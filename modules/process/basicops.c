@@ -25,27 +25,26 @@
 #include <libprocess/datafield.h>
 #include <app/gwyapp.h>
 
-#define BASICOPS_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define BASICOPS_RUN_MODES GWY_RUN_IMMEDIATE
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    flip_horizontally          (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    flip_vertically            (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    invert_value               (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    rotate_clockwise_90        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    rotate_counterclockwise_90 (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    rotate_180                 (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    square_samples             (GwyContainer *data,
-                                               GwyRunType run);
-static void        flip_xy                    (GwyDataField *source,
-                                               GwyDataField *dest,
-                                               gboolean minor);
+static gboolean module_register           (const gchar *name);
+static void     flip_horizontally         (GwyContainer *data,
+                                           GwyRunType run);
+static void     flip_vertically           (GwyContainer *data,
+                                           GwyRunType run);
+static void     invert_value              (GwyContainer *data,
+                                           GwyRunType run);
+static void     rotate_clockwise_90       (GwyContainer *data,
+                                           GwyRunType run);
+static void     rotate_counterclockwise_90(GwyContainer *data,
+                                           GwyRunType run);
+static void     rotate_180                (GwyContainer *data,
+                                           GwyRunType run);
+static void     square_samples            (GwyContainer *data,
+                                           GwyRunType run);
+static void     flip_xy                   (GwyDataField *source,
+                                           GwyDataField *dest,
+                                           gboolean minor);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -71,49 +70,49 @@ module_register(const gchar *name)
         N_("/_Basic Operations/Flip _Horizontally"),
         (GwyProcessFunc)&flip_horizontally,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo flip_vertically_func_info = {
         "flip_vertically",
         N_("/_Basic Operations/Flip _Vertically"),
         (GwyProcessFunc)&flip_vertically,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo invert_value_func_info = {
         "invert_value",
         N_("/_Basic Operations/_Invert Value"),
         (GwyProcessFunc)&invert_value,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
         N_("/_Basic Operations/_Rotate Clockwise"),
         (GwyProcessFunc)&rotate_clockwise_90,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
         N_("/_Basic Operations/Rotate _Counterclockwise"),
         (GwyProcessFunc)&rotate_counterclockwise_90,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
         N_("/_Basic Operations/Flip _Both"),
         (GwyProcessFunc)&rotate_180,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo square_samples_func_info = {
         "square_samples",
         N_("/_Basic Operations/S_quare Samples"),
         (GwyProcessFunc)&square_samples,
         BASICOPS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &flip_horizontally_func_info);
@@ -127,14 +126,14 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 flip_horizontally(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     const gchar *keys[3];
     gsize n;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     n = 0;
     keys[n++] = "/0/data";
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
@@ -153,18 +152,16 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
         gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
         gwy_data_field_data_changed(dfield);
     }
-
-    return TRUE;
 }
 
-static gboolean
+static void
 flip_vertically(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     const gchar *keys[3];
     gsize n;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     n = 0;
     keys[n++] = "/0/data";
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
@@ -183,18 +180,16 @@ flip_vertically(GwyContainer *data, GwyRunType run)
         gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
         gwy_data_field_data_changed(dfield);
     }
-
-    return TRUE;
 }
 
-static gboolean
+static void
 invert_value(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     const gchar *keys[2];
     gsize n;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     n = 0;
     keys[n++] = "/0/data";
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
@@ -207,18 +202,16 @@ invert_value(GwyContainer *data, GwyRunType run)
         gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
         gwy_data_field_data_changed(dfield);
     }
-
-    return TRUE;
 }
 
-static gboolean
+static void
 rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield, *old;
     GwyContainer *newdata;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = gwy_container_duplicate(data);
     gwy_app_clean_up_data(newdata);
@@ -236,18 +229,16 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(newdata);
-
-    return FALSE;
 }
 
-static gboolean
+static void
 rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield, *old;
     GwyContainer *newdata;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = gwy_container_duplicate(data);
     gwy_app_clean_up_data(newdata);
@@ -265,8 +256,6 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(newdata);
-
-    return FALSE;
 }
 
 static void
@@ -299,14 +288,14 @@ flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
     gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
 }
 
-static gboolean
+static void
 rotate_180(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     const gchar *keys[3];
     gsize n;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     n = 0;
     keys[n++] = "/0/data";
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
@@ -325,11 +314,9 @@ rotate_180(GwyContainer *data, GwyRunType run)
         gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
         gwy_data_field_data_changed(dfield);
     }
-
-    return TRUE;
 }
 
-static gboolean
+static void
 square_samples(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
@@ -338,7 +325,7 @@ square_samples(GwyContainer *data, GwyRunType run)
     gdouble xreal, yreal, qx, qy;
     gint xres, yres;
 
-    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = gwy_container_duplicate(data);
     gwy_app_clean_up_data(newdata);
@@ -369,8 +356,6 @@ square_samples(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(newdata);
-
-    return FALSE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

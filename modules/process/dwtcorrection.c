@@ -19,18 +19,16 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/dwt.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define DWT_CORRECTION_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define DWT_CORRECTION_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 /* Data for this function. */
 typedef struct {
@@ -44,7 +42,7 @@ typedef struct {
 } DWTCorrectionControls;
 
 static gboolean module_register             (const gchar *name);
-static gboolean dwt_correction              (GwyContainer *data,
+static void     dwt_correction              (GwyContainer *data,
                                              GwyRunType run);
 static gboolean dwt_correction_dialog       (DWTCorrectionArgs *args);
 static void     dwt_correction_dialog_update(DWTCorrectionControls *controls,
@@ -85,7 +83,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/DWT C_orrection..."),
         (GwyProcessFunc)&dwt_correction,
         DWT_CORRECTION_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &dwt_correction_func_info);
@@ -103,7 +101,7 @@ dwt_correction(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint xsize, ysize, newsize;
 
-    g_assert(run & DWT_CORRECTION_RUN_MODES);
+    g_return_if_fail(run & DWT_CORRECTION_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -116,19 +114,16 @@ dwt_correction(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), _("DWT Correction"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-
-        return FALSE;
+        return;
     }
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_correction_defaults;
-    else
-        dwt_correction_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_correction_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    dwt_correction_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = dwt_correction_dialog(&args);
         dwt_correction_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
         mask = gwy_data_field_new_alike(dfield, TRUE);
@@ -153,9 +148,7 @@ dwt_correction(GwyContainer *data, GwyRunType run)
 
     gwy_container_remove_by_name(data, "/0/mask");
     g_object_unref(wtcoefs);
-    return TRUE;
 }
-
 
 static gboolean
 dwt_correction_dialog(DWTCorrectionArgs *args)

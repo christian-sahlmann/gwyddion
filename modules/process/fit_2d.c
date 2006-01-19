@@ -20,15 +20,10 @@
 
 #include "config.h"
 #include <stdlib.h>
-#include <math.h>
 #include <errno.h>
-
 #include <glib/gstdio.h>
-
-#include <libgwyddion/gwymacros.h>
-
 #include <gtk/gtk.h>
-
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwynlfit.h>
 #include <libgwymodule/gwymodule.h>
@@ -37,8 +32,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define FIT_2D_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define FIT_2D_RUN_MODES GWY_RUN_INTERACTIVE
 
 #define MAX_PARAMS 4
 
@@ -86,7 +80,7 @@ typedef struct {
 } Fit2DControls;
 
 static gboolean    module_register          (const gchar *name);
-static gboolean    fit_2d                   (GwyContainer *data,
+static void        fit_2d                   (GwyContainer *data,
                                              GwyRunType run);
 static gboolean    fit_2d_dialog            (Fit2DArgs *args,
                                              GwyContainer *data);
@@ -160,7 +154,7 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-
+/* XXX XXX XXX XXX XXX */
 Fit2DControls *pcontrols;
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -175,7 +169,7 @@ module_register(const gchar *name)
         N_("/_Level/_Fit Sphere..."),
         (GwyProcessFunc)&fit_2d,
         FIT_2D_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &fit_2d_func_info);
@@ -183,13 +177,12 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 fit_2d(GwyContainer *data, GwyRunType run)
 {
     Fit2DArgs args;
-    gboolean ok;
 
-    g_assert(run & FIT_2D_RUN_MODES);
+    g_return_if_fail(run & FIT_2D_RUN_MODES);
 
     fit_2d_load_args(gwy_app_settings_get(), &args);
     args.par_fix[0] = FALSE;
@@ -199,14 +192,12 @@ fit_2d(GwyContainer *data, GwyRunType run)
     args.original_data = data;
     args.fitter = NULL;
     args.is_fitted = 0;
-
-    ok = fit_2d_dialog(&args, data);
+    fit_2d_dialog(&args, data);
     fit_2d_save_args(gwy_app_settings_get(), &args);
-
-    return FALSE;
 }
 
-
+/* FIXME: What is the return value good for when fit_2d_dialog() does all the
+ * work itself? */
 static gboolean
 fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
 {

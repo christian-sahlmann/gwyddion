@@ -622,4 +622,26 @@ _gwy_module_unwatch_settings(void)
  * Module information returned by GWY_MODULE_QUERY().
  **/
 
+/**
+ * GwyRunType:
+ * @GWY_RUN_NONE: None.
+ * @GWY_RUN_NONINTERACTIVE: The function is run non-interactively, it must not
+ *                          present any GUI and touch application state.
+ * @GWY_RUN_INTERACTIVE: The function presents a modal user interfaces where
+ *                       parameters can be adjusted, it returns after
+ *                       finishing all operations.
+ * @GWY_RUN_IMMEDIATE: Function is run immediately and uses parameter values
+ *                     stored in the settings to reproduce previous run.
+ *                     It can however present GUI error messages
+ *                     or display progress, create new widndows, etc.
+ * @GWY_RUN_MASK: The mask for all the run modes.
+ *
+ * Module function run-modes.
+ *
+ * Note @GWY_RUN_NONINTERACTIVE is only possible for file functions,
+ * processing functions do not have a truly non-interactive interface yet and
+ * therefore they should not claim they support it.  The closest match for
+ * process functions is @GWY_RUN_IMMEDIATE.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

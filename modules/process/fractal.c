@@ -19,19 +19,17 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/fractals.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define FRACTAL_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define FRACTAL_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef enum {
     GWY_FRACTAL_PARTITIONING  = 0,
@@ -72,7 +70,7 @@ typedef struct {
 } FractalControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    fractal                    (GwyContainer *data,
+static void        fractal                    (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    fractal_dialog             (FractalArgs *args,
                                                GwyContainer *data);
@@ -111,7 +109,7 @@ static void        fractal_save_args          (GwyContainer *container,
                                                FractalArgs *args);
 static void        fractal_sanitize_args      (FractalArgs *args);
 
-FractalArgs fractal_defaults = {
+static const FractalArgs fractal_defaults = {
     { 0, 0, 0, 0, },
     { 0, 0, 0, 0, },
     { 0, 0, 0, 0, },
@@ -164,7 +162,7 @@ module_register(const gchar *name)
         N_("/_Statistics/_Fractal Dimension..."),
         (GwyProcessFunc)&fractal,
         FRACTAL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &fractal_func_info);
@@ -172,24 +170,19 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 fractal(GwyContainer *data, GwyRunType run)
 {
     FractalArgs args;
-    gboolean ok;
 
-    g_assert(run & FRACTAL_RUN_MODES);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = fractal_defaults;
-    else
-        fractal_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || fractal_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
-        fractal_save_args(data, &args);
-
-    return FALSE;
+    g_return_if_fail(run & FRACTAL_RUN_MODES);
+    fractal_load_args(gwy_app_settings_get(), &args);
+    fractal_dialog(&args, data);
+    fractal_save_args(data, &args);
 }
 
+/* FIXME: What is the return value good for when fftf_1d_dialog() does all the
+ * work itself? */
 static gboolean
 fractal_dialog(FractalArgs *args, GwyContainer *data)
 {

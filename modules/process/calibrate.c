@@ -25,11 +25,9 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define CALIBRATE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define CALIBRATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 /* Data for this function. */
 typedef struct {
@@ -75,7 +73,7 @@ typedef struct {
 } CalibrateControls;
 
 static gboolean    module_register           (const gchar *name);
-static gboolean    calibrate                 (GwyContainer *data,
+static void        calibrate                 (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    calibrate_dialog          (CalibrateArgs *args,
                                               GwyContainer *data);
@@ -111,7 +109,7 @@ static void        calibrate_load_args       (GwyContainer *container,
 static void        calibrate_save_args       (GwyContainer *container,
                                               CalibrateArgs *args);
 
-CalibrateArgs calibrate_defaults = {
+static const CalibrateArgs calibrate_defaults = {
     1.0,
     1.0,
     1.0,
@@ -144,7 +142,7 @@ module_register(const gchar *name)
         N_("/_Basic Operations/_Recalibrate..."),
         (GwyProcessFunc)&calibrate,
         CALIBRATE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &calibrate_func_info);
@@ -152,7 +150,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 calibrate(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
@@ -160,13 +158,10 @@ calibrate(GwyContainer *data, GwyRunType run)
     CalibrateArgs args;
     gboolean ok;
 
-    g_return_val_if_fail(run & CALIBRATE_RUN_MODES, FALSE);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = calibrate_defaults;
-    else
-        calibrate_load_args(gwy_app_settings_get(), &args);
+    g_return_if_fail(run & CALIBRATE_RUN_MODES);
+    calibrate_load_args(gwy_app_settings_get(), &args);
 
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     args.xorig = gwy_data_field_get_xreal(dfield);
     args.yorig = gwy_data_field_get_yreal(dfield);
     args.zorig = gwy_data_field_get_max(dfield)
@@ -185,11 +180,12 @@ calibrate(GwyContainer *data, GwyRunType run)
     args.x0 = args.x0orig;
     args.y0 = args.y0orig;
 
-    ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = calibrate_dialog(&args, data);
         calibrate_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     data = gwy_container_duplicate(data);
     gwy_app_clean_up_data(data);
@@ -218,8 +214,6 @@ calibrate(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(data);
-
-    return FALSE;
 }
 
 static gboolean

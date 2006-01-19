@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include <string.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -28,11 +27,8 @@
 #include <libprocess/datafield.h>
 #include <app/gwyapp.h>
 
-#define SCARS_MARK_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
-
-#define SCARS_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define SCARS_MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define SCARS_RUN_MODES GWY_RUN_IMMEDIATE
 
 enum {
     PREVIEW_SIZE = 320,
@@ -40,7 +36,7 @@ enum {
 };
 
 typedef struct {
-    gboolean inverted;   /* unused */
+    gboolean inverted;
     gdouble threshold_high;
     gdouble threshold_low;
     gint min_len;
@@ -60,9 +56,9 @@ typedef struct {
 } ScarsControls;
 
 static gboolean    module_register                   (const gchar *name);
-static gboolean    scars_remove                      (GwyContainer *data,
+static void        scars_remove                      (GwyContainer *data,
                                                       GwyRunType run);
-static gboolean    scars_mark                        (GwyContainer *data,
+static void        scars_mark                        (GwyContainer *data,
                                                       GwyRunType run);
 static void        load_mask_color                   (GtkWidget *color_button,
                                                       GwyContainer *data);
@@ -96,7 +92,6 @@ static const ScarsArgs scars_defaults = {
     4
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -107,8 +102,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -119,14 +112,14 @@ module_register(const gchar *name)
         N_("/_Correct Data/M_ark Scars..."),
         (GwyProcessFunc)&scars_mark,
         SCARS_MARK_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo scars_remove_func_info = {
         "scars_remove",
         N_("/_Correct Data/Remove _Scars"),
         (GwyProcessFunc)&scars_remove,
         SCARS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &scars_mark_func_info);
@@ -287,7 +280,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
     }
 }
 
-static gboolean
+static void
 scars_remove(GwyContainer *data, GwyRunType run)
 {
     ScarsArgs args;
@@ -295,11 +288,8 @@ scars_remove(GwyContainer *data, GwyRunType run)
     gint xres, yres, i, j, k;
     gdouble *d, *m;
 
-    g_return_val_if_fail(run & SCARS_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = scars_defaults;
-    else
-        scars_mark_load_args(gwy_app_settings_get(), &args);
+    g_return_if_fail(run & SCARS_RUN_MODES);
+    scars_mark_load_args(gwy_app_settings_get(), &args);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xres = gwy_data_field_get_xres(dfield);
@@ -338,32 +328,25 @@ scars_remove(GwyContainer *data, GwyRunType run)
 
     g_object_unref(mask);
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
-static gboolean
+static void
 scars_mark(GwyContainer *data, GwyRunType run)
 {
     ScarsArgs args;
-    gboolean ok = FALSE;
+    gboolean ok;
 
-    g_return_val_if_fail(run & SCARS_MARK_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = scars_defaults;
-    else
-        scars_mark_load_args(gwy_app_settings_get(), &args);
-
-    ok = (run != GWY_RUN_MODAL) || scars_mark_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
+    g_return_if_fail(run & SCARS_MARK_RUN_MODES);
+    scars_mark_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = scars_mark_dialog(&args, data);
         scars_mark_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     scars_mark_do(&args, data);
-
-    return ok;
 }
 
 static void

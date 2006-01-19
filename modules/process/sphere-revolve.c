@@ -27,12 +27,9 @@
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/undo.h>
+#include <app/gwyapp.h>
 
-#define SPHREV_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define SPHREV_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef enum {
     SPHREV_HORIZONTAL = 1,
@@ -40,7 +37,6 @@ typedef enum {
     SPHREV_BOTH
 } Sphrev1DDirection;
 
-/* Data for this function. */
 typedef struct {
     Sphrev1DDirection direction;
     gdouble size;
@@ -59,7 +55,7 @@ typedef struct {
 } Sphrev1DControls;
 
 static gboolean      module_register           (const gchar *name);
-static gboolean      sphrev                    (GwyContainer *data,
+static void          sphrev                    (GwyContainer *data,
                                                 GwyRunType run);
 static GwyDataField* sphrev_horizontal         (Sphrev1DArgs *args,
                                                 GwyDataField *dfield);
@@ -84,7 +80,7 @@ static void          sphrev_load_args          (GwyContainer *container,
 static void          sphrev_save_args          (GwyContainer *container,
                                                 Sphrev1DArgs *args);
 
-Sphrev1DArgs sphrev_defaults = {
+static const Sphrev1DArgs sphrev_defaults = {
     SPHREV_HORIZONTAL,
     20,
     FALSE,
@@ -92,7 +88,6 @@ Sphrev1DArgs sphrev_defaults = {
     0,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -103,8 +98,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -115,7 +108,7 @@ module_register(const gchar *name)
         N_("/_Level/Revolve _Arc..."),
         (GwyProcessFunc)&sphrev,
         SPHREV_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &sphrev_func_info);
@@ -123,21 +116,18 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 sphrev(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield, *background = NULL;
     Sphrev1DArgs args;
     gdouble xr, yr;
-    gboolean ok;
+    gboolean ok = TRUE;
 
-    g_return_val_if_fail(run & SPHREV_RUN_MODES, FALSE);
+    g_return_if_fail(run & SPHREV_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = sphrev_defaults;
-    else
-        sphrev_load_args(gwy_app_settings_get(), &args);
+    sphrev_load_args(gwy_app_settings_get(), &args);
 
     /* FIXME: this is bogus for non-square pixels anyway */
     xr = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
@@ -150,13 +140,14 @@ sphrev(GwyContainer *data, GwyRunType run)
               args.pixelsize, args.valform->magnitude, args.valform->precision,
               args.valform->units);
 
-    ok = (run != GWY_RUN_MODAL) || sphrev_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = sphrev_dialog(&args);
         sphrev_save_args(gwy_app_settings_get(), &args);
+    }
 
     gwy_si_unit_value_format_free(args.valform);
     if (!ok)
-        return FALSE;
+        return;
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     switch (args.direction) {
@@ -188,7 +179,7 @@ sphrev(GwyContainer *data, GwyRunType run)
 
     if (!args.do_extract) {
         g_object_unref(background);
-        return TRUE;
+        return;
     }
 
     data = gwy_container_duplicate_by_prefix(data,
@@ -200,8 +191,6 @@ sphrev(GwyContainer *data, GwyRunType run)
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      _("Background"));
     g_object_unref(data);
-
-    return TRUE;
 }
 
 static gboolean

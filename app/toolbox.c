@@ -214,7 +214,7 @@ gwy_app_toolbox_create(void)
         {
             GWY_STOCK_FACET_LEVEL,
             N_("Facet-level data"),
-            "facet_level",
+            "facet-level",
         },
         {
             GWY_STOCK_FFT,
@@ -229,17 +229,17 @@ gwy_app_toolbox_create(void)
         {
             GWY_STOCK_GRAINS,
             N_("Mark grains by threshold"),
-            "mark_threshold",
+            "grain_mark",
         },
         {
             GWY_STOCK_GRAINS_WATER,
             N_("Mark grains by watershed"),
-            "wshed_threshold",
+            "grain_wshed",
         },
         {
             GWY_STOCK_GRAINS_REMOVE,
             N_("Remove grains by threshold"),
-            "remove_threshold",
+            "grain_rem_threshold",
         },
         {
             GWY_STOCK_GRAINS_GRAPH,
@@ -259,7 +259,7 @@ gwy_app_toolbox_create(void)
         {
             GWY_STOCK_POLYNOM_REMOVE,
             N_("Remove polynomial background"),
-            "poly_level",
+            "polylevel",
         },
         {
             GWY_STOCK_SCARS,
@@ -379,7 +379,7 @@ gwy_app_toolbox_create(void)
         if (!button)
             continue;
         flags = gwy_process_func_get_sensitivity_flags(proc_actions[i].name);
-        gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA | flags, 0);
+        gwy_app_menu_set_sensitive_both(button, flags, 0);
         j++;
     }
 
@@ -487,16 +487,12 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
     static const gchar *repeat_accel_path = "<proc>/Repeat Last";
     GtkWidget *menu, *last;
     GtkItemFactory *item_factory;
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<proc>",
                                         accel_group);
     gwy_process_func_build_menu(GTK_OBJECT(item_factory), "",
                                 G_CALLBACK(gwy_app_run_process_func_cb));
     menu = gtk_item_factory_get_widget(item_factory, "<proc>");
-
-    /* set up sensitivity: all items need an active data window */
-    gwy_app_menu_set_flags_recursive(menu, &sens_data);
 
     /* re-run last item */
     menu = gtk_item_factory_get_widget(item_factory, "<proc>");
@@ -512,7 +508,7 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
                                     | GWY_MENU_FLAG_LAST_PROC, 0);
     g_signal_connect_swapped(last, "activate",
                              G_CALLBACK(gwy_app_rerun_process_func_cb),
-                             GUINT_TO_POINTER(GWY_RUN_MODAL));
+                             GUINT_TO_POINTER(GWY_RUN_INTERACTIVE));
 
     last = gtk_menu_item_new_with_mnemonic(_("Repeat Last"));
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), repeat_accel_path);
@@ -525,7 +521,7 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
                                     | GWY_MENU_FLAG_LAST_PROC, 0);
     g_signal_connect_swapped(last, "activate",
                              G_CALLBACK(gwy_app_rerun_process_func_cb),
-                             GUINT_TO_POINTER(GWY_RUN_NONINTERACTIVE));
+                             GUINT_TO_POINTER(GWY_RUN_IMMEDIATE));
 
     gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
 
@@ -962,13 +958,7 @@ gwy_app_rerun_process_func_cb(gpointer user_data)
     gwy_debug("run mode = %u, available = %u", run, available_run_modes);
 
     /* try to find some mode `near' to requested one, otherwise just use any */
-    if (!(run & available_run_modes)) {
-        if (run == GWY_RUN_NONINTERACTIVE
-            && (available_run_modes & GWY_RUN_WITH_DEFAULTS))
-            run = GWY_RUN_WITH_DEFAULTS;
-        else
-            run = 0;
-    }
+    run &= available_run_modes;
     if (run)
         gwy_app_run_process_func_in_mode(name, run);
     else

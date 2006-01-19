@@ -27,8 +27,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
-#define CROSSCOR_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define CROSSCOR_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef enum {
     GWY_CROSSCOR_ABS,
@@ -68,7 +67,7 @@ typedef struct {
 } CrosscorControls;
 
 static gboolean   module_register             (const gchar *name);
-static gboolean   crosscor                    (GwyContainer *data,
+static void       crosscor                    (GwyContainer *data,
                                                GwyRunType run);
 static GtkWidget* crosscor_window_construct   (CrosscorArgs *args,
                                                CrosscorControls *controls);
@@ -92,10 +91,10 @@ static void       mask_changed_cb             (GtkToggleButton *button,
 CrosscorControls *pcontrols;
 
 static const GwyEnum results[] = {
-    { N_("Absolute"),    GWY_CROSSCOR_ABS },
-    { N_("X Distance"),  GWY_CROSSCOR_X },
-    { N_("Y Distance"),  GWY_CROSSCOR_Y },
-    { N_("Angle"),       GWY_CROSSCOR_DIR },
+    { N_("Absolute"),   GWY_CROSSCOR_ABS, },
+    { N_("X Distance"), GWY_CROSSCOR_X,   },
+    { N_("Y Distance"), GWY_CROSSCOR_Y,   },
+    { N_("Angle"),      GWY_CROSSCOR_DIR, },
 };
 
 static const CrosscorArgs crosscor_defaults = {
@@ -125,7 +124,7 @@ module_register(const gchar *name)
         N_("/M_ultidata/_Cross-Correlation..."),
         (GwyProcessFunc)&crosscor,
         CROSSCOR_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &crosscor_func_info);
@@ -134,7 +133,7 @@ module_register(const gchar *name)
 }
 
 /* FIXME: we ignore the Container argument and use current data window */
-static gboolean
+static void
 crosscor(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *crosscor_window;
@@ -143,7 +142,7 @@ crosscor(GwyContainer *data, GwyRunType run)
     GwyContainer *settings;
     gboolean ok = FALSE;
 
-    g_return_val_if_fail(run & CROSSCOR_RUN_MODES, FALSE);
+    g_return_if_fail(run & CROSSCOR_RUN_MODES);
     settings = gwy_app_settings_get();
     crosscor_load_args(settings, &args);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
@@ -178,8 +177,6 @@ crosscor(GwyContainer *data, GwyRunType run)
             break;
         }
     } while (!ok);
-
-    return FALSE;
 }
 
 static GtkWidget*

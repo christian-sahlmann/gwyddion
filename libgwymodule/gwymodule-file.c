@@ -789,7 +789,8 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
 /**
  * GwyFileLoadFunc:
  * @filename: A file name to load data from.
- * @mode: Run mode.
+ * @mode: Run mode, this is either @GWY_RUN_NONINTERACTIVE
+ *        or @GWY_RUN_INTERACTIVE.
  * @error: Return location for a #GError (or %NULL).
  * @name: Function name from #GwyFileFuncInfo (functions implementing only
  *        one file type can safely ignore this argument)
@@ -803,7 +804,8 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * GwyFileSaveFunc:
  * @data: A #GwyContainer to save.
  * @filename: A file name to save @data as.
- * @mode: Run mode.
+ * @mode: Run mode, this is either @GWY_RUN_NONINTERACTIVE
+ *        or @GWY_RUN_INTERACTIVE.
  * @error: Return location for a #GError (or %NULL).
  * @name: Function name from #GwyFileFuncInfo (functions implementing only
  *        one file type can safely ignore this argument)

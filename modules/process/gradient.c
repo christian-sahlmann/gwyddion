@@ -19,24 +19,22 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <math.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
 #include <app/gwyapp.h>
 
-#define GRADIENT_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define GRADIENT_RUN_MODES GWY_RUN_IMMEDIATE
 
-static gboolean    module_register              (const gchar *name);
-static gboolean    gradient_filter              (GwyContainer *data,
-                                                 GwyRunType run,
-                                                 const gchar *name);
+static gboolean module_register(const gchar *name);
+static void     gradient_filter(GwyContainer *data,
+                                GwyRunType run,
+                                const gchar *name);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -62,14 +60,14 @@ module_register(const gchar *name)
         N_("/_Display/_Gradient/_Sobel (horizontal)"),
         (GwyProcessFunc)&gradient_filter,
         GRADIENT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo sobel_vertical_func_info = {
         "sobel_vertical",
         N_("/_Display/_Gradient/_Sobel (vertical)"),
         (GwyProcessFunc)&gradient_filter,
         GRADIENT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     static GwyProcessFuncInfo prewitt_horizontal_func_info = {
@@ -77,14 +75,14 @@ module_register(const gchar *name)
         N_("/_Display/_Gradient/_Prewitt (horizontal)"),
         (GwyProcessFunc)&gradient_filter,
         GRADIENT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo prewitt_vertical_func_info = {
         "prewitt_vertical",
         N_("/_Display/_Gradient/_Prewitt (vertical)"),
         (GwyProcessFunc)&gradient_filter,
         GRADIENT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &sobel_horizontal_func_info);
@@ -95,7 +93,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 gradient_filter(GwyContainer *data,
                 GwyRunType run,
                 const gchar *name)
@@ -103,7 +101,7 @@ gradient_filter(GwyContainer *data,
     GwyDataField *dfield, *gradfield;
     GwySIUnit *siunit;
 
-    g_return_val_if_fail(run & GRADIENT_RUN_MODES, FALSE);
+    g_return_if_fail(run & GRADIENT_RUN_MODES);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
@@ -137,8 +135,6 @@ gradient_filter(GwyContainer *data,
     }
     gwy_data_field_normalize(gradfield);
     gwy_data_field_data_changed(gradfield);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

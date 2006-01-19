@@ -269,7 +269,7 @@ guint
 gwy_app_run_process_func_cb(gchar *name)
 {
     GwyRunType run_types[] = {
-        GWY_RUN_MODAL, GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_INTERACTIVE, GWY_RUN_IMMEDIATE,
     };
     GwyRunType available_run_modes;
     gsize i;

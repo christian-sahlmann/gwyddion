@@ -18,26 +18,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
-#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/correct.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define DRIFT_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define DRIFT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-        PREVIEW_SIZE = 320
+    PREVIEW_SIZE = 320
 };
 
 
 typedef enum {
     GWY_DRIFT_CORRELATION = 0,
-    GWY_DRIFT_ISOTROPY = 1,
-    GWY_DRIFT_SAMPLE = 2
+    GWY_DRIFT_ISOTROPY    = 1,
+    GWY_DRIFT_SAMPLE      = 2
 } GwyDriftMethod;
 
 /* Data for this function. */
@@ -67,7 +65,7 @@ typedef struct {
 } DriftControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    drift                       (GwyContainer *data,
+static void        drift                      (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    drift_dialog                (DriftArgs *args,
                                                GwyContainer *data);
@@ -96,27 +94,27 @@ static void        drift_load_args              (GwyContainer *container,
 static void        drift_save_args              (GwyContainer *container,
                                                DriftArgs *args);
 static void        drift_sanitize_args         (DriftArgs *args);
-static void         mask_process               (GwyDataField *dfield, 
-                                                GwyDataField *maskfield, 
+static void         mask_process               (GwyDataField *dfield,
+                                                GwyDataField *maskfield,
                                                 DriftArgs *args,
                                                 DriftControls *controls);
 
 
 static const GwyEnum methods[] = {
-    { N_("Scan lines correlation"),   GWY_DRIFT_CORRELATION  },
-    { N_("Local isotropy"),           GWY_DRIFT_ISOTROPY  },
-    { N_("Calibration sample"),       GWY_DRIFT_SAMPLE },
+    { N_("Scan lines correlation"), GWY_DRIFT_CORRELATION, },
+    { N_("Local isotropy"),         GWY_DRIFT_ISOTROPY,    },
+    { N_("Calibration sample"),     GWY_DRIFT_SAMPLE,      },
 };
 
 
 
-DriftArgs drift_defaults = {
+static const DriftArgs drift_defaults = {
     GWY_DRIFT_CORRELATION,
     50,
     50,
     TRUE,
     TRUE,
-    TRUE,    
+    TRUE,
     GWY_INTERPOLATION_BILINEAR,
 };
 
@@ -143,7 +141,7 @@ module_register(const gchar *name)
         N_("/_Correct Data/_Compensate drift..."),
         (GwyProcessFunc)&drift,
         DRIFT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &drift_func_info);
@@ -151,26 +149,21 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 drift(GwyContainer *data, GwyRunType run)
 {
     DriftArgs args;
     gboolean ok = TRUE;
 
-    g_assert(run & DRIFT_RUN_MODES);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = drift_defaults;
-    else
-        drift_load_args(gwy_app_settings_get(), &args);
-
-    if (run == GWY_RUN_MODAL) {
+    g_return_if_fail(run & DRIFT_RUN_MODES);
+    drift_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
         ok = drift_dialog(&args, data);
         drift_save_args(gwy_app_settings_get(), &args);
     }
     else
+        /* FIXME: This crashes.  What it was supposed to do? */
         drift_ok(NULL, &args);
-
-    return ok;
 }
 
 static void
@@ -190,6 +183,8 @@ table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
     (*row)++;
 }
 
+/* FIXME: What is the return value good for when drift_dialog() does all the
+ * work itself? */
 static gboolean
 drift_dialog(DriftArgs *args, GwyContainer *data)
 {
@@ -222,16 +217,16 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     controls.mydata = gwy_container_duplicate_by_prefix(data, "/0/data", NULL);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = GTK_OBJECT(gwy_layer_basic_new());
-    
+
     gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");    
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                              "/0/data"));
 
     controls.result = GWY_DATA_LINE(gwy_data_line_new(dfield->yres, dfield->yreal, TRUE));
-    
+
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
         zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
     else
@@ -249,21 +244,21 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                                 GTK_EXPAND | GTK_FILL, 0, 2, 2);
-        
-   
+
+
 
     controls.method = gwy_enum_combo_box_new(methods, G_N_ELEMENTS(methods),
                                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                                  &args->method, args->method, TRUE);
-   
+
  //   g_signal_connect(controls.method, "value_changed",
  //                                     G_CALLBACK(drift_invalidate), &controls);
-    
-    
+
+
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.method);
     gtk_table_attach(GTK_TABLE(table), controls.method, 1, 2, row, row+1,
                                  GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    
+
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation:"));
@@ -271,35 +266,35 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                                 GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    controls.interpolation = 
+    controls.interpolation =
           gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->interpolation, args->interpolation, TRUE);
-    
-   
+
+
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interpolation);
     gtk_table_attach(GTK_TABLE(table), controls.interpolation, 1, 2, row, row+1,
                                  GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    
+
     row++;
 
-   
+
     controls.sensitivity = gtk_adjustment_new(args->sensitivity, 0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_hscale(table, row, "sensitivity:", "", controls.sensitivity,
                                                GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
-    g_signal_connect(controls.sensitivity, "value_changed", 
-                     G_CALLBACK(drift_invalidate), &controls);    
-    
+    g_signal_connect(controls.sensitivity, "value_changed",
+                     G_CALLBACK(drift_invalidate), &controls);
+
     row++;
 
     controls.smoothing = gtk_adjustment_new(args->smoothing, 0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_hscale(table, row, "smoothing:", "%", controls.smoothing,
                                                GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
-    g_signal_connect(controls.smoothing, "value_changed", 
-                     G_CALLBACK(drift_invalidate), &controls);    
-    
+    g_signal_connect(controls.smoothing, "value_changed",
+                     G_CALLBACK(drift_invalidate), &controls);
+
     row++;
 
     controls.color_button = gwy_color_button_new();
@@ -312,7 +307,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                                     GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
                            G_CALLBACK(mask_color_change_cb), &controls);
-                    
+
     row++;
 
     controls.is_graph = gtk_check_button_new_with_mnemonic(_("_Extract drift graph"));
@@ -342,7 +337,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                      G_CALLBACK(drift_invalidate), &controls);
     row++;
 
-    
+
     controls.computed = FALSE;
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_graph),
@@ -587,7 +582,7 @@ mask_process(GwyDataField *dfield,
     gwy_data_line_clear(controls->result);
 
     if (args->method == GWY_DRIFT_CORRELATION)
-        gwy_data_field_get_drift_from_correlation(dfield, 
+        gwy_data_field_get_drift_from_correlation(dfield,
                                                   controls->result,
                                                   MAX(1, (gint)(args->sensitivity/10)),
                                                   100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
@@ -603,7 +598,7 @@ mask_process(GwyDataField *dfield,
             if (pos>1 && pos < dfield->xres)
             {
                 maskfield->data[(gint)(pos + i*dfield->xres)] = 1;
-                if (dfield->xres >= 300) 
+                if (dfield->xres >= 300)
                     maskfield->data[(gint)(pos - 1 + i*dfield->xres)] = 1;
             }
         }

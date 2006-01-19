@@ -21,18 +21,14 @@
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/wait.h>
+#include <app/gwyapp.h>
 
-#define ANGLE_DIST_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define ANGLE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     MAX_OUT_SIZE = 1024,
@@ -57,7 +53,7 @@ typedef struct {
 } AngleControls;
 
 static gboolean      module_register              (const gchar *name);
-static gboolean      angle_dist                   (GwyContainer *data,
+static void          angle_dist                   (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean      angle_dialog                 (AngleArgs *args);
 static void          angle_dialog_update_controls (AngleControls *controls,
@@ -90,7 +86,7 @@ static void          save_args                    (GwyContainer *container,
                                                    AngleArgs *args);
 static void          sanitize_args                (AngleArgs *args);
 
-AngleArgs angle_defaults = {
+static const AngleArgs angle_defaults = {
     200,
     360,
     FALSE,
@@ -122,7 +118,7 @@ module_register(const gchar *name)
         N_("/_Statistics/_Angle Distribution..."),
         (GwyProcessFunc)&angle_dist,
         ANGLE_DIST_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &angle_dist_func_info);
@@ -130,47 +126,43 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 angle_dist(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield = NULL;
     AngleArgs args;
     const guchar *pal = NULL;
-    gboolean ok;
+    gboolean ok = TRUE;
 
-    g_return_val_if_fail(run & ANGLE_DIST_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = angle_defaults;
-    else
-        load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || angle_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    g_return_if_fail(run & ANGLE_DIST_RUN_MODES);
+    load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = angle_dialog(&args);
         save_args(gwy_app_settings_get(), &args);
-    if (ok) {
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
-                           _("Computing angle distribution"));
-        dfield = angle_do(dfield, &args);
-        gwy_app_wait_finish();
-    }
-    if (dfield) {
-        data = gwy_container_new();
-        gwy_container_set_object_by_name(data, "/0/data", dfield);
-        g_object_unref(dfield);
-        if (pal)
-            gwy_container_set_string_by_name(data, "/0/base/palette",
-                                             g_strdup(pal));
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("Angle"));
-        g_object_unref(data);
+        if (!ok)
+            return;
     }
 
-    return FALSE;
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+                       _("Computing angle distribution"));
+    dfield = angle_do(dfield, &args);
+    gwy_app_wait_finish();
+    if (!dfield)
+        return;
+
+    data = gwy_container_new();
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    g_object_unref(dfield);
+    if (pal)
+        gwy_container_set_string_by_name(data, "/0/base/palette",
+                                         g_strdup(pal));
+
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), _("Angle"));
+    g_object_unref(data);
 }
 
 static gboolean

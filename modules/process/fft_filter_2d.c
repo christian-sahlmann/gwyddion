@@ -19,10 +19,10 @@
  */
 
 /*TODO: Only allow 2^n sized images */
-#include <math.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -33,10 +33,9 @@
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
-#include <app/settings.h>
 #include <app/gwyapp.h>
 
-#define FFTF_2D_RUN_MODES (GWY_RUN_MODAL)
+#define FFTF_2D_RUN_MODES GWY_RUN_INTERACTIVE
 
 #define PREVIEW_SIZE 400.0
 #define CR_DEFAULT 5
@@ -148,7 +147,7 @@ typedef struct {
 
 /* Gwyddion Module Routines */
 static gboolean     module_register     (const gchar *name);
-static gboolean     run_main            (GwyContainer *data,
+static void         run_main            (GwyContainer *data,
                                          GwyRunType run);
 
 /* Signal handlers */
@@ -221,11 +220,11 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo do_main_func_info = {
-        "run_main",
+        "fft_filter_2d",
         N_("/_Correct Data/_2D FFT filtering..."),
         (GwyProcessFunc)&run_main,
         FFTF_2D_RUN_MODES,
-        0
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &do_main_func_info);
@@ -233,7 +232,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 run_main(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
@@ -247,7 +246,7 @@ run_main(GwyContainer *data, GwyRunType run)
     gdouble min, max;
     GSList *list;
 
-    g_assert(run & FFTF_2D_RUN_MODES);
+    g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
     /* Setup containers and data fields */
     controls.cont_data = data;
@@ -323,8 +322,6 @@ run_main(GwyContainer *data, GwyRunType run)
     }
     g_slist_free(controls.markers);
     controls.markers = NULL;
-
-    return FALSE;
 }
 
 static gboolean

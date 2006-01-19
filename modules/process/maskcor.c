@@ -26,8 +26,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
-#define MASKCOR_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define MASKCOR_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef enum {
     GWY_MASKCOR_OBJECTS,
@@ -50,7 +49,7 @@ typedef struct {
 } MaskcorControls;
 
 static gboolean   module_register          (const gchar *name);
-static gboolean   maskcor                  (GwyContainer *data,
+static void       maskcor                  (GwyContainer *data,
                                             GwyRunType run);
 static GtkWidget* maskcor_window_construct (MaskcorArgs *args,
                                             MaskcorControls *controls);
@@ -71,7 +70,6 @@ static const MaskcorArgs maskcor_defaults = {
     GWY_MASKCOR_OBJECTS, 0.95, GWY_CORRELATION_NORMAL, NULL, NULL
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -82,8 +80,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -94,7 +90,7 @@ module_register(const gchar *name)
         N_("/M_ultidata/_Mask by Correlation..."),
         (GwyProcessFunc)&maskcor,
         MASKCOR_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &maskcor_func_info);
@@ -103,7 +99,7 @@ module_register(const gchar *name)
 }
 
 /* FIXME: we ignore the Container argument and use current data window */
-static gboolean
+static void
 maskcor(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *maskcor_window;
@@ -112,7 +108,7 @@ maskcor(GwyContainer *data, GwyRunType run)
     GwyContainer *settings;
     gboolean ok = FALSE;
 
-    g_return_val_if_fail(run & MASKCOR_RUN_MODES, FALSE);
+    g_return_if_fail(run & MASKCOR_RUN_MODES);
     settings = gwy_app_settings_get();
     maskcor_load_args(settings, &args);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
@@ -142,8 +138,6 @@ maskcor(GwyContainer *data, GwyRunType run)
             break;
         }
     } while (!ok);
-
-    return FALSE;
 }
 
 static GtkWidget*

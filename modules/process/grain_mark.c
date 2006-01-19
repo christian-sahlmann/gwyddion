@@ -19,16 +19,15 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/grains.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define MARK_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 320
@@ -71,7 +70,7 @@ typedef struct {
 } MarkControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    mark                       (GwyContainer *data,
+static void        mark                       (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    mark_dialog                (MarkArgs *args,
                                                GwyContainer *data);
@@ -103,7 +102,7 @@ static void        mark_save_args             (GwyContainer *container,
 static void        mark_sanitize_args         (MarkArgs *args);
 
 
-MarkArgs mark_defaults = {
+static const MarkArgs mark_defaults = {
     FALSE,
     100,
     100,
@@ -133,11 +132,11 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mark_func_info = {
-        "mark_threshold",
+        "grain_mark",
         N_("/_Grains/_Mark by Threshold..."),
         (GwyProcessFunc)&mark,
         MARK_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &mark_func_info);
@@ -145,26 +144,19 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 mark(GwyContainer *data, GwyRunType run)
 {
     MarkArgs args;
-    gboolean ok = TRUE;
 
-    g_assert(run & MARK_RUN_MODES);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = mark_defaults;
-    else
-        mark_load_args(gwy_app_settings_get(), &args);
-
-    if (run == GWY_RUN_MODAL) {
-        ok = mark_dialog(&args, data);
+    g_return_if_fail(run & MARK_RUN_MODES);
+    mark_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        mark_dialog(&args, data);
         mark_save_args(gwy_app_settings_get(), &args);
     }
     else
         mark_ok(NULL, &args, data);
-
-    return ok;
 }
 
 static void
@@ -183,6 +175,8 @@ table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
     (*row)++;
 }
 
+/* FIXME: What is the return value good for when mark_dialog() does all the
+ * work itself? */
 static gboolean
 mark_dialog(MarkArgs *args, GwyContainer *data)
 {

@@ -21,17 +21,15 @@
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define SLOPE_DIST_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define SLOPE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     MAX_OUT_SIZE = 1024
@@ -43,7 +41,6 @@ typedef enum {
     SLOPE_DIST_LAST
 } SlopeOutput;
 
-/* Data for this function. */
 typedef struct {
     SlopeOutput output_type;
     gint size;
@@ -61,7 +58,7 @@ typedef struct {
 } SlopeControls;
 
 static gboolean      module_register              (const gchar *name);
-static gboolean      slope_dist                   (GwyContainer *data,
+static void          slope_dist                   (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean      slope_dialog                 (SlopeArgs *args);
 static void          slope_dialog_update_controls (SlopeControls *controls,
@@ -91,7 +88,7 @@ static void          save_args                    (GwyContainer *container,
                                                    SlopeArgs *args);
 static void          sanitize_args                (SlopeArgs *args);
 
-SlopeArgs slope_defaults = {
+static const SlopeArgs slope_defaults = {
     SLOPE_DIST_2D_DIST,
     200,
     FALSE,
@@ -99,7 +96,6 @@ SlopeArgs slope_defaults = {
     5,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -111,8 +107,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -123,7 +117,7 @@ module_register(const gchar *name)
         N_("/_Statistics/_Slope Distribution..."),
         (GwyProcessFunc)&slope_dist,
         SLOPE_DIST_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &slope_dist_func_info);
@@ -131,7 +125,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 slope_dist(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
@@ -140,45 +134,41 @@ slope_dist(GwyContainer *data, GwyRunType run)
     const guchar *pal = NULL;
     gboolean ok;
 
-    g_return_val_if_fail(run & SLOPE_DIST_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = slope_defaults;
-    else
-        load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || slope_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    g_return_if_fail(run & SLOPE_DIST_RUN_MODES);
+    load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = slope_dialog(&args);
         save_args(gwy_app_settings_get(), &args);
-    if (ok) {
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        switch (args.output_type) {
-            case SLOPE_DIST_2D_DIST:
-            gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-            dfield = slope_do(dfield, &args);
-            data = gwy_container_new();
-            gwy_container_set_object_by_name(data, "/0/data", dfield);
-            g_object_unref(dfield);
-            if (pal)
-                gwy_container_set_string_by_name(data, "/0/base/palette",
-                                                 g_strdup(pal));
-
-            data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             _("Slope"));
-            g_object_unref(data);
-            break;
-
-            case SLOPE_DIST_GRAPH:
-            slope_do_graph(data, &args);
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
+        if (!ok)
+            return;
     }
 
-    return FALSE;
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    switch (args.output_type) {
+        case SLOPE_DIST_2D_DIST:
+        gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
+        dfield = slope_do(dfield, &args);
+        data = gwy_container_new();
+        gwy_container_set_object_by_name(data, "/0/data", dfield);
+        g_object_unref(dfield);
+        if (pal)
+            gwy_container_set_string_by_name(data, "/0/base/palette",
+                                             g_strdup(pal));
+
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                         _("Slope"));
+        g_object_unref(data);
+        break;
+
+        case SLOPE_DIST_GRAPH:
+        slope_do_graph(data, &args);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
 }
 
 static gboolean

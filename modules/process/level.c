@@ -26,20 +26,18 @@
 #include <libprocess/stats.h>
 #include <app/gwyapp.h>
 
-#define LEVEL_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define LEVEL_RUN_MODES GWY_RUN_IMMEDIATE
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    level                      (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    level_rotate               (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    fix_zero                   (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    zero_mean                  (GwyContainer *data,
-                                               GwyRunType run);
+static gboolean module_register(const gchar *name);
+static void     level          (GwyContainer *data,
+                                GwyRunType run);
+static void     level_rotate   (GwyContainer *data,
+                                GwyRunType run);
+static void     fix_zero       (GwyContainer *data,
+                                GwyRunType run);
+static void     zero_mean      (GwyContainer *data,
+                                GwyRunType run);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -51,8 +49,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -63,28 +59,28 @@ module_register(const gchar *name)
         N_("/_Level/_Level"),
         (GwyProcessFunc)&level,
         LEVEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
         N_("/_Level/Level _Rotate"),
         (GwyProcessFunc)&level_rotate,
         LEVEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo fix_zero_func_info = {
         "fix_zero",
         N_("/_Level/Fix _Zero"),
         (GwyProcessFunc)&fix_zero,
         LEVEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo zero_mean_func_info = {
         "zero_mean",
         N_("/_Level/Zero _Mean Value"),
         (GwyProcessFunc)&zero_mean,
         LEVEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &level_func_info);
@@ -95,13 +91,13 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     gdouble c, bx, by;
 
-    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    g_return_if_fail(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_fit_plane(dfield, &c, &bx, &by);
@@ -109,17 +105,15 @@ level(GwyContainer *data, GwyRunType run)
               + by*gwy_data_field_get_yres(dfield));
     gwy_data_field_plane_level(dfield, c, bx, by);
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
-static gboolean
+static void
 level_rotate(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     gdouble a, bx, by;
 
-    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    g_return_if_fail(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_fit_plane(dfield, &a, &bx, &by);
@@ -130,36 +124,30 @@ level_rotate(GwyContainer *data, GwyRunType run)
     gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
               bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
-static gboolean
+static void
 fix_zero(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    g_return_if_fail(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_min(dfield));
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
-static gboolean
+static void
 zero_mean(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    g_return_if_fail(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

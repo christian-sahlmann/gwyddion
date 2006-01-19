@@ -19,18 +19,15 @@
  */
 
 #include "config.h"
-#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define FFT_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define FFT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef enum {
     GWY_FFT_OUTPUT_REAL_IMG   = 0,
@@ -56,7 +53,7 @@ typedef struct {
 } FFTControls;
 
 static gboolean module_register    (const gchar *name);
-static gboolean fft                (GwyContainer *data,
+static void     fft                (GwyContainer *data,
                                     GwyRunType run);
 static void     fft_create_output  (GwyContainer *data,
                                     GwyDataField *dfield,
@@ -78,16 +75,13 @@ static void     fft_save_args      (GwyContainer *container,
                                     FFTArgs *args);
 static void     fft_sanitize_args  (FFTArgs *args);
 
-
-
-FFTArgs fft_defaults = {
+static const FFTArgs fft_defaults = {
     0,
     GWY_INTERPOLATION_BILINEAR,
     GWY_WINDOWING_HANN,
     GWY_FFT_OUTPUT_MOD,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -98,8 +92,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -110,7 +102,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/_2D FFT..."),
         (GwyProcessFunc)&fft,
         FFT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &fft_func_info);
@@ -118,7 +110,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 fft(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
@@ -129,7 +121,7 @@ fft(GwyContainer *data, GwyRunType run)
     gint xsize, ysize, newsize;
     gdouble newreals;
 
-    g_assert(run & FFT_RUN_MODES);
+    g_return_if_fail(run & FFT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -142,19 +134,15 @@ fft(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), "FFT");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-
-        return FALSE;
     }
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = fft_defaults;
-    else
-        fft_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || fft_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    fft_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = fft_dialog(&args);
         fft_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     dfield = gwy_data_field_duplicate(dfield);
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
@@ -221,8 +209,6 @@ fft(GwyContainer *data, GwyRunType run)
     g_object_unref(dfield);
     g_object_unref(raout);
     g_object_unref(ipout);
-
-    return FALSE;
 }
 
 static void

@@ -28,9 +28,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
-#define TIP_CERTAINTY_MAP_RUN_MODES \
-    (GWY_RUN_MODAL)
-
+#define TIP_CERTAINTY_MAP_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
     GwyDataWindow *win1;
@@ -38,7 +36,7 @@ typedef struct {
 } TipCertaintyMapArgs;
 
 static gboolean   module_register                    (const gchar *name);
-static gboolean   tip_certainty_map                  (GwyContainer *data,
+static void       tip_certainty_map                  (GwyContainer *data,
                                                       GwyRunType run);
 static GtkWidget* tip_certainty_map_window_construct (TipCertaintyMapArgs *args);
 static void       tip_certainty_map_data_cb          (GtkWidget *item);
@@ -47,12 +45,6 @@ static gboolean   tip_certainty_map_check            (TipCertaintyMapArgs *args,
 static gboolean   tip_certainty_map_do               (TipCertaintyMapArgs *args);
 static GtkWidget* tip_certainty_map_data_option_menu (GwyDataWindow **operand);
 
-
-static const TipCertaintyMapArgs tip_certainty_map_defaults = {
-    NULL, NULL,
-};
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -63,8 +55,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -75,7 +65,7 @@ module_register(const gchar *name)
         N_("/_Tip/_Certainty Map..."),
         (GwyProcessFunc)&tip_certainty_map,
         TIP_CERTAINTY_MAP_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &tip_certainty_map_func_info);
@@ -84,7 +74,7 @@ module_register(const gchar *name)
 }
 
 /* FIXME: we ignore the Container argument and use current data window */
-static gboolean
+static void
 tip_certainty_map(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *tip_certainty_map_window;
@@ -92,7 +82,7 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
     GwyContainer *settings;
     gboolean ok = FALSE;
 
-    g_return_val_if_fail(run & TIP_CERTAINTY_MAP_RUN_MODES, FALSE);
+    g_return_if_fail(run & TIP_CERTAINTY_MAP_RUN_MODES);
     settings = gwy_app_settings_get();
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
@@ -121,8 +111,6 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
             break;
         }
     } while (!ok);
-
-    return FALSE;
 }
 
 static GtkWidget*

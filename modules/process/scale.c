@@ -25,13 +25,10 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define SCALE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define SCALE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-/* Data for this function. */
 typedef struct {
     gdouble ratio;
     GwyInterpolationType interp;
@@ -50,7 +47,7 @@ typedef struct {
 } ScaleControls;
 
 static gboolean    module_register           (const gchar *name);
-static gboolean    scale                     (GwyContainer *data,
+static void        scale                     (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    scale_dialog              (ScaleArgs *args);
 static void        scale_changed_cb          (GtkAdjustment *adj,
@@ -67,14 +64,13 @@ static void        scale_load_args           (GwyContainer *container,
 static void        scale_save_args           (GwyContainer *container,
                                               ScaleArgs *args);
 
-ScaleArgs scale_defaults = {
+static const ScaleArgs scale_defaults = {
     1.0,
     GWY_INTERPOLATION_BILINEAR,
     0,
     0,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -85,8 +81,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -97,7 +91,7 @@ module_register(const gchar *name)
         N_("/_Basic Operations/Scale..."),
         (GwyProcessFunc)&scale,
         SCALE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &scale_func_info);
@@ -105,7 +99,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 scale(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
@@ -113,19 +107,17 @@ scale(GwyContainer *data, GwyRunType run)
     ScaleArgs args;
     gboolean ok;
 
-    g_return_val_if_fail(run & SCALE_RUN_MODES, FALSE);
+    g_return_if_fail(run & SCALE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = scale_defaults;
-    else
-        scale_load_args(gwy_app_settings_get(), &args);
+    scale_load_args(gwy_app_settings_get(), &args);
     args.xres = gwy_data_field_get_xres(dfield);
     args.yres = gwy_data_field_get_yres(dfield);
-    ok = (run != GWY_RUN_MODAL) || scale_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = scale_dialog(&args);
         scale_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     data = gwy_container_duplicate(data);
     gwy_app_clean_up_data(data);
@@ -148,8 +140,6 @@ scale(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(data);
-
-    return FALSE;
 }
 
 static gboolean

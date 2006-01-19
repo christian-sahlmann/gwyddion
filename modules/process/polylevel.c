@@ -25,18 +25,14 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/undo.h>
+#include <app/gwyapp.h>
 
-#define POLYLEVEL_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define POLYLEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     MAX_DEGREE = 5
 };
 
-/* Data for this function. */
 typedef struct {
     gint col_degree;
     gint row_degree;
@@ -54,7 +50,7 @@ typedef struct {
 } PolyLevelControls;
 
 static gboolean module_register                  (const gchar *name);
-static gboolean poly_level                       (GwyContainer *data,
+static void     poly_level                       (GwyContainer *data,
                                                   GwyRunType run);
 static void     poly_level_do                    (GwyContainer *data,
                                                   PolyLevelArgs *args);
@@ -73,14 +69,13 @@ static void     save_args                        (GwyContainer *container,
                                                   PolyLevelArgs *args);
 static void     sanitize_args                    (PolyLevelArgs *args);
 
-PolyLevelArgs poly_level_defaults = {
+static const PolyLevelArgs poly_level_defaults = {
     3,
     3,
     FALSE,
     TRUE,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -91,19 +86,17 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo poly_level_func_info = {
-        "poly_level",
+        "polylevel",
         N_("/_Level/_Polynomial Background..."),
         (GwyProcessFunc)&poly_level,
         POLYLEVEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &poly_level_func_info);
@@ -111,25 +104,21 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 poly_level(GwyContainer *data, GwyRunType run)
 {
     PolyLevelArgs args;
     gboolean ok;
 
-    g_return_val_if_fail(run & POLYLEVEL_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = poly_level_defaults;
-    else
-        load_args(gwy_app_settings_get(), &args);
-
-    ok = (run != GWY_RUN_MODAL) || poly_level_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    g_return_if_fail(run & POLYLEVEL_RUN_MODES);
+    load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = poly_level_dialog(&args);
         save_args(gwy_app_settings_get(), &args);
-    if (ok)
-        poly_level_do(data, &args);
-
-    return ok;
+        if (!ok)
+            return;
+    }
+    poly_level_do(data, &args);
 }
 
 static void

@@ -26,17 +26,14 @@
 #include <libprocess/correct.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define UNROTATE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define UNROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 120
 };
 
-/* Data for this function. */
 typedef struct {
     GwyInterpolationType interp;
     GwyPlaneSymmetry symmetry;
@@ -55,7 +52,7 @@ typedef struct {
 } UnrotateControls;
 
 static gboolean         module_register          (const gchar *name);
-static gboolean         unrotate                 (GwyContainer *data,
+static void             unrotate                 (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean         unrotate_dialog          (UnrotateArgs *args,
                                                   GwyContainer *data,
@@ -73,12 +70,11 @@ static void             save_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
 static void             sanitize_args            (UnrotateArgs *args);
 
-UnrotateArgs unrotate_defaults = {
+static const UnrotateArgs unrotate_defaults = {
     GWY_INTERPOLATION_BILINEAR,
     GWY_SYMMETRY_AUTO,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -90,8 +86,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -102,7 +96,7 @@ module_register(const gchar *name)
         N_("/_Correct Data/_Unrotate..."),
         (GwyProcessFunc)&unrotate,
         UNROTATE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &unrotate_func_info);
@@ -110,7 +104,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 unrotate(GwyContainer *data, GwyRunType run)
 {
     enum { nder = 4800 };
@@ -121,44 +115,40 @@ unrotate(GwyContainer *data, GwyRunType run)
     GwyPlaneSymmetry symm;
     GwyDataLine *derdist;
     gdouble phi;
-    gboolean ok;
+    gboolean ok = TRUE;
 
-    g_return_val_if_fail(run & UNROTATE_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = unrotate_defaults;
-    else
-        load_args(gwy_app_settings_get(), &args);
+    g_return_if_fail(run & UNROTATE_RUN_MODES);
 
+    load_args(gwy_app_settings_get(), &args);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     derdist = GWY_DATA_LINE(gwy_data_line_new(nder, 2*G_PI, FALSE));
     gwy_data_field_slope_distribution(dfield, derdist, 5);
     symm = gwy_data_field_unrotate_find_corrections(derdist, correction);
     g_object_unref(derdist);
 
-    ok = (run != GWY_RUN_MODAL)
-         || unrotate_dialog(&args, data, correction, symm);
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = unrotate_dialog(&args, data, correction, symm);
         save_args(gwy_app_settings_get(), &args);
-    if (ok) {
-        if (args.symmetry)
-            symm = args.symmetry;
-        phi = correction[symm];
-        data = gwy_container_duplicate(data);
-        gwy_app_clean_up_data(data);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-
-        gwy_data_field_rotate(dfield, phi, args.interp);
-        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-            gwy_data_field_rotate(dfield, phi, args.interp);
-        if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-            gwy_data_field_rotate(dfield, phi, args.interp);
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-        g_object_unref(data);
+        if (!ok)
+            return;
     }
 
-    return FALSE;
+    if (args.symmetry)
+        symm = args.symmetry;
+    phi = correction[symm];
+    data = gwy_container_duplicate(data);
+    gwy_app_clean_up_data(data);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                             "/0/data"));
+
+    gwy_data_field_rotate(dfield, phi, args.interp);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+        gwy_data_field_rotate(dfield, phi, args.interp);
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+        gwy_data_field_rotate(dfield, phi, args.interp);
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    g_object_unref(data);
 }
 
 /* create a smaller copy of data */

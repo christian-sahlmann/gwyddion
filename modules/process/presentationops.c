@@ -25,25 +25,22 @@
 #include <libprocess/filters.h>
 #include <app/gwyapp.h>
 
-#define PRESENTATIONOPS_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define PRESENTATIONOPS_RUN_MODES GWY_RUN_IMMEDIATE
 
-#define PRESENTATION_ATTACH_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define PRESENTATION_ATTACH_RUN_MODES GWY_RUN_INTERACTIVE
 
 static gboolean module_register           (const gchar *name);
-static gboolean presentation_remove       (GwyContainer *data,
+static void     presentation_remove       (GwyContainer *data,
                                            GwyRunType run);
-static gboolean presentation_extract      (GwyContainer *data,
+static void     presentation_extract      (GwyContainer *data,
                                            GwyRunType run);
-static gboolean presentation_attach       (GwyContainer *data,
+static void     presentation_attach       (GwyContainer *data,
                                            GwyRunType run);
 static void     presentation_attach_do    (GwyContainer *source,
                                            GwyContainer *target);
 static gboolean presentation_attach_filter(GwyDataWindow *source,
                                            gpointer user_data);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -54,8 +51,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -66,21 +61,21 @@ module_register(const gchar *name)
         N_("/_Display/_Remove Presentation"),
         (GwyProcessFunc)&presentation_remove,
         PRESENTATIONOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_SHOW,
+        GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo presentation_extract_func_info = {
         "presentation_extract",
         N_("/_Display/E_xtract Presentation"),
         (GwyProcessFunc)&presentation_extract,
         PRESENTATIONOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_SHOW,
+        GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo presentation_attach_func_info = {
         "presentation_attach",
         N_("/_Display/_Attach Presentation..."),
         (GwyProcessFunc)&presentation_attach,
         PRESENTATION_ATTACH_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &presentation_remove_func_info);
@@ -90,31 +85,29 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 presentation_remove(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_return_val_if_fail(run & PRESENTATIONOPS_RUN_MODES, FALSE);
+    g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
-    g_return_val_if_fail(dfield, FALSE);
+    g_return_if_fail(dfield);
 
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     gwy_container_remove_by_name(data, "/0/show");
-
-    return TRUE;
 }
 
-static gboolean
+static void
 presentation_extract(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield;
     const guchar *pal = NULL;
 
-    g_return_val_if_fail(run & PRESENTATIONOPS_RUN_MODES, FALSE);
-    dfield = gwy_container_get_object_by_name(data, "/0/show");
-    g_return_val_if_fail(dfield, FALSE);
+    g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
+    g_return_if_fail(dfield);
 
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     dfield = gwy_data_field_duplicate(dfield);
@@ -130,11 +123,9 @@ presentation_extract(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(data);
-
-    return FALSE;
 }
 
-static gboolean
+static void
 presentation_attach(GwyContainer *data,
                     GwyRunType run)
 {
@@ -143,7 +134,7 @@ presentation_attach(GwyContainer *data,
     GwyDataWindow *source;
     gint row, response;
 
-    g_return_val_if_fail(run & PRESENTATION_ATTACH_RUN_MODES, FALSE);
+    g_return_if_fail(run & PRESENTATION_ATTACH_RUN_MODES);
     source = gwy_app_data_window_get_current();
 
     dialog = gtk_dialog_new_with_buttons(_("Attach Presentation"), NULL, 0,
@@ -182,7 +173,7 @@ presentation_attach(GwyContainer *data,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -198,8 +189,6 @@ presentation_attach(GwyContainer *data,
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
-
-    return TRUE;
 }
 
 static gboolean

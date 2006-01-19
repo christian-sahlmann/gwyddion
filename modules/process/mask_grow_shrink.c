@@ -26,14 +26,12 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define MASK_GROW_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define MASK_GROW_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     MAX_AMOUNT = 1024
 };
 
-/* Data for this function. */
 typedef struct {
     gint pixels;
 } MaskGrowArgs;
@@ -43,7 +41,7 @@ typedef struct {
 } MaskGrowControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    mask_grow                  (GwyContainer *data,
+static void        mask_grow                  (GwyContainer *data,
                                                GwyRunType run,
                                                const gchar *name);
 static gboolean    mask_grow_dialog           (MaskGrowArgs *args,
@@ -60,11 +58,10 @@ static void        mask_grow_save_args        (GwyContainer *container,
                                                MaskGrowArgs *args,
                                                const gchar *name);
 
-MaskGrowArgs mask_grow_defaults = {
+static const MaskGrowArgs mask_grow_defaults = {
     1,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -75,8 +72,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -87,14 +82,14 @@ module_register(const gchar *name)
         N_("/_Mask/_Grow Mask..."),
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK,
+        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo mask_shrink_func_info = {
         "mask_shrink",
         N_("/_Mask/_Shrink Mask..."),
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK,
+        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &mask_shrink_func_info);
@@ -103,7 +98,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
 {
     static struct {
@@ -132,33 +127,28 @@ mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
     gboolean ok;
     gsize i;
 
-    g_return_val_if_fail(run & MASK_GROW_RUN_MODES, FALSE);
+    g_return_if_fail(run & MASK_GROW_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    g_return_val_if_fail(dfield, FALSE);
+    g_return_if_fail(dfield);
 
     for (i = 0; i < G_N_ELEMENTS(grow_shrink_meta); i++) {
         if (gwy_strequal(grow_shrink_meta[i].name, name))
             break;
     }
-    g_return_val_if_fail(i < G_N_ELEMENTS(grow_shrink_meta), FALSE);
+    g_return_if_fail(i < G_N_ELEMENTS(grow_shrink_meta));
 
     settings = gwy_app_settings_get();
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = mask_grow_defaults;
-    else
-        mask_grow_load_args(settings, &args, name);
-    ok = (run != GWY_RUN_MODAL) || mask_grow_dialog(&args,
-                                                    grow_shrink_meta[i].title,
-                                                    grow_shrink_meta[i].desc);
-    if (run == GWY_RUN_MODAL)
+    mask_grow_load_args(settings, &args, name);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = mask_grow_dialog(&args,
+                              grow_shrink_meta[i].title,
+                              grow_shrink_meta[i].desc);
         mask_grow_save_args(settings, &args, name);
-    if (!ok)
-        return FALSE;
-
+        if (!ok)
+            return;
+    }
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     grow_shrink_meta[i].func(dfield, args.pixels);
-
-    return TRUE;
 }
 
 static gboolean

@@ -19,24 +19,20 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define ROTATE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define ROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 120
 };
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
 typedef struct {
     gdouble angle;
     GwyInterpolationType interp;
@@ -52,34 +48,33 @@ typedef struct {
     RotateArgs *args;
 } RotateControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    rotate                     (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    rotate_dialog              (RotateArgs *args,
-                                               GwyContainer *data);
-static void        interp_changed_cb          (GtkWidget *combo,
-                                               RotateControls *controls);
-static void        expand_changed_cb          (GtkWidget *toggle,
-                                               RotateControls *controls);
-static void        angle_changed_cb           (GtkObject *angle,
-                                               RotateControls *controls);
-static void        rotate_preview_draw        (RotateControls *controls,
-                                               RotateArgs *args);
-static void        rotate_dialog_update       (RotateControls *controls,
-                                               RotateArgs *args);
-static void        rotate_sanitize_args       (RotateArgs *args);
-static void        rotate_load_args           (GwyContainer *container,
-                                               RotateArgs *args);
-static void        rotate_save_args           (GwyContainer *container,
-                                               RotateArgs *args);
+static gboolean module_register     (const gchar *name);
+static void     rotate              (GwyContainer *data,
+                                     GwyRunType run);
+static gboolean rotate_dialog       (RotateArgs *args,
+                                     GwyContainer *data);
+static void     interp_changed_cb   (GtkWidget *combo,
+                                     RotateControls *controls);
+static void     expand_changed_cb   (GtkWidget *toggle,
+                                     RotateControls *controls);
+static void     angle_changed_cb    (GtkObject *angle,
+                                     RotateControls *controls);
+static void     rotate_preview_draw (RotateControls *controls,
+                                     RotateArgs *args);
+static void     rotate_dialog_update(RotateControls *controls,
+                                     RotateArgs *args);
+static void     rotate_sanitize_args(RotateArgs *args);
+static void     rotate_load_args    (GwyContainer *container,
+                                     RotateArgs *args);
+static void     rotate_save_args    (GwyContainer *container,
+                                     RotateArgs *args);
 
-RotateArgs rotate_defaults = {
+static const RotateArgs rotate_defaults = {
     0.0,
     GWY_INTERPOLATION_BILINEAR,
     FALSE,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -90,8 +85,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -102,7 +95,7 @@ module_register(const gchar *name)
         N_("/_Basic Operations/Rotate by _Angle..."),
         (GwyProcessFunc)&rotate,
         ROTATE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &rotate_func_info);
@@ -146,7 +139,7 @@ rotate_datafield(GwyDataField *dfield,
     g_object_unref(df);
 }
 
-static gboolean
+static void
 rotate(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
@@ -154,17 +147,15 @@ rotate(GwyContainer *data, GwyRunType run)
     RotateArgs args;
     gboolean ok;
 
-    g_return_val_if_fail(run & ROTATE_RUN_MODES, FALSE);
+    g_return_if_fail(run & ROTATE_RUN_MODES);
     dfield = gwy_container_get_object_by_name(data, "/0/data");
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = rotate_defaults;
-    else
-        rotate_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || rotate_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
+    rotate_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = rotate_dialog(&args, data);
         rotate_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     data = gwy_container_duplicate(data);
     gwy_app_clean_up_data(data);
@@ -178,8 +169,6 @@ rotate(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(data);
-
-    return FALSE;
 }
 
 /* create a smaller copy of data */

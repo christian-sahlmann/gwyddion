@@ -19,23 +19,19 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/correct.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
 #include <app/gwyapp.h>
 
-#define OUTLIERS_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define OUTLIERS_RUN_MODES GWY_RUN_IMMEDIATE
 
-
-static gboolean    module_register            (const gchar *name);
-static gboolean    outliers                   (GwyContainer *data,
-                                               GwyRunType run);
+static gboolean module_register(const gchar *name);
+static void     outliers       (GwyContainer *data,
+                                GwyRunType run);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -60,7 +56,7 @@ module_register(const gchar *name)
         N_("/_Correct Data/_Mask of Outliers"),
         (GwyProcessFunc)&outliers,
         OUTLIERS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &outliers_func_info);
@@ -68,13 +64,13 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 outliers(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *maskfield;
-    gdouble thresh;
+    gdouble thresh = 3.0;
 
-    g_assert(run & OUTLIERS_RUN_MODES);
+    g_return_if_fail(run & OUTLIERS_RUN_MODES);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
@@ -83,14 +79,8 @@ outliers(GwyContainer *data, GwyRunType run)
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         g_object_unref(maskfield);
     }
-
-    thresh = 3.0;
     gwy_data_field_mask_outliers(dfield, maskfield, thresh);
     gwy_data_field_data_changed(maskfield);
-
-    return TRUE;
 }
 
-
-
-
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -29,15 +28,13 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define TIP_BLIND_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define TIP_BLIND_RUN_MODES GWY_RUN_IMMEDIATE
 
 enum {
     MIN_RES = 3,
     MAX_RES = 128
 };
 
-/* Data for this function. */
 typedef struct {
     gint xres;
     gint yres;
@@ -71,7 +68,7 @@ typedef struct {
 } TipBlindControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    tip_blind                  (GwyContainer *data,
+static void        tip_blind                  (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    tip_blind_dialog           (TipBlindArgs *args,
                                                GwyContainer *data);
@@ -110,7 +107,7 @@ static void        prepare_fields             (GwyDataField *tipfield,
                                                gint xres,
                                                gint yres);
 
-TipBlindArgs tip_blind_defaults = {
+static const TipBlindArgs tip_blind_defaults = {
     10,
     10,
     1e-10,
@@ -119,7 +116,6 @@ TipBlindArgs tip_blind_defaults = {
     NULL,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -130,8 +126,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -142,7 +136,7 @@ module_register(const gchar *name)
         N_("/_Tip/_Blind estimation..."),
         (GwyProcessFunc)&tip_blind,
         TIP_BLIND_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &tip_blind_func_info);
@@ -150,21 +144,19 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 tip_blind(GwyContainer *data, GwyRunType run)
 {
     TipBlindArgs args;
 
-    g_assert(run & TIP_BLIND_RUN_MODES);
-
+    g_return_if_fail(run & TIP_BLIND_RUN_MODES);
     tip_blind_load_args(gwy_app_settings_get(), &args);
     tip_blind_dialog(&args, data);
     tip_blind_save_args(gwy_app_settings_get(), &args);
-
-    return FALSE;
 }
 
-
+/* FIXME: What is the return value good for when tip_blind_dialog() does all
+ * the work itself? */
 static gboolean
 tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 {

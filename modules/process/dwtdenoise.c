@@ -19,9 +19,9 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
@@ -29,14 +29,10 @@
 #include <libprocess/dwt.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define DWT_DENOISE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define DWT_DENOISE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
 typedef struct {
     gboolean preserve;
     GwyInterpolationType interp;
@@ -52,7 +48,7 @@ typedef struct {
 } DWTDenoiseControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    dwt_denoise                (GwyContainer *data,
+static void        dwt_denoise                (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    dwt_denoise_dialog         (DWTDenoiseArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
@@ -65,7 +61,7 @@ static void        dwt_denoise_save_args      (GwyContainer *container,
                                                DWTDenoiseArgs *args);
 static void        dwt_denoise_sanitize_args  (DWTDenoiseArgs *args);
 
-DWTDenoiseArgs dwt_denoise_defaults = {
+static const DWTDenoiseArgs dwt_denoise_defaults = {
     0,
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
@@ -95,7 +91,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/DWT De_noise..."),
         (GwyProcessFunc)&dwt_denoise,
         DWT_DENOISE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &dwt_denoise_func_info);
@@ -103,7 +99,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 dwt_denoise(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window, *dialog;
@@ -113,7 +109,7 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint xsize, ysize, newsize;
 
-    g_assert(run & DWT_DENOISE_RUN_MODES);
+    g_return_if_fail(run & DWT_DENOISE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -126,19 +122,15 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), _("DWT Denoise"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-
-        return FALSE;
     }
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_denoise_defaults;
-    else
-        dwt_denoise_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_denoise_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    dwt_denoise_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = dwt_denoise_dialog(&args);
         dwt_denoise_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     data = gwy_container_duplicate_by_prefix(data,
                                              "/0/data",
@@ -162,11 +154,8 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      _("DWT Denoise"));
     g_object_unref(data);
-
     g_object_unref(wtcoefs);
-    return FALSE;
 }
-
 
 static gboolean
 dwt_denoise_dialog(DWTDenoiseArgs *args)

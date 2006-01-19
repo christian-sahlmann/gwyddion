@@ -19,9 +19,8 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
@@ -29,11 +28,9 @@
 #include <libprocess/dwt.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define DWT_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define DWT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 /* Data for this function. */
 typedef struct {
@@ -49,7 +46,7 @@ typedef struct {
 } DWTControls;
 
 static gboolean module_register    (const gchar *name);
-static gboolean dwt                (GwyContainer *data,
+static void     dwt                (GwyContainer *data,
                                     GwyRunType run);
 static gboolean dwt_dialog         (DWTArgs *args);
 static void     preserve_changed_cb(GtkToggleButton *button,
@@ -63,7 +60,7 @@ static void     dwt_save_args      (GwyContainer *container,
 static void     dwt_sanitize_args  (DWTArgs *args);
 
 
-DWTArgs dwt_defaults = {
+static const DWTArgs dwt_defaults = {
     0,
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
@@ -92,7 +89,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/_2D DWT..."),
         (GwyProcessFunc)&dwt,
         DWT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &dwt_func_info);
@@ -100,7 +97,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 dwt(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window, *dialog;
@@ -110,7 +107,7 @@ dwt(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint xsize, ysize, newsize;
 
-    g_assert(run & DWT_RUN_MODES);
+    g_return_if_fail(run & DWT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -123,18 +120,16 @@ dwt(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), "DWT");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-        return FALSE;
+        return;
     }
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_defaults;
-    else
-        dwt_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    dwt_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = dwt_dialog(&args);
         dwt_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     data = gwy_container_duplicate_by_prefix(data,
                                              "/0/data",
@@ -151,7 +146,6 @@ dwt(GwyContainer *data, GwyRunType run)
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     gwy_data_field_dwt(dfield, wtcoefs, 1, 4);
 
-
     if (args.preserve)
         gwy_data_field_resample(dfield, xsize, ysize, args.interp);
 
@@ -160,7 +154,6 @@ dwt(GwyContainer *data, GwyRunType run)
     g_object_unref(data);
 
     g_object_unref(wtcoefs);
-    return FALSE;
 }
 
 

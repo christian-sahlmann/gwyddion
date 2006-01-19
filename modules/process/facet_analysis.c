@@ -26,7 +26,6 @@
 
 #include "config.h"
 #include <string.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -35,14 +34,12 @@
 #include <libprocess/level.h>
 #include <app/gwyapp.h>
 
-#define FACETS_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define FACETS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 320,
     /* XXX: don't change */
     FDATA_RES = 189,
-    MAX_LENGTH = 1024
 };
 
 typedef struct {
@@ -69,7 +66,7 @@ typedef struct {
 } FacetsControls;
 
 static gboolean module_register                  (const gchar *name);
-static gboolean facets_analyse                   (GwyContainer *data,
+static void     facets_analyse                   (GwyContainer *data,
                                                   GwyRunType run);
 static void     load_mask_color                  (GtkWidget *color_button,
                                                   GwyContainer *data);
@@ -135,7 +132,6 @@ static const FacetsArgs facets_defaults = {
     0.0,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -146,8 +142,6 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -158,7 +152,7 @@ module_register(const gchar *name)
         N_("/_Statistics/Facet _Analysis..."),
         (GwyProcessFunc)&facets_analyse,
         FACETS_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &facet_analysis_func_info);
@@ -167,37 +161,32 @@ module_register(const gchar *name)
 }
 
 
-static gboolean
+static void
 facets_analyse(GwyContainer *data, GwyRunType run)
 {
     GwyContainer *fdata;
     GwyDataField *dfield;
     FacetsArgs args;
-    gboolean ok = FALSE;
+    gboolean ok = TRUE;
 
-    g_return_val_if_fail(run & FACETS_RUN_MODES, FALSE);
-    g_return_val_if_fail(g_type_from_name("GwyLayerPoint"), FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = facets_defaults;
-    else
-        facets_load_args(gwy_app_settings_get(), &args);
+    g_return_if_fail(run & FACETS_RUN_MODES);
+    g_return_if_fail(g_type_from_name("GwyLayerPoint"));
+    facets_load_args(gwy_app_settings_get(), &args);
 
     fdata = gwy_container_new();
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_facet_distribution(dfield, 3, fdata);
     args.theta0 = gwy_container_get_double_by_name(fdata, "/theta0");
     args.phi0 = gwy_container_get_double_by_name(fdata, "/phi0");
-    ok = (run != GWY_RUN_MODAL) || facets_dialog(&args, data, fdata);
-
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = facets_dialog(&args, data, fdata);
         facets_save_args(gwy_app_settings_get(), &args);
+    }
     if (ok) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         facets_do(&args, data, fdata);
     }
     g_object_unref(fdata);
-
-    return ok;
 }
 
 static GtkWidget*

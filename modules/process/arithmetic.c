@@ -31,8 +31,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
-#define ARITH_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define ARITH_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
     WIN_ARGS = 3
@@ -62,7 +61,7 @@ typedef struct {
 } ArithmeticControls;
 
 static gboolean     module_register           (const gchar *name);
-static gboolean     arithmetic                (GwyContainer *data,
+static void         arithmetic                (GwyContainer *data,
                                                GwyRunType run);
 static void         arithmetic_load_args      (GwyContainer *settings,
                                                ArithmeticArgs *args);
@@ -104,7 +103,7 @@ module_register(const gchar *name)
         N_("/M_ultidata/_Arithmetic..."),
         (GwyProcessFunc)&arithmetic,
         ARITH_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &arithmetic_func_info);
@@ -113,14 +112,14 @@ module_register(const gchar *name)
 }
 
 /* FIXME: we ignore the Container argument and use current data window */
-gboolean
+void
 arithmetic(GwyContainer *data, GwyRunType run)
 {
     ArithmeticArgs args;
     guint i;
     GwyContainer *settings;
 
-    g_return_val_if_fail(run & ARITH_RUN_MODES, FALSE);
+    g_return_if_fail(run & ARITH_RUN_MODES);
     settings = gwy_app_settings_get();
     for (i = 0; i < WIN_ARGS; i++)
         args.win[i] = gwy_app_data_window_get_current();
@@ -133,8 +132,6 @@ arithmetic(GwyContainer *data, GwyRunType run)
     }
     arithmetic_save_args(settings, &args);
     gwy_expr_free(args.expr);
-
-    return FALSE;
 }
 
 static gboolean

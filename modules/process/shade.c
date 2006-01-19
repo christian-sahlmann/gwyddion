@@ -19,24 +19,21 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
 #include <app/gwyapp.h>
 
-#define SHADE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define SHADE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 120
 };
 
-/* Data for this function.*/
 typedef struct {
     gdouble theta;
     gdouble phi;
@@ -53,7 +50,7 @@ typedef struct {
 } ShadeControls;
 
 static gboolean    module_register              (const gchar *name);
-static gboolean    shade                        (GwyContainer *data,
+static void        shade                        (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    shade_dialog                 (ShadeArgs *args,
                                                  GwyContainer *data);
@@ -72,12 +69,11 @@ static void        shade_save_args              (GwyContainer *container,
 static void        shade_sanitize_args          (ShadeArgs *args);
 
 
-ShadeArgs shade_defaults = {
+static const ShadeArgs shade_defaults = {
     0,
     0,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -88,8 +84,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -100,7 +94,7 @@ module_register(const gchar *name)
         N_("/_Display/_Shading..."),
         (GwyProcessFunc)&shade,
         SHADE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &shade_func_info);
@@ -108,7 +102,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 shade(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *shadefield;
@@ -116,41 +110,37 @@ shade(GwyContainer *data, GwyRunType run)
     ShadeArgs args;
     gboolean ok;
 
-    g_assert(run & SHADE_RUN_MODES);
+    g_return_if_fail(run & SHADE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = shade_defaults;
-    else
-        shade_load_args(gwy_app_settings_get(), &args);
-
-    ok = (run != GWY_RUN_MODAL) || shade_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
+    shade_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = shade_dialog(&args, data);
         shade_save_args(gwy_app_settings_get(), &args);
-    if (ok) {
-        gwy_app_undo_checkpoint(data, "/0/show", NULL);
-        siunit = gwy_si_unit_new("");
-        if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-            gwy_data_field_resample(shadefield,
-                                    gwy_data_field_get_xres(dfield),
-                                    gwy_data_field_get_yres(dfield),
-                                    GWY_INTERPOLATION_NONE);
-            gwy_data_field_set_si_unit_z(shadefield, siunit);
-        }
-        else {
-            shadefield = gwy_data_field_new_alike(dfield, FALSE);
-            gwy_data_field_set_si_unit_z(shadefield, siunit);
-            gwy_container_set_object_by_name(data, "/0/show", shadefield);
-            g_object_unref(shadefield);
-        }
-        g_object_unref(siunit);
-
-        gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
-        gwy_data_field_normalize(shadefield);
-        gwy_data_field_data_changed(shadefield);
+        if (!ok)
+            return;
     }
 
-    return ok;
+    gwy_app_undo_checkpoint(data, "/0/show", NULL);
+    siunit = gwy_si_unit_new("");
+    if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
+        gwy_data_field_resample(shadefield,
+                                gwy_data_field_get_xres(dfield),
+                                gwy_data_field_get_yres(dfield),
+                                GWY_INTERPOLATION_NONE);
+        gwy_data_field_set_si_unit_z(shadefield, siunit);
+    }
+    else {
+        shadefield = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_set_si_unit_z(shadefield, siunit);
+        gwy_container_set_object_by_name(data, "/0/show", shadefield);
+        g_object_unref(shadefield);
+    }
+    g_object_unref(siunit);
+
+    gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
+    gwy_data_field_normalize(shadefield);
+    gwy_data_field_data_changed(shadefield);
 }
 
 /* create a smaller copy of data */

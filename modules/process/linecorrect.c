@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include <string.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -29,8 +28,7 @@
 #include <libprocess/linestats.h>
 #include <app/gwyapp.h>
 
-#define LINECORR_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define LINECORR_RUN_MODES GWY_RUN_IMMEDIATE
 
 #define GOLDEN_RATIO .6180339887498948482
 
@@ -40,24 +38,23 @@ typedef struct {
     guint n;
 } MedianLineData;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    line_correct_modus         (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    line_correct_median        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    line_correct_match         (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    line_correct_step          (GwyContainer *data,
-                                               GwyRunType run);
-static gdouble     find_minima_golden         (gdouble (*func)(gdouble x,
-                                                               gpointer data),
-                                               gdouble from,
-                                               gdouble to,
-                                               gpointer data);
-static gdouble     sum_of_abs_diff            (gdouble shift,
-                                               gpointer data);
+static gboolean module_register    (const gchar *name);
+static void     line_correct_modus (GwyContainer *data,
+                                    GwyRunType run);
+static void     line_correct_median(GwyContainer *data,
+                                    GwyRunType run);
+static void     line_correct_match (GwyContainer *data,
+                                    GwyRunType run);
+static void     line_correct_step  (GwyContainer *data,
+                                    GwyRunType run);
+static gdouble  find_minima_golden (gdouble (*func)(gdouble x,
+                                    gpointer data),
+                                    gdouble from,
+                                    gdouble to,
+                                    gpointer data);
+static gdouble  sum_of_abs_diff    (gdouble shift,
+                                    gpointer data);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -68,8 +65,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -80,28 +75,28 @@ module_register(const gchar *name)
         N_("/_Correct Data/M_odus Line Correction"),
         (GwyProcessFunc)&line_correct_modus,
         LINECORR_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo line_correct_median_func_info = {
         "line_correct_median",
         N_("/_Correct Data/M_edian Line Correction"),
         (GwyProcessFunc)&line_correct_median,
         LINECORR_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo line_correct_match_func_info = {
         "line_correct_match",
         N_("/_Correct Data/Ma_tch Line Correction"),
         (GwyProcessFunc)&line_correct_match,
         LINECORR_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo line_correct_step_func_info = {
         "line_correct_step",
         N_("/_Correct Data/Ste_p Line Correction"),
         (GwyProcessFunc)&line_correct_step,
         LINECORR_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &line_correct_modus_func_info);
@@ -112,7 +107,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 line_correct_modus(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
@@ -120,13 +115,13 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     gint xres, yres, i;
     gdouble modus;
 
-    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    g_return_if_fail(run & LINECORR_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     xres = gwy_data_field_get_xres(dfield);
-    line = (GwyDataLine*)gwy_data_line_new(xres, 1.0, FALSE);
+    line = gwy_data_line_new(xres, 1.0, FALSE);
     yres = gwy_data_field_get_yres(dfield);
-    modi = (GwyDataLine*)gwy_data_line_new(yres, 1.0, FALSE);
+    modi = gwy_data_line_new(yres, 1.0, FALSE);
 
     for (i = 0; i < yres; i++) {
         gwy_data_field_get_row(dfield, line, i);
@@ -144,11 +139,9 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     g_object_unref(modi);
     g_object_unref(line);
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
-static gboolean
+static void
 line_correct_median(GwyContainer *data, GwyRunType run)
 {
     MedianLineData mldata;
@@ -157,7 +150,7 @@ line_correct_median(GwyContainer *data, GwyRunType run)
     gdouble shift, csum, mindiff, maxdiff, x;
     gdouble *d;
 
-    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    g_return_if_fail(run & LINECORR_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
@@ -185,8 +178,6 @@ line_correct_median(GwyContainer *data, GwyRunType run)
     }
     gwy_data_field_add(dfield, -csum/(xres*yres));
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
 static gdouble
@@ -252,7 +243,7 @@ sum_of_abs_diff(gdouble shift,
     return sum;
 }
 
-static gboolean
+static void
 line_correct_match(GwyContainer *data,
                    GwyRunType run)
 {
@@ -263,7 +254,7 @@ line_correct_match(GwyContainer *data,
     gdouble *d, *s, *w;
     const gdouble *a, *b;
 
-    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    g_return_if_fail(run & LINECORR_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
@@ -316,8 +307,6 @@ line_correct_match(GwyContainer *data,
     g_object_unref(shifts);
     g_free(w);
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
 static void
@@ -405,13 +394,13 @@ line_correct_step_iter(GwyDataField *dfield,
     gwy_data_field_sum_fields(dfield, dfield, mask);
 }
 
-static gboolean
+static void
 line_correct_step(GwyContainer *data,
                   GwyRunType run)
 {
     GwyDataField *dfield, *mask;
 
-    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    g_return_if_fail(run & LINECORR_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
@@ -423,8 +412,6 @@ line_correct_step(GwyContainer *data,
 
     gwy_data_field_filter_conservative(dfield, 5);
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

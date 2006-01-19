@@ -19,16 +19,15 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/grains.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define REMOVE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define REMOVE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 320
@@ -57,7 +56,7 @@ typedef struct {
 } RemoveControls;
 
 static gboolean    module_register               (const gchar *name);
-static gboolean    remove_th                     (GwyContainer *data,
+static void        remove_th                     (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean    remove_dialog                 (RemoveArgs *args,
                                                   GwyContainer *data);
@@ -88,7 +87,7 @@ static void        remove_save_args              (GwyContainer *container,
                                                   RemoveArgs *args);
 static void        remove_sanitize_args          (RemoveArgs *args);
 
-RemoveArgs remove_defaults = {
+static const RemoveArgs remove_defaults = {
     FALSE,
     50,
     50,
@@ -116,11 +115,11 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo remove_func_info = {
-        "remove_threshold",
+        "grain_rem_threshold",
         N_("/_Grains/_Remove by Threshold..."),
         (GwyProcessFunc)&remove_th,
         REMOVE_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK,
+        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &remove_func_info);
@@ -128,30 +127,22 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 remove_th(GwyContainer *data, GwyRunType run)
 {
     RemoveArgs args;
-    gboolean ok = FALSE;
+    gboolean ok;
 
-    g_assert(run & REMOVE_RUN_MODES);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = remove_defaults;
-    else
-        remove_load_args(gwy_app_settings_get(), &args);
-
-    if (!gwy_container_contains_by_name(data, "/0/mask"))
-        return FALSE;
-
-    ok = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
+    g_return_if_fail(run & REMOVE_RUN_MODES);
+    g_return_if_fail(gwy_container_contains_by_name(data, "/0/mask"));
+    remove_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = remove_dialog(&args, data);
         remove_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
-
+        if (!ok)
+            return;
+    }
     remove_th_do(&args, data);
-
-    return ok;
 }
 
 static gboolean

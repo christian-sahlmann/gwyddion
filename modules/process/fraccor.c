@@ -19,27 +19,19 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <gtk/gtk.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/fractals.h>
-#include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
 #include <app/gwyapp.h>
-#include <app/wait.h>
 
-#define FRACCOR_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define FRACCOR_RUN_MODES GWY_RUN_IMMEDIATE
 
+static gboolean module_register(const gchar *name);
+static void     fraccor        (GwyContainer *data,
+                                GwyRunType run);
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    fraccor                    (GwyContainer *data,
-                                               GwyRunType run);
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -50,8 +42,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -70,33 +60,22 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-
-static gboolean
+static void
 fraccor(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *maskfield;
 
-    g_assert(run & FRACCOR_RUN_MODES);
+    g_return_if_fail(run & FRACCOR_RUN_MODES);
 
     if (gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
-
         gwy_data_field_fractal_correction(dfield, maskfield,
                                           GWY_INTERPOLATION_BILINEAR);
-
         gwy_container_remove_by_name(data, "/0/mask");
         gwy_data_field_data_changed(dfield);
     }
-    else {
-        g_warning("There is no mask to be used for computation.");
-        return FALSE;
-
-    }
-    return TRUE;
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

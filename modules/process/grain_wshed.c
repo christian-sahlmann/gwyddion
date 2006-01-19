@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -29,14 +28,12 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define WSHED_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define WSHED_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 320
 };
 
-/* Data for this function. */
 typedef struct {
     gboolean inverted;
     gint locate_steps;
@@ -61,9 +58,9 @@ typedef struct {
 } WshedControls;
 
 static gboolean    module_register              (const gchar *name);
-static gboolean    wshed                        (GwyContainer *data,
+static void        wshed                        (GwyContainer *data,
                                                  GwyRunType run);
-static gboolean    wshed_dialog                 (WshedArgs *args,
+static void        wshed_dialog                 (WshedArgs *args,
                                                  GwyContainer *data);
 static void        mask_color_change_cb         (GtkWidget *color_button,
                                                  WshedControls *controls);
@@ -95,7 +92,7 @@ static void        wshed_save_args              (GwyContainer *container,
                                                  WshedArgs *args);
 static void        wshed_sanitize_args          (WshedArgs *args);
 
-WshedArgs wshed_defaults = {
+static const WshedArgs wshed_defaults = {
     FALSE,
     10,
     3,
@@ -104,7 +101,6 @@ WshedArgs wshed_defaults = {
     1
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -115,19 +111,17 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo wshed_func_info = {
-        "wshed_threshold",
+        "grain_wshed",
         N_("/_Grains/Mark by _Watershed..."),
         (GwyProcessFunc)&wshed,
         WSHED_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &wshed_func_info);
@@ -135,29 +129,23 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 wshed(GwyContainer *data, GwyRunType run)
 {
     WshedArgs args;
-    gboolean ok = FALSE;
 
-    g_assert(run & WSHED_RUN_MODES);
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = wshed_defaults;
-    else
-        wshed_load_args(gwy_app_settings_get(), &args);
-    if (run == GWY_RUN_NONINTERACTIVE || run == GWY_RUN_WITH_DEFAULTS)
-        ok = run_noninteractive(&args, data);
-    else if (run == GWY_RUN_MODAL) {
-        ok = wshed_dialog(&args, data);
+    g_return_if_fail(run & WSHED_RUN_MODES);
+    wshed_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_IMMEDIATE)
+        run_noninteractive(&args, data);
+    else {
+        wshed_dialog(&args, data);
         wshed_save_args(gwy_app_settings_get(), &args);
     }
-
-    return ok;
 }
 
 
-static gboolean
+static void
 wshed_dialog(WshedArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *label, *spin, *hbox;
@@ -307,7 +295,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -334,8 +322,6 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_widget_destroy(dialog);
     wshed_ok(&controls, args, data);
     g_object_unref(controls.mydata);
-
-    return controls.computed;
 }
 
 static void

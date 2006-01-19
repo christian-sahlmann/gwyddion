@@ -19,26 +19,21 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/hough.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
 #include <app/gwyapp.h>
 
-#define HOUGH_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define HOUGH_RUN_MODES GWY_RUN_IMMEDIATE
 
+static gboolean module_register(const gchar *name);
+static void     hough          (GwyContainer *data,
+                                GwyRunType run);
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    hough                   (GwyContainer *data,
-                                               GwyRunType run);
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -49,8 +44,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -61,7 +54,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/_Hough"),
         (GwyProcessFunc)&hough,
         HOUGH_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &hough_func_info);
@@ -69,16 +62,14 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 hough(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *edgefield, *result, *f1, *f2;
     GwyContainer *resdata;
     GtkWidget *data_window;
 
-    gdouble thresh;
-
-    g_assert(run & HOUGH_RUN_MODES);
+    g_return_if_fail(run & HOUGH_RUN_MODES);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     resdata = gwy_container_duplicate_by_prefix(data,
@@ -108,18 +99,16 @@ hough(GwyContainer *data, GwyRunType run)
 			      1);
     */
     gwy_data_field_hough_circle(edgefield,
-			      f1,
-			      f2,
-			      result,
-			      10);
+                                f1,
+                                f2,
+                                result,
+                                10);
 
 
     data_window = gwy_app_data_window_create(resdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      _("Hough transform"));
     g_object_unref(resdata);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

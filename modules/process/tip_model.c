@@ -19,19 +19,17 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/tip.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define TIP_MODEL_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
+#define TIP_MODEL_RUN_MODES GWY_RUN_INTERACTIVE
 
-/* Data for this function. */
 typedef struct {
     gint nsides;
     gdouble angle;
@@ -100,7 +98,7 @@ static void        radius_changed_cb               (gpointer object,
 static void        tip_model_dialog_abandon        (TipModelControls *controls);
 
 
-TipModelArgs tip_model_defaults = {
+static const TipModelArgs tip_model_defaults = {
     4,
     54.73561032,
     200e-9,
@@ -109,7 +107,6 @@ TipModelArgs tip_model_defaults = {
     NULL,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -120,8 +117,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -132,7 +127,7 @@ module_register(const gchar *name)
         N_("/_Tip/_Model Tip..."),
         (GwyProcessFunc)&tip_model,
         TIP_MODEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &tip_model_func_info);
@@ -144,27 +139,21 @@ static gboolean
 tip_model(GwyContainer *data, GwyRunType run)
 {
     TipModelArgs args;
-    gboolean ok = FALSE;
 
-    g_assert(run & TIP_MODEL_RUN_MODES);
+    g_return_if_fail(run & TIP_MODEL_RUN_MODES);
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = tip_model_defaults;
-    else
-        tip_model_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || tip_model_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
-        tip_model_save_args(gwy_app_settings_get(), &args);
-
-    return FALSE;
+    tip_model_load_args(gwy_app_settings_get(), &args);
+    tip_model_dialog(&args, data);
+    tip_model_save_args(gwy_app_settings_get(), &args);
 }
 
-
+/* FIXME: What is the return value good for when tip_model_dialog() does all
+ * the work itself? */
 static gboolean
 tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 {
     enum {
-        RESPONSE_RESET = 1,
+        RESPONSE_RESET   = 1,
         RESPONSE_PREVIEW = 2
     };
     GtkWidget *dialog, *table, *hbox, *spin;

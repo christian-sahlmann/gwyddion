@@ -29,9 +29,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
-#define NANOINDENT_ADJUST_RUN_MODES \
-    (GWY_RUN_MODAL)
-
+#define NANOINDENT_ADJUST_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
     GwyDataWindow *win1;
@@ -51,45 +49,39 @@ typedef struct {
     GtkWidget *move;
 } NanoindentAdjustControls;
 
-static gboolean   module_register               (const gchar *name);
-static gboolean   nanoindent_adjust                  (GwyContainer *data,
-                                                 GwyRunType run);
-static GtkWidget* nanoindent_adjust_window_construct (NanoindentAdjustArgs *args);
-static void       nanoindent_adjust_data_cb          (GtkWidget *item);
-static gboolean   nanoindent_adjust_check            (NanoindentAdjustArgs *args,
-                                                 GtkWidget *nanoindent_adjust_window);
-static gboolean   nanoindent_adjust_do               (NanoindentAdjustArgs *args);
-static GtkWidget* nanoindent_adjust_data_option_menu (GwyDataWindow **operand);
-
-static void        expand_changed_cb          (GtkWidget *toggle,
-                                               NanoindentAdjustArgs *args);
-static void        move_changed_cb            (GtkWidget *toggle,
-                                               NanoindentAdjustArgs *args);
-static void        rotate_changed_cb          (GtkWidget *toggle,
-                                               NanoindentAdjustArgs *args);
-
-static void        interp_changed_cb          (GtkWidget *combo,
-                                               NanoindentAdjustArgs *args);
-
-
-static GwyDataField *gwy_nanoindent_adjust           (GwyDataField *model,
-                                                      GwyDataField *sample,
-                                                      GwySetFractionFunc set_fraction,
-                                                      GwySetMessageFunc set_message,
-                                                      NanoindentAdjustArgs *args);
-
-static void        nanoindent_adjust_sanitize_args       (NanoindentAdjustArgs *args);
-static void        nanoindent_adjust_load_args           (GwyContainer *container,
-                                                          NanoindentAdjustArgs *args);
-static void        nanoindent_adjust_save_args           (GwyContainer *container,
-                                                          NanoindentAdjustArgs *args);
+static gboolean      module_register                   (const gchar *name);
+static void          nanoindent_adjust                 (GwyContainer *data,
+                                                        GwyRunType run);
+static GtkWidget*    nanoindent_adjust_window_construct(NanoindentAdjustArgs *args);
+static void          nanoindent_adjust_data_cb         (GtkWidget *item);
+static gboolean      nanoindent_adjust_check           (NanoindentAdjustArgs *args,
+                                                        GtkWidget *nanoindent_adjust_window);
+static gboolean      nanoindent_adjust_do              (NanoindentAdjustArgs *args);
+static GtkWidget*    nanoindent_adjust_data_option_menu(GwyDataWindow **operand);
+static void          expand_changed_cb                 (GtkWidget *toggle,
+                                                        NanoindentAdjustArgs *args);
+static void          move_changed_cb                   (GtkWidget *toggle,
+                                                        NanoindentAdjustArgs *args);
+static void          rotate_changed_cb                 (GtkWidget *toggle,
+                                                        NanoindentAdjustArgs *args);
+static void          interp_changed_cb                 (GtkWidget *combo,
+                                                        NanoindentAdjustArgs *args);
+static GwyDataField* gwy_nanoindent_adjust             (GwyDataField *model,
+                                                        GwyDataField *sample,
+                                                        GwySetFractionFunc set_fraction,
+                                                        GwySetMessageFunc set_message,
+                                                        NanoindentAdjustArgs *args);
+static void          nanoindent_adjust_sanitize_args   (NanoindentAdjustArgs *args);
+static void          nanoindent_adjust_load_args       (GwyContainer *container,
+                                                        NanoindentAdjustArgs *args);
+static void          nanoindent_adjust_save_args       (GwyContainer *container,
+                                                        NanoindentAdjustArgs *args);
 
 
 static const NanoindentAdjustArgs nanoindent_adjust_defaults = {
     NULL, NULL, 0, TRUE, TRUE, FALSE, TRUE
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -100,8 +92,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -112,7 +102,7 @@ module_register(const gchar *name)
         N_("/Indento_r/Ad_just..."),
         (GwyProcessFunc)&nanoindent_adjust,
         NANOINDENT_ADJUST_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &nanoindent_adjust_func_info);
@@ -121,20 +111,15 @@ module_register(const gchar *name)
 }
 
 /* FIXME: we ignore the Container argument and use current data window */
-static gboolean
+static void
 nanoindent_adjust(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *nanoindent_adjust_window;
     NanoindentAdjustArgs args;
     gboolean ok = FALSE;
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-            args = nanoindent_adjust_defaults;
-    else
-            nanoindent_adjust_load_args(gwy_app_settings_get(), &args);
-
-
-    g_return_val_if_fail(run & NANOINDENT_ADJUST_RUN_MODES, FALSE);
+    g_return_if_fail(run & NANOINDENT_ADJUST_RUN_MODES);
+    nanoindent_adjust_load_args(gwy_app_settings_get(), &args);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
     nanoindent_adjust_window = nanoindent_adjust_window_construct(&args);
@@ -163,8 +148,6 @@ nanoindent_adjust(GwyContainer *data, GwyRunType run)
             break;
         }
     } while (!ok);
-
-    return FALSE;
 }
 
 static GtkWidget*
@@ -475,9 +458,9 @@ data_field_move(GwyDataField *sample, gint xoff, gint yoff)
 
 static GwyDataField*
 gwy_nanoindent_adjust(GwyDataField *model, GwyDataField *sample,
-                                GwySetFractionFunc set_fraction,
-                                GwySetMessageFunc set_message,
-                                NanoindentAdjustArgs *args)
+                      GwySetFractionFunc set_fraction,
+                      GwySetMessageFunc set_message,
+                      NanoindentAdjustArgs *args)
 {
     gint mod_xmin, mod_ymin, sam_xmin, sam_ymin;
     gdouble angle;

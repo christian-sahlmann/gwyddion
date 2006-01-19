@@ -31,25 +31,24 @@
 #include <libgwydgets/gwygraph.h>
 #include <app/gwyapp.h>
 
-#define FFTF_1D_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define FFTF_1D_RUN_MODES GWY_RUN_INTERACTIVE
 
 #define MAX_PARAMS 4
 
 typedef enum {
-    GWY_FFTF_1D_SUPPRESS_NULL = 0,
+    GWY_FFTF_1D_SUPPRESS_NULL         = 0,
     GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD = 1
 } GwyFftf1dSuppressType;
 
 typedef enum {
-    GWY_FFTF_1D_VIEW_MARKED = 0,
+    GWY_FFTF_1D_VIEW_MARKED   = 0,
     GWY_FFTF_1D_VIEW_UNMARKED = 1
 } GwyFftf1dViewType;
 
+enum { MAX_PREV = 200 };
 
 /* Data for this function. */
 typedef struct {
-    gboolean is_inverted;
     GwyContainer *original;
     GwyContainer *result;
     GwyContainer *original_vdata;
@@ -80,7 +79,7 @@ typedef struct {
 } Fftf1dControls;
 
 static gboolean   module_register         (const gchar *name);
-static gboolean   fftf_1d                 (GwyContainer *data,
+static void       fftf_1d                 (GwyContainer *data,
                                            GwyRunType run);
 static gboolean   fftf_1d_dialog          (Fftf1dArgs *args,
                                            GwyContainer *data);
@@ -113,7 +112,6 @@ static void       graph_selected          (GwyGraphArea *area,
                                            Fftf1dArgs *args);
 
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -124,12 +122,9 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* XXX XXX XXX */
+/* XXX XXX XXX XXX XXX */
 Fftf1dControls *pcontrols;
-const gint MAX_PREV = 200;
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -140,7 +135,7 @@ module_register(const gchar *name)
         N_("/_Correct Data/1D _FFT filtering..."),
         (GwyProcessFunc)&fftf_1d,
         FFTF_1D_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &fftf_1d_func_info);
@@ -148,28 +143,20 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 fftf_1d(GwyContainer *data, GwyRunType run)
 {
     Fftf1dArgs args;
-    gboolean ok;
 
-    g_assert(run & FFTF_1D_RUN_MODES);
+    g_return_if_fail(run & FFTF_1D_RUN_MODES);
 
-    args.interpolation = GWY_INTERPOLATION_BILINEAR;
-    args.direction = GTK_ORIENTATION_HORIZONTAL;
-    args.suppress = GWY_FFTF_1D_SUPPRESS_NULL;
     fftf_1d_load_args(gwy_app_settings_get(), &args);
-
-    args.is_inverted = FALSE;
-
-    ok = fftf_1d_dialog(&args, data);
+    fftf_1d_dialog(&args, data);
     fftf_1d_save_args(gwy_app_settings_get(), &args);
-
-    return FALSE;
 }
 
-
+/* FIXME: What is the return value good for when fftf_1d_dialog() does all the
+ * work itself? */
 static gboolean
 fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
 {
@@ -635,7 +622,7 @@ fftf_1d_sanitize_args(Fftf1dArgs *args)
     args->update = !!args->update;
 
     if (args->suppress == GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD)
-       args->view_type = GWY_FFTF_1D_VIEW_UNMARKED;
+        args->view_type = GWY_FFTF_1D_VIEW_UNMARKED;
 
 }
 
@@ -643,6 +630,10 @@ static void
 fftf_1d_load_args(GwyContainer *container,
                   Fftf1dArgs *args)
 {
+    args->interpolation = GWY_INTERPOLATION_BILINEAR;
+    args->direction = GTK_ORIENTATION_HORIZONTAL;
+    args->suppress = GWY_FFTF_1D_SUPPRESS_NULL;
+
     gwy_container_gis_enum_by_name(container, suppress_key, &args->suppress);
     gwy_container_gis_enum_by_name(container, view_key, &args->view_type);
     gwy_container_gis_enum_by_name(container, direction_key, &args->direction);

@@ -57,10 +57,9 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define PLUGIN_PROXY_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
+#define PLUGIN_PROXY_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef struct {
     GwyProcessFuncInfo func;
@@ -98,7 +97,7 @@ static GList*          proc_register_plugins     (GList *plugins,
                                                   const gchar *name,
                                                   const gchar *dir,
                                                   gchar *buffer);
-static gboolean        proc_plugin_proxy_run     (GwyContainer *data,
+static void            proc_plugin_proxy_run     (GwyContainer *data,
                                                   GwyRunType run,
                                                   const gchar *name);
 static ProcPluginInfo* proc_find_plugin          (const gchar *name,
@@ -164,11 +163,12 @@ static GList *proc_plugins = NULL;
 static GList *file_plugins = NULL;
 
 static const GwyEnum run_mode_names[] = {
-    { "noninteractive", GWY_RUN_NONINTERACTIVE, },
-    { "modal",          GWY_RUN_INTERACTIVE,    },
-    { "interactive",    GWY_RUN_INTERACTIVE,    },
-    { "with_defaults",  GWY_RUN_NONINTERACTIVE, },
-    { NULL,             -1,                     },
+    { "noninteractive", GWY_RUN_IMMEDIATE,   },
+    { "modal",          GWY_RUN_INTERACTIVE, },
+    { "interactive",    GWY_RUN_INTERACTIVE, },
+    { "with_defaults",  GWY_RUN_IMMEDIATE,   },
+    { "immediate",      GWY_RUN_IMMEDIATE,   },
+    { NULL,             -1,                  },
 };
 
 /* For plug-ins, save always means export */
@@ -500,7 +500,7 @@ proc_register_plugins(GList *plugins,
  *
  * Returns: Whether it succeeded running the plug-in.
  **/
-static gboolean
+static void
 proc_plugin_proxy_run(GwyContainer *data,
                       GwyRunType run,
                       const gchar *name)
@@ -517,7 +517,7 @@ proc_plugin_proxy_run(GwyContainer *data,
 
     gwy_debug("called as %s with run mode %d", name, run);
     if (!(info = proc_find_plugin(name, run)))
-        return FALSE;
+        return;
 
     fh = text_dump_export(data, &filename, NULL);
     g_return_val_if_fail(fh, FALSE);
@@ -542,15 +542,12 @@ proc_plugin_proxy_run(GwyContainer *data,
         g_warning("Cannot run plug-in %s: %s",
                   info->file,
                   err ? err->message : "it returned garbage.");
-        ok = FALSE;
     }
     g_free(args[3]);
     g_free(args[2]);
     g_clear_error(&err);
     g_free(buffer);
     g_free(filename);
-
-    return ok;
 }
 
 /**

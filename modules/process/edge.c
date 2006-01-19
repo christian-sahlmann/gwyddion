@@ -29,14 +29,12 @@
 #include <libprocess/hough.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
 #include <app/gwyapp.h>
 
-#define EDGE_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define EDGE_RUN_MODES GWY_RUN_IMMEDIATE
 
 static gboolean    module_register              (const gchar *name);
-static gboolean    edge                         (GwyContainer *data,
+static void        edge                         (GwyContainer *data,
                                                  GwyRunType run,
                                                  const gchar *name);
 static void        laplacian_do                 (GwyDataField *dfield,
@@ -77,42 +75,42 @@ module_register(const gchar *name)
         N_("/_Display/_Edge detection/_Laplacian of Gaussian"),
         (GwyProcessFunc)&edge,
         EDGE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo canny_func_info = {
         "canny",
         N_("/_Display/_Edge detection/_Canny"),
         (GwyProcessFunc)&edge,
         EDGE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo rms_func_info = {
         "rms",
         N_("/_Display/_Edge detection/_RMS"),
         (GwyProcessFunc)&edge,
         EDGE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo rms_edge_func_info = {
         "rms_edge",
         N_("/_Display/_Edge detection/RMS _Edge"),
         (GwyProcessFunc)&edge,
         EDGE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo nonlinearity_func_info = {
         "nonlinearity",
         N_("/_Display/_Edge detection/Local _Nonlinearity"),
         (GwyProcessFunc)&edge,
         EDGE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
     static GwyProcessFuncInfo hough_lines_func_info = {
         "hough_lines",
         N_("/_Display/_Edge detection/Hough L_ines"),
         (GwyProcessFunc)&edge,
         EDGE_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
 
@@ -126,13 +124,13 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 edge(GwyContainer *data, GwyRunType run, const gchar *name)
 {
     GwyDataField *dfield, *show;
     GwySIUnit *siunit;
 
-    g_return_val_if_fail(run & EDGE_RUN_MODES, FALSE);
+    g_return_if_fail(run & EDGE_RUN_MODES);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
@@ -164,15 +162,13 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         nonlinearity_do(dfield, show);
     else if (gwy_strequal(name, "hough_lines"))
         hough_lines_do(dfield, show);
-     else {
+    else {
         g_warning("Function called under unregistered name: %s", name);
         gwy_data_field_copy(dfield, show, FALSE);
     }
 
     gwy_data_field_normalize(show);
     gwy_data_field_data_changed(show);
-
-    return TRUE;
 }
 
 static void

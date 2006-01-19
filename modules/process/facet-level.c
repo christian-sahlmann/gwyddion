@@ -19,22 +19,20 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
 #include <app/gwyapp.h>
 
-#define LEVEL_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define LEVEL_RUN_MODES GWY_RUN_IMMEDIATE
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    facet_level                (GwyContainer *data,
+static void        facet_level                (GwyContainer *data,
                                                GwyRunType run);
 static void        facet_level_coeffs         (GwyDataField *dfield,
                                                gdouble *bx, gdouble *by);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -46,19 +44,17 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo facet_level_func_info = {
-        "facet_level",
+        "facet-level",
         N_("/_Level/_Facet Level"),
         (GwyProcessFunc)&facet_level,
         LEVEL_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &facet_level_func_info);
@@ -66,7 +62,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 facet_level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *old;
@@ -75,7 +71,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     gint i;
     gboolean cancelled = FALSE;
 
-    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    g_return_if_fail(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     old = dfield;
     dfield = gwy_data_field_duplicate(dfield);
@@ -114,8 +110,6 @@ facet_level(GwyContainer *data, GwyRunType run)
         gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);
-
-    return !cancelled;
 }
 
 static void

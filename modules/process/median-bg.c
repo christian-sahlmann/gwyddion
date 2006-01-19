@@ -19,23 +19,18 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/undo.h>
-#include <app/wait.h>
+#include <app/gwyapp.h>
 
-#define MEDIANBG_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define MEDIANBG_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-/* Data for this function. */
 typedef struct {
     gdouble size;
     gboolean do_extract;
@@ -52,7 +47,7 @@ typedef struct {
 } MedianBgControls;
 
 static gboolean      module_register           (const gchar *name);
-static gboolean      median                    (GwyContainer *data,
+static void          median                    (GwyContainer *data,
                                                 GwyRunType run);
 static GwyDataField* median_background         (gint size,
                                                 GwyDataField *dfield);
@@ -72,14 +67,13 @@ static void          median_load_args          (GwyContainer *container,
 static void          median_save_args          (GwyContainer *container,
                                                 MedianBgArgs *args);
 
-MedianBgArgs median_defaults = {
+static const MedianBgArgs median_defaults = {
     20,
     FALSE,
     NULL,
     0,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -90,19 +84,17 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo median_func_info = {
-        "median_bg",
+        "median-bg",
         N_("/_Level/_Median Level..."),
         (GwyProcessFunc)&median,
         MEDIANBG_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &median_func_info);
@@ -110,21 +102,18 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 median(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield, *background = NULL;
     MedianBgArgs args;
     gdouble xr, yr;
-    gboolean ok;
+    gboolean ok = TRUE;
 
-    g_return_val_if_fail(run & MEDIANBG_RUN_MODES, FALSE);
+    g_return_if_fail(run & MEDIANBG_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = median_defaults;
-    else
-        median_load_args(gwy_app_settings_get(), &args);
+    median_load_args(gwy_app_settings_get(), &args);
 
     /* FIXME: this is bogus for non-square pixels anyway */
     xr = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
@@ -137,20 +126,21 @@ median(GwyContainer *data, GwyRunType run)
               args.pixelsize, args.valform->magnitude, args.valform->precision,
               args.valform->units);
 
-    ok = (run != GWY_RUN_MODAL) || median_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = median_dialog(&args);
         median_save_args(gwy_app_settings_get(), &args);
+    }
 
     gwy_si_unit_value_format_free(args.valform);
     if (!ok)
-        return FALSE;
+        return;
 
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
                        _("Median-leveling"));
     background = median_background(ROUND(args.size), dfield);
     gwy_app_wait_finish();
     if (!background)
-        return FALSE;
+        return;
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_subtract_fields(dfield, dfield, background);
@@ -158,7 +148,7 @@ median(GwyContainer *data, GwyRunType run)
 
     if (!args.do_extract) {
         g_object_unref(background);
-        return TRUE;
+        return;
     }
 
     data = gwy_container_duplicate_by_prefix(data,
@@ -170,8 +160,6 @@ median(GwyContainer *data, GwyRunType run)
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      _("Background"));
     g_object_unref(data);
-
-    return TRUE;
 }
 
 static gboolean

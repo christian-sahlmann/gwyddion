@@ -28,9 +28,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
-#define TIP_RECONSTRUCTION_RUN_MODES \
-    (GWY_RUN_MODAL)
-
+#define TIP_RECONSTRUCTION_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
     GwyDataWindow *win1;
@@ -38,7 +36,7 @@ typedef struct {
 } TipReconstructionArgs;
 
 static gboolean   module_register                     (const gchar *name);
-static gboolean   tip_reconstruction                  (GwyContainer *data,
+static void       tip_reconstruction                  (GwyContainer *data,
                                                        GwyRunType run);
 static GtkWidget* tip_reconstruction_window_construct (TipReconstructionArgs *args);
 static void       tip_reconstruction_data_cb          (GtkWidget *item);
@@ -47,12 +45,6 @@ static gboolean   tip_reconstruction_check            (TipReconstructionArgs *ar
 static gboolean   tip_reconstruction_do               (TipReconstructionArgs *args);
 static GtkWidget* tip_reconstruction_data_option_menu (GwyDataWindow **operand);
 
-
-static const TipReconstructionArgs tip_reconstruction_defaults = {
-    NULL, NULL,
-};
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -63,8 +55,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -75,7 +65,7 @@ module_register(const gchar *name)
         N_("/_Tip/_Surface Reconstruction..."),
         (GwyProcessFunc)&tip_reconstruction,
         TIP_RECONSTRUCTION_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &tip_reconstruction_func_info);
@@ -84,14 +74,14 @@ module_register(const gchar *name)
 }
 
 /* FIXME: we ignore the Container argument and use current data window */
-static gboolean
+static void
 tip_reconstruction(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *tip_reconstruction_window;
     TipReconstructionArgs args;
     gboolean ok = FALSE;
 
-    g_return_val_if_fail(run & TIP_RECONSTRUCTION_RUN_MODES, FALSE);
+    g_return_if_fail(run & TIP_RECONSTRUCTION_RUN_MODES);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
     tip_reconstruction_window = tip_reconstruction_window_construct(&args);
@@ -119,8 +109,6 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
             break;
         }
     } while (!ok);
-
-    return FALSE;
 }
 
 static GtkWidget*

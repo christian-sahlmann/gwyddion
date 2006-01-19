@@ -19,9 +19,9 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
@@ -29,12 +29,9 @@
 #include <libprocess/dwt.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/undo.h>
+#include <app/gwyapp.h>
 
-#define DWT_ANISOTROPY_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define DWT_ANISOTROPY_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
@@ -53,7 +50,7 @@ typedef struct {
 } DWTAnisotropyControls;
 
 static gboolean module_register             (const gchar *name);
-static gboolean dwt_anisotropy              (GwyContainer *data,
+static void     dwt_anisotropy              (GwyContainer *data,
                                              GwyRunType run);
 static gboolean dwt_anisotropy_dialog       (DWTAnisotropyArgs *args);
 static void     ratio_changed_cb            (GtkAdjustment *adj,
@@ -69,7 +66,7 @@ static void     dwt_anisotropy_save_args    (GwyContainer *container,
 static void     dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args);
 
 
-DWTAnisotropyArgs dwt_anisotropy_defaults = {
+static const DWTAnisotropyArgs dwt_anisotropy_defaults = {
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
     0.2,
@@ -99,7 +96,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/DWT _Anisotropy..."),
         (GwyProcessFunc)&dwt_anisotropy,
         DWT_ANISOTROPY_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &dwt_anisotropy_func_info);
@@ -107,7 +104,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 dwt_anisotropy(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
@@ -117,7 +114,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint xsize, ysize, newsize, limit;
 
-    g_assert(run & DWT_ANISOTROPY_RUN_MODES);
+    g_return_if_fail(run & DWT_ANISOTROPY_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -130,19 +127,15 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), _("DWT Anisotropy"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-
-        return FALSE;
     }
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_anisotropy_defaults;
-    else
-        dwt_anisotropy_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_anisotropy_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    dwt_anisotropy_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = dwt_anisotropy_dialog(&args);
         dwt_anisotropy_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     mask = NULL;
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
@@ -154,8 +147,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
     if (mask)
-        gwy_data_field_resample(mask, newsize, newsize,
-                                GWY_INTERPOLATION_NONE);
+        gwy_data_field_resample(mask, newsize, newsize, GWY_INTERPOLATION_NONE);
     else {
         mask = gwy_data_field_new_alike(dfield, TRUE);
         gwy_container_set_object_by_name(data, "/0/mask", mask);
@@ -170,13 +162,10 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio,
                                               limit);
 
-    gwy_data_field_resample(mask, xsize, ysize,
-                            GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(mask, xsize, ysize, GWY_INTERPOLATION_BILINEAR);
     g_object_unref(wtcoefs);
     g_object_unref(dfield);
     gwy_data_field_data_changed(mask);
-
-    return TRUE;
 }
 
 

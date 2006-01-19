@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail:
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,14 +21,14 @@
 /* TO DO
 controls_changed => computed = FALSE
 
+in fact: rewrite from scratch.
+
 */
 
 
 #include "config.h"
 #include <string.h>
-
 #include <glib/gstdio.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -38,16 +38,12 @@ controls_changed => computed = FALSE
 #include <libprocess/level.h>
 #include <libprocess/correct.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
 #include <app/gwyapp.h>
 
 
 #define  SURE_IMPRESSION_COEFF   0.3
 
-
-#define INDENT_ANALYZE_RUN_MODES \
-    (GWY_RUN_MODAL)
+#define INDENT_ANALYZE_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
     GWY_PLANE_NONE = 0,
@@ -86,8 +82,6 @@ typedef enum {
     GWY_INDENTOR_CUBECORNER  = 6
 } GwyIndentorType;
 
-
-/* Data for this function. */
 typedef struct {
 
     gint minx;
@@ -188,13 +182,12 @@ typedef struct {
 } IndentAnalyzeControls;
 
 typedef  enum {
-        NORMAL,
-        CENTRAL,
-        DIRECTION
+    NORMAL,
+    CENTRAL,
+    DIRECTION
 } FloodFillMode;
 
-typedef struct
-{
+typedef struct {
     gdouble x,y,z;
 } GwyVec;
 
@@ -207,50 +200,66 @@ typedef struct {
 } FloodFillInfo;
 
 
-static gboolean         module_register          (const gchar *name);
-
-static gboolean         indent_analyze(GwyContainer *data, GwyRunType run);
-
-static gboolean         indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args);
-
-static void             dialog_update   (IndentAnalyzeControls *controls,
-                                                  IndentAnalyzeArgs *args);
-
-static void     set_mask_at (GwyDataField *mask, gint x, gint y, gdouble  m,  gint how );
-static void     level_data (IndentAnalyzeControls *c);
-static void     get_field_xymin(GwyDataField *dfield, gdouble *min, gint *posx, gint *posy);
-static void     get_field_xymax(GwyDataField *dfield, gdouble *max, gint *posx, gint *posy);
-static GwyVec   data_field_average_normal_vector (GwyDataField *dfield, gint x, gint y, gint r);
-static gdouble  data_field_compute_ds (GwyDataField *dfield, gint x_pos, gint y_pos);
-static void     indentmask_flood_fill (GwyDataField *indentmask, gint i, gint j,
-                                       GwyDataField *dfield, FloodFillInfo *ffi);
-static void     compute_expected_indent (IndentAnalyzeControls* c);
-
-static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls);
-static void     compute_and_preview(IndentAnalyzeControls *controls);
-static gboolean indent_analyze_ok(GwyContainer *data, IndentAnalyzeControls *controls);
-
-static void save_statistics_dialog (IndentAnalyzeControls* c);
-
-static void read_data_from_controls (IndentAnalyzeControls *c);
-static void update_data_labels (IndentAnalyzeControls *c);
-
-static void             load_args                (GwyContainer *container,
+static gboolean module_register                 (const gchar *name);
+static void     indent_analyze                  (GwyContainer *data,
+                                                 GwyRunType run);
+static gboolean indent_analyze_dialog           (GwyContainer *data,
                                                  IndentAnalyzeArgs *args);
-static void             save_args                (GwyContainer *container,
-                                                  IndentAnalyzeArgs *args);
-static void             sanitize_args            (IndentAnalyzeArgs *args);
-
-static GwyVec gwy_vec_cross (GwyVec v1, GwyVec v2);
-static gdouble gwy_vec_dot (GwyVec v1, GwyVec v2);
-static GwyVec gwy_vec_times (GwyVec v, gdouble c);
-static gdouble gwy_vec_abs (GwyVec v);
+static void     dialog_update                   (IndentAnalyzeControls *controls,
+                                                 IndentAnalyzeArgs *args);
+static void     set_mask_at                     (GwyDataField *mask,
+                                                 gint x,
+                                                 gint y,
+                                                 gdouble m,
+                                                 gint how );
+static void     level_data                      (IndentAnalyzeControls *c);
+static void     get_field_xymin                 (GwyDataField *dfield,
+                                                 gdouble *min,
+                                                 gint *posx,
+                                                 gint *posy);
+static void     get_field_xymax                 (GwyDataField *dfield,
+                                                 gdouble *max,
+                                                 gint *posx,
+                                                 gint *posy);
+static GwyVec   data_field_average_normal_vector(GwyDataField *dfield,
+                                                 gint x,
+                                                 gint y,
+                                                 gint r);
+static gdouble  data_field_compute_ds           (GwyDataField *dfield,
+                                                 gint x_pos,
+                                                 gint y_pos);
+static void     indentmask_flood_fill           (GwyDataField *indentmask,
+                                                 gint i,
+                                                 gint j,
+                                                 GwyDataField *dfield,
+                                                 FloodFillInfo *ffi);
+static void     compute_expected_indent         (IndentAnalyzeControls* c);
+static gboolean indent_analyze_do_the_hard_work (IndentAnalyzeControls *controls);
+static void     compute_and_preview             (IndentAnalyzeControls *controls);
+static gboolean indent_analyze_ok               (GwyContainer *data,
+                                                 IndentAnalyzeControls *controls);
+static void     save_statistics_dialog          (IndentAnalyzeControls* c);
+static void     read_data_from_controls         (IndentAnalyzeControls *c);
+static void     update_data_labels              (IndentAnalyzeControls *c);
+static void     load_args                       (GwyContainer *container,
+                                                 IndentAnalyzeArgs *args);
+static void     save_args                       (GwyContainer *container,
+                                                 IndentAnalyzeArgs *args);
+static void     sanitize_args                   (IndentAnalyzeArgs *args);
+static GwyVec   gwy_vec_cross                   (GwyVec v1,
+                                                 GwyVec v2);
+static gdouble  gwy_vec_dot                     (GwyVec v1,
+                                                 GwyVec v2);
+static GwyVec   gwy_vec_times                   (GwyVec v,
+                                                 gdouble c);
+static gdouble  gwy_vec_abs                     (GwyVec v);
+static gdouble  gwy_vec_cos                     (GwyVec v1,
+                                                 GwyVec v2);
+static void  gwy_vec_normalize (GwyVec *v);
 /*
 static gdouble gwy_vec_arg_phi (GwyVec v);
 static gdouble gwy_vec_arg_theta (GwyVec v);
 */
-static gdouble gwy_vec_cos (GwyVec v1, GwyVec v2);
-static void  gwy_vec_normalize (GwyVec *v);
 
 GwyEnum plane_correct_enum[] = {
     { N_("Do nothing"),   GWY_PLANE_NONE,   },
@@ -288,7 +297,6 @@ static const GwyEnum indentors[] = {
     { N_("Rockwell"),             GWY_INDENTOR_ROCKWELL,    },
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -299,8 +307,6 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -311,7 +317,7 @@ module_register(const gchar *name)
         N_("/Indento_r/_Analyze..."),
         (GwyProcessFunc)&indent_analyze,
         INDENT_ANALYZE_RUN_MODES ,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &indent_analyze_func_info);
@@ -319,27 +325,20 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 indent_analyze(GwyContainer *data, GwyRunType run)
 {
 
     IndentAnalyzeArgs args;
-    gboolean ok;
 
-    g_return_val_if_fail(run & INDENT_ANALYZE_RUN_MODES, FALSE);
-    if (run == GWY_RUN_WITH_DEFAULTS) {
-
-    }
-    else
-        load_args(gwy_app_settings_get(), &args);
-
-    ok = (run != GWY_RUN_MODAL) || indent_analyze_dialog(data, &args);
-    if (run == GWY_RUN_MODAL)
-        save_args(gwy_app_settings_get(), &args);
-
-    return TRUE;
+    g_return_if_fail(run & INDENT_ANALYZE_RUN_MODES);
+    load_args(gwy_app_settings_get(), &args);
+    indent_analyze_dialog(data, &args);
+    save_args(gwy_app_settings_get(), &args);
 }
 
+/* FIXME: What is the return value good for when indent_analyze_dialog() does
+ * all the work itself? */
 static gboolean
 indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
 {

@@ -19,27 +19,21 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
 #include <app/gwyapp.h>
-#include <app/wait.h>
 
-#define LAPLACE_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define LAPLACE_RUN_MODES GWY_RUN_IMMEDIATE
 
+static gboolean module_register(const gchar *name);
+static void     laplace        (GwyContainer *data,
+                                GwyRunType run);
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    laplace                        (GwyContainer *data,
-                                               GwyRunType run);
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -51,8 +45,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -63,7 +55,7 @@ module_register(const gchar *name)
         N_("/_Correct Data/_Remove Data Under Mask"),
         (GwyProcessFunc)&laplace,
         LAPLACE_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK,
+        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &laplace_func_info);
@@ -72,17 +64,15 @@ module_register(const gchar *name)
 }
 
 
-static gboolean
+static void
 laplace(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *maskfield, *buffer;
     gdouble error, cor, maxer, lastfrac, frac, starter;
     gint i;
 
-    g_assert(run & LAPLACE_RUN_MODES);
-
-    if (!gwy_container_contains_by_name(data, "/0/mask"))
-        return FALSE;
+    g_return_if_fail(run & LAPLACE_RUN_MODES);
+    g_return_if_fail(gwy_container_contains_by_name(data, "/0/mask"));
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -124,8 +114,6 @@ laplace(GwyContainer *data, GwyRunType run)
     gwy_container_remove_by_name(data, "/0/mask");
     g_object_unref(buffer);
     gwy_data_field_data_changed(dfield);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

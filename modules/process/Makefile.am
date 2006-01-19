@@ -37,7 +37,6 @@ process_LTLIBRARIES = \
 	maskops.la \
 	median-bg.la \
 	nanoindent_adjust.la \
-	nanoindent_analyze.la \
 	outliers.la \
 	polylevel.la \
 	presentationops.la \
@@ -165,9 +164,6 @@ grain_dist_la_LIBADD = $(module_libadd)
 hough_la_SOURCES = hough.c
 hough_la_LIBADD = $(module_libadd)
 
-#indent_analyze_la_SOURCES = indent_analyze.c
-#indent_analyze_la_LIBADD = $(module_libadd)
-
 laplace_la_SOURCES = laplace.c
 laplace_la_LIBADD = $(module_libadd)
 
@@ -183,8 +179,8 @@ local_contrast_la_LIBADD = $(module_libadd)
 nanoindent_adjust_la_SOURCES = nanoindent_adjust.c
 nanoindent_adjust_la_LIBADD = $(module_libadd)
 
-nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
-nanoindent_analyze_la_LIBADD = $(module_libadd)
+#nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
+#nanoindent_analyze_la_LIBADD = $(module_libadd)
 
 mask_grow_shrink_la_SOURCES = mask_grow_shrink.c
 mask_grow_shrink_la_LIBADD = $(module_libadd)

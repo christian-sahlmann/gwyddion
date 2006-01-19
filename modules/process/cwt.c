@@ -26,11 +26,9 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/cwt.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
-#define CWT_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define CWT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 /* Data for this function. */
 typedef struct {
@@ -48,7 +46,7 @@ typedef struct {
 } CWTControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    cwt                        (GwyContainer *data,
+static void        cwt                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    cwt_dialog                 (CWTArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
@@ -90,7 +88,7 @@ module_register(const gchar *name)
         N_("/_Integral Transforms/_2D CWT..."),
         (GwyProcessFunc)&cwt,
         CWT_RUN_MODES,
-        0,
+        GWY_MENU_FLAG_DATA,
     };
 
     gwy_process_func_register(name, &cwt_func_info);
@@ -98,7 +96,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 cwt(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window, *dialog;
@@ -108,7 +106,7 @@ cwt(GwyContainer *data, GwyRunType run)
     gint xsize, ysize;
     gint newsize;
 
-    g_assert(run & CWT_RUN_MODES);
+    g_return_if_fail(run & CWT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -121,19 +119,16 @@ cwt(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), "CWT");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-
-        return FALSE;
+        return;
     }
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = cwt_defaults;
-    else
-        cwt_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || cwt_dialog(&args);
-    if (run == GWY_RUN_MODAL)
+    cwt_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = cwt_dialog(&args);
         cwt_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
+        if (!ok)
+            return;
+    }
 
     data = gwy_container_duplicate_by_prefix(data,
                                              "/0/data",
@@ -156,8 +151,6 @@ cwt(GwyContainer *data, GwyRunType run)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     g_object_unref(data);
-
-    return FALSE;
 }
 
 
