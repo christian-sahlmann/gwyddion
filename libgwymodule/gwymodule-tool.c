@@ -22,9 +22,6 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <gtk/gtk.h>
-#include <gtk/gtkradiobutton.h>
-#include <gtk/gtktable.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodule-tool.h"
