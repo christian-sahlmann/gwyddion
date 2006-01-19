@@ -80,7 +80,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyFileFuncInfo aafm_func_info = {
-        "assing_afm",
+        "assing-afm",
         N_("Assing AFM files (.afm)"),
         (GwyFileDetectFunc)&aafm_detect,
         (GwyFileLoadFunc)&aafm_load,

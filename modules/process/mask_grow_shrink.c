@@ -352,9 +352,6 @@ mask_grow_save_args(GwyContainer *container,
 {
     gchar *s;
 
-    /* TODO: remove someday */
-    gwy_container_remove_by_name(container, pixels_key);
-
     s = g_strdup_printf(pixels_key, name);
     gwy_container_set_int32_by_name(container, s, args->pixels);
     g_free(s);

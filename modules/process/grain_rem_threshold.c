@@ -470,12 +470,12 @@ intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask
     }
 }
 
-static const gchar inverted_key[]  = "/module/remove_threshold/inverted";
-static const gchar isheight_key[]  = "/module/remove_threshold/isheight";
-static const gchar isarea_key[]    = "/module/remove_threshold/isarea";
-static const gchar height_key[]    = "/module/remove_threshold/height";
-static const gchar area_key[]      = "/module/remove_threshold/area";
-static const gchar mergetype_key[] = "/module/remove_threshold/mergetype";
+static const gchar inverted_key[]  = "/module/grain_rem_threshold/inverted";
+static const gchar isheight_key[]  = "/module/grain_rem_threshold/isheight";
+static const gchar isarea_key[]    = "/module/grain_rem_threshold/isarea";
+static const gchar height_key[]    = "/module/grain_rem_threshold/height";
+static const gchar area_key[]      = "/module/grain_rem_threshold/area";
+static const gchar mergetype_key[] = "/module/grain_rem_threshold/mergetype";
 
 static void
 remove_sanitize_args(RemoveArgs *args)

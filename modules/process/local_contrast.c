@@ -85,7 +85,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo max_local_contrast_func_info = {
-        "maximize_local_contrast",
+        "local_contrast",
         N_("/_Display/_Local Contrast..."),
         (GwyProcessFunc)&maximize_local_contrast,
         CONTRAST_RUN_MODES,

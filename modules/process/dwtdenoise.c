@@ -87,7 +87,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_denoise_func_info = {
-        "dwt_denoise",
+        "dwtdenoise",
         N_("/_Integral Transforms/DWT De_noise..."),
         (GwyProcessFunc)&dwt_denoise,
         DWT_DENOISE_RUN_MODES,
@@ -259,10 +259,10 @@ dwt_denoise_dialog_update(DWTDenoiseControls *controls,
 }
 
 
-static const gchar preserve_key[] = "/module/dwt_denoise/preserve";
-static const gchar interp_key[]   = "/module/dwt_denoise/interp";
-static const gchar wavelet_key[]  = "/module/dwt_denoise/wavelet";
-static const gchar method_key[]   = "/module/dwt_denoise/method";
+static const gchar preserve_key[] = "/module/dwtdenoise/preserve";
+static const gchar interp_key[]   = "/module/dwtdenoise/interp";
+static const gchar wavelet_key[]  = "/module/dwtdenoise/wavelet";
+static const gchar method_key[]   = "/module/dwtdenoise/method";
 
 static void
 dwt_denoise_sanitize_args(DWTDenoiseArgs *args)

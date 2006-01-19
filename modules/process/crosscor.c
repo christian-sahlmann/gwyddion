@@ -507,9 +507,6 @@ static void
 crosscor_load_args(GwyContainer *settings,
                    CrosscorArgs *args)
 {
-    /* TODO: remove this someday (old keys we used as  */
-    gwy_container_remove_by_prefix(settings, "/app/croscor");
-
     *args = crosscor_defaults;
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_int32_by_name(settings, search_x_key, &args->search_x);

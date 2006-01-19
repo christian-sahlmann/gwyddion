@@ -131,7 +131,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fftf_1d_func_info = {
-        "fftf_1d",
+        "fft_filter_1d",
         N_("/_Correct Data/1D _FFT filtering..."),
         (GwyProcessFunc)&fftf_1d,
         FFTF_1D_RUN_MODES,
@@ -606,11 +606,11 @@ interpolation_changed_cb(GtkWidget *combo,
     update_view(pcontrols, args);
 }
 
-static const gchar suppress_key[]      = "/module/fftf_1d/suppress";
-static const gchar update_key[]        = "/module/fftf_1d/update";
-static const gchar view_key[]          = "/module/fftf_1d/view";
-static const gchar direction_key[]     = "/module/fftf_1d/direction";
-static const gchar interpolation_key[] = "/module/fftf_1d/interpolation";
+static const gchar suppress_key[]      = "/module/fft_filter_1d/suppress";
+static const gchar update_key[]        = "/module/fft_filter_1d/update";
+static const gchar view_key[]          = "/module/fft_filter_1d/view";
+static const gchar direction_key[]     = "/module/fft_filter_1d/direction";
+static const gchar interpolation_key[] = "/module/fft_filter_1d/interpolation";
 
 static void
 fftf_1d_sanitize_args(Fftf1dArgs *args)

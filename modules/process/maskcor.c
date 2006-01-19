@@ -368,9 +368,6 @@ static void
 maskcor_load_args(GwyContainer *settings,
                   MaskcorArgs *args)
 {
-    /* TODO: remove this someday */
-    gwy_container_remove_by_prefix(settings, "/app/maskcor");
-
     *args = maskcor_defaults;
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_enum_by_name(settings, method_key, &args->method);

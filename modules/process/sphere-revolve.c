@@ -103,6 +103,8 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
+    /* The name mismatch is intentional, there should be a sphere_revolve
+     * function too */
     static GwyProcessFuncInfo sphrev_func_info = {
         "arc_revolve",
         N_("/_Level/Revolve _Arc..."),

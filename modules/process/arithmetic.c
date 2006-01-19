@@ -421,13 +421,6 @@ arithmetic_load_args(GwyContainer *settings,
 {
     const guchar *exprstr;
 
-    /* TODO: remove this someday */
-    gwy_container_remove_by_prefix(settings, "/app/arith");
-    gwy_container_remove_by_name(settings, "/module/arithmetic/scalar1");
-    gwy_container_remove_by_name(settings, "/module/arithmetic/scalar2");
-    gwy_container_remove_by_name(settings, "/module/arithmetic/scalar_is1");
-    gwy_container_remove_by_name(settings, "/module/arithmetic/scalar_is2");
-
     exprstr = default_expression;
     gwy_container_gis_string_by_name(settings, expression_key, &exprstr);
     args->expression = g_strdup(exprstr);

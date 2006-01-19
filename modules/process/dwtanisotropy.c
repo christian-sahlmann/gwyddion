@@ -92,7 +92,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_anisotropy_func_info = {
-        "dwt_anisotropy",
+        "dwtanisotropy",
         N_("/_Integral Transforms/DWT _Anisotropy..."),
         (GwyProcessFunc)&dwt_anisotropy,
         DWT_ANISOTROPY_RUN_MODES,
@@ -277,10 +277,10 @@ dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
 }
 
 
-static const gchar interp_key[]   = "/module/dwt_anisotropy/interp";
-static const gchar wavelet_key[]  = "/module/dwt_anisotropy/wavelet";
-static const gchar ratio_key[]    = "/module/dwt_anisotropy/ratio";
-static const gchar lowlimit_key[] = "/module/dwt_anisotropy/lowlimit";
+static const gchar interp_key[]   = "/module/dwtanisotropy/interp";
+static const gchar wavelet_key[]  = "/module/dwtanisotropy/wavelet";
+static const gchar ratio_key[]    = "/module/dwtanisotropy/ratio";
+static const gchar lowlimit_key[] = "/module/dwtanisotropy/lowlimit";
 
 static void
 dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)

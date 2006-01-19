@@ -79,7 +79,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_correction_func_info = {
-        "dwt_correction",
+        "dwtcorrection",
         N_("/_Integral Transforms/DWT C_orrection..."),
         (GwyProcessFunc)&dwt_correction,
         DWT_CORRECTION_RUN_MODES,
@@ -218,7 +218,7 @@ dwt_correction_dialog(DWTCorrectionArgs *args)
 
 static void
 dwt_correction_dialog_update(DWTCorrectionControls *controls,
-                     DWTCorrectionArgs *args)
+                             DWTCorrectionArgs *args)
 {
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
@@ -227,8 +227,8 @@ dwt_correction_dialog_update(DWTCorrectionControls *controls,
 }
 
 
-static const gchar interp_key[]  = "/module/dwt_correction/interp";
-static const gchar wavelet_key[] = "/module/dwt_correction/wavelet";
+static const gchar interp_key[]  = "/module/dwtcorrection/interp";
+static const gchar wavelet_key[] = "/module/dwtcorrection/wavelet";
 
 static void
 dwt_correction_sanitize_args(DWTCorrectionArgs *args)
@@ -240,7 +240,7 @@ dwt_correction_sanitize_args(DWTCorrectionArgs *args)
 
 static void
 dwt_correction_load_args(GwyContainer *container,
-              DWTCorrectionArgs *args)
+                         DWTCorrectionArgs *args)
 {
     *args = dwt_correction_defaults;
 
@@ -251,7 +251,7 @@ dwt_correction_load_args(GwyContainer *container,
 
 static void
 dwt_correction_save_args(GwyContainer *container,
-              DWTCorrectionArgs *args)
+                         DWTCorrectionArgs *args)
 {
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);

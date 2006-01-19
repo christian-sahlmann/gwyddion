@@ -311,7 +311,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyFileFuncInfo mdt_func_info = {
-        "mdtfile",
+        "nt-mdt",
         N_("NT-MDT files (.mdt)"),
         (GwyFileDetectFunc)&mdt_detect,
         (GwyFileLoadFunc)&mdt_load,

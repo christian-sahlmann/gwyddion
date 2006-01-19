@@ -71,7 +71,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyFileFuncInfo hitachi_func_info = {
-        "hitachi_afm",
+        "hitachi-afm",
         N_("Hitachi AFM files"),
         (GwyFileDetectFunc)&hitachi_detect,
         (GwyFileLoadFunc)&hitachi_load,
