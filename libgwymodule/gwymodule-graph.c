@@ -135,7 +135,9 @@ gwy_graph_func_run(const guchar *name,
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH(graph), FALSE);
     g_object_ref(graph);
+    _gwy_module_watch_settings(GWY_MODULE_PREFIX_GRAPH, name);
     status = func_info->info.graph(graph, name);
+    _gwy_module_unwatch_settings();
     g_object_unref(graph);
 
     return status;

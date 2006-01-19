@@ -143,19 +143,15 @@ gwy_process_func_run(const guchar *name,
                      GwyRunType run)
 {
     ProcessFuncInfo *func_info;
-    GwyDataField *dfield;
     gboolean status;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(run & func_info->info.run, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-    /* TODO: Container */
-    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
-    g_object_ref(dfield);
+    _gwy_module_watch_settings(GWY_MODULE_PREFIX_PROC, name);
     status = func_info->info.process(data, run, name);
-    g_object_unref(dfield);
+    _gwy_module_unwatch_settings();
     g_object_unref(data);
 
     return status;

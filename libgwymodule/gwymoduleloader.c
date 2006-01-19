@@ -36,9 +36,9 @@ static void gwy_load_modules_in_dir (GDir *gdir,
                                      GHashTable *mods);
 static void gwy_module_get_rid_of   (const gchar *modname);
 static void gwy_module_init         (void);
-static G_CONST_RETURN
-GwyModuleInfo* gwy_module_do_register_module(const gchar *modulename,
-                                             GHashTable *mods);
+static const GwyModuleInfo*
+gwy_module_do_register_module(const gchar *modulename,
+                              GHashTable *mods);
 
 static GHashTable *modules;
 static gboolean modules_initialized = FALSE;
@@ -309,6 +309,15 @@ gwy_module_do_register_module(const gchar *filename,
             g_warning("Module `%s' feature registration failed", iinfo->name);
             gwy_module_get_rid_of(iinfo->name);
         }
+
+        if (g_slist_length(iinfo->funcs) == 1) {
+            const gchar *x = strchr((gchar*)iinfo->funcs->data, ':') + 2;
+            if (!gwy_strequal(iinfo->name, x))
+                g_warning("Module `%s' registered only one function `%s' "
+                          "and its name differs from module name.  Usually, "
+                          "these two names should be the same.",
+                          iinfo->name, x);
+        }
     }
 
     if (ok) {
@@ -446,13 +455,93 @@ gwy_module_init(void)
  * Returns: The module info, of %NULL if not found.  It must be considered
  *          constant and never modified or freed.
  **/
-G_CONST_RETURN GwyModuleInfo*
+const GwyModuleInfo*
 gwy_module_lookup(const gchar *name)
 {
     _GwyModuleInfoInternal *iinfo;
 
     iinfo = _gwy_module_get_module_info(name);
     return iinfo ? iinfo->mod_info : NULL;
+}
+
+#include <libgwyddion/gwycontainer.h>
+static GwyContainer *watch_settings = NULL;
+static const gchar *watch_modname = NULL;
+static const gchar *watch_funcname = NULL;
+static gulong watch_id = 0;
+
+void
+gwy_module_set_settings(GwyContainer *settings)
+{
+    watch_settings = settings;
+}
+
+static void
+gwy_module_check_settings_key(G_GNUC_UNUSED GwyContainer *settings,
+                              GQuark quark)
+{
+    const gchar *key = g_quark_to_string(quark);
+
+    if (!g_str_has_prefix(key, "/module/")) {
+        g_warning("Function `%s' of module `%s' changed very strange "
+                  "settings: `%s'.",
+                  watch_funcname, watch_modname, key);
+        return;
+    }
+    key += strlen("/module/");
+    if (g_str_has_prefix(key, watch_modname)
+        && key[strlen(watch_modname)] == '/') {
+        return;
+    }
+    if (g_str_has_prefix(key, watch_funcname)
+        && key[strlen(watch_funcname)] == '/') {
+        return;
+    }
+    g_warning("Function `%s' of module `%s' changed settings `%s' that "
+              "matches neither function name nor module name.",
+              watch_funcname, watch_modname, key - strlen("/module/"));
+}
+
+static void
+set_watch(const gchar *name,
+          _GwyModuleInfoInternal *iinfo,
+          const gchar *funcname)
+{
+    GSList *l;
+
+    if (watch_modname)
+        return;
+
+    for (l = iinfo->funcs; l; l = g_slist_next(l)) {
+        if (gwy_strequal(funcname, (gchar*)l->data)) {
+            watch_modname = name;
+            return;
+        }
+    }
+}
+
+void
+_gwy_module_watch_settings(const gchar *type,
+                           const gchar *funcname)
+{
+    gchar *fullname;
+
+    fullname = g_strconcat(type, funcname, NULL);
+    g_hash_table_foreach(modules, (GHFunc)set_watch, fullname);
+    g_free(fullname);
+    g_assert(watch_modname);
+    watch_funcname = funcname;
+    watch_id = g_signal_connect(watch_settings, "item-changed",
+                                G_CALLBACK(gwy_module_check_settings_key),
+                                NULL);
+}
+
+void
+_gwy_module_unwatch_settings(void)
+{
+    g_signal_handler_disconnect(watch_settings, watch_id);
+    watch_modname = NULL;
+    watch_funcname = NULL;
 }
 
 /************************** Documentation ****************************/

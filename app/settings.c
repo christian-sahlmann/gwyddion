@@ -44,6 +44,9 @@ static const gchar *magic_header = "Gwyddion Settings 1.0\n";
 static GwyContainer *gwy_settings = NULL;
 static gboolean gwy_gl_ok = FALSE;
 
+/* XXX */
+void gwy_module_set_settings(GwyContainer *settings);
+
 /**
  * gwy_app_settings_get:
  *
@@ -191,6 +194,7 @@ gwy_app_settings_load(const gchar *filename)
     gwy_settings = new_settings;
     gwy_app_settings_set_defaults(gwy_settings);
     gwy_app_settings_apply(gwy_settings);
+    gwy_module_set_settings(gwy_settings);
 
     return TRUE;
 }

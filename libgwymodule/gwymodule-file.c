@@ -215,7 +215,9 @@ gwy_file_func_run_load(const gchar *name,
     g_return_val_if_fail(func_info, NULL);
     g_return_val_if_fail(func_info->load, NULL);
 
+    _gwy_module_watch_settings(GWY_MODULE_PREFIX_FILE, name);
     data = func_info->load(filename, mode, error, name);
+    _gwy_module_unwatch_settings();
     if (data)
         gwy_file_type_info_set(data, name, filename);
 
@@ -258,7 +260,9 @@ gwy_file_func_run_save(const gchar *name,
     g_return_val_if_fail(func_info->save, FALSE);
 
     g_object_ref(data);
+    _gwy_module_watch_settings(GWY_MODULE_PREFIX_FILE, name);
     status = func_info->save(data, filename, mode, error, name);
+    _gwy_module_unwatch_settings();
     if (status)
         gwy_file_type_info_set(data, name, filename);
     g_object_unref(data);
@@ -302,7 +306,9 @@ gwy_file_func_run_export(const gchar *name,
     g_return_val_if_fail(func_info->export_, FALSE);
 
     g_object_ref(data);
+    _gwy_module_watch_settings(GWY_MODULE_PREFIX_FILE, name);
     status = func_info->export_(data, filename, mode, error, name);
+    _gwy_module_unwatch_settings();
     g_object_unref(data);
 
     return status;

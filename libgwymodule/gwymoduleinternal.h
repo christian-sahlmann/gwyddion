@@ -74,6 +74,15 @@ void  _gwy_graph_func_set_register_callback(void (*callback)(const gchar *fullna
 G_GNUC_INTERNAL
 void  _gwy_layer_func_set_register_callback(void (*callback)(const gchar *fullname));
 
+G_GNUC_INTERNAL
+void
+_gwy_module_watch_settings(const gchar *modname,
+                           const gchar *funcname);
+
+G_GNUC_INTERNAL
+void
+_gwy_module_unwatch_settings(void);
+
 G_END_DECLS
 
 #endif /* __GWY_MODULE_INTERNAL_H__ */
