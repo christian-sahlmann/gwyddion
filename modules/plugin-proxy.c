@@ -520,7 +520,7 @@ proc_plugin_proxy_run(GwyContainer *data,
         return;
 
     fh = text_dump_export(data, &filename, NULL);
-    g_return_val_if_fail(fh, FALSE);
+    g_return_if_fail(fh);
     args[0] = info->file;
     args[2] = g_strdup(gwy_enum_to_string(run, run_mode_names, -1));
     args[3] = decode_glib_encoded_filename(filename);
