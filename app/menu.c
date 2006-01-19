@@ -308,7 +308,6 @@ gwy_app_run_process_func_in_mode(gchar *name,
     GwyDataView *data_view;
     GtkWidget *menu;
     GwyContainer *data;
-    gboolean ok;
 
     gwy_debug("`%s'", name);
     if (!(run & gwy_process_func_get_run_types(name)))
@@ -319,7 +318,7 @@ gwy_app_run_process_func_in_mode(gchar *name,
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(data);
-    ok = gwy_process_func_run(name, data, run);
+    gwy_process_func_run(name, data, run);
 
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                         "<proc>"));

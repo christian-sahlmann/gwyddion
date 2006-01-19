@@ -29,9 +29,9 @@ G_BEGIN_DECLS
 
 typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
 
-typedef gboolean       (*GwyProcessFunc)        (GwyContainer *data,
-                                                 GwyRunType run,
-                                                 const gchar *name);
+typedef void (*GwyProcessFunc)(GwyContainer *data,
+                               GwyRunType run,
+                               const gchar *name);
 
 struct _GwyProcessFuncInfo {
     const gchar *name;
@@ -43,12 +43,11 @@ struct _GwyProcessFuncInfo {
 
 gboolean       gwy_process_func_register      (const gchar *modname,
                                                GwyProcessFuncInfo *func_info);
-gboolean       gwy_process_func_run           (const guchar *name,
+void           gwy_process_func_run           (const guchar *name,
                                                GwyContainer *data,
                                                GwyRunType run);
 GwyRunType     gwy_process_func_get_run_types (const gchar *name);
-G_CONST_RETURN
-gchar*         gwy_process_func_get_menu_path (const gchar *name);
+const gchar*   gwy_process_func_get_menu_path (const gchar *name);
 GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
                                                const gchar *prefix,
                                                GCallback item_callback);

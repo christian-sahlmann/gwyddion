@@ -134,27 +134,22 @@ gwy_process_func_info_free(gpointer data)
  *
  * It guarantees the container lifetime spans through the actual processing,
  * so the module function doesn't have to care about it.
- *
- * Returns: %TRUE on success, %FALSE on failure.
  **/
-gboolean
+void
 gwy_process_func_run(const guchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {
     ProcessFuncInfo *func_info;
-    gboolean status;
 
     func_info = g_hash_table_lookup(process_funcs, name);
-    g_return_val_if_fail(run & func_info->info.run, FALSE);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    g_return_if_fail(run & func_info->info.run);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
     g_object_ref(data);
     _gwy_module_watch_settings(GWY_MODULE_PREFIX_PROC, name);
-    status = func_info->info.process(data, run, name);
+    func_info->info.process(data, run, name);
     _gwy_module_unwatch_settings();
     g_object_unref(data);
-
-    return status;
 }
 
 /**
