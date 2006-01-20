@@ -46,6 +46,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyradiobuttons.h \
 	gwyruler.h \
 	gwyscitext.h \
+	gwysensitivitygroup.h \
 	gwyshader.h \
 	gwystatusbar.h \
 	gwystock.h \
@@ -115,6 +116,7 @@ libgwydgets_la_SOURCES = \
 	gwyradiobuttons.c \
 	gwyruler.c \
 	gwyscitext.c \
+	gwysensitivitygroup.c \
 	gwyshader.c \
 	gwystatusbar.c \
 	gwystock.c \

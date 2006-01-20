@@ -61,6 +61,7 @@
 #include <libgwydgets/gwypixmaplayer.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwyruler.h>
+#include <libgwydgets/gwysensitivitygroup.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyshader.h>
 #include <libgwydgets/gwystatusbar.h>
