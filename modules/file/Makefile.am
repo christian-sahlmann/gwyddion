@@ -30,11 +30,8 @@ file_LTLIBRARIES = \
 	stpfile.la \
 	unisoku.la \
 	witfile.la \
-	wsxmfile.la
-
-#file_LTLIBRARIES = \
-#	mifile.la \
-#
+	wsxmfile.la \
+	mifile.la
 
 noinst_HEADERS = \
 	err.h \
@@ -106,8 +103,8 @@ nanoscope_la_LIBADD = $(module_libadd)
 nt_mdt_la_SOURCES = nt-mdt.c
 nt_mdt_la_LIBADD = $(module_libadd)
 
-#mifile_la_SOURCES = mifile.c
-#mifile_la_LIBADD = $(module_libadd)
+mifile_la_SOURCES = mifile.c
+mifile_la_LIBADD = $(module_libadd)
 
 pixmap_la_SOURCES = pixmap.c
 pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)

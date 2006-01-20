@@ -21,6 +21,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+ /*TODO: Make sure it can handle old beta .mi files that had "data" tag with no
+reference to BINARY or ASCII. Also, implement loading of ASCII files */
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -34,6 +37,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "err.h"
 
 #define MAGIC "fileType      Image"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
@@ -78,7 +83,9 @@ typedef struct {
 static gboolean         module_register      (const gchar *name);
 static gint             mifile_detect        (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
-static GwyContainer*    mifile_load          (const gchar *filename);
+static GwyContainer*    mifile_load          (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
 
 /* Helper Functions */
 static guint            find_data_start      (const guchar *buffer,
@@ -86,9 +93,6 @@ static guint            find_data_start      (const guchar *buffer,
                                               gboolean *isbinary);
 static guint            file_read_header     (MIFile *mifile,
                                               gchar *buffer);
-static guint            select_which_data    (MIFile *mifile);
-static void             selection_changed    (GtkWidget *button,
-                                              MIControls *controls);
 static void             read_data_field      (GwyDataField *dfield,
                                               MIData *midata,
                                               gint xres, gint yres);
@@ -98,16 +102,18 @@ static gboolean         mifile_get_double    (GHashTable *meta,
                                               gdouble *value);
 static void             process_metadata     (MIFile *mifile,
                                               guint id,
-                                              GwyContainer *container);
+                                              GwyContainer *container,
+                                              const gchar *container_key);
+
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.2.0",
+    "0.3.0",
     "Chris Anderson, Molecular Imaging Corp.",
-    "2005",
+    "2006",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -122,7 +128,8 @@ module_register(const gchar *name)
         N_("PicoView Data Files (.mi)"),
         (GwyFileDetectFunc)&mifile_detect,
         (GwyFileLoadFunc)&mifile_load,
-        NULL
+        NULL,
+        NULL,
     };
 
     gwy_file_func_register(name, &mifile_func_info);
@@ -146,10 +153,13 @@ mifile_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 }
 
 static GwyContainer*
-mifile_load(const gchar *filename)
+mifile_load(const gchar *filename,
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     MIFile *mifile;
     GwyContainer *container = NULL;
+    gchar *container_key = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -162,8 +172,7 @@ mifile_load(const gchar *filename)
 
     /* Open the file and load in its contents into "buffer" */
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
@@ -171,9 +180,8 @@ mifile_load(const gchar *filename)
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
         || size <= BINARY_DATA_MAGIC_SIZE
         || !(header_size = find_data_start(buffer, size, &isbinary))) {
-
-        g_warning("File %s is not a MI file", filename);
-        gwy_file_abandon_contents(buffer, size, NULL);
+        err_FILE_TYPE(error, "MI");
+        gwy_file_abandon_contents(buffer, size, &err);
         return NULL;
     }
 
@@ -188,31 +196,33 @@ mifile_load(const gchar *filename)
     if (ok) {
         pos = header_size;
         for (i = 0; i < mifile->n; i++) {
+            /*XXX: shouldn't this be gint16? */
             mifile->buffers[i].data = (const guint16*)(buffer + pos);
             pos += 2*mifile->xres * mifile->yres;
+
+            dfield = gwy_data_field_new(mifile->xres, mifile->yres,
+                                        1.0, 1.0, FALSE);
+            read_data_field(dfield, mifile->buffers + i,
+                            mifile->xres, mifile->yres);
+
+            if (!container)
+                container = gwy_container_new();
+
+            container_key = g_strdup_printf("/%i/data", i);
+            gwy_container_set_object_by_name(container, container_key, dfield);
+            g_object_unref(dfield);
+            process_metadata(mifile, i, container, container_key);
+            g_free(container_key);
         }
-        /* Show the buffer previews to the user, and let
-           him/her select which one to actually load */
-        i = select_which_data(mifile);
-        if (i == (guint)-1)
-            ok = FALSE;
     }
 
-    if (ok) {
-        dfield = gwy_data_field_new(mifile->xres, mifile->yres,
-                                    1.0, 1.0, FALSE);
-        read_data_field(dfield, mifile->buffers + i,
-                        mifile->xres, mifile->yres);
-    }
     gwy_file_abandon_contents(buffer, size, NULL);
-
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        g_object_unref(dfield);
-        process_metadata(mifile, i, container);
-    }
     mifile_free(mifile);
+
+    if (!container) {
+        err_NO_DATA(error);
+        return NULL;
+    }
 
     return container;
 }
@@ -277,133 +287,6 @@ file_read_header(MIFile *mifile,
     return mifile->n;
 }
 
-static guint
-select_which_data(MIFile *mifile)
-{
-    MIControls controls;
-    MIData *data;
-    GtkWidget *dialog, *label, *vbox, *hbox, *align;
-    GwyDataField *dfield;
-    GwyEnum *choices;
-    GwyPixmapLayer *layer;
-    GSList *radio, *rl;
-    guint i, b = (guint)-1;
-    const gchar *title;
-
-    if (!mifile->n)
-        return b;
-
-    if (mifile->n == 1)
-        return 0;
-
-    controls.file = mifile;
-    choices = g_new(GwyEnum, mifile->n);
-    for (i = 0; i < mifile->n; i++) {
-        data = mifile->buffers + i;
-        choices[i].value = i;
-        title = NULL;
-        title = g_strdup(data->id);
-        if (title)
-            choices[i].name = g_strdup_printf(_("Buffer %u (%s)"), i, title);
-        else
-            choices[i].name = g_strdup_printf(_("Buffer %u"), i);
-    }
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
-
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    vbox = gtk_vbox_new(TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
-
-    label = gtk_label_new(_("Data to load:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
-
-    radio = gwy_radio_buttons_create(choices, mifile->n, "data",
-                                     G_CALLBACK(selection_changed), &controls,
-                                     0);
-    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
-
-    /* preview */
-    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    controls.data = gwy_container_new();
-    dfield = gwy_data_field_new(mifile->xres, mifile->yres, 1.0, 1.0, FALSE);
-    read_data_field(dfield, mifile->buffers, mifile->xres, mifile->yres);
-    gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
-    gwy_container_set_enum_by_name(controls.data, "/0/base/range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-    g_object_unref(dfield);
-
-    controls.data_view = gwy_data_view_new(controls.data);
-    g_object_unref(controls.data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
-                           120.0/MAX(mifile->xres, mifile->yres));
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
-                                       "/0/base/range-type");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
-    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
-
-    gtk_widget_show_all(dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-    switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
-        case GTK_RESPONSE_CANCEL:
-        case GTK_RESPONSE_DELETE_EVENT:
-        gtk_widget_destroy(dialog);
-        case GTK_RESPONSE_NONE:
-        break;
-
-        case GTK_RESPONSE_OK:
-        b = GPOINTER_TO_UINT(gwy_radio_buttons_get_current(radio, "data"));
-        gtk_widget_destroy(dialog);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    for (i = 0; i < mifile->n; i++)
-        g_free((gpointer)choices[i].name);
-    g_free(choices);
-
-    return b;
-}
-
-static void
-selection_changed(GtkWidget *button,
-                  MIControls *controls)
-{
-    MIFile *mifile;
-    GwyDataField *dfield;
-    guint i;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
-    i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (guint)-1);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                             "/0/data"));
-    mifile = controls->file;
-    read_data_field(dfield, mifile->buffers + i, mifile->xres, mifile->yres);
-}
-
 static void
 read_data_field(GwyDataField *dfield,
                 MIData *midata,
@@ -460,7 +343,8 @@ mifile_get_double(GHashTable *meta,
 static void
 process_metadata(MIFile *mifile,
                  guint id,
-                 GwyContainer *container)
+                 GwyContainer *container,
+                 const gchar *container_key)
 {
     static const MetaDataFormat global_metadata[] = {
         { "version", "Version", "%s" },
@@ -511,9 +395,11 @@ process_metadata(MIFile *mifile,
     gchar *p;
     guint i;
     gdouble xLength, yLength;
+    gchar *channel_key = NULL;
+    gchar *channel_title = NULL;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
-                                                             "/0/data"));
+                                                             container_key));
     /* Make "data" point to the selected buffer */
     data = mifile->buffers + id;
 
@@ -523,11 +409,20 @@ process_metadata(MIFile *mifile,
 
     /* Set the container's title to whatever the buffer mode is */
     if (mode)
-        gwy_container_set_string_by_name(container, "/filename/title",
-                                         g_strdup(mode));
+        channel_title = g_strdup(mode);
     else
+        channel_title = g_strdup("Unknown Channel");
+    channel_key = g_strdup_printf("%s/title", container_key);
+    gwy_container_set_string_by_name(container, channel_key,
+                                     g_strdup(channel_title));
+
+    /* If this is the first channel, store the title under /filename/title as
+    well for compatability with 1.x. */
+    if (id == 0)
         gwy_container_set_string_by_name(container, "/filename/title",
-                                         g_strdup("Unknown"));
+                                         g_strdup(channel_title));
+    g_free(channel_key);
+    g_free(channel_title);
 
     /* Fix z-value scale */
     bufferUnit = NULL;

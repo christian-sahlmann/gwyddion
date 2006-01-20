@@ -106,9 +106,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2.3",
-    "David Nečas (Yeti) & Petr Klapetek",
-    "2005",
+    "0.3.0",
+    "David Nečas (Yeti), Petr Klapetek, Chris Anderson",
+    "2006",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -150,11 +150,12 @@ stpfile_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 stpfile_load(const gchar *filename,
-                G_GNUC_UNUSED GwyRunType mode,
-                GError **error)
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     STPFile *stpfile;
     GwyContainer *container = NULL;
+    gchar *container_key = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -163,7 +164,6 @@ stpfile_load(const gchar *filename,
     gchar *p;
     gboolean ok;
     guint i = 0, pos;
-    gchar *container_key = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -187,11 +187,7 @@ stpfile_load(const gchar *filename,
         pos = header_size;
         for (i = 0; i < stpfile->n; i++) {
             stpfile->buffers[i].data = (const guint16*)(buffer + pos);
-            gwy_debug("buffer %i pos: %u", i, pos);
             pos += 2*stpfile->buffers[i].xres * stpfile->buffers[i].yres;
-        }
-        /*XXX: its stupid to have two identical loops here */
-        for (i=0; i < stpfile->n; i++) {
 
             dfield = gwy_data_field_new(stpfile->buffers[i].xres,
                                         stpfile->buffers[i].yres,
@@ -212,8 +208,10 @@ stpfile_load(const gchar *filename,
     gwy_file_abandon_contents(buffer, size, NULL);
     stpfile_free(stpfile);
 
-    if (!container)
+    if (!container) {
         err_NO_DATA(error);
+        return NULL;
+    }
 
     return container;
 }
