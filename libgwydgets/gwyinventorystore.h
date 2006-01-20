@@ -36,8 +36,7 @@ G_BEGIN_DECLS
 typedef struct _GwyInventoryStore       GwyInventoryStore;
 typedef struct _GwyInventoryStoreClass  GwyInventoryStoreClass;
 
-struct _GwyInventoryStore
-{
+struct _GwyInventoryStore {
     GObject parent_instance;
 
     gint stamp;
@@ -52,8 +51,7 @@ struct _GwyInventoryStore
     gulong items_reordered_id;
 };
 
-struct _GwyInventoryStoreClass
-{
+struct _GwyInventoryStoreClass {
     GObjectClass parent_class;
 };
 

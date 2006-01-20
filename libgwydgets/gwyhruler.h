@@ -52,13 +52,10 @@
 #ifndef __GWY_HRULER_H__
 #define __GWY_HRULER_H__
 
-
 #include <gdk/gdk.h>
 #include <libgwydgets/gwyruler.h>
 
-
 G_BEGIN_DECLS
-
 
 #define GWY_TYPE_HRULER            (gwy_hruler_get_type())
 #define GWY_HRULER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_HRULER, GwyHRuler))
@@ -71,16 +68,13 @@ G_BEGIN_DECLS
 typedef struct _GwyHRuler       GwyHRuler;
 typedef struct _GwyHRulerClass  GwyHRulerClass;
 
-struct _GwyHRuler
-{
+struct _GwyHRuler {
     GwyRuler ruler;
 };
 
-struct _GwyHRulerClass
-{
+struct _GwyHRulerClass {
     GwyRulerClass parent_class;
 };
-
 
 GType      gwy_hruler_get_type (void) G_GNUC_CONST;
 GtkWidget* gwy_hruler_new      (void);
@@ -88,6 +82,6 @@ GtkWidget* gwy_hruler_new      (void);
 
 G_END_DECLS
 
-
 #endif /* __GWY_HRULER_H__ */
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

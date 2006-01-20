@@ -58,7 +58,7 @@
 #include <gtk/gtkdrawingarea.h>
 
 #include <libgwydgets/gwydgetenums.h>
-#include "../libdraw/gwyrgba.h"
+#include <libdraw/gwyrgba.h>
 
 G_BEGIN_DECLS
 
@@ -80,14 +80,12 @@ typedef struct _GwyCurveClass   GwyCurveClass;
 typedef struct _GwyPoint        GwyPoint;
 typedef struct _GwyChannelData  GwyChannelData;
 
-struct _GwyPoint
-{
+struct _GwyPoint {
     gfloat x;
     gfloat y;
 };
 
-struct _GwyChannelData
-{
+struct _GwyChannelData {
     /* curve points: */
     gint num_points;
     GwyPoint *points;
@@ -99,8 +97,7 @@ struct _GwyChannelData
     GwyRGBA color;
 };
 
-struct _GwyCurve
-{
+struct _GwyCurve {
     GtkDrawingArea graph;
 
     gint cursor_type;
@@ -121,18 +118,18 @@ struct _GwyCurve
     GwyChannelData *channel_data;
 };
 
-struct _GwyCurveClass
-{
-  GtkDrawingAreaClass parent_class;
+struct _GwyCurveClass {
+    GtkDrawingAreaClass parent_class;
 
-  void (* curve_type_changed) (GwyCurve *curve);
-  void (* curve_edited) (GwyCurve *curve);
+    /* Signals */
+    void (* curve_type_changed) (GwyCurve *curve);
+    void (* curve_edited) (GwyCurve *curve);
 
-  /* Padding for future expansion */
-  void (*_gtk_reserved1) (void);
-  void (*_gtk_reserved2) (void);
-  void (*_gtk_reserved3) (void);
-  void (*_gtk_reserved4) (void);
+    /* Padding for future expansion */
+    void (*_gwy_reserved1) (void);
+    void (*_gwy_reserved2) (void);
+    void (*_gwy_reserved3) (void);
+    void (*_gwy_reserved4) (void);
 };
 
 GtkWidget*  gwy_curve_new                   (void);
@@ -157,3 +154,5 @@ void        gwy_curve_get_control_points    (GwyCurve *curve,
 G_END_DECLS
 
 #endif /* __GWY_CURVE_H__ */
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

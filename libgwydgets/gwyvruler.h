@@ -52,13 +52,10 @@
 #ifndef __GWY_VRULER_H__
 #define __GWY_VRULER_H__
 
-
 #include <gdk/gdk.h>
 #include <libgwydgets/gwyruler.h>
 
-
 G_BEGIN_DECLS
-
 
 #define GWY_TYPE_VRULER            (gwy_vruler_get_type())
 #define GWY_VRULER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VRULER, GwyVRuler))
@@ -67,17 +64,14 @@ G_BEGIN_DECLS
 #define GWY_IS_VRULER_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_VRULER))
 #define GWY_VRULER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_VRULER, GwyVRulerClass))
 
-
 typedef struct _GwyVRuler       GwyVRuler;
 typedef struct _GwyVRulerClass  GwyVRulerClass;
 
-struct _GwyVRuler
-{
+struct _GwyVRuler {
     GwyRuler ruler;
 };
 
-struct _GwyVRulerClass
-{
+struct _GwyVRulerClass {
     GwyRulerClass parent_class;
 };
 
@@ -87,7 +81,6 @@ GtkWidget* gwy_vruler_new      (void);
 
 
 G_END_DECLS
-
 
 #endif /* __GWY_VRULER_H__ */
 
