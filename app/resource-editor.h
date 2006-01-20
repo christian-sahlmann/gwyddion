@@ -23,17 +23,9 @@
 
 #include <gtk/gtkwindow.h>
 #include <libgwyddion/gwyresource.h>
+#include <libgwydgets/gwysensitivitygroup.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-    GWY_RESOURCE_EDITOR_BUTTON_EDIT,
-    GWY_RESOURCE_EDITOR_BUTTON_NEW,
-    GWY_RESOURCE_EDITOR_BUTTON_COPY,
-    GWY_RESOURCE_EDITOR_BUTTON_DELETE,
-    GWY_RESOURCE_EDITOR_BUTTON_SET_DEFAULT,
-    GWY_RESOURCE_EDITOR_NBUTTONS
-} GwyResourceEditorButton;
 
 #define GWY_TYPE_RESOURCE_EDITOR             (gwy_resource_editor_get_type())
 #define GWY_RESOURCE_EDITOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_RESOURCE_EDITOR, GwyResourceEditor))
@@ -50,7 +42,7 @@ struct _GwyResourceEditor {
 
     GtkWidget *vbox;
     GtkWidget *treeview;
-    GtkWidget *buttons[GWY_RESOURCE_EDITOR_NBUTTONS];
+    GwySensitivityGroup *sensgroup;
 
     GtkWidget *edit_window;
     GString *edited_resource;

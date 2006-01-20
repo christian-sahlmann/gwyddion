@@ -34,6 +34,12 @@ enum {
     COMMIT_TIMEOUT = 120
 };
 
+enum {
+    SELECTED_ANY      = 1 << 0,
+    SELECTED_EDITABLE = 1 << 1,
+    SELECTED_MASK     = 0x03
+};
+
 static void     gwy_resource_editor_finalize      (GObject *object);
 static void     gwy_resource_editor_cell_name     (GtkTreeViewColumn *column,
                                                    GtkCellRenderer *renderer,
@@ -115,42 +121,42 @@ void
 gwy_resource_editor_setup(GwyResourceEditor *editor)
 {
     static const struct {
-        GwyResourceEditorButton id;
         const gchar *label;
         const gchar *stock_id;
         const gchar *tooltip;
         GCallback callback;
+        guint sens_flags;
     }
     toolbar_buttons[] = {
         {
-            GWY_RESOURCE_EDITOR_BUTTON_EDIT,
             N_("verb|_Edit"), GTK_STOCK_EDIT,
             N_("Edit selected item"),
             G_CALLBACK(gwy_resource_editor_edit),
+            SELECTED_EDITABLE,
         },
         {
-            GWY_RESOURCE_EDITOR_BUTTON_NEW,
             N_("_New"), GTK_STOCK_NEW,
             N_("Create a new item"),
             G_CALLBACK(gwy_resource_editor_new),
+            0,
         },
         {
-            GWY_RESOURCE_EDITOR_BUTTON_COPY,
             N_("_Copy"), GTK_STOCK_COPY,
             N_("Create a new item based on selected one"),
             G_CALLBACK(gwy_resource_editor_duplicate),
+            SELECTED_ANY,
         },
         {
-            GWY_RESOURCE_EDITOR_BUTTON_DELETE,
             N_("_Delete"), GTK_STOCK_DELETE,
             N_("Delete selected item"),
             G_CALLBACK(gwy_resource_editor_delete),
+            SELECTED_EDITABLE,
         },
         {
-            GWY_RESOURCE_EDITOR_BUTTON_SET_DEFAULT,
             N_("De_fault"), "gwy_favourite",
             N_("Set selected item as default"),
             G_CALLBACK(gwy_resource_editor_set_default),
+            SELECTED_ANY,
         },
     };
 
@@ -188,6 +194,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     /* Window setup */
     gtk_window_set_resizable(GTK_WINDOW(editor), TRUE);
     gtk_window_set_title(GTK_WINDOW(editor), klass->window_title);
+    editor->sensgroup = gwy_sensitivity_group_new();
 
     editor->vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(editor), editor->vbox);
@@ -227,13 +234,15 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     for (i = 0; i < G_N_ELEMENTS(toolbar_buttons); i++) {
         button = gwy_tool_like_button_new(gwy_sgettext(toolbar_buttons[i].label),
                                           toolbar_buttons[i].stock_id);
-        editor->buttons[toolbar_buttons[i].id] = button;
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gtk_tooltips_set_tip(tooltips, button,
                              toolbar_buttons[i].tooltip, NULL);
+        gwy_sensitivity_group_add_widget(editor->sensgroup, button,
+                                         toolbar_buttons[i].sens_flags);
         g_signal_connect_swapped(button, "clicked",
                                  toolbar_buttons[i].callback, editor);
     }
+    g_object_unref(editor->sensgroup);
 
     w = h = -1;
     gwy_container_gis_int32(settings, klass->width_key, &w);
@@ -272,40 +281,19 @@ static void
 gwy_resource_editor_changed(GtkTreeSelection *selection,
                             GwyResourceEditor *editor)
 {
-    static const GwyResourceEditorButton needs_selection[] = {
-        GWY_RESOURCE_EDITOR_BUTTON_COPY,
-        GWY_RESOURCE_EDITOR_BUTTON_SET_DEFAULT,
-    };
-    static const GwyResourceEditorButton needs_modifiable[] = {
-        GWY_RESOURCE_EDITOR_BUTTON_EDIT,
-        GWY_RESOURCE_EDITOR_BUTTON_DELETE,
-    };
     GwyResource *resource;
     GtkTreeModel *model;
     GtkTreeIter iter;
-    gboolean is_modifiable;
-    guint i;
+    guint state = 0;
 
     gwy_debug("");
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        for (i = 0; i < G_N_ELEMENTS(needs_selection); i++)
-            gtk_widget_set_sensitive(editor->buttons[needs_selection[i]],
-                                     FALSE);
-        for (i = 0; i < G_N_ELEMENTS(needs_modifiable); i++)
-            gtk_widget_set_sensitive(editor->buttons[needs_modifiable[i]],
-                                     FALSE);
-        return;
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        state |= SELECTED_ANY;
+        gtk_tree_model_get(model, &iter, 0, &resource, -1);
+        if (gwy_resource_get_is_modifiable(resource))
+            state |= SELECTED_EDITABLE;
     }
-
-    gtk_tree_model_get(model, &iter, 0, &resource, -1);
-
-    for (i = 0; i < G_N_ELEMENTS(needs_selection); i++)
-        gtk_widget_set_sensitive(editor->buttons[needs_selection[i]],
-                                 TRUE);
-    is_modifiable = gwy_resource_get_is_modifiable(resource);
-    for (i = 0; i < G_N_ELEMENTS(needs_modifiable); i++)
-        gtk_widget_set_sensitive(editor->buttons[needs_modifiable[i]],
-                                 is_modifiable);
+    gwy_sensitivity_group_set_state(editor->sensgroup, SELECTED_MASK, state);
 }
 
 static void
@@ -794,18 +782,6 @@ gwy_resource_editor_get_edited(GwyResourceEditor *editor)
  * have to override (in fact, to fill, because #GwyResourceEditor does not
  * define them) the methods and class data in their class init methods.  Then
  * they generally only need to care about widgets inside their edit windows.
- **/
-
-/**
- * GwyResourceEditorButton:
- * @GWY_RESOURCE_EDITOR_BUTTON_EDIT: `Edit' button.
- * @GWY_RESOURCE_EDITOR_BUTTON_NEW: `New' button.
- * @GWY_RESOURCE_EDITOR_BUTTON_COPY: `Copy' button.
- * @GWY_RESOURCE_EDITOR_BUTTON_DELETE: `Delete' button.
- * @GWY_RESOURCE_EDITOR_BUTTON_SET_DEFAULT: `Default' button.
- * @GWY_RESOURCE_EDITOR_NBUTTONS: The number of toolbar buttons.
- *
- * Resource editor toolbar button id's.
  **/
 
 /**
