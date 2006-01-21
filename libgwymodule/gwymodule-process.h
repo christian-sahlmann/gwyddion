@@ -52,6 +52,8 @@ GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
                                                const gchar *prefix,
                                                GCallback item_callback);
 guint          gwy_process_func_get_sensitivity_flags (const gchar *name);
+void           gwy_process_func_foreach       (GFunc function,
+                                               gpointer user_data);
 
 G_END_DECLS
 

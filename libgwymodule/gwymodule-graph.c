@@ -35,6 +35,11 @@ typedef struct {
     gchar *menu_path_factory;
 } GraphFuncInfo;
 
+typedef struct {
+    GFunc function;
+    gpointer user_data;
+} GraphFuncForeachData;
+
 static void gwy_graph_func_info_free   (gpointer data);
 static gint graph_menu_entry_compare   (GraphFuncInfo *a,
                                         GraphFuncInfo *b);
@@ -258,6 +263,39 @@ graph_menu_entry_compare(GraphFuncInfo *a,
                          GraphFuncInfo *b)
 {
     return g_utf8_collate(a->menu_path_factory, b->menu_path_factory);
+}
+
+static void
+gwy_graph_func_user_cb(gpointer key,
+                       G_GNUC_UNUSED gpointer value,
+                       gpointer user_data)
+{
+    GraphFuncForeachData *gffd = (GraphFuncForeachData*)user_data;
+
+    gffd->function(key, gffd->user_data);
+}
+
+/**
+ * gwy_graph_func_foreach:
+ * @function: Function to run for each graph function.  It will get function
+ *            name (constant string owned by module system) as its first
+ *            argument, @user_data as the second argument.
+ * @user_data: Data to pass to @function.
+ *
+ * Calls a function for each graph function.
+ **/
+void
+gwy_graph_func_foreach(GFunc function,
+                       gpointer user_data)
+{
+    GraphFuncForeachData gffd;
+
+    if (!graph_funcs)
+        return;
+
+    gffd.user_data = user_data;
+    gffd.function = function;
+    g_hash_table_foreach(graph_funcs, gwy_graph_func_user_cb, &gffd);
 }
 
 /**

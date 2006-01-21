@@ -533,6 +533,15 @@ gwy_file_func_user_cb(gpointer key,
     fffd->function(key, fffd->user_data);
 }
 
+/**
+ * gwy_file_func_foreach:
+ * @function: Function to run for each file function.  It will get function
+ *            name (constant string owned by module system) as its first
+ *            argument, @user_data as the second argument.
+ * @user_data: Data to pass to @function.
+ *
+ * Calls a function for each file function.
+ **/
 void
 gwy_file_func_foreach(GFunc function,
                       gpointer user_data)

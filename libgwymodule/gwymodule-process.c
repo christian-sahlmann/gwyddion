@@ -42,6 +42,11 @@ typedef struct {
     gchar *menu_path_factory;
 } ProcessFuncInfo;
 
+typedef struct {
+    GFunc function;
+    gpointer user_data;
+} ProcFuncForeachData;
+
 static void gwy_process_func_info_free (gpointer data);
 static gint process_menu_entry_compare (ProcessFuncInfo *a,
                                         ProcessFuncInfo *b);
@@ -278,6 +283,39 @@ process_menu_entry_compare(ProcessFuncInfo *a,
 {
     return g_utf8_collate(a->menu_path_factory, b->menu_path_factory);
 
+}
+
+static void
+gwy_process_func_user_cb(gpointer key,
+                         G_GNUC_UNUSED gpointer value,
+                         gpointer user_data)
+{
+    ProcFuncForeachData *pffd = (ProcFuncForeachData*)user_data;
+
+    pffd->function(key, pffd->user_data);
+}
+
+/**
+ * gwy_process_func_foreach:
+ * @function: Function to run for each process function.  It will get function
+ *            name (constant string owned by module system) as its first
+ *            argument, @user_data as the second argument.
+ * @user_data: Data to pass to @function.
+ *
+ * Calls a function for each process function.
+ **/
+void
+gwy_process_func_foreach(GFunc function,
+                         gpointer user_data)
+{
+    ProcFuncForeachData pffd;
+
+    if (!process_funcs)
+        return;
+
+    pffd.user_data = user_data;
+    pffd.function = function;
+    g_hash_table_foreach(process_funcs, gwy_process_func_user_cb, &pffd);
 }
 
 /**
