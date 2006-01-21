@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,12 +41,19 @@ struct _GwySensitivityGroup {
     guint state;
     guint old_state;
     GList *lists;
-
     gulong source_id;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwySensitivityGroupClass {
     GObjectClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 
