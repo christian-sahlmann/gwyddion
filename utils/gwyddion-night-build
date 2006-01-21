@@ -90,7 +90,7 @@ function build_documentation() {
 function check_coding_style() {
   # Note this need build_documentation() to pass
   # Source coding style
-  find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \
+  find -name \*.c | grep -Ev '^\./gwyddion-|/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
 
