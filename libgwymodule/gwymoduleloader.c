@@ -205,7 +205,7 @@ gwy_module_get_functions(const gchar *name)
  *
  * Returns: Module info on success, %NULL on failure.
  **/
-G_CONST_RETURN GwyModuleInfo*
+const GwyModuleInfo*
 gwy_module_register_module(const gchar *name)
 {
     if (!modules_initialized)
@@ -214,7 +214,7 @@ gwy_module_register_module(const gchar *name)
     return gwy_module_do_register_module(name, modules);
 }
 
-static G_CONST_RETURN GwyModuleInfo*
+static const GwyModuleInfo*
 gwy_module_do_register_module(const gchar *filename,
                               GHashTable *mods)
 {

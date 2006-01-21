@@ -171,7 +171,7 @@ static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
                                                       GwyDataWindow *data_window);
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
-static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
+static const gchar* gwy_recent_file_thumbnail_dir    (void);
 
 static guint remember_recent_files = 512;
 
@@ -1040,7 +1040,7 @@ gwy_recent_file_thumbnail_name(const gchar *uri)
                             NULL);
 }
 
-static G_CONST_RETURN gchar*
+static const gchar*
 gwy_recent_file_thumbnail_dir(void)
 {
     const gchar *thumbdir =

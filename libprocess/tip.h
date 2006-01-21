@@ -53,23 +53,13 @@ struct _GwyTipModelPreset {
 
 
 /* XXX: remove presets, each tip type is quite different */
-gint             gwy_tip_model_get_npresets(void);
-
-G_CONST_RETURN
-GwyTipModelPreset* gwy_tip_model_get_preset(gint preset_id);
-
-G_CONST_RETURN
-GwyTipModelPreset* gwy_tip_model_get_preset_by_name(const gchar *name);
-
-gint            gwy_tip_model_get_preset_id     (const GwyTipModelPreset* preset);
-
-G_CONST_RETURN
-gchar*          gwy_tip_model_get_preset_tip_name   (const GwyTipModelPreset* preset);
-
-G_CONST_RETURN
-gchar*          gwy_tip_model_get_preset_group_name   (const GwyTipModelPreset* preset);
-
-gint            gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset);
+gint                     gwy_tip_model_get_npresets         (void);
+const GwyTipModelPreset* gwy_tip_model_get_preset           (gint preset_id);
+const GwyTipModelPreset* gwy_tip_model_get_preset_by_name   (const gchar *name);
+gint                     gwy_tip_model_get_preset_id        (const GwyTipModelPreset* preset);
+const gchar*             gwy_tip_model_get_preset_tip_name  (const GwyTipModelPreset* preset);
+const gchar*             gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset);
+gint                     gwy_tip_model_get_preset_nparams   (const GwyTipModelPreset* preset);
 
 
 GwyDataField*   gwy_tip_dilation(GwyDataField *tip,
@@ -111,3 +101,4 @@ G_END_DECLS
 
 #endif /*__GWY_PROCESS_GRAINS__*/
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

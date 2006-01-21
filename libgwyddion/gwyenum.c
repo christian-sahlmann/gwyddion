@@ -81,7 +81,7 @@ gwy_string_to_enum(const gchar *str,
  *          modified too. If the value is not found, an empty string is
  *          returned.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_enum_to_string(gint enumval,
                    const GwyEnum *enum_table,
                    gint n)

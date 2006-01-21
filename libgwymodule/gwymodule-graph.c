@@ -324,7 +324,7 @@ gwy_graph_func_exists(const gchar *name)
  * Returns: The menu path.  The returned string must be treated as constant
  *          and never modified or freed.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_graph_func_get_menu_path(const gchar *name)
 {
     GraphFuncInfo *func_info;

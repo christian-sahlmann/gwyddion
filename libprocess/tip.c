@@ -270,7 +270,7 @@ gwy_tip_model_get_npresets(void)
  *
  * Returns: Chosen preset data.
  **/
-G_CONST_RETURN GwyTipModelPreset*
+const GwyTipModelPreset*
 gwy_tip_model_get_preset(gint preset_id)
 {
     g_return_val_if_fail(preset_id >= 0
@@ -288,7 +288,7 @@ gwy_tip_model_get_preset(gint preset_id)
  *
  * Returns: Chosen preset data.
  **/
-G_CONST_RETURN GwyTipModelPreset*
+const GwyTipModelPreset*
 gwy_tip_model_get_preset_by_name(const gchar *name)
 {
     gsize i;
@@ -322,7 +322,7 @@ gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
  *
  * Returns: Preset name.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
 {
     return preset->tip_name;
@@ -336,7 +336,7 @@ gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
  *
  * Returns: Preset group name.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
 {
     return preset->group_name;

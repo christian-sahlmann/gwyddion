@@ -358,7 +358,7 @@ gwy_process_func_get_run_types(const gchar *name)
  * Returns: The menu path.  The returned string must be treated as constant
  *          and never modified or freed.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_process_func_get_menu_path(const gchar *name)
 {
     ProcessFuncInfo *func_info;
