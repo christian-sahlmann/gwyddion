@@ -290,11 +290,12 @@ gwy_app_get_current_data(void)
 gboolean
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
-        GWY_MENU_FLAG_DATA
-    };
+    GwyMenuSensFlags mask = (GWY_MENU_FLAG_DATA
+                             | GWY_MENU_FLAG_UNDO
+                             | GWY_MENU_FLAG_REDO
+                             | GWY_MENU_FLAG_DATA_MASK
+                             | GWY_MENU_FLAG_DATA_SHOW);
+    GwyMenuSensFlags state = GWY_MENU_FLAG_DATA;
     static GwyDataWindow *already_current = NULL;
     GwyDataView *data_view;
     GwyPixmapLayer *layer;
@@ -320,17 +321,17 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     data_view = gwy_data_window_get_data_view(window);
     data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
-        sens_data.set_to |= GWY_MENU_FLAG_UNDO;
+        state |= GWY_MENU_FLAG_UNDO;
     if (gwy_undo_container_has_redo(data))
-        sens_data.set_to |= GWY_MENU_FLAG_REDO;
+        state |= GWY_MENU_FLAG_REDO;
 
     layer = gwy_data_view_get_base_layer(data_view);
     if (gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer)))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+        state |= GWY_MENU_FLAG_DATA_SHOW;
     if (gwy_data_view_get_alpha_layer(data_view))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+        state |= GWY_MENU_FLAG_DATA_MASK;
 
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(mask, state);
     already_current = window;
 
     return FALSE;
@@ -349,11 +350,11 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
-    static const GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
-        0
-    };
+    GwyMenuSensFlags mask = (GWY_MENU_FLAG_DATA
+                             | GWY_MENU_FLAG_UNDO
+                             | GWY_MENU_FLAG_REDO
+                             | GWY_MENU_FLAG_DATA_MASK
+                             | GWY_MENU_FLAG_DATA_SHOW);
     GList *item;
 
     gwy_debug("");
@@ -376,7 +377,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(mask, 0);
 
     gwy_app_data_window_list_updated();
 }
@@ -396,7 +397,6 @@ gwy_app_data_window_create(GwyContainer *data)
 {
     static GtkWidget *popup_menu = NULL;
 
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA };
     GtkWidget *window, *view, *corner;
     GwyDataWindow *data_window;
     GwyDataView *data_view;
@@ -448,7 +448,7 @@ gwy_app_data_window_create(GwyContainer *data)
                              popup_menu);
 
     gwy_app_data_window_add(data_window);
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA);
     gwy_app_data_view_setup_layers2(data_view);
     gtk_window_present(GTK_WINDOW(window));
 
@@ -507,7 +507,6 @@ gwy_app_data_view_mask_changed(GwyContainer *data,
                                GQuark quark,
                                GwyDataView *data_view)
 {
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
     gboolean has_dfield, has_layer;
     const gchar *key;
     GwyPixmapLayer *layer;
@@ -530,8 +529,8 @@ gwy_app_data_view_mask_changed(GwyContainer *data,
 
     if (has_dfield != has_layer
         && data == gwy_app_get_current_data()) {
-        sens_data.set_to = has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0;
-        gwy_app_toolbox_update_state(&sens_data);
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_MASK,
+                                      has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0);
     }
 }
 
@@ -539,15 +538,14 @@ static void
 gwy_app_data_view_show_changed(GwyLayerBasic *basic_layer,
                                GwyDataView *data_view)
 {
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_SHOW, 0 };
     gboolean has_show;
 
     if (gwy_data_view_get_data(data_view) != gwy_app_get_current_data())
         return;
 
     has_show = gwy_layer_basic_get_has_presentation(basic_layer);
-    sens_data.set_to = has_show ? GWY_MENU_FLAG_DATA_SHOW : 0;
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_SHOW,
+                                  has_show ? GWY_MENU_FLAG_DATA_SHOW: 0);
 }
 
 /**
@@ -728,9 +726,6 @@ gwy_app_graph_window_get_current(void)
 gboolean
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
-    static const GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH
-    };
     GList *item;
 
     gwy_debug("%p", window);
@@ -740,7 +735,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     current_graph = g_list_remove_link(current_graph, item);
     current_graph = g_list_concat(item, current_graph);
 
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
     gwy_app_set_current_window(window);
 
     return FALSE;
@@ -758,9 +753,6 @@ gwy_app_graph_window_set_current(GtkWidget *window)
 void
 gwy_app_graph_window_remove(GtkWidget *window)
 {
-    static const GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_GRAPH, 0
-    };
     GList *item;
 
     item = g_list_find(current_graph, window);
@@ -773,7 +765,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
     if (current_graph)
         gwy_app_graph_window_set_current(current_graph->data);
     else
-        gwy_app_toolbox_update_state(&sens_data);
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, 0);
 }
 
 /**
@@ -1232,24 +1224,14 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     }
     const menu_items[] = {
         { N_("/Remove _Mask"), gwy_app_mask_kill_cb, NULL },
-        { N_("/Mask _Color"),  gwy_app_change_mask_color_cb, NULL },
+        { N_("/Mask _Color..."),  gwy_app_change_mask_color_cb, NULL },
         { N_("/Fix _Zero"), gwy_app_run_process_func_cb, "fix_zero" },
         { N_("/Remove _Presentation"), gwy_app_show_kill_cb, NULL },
         { N_("/_Level"), gwy_app_run_process_func_cb, "level" },
         { N_("/Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
-    static const gchar *items_need_data_mask[] = {
-        "/Remove Mask", "/Mask Color", NULL
-    };
-    static const gchar *items_need_data_show[] = {
-        "/Remove Presentation", NULL
-    };
     GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
     GtkItemFactory *item_factory;
-    GtkWidget *menu;
-    GwyMenuSensData sens_data_mask = { GWY_MENU_FLAG_DATA_MASK, 0 };
-    GwyMenuSensData sens_data_show = { GWY_MENU_FLAG_DATA_SHOW, 0 };
-    GList *menus;
     gsize i;
 
     /* XXX: it is probably wrong to use this accel group */
@@ -1272,21 +1254,14 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         gtk_item_factory_create_item(item_factory, &entry,
                                      menu_items[i].cbdata, 1);
     }
-    menu = gtk_item_factory_get_widget(item_factory, "<data-popup>");
-    gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
-                                     items_need_data_mask,
-                                     sens_data_mask.flags);
-    gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
-                                     items_need_data_show,
-                                     sens_data_show.flags);
 
-    /* XXX: assuming g_list_append() doesn't change nonempty list head */
-    menus = (GList*)g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                      "menus");
-    g_assert(menus);
-    g_list_append(menus, menu);
+    set_sensitivity(item_factory,
+                    "<data-popup>/Remove Mask",         GWY_MENU_FLAG_DATA_MASK,
+                    "<data-popup>/Mask Color...",       GWY_MENU_FLAG_DATA_MASK,
+                    "<data-popup>/Remove Presentation", GWY_MENU_FLAG_DATA_SHOW,
+                    NULL);
 
-    return menu;
+    return gtk_item_factory_get_widget(item_factory, "<data-popup>");
 }
 
 static gboolean

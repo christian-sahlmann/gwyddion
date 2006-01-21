@@ -128,16 +128,13 @@ gwy_app_undo_checkpointv(GwyContainer *data,
                          guint n,
                          const gchar **keys)
 {
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
-        GWY_MENU_FLAG_UNDO
-    };
     gulong id;
 
 
     id = gwy_undo_checkpointv(data, n, keys);
     if (id)
-        gwy_app_toolbox_update_state(&sens_data);
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+                                      GWY_MENU_FLAG_UNDO);
 
     return id;
 }
@@ -156,17 +153,13 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 void
 gwy_app_undo_undo_container(GwyContainer *data)
 {
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
-        GWY_MENU_FLAG_REDO
-    };
     GwyAppUndo *appundo;
 
     gwy_undo_undo_container(data);
     appundo = gwy_undo_get_for_data(data, FALSE);
-    if (appundo->undo)
-        sens_data.set_to |= GWY_MENU_FLAG_UNDO;
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+                                  GWY_MENU_FLAG_REDO
+                                  | (appundo->undo ? GWY_MENU_FLAG_UNDO : 0));
 }
 
 /**
@@ -183,17 +176,13 @@ gwy_app_undo_undo_container(GwyContainer *data)
 void
 gwy_app_undo_redo_container(GwyContainer *data)
 {
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
-        GWY_MENU_FLAG_UNDO
-    };
     GwyAppUndo *appundo;
 
     gwy_undo_redo_container(data);
     appundo = gwy_undo_get_for_data(data, FALSE);
-    if (appundo->redo)
-        sens_data.set_to |= GWY_MENU_FLAG_REDO;
-    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+                                  GWY_MENU_FLAG_UNDO
+                                  | (appundo->redo ? GWY_MENU_FLAG_REDO : 0));
 }
 
 /**

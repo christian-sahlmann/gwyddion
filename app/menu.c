@@ -20,7 +20,6 @@
 
 /* FIXME: most of this file belongs to gwyddion, not libgwyapp.
  * - menu constructors should be in gwyddion
- * - the menu sensitivity stuff should be in libgwyapp
  * - last-run function stuff should be in ???
  */
 
@@ -39,33 +38,17 @@
 #include "filelist.h"
 #include "gwyappinternal.h"
 
-#define set_sensitive(item, flags) \
-    g_object_set_qdata(G_OBJECT(item), sensitive_key, \
-                       GUINT_TO_POINTER(flags))
-#define set_sensitive_state(item, state) \
-    g_object_set_qdata(G_OBJECT(item), sensitive_state_key, \
-                       GUINT_TO_POINTER(state))
-#define set_sensitive_both(item, flags, state) \
-    do { \
-        set_sensitive(item, flags); \
-        set_sensitive_state(item, state); \
-    } while (0)
-
 static void       gwy_app_file_open_recent_cb       (GObject *item);
 static void       gwy_app_update_last_process_func  (GtkWidget *menu,
                                                      const gchar *name);
-static void       setup_sensitivity_keys            (void);
 static gchar*     fix_recent_file_underscores       (gchar *s);
 static GtkWidget* find_repeat_last_item             (GtkWidget *menu,
                                                      const gchar *key);
 
-static GQuark sensitive_key = 0;
-static GQuark sensitive_state_key = 0;
-
 int gwy_app_n_recent_files = 10;
-static GtkWidget *recent_files_menu = NULL;
-
-static GtkTooltips *app_tooltips = NULL;
+static GtkWidget           *recent_files_menu = NULL;
+static GtkTooltips         *app_tooltips      = NULL;
+static GwySensitivityGroup *app_sensgroup     = NULL;
 
 /* FIXME: how can MSVC can get to needing this when we are not DEBUGging? */
 #if (defined(DEBUG) || defined(_MSC_VER))
@@ -73,187 +56,20 @@ static gchar*
 debug_menu_sens_flags(guint flags)
 {
     static const GwyEnum menu_enum[] = {
-        { "Data", GWY_MENU_FLAG_DATA },
-        { "Undo", GWY_MENU_FLAG_UNDO },
-        { "Redo", GWY_MENU_FLAG_REDO },
-        { "Graph", GWY_MENU_FLAG_GRAPH },
-        { "Last", GWY_MENU_FLAG_LAST_PROC },
-        { "LastG", GWY_MENU_FLAG_LAST_GRAPH },
-        { "Mask", GWY_MENU_FLAG_DATA_MASK },
-        { "Show", GWY_MENU_FLAG_DATA_SHOW },
+        { "Data",  GWY_MENU_FLAG_DATA,       },
+        { "Undo",  GWY_MENU_FLAG_UNDO,       },
+        { "Redo",  GWY_MENU_FLAG_REDO,       },
+        { "Graph", GWY_MENU_FLAG_GRAPH,      },
+        { "Last",  GWY_MENU_FLAG_LAST_PROC,  },
+        { "LastG", GWY_MENU_FLAG_LAST_GRAPH, },
+        { "Mask",  GWY_MENU_FLAG_DATA_MASK,  },
+        { "Show",  GWY_MENU_FLAG_DATA_SHOW,  },
     };
 
     /* this is going to leak some memory, but no one cares in debugging mode */
     return gwy_flags_to_string(flags, menu_enum, G_N_ELEMENTS(menu_enum), NULL);
 }
 #endif
-
-/**
- * gwy_app_menu_set_sensitive_array:
- * @item_factory: A item factory to obtain menu items from.
- * @root: Menu root, without "<" and ">".
- * @items: %NULL-terminated array of item paths in the menu (without the
- *         root).
- * @flags: Sensitivity bits describing when the item should be sensitive.
- *
- * Sets sensitivity flags for a list of menu items.
- **/
-void
-gwy_app_menu_set_sensitive_array(GtkItemFactory *item_factory,
-                                 const gchar *root,
-                                 const gchar **items,
-                                 GwyMenuSensFlags flags)
-{
-    GtkWidget *item;
-    gsize i, len, maxlen;
-    gchar *path;
-
-    setup_sensitivity_keys();
-
-    g_return_if_fail(GTK_IS_ITEM_FACTORY(item_factory));
-    g_return_if_fail(root);
-    g_return_if_fail(items);
-
-    maxlen = 0;
-    for (i = 0; items[i]; i++) {
-        len = strlen(items[i]);
-        if (len > maxlen)
-            maxlen = len;
-    }
-
-    len = strlen(root);
-    path = g_new(gchar, maxlen + len + 3);
-    strcpy(path + 1, root);
-    path[0] = '<';
-    path[len+1] = '>';
-    for (i = 0; items[i]; i++) {
-        strcpy(path + len + 2, items[i]);
-        item = gtk_item_factory_get_item(item_factory, path);
-        set_sensitive(item, flags);
-    }
-    g_free(path);
-}
-
-/**
- * gwy_app_menu_set_sensitive_recursive:
- * @widget: A menu widget (a menu bar, menu, or an item).
- * @data: Sensitivity data.
- *
- * Sets sensitivity bits and current state of a menu subtree at @widget
- * according @data.
- **/
-void
-gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
-                                     const GwyMenuSensData *data)
-{
-    GObject *obj;
-    guint i, j;
-
-    setup_sensitivity_keys();
-    gwy_debug("{%s, %s}",
-              debug_menu_sens_flags(data->flags),
-              debug_menu_sens_flags(data->set_to));
-
-    obj = G_OBJECT(widget);
-    /*gwy_debug("%s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));*/
-    i = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_key));
-    /* if there are any relevant flags */
-    if (i & data->flags) {
-        j = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_state_key));
-        /* clear all data->flags bits in state
-         * and set all data->set_to bits in state */
-        j = (j & ~data->flags) | (data->set_to & data->flags);
-        set_sensitive_state(obj, j);
-        /* make widget sensitive if all conditions are met */
-        gtk_widget_set_sensitive(widget, (j & i) == i);
-
-    }
-    if (GTK_IS_ALIGNMENT(widget)
-        || GTK_IS_MENU(widget)
-        || GTK_IS_VBOX(widget)
-        || GTK_IS_MENU_BAR(widget)
-        || GTK_IS_TABLE(widget)) {
-        gtk_container_foreach(GTK_CONTAINER(widget),
-                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              (gpointer)data);
-    }
-    else if (GTK_IS_MENU_ITEM(widget)
-             && (widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
-        gtk_container_foreach(GTK_CONTAINER(widget),
-                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              (gpointer)data);
-}
-
-/* Changed in rev 1.52: now uses bitwise OR with existing flags.  There is no
- * way to clear existing flags. */
-/**
- * gwy_app_menu_set_flags_recursive:
- * @widget: A menu widget (a menu bar, menu, or an item).
- * @data: Sensitivity data.
- *
- * Adds item sensitivity data @data to a menu subtree @widget.
- *
- * Adding means bitwise OR with existing flags, so existing flags are kept.
- **/
-void
-gwy_app_menu_set_flags_recursive(GtkWidget *widget,
-                                 const GwyMenuSensData *data)
-{
-    setup_sensitivity_keys();
-
-    if (!GTK_IS_TEAROFF_MENU_ITEM(widget)) {
-        GwyMenuSensFlags flags, state;
-        GObject *obj;
-
-        obj = G_OBJECT(widget);
-        flags = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_key));
-        state = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_state_key));
-        set_sensitive_both(widget, data->flags | flags, data->set_to | state);
-    }
-
-    if (GTK_IS_ALIGNMENT(widget)
-        || GTK_IS_MENU(widget)
-        || GTK_IS_VBOX(widget)
-        || GTK_IS_MENU_BAR(widget)
-        || GTK_IS_TABLE(widget)) {
-        gtk_container_foreach(GTK_CONTAINER(widget),
-                              (GtkCallback)gwy_app_menu_set_flags_recursive,
-                              (gpointer)data);
-    }
-    else if (GTK_IS_MENU_ITEM(widget)) {
-        if ((widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
-            gtk_container_foreach(GTK_CONTAINER(widget),
-                                  (GtkCallback)gwy_app_menu_set_flags_recursive,
-                                  (gpointer)data);
-    }
-}
-
-/**
- * gwy_app_menu_set_sensitive_both:
- * @item: A menu item.
- * @flags: Sensitivity bits describing when the item should be sensitive.
- * @state: Current state bits determining whether it's actually sensitive
- *         or not.
- *
- * Sets both senstitivity data and current state for a menu item.
- **/
-void
-gwy_app_menu_set_sensitive_both(GtkWidget *item,
-                                GwyMenuSensFlags flags,
-                                GwyMenuSensFlags state)
-{
-    set_sensitive_both(item, flags, state);
-}
-
-
-static void
-setup_sensitivity_keys(void)
-{
-    if (!sensitive_key)
-        sensitive_key = g_quark_from_static_string("sensitive");
-    if (!sensitive_state_key)
-        sensitive_state_key = g_quark_from_static_string("sensitive-state");
-}
 
 /**
  * gwy_app_run_process_func_cb:
@@ -298,12 +114,6 @@ void
 gwy_app_run_process_func_in_mode(gchar *name,
                                  GwyRunType run)
 {
-    /* FIXME: It makes no sense to set GWY_MENU_FLAG_DATA here.  But otherwise
-     * the last run func item never becomes sensitive. */
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_LAST_PROC | GWY_MENU_FLAG_DATA,
-        GWY_MENU_FLAG_LAST_PROC | GWY_MENU_FLAG_DATA
-    };
     GwyDataWindow *data_window;
     GwyDataView *data_view;
     GtkWidget *menu;
@@ -323,7 +133,8 @@ gwy_app_run_process_func_in_mode(gchar *name,
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                         "<proc>"));
     gwy_app_update_last_process_func(menu, name);
-    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_LAST_PROC,
+                                  GWY_MENU_FLAG_LAST_PROC);
 }
 
 static void
@@ -332,10 +143,10 @@ gwy_app_update_last_process_func(GtkWidget *menu,
 {
     static GtkWidget *repeat_item = NULL;
     static GtkWidget *reshow_item = NULL;
+    GwyMenuSensFlags sens;
     GtkWidget *label;
     const gchar *menu_path;
     gsize len;
-    guint sens;
     gchar *s, *mp;
 
     g_object_set_data(G_OBJECT(menu), "last-func", (gpointer)name);
@@ -344,8 +155,6 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     if (!reshow_item)
         reshow_item = find_repeat_last_item(menu, "show-last-item");
 
-    sens = gwy_process_func_get_sensitivity_flags(name)
-           | GWY_MENU_FLAG_DATA;
     /* FIXME: at least the `_' removal should not be necessary as libgwymodule
      * knows the right path */
     menu_path = gwy_process_func_get_menu_path(name);
@@ -357,11 +166,13 @@ gwy_app_update_last_process_func(GtkWidget *menu,
         len -= 3;
     mp = gwy_strkill(g_strndup(menu_path, len), "_");
 
+    sens = (gwy_process_func_get_sensitivity_flags(name)
+            | GWY_MENU_FLAG_LAST_PROC);
     if (repeat_item) {
         label = GTK_BIN(repeat_item)->child;
         s = g_strconcat(_("Repeat"), " (", mp, ")", NULL);
         gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
-        set_sensitive(repeat_item, sens);
+        gwy_sensitivity_group_set_widget_mask(app_sensgroup, repeat_item, sens);
         g_free(s);
     }
 
@@ -369,7 +180,7 @@ gwy_app_update_last_process_func(GtkWidget *menu,
         label = GTK_BIN(reshow_item)->child;
         s = g_strconcat(_("Re-show"), " (", mp, ")", NULL);
         gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
-        set_sensitive(reshow_item, sens);
+        gwy_sensitivity_group_set_widget_mask(app_sensgroup, reshow_item, sens);
         g_free(s);
     }
     gwy_debug("Repeat sens: %s", debug_menu_sens_flags(sens));
@@ -557,51 +368,86 @@ gwy_app_file_open_recent_cb(GObject *item)
 }
 
 /**
- * gwy_app_toolbox_update_state:
- * @sens_data: Menu sensitivity data.
+ * gwy_app_sensitivity_get_group:
  *
- * Updates menus and toolbox sensititivity to reflect @sens_data.
+ * Gets the application-wide widget sensitvity group.
+ *
+ * The flags to be used with this sensitvity group are defined in
+ * #GwyMenuSensFlags.
+ *
+ * Returns: The global sensitvity group instead.  No reference is added, you
+ *          can add yours, but the returned object will exist to the end of
+ *          program anyway.
  **/
-void
-gwy_app_toolbox_update_state(const GwyMenuSensData *sens_data)
+GwySensitivityGroup*
+gwy_app_sensitivity_get_group(void)
 {
-    GSList *l;
-    GObject *obj;
+    /* This reference is never released. */
+    if (!app_sensgroup)
+        app_sensgroup = gwy_sensitivity_group_new();
 
-    gwy_debug("{%s, %s}",
-              debug_menu_sens_flags(sens_data->flags),
-              debug_menu_sens_flags(sens_data->set_to));
-
-    /* FIXME: this actually belongs to toolbox.c; however
-    * gwy_app_toolbox_update_state() is called from gwy_app_data_view_update()
-    * so libgwyapp would depend on gwyddion instead the other way around */
-    obj = G_OBJECT(gwy_app_main_window_get());
-
-    for (l = g_object_get_data(obj, "menus"); l; l = g_slist_next(l))
-        gtk_container_foreach(GTK_CONTAINER(l->data),
-                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              (gpointer)sens_data);
-
-    for (l = g_object_get_data(obj, "toolbars"); l; l = g_slist_next(l))
-        gwy_app_menu_set_sensitive_recursive(GTK_WIDGET(l->data),
-                                             sens_data);
+    return app_sensgroup;
 }
 
 /**
- * gwy_app_tooltips_get:
+ * gwy_app_sensitivity_add_widget:
+ * @widget: Widget to add.
+ * @mask: Which flags the widget is sensitive to.
+ *
+ * Adds a widget to the application-wide widget sensitvity group.
+ *
+ * The semantics of this function is the same as
+ * gwy_sensitivity_group_add_widget() (in fact, it's a simple wrapper around
+ * it).
+ **/
+void
+gwy_app_sensitivity_add_widget(GtkWidget *widget,
+                               GwyMenuSensFlags mask)
+{
+    /* This reference is never released. */
+    if (!app_sensgroup)
+        app_sensgroup = gwy_sensitivity_group_new();
+
+    gwy_sensitivity_group_add_widget(app_sensgroup, widget, mask);
+}
+
+/**
+ * gwy_app_sensitivity_set_state:
+ * @affected_mask: Which bits in @state to copy to state.
+ * @state: The new state (masked with @affected_mask).
+ *
+ * Sets the state of application-wide widget sensitvity group.
+ *
+ * The semantics of this function is the same as
+ * gwy_sensitivity_group_set_state() (in fact, it's a simple wrapper around
+ * it).
+ **/
+void
+gwy_app_sensitivity_set_state(GwyMenuSensFlags affected_mask,
+                              GwyMenuSensFlags state)
+{
+    /* This reference is never released. */
+    if (!app_sensgroup)
+        app_sensgroup = gwy_sensitivity_group_new();
+
+    gwy_sensitivity_group_set_state(app_sensgroup, affected_mask, state);
+}
+
+/**
+ * gwy_app_get_tooltips:
  *
  * Gets the application-wide tooltips instance.
  *
- * Returns: The global tooltips distance.  No reference is added, you can
+ * Returns: The global tooltips instance.  No reference is added, you can
  *          add yours, but the returned object will exist to the end of program
  *          anyway.
  **/
 GtkTooltips*
-gwy_app_tooltips_get(void)
+gwy_app_get_tooltips(void)
 {
     if (!app_tooltips) {
         app_tooltips = gtk_tooltips_new();
-        /* Take ownership.  FIXME: Someone should free it later */
+        /* This reference is never released. */
         g_object_ref(app_tooltips);
         gtk_object_sink(GTK_OBJECT(app_tooltips));
     }
@@ -619,11 +465,6 @@ gwy_app_tooltips_get(void)
  * Menu and toolbox item sensitivity is updated by main application whenever
  * its state changes.  Possible states that may affect widget sesitivity are
  * defined in #GwyMenuSensFlags.
- *
- * A widget can have defined a set of conditions (by
- * gwy_app_menu_set_sensitive_both() and other fucntions) that have all to be
- * satisfied to become sensitive. If there are no conditions defined, the
- * widget is sensitive always.
  **/
 
 /**
@@ -640,20 +481,10 @@ gwy_app_tooltips_get(void)
  * @GWY_MENU_FLAG_3D: A 3D view is present.
  * @GWY_MENU_FLAG_MASK: All the bits combined.
  *
- * Menu sensitivity flags.
+ * Global application sensitivity flags.
  *
  * They represent various application states that may be preconditions for
- * some menu item (or other widget) to become sensitive.
- **/
-
-/**
- * GwyMenuSensData:
- * @flags: The flags that have to be set for a widget to become sensitive.
- * @set_to: The actually set flags.
- *
- * Sensitivity flags and their current state in one struct.
- *
- * All widget bits have to be set to make it sensitive.
+ * widgets to become sensitive.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

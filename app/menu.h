@@ -23,8 +23,7 @@
 
 #include <gtk/gtkwidget.h>
 #include <gtk/gtktooltips.h>
-#include <gtk/gtkitemfactory.h>
-#include <libgwymodule/gwymodule-process.h>
+#include <libgwydgets/gwysensitivitygroup.h>
 
 G_BEGIN_DECLS
 
@@ -41,27 +40,13 @@ typedef enum {
     GWY_MENU_FLAG_MASK       = 0xff
 } GwyMenuSensFlags;
 
-typedef struct _GwyMenuSensData GwyMenuSensData;
-
-struct _GwyMenuSensData {
-    GwyMenuSensFlags flags;
-    GwyMenuSensFlags set_to;
-};
-
-void     gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
-                                              const GwyMenuSensData *data);
-void     gwy_app_menu_recent_files_update    (GList *recent_files);
-void     gwy_app_menu_set_flags_recursive    (GtkWidget *widget,
-                                              const GwyMenuSensData *data);
-void     gwy_app_menu_set_sensitive_array    (GtkItemFactory *item_factory,
-                                              const gchar *root,
-                                              const gchar **items,
-                                              const GwyMenuSensFlags flags);
-void     gwy_app_menu_set_sensitive_both     (GtkWidget *item,
-                                              GwyMenuSensFlags flags,
+void         gwy_app_menu_recent_files_update(GList *recent_files);
+GtkTooltips* gwy_app_get_tooltips            (void);
+GwySensitivityGroup* gwy_app_sensitivity_get_group   (void);
+void         gwy_app_sensitivity_add_widget  (GtkWidget *widget,
+                                              GwyMenuSensFlags mask);
+void         gwy_app_sensitivity_set_state   (GwyMenuSensFlags affected_mask,
                                               GwyMenuSensFlags state);
-void     gwy_app_toolbox_update_state        (const GwyMenuSensData *sens_data);
-GtkTooltips* gwy_app_tooltips_get            (void);
 
 G_END_DECLS
 

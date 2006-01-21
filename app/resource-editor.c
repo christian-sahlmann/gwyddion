@@ -228,7 +228,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     gtk_container_add(GTK_CONTAINER(scwin), editor->treeview);
 
     /* Controls */
-    tooltips = gwy_app_tooltips_get();
+    tooltips = gwy_app_get_tooltips();
     hbox = gtk_hbox_new(TRUE, 0);
     gtk_box_pack_start(GTK_BOX(editor->vbox), hbox, FALSE, FALSE, 0);
     for (i = 0; i < G_N_ELEMENTS(toolbar_buttons); i++) {

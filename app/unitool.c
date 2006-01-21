@@ -192,7 +192,7 @@ gwy_unitool_name_changed_cb(GwyUnitoolState *state)
     title = gwy_data_window_get_base_name(state->data_window);
     gtk_label_set_text(GTK_LABEL(state->windowname), title);
     ebox = gtk_widget_get_ancestor(state->windowname, GTK_TYPE_EVENT_BOX);
-    tooltips = gwy_app_tooltips_get();
+    tooltips = gwy_app_get_tooltips();
     gtk_tooltips_set_tip(tooltips, ebox, title, NULL);
     g_free(title);
 }
@@ -548,7 +548,7 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     image = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
 
-    tooltips = gwy_app_tooltips_get();
+    tooltips = gwy_app_get_tooltips();
     title = gwy_data_window_get_base_name(state->data_window);
     gtk_tooltips_set_tip(tooltips, ebox, title, NULL);
 

@@ -221,7 +221,7 @@ gwy_app_recent_file_list_new(void)
     gcontrols.prune = gwy_stock_like_button_new(_("_Prune"),
                                                 GTK_STOCK_FIND);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.prune, TRUE, TRUE, 0);
-    gtk_tooltips_set_tip(gwy_app_tooltips_get(), gcontrols.prune,
+    gtk_tooltips_set_tip(gwy_app_get_tooltips(), gcontrols.prune,
                          _("Remove entries of files that no longer exist"),
                          NULL);
     g_signal_connect_swapped(gcontrols.prune, "clicked",
@@ -230,14 +230,14 @@ gwy_app_recent_file_list_new(void)
 
     button = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
     gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
-    gtk_tooltips_set_tip(gwy_app_tooltips_get(), button,
+    gtk_tooltips_set_tip(gwy_app_get_tooltips(), button,
                          _("Close file list"), NULL);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gtk_widget_destroy), gcontrols.window);
 
     gcontrols.open = gtk_button_new_from_stock(GTK_STOCK_OPEN);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.open, TRUE, TRUE, 0);
-    gtk_tooltips_set_tip(gwy_app_tooltips_get(), gcontrols.open,
+    gtk_tooltips_set_tip(gwy_app_get_tooltips(), gcontrols.open,
                          _("Open selected file"), NULL);
     g_signal_connect_swapped(gcontrols.open, "clicked",
                              G_CALLBACK(gwy_app_recent_file_list_open), list);

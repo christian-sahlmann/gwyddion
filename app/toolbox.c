@@ -284,15 +284,7 @@ gwy_app_toolbox_create(void)
         "stats", "sfunctions", "profile", "grain_remove_manually",
         "spotremove", "icolorange", "maskedit",
     };
-    GwyMenuSensData sens_data_data = { GWY_MENU_FLAG_DATA, 0 };
-    GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
-    GwyMenuSensData sens_data_all = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_GRAPH
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW
-            | GWY_MENU_FLAG_LAST_PROC | GWY_MENU_FLAG_LAST_GRAPH
-            | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
-        0
-    };
+    GwyMenuSensFlags sens;
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
     GtkRadioButton *group;
     GtkTooltips *tooltips;
@@ -304,7 +296,7 @@ gwy_app_toolbox_create(void)
     GSList *l;
     const gchar *first_tool = NULL;
     gboolean visible;
-    guint i, j, flags;
+    guint i, j;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
@@ -321,7 +313,7 @@ gwy_app_toolbox_create(void)
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
     container = vbox;
 
-    tooltips = gwy_app_tooltips_get();
+    tooltips = gwy_app_get_tooltips();
 
     menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_file_menu(accel_group),
@@ -339,8 +331,6 @@ gwy_app_toolbox_create(void)
                                 gwy_app_menu_create_meta_menu(accel_group),
                                 _("_Meta"), menus);
 
-    gwy_app_menu_set_sensitive_recursive(container, &sens_data_all);
-
     /***************************************************************/
     label = gwy_app_toolbox_create_label(_("View"), "zoom", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
@@ -350,12 +340,10 @@ gwy_app_toolbox_create(void)
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    for (i = 0; i < G_N_ELEMENTS(view_actions); i++)
+    for (i = 0; i < G_N_ELEMENTS(view_actions); i++) {
         button = add_button(toolbar, i, view_actions + i, NULL, tooltips);
-
-    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
-    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
-
+        gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_DATA);
+    }
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -378,12 +366,10 @@ gwy_app_toolbox_create(void)
                             tooltips);
         if (!button)
             continue;
-        flags = gwy_process_func_get_sensitivity_flags(proc_actions[i].name);
-        gwy_app_menu_set_sensitive_both(button, flags, 0);
+        sens = gwy_process_func_get_sensitivity_flags(proc_actions[i].name);
+        gwy_app_sensitivity_add_widget(button, sens);
         j++;
     }
-
-    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -405,11 +391,10 @@ gwy_app_toolbox_create(void)
                             (ActionCheckFunc)gwy_graph_func_exists, tooltips);
         if (!button)
             continue;
+        /* FIXME: implicit sensitivity, remove */
+        gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_GRAPH);
         j++;
     }
-
-    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_graph);
-    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_graph);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -432,15 +417,14 @@ gwy_app_toolbox_create(void)
                              (ActionCheckFunc)gwy_tool_func_exists, tooltips);
         if (!button)
             continue;
+        /* FIXME: implicit sensitivity, remove */
+        gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_DATA);
         if (!group) {
             group = GTK_RADIO_BUTTON(button);
             first_tool = tool_actions[i];
         }
         j++;
     }
-
-    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
-    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -471,11 +455,6 @@ gwy_app_toolbox_create(void)
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
 
-    g_object_set_data_full(G_OBJECT(toolbox), "toolbars", toolbars,
-                           (GDestroyNotify)g_slist_free);
-    g_object_set_data_full(G_OBJECT(toolbox), "menus", menus,
-                           (GDestroyNotify)g_slist_free);
-
     return toolbox;
 }
 
@@ -503,9 +482,8 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
                             GDK_CONTROL_MASK | GDK_SHIFT_MASK);
     g_object_set_data(G_OBJECT(last), "show-last-item", GINT_TO_POINTER(TRUE));
     gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
-    gwy_app_menu_set_sensitive_both(last,
-                                    GWY_MENU_FLAG_DATA
-                                    | GWY_MENU_FLAG_LAST_PROC, 0);
+    gwy_app_sensitivity_add_widget(last, (GWY_MENU_FLAG_DATA
+                                          | GWY_MENU_FLAG_LAST_PROC));
     g_signal_connect_swapped(last, "activate",
                              G_CALLBACK(gwy_app_rerun_process_func_cb),
                              GUINT_TO_POINTER(GWY_RUN_INTERACTIVE));
@@ -516,9 +494,8 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
                             GDK_CONTROL_MASK);
     g_object_set_data(G_OBJECT(last), "run-last-item", GINT_TO_POINTER(TRUE));
     gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
-    gwy_app_menu_set_sensitive_both(last,
-                                    GWY_MENU_FLAG_DATA
-                                    | GWY_MENU_FLAG_LAST_PROC, 0);
+    gwy_app_sensitivity_add_widget(last, (GWY_MENU_FLAG_DATA
+                                          | GWY_MENU_FLAG_LAST_PROC));
     g_signal_connect_swapped(last, "activate",
                              G_CALLBACK(gwy_app_rerun_process_func_cb),
                              GUINT_TO_POINTER(GWY_RUN_IMMEDIATE));
@@ -533,7 +510,6 @@ gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
 {
     GtkWidget *menu;
     GtkItemFactory *item_factory;
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_GRAPH, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<graph>", accel_group);
     gwy_graph_func_build_menu(GTK_OBJECT(item_factory), "",
@@ -542,7 +518,9 @@ gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
     gtk_widget_show_all(menu);
 
     /* set up sensitivity: all items need an active graph window */
+    /* TODO: replace this
     gwy_app_menu_set_flags_recursive(menu, &sens_data);
+    */
 
     return menu;
 }
@@ -591,11 +569,7 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_ABOUT
         },
     };
-    static const gchar *items_need_data[] = {
-        "/Metadata Browser", NULL
-    };
     GtkItemFactory *item_factory;
-    GtkWidget *menu;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<meta>", accel_group);
 #ifdef ENABLE_NLS
@@ -605,17 +579,18 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 #endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
-    menu = gtk_item_factory_get_widget(item_factory, "<meta>");
-    gwy_app_menu_set_sensitive_array(item_factory, "meta", items_need_data,
-                                     GWY_MENU_FLAG_DATA);
 
-    return menu;
+    set_sensitivity(item_factory,
+                    "<meta>/Metadata Browser", GWY_MENU_FLAG_DATA,
+                    NULL);
+
+    return gtk_item_factory_get_widget(item_factory, "<meta>");
 }
 
 static GtkWidget*
 gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
-    static GtkItemFactoryEntry menu_items1[] = {
+    static GtkItemFactoryEntry menu_items[] = {
         {
             "/---",
             NULL,
@@ -664,8 +639,6 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             "<StockItem>",
             GTK_STOCK_SAVE_AS
         },
-    };
-    static GtkItemFactoryEntry menu_items2[] = {
         {
             N_("/Close _Window"),
             "<control>W",
@@ -691,12 +664,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_QUIT
         },
     };
-    static const gchar *items_need_data[] = {
-        "/Save", "/Save As", "/Close Window", NULL
-    };
     GtkItemFactory *item_factory;
-    GtkWidget *menu;
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<file>", accel_group);
 #ifdef ENABLE_NLS
@@ -705,18 +673,18 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
                                         NULL, NULL);
 #endif
     gtk_item_factory_create_items(item_factory,
-                                  G_N_ELEMENTS(menu_items1), menu_items1, NULL);
-    gtk_item_factory_create_items(item_factory,
-                                  G_N_ELEMENTS(menu_items2), menu_items2, NULL);
-    menu = gtk_item_factory_get_widget(item_factory, "<file>");
+                                  G_N_ELEMENTS(menu_items), menu_items, NULL);
 
-    /* set up sensitivity  */
-    gwy_app_menu_set_sensitive_array(item_factory, "file", items_need_data,
-                                     sens_data.flags);
-    gwy_app_menu_set_recent_files_menu(
-        gtk_item_factory_get_widget(item_factory, "<file>/Open Recent"));
+    set_sensitivity(item_factory,
+                    "<file>/Save",         GWY_MENU_FLAG_DATA,
+                    "<file>/Save As",      GWY_MENU_FLAG_DATA,
+                    "<file>/Close Window", GWY_MENU_FLAG_DATA,
+                    NULL);
 
-    return menu;
+    gwy_app_menu_set_recent_files_menu
+             (gtk_item_factory_get_widget(item_factory, "<file>/Open Recent"));
+
+    return gtk_item_factory_get_widget(item_factory, "<file>");
 }
 
 GtkWidget*
@@ -820,24 +788,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL 
         },
     };
-    static const gchar *items_need_data[] = {
-        "/Duplicate", NULL
-    };
-    static const gchar *items_need_data_mask[] = {
-        "/Remove Mask", "/Mask Color...", NULL
-    };
-    static const gchar *items_need_data_show[] = {
-        "/Remove Presentation", NULL
-    };
-    static const gchar *items_need_undo[] = {
-        "/Undo", NULL
-    };
-    static const gchar *items_need_redo[] = {
-        "/Redo", NULL
-    };
     GtkItemFactory *item_factory;
-    GtkWidget *menu;
-    GwyMenuSensData sens_data;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<edit>", accel_group);
 #ifdef ENABLE_NLS
@@ -847,27 +798,17 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 #endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
-    menu = gtk_item_factory_get_widget(item_factory, "<edit>");
 
-    /* set up sensitivity  */
-    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_undo,
-                                     GWY_MENU_FLAG_UNDO);
-    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_redo,
-                                     GWY_MENU_FLAG_REDO);
-    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_data,
-                                     GWY_MENU_FLAG_DATA);
-    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_data_mask,
-                                     GWY_MENU_FLAG_DATA_MASK);
-    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_data_show,
-                                     GWY_MENU_FLAG_DATA_SHOW);
-    sens_data.flags = GWY_MENU_FLAG_DATA
-                      | GWY_MENU_FLAG_REDO
-                      | GWY_MENU_FLAG_UNDO
-                      | GWY_MENU_FLAG_DATA_MASK
-                      | GWY_MENU_FLAG_DATA_SHOW;
-    sens_data.set_to = 0;
+    set_sensitivity(item_factory,
+                    "<edit>/Duplicate", GWY_MENU_FLAG_DATA,
+                    "<edit>/Undo", GWY_MENU_FLAG_UNDO,
+                    "<edit>/Redo", GWY_MENU_FLAG_REDO,
+                    "<edit>/Remove Mask", GWY_MENU_FLAG_DATA_MASK,
+                    "<edit>/Remove Presentation", GWY_MENU_FLAG_DATA_SHOW,
+                    "<edit>/Mask Color...", GWY_MENU_FLAG_DATA_MASK,
+                    NULL);
 
-    return menu;
+    return gtk_item_factory_get_widget(item_factory, "<edit>");
 }
 
 static GtkWidget*

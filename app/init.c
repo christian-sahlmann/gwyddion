@@ -56,9 +56,9 @@ gwy_app_init(int *argc,
     g_set_application_name(PACKAGE_NAME);
     gwy_app_gl_init(argc, argv);
     /* XXX: These reference are never released. */
-    gwy_data_window_class_set_tooltips(gwy_app_tooltips_get());
-    gwy_3d_window_class_set_tooltips(gwy_app_tooltips_get());
-    gwy_graph_window_class_set_tooltips(gwy_app_tooltips_get());
+    gwy_data_window_class_set_tooltips(gwy_app_get_tooltips());
+    gwy_3d_window_class_set_tooltips(gwy_app_get_tooltips());
+    gwy_graph_window_class_set_tooltips(gwy_app_get_tooltips());
 
     gwy_app_init_set_window_icon();
 
