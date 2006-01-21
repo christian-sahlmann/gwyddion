@@ -80,5 +80,6 @@
     <xi:include href="xml/gwyoptionmenus.xml"/>
     <xi:include href="xml/gwycombobox.xml"/>
     <xi:include href="xml/gwyradiobuttons.xml"/>
+    <xi:include href="xml/gwysensitivitygroup.xml"/>
   </chapter>
 </book>
