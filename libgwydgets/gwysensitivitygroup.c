@@ -417,7 +417,52 @@ gwy_sensitivity_group_get_senslist(GwySensitivityGroup *sensgroup,
 /**
  * SECTION:gwysensitivitygroup
  * @title: GwySensitivityGroup
- * @short_description: Set widget sensitivity based on flags
+ * @short_description: Control widget sensitivity by flags
+ *
+ * #GwySensitivityGroup is a tool to manage sensitivity of sets of related
+ * widgets based on fulfilment of some conditions.
+ *
+ * A new sensitivity group is created with gwy_sensitivity_group_new().
+ * Widgets are then added to it with gwy_sensitivity_group_add_widget(), each
+ * with some set of flags it reacts to.  When state of the sensitivity group
+ * is then changed with gwy_sensitivity_group_set_state(), widgets whose flags
+ * are set are made sensitive, others insensitive (see
+ * gwy_sensitivity_group_set_state() description for details).
+ *
+ * The interpretation of the flags is completely up to #GwySensitivityGroup
+ * user, but they generally represent availability of some resource or
+ * possibility of some action.
+ *
+ * In the following example we have two conditions, %SENS_IMAGE and
+ * %SENS_GRAPH, representing availability of image data and graph data:
+ * <informalexample><programlisting>
+ * enum {
+ *      SENS_IMAGE = 1 << 0,
+ *      SENS_GRAPH = 1 << 1,
+ *      SENS_MASK  = 0x03
+ * };
+ * </programlisting></informalexample>
+ * We create buttons for three actions, one operates on image data, another
+ * on graph data, and the last on both:
+ * <informalexample><programlisting>
+ * sensgroup = gwy_sensitivity_group_new();
+ * button = gtk_button_new_with_label("Filter Data");
+ * gwy_sensitivity_group_add_widget(sensgroup, button, SENS_IMAGE);
+ * button = gtk_button_new_with_label("Fit Graph");
+ * gwy_sensitivity_group_add_widget(sensgroup, button, SENS_GRAPH);
+ * button = gtk_button_new_with_label("Add Profile");
+ * gwy_sensitivity_group_add_widget(sensgroup, button, SENS_IMAGE | SENS_GRAPH);
+ * g_object_unref(sensgroup);
+ * </programlisting></informalexample>
+ * When graph data becomes available, we simply call
+ * <informalexample><programlisting>
+ * gwy_sensitivity_group_set_state(sensgroup, SENS_GRAPH, SENS_GRAPH);
+ * </programlisting></informalexample>
+ * and when image data becomes unavailable
+ * <informalexample><programlisting>
+ * gwy_sensitivity_group_set_state(sensgroup, SENS_IMAGE, 0);
+ * </programlisting></informalexample>
+ * and the button sensitivities will be adjusted to match the situation.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
