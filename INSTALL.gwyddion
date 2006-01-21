@@ -3,8 +3,9 @@ Contents:
 0. Prebuilt binaries
 1. From sources -- Linux/Unix
 2. From sources -- MS Windows
-3. From CVS (Linux/Unix only)
-4. Modules and plug-ins
+3. From sources -- Mac OS X
+4. From CVS (Linux/Unix only)
+5. Modules and plug-ins
 
 ===[ 0. Prebuilt binaries ]==================================================
 
@@ -29,7 +30,7 @@ Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
 
 Recommended though optional, for speed up of some operations:
-- FFTW-3.0.0 or newer, including development files
+- FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
 
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
@@ -56,14 +57,13 @@ and as root run:
 Prerequisities:
 - MSVC 6 or newer (it may build with Cygwin or MinGW toolchain, but MSVC is
   the tested one)
-- Gtk+-2.6, including development files
+- GLib-2.6 and Gtk+-2.6, including development files
 - GtkGLExt-1.0 or newer, including development files
-- Pango with FT2 backend, including development files
 The prefered way to get all these is to install Gtk+ all-in-one package from
 GladeWin32.
 
 Optional but recommended, for installer creation:
-- Inno Setup 4 (or newer)
+- Inno Setup 4 or newer
 
 Unpack tarball with sources, change to the created directory and edit
 make.msc (note it has Unix EOLs so use Wordpad or some full-fledged text
@@ -105,7 +105,27 @@ source files, pixmaps, etc. according to Unix makefiles as it works with the
 nmake makefiles now.
 
 
-===[ 3. From CVS (Linux/Unix only) ]=========================================
+===[ 3. From sources -- Mac OS X ]===========================================
+
+Essentially, the Unix instructions apply here too.
+
+It's recommended to use Darwinports for installing the dependencies.  You
+need to install ports for gtk2, gtkglext, pkg-config and tiff; that should
+pull all the other dependencies.
+
+To make sure headers and libraries are found where Darwinports install them
+you may want to explicitely set:
+
+  CFLAGS='-I/opt/local/include -I/usr/X11R6/include'
+  LDFLAGS='-L/opt/local/lib -I/usr/X11R6/lib'
+
+Also make sure /opt/local/bin is in the PATH so that pkg-config can be found.
+
+Note until Gtk+ Quartz port is finished, it's necessary to start an X11
+server before running Gwyddion.
+
+
+===[ 4. From CVS (Linux/Unix only) ]=========================================
 
 CVS generally doesn't contain generated files, no matter how unusual tools
 may be needed to generate them.  Consider use of nightly snapshot tarballs
@@ -147,7 +167,7 @@ or
 will work as expected.
 
 
-===[ 4. Modules and plug-ins ]===============================================
+===[ 5. Modules and plug-ins ]===============================================
 
 To be written.
 
