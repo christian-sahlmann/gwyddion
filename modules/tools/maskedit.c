@@ -216,7 +216,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
     toolbox = gtk_table_new(1, G_N_ELEMENTS(modes), TRUE);
-    tips = gwy_app_tooltips_get();
+    tips = gwy_app_get_tooltips();
     for (i = 0; i < G_N_ELEMENTS(modes); i++) {
         button = gtk_radio_button_new_from_widget(group);
         g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
