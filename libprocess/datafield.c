@@ -643,6 +643,8 @@ gwy_data_field_resize(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Extracts a rectangular part of a data field to a new data field.
+ *
+ * Returns: The extracted area as a newly created data field.
  **/
 GwyDataField*
 gwy_data_field_area_extract(GwyDataField *data_field,

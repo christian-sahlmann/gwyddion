@@ -107,6 +107,17 @@ gwy_data_line_finalize(GObject *object)
     G_OBJECT_CLASS(gwy_data_line_parent_class)->finalize(object);
 }
 
+/**
+ * gwy_data_line_new:
+ * @res: Resolution, i.e., the number of samples.
+ * @real: Real physical dimension.
+ * @nullme: Whether the data line should be initialized to zeroes. If %FALSE,
+ *          the data will not be initialized.
+ *
+ * Creates a new data line.
+ *
+ * Returns: A newly created data line.
+ **/
 GwyDataLine*
 gwy_data_line_new(gint res, gdouble real, gboolean nullme)
 {
@@ -125,6 +136,19 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
     return data_line;
 }
 
+/**
+ * gwy_data_line_new_alike:
+ * @model: A data line to take resolutions and units from.
+ * @nullme: Whether the data line should be initialized to zeroes. If %FALSE,
+ *          the data will not be initialized.
+ *
+ * Creates a new data line similar to an existing one.
+ *
+ * Use gwy_data_line_duplicate() if you want to copy a data line including
+ * data.
+ *
+ * Returns: A newly created data line.
+ **/
 GwyDataLine*
 gwy_data_line_new_alike(GwyDataLine *model,
                         gboolean nullme)
@@ -404,6 +428,8 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
  * @len: Length of extracted segment.
  *
  * Extracts a part of a data line to a new data line.
+ *
+ * Returns: The extracted area as a newly created data line.
  **/
 GwyDataLine*
 gwy_data_line_part_extract(GwyDataLine *data_line,
