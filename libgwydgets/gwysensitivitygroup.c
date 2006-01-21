@@ -212,6 +212,8 @@ gwy_sensitivity_group_release_widget(GwySensitivityGroup *sensgroup,
                                      GtkWidget *widget)
 {
     SensList *senslist;
+    gboolean sens;
+    GList *item;
 
     g_return_if_fail(GWY_IS_SENSITIVITY_GROUP(sensgroup));
     g_return_if_fail(GTK_IS_WIDGET(widget));
@@ -219,7 +221,18 @@ gwy_sensitivity_group_release_widget(GwySensitivityGroup *sensgroup,
     if (!senslist)
         return;
 
-    senslist->widgets = g_list_remove(senslist->widgets, widget);
+    /* Commit sensitivity changes before removal */
+    if (senslist->dirty) {
+        sens = ((senslist->mask & sensgroup->state) == senslist->mask);
+        gtk_widget_set_sensitive(widget, sens);
+    }
+
+    item = g_list_find(senslist->widgets, widget);
+    g_assert(item);
+    g_signal_handlers_disconnect_by_func(widget,
+                                         gwy_sensitivity_group_widget_gone,
+                                         item);
+    senslist->widgets = g_list_delete_link(senslist->widgets, item);
     /* Destroy whole list when there are no widgets in it */
     if (!senslist->widgets)
         sensgroup->lists = g_list_remove(sensgroup->lists, senslist);
