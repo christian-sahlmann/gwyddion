@@ -132,7 +132,7 @@ clean-local:
 
 if MAINTAINER_MODE
 enum_headers = gwydgetenums.h
-stamp_files = stamp-gwyprocessenums.h
+stamp_files = stamp-gwyprocesstypes.h
 
 MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
 

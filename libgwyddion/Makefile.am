@@ -75,7 +75,7 @@ clean-local:
 
 if MAINTAINER_MODE
 enum_headers = gwyddionenums.h
-stamp_files = stamp-gwyddionenums.h
+stamp_files = stamp-gwyddiontypes.h
 
 MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
 
