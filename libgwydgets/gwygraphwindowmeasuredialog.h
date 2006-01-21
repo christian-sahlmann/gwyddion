@@ -40,8 +40,8 @@ G_BEGIN_DECLS
 
 typedef enum {
     METHOD_INTERSECTIONS = 0,
-    METHOD_CROSSES = 1
-} MeasureMethodType;
+    METHOD_CROSSES       = 1
+} GwyMeasureMethodType;
 
 
 typedef struct _GwyGraphWindowMeasureDialog      GwyGraphWindowMeasureDialog;
@@ -67,8 +67,8 @@ struct _GwyGraphWindowMeasureDialog {
     GtkWidget *header_y;
     GtkWidget *header_distx;
     GtkWidget *header_disty;
-    
-    MeasureMethodType mmethod;
+
+    GwyMeasureMethodType mmethod;
     gint n;
     gint curve_index;
     gdouble x_mag;
