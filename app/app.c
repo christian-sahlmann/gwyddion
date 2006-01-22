@@ -77,6 +77,28 @@ static void       gwy_app_3d_window_title_changed  (GtkWidget *data_window,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 
+/* FIXME: A temporary hack. */
+static void
+set_sensitivity(GtkItemFactory *item_factory, ...)
+{
+    GwySensitivityGroup *sensgroup;
+    GwyMenuSensFlags mask;
+    const gchar *path;
+    GtkWidget *widget;
+    va_list ap;
+
+    sensgroup = gwy_app_sensitivity_get_group();
+    va_start(ap, item_factory);
+    while ((path = va_arg(ap, const gchar*))) {
+        mask = va_arg(ap, guint);
+        widget = gtk_item_factory_get_widget(item_factory, path);
+        if (!widget)
+            break;
+        gwy_sensitivity_group_add_widget(sensgroup, widget, mask);
+    }
+    va_end(ap);
+}
+
 /*****************************************************************************
  *                                                                           *
  *     Main, toolbox                                                         *

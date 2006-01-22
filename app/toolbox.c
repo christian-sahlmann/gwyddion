@@ -79,6 +79,28 @@ static GtkTargetEntry dnd_target_table[] = {
   { "text/plain", 0, DND_TARGET_STRING },
 };
 
+/* FIXME: A temporary hack. */
+static void
+set_sensitivity(GtkItemFactory *item_factory, ...)
+{
+    GwySensitivityGroup *sensgroup;
+    GwyMenuSensFlags mask;
+    const gchar *path;
+    GtkWidget *widget;
+    va_list ap;
+
+    sensgroup = gwy_app_sensitivity_get_group();
+    va_start(ap, item_factory);
+    while ((path = va_arg(ap, const gchar*))) {
+        mask = va_arg(ap, guint);
+        widget = gtk_item_factory_get_widget(item_factory, path);
+        if (!widget)
+            break;
+        gwy_sensitivity_group_add_widget(sensgroup, widget, mask);
+    }
+    va_end(ap);
+}
+
 static GSList*
 toolbox_add_menubar(GtkWidget *container,
                     GtkWidget *menu,
