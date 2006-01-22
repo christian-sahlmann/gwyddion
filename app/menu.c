@@ -71,6 +71,290 @@ debug_menu_sens_flags(guint flags)
 }
 #endif
 
+typedef struct {
+    const gchar *name;
+    gchar *path;
+    gchar *path_translated;
+    gchar *item_canonical;  /* No underscores, no ellipses */
+    gchar *item_translated;
+    gchar *item_collated;
+    GtkWidget *widget;
+} MenuNodeData;
+
+static void
+gwy_app_menu_canonicalize_label(gchar *label)
+{
+    guint i, j;
+
+    for (i = j = 0; label[i]; i++) {
+        label[j] = label[i];
+        if (label[i] != '_' || label[i+1] == '_')
+            j++;
+    }
+    /* If the label *ends* with an underscore, just kill it */
+    label[j] = '\0';
+    if (j >= 3 && label[j-3] == '.' && label[j-2] == '.' && label[j-1] == '.')
+        label[j-3] = '\0';
+}
+
+static void
+gwy_app_menu_add_node(GNode *root,
+                      const gchar *name,
+                      const gchar *path)
+{
+    MenuNodeData *data = NULL;
+    GNode *node, *child;
+    gchar **segments, **segments_canonical;
+    gchar *s;
+    guint n, i;
+
+    g_return_if_fail(path && path[0] == '/');
+    segments = g_strsplit(path, "/", 0);
+
+    /* Canonicalize */
+    n = g_strv_length(segments);
+    segments_canonical = g_new0(gchar*, n+1);
+    for (i = 0; i < n; i++) {
+        segments_canonical[i] = g_strdup(segments[i]);
+        gwy_app_menu_canonicalize_label(segments_canonical[i]);
+    }
+
+    /* Find node in the tree to branch off */
+    node = root;
+    i = 1;
+    while (segments_canonical[i]) {
+        gwy_debug("Searching for <%s> in <%s>",
+                  segments_canonical[i], ((MenuNodeData*)node->data)->path);
+        for (child = node->children; child; child = child->next) {
+            data = (MenuNodeData*)child->data;
+            if (gwy_strequal(data->item_canonical, segments_canonical[i])) {
+                gwy_debug("Found <%s>, descending", segments_canonical[i]);
+                break;
+            }
+        }
+        if (child) {
+            node = child;
+            i++;
+        }
+        else {
+            gwy_debug("Not found <%s>, stopping search", segments_canonical[i]);
+            break;
+        }
+    }
+    if (!segments[i]) {
+        g_warning("Item with path `%s' already exists", path);
+        goto fail;
+    }
+    if (i > 1 && (!data || ((MenuNodeData*)node->data)->name)) {
+        g_warning("Item with path `%s' cannot be both leaf and branch", path);
+        goto fail;
+    }
+
+    /* Now recursively create new children till segments[] is exhausted */
+    gwy_debug("Branching off new child of <%s>",
+              ((MenuNodeData*)node->data)->path);
+    while (segments[i]) {
+        data = g_new0(MenuNodeData, 1);
+        s = segments[i+1];
+        segments[i+1] = NULL;
+        data->path = g_strjoinv("/", segments);
+        segments[i+1] = s;
+
+        data->item_canonical = segments_canonical[i];
+        segments_canonical[i] = NULL;
+        gwy_debug("Created <%s> with full path <%s>",
+                  data->item_canonical, data->path);
+        node = g_node_prepend_data(node, data);
+        i++;
+    }
+    /* The leaf node is the real item */
+    data->name = name;
+    s = gettext(path);
+    if (!gwy_strequal(s, path)) {
+        data->path_translated = g_strdup(s);
+    }
+
+fail:
+    g_strfreev(segments);
+    g_strfreev(segments_canonical);
+}
+
+/* Deduce partial translations, this enables merging of
+ * "/Translated Foo/Translated Bar" and "/Foo/Baz" under *one* submenu
+ * "/Translated Foo". */
+static gboolean
+gwy_app_menu_resolve_translations(GNode *node,
+                                  G_GNUC_UNUSED gpointer userdata)
+{
+    MenuNodeData *data = (MenuNodeData*)node->data;
+    MenuNodeData *pdata;
+    const gchar *p;
+
+    if (G_NODE_IS_ROOT(node))
+        return FALSE;
+
+    pdata = (MenuNodeData*)node->parent->data;
+    if (!data->path_translated) {
+        gwy_debug("Path <%s> is untranslated", data->path);
+        data->path_translated = g_strdup(data->path);
+    }
+    else {
+        gwy_debug("Path <%s> is translated", data->path);
+    }
+
+    p = strrchr(data->path_translated, '/');
+    g_return_val_if_fail(p, FALSE);
+    data->item_translated = g_strdup(p+1);
+    data->item_collated = g_utf8_collate_key(data->item_translated, -1);
+    if (!pdata->path_translated) {
+        pdata->path_translated = g_strndup(data->path_translated,
+                                           p - data->path_translated);
+        gwy_debug("Deducing partial translation: <%s> from <%s>",
+                  pdata->path, data->path);
+    }
+
+    return FALSE;
+}
+
+static gboolean
+gwy_app_menu_sort_submenus(GNode *node,
+                           G_GNUC_UNUSED gpointer userdata)
+{
+    MenuNodeData *data1, *data2;
+    GNode *c1, *c2;
+    gboolean ok = FALSE;
+
+    if (G_NODE_IS_LEAF(node))
+        return FALSE;
+
+    /* This is bubble sort. */
+    while (!ok) {
+        ok = TRUE;
+        for (c1 = node->children, c2 = c1->next; c2; c1 = c2, c2 = c2->next) {
+            data1 = (MenuNodeData*)c1->data;
+            data2 = (MenuNodeData*)c2->data;
+            if (strcmp(data1->item_collated, data2->item_collated) < 0)
+                continue;
+
+            c1->next = c2->next;
+            c2->prev = c1->prev;
+            if (c1->prev)
+                c1->prev->next = c2;
+            if (c1 == node->children)
+                node->children = c2;
+            if (c2->next)
+                c2->next->prev = c1;
+            c1->prev = c2;
+            c2->next = c1;
+            c1 = c1->prev;
+            c2 = c2->next;
+            ok = FALSE;
+        }
+    }
+
+    return FALSE;
+}
+
+static gboolean
+gwy_app_menu_create_widgets(GNode *node,
+                            gpointer callback)
+{
+    MenuNodeData *cdata, *data = (MenuNodeData*)node->data;
+    GwyMenuSensFlags sens;
+    GNode *child;
+    GtkWidget *menu, *item;
+
+    if (!G_NODE_IS_ROOT(node))
+        data->widget = gtk_menu_item_new_with_mnemonic(data->item_translated);
+    if (G_NODE_IS_LEAF(node)) {
+        g_signal_connect_swapped(data->widget, "activate",
+                                 G_CALLBACK(callback), (gpointer)data->name);
+        sens = gwy_process_func_get_sensitivity_flags(data->name);
+        gwy_app_sensitivity_add_widget(data->widget, sens);
+        return FALSE;
+    }
+
+    menu = gtk_menu_new();
+    /* This mangles item_translated, but we have no further use for it. */
+    gwy_app_menu_canonicalize_label(data->item_translated);
+    gtk_menu_set_title(GTK_MENU(menu), data->item_translated);
+    item = gtk_tearoff_menu_item_new();
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    for (child = node->children; child; child = child->next) {
+        cdata = (MenuNodeData*)child->data;
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), cdata->widget);
+    }
+    if (G_NODE_IS_ROOT(node))
+        data->widget = menu;
+    else
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(data->widget), menu);
+    gtk_widget_show_all(menu);
+
+    return FALSE;
+}
+
+static gboolean
+gwy_app_menu_free_node_data(GNode *node,
+                            G_GNUC_UNUSED gpointer userdata)
+{
+    MenuNodeData *data = (MenuNodeData*)node->data;
+
+    g_free(data->path);
+    g_free(data->path_translated);
+    g_free(data->item_canonical);
+    g_free(data->item_collated);
+    g_free(data->item_translated);
+    g_free(data);
+
+    return FALSE;
+}
+
+static void
+gwy_app_menu_add_proc_func(const gchar *name,
+                           GNode *root)
+{
+    gwy_app_menu_add_node(root, name, gwy_process_func_get_menu_path(name));
+}
+
+static GtkWidget*
+gwy_app_build_module_func_menu(GNode *root,
+                               GCallback callback)
+{
+    GtkWidget *menu;
+
+    g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
+                    &gwy_app_menu_resolve_translations, NULL);
+    g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+                    &gwy_app_menu_sort_submenus, NULL);
+    g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
+                    &gwy_app_menu_create_widgets, callback);
+    menu = ((MenuNodeData*)root->data)->widget;
+    g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
+                    &gwy_app_menu_free_node_data, NULL);
+    g_node_destroy(root);
+
+    return menu;
+}
+
+GtkWidget*
+gwy_app_build_process_menu(void)
+{
+    MenuNodeData *data;
+    GtkWidget *menu;
+    GNode *root;
+
+    data = g_new0(MenuNodeData, 1);
+    data->path = g_strdup("");
+    data->item_translated = g_strdup(_("_Data Process"));
+    root = g_node_new(data);
+    gwy_process_func_foreach((GFunc)&gwy_app_menu_add_proc_func, root);
+    menu = gwy_app_build_module_func_menu
+                               (root, G_CALLBACK(gwy_app_run_process_func_cb));
+    /* TODO: add Last run funcs here */
+
+    return menu;
+}
+
 /**
  * gwy_app_run_process_func_cb:
  * @name: A data processing function name.
@@ -84,9 +368,7 @@ debug_menu_sens_flags(guint flags)
 guint
 gwy_app_run_process_func_cb(gchar *name)
 {
-    GwyRunType run_types[] = {
-        GWY_RUN_INTERACTIVE, GWY_RUN_IMMEDIATE,
-    };
+    GwyRunType run_types[] = { GWY_RUN_INTERACTIVE, GWY_RUN_IMMEDIATE, };
     GwyRunType available_run_modes;
     gsize i;
 

@@ -40,6 +40,8 @@ typedef enum {
     GWY_MENU_FLAG_MASK       = 0xff
 } GwyMenuSensFlags;
 
+GtkWidget*   gwy_app_build_process_menu      (void);
+
 void         gwy_app_menu_recent_files_update(GList *recent_files);
 GtkTooltips* gwy_app_get_tooltips            (void);
 GwySensitivityGroup* gwy_app_sensitivity_get_group   (void);
