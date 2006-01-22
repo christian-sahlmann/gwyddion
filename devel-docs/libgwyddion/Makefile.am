@@ -32,6 +32,11 @@ MKDB_OPTIONS =
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS =
+	--extra-dir=$(srcdir)/../libgwyprocess/html \
+	--extra-dir=$(srcdir)/../libgwydraw/html \
+	--extra-dir=$(srcdir)/../libgwydgets/html \
+	--extra-dir=$(srcdir)/../libgwymodule/html \
+	--extra-dir=$(srcdir)/../libgwyapp/html
 
 # Used for dependencies.
 HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h
