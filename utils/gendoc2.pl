@@ -10,8 +10,10 @@ use POSIX qw(getcwd);
 my $tidy = 'tidy -asxhtml -q';
 my $unsafe_chars = "<>\"&";
 my $base = $ENV{'HOME'} . '/Projects/Gwyddion/Web/documentation';
-my $suffix = '';
-if ( $ARGV[0] eq 'CVS' ) { shift @ARGV; $suffix = "&nbsp;(CVS)"; }
+my $suffix;
+if ( not defined $ARGV[0] ) { $suffix = ''; }
+elsif ( $ARGV[0] eq 'CVS' ) { shift @ARGV; $suffix = "&nbsp;(CVS HEAD)"; }
+elsif ( $ARGV[0] =~ /^\d+\.\d/ ) { $suffix = "&nbsp;(" . (shift @ARGV) . ")"; }
 if ( defined $ARGV[0] ) { $base = $ARGV[0]; }
 my $APIDOCS = "$base";
 my $pkgname = "Gwyddion";
