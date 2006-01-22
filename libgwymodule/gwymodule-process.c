@@ -366,7 +366,7 @@ gwy_process_func_get_menu_path(const gchar *name)
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
 
-    return func_info->menu_path_translated;
+    return func_info->info.menu_path;
 }
 
 /**
