@@ -7,6 +7,7 @@ dont_update_version=
 arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
+docdir=$HOME/Projects/Gwyddion/devel-docs
 installroot=$HOME/tmp
 gtkdocdir="/share/gtk-doc/html/*"
 gtkdocdirs=(/usr /usr/local /opt/gnome $installroot/usr)
@@ -95,7 +96,8 @@ function check_coding_style() {
     | cat --squeeze-blank >$logdir/coding-style.log
 
   # Libraries
-  find . -path \*.libs/lib\*.so | grep -v '\..*\..*\..*\.' | while read lib; do
+  #find . -path \*.libs/lib\*.so | grep -v '\..*\..*\..*\.'
+  echo ./app/.libs/libgwyapp.so | while read lib; do
     d=${lib##./}
     d=${d%%/*}
     l=$(basename $lib .so)
@@ -187,19 +189,14 @@ function gnains_index() {
 
 
 function webify_api() {
-  libs="libgwyddion libgwyapp libgwymodule libgwydgets libgwyprocess libgwydraw"
-  ./utils/gendoc.pl
-  for d in $libs; do
-    rm -vf $phpswroot/$pkgname/$d/main.xhtml
-    sed -i '5i<link rel="shortcut icon" type="image/x-icon" href="/Img/favicon.ico"/>' $phpswroot/$pkgname/$d/*.xhtml
-    ln -s index.xhtml $phpswroot/$pkgname/$d/main.xhtml
+  ./utils/gendoc2.pl CVS $docdir
+  for x in devel-docs/libgwy*; do
+    if test -d $x; then
+      cp $x/html/*.png $docdir/$(basename $x)
+    fi
   done
-  for d in libgwydgets; do
-    dir=Img/software/$pkgname/$d
-    sed -i 's#src="\(.*\.png\)"#src="/'$dir'/\1"#' $phpswroot/$pkgname/$d/*.xhtml
-    cp devel-docs/$d/html/*.png $HOME/$dir
-    rsync --recursive --rsh=ssh $HOME/$dir $host:Img/software/$pkgname
-  done
+  rm $docdir/*/{left,right,home.up}.png
+  rsync --recursive --rsh=ssh $docdir $host:$(dirname $docdir)
 }
 
 

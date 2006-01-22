@@ -7,10 +7,12 @@ use POSIX qw(getcwd);
 
 # This script transforms gtk-doc documentation to a form directly usable on
 # gwyddion.net with left bar, etc.  I should rather learn DSSSL...
-
 my $tidy = 'tidy -asxhtml -q';
 my $unsafe_chars = "<>\"&";
-my $base = $ENV{'HOME'} . "/Projects/Gwyddion/Web/documentation";
+my $base = $ENV{'HOME'} . '/Projects/Gwyddion/Web/documentation';
+my $suffix = '';
+if ( $ARGV[0] eq 'CVS' ) { shift @ARGV; $suffix = "&nbsp;(CVS)"; }
+if ( defined $ARGV[0] ) { $base = $ARGV[0]; }
 my $APIDOCS = "$base";
 my $pkgname = "Gwyddion";
 
@@ -19,14 +21,16 @@ undef $/;
 my $footer =
 "
 </div>
-<?php include('../../_leftmenu.php'); ?>
+<?php include('../../../_leftmenu.php'); ?>
 ";
 
-chdir "devel-docs";
+chdir "devel-docs" or die "Must be run from top-level $pkgname directory.";
 foreach my $dir (glob "*") {
     next if !-d $dir;
+    next if $dir eq "CVS";
     my $oldcwd = getcwd;
     chdir $dir;
+    mkdir "$APIDOCS/$dir" unless -d "$APIDOCS/$dir";
     foreach my $f (glob "html/*.html") {
         print "$dir/$f\n";
         $_ = qx(sed -e 's:</*gtkdoc[^>]*>::gi' $f | $tidy 2>/dev/null);
@@ -46,6 +50,12 @@ foreach my $dir (glob "*") {
         s#\s*</div>##sg;
         # Remove whitespace before </a>
         s#\s*</a>#</a>#sg;
+        # Piece together broken likes
+        s#(<\w+)\s*\n\s*#$1 #sg;
+        s#(<\w+)\s*\n\s*#$1 #sg;
+        s#(<\w+)\s*\n\s*#$1 #sg;
+        # Remove function name patenthesis spacing
+        s#\s+\(\)#()#g;
         # Add "api-since" class to Since: version
         s#(Since:? [\d.]+)#<span class="api-since">$1</span>#sg;
         # Remove leading empty lines from preforematted text
@@ -57,12 +67,20 @@ foreach my $dir (glob "*") {
         s#\s+cellpadding=".*?"##sg;
         s#\s+cellspacing=".*?"##sg;
         s#<meta name="generator".*?>##sgi;
+        s#<hr\s*/>\n##sgi;
         # Change .html links to .php, unless they are to local gtk-doc docs
         s#href="([^/][^"]*)\.html\b#href="$1.php#sg;
         # Add navigation
         my $add_topnote = s#<table class="navigation" width="100%"\s*>\s*<tr>\s*<th valign="middle">\s*<p class="title">(.*?)</p>\s*</th>\s*</tr>\s*</table>\s*<hr\s*/>#<h1>$1</h1>#sg;
         s#<h2><span class="refentrytitle">(.*?)</span></h2>#<h1>$1</h1>#s;
         s#<h2 class="title"(.*?)</h2>#<h1$1</h1>#s;
+        # Remove the who-knows-what-it's-good-for table from titles
+        s#<table[^>]*>\s*<tr>\s*<td[^>]*>\s*(<h1>.*?</h1>)\s*(.*?)</td>.*?</table>#$1\n<p>$2</p>#si;
+        # Add suffix to h1 tags
+        if ( $suffix ) {
+            s#</h1>#$suffix</h1>#;
+            s#(<p class="title">.*?)</p>#$1$suffix</p>#;
+        }
         # Change warnings from titles to normal bold paragraphs
         s#<h3 class="title">Warning</h3>\n#<p><b class="warning">Warning:</b></p>#sg;
         if ( !$add_topnote ) { s#(<table class="navigation".*?</table>)#<div class="topnote">$1</div>#s; }
