@@ -67,6 +67,7 @@ void gwy_data_field_correlate_iteration(GwyDataField *data_field,
                                         GwyComputationStateType *state,
                                         gint *iteration);
 
+
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_CORRELATION__*/

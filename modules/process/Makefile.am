@@ -36,6 +36,7 @@ process_LTLIBRARIES = \
 	maskcor.la \
 	maskops.la \
 	median-bg.la \
+	merge.la \
 	nanoindent_adjust.la \
 	outliers.la \
 	polylevel.la \
@@ -164,6 +165,12 @@ grain_dist_la_LIBADD = $(module_libadd)
 hough_la_SOURCES = hough.c
 hough_la_LIBADD = $(module_libadd)
 
+#indent_analyze_la_SOURCES = indent_analyze.c
+#indent_analyze_la_LIBADD = $(module_libadd)
+
+#immerse_la_SOURCES = immerse.c
+#immerse_la_LIBADD = $(module_libadd)
+
 laplace_la_SOURCES = laplace.c
 laplace_la_LIBADD = $(module_libadd)
 
@@ -194,6 +201,9 @@ maskops_la_LIBADD = $(module_libadd)
 median_bg_la_SOURCES = median-bg.c
 median_bg_la_LIBADD = $(module_libadd)
 
+merge_la_SOURCES = merge.c
+merge_la_LIBADD = $(module_libadd)
+    
 outliers_la_SOURCES = outliers.c
 outliers_la_LIBADD = $(module_libadd)
 
