@@ -63,6 +63,7 @@ static GQuark last_name_quark   = 0;
 
 static GtkWidget           *recent_files_menu = NULL;
 static GtkWidget           *process_menu      = NULL;
+static GtkWidget           *graph_menu        = NULL;
 static GtkTooltips         *app_tooltips      = NULL;
 static GwySensitivityGroup *app_sensgroup     = NULL;
 
@@ -342,7 +343,6 @@ gwy_app_menu_create_widgets(GNode *node,
                             gpointer callback)
 {
     MenuNodeData *cdata, *data = (MenuNodeData*)node->data;
-    GwyMenuSensFlags sens;
     GNode *child;
     GtkWidget *menu, *item;
 
@@ -351,8 +351,6 @@ gwy_app_menu_create_widgets(GNode *node,
     if (G_NODE_IS_LEAF(node)) {
         g_signal_connect_swapped(data->widget, "activate",
                                  G_CALLBACK(callback), (gpointer)data->name);
-        sens = gwy_process_func_get_sensitivity_flags(data->name);
-        gwy_app_sensitivity_add_widget(data->widget, sens);
         return FALSE;
     }
 
@@ -374,13 +372,36 @@ gwy_app_menu_create_widgets(GNode *node,
 }
 
 /**
+ * gwy_app_menu_setup_sensitivity:
+ * @node: Module function menu tree node to process.
+ * @userdata: Function to get sensitivity flags for @node.
+ *
+ * Sets up widget sensitivities.
+ *
+ * This is stage 5, sensitivity set-up.
+ *
+ * Returns: Always %FALSE.
+ **/
+static gboolean
+gwy_app_menu_setup_sensitivity(GNode *node,
+                               gpointer userdata)
+{
+    MenuNodeData *data = (MenuNodeData*)node->data;
+    guint (*get_flags)(const gchar *name);
+
+    get_flags = userdata;
+    gwy_app_sensitivity_add_widget(data->widget, get_flags(data->name));
+    return FALSE;
+}
+
+/**
  * gwy_app_menu_free_node_data:
  * @node: Module function menu tree node to process.
  * @userdata: Unused.
  *
  * Frees module function menu tree auxiliary data.
  *
- * This is stage 5, clean-up.
+ * This is stage 6, clean-up.
  *
  * Returns: Always %FALSE.
  **/
@@ -401,26 +422,20 @@ gwy_app_menu_free_node_data(GNode *node,
     return FALSE;
 }
 
-static void
-gwy_app_menu_add_proc_func(const gchar *name,
-                           GNode *root)
-{
-    gwy_app_menu_add_node(root, name, gwy_process_func_get_menu_path(name));
-}
-
 /**
  * gwy_app_build_module_func_menu:
  * @root: Module function menu root.
  * @callback: The callback function to connect to leaves.
  *
- * Executes stages 2-5 of module function menu construction and destroys the
+ * Executes stages 2-4 of module function menu construction and destroys the
  * node tree.
  *
  * Returns: The top-level menu widget.
  **/
 static GtkWidget*
 gwy_app_build_module_func_menu(GNode *root,
-                               GCallback callback)
+                               GCallback callback,
+                               guint (*get_flags)(const gchar *name))
 {
     GtkWidget *menu;
 
@@ -431,11 +446,21 @@ gwy_app_build_module_func_menu(GNode *root,
     g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
                     &gwy_app_menu_create_widgets, callback);
     menu = ((MenuNodeData*)root->data)->widget;
+    if (get_flags)
+        g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_LEAVES, -1,
+                        &gwy_app_menu_setup_sensitivity, get_flags);
     g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
                     &gwy_app_menu_free_node_data, NULL);
     g_node_destroy(root);
 
     return menu;
+}
+
+static void
+gwy_app_menu_add_proc_func(const gchar *name,
+                           GNode *root)
+{
+    gwy_app_menu_add_node(root, name, gwy_process_func_get_menu_path(name));
 }
 
 GtkWidget*
@@ -451,9 +476,38 @@ gwy_app_build_process_menu(GtkAccelGroup *accel_group)
     root = g_node_new(data);
     gwy_process_func_foreach((GFunc)&gwy_app_menu_add_proc_func, root);
     menu = gwy_app_build_module_func_menu(root,
-                                          G_CALLBACK(gwy_app_run_process_func));
+                                          G_CALLBACK(gwy_app_run_process_func),
+                                          gwy_process_func_get_sensitivity_flags);
     gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
     process_menu = menu;
+
+    return menu;
+}
+
+static void
+gwy_app_menu_add_graph_func(const gchar *name,
+                            GNode *root)
+{
+    gwy_app_menu_add_node(root, name, gwy_graph_func_get_menu_path(name));
+}
+
+GtkWidget*
+gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
+{
+    MenuNodeData *data;
+    GtkWidget *menu;
+    GNode *root;
+
+    data = g_new0(MenuNodeData, 1);
+    data->path = g_strdup("");
+    data->item_translated = g_strdup(_("_Graph"));
+    root = g_node_new(data);
+    gwy_graph_func_foreach((GFunc)&gwy_app_menu_add_graph_func, root);
+    menu = gwy_app_build_module_func_menu(root,
+                                          G_CALLBACK(gwy_app_run_graph_func),
+                                          gwy_graph_func_get_sensitivity_flags);
+    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    graph_menu = menu;
 
     return menu;
 }
@@ -621,7 +675,7 @@ gwy_app_update_last_process_func(const gchar *name)
 }
 
 void
-gwy_app_run_graph_func_cb(gchar *name)
+gwy_app_run_graph_func(const gchar *name)
 {
     GtkWidget *graph_window;
 
@@ -630,9 +684,6 @@ gwy_app_run_graph_func_cb(gchar *name)
     g_return_if_fail(GWY_IS_GRAPH_WINDOW(graph_window));
     g_return_if_fail(GWY_IS_GRAPH(GWY_GRAPH_WINDOW(graph_window)->graph));
     gwy_graph_func_run(name, GWY_GRAPH(GWY_GRAPH_WINDOW(graph_window)->graph));
-    /* FIXME TODO: some equivalent of this:
-    gwy_app_data_view_update(data_view);
-    */
 }
 
 static void

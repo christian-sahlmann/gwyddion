@@ -49,7 +49,6 @@ typedef struct {
 typedef gboolean (*ActionCheckFunc)(gconstpointer);
 
 static GtkWidget* gwy_app_menu_create_meta_menu (GtkAccelGroup *accel_group);
-static GtkWidget* gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
@@ -99,11 +98,10 @@ set_sensitivity(GtkItemFactory *item_factory, ...)
     va_end(ap);
 }
 
-static GSList*
+static void
 toolbox_add_menubar(GtkWidget *container,
                     GtkWidget *menu,
-                    const gchar *item_label,
-                    GSList *menus)
+                    const gchar *item_label)
 {
     GtkWidget *item, *alignment, *menubar;
     GtkTextDirection direction;
@@ -119,9 +117,6 @@ toolbox_add_menubar(GtkWidget *container,
     item = gtk_menu_item_new_with_mnemonic(item_label);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), item);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-    menus = g_slist_append(menus, menubar);
-
-    return menus;
 }
 
 static GtkWidget*
@@ -311,9 +306,7 @@ gwy_app_toolbox_create(void)
     GtkAccelGroup *accel_group;
     Action action;
     GList *list;
-    GSList *toolbars = NULL;    /* list of all toolbars for sensitivity */
-    GSList *menus = NULL;    /* list of all menus for sensitivity */
-    GSList *l;
+    GSList *toolbars = NULL, *l;
     const gchar *first_tool = NULL;
     gboolean visible;
     guint i, j;
@@ -335,23 +328,22 @@ gwy_app_toolbox_create(void)
 
     tooltips = gwy_app_get_tooltips();
 
-    menus = toolbox_add_menubar(container,
-                                gwy_app_menu_create_file_menu(accel_group),
-                                _("_File"), menus);
-    menus = toolbox_add_menubar(container,
-                                gwy_app_menu_create_edit_menu(accel_group),
-                                _("_Edit"), menus);
+    toolbox_add_menubar(container,
+                        gwy_app_menu_create_file_menu(accel_group), _("_File"));
+    toolbox_add_menubar(container,
+                        gwy_app_menu_create_edit_menu(accel_group), _("_Edit"));
+
     menu = gwy_app_build_process_menu(accel_group);
     gwy_app_process_menu_add_run_last(menu);
     gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
-    g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);     /* XXX */
-    menus = toolbox_add_menubar(container, menu, _("_Data Process"), menus);
-    menus = toolbox_add_menubar(container,
-                                gwy_app_menu_create_graph_menu(accel_group),
-                                _("_Graph"), menus);
-    menus = toolbox_add_menubar(container,
-                                gwy_app_menu_create_meta_menu(accel_group),
-                                _("_Meta"), menus);
+    toolbox_add_menubar(container, menu, _("_Data Process"));
+
+    menu = gwy_app_build_graph_menu(accel_group);
+    gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
+    toolbox_add_menubar(container, menu, _("_Graph"));
+
+    toolbox_add_menubar(container,
+                        gwy_app_menu_create_meta_menu(accel_group), _("_Meta"));
 
     /***************************************************************/
     label = gwy_app_toolbox_create_label(_("View"), "zoom", &visible);
@@ -404,7 +396,7 @@ gwy_app_toolbox_create(void)
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    action.callback = G_CALLBACK(gwy_app_run_graph_func_cb);
+    action.callback = G_CALLBACK(gwy_app_run_graph_func);
     for (j = i = 0; i < G_N_ELEMENTS(graph_actions); i++) {
         action.stock_id = graph_actions[i].stock_id;
         action.tooltip = graph_actions[i].tooltip;
@@ -474,6 +466,8 @@ gwy_app_toolbox_create(void)
     gwy_app_main_window_restore_position();
     for (l = toolbars; l; l = g_slist_next(l))
         gtk_widget_set_no_show_all(GTK_WIDGET(l->data), FALSE);
+    g_slist_free(toolbars);
+
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
 
@@ -481,26 +475,6 @@ gwy_app_toolbox_create(void)
 }
 
 /*************************************************************************/
-static GtkWidget*
-gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
-{
-    GtkWidget *menu;
-    GtkItemFactory *item_factory;
-
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<graph>", accel_group);
-    gwy_graph_func_build_menu(GTK_OBJECT(item_factory), "",
-                              G_CALLBACK(gwy_app_run_graph_func_cb));
-    menu = gtk_item_factory_get_widget(item_factory, "<graph>");
-    gtk_widget_show_all(menu);
-
-    /* set up sensitivity: all items need an active graph window */
-    /* TODO: replace this
-    gwy_app_menu_set_flags_recursive(menu, &sens_data);
-    */
-
-    return menu;
-}
-
 static GtkWidget*
 gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 {

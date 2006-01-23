@@ -48,6 +48,9 @@ GwyRunType gwy_app_run_process_func         (const gchar *name);
 void       gwy_app_run_process_func_in_mode (const gchar *name,
                                              GwyRunType run);
 
+GtkWidget* gwy_app_build_graph_menu         (GtkAccelGroup *accel_group);
+void       gwy_app_run_graph_func           (const gchar *name);
+
 void         gwy_app_menu_recent_files_update(GList *recent_files);
 GtkTooltips* gwy_app_get_tooltips            (void);
 GwySensitivityGroup* gwy_app_sensitivity_get_group   (void);
