@@ -30,26 +30,12 @@
 #include "gwymoduleinternal.h"
 #include "gwymodule-process.h"
 
-/* FIXME:
- * To avoid circular dependency on libgwyapp, we cheat and set object
- * data for sentitivity manually.  Maybe the menu-building doesn't belong
- * here at all.
- **/
-
-typedef struct {
-    GwyProcessFuncInfo info;
-    const gchar *menu_path_translated;
-    gchar *menu_path_factory;
-} ProcessFuncInfo;
-
 typedef struct {
     GFunc function;
     gpointer user_data;
 } ProcFuncForeachData;
 
 static void gwy_process_func_info_free (gpointer data);
-static gint process_menu_entry_compare (ProcessFuncInfo *a,
-                                        ProcessFuncInfo *b);
 
 static GHashTable *process_funcs = NULL;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
@@ -71,7 +57,7 @@ gwy_process_func_register(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
-    ProcessFuncInfo *pfinfo;
+    GwyProcessFuncInfo *pfinfo;
     gchar *canon_name;
 
     gwy_debug("");
@@ -95,16 +81,12 @@ gwy_process_func_register(const gchar *modname,
         return FALSE;
     }
 
-    pfinfo = g_new0(ProcessFuncInfo, 1);
-    pfinfo->info = *func_info;
-    pfinfo->info.name = g_strdup(func_info->name);
-    pfinfo->info.menu_path = g_strdup(func_info->menu_path);
-    pfinfo->menu_path_translated = _(func_info->menu_path);
-    pfinfo->menu_path_factory
-        = gwy_strkill(g_strdup(pfinfo->menu_path_translated), "_");
+    pfinfo = g_memdup(func_info, sizeof(GwyProcessFuncInfo));
+    pfinfo->name = g_strdup(func_info->name);
+    pfinfo->menu_path = g_strdup(func_info->menu_path);
 
-    g_hash_table_insert(process_funcs, (gpointer)pfinfo->info.name, pfinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_PROC, pfinfo->info.name, NULL);
+    g_hash_table_insert(process_funcs, (gpointer)pfinfo->name, pfinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_PROC, pfinfo->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -121,11 +103,10 @@ _gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname))
 static void
 gwy_process_func_info_free(gpointer data)
 {
-    ProcessFuncInfo *pfinfo = (ProcessFuncInfo*)data;
+    GwyProcessFuncInfo *pfinfo = (GwyProcessFuncInfo*)data;
 
-    g_free((gpointer)pfinfo->info.name);
-    g_free((gpointer)pfinfo->info.menu_path);
-    g_free((gpointer)pfinfo->menu_path_factory);
+    g_free((gpointer)pfinfo->name);
+    g_free((gpointer)pfinfo->menu_path);
     g_free(pfinfo);
 }
 
@@ -145,144 +126,16 @@ gwy_process_func_run(const guchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {
-    ProcessFuncInfo *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
-    g_return_if_fail(run & func_info->info.run);
+    g_return_if_fail(run & func_info->run);
     g_return_if_fail(GWY_IS_CONTAINER(data));
     g_object_ref(data);
     _gwy_module_watch_settings(GWY_MODULE_PREFIX_PROC, name);
-    func_info->info.process(data, run, name);
+    func_info->process(data, run, name);
     _gwy_module_unwatch_settings();
     g_object_unref(data);
-}
-
-/**
- * gwy_process_func_build_menu:
- * @item_factory: A #GtkItemFactory to add items to.
- * @prefix: Where to add the menu items to the factory.
- * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
- *                 menu is selected.
- *
- * Creates #GtkItemFactory for a data processing menu with all registered data
- * processing functions.
- *
- * Returns: The menu item factory as a #GtkObject.
- **/
-GtkObject*
-gwy_process_func_build_menu(GtkObject *item_factory,
-                            const gchar *prefix,
-                            GCallback item_callback)
-{
-    GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
-    GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
-    GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
-    GtkItemFactory *factory;
-    GString *current, *prev;
-    const gchar *mpath;
-    GSList *l, *entries = NULL;
-    gint i, dp_len;
-
-    g_return_val_if_fail(GTK_IS_ITEM_FACTORY(item_factory), NULL);
-    factory = GTK_ITEM_FACTORY(item_factory);
-
-    if (!process_funcs) {
-        g_warning("No process function present to build menu of");
-        entries = NULL;
-    }
-    else
-        g_hash_table_foreach(process_funcs, gwy_hash_table_to_slist_cb,
-                             &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)process_menu_entry_compare);
-
-    dp_len = strlen(prefix);
-
-    /* the root branch */
-    current = g_string_new(prefix);
-
-    /* the root tearoff */
-    prev = g_string_new(prefix);
-    g_string_append(prev, "/---");
-    tearoff.path = prev->str;
-    gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
-
-    /* create missing branches
-     * XXX: Gtk+ essentially can do this itself
-     * but this way we can e. g. put a tearoff at the top of each branch... */
-    for (l = entries; l; l = g_slist_next(l)) {
-        ProcessFuncInfo *func_info = (ProcessFuncInfo*)l->data;
-
-        mpath = func_info->menu_path_translated;
-        if (!mpath || !*mpath)
-            continue;
-        if (mpath[0] != '/') {
-            g_warning("Menu path `%s' doesn't start with a slash", mpath);
-            continue;
-        }
-
-        g_string_truncate(current, dp_len);
-        g_string_append(current, mpath);
-        /* find where the paths differ */
-        i = gwy_strdiffpos(current->str + dp_len, prev->str + dp_len);
-        if (!current->str[i] && !prev->str[i])
-            g_warning("Duplicate menu entry `%s'", mpath);
-        else {
-            /* find where the next / is  */
-            do {
-                i++;
-            } while (current->str[i] && current->str[i] != '/');
-        }
-
-        while (current->str[i]) {
-            /* create a branch with a tearoff */
-            current->str[i] = '\0';
-            branch.path = current->str;
-            gtk_item_factory_create_item(factory, &branch, NULL, 1);
-
-            g_string_assign(prev, current->str);
-            g_string_append(prev, "/---");
-            tearoff.path = prev->str;
-            gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
-            current->str[i] = '/';
-
-            /* find where the next / is  */
-            do {
-                i++;
-            } while (current->str[i] && current->str[i] != '/');
-        }
-
-        /* XXX: passing directly func_info->name may be a little dangerous,
-         * OTOH who would eventually free a newly allocated string? */
-        item.path = current->str;
-        gtk_item_factory_create_item(factory, &item,
-                                     (gpointer)func_info->info.name, 1);
-        if (func_info->info.sens_flags) {
-            GtkWidget *widget;
-
-            gwy_debug("Setting sens flags for `%s' to %u",
-                      item.path, func_info->info.sens_flags);
-            widget = gtk_item_factory_get_widget(factory,
-                                                 func_info->menu_path_factory);
-            g_object_set_data(G_OBJECT(widget), "sensitive",
-                              GUINT_TO_POINTER(func_info->info.sens_flags));
-        }
-
-        GWY_SWAP(GString*, current, prev);
-    }
-
-    g_string_free(prev, TRUE);
-    g_string_free(current, TRUE);
-    g_slist_free(entries);
-
-    return item_factory;
-}
-
-static gint
-process_menu_entry_compare(ProcessFuncInfo *a,
-                           ProcessFuncInfo *b)
-{
-    return g_utf8_collate(a->menu_path_factory, b->menu_path_factory);
-
 }
 
 static void
@@ -333,7 +186,7 @@ gwy_process_func_foreach(GFunc function,
 GwyRunType
 gwy_process_func_get_run_types(const gchar *name)
 {
-    ProcessFuncInfo *func_info;
+    GwyProcessFuncInfo *func_info;
 
     if (!process_funcs)
         return 0;
@@ -342,7 +195,7 @@ gwy_process_func_get_run_types(const gchar *name)
     if (!func_info)
         return 0;
 
-    return func_info->info.run;
+    return func_info->run;
 }
 
 /**
@@ -361,12 +214,12 @@ gwy_process_func_get_run_types(const gchar *name)
 const gchar*
 gwy_process_func_get_menu_path(const gchar *name)
 {
-    ProcessFuncInfo *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
 
-    return func_info->info.menu_path;
+    return func_info->menu_path;
 }
 
 /**
@@ -382,12 +235,12 @@ gwy_process_func_get_menu_path(const gchar *name)
 guint
 gwy_process_func_get_sensitivity_flags(const gchar *name)
 {
-    ProcessFuncInfo *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
 
-    return func_info->info.sens_flags;
+    return func_info->sens_flags;
 }
 
 /**

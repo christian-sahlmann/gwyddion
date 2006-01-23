@@ -48,9 +48,6 @@ void           gwy_process_func_run           (const guchar *name,
                                                GwyRunType run);
 GwyRunType     gwy_process_func_get_run_types (const gchar *name);
 const gchar*   gwy_process_func_get_menu_path (const gchar *name);
-GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
-                                               const gchar *prefix,
-                                               GCallback item_callback);
 guint          gwy_process_func_get_sensitivity_flags (const gchar *name);
 void           gwy_process_func_foreach       (GFunc function,
                                                gpointer user_data);
