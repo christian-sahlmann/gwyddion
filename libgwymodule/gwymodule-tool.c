@@ -77,9 +77,7 @@ gwy_tool_func_register(const gchar *modname,
     tfinfo = g_memdup(func_info, sizeof(GwyToolFuncInfo));
     tfinfo->name = g_strdup(func_info->name);
     tfinfo->stock_id = g_strdup(func_info->stock_id);
-    /* FIXME: This is not very clean. But we need the translated string often,
-     * namely in menu building code. */
-    tfinfo->tooltip = g_strdup(_(func_info->tooltip));
+    tfinfo->tooltip = g_strdup(func_info->tooltip);
 
     g_hash_table_insert(tool_funcs, (gpointer)tfinfo->name, tfinfo);
     canon_name = g_strconcat(GWY_MODULE_PREFIX_TOOL, tfinfo->name, NULL);
