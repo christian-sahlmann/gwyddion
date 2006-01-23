@@ -28,6 +28,7 @@ process_LTLIBRARIES = \
 	grain_rem_threshold.la \
 	grain_wshed.la \
 	hough.la \
+	immerse.la \
 	laplace.la \
 	level.la \
 	linecorrect.la \
@@ -168,8 +169,8 @@ hough_la_LIBADD = $(module_libadd)
 #indent_analyze_la_SOURCES = indent_analyze.c
 #indent_analyze_la_LIBADD = $(module_libadd)
 
-#immerse_la_SOURCES = immerse.c
-#immerse_la_LIBADD = $(module_libadd)
+immerse_la_SOURCES = immerse.c
+immerse_la_LIBADD = $(module_libadd)
 
 laplace_la_SOURCES = laplace.c
 laplace_la_LIBADD = $(module_libadd)
