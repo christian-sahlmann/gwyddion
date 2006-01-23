@@ -334,6 +334,26 @@ gwy_graph_func_get_menu_path(const gchar *name)
     return func_info->menu_path_translated;
 }
 
+/**
+ * gwy_graph_func_get_sensitivity_flags:
+ * @name: Graph function name.
+ *
+ * Returns menu sensititivy flags for function @name.
+ *
+ * Returns: The menu item sensitivity flags (a #GwyMenuSensFlags mask).
+ **/
+guint
+gwy_graph_func_get_sensitivity_flags(const gchar *name)
+{
+    GwyGraphFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(graph_funcs, name);
+    g_return_val_if_fail(func_info, 0);
+
+    /* XXX XXX XXX */
+    return 1 << 3 /* GWY_MENU_FLAG_GRAPH */;
+}
+
 gboolean
 _gwy_graph_func_remove(const gchar *name)
 {

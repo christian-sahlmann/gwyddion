@@ -228,9 +228,7 @@ gwy_process_func_get_menu_path(const gchar *name)
  *
  * Returns menu sensititivy flags for function @name.
  *
- * Returns: The menu item sensitivity flags, as it was set with
- *          gwy_process_func_set_sensitivity_flags(), i.e., without any
- *          implied flags.
+ * Returns: The menu item sensitivity flags (a #GwyMenuSensFlags mask).
  **/
 guint
 gwy_process_func_get_sensitivity_flags(const gchar *name)
