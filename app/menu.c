@@ -38,6 +38,17 @@
 #include "filelist.h"
 #include "gwyappinternal.h"
 
+typedef struct {
+    const gchar *name;
+    gchar *path;
+    gchar *path_translated;
+    gchar *item_canonical;
+    gchar *item_translated;
+    gchar *item_translated_canonical;
+    gchar *item_collated;
+    GtkWidget *widget;
+} MenuNodeData;
+
 static void       gwy_app_file_open_recent_cb       (GObject *item);
 static void       gwy_app_update_last_process_func  (GtkWidget *menu,
                                                      const gchar *name);
@@ -71,16 +82,14 @@ debug_menu_sens_flags(guint flags)
 }
 #endif
 
-typedef struct {
-    const gchar *name;
-    gchar *path;
-    gchar *path_translated;
-    gchar *item_canonical;  /* No underscores, no ellipses */
-    gchar *item_translated;
-    gchar *item_collated;
-    GtkWidget *widget;
-} MenuNodeData;
-
+/**
+ * gwy_app_menu_canonicalize_label:
+ * @label: Menu item label to canonicalize.
+ *
+ * Canonicalized menu item label in place.
+ *
+ * That is, removes accelerator underscores and trailing ellipsis.
+ **/
 static void
 gwy_app_menu_canonicalize_label(gchar *label)
 {
@@ -97,6 +106,17 @@ gwy_app_menu_canonicalize_label(gchar *label)
         label[j-3] = '\0';
 }
 
+/**
+ * gwy_app_menu_add_node:
+ * @root: Module function menu root.
+ * @name: The name of the function to add.
+ * @path: Menu path of this function.
+ *
+ * Inserts a module function to menu tree.
+ *
+ * This is stage 1, to sort out the information that gwy_foo_func_foreach()
+ * gives us to a tree.
+ **/
 static void
 gwy_app_menu_add_node(GNode *root,
                       const gchar *name,
@@ -179,9 +199,24 @@ fail:
     g_strfreev(segments_canonical);
 }
 
-/* Deduce partial translations, this enables merging of
- * "/Translated Foo/Translated Bar" and "/Foo/Baz" under *one* submenu
- * "/Translated Foo". */
+/**
+ * gwy_app_menu_resolve_translations:
+ * @node: Module function menu tree node to process.
+ * @userdata: Unused.
+ *
+ * Resolves partial translations of menu paths, calculates collation keys.
+ *
+ * Must be called on nodes in %G_POST_ORDER.
+ *
+ * This is stage 2, translations of particular items are extracted and
+ * translations are propagated from non-leaf nodes up to braches.
+ *
+ * FIXME: We should better deal with situations like missing accelerators in
+ * some translations by prefering those with accelerators.  Or at least print
+ * some warning.
+ *
+ * Returns: Always %FALSE.
+ **/
 static gboolean
 gwy_app_menu_resolve_translations(GNode *node,
                                   G_GNUC_UNUSED gpointer userdata)
@@ -205,7 +240,11 @@ gwy_app_menu_resolve_translations(GNode *node,
     p = strrchr(data->path_translated, '/');
     g_return_val_if_fail(p, FALSE);
     data->item_translated = g_strdup(p+1);
-    data->item_collated = g_utf8_collate_key(data->item_translated, -1);
+    data->item_translated_canonical = g_strdup(data->item_translated);
+    gwy_app_menu_canonicalize_label(data->item_translated_canonical);
+    data->item_collated = g_utf8_collate_key(data->item_translated_canonical,
+                                             -1);
+
     if (!pdata->path_translated) {
         pdata->path_translated = g_strndup(data->path_translated,
                                            p - data->path_translated);
@@ -216,6 +255,20 @@ gwy_app_menu_resolve_translations(GNode *node,
     return FALSE;
 }
 
+/**
+ * gwy_app_menu_sort_submenus:
+ * @node: Module function menu tree node to process.
+ * @userdata: Unused.
+ *
+ * Sorts module function submenus alphabetically.
+ *
+ * Must be called on nodes in %G_PRE_ORDER.
+ *
+ * This is stage 3, childrens of each node are sorted according to collation
+ * keys (calculated in stage 2).
+ *
+ * Returns: Always %FALSE.
+ **/
 static gboolean
 gwy_app_menu_sort_submenus(GNode *node,
                            G_GNUC_UNUSED gpointer userdata)
@@ -255,6 +308,24 @@ gwy_app_menu_sort_submenus(GNode *node,
     return FALSE;
 }
 
+/**
+ * gwy_app_menu_create_widgets:
+ * @node: Module function menu tree node to process.
+ * @callback: Callback function to connect to "activate" signal of the
+ *            created menu items, swapped.  Function name is used as callback
+ *            data.
+ *
+ * Creates widgets from module function tree.
+ *
+ * Must be called on nodes in %G_POST_ORDER.
+ *
+ * This is stage 4, menu items are created from leaves and branches, submenus
+ * are attached to branches (with tearoffs, titles, and everything).  Each node
+ * data gets its @widget field filled with corresponding menu item, except
+ * root node that gets it @with field filled with the top-level menu.
+ *
+ * Returns: Always %FALSE.
+ **/
 static gboolean
 gwy_app_menu_create_widgets(GNode *node,
                             gpointer callback)
@@ -275,9 +346,7 @@ gwy_app_menu_create_widgets(GNode *node,
     }
 
     menu = gtk_menu_new();
-    /* This mangles item_translated, but we have no further use for it. */
-    gwy_app_menu_canonicalize_label(data->item_translated);
-    gtk_menu_set_title(GTK_MENU(menu), data->item_translated);
+    gtk_menu_set_title(GTK_MENU(menu), data->item_translated_canonical);
     item = gtk_tearoff_menu_item_new();
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
     for (child = node->children; child; child = child->next) {
@@ -293,6 +362,17 @@ gwy_app_menu_create_widgets(GNode *node,
     return FALSE;
 }
 
+/**
+ * gwy_app_menu_free_node_data:
+ * @node: Module function menu tree node to process.
+ * @userdata: Unused.
+ *
+ * Frees module function menu tree auxiliary data.
+ *
+ * This is stage 5, clean-up.
+ *
+ * Returns: Always %FALSE.
+ **/
 static gboolean
 gwy_app_menu_free_node_data(GNode *node,
                             G_GNUC_UNUSED gpointer userdata)
@@ -304,6 +384,7 @@ gwy_app_menu_free_node_data(GNode *node,
     g_free(data->item_canonical);
     g_free(data->item_collated);
     g_free(data->item_translated);
+    g_free(data->item_translated_canonical);
     g_free(data);
 
     return FALSE;
@@ -316,6 +397,16 @@ gwy_app_menu_add_proc_func(const gchar *name,
     gwy_app_menu_add_node(root, name, gwy_process_func_get_menu_path(name));
 }
 
+/**
+ * gwy_app_build_module_func_menu:
+ * @root: Module function menu root.
+ * @callback: The callback function to connect to leaves.
+ *
+ * Executes stages 2-5 of module function menu construction and destroys the
+ * node tree.
+ *
+ * Returns: The top-level menu widget.
+ **/
 static GtkWidget*
 gwy_app_build_module_func_menu(GNode *root,
                                GCallback callback)
