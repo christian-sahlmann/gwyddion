@@ -649,7 +649,7 @@ gwy_app_update_last_process_func(const gchar *name)
 
     /* FIXME: at least the `_' removal should not be necessary as libgwymodule
      * knows the right path */
-    menu_path = gwy_process_func_get_menu_path(name);
+    menu_path = gettext(gwy_process_func_get_menu_path(name));
     menu_path = strrchr(menu_path, '/');
     g_assert(menu_path);
     menu_path++;
