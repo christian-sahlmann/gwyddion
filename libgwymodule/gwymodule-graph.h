@@ -43,9 +43,6 @@ gboolean     gwy_graph_func_run           (const guchar *name,
                                            GwyGraph *graph);
 gboolean     gwy_graph_func_exists        (const gchar *name);
 const gchar* gwy_graph_func_get_menu_path (const gchar *name);
-GtkObject*   gwy_graph_func_build_menu    (GtkObject *item_factory,
-                                           const gchar *prefix,
-                                           GCallback item_callback);
 guint        gwy_graph_func_get_sensitivity_flags (const gchar *name);
 void         gwy_graph_func_foreach       (GFunc function,
                                            gpointer user_data);
