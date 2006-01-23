@@ -1247,9 +1247,9 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     const menu_items[] = {
         { N_("/Remove _Mask"), gwy_app_mask_kill_cb, NULL },
         { N_("/Mask _Color..."),  gwy_app_change_mask_color_cb, NULL },
-        { N_("/Fix _Zero"), gwy_app_run_process_func_cb, "fix_zero" },
+        { N_("/Fix _Zero"), gwy_app_run_process_func, "fix_zero" },
         { N_("/Remove _Presentation"), gwy_app_show_kill_cb, NULL },
-        { N_("/_Level"), gwy_app_run_process_func_cb, "level" },
+        { N_("/_Level"), gwy_app_run_process_func, "level" },
         { N_("/Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
     GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
@@ -1265,7 +1265,7 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
                                         NULL, NULL);
 #endif
     for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
-        if (menu_items[i].callback == gwy_app_run_process_func_cb
+        if (menu_items[i].callback == gwy_app_run_process_func
             && !gwy_process_func_get_run_types((gchar*)menu_items[i].cbdata)) {
             g_warning("Data processing function <%s> for right-click menu "
                       "is not available.", (gchar*)menu_items[i].cbdata);

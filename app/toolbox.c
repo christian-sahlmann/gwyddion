@@ -49,7 +49,6 @@ typedef struct {
 typedef gboolean (*ActionCheckFunc)(gconstpointer);
 
 static GtkWidget* gwy_app_menu_create_meta_menu (GtkAccelGroup *accel_group);
-static GtkWidget* gwy_app_menu_create_proc_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu (GtkAccelGroup *accel_group);
@@ -58,7 +57,6 @@ static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
                                                 gboolean *pvisible);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
                                                 GtkWidget *widget);
-static void       gwy_app_rerun_process_func_cb(gpointer user_data);
 static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 GdkDragContext *context,
                                                 gint x,
@@ -343,7 +341,9 @@ gwy_app_toolbox_create(void)
     menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_edit_menu(accel_group),
                                 _("_Edit"), menus);
-    menu = gwy_app_menu_create_proc_menu(accel_group);
+    menu = gwy_app_build_process_menu(accel_group);
+    gwy_app_process_menu_add_run_last(menu);
+    gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
     g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);     /* XXX */
     menus = toolbox_add_menubar(container, menu, _("_Data Process"), menus);
     menus = toolbox_add_menubar(container,
@@ -378,7 +378,7 @@ gwy_app_toolbox_create(void)
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    action.callback = G_CALLBACK(gwy_app_run_process_func_cb);
+    action.callback = G_CALLBACK(gwy_app_run_process_func);
     for (j = i = 0; i < G_N_ELEMENTS(proc_actions); i++) {
         action.stock_id = proc_actions[i].stock_id;
         action.tooltip = proc_actions[i].tooltip;
@@ -481,52 +481,6 @@ gwy_app_toolbox_create(void)
 }
 
 /*************************************************************************/
-static GtkWidget*
-gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
-{
-    static const gchar *reshow_accel_path = "<proc>/Re-show Last";
-    static const gchar *repeat_accel_path = "<proc>/Repeat Last";
-    GtkWidget *menu, *last;
-    GtkItemFactory *item_factory;
-
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<proc>",
-                                        accel_group);
-    gwy_process_func_build_menu(GTK_OBJECT(item_factory), "",
-                                G_CALLBACK(gwy_app_run_process_func_cb));
-    menu = gtk_item_factory_get_widget(item_factory, "<proc>");
-
-    /* re-run last item */
-    menu = gtk_item_factory_get_widget(item_factory, "<proc>");
-
-    last = gtk_menu_item_new_with_mnemonic(_("Re-show Last"));
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), reshow_accel_path);
-    gtk_accel_map_add_entry(reshow_accel_path, GDK_f,
-                            GDK_CONTROL_MASK | GDK_SHIFT_MASK);
-    g_object_set_data(G_OBJECT(last), "show-last-item", GINT_TO_POINTER(TRUE));
-    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
-    gwy_app_sensitivity_add_widget(last, (GWY_MENU_FLAG_DATA
-                                          | GWY_MENU_FLAG_LAST_PROC));
-    g_signal_connect_swapped(last, "activate",
-                             G_CALLBACK(gwy_app_rerun_process_func_cb),
-                             GUINT_TO_POINTER(GWY_RUN_INTERACTIVE));
-
-    last = gtk_menu_item_new_with_mnemonic(_("Repeat Last"));
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), repeat_accel_path);
-    gtk_accel_map_add_entry(repeat_accel_path, GDK_f,
-                            GDK_CONTROL_MASK);
-    g_object_set_data(G_OBJECT(last), "run-last-item", GINT_TO_POINTER(TRUE));
-    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
-    gwy_app_sensitivity_add_widget(last, (GWY_MENU_FLAG_DATA
-                                          | GWY_MENU_FLAG_LAST_PROC));
-    g_signal_connect_swapped(last, "activate",
-                             G_CALLBACK(gwy_app_rerun_process_func_cb),
-                             GUINT_TO_POINTER(GWY_RUN_IMMEDIATE));
-
-    gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
-
-    return menu;
-}
-
 static GtkWidget*
 gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
 {
@@ -901,31 +855,6 @@ gwy_app_toolbox_showhide_cb(GtkWidget *button,
     g_object_set(arrow, "arrow-type",
                  visible ? GTK_ARROW_DOWN : GTK_ARROW_RIGHT,
                  NULL);
-}
-
-static void
-gwy_app_rerun_process_func_cb(gpointer user_data)
-{
-    GtkWidget *menu;
-    GwyRunType run, available_run_modes;
-    gchar *name;
-
-    menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                        "<proc>"));
-    g_return_if_fail(menu);
-    name = (gchar*)g_object_get_data(G_OBJECT(menu), "last-func");
-    g_return_if_fail(name);
-    run = GPOINTER_TO_UINT(user_data);
-    available_run_modes = gwy_process_func_get_run_types(name);
-    g_return_if_fail(available_run_modes);
-    gwy_debug("run mode = %u, available = %u", run, available_run_modes);
-
-    /* try to find some mode `near' to requested one, otherwise just use any */
-    run &= available_run_modes;
-    if (run)
-        gwy_app_run_process_func_in_mode(name, run);
-    else
-        gwy_app_run_process_func_cb(name);
 }
 
 static void

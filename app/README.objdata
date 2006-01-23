@@ -5,12 +5,11 @@ May change, namely many may get some "gwy-app-" prefix.
 Toolbox (gwy_app_main_window_get()):
     "accel_group":       The toolbox's main accelerator group
     "<proc>":            `Data Process' menu widget
-    "toolbars":          GList of all toolbox toolbars
-    "menus":             GList of all toolbox menus
 
-Some item in "<proc>" menu:
-    "run-last-item":     Nonzero if the item is the `Repeat Last' menu item
-    "show-last-item":    Nonzero if the item is the `Re-show Last' menu item
+Process menu:
+    "gwy-app-menu-last-func-name": Name of last run function
+    "gwy-app-menu-repeat-last":    Menu item representing repeat-last
+    "gwy-app-menu-reshow-last":    Menu item representing reshow-last
 
 `Recent Files' menu items:
     "filename":          The file name
@@ -20,10 +19,6 @@ Toolbar show/hide buttons:
     "key":               Settings key holding visibility for this toolbox
                          ("/app/toolbox/visible/SOMETHING")
 
-Toolbox menu items and buttons:
-    "sensitive":         The sensitivity flags that apply to this widget
-    "sensitive-state":   The current sensitivity flags
-
 DataFields:
     "is_preview":	       If set on a presentation, it marks it as a preview
                          that should not be duplicated (this is really dirty).
@@ -31,11 +26,6 @@ DataFields:
 Data Containers:
     "metadata-browser"   If set, there is already a metadata browser active for
                          this data and the pointer is its window widget.
-
-File selectors:
-    "file-type":         The file type this file selector was run for
-    "data":              The data this file selector was created for
-    "window":            The data window this file selector was created for
 
 Tool dialog buttons:
     "gwy-unitool-response-id":  Responde id's (if button created by unitool)

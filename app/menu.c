@@ -26,6 +26,7 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -50,14 +51,18 @@ typedef struct {
 } MenuNodeData;
 
 static void       gwy_app_file_open_recent_cb       (GObject *item);
-static void       gwy_app_update_last_process_func  (GtkWidget *menu,
-                                                     const gchar *name);
+static void       gwy_app_rerun_process_func        (gpointer user_data);
+static void       gwy_app_update_last_process_func  (const gchar *name);
 static gchar*     fix_recent_file_underscores       (gchar *s);
-static GtkWidget* find_repeat_last_item             (GtkWidget *menu,
-                                                     const gchar *key);
 
 int gwy_app_n_recent_files = 10;
+
+static GQuark repeat_last_quark = 0;
+static GQuark reshow_last_quark = 0;
+static GQuark last_name_quark   = 0;
+
 static GtkWidget           *recent_files_menu = NULL;
+static GtkWidget           *process_menu      = NULL;
 static GtkTooltips         *app_tooltips      = NULL;
 static GwySensitivityGroup *app_sensgroup     = NULL;
 
@@ -105,6 +110,12 @@ gwy_app_menu_canonicalize_label(gchar *label)
     if (j >= 3 && label[j-3] == '.' && label[j-2] == '.' && label[j-1] == '.')
         label[j-3] = '\0';
 }
+
+/*****************************************************************************
+ *
+ * Module function menu building
+ *
+ *****************************************************************************/
 
 /**
  * gwy_app_menu_add_node:
@@ -428,7 +439,7 @@ gwy_app_build_module_func_menu(GNode *root,
 }
 
 GtkWidget*
-gwy_app_build_process_menu(void)
+gwy_app_build_process_menu(GtkAccelGroup *accel_group)
 {
     MenuNodeData *data;
     GtkWidget *menu;
@@ -439,25 +450,89 @@ gwy_app_build_process_menu(void)
     data->item_translated = g_strdup(_("_Data Process"));
     root = g_node_new(data);
     gwy_process_func_foreach((GFunc)&gwy_app_menu_add_proc_func, root);
-    menu = gwy_app_build_module_func_menu
-                               (root, G_CALLBACK(gwy_app_run_process_func_cb));
-    /* TODO: add Last run funcs here */
+    menu = gwy_app_build_module_func_menu(root,
+                                          G_CALLBACK(gwy_app_run_process_func));
+    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    process_menu = menu;
 
     return menu;
 }
 
+void
+gwy_app_process_menu_add_run_last(GtkWidget *menu)
+{
+    static const gchar *reshow_accel_path = "<proc>/Re-show Last";
+    static const gchar *repeat_accel_path = "<proc>/Repeat Last";
+    GtkWidget *item;
+
+    if (!reshow_last_quark)
+        reshow_last_quark = g_quark_from_static_string("gwy-app-menu-"
+                                                       "reshow-last");
+    item = gtk_menu_item_new_with_mnemonic(_("Re-show Last"));
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), reshow_accel_path);
+    gtk_accel_map_add_entry(reshow_accel_path, GDK_f,
+                            GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    g_object_set_qdata(G_OBJECT(menu), reshow_last_quark, item);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), item, 1);
+    gwy_app_sensitivity_add_widget(item, (GWY_MENU_FLAG_DATA
+                                          | GWY_MENU_FLAG_LAST_PROC));
+    g_signal_connect_swapped(item, "activate",
+                             G_CALLBACK(gwy_app_rerun_process_func),
+                             GUINT_TO_POINTER(GWY_RUN_INTERACTIVE));
+
+    if (!repeat_last_quark)
+        repeat_last_quark = g_quark_from_static_string("gwy-app-menu-"
+                                                       "repeat-last");
+    item = gtk_menu_item_new_with_mnemonic(_("Repeat Last"));
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), repeat_accel_path);
+    gtk_accel_map_add_entry(repeat_accel_path, GDK_f, GDK_CONTROL_MASK);
+    g_object_set_qdata(G_OBJECT(menu), repeat_last_quark, item);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), item, 1);
+    gwy_app_sensitivity_add_widget(item, (GWY_MENU_FLAG_DATA
+                                          | GWY_MENU_FLAG_LAST_PROC));
+    g_signal_connect_swapped(item, "activate",
+                             G_CALLBACK(gwy_app_rerun_process_func),
+                             GUINT_TO_POINTER(GWY_RUN_INTERACTIVE));
+}
+
+static void
+gwy_app_rerun_process_func(gpointer user_data)
+{
+    GwyRunType run, available_run_modes;
+    const gchar *name;
+
+    g_return_if_fail(process_menu);
+    g_return_if_fail(last_name_quark);
+
+    name = (const gchar*)g_object_get_qdata(G_OBJECT(process_menu),
+                                            last_name_quark);
+    g_return_if_fail(name);
+    run = GPOINTER_TO_UINT(user_data);
+    available_run_modes = gwy_process_func_get_run_types(name);
+    g_return_if_fail(available_run_modes);
+    gwy_debug("run mode = %u, available = %u", run, available_run_modes);
+
+    /* try to find some mode `near' to requested one, otherwise just use any */
+    run &= available_run_modes;
+    if (run)
+        gwy_app_run_process_func_in_mode(name, run);
+    else
+        gwy_app_run_process_func(name);
+}
+
 /**
- * gwy_app_run_process_func_cb:
+ * gwy_app_run_process_func:
  * @name: A data processing function name.
  *
- * Run a data processing function @name in the best possible mode.
+ * Runs a data processing function on current data.
  *
- * Interactive modes are considered `better' than noninteractive for this
- * purpose.  Since 1.2 it returns the actually used mode (nonzero), or 0 on
- * failure.
+ * From the run modes function @name supports, the most interactive one is
+ * selected.
+ *
+ * Returns: The actually used mode (nonzero), or 0 on failure.
  **/
-guint
-gwy_app_run_process_func_cb(gchar *name)
+GwyRunType
+gwy_app_run_process_func(const gchar *name)
 {
     GwyRunType run_types[] = { GWY_RUN_INTERACTIVE, GWY_RUN_IMMEDIATE, };
     GwyRunType available_run_modes;
@@ -472,7 +547,6 @@ gwy_app_run_process_func_cb(gchar *name)
             return run_types[i];
         }
     }
-    g_critical("Trying to run `%s', but no run mode found", name);
     return 0;
 }
 
@@ -481,52 +555,43 @@ gwy_app_run_process_func_cb(gchar *name)
  * @name: A data processing function name.
  * @run: A run mode.
  *
- * Run a data processing function @name in mode @run.
+ * Runs a data processing function @on current data in specified mode.
  **/
 void
-gwy_app_run_process_func_in_mode(gchar *name,
+gwy_app_run_process_func_in_mode(const gchar *name,
                                  GwyRunType run)
 {
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    GtkWidget *menu;
     GwyContainer *data;
 
     gwy_debug("`%s'", name);
     if (!(run & gwy_process_func_get_run_types(name)))
         return;
 
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(data_window);
-    data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(data_view);
+    data = gwy_app_get_current_data();
     g_return_if_fail(data);
     gwy_process_func_run(name, data, run);
-
-    menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                        "<proc>"));
-    gwy_app_update_last_process_func(menu, name);
+    gwy_app_update_last_process_func(name);
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_LAST_PROC,
                                   GWY_MENU_FLAG_LAST_PROC);
 }
 
 static void
-gwy_app_update_last_process_func(GtkWidget *menu,
-                                 const gchar *name)
+gwy_app_update_last_process_func(const gchar *name)
 {
-    static GtkWidget *repeat_item = NULL;
-    static GtkWidget *reshow_item = NULL;
+    GtkWidget *repeat_item, *reshow_item, *label;
     GwyMenuSensFlags sens;
-    GtkWidget *label;
     const gchar *menu_path;
-    gsize len;
-    gchar *s, *mp;
+    gchar *s, *lab;
 
-    g_object_set_data(G_OBJECT(menu), "last-func", (gpointer)name);
-    if (!repeat_item)
-        repeat_item = find_repeat_last_item(menu, "run-last-item");
-    if (!reshow_item)
-        reshow_item = find_repeat_last_item(menu, "show-last-item");
+    if (!last_name_quark)
+        last_name_quark = g_quark_from_static_string("gwy-app-menu-last"
+                                                     "-func-name");
+
+    g_return_if_fail(GTK_IS_MENU(process_menu));
+    g_object_set_qdata(G_OBJECT(process_menu), last_name_quark, (gpointer)name);
+    repeat_item = g_object_get_qdata(G_OBJECT(process_menu), repeat_last_quark);
+    reshow_item = g_object_get_qdata(G_OBJECT(process_menu), reshow_last_quark);
+    g_return_if_fail(repeat_item && reshow_item);
 
     /* FIXME: at least the `_' removal should not be necessary as libgwymodule
      * knows the right path */
@@ -534,53 +599,25 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     menu_path = strrchr(menu_path, '/');
     g_assert(menu_path);
     menu_path++;
-    len = strlen(menu_path);
-    if (g_str_has_suffix(menu_path, "..."))
-        len -= 3;
-    mp = gwy_strkill(g_strndup(menu_path, len), "_");
-
+    lab = g_strdup(menu_path);
+    gwy_app_menu_canonicalize_label(lab);
     sens = (gwy_process_func_get_sensitivity_flags(name)
             | GWY_MENU_FLAG_LAST_PROC);
-    if (repeat_item) {
-        label = GTK_BIN(repeat_item)->child;
-        s = g_strconcat(_("Repeat"), " (", mp, ")", NULL);
-        gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
-        gwy_sensitivity_group_set_widget_mask(app_sensgroup, repeat_item, sens);
-        g_free(s);
-    }
-
-    if (reshow_item) {
-        label = GTK_BIN(reshow_item)->child;
-        s = g_strconcat(_("Re-show"), " (", mp, ")", NULL);
-        gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
-        gwy_sensitivity_group_set_widget_mask(app_sensgroup, reshow_item, sens);
-        g_free(s);
-    }
     gwy_debug("Repeat sens: %s", debug_menu_sens_flags(sens));
 
-    g_free(mp);
-}
+    label = GTK_BIN(repeat_item)->child;
+    s = g_strconcat(_("Repeat"), " (", lab, ")", NULL);
+    gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
+    gwy_sensitivity_group_set_widget_mask(app_sensgroup, repeat_item, sens);
+    g_free(s);
 
-/* Find the "run-last-item" menu item
- * FIXME: this is fragile */
-static GtkWidget*
-find_repeat_last_item(GtkWidget *menu,
-                      const gchar *key)
-{
-    GQuark quark;
-    GList *l;
+    label = GTK_BIN(reshow_item)->child;
+    s = g_strconcat(_("Re-show"), " (", lab, ")", NULL);
+    gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
+    gwy_sensitivity_group_set_widget_mask(app_sensgroup, reshow_item, sens);
+    g_free(s);
 
-    quark = g_quark_from_string(key);
-    for (l = GTK_MENU_SHELL(menu)->children; l; l = g_list_next(l)) {
-        if (g_object_get_qdata(G_OBJECT(l->data), quark))
-            break;
-    }
-    if (!l) {
-        g_warning("Cannot find `%s' menu item", key);
-        return NULL;
-    }
-
-    return GTK_WIDGET(l->data);
+    g_free(lab);
 }
 
 void

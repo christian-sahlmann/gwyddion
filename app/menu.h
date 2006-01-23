@@ -21,8 +21,10 @@
 #ifndef __GWY_APP_MENU_H__
 #define __GWY_APP_MENU_H__
 
+#include <gtk/gtkaccelgroup.h>
 #include <gtk/gtkwidget.h>
 #include <gtk/gtktooltips.h>
+#include <libgwymodule/gwymoduleenums.h>
 #include <libgwydgets/gwysensitivitygroup.h>
 
 G_BEGIN_DECLS
@@ -40,7 +42,11 @@ typedef enum {
     GWY_MENU_FLAG_MASK       = 0xff
 } GwyMenuSensFlags;
 
-GtkWidget*   gwy_app_build_process_menu      (void);
+GtkWidget* gwy_app_build_process_menu       (GtkAccelGroup *accel_group);
+void       gwy_app_process_menu_add_run_last(GtkWidget *menu);
+GwyRunType gwy_app_run_process_func         (const gchar *name);
+void       gwy_app_run_process_func_in_mode (const gchar *name,
+                                             GwyRunType run);
 
 void         gwy_app_menu_recent_files_update(GList *recent_files);
 GtkTooltips* gwy_app_get_tooltips            (void);
