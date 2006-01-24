@@ -208,6 +208,62 @@ gwy_strdiffpos(const gchar *s1, const gchar *s2)
 }
 
 /**
+ * gwy_strisident:
+ * @s: A NUL-terminated string.
+ * @more: List of additional ASCII characters allowed inside identifier, empty
+ *        list can be passed as %NULL.
+ * @startmore: List of additional ASCII characters allowed as the first
+ *             identifier characters, empty list can be passed as %NULL.
+ *
+ * Checks whether a string is valid identifier.
+ *
+ * Valid identifier must start with an alphabetic character or a character from
+ * @startmore, and it must continue with alphanumeric characters or characters
+ * from @more.
+ *
+ * Note underscore is not allowed by default, you have to pass it in @more
+ * and/or @startmore.
+ *
+ * Returns: %TRUE if @s is valid identifier, %FALSE otherwise.
+ **/
+gboolean
+gwy_strisident(const gchar *s,
+               const gchar *more,
+               const gchar *startmore)
+{
+    const gchar *m;
+
+    g_return_val_if_fail(s, FALSE);
+    if (!g_ascii_isalpha(*s)) {
+        if (!startmore)
+            return FALSE;
+        for (m = startmore; *m; m++) {
+            if (*s == *m)
+                break;
+        }
+        if (!*m)
+            return FALSE;
+    }
+    s++;
+
+    while (*s) {
+        if (!g_ascii_isalnum(*s)) {
+            if (!more)
+                return FALSE;
+            for (m = more; *m; m++) {
+                if (*s == *m)
+                    break;
+            }
+            if (!*m)
+                return FALSE;
+        }
+        s++;
+    }
+
+    return TRUE;
+}
+
+/**
  * gwy_file_get_contents:
  * @filename: A file to read contents of.
  * @buffer: Buffer to store the file contents.
