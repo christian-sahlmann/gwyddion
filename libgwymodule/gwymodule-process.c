@@ -76,8 +76,12 @@ gwy_process_func_register(const gchar *modname,
     g_return_val_if_fail(func_info->process, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->run & GWY_RUN_MASK, FALSE);
+    if (!gwy_strisident(func_info->name, "_-", NULL))
+        g_warning("Function name `%s' is not a valid identifier. "
+                  "It may be rejected in future.", func_info->name);
     if (g_hash_table_lookup(process_funcs, func_info->name)) {
-        g_warning("Duplicate function %s, keeping only first", func_info->name);
+        g_warning("Duplicate function `%s', keeping only first",
+                  func_info->name);
         return FALSE;
     }
 

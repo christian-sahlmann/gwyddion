@@ -21,8 +21,6 @@
 #ifndef __GWY_MODULE_TOOL_H__
 #define __GWY_MODULE_TOOL_H__
 
-#include <gtk/gtkwidget.h>
-#include <gtk/gtktooltips.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwymodule/gwymoduleenums.h>
 

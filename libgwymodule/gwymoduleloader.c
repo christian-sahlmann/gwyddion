@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 
 #include "gwymoduleinternal.h"
 
@@ -224,7 +225,6 @@ gwy_module_do_register_module(const gchar *filename,
     GwyModuleInfo *mod_info = NULL;
     GwyModuleQueryFunc query;
     gchar *modname, *s;
-    size_t span_length;
 
     s = g_path_get_basename(filename);
     modname = g_ascii_strdown(s, -1);
@@ -239,8 +239,7 @@ gwy_module_do_register_module(const gchar *filename,
         return NULL;
     }
 
-    span_length = strspn(modname, G_CSET_a_2_z G_CSET_DIGITS "-_");
-    if (span_length != strlen(modname) || !g_ascii_isalpha(modname[0]))
+    if (!gwy_strisident(modname, "_-", NULL))
         g_warning("Module name `%s' is not a valid identifier. "
                   "It may be rejected in future.", modname);
 
@@ -464,6 +463,8 @@ gwy_module_lookup(const gchar *name)
     return iinfo ? iinfo->mod_info : NULL;
 }
 
+/***************************************************************************/
+/* XXX: Temporary hack */
 #include <libgwyddion/gwycontainer.h>
 static GwyContainer *watch_settings = NULL;
 static const gchar *watch_modname = NULL;

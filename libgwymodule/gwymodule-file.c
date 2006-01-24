@@ -107,6 +107,9 @@ gwy_file_func_register(const gchar *modname,
                          || func_info->export_,
                          FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
+    if (!gwy_strisident(func_info->name, "_-", NULL))
+        g_warning("Function name `%s' is not a valid identifier. "
+                  "It may be rejected in future.", func_info->name);
     if (g_hash_table_lookup(file_funcs, func_info->name)) {
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;

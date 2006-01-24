@@ -21,7 +21,6 @@
 #ifndef __GWY_MODULE_PROCESS_H__
 #define __GWY_MODULE_PROCESS_H__
 
-#include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleenums.h>
 

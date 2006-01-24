@@ -21,7 +21,6 @@
 #ifndef __GWY_MODULE_GRAPH_H__
 #define __GWY_MODULE_GRAPH_H__
 
-#include <gtk/gtkobject.h>
 #include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
