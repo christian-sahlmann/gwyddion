@@ -1177,13 +1177,13 @@ gwy_graph_area_refresh(GwyGraphArea *area)
         gtk_widget_hide(GTK_WIDGET(area->lab));
 
     /*reconnect signals?*/
-    g_signal_connect_swapped(
-              GWY_GRAPH_MODEL(area->graph_model),
-              "notify",
-              G_CALLBACK(gwy_graph_area_repos_label), area);
+    //g_signal_connect_swapped(
+    //          GWY_GRAPH_MODEL(area->graph_model),
+    //          "notify",
+    //          G_CALLBACK(gwy_graph_area_repos_label), area);
 
     /*repaint area data*/
-    gtk_widget_queue_draw(GTK_WIDGET(area));
+    //gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 /**
