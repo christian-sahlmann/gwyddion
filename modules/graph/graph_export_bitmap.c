@@ -22,47 +22,38 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-
 #include <glib/gstdio.h>
-
 #include <gtk/gtk.h>
-
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-
-/* Data for this function.*/
+#include <app/gwyapp.h>
 
 static gboolean    module_register           (const gchar *name);
 static gboolean    export                     (GwyGraph *graph);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Export graph into bitmap"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
+    "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo export_info = {
-        "graph_export_bitmap",
-        N_("/Export _bitmap"),
-        (GwyGraphFunc)&export,
-    };
+    gwy_graph_func_register("graph_export_bitmap",
+                            (GwyGraphFunc)&export,
+                            N_("/Export _bitmap"),
+                            GWY_STOCK_GRAPH_BITMAP,
+                            GWY_MENU_FLAG_GRAPH,
+                            N_("Export graph to a raster image"));
 
-    gwy_graph_func_register(name, &export_info);
     return TRUE;
 }
 

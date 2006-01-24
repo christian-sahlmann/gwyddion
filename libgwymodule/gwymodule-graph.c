@@ -23,9 +23,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwydgets/gwygraph.h>
-
+#include <libgwymodule/gwymodule-graph.h>
 #include "gwymoduleinternal.h"
-#include "gwymodule-graph.h"
 
 typedef struct {
     const gchar *name;
@@ -34,7 +33,7 @@ typedef struct {
     const gchar *tooltip;
     guint sens_mask;
     GwyGraphFunc func;
-} GwyGraphFuncData;
+} GwyGraphFuncInfo;
 
 typedef struct {
     GFunc function;
@@ -45,57 +44,6 @@ static GHashTable *graph_funcs = NULL;
 
 /**
  * gwy_graph_func_register:
- * @modname: Module identifier (name).
- * @func_info: Data graphing function info.
- *
- * Registers a data graphing function.
- *
- * To keep compatibility with old versions @func_info should not be an
- * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
- *
- * Returns: %TRUE on success, %FALSE on failure.
- **/
-gboolean
-gwy_graph_func_register(const gchar *modname,
-                        GwyGraphFuncInfo *func_info)
-{
-    GwyGraphFuncData *gfinfo;
-
-    gwy_debug("name = %s, menu path = %s, func = %p",
-              func_info->name, func_info->menu_path, func_info->graph);
-
-    if (!graph_funcs) {
-        gwy_debug("Initializing...");
-        graph_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                            NULL, g_free);
-    }
-
-    g_return_val_if_fail(func_info->graph, FALSE);
-    g_return_val_if_fail(func_info->name, FALSE);
-    if (!gwy_strisident(func_info->name, "_-", NULL))
-        g_warning("Function name `%s' is not a valid identifier. "
-                  "It may be rejected in future.", func_info->name);
-    if (g_hash_table_lookup(graph_funcs, func_info->name)) {
-        g_warning("Duplicate function %s, keeping only first", func_info->name);
-        return FALSE;
-    }
-
-    gfinfo = g_new0(GwyGraphFuncData, 1);
-    gfinfo->name = func_info->name;
-    gfinfo->menu_path = func_info->menu_path;
-    gfinfo->func = func_info->graph;
-
-    g_hash_table_insert(graph_funcs, (gpointer)gfinfo->name, gfinfo);
-    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_GRAPH, gfinfo->name)) {
-        g_hash_table_remove(graph_funcs, (gpointer)gfinfo->name);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-/**
- * gwy_graph_func_register2:
  * @name: Name of function to register.  It should be a valid identifier.
  * @func: The function itself.
  * @menu_path: Menu path under Graph menu.
@@ -106,17 +54,21 @@ gwy_graph_func_register(const gchar *modname,
  *
  * Registers a graph function.
  *
+ * Note: the string arguments are not copied as modules are not expected to
+ * vanish.  If they are constructed (non-constant) strings, do not free them.
+ * Should modules ever become unloadable they will get chance to clean-up.
+ *
  * Returns: Normally %TRUE; %FALSE on failure.
  **/
 gboolean
-gwy_graph_func_register2(const gchar *name,
-                         GwyGraphFunc func,
-                         const gchar *menu_path,
-                         const gchar *stock_id,
-                         guint sens_mask,
-                         const gchar *tooltip)
+gwy_graph_func_register(const gchar *name,
+                        GwyGraphFunc func,
+                        const gchar *menu_path,
+                        const gchar *stock_id,
+                        guint sens_mask,
+                        const gchar *tooltip)
 {
-    GwyGraphFuncData *gfinfo;
+    GwyGraphFuncInfo *gfinfo;
 
     g_return_val_if_fail(name, FALSE);
     g_return_val_if_fail(func, FALSE);
@@ -137,7 +89,7 @@ gwy_graph_func_register2(const gchar *name,
         return FALSE;
     }
 
-    gfinfo = g_new0(GwyGraphFuncData, 1);
+    gfinfo = g_new0(GwyGraphFuncInfo, 1);
     gfinfo->name = name;
     gfinfo->func = func;
     gfinfo->menu_path = menu_path;
@@ -167,7 +119,7 @@ gboolean
 gwy_graph_func_run(const guchar *name,
                    GwyGraph *graph)
 {
-    GwyGraphFuncData *func_info;
+    GwyGraphFuncInfo *func_info;
     gboolean status;
 
     func_info = g_hash_table_lookup(graph_funcs, name);
@@ -243,7 +195,7 @@ gwy_graph_func_exists(const gchar *name)
 const gchar*
 gwy_graph_func_get_menu_path(const gchar *name)
 {
-    GwyGraphFuncData *func_info;
+    GwyGraphFuncInfo *func_info;
 
     g_return_val_if_fail(graph_funcs, NULL);
     func_info = g_hash_table_lookup(graph_funcs, name);
@@ -263,7 +215,7 @@ gwy_graph_func_get_menu_path(const gchar *name)
 const gchar*
 gwy_graph_func_get_stock_id(const gchar *name)
 {
-    GwyGraphFuncData *func_info;
+    GwyGraphFuncInfo *func_info;
 
     g_return_val_if_fail(graph_funcs, NULL);
     func_info = g_hash_table_lookup(graph_funcs, name);
@@ -283,7 +235,7 @@ gwy_graph_func_get_stock_id(const gchar *name)
 const gchar*
 gwy_graph_func_get_tooltip(const gchar *name)
 {
-    GwyGraphFuncData *func_info;
+    GwyGraphFuncInfo *func_info;
 
     g_return_val_if_fail(graph_funcs, NULL);
     func_info = g_hash_table_lookup(graph_funcs, name);
@@ -304,7 +256,7 @@ gwy_graph_func_get_tooltip(const gchar *name)
 guint
 gwy_graph_func_get_sensitivity_mask(const gchar *name)
 {
-    GwyGraphFuncData *func_info;
+    GwyGraphFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(graph_funcs, name);
     g_return_val_if_fail(func_info, 0);

@@ -18,15 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
+#include "config.h"
 #include <stdio.h>
 #include <gtk/gtk.h>
-#include <libgwyddion/gwyddion.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwynlfitpreset.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 enum { MAX_PARAMS = 4 };
 
@@ -37,7 +37,6 @@ enum {
     PROFILE_4
 };
 
-/* Data for this function.*/
 typedef struct {
     GtkWidget *graph;
 
@@ -78,31 +77,27 @@ static void        stat_updated_cb             (StatsControls *data);
 static void        combo_box_cb                (GtkWidget *combo,
                                                 StatsControls *data);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Graph statistics."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo stats_func_info = {
-        "stats",
-        N_("/_Graph statistics"),
-        (GwyGraphFunc)&stats,
-    };
-
-    gwy_graph_func_register(name, &stats_func_info);
+    gwy_graph_func_register("graph_stats",
+                            (GwyGraphFunc)&stats,
+                            N_("/_Graph statistics"),
+                            NULL,
+                            GWY_MENU_FLAG_GRAPH,
+                            N_("Calculate graph data statistics"));
 
     return TRUE;
 }

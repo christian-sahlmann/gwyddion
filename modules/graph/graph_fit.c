@@ -22,17 +22,12 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-
 #include <glib/gstdio.h>
-
 #include <gtk/gtk.h>
-
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/file.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 enum { MAX_PARAMS = 4 };
 
@@ -119,31 +114,27 @@ static GString*    create_fit_report         (FitArgs *args);
 static void        destroy                   (FitArgs *args,
                                               FitControls *controls);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo fit_func_info = {
-        "graph_fit",
-        N_("/_Fit Graph"),
-        (GwyGraphFunc)&fit,
-    };
-
-    gwy_graph_func_register(name, &fit_func_info);
+    gwy_graph_func_register("graph_fit",
+                            (GwyGraphFunc)&fit,
+                            N_("/_Fit Graph"),
+                            GWY_STOCK_GRAPH_FIT_FUNC,
+                            GWY_MENU_FLAG_GRAPH,
+                            N_("Fit a function on graph data"));
 
     return TRUE;
 }

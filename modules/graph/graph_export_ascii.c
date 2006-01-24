@@ -18,17 +18,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-
-
-/* Data for this function.*/
+#include <app/gwyapp.h>
 
 typedef struct {
     GtkWidget *preference;
@@ -69,34 +66,31 @@ GwyEnum style_type[] = {
    { N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN,  },
 };
 
+/* XXX XXX XXX XXX XXX */
 static GtkWidget *dialog = NULL;
 static ExportControls controls;
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Graph ASCII export."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo export_func_info = {
-        "graph_export_ascii",
-        N_("/Export _ASCII"),
-        (GwyGraphFunc)&export,
-    };
-
-    gwy_graph_func_register(name, &export_func_info);
+    gwy_graph_func_register("graph_export_ascii",
+                            (GwyGraphFunc)&export,
+                            N_("/Export _ASCII"),
+                            GWY_STOCK_GRAPH_ASCII,
+                            GWY_MENU_FLAG_GRAPH,
+                            N_("Export graph data to a text file"));
 
     return TRUE;
 }

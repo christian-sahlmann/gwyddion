@@ -22,23 +22,16 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-
 #include <glib/gstdio.h>
 #include <stdio.h>
-
 #include <gtk/gtk.h>
-
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <libprocess/cdline.h>
-#include <app/settings.h>
-#include <app/file.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 #define MAX_PARAMS 5
-
-/* Data for this function.*/
 
 typedef struct {
     GtkWidget *graph;
@@ -113,31 +106,27 @@ static void        destroy                   (FitArgs *args,
 FitControls *pcontrols;
 
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Critical dimension measurements"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.2",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo fit_func_info = {
-        "graph_cd",
-        N_("/_Critical dimension"),
-        (GwyGraphFunc)&fit,
-    };
-
-    gwy_graph_func_register(name, &fit_func_info);
+    gwy_graph_func_register("graph_cd",
+                            (GwyGraphFunc)&fit,
+                            N_("/_Critical dimension"),
+                            GWY_STOCK_GRAPH_MEASURE,
+                            GWY_MENU_FLAG_GRAPH,
+                            N_("Fit critical dimension"));
 
     return TRUE;
 }

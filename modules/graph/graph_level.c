@@ -19,19 +19,12 @@
  */
 
 #include "config.h"
-#include <errno.h>
 #include <string.h>
-#include <stdlib.h>
-
-#include <glib/gstdio.h>
-
 #include <gtk/gtk.h>
-
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 static gboolean module_register(const gchar *name);
 static gboolean level          (GwyGraph *graph);
@@ -46,23 +39,20 @@ static GwyModuleInfo module_info = {
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
+    "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo fit_func_info = {
-        "graph_level",
-        N_("/_Level"),
-        (GwyGraphFunc)&level,
-    };
-
-    gwy_graph_func_register(name, &fit_func_info);
+    gwy_graph_func_register("graph_level",
+                            (GwyGraphFunc)&level,
+                            N_("/_Level"),
+                            NULL,
+                            GWY_MENU_FLAG_GRAPH,
+                            N_("Level graph curves"));
 
     return TRUE;
 }
