@@ -66,7 +66,7 @@ typedef struct {
 
 
 static gboolean    module_register           (const gchar *name);
-static gboolean    fit                       (GwyGraph *graph);
+static void        fit                       (GwyGraph *graph);
 static gboolean    fit_dialog                (FitArgs *args);
 static void        recompute                 (FitArgs *args,
                                               FitControls *controls);
@@ -131,11 +131,10 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 fit(GwyGraph *graph)
 {
     GwyContainer *settings;
-    gboolean ok;
     gint i;
     FitArgs args;
 
@@ -144,7 +143,7 @@ fit(GwyGraph *graph)
     args.from = 0;
     args.to = 0;
     args.parent_graph = graph;
-    
+
     for (i = 0; i < MAX_PARAMS; i++)
         args.par_fix[i] = FALSE;
     args.curve = 1;
@@ -153,11 +152,8 @@ fit(GwyGraph *graph)
 
     settings = gwy_app_settings_get();
     load_args(settings, &args);
-
-    ok = fit_dialog(&args);
+    fit_dialog(&args);
     save_args(settings, &args);
-
-    return ok;
 }
 
 
@@ -206,7 +202,7 @@ normalize_data(FitArgs *args,
 }
 
 
-
+/* FIXME: the return value is useless, the dialog does all work itself */
 static gboolean
 fit_dialog(FitArgs *args)
 {
@@ -468,7 +464,7 @@ plot_inits(FitArgs *args, FitControls *controls)
     gboolean ok;
     gint i;
     GwyGraphCurveModel *cmodel;
-    
+
 
     xdata = gwy_data_line_new(10, 10, FALSE);
     ydata = gwy_data_line_new(10, 10, FALSE);
@@ -499,7 +495,7 @@ plot_inits(FitArgs *args, FitControls *controls)
                                    ydata->data,
                                    xdata->res);
     gwy_graph_model_add_curve(args->graph_model, cmodel);
-    
+
     g_object_unref(cmodel);
     g_object_unref(xdata);
     g_object_unref(ydata);
@@ -524,7 +520,7 @@ recompute(FitArgs *args, FitControls *controls)
 
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
-    
+
     if (!normalize_data(args, xdata, ydata, args->curve - 1))
     {
         g_object_unref(xdata);
@@ -598,8 +594,8 @@ type_changed_cb(GtkWidget *combo, FitArgs *args)
     active = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
     if (active == args->function_type)
                 return;
-        
-    
+
+
     args->function_type = active;
     args->fitfunc = gwy_inventory_get_nth_item(gwy_cdlines(),
                                              args->function_type);
@@ -954,7 +950,7 @@ create_results_window(FitArgs *args)
     row++;
 
     p = gwy_find_self_dir("pixmaps");
-    args->fitfunc = 
+    args->fitfunc =
     filename = g_build_filename(p, gwy_cdline_get_definition(args->fitfunc), NULL);
     g_free(p);
 

@@ -59,7 +59,7 @@ typedef struct {
 } StatsControls;
 
 static gboolean    module_register             (const gchar *name);
-static gboolean    stats                       (GwyGraph *graph);
+static void        stats                       (GwyGraph *graph);
 static gboolean    stats_dialog                (StatsControls *data);
 static void        selection_updated_cb        (StatsControls *data);
 static void        stats_dialog_closed_cb      (StatsControls *data);
@@ -102,7 +102,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 stats(GwyGraph *graph)
 {
     StatsControls *data;
@@ -134,8 +134,6 @@ stats(GwyGraph *graph)
 
     if (!data->dialog)
         stats_dialog(data);
-
-    return TRUE;
 }
 
 static gboolean

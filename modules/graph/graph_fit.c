@@ -68,7 +68,7 @@ typedef struct {
 } FitControls;
 
 static gboolean    module_register           (const gchar *name);
-static gboolean    fit                       (GwyGraph *graph);
+static void        fit                       (GwyGraph *graph);
 static gboolean    fit_dialog                (FitArgs *args);
 static void        recompute                 (FitArgs *args,
                                               FitControls *controls);
@@ -139,11 +139,10 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 fit(GwyGraph *graph)
 {
     GwyContainer *settings;
-    gboolean ok;
     gint i;
     FitArgs args;
 
@@ -161,11 +160,8 @@ fit(GwyGraph *graph)
 
     settings = gwy_app_settings_get();
     load_args(settings, &args);
-
-    ok = fit_dialog(&args);
+    fit_dialog(&args);
     save_args(settings, &args);
-
-    return ok;
 }
 
 
@@ -226,7 +222,7 @@ normalize_data(FitArgs *args,
 }
 
 
-
+/* FIXME: the return value is useless, the dialog does all work itself */
 static gboolean
 fit_dialog(FitArgs *args)
 {

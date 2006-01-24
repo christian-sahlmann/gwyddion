@@ -43,7 +43,7 @@ typedef struct {
 
 
 static gboolean module_register          (const gchar *name);
-static gboolean export                   (GwyGraph *graph);
+static void     export                   (GwyGraph *graph);
 static gboolean export_dialog            (GwyGraph *graph);
 static void     export_dialog_closed_cb  (GwyGraph *graph);
 static void     export_dialog_response_cb(GtkDialog *pdialog,
@@ -66,7 +66,9 @@ GwyEnum style_type[] = {
    { N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN,  },
 };
 
-/* XXX XXX XXX XXX XXX */
+/* XXX XXX XXX XXX XXX This is absolute bogus. The dialog should be modal.
+ * If not, it should be possible to have it open for arbitrary number of
+ * graphs at once. */
 static GtkWidget *dialog = NULL;
 static ExportControls controls;
 
@@ -95,7 +97,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 export(GwyGraph *graph)
 {
     GwyContainer *settings;
@@ -104,7 +106,7 @@ export(GwyGraph *graph)
         if (dialog)
             gtk_widget_destroy(dialog);
         dialog = NULL;
-        return TRUE;
+        return;
     }
     settings = gwy_app_settings_get();
     load_args(settings, &controls);
@@ -112,11 +114,9 @@ export(GwyGraph *graph)
 
     if (!dialog)
         export_dialog(graph);
-
-    return TRUE;
 }
 
-
+/* FIXME: the return value is useless */
 static gboolean
 export_dialog(GwyGraph *graph)
 {

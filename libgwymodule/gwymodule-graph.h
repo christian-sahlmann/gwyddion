@@ -25,8 +25,8 @@
 
 G_BEGIN_DECLS
 
-typedef gboolean    (*GwyGraphFunc)     (GwyGraph *graph,
-                                         const gchar *name);
+typedef void (*GwyGraphFunc)(GwyGraph *graph,
+                             const gchar *name);
 
 gboolean     gwy_graph_func_register            (const gchar *name,
                                                  GwyGraphFunc func,
@@ -34,7 +34,7 @@ gboolean     gwy_graph_func_register            (const gchar *name,
                                                  const gchar *stock_id,
                                                  guint sens_mask,
                                                  const gchar *tooltip);
-gboolean     gwy_graph_func_run                 (const guchar *name,
+void         gwy_graph_func_run                 (const guchar *name,
                                                  GwyGraph *graph);
 gboolean     gwy_graph_func_exists              (const gchar *name);
 const gchar* gwy_graph_func_get_menu_path       (const gchar *name);

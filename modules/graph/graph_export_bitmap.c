@@ -29,8 +29,8 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-static gboolean    module_register           (const gchar *name);
-static gboolean    export                     (GwyGraph *graph);
+static gboolean module_register(const gchar *name);
+static void     export         (GwyGraph *graph);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -57,7 +57,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 export(GwyGraph *graph)
 {
     GtkDialog *filedialog;
@@ -76,8 +76,6 @@ export(GwyGraph *graph)
                                          TRUE, TRUE, TRUE);
     }
     gtk_widget_destroy(GTK_WIDGET(filedialog));
- 
-    return TRUE;
 }
 
 

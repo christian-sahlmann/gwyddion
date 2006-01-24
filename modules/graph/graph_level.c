@@ -27,7 +27,7 @@
 #include <app/gwyapp.h>
 
 static gboolean module_register(const gchar *name);
-static gboolean level          (GwyGraph *graph);
+static void     level          (GwyGraph *graph);
 static void     level_do       (const gdouble *x,
                                 gdouble *y,
                                 gdouble n);
@@ -57,14 +57,13 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static gboolean
+static void
 level(GwyGraph *graph)
 {
     GwyGraphCurveModel *cmodel;
     const gdouble *xdata, *ydata;
     GArray *newydata;
     gint i, ncurves, ndata;
-    gboolean ok = TRUE;
 
     ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
     newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));
@@ -81,8 +80,6 @@ level(GwyGraph *graph)
                                        ndata);
     }
     g_array_free(newydata, TRUE);
-
-    return ok;
 }
 
 static void

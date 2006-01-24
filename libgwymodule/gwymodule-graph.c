@@ -112,26 +112,19 @@ gwy_graph_func_register(const gchar *name,
  * @graph: Graph (a #GwyGraph).
  *
  * Runs a graph function identified by @name.
- *
- * Returns: %TRUE on success, %FALSE on failure. XXX: whatever it means.
  **/
-gboolean
+void
 gwy_graph_func_run(const guchar *name,
                    GwyGraph *graph)
 {
     GwyGraphFuncInfo *func_info;
-    gboolean status;
 
     func_info = g_hash_table_lookup(graph_funcs, name);
-    g_return_val_if_fail(func_info, FALSE);
-    g_return_val_if_fail(GWY_IS_GRAPH(graph), FALSE);
-    g_object_ref(graph);
+    g_return_if_fail(func_info);
+    g_return_if_fail(GWY_IS_GRAPH(graph));
     _gwy_module_watch_settings(GWY_MODULE_PREFIX_GRAPH, name);
-    status = func_info->func(graph, name);
+    func_info->func(graph, name);
     _gwy_module_unwatch_settings();
-    g_object_unref(graph);
-
-    return status;
 }
 
 static void
@@ -286,24 +279,12 @@ _gwy_graph_func_remove(const gchar *name)
  **/
 
 /**
- * GwyGraphFuncInfo:
- * @name: An unique data graphing function name.
- * @menu_path: A path under "/Data Graph" where the function should appear.
- *             It must start with "/".
- * @graph: The function itself.
- *
- * Information about one graph function.
- **/
-
-/**
  * GwyGraphFunc:
  * @graph: Graph (a #GwyGraph) to operate on.
  * @name: Function name from #GwyGraphFuncInfo (most modules can safely
  *        ignore this argument)
  *
  * The type of graph function.
- *
- * Returns: Whether it succeeded (XXX: this means exactly what?).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
