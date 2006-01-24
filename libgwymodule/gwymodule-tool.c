@@ -29,9 +29,6 @@
 static void gwy_tool_func_info_free        (gpointer data);
 
 static GHashTable *tool_funcs = NULL;
-static void (*func_register_callback)(const gchar *fullname) = NULL;
-
-enum { bufsize = 1024 };
 
 /**
  * gwy_tool_func_register:
@@ -49,9 +46,7 @@ gboolean
 gwy_tool_func_register(const gchar *modname,
                        GwyToolFuncInfo *func_info)
 {
-    _GwyModuleInfoInternal *iinfo;
     GwyToolFuncInfo *tfinfo;
-    gchar *canon_name;
 
     gwy_debug("");
     gwy_debug("name = %s, stock id = %s, func = %p",
@@ -63,8 +58,6 @@ gwy_tool_func_register(const gchar *modname,
                                            NULL, gwy_tool_func_info_free);
     }
 
-    iinfo = _gwy_module_get_module_info(modname);
-    g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->use, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->stock_id, FALSE);
@@ -83,18 +76,12 @@ gwy_tool_func_register(const gchar *modname,
     tfinfo->tooltip = g_strdup(func_info->tooltip);
 
     g_hash_table_insert(tool_funcs, (gpointer)tfinfo->name, tfinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_TOOL, tfinfo->name, NULL);
-    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
-    if (func_register_callback)
-        func_register_callback(canon_name);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_TOOL, tfinfo->name)) {
+        g_hash_table_remove(tool_funcs, (gpointer)tfinfo->name);
+        return FALSE;
+    }
 
     return TRUE;
-}
-
-void
-_gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullname))
-{
-    func_register_callback = callback;
 }
 
 static void

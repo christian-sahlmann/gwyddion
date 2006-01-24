@@ -29,9 +29,6 @@
 #include "gwymodule-layer.h"
 
 static GHashTable *layer_funcs = NULL;
-static void (*func_register_callback)(const gchar *fullname) = NULL;
-
-enum { bufsize = 1024 };
 
 static void gwy_layer_func_info_free(gpointer data);
 
@@ -51,9 +48,7 @@ gboolean
 gwy_layer_func_register(const gchar *modname,
                         GwyLayerFuncInfo *func_info)
 {
-    _GwyModuleInfoInternal *iinfo;
     GwyLayerFuncInfo *lfinfo;
-    gchar *canon_name;
 
     gwy_debug("name = %s", func_info->name);
 
@@ -63,8 +58,6 @@ gwy_layer_func_register(const gchar *modname,
                                             NULL, gwy_layer_func_info_free);
     }
 
-    iinfo = _gwy_module_get_module_info(modname);
-    g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->type, FALSE);
     if (g_hash_table_lookup(layer_funcs, func_info->name)) {
@@ -77,18 +70,12 @@ gwy_layer_func_register(const gchar *modname,
     lfinfo->name = g_strdup(func_info->name);
 
     g_hash_table_insert(layer_funcs, (gpointer)lfinfo->name, lfinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_LAYER, lfinfo->name, NULL);
-    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
-    if (func_register_callback)
-        func_register_callback(canon_name);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_LAYER, lfinfo->name)) {
+        g_hash_table_remove(layer_funcs, (gpointer)lfinfo->name);
+        return FALSE;
+    }
 
     return TRUE;
-}
-
-void
-_gwy_layer_func_set_register_callback(void (*callback)(const gchar *fullname))
-{
-    func_register_callback = callback;
 }
 
 static void

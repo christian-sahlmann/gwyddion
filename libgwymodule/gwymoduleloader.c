@@ -41,9 +41,9 @@ static const GwyModuleInfo*
 gwy_module_do_register_module(const gchar *modulename,
                               GHashTable *mods);
 
-static GHashTable *modules;
+static GHashTable *modules = NULL;
 static gboolean modules_initialized = FALSE;
-
+static gchar *currenly_registered_module = NULL;
 
 /**
  * gwy_module_register_modules:
@@ -80,42 +80,19 @@ gwy_module_register_modules(const gchar **paths)
     }
 }
 
-/**
- * gwy_module_set_register_callback:
- * @callback: A callback function called when a function is registered with
- *            full (prefixed) function name.
- *
- * Sets function registration callback.
- *
- * Note this is very rudimentary and only one callback can exist at a time.
- **/
-void
-gwy_module_set_register_callback(void (*callback)(const gchar *fullname))
+gboolean
+_gwy_module_add_registered_function(const gchar *prefix,
+                                    const gchar *name)
 {
-    _gwy_file_func_set_register_callback(callback);
-    _gwy_graph_func_set_register_callback(callback);
-    _gwy_layer_func_set_register_callback(callback);
-    _gwy_process_func_set_register_callback(callback);
-    _gwy_tool_func_set_register_callback(callback);
-}
+    _GwyModuleInfoInternal *info;
 
-/**
- * gwy_module_get_module_info:
- * @name: A module name.
- *
- * Gets internal module info for module identified by @name.
- *
- * This function exposes internal module info and is intended to be used only
- * by the rest of Gwyddion module system.
- *
- * Returns: The internal module info.
- **/
-_GwyModuleInfoInternal*
-_gwy_module_get_module_info(const gchar *name)
-{
-    g_assert(modules_initialized);
+    g_return_val_if_fail(modules_initialized, FALSE);
+    g_return_val_if_fail(currenly_registered_module, FALSE);
+    info = g_hash_table_lookup(modules, currenly_registered_module);
+    g_return_val_if_fail(info, FALSE);
 
-    return g_hash_table_lookup(modules, name);
+    info->funcs = g_slist_append(info->funcs, g_strconcat(prefix, name, NULL));
+    return TRUE;
 }
 
 static void
@@ -262,6 +239,7 @@ gwy_module_do_register_module(const gchar *filename,
     /* Do a few sanity checks on the module before registration
         * is performed. */
     ok = TRUE;
+    currenly_registered_module = modname;
     if (!g_module_symbol(mod, GWY_MODULE_QUERY_NAME, (gpointer)&query)
         || !query) {
         g_warning("No query function in module %s", filename);
@@ -309,6 +287,7 @@ gwy_module_do_register_module(const gchar *filename,
             gwy_module_get_rid_of(iinfo->name);
         }
 
+        /* XXX: pedantic check */
         if (g_slist_length(iinfo->funcs) == 1) {
             const gchar *x = strchr((gchar*)iinfo->funcs->data, ':') + 2;
             if (!gwy_strequal(iinfo->name, x))
@@ -329,6 +308,7 @@ gwy_module_do_register_module(const gchar *filename,
                        filename, g_module_error());
         g_free(modname);
     }
+    currenly_registered_module = NULL;
 
     return ok ? mod_info : NULL;
 }
@@ -457,14 +437,14 @@ gwy_module_init(void)
 const GwyModuleInfo*
 gwy_module_lookup(const gchar *name)
 {
-    _GwyModuleInfoInternal *iinfo;
+    _GwyModuleInfoInternal *info;
 
-    iinfo = _gwy_module_get_module_info(name);
-    return iinfo ? iinfo->mod_info : NULL;
+    info = g_hash_table_lookup(modules, name);
+    return info ? info->mod_info : NULL;
 }
 
 /***************************************************************************/
-/* XXX: Temporary hack */
+/* XXX: pedantic check */
 #include <libgwyddion/gwycontainer.h>
 static GwyContainer *watch_settings = NULL;
 static const gchar *watch_modname = NULL;

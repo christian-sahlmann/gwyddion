@@ -20,16 +20,11 @@
 
 #include "config.h"
 #include <string.h>
-
 #include <glib/gstdio.h>
-
 #include <libgwyddion/gwymacros.h>
-
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwydgets.h>
-
 #include "gwymoduleinternal.h"
 #include "gwymodule-file.h"
 
@@ -70,7 +65,6 @@ static void    gwy_file_container_finalized(gpointer userdata,
 
 static GHashTable *file_funcs = NULL;
 static GList *container_list = NULL;
-static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 /**
  * gwy_file_func_register:
@@ -85,11 +79,8 @@ gboolean
 gwy_file_func_register(const gchar *modname,
                        const GwyFileFuncInfo *func_info)
 {
-    _GwyModuleInfoInternal *iinfo;
     GwyFileFuncInfo *ftinfo;
-    gchar *canon_name;
 
-    gwy_debug("");
     gwy_debug("name = %s, file_desc = %s, detect = %p, load = %p, save = %p",
               func_info->name, func_info->file_desc,
               func_info->detect, func_info->load, func_info->save);
@@ -100,8 +91,6 @@ gwy_file_func_register(const gchar *modname,
                                            NULL, &gwy_file_func_info_free);
     }
 
-    iinfo = _gwy_module_get_module_info(modname);
-    g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->load
                          || func_info->save
                          || func_info->export_,
@@ -121,18 +110,12 @@ gwy_file_func_register(const gchar *modname,
     ftinfo->file_desc = g_strdup(func_info->file_desc);
 
     g_hash_table_insert(file_funcs, (gpointer)ftinfo->name, ftinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, ftinfo->name, NULL);
-    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
-    if (func_register_callback)
-        func_register_callback(canon_name);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_FILE, ftinfo->name)) {
+        g_hash_table_remove(file_funcs, (gpointer)ftinfo->name);
+        return FALSE;
+    }
 
     return TRUE;
-}
-
-void
-_gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname))
-{
-    func_register_callback = callback;
 }
 
 static void

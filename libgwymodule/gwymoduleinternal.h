@@ -42,38 +42,25 @@ typedef struct {
 } _GwyModuleInfoInternal;
 
 G_GNUC_INTERNAL
-_GwyModuleInfoInternal* _gwy_module_get_module_info  (const gchar *name);
+gboolean _gwy_module_add_registered_function(const gchar *prefix,
+                                             const gchar *name);
 
 G_GNUC_INTERNAL
-gboolean                _gwy_file_func_remove        (const gchar *name);
+gboolean _gwy_file_func_remove              (const gchar *name);
 
 G_GNUC_INTERNAL
-gboolean                _gwy_process_func_remove     (const gchar *name);
+gboolean _gwy_process_func_remove           (const gchar *name);
 
 G_GNUC_INTERNAL
-gboolean                _gwy_tool_func_remove        (const gchar *name);
+gboolean _gwy_tool_func_remove              (const gchar *name);
 
 G_GNUC_INTERNAL
-gboolean                _gwy_graph_func_remove       (const gchar *name);
+gboolean _gwy_graph_func_remove             (const gchar *name);
 
 G_GNUC_INTERNAL
-gboolean                _gwy_layer_func_remove       (const gchar *name);
+gboolean _gwy_layer_func_remove             (const gchar *name);
 
-G_GNUC_INTERNAL
-void  _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname));
-
-G_GNUC_INTERNAL
-void  _gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname));
-
-G_GNUC_INTERNAL
-void  _gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullname));
-
-G_GNUC_INTERNAL
-void  _gwy_graph_func_set_register_callback(void (*callback)(const gchar *fullname));
-
-G_GNUC_INTERNAL
-void  _gwy_layer_func_set_register_callback(void (*callback)(const gchar *fullname));
-
+/* XXX XXX XXX: pedantic check */
 G_GNUC_INTERNAL
 void
 _gwy_module_watch_settings(const gchar *modname,

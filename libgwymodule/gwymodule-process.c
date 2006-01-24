@@ -20,13 +20,10 @@
 
 #include "config.h"
 #include <string.h>
-#include <gtk/gtkitemfactory.h>
-#include <gtk/gtkmenubar.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
-
 #include "gwymoduleinternal.h"
 #include "gwymodule-process.h"
 
@@ -38,7 +35,6 @@ typedef struct {
 static void gwy_process_func_info_free (gpointer data);
 
 static GHashTable *process_funcs = NULL;
-static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 /**
  * gwy_process_func_register:
@@ -56,9 +52,7 @@ gboolean
 gwy_process_func_register(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
-    _GwyModuleInfoInternal *iinfo;
     GwyProcessFuncInfo *pfinfo;
-    gchar *canon_name;
 
     gwy_debug("");
     gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
@@ -71,8 +65,6 @@ gwy_process_func_register(const gchar *modname,
                                               NULL, gwy_process_func_info_free);
     }
 
-    iinfo = _gwy_module_get_module_info(modname);
-    g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->process, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->run & GWY_RUN_MASK, FALSE);
@@ -90,18 +82,12 @@ gwy_process_func_register(const gchar *modname,
     pfinfo->menu_path = g_strdup(func_info->menu_path);
 
     g_hash_table_insert(process_funcs, (gpointer)pfinfo->name, pfinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_PROC, pfinfo->name, NULL);
-    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
-    if (func_register_callback)
-        func_register_callback(canon_name);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_PROC, pfinfo->name)) {
+        g_hash_table_remove(process_funcs, (gpointer)pfinfo->name);
+        return FALSE;
+    }
 
     return TRUE;
-}
-
-void
-_gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname))
-{
-    func_register_callback = callback;
 }
 
 static void

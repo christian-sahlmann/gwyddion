@@ -33,10 +33,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodulebrowser.h>
 #include <libgwydgets/gwydgets.h>
-#include "app.h"
-#include "menu.h"
-#include "file.h"
-#include "filelist.h"
+#include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
 typedef struct {
@@ -66,27 +63,6 @@ static GtkWidget           *process_menu      = NULL;
 static GtkWidget           *graph_menu        = NULL;
 static GtkTooltips         *app_tooltips      = NULL;
 static GwySensitivityGroup *app_sensgroup     = NULL;
-
-/* FIXME: how can MSVC can get to needing this when we are not DEBUGging? */
-#if (defined(DEBUG) || defined(_MSC_VER))
-static gchar*
-debug_menu_sens_flags(guint flags)
-{
-    static const GwyEnum menu_enum[] = {
-        { "Data",  GWY_MENU_FLAG_DATA,       },
-        { "Undo",  GWY_MENU_FLAG_UNDO,       },
-        { "Redo",  GWY_MENU_FLAG_REDO,       },
-        { "Graph", GWY_MENU_FLAG_GRAPH,      },
-        { "Last",  GWY_MENU_FLAG_LAST_PROC,  },
-        { "LastG", GWY_MENU_FLAG_LAST_GRAPH, },
-        { "Mask",  GWY_MENU_FLAG_DATA_MASK,  },
-        { "Show",  GWY_MENU_FLAG_DATA_SHOW,  },
-    };
-
-    /* this is going to leak some memory, but no one cares in debugging mode */
-    return gwy_flags_to_string(flags, menu_enum, G_N_ELEMENTS(menu_enum), NULL);
-}
-#endif
 
 /**
  * gwy_app_menu_canonicalize_label:
@@ -505,7 +481,7 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
     gwy_graph_func_foreach((GFunc)&gwy_app_menu_add_graph_func, root);
     menu = gwy_app_build_module_func_menu(root,
                                           G_CALLBACK(gwy_app_run_graph_func),
-                                          gwy_graph_func_get_sensitivity_flags);
+                                          gwy_graph_func_get_sensitivity_mask);
     gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
     graph_menu = menu;
 
@@ -657,7 +633,6 @@ gwy_app_update_last_process_func(const gchar *name)
     gwy_app_menu_canonicalize_label(lab);
     sens = (gwy_process_func_get_sensitivity_flags(name)
             | GWY_MENU_FLAG_LAST_PROC);
-    gwy_debug("Repeat sens: %s", debug_menu_sens_flags(sens));
 
     label = GTK_BIN(repeat_item)->child;
     s = g_strconcat(_("Repeat"), " (", lab, ")", NULL);

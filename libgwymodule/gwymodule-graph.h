@@ -38,11 +38,19 @@ struct _GwyGraphFuncInfo {
 
 gboolean     gwy_graph_func_register      (const gchar *modname,
                                            GwyGraphFuncInfo *func_info);
+gboolean     gwy_graph_func_register2     (const gchar *name,
+                                           GwyGraphFunc func,
+                                           const gchar *menu_path,
+                                           const gchar *stock_id,
+                                           guint sens_mask,
+                                           const gchar *tooltip);
 gboolean     gwy_graph_func_run           (const guchar *name,
                                            GwyGraph *graph);
 gboolean     gwy_graph_func_exists        (const gchar *name);
 const gchar* gwy_graph_func_get_menu_path (const gchar *name);
-guint        gwy_graph_func_get_sensitivity_flags (const gchar *name);
+const gchar* gwy_graph_func_get_stock_id  (const gchar *name);
+const gchar* gwy_graph_func_get_tooltip   (const gchar *name);
+guint        gwy_graph_func_get_sensitivity_mask (const gchar *name);
 void         gwy_graph_func_foreach       (GFunc function,
                                            gpointer user_data);
 

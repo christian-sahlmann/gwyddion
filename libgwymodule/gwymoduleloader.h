@@ -54,7 +54,6 @@ GSList*                 gwy_module_get_functions    (const gchar *name);
 void                    gwy_module_foreach          (GHFunc function,
                                                      gpointer data);
 const GwyModuleInfo*    gwy_module_register_module  (const gchar *name);
-void                    gwy_module_set_register_callback(void (*callback)(const gchar *fullname));
 
 G_END_DECLS
 
