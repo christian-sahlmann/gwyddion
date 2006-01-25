@@ -1367,6 +1367,26 @@ gwy_data_field_fill_one_grain(gint xres,
     return count;
 }
 
+/* XXX: Move the descriptions to a gtk-doc comment once it becomes public
+ * again. */
+#if 0
+typedef enum {
+    GWY_GRAIN_VALUE_AREA                  = 0, /*grain projection area*/
+    GWY_GRAIN_VALUE_PERIMETER             = 1, /*grain projection perimeter*/
+    GWY_GRAIN_VALUE_AREA_RADIUS           = 2, /*projection area equivalent circle radius*/
+    GWY_GRAIN_VALUE_PERIMETER_RADIUS      = 3, /*projection perimeter equivalent circle radius*/
+    GWY_GRAIN_VALUE_MAX_Z                 = 4, /*maximum height above terrain*/
+    GWY_GRAIN_VALUE_MIN_Z                 = 5, /*minimum height below terrain*/
+    GWY_GRAIN_VALUE_VOLUME                = 6, /*volume above terrain*/
+    GWY_GRAIN_VALUE_SURFACE               = 7, /*surface above terrain*/
+    GWY_GRAIN_VALUE_MIN_BOUND             = 8, /*minimum one-directional bounding size (in any direction)*/
+    GWY_GRAIN_VALUE_MAX_BOUND             = 9, /*maximum one-directional bounding size (in any direction)*/
+    GWY_GRAIN_VALUE_MIN_BOUND_DIRECTION   = 10, /*minimum one-directional bounding direction*/
+    GWY_GRAIN_VALUE_MAX_BOUND_DIRECTION   = 11, /*maximum one-directional bounding direction*/
+    GWY_GRAIN_VALUE_MINMAX_DIFF           = 12, /*GWY_GRAIN_VALUE_MAX_BOUND - GWY_GRAIN_VALUE_MIN_BOUND*/
+    GWY_GRAIN_VALUE_MINMAX_DIFF_DIRECTION = 13  /*angle betwen minimum and maximum bound directions*/
+} GwyGrainValueType;
+
 gdouble
 gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
                                            GwyDataField *grain_field,
@@ -1390,6 +1410,7 @@ gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
         return sqrt((gdouble)(nindices)*pixel_to_area/G_PI);
      }
 }
+#endif
 
 /************************** Documentation ****************************/
 
@@ -1398,6 +1419,5 @@ gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
  * @title: grains
  * @short_description: Grain detection and processing
  **/
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
