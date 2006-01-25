@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.5cvs20060115, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.5cvs20060125, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.6
@@ -363,6 +363,13 @@ BASIC_CFLAGS="$GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $CFLAGS"
 
 CFLAGS="$TARGET_CFLAGS $WARNING_CFLAGS $MATH_CFLAGS $BASIC_CFLAGS"
 LDFLAGS="$TARGET_LDFLAGS"
+
+#############################################################################
+# Plugin-proxy
+GWY_ENABLE([plugin-proxy],
+           [plugin_proxy],
+           [Build plug-in proxy module])
+AM_CONDITIONAL([ENABLE_PLUGIN_PROXY],[test "$enable_plugin_proxy" != no])
 
 #############################################################################
 # RPM

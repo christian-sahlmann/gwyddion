@@ -9,11 +9,17 @@ SUBDIRS = \
 
 moduledir = $(pkglibdir)/modules
 
+if ENABLE_PLUGIN_PROXY
 module_LTLIBRARIES = \
 	plugin-proxy.la
+plugin_proxy_sources =
+else
+plugin_proxy_sources = plugin-proxy.c
+endif
 
 
 EXTRA_DIST = \
+	$(plugin_proxy_sources) \
 	makefile.msc \
 	makefile.msc.gwt
 
@@ -41,8 +47,10 @@ module_libadd = \
 endif
 
 
+if ENABLE_PLUGIN_PROXY
 plugin_proxy_la_SOURCES = plugin-proxy.c
 plugin_proxy_la_LIBADD = $(module_libadd)
+endif
 
 
 clean-local:
