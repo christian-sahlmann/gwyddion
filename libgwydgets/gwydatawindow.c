@@ -47,7 +47,6 @@ static void     gwy_data_window_finalize          (GObject *object);
 static void     gwy_data_window_destroy           (GtkObject *object);
 static void     gwy_data_window_size_allocate     (GtkWidget *widget,
                                                    GtkAllocation *alc);
-static void     gwy_data_window_lame_resize       (GwyDataWindow *data_window);
 static void     gwy_data_window_fit_to_screen     (GwyDataWindow *data_window,
                                                    GwyDataView *data_view);
 static void     gwy_data_window_update_units      (GwyDataWindow *data_window);
@@ -173,7 +172,7 @@ gwy_data_window_destroy(GtkObject *object)
 GtkWidget*
 gwy_data_window_new(GwyDataView *data_view)
 {
-    GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
+    GdkGeometry geom = { 10, 10, 1000, 1000, -1, -1, 1, 1, 1.0, 1.0, 0 };
     GwyDataWindow *data_window;
     GwyContainer *data;
     GwyPixmapLayer *layer;
@@ -185,12 +184,17 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_window_set_wmclass(GTK_WINDOW(data_window), "data",
                            g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(data_window), TRUE);
-    /* FIXME: this affects the window, not data_view [Fvwm] */
-    /*
+    /* FIXME: This exhibits some `interesting' brokeness when window is resized
+     * with mouse to size at which data view size no longer determines window
+     * size (and thus hexcess/vexcess appears).  The window is suddenly resized
+     * to some larger size, probably to keep the aspect ratio.  I don't know
+     * how to change the aspect dynamically to only apply to large sizes.
     gtk_window_set_geometry_hints(GTK_WINDOW(data_window),
                                   GTK_WIDGET(data_view),
                                   &geom,
-                                  GDK_HINT_MIN_SIZE | GDK_HINT_ASPECT);
+                                  GDK_HINT_MIN_SIZE
+                                  | GDK_HINT_ASPECT
+                                  | GDK_HINT_BASE_SIZE);
     */
     gtk_window_set_geometry_hints(GTK_WINDOW(data_window),
                                   GTK_WIDGET(data_view),
@@ -393,25 +397,6 @@ gwy_data_window_size_allocate(GtkWidget *widget,
 }
 
 static void
-gwy_data_window_lame_resize(GwyDataWindow *data_window)
-{
-    GtkRequisition hruler_req, vruler_req, statusbar_req, coloraxis_req,
-                   view_req;
-    gint width, height;
-
-    gwy_debug(" ");
-    gtk_widget_get_child_requisition(data_window->hruler, &hruler_req);
-    gtk_widget_get_child_requisition(data_window->vruler, &vruler_req);
-    gtk_widget_get_child_requisition(data_window->statusbar, &statusbar_req);
-    gtk_widget_size_request(data_window->coloraxis, &coloraxis_req);
-    gtk_widget_size_request(data_window->data_view, &view_req);
-
-    width = vruler_req.width + view_req.width + coloraxis_req.width;
-    height = hruler_req.height + view_req.height + statusbar_req.height;
-    gtk_window_resize(GTK_WINDOW(data_window), width, height);
-}
-
-static void
 gwy_data_window_fit_to_screen(GwyDataWindow *data_window,
                               GwyDataView *data_view)
 {
@@ -448,7 +433,9 @@ void
 gwy_data_window_set_zoom(GwyDataWindow *data_window,
                          gint izoom)
 {
-    gdouble factor = 0.5;    /* Half-pixel zoom */
+    static const gdouble factor = 0.5;    /* Half-pixel zoom */
+    GtkRequisition req;
+    GtkWidget *widget;
     gdouble rzoom;
     gint curzoom = 0;
 
@@ -478,7 +465,10 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
     }
     rzoom = CLAMP(rzoom, 1/12.0, 12.0);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(data_window->data_view), rzoom);
-    gwy_data_window_lame_resize(data_window);
+
+    widget = GTK_WIDGET(data_window);
+    GTK_WIDGET_CLASS(gwy_data_window_parent_class)->size_request(widget, &req);
+    gtk_window_resize(GTK_WINDOW(data_window), req.width, req.height);
 }
 
 static void
