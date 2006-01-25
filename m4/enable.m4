@@ -4,7 +4,7 @@ AC_DEFUN([GWY_ENABLE],
 [
 AC_ARG_ENABLE([$1],
   AS_HELP_STRING([--enable-$1],
-                 [$3 (yes)]),
+                 [$3 @<:@default=yes@:>@)]),
   [case "${enableval}" in
      yes|no) ifelse([$2],,[enable_$1="$enableval"],[enable_$2="$enableval"]) ;;
      *) AC_MSG_ERROR(bad value ${enableval} for --enable-$1) ;;
@@ -18,7 +18,7 @@ AC_DEFUN([GWY_WITH],
 [
 AC_ARG_WITH([$1],
   AS_HELP_STRING([--with-$1],
-                 [$3 (yes)]),
+                 [$3 @<:@default=yes@:>@]),
   [case "${withval}" in
      yes|no) ifelse([$2],,[enable_$1="$withval"],[enable_$2="$withval"]) ;;
      *) AC_MSG_ERROR(bad value ${withval} for --with-$1) ;;

@@ -95,7 +95,7 @@ case "$target_or_host" in
     ;;
   *)
     # The trouble is, we cannot reliably detect things like CFLAGS=-m32
-    arch_32bit="maybe not"
+    arch_32bit="maybe-not"
     ;;
 esac
 AC_MSG_RESULT([$arch_32bit])
