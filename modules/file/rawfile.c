@@ -279,25 +279,21 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo rawfile_func_info = {
-        "rawfile",
-        N_("Raw data files"),
-        (GwyFileDetectFunc)&rawfile_detect,
-        (GwyFileLoadFunc)&rawfile_load,
-        NULL,
-        NULL
-    };
     static gint types_initialized = 0;
+    GwyResourceClass *klass;
 
     if (!types_initialized) {
-        GwyResourceClass *klass;
-
         types_initialized += gwy_raw_file_preset_get_type();
         klass = g_type_class_ref(GWY_TYPE_RAW_FILE_PRESET);
         gwy_resource_class_load(klass);
         g_type_class_unref(klass);
     }
-    gwy_file_func_register(name, &rawfile_func_info);
+    gwy_file_func_register("rawfile",
+                           N_("Raw data files"),
+                           (GwyFileDetectFunc)&rawfile_detect,
+                           (GwyFileLoadFunc)&rawfile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

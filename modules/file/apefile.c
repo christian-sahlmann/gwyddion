@@ -129,16 +129,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo apefile_func_info = {
-        "apefile",
-        N_("APE files (.dat)"),
-        (GwyFileDetectFunc)&apefile_detect,
-        (GwyFileLoadFunc)&apefile_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &apefile_func_info);
+    gwy_file_func_register("apefile",
+                           N_("APE files (.dat)"),
+                           (GwyFileDetectFunc)&apefile_detect,
+                           (GwyFileLoadFunc)&apefile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

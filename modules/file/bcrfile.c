@@ -84,16 +84,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo bcrfile_func_info = {
-        "bcrfile",
-        N_("BCR files (.bcr, .bcrf)"),
-        (GwyFileDetectFunc)&bcrfile_detect,
-        (GwyFileLoadFunc)&bcrfile_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &bcrfile_func_info);
+    gwy_file_func_register("bcrfile",
+                           N_("BCR files (.bcr, .bcrf)"),
+                           (GwyFileDetectFunc)&bcrfile_detect,
+                           (GwyFileLoadFunc)&bcrfile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

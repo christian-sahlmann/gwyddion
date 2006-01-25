@@ -117,17 +117,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register (const gchar *name)
 {
-  static GwyFileFuncInfo jpkscan_func_info =
-  {
-    "jpkscan",
-    N_("JPK image scans (.jpk)"),
-    (GwyFileDetectFunc) jpkscan_detect,
-    (GwyFileLoadFunc)   jpkscan_load,
-    NULL,
-    NULL
-  };
-
-  gwy_file_func_register (name, &jpkscan_func_info);
+  gwy_file_func_register ("jpkscan",
+                          N_("JPK image scans (.jpk)"),
+                          (GwyFileDetectFunc)&jpkscan_detect,
+                          (GwyFileLoadFunc)&jpkscan_load,
+                          NULL,
+                          NULL);
 
   return TRUE;
 }

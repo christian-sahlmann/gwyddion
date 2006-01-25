@@ -147,16 +147,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo rhkspm32_func_info = {
-        "rhk-spm32",
-        N_("RHK SPM32 files (.sm2)"),
-        (GwyFileDetectFunc)&rhkspm32_detect,
-        (GwyFileLoadFunc)&rhkspm32_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &rhkspm32_func_info);
+    gwy_file_func_register("rhk-spm32",
+                           N_("RHK SPM32 files (.sm2)"),
+                           (GwyFileDetectFunc)&rhkspm32_detect,
+                           (GwyFileLoadFunc)&rhkspm32_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

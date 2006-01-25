@@ -84,16 +84,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo gwyfile_func_info = {
-        "gwyfile",
-        N_("Gwyddion native format (.gwy)"),
-        (GwyFileDetectFunc)&gwyfile_detect,
-        (GwyFileLoadFunc)&gwyfile_load,
-        (GwyFileSaveFunc)&gwyfile_save,
-        NULL,
-    };
-
-    gwy_file_func_register(name, &gwyfile_func_info);
+    gwy_file_func_register("gwyfile",
+                           N_("Gwyddion native format (.gwy)"),
+                           (GwyFileDetectFunc)&gwyfile_detect,
+                           (GwyFileLoadFunc)&gwyfile_load,
+                           (GwyFileSaveFunc)&gwyfile_save,
+                           NULL);
 
     return TRUE;
 }

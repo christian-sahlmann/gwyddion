@@ -82,16 +82,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo stmprg_func_info = {
-        "stmprg",
-        N_("Omicron STMPRG files (tp ta)"),
-        (GwyFileDetectFunc)&stmprg_detect,
-        (GwyFileLoadFunc)&stmprg_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &stmprg_func_info);
+    gwy_file_func_register("stmprg",
+                           N_("Omicron STMPRG files (tp ta)"),
+                           (GwyFileDetectFunc)&stmprg_detect,
+                           (GwyFileLoadFunc)&stmprg_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

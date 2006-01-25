@@ -364,16 +364,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo sis_func_info = {
-        "sisfile",
-        N_("SIS files (.sis)"),
-        (GwyFileDetectFunc)&sis_detect,
-        (GwyFileLoadFunc)&sis_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &sis_func_info);
+    gwy_file_func_register("sis",
+                           N_("SIS files (.sis)"),
+                           (GwyFileDetectFunc)&sis_detect,
+                           (GwyFileLoadFunc)&sis_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

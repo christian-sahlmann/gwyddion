@@ -136,16 +136,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo unisoku_func_info = {
-        "unisoku",
-        N_("Unisoku files (.hdr + .dat)"),
-        (GwyFileDetectFunc)&unisoku_detect,
-        (GwyFileLoadFunc)&unisoku_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &unisoku_func_info);
+    gwy_file_func_register("unisoku",
+                           N_("Unisoku files (.hdr + .dat)"),
+                           (GwyFileDetectFunc)&unisoku_detect,
+                           (GwyFileLoadFunc)&unisoku_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

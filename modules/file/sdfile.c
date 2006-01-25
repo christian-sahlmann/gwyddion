@@ -114,16 +114,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo sdfile_func_info = {
-        "sdfile",
-        N_("Surfstand SDF files"),
-        (GwyFileDetectFunc)&sdfile_detect,
-        (GwyFileLoadFunc)&sdfile_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &sdfile_func_info);
+    gwy_file_func_register("sdfile",
+                           N_("Surfstand SDF files (.sdf)"),
+                           (GwyFileDetectFunc)&sdfile_detect,
+                           (GwyFileLoadFunc)&sdfile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

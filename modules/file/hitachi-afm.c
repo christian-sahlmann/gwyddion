@@ -70,16 +70,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo hitachi_func_info = {
-        "hitachi-afm",
-        N_("Hitachi AFM files"),
-        (GwyFileDetectFunc)&hitachi_detect,
-        (GwyFileLoadFunc)&hitachi_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &hitachi_func_info);
+    gwy_file_func_register("hitachi-afm",
+                           N_("Hitachi AFM files (.afm)"),
+                           (GwyFileDetectFunc)&hitachi_detect,
+                           (GwyFileLoadFunc)&hitachi_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

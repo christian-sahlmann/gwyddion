@@ -9,8 +9,8 @@ SUBDIRS = \
 
 moduledir = $(pkglibdir)/modules
 
-module_LTLIBRARIES = \
-	plugin-proxy.la
+#module_LTLIBRARIES = \
+#	plugin-proxy.la
 
 
 EXTRA_DIST = \
@@ -41,8 +41,8 @@ module_libadd = \
 endif
 
 
-plugin_proxy_la_SOURCES = plugin-proxy.c
-plugin_proxy_la_LIBADD = $(module_libadd)
+#plugin_proxy_la_SOURCES = plugin-proxy.c
+#plugin_proxy_la_LIBADD = $(module_libadd)
 
 
 clean-local:

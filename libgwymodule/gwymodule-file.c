@@ -25,9 +25,20 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
 #include "gwymoduleinternal.h"
-#include "gwymodule-file.h"
 
+/* The file function information. */
+typedef struct {
+    const gchar *name;
+    const gchar *description;
+    GwyFileDetectFunc detect;
+    GwyFileLoadFunc load;
+    GwyFileSaveFunc save;
+    GwyFileSaveFunc export_;
+} GwyFileFuncInfo;
+
+/* Information about current file, passed around during detection */
 typedef struct {
     const gchar *winner;
     gint score;
@@ -36,18 +47,21 @@ typedef struct {
     GwyFileDetectInfo *fileinfo;
 } FileDetectData;
 
+/* Information about successful loads and saves of a Container, kept in
+ * container_list */
 typedef struct {
     gpointer container;
     GQuark name;
     gchar *filename_sys;
 } FileTypeInfo;
 
+/* Auxiliary structure to pass both user callback function and data to
+ * g_hash_table_foreach() lambda argument in gwy_file_func_foreach() */
 typedef struct {
     GFunc function;
     gpointer user_data;
-} FileFuncForeachData;
+} FuncForeachData;
 
-static void     gwy_file_func_info_free    (gpointer data);
 static gboolean gwy_file_detect_fill_info  (GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static void     gwy_file_detect_free_info  (GwyFileDetectInfo *fileinfo);
@@ -68,64 +82,71 @@ static GList *container_list = NULL;
 
 /**
  * gwy_file_func_register:
- * @modname: Module identifier (name).
- * @func_info: File type function info.
+ * @name: Name of function to register.  It should be a valid identifier.
+ * @description: File type description (will be used in file type selectors).
+ * @detect: Detection function.  It may be %NULL, files of such a type can
+ *          can be then loaded and saved only on explict request.
+ * @load: File load/import function.
+ * @save: File save function.
+ * @export_: File export function.
  *
- * Registeres a file type function.
+ * Registered a file function.
  *
- * Returns: %TRUE on success, %FALSE on failure.
+ * At least one of @load, @save, and @export_ must be non-%NULL.  See
+ * #GwyFileOperationType for differences between save and export.
+ *
+ * Note: the string arguments are not copied as modules are not expected to
+ * vanish.  If they are constructed (non-constant) strings, do not free them.
+ * Should modules ever become unloadable they will get chance to clean-up.
+ *
+ * Returns: Normally %TRUE; %FALSE on failure.
  **/
 gboolean
-gwy_file_func_register(const gchar *modname,
-                       const GwyFileFuncInfo *func_info)
+gwy_file_func_register(const gchar *name,
+                       const gchar *description,
+                       GwyFileDetectFunc detect,
+                       GwyFileLoadFunc load,
+                       GwyFileSaveFunc save,
+                       GwyFileSaveFunc export_)
 {
-    GwyFileFuncInfo *ftinfo;
+    GwyFileFuncInfo *func_info;
 
-    gwy_debug("name = %s, file_desc = %s, detect = %p, load = %p, save = %p",
-              func_info->name, func_info->file_desc,
-              func_info->detect, func_info->load, func_info->save);
+    g_return_val_if_fail(name, FALSE);
+    g_return_val_if_fail(load || save || export_, FALSE);
+    g_return_val_if_fail(description, FALSE);
+    gwy_debug("name = %s, desc = %s, detect = %p, "
+              "load = %p, save = %p, export = %p",
+              name, description, detect, load, save, export_);
 
     if (!file_funcs) {
         gwy_debug("Initializing...");
         file_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                           NULL, &gwy_file_func_info_free);
+                                           NULL, &g_free);
     }
 
-    g_return_val_if_fail(func_info->load
-                         || func_info->save
-                         || func_info->export_,
-                         FALSE);
-    g_return_val_if_fail(func_info->name, FALSE);
-    if (!gwy_strisident(func_info->name, "_-", NULL))
+    if (!gwy_strisident(name, "_-", NULL))
         g_warning("Function name `%s' is not a valid identifier. "
-                  "It may be rejected in future.", func_info->name);
-    if (g_hash_table_lookup(file_funcs, func_info->name)) {
-        g_warning("Duplicate function %s, keeping only first", func_info->name);
+                  "It may be rejected in future.", name);
+    if (g_hash_table_lookup(file_funcs, name)) {
+        g_warning("Duplicate function %s, keeping only first", name);
         return FALSE;
     }
 
-    ftinfo = g_new(GwyFileFuncInfo, 1);
-    *ftinfo = *func_info;
-    ftinfo->name = g_strdup(func_info->name);
-    ftinfo->file_desc = g_strdup(func_info->file_desc);
+    func_info = g_new0(GwyFileFuncInfo, 1);
+    func_info->name = name;
+    func_info->description = description;
+    func_info->detect = detect;
+    func_info->load = load;
+    func_info->save = save;
+    func_info->export_ = export_;
 
-    g_hash_table_insert(file_funcs, (gpointer)ftinfo->name, ftinfo);
-    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_FILE, ftinfo->name)) {
-        g_hash_table_remove(file_funcs, (gpointer)ftinfo->name);
+    g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_FILE, name)) {
+        g_hash_table_remove(file_funcs, (gpointer)func_info->name);
         return FALSE;
     }
 
     return TRUE;
-}
-
-static void
-gwy_file_func_info_free(gpointer data)
-{
-    GwyFileFuncInfo *ftinfo = (GwyFileFuncInfo*)data;
-
-    g_free((gpointer)ftinfo->name);
-    g_free((gpointer)ftinfo->file_desc);
-    g_free(ftinfo);
 }
 
 /**
@@ -514,9 +535,9 @@ gwy_file_func_user_cb(gpointer key,
                       G_GNUC_UNUSED gpointer value,
                       gpointer user_data)
 {
-    FileFuncForeachData *fffd = (FileFuncForeachData*)user_data;
+    FuncForeachData *ffd = (FuncForeachData*)user_data;
 
-    fffd->function(key, fffd->user_data);
+    ffd->function(key, ffd->user_data);
 }
 
 /**
@@ -532,14 +553,14 @@ void
 gwy_file_func_foreach(GFunc function,
                       gpointer user_data)
 {
-    FileFuncForeachData fffd;
+    FuncForeachData ffd;
 
     if (!file_funcs)
         return;
 
-    fffd.user_data = user_data;
-    fffd.function = function;
-    g_hash_table_foreach(file_funcs, gwy_file_func_user_cb, &fffd);
+    ffd.user_data = user_data;
+    ffd.function = function;
+    g_hash_table_foreach(file_funcs, gwy_file_func_user_cb, &ffd);
 }
 
 /**
@@ -598,7 +619,7 @@ gwy_file_func_get_description(const gchar *name)
     if (!func_info)
         return NULL;
 
-    return func_info->file_desc;
+    return func_info->description;
 }
 
 gboolean
@@ -663,7 +684,8 @@ gwy_module_file_error_quark(void)
     static GQuark error_domain = 0;
 
     if (!error_domain)
-        error_domain = g_quark_from_static_string("gwy-module-file-error-quark");
+        error_domain = g_quark_from_static_string("gwy-module-file-"
+                                                  "error-quark");
 
     return error_domain;
 }
@@ -749,20 +771,6 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * For file module writers, the only useful function here is the registration
  * function gwy_file_func_register() and the signatures of particular file
  * operations: #GwyFileDetectFunc, #GwyFileLoadFunc, and #GwyFileSaveFunc.
- **/
-
-/**
- * GwyFileFuncInfo:
- * @name: File type function name (used for all detect/save/load functions).
- * @file_desc: Brief file type description.  This will appear in the menu
- *             so it should not contain slashes, and the preferred form is
- *             "Foobar data (.foo)".
- * @detect: The file type detecting function.
- * @load: The file loading function.
- * @save: The file saving function.
- * @export_: The file exporting function.
- *
- * Information about set of functions for one file type.
  **/
 
 /**
@@ -876,8 +884,9 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * Error codes returned by file module operations.
  *
  * File module functions can return any of these codes, except
- * @GWY_MODULE_FILE_ERROR_UNIMPLEMENTED which is only returned by high-level
- * functions gwy_file_load() and gwy_file_save().
+ * @GWY_MODULE_FILE_ERROR_UNIMPLEMENTED which is normally only returned by
+ * high-level functions gwy_file_load() and gwy_file_save().  Module functions
+ * can return it only when they are called with a wrong function name.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

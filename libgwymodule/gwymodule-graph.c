@@ -26,6 +26,7 @@
 #include <libgwymodule/gwymodule-graph.h>
 #include "gwymoduleinternal.h"
 
+/* The graph function information */
 typedef struct {
     const gchar *name;
     const gchar *menu_path;
@@ -35,10 +36,12 @@ typedef struct {
     GwyGraphFunc func;
 } GwyGraphFuncInfo;
 
+/* Auxiliary structure to pass both user callback function and data to
+ * g_hash_table_foreach() lambda argument in gwy_file_func_foreach() */
 typedef struct {
     GFunc function;
     gpointer user_data;
-} GraphFuncForeachData;
+} FuncForeachData;
 
 static GHashTable *graph_funcs = NULL;
 
@@ -49,7 +52,8 @@ static GHashTable *graph_funcs = NULL;
  * @menu_path: Menu path under Graph menu.
  * @stock_id: Stock icon id for toolbar.
  * @sens_mask: Sensitivity mask (a combination of #GwyMenuSensFlags
- *             flags).
+ *             flags).  Usually it is equal to #GWY_MENU_FLAG_GRAPH, but it's
+ *             possible to set other requirements.
  * @tooltip: Tooltip for this function.
  *
  * Registers a graph function.
@@ -68,7 +72,7 @@ gwy_graph_func_register(const gchar *name,
                         guint sens_mask,
                         const gchar *tooltip)
 {
-    GwyGraphFuncInfo *gfinfo;
+    GwyGraphFuncInfo *func_info;
 
     g_return_val_if_fail(name, FALSE);
     g_return_val_if_fail(func, FALSE);
@@ -89,17 +93,17 @@ gwy_graph_func_register(const gchar *name,
         return FALSE;
     }
 
-    gfinfo = g_new0(GwyGraphFuncInfo, 1);
-    gfinfo->name = name;
-    gfinfo->func = func;
-    gfinfo->menu_path = menu_path;
-    gfinfo->stock_id = stock_id;
-    gfinfo->tooltip = tooltip;
-    gfinfo->sens_mask = sens_mask;
+    func_info = g_new0(GwyGraphFuncInfo, 1);
+    func_info->name = name;
+    func_info->func = func;
+    func_info->menu_path = menu_path;
+    func_info->stock_id = stock_id;
+    func_info->tooltip = tooltip;
+    func_info->sens_mask = sens_mask;
 
-    g_hash_table_insert(graph_funcs, (gpointer)gfinfo->name, gfinfo);
+    g_hash_table_insert(graph_funcs, (gpointer)func_info->name, func_info);
     if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_GRAPH, name)) {
-        g_hash_table_remove(graph_funcs, (gpointer)gfinfo->name);
+        g_hash_table_remove(graph_funcs, (gpointer)func_info->name);
         return FALSE;
     }
 
@@ -132,9 +136,9 @@ gwy_graph_func_user_cb(gpointer key,
                        G_GNUC_UNUSED gpointer value,
                        gpointer user_data)
 {
-    GraphFuncForeachData *gffd = (GraphFuncForeachData*)user_data;
+    FuncForeachData *ffd = (FuncForeachData*)user_data;
 
-    gffd->function(key, gffd->user_data);
+    ffd->function(key, ffd->user_data);
 }
 
 /**
@@ -150,14 +154,14 @@ void
 gwy_graph_func_foreach(GFunc function,
                        gpointer user_data)
 {
-    GraphFuncForeachData gffd;
+    FuncForeachData ffd;
 
     if (!graph_funcs)
         return;
 
-    gffd.user_data = user_data;
-    gffd.function = function;
-    g_hash_table_foreach(graph_funcs, gwy_graph_func_user_cb, &gffd);
+    ffd.user_data = user_data;
+    ffd.function = function;
+    g_hash_table_foreach(graph_funcs, gwy_graph_func_user_cb, &ffd);
 }
 
 /**

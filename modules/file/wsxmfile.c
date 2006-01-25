@@ -80,16 +80,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo wsxmfile_func_info = {
-        "wsxmfile",
-        N_("WSXM files (.tom)"),
-        (GwyFileDetectFunc)&wsxmfile_detect,
-        (GwyFileLoadFunc)&wsxmfile_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &wsxmfile_func_info);
+    gwy_file_func_register("wsxmfile",
+                           N_("WSXM files (.tom)"),
+                           (GwyFileDetectFunc)&wsxmfile_detect,
+                           (GwyFileLoadFunc)&wsxmfile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

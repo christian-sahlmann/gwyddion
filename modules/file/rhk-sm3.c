@@ -260,16 +260,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo rhk_sm3_func_info = {
-        "rhk-sm3",
-        N_("RHK SM3 files (.sm3)"),
-        (GwyFileDetectFunc)&rhk_sm3_detect,
-        (GwyFileLoadFunc)&rhk_sm3_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &rhk_sm3_func_info);
+    gwy_file_func_register("rhk-sm3",
+                           N_("RHK SM3 files (.sm3)"),
+                           (GwyFileDetectFunc)&rhk_sm3_detect,
+                           (GwyFileLoadFunc)&rhk_sm3_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

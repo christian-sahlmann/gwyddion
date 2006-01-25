@@ -82,16 +82,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo createc_func_info = {
-        "createc",
-        N_("Createc files (.dat)"),
-        (GwyFileDetectFunc)&createc_detect,
-        (GwyFileLoadFunc)&createc_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &createc_func_info);
+    gwy_file_func_register("createc",
+                           N_("Createc files (.dat)"),
+                           (GwyFileDetectFunc)&createc_detect,
+                           (GwyFileLoadFunc)&createc_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

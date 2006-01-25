@@ -47,8 +47,6 @@ typedef struct {
     const guchar *buffer;
 } GwyFileDetectInfo;
 
-typedef struct _GwyFileFuncInfo GwyFileFuncInfo;
-
 typedef gint           (*GwyFileDetectFunc) (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name,
                                              const gchar *name);
@@ -62,18 +60,13 @@ typedef gboolean       (*GwyFileSaveFunc)   (GwyContainer *data,
                                              GError **error,
                                              const gchar *name);
 
-struct _GwyFileFuncInfo {
-    const gchar *name;
-    const gchar *file_desc;
-    GwyFileDetectFunc detect;
-    GwyFileLoadFunc load;
-    GwyFileSaveFunc save;
-    GwyFileSaveFunc export_;
-};
-
 /* low-level interface */
-gboolean      gwy_file_func_register  (const gchar *modname,
-                                       const GwyFileFuncInfo *func_info);
+gboolean      gwy_file_func_register  (const gchar *name,
+                                       const gchar *description,
+                                       GwyFileDetectFunc detect,
+                                       GwyFileLoadFunc load,
+                                       GwyFileSaveFunc save,
+                                       GwyFileSaveFunc export_);
 gint          gwy_file_func_run_detect(const gchar *name,
                                        const gchar *filename,
                                        gboolean only_name);

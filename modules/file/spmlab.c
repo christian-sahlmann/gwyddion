@@ -64,16 +64,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo spmlab_func_info = {
-        "spmlab",
-        N_("Thermicroscopes SpmLab R4, R5, R6 files"),
-        (GwyFileDetectFunc)&spmlab_detect,
-        (GwyFileLoadFunc)&spmlab_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &spmlab_func_info);
+    gwy_file_func_register("spmlab",
+                           N_("Thermicroscopes SpmLab files"),
+                           (GwyFileDetectFunc)&spmlab_detect,
+                           (GwyFileLoadFunc)&spmlab_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

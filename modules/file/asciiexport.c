@@ -64,16 +64,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo asciiexport_func_info = {
-        "asciiexport",
-        N_("ASCII data matrix (.txt)"),
-        (GwyFileDetectFunc)&asciiexport_detect,
-        NULL,
-        NULL,
-        (GwyFileSaveFunc)&asciiexport_export,
-    };
-
-    gwy_file_func_register(name, &asciiexport_func_info);
+    gwy_file_func_register("asciiexport",
+                           N_("ASCII data matrix (.txt)"),
+                           (GwyFileDetectFunc)&asciiexport_detect,
+                           NULL,
+                           NULL,
+                           (GwyFileSaveFunc)&asciiexport_export);
 
     return TRUE;
 }

@@ -59,8 +59,6 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-#define PLUGIN_PROXY_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
-
 typedef struct {
     GwyProcessFuncInfo func;
     gchar *file;

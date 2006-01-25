@@ -118,16 +118,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo ezdfile_func_info = {
-        "ezdfile",
-        N_("Nanosurf files (.ezd, .nid)"),
-        (GwyFileDetectFunc)&ezdfile_detect,
-        (GwyFileLoadFunc)&ezdfile_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &ezdfile_func_info);
+    gwy_file_func_register("ezdfile",
+                           N_("Nanosurf files (.ezd, .nid)"),
+                           (GwyFileDetectFunc)&ezdfile_detect,
+                           (GwyFileLoadFunc)&ezdfile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

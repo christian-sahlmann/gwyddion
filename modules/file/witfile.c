@@ -208,16 +208,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo witec_func_info = {
-        "witfile",
-        N_("WITec files (.wit)"),
-        (GwyFileDetectFunc)&witec_detect,
-        (GwyFileLoadFunc)&witec_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &witec_func_info);
+    gwy_file_func_register("witfile",
+                           N_("WITec files (.wit)"),
+                           (GwyFileDetectFunc)&witec_detect,
+                           (GwyFileLoadFunc)&witec_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

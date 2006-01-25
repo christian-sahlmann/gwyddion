@@ -79,16 +79,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo aafm_func_info = {
-        "assing-afm",
-        N_("Assing AFM files (.afm)"),
-        (GwyFileDetectFunc)&aafm_detect,
-        (GwyFileLoadFunc)&aafm_load,
-        NULL,
-        (GwyFileSaveFunc)&aafm_export,
-    };
-
-    gwy_file_func_register(name, &aafm_func_info);
+    gwy_file_func_register("assing-afm",
+                           N_("Assing AFM files (.afm)"),
+                           (GwyFileDetectFunc)&aafm_detect,
+                           (GwyFileLoadFunc)&aafm_load,
+                           NULL,
+                           (GwyFileSaveFunc)&aafm_export);
 
     return TRUE;
 }

@@ -123,16 +123,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo mifile_func_info = {
-        "mifile",
-        N_("PicoView Data Files (.mi)"),
-        (GwyFileDetectFunc)&mifile_detect,
-        (GwyFileLoadFunc)&mifile_load,
-        NULL,
-        NULL,
-    };
-
-    gwy_file_func_register(name, &mifile_func_info);
+    gwy_file_func_register("mifile",
+                           N_("PicoView Data Files (.mi)"),
+                           (GwyFileDetectFunc)&mifile_detect,
+                           (GwyFileLoadFunc)&mifile_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

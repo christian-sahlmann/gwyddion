@@ -310,16 +310,12 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo mdt_func_info = {
-        "nt-mdt",
-        N_("NT-MDT files (.mdt)"),
-        (GwyFileDetectFunc)&mdt_detect,
-        (GwyFileLoadFunc)&mdt_load,
-        NULL,
-        NULL
-    };
-
-    gwy_file_func_register(name, &mdt_func_info);
+    gwy_file_func_register("nt-mdt",
+                           N_("NT-MDT files (.mdt)"),
+                           (GwyFileDetectFunc)&mdt_detect,
+                           (GwyFileLoadFunc)&mdt_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }

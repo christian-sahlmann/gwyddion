@@ -57,6 +57,14 @@
 
 #define ZOOM2LW(x) ((x) > 1 ? ((x) + 0.4) : 1)
 
+/* More or less copied from libgwymodule where it's no longer public */
+typedef struct {
+    const gchar *name;
+    const gchar *description;
+    GwyFileLoadFunc load;
+    GwyFileSaveFunc save;
+} FileFuncInfo;
+
 /* What is present on the exported image */
 typedef enum {
     PIXMAP_RAW_DATA,
@@ -121,7 +129,7 @@ typedef struct {
  * however, we may invent an export format GdkPixbuf cannot load */
 typedef struct {
     const gchar *extensions;
-    GwyFileFuncInfo *func_info;
+    FileFuncInfo *func_info;
     const GdkPixbufFormat *pixbuf_format;
 } PixmapFormatInfo;
 
@@ -304,7 +312,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    GwyFileFuncInfo *func_info;
+    FileFuncInfo *func_info;
     PixmapFormatInfo *format_info;
     GSList *formats, *l;
     gboolean registered[G_N_ELEMENTS(saveable_formats)];
@@ -331,10 +339,9 @@ module_register(const gchar *name)
             continue;
         }
 
-        func_info = g_new0(GwyFileFuncInfo, 1);
+        func_info = g_new0(FileFuncInfo, 1);
         func_info->name = fmtname;
         func_info->load = &pixmap_load;
-        func_info->detect = &pixmap_detect;
         format_info = g_new0(PixmapFormatInfo, 1);
         format_info->func_info = func_info;
         format_info->pixbuf_format = pixbuf_format;
@@ -342,8 +349,8 @@ module_register(const gchar *name)
             /* FIXME: hope we have the same format names */
             if (gwy_strequal(fmtname, saveable_formats[i].name)) {
                 gwy_debug("Found GdkPixbuf loader for known type: %s", fmtname);
-                func_info->file_desc = saveable_formats[i].description;
-                func_info->export_ = saveable_formats[i].save;
+                func_info->description = saveable_formats[i].description;
+                func_info->save = saveable_formats[i].save;
                 format_info->extensions = saveable_formats[i].extensions;
                 registered[i] = TRUE;
                 break;
@@ -353,19 +360,20 @@ module_register(const gchar *name)
             gchar *s, **ext;
 
             gwy_debug("Found GdkPixbuf loader for new type: %s", fmtname);
-            func_info->file_desc
+            func_info->description
                 = gdk_pixbuf_format_get_description(pixbuf_format);
-            /* FIXME: fix the slashes in menu path better */
-            for (s = strchr(func_info->file_desc, '/'); s; s = strchr(s, '/'))
-                *s = '-';
-
             ext = gdk_pixbuf_format_get_extensions(pixbuf_format);
             s = g_strjoinv(",.", ext);
             format_info->extensions = g_strconcat(".", s, NULL);
             g_free(s);
             g_strfreev(ext);
         }
-        gwy_file_func_register(name, func_info);
+        gwy_file_func_register(func_info->name,
+                               func_info->description,
+                               &pixmap_detect,
+                               func_info->load,
+                               NULL,
+                               func_info->save);
         pixmap_formats = g_slist_append(pixmap_formats, format_info);
     }
 
@@ -374,16 +382,20 @@ module_register(const gchar *name)
             continue;
         gwy_debug("Saveable format %s not known to GdkPixbuf",
                   saveable_formats[i].name);
-        func_info = g_new0(GwyFileFuncInfo, 1);
+        func_info = g_new0(FileFuncInfo, 1);
         func_info->name = saveable_formats[i].name;
-        func_info->file_desc = saveable_formats[i].description;
-        func_info->export_ = saveable_formats[i].save;
-        func_info->detect = &pixmap_detect;
+        func_info->description = saveable_formats[i].description;
+        func_info->save = saveable_formats[i].save;
         format_info = g_new0(PixmapFormatInfo, 1);
         format_info->func_info = func_info;
         format_info->extensions = saveable_formats[i].extensions;
 
-        gwy_file_func_register(name, func_info);
+        gwy_file_func_register(func_info->name,
+                               func_info->description,
+                               &pixmap_detect,
+                               func_info->load,
+                               NULL,
+                               func_info->save);
         pixmap_formats = g_slist_append(pixmap_formats, format_info);
     }
 
