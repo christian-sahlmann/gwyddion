@@ -118,7 +118,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_file_func_register("apefile",
+    gwy_file_func_register("stpfile",
                            N_("STP files (.stp)"),
                            (GwyFileDetectFunc)&stpfile_detect,
                            (GwyFileLoadFunc)&stpfile_load,
