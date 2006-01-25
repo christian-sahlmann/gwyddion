@@ -144,14 +144,7 @@ G_DEFINE_TYPE(GwyLayerAxis, gwy_layer_axis, GWY_TYPE_VECTOR_LAYER)
 static gboolean
 module_register(const gchar *name)
 {
-    GwyLayerFuncInfo func_info = {
-        "axis",
-        0,
-    };
-
-    func_info.type = gwy_layer_axis_get_type();
-    gwy_layer_func_register(name, &func_info);
-
+    gwy_layer_func_register(GWY_TYPE_LAYER_AXIS);
     return TRUE;
 }
 

@@ -77,7 +77,7 @@ gwy_tool_func_register(const gchar *modname,
 
     g_hash_table_insert(tool_funcs, (gpointer)tfinfo->name, tfinfo);
     if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_TOOL, tfinfo->name)) {
-        g_hash_table_remove(tool_funcs, (gpointer)tfinfo->name);
+        g_hash_table_remove(tool_funcs, tfinfo->name);
         return FALSE;
     }
 

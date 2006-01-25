@@ -143,14 +143,7 @@ G_DEFINE_TYPE(GwyLayerEllipse, gwy_layer_ellipse,
 static gboolean
 module_register(const gchar *name)
 {
-    GwyLayerFuncInfo func_info = {
-        "ellipse",
-        0,
-    };
-
-    func_info.type = GWY_TYPE_LAYER_ELLIPSE;
-    gwy_layer_func_register(name, &func_info);
-
+    gwy_layer_func_register(GWY_TYPE_LAYER_ELLIPSE);
     return TRUE;
 }
 

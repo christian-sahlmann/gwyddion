@@ -146,14 +146,7 @@ G_DEFINE_TYPE(GwyLayerRectangle, gwy_layer_rectangle,
 static gboolean
 module_register(const gchar *name)
 {
-    GwyLayerFuncInfo func_info = {
-        "rectangle",
-        0,
-    };
-
-    func_info.type = GWY_TYPE_LAYER_RECTANGLE;
-    gwy_layer_func_register(name, &func_info);
-
+    gwy_layer_func_register(GWY_TYPE_LAYER_RECTANGLE);
     return TRUE;
 }
 

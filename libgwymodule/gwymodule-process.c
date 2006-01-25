@@ -83,7 +83,7 @@ gwy_process_func_register(const gchar *modname,
 
     g_hash_table_insert(process_funcs, (gpointer)pfinfo->name, pfinfo);
     if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_PROC, pfinfo->name)) {
-        g_hash_table_remove(process_funcs, (gpointer)pfinfo->name);
+        g_hash_table_remove(process_funcs, pfinfo->name);
         return FALSE;
     }
 

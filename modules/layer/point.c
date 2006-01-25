@@ -131,14 +131,7 @@ G_DEFINE_TYPE(GwyLayerPoint, gwy_layer_point, GWY_TYPE_VECTOR_LAYER)
 static gboolean
 module_register(const gchar *name)
 {
-    GwyLayerFuncInfo func_info = {
-        "point",
-        0,
-    };
-
-    func_info.type = gwy_layer_point_get_type();
-    gwy_layer_func_register(name, &func_info);
-
+    gwy_layer_func_register(GWY_TYPE_LAYER_POINT);
     return TRUE;
 }
 

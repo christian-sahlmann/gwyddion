@@ -142,7 +142,7 @@ gwy_file_func_register(const gchar *name,
 
     g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
     if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_FILE, name)) {
-        g_hash_table_remove(file_funcs, (gpointer)func_info->name);
+        g_hash_table_remove(file_funcs, func_info->name);
         return FALSE;
     }
 

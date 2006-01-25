@@ -169,14 +169,7 @@ G_DEFINE_TYPE(GwyLayerLine, gwy_layer_line, GWY_TYPE_VECTOR_LAYER)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyLayerFuncInfo func_info = {
-        "line",
-        0,
-    };
-
-    func_info.type = gwy_layer_line_get_type();
-    gwy_layer_func_register(name, &func_info);
-
+    gwy_layer_func_register(GWY_TYPE_LAYER_LINE);
     return TRUE;
 }
 

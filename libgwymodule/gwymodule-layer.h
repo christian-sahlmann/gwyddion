@@ -25,15 +25,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GwyLayerFuncInfo GwyLayerFuncInfo;
-
-struct _GwyLayerFuncInfo {
-    const gchar *name;
-    GType type;
-};
-
-gboolean     gwy_layer_func_register      (const gchar *modname,
-                                           GwyLayerFuncInfo *func_info);
+gboolean gwy_layer_func_register(GType type);
 
 G_END_DECLS
 
