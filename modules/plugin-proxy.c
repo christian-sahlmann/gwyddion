@@ -56,21 +56,21 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
 typedef struct {
     GwyProcessFuncInfo func;
-    gchar *file;
+    gchar *file;  /* The file to execute to run the plug-in */
 } ProcPluginInfo;
 
 typedef struct {
-    GwyFileFuncInfo func;
+    gchar *name;
+    gchar *description;
     GwyFileOperationType run;
     gchar *glob;
     GPatternSpec **pattern;
     glong *specificity;
-    gchar *file;
+    gchar *file;  /* The file to execute to run the plug-in */
 } FilePluginInfo;
 
 typedef GList* (*ProxyRegister)(GList *plugins,
@@ -618,14 +618,15 @@ file_register_plugins(GList *plugins,
             && (run = gwy_string_to_flags(run_modes,
                                           file_op_names, -1, NULL))) {
             info = g_new0(FilePluginInfo, 1);
-            info->func.name = g_strdup(pname);
-            info->func.file_desc = g_strdup(file_desc);
-            info->func.detect = file_plugin_proxy_detect;
-            info->func.load = (run & GWY_FILE_OPERATION_LOAD)
-                              ? file_plugin_proxy_load : NULL;
-            info->func.export_ = (run & GWY_FILE_OPERATION_EXPORT)
-                                 ? file_plugin_proxy_export : NULL;
-            if (gwy_file_func_register(name, &info->func)) {
+            info->name = g_strdup(pname);
+            info->description = g_strdup(file_desc);
+            if (gwy_file_func_register(info->name, info->description,
+                                       &file_plugin_proxy_detect,
+                                       (run & GWY_FILE_OPERATION_LOAD)
+                                       ? file_plugin_proxy_load : NULL,
+                                       NULL,
+                                       (run & GWY_FILE_OPERATION_EXPORT)
+                                       ? file_plugin_proxy_export : NULL)) {
                 info->file = g_strdup(file);
                 info->run = run;
                 info->glob = g_strdup(glob);
@@ -634,8 +635,8 @@ file_register_plugins(GList *plugins,
                 plugins = g_list_prepend(plugins, info);
             }
             else {
-                g_free((gpointer)info->func.name);
-                g_free((gpointer)info->func.file_desc);
+                g_free((gpointer)info->name);
+                g_free((gpointer)info->description);
                 g_free(info);
             }
         }
@@ -881,7 +882,7 @@ file_find_plugin(const gchar *name,
 
     for (l = file_plugins; l; l = g_list_next(l)) {
         info = (FilePluginInfo*)l->data;
-        if (gwy_strequal(info->func.name, name))
+        if (gwy_strequal(info->name, name))
             break;
     }
     if (!l) {
