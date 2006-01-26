@@ -335,7 +335,7 @@ immerse_do(ImmerseArgs *args)
     GwyContainer *data;
     GwyDataField *resampled, *score, *dfield1, *dfield2, *result;
     GwyDataWindow *operand1, *operand2;
-    gint max_col, max_row;
+    gint max_col = 0, max_row = 0;
 
     operand1 = args->win1;
     operand2 = args->win2;
@@ -358,18 +358,22 @@ immerse_do(ImmerseArgs *args)
     {
         resampled = gwy_data_field_new_alike(dfield2, FALSE);
         gwy_data_field_resample(result, dfield1->xres, dfield1->yres, GWY_INTERPOLATION_NONE);
-        score = gwy_data_field_new_alike(dfield1, FALSE);
         
         gwy_data_field_copy(dfield1, result, FALSE);
         gwy_data_field_copy(dfield2, resampled, FALSE);
         gwy_data_field_resample(resampled, 
                                 dfield1->xres*dfield2->xreal/dfield1->xreal,
-                                dfield1->yres*dfield2->yreal/dfield1->yreal,
+                                dfield1->yres*dfield2->xreal/dfield1->xreal,
                                 GWY_INTERPOLATION_BILINEAR);
 
-        get_score_iteratively(dfield1, resampled,
+        if (args->mode == GWY_IMMERSE_MODE_CORRELATE)
+        {
+            score = gwy_data_field_new_alike(dfield1, FALSE);
+            get_score_iteratively(dfield1, resampled,
                               score, args);
-        find_score_maximum(score, &max_col, &max_row);
+            find_score_maximum(score, &max_col, &max_row);
+            g_object_unref(score);
+        }
 
         gwy_data_field_area_copy(resampled, result, 
                                  0, 0, 
@@ -380,33 +384,38 @@ immerse_do(ImmerseArgs *args)
     }
     else
     {
-        result = gwy_data_field_new_alike(dfield1, FALSE);
+        gwy_data_field_resample(result, dfield1->xres, dfield1->yres, FALSE);
         gwy_data_field_copy(dfield1, result, FALSE);
         
         gwy_data_field_resample(result,
-                                dfield2->xres*dfield1->xreal/dfield2->xreal,
-                                dfield2->yres*dfield1->yreal/dfield2->yreal,
+                                dfield1->xres*dfield1->xreal/dfield2->xreal,
+                                dfield1->yres*dfield1->xreal/dfield2->xreal,
                                 GWY_INTERPOLATION_BILINEAR);
-        score = gwy_data_field_new_alike(result, FALSE);
-        get_score_iteratively(result, dfield2,
+        
+       
+        if (args->mode == GWY_IMMERSE_MODE_CORRELATE)
+        {                
+            score = gwy_data_field_new_alike(result, FALSE);
+            get_score_iteratively(result, dfield2,
                                      score, args);
-        find_score_maximum(score, &max_col, &max_row);
+            find_score_maximum(score, &max_col, &max_row);
+            g_object_unref(score);
+        }
         gwy_data_field_area_copy(dfield2, result, 
                                  0, 0, 
-                                 resampled->xres, resampled->yres,
-                                 max_col - resampled->xres/2,
-                                 max_row - resampled->yres/2);
+                                 dfield2->xres, dfield2->yres,
+                                 max_col - result->xres/2,
+                                 max_row - result->yres/2);
          
     }
 
     /*set right output */
-
     if (result) {
+        result = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
     g_object_unref(data);
-    g_object_unref(score);
     
 
     return TRUE;

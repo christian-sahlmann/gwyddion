@@ -57,13 +57,15 @@ main(int argc, char *argv[])
     srand(time(0));
 
     ppow = 1000*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
-    for (i = 0; i < 10; i++) {
-        xp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
+    for (i = 0; i < 20; i++) {
+        xp[i] = 0.1 + i*0.099;
+        yp[i] = sin(i/6.28);
+/*        xp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
         xp[i]*=xp[i]*xp[i]*pow(10, xp[i]*pow(10000000, xp[i]))*ppow;
         xp[i] -= rand()/RAND_MAX*xp[i];
         yp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
         yp[i]*=yp[i]*yp[i]*pow(10, yp[i]*pow(10000000, xp[i]))*ppow;
-        yp[i] -= rand()/RAND_MAX*xp[i];
+        yp[i] -= rand()/RAND_MAX*xp[i];*/
         printf("%g %g\n", xp[i], yp[i]);
     }
     gtk_init(&argc, &argv);
@@ -97,7 +99,7 @@ main(int argc, char *argv[])
     graph = gwy_graph_new(gmodel);
     
     model = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(model, xp, yp, 10);
+    gwy_graph_curve_model_set_data(model, xp, yp, 20);
     gwy_graph_curve_model_set_description(model, "parabola");
 
     gwy_graph_model_add_curve(gmodel, model);
@@ -110,7 +112,7 @@ main(int argc, char *argv[])
 
    /*gwy_graph_enable_user_input(graph, TRUE);*/
    /*printf("show!\n");*/
-    gtk_widget_set_size_request(gwindow, 600, 400);
+    gtk_widget_set_size_request(gwindow, 300, 200);
     gtk_widget_show (gwindow);
 
     g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), NULL);

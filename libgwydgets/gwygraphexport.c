@@ -31,7 +31,8 @@
 
 void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                                      G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
-                                     G_GNUC_UNUSED gboolean export_labels)
+                                     G_GNUC_UNUSED gboolean export_labels,
+                                     GError** error)
 {
     GdkColor color = { 0, 65535, 65535, 65535 };
     GdkColormap *cmap;
@@ -108,7 +109,8 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
 void       
 gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
                                          G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
-                                         G_GNUC_UNUSED gboolean export_labels)
+                                         G_GNUC_UNUSED gboolean export_labels,
+                                         GError** error)
 {
     FILE *fw;
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;

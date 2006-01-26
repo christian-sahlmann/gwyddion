@@ -195,6 +195,7 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
 {
     GtkDialog *filedialog;
     GwyContainer *settings;
+    GError *err = NULL;
     gchar *filename;
 
     if (response == GTK_RESPONSE_OK)
@@ -210,7 +211,8 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
             filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
             gwy_graph_model_export_ascii(graph->graph_model, filename,
                                          controls.units, controls.labels, controls.metadata,
-                                         controls.style);
+                                         controls.style, &err);
+            if (err) printf("Errrrr\n");
         }
         gtk_widget_destroy(GTK_WIDGET(filedialog));
         settings = gwy_app_settings_get();

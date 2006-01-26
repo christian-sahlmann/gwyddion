@@ -993,7 +993,8 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
 void
 gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
                              gboolean export_units, gboolean export_labels,
-                             gboolean export_metadata, GwyGraphModelExportStyle export_style)
+                             gboolean export_metadata, GwyGraphModelExportStyle export_style,
+                             GError** error)
 {
     FILE *fw;
     GwyGraphCurveModel *cmodel;

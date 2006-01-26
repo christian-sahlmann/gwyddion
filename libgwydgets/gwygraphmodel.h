@@ -145,7 +145,8 @@ void           gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          gboolean export_units,
                                                          gboolean export_labels,
                                                          gboolean export_metadata,
-                                                         GwyGraphModelExportStyle export_style);
+                                                         GwyGraphModelExportStyle export_style,
+                                                         GError** error);
 
 void           gwy_graph_model_signal_layout_changed    (GwyGraphModel *model);
 
