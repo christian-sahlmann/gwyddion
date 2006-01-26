@@ -85,6 +85,7 @@ gboolean      gwy_file_func_run_export(const gchar *name,
                                        GwyRunType mode,
                                        GError **error);
 
+gboolean             gwy_file_func_exists         (const gchar *name);
 GwyFileOperationType gwy_file_func_get_operations (const gchar *name);
 const gchar*         gwy_file_func_get_description(const gchar *name);
 void                 gwy_file_func_foreach        (GFunc function,

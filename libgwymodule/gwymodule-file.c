@@ -564,24 +564,37 @@ gwy_file_func_foreach(GFunc function,
 }
 
 /**
+ * gwy_file_func_exists:
+ * @name: File type function name.
+ *
+ * Checks whether a file type function exists.
+ *
+ * Returns: %TRUE if function @name exists, %FALSE otherwise.
+ **/
+gboolean
+gwy_file_func_exists(const gchar *name)
+{
+    return file_funcs && g_hash_table_lookup(file_funcs, name);
+}
+
+/**
  * gwy_file_func_get_operations:
  * @name: File type function name.
  *
- * Returns possible operations for a file type function identified by
- * @name.
- *
- * This function is the prefered one for testing whether a file
- * function exists, as function with no operations cannot be registered.
+ * Returns operations supported by a file type function.
  *
  * Returns: The file operation bit mask, zero if @name does not exist.
  **/
 GwyFileOperationType
 gwy_file_func_get_operations(const gchar *name)
 {
-    if (!file_funcs)
-        return 0;
+    GwyFileFuncInfo *func_info;
 
-    return get_operations(g_hash_table_lookup(file_funcs, name));
+    g_return_val_if_fail(file_funcs, 0);
+    func_info = g_hash_table_lookup(file_funcs, name);
+    g_return_val_if_fail(func_info, 0);
+
+    return get_operations(func_info);
 }
 
 static GwyFileOperationType
@@ -615,9 +628,9 @@ gwy_file_func_get_description(const gchar *name)
 {
     GwyFileFuncInfo *func_info;
 
+    g_return_val_if_fail(file_funcs, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
-    if (!func_info)
-        return NULL;
+    g_return_val_if_fail(func_info, NULL);
 
     return func_info->description;
 }
@@ -778,8 +791,8 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * @fileinfo: Information about file to detect the filetype of,
  *            see #GwyFileDetectInfo.
  * @only_name: Whether the type should be guessed only from file name.
- * @name: Function name from #GwyFileFuncInfo (functions implementing only
- *        one file type can safely ignore this argument)
+ * @name: Function name from as registered with gwy_file_func_register()
+ *        (single-function modules can safely ignore this argument).
  *
  * The type of file type detection function.
  *
@@ -795,8 +808,8 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * @mode: Run mode, this is either @GWY_RUN_NONINTERACTIVE
  *        or @GWY_RUN_INTERACTIVE.
  * @error: Return location for a #GError (or %NULL).
- * @name: Function name from #GwyFileFuncInfo (functions implementing only
- *        one file type can safely ignore this argument)
+ * @name: Function name from as registered with gwy_file_func_register()
+ *        (single-function modules can safely ignore this argument).
  *
  * The type of file loading function.
  *
@@ -810,8 +823,8 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * @mode: Run mode, this is either @GWY_RUN_NONINTERACTIVE
  *        or @GWY_RUN_INTERACTIVE.
  * @error: Return location for a #GError (or %NULL).
- * @name: Function name from #GwyFileFuncInfo (functions implementing only
- *        one file type can safely ignore this argument)
+ * @name: Function name from as registered with gwy_file_func_register()
+ *        (single-function modules can safely ignore this argument).
  *
  * The type of file saving function.
  *

@@ -37,7 +37,7 @@ typedef struct {
 } GwyGraphFuncInfo;
 
 /* Auxiliary structure to pass both user callback function and data to
- * g_hash_table_foreach() lambda argument in gwy_file_func_foreach() */
+ * g_hash_table_foreach() lambda argument in gwy_graph_func_foreach() */
 typedef struct {
     GFunc function;
     gpointer user_data;
@@ -51,8 +51,8 @@ static GHashTable *graph_funcs = NULL;
  * @func: The function itself.
  * @menu_path: Menu path under Graph menu.
  * @stock_id: Stock icon id for toolbar.
- * @sens_mask: Sensitivity mask (a combination of #GwyMenuSensFlags
- *             flags).  Usually it is equal to #GWY_MENU_FLAG_GRAPH, but it's
+ * @sens_mask: Sensitivity mask (a combination of #GwyMenuSensFlags flags).
+ *             Usually it is equal to #GWY_MENU_FLAG_GRAPH, but it's
  *             possible to set other requirements.
  * @tooltip: Tooltip for this function.
  *
@@ -170,7 +170,7 @@ gwy_graph_func_foreach(GFunc function,
  *
  * Checks whether a graph function exists.
  *
- * Returns: %TRUE if @name exists, %FALSE otherwise.
+ * Returns: %TRUE if function @name exists, %FALSE otherwise.
  **/
 gboolean
 gwy_graph_func_exists(const gchar *name)
@@ -285,8 +285,8 @@ _gwy_graph_func_remove(const gchar *name)
 /**
  * GwyGraphFunc:
  * @graph: Graph (a #GwyGraph) to operate on.
- * @name: Function name from #GwyGraphFuncInfo (most modules can safely
- *        ignore this argument)
+ * @name: Function name from as registered with gwy_graph_func_register()
+ *        (single-function modules can safely ignore this argument).
  *
  * The type of graph function.
  **/

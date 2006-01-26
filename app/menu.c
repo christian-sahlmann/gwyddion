@@ -453,7 +453,7 @@ gwy_app_build_process_menu(GtkAccelGroup *accel_group)
     gwy_process_func_foreach((GFunc)&gwy_app_menu_add_proc_func, root);
     menu = gwy_app_build_module_func_menu(root,
                                           G_CALLBACK(gwy_app_run_process_func),
-                                          gwy_process_func_get_sensitivity_flags);
+                                          gwy_process_func_get_sensitivity_mask);
     gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
     process_menu = menu;
 
@@ -631,7 +631,7 @@ gwy_app_update_last_process_func(const gchar *name)
     menu_path++;
     lab = g_strdup(menu_path);
     gwy_app_menu_canonicalize_label(lab);
-    sens = (gwy_process_func_get_sensitivity_flags(name)
+    sens = (gwy_process_func_get_sensitivity_mask(name)
             | GWY_MENU_FLAG_LAST_PROC);
 
     label = GTK_BIN(repeat_item)->child;

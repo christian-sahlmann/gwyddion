@@ -376,11 +376,11 @@ gwy_app_toolbox_create(void)
         action.tooltip = proc_actions[i].tooltip;
         action.cbdata = proc_actions[i].name;
         button = add_button(toolbar, j, &action,
-                            (ActionCheckFunc)gwy_process_func_get_run_types,
+                            (ActionCheckFunc)gwy_process_func_exists,
                             tooltips);
         if (!button)
             continue;
-        sens = gwy_process_func_get_sensitivity_flags(proc_actions[i].name);
+        sens = gwy_process_func_get_sensitivity_mask(proc_actions[i].name);
         gwy_app_sensitivity_add_widget(button, sens);
         j++;
     }

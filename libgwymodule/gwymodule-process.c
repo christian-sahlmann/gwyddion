@@ -27,77 +27,139 @@
 #include "gwymoduleinternal.h"
 #include "gwymodule-process.h"
 
+/* The process function information */
+typedef struct {
+    const gchar *name;
+    const gchar *menu_path;
+    const gchar *stock_id;
+    const gchar *tooltip;
+    GwyRunType run;
+    guint sens_mask;
+    GwyProcessFunc func;
+} GwyProcessFuncInf2;
+
+/* Auxiliary structure to pass both user callback function and data to
+ * g_hash_table_foreach() lambda argument in gwy_process_func_foreach() */
 typedef struct {
     GFunc function;
     gpointer user_data;
 } ProcFuncForeachData;
 
-static void gwy_process_func_info_free (gpointer data);
-
 static GHashTable *process_funcs = NULL;
 
-/**
- * gwy_process_func_register:
- * @modname: Module identifier (name).
- * @func_info: Data processing function info.
- *
- * Registeres a data processing function.
- *
- * To keep compatibility with old versions @func_info should not be an
- * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
- *
- * Returns: %TRUE on success, %FALSE on failure.
- **/
 gboolean
 gwy_process_func_register(const gchar *modname,
-                          GwyProcessFuncInfo *func_info)
+                          GwyProcessFuncInfo *z)
 {
-    GwyProcessFuncInfo *pfinfo;
+    GwyProcessFuncInf2 *func_info;
 
-    gwy_debug("");
+    g_return_val_if_fail(z->name, FALSE);
+    g_return_val_if_fail(z->process, FALSE);
+    g_return_val_if_fail(z->menu_path, FALSE);
+    g_return_val_if_fail(z->run & GWY_RUN_MASK, FALSE);
     gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
-              func_info->name, func_info->menu_path, func_info->run,
-              func_info->process);
+              z->name, z->menu_path, z->run, z->process);
 
     if (!process_funcs) {
         gwy_debug("Initializing...");
         process_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                              NULL, gwy_process_func_info_free);
+                                              NULL, g_free);
     }
 
-    g_return_val_if_fail(func_info->process, FALSE);
-    g_return_val_if_fail(func_info->name, FALSE);
-    g_return_val_if_fail(func_info->run & GWY_RUN_MASK, FALSE);
-    if (!gwy_strisident(func_info->name, "_-", NULL))
+    if (!gwy_strisident(z->name, "_-", NULL))
         g_warning("Function name `%s' is not a valid identifier. "
-                  "It may be rejected in future.", func_info->name);
-    if (g_hash_table_lookup(process_funcs, func_info->name)) {
+                  "It may be rejected in future.", z->name);
+    if (g_hash_table_lookup(process_funcs, z->name)) {
         g_warning("Duplicate function `%s', keeping only first",
-                  func_info->name);
+                  z->name);
         return FALSE;
     }
 
-    pfinfo = g_memdup(func_info, sizeof(GwyProcessFuncInfo));
-    pfinfo->name = g_strdup(func_info->name);
-    pfinfo->menu_path = g_strdup(func_info->menu_path);
+    func_info = g_new0(GwyProcessFuncInf2, 1);
+    /* Memory leak, but we don't care, this function will be removed. */
+    func_info->name = g_strdup(z->name);
+    func_info->func = z->process;
+    func_info->menu_path = g_strdup(z->menu_path);
+    func_info->run = z->run;
+    func_info->sens_mask = z->sens_flags;
 
-    g_hash_table_insert(process_funcs, (gpointer)pfinfo->name, pfinfo);
-    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_PROC, pfinfo->name)) {
-        g_hash_table_remove(process_funcs, pfinfo->name);
+    g_hash_table_insert(process_funcs, (gpointer)func_info->name, func_info);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_PROC, z->name)) {
+        g_hash_table_remove(process_funcs, func_info->name);
         return FALSE;
     }
 
     return TRUE;
 }
 
-static void
-gwy_process_func_info_free(gpointer data)
+/**
+ * gwy_process_func_registe2:
+ * @name: Name of function to register.  It should be a valid identifier.
+ * @func: The function itself.
+ * @menu_path: Menu path under Data Process menu.
+ * @stock_id: Stock icon id for toolbar.
+ * @run: Supported run modes.
+ * @sens_mask: Sensitivity mask (a combination of #GwyMenuSensFlags flags).
+ *             Usually it contains #GWY_MENU_FLAG_DATA, possibly other
+ *             requirements.
+ * @tooltip: Tooltip for this function.
+ *
+ * Registers a data processing function.
+ *
+ * Note: the string arguments are not copied as modules are not expected to
+ * vanish.  If they are constructed (non-constant) strings, do not free them.
+ * Should modules ever become unloadable they will get chance to clean-up.
+ *
+ * Returns: Normally %TRUE; %FALSE on failure.
+ **/
+gboolean
+gwy_process_func_registe2(const gchar *name,
+                          GwyProcessFunc func,
+                          const gchar *menu_path,
+                          const gchar *stock_id,
+                          GwyRunType run,
+                          guint sens_mask,
+                          const gchar *tooltip)
 {
-    GwyProcessFuncInfo *pfinfo = (GwyProcessFuncInfo*)data;
+    GwyProcessFuncInf2 *func_info;
 
-    g_free((gpointer)pfinfo->name);
-    g_free((gpointer)pfinfo->menu_path);
-    g_free(pfinfo);
+    g_return_val_if_fail(name, FALSE);
+    g_return_val_if_fail(func, FALSE);
+    g_return_val_if_fail(menu_path, FALSE);
+    g_return_val_if_fail(run & GWY_RUN_MASK, FALSE);
+    gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
+              name, menu_path, run, func);
+
+    if (!process_funcs) {
+        gwy_debug("Initializing...");
+        process_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                              NULL, g_free);
+    }
+
+    if (!gwy_strisident(name, "_-", NULL))
+        g_warning("Function name `%s' is not a valid identifier. "
+                  "It may be rejected in future.", name);
+    if (g_hash_table_lookup(process_funcs, name)) {
+        g_warning("Duplicate function `%s', keeping only first", name);
+        return FALSE;
+    }
+
+    func_info = g_new0(GwyProcessFuncInf2, 1);
+    func_info->name = name;
+    func_info->func = func;
+    func_info->menu_path = menu_path;
+    func_info->stock_id = stock_id;
+    func_info->tooltip = tooltip;
+    func_info->run = run;
+    func_info->sens_mask = sens_mask;
+
+    g_hash_table_insert(process_funcs, (gpointer)func_info->name, func_info);
+    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_PROC, name)) {
+        g_hash_table_remove(process_funcs, func_info->name);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /**
@@ -107,25 +169,20 @@ gwy_process_func_info_free(gpointer data)
  * @run: How the function should be run.
  *
  * Runs a data processing function identified by @name.
- *
- * It guarantees the container lifetime spans through the actual processing,
- * so the module function doesn't have to care about it.
  **/
 void
 gwy_process_func_run(const guchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {
-    GwyProcessFuncInfo *func_info;
+    GwyProcessFuncInf2 *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_if_fail(run & func_info->run);
     g_return_if_fail(GWY_IS_CONTAINER(data));
-    g_object_ref(data);
     _gwy_module_watch_settings(GWY_MODULE_PREFIX_PROC, name);
-    func_info->process(data, run, name);
+    func_info->func(data, run, name);
     _gwy_module_unwatch_settings();
-    g_object_unref(data);
 }
 
 static void
@@ -162,28 +219,34 @@ gwy_process_func_foreach(GFunc function,
 }
 
 /**
+ * gwy_process_func_exists:
+ * @name: Data processing function name.
+ *
+ * Checks whether a data processing function exists.
+ *
+ * Returns: %TRUE if function @name exists, %FALSE otherwise.
+ **/
+gboolean
+gwy_process_func_exists(const gchar *name)
+{
+    return process_funcs && g_hash_table_lookup(process_funcs, name);
+}
+
+/**
  * gwy_process_func_get_run_types:
  * @name: Data processing function name.
  *
- * Returns possible run modes for a data processing function identified by
- * @name.
+ * Returns run modes supported by a data processing function.
  *
- * This function is the prefered one for testing whether a data processing
- * function exists, as function with no run modes cannot be registered.
- *
- * Returns: The run mode bit mask, zero if the function does not exist.
+ * Returns: The run mode bit mask.
  **/
 GwyRunType
 gwy_process_func_get_run_types(const gchar *name)
 {
-    GwyProcessFuncInfo *func_info;
-
-    if (!process_funcs)
-        return 0;
+    GwyProcessFuncInf2 *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
-    if (!func_info)
-        return 0;
+    g_return_val_if_fail(func_info, 0);
 
     return func_info->run;
 }
@@ -192,19 +255,17 @@ gwy_process_func_get_run_types(const gchar *name)
  * gwy_process_func_get_menu_path:
  * @name: Data processing function name.
  *
- * Returns the menu path of a data processing function identified by
- * @name.
+ * Returns the menu path of a data processing function.
  *
  * The returned menu path is only the tail part registered by the function,
  * i.e., without any leading "/Data Process".
  *
- * Returns: The menu path.  The returned string must be treated as constant
- *          and never modified or freed.
+ * Returns: The menu path.  The returned string is owned by the module.
  **/
 const gchar*
 gwy_process_func_get_menu_path(const gchar *name)
 {
-    GwyProcessFuncInfo *func_info;
+    GwyProcessFuncInf2 *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
@@ -213,33 +274,65 @@ gwy_process_func_get_menu_path(const gchar *name)
 }
 
 /**
- * gwy_process_func_get_sensitivity_flags:
+ * gwy_process_func_get_stock_id:
  * @name: Data processing function name.
  *
- * Returns menu sensititivy flags for function @name.
+ * Gets stock icon id of a data processing  function.
  *
- * Returns: The menu item sensitivity flags (a #GwyMenuSensFlags mask).
+ * Returns: The stock icon id.  The returned string is owned by the module.
+ **/
+const gchar*
+gwy_process_func_get_stock_id(const gchar *name)
+{
+    GwyProcessFuncInf2 *func_info;
+
+    g_return_val_if_fail(process_funcs, NULL);
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, NULL);
+
+    return func_info->stock_id;
+}
+
+/**
+ * gwy_process_func_get_tooltip:
+ * @name: Data processing function name.
+ *
+ * Gets tooltip for a data processing function.
+ *
+ * Returns: The tooltip.  The returned string is owned by the module.
+ **/
+const gchar*
+gwy_process_func_get_tooltip(const gchar *name)
+{
+    GwyProcessFuncInf2 *func_info;
+
+    g_return_val_if_fail(process_funcs, NULL);
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, NULL);
+
+    return func_info->tooltip;
+}
+
+/**
+ * gwy_process_func_get_sensitivity_mask:
+ * @name: Data processing function name.
+ *
+ * Gets menu sensititivy mask for a data processing function.
+ *
+ * Returns: The menu item sensitivity mask (a combination of #GwyMenuSensFlags
+ *          flags).
  **/
 guint
-gwy_process_func_get_sensitivity_flags(const gchar *name)
+gwy_process_func_get_sensitivity_mask(const gchar *name)
 {
-    GwyProcessFuncInfo *func_info;
+    GwyProcessFuncInf2 *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
 
-    return func_info->sens_flags;
+    return func_info->sens_mask;
 }
 
-/**
- * gwy_process_func_remove:
- * @name: Data processing function name.
- *
- * Removes a data processing function from.
- *
- * Returns: %TRUE if there was such a function and was removed, %FALSE
- *          otherwise.
- **/
 gboolean
 _gwy_process_func_remove(const gchar *name)
 {
@@ -282,8 +375,8 @@ _gwy_process_func_remove(const gchar *name)
  * GwyProcessFunc:
  * @data: The data container to operate on.
  * @run: Run mode.
- * @name: Function name from #GwyProcessFuncInfo (most modules can safely
- *        ignore this argument)
+ * @name: Function name from as registered with gwy_process_func_register()
+ *        (single-function modules can safely ignore this argument).
  *
  * The type of data processing function.
  **/

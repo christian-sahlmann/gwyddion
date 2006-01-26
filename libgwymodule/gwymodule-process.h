@@ -26,11 +26,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
-
 typedef void (*GwyProcessFunc)(GwyContainer *data,
                                GwyRunType run,
                                const gchar *name);
+
+#ifndef GWY_DISABLE_DEPRECATED
+typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
 
 struct _GwyProcessFuncInfo {
     const gchar *name;
@@ -39,17 +40,28 @@ struct _GwyProcessFuncInfo {
     GwyRunType run;
     guint sens_flags;    /* guint, don't depend on libgwyapp */
 };
+#endif
 
 gboolean       gwy_process_func_register      (const gchar *modname,
                                                GwyProcessFuncInfo *func_info);
-void           gwy_process_func_run           (const guchar *name,
-                                               GwyContainer *data,
-                                               GwyRunType run);
-GwyRunType     gwy_process_func_get_run_types (const gchar *name);
-const gchar*   gwy_process_func_get_menu_path (const gchar *name);
-guint          gwy_process_func_get_sensitivity_flags (const gchar *name);
-void           gwy_process_func_foreach       (GFunc function,
-                                               gpointer user_data);
+gboolean     gwy_process_func_registe2            (const gchar *name,
+                                                   GwyProcessFunc func,
+                                                   const gchar *menu_path,
+                                                   const gchar *stock_id,
+                                                   GwyRunType run,
+                                                   guint sens_mask,
+                                                   const gchar *tooltip);
+void         gwy_process_func_run                 (const guchar *name,
+                                                   GwyContainer *data,
+                                                   GwyRunType run);
+gboolean     gwy_process_func_exists              (const gchar *name);
+GwyRunType   gwy_process_func_get_run_types       (const gchar *name);
+const gchar* gwy_process_func_get_menu_path       (const gchar *name);
+const gchar* gwy_process_func_get_stock_id        (const gchar *name);
+const gchar* gwy_process_func_get_tooltip         (const gchar *name);
+guint        gwy_process_func_get_sensitivity_mask(const gchar *name);
+void         gwy_process_func_foreach             (GFunc function,
+                                                   gpointer user_data);
 
 G_END_DECLS
 
