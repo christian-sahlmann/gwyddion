@@ -63,6 +63,8 @@ export(GwyGraph *graph)
     GtkDialog *filedialog;
     gchar *filename;
     GError *err = NULL;
+    GString *str = g_string_new("");
+    FILE *fw;
 
     filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to postscript",
                                                           NULL,
@@ -73,8 +75,11 @@ export(GwyGraph *graph)
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-        gwy_graph_export_postscript(graph, filename,
-                                         TRUE, TRUE, TRUE, &err);
+        str = gwy_graph_export_postscript(graph,
+                                         TRUE, TRUE, TRUE, str);
+        fw = g_fopen(filename, "w");
+        fprintf(fw, "%s", str->str);
+        fclose(fw);
     }
     gtk_widget_destroy(GTK_WIDGET(filedialog));
 }

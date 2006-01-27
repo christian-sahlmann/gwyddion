@@ -29,17 +29,16 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
-void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
+GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph, 
                                      G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
                                      G_GNUC_UNUSED gboolean export_labels,
-                                     GError** error)
+                                     GdkPixbuf *pixbuf)
 {
     GdkColor color = { 0, 65535, 65535, 65535 };
     GdkColormap *cmap;
     GdkGC *gc;
     GdkVisual *visual;
     GdkPixmap *pixmap;
-    GdkPixbuf *pixbuf;
     PangoLayout *layout;
     PangoContext *context;
     gint width, height, topheight, bottomheight, leftwidth, rightwidth;
@@ -102,17 +101,16 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                                           cmap,
                                           0, 0, 0, 0,
                                           -1, -1);
-    gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
+    return pixbuf;
 
 }
 
-void       
-gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
+GString *       
+gwy_graph_export_postscript(GwyGraph *graph, 
                                          G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
                                          G_GNUC_UNUSED gboolean export_labels,
-                                         GError** error)
+                                         GString* string)
 {
-    FILE *fw;
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
     gint fontsize = 20;
@@ -135,86 +133,84 @@ gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
     labelx = width - areax - labelw - 5;
     labely = height - areay - labelh - 5;
     
-    /*create stream*/
-    fw = g_fopen(filename, "w");
 
     /*write header*/
-    fprintf(fw, "%%!PS-Adobe EPSF-3.0\n");
-    fprintf(fw, "%%%%Title: %s\n", filename);
-    fprintf(fw, "%%%%Creator: Gwyddion\n");
-    fprintf(fw, "%%%%BoundingBox: %d %d %d %d\n", 0, 0, width, height);
-    fprintf(fw, "%%%%Orientation: Portrait\n");
-    fprintf(fw, "%%%%EndComments\n");
-    fprintf(fw, "/hpt %d def\n", hpt);
-    fprintf(fw, "/vpt %d def\n", vpt);
-    fprintf(fw, "/hpt2 hpt 2 mul def\n");
-    fprintf(fw, "/vpt2 vpt 2 mul def\n");
-    fprintf(fw, "/M {moveto} bind def\n");
-    fprintf(fw, "/L {lineto} bind def\n");
-    fprintf(fw, "/R {rmoveto} bind def\n");
-    fprintf(fw, "/V {rlineto} bind def\n");
-    fprintf(fw, "/N {newpath moveto} bind def\n");
-    fprintf(fw, "/R {rmoveto} bind def\n");
-    fprintf(fw, "/C {setrgbcolor} bind def\n");
-    fprintf(fw, "/Pnt { stroke [] 0 setdash\n"
+    g_string_append_printf(string, "%%!PS-Adobe EPSF-3.0\n");
+    g_string_append_printf(string, "%%%%Title: Gwyddion vector graph export\n");
+    g_string_append_printf(string, "%%%%Creator: Gwyddion\n");
+    g_string_append_printf(string, "%%%%BoundingBox: %d %d %d %d\n", 0, 0, width, height);
+    g_string_append_printf(string, "%%%%Orientation: Portrait\n");
+    g_string_append_printf(string, "%%%%EndComments\n");
+    g_string_append_printf(string, "/hpt %d def\n", hpt);
+    g_string_append_printf(string, "/vpt %d def\n", vpt);
+    g_string_append_printf(string, "/hpt2 hpt 2 mul def\n");
+    g_string_append_printf(string, "/vpt2 vpt 2 mul def\n");
+    g_string_append_printf(string, "/M {moveto} bind def\n");
+    g_string_append_printf(string, "/L {lineto} bind def\n");
+    g_string_append_printf(string, "/R {rmoveto} bind def\n");
+    g_string_append_printf(string, "/V {rlineto} bind def\n");
+    g_string_append_printf(string, "/N {newpath moveto} bind def\n");
+    g_string_append_printf(string, "/R {rmoveto} bind def\n");
+    g_string_append_printf(string, "/C {setrgbcolor} bind def\n");
+    g_string_append_printf(string, "/Pnt { stroke [] 0 setdash\n"
                 "gsave 1 setlinecap M 0 0 V stroke grestore } def\n");
-    fprintf(fw, "/Dia { stroke [] 0 setdash 2 copy vpt add M\n"
+    g_string_append_printf(string, "/Dia { stroke [] 0 setdash 2 copy vpt add M\n"
                 "hpt neg vpt neg V hpt vpt neg V\n"
                 "hpt vpt V hpt neg vpt V closepath stroke\n"
                 " } def\n");
-    fprintf(fw, "/Box { stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M\n"
+    g_string_append_printf(string, "/Box { stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M\n"
                 "0 vpt2 neg V hpt2 0 V 0 vpt2 V\n"
                 "hpt2 neg 0 V closepath stroke\n"
                 " } def\n");
-    fprintf(fw, "/Circle { stroke [] 0 setdash 2 copy\n"
+    g_string_append_printf(string, "/Circle { stroke [] 0 setdash 2 copy\n"
                 "hpt 0 360 arc stroke } def\n");
-    fprintf(fw, "/Times { stroke [] 0 setdash exch hpt sub exch vpt add M\n"
+    g_string_append_printf(string, "/Times { stroke [] 0 setdash exch hpt sub exch vpt add M\n"
                 "hpt2 vpt2 neg V currentpoint stroke M\n"
                 "hpt2 neg 0 R hpt2 vpt2 V stroke } def\n");
-    fprintf(fw, "/Cross { stroke [] 0 setdash vpt sub M 0 vpt2 V\n"
+    g_string_append_printf(string, "/Cross { stroke [] 0 setdash vpt sub M 0 vpt2 V\n"
                 "currentpoint stroke M\n"
                 "hpt neg vpt neg R hpt2 0 V stroke\n"
                 "} def\n");
-    fprintf(fw, "/Star { 2 copy Cross Times } def\n");
-    fprintf(fw, "/TriU { stroke [] 0 setdash 2 copy vpt 1.12 mul add M\n"
+    g_string_append_printf(string, "/Star { 2 copy Cross Times } def\n");
+    g_string_append_printf(string, "/TriU { stroke [] 0 setdash 2 copy vpt 1.12 mul add M\n"
                 "hpt neg vpt -1.62 mul V\n"
                 "hpt 2 mul 0 V\n"
                 "hpt neg vpt 1.62 mul V closepath stroke\n"
                 "} def\n");
-    fprintf(fw, "/TriD { stroke [] 0 setdash 2 copy vpt 1.12 mul sub M\n"
+    g_string_append_printf(string, "/TriD { stroke [] 0 setdash 2 copy vpt 1.12 mul sub M\n"
                 "hpt neg vpt 1.62 mul V\n"
                 "hpt 2 mul 0 V\n"
                 "hpt neg vpt -1.62 mul V closepath stroke\n"
                 "} def\n");
-    fprintf(fw, "/Times-Roman findfont\n");
-    fprintf(fw, "%%%%EndProlog\n");
+    g_string_append_printf(string, "/Times-Roman findfont\n");
+    g_string_append_printf(string, "%%%%EndProlog\n");
 
     
     /*write axises*/
     psaxis = gwy_axis_export_vector(graph->axis_bottom, areax, 0, areaw, areay, fontsize);
-    fprintf(fw, "%s", psaxis->str);
+    g_string_append_printf(string, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
     psaxis = gwy_axis_export_vector(graph->axis_top, areax, areay + areah, areaw, areay, fontsize);
-    fprintf(fw, "%s", psaxis->str);
+    g_string_append_printf(string, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
     psaxis = gwy_axis_export_vector(graph->axis_left, 0, areay, areax, areah, fontsize);
-    fprintf(fw, "%s", psaxis->str);
+    g_string_append_printf(string, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
     psaxis = gwy_axis_export_vector(graph->axis_right, areax + areaw, areay, areax, areah, fontsize);
-    fprintf(fw, "%s", psaxis->str);
+    g_string_append_printf(string, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
 
 
     /*write area*/
     psarea = gwy_graph_area_export_vector(graph->area, areax, areay, areaw, areah);
-    fprintf(fw, "%s", psarea->str);
+    g_string_append_printf(string, "%s", psarea->str);
 
     /*write label*/
     pslabel = gwy_graph_label_export_vector(graph->area->lab, labelx, labely, labelw, labelh, fontsize);
-    fprintf(fw, "%s", pslabel->str);
+    g_string_append_printf(string, "%s", pslabel->str);
 
     /*save stream*/
-    fclose(fw);
+    return string;
 }
 
 
