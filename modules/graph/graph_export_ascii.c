@@ -26,6 +26,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
+#include <glib/gstdio.h>
 
 typedef struct {
     GtkWidget *preference;
@@ -197,6 +198,9 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
     GwyContainer *settings;
     GError *err = NULL;
     gchar *filename;
+    GString *string = g_string_new("");
+    FILE *fw;
+    
 
     if (response == GTK_RESPONSE_OK)
     {
@@ -209,10 +213,13 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
         if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
         {
             filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-            gwy_graph_model_export_ascii(graph->graph_model, filename,
+            string = gwy_graph_model_export_ascii(graph->graph_model, filename,
                                          controls.units, controls.labels, controls.metadata,
-                                         controls.style, &err);
-            if (err) printf("Errrrr\n");
+                                         controls.style, string);
+            
+            fw = g_fopen(filename, "w");
+            fprintf(fw, "%s", string->str);
+            fclose(fw);
         }
         gtk_widget_destroy(GTK_WIDGET(filedialog));
         settings = gwy_app_settings_get();

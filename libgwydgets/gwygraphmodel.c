@@ -990,21 +990,18 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
  * Exports graph model into a file. The export format is specified by
  * parameter @export_style.
  **/
-void
+GString*
 gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
                              gboolean export_units, gboolean export_labels,
                              gboolean export_metadata, GwyGraphModelExportStyle export_style,
-                             GError** error)
+                             GString* string)
 {
-    FILE *fw;
     GwyGraphCurveModel *cmodel;
     GwySIValueFormat *xformat = NULL, *yformat = NULL;
     gdouble xaverage, xrange, yaverage, yrange;
     gdouble xmult, ymult;
     GString *labels, *descriptions, *units;
     gint i, j, max, ndata;
-
-    fw = g_fopen(filename, "w");
 
     if (export_units) {
         xaverage = (model->x_max + model->x_min)/2;
@@ -1043,9 +1040,9 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
                 g_string_append_printf(units, "[%s]     [%s]         ",
                                        xformat->units, yformat->units);
         }
-        if (export_metadata) fprintf(fw, "%s\n", descriptions->str);
-        if (export_labels) fprintf(fw, "%s\n", labels->str);
-        if (export_units) fprintf(fw, "%s\n", units->str);
+        if (export_metadata) g_string_append_printf(string, "%s\n", descriptions->str);
+        if (export_labels) g_string_append_printf(string, "%s\n", labels->str);
+        if (export_units) g_string_append_printf(string, "%s\n", units->str);
         g_string_free(descriptions, TRUE);
         g_string_free(labels, TRUE);
         g_string_free(units, TRUE);
@@ -1061,12 +1058,12 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
             for (i = 0; i < model->curves->len; i++) {
                 cmodel = g_ptr_array_index(model->curves, i);
                 if (gwy_graph_curve_model_get_ndata(cmodel) > j)
-                    fprintf(fw, "%g  %g            ",
+                    g_string_append_printf(string, "%g  %g            ",
                             cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
                 else
-                    fprintf(fw, "-          -              ");
+                    g_string_append_printf(string, "-          -              ");
             }
-            fprintf(fw, "\n");
+            g_string_append_printf(string, "\n");
         }
         break;
 
@@ -1074,17 +1071,17 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
         for (i = 0; i < model->curves->len; i++) {
             cmodel = g_ptr_array_index(model->curves, i);
             if (export_metadata)
-                fprintf(fw, "# %s\n", cmodel->description->str);
+                g_string_append_printf(string, "# %s\n", cmodel->description->str);
             if (export_labels)
-                fprintf(fw, "# %s      %s\n",
+                g_string_append_printf(string, "# %s      %s\n",
                         model->bottom_label->str, model->left_label->str);
             if (export_units)
-                fprintf(fw, "# [%s]    [%s]\n",
+                g_string_append_printf(string, "# [%s]    [%s]\n",
                         xformat->units, yformat->units);
             for (j = 0; j < cmodel->n; j++)
-                fprintf(fw, "%g   %g\n",
+                g_string_append_printf(string, "%g   %g\n",
                         cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
-            fprintf(fw, "\n\n");
+            g_string_append_printf(string, "\n\n");
         }
 
         break;
@@ -1107,11 +1104,11 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
                                        xformat->units, yformat->units);
         }
         if (export_metadata)
-            fprintf(fw, "%s\n", descriptions->str);
+            g_string_append_printf(string, "%s\n", descriptions->str);
         if (export_labels)
-            fprintf(fw, "%s\n", labels->str);
+            g_string_append_printf(string, "%s\n", labels->str);
         if (export_units)
-            fprintf(fw, "%s\n", units->str);
+            g_string_append_printf(string, "%s\n", units->str);
         g_string_free(descriptions, TRUE);
         g_string_free(labels, TRUE);
         g_string_free(units, TRUE);
@@ -1127,12 +1124,12 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
             for (i = 0; i < model->curves->len; i++) {
                 cmodel = g_ptr_array_index(model->curves, i);
                 if (gwy_graph_curve_model_get_ndata(cmodel) > j)
-                    fprintf(fw, "%g;%g;",
+                    g_string_append_printf(string, "%g;%g;",
                             cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
                 else
-                    fprintf(fw, ";;");
+                    g_string_append_printf(string, ";;");
             }
-            fprintf(fw, "\n");
+            g_string_append_printf(string, "\n");
         }
         break;
 
@@ -1140,7 +1137,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
         break;
     }
 
-    fclose(fw);
+    return string;
 }
 
 /************************** Documentation ****************************/
