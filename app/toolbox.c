@@ -136,7 +136,7 @@ add_button(GtkWidget *toolbar,
                               i%4, i%4 + 1, i/4, i/4 + 1);
     gtk_container_add(GTK_CONTAINER(button),
                       gtk_image_new_from_stock(action->stock_id,
-                                               GTK_ICON_SIZE_BUTTON));
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
     g_signal_connect_swapped(button, "clicked",
                              action->callback, (gpointer)action->cbdata);
     gtk_tooltips_set_tip(tips, button, _(action->tooltip), NULL);
@@ -163,7 +163,7 @@ add_rbutton(GtkWidget *toolbar,
                               i%4, i%4 + 1, i/4, i/4 + 1);
     gtk_container_add(GTK_CONTAINER(button),
                       gtk_image_new_from_stock(action->stock_id,
-                                               GTK_ICON_SIZE_BUTTON));
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
     g_signal_connect_swapped(button, "clicked",
                              action->callback, (gpointer)action->cbdata);
     gtk_tooltips_set_tip(tips, button, _(action->tooltip), NULL);

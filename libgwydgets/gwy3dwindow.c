@@ -422,7 +422,7 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
         g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
         gtk_container_add(GTK_CONTAINER(button),
                           gtk_image_new_from_stock(buttons[i].stock_id,
-                                                   GTK_ICON_SIZE_BUTTON));
+                                                   GTK_ICON_SIZE_LARGE_TOOLBAR));
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_3d_window_set_mode),
                                  GINT_TO_POINTER(buttons[i].mode));
@@ -499,7 +499,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                       gtk_image_new_from_stock(direction == GTK_TEXT_DIR_LTR
                                                ? GWY_STOCK_LESS
                                                : GWY_STOCK_MORE,
-                                               GTK_ICON_SIZE_BUTTON));
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
     gwy_3d_window_set_tooltip(button, _("Show full controls"));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect_swapped(button, "clicked",
@@ -526,7 +526,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                       gtk_image_new_from_stock(direction == GTK_TEXT_DIR_LTR
                                                ? GWY_STOCK_MORE
                                                : GWY_STOCK_LESS,
-                                               GTK_ICON_SIZE_BUTTON));
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
     gwy_3d_window_set_tooltip(button, _("Hide full controls"));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect_swapped(button, "clicked",
@@ -830,7 +830,8 @@ gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
     gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_small), button,
                        FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON));
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
     gwy_3d_window_set_tooltip(button, tooltip);
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect_swapped(button, "clicked", G_CALLBACK(callback), cbdata);

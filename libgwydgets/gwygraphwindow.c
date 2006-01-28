@@ -157,9 +157,12 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_measure_points = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_measure_points),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_MEASURE, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points, FALSE, FALSE, 0);
-    gwy_graph_window_set_tooltip(graphwindow->button_measure_points, "Measure distances in graph");
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_MEASURE,
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points,
+                       FALSE, FALSE, 0);
+    gwy_graph_window_set_tooltip(graphwindow->button_measure_points,
+                                 _("Measure distances in graph"));
     g_signal_connect_swapped(graphwindow->button_measure_points, "clicked",
                            G_CALLBACK(gwy_graph_window_measure_cb),
                            graphwindow);
@@ -167,18 +170,24 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_zoom_in = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_in),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_IN, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_in, FALSE, FALSE, 0);
-    gwy_graph_window_set_tooltip(graphwindow->button_zoom_in, "Zoom in by mouse selection.");
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_IN,
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_in,
+                       FALSE, FALSE, 0);
+    gwy_graph_window_set_tooltip(graphwindow->button_zoom_in,
+                                 _("Zoom in by mouse selection"));
     g_signal_connect_swapped(graphwindow->button_zoom_in, "toggled",
                            G_CALLBACK(gwy_graph_window_zoom_in_cb),
                            graphwindow);
 
     graphwindow->button_zoom_out = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_out),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_FIT, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_out, FALSE, FALSE, 0);
-    gwy_graph_window_set_tooltip(graphwindow->button_zoom_out, "Zoom out to full curve.");
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_FIT,
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_out,
+                       FALSE, FALSE, 0);
+    gwy_graph_window_set_tooltip(graphwindow->button_zoom_out,
+                                 _("Zoom out to full curve"));
     g_signal_connect_swapped(graphwindow->button_zoom_out, "clicked",
                            G_CALLBACK(gwy_graph_window_zoom_out_cb),
                            graphwindow);
@@ -186,8 +195,10 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_x_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_X_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log, FALSE, FALSE, 0);
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_X_LOGARITHMIC,
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log,
+                       FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_x_log, "clicked",
                            G_CALLBACK(gwy_graph_window_x_log_cb),
                            graphwindow);
@@ -197,8 +208,10 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_y_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_Y_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log, FALSE, FALSE, 0);
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_Y_LOGARITHMIC,
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log,
+                       FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
                            G_CALLBACK(gwy_graph_window_y_log_cb),
                            graphwindow);
