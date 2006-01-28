@@ -403,7 +403,7 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
         },
         {
             GWY_3D_MOVEMENT_DEFORMATION,
-            GWY_STOCK_Z_SCALE,
+            GWY_STOCK_SCALE_VERTICALLY,
             N_("Scale value range")
         },
         {

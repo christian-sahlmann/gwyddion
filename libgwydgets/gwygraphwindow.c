@@ -195,7 +195,7 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_x_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_X_LOGARITHMIC,
+                      gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_HORIZONTAL,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log,
                        FALSE, FALSE, 0);
@@ -208,7 +208,7 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_y_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_Y_LOGARITHMIC,
+                      gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_VERTICAL,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log,
                        FALSE, FALSE, 0);

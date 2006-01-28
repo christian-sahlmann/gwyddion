@@ -132,7 +132,7 @@ module_register(const gchar *name)
     gwy_graph_func_register("graph_fit",
                             (GwyGraphFunc)&fit,
                             N_("/_Fit Graph"),
-                            GWY_STOCK_GRAPH_FIT_FUNC,
+                            GWY_STOCK_GRAPH_FUNCTION,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Fit a function on graph data"));
 

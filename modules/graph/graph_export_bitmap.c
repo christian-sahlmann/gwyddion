@@ -50,7 +50,7 @@ module_register(const gchar *name)
     gwy_graph_func_register("graph_export_bitmap",
                             (GwyGraphFunc)&export,
                             N_("/Export _bitmap"),
-                            GWY_STOCK_GRAPH_BITMAP,
+                            NULL,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Export graph to a raster image"));
 

@@ -50,7 +50,7 @@ module_register(const gchar *name)
     gwy_graph_func_register("graph_export_vector",
                             (GwyGraphFunc)&export,
                             N_("/Export _PostScript"),
-                            GWY_STOCK_GRAPH_VECTOR,
+                            NULL,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Export graph to a vector image"));
 

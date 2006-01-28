@@ -167,7 +167,7 @@ dialog_create(GwyUnitoolState *state)
     const modes[] = {
         {
             MASK_EDIT_SET,
-            GWY_STOCK_MASK_SET,
+            GWY_STOCK_MASK,
             N_("Set mask to selection"),
         },
         {

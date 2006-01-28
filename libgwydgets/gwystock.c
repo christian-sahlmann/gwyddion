@@ -300,14 +300,14 @@ free_the_icon_factory(void)
  * GWY_STOCK_BOLD
  *
  * The "Bold" stock icon.
- * <inlinegraphic fileref="gwy_bold-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_bold-20.png" format="PNG"/>
  **/
 
 /**
- * GWY_STOCK_CROP
+ * GWY_STOCK_CANTILEVER
  *
- * The "Crop" stock icon.
- * <inlinegraphic fileref="gwy_crop-24.png" format="PNG"/>
+ * The "Cantilever" stock icon.
+ * <inlinegraphic fileref="gwy_cantilever-24.png" format="PNG"/>
  **/
 
 /**
@@ -318,9 +318,16 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_CROP
+ *
+ * The "Crop" stock icon.
+ * <inlinegraphic fileref="gwy_crop-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_CWT
  *
- * The "Continuous-Wavelet-Transform" stock icon.
+ * The "CWT" stock icon.
  * <inlinegraphic fileref="gwy_cwt-24.png" format="PNG"/>
  **/
 
@@ -332,10 +339,31 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_DWT
+ *
+ * The "DWT" stock icon.
+ * <inlinegraphic fileref="gwy_dwt-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_FACET_LEVEL
  *
  * The "Facet-Level" stock icon.
  * <inlinegraphic fileref="gwy_facet_level-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_FAVOURITE
+ *
+ * The "Favourite" stock icon.
+ * <inlinegraphic fileref="gwy_favourite-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_FFT
+ *
+ * The "FFT" stock icon.
+ * <inlinegraphic fileref="gwy_fft-24.png" format="PNG"/>
  **/
 
 /**
@@ -346,20 +374,6 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_FIT_PLANE
- *
- * The "Fit-Plane" stock icon.
- * <inlinegraphic fileref="gwy_fit_plane-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_FIT_TRIANGLE
- *
- * The "Fit-Triangle" stock icon.
- * <inlinegraphic fileref="gwy_fit_triangle-24.png" format="PNG"/>
- **/
-
-/**
  * GWY_STOCK_FIX_ZERO
  *
  * The "Fix-Zero" stock icon.
@@ -367,10 +381,17 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_FFT
+ * GWY_STOCK_FLIP_HORIZONTALLY
  *
- * The "Fast-Fourier-Transform" stock icon.
- * <inlinegraphic fileref="gwy_fft-24.png" format="PNG"/>
+ * The "Flip-Horizontally" stock icon.
+ * <inlinegraphic fileref="gwy_flip_horizontally-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_FLIP_VERTICALLY
+ *
+ * The "Flip-Vertically" stock icon.
+ * <inlinegraphic fileref="gwy_flip_vertically-24.png" format="PNG"/>
  **/
 
 /**
@@ -378,6 +399,20 @@ free_the_icon_factory(void)
  *
  * The "Fractal" stock icon.
  * <inlinegraphic fileref="gwy_fractal-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRADIENT_HORIZONTAL
+ *
+ * The "Gradient-Horizontal" stock icon.
+ * <inlinegraphic fileref="gwy_gradient_horizontal-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRADIENT_VERTICAL
+ *
+ * The "Gradient-Vertical" stock icon.
+ * <inlinegraphic fileref="gwy_gradient_vertical-24.png" format="PNG"/>
  **/
 
 /**
@@ -416,38 +451,10 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_GRAPH_ASCII
+ * GWY_STOCK_GRAPH_FUNCTION
  *
- * The "Graph-Ascii" stock icon.
- * <inlinegraphic fileref="gwy_graph_ascii-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_GRAPH_BITMAP
- *
- * The "Graph-Bitmap" stock icon.
- * <inlinegraphic fileref="gwy_graph_bitmap-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_GRAPH_VECTOR
- *
- * The "Graph-Vector" stock icon.
- * <inlinegraphic fileref="gwy_graph_vector-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_GRAPH_FIT_FUNC
- *
- * The "Graph-Fit-Func" stock icon.
- * <inlinegraphic fileref="gwy_graph_fit_func-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_GRAPH_GAUSS
- *
- * The "Graph-Gauss" stock icon.
- * <inlinegraphic fileref="gwy_graph_gauss-24.png" format="PNG"/>
+ * The "Graph-Function" stock icon.
+ * <inlinegraphic fileref="gwy_graph_function-24.png" format="PNG"/>
  **/
 
 /**
@@ -507,20 +514,6 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_GRAPH_X_LOGARITHMIC
- *
- * The "Graph-X-Logarithmic" stock icon.
- * <inlinegraphic fileref="gwy_graph_x_logarithmic-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_GRAPH_Y_LOGARITHMIC
- *
- * The "Graph-Y-Logarithmic" stock icon.
- * <inlinegraphic fileref="gwy_graph_y_logarithmic-24.png" format="PNG"/>
- **/
-
-/**
  * GWY_STOCK_GWYDDION
  *
  * The "Gwyddion" stock icon.
@@ -531,7 +524,7 @@ free_the_icon_factory(void)
  * GWY_STOCK_ITALIC
  *
  * The "Italic" stock icon.
- * <inlinegraphic fileref="gwy_italic-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_italic-20.png" format="PNG"/>
  **/
 
 /**
@@ -542,10 +535,45 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_LEVEL
+ *
+ * The "Level" stock icon.
+ * <inlinegraphic fileref="gwy_level-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LEVEL_TRIANGLE
+ *
+ * The "Level-Triangle" stock icon.
+ * <inlinegraphic fileref="gwy_level_triangle-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_LIGHT_ROTATE
  *
  * The "Light-Rotate" stock icon.
  * <inlinegraphic fileref="gwy_light_rotate-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LOGSCALE_HORIZONTAL
+ *
+ * The "Logscale-Horizontal" stock icon.
+ * <inlinegraphic fileref="gwy_logscale_horizontal-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LOGSCALE_VERTICAL
+ *
+ * The "Logscale-Vertical" stock icon.
+ * <inlinegraphic fileref="gwy_logscale_vertical-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK
+ *
+ * The "Mask" stock icon.
+ * <inlinegraphic fileref="gwy_mask-24.png" format="PNG"/>
  **/
 
 /**
@@ -556,10 +584,24 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_MASK_GROW
+ * GWY_STOCK_MASK_CIRCLE
  *
- * The "Mask-Grow" stock icon.
- * <inlinegraphic fileref="gwy_mask_grow-24.png" format="PNG"/>
+ * The "Mask-Circle" stock icon.
+ * <inlinegraphic fileref="gwy_mask_circle-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_CIRCLE_EXCLUSIVE
+ *
+ * The "Mask-Circle-Exclusive" stock icon.
+ * <inlinegraphic fileref="gwy_mask_circle_exclusive-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_CIRCLE_INCLUSIVE
+ *
+ * The "Mask-Circle-Inclusive" stock icon.
+ * <inlinegraphic fileref="gwy_mask_circle_inclusive-24.png" format="PNG"/>
  **/
 
 /**
@@ -567,6 +609,27 @@ free_the_icon_factory(void)
  *
  * The "Mask-Editor" stock icon.
  * <inlinegraphic fileref="gwy_mask_editor-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_EXCLUDE
+ *
+ * The "Mask-Exclude" stock icon.
+ * <inlinegraphic fileref="gwy_mask_exclude-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_EXCLUDE_CIRCLE
+ *
+ * The "Mask-Exclude-Circle" stock icon.
+ * <inlinegraphic fileref="gwy_mask_exclude_circle-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_GROW
+ *
+ * The "Mask-Grow" stock icon.
+ * <inlinegraphic fileref="gwy_mask_grow-24.png" format="PNG"/>
  **/
 
 /**
@@ -584,17 +647,24 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_MASK_RECT_EXCLUSIVE
+ *
+ * The "Mask-Rect-Exclusive" stock icon.
+ * <inlinegraphic fileref="gwy_mask_rect_exclusive-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_RECT_INCLUSIVE
+ *
+ * The "Mask-Rect-Inclusive" stock icon.
+ * <inlinegraphic fileref="gwy_mask_rect_inclusive-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_MASK_REMOVE
  *
  * The "Mask-Remove" stock icon.
  * <inlinegraphic fileref="gwy_mask_remove-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_MASK_SET
- *
- * The "Mask-Set" stock icon.
- * <inlinegraphic fileref="gwy_mask_set-24.png" format="PNG"/>
  **/
 
 /**
@@ -619,17 +689,10 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_NONE
+ * GWY_STOCK_PALETTES
  *
- * The "None" stock icon.
- * <inlinegraphic fileref="gwy_none-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_POINTER
- *
- * The "Pointer" stock icon.
- * <inlinegraphic fileref="gwy_pointer-24.png" format="PNG"/>
+ * The "Palettes" stock icon.
+ * <inlinegraphic fileref="gwy_palettes-24.png" format="PNG"/>
  **/
 
 /**
@@ -640,10 +703,10 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_POLYNOM_REMOVE
+ * GWY_STOCK_POLYNOM
  *
- * The "Polynom-Remove" stock icon.
- * <inlinegraphic fileref="gwy_polynom_remove-24.png" format="PNG"/>
+ * The "Polynom" stock icon.
+ * <inlinegraphic fileref="gwy_polynom-24.png" format="PNG"/>
  **/
 
 /**
@@ -661,10 +724,45 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_ROTATE_180
+ *
+ * The "Rotate-180" stock icon.
+ * <inlinegraphic fileref="gwy_rotate_180-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_ROTATE_90_CCW
+ *
+ * The "Rotate-90-CCW" stock icon.
+ * <inlinegraphic fileref="gwy_rotate_90_ccw-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_ROTATE_90_CW
+ *
+ * The "Rotate-90-CW" stock icon.
+ * <inlinegraphic fileref="gwy_rotate_90_cw-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_SCALE
  *
  * The "Scale" stock icon.
  * <inlinegraphic fileref="gwy_scale-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_SCALE_HORIZONTALLY
+ *
+ * The "Scale-Horizontally" stock icon.
+ * <inlinegraphic fileref="gwy_scale_horizontally-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_SCALE_VERTICALLY
+ *
+ * The "Scale-Vertically" stock icon.
+ * <inlinegraphic fileref="gwy_scale_vertically-24.png" format="PNG"/>
  **/
 
 /**
@@ -699,7 +797,7 @@ free_the_icon_factory(void)
  * GWY_STOCK_SUBSCRIPT
  *
  * The "Subscript" stock icon.
- * <inlinegraphic fileref="gwy_subscript-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_subscript-20.png" format="PNG"/>
  **/
 
 /**
@@ -717,17 +815,17 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_Z_SCALE
+ * GWY_STOCK_VALUE_INVERT
  *
- * The "Z-Scale" stock icon.
- * <inlinegraphic fileref="gwy_z_scale-24.png" format="PNG"/>
+ * The "Value-Invert" stock icon.
+ * <inlinegraphic fileref="gwy_value_invert-24.png" format="PNG"/>
  **/
 
 /**
- * GWY_STOCK_ZOOM_1_1
+ * GWY_STOCK_ZOOM_1:1
  *
  * The "Zoom-1:1" stock icon.
- * <inlinegraphic fileref="gwy_zoom_1_1-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_zoom_1:1-24.png" format="PNG"/>
  **/
 
 /**
@@ -750,6 +848,7 @@ free_the_icon_factory(void)
  * The "Zoom-Out" stock icon.
  * <inlinegraphic fileref="gwy_zoom_out-24.png" format="PNG"/>
  **/
+
 /* @@@ GENERATED STOCK LIST END @@@ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

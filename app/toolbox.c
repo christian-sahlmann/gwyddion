@@ -222,7 +222,7 @@ gwy_app_toolbox_create(void)
             "unrotate",
         },
         {
-            GWY_STOCK_FIT_PLANE,
+            GWY_STOCK_LEVEL,
             N_("Automatically level data"),
             "level",
         },
@@ -272,7 +272,7 @@ gwy_app_toolbox_create(void)
             "shade",
         },
         {
-            GWY_STOCK_POLYNOM_REMOVE,
+            GWY_STOCK_POLYNOM,
             N_("Remove polynomial background"),
             "polylevel",
         },
@@ -289,7 +289,7 @@ gwy_app_toolbox_create(void)
             "graph_cd",
         },
         {
-            GWY_STOCK_GRAPH_FIT_FUNC,
+            GWY_STOCK_GRAPH_FUNCTION,
             N_("Fit functions to graph data"),
             "graph_fit",
         },

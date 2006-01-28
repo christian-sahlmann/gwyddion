@@ -83,7 +83,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "level3",
-        GWY_STOCK_FIT_TRIANGLE,
+        GWY_STOCK_LEVEL_TRIANGLE,
         N_("Level data using three points."),
         use,
     };
