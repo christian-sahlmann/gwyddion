@@ -47,9 +47,7 @@ IGNORE_HFILES = stamp-gwydgettypes.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES = \
-	$(top_srcdir)/pixmaps/gwy_*-24.png \
-	$(top_srcdir)/pixmaps/gwy_gwyddion-60.png \
-	$(top_srcdir)/pixmaps/gwy_gwyddion-32.png \
+	$(top_srcdir)/pixmaps/gwy_*-[1-9][0-9].png \
 	$(top_srcdir)/pixmaps/cd_line.png \
 	$(top_srcdir)/pixmaps/cd_rline.png \
 	$(top_srcdir)/pixmaps/cd_step.png \
