@@ -1,7 +1,12 @@
 # @(#) $Id$ */
 
+# When libTIFF is disabled, put the sources to EXTRA_DIST to include them in
+# make dist.
 if HAVE_TIFF
 tiff_modules = jpkscan.la
+tiff_sources =
+else
+tiff_sources = jpk.h jpkscan.c
 endif
 
 
@@ -38,6 +43,7 @@ noinst_HEADERS = \
 	get.h
 
 EXTRA_DIST = \
+	$(tiff_sources) \
 	makefile.msc \
 	makefile.msc.gwt
 
