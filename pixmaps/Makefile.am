@@ -23,6 +23,10 @@ icondatadir = $(datadir)/pixmaps
 #   unrotate
 
 pixmapdata_DATA = \
+	cd_line.png \
+	cd_rline.png \
+	cd_rstep.png \
+	cd_step.png \
 	gwy_3d_base-24.png \
 	gwy_bold-20.png \
 	gwy_cantilever-24.png \
@@ -103,7 +107,8 @@ pixmapdata_DATA = \
 	gwy_zoom_1_1-24.png \
 	gwy_zoom_fit-24.png \
 	gwy_zoom_in-24.png \
-	gwy_zoom_out-24.png
+	gwy_zoom_out-24.png \
+	splash.png
 
 icondata_DATA = \
 	gwyddion.png
