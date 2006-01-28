@@ -338,7 +338,6 @@ gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
         gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_XLINES);
         gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
-        gwy_graph_signal_selected(GWY_GRAPH(graphwindow->graph));
         gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
     }
     else

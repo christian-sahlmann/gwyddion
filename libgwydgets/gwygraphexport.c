@@ -121,7 +121,7 @@ gwy_graph_export_postscript(GwyGraph *graph,
     areay = 90;
     areaw = width - 2*areax;
     areah = height - 2*areay;
-    hpt = vpt = 8;
+    hpt = vpt = 3;
    
     /*TODO remove the empirical quadratic part of these relations*/
     labelh = graph->area->lab->reqheight*fontsize

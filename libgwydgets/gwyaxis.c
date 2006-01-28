@@ -745,9 +745,9 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
-    /*PangoContext *context;
-    PangoMatrix matrix = PANGO_MATRIX_INIT;
-    */
+    PangoMatrix matrix = PANGO_MATRIX_INIT; // TODO fix all code marked by comments - it does nothing
+    gint width, height; //
+    
     GString *plotlabel;
 
    context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
@@ -765,8 +765,8 @@ gwy_axis_draw_label(GdkDrawable *drawable,
 
     pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
     pango_layout_get_pixel_extents(layout, NULL, &rect);
-    /*context = gtk_widget_create_pango_context (widget);
-    */
+    context = gtk_widget_create_pango_context (GTK_WIDGET(axis)); //
+    
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
@@ -783,10 +783,10 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
 
         case GTK_POS_LEFT:
-        /*pango_matrix_rotate (&matrix, 90);
-        pango_context_set_matrix (context, &matrix);
-        pango_layout_context_changed (layout);
-        pango_layout_get_size (layout, &width, &height);*/
+        pango_matrix_rotate (&matrix, 90); // 
+        pango_context_set_matrix (context, &matrix); //
+        pango_layout_context_changed (layout); //
+        pango_layout_get_size (layout, &width, &height);//
         gdk_draw_layout(drawable, gc,
                         specs->xmin + axis->label_x_pos,
                         specs->ymin + axis->label_y_pos,
@@ -794,6 +794,10 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
 
         case GTK_POS_RIGHT:
+        pango_matrix_rotate (&matrix, 90); //
+        pango_context_set_matrix (context, &matrix); //
+        pango_layout_context_changed (layout); //
+        pango_layout_get_size (layout, &width, &height);//
         gdk_draw_layout(drawable, gc,
                         specs->xmin + axis->label_x_pos - rect.width,
                         specs->ymin + axis->label_y_pos,
@@ -961,9 +965,6 @@ gwy_axis_normalscale(GwyAxis *a)
     minortickstep = tickstep/(gdouble)a->par.minor_division;
     minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
 
-    /*printf("rng=%g, tst=%g, mjb=%g, mnts=%g, mnb=%g\n",
-       range, tickstep, majorbase, minortickstep, minorbase);*/
-
     if (majorbase > a->reqmin) {
         majorbase -= tickstep;
         minorbase = majorbase;
@@ -971,8 +972,6 @@ gwy_axis_normalscale(GwyAxis *a)
     }
     else
         a->min = a->reqmin;
-
-    /*printf("majorbase = %f, reqmin=%f\n", majorbase, a->reqmin);*/
 
     /*major tics*/
     i = 0;
@@ -1010,8 +1009,6 @@ gwy_axis_logscale(GwyAxis *a)
     min = a->reqmin;
     _min = min+0.1;
 
-    /*printf("start: max %g, min %g\n", max, min);*/
-
     /*no negative values are allowed*/
     if (min > 0)
         logmin = log10(min);
@@ -1025,10 +1022,8 @@ gwy_axis_logscale(GwyAxis *a)
     else
         return 1;
 
-    /*printf("logmax %g, logmin %g\n", max, min);*/
 
     /*ticks will be linearly distributed again*/
-
     /*major ticks - will be equally ditributed in the log domain 1,10,100*/
     tickstep = 1; /*step*/
     base = ceil(logmin/tickstep)*tickstep - 1; /*starting value*/
@@ -1039,36 +1034,28 @@ gwy_axis_logscale(GwyAxis *a)
         mjt.t.value = base;
         mjt.ttext = g_string_new(" ");
         g_array_append_val(a->mjticks, mjt);
-        /*printf("MJ mjt_value[%d]: %g\n", i, mjt.t.value);*/
         base += tickstep;
         i++;
     } while (i<2 || ((base - tickstep) < logmax && i<a->par.major_maxticks));
     logmax = base - tickstep;
     min = gwy_axis_dbl_raise(10.0, logmin);
     max = gwy_axis_dbl_raise(10.0, logmax);
-    /*printf("recomputed: max %g, min %g\n", max, min);*/
-
 
     /*minor ticks - will be equally distributed in the normal domain 1,2,3...*/
     tickstep = min;
     base = tickstep;
-    /*printf("MI starting value: base: %g  tickstep: %g\n", base, tickstep);*/
     i = 0;
     do {
          /*here, tickstep must be adapted do scale*/
          tickstep = gwy_axis_dbl_raise(10.0, (gint)floor(log10(base*1.01)));
              mit.value = log10(base);
          g_array_append_val(a->miticks, mit);
-         /*printf("MI mit_value[%d]: %g\n", i, mit.value);*/
-         /*printf("MI base: %g  tickstep: %g  mit_value[%d]: %g\n", base, tickstep, i, mit.value);*/
          base += tickstep;
-         /*printf("MI base: %g  max: %g\n", base, max);*/
          i++;
     } while (base<=max && i<(a->par.major_maxticks*20));
 
     a->max = max;
     a->min = min;
-    /*printf("max %g, min %g\n", max, min);*/
 
     return 0;
 }

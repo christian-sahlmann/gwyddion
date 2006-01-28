@@ -51,7 +51,7 @@ static void label_updated_cb       (GwyAxis *axis,
 static void gwy_graph_finalize          (GObject *object);
 static void gwy_graph_signal_zoomed     (GwyGraph *graph);
 
-
+static void gwy_graph_signal_selected(GwyGraph *graph);
 
 static guint gwygraph_signals[LAST_SIGNAL] = { 0 };
 
@@ -649,8 +649,7 @@ gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable)
     gwy_axis_enable_label_edit(graph->axis_right, enable);
 }
 
-/*XXX: Does this need to be public? */
-void
+static void
 gwy_graph_signal_selected(GwyGraph *graph)
 {
     g_signal_emit(G_OBJECT(graph), gwygraph_signals[SELECTED_SIGNAL], 0);
@@ -733,11 +732,6 @@ zoomed_cb(GwyGraph *graph)
     gwy_graph_signal_zoomed(graph);
 }
 
-/* XXX What the f**k is this? XXX
- *
- * Why it does exactly the thing GString attempts to avoid?  Shouldn't it do:
- * g_string_assign(graph->graph_model->some_label, gwy_axis_set_label(axis));
- * Except that GwyGraphModel should have a *method* for setting axis labels. */
 static void
 label_updated_cb(GwyAxis *axis, GwyGraph *graph)
 {
@@ -745,30 +739,22 @@ label_updated_cb(GwyAxis *axis, GwyGraph *graph)
     {
         case GTK_POS_TOP:
         if (graph->graph_model->top_label)
-            g_string_free(graph->graph_model->top_label, TRUE);
-        graph->graph_model->top_label
-            = g_string_new((gwy_axis_get_label(axis))->str);
+            g_string_assign(graph->graph_model->top_label, gwy_axis_get_label(axis));
         break;
 
         case GTK_POS_BOTTOM:
         if (graph->graph_model->bottom_label)
-            g_string_free(graph->graph_model->bottom_label, TRUE);
-        graph->graph_model->bottom_label
-            = g_string_new((gwy_axis_get_label(axis))->str);
+            g_string_assign(graph->graph_model->bottom_label, gwy_axis_get_label(axis));
         break;
 
         case GTK_POS_LEFT:
         if (graph->graph_model->left_label)
-            g_string_free(graph->graph_model->left_label, TRUE);
-        graph->graph_model->left_label
-            = g_string_new((gwy_axis_get_label(axis))->str);
+            g_string_assign(graph->graph_model->left_label, gwy_axis_get_label(axis));
         break;
 
         case GTK_POS_RIGHT:
         if (graph->graph_model->right_label)
-            g_string_free(graph->graph_model->right_label, TRUE);
-        graph->graph_model->right_label
-            = g_string_new((gwy_axis_get_label(axis))->str);
+            g_string_assign(graph->graph_model->right_label, gwy_axis_get_label(axis));
         break;
     }
 }

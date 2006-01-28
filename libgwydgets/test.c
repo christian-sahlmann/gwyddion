@@ -34,8 +34,17 @@
 
 
 static void
-destroy(GtkWidget *widget, gpointer data)
+destroy(GtkWidget *widget, GwyGraph *graph)
 {
+    GString *str = g_string_new("");
+    FILE *fw;
+        
+    str = gwy_graph_export_postscript(graph,
+                                      TRUE, TRUE, TRUE, str);
+    fw = fopen("ble.eps", "w");
+    fprintf(fw, "%s", str->str);
+    fclose(fw);
+
     gtk_main_quit();
 }
 
@@ -57,8 +66,8 @@ main(int argc, char *argv[])
     srand(time(0));
 
     ppow = 1000*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
-    for (i = 0; i < 20; i++) {
-        xp[i] = 0.1 + i*0.099;
+    for (i = 0; i < 10; i++) {
+        xp[i] = 1 + i*0.99;
         yp[i] = sin(i/6.28);
 /*        xp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
         xp[i]*=xp[i]*xp[i]*pow(10, xp[i]*pow(10000000, xp[i]))*ppow;
@@ -99,7 +108,7 @@ main(int argc, char *argv[])
     graph = gwy_graph_new(gmodel);
     
     model = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(model, xp, yp, 20);
+    gwy_graph_curve_model_set_data(model, xp, yp, 10);
     gwy_graph_curve_model_set_description(model, "parabola");
 
     gwy_graph_model_add_curve(gmodel, model);
@@ -107,7 +116,17 @@ main(int argc, char *argv[])
     gwy_graph_model_set_label_visible(gmodel, TRUE);
     
     gwindow = gwy_graph_window_new(graph);
+
+    gtk_widget_set_size_request(gwindow, 300, 200);
+    gtk_widget_show (gwindow);
+
+    g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), graph);
+    gtk_widget_show_all(gwindow);
+
+    gtk_main();
+
     
+    return 0;
     //gtk_container_add (GTK_CONTAINER (window), gwindow);
 
    /*gwy_graph_enable_user_input(graph, TRUE);*/
@@ -117,6 +136,7 @@ main(int argc, char *argv[])
 
     g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), NULL);
 
+    
     printf("show all!\n");
     gtk_widget_show_all(gwindow);
 

@@ -74,6 +74,7 @@ export(GwyGraph *graph)
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+        
         pixbuf = gwy_graph_export_pixmap(graph, 
                                          TRUE, TRUE, TRUE, pixbuf);
         gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);

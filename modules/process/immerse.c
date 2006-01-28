@@ -237,13 +237,14 @@ immerse_window_construct(ImmerseArgs *args)
     row++;
 
     /*Parameters*/
-    combo = gwy_enum_combo_box_new(levelings, G_N_ELEMENTS(levelings),
+    /*TODO, uncomment after it is clear what this should do*/
+    /*combo = gwy_enum_combo_box_new(levelings, G_N_ELEMENTS(levelings),
                                    G_CALLBACK(immerse_leveling_cb), args,
                                    args->leveling, TRUE);
     gwy_table_attach_hscale(table, row, _("_Leveling:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
-
+*/
     combo = gwy_enum_combo_box_new(modes, G_N_ELEMENTS(modes),
                                    G_CALLBACK(immerse_mode_cb), args,
                                    args->mode, TRUE);
@@ -388,8 +389,8 @@ immerse_do(ImmerseArgs *args)
         gwy_data_field_copy(dfield1, result, FALSE);
         
         gwy_data_field_resample(result,
-                                dfield1->xres*dfield1->xreal/dfield2->xreal,
-                                dfield1->yres*dfield1->xreal/dfield2->xreal,
+                                dfield2->xres*dfield1->xreal/dfield2->xreal,
+                                dfield2->yres*dfield1->xreal/dfield2->xreal,
                                 GWY_INTERPOLATION_BILINEAR);
         
        
@@ -404,8 +405,8 @@ immerse_do(ImmerseArgs *args)
         gwy_data_field_area_copy(dfield2, result, 
                                  0, 0, 
                                  dfield2->xres, dfield2->yres,
-                                 max_col - result->xres/2,
-                                 max_row - result->yres/2);
+                                 max_col - dfield2->xres/2,
+                                 max_row - dfield2->yres/2);
          
     }
 

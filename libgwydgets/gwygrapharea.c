@@ -1386,7 +1386,6 @@ static gchar *symbols[] =
  * gwy_graph_area_export_vector:
  * @area: the graph area to export
  *
- * XXX: Does this need to be public?
  **/
 GString* gwy_graph_area_export_vector(GwyGraphArea *area,
                                       gint x, gint y,
