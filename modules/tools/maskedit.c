@@ -223,7 +223,7 @@ dialog_create(GwyUnitoolState *state)
         gtk_table_attach_defaults(GTK_TABLE(toolbox), button, i, i+1, 0, 1);
         gtk_container_add(GTK_CONTAINER(button),
                           gtk_image_new_from_stock(modes[i].stock_id,
-                                                   GTK_ICON_SIZE_BUTTON));
+                                                  GTK_ICON_SIZE_LARGE_TOOLBAR));
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(mode_changed_cb), state);
         gtk_tooltips_set_tip(tips, button, _(modes[i].tooltip), NULL);
