@@ -23,6 +23,7 @@
 
 G_BEGIN_DECLS
 
+/* @@@ GENERATED STOCK LIST BEGIN @@@ */
 #define GWY_STOCK_3D_BASE               "gwy_3d_base"
 #define GWY_STOCK_BOLD                  "gwy_bold"
 #define GWY_STOCK_CROP                  "gwy_crop"
@@ -93,6 +94,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_ZOOM_FIT              "gwy_zoom_fit"
 #define GWY_STOCK_ZOOM_IN               "gwy_zoom_in"
 #define GWY_STOCK_ZOOM_OUT              "gwy_zoom_out"
+/* @@@ GENERATED STOCK LIST END @@@ */
 
 #define GWY_ICON_SIZE_ABOUT "gwy-about"
 
