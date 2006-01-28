@@ -3,6 +3,24 @@
 pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/pixmaps
 
+# Removed/missing:
+#   data_arithmetic
+#   graph_export_ascii
+#   graph_export_bitmap
+#   graph_export_vector
+#   graph_gauss
+#   line_correction
+#   measure_scale
+#   none
+#   polynom_remove (but see polynom)
+#   slope_mask
+#   window_measure
+#
+# Kept old:
+#   3d_base
+#   scars
+#   unrotate
+
 pixmapdata_DATA = \
 	gwy_3d_base-24.png \
 	gwy_bold-24.png \
