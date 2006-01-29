@@ -20,7 +20,7 @@
 
 /* FIXME: non-object code paths are untested and may leak memory or even
  * crash */
-#define DEBUG 1
+
 #include "config.h"
 #include <stdarg.h>
 #include <string.h>
@@ -581,6 +581,7 @@ gwy_undo_container_set_unmodified(GwyContainer *data)
 
 /**
  * gwy_app_undo_container_finalized:
+ * @userdata: Item from @container_list corresponding to finalized data.
  * @deceased_data: A #GwyContainer pointer (the object may not longer exits).
  *
  * Removes all undo and redo information for a container.
