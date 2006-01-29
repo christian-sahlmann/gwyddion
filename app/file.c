@@ -27,8 +27,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <gtk/gtk.h>
-#include "gwyapp.h"
-#include "data-browser.h"
+#include <app/gwyapp.h>
 
 enum {
     COLUMN_FILETYPE,
@@ -168,12 +167,10 @@ gwy_app_file_load(const gchar *filename_utf8,
                   const gchar *filename_sys,
                   const gchar *name)
 {
-    GtkWidget *data_window = NULL, *dialog, *data_browser;
+    GtkWidget *data_window = NULL, *dialog;
     gboolean free_utf8 = FALSE, free_sys = FALSE;
-    GwyContainer *data, *split_data;
+    GwyContainer *data;
     GError *err = NULL;
-    gint i, channel_count;
-    gchar *channel_key;
 
     g_return_val_if_fail(filename_utf8 || filename_sys, NULL);
     if (!filename_sys) {
@@ -209,26 +206,7 @@ gwy_app_file_load(const gchar *filename_utf8,
 
         /* TODO: replace by browser construction */
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_browser(data);
-
-        /*XXX: This code is total crap, but handy for now */
-        /*
-        channel_count = gwy_browser_get_n_channels(data);
-        for (i=0; i<channel_count; i++) {
-            channel_key = gwy_browser_get_channel_key(i);
-
-            split_data = gwy_container_duplicate_by_prefix(data,
-                                                           channel_key, NULL);
-            gwy_container_rename(split_data,
-                                 g_quark_from_string(channel_key),
-                                 g_quark_from_static_string("/0/data"),
-                                 TRUE);
-            data_window = gwy_app_data_window_create(split_data);
-            g_object_unref(split_data);
-        }
-        if (!data_window)
-            data_window = gwy_app_data_window_create(data);
-        */
+        gwy_app_data_browser_add(data);
         g_object_unref(data);
 
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),

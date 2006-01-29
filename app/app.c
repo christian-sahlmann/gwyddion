@@ -326,6 +326,10 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     gwy_debug("win = %p, tool = %p", window, current_tool);
     gwy_app_set_current_window(GTK_WIDGET(window));
+
+    data_view = gwy_data_window_get_data_view(window);
+    gwy_app_data_browser_select_data_view(data_view);
+
     if (already_current == window) {
         g_assert(current_data && current_data->data == (gpointer)window);
         return FALSE;
@@ -340,7 +344,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
-    data_view = gwy_data_window_get_data_view(window);
     data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
         state |= GWY_MENU_FLAG_UNDO;
@@ -1043,9 +1046,6 @@ gwy_app_3d_window_set_current(GtkWidget *window)
     current_3d = g_list_remove_link(current_3d, item);
     current_3d = g_list_concat(item, current_3d);
 
-    /* FIXME: hangs.
-     * gwy_app_toolbox_update_state(&sens_data);
-     * FIXME FIXME: does it still hang after return value fix? */
     gwy_app_set_current_window(window);
 
     return FALSE;

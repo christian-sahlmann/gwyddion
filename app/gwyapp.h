@@ -22,6 +22,7 @@
 #define __GWY_APP_GWYAPP_H__
 
 #include <app/app.h>
+#include <app/data-browser.h>
 #include <app/file.h>
 #include <app/filelist.h>
 #include <app/glmaterial-editor.h>

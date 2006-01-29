@@ -21,15 +21,20 @@
 #ifndef __GWY_DATA_BROWSER_H__
 #define __GWY_DATA_BROWSER_H__
 
-#include <libgwyddion/gwycontainer.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 
-void    gwy_app_data_browser            (GwyContainer *data);
+void gwy_app_data_browser_add             (GwyContainer *data);
+void gwy_app_data_browser_select_data_view(GwyDataView *data_view);
+void gwy_app_data_browser_select_graph    (GwyGraph *graph);
+/*
 gint    gwy_browser_get_n_channels      (GwyContainer *data);
 gchar*  gwy_browser_get_channel_title   (GwyContainer *data, guint channel);
 gchar*  gwy_browser_get_channel_key     (guint channel);
 GArray* gwy_browser_get_channel_numbers (GwyContainer *data);
+*/
 
 G_END_DECLS
 
