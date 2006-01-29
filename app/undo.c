@@ -20,7 +20,7 @@
 
 /* FIXME: non-object code paths are untested and may leak memory or even
  * crash */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdarg.h>
 #include <string.h>
@@ -353,8 +353,7 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
                 g_value_take_object(&item->value,
                                     gwy_serializable_duplicate(iobject));
             }
-            gwy_debug("Item (%lu,%x) created as new",
-                      level->id, item->key);
+            gwy_debug("Item (%lu,%x) created as new", level->id, item->key);
         }
     }
 
@@ -587,18 +586,15 @@ gwy_undo_container_set_unmodified(GwyContainer *data)
  * Removes all undo and redo information for a container.
  **/
 static void
-gwy_app_undo_container_finalized(G_GNUC_UNUSED gpointer userdata,
+gwy_app_undo_container_finalized(gpointer userdata,
                                  GObject *deceased_data)
 {
-    GwyAppUndo *appundo;
+    GList *item = (GList*)userdata;
+    GwyAppUndo *appundo = (GwyAppUndo*)item->data;
 
     gwy_debug("Freeing undo for Container %p", deceased_data);
-    /* must not typecast with GWY_CONTAINER(), it doesn't exist any more */
-    appundo = gwy_undo_get_for_data((GwyContainer*)deceased_data, FALSE);
-    g_return_if_fail(appundo);
-    /* gwy_undo_get_for_data() moves the item to list head */
-    g_assert(appundo == container_list->data);
-    container_list = g_list_delete_link(container_list, container_list);
+    g_assert(appundo->container == (gpointer)deceased_data);
+    container_list = g_list_delete_link(container_list, item);
     gwy_app_undo_list_free(appundo->redo);
     gwy_app_undo_list_free(appundo->undo);
     g_free(appundo);
@@ -656,7 +652,7 @@ gwy_undo_get_for_data(GwyContainer *data,
         appundo->container = data;
         container_list = g_list_prepend(container_list, appundo);
         g_object_weak_ref(G_OBJECT(data), gwy_app_undo_container_finalized,
-                          NULL);
+                          container_list);
 
         return appundo;
     }
