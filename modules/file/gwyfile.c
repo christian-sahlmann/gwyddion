@@ -43,11 +43,11 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 typedef struct {
-    GArray *map;
-    gint len;
-    gint *rmap;
-    GwyContainer *target;
-    GString *str;
+    GArray *map;   /* data numbers in container, map plain position -> id */
+    gint len;   /* length of reverse map @rmap */
+    gint *rmap;   /* inversion of @map, defined only for the image of @map */
+    GwyContainer *target;   /* container to remap keys to */
+    GString *str;   /* scratch space */
 } CompressIdData;
 
 static gboolean      module_register         (const gchar *name);
@@ -116,6 +116,7 @@ gwyfile_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
+    GwyContainer *data;
     GObject *object;
     GError *err = NULL;
     guchar *buffer = NULL;
@@ -155,17 +156,10 @@ gwyfile_load(const gchar *filename,
         g_object_unref(object);
         return NULL;
     }
+    data = gwyfile_compress_data_ids(GWY_CONTAINER(object));
+    g_object_unref(object);
 
-    /* XXX: This should be no longer a hard error, though it's still unexpected
-    dfield = gwy_container_get_object_by_name(GWY_CONTAINER(object), "/0/data");
-    if (!dfield || !GWY_IS_DATA_FIELD(dfield)) {
-        g_warning("File %s contains no data field", filename);
-        g_object_unref(object);
-        return NULL;
-    }
-    */
-
-    return (GwyContainer*)object;
+    return data;
 }
 
 static gboolean
@@ -199,6 +193,23 @@ gwyfile_save(GwyContainer *data,
     return ok;
 }
 
+/*****************************************************************************
+ *
+ * Data key compression
+ *
+ *****************************************************************************/
+
+/**
+ * key_get_int_prefix:
+ * @strkey: String container key.
+ * @len: Location to store integer prefix length if the string has an integer
+ *       prefix.
+ *
+ * Checks whether a container key starts with "/[0-9]+/" and gets the prefix
+ * number.
+ *
+ * Returns: The prefix number, or -1 if the key does not match.
+ **/
 static gint
 key_get_int_prefix(const gchar *strkey,
                    guint *len)
@@ -216,7 +227,16 @@ key_get_int_prefix(const gchar *strkey,
     return atoi(strkey + 1);
 }
 
-/* Check whether hash key matches "/[0-9]+/data" */
+/**
+ * hash_data_find_func:
+ * @key: Container key.
+ * @value: Value at @key.  When it matches, it must be an object.
+ * @user_data: #GArray of gint data indices.
+ *
+ * Checks whether hash key matches "/[0-9]+/data".
+ *
+ * If it matches, the data number is added to the @user_data array.
+ **/
 static void
 hash_data_find_func(gpointer key,
                     gpointer value,
@@ -315,6 +335,17 @@ compare_integers(gconstpointer a,
     return ia - ib;
 }
 
+/**
+ * gwyfile_compress_data_ids:
+ * @data: A data container.
+ *
+ * Creates a container with compressed data numbers.
+ *
+ * Returns: A container where data numbers form simple sequence from 0 onward.
+ *          It may be @data itself too, in such case a reference is added so
+ *          that caller should always use g_object_unref() on the returned
+ *          container to release it.
+ **/
 static GwyContainer*
 gwyfile_compress_data_ids(GwyContainer *data)
 {
