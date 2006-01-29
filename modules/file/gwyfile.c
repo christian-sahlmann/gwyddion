@@ -547,6 +547,11 @@ gwyfile_compress_graph_ids(GwyContainer *data)
     }
     else
         cidd.target = g_object_ref(data);
+    /* Keep 1.x compatibility */
+    gwy_container_remove_by_name(cidd.target, "/0/graph/lastid");
+    gwy_container_set_int32_by_name(cidd.target, "/0/graph/lastid",
+                                    cidd.map->len);
+
     g_array_free(cidd.map, TRUE);
 
     return cidd.target;
