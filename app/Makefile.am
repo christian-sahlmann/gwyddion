@@ -15,7 +15,6 @@ libgwyappinclude_HEADERS = \
 	filelist.h \
 	glmaterial-editor.h \
 	gradient-editor.h \
-	graphlist.h \
 	gwyapp.h \
 	menu.h \
 	menu-windowlist.h \
@@ -59,7 +58,6 @@ libgwyapp_la_SOURCES = \
 	filelist.c \
 	glmaterial-editor.c \
 	gradient-editor.c \
-	graphlist.c \
 	menu.c \
 	menu-windowlist.c \
 	settings.c \

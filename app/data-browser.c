@@ -49,7 +49,7 @@ typedef enum {
 enum {
     MODEL_ID,
     MODEL_OBJECT,
-    MODEL_VISIBLE,
+    MODEL_WIDGET,
     MODEL_N_COLUMNS
 };
 
@@ -181,7 +181,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
     gtk_list_store_set(proxy->channels, &iter,
                        MODEL_ID, i,
                        MODEL_OBJECT, object,
-                       MODEL_VISIBLE, FALSE,
+                       MODEL_WIDGET, NULL,
                        -1);
     if (proxy->last_channel < i)
         proxy->last_channel = i;
@@ -245,7 +245,7 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
     gtk_list_store_set(proxy->graphs, &iter,
                        MODEL_ID, i,
                        MODEL_OBJECT, object,
-                       MODEL_VISIBLE, FALSE,
+                       MODEL_WIDGET, NULL,
                        -1);
     if (proxy->last_graph < i)
         proxy->last_graph = i;
@@ -514,7 +514,7 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     proxy->channels = gtk_list_store_new(MODEL_N_COLUMNS,
                                          G_TYPE_INT,
                                          G_TYPE_OBJECT,
-                                         G_TYPE_BOOLEAN);
+                                         G_TYPE_OBJECT);
     proxy->last_channel = -1;
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(proxy->channels),
                                          MODEL_ID, GTK_SORT_ASCENDING);
@@ -522,7 +522,7 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     proxy->graphs = gtk_list_store_new(MODEL_N_COLUMNS,
                                        G_TYPE_INT,
                                        G_TYPE_OBJECT,
-                                       G_TYPE_BOOLEAN);
+                                       G_TYPE_OBJECT);
     /* For compatibility reasons, graphs are numbered from 1 */
     proxy->last_graph = 0;
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(proxy->graphs),
@@ -534,9 +534,9 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
 }
 
 static GwyAppDataProxy*
-gwy_app_data_proxy_get_for_data(GwyAppDataBrowser *browser,
-                                GwyContainer *data,
-                                gboolean do_create)
+gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
+                               GwyContainer *data,
+                               gboolean do_create)
 {
     GList *item;
 
@@ -557,6 +557,20 @@ gwy_app_data_proxy_get_for_data(GwyAppDataBrowser *browser,
     }
 
     return (GwyAppDataProxy*)item->data;
+}
+
+static void
+gwy_app_data_browser_render_visible(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                    GtkCellRenderer *renderer,
+                                    GtkTreeModel *model,
+                                    GtkTreeIter *iter,
+                                    G_GNUC_UNUSED gpointer userdata)
+{
+    GtkWidget *widget;
+
+    gtk_tree_model_get(model, iter, MODEL_WIDGET, &widget, -1);
+    g_object_set(G_OBJECT(renderer), "active", widget != NULL, NULL);
+    gwy_object_unref(widget);
 }
 
 static void
@@ -668,8 +682,10 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_data_browser_channel_toggled), browser);
     column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
-                                                      "active", MODEL_VISIBLE,
                                                       NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_visible, browser, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     /* Add the title column */
@@ -731,11 +747,72 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
 }
 
 static void
-gwy_app_data_browser_graph_toggled(G_GNUC_UNUSED GtkCellRendererToggle *cell_renderer,
-                                   gchar *path_str,
-                                   G_GNUC_UNUSED GwyAppDataBrowser *browser)
+gwy_app_data_browser_graph_deleted(G_GNUC_UNUSED GtkWidget *graph,
+                                   GtkCellRendererToggle *renderer)
 {
-    gwy_debug("Toggled data row %s", path_str);
+    gwy_debug("Graph %p deleted", graph);
+    gtk_cell_renderer_toggle_set_active(renderer, FALSE);
+}
+
+static GtkWidget*
+gwy_app_data_browser_create_graph(G_GNUC_UNUSED GwyAppDataBrowser *browser,
+                                  GtkCellRendererToggle *renderer,
+                                  GwyGraphModel *gmodel)
+{
+    GtkWidget *graph, *graph_window;
+
+    graph = gwy_graph_new(gmodel);
+    graph_window = gwy_graph_window_new(GWY_GRAPH(graph));
+    g_signal_connect_swapped(graph_window, "focus-in-event",
+                             G_CALLBACK(gwy_app_data_browser_select_graph),
+                             graph);
+    g_signal_connect(graph, "delete-event",
+                     G_CALLBACK(gwy_app_data_browser_graph_deleted), renderer);
+    gtk_widget_show_all(graph_window);
+
+    return graph;
+}
+
+static void
+gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
+                                   gchar *path_str,
+                                   GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+    GtkTreeModel *model;
+    GtkWidget *widget;
+    GObject *object;
+    gboolean active;
+
+    gwy_debug("Toggled graph row %s", path_str);
+    proxy = browser->current;
+    g_return_if_fail(proxy);
+
+    path = gtk_tree_path_new_from_string(path_str);
+    model = GTK_TREE_MODEL(proxy->graphs);
+
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter,
+                       MODEL_WIDGET, &widget,
+                       MODEL_OBJECT, &object,
+                       -1);
+    active = gtk_cell_renderer_toggle_get_active(renderer);
+    g_assert(active == (widget != NULL));
+    if (!active) {
+        widget = gwy_app_data_browser_create_graph(browser, renderer,
+                                                   GWY_GRAPH_MODEL(object));
+        gtk_list_store_set(proxy->graphs, &iter, MODEL_WIDGET, widget, -1);
+    }
+    else {
+        gtk_widget_destroy(widget);
+        gtk_list_store_set(proxy->graphs, &iter, MODEL_WIDGET, NULL, -1);
+        g_object_unref(widget);
+    }
+    g_object_unref(object);
 }
 
 static GtkWidget*
@@ -760,8 +837,10 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_data_browser_graph_toggled), browser);
     column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
-                                                      "active", MODEL_VISIBLE,
                                                       NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_visible, browser, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     /* Add the title column */
@@ -882,7 +961,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
         return;
     }
 
-    proxy = gwy_app_data_proxy_get_for_data(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
     browser->current = proxy;
     gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels),
@@ -911,7 +990,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     gwy_app_data_browser_switch_data(data);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_proxy_get_for_data(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
 
     layer = gwy_data_view_get_base_layer(data_view);
@@ -929,6 +1008,7 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
+    GwyGraphModel *gmodel;
     GtkTreeSelection *selection;
     GtkTreeIter iter;
     GwyContainer *data;
@@ -938,15 +1018,17 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     guint len;
     gint i;
 
-    data = g_object_get_data(G_OBJECT(graph), "gwy-app-data-browser-container");
+    gmodel = gwy_graph_get_model(graph);
+    data = g_object_get_data(G_OBJECT(gmodel),
+                             "gwy-app-data-browser-container");
     g_return_if_fail(data);
     gwy_app_data_browser_switch_data(data);
 
     browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_proxy_get_for_data(browser, data, FALSE);
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
 
-    quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(graph),
+    quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(gmodel),
                                                "gwy-app-data-browser-quark"));
     strkey = g_quark_to_string(quark);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, &len);
@@ -963,8 +1045,36 @@ gwy_app_data_browser_add(GwyContainer *data)
     GwyAppDataBrowser *browser;
 
     browser = gwy_app_get_data_browser();
-    gwy_app_data_proxy_get_for_data(browser, data, TRUE);
+    gwy_app_data_browser_get_proxy(browser, data, TRUE);
     /* Show first window or something like that */
+}
+
+void
+gwy_app_data_browser_add_graph(GwyGraphModel *gmodel,
+                               GwyContainer *data,
+                               G_GNUC_UNUSED gboolean showit)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GQuark quark;
+    gchar key[32];
+
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+
+    browser = gwy_app_get_data_browser();
+    if (data)
+        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    else
+        proxy = browser->current;
+    g_return_if_fail(proxy);
+
+    proxy->last_graph++;
+    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, proxy->last_graph);
+    quark = g_quark_from_string(key);
+    g_object_set_data(G_OBJECT(gmodel), "gwy-app-data-browser-container", data);
+    g_object_set_data(G_OBJECT(gmodel), "gwy-app-data-browser-quark",
+                      GUINT_TO_POINTER(quark));
+    gwy_container_set_object_by_name(proxy->container, key, gmodel);
 }
 
 #if 0

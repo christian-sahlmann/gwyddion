@@ -27,7 +27,6 @@
 #include <app/filelist.h>
 #include <app/glmaterial-editor.h>
 #include <app/gradient-editor.h>
-#include <app/graphlist.h>
 #include <app/menu.h>
 #include <app/menu-windowlist.h>
 #include <app/resource-editor.h>

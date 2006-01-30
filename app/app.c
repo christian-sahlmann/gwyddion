@@ -66,9 +66,6 @@ static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
 static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
 static void       gwy_app_set_current_window       (GtkWidget *window);
-static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
-                                                    GwyDataWindow *data_window);
-static gboolean   gwy_app_graph_list_delete_cb     (GtkWidget *toggle);
 static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
@@ -462,8 +459,6 @@ gwy_app_data_window_create(GwyContainer *data)
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
     g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_data_window_remove), NULL);
-    g_signal_connect(corner, "toggled",
-                     G_CALLBACK(gwy_app_graph_list_toggle_cb), data_window);
 
     g_signal_connect_swapped(data_view, "button-press-event",
                              G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
@@ -751,6 +746,7 @@ gwy_app_graph_window_get_current(void)
 gboolean
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
+    GtkWidget *graph;
     GList *item;
 
     gwy_debug("%p", window);
@@ -761,6 +757,8 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     current_graph = g_list_concat(item, current_graph);
 
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
+    graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(window));
+    gwy_app_data_browser_select_graph(GWY_GRAPH(graph));
     gwy_app_set_current_window(window);
 
     return FALSE;
@@ -836,14 +834,16 @@ gwy_app_graph_window_create(GwyGraph *graph,
     g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
+    g_warning("gwy_app_graph_window_create() is deprecated and broken");
+    gwy_app_data_browser_add_graph(gwy_graph_get_model(graph), data, FALSE);
+    gtk_widget_destroy(GTK_WIDGET(graph));
+    return NULL;
+
     window = gwy_graph_window_new(graph);
     gtk_container_set_border_width(GTK_CONTAINER (window), 0);
     gtk_window_add_accel_group
         (GTK_WINDOW(window),
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
-
-    gwy_app_graph_list_add(data, gwy_graph_get_model(graph),
-                           GWY_GRAPH_WINDOW(window));
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
@@ -857,59 +857,6 @@ gwy_app_graph_window_create(GwyGraph *graph,
     gtk_window_present(GTK_WINDOW(window));
 
     return window;
-}
-
-static void
-gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
-                             GwyDataWindow *data_window)
-{
-    GtkWidget *graph_view;
-    gint x, y;
-
-    graph_view = g_object_get_data(G_OBJECT(data_window), "graph-list-window");
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle))) {
-        gtk_window_get_position(GTK_WINDOW(graph_view), &x, &y);
-        /* to store zero reliably */
-        x += 10000;
-        y += 10000;
-        g_object_set_data(G_OBJECT(graph_view), "window-position-x",
-                          GINT_TO_POINTER(x));
-        g_object_set_data(G_OBJECT(graph_view), "window-position-y",
-                          GINT_TO_POINTER(y));
-        gtk_widget_hide(graph_view);
-        return;
-    }
-
-    if (graph_view) {
-        x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
-                                              "window-position-x"));
-        y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
-                                              "window-position-y"));
-        /* XXX: move twice since most windowmanagers ignore the first, nicer
-         * one */
-        if (x > 0 && y > 0)
-            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
-        gtk_widget_show(graph_view);
-        if (x > 0 && y > 0)
-            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
-        return;
-    }
-
-    graph_view = gwy_app_graph_list_new(data_window);
-    g_object_set_data(G_OBJECT(data_window), "graph-list-window", graph_view);
-    g_signal_connect_swapped(graph_view, "delete-event",
-                             G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
-    gtk_window_set_transient_for(GTK_WINDOW(graph_view),
-                                 GTK_WINDOW(data_window));
-    gtk_window_present(GTK_WINDOW(graph_view));
-}
-
-static gboolean
-gwy_app_graph_list_delete_cb(GtkWidget *toggle)
-{
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(toggle), FALSE);
-
-    return TRUE;
 }
 
 /*****************************************************************************

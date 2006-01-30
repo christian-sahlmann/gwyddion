@@ -29,6 +29,9 @@ G_BEGIN_DECLS
 void gwy_app_data_browser_add             (GwyContainer *data);
 void gwy_app_data_browser_select_data_view(GwyDataView *data_view);
 void gwy_app_data_browser_select_graph    (GwyGraph *graph);
+void gwy_app_data_browser_add_graph       (GwyGraphModel *gmodel,
+                                           GwyContainer *data,
+                                           gboolean showit);
 /*
 gint    gwy_browser_get_n_channels      (GwyContainer *data);
 gchar*  gwy_browser_get_channel_title   (GwyContainer *data, guint channel);
