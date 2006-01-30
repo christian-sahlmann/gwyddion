@@ -752,9 +752,12 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     gwy_debug("%p", window);
 
     item = g_list_find(current_graph, window);
-    g_return_val_if_fail(item, FALSE);
-    current_graph = g_list_remove_link(current_graph, item);
-    current_graph = g_list_concat(item, current_graph);
+    if (item) {
+        current_graph = g_list_remove_link(current_graph, item);
+        current_graph = g_list_concat(item, current_graph);
+    }
+    else
+        current_graph = g_list_prepend(current_graph, window);
 
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
     graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(window));
@@ -829,8 +832,6 @@ GtkWidget*
 gwy_app_graph_window_create(GwyGraph *graph,
                             GwyContainer *data)
 {
-    GtkWidget *window;
-
     g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
@@ -838,25 +839,6 @@ gwy_app_graph_window_create(GwyGraph *graph,
     gwy_app_data_browser_add_graph(gwy_graph_get_model(graph), data, FALSE);
     gtk_widget_destroy(GTK_WIDGET(graph));
     return NULL;
-
-    window = gwy_graph_window_new(graph);
-    gtk_container_set_border_width(GTK_CONTAINER (window), 0);
-    gtk_window_add_accel_group
-        (GTK_WINDOW(window),
-         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
-
-    g_signal_connect(window, "focus-in-event",
-                     G_CALLBACK(gwy_app_graph_window_set_current), NULL);
-    g_signal_connect(window, "destroy",
-                     G_CALLBACK(gwy_app_graph_window_remove), NULL);
-
-    current_graph = g_list_append(current_graph, window);
-
-    gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
-    gtk_widget_show_all(window);
-    gtk_window_present(GTK_WINDOW(window));
-
-    return window;
 }
 
 /*****************************************************************************

@@ -29,8 +29,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwygraphwindow.h>
 #include <libgwydgets/gwydatawindow.h>
-#include <app/undo.h>
-#include <app/data-browser.h>
+#include <app/gwyapp.h>
 
 /* The container prefix all graph reside in.  This is a bit silly but it does
  * not worth to break file compatibility with 1.x. */
@@ -755,22 +754,22 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
 }
 
 static gboolean
-gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
+gwy_app_data_browser_graph_deleted(GtkWidget *graph_window)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyAppKeyType type;
     GwyGraphModel *gmodel;
     GwyContainer *data;
-    GwyGraph *graph;
+    GtkWidget *graph;
     GtkTreeIter iter;
     const gchar *strkey;
     GQuark quark;
     gint i;
 
     gwy_debug("Graph window %p deleted", graph_window);
-    graph = (GwyGraph*)gwy_graph_window_get_graph(graph_window);
-    gmodel = gwy_graph_get_model(graph);
+    graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(graph_window));
+    gmodel = gwy_graph_get_model(GWY_GRAPH(graph));
     data = g_object_get_qdata(G_OBJECT(gmodel), container_quark);
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(gmodel),
                                                 own_key_quark));
@@ -789,7 +788,8 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
     }
 
     gtk_list_store_set(proxy->graphs, &iter, MODEL_WIDGET, NULL, -1);
-    gtk_widget_destroy(GTK_WIDGET(graph_window));
+    gwy_app_graph_window_remove(graph_window);
+    gtk_widget_destroy(graph_window);
 
     return TRUE;
 }
@@ -814,6 +814,8 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                              graph);
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), renderer);
+    /* This primarily adds the window to the list of visible windows */
+    gwy_app_graph_window_set_current(graph_window);
     gtk_widget_show_all(graph_window);
 
     return graph;
@@ -828,7 +830,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
-    GtkWidget *widget;
+    GtkWidget *widget, *window;
     GObject *object;
     gboolean active;
 
@@ -854,7 +856,9 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
         gtk_list_store_set(proxy->graphs, &iter, MODEL_WIDGET, widget, -1);
     }
     else {
-        gtk_widget_destroy(gtk_widget_get_toplevel(widget));
+        window = gtk_widget_get_toplevel(widget);
+        gwy_app_graph_window_remove(window);
+        gtk_widget_destroy(window);
         gtk_list_store_set(proxy->graphs, &iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
     }
