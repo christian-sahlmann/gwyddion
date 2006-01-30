@@ -108,6 +108,7 @@ pixmapdata_DATA = \
 	gwy_zoom_fit-24.png \
 	gwy_zoom_in-24.png \
 	gwy_zoom_out-24.png \
+	gwyddion.ico \
 	splash.png
 
 icondata_DATA = \
