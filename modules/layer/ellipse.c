@@ -537,11 +537,11 @@ gwy_layer_ellipse_set_reflection(GwyLayerEllipse *layer,
     if (draw_reflection == layer->draw_reflection)
         return;
 
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_ellipse_undraw(vector_layer, parent->window,
                                  GWY_RENDERING_TARGET_SCREEN);
     layer->draw_reflection = draw_reflection;
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_ellipse_draw(vector_layer, parent->window,
                                GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-reflection");

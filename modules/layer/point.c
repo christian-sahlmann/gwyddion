@@ -456,11 +456,11 @@ gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
     if (draw_marker == layer->draw_marker)
         return;
 
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_point_undraw(vector_layer, parent->window,
                                GWY_RENDERING_TARGET_SCREEN);
     layer->draw_marker = draw_marker;
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_point_draw(vector_layer, parent->window,
                              GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-marker");

@@ -276,11 +276,11 @@ gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
     if (line_numbers == layer->line_numbers)
         return;
 
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_line_undraw(vector_layer, parent->window,
                               GWY_RENDERING_TARGET_SCREEN);
     layer->line_numbers = line_numbers;
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_line_draw(vector_layer, parent->window,
                             GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "line-numbers");

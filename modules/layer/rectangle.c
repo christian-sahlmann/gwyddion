@@ -569,11 +569,11 @@ gwy_layer_rectangle_set_is_crop(GwyLayerRectangle *layer,
     if (is_crop == layer->is_crop)
         return;
 
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_rectangle_undraw(vector_layer, parent->window,
                                    GWY_RENDERING_TARGET_SCREEN);
     layer->is_crop = is_crop;
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_rectangle_draw(vector_layer, parent->window,
                                  GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "is-crop");
