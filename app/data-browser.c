@@ -1487,6 +1487,23 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
     return proxy->channels.last + 1;
 }
 
+void
+gwy_app_data_browser_blow_up(void)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+
+    browser = gwy_app_get_data_browser();
+    browser->current = NULL;
+    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels), NULL);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs), NULL);
+    while (browser->container_list) {
+        proxy = (GwyAppDataProxy*)browser->container_list->data;
+        gwy_app_data_proxy_container_finalized(browser->container_list,
+                                               (GObject*)proxy->container);
+    }
+}
+
 /************************** Documentation ****************************/
 
 /**

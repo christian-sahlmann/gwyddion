@@ -111,12 +111,15 @@ gwy_app_quit(void)
     if (!gwy_app_confirm_quit())
         return TRUE;
 
+    /* XXX
     while ((widget = (GtkWidget*)(gwy_app_graph_window_get_current())))
         gtk_widget_destroy(widget);
     while ((widget = (GtkWidget*)(gwy_app_3d_window_get_current())))
         gtk_widget_destroy(widget);
     while ((widget = (GtkWidget*)(gwy_app_data_window_get_current())))
         gtk_widget_destroy(widget);
+        */
+    gwy_app_data_browser_blow_up();
 
     gtk_main_quit();
     return TRUE;
