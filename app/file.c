@@ -50,6 +50,8 @@ static gchar *current_dir = NULL;
 
 /*** Queer stuff that maybe even doesn't belong here ***********************/
 
+/* FIXME: This is broken.  Make it duplicate one data field, or selection.
+ * File duplication could be possible too, but as a less direct function. */
 void
 gwy_app_file_duplicate_cb(void)
 {
@@ -204,14 +206,8 @@ gwy_app_file_load(const gchar *filename_utf8,
             gwy_container_set_string_by_name(data, "/filename",
                                              g_strdup(filename_utf8));
 
-        /* TODO: replace by browser construction */
-        data_window = gwy_app_data_window_create(data);
         gwy_app_data_browser_add(data);
-        g_object_unref(data);
-
-        gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
-                                        filename_utf8,
-                                        filename_sys);
+        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys);
         gwy_app_set_current_directory(filename_sys);
     }
     else {
@@ -352,11 +348,7 @@ gwy_app_file_write(GwyContainer *data,
         else
             gwy_container_set_string_by_name(data, "/filename",
                                              g_strdup(filename_utf8));
-
-        /* FIXME: get rid of GwyDataWindowism */
-        gwy_app_recent_file_list_update(gwy_app_data_window_get_for_data(data),
-                                        filename_utf8,
-                                        filename_sys);
+        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys);
 
         case GWY_FILE_OPERATION_EXPORT:
         gwy_app_set_current_directory(filename_sys);

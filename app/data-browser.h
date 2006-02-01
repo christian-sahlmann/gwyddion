@@ -21,6 +21,7 @@
 #ifndef __GWY_DATA_BROWSER_H__
 #define __GWY_DATA_BROWSER_H__
 
+#include <libprocess/datafield.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraph.h>
 
@@ -29,7 +30,10 @@ G_BEGIN_DECLS
 void gwy_app_data_browser_add             (GwyContainer *data);
 void gwy_app_data_browser_select_data_view(GwyDataView *data_view);
 void gwy_app_data_browser_select_graph    (GwyGraph *graph);
-void gwy_app_data_browser_add_graph       (GwyGraphModel *gmodel,
+gint gwy_app_data_browser_add_channel     (GwyDataField *dfield,
+                                           GwyContainer *data,
+                                           gboolean showit);
+gint gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
                                            GwyContainer *data,
                                            gboolean showit);
 

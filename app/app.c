@@ -165,6 +165,28 @@ gwy_app_main_window_restore_position(void)
 }
 
 /**
+ * gwy_app_add_main_accel_group:
+ * @window: A window.
+ *
+ * Adds main (global) application accelerator group to a window.
+ **/
+void
+gwy_app_add_main_accel_group(GtkWindow *window)
+{
+    GtkWidget *main_window;
+    GtkAccelGroup *accel_group;
+
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    main_window = gwy_app_main_window_get();
+    g_return_if_fail(GTK_IS_WINDOW(main_window));
+
+    accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
+                                                    "accel_group"));
+    g_return_if_fail(GTK_IS_ACCEL_GROUP(accel_group));
+    gtk_window_add_accel_group(window, accel_group);
+}
+
+/**
  * gwy_app_main_window_get:
  *
  * Returns Gwyddion main application window (toolbox).
@@ -334,12 +356,17 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(window), FALSE);
     item = g_list_find(current_data, window);
-    g_return_val_if_fail(item, FALSE);
-    current_data = g_list_remove_link(current_data, item);
-    current_data = g_list_concat(item, current_data);
+    if (item) {
+        current_data = g_list_remove_link(current_data, item);
+        current_data = g_list_concat(item, current_data);
+    }
+    else
+        current_data = g_list_prepend(current_data, window);
 
+    /*
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
+        */
 
     data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
@@ -417,12 +444,17 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 GtkWidget*
 gwy_app_data_window_create(GwyContainer *data)
 {
-    static GtkWidget *popup_menu = NULL;
-
-    GtkWidget *window, *view, *corner;
+    /*
+    GtkWidget *window, *view;
     GwyDataWindow *data_window;
     GwyDataView *data_view;
+    */
 
+    g_warning("gwy_app_data_window_create() is deprecated and broken");
+    gwy_app_data_browser_add(data);
+    return NULL;
+
+    /*
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     if (!popup_menu) {
         popup_menu = gwy_app_menu_data_popup_create(NULL);
@@ -435,37 +467,10 @@ gwy_app_data_window_create(GwyContainer *data)
     window = gwy_data_window_new(data_view);
     data_window = GWY_DATA_WINDOW(window);
 
-    gtk_window_add_accel_group
-        (GTK_WINDOW(window),
-         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
-
-    /* FIXME: integrate better to DataWindow? */
-    {
-        corner = gtk_toggle_button_new();
-        g_object_set(G_OBJECT(corner),
-                     "can-default", FALSE,
-                     "can-focus", FALSE,
-                     "border-width", 1,
-                     NULL);
-        gtk_widget_set_name(corner, "cornerbutton");
-        gtk_container_add(GTK_CONTAINER(corner),
-                          gtk_image_new_from_stock(GWY_STOCK_GRAPH,
-                                                   GTK_ICON_SIZE_MENU));
-        gtk_widget_show_all(corner);
-        gwy_data_window_set_ul_corner_widget(data_window, corner);
-    }
-
     g_signal_connect(data_window, "focus-in-event",
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
     g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_data_window_remove), NULL);
-
-    g_signal_connect_swapped(data_view, "button-press-event",
-                             G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
-                             popup_menu);
-    g_signal_connect_swapped(data_window, "popup-menu",
-                             G_CALLBACK(gwy_app_data_popup_menu_popup_key),
-                             popup_menu);
 
     gwy_app_data_window_add(data_window);
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA);
@@ -475,6 +480,28 @@ gwy_app_data_window_create(GwyContainer *data)
     gwy_app_data_window_list_updated();
 
     return window;
+    */
+}
+
+void
+gwy_app_data_window_setup(GwyDataWindow *data_window)
+{
+    static GtkWidget *popup_menu = NULL;
+
+    GwyDataView *data_view;
+
+    if (!popup_menu) {
+        popup_menu = gwy_app_menu_data_popup_create(NULL);
+        gtk_widget_show_all(popup_menu);
+    }
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    g_signal_connect_swapped(data_view, "button-press-event",
+                             G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
+                             popup_menu);
+    g_signal_connect_swapped(data_window, "popup-menu",
+                             G_CALLBACK(gwy_app_data_popup_menu_popup_key),
+                             popup_menu);
 }
 
 static void
@@ -836,7 +863,8 @@ gwy_app_graph_window_create(GwyGraph *graph,
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     g_warning("gwy_app_graph_window_create() is deprecated and broken");
-    gwy_app_data_browser_add_graph(gwy_graph_get_model(graph), data, FALSE);
+    gwy_app_data_browser_add_graph_model(gwy_graph_get_model(graph),
+                                         data, FALSE);
     gtk_widget_destroy(GTK_WIDGET(graph));
     return NULL;
 }
@@ -885,9 +913,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     gwy_3d_view_set_gradient_key(GWY_3D_VIEW(gwy3dview), "/0/3d/palette");
     gwy_3d_view_set_material_key(GWY_3D_VIEW(gwy3dview), "/0/3d/material");
     gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
-    gtk_window_add_accel_group
-        (GTK_WINDOW(gwy3dwindow),
-         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
+    gwy_app_add_main_accel_group(GTK_WINDOW(gwy3dwindow));
 
     name = gwy_data_window_get_base_name(data_window);
     title = g_strconcat("3D ", name, NULL);

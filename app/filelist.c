@@ -658,7 +658,7 @@ gwy_app_recent_file_list_free(void)
 
 /**
  * gwy_app_recent_file_list_update:
- * @data_window: A data window corresponding to the file (for thumbnails).
+ * @data: A data container corresponding to the file.
  * @filename_utf8: A recent file to insert or move to the first position in
  *                 document history, in UTF-8.
  * @filename_sys: A recent file to insert or move to the first position in
@@ -670,10 +670,11 @@ gwy_app_recent_file_list_free(void)
  * At least one of @filename_utf8, @filename_sys should be set.
  **/
 void
-gwy_app_recent_file_list_update(GwyDataWindow *data_window,
+gwy_app_recent_file_list_update(GwyContainer *data,
                                 const gchar *filename_utf8,
                                 const gchar *filename_sys)
 {
+    /*g_return_if_fail(GWY_IS_CONTAINER(data));*/
     g_return_if_fail(gcontrols.store);
 
     /* Prepare argument to be eaten */
@@ -714,8 +715,12 @@ gwy_app_recent_file_list_update(GwyDataWindow *data_window,
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
 
-        if (data_window)
-            gwy_recent_file_update_thumbnail(rf, data_window);
+        if (data) {
+            /* XXX */
+            g_warning("Thumbnail update temporary disabled due "
+                      "to GwyDataWindow-isms.");
+            /* gwy_recent_file_update_thumbnail(rf, data_window); */
+        }
     }
 
     gwy_app_recent_file_list_update_menu(&gcontrols);

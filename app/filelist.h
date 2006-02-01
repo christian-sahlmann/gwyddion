@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 GtkWidget* gwy_app_recent_file_list_new     (void);
-void       gwy_app_recent_file_list_update  (GwyDataWindow *data_window,
+void       gwy_app_recent_file_list_update  (GwyContainer *data,
                                              const gchar *filename_utf8,
                                              const gchar *filename_sys);
 gboolean   gwy_app_recent_file_list_load    (const gchar *filename);
