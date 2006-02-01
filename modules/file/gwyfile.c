@@ -534,7 +534,7 @@ gwyfile_compress_graph_ids(GwyContainer *data)
     CompressIdData cidd;
 
     cidd.map = g_array_new(FALSE, FALSE, sizeof(gint));
-    gwy_container_foreach(data, NULL, hash_graph_find_func, cidd.map);
+    gwy_container_foreach(data, GRAPH_PREFIX, hash_graph_find_func, cidd.map);
 
     /* For historic reasons graphs start from 1.  Graph with id=0 makes
      * 1.x crash. */
