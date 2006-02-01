@@ -727,4 +727,27 @@ gwy_app_file_types_new(GtkFileChooserAction action)
 
 /************************** Documentation ****************************/
 
+/**
+ * SECTION:file
+ * @title: file
+ * @short_description: High level file functions
+ *
+ * High-level functions gwy_app_file_load() and gwy_app_file_write()
+ * wrap low-level file handling functions from
+ * <link linkend="libgwymodule-gwymodule-file">gwymodule-file</link>
+ * and handle registration of loaded containers in data browser, showing
+ * windows, remembering file types, or the differenced between save and export.
+ *
+ * They are complemented by application-level functions gwy_app_file_open(),
+ * gwy_app_file_save(), and gwy_app_file_save_as() that perform the
+ * corresponding operations of File menu.  These are probably not of general
+ * interest.
+ *
+ * Beside that, functions to maintain application-level idea of current
+ * directory are provided: gwy_app_get_current_directory(),
+ * gwy_app_set_current_directory().  They should be used in place of system
+ * chdir() which has various unwanted side-effect, like change of the directory
+ * where core is dumped on segfault.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

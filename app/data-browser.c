@@ -80,16 +80,32 @@ static void               gwy_app_data_browser_switch_data(GwyContainer *data);
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
 
+/**
+ * gwy_app_data_proxy_compare_data:
+ * @a: Pointer to a #GwyAppDataProxy.
+ * @b: Pointer to a #GwyContainer.
+ *
+ * Compares two containers (one of them referenced by a data proxy).
+ *
+ * Returns: Zero if the containers are equal, nonzero otherwise.  This function
+ *          is intended only for equality tests, not ordering.
+ **/
 static gint
 gwy_app_data_proxy_compare_data(gconstpointer a,
                                 gconstpointer b)
 {
     GwyAppDataProxy *ua = (GwyAppDataProxy*)a;
 
-    /* sign does not matter, only used for equality test */
     return (guchar*)ua->container - (guchar*)b;
 }
 
+/**
+ * emit_row_changed:
+ * @store: A list store.
+ * @iter: A tree model iterator that belongs to @store.
+ *
+ * Auxiliary function to emit "row-changed" signal on a list store.
+ **/
 static void
 emit_row_changed(GtkListStore *store,
                  GtkTreeIter *iter)
@@ -313,6 +329,17 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
     g_object_unref(old);
 }
 
+/**
+ * gwy_app_data_proxy_scan_data:
+ * @key: Container quark key.
+ * @value: Value at @key.
+ * @userdata: Data proxy.
+ *
+ * Adds a data object from Container to data proxy.
+ *
+ * More precisely, if the key and value is found to be data channel or graph
+ * it's added.  Other container items are ignored.
+ **/
 static void
 gwy_app_data_proxy_scan_data(gpointer key,
                              gpointer value,
@@ -361,8 +388,18 @@ gwy_app_data_proxy_scan_data(gpointer key,
     }
 }
 
+/**
+ * gwy_app_data_proxy_finalize_list:
+ * @model: A tree model.
+ * @column: Model column that contains the objects.
+ * @func: A callback connected to the objects.
+ * @data: User data for @func.
+ *
+ * Disconnect a callback from all objects in a tree model.
+ **/
 static void
 gwy_app_data_proxy_finalize_list(GtkTreeModel *model,
+                                 gint column,
                                  gpointer func,
                                  gpointer data)
 {
@@ -373,7 +410,7 @@ gwy_app_data_proxy_finalize_list(GtkTreeModel *model,
         return;
 
     do {
-        gtk_tree_model_get(model, &iter, MODEL_OBJECT, &object, -1);
+        gtk_tree_model_get(model, &iter, column, &object, -1);
         g_signal_handlers_disconnect_by_func(object, func, data);
         g_object_unref(object);
     } while (gtk_tree_model_iter_next(model, &iter));
@@ -406,9 +443,11 @@ gwy_app_data_proxy_container_finalized(gpointer userdata,
     browser->container_list = g_list_delete_link(browser->container_list, item);
 
     gwy_app_data_proxy_finalize_list(GTK_TREE_MODEL(proxy->channels),
+                                     MODEL_OBJECT,
                                      &gwy_app_data_proxy_channel_changed,
                                      proxy);
     gwy_app_data_proxy_finalize_list(GTK_TREE_MODEL(proxy->graphs),
+                                     MODEL_OBJECT,
                                      &gwy_app_data_proxy_graph_changed,
                                      proxy);
     g_free(proxy);
@@ -444,6 +483,14 @@ gwy_app_data_proxy_find_object(GtkTreeModel *model,
     return FALSE;
 }
 
+/**
+ * gwy_app_data_proxy_item_changed:
+ * @data: A data container.
+ * @quark: Quark key of item that has changed.
+ * @proxy: Data proxy.
+ *
+ * Updates a data proxy in response to a Container "item-changed" signal.
+ **/
 static void
 gwy_app_data_proxy_item_changed(GwyContainer *data,
                                 GQuark quark,
@@ -514,6 +561,19 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     }
 }
 
+/**
+ * gwy_app_data_proxy_new:
+ * @browser: Parent data browser for the new proxy.
+ * @data: Data container to manage by the new proxy.
+ *
+ * Creates a data proxy for a data container.
+ *
+ * Note not only @parent field of the new proxy is set to @browser, but in
+ * addition the new proxy is added to @browser's container list (as the new
+ * list head).
+ *
+ * Returns: A new data proxy.
+ **/
 static GwyAppDataProxy*
 gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
                        GwyContainer *data)
@@ -553,6 +613,19 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     return proxy;
 }
 
+/**
+ * gwy_app_data_browser_get_proxy:
+ * @browser: A data browser.
+ * @data: The container to find data proxy for.
+ * @do_create: %TRUE to create a new proxy when none is found, %FALSE to return
+ *             %NULL when proxy is not found.
+ *
+ * Finds data proxy managing a container.
+ *
+ * Returns: The data proxy managing container (perhaps newly created when
+ *          @do_create is %TRUE), or %NULL.  It is assumed only one proxy
+ *          exists for each container.
+ **/
 static GwyAppDataProxy*
 gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
                                GwyContainer *data,
@@ -753,6 +826,17 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
     g_object_set(G_OBJECT(renderer), "text", s, NULL);
 }
 
+/**
+ * gwy_app_data_browser_graph_deleted:
+ * @graph_window: A graph window that was deleted.
+ *
+ * Destroys a deleted graph window, updating proxy.
+ *
+ * This functions makes sure various updates happen in reasonable order,
+ * simple gtk_widget_destroy() on the graph window would not do that.
+ *
+ * Returns: Always %TRUE to be usable as terminal event handler.
+ **/
 static gboolean
 gwy_app_data_browser_graph_deleted(GtkWidget *graph_window)
 {
@@ -794,9 +878,17 @@ gwy_app_data_browser_graph_deleted(GtkWidget *graph_window)
     return TRUE;
 }
 
+/**
+ * gwy_app_data_browser_create_graph:
+ * @browser: A data browser.
+ * @gmodel: The graph model to create graph window for.
+ *
+ * Creates a graph window for a graph model when its visibility is switched on.
+ *
+ * Returns: The graph widget (NOT graph window).
+ **/
 static GtkWidget*
 gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
-                                  GtkCellRendererToggle *renderer,
                                   GwyGraphModel *gmodel)
 {
     GtkWidget *graph, *graph_window;
@@ -813,7 +905,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                              G_CALLBACK(gwy_app_data_browser_select_graph),
                              graph);
     g_signal_connect(graph_window, "delete-event",
-                     G_CALLBACK(gwy_app_data_browser_graph_deleted), renderer);
+                     G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     /* This primarily adds the window to the list of visible windows */
     gwy_app_graph_window_set_current(graph_window);
     gtk_widget_show_all(graph_window);
@@ -851,7 +943,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     active = gtk_cell_renderer_toggle_get_active(renderer);
     g_assert(active == (widget != NULL));
     if (!active) {
-        widget = gwy_app_data_browser_create_graph(browser, renderer,
+        widget = gwy_app_data_browser_create_graph(browser,
                                                    GWY_GRAPH_MODEL(object));
         gtk_list_store_set(proxy->graphs, &iter, MODEL_WIDGET, widget, -1);
     }
@@ -1027,6 +1119,13 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     /* TODO: set title, selection, ... */
 }
 
+/**
+ * gwy_app_data_browser_select_data_view:
+ * @data_view: A data view widget.
+ *
+ * Switches application data browser to display container of @data_view's data
+ * and selects @data_view's data in the channel list.
+ **/
 void
 gwy_app_data_browser_select_data_view(GwyDataView *data_view)
 {
@@ -1057,6 +1156,13 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     gtk_tree_selection_select_iter(selection, &iter);
 }
 
+/**
+ * gwy_app_data_browser_select_data_view:
+ * @graph: A graph widget.
+ *
+ * Switches application data browser to display container of @graph's data
+ * and selects @graph's data in the graph list.
+ **/
 void
 gwy_app_data_browser_select_graph(GwyGraph *graph)
 {
@@ -1091,6 +1197,18 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     gtk_tree_selection_select_iter(selection, &iter);
 }
 
+/**
+ * gwy_app_data_browser_add:
+ * @data: A data container.
+ *
+ * Adds a data container to application data browser.
+ *
+ * The container is then managed by the data browser until it's destroyed.
+ * Since the data browser does not add any reference, the container is normally
+ * destroyed when there is no view (any: channel, graph) showing its
+ * contents.  Make sure such a view exists before you release your reference
+ * to @data.
+ **/
 void
 gwy_app_data_browser_add(GwyContainer *data)
 {
@@ -1126,5 +1244,13 @@ gwy_app_data_browser_add_graph(GwyGraphModel *gmodel,
     /* This invokes "item-changed" callback that will finish the work */
     gwy_container_set_object_by_name(proxy->container, key, gmodel);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:data-browser
+ * @title: data-browser
+ * @short_description: Data browser
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
