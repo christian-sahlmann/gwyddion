@@ -854,8 +854,8 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
     /* This primarily adds the window to the list of visible windows */
     gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
-    gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
     gtk_widget_show_all(data_window);
+    gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
 
     return data_view;
 }
@@ -1082,8 +1082,8 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     /* This primarily adds the window to the list of visible windows */
     gwy_app_add_main_accel_group(GTK_WINDOW(graph_window));
-    gwy_app_graph_window_set_current(graph_window);
     gtk_widget_show_all(graph_window);
+    gwy_app_graph_window_set_current(graph_window);
 
     return graph;
 }

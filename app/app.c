@@ -363,10 +363,8 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     else
         current_data = g_list_prepend(current_data, window);
 
-    /*
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
-        */
 
     data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
