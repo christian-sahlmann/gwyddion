@@ -665,6 +665,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             "<StockItem>",
             GTK_STOCK_REDO 
         },
+        /*
         {
             N_("/_Duplicate"),
             "<control>D",
@@ -673,6 +674,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             "<StockItem>",
             GTK_STOCK_COPY 
         },
+        */
         {
             "/---",
             NULL,
@@ -750,7 +752,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
 
     set_sensitivity(item_factory,
-                    "<edit>/Duplicate", GWY_MENU_FLAG_DATA,
+                    /* "<edit>/Duplicate", GWY_MENU_FLAG_DATA, */
                     "<edit>/Undo", GWY_MENU_FLAG_UNDO,
                     "<edit>/Redo", GWY_MENU_FLAG_REDO,
                     "<edit>/Remove Mask", GWY_MENU_FLAG_DATA_MASK,
