@@ -1,11 +1,13 @@
-1.99.5cvs20060113
+1.99.5cvs20060201
 
 1.99.6
 Application:
 - New file selection dialogs, with embedded file type options (replacing
-  File Export and Import menus).
+  File Export and Import menus) and possibility to select several files.
 - File loading/saving errors are reported in the GUI instead of being printed
   to console.
+- When gwyddion is run with a directory argument, it opens a file selector
+  in this directory.
 - Metadata is editable.
 
 Libraries:
@@ -15,10 +17,23 @@ Libraries:
   does not cause file name change.
 - libgwymodule: File modules report errors via GError, have interactive/
   /noninteractive run modes.
+- libgwymodule, libgwyapp: Run modes was changed to match reality.
+- libgwydgets: GwySensitivityGroup flag-based widget sensitivity manager.
+- libgwymodule, libgwyapp: Construction of menus from registered modules was
+  moved to app.
+- libgwyapp: Module functions with untranslated menu paths are properly
+  merged into translated menus.
 
 Modules:
+- All: Feature registration has changed, more, less, or different information
+  is provided for particular function types during registration.
+- File modules: Import all (importable) data present in files instead of
+  presenting channel choosers.  Metadata were temporarily disabled in most
+  modules.
 - Rawfile: It is possible to switch off automatic import of uknown files as
-  raw data
+  raw data, presets are stored in external files, a few GUI fixes.
+- Layer modules: Support for focusing one object was added, nearest object
+  search in ellipse and rectangle was fixed.
 
 
 1.99.5 (2005-12-20)

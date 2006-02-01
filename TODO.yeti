@@ -1,6 +1,5 @@
 HEAD
-- Files: store type in container on successful load/save, attempt to save
-  only as this type on Ctrl-S
+- Import from transparent PNG show some weird image in preview.
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
