@@ -210,6 +210,7 @@ gwy_app_file_load(const gchar *filename_utf8,
         gwy_app_data_browser_add(data);
         gwy_app_recent_file_list_update(data, filename_utf8, filename_sys);
         gwy_app_set_current_directory(filename_sys);
+        g_object_unref(data);
     }
     else {
         if (err->code != GWY_MODULE_FILE_ERROR_CANCELLED) {
