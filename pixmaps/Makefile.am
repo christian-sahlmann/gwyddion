@@ -101,7 +101,7 @@ pixmapdata_DATA = \
 	gwy_spot_remove-24.png \
 	gwy_stat_quantities-24.png \
 	gwy_subscript-20.png \
-	gwy_superscript-24.png \
+	gwy_superscript-20.png \
 	gwy_unrotate-24.png \
 	gwy_value_invert-24.png \
 	gwy_zoom_1_1-24.png \
