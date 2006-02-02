@@ -79,7 +79,13 @@ struct _GwyAppDataProxy {
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
-static void               gwy_app_data_browser_switch_data(GwyContainer *data);
+static void gwy_app_data_browser_switch_data(GwyContainer *data);
+static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
+                                             GQuark quark,
+                                             GwyDataView *data_view);
+static void gwy_app_data_browser_sync_show  (GwyContainer *data,
+                                             GQuark quark,
+                                             GwyDataView *data_view);
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
@@ -514,6 +520,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     const gchar *strkey;
     GwyAppKeyType type;
     GtkTreeIter iter;
+    GwyDataView *data_view;
     gboolean found;
     gint i;
 
@@ -564,6 +571,16 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         found = gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter);
         if (found)
             emit_row_changed(proxy->channels.list, &iter);
+        gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
+                           MODEL_WIDGET, &data_view,
+                           -1);
+        if (data_view) {
+            if (type == KEY_IS_MASK)
+                gwy_app_data_browser_sync_mask(data, quark, data_view);
+            else
+                gwy_app_data_browser_sync_show(data, quark, data_view);
+            g_object_unref(data_view);
+        }
         break;
 
         default:
@@ -796,6 +813,82 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
     return TRUE;
 }
 
+static void
+gwy_app_data_proxy_setup_mask(GwyContainer *data,
+                              gint i)
+{
+    static const gchar *keys[] = {
+        "/%d/mask/red", "/%d/mask/green", "/%d/mask/blue", "/%d/mask/alpha"
+    };
+
+    GwyContainer *settings;
+    gchar key[32];
+    gdouble x;
+    guint j;
+
+    settings = gwy_app_settings_get();
+    for (j = 0; j < G_N_ELEMENTS(keys); j++) {
+        g_snprintf(key, sizeof(key), keys[j], i);
+        if (gwy_container_contains_by_name(data, key))
+            continue;
+        /* be noisy when we don't have default mask color */
+        /* XXX: This is a dirty trick stripping the first 3 chars of key */
+        x = gwy_container_get_double_by_name(settings, keys[j] + 3);
+        gwy_container_set_double_by_name(data, key, x);
+    }
+}
+
+static void
+gwy_app_data_browser_sync_show(GwyContainer *data,
+                               GQuark quark,
+                               G_GNUC_UNUSED GwyDataView *data_view)
+{
+    gboolean has_show;
+
+    if (data != gwy_app_get_current_data())
+        return;
+
+    has_show = gwy_container_contains(data, quark);
+    gwy_debug("Syncing show sens flags");
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_SHOW,
+                                  has_show ? GWY_MENU_FLAG_DATA_SHOW: 0);
+}
+
+static void
+gwy_app_data_browser_sync_mask(GwyContainer *data,
+                               GQuark quark,
+                               GwyDataView *data_view)
+{
+    gboolean has_dfield, has_layer;
+    const gchar *strkey;
+    GwyPixmapLayer *layer;
+    GwyAppKeyType type;
+    gint i;
+
+    has_dfield = gwy_container_contains(data, quark);
+    has_layer = gwy_data_view_get_alpha_layer(data_view) != NULL;
+    gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
+
+    if (has_dfield && !has_layer) {
+        strkey = g_quark_to_string(quark);
+        i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+        gwy_app_data_proxy_setup_mask(data, i);
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, strkey);
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), strkey);
+        gwy_data_view_set_alpha_layer(data_view, layer);
+    }
+    else if (!has_dfield && has_layer)
+        gwy_data_view_set_alpha_layer(data_view, NULL);
+
+    if (has_dfield != has_layer
+        && data == gwy_app_get_current_data()) {
+        gwy_debug("Syncing mask sens flags");
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_MASK,
+                                      has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0);
+    }
+}
+
 /**
  * gwy_app_data_browser_create_channel:
  * @browser: A data browser.
@@ -845,6 +938,7 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     data_view = gwy_data_view_new(data);
     g_object_unref(data);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
+
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
 
     g_signal_connect_swapped(data_window, "focus-in-event",
@@ -857,6 +951,10 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     gtk_widget_show_all(data_window);
     /* This primarily adds the window to the list of visible windows */
     gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
+
+    g_snprintf(key, sizeof(key), "/%d/mask", i);
+    quark = g_quark_from_string(key);
+    gwy_app_data_browser_sync_mask(data, quark, GWY_DATA_VIEW(data_view));
 
     return data_view;
 }

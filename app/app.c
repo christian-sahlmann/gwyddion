@@ -49,15 +49,6 @@ static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
-static void       gwy_app_data_view_setup_layers1  (GwyDataView *data_view);
-static void       gwy_app_data_view_setup_layers2  (GwyDataView *data_view);
-static void       gwy_app_data_view_mask_changed   (GwyContainer *data,
-                                                    GQuark quark,
-                                                    GwyDataView *data_view);
-static void       gwy_app_data_view_show_changed   (GwyLayerBasic *basic_layer,
-                                                    GwyDataView *data_view);
-static void       gwy_app_container_setup_mask     (GwyContainer *data);
-static void       gwy_app_data_window_list_updated (void);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                                       GdkEventButton *event,
@@ -104,20 +95,10 @@ set_sensitivity(GtkItemFactory *item_factory, ...)
 gboolean
 gwy_app_quit(void)
 {
-    GtkWidget *widget;
-
     gwy_debug("");
     if (!gwy_app_confirm_quit())
         return TRUE;
 
-    /* XXX
-    while ((widget = (GtkWidget*)(gwy_app_graph_window_get_current())))
-        gtk_widget_destroy(widget);
-    while ((widget = (GtkWidget*)(gwy_app_3d_window_get_current())))
-        gtk_widget_destroy(widget);
-    while ((widget = (GtkWidget*)(gwy_app_data_window_get_current())))
-        gtk_widget_destroy(widget);
-        */
     gwy_app_data_browser_blow_up();
 
     gtk_main_quit();
@@ -420,15 +401,12 @@ gwy_app_data_window_remove(GwyDataWindow *window)
               current_data ? current_data->data : NULL);
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
-        gwy_app_data_window_list_updated();
         return;
     }
 
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
     gwy_app_sensitivity_set_state(mask, 0);
-
-    gwy_app_data_window_list_updated();
 }
 
 /**
@@ -477,8 +455,6 @@ gwy_app_data_window_create(GwyContainer *data)
     gwy_app_data_view_setup_layers2(data_view);
     gtk_window_present(GTK_WINDOW(window));
 
-    gwy_app_data_window_list_updated();
-
     return window;
     */
 }
@@ -502,135 +478,6 @@ gwy_app_data_window_setup(GwyDataWindow *data_window)
     g_signal_connect_swapped(data_window, "popup-menu",
                              G_CALLBACK(gwy_app_data_popup_menu_popup_key),
                              popup_menu);
-}
-
-static void
-gwy_app_data_view_setup_layers1(GwyDataView *data_view)
-{
-    GwyPixmapLayer *layer;
-    GwyLayerBasic *blayer;
-
-    /* base */
-    gwy_debug("%p %p", data_view, data);
-    layer = gwy_layer_basic_new();
-    blayer = GWY_LAYER_BASIC(layer);
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_presentation_key(blayer, "/0/show");
-    gwy_layer_basic_set_gradient_key(blayer, "/0/base/palette");
-    gwy_layer_basic_set_range_type_key(blayer, "/0/base/range-type");
-    gwy_layer_basic_set_min_max_key(blayer, "/0/base");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
-}
-
-static void
-gwy_app_data_view_setup_layers2(GwyDataView *data_view)
-{
-    GwyLayerBasic *blayer;
-    GwyContainer *data;
-
-    data = gwy_data_view_get_data(data_view);
-    blayer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
-
-    /* force sync */
-    gwy_app_data_view_mask_changed(data, g_quark_from_string("/0/mask"),
-                                   data_view);
-    gwy_app_data_view_show_changed(blayer, data_view);
-
-    g_signal_connect(data, "item-changed::/0/mask",
-                     G_CALLBACK(gwy_app_data_view_mask_changed), data_view);
-    g_signal_connect(blayer, "presentation-switched",
-                     G_CALLBACK(gwy_app_data_view_show_changed), data_view);
-}
-
-/**
- * gwy_app_data_view_mask_changed:
- * @data: A container coreesponding to @data_view.
- * @data_view: A data view.
- *
- * Adds or removes alpha layer depending on container contents.
- **/
-static void
-gwy_app_data_view_mask_changed(GwyContainer *data,
-                               GQuark quark,
-                               GwyDataView *data_view)
-{
-    gboolean has_dfield, has_layer;
-    const gchar *key;
-    GwyPixmapLayer *layer;
-
-    has_dfield = gwy_container_contains(data, quark);
-    has_layer = gwy_data_view_get_alpha_layer(data_view) != NULL;
-    gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
-
-    if (has_dfield && !has_layer) {
-        key = g_quark_to_string(quark);
-        gwy_app_container_setup_mask(data);
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, key);
-        /* TODO: Container */
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), key);
-        gwy_data_view_set_alpha_layer(data_view, layer);
-    }
-    else if (!has_dfield && has_layer)
-        gwy_data_view_set_alpha_layer(data_view, NULL);
-
-    if (has_dfield != has_layer
-        && data == gwy_app_get_current_data()) {
-        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_MASK,
-                                      has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0);
-    }
-}
-
-static void
-gwy_app_data_view_show_changed(GwyLayerBasic *basic_layer,
-                               GwyDataView *data_view)
-{
-    gboolean has_show;
-
-    if (gwy_data_view_get_data(data_view) != gwy_app_get_current_data())
-        return;
-
-    has_show = gwy_layer_basic_get_has_presentation(basic_layer);
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_SHOW,
-                                  has_show ? GWY_MENU_FLAG_DATA_SHOW: 0);
-}
-
-/**
- * gwy_app_container_setup_mask:
- * @data: A data container.
- *
- * Eventually copies default mask color to particular data mask color.
- **/
-static void
-gwy_app_container_setup_mask(GwyContainer *data)
-{
-    static const gchar *keys[] = {
-        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
-    };
-
-    GwyContainer *settings;
-    gdouble x;
-    guint i;
-
-    settings = gwy_app_settings_get();
-    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
-        if (gwy_container_contains_by_name(data, keys[i]))
-            continue;
-        /* be noisy when we don't have default mask color */
-        x = gwy_container_get_double_by_name(settings, keys[i] + 2);
-        gwy_container_set_double_by_name(data, keys[i], x);
-    }
-}
-
-static void
-gwy_app_data_window_list_updated(void)
-{
-    gwy_debug("");
-
-    if (!window_list_hook_list.is_setup)
-        return;
-
-    g_hook_list_invoke(&window_list_hook_list, FALSE);
 }
 
 /**
