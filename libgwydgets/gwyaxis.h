@@ -130,6 +130,8 @@ void        gwy_axis_set_logarithmic    (GwyAxis *axis,
                                          gboolean is_logarithmic);
 void        gwy_axis_set_visible        (GwyAxis *axis,
                                          gboolean is_visible);
+gboolean    gwy_axis_is_visible         (GwyAxis *axis);
+gboolean    gwy_axis_is_logarithmic     (GwyAxis *axis);
 void        gwy_axis_set_auto           (GwyAxis *axis,
                                          gboolean is_auto);
 void        gwy_axis_set_req            (GwyAxis *axis,

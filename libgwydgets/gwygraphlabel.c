@@ -164,7 +164,7 @@ gwy_graph_label_realize(GtkWidget *widget)
     gdk_window_set_user_data(widget->window, widget);
     widget->style = gtk_style_attach(widget->style, widget->window);
 
-    /*set backgroun for white forever*/
+    /*set background for white forever*/
     s = gtk_style_copy(widget->style);
     s->bg_gc[0] =
     s->bg_gc[1] =
@@ -511,7 +511,7 @@ gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
  * @height: hieght of the graph label
  * @fontsize: fontsize of the label
  *
- * Returns: the graph label vector as a string
+ * Returns: the graph label vector (piece of postscript code) as a string
  **/
 GString*
 gwy_graph_label_export_vector(GwyGraphLabel *label,

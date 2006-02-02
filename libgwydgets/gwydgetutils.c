@@ -715,6 +715,8 @@ gwy_gdk_cursor_free_or_unref(GdkCursor **cursor)
         *cursor = NULL;
 }
 
+
+
 /************************** Documentation ****************************/
 
 /**

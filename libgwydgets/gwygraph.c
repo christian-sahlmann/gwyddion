@@ -467,7 +467,8 @@ gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
  * @type: Axis orientation
  * @is_visible: set/unset axis visibility within graph widget
  *
- * Sets the visibility of graph axis of given orientation.
+ * Sets the visibility of graph axis of given orientation. Visibility
+ * can be set also directly using GwyAxis API.
  **/
 void
 gwy_graph_set_axis_visible(GwyGraph *graph,
@@ -535,7 +536,6 @@ gwy_graph_get_status(GwyGraph *graph)
     return graph->area->status;
 }
 
-/*XXX: what are the units? */
 /**
  * gwy_graph_request_x_range:
  * @graph: A graph widget.
@@ -621,7 +621,7 @@ gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max)
  * @y_min: y minimum
  * @y_max: y maximum
  *
- * Get the actual boudaries of graph area and axis in the y direction
+ * Get the actual boundaries of graph area and axis in the y direction
  * and store them in y_min and y_max.
  **/
 void

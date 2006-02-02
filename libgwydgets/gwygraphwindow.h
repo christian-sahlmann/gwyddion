@@ -61,6 +61,8 @@ struct _GwyGraphWindow {
 
     GtkWidget *statusbar;
 
+    GwyGraphStatusType last_status;
+
     GtkWidget *widget1;
     GtkWidget *widget2;
     GtkWidget *widget3;

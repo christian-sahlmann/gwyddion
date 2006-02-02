@@ -67,15 +67,17 @@ main(int argc, char *argv[])
 
     ppow = 1000*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
     for (i = 0; i < 10; i++) {
-        xp[i] = 1 + i*0.99;
+        xp[i] = 1 + 1*i*0.99;
         yp[i] = sin(i/6.28);
-/*        xp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
-        xp[i]*=xp[i]*xp[i]*pow(10, xp[i]*pow(10000000, xp[i]))*ppow;
-        xp[i] -= rand()/RAND_MAX*xp[i];
-        yp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
-        yp[i]*=yp[i]*yp[i]*pow(10, yp[i]*pow(10000000, xp[i]))*ppow;
-        yp[i] -= rand()/RAND_MAX*xp[i];*/
-        printf("%g %g\n", xp[i], yp[i]);
+        xp[i] *= 1e-3;
+        yp[i] *= 1e-3;
+//        xp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
+//        xp[i]*=xp[i]*xp[i]*pow(10, xp[i]*pow(10000000, xp[i]))*ppow;
+//        xp[i] -= rand()/RAND_MAX*xp[i];
+//        yp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
+//        yp[i]*=yp[i]*yp[i]*pow(10, yp[i]*pow(10000000, xp[i]))*ppow;
+//        yp[i] -= rand()/RAND_MAX*xp[i];
+        //printf("%g %g\n", xp[i], yp[i]);
     }
     gtk_init(&argc, &argv);
 
@@ -110,12 +112,21 @@ main(int argc, char *argv[])
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, yp, 10);
     gwy_graph_curve_model_set_description(model, "parabola");
-
     gwy_graph_model_add_curve(gmodel, model);
-   
     gwy_graph_model_set_label_visible(gmodel, TRUE);
     
-    gwindow = gwy_graph_window_new(graph);
+    model = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(model, xp, yp, 10);
+    gwy_graph_curve_model_set_description(model, "fd");
+//    gwy_graph_model_add_curve(gmodel, model);
+    gwy_graph_model_set_label_visible(gmodel, TRUE);
+
+    model = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(model, xp, yp, 10);
+    gwy_graph_curve_model_set_description(model, "fdsfsdf");
+//    gwy_graph_model_add_curve(gmodel, model);
+    gwy_graph_model_set_label_visible(gmodel, TRUE);
+     gwindow = gwy_graph_window_new(graph);
 
     gtk_widget_set_size_request(gwindow, 300, 200);
     gtk_widget_show (gwindow);

@@ -26,6 +26,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <gtk/gtk.h>
 #include <app/gwyapp.h>
 
@@ -39,7 +40,7 @@ typedef struct {
     GwyFileOperationType fileop;
 } TypeListData;
 
-static gboolean   confirm_overwrite              (GtkWidget *chooser);
+//static gboolean   confirm_overwrite              (GtkWidget *chooser);
 static void       gwy_app_file_add_types         (GtkListStore *store,
                                                   GwyFileOperationType fileop);
 static void       gwy_app_file_select_type       (GtkWidget *selector);
@@ -459,7 +460,7 @@ gwy_app_file_save_as(void)
         filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         if (filename_sys
             && (!g_file_test(filename_sys, G_FILE_TEST_EXISTS)
-                || confirm_overwrite(dialog))) {
+                || gwy_app_file_confirm_overwrite(dialog))) {
             gwy_app_file_write(data, NULL, filename_sys, name);
             break;
         }
@@ -471,8 +472,9 @@ gwy_app_file_save_as(void)
     g_free(name);
 }
 
-static gboolean
-confirm_overwrite(GtkWidget *chooser)
+
+gboolean
+gwy_app_file_confirm_overwrite(GtkWidget *chooser)
 {
     GtkWidget *dialog;
     gchar *filename_sys, *filename_utf8, *dirname_sys, *dirname_utf8,

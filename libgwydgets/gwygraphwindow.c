@@ -55,9 +55,6 @@ static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
 static GtkTooltips *tooltips = NULL;
 static gboolean tooltips_set = FALSE;
 
-/* XXX XXX XXX extreme brain damage XXX XXX XXX */
-static GwyGraphStatusType last_status = 0;
-
 /*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
 
 G_DEFINE_TYPE(GwyGraphWindow, gwy_graph_window, GTK_TYPE_WINDOW)
@@ -126,6 +123,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_container_add(GTK_CONTAINER(GTK_WINDOW(graphwindow)), vbox);
 
     graphwindow->graph = GTK_WIDGET(graph);
+    graphwindow->last_status = gwy_graph_get_status(graphwindow->graph);
 
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
@@ -369,11 +367,11 @@ gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
 {
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
     {
-        last_status = gwy_graph_get_status(GWY_GRAPH(graphwindow->graph));
+        graphwindow->last_status = gwy_graph_get_status(GWY_GRAPH(graphwindow->graph));
         gwy_graph_zoom_in(GWY_GRAPH(graphwindow->graph));
     }
     else
-        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
+        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), graphwindow->last_status);
 }
 
 static void
@@ -386,7 +384,7 @@ static void
 gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
+    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), graphwindow->last_status);
 }
 
 

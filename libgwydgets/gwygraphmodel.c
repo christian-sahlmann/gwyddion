@@ -128,11 +128,11 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->y_unit = gwy_si_unit_new("");
 
     /* XXX: GwyGraph has no such thing */
-    gmodel->title = g_string_new("FIXME: Mysterious Graph");
+    gmodel->title = g_string_new("Graph");
     gmodel->top_label = g_string_new("");
     gmodel->bottom_label = g_string_new("x");
-    gmodel->left_label = g_string_new("y");
-    gmodel->right_label = g_string_new("");
+    gmodel->left_label = g_string_new("");
+    gmodel->right_label = g_string_new("y");
 
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
     gmodel->label_has_frame = 1;

@@ -818,7 +818,6 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             selection_areadata[3] = dy;
 
          gwy_selection_set_object(GWY_SELECTION(area->areasdata), GWY_SELECTION(area->areasdata)->n - 1, selection_areadata);
-         //gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)
@@ -1359,8 +1358,8 @@ gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_curs
     }
 }
 
-static
-gboolean gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *event)
+static gboolean 
+gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *event)
 {
     GwyGraphArea *area = GWY_GRAPH_AREA(widget);
 
@@ -1387,7 +1386,8 @@ static gchar *symbols[] =
  * @area: the graph area to export
  *
  **/
-GString* gwy_graph_area_export_vector(GwyGraphArea *area,
+GString* 
+gwy_graph_area_export_vector(GwyGraphArea *area,
                                       gint x, gint y,
                                       gint width, gint height)
 {
@@ -1429,6 +1429,7 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
     g_string_append_printf(out, "box\n");
     g_string_append_printf(out, "clip\n");
 
+    
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve_by_index(model, i);
@@ -1473,6 +1474,15 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
     }
     g_string_append_printf(out, "grestore\n");
 
+    /*plot boundary*/
+    g_string_append_printf(out, "%d setlinewidth\n", 2);
+    g_string_append_printf(out, "%d %d M\n", x, y);
+    g_string_append_printf(out, "%d %d L\n", x + width, y);
+    g_string_append_printf(out, "%d %d L\n", x + width, y + height);
+    g_string_append_printf(out, "%d %d L\n", x, y + height);
+    g_string_append_printf(out, "%d %d L\n", x, y);
+    g_string_append_printf(out, "stroke\n");
+    
     return out;
 }
 

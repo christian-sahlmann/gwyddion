@@ -113,20 +113,32 @@ gwy_graph_export_postscript(GwyGraph *graph,
 {
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
+    GwyGraphModel *gmodel = graph->graph_model;
     gint fontsize = 20;
+    gint borderskip = 30;
    
-    width = 600;
-    height = 450;
+    width = (GTK_WIDGET(graph))->allocation.width;
+    height = (GTK_WIDGET(graph))->allocation.height;
     areax = 90;
     areay = 90;
-    areaw = width - 2*areax;
-    areah = height - 2*areay;
-    hpt = vpt = 3;
+    
+    if (gwy_axis_is_visible(graph->axis_left) && gwy_axis_is_visible(graph->axis_right)) 
+        areaw = width - 2*areax;
+    else if (gwy_axis_is_visible(graph->axis_left) || gwy_axis_is_visible(graph->axis_right))
+        areaw = width - areax - borderskip;
+    else areaw = width - 2*borderskip;
+    
+    if (gwy_axis_is_visible(graph->axis_top) && gwy_axis_is_visible(graph->axis_bottom)) 
+        areah = height - 2*areay;
+    else if (gwy_axis_is_visible(graph->axis_top) || gwy_axis_is_visible(graph->axis_bottom))
+        areah = height - areay - borderskip;
+    else areah = height - 2*borderskip;
+     
+    hpt = vpt = 1;
    
-    /*TODO remove the empirical quadratic part of these relations*/
-    labelh = graph->area->lab->reqheight*fontsize
-        /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE
-        - 0.07*fontsize*fontsize;
+    /*TODO remove the empirical part of these relations*/
+    labelh = 5 + 15*gwy_graph_model_get_n_curves(gmodel)*fontsize
+        /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE;
     labelw = graph->area->lab->reqwidth*fontsize
         /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE
         - 0.08*fontsize*fontsize;
@@ -187,19 +199,30 @@ gwy_graph_export_postscript(GwyGraph *graph,
 
     
     /*write axises*/
-    psaxis = gwy_axis_export_vector(graph->axis_bottom, areax, 0, areaw, areay, fontsize);
-    g_string_append_printf(string, "%s", psaxis->str);
-    g_string_free(psaxis, TRUE);
-    psaxis = gwy_axis_export_vector(graph->axis_top, areax, areay + areah, areaw, areay, fontsize);
-    g_string_append_printf(string, "%s", psaxis->str);
-    g_string_free(psaxis, TRUE);
-    psaxis = gwy_axis_export_vector(graph->axis_left, 0, areay, areax, areah, fontsize);
-    g_string_append_printf(string, "%s", psaxis->str);
-    g_string_free(psaxis, TRUE);
-    psaxis = gwy_axis_export_vector(graph->axis_right, areax + areaw, areay, areax, areah, fontsize);
-    g_string_append_printf(string, "%s", psaxis->str);
-    g_string_free(psaxis, TRUE);
-
+    if (gwy_axis_is_visible(graph->axis_bottom))
+    {
+        psaxis = gwy_axis_export_vector(graph->axis_bottom, areax, 0, areaw, areay, fontsize);
+        g_string_append_printf(string, "%s", psaxis->str);
+        g_string_free(psaxis, TRUE);
+    }
+    if (gwy_axis_is_visible(graph->axis_top))
+    {
+        psaxis = gwy_axis_export_vector(graph->axis_top, areax, areay + areah, areaw, areay, fontsize);
+        g_string_append_printf(string, "%s", psaxis->str);
+        g_string_free(psaxis, TRUE);
+    }
+    if (gwy_axis_is_visible(graph->axis_right))
+    {
+        psaxis = gwy_axis_export_vector(graph->axis_right, 0, areay, areax, areah, fontsize);
+        g_string_append_printf(string, "%s", psaxis->str);
+        g_string_free(psaxis, TRUE);
+    }
+    if (gwy_axis_is_visible(graph->axis_left))
+    {
+        psaxis = gwy_axis_export_vector(graph->axis_left, areax + areaw, areay, areax, areah, fontsize);
+        g_string_append_printf(string, "%s", psaxis->str);
+        g_string_free(psaxis, TRUE);
+    }
 
     /*write area*/
     psarea = gwy_graph_area_export_vector(graph->area, areax, areay, areaw, areah);

@@ -78,6 +78,9 @@ void         gwy_gdk_cursor_new_or_ref      (GdkCursor **cursor,
                                              GdkCursorType type);
 void         gwy_gdk_cursor_free_or_unref   (GdkCursor **cursor);
 
+
+
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDGET_UTILS_H__ */

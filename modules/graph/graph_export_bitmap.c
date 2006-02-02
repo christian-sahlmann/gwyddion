@@ -71,13 +71,19 @@ export(GwyGraph *graph)
                                                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                           GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
                                                           NULL));
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
+                                             gwy_app_get_current_directory());
+
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-        
-        pixbuf = gwy_graph_export_pixmap(graph, 
+        if (!g_file_test(filename, G_FILE_TEST_EXISTS)
+                                 || gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
+        {
+            pixbuf = gwy_graph_export_pixmap(graph, 
                                          TRUE, TRUE, TRUE, pixbuf);
-        gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
+            gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
+        }
     }
     gtk_widget_destroy(GTK_WIDGET(filedialog));
 }

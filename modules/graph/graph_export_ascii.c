@@ -210,16 +210,22 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
                                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                             GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
                                                             NULL));
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
+                                             gwy_app_get_current_directory());
         if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
         {
             filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-            string = gwy_graph_model_export_ascii(graph->graph_model, filename,
+            if (!g_file_test(filename, G_FILE_TEST_EXISTS)
+                                 || gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
+            {
+                string = gwy_graph_model_export_ascii(graph->graph_model, filename,
                                          controls.units, controls.labels, controls.metadata,
                                          controls.style, string);
             
-            fw = g_fopen(filename, "w");
-            fprintf(fw, "%s", string->str);
-            fclose(fw);
+                fw = g_fopen(filename, "w");
+                fprintf(fw, "%s", string->str);
+                fclose(fw);
+            }
         }
         gtk_widget_destroy(GTK_WIDGET(filedialog));
         settings = gwy_app_settings_get();
