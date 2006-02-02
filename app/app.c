@@ -58,7 +58,6 @@ static void       gwy_app_data_view_show_changed   (GwyLayerBasic *basic_layer,
                                                     GwyDataView *data_view);
 static void       gwy_app_container_setup_mask     (GwyContainer *data);
 static void       gwy_app_data_window_list_updated (void);
-static void       gwy_app_data_window_add          (GwyDataWindow *window);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                                       GdkEventButton *event,
@@ -681,23 +680,6 @@ gwy_app_data_window_list_remove_hook(gulong hook_id)
     g_return_val_if_fail(window_list_hook_list.is_setup, FALSE);
 
     return g_hook_destroy(&window_list_hook_list, hook_id);
-}
-
-/*
- * Assures @window is present in the data window list, but doesn't make
- * it current.
- */
-static void
-gwy_app_data_window_add(GwyDataWindow *window)
-{
-    gwy_debug("%p", window);
-
-    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
-
-    if (g_list_find(current_data, window))
-        return;
-
-    current_data = g_list_append(current_data, window);
 }
 
 /**
@@ -1328,23 +1310,6 @@ gwy_app_zoom_set_cb(gpointer data)
     data_window = gwy_app_data_window_get_current();
     g_return_if_fail(data_window);
     gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
-}
-
-/**
- * gwy_app_clean_up_data:
- * @data: A data container.
- *
- * Cleans-up a data container.
- *
- * XXX: Generally, it should remove some things that you might not want to
- * copy to the new data window.  Currently it removes selection.
- **/
-void
-gwy_app_clean_up_data(GwyContainer *data)
-{
-    /* TODO: Container */
-    /* FIXME: This is dirty. Clean-up various individual stuff. */
-    gwy_container_remove_by_prefix(data, "/0/select");
 }
 
 static void

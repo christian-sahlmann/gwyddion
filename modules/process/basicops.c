@@ -214,7 +214,6 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & BASICOPS_RUN_MODES);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = gwy_container_duplicate(data);
-    gwy_app_clean_up_data(newdata);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
                                                              "/0/data"));
     flip_xy(old, dfield, FALSE);
@@ -241,7 +240,6 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & BASICOPS_RUN_MODES);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = gwy_container_duplicate(data);
-    gwy_app_clean_up_data(newdata);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
                                                              "/0/data"));
     flip_xy(old, dfield, TRUE);
@@ -328,7 +326,6 @@ square_samples(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & BASICOPS_RUN_MODES);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = gwy_container_duplicate(data);
-    gwy_app_clean_up_data(newdata);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
                                                              "/0/data"));
     xres = gwy_data_field_get_xres(dfield);

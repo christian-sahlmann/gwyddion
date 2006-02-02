@@ -1207,7 +1207,6 @@ text_dump_import(GwyContainer *old_data,
 
     if (old_data) {
         data = gwy_container_duplicate(old_data);
-        gwy_app_clean_up_data(data);
     }
     else
         data = gwy_container_new();

@@ -252,14 +252,11 @@ run_main(GwyContainer *data, GwyRunType run)
     controls.cont_data = data;
     controls.cont_fft = gwy_container_duplicate_by_prefix(data, "/0/data",
                                                           NULL);
-    gwy_app_clean_up_data(controls.cont_fft);
 
     cont_output_image = gwy_container_duplicate_by_prefix(data, "/0/data",
                                                           "/0/base/palette",
                                                           NULL);
     cont_output_fft = gwy_container_duplicate_by_prefix(data, "/0/data", NULL);
-    gwy_app_clean_up_data(cont_output_image);
-    gwy_app_clean_up_data(cont_output_fft);
     controls.data_output_image = get_container_data(cont_output_image);
     controls.data_output_fft = get_container_data(cont_output_fft);
 

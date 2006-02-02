@@ -535,7 +535,6 @@ drift_ok(DriftControls *controls,
     if (args->is_correct)
     {
         newdata = gwy_container_duplicate_by_prefix(controls->mydata, "/0/data", NULL);
-        gwy_app_clean_up_data(newdata);
         newdata_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata, "/0/data"));
         data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 

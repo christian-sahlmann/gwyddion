@@ -137,7 +137,6 @@ unrotate(GwyContainer *data, GwyRunType run)
         symm = args.symmetry;
     phi = correction[symm];
     data = gwy_container_duplicate(data);
-    gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
 

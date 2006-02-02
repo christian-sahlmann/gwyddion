@@ -68,8 +68,8 @@ GtkWidget*     gwy_app_main_window_get             (void);
 
 gboolean       gwy_app_quit                        (void);
 
-/* FIXME: ugly. to be moved somewhere? refactored? */
-void            gwy_app_clean_up_data                (GwyContainer *data);
+/* XXX: hack */
+void            gwy_app_data_window_setup          (GwyDataWindow *data_window);
 
 G_END_DECLS
 
