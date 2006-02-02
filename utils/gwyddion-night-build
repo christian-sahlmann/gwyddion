@@ -45,15 +45,6 @@ function getlist() {
 }
 
 # =====[ components ]========================================================
-function update_tags() {
-  ctags *
-  subdirs=$(getlist Makefile.am SUBDIRS)
-  for d in $subdirs; do
-    cd ./$d && { update_tags; cd ..; }
-  done
-}
-
-
 function update_version() {
   version=${basever}
   test -n "$dont_update_version" && return
@@ -75,6 +66,9 @@ function autostuff() {
 function build_project() {
   make -k clean
   make -k
+  # Use ctags to build tags
+  # Prevent automake from exporting CTAGS some garbage in CTAGS
+  make -k tags ETAGS=ctags CTAGS="$CTAGS"
   ./utils/update-msvc.py
 }
 
@@ -223,7 +217,6 @@ if test -n "$1"; then
 else
   rm -f $logdir/*
   # LIST-BEGIN
-  call update_tags
   call update_version
   call autostuff
   call build_project

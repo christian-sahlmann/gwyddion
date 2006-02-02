@@ -107,7 +107,6 @@ function coding_style_report() {
   printf '% 7d  total' $(wc -l <coding-style.log) >>$phpdir/$base.txt
 }
 
-printerr update_tags
 printerr update_version
 printerr autostuff
 printerr build_project
