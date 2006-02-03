@@ -253,6 +253,7 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
     editor->mode_group = group;
 
     editor->curve = gwy_curve_new();
+    g_object_set(editor->curve, "snap", TRUE, NULL);
     gwy_curve_set_range(GWY_CURVE(editor->curve), 0, 1, 0, 1);
     colors[0].r = 0.95; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
     colors[1].r = 0; colors[1].g = 0.9; colors[1].b = 0; colors[1].a = 1;

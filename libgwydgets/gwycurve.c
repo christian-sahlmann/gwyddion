@@ -45,14 +45,22 @@
  */
 
 /*
- * Modified by Chris Anderson 2005.
+ * Modified by Chris Anderson 2005-2006.
  * GwyCurve is based on GtkCurve (instead of subclassing) since GtkCurve
  * can be subject to removal from Gtk+ at some unspecified point in the future.
+ *
+ * Changes:
+ *   - Cleaned up and standardized data structures
+ *   - Support for any number of "channels"
+ *   - Better access to control points
+ *   - Control point snapping
  */
 
 /*TODO: Update documentation */
 /*TODO: Deal with freehand mode */
 /*TODO: Some kind of node-snap, or column node-snap */
+/*        o Fix problem with MIN_DISTANCE and SNAP_THRESH (assymmetry)*/
+/*        o show vertical line when control points line up */
 
 #include <config.h>
 #include <stdlib.h>
@@ -68,7 +76,10 @@
 //#include <libdraw/gwyrgba.h>
 
 #define RADIUS          3   /* radius of the control points */
-#define MIN_DISTANCE    8   /* min distance between control points */
+#define MIN_DISTANCE    20   /* min distance between control points */
+#define SNAP_THRESH     10   /* maximum distance to allow snap */
+
+
 
 #define GRAPH_MASK  (GDK_EXPOSURE_MASK |        \
                      GDK_POINTER_MOTION_MASK |  \
@@ -90,7 +101,8 @@ enum {
     PROP_MIN_X,
     PROP_MAX_X,
     PROP_MIN_Y,
-    PROP_MAX_Y
+    PROP_MAX_Y,
+    PROP_SNAP,
 };
 
 static GtkDrawingAreaClass *parent_class = NULL;
@@ -196,12 +208,20 @@ gwy_curve_class_init (GwyCurveClass *class)
                                         G_PARAM_WRITABLE));
     g_object_class_install_property(gobject_class,
                                     PROP_MAX_Y,
-                                    g_param_spec_float ("max-y",
+                                    g_param_spec_float("max-y",
                                         "Maximum Y",
                                         "Maximum possible value for Y",
                                         -G_MAXFLOAT,
                                         G_MAXFLOAT,
                                         1.0,
+                                        G_PARAM_READABLE |
+                                        G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_SNAP,
+                                    g_param_spec_boolean("snap",
+                                        "Snap Mode",
+                                        "Snap to control points mode",
+                                        TRUE,
                                         G_PARAM_READABLE |
                                         G_PARAM_WRITABLE));
 
@@ -252,6 +272,10 @@ gwy_curve_get_property(GObject *object, guint prop_id,
         g_value_set_float(value, curve->max_y);
         break;
 
+        case PROP_SNAP:
+        g_value_set_boolean(value, curve->snap);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -288,6 +312,10 @@ gwy_curve_set_property(GObject *object, guint prop_id,
         case PROP_MAX_Y:
         gwy_curve_set_range(curve, curve->min_x, curve->max_x,
                             curve->min_y, g_value_get_float(value));
+        break;
+
+        case PROP_SNAP:
+            curve->snap = g_value_get_boolean(value);
         break;
 
         default:
@@ -610,8 +638,8 @@ gwy_curve_motion_notify(GwyCurve *c)
     gint i, j, leftbound, rightbound;
     gfloat rx, ry;
     GtkWidget *w;
-    GwyChannelData *channel;
-    guint distance, distance2;
+    GwyChannelData *channel, *channel2;
+    gfloat distance, distance2;
     gint closest_point = 0;
     gint closest_channel = 0;
 
@@ -689,6 +717,30 @@ gwy_curve_motion_notify(GwyCurve *c)
 
             channel->ctlpoints[c->grab_point].x = rx;
             channel->ctlpoints[c->grab_point].y = ry;
+
+            if (c->snap && rx > 0) {
+                /* Look in other channels for closest control point to this
+                one. If it is within the threshold, snap to it.*/
+                for (i=0, distance = 2; i < c->num_channels; i++) {
+                    if (i != c->grab_channel) {
+                        channel2 = &c->channel_data[i];
+                        for (j=0; j<channel->num_ctlpoints; ++j) {
+                            distance2 = fabs(channel2->ctlpoints[j].x - rx);
+                            if (distance2 < distance) {
+                                distance = distance2;
+                                closest_point = j;
+                                closest_channel = i;
+                            }
+                        }
+                    }
+                }
+                if (project(distance,c->min_x,c->max_x,width) < SNAP_THRESH) {
+                    g_debug("SNAP!");
+                    channel2 = &c->channel_data[closest_channel];
+                    channel->ctlpoints[c->grab_point].x =
+                             channel2->ctlpoints[closest_point].x;
+                }
+            }
 
             gwy_curve_interpolate(c, width, height);
             gwy_curve_draw(c, width, height);

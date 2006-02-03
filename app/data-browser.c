@@ -1449,7 +1449,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
 }
 
 /**
- * gwy_app_data_browser_select_data_view:
+ * gwy_app_data_browser_select_graph:
  * @graph: A graph widget.
  *
  * Switches application data browser to display container of @graph's data

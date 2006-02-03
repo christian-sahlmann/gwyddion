@@ -105,6 +105,7 @@ struct _GwyCurve {
     gfloat max_x;
     gfloat min_y;
     gfloat max_y;
+    gboolean snap;
     GdkPixmap *pixmap;
     GwyCurveType curve_type;
     gint height;                  /* (cached) graph height in pixels */
