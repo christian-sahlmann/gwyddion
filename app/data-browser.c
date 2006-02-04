@@ -43,6 +43,12 @@ typedef enum {
     KEY_IS_GRAPH
 } GwyAppKeyType;
 
+/* Notebook pages */
+enum {
+    PAGE_CHANNELS,
+    PAGE_GRAPHS
+};
+
 /* Channel and graph tree store columns */
 enum {
     MODEL_ID,
@@ -1322,6 +1328,14 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     return tree;
 }
 
+static void
+gwy_app_data_browser_page_changed(G_GNUC_UNUSED GwyAppDataBrowser *browser,
+                                  G_GNUC_UNUSED GtkNotebookPage *useless,
+                                  gint pageno)
+{
+    gwy_debug("Page changed to: %d", pageno);
+}
+
 static gboolean
 gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
 {
@@ -1374,6 +1388,9 @@ gwy_app_get_data_browser(void)
     /* Create the notebook */
     notebook = gtk_notebook_new();
     gtk_container_add(GTK_CONTAINER(browser->window), notebook);
+    g_signal_connect_swapped(notebook, "switch-page",
+                             G_CALLBACK(gwy_app_data_browser_page_changed),
+                             browser);
 
     /* Create Data Channels tab */
     box_page = gtk_vbox_new(FALSE, 0);
