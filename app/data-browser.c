@@ -574,6 +574,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
                            MODEL_WIDGET, &data_view,
                            -1);
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
         if (data_view) {
             if (type == KEY_IS_MASK)
                 gwy_app_data_browser_sync_mask(data, quark, data_view);
@@ -683,6 +685,25 @@ gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
     }
 
     return (GwyAppDataProxy*)item->data;
+}
+
+static void
+gwy_app_data_proxy_update_visibility(GObject *object,
+                                     gboolean visible)
+{
+    GwyContainer *data;
+    const gchar *strkey;
+    gchar key[48];
+    GQuark quark;
+
+    data = g_object_get_qdata(object, container_quark);
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(object, own_key_quark));
+    strkey = g_quark_to_string(quark);
+    g_snprintf(key, sizeof(key), "%s/visible", strkey);
+    if (visible)
+        gwy_container_set_boolean_by_name(data, key, TRUE);
+    else
+        gwy_container_remove_by_name(data, key);
 }
 
 static void
@@ -872,6 +893,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
     if (has_dfield && !has_layer) {
         strkey = g_quark_to_string(quark);
         i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+        g_return_if_fail(i >= 0 && type == KEY_IS_MASK);
         gwy_app_data_proxy_setup_mask(data, i);
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, strkey);
@@ -940,6 +962,7 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
 
+    gwy_app_data_proxy_update_visibility(G_OBJECT(dfield), TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_data_view),
                              data_view);
@@ -995,6 +1018,7 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
                            -1);
     }
     else {
+        gwy_app_data_proxy_update_visibility(object, FALSE);
         g_object_ref(proxy->container);
         window = gtk_widget_get_toplevel(widget);
         gwy_app_data_window_remove(GWY_DATA_WINDOW(window));
@@ -1173,6 +1197,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     g_object_weak_ref(G_OBJECT(graph_window),
                       (GWeakNotify)g_object_unref, browser->current->container);
 
+    gwy_app_data_proxy_update_visibility(G_OBJECT(gmodel), TRUE);
     g_signal_connect_swapped(graph_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_graph),
                              graph);
@@ -1223,6 +1248,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
                            widget, -1);
     }
     else {
+        gwy_app_data_proxy_update_visibility(object, FALSE);
         g_object_ref(proxy->container);
         window = gtk_widget_get_toplevel(widget);
         gwy_app_graph_window_remove(window);
@@ -1386,6 +1412,21 @@ gwy_app_get_data_browser(void)
 }
 
 static void
+gwy_app_data_browser_restore_active(GtkTreeView *treeview,
+                                    GwyAppDataList *list)
+{
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+
+    gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(list->list));
+    if (!gwy_app_data_proxy_find_object(list->list, list->active, &iter))
+        return;
+
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_select_iter(selection, &iter);
+}
+
+static void
 gwy_app_data_browser_switch_data(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
@@ -1403,10 +1444,10 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
     browser->current = proxy;
-    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels),
-                            GTK_TREE_MODEL(proxy->channels.list));
-    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs),
-                            GTK_TREE_MODEL(proxy->graphs.list));
+    gwy_app_data_browser_restore_active(GTK_TREE_VIEW(browser->channels),
+                                        &proxy->channels);
+    gwy_app_data_browser_restore_active(GTK_TREE_VIEW(browser->graphs),
+                                        &proxy->graphs);
 
     /* TODO: set title, selection, ... */
 }
@@ -1442,6 +1483,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_DATA);
+    proxy->channels.active = i;
     gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->channels));
@@ -1483,10 +1525,74 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     strkey = g_quark_to_string(quark);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_GRAPH);
+    proxy->graphs.active = i;
     gwy_app_data_proxy_find_object(proxy->graphs.list, i, &iter);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->graphs));
     gtk_tree_selection_select_iter(selection, &iter);
+}
+
+static gboolean
+gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
+{
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    GtkWidget *widget;
+    GwyDataField *dfield;
+    GwyGraphModel *gmodel;
+    const gchar *strkey;
+    GQuark quark;
+    gboolean visible;
+    gchar key[48];
+    gint count = 0;
+
+    /* Data channels */
+    model = GTK_TREE_MODEL(proxy->channels.list);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            visible = FALSE;
+            gtk_tree_model_get(model, &iter, MODEL_OBJECT, &dfield, -1);
+            quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(dfield),
+                                                        own_key_quark));
+            strkey = g_quark_to_string(quark);
+            g_snprintf(key, sizeof(key), "%s/visible", strkey);
+            gwy_container_gis_boolean_by_name(proxy->container, key, &visible);
+            if (visible) {
+                widget = gwy_app_data_browser_create_channel(proxy->parent,
+                                                             dfield);
+                gtk_list_store_set(proxy->channels.list, &iter,
+                                   MODEL_WIDGET, widget,
+                                   -1);
+                count++;
+            }
+            g_object_unref(dfield);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    /* Graphs */
+    model = GTK_TREE_MODEL(proxy->graphs.list);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            visible = FALSE;
+            gtk_tree_model_get(model, &iter, MODEL_OBJECT, &gmodel, -1);
+            quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(gmodel),
+                                                        own_key_quark));
+            strkey = g_quark_to_string(quark);
+            g_snprintf(key, sizeof(key), "%s/visible", strkey);
+            gwy_container_gis_boolean_by_name(proxy->container, key, &visible);
+            if (visible) {
+                widget = gwy_app_data_browser_create_graph(proxy->parent,
+                                                           gmodel);
+                gtk_list_store_set(proxy->graphs.list, &iter,
+                                   MODEL_WIDGET, widget,
+                                   -1);
+                count++;
+            }
+            g_object_unref(gmodel);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    return count > 0;
 }
 
 /**
@@ -1515,19 +1621,21 @@ gwy_app_data_browser_add(GwyContainer *data)
 
     /* Show first window
      * XXX: crude */
-    if (gwy_app_data_proxy_find_object(proxy->channels.list, 0, &iter)) {
-        gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
-                           MODEL_OBJECT, &dfield,
-                           -1);
-        widget = gwy_app_data_browser_create_channel(browser, dfield);
-        gtk_list_store_set(proxy->channels.list, &iter,
-                           MODEL_WIDGET, widget,
-                           -1);
-        g_object_unref(dfield);
-    }
-    else {
-        g_warning("There are no data channels in container.  "
-                  "It will be likely finalized right away.");
+    if (!gwy_app_data_browser_reconstruct_visibility(proxy)) {
+        if (gwy_app_data_proxy_find_object(proxy->channels.list, 0, &iter)) {
+            gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
+                               MODEL_OBJECT, &dfield,
+                               -1);
+            widget = gwy_app_data_browser_create_channel(browser, dfield);
+            gtk_list_store_set(proxy->channels.list, &iter,
+                               MODEL_WIDGET, widget,
+                               -1);
+            g_object_unref(dfield);
+        }
+        else {
+            g_warning("There are no data channels in container.  "
+                      "It will be likely finalized right away.");
+        }
     }
 }
 
