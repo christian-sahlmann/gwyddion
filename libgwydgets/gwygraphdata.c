@@ -33,8 +33,6 @@ enum {
     LAST_SIGNAL
 };
 
-static void     clean_gtk_tree_view                  (GtkTreeView *widget);
-
 static guint gwygraph_data_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE(GwyGraphData, gwy_graph_data, GTK_TYPE_TREE_VIEW)
@@ -80,6 +78,13 @@ gwy_graph_data_new(GwyGraphModel *gmodel)
     GtkWidget *graph_data = GTK_WIDGET(g_object_new(gwy_graph_data_get_type(), NULL));
     gwy_debug("");
 
+    GWY_GRAPH_DATA(graph_data)->store = gtk_list_store_new(10, G_TYPE_STRING, G_TYPE_STRING,
+                               G_TYPE_STRING, G_TYPE_STRING,
+                               G_TYPE_STRING, G_TYPE_STRING,
+                               G_TYPE_STRING, G_TYPE_STRING,
+                               G_TYPE_STRING, G_TYPE_STRING);
+
+
     if (gmodel != NULL)
     {
        gwy_graph_data_change_model(GWY_GRAPH_DATA(graph_data), gmodel);
@@ -121,7 +126,7 @@ get_cell_string(GwyGraphModel *model,
 
     else {
         curvemodel = gwy_graph_model_get_curve_by_index(model, curve_index);
-        if (data_index >= curvemodel->n) return g_strdup(" ");
+        if (data_index >= curvemodel->n) return "";
 
         if (axis_index == 0) return g_strdup_printf("%g", curvemodel->xdata[data_index]);
         else return g_strdup_printf("%g", curvemodel->ydata[data_index]);
@@ -150,7 +155,6 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
     GtkTreeIter iter;
     GtkTreeViewColumn *xcolumn, *ycolumn;
     GtkCellRenderer *renderer;
-    GtkListStore *store;
     gint i, nc;
     GString *description;
 
@@ -159,19 +163,11 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
     tview = GTK_TREE_VIEW(graph_data);
 
 
-    clean_gtk_tree_view(tview);
-    gtk_tree_view_set_model(tview, NULL);
-
-    store = gtk_list_store_new(10, G_TYPE_STRING, G_TYPE_STRING,
-                               G_TYPE_STRING, G_TYPE_STRING,
-                               G_TYPE_STRING, G_TYPE_STRING,
-                               G_TYPE_STRING, G_TYPE_STRING,
-                               G_TYPE_STRING, G_TYPE_STRING);
-
+    gtk_list_store_clear(graph_data->store);
     for (i = 0; i<get_max_n(model); i++)
     {
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter,
+        gtk_list_store_append(graph_data->store, &iter);
+        gtk_list_store_set(graph_data->store, &iter,
                        X1_COLUMN, get_cell_string(model, 0, i, 0),
                        Y1_COLUMN, get_cell_string(model, 0, i, 1),
                        X2_COLUMN, get_cell_string(model, 1, i, 0),
@@ -186,7 +182,7 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
 
     }
 
-    gtk_tree_view_set_model(tview, GTK_TREE_MODEL(store));
+    gtk_tree_view_set_model(tview, GTK_TREE_MODEL(graph_data->store));
 
     /*make two columns for each curve*/
     nc = gwy_graph_model_get_n_curves(model);
@@ -217,29 +213,6 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
     }
 }
 
-
-/* Remove all columns from a GtkTreeView */
-/* XXX: use gtk_list_store_clear() */
-static void
-clean_gtk_tree_view (GtkTreeView *widget)
-{
-    GList *columns, *list;
-    gint n, i;
-    GtkTreeViewColumn *column;
-
-    columns = gtk_tree_view_get_columns (widget);
-
-    list = columns;
-
-    n = g_list_length (columns);
-
-    for (i = n; i > 0; i--) {
-       column = gtk_tree_view_get_column (widget, i-1);
-       gtk_tree_view_remove_column (widget, column);
-    }
-
-    g_list_free (columns);
-}
 
 /**
  * gwy_graph_data_change_model:

@@ -44,6 +44,7 @@ struct _GwyGraphData {
     GtkTreeView treeview;
 
     GwyGraphModel *graph_model;
+    GtkListStore *store;
 
     gpointer reserved1;
     gpointer reserved2;

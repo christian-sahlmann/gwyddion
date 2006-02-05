@@ -132,7 +132,7 @@ void           gwy_graph_model_set_si_unit_y            (GwyGraphModel *model,
                                                          GwySIUnit *siunit);
 void           gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
                                                         GwyDataLine *data_line);
-gchar*         gwy_graph_model_get_title                (GwyGraphModel *model);
+const gchar*   gwy_graph_model_get_title                (GwyGraphModel *model);
 GwyGraphLabelPosition gwy_graph_model_get_label_position(GwyGraphModel *model);
 gboolean       gwy_graph_model_get_label_has_frame      (GwyGraphModel *model);
 gint           gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model);

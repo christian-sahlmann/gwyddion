@@ -742,12 +742,12 @@ gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
  * gwy_graph_model_get_title:
  * @model: A #GwyGraphModel.
  *
- * Returns: graph title (newly allocated string).
+ * Returns: graph title.
  **/
-gchar*
+const gchar*
 gwy_graph_model_get_title(GwyGraphModel *model)
 {
-    return g_strdup(model->title->str);
+    return model->title->str;
 }
 
 /**
