@@ -35,6 +35,12 @@ typedef struct {
     gdouble local;
 } GwyFunctionUseInfo;
 
+struct _GwyFunctionUse {
+    gdouble delta_local;
+    gdouble delta_global;
+    GArray *funcs;
+};
+
 static GwyFunctionUse *process_use_info  = NULL;
 
 static void
@@ -67,12 +73,13 @@ void
 gwy_func_use_add(GwyFunctionUse *functions,
                  const gchar *name)
 {
-    GArray *funcs = (GArray*)functions;
+    GArray *funcs;
     GQuark quark;
     guint i, found;
 
     /* Find function info, using linear search (but most used funcs are
      * near the head). */
+    funcs = functions->funcs;
     quark = g_quark_from_string(name);
     found = (guint)-1;
     for (i = 0; i < funcs->len; i++) {
@@ -80,11 +87,11 @@ gwy_func_use_add(GwyFunctionUse *functions,
 
         if (info->quark == quark) {
             found = i;
-            info->local += FUNC_DELTA_LOCAL;
-            info->global += FUNC_DELTA_GLOBAL;
+            info->local += functions->delta_local;
+            info->global += functions->delta_global;
         }
-        info->local /= 1.0 + FUNC_DELTA_LOCAL;
-        info->global /= 1.0 + FUNC_DELTA_GLOBAL;
+        info->local /= 1.0 + functions->delta_local;
+        info->global /= 1.0 + functions->delta_global;
     }
 
     if (found == (guint)-1) {
@@ -92,8 +99,8 @@ gwy_func_use_add(GwyFunctionUse *functions,
 
         found = funcs->len;
         info.quark = quark;
-        info.local = FUNC_DELTA_LOCAL/(1.0 + FUNC_DELTA_LOCAL);
-        info.global = FUNC_DELTA_GLOBAL/(1.0 + FUNC_DELTA_GLOBAL);
+        info.local = functions->delta_local/(1.0 + functions->delta_local);
+        info.global = functions->delta_global/(1.0 + functions->delta_global);
         g_array_append_val(funcs, info);
     }
 
@@ -114,43 +121,49 @@ const gchar*
 gwy_func_use_get(GwyFunctionUse *functions,
                  guint i)
 {
-    GArray *funcs = (GArray*)functions;
     GwyFunctionUseInfo *info;
 
-    if (i >= funcs->len)
+    if (i >= functions->funcs->len)
         return NULL;
 
-    info = &g_array_index(funcs, GwyFunctionUseInfo, i);
+    info = &g_array_index(functions->funcs, GwyFunctionUseInfo, i);
     return g_quark_to_string(info->quark);
 }
 
 GwyFunctionUse*
 gwy_func_use_new(void)
 {
-    return (GwyFunctionUse*)g_array_new(FALSE, FALSE,
-                                        sizeof(GwyFunctionUseInfo));
+    GwyFunctionUse *functions;
+
+    functions = g_new(GwyFunctionUse, 1);
+    functions->funcs = g_array_new(FALSE, FALSE, sizeof(GwyFunctionUseInfo));
+    functions->delta_global = FUNC_DELTA_GLOBAL;
+    functions->delta_local = FUNC_DELTA_LOCAL;
+
+    return functions;
 }
 
 void
 gwy_func_use_free(GwyFunctionUse *functions)
 {
-    GArray *funcs = (GArray*)functions;
-
-    g_array_free(funcs, TRUE);
+    g_array_free(functions->funcs, TRUE);
+    g_free(functions);
 }
 
 GwyFunctionUse*
 gwy_func_use_load(const gchar *filename)
 {
+    GwyFunctionUse *functions;
     GwyFunctionUseInfo info;
     GArray *funcs;
     gchar *buffer, *line, *p, *val;
     gsize len;
 
-    funcs = g_array_new(FALSE, FALSE, sizeof(GwyFunctionUseInfo));
+    functions = gwy_func_use_new();
     if (!g_file_get_contents(filename, &buffer, &len, NULL))
-        return (GwyFunctionUse*)funcs;
+        return functions;
 
+    funcs = functions->funcs;
     p = buffer;
     info.local = 0.0;
     while ((line = gwy_str_next_line(&p))) {
@@ -167,14 +180,14 @@ gwy_func_use_load(const gchar *filename)
     }
     g_free(buffer);
 
-    return (GwyFunctionUse*)funcs;
+    return functions;
 }
 
 void
 gwy_func_use_save(GwyFunctionUse *functions,
                   const gchar *filename)
 {
-    GArray *funcs = (GArray*)functions;
+    GArray *funcs;
     gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     guint i;
     FILE *fh;
@@ -183,6 +196,7 @@ gwy_func_use_save(GwyFunctionUse *functions,
     if (!fh)
         return;
 
+    funcs = functions->funcs;
     for (i = 0; i < funcs->len; i++) {
         GwyFunctionUseInfo *info;
 
