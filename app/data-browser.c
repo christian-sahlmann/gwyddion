@@ -850,6 +850,7 @@ gwy_app_data_proxy_setup_mask(GwyContainer *data,
 
     GwyContainer *settings;
     gchar key[32];
+    const gchar *gkey;
     gdouble x;
     guint j;
 
@@ -858,9 +859,11 @@ gwy_app_data_proxy_setup_mask(GwyContainer *data,
         g_snprintf(key, sizeof(key), keys[j], i);
         if (gwy_container_contains_by_name(data, key))
             continue;
-        /* be noisy when we don't have default mask color */
         /* XXX: This is a dirty trick stripping the first 3 chars of key */
-        x = gwy_container_get_double_by_name(settings, keys[j] + 3);
+        gkey = keys[j] + 3;
+        if (!gwy_container_gis_double_by_name(data, gkey, &x))
+            /* be noisy when we don't have default mask color */
+            x = gwy_container_get_double_by_name(settings, gkey);
         gwy_container_set_double_by_name(data, key, x);
     }
 }
