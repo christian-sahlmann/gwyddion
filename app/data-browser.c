@@ -49,6 +49,12 @@ enum {
     PAGE_GRAPHS
 };
 
+/* Sensitivity flags */
+enum {
+    SENS_OBJECT = 1 << 0,
+    SENS_MASK   = 0x01
+};
+
 /* Channel and graph tree store columns */
 enum {
     MODEL_ID,
@@ -71,6 +77,8 @@ typedef struct {
 struct _GwyAppDataBrowser {
     GList *container_list;
     struct _GwyAppDataProxy *current;
+    gint active_page;
+    GwySensitivityGroup *sensgroup;
     GtkWidget *window;
     GtkWidget *channels;
     GtkWidget *graphs;
@@ -95,6 +103,9 @@ static void gwy_app_data_browser_sync_show  (GwyContainer *data,
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
+
+/* The data browser */
+static GwyAppDataBrowser *gwy_app_data_browser = NULL;
 
 /**
  * gwy_app_data_proxy_compare_data:
@@ -760,6 +771,21 @@ gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
 }
 
 static void
+gwy_app_data_browser_channel_selection_changed(GtkTreeSelection *selection,
+                                               GwyAppDataBrowser *browser)
+{
+    gboolean any;
+
+    /* This can happen when data is manipulated programatically */
+    if (browser->active_page != PAGE_CHANNELS)
+        return;
+
+    any = gtk_tree_selection_get_selected(selection, NULL, NULL);
+    gwy_sensitivity_group_set_state(browser->sensgroup,
+                                    SENS_OBJECT, any ? SENS_OBJECT : 0);
+}
+
+static void
 gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                           GtkCellRenderer *renderer,
                                           GtkTreeModel *model,
@@ -1047,18 +1073,21 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
 static GtkWidget*
 gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 {
-    GtkWidget *tree;
+    GtkWidget *retval;
+    GtkTreeView *treeview;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
 
     /* Construct the GtkTreeView that will display data channels */
-    tree = gtk_tree_view_new();
+    retval = gtk_tree_view_new();
+    treeview = GTK_TREE_VIEW(retval);
 
     /* Add the thumbnail column */
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
     renderer = gtk_cell_renderer_toggle_new();
@@ -1070,7 +1099,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_render_visible, browser, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
     /* Add the title column */
     renderer = gtk_cell_renderer_text_new();
@@ -1084,7 +1113,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_channel_render_title, browser, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
@@ -1094,11 +1123,16 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_channel_render_flags, browser, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree), FALSE);
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
 
-    return tree;
+    selection = gtk_tree_view_get_selection(treeview);
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_data_browser_channel_selection_changed),
+                     browser);
+
+    return retval;
 }
 
 static void
@@ -1130,6 +1164,21 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
     g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
     g_object_set(G_OBJECT(renderer), "text", s, NULL);
     g_object_unref(gmodel);
+}
+
+static void
+gwy_app_data_browser_graph_selection_changed(GtkTreeSelection *selection,
+                                             GwyAppDataBrowser *browser)
+{
+    gboolean any;
+
+    /* This can happen when data is manipulated programatically */
+    if (browser->active_page != PAGE_GRAPHS)
+        return;
+
+    any = gtk_tree_selection_get_selected(selection, NULL, NULL);
+    gwy_sensitivity_group_set_state(browser->sensgroup,
+                                    SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
 
 /**
@@ -1277,18 +1326,21 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
 static GtkWidget*
 gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 {
-    GtkWidget *tree;
+    GtkTreeView *treeview;
+    GtkWidget *retval;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
 
     /* Construct the GtkTreeView that will display graphs */
-    tree = gtk_tree_view_new();
+    retval = gtk_tree_view_new();
+    treeview = GTK_TREE_VIEW(retval);
 
     /* Add the thumbnail column */
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
     renderer = gtk_cell_renderer_toggle_new();
@@ -1300,7 +1352,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_render_visible, browser, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
     /* Add the title column */
     renderer = gtk_cell_renderer_text_new();
@@ -1314,7 +1366,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_graph_render_title, browser, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
@@ -1324,19 +1376,51 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_graph_render_ncurves, browser, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    gtk_tree_view_append_column(treeview, column);
 
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree), FALSE);
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
 
-    return tree;
+    selection = gtk_tree_view_get_selection(treeview);
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_data_browser_graph_selection_changed),
+                     browser);
+
+    return retval;
 }
 
 static void
-gwy_app_data_browser_page_changed(G_GNUC_UNUSED GwyAppDataBrowser *browser,
-                                  G_GNUC_UNUSED GtkNotebookPage *useless,
+gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
+{
+    gwy_debug("Implement me!");
+}
+
+static void
+gwy_app_data_browser_page_changed(GwyAppDataBrowser *browser,
+                                  G_GNUC_UNUSED GtkNotebookPage *useless_crap,
                                   gint pageno)
 {
+    GtkTreeSelection *selection;
+
     gwy_debug("Page changed to: %d", pageno);
+
+    browser->active_page = pageno;
+    switch (pageno) {
+        case PAGE_CHANNELS:
+        selection
+            = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->channels));
+        gwy_app_data_browser_channel_selection_changed(selection, browser);
+        break;
+
+        case PAGE_GRAPHS:
+        selection
+            = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->graphs));
+        gwy_app_data_browser_graph_selection_changed(selection, browser);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static gboolean
@@ -1369,31 +1453,33 @@ gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
 static GwyAppDataBrowser*
 gwy_app_get_data_browser(void)
 {
-    /* The list of all Containers we manage */
-    static GwyAppDataBrowser *browser = NULL;
+    GtkWidget *notebook, *label, *box_page, *scwin, *vbox, *hbox, *button;
+    GwyAppDataBrowser *browser;
 
-    GtkWidget *notebook, *label, *box_page, *scwin;
-
-    if (browser)
-        return browser;
+    if (gwy_app_data_browser)
+        return gwy_app_data_browser;
 
     own_key_quark
         = g_quark_from_static_string("gwy-app-data-browser-own-key");
     container_quark
         = g_quark_from_static_string("gwy-app-data-browser-container");
 
+    /* Window setup */
     browser = g_new0(GwyAppDataBrowser, 1);
+    gwy_app_data_browser = browser;
+    browser->sensgroup = gwy_sensitivity_group_new();
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
     gtk_window_set_default_size(GTK_WINDOW(browser->window), 300, 300);
     gtk_window_set_title(GTK_WINDOW(browser->window), _("Data Browser"));
+    gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(browser->window), vbox);
 
     /* Create the notebook */
     notebook = gtk_notebook_new();
-    gtk_container_add(GTK_CONTAINER(browser->window), notebook);
-    g_signal_connect_swapped(notebook, "switch-page",
-                             G_CALLBACK(gwy_app_data_browser_page_changed),
-                             browser);
+    gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
 
     /* Create Data Channels tab */
     box_page = gtk_vbox_new(FALSE, 0);
@@ -1421,12 +1507,30 @@ gwy_app_get_data_browser(void)
     browser->graphs = gwy_app_data_browser_construct_graphs(browser);
     gtk_container_add(GTK_CONTAINER(scwin), browser->graphs);
 
+    /* Create the bottom toolbar */
+    hbox = gtk_hbox_new(TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+    button = gwy_tool_like_button_new(_("_Delete"), GTK_STOCK_DELETE);
+    gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+    gwy_sensitivity_group_add_widget(browser->sensgroup, button, SENS_OBJECT);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_data_browser_delete_object),
+                             browser);
+
+    g_signal_connect_swapped(notebook, "switch-page",
+                             G_CALLBACK(gwy_app_data_browser_page_changed),
+                             browser);
     g_signal_connect_swapped(browser->window, "delete-event",
                              G_CALLBACK(gwy_app_data_browser_deleted), browser);
+    g_object_unref(browser->sensgroup);
 
-    gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
+    gwy_app_restore_window_position(GTK_WINDOW(browser->window),
+                                    "/app/data-browser", FALSE);
     gtk_widget_show_all(browser->window);
     gtk_window_present(GTK_WINDOW(browser->window));
+    gwy_app_restore_window_position(GTK_WINDOW(browser->window),
+                                    "/app/data-browser", FALSE);
 
     return browser;
 }
@@ -1714,12 +1818,17 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
 }
 
 void
-gwy_app_data_browser_blow_up(void)
+gwy_app_data_browser_shut_down(void)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
 
-    browser = gwy_app_get_data_browser();
+    browser = gwy_app_data_browser;
+    if (!browser)
+        return;
+
+    gwy_app_save_window_position(GTK_WINDOW(browser->window),
+                                 "/app/data-browser", TRUE, TRUE);
     browser->current = NULL;
     gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels), NULL);
     gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs), NULL);

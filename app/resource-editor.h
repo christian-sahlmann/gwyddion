@@ -57,9 +57,7 @@ struct _GwyResourceEditorClass {
     const gchar *window_title;
     const gchar *editor_title;
 
-    GQuark current_key;
-    GQuark width_key;
-    GQuark height_key;
+    gchar *settings_prefix;
 
     GtkWidget* (*construct_treeview)(GCallback callback,
                                      gpointer cbdata,

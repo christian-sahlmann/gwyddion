@@ -25,6 +25,7 @@
 #include <libgwyddion/gwyddion.h>
 #include <app/menu.h>
 #include <app/settings.h>
+#include <app/app.h>
 #include <app/resource-editor.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwyinventorystore.h>
@@ -168,11 +169,10 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     GwyContainer *settings;
     GtkWidget *hbox, *button;
     GtkTooltips *tooltips;
-    GtkRequisition req;
     GtkWidget *scwin;
     const guchar *name;
     GList *rlist;
-    gint32 w, h;
+    gchar *key;
     guint i;
 
     klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
@@ -184,7 +184,9 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
 
     settings = gwy_app_settings_get();
     name = klass->base_resource;
-    gwy_container_gis_string(settings, klass->current_key, &name);
+    key = g_strconcat(klass->settings_prefix, "/current", NULL);
+    gwy_container_gis_string_by_name(settings, key, &name);
+    g_free(key);
 
     rklass = g_type_class_ref(klass->resource_type);
     /* TODO: handle errors */
@@ -244,15 +246,8 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     }
     g_object_unref(editor->sensgroup);
 
-    w = h = -1;
-    gwy_container_gis_int32(settings, klass->width_key, &w);
-    gwy_container_gis_int32(settings, klass->height_key, &h);
-    if (h == -1)
-        h = 420;
-    gtk_widget_size_request(GTK_WIDGET(editor), &req);
-    gtk_window_set_default_size(GTK_WINDOW(editor),
-                                MAX(w, req.width), MAX(h, req.height));
-
+    gwy_app_restore_window_position(GTK_WINDOW(editor), klass->settings_prefix,
+                                    TRUE);
     gtk_widget_show_all(editor->vbox);
     gwy_resource_tree_view_set_active(editor->treeview, name);
 }
@@ -301,25 +296,23 @@ gwy_resource_editor_unmap(GtkWidget *widget)
 {
     GwyResourceEditorClass *klass;
     GwyResourceEditor *editor;
-    GwyResource *resource;
     GwyContainer *settings;
-    gint w, h;
+    GwyResource *resource;
+    gchar *key;
 
     editor = GWY_RESOURCE_EDITOR(widget);
     klass = GWY_RESOURCE_EDITOR_GET_CLASS(widget);
-    settings = gwy_app_settings_get();
 
-    gdk_drawable_get_size(widget->window, &w, &h);
-    gwy_debug("w: %d, h: %d", w, h);
-    if (w > 1 && h > 1) {
-        gwy_container_set_int32(settings, klass->width_key, w);
-        gwy_container_set_int32(settings, klass->height_key, h);
+    gwy_app_save_window_position(GTK_WINDOW(widget), klass->settings_prefix,
+                                 FALSE, TRUE);
+
+    if ((resource = gwy_resource_editor_get_active(editor, NULL, NULL, NULL))) {
+        settings = gwy_app_settings_get();
+        key = g_strconcat(klass->settings_prefix, "/current", NULL);
+        gwy_container_set_string_by_name
+                    (settings, key, g_strdup(gwy_resource_get_name(resource)));
+        g_free(key);
     }
-
-    if ((resource = gwy_resource_editor_get_active(editor,
-                                                   NULL, NULL, NULL)))
-        gwy_container_set_string(settings, klass->current_key,
-                                 g_strdup(gwy_resource_get_name(resource)));
 
     GTK_WIDGET_CLASS(gwy_resource_editor_parent_class)->unmap(widget);
 }
@@ -726,7 +719,6 @@ gwy_resource_editor_class_setup(GwyResourceEditorClass *klass)
 {
     GwyResourceClass *rklass;
     const gchar *name;
-    GString *str;
 
     gwy_debug("");
     g_return_if_fail(GWY_IS_RESOURCE_EDITOR_CLASS(klass));
@@ -735,13 +727,7 @@ gwy_resource_editor_class_setup(GwyResourceEditorClass *klass)
     name = gwy_resource_class_get_name(rklass);
     g_type_class_unref(rklass);
 
-    str = g_string_new("");
-    g_string_printf(str, "/app/%s/editor/current", name);
-    klass->current_key = g_quark_from_string(str->str);
-    g_string_printf(str, "/app/%s/editor/position/width", name);
-    klass->width_key = g_quark_from_string(str->str);
-    g_string_printf(str, "/app/%s/editor/position/height", name);
-    klass->height_key = g_quark_from_string(str->str);
+    klass->settings_prefix = g_strdup_printf("/app/%s/editor", name);
 }
 
 /**
@@ -794,12 +780,8 @@ gwy_resource_editor_get_edited(GwyResourceEditor *editor)
  * @editor_title: Editor window title template.  It must contain one
  *                <literal>%s</literal> that will be replaced with edited
  *                resource name.  It should be already translated.
- * @current_key: Settings key for currently active resource, filled by
- *               gwy_resource_editor_class_setup().
- * @width_key: Settings key for window width, filled by
- *             gwy_resource_editor_class_setup().
- * @height_key: Settings key for window height, filled by
- *              gwy_resource_editor_class_setup().
+ * @settings_prefix: Settings prefix for saved state, filled by
+ *                   gwy_resource_editor_class_setup().
  * @construct_treeview: Method to create the resource list widget, it is
  *                      of the gwy_gradients_tree_view_new() signature.
  *                      There are currently some hardcoded assumptions about

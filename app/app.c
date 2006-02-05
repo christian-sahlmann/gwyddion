@@ -99,7 +99,7 @@ gwy_app_quit(void)
     if (!gwy_app_confirm_quit())
         return TRUE;
 
-    gwy_app_data_browser_blow_up();
+    gwy_app_data_browser_shut_down();
 
     gtk_main_quit();
     return TRUE;
@@ -108,24 +108,8 @@ gwy_app_quit(void)
 gboolean
 gwy_app_main_window_save_position(void)
 {
-    GwyContainer *settings;
-    GdkScreen *screen;
-    gint x, y, w, h;
-
-    g_return_val_if_fail(GTK_IS_WINDOW(gwy_app_main_window), FALSE);
-
-    settings = gwy_app_settings_get();
-    screen = gtk_window_get_screen(GTK_WINDOW(gwy_app_main_window));
-    w = gdk_screen_get_width(screen);
-    h = gdk_screen_get_height(screen);
-    /* FIXME: read the gtk_window_get_position() docs about how this is
-     * a broken approach */
-    gtk_window_get_position(GTK_WINDOW(gwy_app_main_window), &x, &y);
-    if (x >= 0 && y >= 0 && x < w && y < h) {
-        gwy_container_set_int32_by_name(settings, "/app/toolbox/position/x", x);
-        gwy_container_set_int32_by_name(settings, "/app/toolbox/position/y", y);
-    }
-
+    gwy_app_save_window_position(GTK_WINDOW(gwy_app_main_window),
+                                 "/app/toolbox", TRUE, FALSE);
     /* to be usable as an event handler */
     return FALSE;
 }
@@ -133,18 +117,8 @@ gwy_app_main_window_save_position(void)
 void
 gwy_app_main_window_restore_position(void)
 {
-    GwyContainer *settings;
-    gint x, y;
-
-    g_return_if_fail(GTK_IS_WINDOW(gwy_app_main_window));
-
-    settings = gwy_app_settings_get();
-    if (gwy_container_gis_int32_by_name(settings,
-                                        "/app/toolbox/position/x", &x)
-        && gwy_container_gis_int32_by_name(settings,
-                                           "/app/toolbox/position/y", &y)) {
-        gtk_window_move(GTK_WINDOW(gwy_app_main_window), x, y);
-    }
+    gwy_app_restore_window_position(GTK_WINDOW(gwy_app_main_window),
+                                    "/app/toolbox", FALSE);
 }
 
 /**
@@ -1306,6 +1280,131 @@ gwy_app_show_kill_cb(void)
         data = gwy_data_view_get_data(data_view);
         gwy_app_undo_checkpoint(data, key, NULL);
         gwy_container_remove_by_name(data, key);
+    }
+}
+
+/**
+ * gwy_app_save_window_position:
+ * @window: A window to save position of.
+ * @prefix: Unique prefix in settings to store the information under.
+ * @position: %TRUE to save position information.
+ * @size: %TRUE to save size information.
+ *
+ * Saves position and/or size of a window to settings.
+ *
+ * Some sanity checks are included, therefore if window position and/or size
+ * is too suspicious, it is not saved.
+ **/
+void
+gwy_app_save_window_position(GtkWindow *window,
+                             const gchar *prefix,
+                             gboolean position,
+                             gboolean size)
+{
+    GwyContainer *settings;
+    GdkScreen *screen;
+    gint x, y, w, h, scw, sch;
+    guint len;
+    gchar *key;
+
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    g_return_if_fail(prefix);
+    if (!(position || size))
+        return;
+
+    len = strlen(prefix);
+                              /* The longest suffix */
+    key = g_newa(gchar, len + sizeof("/position/height"));
+    strcpy(key, prefix);
+
+    settings = gwy_app_settings_get();
+    screen = gtk_window_get_screen(window);
+    scw = gdk_screen_get_width(screen);
+    sch = gdk_screen_get_height(screen);
+    /* FIXME: read the gtk_window_get_position() docs about how this is
+     * a broken approach */
+    if (position) {
+        gtk_window_get_position(window, &x, &y);
+        if (x >= 0 && y >= 0 && x+1 < scw && y+1 < sch) {
+            strcpy(key + len, "/position/x");
+            gwy_container_set_int32_by_name(settings, key, x);
+            strcpy(key + len, "/position/y");
+            gwy_container_set_int32_by_name(settings, key, y);
+        }
+    }
+    if (size) {
+        gtk_window_get_size(window, &w, &h);
+        if (w > 1 && h > 1) {
+            strcpy(key + len, "/position/width");
+            gwy_container_set_int32_by_name(settings, key, w);
+            strcpy(key + len, "/position/height");
+            gwy_container_set_int32_by_name(settings, key, h);
+        }
+    }
+}
+
+/**
+ * gwy_app_restore_window_position:
+ * @window: A window to restore position of.
+ * @prefix: Unique prefix in settings to get the information from (the same as
+ *          in gwy_app_save_window_position()).
+ * @grow_only: %TRUE to only attempt set the window default size bigger than it
+ *              requests, never smaller.
+ *
+ * Restores a window position and/or size from settings.
+ *
+ * Unlike gwy_app_save_window_position(), this function has no @position and
+ * @size arguments, it simply restores all attributes that were saved.
+ *
+ * Note to restore position (not size) it should be called twice for each
+ * window to accommodate sloppy window managers: once before the window is
+ * shown, second time immediately after showing the window.
+ *
+ * Some sanity checks are included, therefore if saved window position and/or
+ * size is too suspicious, it is not restored.
+ **/
+void
+gwy_app_restore_window_position(GtkWindow *window,
+                                const gchar *prefix,
+                                gboolean grow_only)
+{
+    GwyContainer *settings;
+    GtkRequisition req;
+    GdkScreen *screen;
+    gint x, y, w, h, scw, sch;
+    guint len;
+    gchar *key;
+
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    g_return_if_fail(prefix);
+
+    len = strlen(prefix);
+                              /* The longest suffix */
+    key = g_newa(gchar, len + sizeof("/position/height"));
+    strcpy(key, prefix);
+
+    settings = gwy_app_settings_get();
+    screen = gtk_window_get_screen(window);
+    scw = gdk_screen_get_width(screen);
+    sch = gdk_screen_get_height(screen);
+    x = y = w = h = -1;
+    strcpy(key + len, "/position/x");
+    gwy_container_gis_int32_by_name(settings, key, &x);
+    strcpy(key + len, "/position/y");
+    gwy_container_gis_int32_by_name(settings, key, &y);
+    strcpy(key + len, "/position/width");
+    gwy_container_gis_int32_by_name(settings, key, &w);
+    strcpy(key + len, "/position/height");
+    gwy_container_gis_int32_by_name(settings, key, &h);
+    if (x >= 0 && y >= 0 && x+1 < scw && y+1 < sch)
+        gtk_window_move(window, x, y);
+    if (w > 1 && h > 1) {
+        if (grow_only) {
+            gtk_widget_size_request(GTK_WIDGET(window), &req);
+            w = MAX(w, req.width);
+            h = MAX(h, req.height);
+        }
+        gtk_window_set_default_size(window, w, h);
     }
 }
 

@@ -64,6 +64,13 @@ GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
 gint           gwy_app_data_window_set_untitled    (GwyDataWindow *window,
                                                     const gchar *templ);
 void           gwy_app_add_main_accel_group        (GtkWindow *window);
+void           gwy_app_save_window_position        (GtkWindow *window,
+                                                    const gchar *prefix,
+                                                    gboolean position,
+                                                    gboolean size);
+void           gwy_app_restore_window_position     (GtkWindow *window,
+                                                    const gchar *prefix,
+                                                    gboolean grow_only);
 GtkWidget*     gwy_app_main_window_get             (void);
 
 gboolean       gwy_app_quit                        (void);

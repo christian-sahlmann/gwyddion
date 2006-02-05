@@ -37,7 +37,7 @@ gint gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
                                            GwyContainer *data,
                                            gboolean showit);
 /* XXX */
-void gwy_app_data_browser_blow_up         (void);
+void gwy_app_data_browser_shut_down        (void);
 
 G_END_DECLS
 
