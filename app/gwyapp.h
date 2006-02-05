@@ -25,6 +25,7 @@
 #include <app/data-browser.h>
 #include <app/file.h>
 #include <app/filelist.h>
+#include <app/funcuse.h>
 #include <app/glmaterial-editor.h>
 #include <app/gradient-editor.h>
 #include <app/menu.h>

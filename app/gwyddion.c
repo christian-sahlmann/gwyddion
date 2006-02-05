@@ -120,6 +120,7 @@ main(int argc, char *argv[])
     if (settings_ok || !has_settings)
         gwy_app_settings_save(settings_file);
     gwy_app_recent_file_list_save(recent_file_file);
+    gwy_process_func_save_use();
     /* XXX: Finalize all gradients.  Useless, but makes --debug-objects happy.
      * Remove in production version. */
     g_object_unref(gwy_gradients());

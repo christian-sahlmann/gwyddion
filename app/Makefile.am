@@ -13,6 +13,7 @@ libgwyappinclude_HEADERS = \
 	data-browser.h \
 	file.h \
 	filelist.h \
+	funcuse.h \
 	glmaterial-editor.h \
 	gradient-editor.h \
 	gwyapp.h \
@@ -56,6 +57,7 @@ libgwyapp_la_SOURCES = \
 	data-browser.c \
 	file.c \
 	filelist.c \
+	funcuse.c \
 	glmaterial-editor.c \
 	gradient-editor.c \
 	menu.c \

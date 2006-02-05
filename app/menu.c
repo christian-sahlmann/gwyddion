@@ -613,6 +613,8 @@ gwy_app_update_last_process_func(const gchar *name)
     const gchar *menu_path;
     gchar *s, *lab;
 
+    gwy_func_use_add(gwy_process_func_get_use(), name);
+
     if (!last_name_quark)
         last_name_quark = g_quark_from_static_string("gwy-app-menu-last"
                                                      "-func-name");
