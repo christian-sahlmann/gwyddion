@@ -27,7 +27,7 @@
 #include <app/gwyapp.h>
 
 #define FUNC_DELTA_LOCAL (G_LN2/8.0)
-#define FUNC_DELTA_GLOBAL (G_LN2/60.0)
+#define FUNC_DELTA_GLOBAL (G_LN2/240.0)
 
 typedef struct {
     GQuark quark;
