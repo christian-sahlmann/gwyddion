@@ -296,6 +296,10 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_channel_changed,
                                          proxy);
+    g_object_set_qdata(object, container_quark,
+                       g_object_get_qdata(old, container_quark));
+    g_object_set_qdata(object, own_key_quark,
+                       g_object_get_qdata(old, own_key_quark));
     gtk_list_store_set(proxy->channels.list, iter,
                        MODEL_OBJECT, object,
                        -1);
@@ -359,6 +363,10 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_graph_changed,
                                          proxy);
+    g_object_set_qdata(object, container_quark,
+                       g_object_get_qdata(old, container_quark));
+    g_object_set_qdata(object, own_key_quark,
+                       g_object_get_qdata(old, own_key_quark));
     gtk_list_store_set(proxy->graphs.list, iter,
                        MODEL_OBJECT, object,
                        -1);
