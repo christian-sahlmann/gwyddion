@@ -460,8 +460,7 @@ gwy_app_file_save_as(void)
 
         filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         if (filename_sys
-            && (!g_file_test(filename_sys, G_FILE_TEST_EXISTS)
-                || gwy_app_file_confirm_overwrite(dialog))) {
+            && (gwy_app_file_confirm_overwrite(dialog))) {
             gwy_app_file_write(data, NULL, filename_sys, name);
             break;
         }
@@ -484,6 +483,8 @@ gwy_app_file_confirm_overwrite(GtkWidget *chooser)
 
     fullname_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser));
     g_return_val_if_fail(fullname_sys, FALSE);
+
+    if (!g_file_test(fullname_sys, G_FILE_TEST_EXISTS)) return TRUE;
 
     filename_sys = g_path_get_basename(fullname_sys);
     dirname_sys = g_path_get_dirname(fullname_sys);
