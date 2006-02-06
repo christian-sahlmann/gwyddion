@@ -41,8 +41,6 @@ enum {
     LAST_SIGNAL
 };
 
-/* Forward declarations */
-
 static void     gwy_data_window_finalize          (GObject *object);
 static void     gwy_data_window_destroy           (GtkObject *object);
 static void     gwy_data_window_size_allocate     (GtkWidget *widget,
@@ -54,6 +52,7 @@ static gboolean gwy_data_window_update_statusbar  (GwyDataView *data_view,
                                                    GdkEventMotion *event,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_update_title      (GwyDataWindow *data_window);
+static void     gwy_data_window_resize_view       (GwyDataWindow *data_window);
 static void     gwy_data_window_zoom_changed      (GwyDataWindow *data_window);
 static gboolean gwy_data_window_key_pressed       (GwyDataWindow *data_window,
                                                    GdkEventKey *event);
@@ -69,8 +68,6 @@ static void     gwy_data_window_gradient_update   (GwyDataWindow *data_window,
 static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 static void     gwy_data_window_set_tooltip       (GtkWidget *widget,
                                                    const gchar *tip_text);
-
-/* Local data */
 
 /* These are actually class data.  To put them to Class struct someone would
  * have to do class_ref() and live with this reference to the end of time. */
@@ -215,6 +212,9 @@ gwy_data_window_new(GwyDataView *data_view)
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
+    g_signal_connect_swapped(data_view, "resized",
+                             G_CALLBACK(gwy_data_window_resize_view),
+                             data_window);
     g_signal_connect_data(data_view, "size-allocate",
                            G_CALLBACK(gwy_data_window_zoom_changed),
                            data_window,
@@ -732,6 +732,17 @@ GtkTooltips*
 gwy_data_window_class_get_tooltips(void)
 {
     return tooltips;
+}
+
+static void
+gwy_data_window_resize_view(GwyDataWindow *data_window)
+{
+    GtkRequisition req;
+    GtkWidget *widget;
+
+    widget = GTK_WIDGET(data_window);
+    GTK_WIDGET_CLASS(gwy_data_window_parent_class)->size_request(widget, &req);
+    gtk_window_resize(GTK_WINDOW(data_window), req.width, req.height);
 }
 
 static void

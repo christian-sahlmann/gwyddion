@@ -80,7 +80,9 @@ struct _GwyDataView {
 struct _GwyDataViewClass {
     GtkWidgetClass parent_class;
 
+    /* Signals */
     void (*redrawn)(GwyDataView *data_view);
+    void (*resized)(GwyDataView *data_view);
     void (*layer_plugged)(GwyDataView *data_view,
                           GwyDataViewLayerType layer);
     void (*layer_unplugged)(GwyDataView *data_view,

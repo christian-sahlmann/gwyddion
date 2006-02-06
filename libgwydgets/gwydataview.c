@@ -34,6 +34,7 @@
 
 enum {
     REDRAWN,
+    RESIZED,
     LAYER_PLUGGED,
     LAYER_UNPLUGGED,
     LAST_SIGNAL
@@ -43,8 +44,6 @@ enum {
     PROP_0,
     PROP_ZOOM
 };
-
-/* Forward declarations */
 
 static void     gwy_data_view_destroy              (GtkObject *object);
 static void     gwy_data_view_finalize             (GObject *object);
@@ -85,8 +84,6 @@ static void     gwy_data_view_set_layer            (GwyDataView *data_view,
                                                     gulong *hid,
                                                     GwyDataViewLayer *layer,
                                                     GwyDataViewLayerType type);
-
-/* Local data */
 
 static guint data_view_signals[LAST_SIGNAL] = { 0 };
 
@@ -146,6 +143,25 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
                        G_OBJECT_CLASS_TYPE(object_class),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwyDataViewClass, redrawn),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
+
+    /**
+     * GwyDataView::resized:
+     * @gwydataview: The #GwyDataView which received the signal.
+     *
+     * The ::resized signal is emitted when #GwyDataView wants to be resized,
+     * that is when the dimensions of base data field changes.
+     * Its purpose is to subvert the normal resizing logic of #GwyDataWindow
+     * (due to geometry hints, its size requests are generally ignored, so
+     * an explicit resize is needed).  You should usually ignore it.
+     **/
+    data_view_signals[RESIZED]
+        = g_signal_new("resized",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataViewClass, resized),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__VOID,
                        G_TYPE_NONE, 0);
@@ -717,8 +733,9 @@ gwy_data_view_update(GwyDataView *data_view)
     }
 
     if (need_resize) {
-        gwy_debug("need resize");
+        gwy_debug("needs resize");
         gtk_widget_queue_resize(widget);
+        g_signal_emit(widget, data_view_signals[RESIZED], 0);
     }
     else
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
