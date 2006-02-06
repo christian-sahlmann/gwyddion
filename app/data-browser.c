@@ -52,7 +52,8 @@ enum {
 /* Sensitivity flags */
 enum {
     SENS_OBJECT = 1 << 0,
-    SENS_MASK   = 0x01
+    SENS_FILE   = 1 << 1,
+    SENS_MASK   = 0x03
 };
 
 /* Channel and graph tree store columns */
@@ -79,7 +80,9 @@ struct _GwyAppDataBrowser {
     struct _GwyAppDataProxy *current;
     gint active_page;
     GwySensitivityGroup *sensgroup;
+    GtkWidget *filename;
     GtkWidget *window;
+    GtkWidget *notebook;
     GtkWidget *channels;
     GtkWidget *graphs;
 };
@@ -781,6 +784,7 @@ gwy_app_data_browser_channel_selection_changed(GtkTreeSelection *selection,
         return;
 
     any = gtk_tree_selection_get_selected(selection, NULL, NULL);
+    gwy_debug("Any channel: %d", any);
     gwy_sensitivity_group_set_state(browser->sensgroup,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
@@ -1177,6 +1181,7 @@ gwy_app_data_browser_graph_selection_changed(GtkTreeSelection *selection,
         return;
 
     any = gtk_tree_selection_get_selected(selection, NULL, NULL);
+    gwy_debug("Any graph: %d", any);
     gwy_sensitivity_group_set_state(browser->sensgroup,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
@@ -1193,7 +1198,7 @@ gwy_app_data_browser_graph_selection_changed(GtkTreeSelection *selection,
  * Returns: Always %TRUE to be usable as terminal event handler.
  **/
 static gboolean
-gwy_app_data_browser_graph_deleted(GtkWidget *graph_window)
+gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
@@ -1207,7 +1212,7 @@ gwy_app_data_browser_graph_deleted(GtkWidget *graph_window)
     gint i;
 
     gwy_debug("Graph window %p deleted", graph_window);
-    graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(graph_window));
+    graph = gwy_graph_window_get_graph(graph_window);
     gmodel = gwy_graph_get_model(GWY_GRAPH(graph));
     data = g_object_get_qdata(G_OBJECT(gmodel), container_quark);
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(gmodel),
@@ -1226,8 +1231,8 @@ gwy_app_data_browser_graph_deleted(GtkWidget *graph_window)
     }
 
     gtk_list_store_set(proxy->graphs.list, &iter, MODEL_WIDGET, NULL, -1);
-    gwy_app_graph_window_remove(graph_window);
-    gtk_widget_destroy(graph_window);
+    gwy_app_graph_window_remove(GTK_WIDGET(graph_window));
+    gtk_widget_destroy(GTK_WIDGET(graph_window));
 
     return TRUE;
 }
@@ -1395,6 +1400,46 @@ gwy_app_data_browser_delete_object(G_GNUC_UNUSED GwyAppDataBrowser *browser)
 }
 
 static void
+gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    GtkWidget *widget, *window;
+
+    proxy = browser->current;
+    g_return_if_fail(proxy);
+    g_object_ref(proxy->container);
+
+    model = GTK_TREE_MODEL(proxy->channels.list);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, MODEL_WIDGET, &widget, -1);
+            if (widget) {
+                window = gtk_widget_get_toplevel(widget);
+                gwy_app_data_browser_channel_deleted(GWY_DATA_WINDOW(window));
+                g_object_unref(widget);
+            }
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    model = GTK_TREE_MODEL(proxy->graphs.list);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, MODEL_WIDGET, &widget, -1);
+            if (widget) {
+                window = gtk_widget_get_toplevel(widget);
+                gwy_app_data_browser_graph_deleted(GWY_GRAPH_WINDOW(window));
+                g_object_unref(widget);
+            }
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    /* This automagically finalizes the proxy itself */
+    g_object_unref(proxy->container);
+}
+
+static void
 gwy_app_data_browser_page_changed(GwyAppDataBrowser *browser,
                                   G_GNUC_UNUSED GtkNotebookPage *useless_crap,
                                   gint pageno)
@@ -1453,7 +1498,7 @@ gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
 static GwyAppDataBrowser*
 gwy_app_get_data_browser(void)
 {
-    GtkWidget *notebook, *label, *box_page, *scwin, *vbox, *hbox, *button;
+    GtkWidget *label, *box_page, *scwin, *vbox, *hbox, *button;
     GwyAppDataBrowser *browser;
 
     if (gwy_app_data_browser)
@@ -1477,14 +1522,21 @@ gwy_app_get_data_browser(void)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(browser->window), vbox);
 
+    browser->filename = gtk_label_new(NULL);
+    gtk_label_set_ellipsize(GTK_LABEL(browser->filename),
+                            PANGO_ELLIPSIZE_END);
+    gtk_misc_set_alignment(GTK_MISC(browser->filename), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(browser->filename), 4, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), browser->filename, FALSE, FALSE, 0);
+
     /* Create the notebook */
-    notebook = gtk_notebook_new();
-    gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
+    browser->notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(vbox), browser->notebook, TRUE, TRUE, 0);
 
     /* Create Data Channels tab */
     box_page = gtk_vbox_new(FALSE, 0);
     label = gtk_label_new(_("Data Channels"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), box_page, label);
+    gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -1497,7 +1549,7 @@ gwy_app_get_data_browser(void)
     /* Create Graphs tab */
     box_page = gtk_vbox_new(FALSE, 0);
     label = gtk_label_new(_("Graphs"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), box_page, label);
+    gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -1518,7 +1570,14 @@ gwy_app_get_data_browser(void)
                              G_CALLBACK(gwy_app_data_browser_delete_object),
                              browser);
 
-    g_signal_connect_swapped(notebook, "switch-page",
+    button = gwy_tool_like_button_new(_("_Close File"), GTK_STOCK_CLOSE);
+    gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+    gwy_sensitivity_group_add_widget(browser->sensgroup, button, SENS_FILE);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_data_browser_close_file),
+                             browser);
+
+    g_signal_connect_swapped(browser->notebook, "switch-page",
                              G_CALLBACK(gwy_app_data_browser_page_changed),
                              browser);
     g_signal_connect_swapped(browser->window, "delete-event",
@@ -1555,15 +1614,19 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
+    const guchar *filename;
 
     browser = gwy_app_get_data_browser();
-    if (browser->current && browser->current->container == data)
-        return;
     if (!data) {
         gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels), NULL);
         gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs), NULL);
+        gtk_label_set_text(GTK_LABEL(browser->filename), "");
+        gwy_sensitivity_group_set_state(browser->sensgroup,
+                                        SENS_FILE | SENS_OBJECT, 0);
         return;
     }
+    if (browser->current && browser->current->container == data)
+        return;
 
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
@@ -1573,7 +1636,14 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     gwy_app_data_browser_restore_active(GTK_TREE_VIEW(browser->graphs),
                                         &proxy->graphs);
 
-    /* TODO: set title, selection, ... */
+    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+        gchar *s;
+
+        s = g_path_get_basename(filename);
+        gtk_label_set_text(GTK_LABEL(browser->filename), s);
+        g_free(s);
+    }
+    gwy_sensitivity_group_set_state(browser->sensgroup, SENS_FILE, SENS_FILE);
 }
 
 /**
@@ -1612,6 +1682,8 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->channels));
     gtk_tree_selection_select_iter(selection, &iter);
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook),
+                                  PAGE_CHANNELS);
 }
 
 /**
@@ -1654,6 +1726,8 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->graphs));
     gtk_tree_selection_select_iter(selection, &iter);
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook),
+                                  PAGE_GRAPHS);
 }
 
 static gboolean
@@ -1763,6 +1837,7 @@ gwy_app_data_browser_add(GwyContainer *data)
                       "It will be likely finalized right away.");
         }
     }
+    gwy_sensitivity_group_set_state(browser->sensgroup, SENS_FILE, SENS_FILE);
 }
 
 /**
