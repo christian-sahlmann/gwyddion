@@ -1389,7 +1389,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 }
 
 static void
-gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
+gwy_app_data_browser_delete_object(G_GNUC_UNUSED GwyAppDataBrowser *browser)
 {
     gwy_debug("Implement me!");
 }
@@ -1740,6 +1740,8 @@ gwy_app_data_browser_add(GwyContainer *data)
     GtkTreeIter iter;
     GwyDataField *dfield;
 
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data, TRUE);
 
@@ -1763,6 +1765,16 @@ gwy_app_data_browser_add(GwyContainer *data)
     }
 }
 
+/**
+ * gwy_app_data_browser_add_graph_model:
+ * @gmodel: A graph model to add.
+ * @data: A data container to add @gmodel to.
+ * @showit: %TRUE to display it immediately, %FALSE to just add it.
+ *
+ * Adds a graph model to a data container.
+ *
+ * Returns: The id of the graph model in the container.
+ **/
 gint
 gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
                                      GwyContainer *data,
@@ -1773,8 +1785,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
     gchar key[32];
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), -1);
-    if (showit)
-        g_warning("showit not implemented");
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
@@ -1787,9 +1798,32 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
     /* This invokes "item-changed" callback that will finish the work */
     gwy_container_set_object_by_name(proxy->container, key, gmodel);
 
+    if (showit) {
+        GtkWidget *widget;
+        GtkTreeIter iter;
+
+        gwy_app_data_proxy_find_object(proxy->graphs.list,
+                                       proxy->graphs.last + 1,
+                                       &iter);
+        widget = gwy_app_data_browser_create_graph(browser, gmodel);
+        gtk_list_store_set(proxy->graphs.list, &iter,
+                           MODEL_WIDGET, widget,
+                           -1);
+    }
+
     return proxy->graphs.last + 1;
 }
 
+/**
+ * gwy_app_data_browser_add_channel:
+ * @dfield: A data file to add.
+ * @data: A data container to add @dfield to.
+ * @showit: %TRUE to display it immediately, %FALSE to just add it.
+ *
+ * Adds a data field to a data container.
+ *
+ * Returns: The id of the data field in the container.
+ **/
 gint
 gwy_app_data_browser_add_channel(GwyDataField *dfield,
                                  GwyContainer *data,
@@ -1800,8 +1834,7 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
     gchar key[24];
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), -1);
-    if (showit)
-        g_warning("showit not implemented");
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
@@ -1814,7 +1847,247 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
     /* This invokes "item-changed" callback that will finish the work */
     gwy_container_set_object_by_name(proxy->container, key, dfield);
 
+    if (showit) {
+        GtkWidget *widget;
+        GtkTreeIter iter;
+
+        gwy_app_data_proxy_find_object(proxy->channels.list,
+                                       proxy->channels.last + 1,
+                                       &iter);
+        widget = gwy_app_data_browser_create_channel(browser, dfield);
+        gtk_list_store_set(proxy->channels.list, &iter,
+                           MODEL_WIDGET, widget,
+                           -1);
+    }
+
     return proxy->channels.last + 1;
+}
+
+static GQuark
+gwy_app_data_browser_mangle_key(GQuark quark,
+                                const gchar *suffix)
+{
+    const gchar *strkey, *p;
+    gchar *newkey;
+    guint len;
+
+    strkey = g_quark_to_string(quark);
+    g_return_val_if_fail(strkey[0] == GWY_CONTAINER_PATHSEP, 0);
+    /* Premature optimization is the root of all evil */
+    len = strlen(strkey);
+    for (p = strkey + len-1; *p != GWY_CONTAINER_PATHSEP; p--)
+        ;
+    len = strlen(suffix);
+    newkey = g_newa(gchar, p-strkey + 2 + len);
+    memcpy(newkey, strkey, p-strkey + 1);
+    memcpy(newkey + (p-strkey + 1), suffix, len+1);
+
+    return g_quark_from_string(newkey);
+}
+
+void
+gwy_app_data_browser_get_current(GwyAppWhat what,
+                                 ...)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *current;
+    GtkTreeIter iter;
+    GObject *object, **otarget;
+    GwyDataWindow *dw;
+    GwyGraphWindow *gw;
+    GQuark quark, *qtarget;
+    va_list ap;
+
+    if (!what)
+        return;
+
+    va_start(ap, what);
+    browser = gwy_app_data_browser;
+    if (browser)
+        current = browser->current;
+    else
+        current = NULL;
+
+    do {
+        switch (what) {
+            case GWY_APP_CONTAINER:
+            otarget = va_arg(ap, GObject**);
+            *otarget = current ? G_OBJECT(current->container) : NULL;
+            break;
+
+            case GWY_APP_DATA_VIEW:
+            otarget = va_arg(ap, GObject**);
+            /* XXX: This can be a data view NOT showing current container */
+            dw = gwy_app_data_window_get_current();
+            *otarget = dw ? G_OBJECT(gwy_data_window_get_data_view(dw)) : NULL;
+            break;
+
+            case GWY_APP_GRAPH:
+            otarget = va_arg(ap, GObject**);
+            /* XXX: This can be a graph NOT showing current container */
+            gw = GWY_GRAPH_WINDOW(gwy_app_graph_window_get_current());
+            *otarget = gw ? G_OBJECT(gwy_graph_window_get_graph(gw)) : NULL;
+            break;
+
+            case GWY_APP_DATA_FIELD:
+            otarget = va_arg(ap, GObject**);
+            if (!current)
+                *otarget = NULL;
+            else if (!gwy_app_data_proxy_find_object(current->channels.list,
+                                                     current->channels.active,
+                                                     &iter)) {
+                *otarget = NULL;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
+                                   &iter, MODEL_OBJECT, &object, -1);
+                *otarget = object;
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_DATA_FIELD_KEY:
+            qtarget = va_arg(ap, GQuark*);
+            if (!current)
+                *qtarget = 0;
+            else if (!gwy_app_data_proxy_find_object(current->channels.list,
+                                                     current->channels.active,
+                                                     &iter)) {
+                *qtarget = 0;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
+                                   &iter, MODEL_OBJECT, &object, -1);
+                *qtarget = GPOINTER_TO_UINT(g_object_get_qdata(object,
+                                                               own_key_quark));
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_MASK_FIELD:
+            otarget = va_arg(ap, GObject**);
+            if (!current)
+                *otarget = NULL;
+            else if (!gwy_app_data_proxy_find_object(current->channels.list,
+                                                     current->channels.active,
+                                                     &iter)) {
+                *otarget = NULL;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
+                                   &iter, MODEL_OBJECT, &object, -1);
+                quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
+                                                            own_key_quark));
+                quark = gwy_app_data_browser_mangle_key(quark, "mask");
+                *otarget = NULL;
+                gwy_container_gis_object(current->container, quark, otarget);
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_MASK_FIELD_KEY:
+            qtarget = va_arg(ap, GQuark*);
+            if (!current)
+                *qtarget = 0;
+            else if (!gwy_app_data_proxy_find_object(current->channels.list,
+                                                     current->channels.active,
+                                                     &iter)) {
+                *qtarget = 0;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
+                                   &iter, MODEL_OBJECT, &object, -1);
+                quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
+                                                            own_key_quark));
+                *qtarget = gwy_app_data_browser_mangle_key(quark, "mask");
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_SHOW_FIELD:
+            otarget = va_arg(ap, GObject**);
+            if (!current)
+                *otarget = NULL;
+            else if (!gwy_app_data_proxy_find_object(current->channels.list,
+                                                     current->channels.active,
+                                                     &iter)) {
+                *otarget = NULL;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
+                                   &iter, MODEL_OBJECT, &object, -1);
+                quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
+                                                            own_key_quark));
+                quark = gwy_app_data_browser_mangle_key(quark, "show");
+                *otarget = NULL;
+                gwy_container_gis_object(current->container, quark, otarget);
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_SHOW_FIELD_KEY:
+            qtarget = va_arg(ap, GQuark*);
+            if (!current)
+                *qtarget = 0;
+            else if (!gwy_app_data_proxy_find_object(current->channels.list,
+                                                     current->channels.active,
+                                                     &iter)) {
+                *qtarget = 0;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
+                                   &iter, MODEL_OBJECT, &object, -1);
+                quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
+                                                            own_key_quark));
+                *qtarget = gwy_app_data_browser_mangle_key(quark, "show");
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_GRAPH_MODEL:
+            otarget = va_arg(ap, GObject**);
+            if (!current)
+                *otarget = NULL;
+            else if (!gwy_app_data_proxy_find_object(current->graphs.list,
+                                                     current->graphs.active,
+                                                     &iter)) {
+                *otarget = NULL;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->graphs.list), &iter,
+                                   MODEL_OBJECT, &object,
+                                   -1);
+                *otarget = object;
+                g_object_unref(object);
+            }
+            break;
+
+            case GWY_APP_GRAPH_MODEL_KEY:
+            qtarget = va_arg(ap, GQuark*);
+            if (!current)
+                *qtarget = 0;
+            else if (!gwy_app_data_proxy_find_object(current->graphs.list,
+                                                     current->graphs.active,
+                                                     &iter)) {
+                *qtarget = 0;
+            }
+            else {
+                gtk_tree_model_get(GTK_TREE_MODEL(current->graphs.list), &iter,
+                                   MODEL_OBJECT, &object,
+                                   -1);
+                *qtarget = GPOINTER_TO_UINT(g_object_get_qdata(object,
+                                                               own_key_quark));
+                g_object_unref(object);
+            }
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while ((what = va_arg(ap, GwyAppWhat)));
+
+    va_end(ap);
 }
 
 void

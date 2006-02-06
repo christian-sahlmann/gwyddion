@@ -27,6 +27,20 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_APP_CONTAINER = 1,
+    GWY_APP_DATA_VIEW,
+    GWY_APP_GRAPH,
+    GWY_APP_DATA_FIELD,
+    GWY_APP_DATA_FIELD_KEY,
+    GWY_APP_MASK_FIELD,
+    GWY_APP_MASK_FIELD_KEY,
+    GWY_APP_SHOW_FIELD,
+    GWY_APP_SHOW_FIELD_KEY,
+    GWY_APP_GRAPH_MODEL,
+    GWY_APP_GRAPH_MODEL_KEY,
+} GwyAppWhat;
+
 void gwy_app_data_browser_add             (GwyContainer *data);
 void gwy_app_data_browser_select_data_view(GwyDataView *data_view);
 void gwy_app_data_browser_select_graph    (GwyGraph *graph);
@@ -36,6 +50,8 @@ gint gwy_app_data_browser_add_channel     (GwyDataField *dfield,
 gint gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
                                            GwyContainer *data,
                                            gboolean showit);
+void gwy_app_data_browser_get_current     (GwyAppWhat what,
+                                           ...);
 /* XXX */
 void gwy_app_data_browser_shut_down        (void);
 
