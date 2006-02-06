@@ -85,7 +85,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
                         ...)
 {
     va_list ap;
-    const gchar **keys;
+    GQuark *keys;
     guint i, n;
     gulong id;
 
@@ -98,14 +98,14 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     };
     va_end(ap);
 
-    keys = g_newa(const gchar*, n);
+    keys = g_newa(GQuark, n);
     va_start(ap, data);
     for (i = 0; i < n; i++) {
-        keys[i] = va_arg(ap, const gchar*);
+        keys[i] = g_quark_from_string(va_arg(ap, const gchar*));
     }
     va_end(ap);
 
-    id = gwy_app_undo_checkpointv(data, n, keys);
+    id = gwy_app_undo_qcheckpointv(data, n, keys);
 
     return id;
 }
@@ -114,9 +114,9 @@ gwy_app_undo_checkpoint(GwyContainer *data,
  * gwy_app_undo_checkpointv:
  * @data: A data container.
  * @n: The number of strings in @keys.
- * @keys: An array of container keys to save data.
+ * @keys: An array of container string keys to save data.
  *
- * Create a point in the undo history is is possible to return to.
+ * Create a point in the undo history it is possible to return to.
  *
  * In addition to what gwy_undo_checkpointv() does, this function takes care
  * of updating application controls state.
@@ -132,6 +132,77 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 
 
     id = gwy_undo_checkpointv(data, n, keys);
+    if (id)
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+                                      GWY_MENU_FLAG_UNDO);
+
+    return id;
+}
+
+/**
+ * gwy_app_undo_qcheckpoint:
+ * @data: A data container.
+ * @...: 0-terminated list of container item quark keys to save.
+ *
+ * Create a point in the undo history it is possible to return to.
+ *
+ * In addition to what gwy_undo_checkpoint() does, this function takes care
+ * of updating application controls state.
+ *
+ * Returns: Undo level id.  Not useful (yet).
+ **/
+gulong
+gwy_app_undo_qcheckpoint(GwyContainer *data,
+                         ...)
+{
+    va_list ap;
+    GQuark *keys;
+    guint i, n;
+    gulong id;
+
+    n = 0;
+    va_start(ap, data);
+    while (TRUE) {
+        if (!va_arg(ap, GQuark))
+            break;
+        n++;
+    };
+    va_end(ap);
+
+    keys = g_newa(GQuark, n);
+    va_start(ap, data);
+    for (i = 0; i < n; i++) {
+        keys[i] = va_arg(ap, GQuark);
+    }
+    va_end(ap);
+
+    id = gwy_app_undo_qcheckpointv(data, n, keys);
+
+    return id;
+}
+
+/**
+ * gwy_app_undo_checkpointv:
+ * @data: A data container.
+ * @n: The number of strings in @keys.
+ * @keys: An array of container quark keys to save data.
+ *
+ * Create a point in the undo history it is possible to return to.
+ *
+ * In addition to what gwy_undo_checkpointv() does, this function takes care
+ * of updating application controls state.
+ *
+ * Returns: Undo level id.  Not useful (yet).
+ **/
+gulong
+gwy_app_undo_qcheckpointv(GwyContainer *data,
+                          guint n,
+                          const GQuark *keys)
+{
+    gulong id;
+
+
+    id = gwy_undo_qcheckpointv(data, n, keys);
     if (id)
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
                                       GWY_MENU_FLAG_UNDO);
@@ -199,7 +270,7 @@ gwy_undo_checkpoint(GwyContainer *data,
                     ...)
 {
     va_list ap;
-    const gchar **keys;
+    GQuark *keys;
     guint i, n;
     gulong id;
 
@@ -212,14 +283,53 @@ gwy_undo_checkpoint(GwyContainer *data,
     };
     va_end(ap);
 
-    keys = g_newa(const gchar*, n);
+    keys = g_newa(GQuark, n);
     va_start(ap, data);
     for (i = 0; i < n; i++) {
-        keys[i] = va_arg(ap, const gchar*);
+        keys[i] = g_quark_from_string(va_arg(ap, const gchar*));
     }
     va_end(ap);
 
-    id = gwy_undo_checkpointv(data, n, keys);
+    id = gwy_undo_qcheckpointv(data, n, keys);
+
+    return id;
+}
+
+/**
+ * gwy_undo_qcheckpoint:
+ * @data: A data container.
+ * @...: 0-terminated list of container item quark keys to save.
+ *
+ * Create a point in the undo history it is possible to return to.
+ *
+ * Returns: Undo level id.  Not useful (yet).
+ **/
+gulong
+gwy_undo_qcheckpoint(GwyContainer *data,
+                     ...)
+{
+    va_list ap;
+    GQuark *keys;
+    guint i, n;
+    gulong id;
+
+    n = 0;
+    va_start(ap, data);
+    while (TRUE) {
+        if (!va_arg(ap, GQuark))
+            break;
+        n++;
+    };
+    va_end(ap);
+
+    keys = g_newa(GQuark, n);
+    va_start(ap, data);
+    for (i = 0; i < n; i++) {
+        keys[i] = va_arg(ap, GQuark);
+    }
+    va_end(ap);
+
+    id = gwy_undo_qcheckpointv(data, n, keys);
 
     return id;
 }
@@ -228,9 +338,9 @@ gwy_undo_checkpoint(GwyContainer *data,
  * gwy_undo_checkpointv:
  * @data: A data container.
  * @n: The number of strings in @keys.
- * @keys: An array of container keys to save data.
+ * @keys: An array of container string keys to save data.
  *
- * Create a point in the undo history is is possible to return to.
+ * Create a point in the undo history it is possible to return to.
  *
  * Returns: Undo level id.  Not useful (yet).
  **/
@@ -239,12 +349,46 @@ gwy_undo_checkpointv(GwyContainer *data,
                      guint n,
                      const gchar **keys)
 {
+    GQuark *qkeys;
+    guint i;
+
+    if (!UNDO_LEVELS)
+        return 0;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
+    if (!n) {
+        g_warning("Nothing to save for undo, no undo level will be created.");
+        return 0UL;
+    }
+
+    qkeys = g_newa(GQuark, n);
+    for (i = 0; i < n; i++) {
+        qkeys[i] = g_quark_from_string(keys[i]);
+    }
+
+    return gwy_undo_qcheckpointv(data, n, qkeys);
+}
+
+/**
+ * gwy_undo_qcheckpointv:
+ * @data: A data container.
+ * @n: The number of strings in @keys.
+ * @keys: An array of container quark keys to save data.
+ *
+ * Create a point in the undo history it is possible to return to.
+ *
+ * Returns: Undo level id.  Not useful (yet).
+ **/
+gulong
+gwy_undo_qcheckpointv(GwyContainer *data,
+                      guint n,
+                      const GQuark *keys)
+{
     static gulong undo_level_id = 0;
 
     GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
     GList *available;
-    const gchar *key;
     guint i;
 
     if (!UNDO_LEVELS)
@@ -267,15 +411,12 @@ gwy_undo_checkpointv(GwyContainer *data,
     /* fill the things to save, but don't duplicate objects yet */
     for (i = 0; i < n; i++) {
         GwyAppUndoItem *item = level->items + i;
-        GQuark quark;
 
-        key = keys[i];
-        quark = g_quark_from_string(key);
-        item->key = quark;
+        item->key = keys[i];
         memset(&item->value, 0, sizeof(GValue));
         /* note this call itself creates a copy for non-objects; for objects
          * it increases reference count */
-        gwy_container_gis_value(data, quark, &item->value);
+        gwy_container_gis_value(data, item->key, &item->value);
     }
 
     /* add to the undo queue */
@@ -292,7 +433,6 @@ gwy_undo_checkpointv(GwyContainer *data,
 
     return level->id;
 }
-
 /**
  * gwy_app_undo_reuse_levels:
  * @level: An undo level with objects that have to be either duplicated or

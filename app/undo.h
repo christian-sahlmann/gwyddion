@@ -27,17 +27,27 @@ G_BEGIN_DECLS
 
 gulong   gwy_app_undo_checkpoint          (GwyContainer *data,
                                            ...);
+gulong   gwy_app_undo_qcheckpoint         (GwyContainer *data,
+                                           ...);
 gulong   gwy_app_undo_checkpointv         (GwyContainer *data,
                                            guint n,
                                            const gchar **keys);
+gulong   gwy_app_undo_qcheckpointv        (GwyContainer *data,
+                                           guint n,
+                                           const GQuark *keys);
 void     gwy_app_undo_undo_container      (GwyContainer *data);
 void     gwy_app_undo_redo_container      (GwyContainer *data);
 
 gulong   gwy_undo_checkpoint              (GwyContainer *data,
                                            ...);
+gulong   gwy_undo_qcheckpoint             (GwyContainer *data,
+                                           ...);
 gulong   gwy_undo_checkpointv             (GwyContainer *data,
                                            guint n,
                                            const gchar **keys);
+gulong   gwy_undo_qcheckpointv            (GwyContainer *data,
+                                           guint n,
+                                           const GQuark *keys);
 void     gwy_undo_undo_container          (GwyContainer *data);
 void     gwy_undo_redo_container          (GwyContainer *data);
 gboolean gwy_undo_container_has_undo      (GwyContainer *data);
