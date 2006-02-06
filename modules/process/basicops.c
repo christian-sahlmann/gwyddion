@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -126,134 +126,144 @@ module_register(const gchar *name)
     return TRUE;
 }
 
+static inline void
+clean_quarks(guint n,
+             GQuark *quarks,
+             GwyDataField **dfields)
+{
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        if (!dfields[i])
+            quarks[i] = 0;
+    }
+}
+
 static void
 flip_horizontally(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
-    const gchar *keys[3];
-    gsize n;
+    GwyDataField *dfields[3];
+    GQuark quarks[3];
+    gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
-    n = 0;
-    keys[n++] = "/0/data";
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        keys[n++] = "/0/mask";
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        keys[n++] = "/0/show";
-    gwy_app_undo_checkpointv(data, n, keys);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-    gwy_data_field_data_changed(dfield);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
-        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-        gwy_data_field_data_changed(dfield);
-    }
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
-        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-        gwy_data_field_data_changed(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_MASK_FIELD_KEY, quarks + 1,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            gwy_data_field_invert(dfields[i], FALSE, TRUE, FALSE);
+            gwy_data_field_data_changed(dfields[i]);
+        }
     }
 }
 
 static void
 flip_vertically(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
-    const gchar *keys[3];
-    gsize n;
+    GwyDataField *dfields[3];
+    GQuark quarks[3];
+    gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
-    n = 0;
-    keys[n++] = "/0/data";
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        keys[n++] = "/0/mask";
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        keys[n++] = "/0/show";
-    gwy_app_undo_checkpointv(data, n, keys);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-    gwy_data_field_data_changed(dfield);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
-        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-        gwy_data_field_data_changed(dfield);
-    }
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
-        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-        gwy_data_field_data_changed(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_MASK_FIELD_KEY, quarks + 1,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            gwy_data_field_invert(dfields[i], TRUE, FALSE, FALSE);
+            gwy_data_field_data_changed(dfields[i]);
+        }
     }
 }
 
 static void
 invert_value(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
-    const gchar *keys[2];
-    gsize n;
+    GwyDataField *dfields[2];
+    GQuark quarks[2];
+    guint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
-    n = 0;
-    keys[n++] = "/0/data";
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        keys[n++] = "/0/show";
-    gwy_app_undo_checkpointv(data, n, keys);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
-    gwy_data_field_data_changed(dfield);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
-        gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
-        gwy_data_field_data_changed(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_SHOW_FIELD, dfields + 1,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 1,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            gwy_data_field_invert(dfields[i], FALSE, FALSE, TRUE);
+            gwy_data_field_data_changed(dfields[i]);
+        }
     }
 }
 
 static void
 rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
-    GwyDataField *dfield, *old;
-    GwyContainer *newdata;
+    GwyDataField *dfields[3], *newfield;
+    GQuark quarks[3];
+    gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
-    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    newdata = gwy_container_duplicate(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
-                                                             "/0/data"));
-    flip_xy(old, dfield, FALSE);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &old)) {
-        dfield = gwy_container_get_object_by_name(newdata, "/0/mask");
-        flip_xy(old, dfield, FALSE);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_MASK_FIELD_KEY, quarks + 1,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            newfield = gwy_data_field_new_alike(dfields[i], FALSE);
+            flip_xy(dfields[i], newfield, FALSE);
+            gwy_container_set_object(data, quarks[i], newfield);
+            g_object_unref(newfield);
+        }
     }
-    if (gwy_container_gis_object_by_name(data, "/0/show", &old)) {
-        dfield = gwy_container_get_object_by_name(newdata, "/0/show");
-        flip_xy(old, dfield, FALSE);
-    }
-    data_window = gwy_app_data_window_create(newdata);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(newdata);
 }
 
 static void
 rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
-    GwyDataField *dfield, *old;
-    GwyContainer *newdata;
+    GwyDataField *dfields[3], *newfield;
+    GQuark quarks[3];
+    gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
-    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    newdata = gwy_container_duplicate(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
-                                                             "/0/data"));
-    flip_xy(old, dfield, TRUE);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &old)) {
-        dfield = gwy_container_get_object_by_name(newdata, "/0/mask");
-        flip_xy(old, dfield, TRUE);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_MASK_FIELD_KEY, quarks + 1,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            newfield = gwy_data_field_new_alike(dfields[i], FALSE);
+            flip_xy(dfields[i], newfield, TRUE);
+            gwy_container_set_object(data, quarks[i], newfield);
+            g_object_unref(newfield);
+        }
     }
-    if (gwy_container_gis_object_by_name(data, "/0/show", &old)) {
-        dfield = gwy_container_get_object_by_name(newdata, "/0/show");
-        flip_xy(old, dfield, TRUE);
-    }
-    data_window = gwy_app_data_window_create(newdata);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(newdata);
 }
 
 static void
@@ -289,28 +299,25 @@ flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
 static void
 rotate_180(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
-    const gchar *keys[3];
-    gsize n;
+    GwyDataField *dfields[3];
+    GQuark quarks[3];
+    gint i;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
-    n = 0;
-    keys[n++] = "/0/data";
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        keys[n++] = "/0/mask";
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        keys[n++] = "/0/show";
-    gwy_app_undo_checkpointv(data, n, keys);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
-    gwy_data_field_data_changed(dfield);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
-        gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
-        gwy_data_field_data_changed(dfield);
-    }
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
-        gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
-        gwy_data_field_data_changed(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_MASK_FIELD_KEY, quarks + 1,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            gwy_data_field_invert(dfields[i], TRUE, TRUE, FALSE);
+            gwy_data_field_data_changed(dfields[i]);
+        }
     }
 }
 
