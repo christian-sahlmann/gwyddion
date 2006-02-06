@@ -44,7 +44,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -96,10 +96,14 @@ level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     gdouble c, bx, by;
+    GQuark quark;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && quark);
+    gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_fit_plane(dfield, &c, &bx, &by);
     c = -0.5*(bx*gwy_data_field_get_xres(dfield)
               + by*gwy_data_field_get_yres(dfield));
@@ -112,10 +116,14 @@ level_rotate(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     gdouble a, bx, by;
+    GQuark quark;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && quark);
+    gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_fit_plane(dfield, &a, &bx, &by);
     bx = gwy_data_field_rtoj(dfield, bx);
     by = gwy_data_field_rtoi(dfield, by);
@@ -130,10 +138,14 @@ static void
 fix_zero(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
+    GQuark quark;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && quark);
+    gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_min(dfield));
     gwy_data_field_data_changed(dfield);
 }
@@ -142,10 +154,14 @@ static void
 zero_mean(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
+    GQuark quark;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && quark);
+    gwy_app_undo_qcheckpoint(data, quark, NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_data_changed(dfield);
 }
