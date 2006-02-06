@@ -668,7 +668,7 @@ gwy_app_graph_window_create(GwyGraph *graph,
 
     g_warning("gwy_app_graph_window_create() is deprecated and broken");
     gwy_app_data_browser_add_graph_model(gwy_graph_get_model(graph),
-                                         data, FALSE);
+                                         data, TRUE);
     gtk_widget_destroy(GTK_WIDGET(graph));
     return NULL;
 }

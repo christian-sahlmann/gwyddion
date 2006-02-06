@@ -1267,6 +1267,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     gwy_app_add_main_accel_group(GTK_WINDOW(graph_window));
+    gtk_window_set_default_size(GTK_WINDOW(graph_window), 480, 360);
     gtk_widget_show_all(graph_window);
     /* This primarily adds the window to the list of visible windows */
     gwy_app_graph_window_set_current(graph_window);
