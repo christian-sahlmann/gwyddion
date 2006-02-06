@@ -115,6 +115,8 @@ gwy_app_undo_checkpoint(GwyContainer *data,
  * @data: A data container.
  * @n: The number of strings in @keys.
  * @keys: An array of container string keys to save data.
+ *        It can contain holes, that is NUL's, they are ignored.  However, it
+ *        should contain at least one real key.
  *
  * Create a point in the undo history it is possible to return to.
  *
@@ -186,6 +188,8 @@ gwy_app_undo_qcheckpoint(GwyContainer *data,
  * @data: A data container.
  * @n: The number of strings in @keys.
  * @keys: An array of container quark keys to save data.
+ *        It can contain holes, that is 0's, they are ignored.  However, it
+ *        should contain at least one real key.
  *
  * Create a point in the undo history it is possible to return to.
  *
@@ -339,6 +343,8 @@ gwy_undo_qcheckpoint(GwyContainer *data,
  * @data: A data container.
  * @n: The number of strings in @keys.
  * @keys: An array of container string keys to save data.
+ *        It can contain holes, that is NUL's, they are ignored.  However, it
+ *        should contain at least one real key.
  *
  * Create a point in the undo history it is possible to return to.
  *
@@ -350,7 +356,7 @@ gwy_undo_checkpointv(GwyContainer *data,
                      const gchar **keys)
 {
     GQuark *qkeys;
-    guint i;
+    guint i, j;
 
     if (!UNDO_LEVELS)
         return 0;
@@ -362,11 +368,15 @@ gwy_undo_checkpointv(GwyContainer *data,
     }
 
     qkeys = g_newa(GQuark, n);
-    for (i = 0; i < n; i++) {
-        qkeys[i] = g_quark_from_string(keys[i]);
+    for (i = j = 0; i < n; i++) {
+        if (!keys[i])
+            continue;
+
+        qkeys[j] = g_quark_from_string(keys[i]);
+        j++;
     }
 
-    return gwy_undo_qcheckpointv(data, n, qkeys);
+    return gwy_undo_qcheckpointv(data, j, qkeys);
 }
 
 /**
@@ -374,6 +384,8 @@ gwy_undo_checkpointv(GwyContainer *data,
  * @data: A data container.
  * @n: The number of strings in @keys.
  * @keys: An array of container quark keys to save data.
+ *        It can contain holes, that is 0's, they are ignored.  However, it
+ *        should contain at least one real key.
  *
  * Create a point in the undo history it is possible to return to.
  *
@@ -389,13 +401,18 @@ gwy_undo_qcheckpointv(GwyContainer *data,
     GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
     GList *available;
-    guint i;
+    guint i, j;
 
     if (!UNDO_LEVELS)
         return 0;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
-    if (!n) {
+    for (i = j = 0; i < n; i++) {
+        if (keys[i])
+            j++;
+    }
+
+    if (!j) {
         g_warning("Nothing to save for undo, no undo level will be created.");
         return 0UL;
     }
@@ -404,20 +421,24 @@ gwy_undo_qcheckpointv(GwyContainer *data,
     undo_level_id++;
     gwy_debug("Creating a new appundo->undo level #%lu", undo_level_id);
     level = g_new(GwyAppUndoLevel, 1);
-    level->nitems = n;
-    level->items = g_new0(GwyAppUndoItem, n);
+    level->nitems = j;
+    level->items = g_new0(GwyAppUndoItem, j);
     level->id = undo_level_id;
 
     /* fill the things to save, but don't duplicate objects yet */
-    for (i = 0; i < n; i++) {
-        GwyAppUndoItem *item = level->items + i;
+    for (i = j = 0; i < n; i++) {
+        GwyAppUndoItem *item = level->items + j;
 
+        if (!keys[i])
+            continue;
         item->key = keys[i];
         memset(&item->value, 0, sizeof(GValue));
         /* note this call itself creates a copy for non-objects; for objects
          * it increases reference count */
         gwy_container_gis_value(data, item->key, &item->value);
+        j++;
     }
+    g_assert(j == level->nitems);
 
     /* add to the undo queue */
     appundo = gwy_undo_get_for_data(data, TRUE);
