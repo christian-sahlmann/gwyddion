@@ -2007,14 +2007,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_DATA_FIELD:
             otarget = va_arg(ap, GObject**);
-            if (!current)
-                *otarget = NULL;
-            else if (!gwy_app_data_proxy_find_object(current->channels.list,
-                                                     current->channels.active,
-                                                     &iter)) {
-                *otarget = NULL;
-            }
-            else {
+            *otarget = NULL;
+            if (current
+                && gwy_app_data_proxy_find_object(current->channels.list,
+                                                  current->channels.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
                                    &iter, MODEL_OBJECT, &object, -1);
                 *otarget = object;
@@ -2024,14 +2021,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_DATA_FIELD_KEY:
             qtarget = va_arg(ap, GQuark*);
-            if (!current)
-                *qtarget = 0;
-            else if (!gwy_app_data_proxy_find_object(current->channels.list,
-                                                     current->channels.active,
-                                                     &iter)) {
-                *qtarget = 0;
-            }
-            else {
+            *qtarget = 0;
+            if (current
+                && gwy_app_data_proxy_find_object(current->channels.list,
+                                                  current->channels.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
                                    &iter, MODEL_OBJECT, &object, -1);
                 *qtarget = GPOINTER_TO_UINT(g_object_get_qdata(object,
@@ -2042,20 +2036,16 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_MASK_FIELD:
             otarget = va_arg(ap, GObject**);
-            if (!current)
-                *otarget = NULL;
-            else if (!gwy_app_data_proxy_find_object(current->channels.list,
-                                                     current->channels.active,
-                                                     &iter)) {
-                *otarget = NULL;
-            }
-            else {
+            *otarget = NULL;
+            if (current
+                && gwy_app_data_proxy_find_object(current->channels.list,
+                                                  current->channels.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
                                    &iter, MODEL_OBJECT, &object, -1);
                 quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
                                                             own_key_quark));
                 quark = gwy_app_data_browser_mangle_key(quark, "mask");
-                *otarget = NULL;
                 gwy_container_gis_object(current->container, quark, otarget);
                 g_object_unref(object);
             }
@@ -2063,14 +2053,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_MASK_FIELD_KEY:
             qtarget = va_arg(ap, GQuark*);
-            if (!current)
-                *qtarget = 0;
-            else if (!gwy_app_data_proxy_find_object(current->channels.list,
-                                                     current->channels.active,
-                                                     &iter)) {
-                *qtarget = 0;
-            }
-            else {
+            *qtarget = 0;
+            if (current
+                && gwy_app_data_proxy_find_object(current->channels.list,
+                                                  current->channels.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
                                    &iter, MODEL_OBJECT, &object, -1);
                 quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
@@ -2082,20 +2069,16 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_SHOW_FIELD:
             otarget = va_arg(ap, GObject**);
-            if (!current)
-                *otarget = NULL;
-            else if (!gwy_app_data_proxy_find_object(current->channels.list,
-                                                     current->channels.active,
-                                                     &iter)) {
-                *otarget = NULL;
-            }
-            else {
+            *otarget = NULL;
+            if (current
+                && gwy_app_data_proxy_find_object(current->channels.list,
+                                                  current->channels.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
                                    &iter, MODEL_OBJECT, &object, -1);
                 quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
                                                             own_key_quark));
                 quark = gwy_app_data_browser_mangle_key(quark, "show");
-                *otarget = NULL;
                 gwy_container_gis_object(current->container, quark, otarget);
                 g_object_unref(object);
             }
@@ -2103,14 +2086,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_SHOW_FIELD_KEY:
             qtarget = va_arg(ap, GQuark*);
-            if (!current)
-                *qtarget = 0;
-            else if (!gwy_app_data_proxy_find_object(current->channels.list,
-                                                     current->channels.active,
-                                                     &iter)) {
-                *qtarget = 0;
-            }
-            else {
+            *qtarget = 0;
+            if (current
+                && gwy_app_data_proxy_find_object(current->channels.list,
+                                                  current->channels.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
                                    &iter, MODEL_OBJECT, &object, -1);
                 quark = GPOINTER_TO_UINT(g_object_get_qdata(object,
@@ -2122,14 +2102,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_GRAPH_MODEL:
             otarget = va_arg(ap, GObject**);
-            if (!current)
-                *otarget = NULL;
-            else if (!gwy_app_data_proxy_find_object(current->graphs.list,
-                                                     current->graphs.active,
-                                                     &iter)) {
-                *otarget = NULL;
-            }
-            else {
+            *otarget = NULL;
+            if (current
+                && gwy_app_data_proxy_find_object(current->graphs.list,
+                                                  current->graphs.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->graphs.list), &iter,
                                    MODEL_OBJECT, &object,
                                    -1);
@@ -2140,14 +2117,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_GRAPH_MODEL_KEY:
             qtarget = va_arg(ap, GQuark*);
-            if (!current)
-                *qtarget = 0;
-            else if (!gwy_app_data_proxy_find_object(current->graphs.list,
-                                                     current->graphs.active,
-                                                     &iter)) {
-                *qtarget = 0;
-            }
-            else {
+            *qtarget = 0;
+            if (current
+                && gwy_app_data_proxy_find_object(current->graphs.list,
+                                                  current->graphs.active,
+                                                  &iter)) {
                 gtk_tree_model_get(GTK_TREE_MODEL(current->graphs.list), &iter,
                                    MODEL_OBJECT, &object,
                                    -1);
