@@ -177,15 +177,18 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
         case GWY_CORRELATION_POC:
         fftxres = gwy_fft_find_nice_size(xres);
         fftyres = gwy_fft_find_nice_size(yres);
-        data_in_re = gwy_data_field_duplicate(data_field);
+        data_in_re = gwy_data_field_new_resampled(data_field,
+                                                  fftxres, fftyres,
+                                                  GWY_INTERPOLATION_BILINEAR);
         kernel_in_re = gwy_data_field_new_alike(data_field, TRUE);
         gwy_data_field_area_copy(kernel_field, kernel_in_re,
                                  0, 0, kernel_field->xres, kernel_field->yres,
                                  kernel_in_re->xres/2 - kernel_field->xres/2,
                                  kernel_in_re->yres/2 - kernel_field->yres/2);
-        gwy_data_field_resample(data_in_re, fftxres, fftyres, GWY_INTERPOLATION_BILINEAR);
-        gwy_data_field_resample(kernel_in_re, fftxres, fftyres, GWY_INTERPOLATION_BILINEAR);
-        gwy_data_field_resample(score, fftxres, fftyres, GWY_INTERPOLATION_NONE);
+        gwy_data_field_resample(kernel_in_re, fftxres, fftyres,
+                                GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(score, fftxres, fftyres,
+                                GWY_INTERPOLATION_NONE);
 
         data_out_re = gwy_data_field_new_alike(data_in_re, TRUE);
         data_out_im = gwy_data_field_new_alike(data_in_re, TRUE);

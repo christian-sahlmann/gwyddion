@@ -49,8 +49,8 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
     xnewres = (gint)pow(2, dimexp) + 1;
 
-    buffer = gwy_data_field_duplicate(data_field);
-    gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
+    buffer = gwy_data_field_new_resampled(data_field, xnewres, xnewres,
+                                          interpolation);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(yresult);
@@ -87,11 +87,10 @@ fractal_partitioning_nomask(GwyDataField *data_field,
     dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
     xnewres = (gint)pow(2, dimexp) + 1;
 
-    buffer = gwy_data_field_duplicate(data_field);
-    maskbuffer = gwy_data_field_duplicate(mask_field);
-    gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
-    gwy_data_field_resample(maskbuffer, xnewres, xnewres,
-                            GWY_INTERPOLATION_ROUND);
+    buffer = gwy_data_field_new_resampled(data_field, xnewres, xnewres,
+                                          interpolation);
+    maskbuffer = gwy_data_field_new_resampled(mask_field, xnewres, xnewres,
+                                              GWY_INTERPOLATION_ROUND);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(yresult);

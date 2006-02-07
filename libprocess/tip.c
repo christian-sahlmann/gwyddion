@@ -515,10 +515,10 @@ get_right_tip_field(GwyDataField *tip,
 
     if (fabs(tipxstep/surfxstep - 1.0) > 0.01
         || fabs(tipystep/surfystep - 1.0) > 0.01) {
-        buffer = gwy_data_field_duplicate(tip);
-        gwy_data_field_resample(buffer, tip->xres/surfxstep*tipxstep,
-                                tip->yres/surfystep*tipystep,
-                                GWY_INTERPOLATION_BILINEAR);
+        buffer = gwy_data_field_new_resampled(tip,
+                                              tip->xres/surfxstep*tipxstep,
+                                              tip->yres/surfystep*tipystep,
+                                              GWY_INTERPOLATION_BILINEAR);
         *freetip = TRUE;
         return buffer;
     }
