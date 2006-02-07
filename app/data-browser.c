@@ -1879,7 +1879,8 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
     g_return_val_if_fail(proxy, -1);
 
     g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, proxy->graphs.last + 1);
-    /* This invokes "item-changed" callback that will finish the work */
+    /* This invokes "item-changed" callback that will finish the work.
+     * Among other things, it will update proxy->graphs.last. */
     gwy_container_set_object_by_name(proxy->container, key, gmodel);
 
     if (showit) {
@@ -1887,7 +1888,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
         GtkTreeIter iter;
 
         gwy_app_data_proxy_find_object(proxy->graphs.list,
-                                       proxy->graphs.last + 1,
+                                       proxy->graphs.last,
                                        &iter);
         widget = gwy_app_data_browser_create_graph(browser, gmodel);
         gtk_list_store_set(proxy->graphs.list, &iter,
@@ -1895,7 +1896,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
                            -1);
     }
 
-    return proxy->graphs.last + 1;
+    return proxy->graphs.last;
 }
 
 /**
@@ -1928,7 +1929,8 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
     g_return_val_if_fail(proxy, -1);
 
     g_snprintf(key, sizeof(key), "/%d/data", proxy->channels.last + 1);
-    /* This invokes "item-changed" callback that will finish the work */
+    /* This invokes "item-changed" callback that will finish the work.
+     * Among other things, it will update proxy->channels.last. */
     gwy_container_set_object_by_name(proxy->container, key, dfield);
 
     if (showit) {
@@ -1936,7 +1938,7 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
         GtkTreeIter iter;
 
         gwy_app_data_proxy_find_object(proxy->channels.list,
-                                       proxy->channels.last + 1,
+                                       proxy->channels.last,
                                        &iter);
         widget = gwy_app_data_browser_create_channel(browser, dfield);
         gtk_list_store_set(proxy->channels.list, &iter,
@@ -1944,7 +1946,7 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
                            -1);
     }
 
-    return proxy->channels.last + 1;
+    return proxy->channels.last;
 }
 
 static GQuark
