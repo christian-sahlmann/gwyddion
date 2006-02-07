@@ -74,6 +74,9 @@ GwyDataField*     gwy_data_field_new                 (gint xres,
 GwyDataField*     gwy_data_field_new_alike           (GwyDataField *model,
                                                       gboolean nullme);
 void              gwy_data_field_data_changed        (GwyDataField *data_field);
+GwyDataField*  gwy_data_field_new_resampled(GwyDataField *data_field,
+                                            gint xres, gint yres,
+                                            GwyInterpolationType interpolation);
 void              gwy_data_field_resample  (GwyDataField *data_field,
                                             gint xres,
                                             gint yres,

@@ -198,6 +198,64 @@ gwy_data_field_new_alike(GwyDataField *model,
     return data_field;
 }
 
+/**
+ * gwy_data_field_new_resampled:
+ * @data_field: A data source field.
+ * @xres: Desired X resolution.
+ * @yres: Desired Y resolution.
+ * @interpolation: Interpolation method to use.
+ *
+ * Creates a new data field by resampling an existing one.
+ *
+ * This method is equivalent to gwy_data_field_duplicate() followed by
+ * gwy_data_field_resample(), but it is more efficient.
+ *
+ * Returns: A newly created data field.
+ **/
+GwyDataField*
+gwy_data_field_new_resampled(GwyDataField *data_field,
+                             gint xres, gint yres,
+                             GwyInterpolationType interpolation)
+{
+    GwyDataField *result;
+    gdouble *p;
+    gdouble xratio, yratio;
+    gint i, j;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    if (data_field->xres == xres && data_field->yres == yres)
+        return gwy_data_field_duplicate(data_field);
+
+    g_return_val_if_fail(xres > 0 && yres > 0, NULL);
+
+    result = gwy_data_field_new(xres, yres,
+                                data_field->xreal, data_field->yreal,
+                                FALSE);
+    result->xoff = data_field->xoff;
+    result->yoff = data_field->yoff;
+    if (data_field->si_unit_xy)
+        result->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
+    if (data_field->si_unit_z)
+        result->si_unit_z = gwy_si_unit_duplicate(data_field->si_unit_z);
+
+    if (interpolation == GWY_INTERPOLATION_NONE)
+        return result;
+
+    xratio = data_field->xres/(gdouble)xres;
+    yratio = data_field->yres/(gdouble)yres;
+
+    p = result->data;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++, p++) {
+            *p = gwy_data_field_get_dval(data_field,
+                                         (j + 0.5)*xratio, (i + 0.5)*yratio,
+                                         interpolation);
+        }
+    }
+
+    return result;
+}
+
 static GByteArray*
 gwy_data_field_serialize(GObject *obj,
                          GByteArray *buffer)
@@ -547,7 +605,7 @@ gwy_data_field_resample(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (data_field->xres == xres && data_field->yres == yres)
         return;
-    g_return_if_fail(xres > 1 && yres > 1);
+    g_return_if_fail(xres > 0 && yres > 0);
 
     gwy_data_field_invalidate(data_field);
 
