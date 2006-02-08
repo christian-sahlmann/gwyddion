@@ -19,12 +19,10 @@
  */
 
 #include "config.h"
-#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/correct.h>
-#include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
 #define OUTLIERS_RUN_MODES GWY_RUN_IMMEDIATE
@@ -33,33 +31,28 @@ static gboolean module_register(const gchar *name);
 static void     outliers       (GwyContainer *data,
                                 GwyRunType run);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Creates mask of outliers."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo outliers_func_info = {
-        "outliers",
-        N_("/_Correct Data/_Mask of Outliers"),
-        (GwyProcessFunc)&outliers,
-        OUTLIERS_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &outliers_func_info);
+    gwy_process_func_registe2("outliers",
+                              (GwyProcessFunc)&outliers,
+                              N_("/_Correct Data/Mask of _Outliers"),
+                              NULL,
+                              OUTLIERS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Mark data farther than 3σ from mean value"));
 
     return TRUE;
 }
@@ -68,15 +61,20 @@ static void
 outliers(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *maskfield;
+    GQuark dquark, mquark;
     gdouble thresh = 3.0;
 
     g_return_if_fail(run & OUTLIERS_RUN_MODES);
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &maskfield,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpoint(data, dquark, mquark, 0);
+    if (!maskfield) {
         maskfield = gwy_data_field_new_alike(dfield, FALSE);
-        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        gwy_container_set_object(data, mquark, maskfield);
         g_object_unref(maskfield);
     }
     gwy_data_field_mask_outliers(dfield, maskfield, thresh);
