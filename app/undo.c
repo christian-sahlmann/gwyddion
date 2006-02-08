@@ -184,7 +184,7 @@ gwy_app_undo_qcheckpoint(GwyContainer *data,
 }
 
 /**
- * gwy_app_undo_checkpointv:
+ * gwy_app_undo_qcheckpointv:
  * @data: A data container.
  * @n: The number of strings in @keys.
  * @keys: An array of container quark keys to save data.
