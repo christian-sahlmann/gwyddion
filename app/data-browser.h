@@ -33,27 +33,43 @@ typedef enum {
     GWY_APP_GRAPH,
     GWY_APP_DATA_FIELD,
     GWY_APP_DATA_FIELD_KEY,
+    GWY_APP_DATA_FIELD_ID,
     GWY_APP_MASK_FIELD,
     GWY_APP_MASK_FIELD_KEY,
     GWY_APP_SHOW_FIELD,
     GWY_APP_SHOW_FIELD_KEY,
     GWY_APP_GRAPH_MODEL,
     GWY_APP_GRAPH_MODEL_KEY,
-} GwyAppWhat;
+    GWY_APP_GRAPH_MODEL_ID,
+} GwyAppWhat;   /* XXX: silly name */
 
-void gwy_app_data_browser_add             (GwyContainer *data);
-void gwy_app_data_browser_select_data_view(GwyDataView *data_view);
-void gwy_app_data_browser_select_graph    (GwyGraph *graph);
-gint gwy_app_data_browser_add_channel     (GwyDataField *dfield,
-                                           GwyContainer *data,
-                                           gboolean showit);
-gint gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
-                                           GwyContainer *data,
-                                           gboolean showit);
-void gwy_app_data_browser_get_current     (GwyAppWhat what,
-                                           ...);
+typedef enum {
+    GWY_DATA_ITEM_GRADIENT = 1,
+    GWY_DATA_ITEM_PALETTE = GWY_DATA_ITEM_GRADIENT,
+    GWY_DATA_ITEM_RANGE,
+    GWY_DATA_ITEM_MASK_COLOR,
+    /* GWY_DATA_ITEM_SELECTION: Current, all? */
+} GwyDataItem;
+
+void   gwy_app_data_browser_add                 (GwyContainer *data);
+void   gwy_app_data_browser_select_data_view    (GwyDataView *data_view);
+void   gwy_app_data_browser_select_graph        (GwyGraph *graph);
+gint   gwy_app_data_browser_add_channel         (GwyDataField *dfield,
+                                                 GwyContainer *data,
+                                                 gboolean showit);
+gint   gwy_app_data_browser_add_graph_model     (GwyGraphModel *gmodel,
+                                                 GwyContainer *data,
+                                                 gboolean showit);
+void   gwy_app_data_browser_get_current         (GwyAppWhat what,
+                                                 ...);
+void   gwy_app_copy_data_items                  (GwyContainer *data,
+                                                 gint from_id,
+                                                 gint to_id,
+                                                 ...);
+GQuark gwy_app_get_mask_key_for_id              (gint id);
+GQuark gwy_app_get_presentation_key_for_id      (gint id);
 /* XXX */
-void gwy_app_data_browser_shut_down        (void);
+void   gwy_app_data_browser_shut_down           (void);
 
 G_END_DECLS
 
