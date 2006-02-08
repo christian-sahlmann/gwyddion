@@ -110,6 +110,11 @@ gwy_process_func_register(const gchar *modname,
  * vanish.  If they are constructed (non-constant) strings, do not free them.
  * Should modules ever become unloadable they will get chance to clean-up.
  *
+ * XXX: The function name is not typo.  It will eventually replace
+ * gwy_process_func_register() and it will be renamed to it.  Therefore the
+ * name should have the same number of characters to avoid code alignment
+ * issues.
+ *
  * Returns: Normally %TRUE; %FALSE on failure.
  **/
 gboolean
