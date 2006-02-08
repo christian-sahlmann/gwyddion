@@ -170,7 +170,7 @@ gwy_app_file_load(const gchar *filename_utf8,
                   const gchar *filename_sys,
                   const gchar *name)
 {
-    GtkWidget *data_window = NULL, *dialog;
+    GtkWidget *dialog;
     gboolean free_utf8 = FALSE, free_sys = FALSE;
     GwyContainer *data;
     GError *err = NULL;

@@ -1951,6 +1951,7 @@ gwy_app_data_browser_add_channel(GwyDataField *dfield,
     return proxy->channels.last;
 }
 
+#if 0
 static GQuark
 gwy_app_data_browser_mangle_key(GQuark quark,
                                 const gchar *suffix)
@@ -1972,7 +1973,16 @@ gwy_app_data_browser_mangle_key(GQuark quark,
 
     return g_quark_from_string(newkey);
 }
+#endif
 
+/**
+ * gwy_app_get_mask_key_for_id:
+ * @id: Data number in container.
+ *
+ * Calculates mask quark identifier from its id.
+ *
+ * Returns: The quark key identifying mask number @id.
+ **/
 GQuark
 gwy_app_get_mask_key_for_id(gint id)
 {
@@ -1992,6 +2002,14 @@ gwy_app_get_mask_key_for_id(gint id)
     return g_quark_from_string(key);
 }
 
+/**
+ * gwy_app_get_presentation_key_for_id:
+ * @id: Data number in container.
+ *
+ * Calculates presentation quark identifier from its id.
+ *
+ * Returns: The quark key identifying presentation number @id.
+ **/
 GQuark
 gwy_app_get_presentation_key_for_id(gint id)
 {
@@ -2016,13 +2034,14 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                                  ...)
 {
     GwyAppDataBrowser *browser;
-    GwyAppDataProxy *current;
+    GwyAppDataProxy *current = NULL;
+    GwyAppDataList *channels = NULL, *graphs = NULL;
     GtkTreeIter iter;
     GObject *object, **otarget;
     GObject *dfield = NULL, *gmodel = NULL;  /* Cache current */
     GwyDataWindow *dw;
     GwyGraphWindow *gw;
-    GQuark dquark = 0, gquark = 0, quark, *qtarget;
+    GQuark quark, *qtarget;
     gint *itarget;
     va_list ap;
 
@@ -2031,10 +2050,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
     va_start(ap, what);
     browser = gwy_app_data_browser;
-    if (browser)
+    if (browser) {
         current = browser->current;
-    else
-        current = NULL;
+        channels = &current->channels;
+        graphs = &current->graphs;
+    }
 
     do {
         switch (what) {
@@ -2066,17 +2086,16 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             case GWY_APP_SHOW_FIELD_KEY:
             if (!dfield
                 && current
-                && gwy_app_data_proxy_find_object(current->channels.list,
-                                                  current->channels.active,
-                                                  &iter)) {
-                gtk_tree_model_get(GTK_TREE_MODEL(current->channels.list),
-                                   &iter, MODEL_OBJECT, &object, -1);
+                && gwy_app_data_proxy_find_object(channels->list,
+                                                  channels->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(channels->list), &iter,
+                                   MODEL_OBJECT, &object, -1);
                 dfield = object;
-                dquark = GPOINTER_TO_UINT(g_object_get_qdata(object,
-                                                             own_key_quark));
                 g_object_unref(object);
             }
-            switch (what){
+            else
+                quark = 0;
+            switch (what) {
                 case GWY_APP_DATA_FIELD:
                 otarget = va_arg(ap, GObject**);
                 *otarget = dfield;
@@ -2084,19 +2103,22 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
                 case GWY_APP_DATA_FIELD_KEY:
                 qtarget = va_arg(ap, GQuark*);
-                *qtarget = dquark;
+                *qtarget = 0;
+                if (dfield)
+                    *qtarget = GPOINTER_TO_UINT(g_object_get_qdata
+                                                      (dfield, own_key_quark));
                 break;
 
                 case GWY_APP_DATA_FIELD_ID:
                 itarget = va_arg(ap, gint*);
-                *itarget = dfield ? current->channels.active : -1;
+                *itarget = dfield ? channels->active : -1;
                 break;
 
                 case GWY_APP_MASK_FIELD:
                 otarget = va_arg(ap, GObject**);
                 *otarget = NULL;
-                if (dquark) {
-                    quark = gwy_app_data_browser_mangle_key(dquark, "mask");
+                if (dfield) {
+                    quark = gwy_app_get_mask_key_for_id(channels->active);
                     gwy_container_gis_object(current->container, quark,
                                              otarget);
                 }
@@ -2105,15 +2127,15 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 case GWY_APP_MASK_FIELD_KEY:
                 qtarget = va_arg(ap, GQuark*);
                 *qtarget = 0;
-                if (dquark)
-                    *qtarget = gwy_app_data_browser_mangle_key(dquark, "mask");
+                if (dfield)
+                    *qtarget = gwy_app_get_mask_key_for_id(channels->active);
                 break;
 
                 case GWY_APP_SHOW_FIELD:
                 otarget = va_arg(ap, GObject**);
                 *otarget = NULL;
-                if (dquark) {
-                    quark = gwy_app_data_browser_mangle_key(dquark, "show");
+                if (dfield) {
+                    quark = gwy_app_get_presentation_key_for_id(channels->active);
                     gwy_container_gis_object(current->container, quark,
                                              otarget);
                 }
@@ -2122,8 +2144,8 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 case GWY_APP_SHOW_FIELD_KEY:
                 qtarget = va_arg(ap, GQuark*);
                 *qtarget = 0;
-                if (dquark)
-                    *qtarget = gwy_app_data_browser_mangle_key(dquark, "show");
+                if (dfield)
+                    *qtarget = gwy_app_get_presentation_key_for_id(channels->active);
                 break;
 
                 default:
@@ -2137,17 +2159,14 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             case GWY_APP_GRAPH_MODEL_ID:
             if (!gmodel
                 && current
-                && gwy_app_data_proxy_find_object(current->graphs.list,
-                                                  current->graphs.active,
-                                                  &iter)) {
-                gtk_tree_model_get(GTK_TREE_MODEL(current->graphs.list),
-                                   &iter, MODEL_OBJECT, &object, -1);
+                && gwy_app_data_proxy_find_object(graphs->list,
+                                                  graphs->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(graphs->list), &iter,
+                                   MODEL_OBJECT, &object, -1);
                 gmodel = object;
-                gquark = GPOINTER_TO_UINT(g_object_get_qdata(object,
-                                                             own_key_quark));
                 g_object_unref(object);
             }
-            switch (what){
+            switch (what) {
                 case GWY_APP_GRAPH_MODEL:
                 otarget = va_arg(ap, GObject**);
                 *otarget = gmodel;
@@ -2155,12 +2174,15 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
                 case GWY_APP_GRAPH_MODEL_KEY:
                 qtarget = va_arg(ap, GQuark*);
-                *qtarget = gquark;
+                *qtarget = 0;
+                if (gmodel)
+                    *qtarget = GPOINTER_TO_UINT(g_object_get_qdata
+                                                       (gmodel, own_key_quark));
                 break;
 
                 case GWY_APP_GRAPH_MODEL_ID:
                 itarget = va_arg(ap, gint*);
-                *itarget = gmodel ? current->graphs.active : -1;
+                *itarget = gmodel ? graphs->active : -1;
                 break;
 
                 default:
