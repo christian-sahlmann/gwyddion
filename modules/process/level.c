@@ -24,6 +24,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define LEVEL_RUN_MODES GWY_RUN_IMMEDIATE
@@ -54,39 +55,35 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo level_func_info = {
-        "level",
-        N_("/_Level/_Level"),
-        (GwyProcessFunc)&level,
-        LEVEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo level_rotate_func_info = {
-        "level_rotate",
-        N_("/_Level/Level _Rotate"),
-        (GwyProcessFunc)&level_rotate,
-        LEVEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo fix_zero_func_info = {
-        "fix_zero",
-        N_("/_Level/Fix _Zero"),
-        (GwyProcessFunc)&fix_zero,
-        LEVEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo zero_mean_func_info = {
-        "zero_mean",
-        N_("/_Level/Zero _Mean Value"),
-        (GwyProcessFunc)&zero_mean,
-        LEVEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &level_func_info);
-    gwy_process_func_register(name, &level_rotate_func_info);
-    gwy_process_func_register(name, &fix_zero_func_info);
-    gwy_process_func_register(name, &zero_mean_func_info);
+    gwy_process_func_registe2("level",
+                              (GwyProcessFunc)&level,
+                              N_("/_Level/_Level"),
+                              GWY_STOCK_LEVEL,
+                              LEVEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Automatically level data by plane "
+                                 "subtraction"));
+    gwy_process_func_registe2("level_rotate",
+                              (GwyProcessFunc)&level_rotate,
+                              N_("/_Level/Level _Rotate"),
+                              NULL,
+                              LEVEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Automatically level data by plane rotation"));
+    gwy_process_func_registe2("fix_zero",
+                              (GwyProcessFunc)&fix_zero,
+                              N_("/_Level/Fix _Zero"),
+                              GWY_STOCK_FIX_ZERO,
+                              LEVEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Shift minimum data value to zero"));
+    gwy_process_func_registe2("zero_mean",
+                              (GwyProcessFunc)&zero_mean,
+                              N_("/_Level/Zero _Mean Value"),
+                              NULL,
+                              LEVEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Shift mean data value to zero"));
 
     return TRUE;
 }
