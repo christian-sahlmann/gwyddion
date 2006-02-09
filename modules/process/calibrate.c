@@ -130,22 +130,18 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo calibrate_func_info = {
-        "calibrate",
-        N_("/_Basic Operations/_Recalibrate..."),
-        (GwyProcessFunc)&calibrate,
-        CALIBRATE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &calibrate_func_info);
+    gwy_process_func_registe2("calibrate",
+                              (GwyProcessFunc)&calibrate,
+                              N_("/_Basic Operations/_Recalibrate..."),
+                              NULL,
+                              CALIBRATE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Recalibrate data"));
 
     return TRUE;
 }
@@ -153,23 +149,29 @@ module_register(const gchar *name)
 static void
 calibrate(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfields[3];
+    GQuark quark;
+    gint oldid, newid;
     CalibrateArgs args;
     gboolean ok;
 
     g_return_if_fail(run & CALIBRATE_RUN_MODES);
-    calibrate_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfields[0]);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    args.xorig = gwy_data_field_get_xreal(dfield);
-    args.yorig = gwy_data_field_get_yreal(dfield);
-    args.zorig = gwy_data_field_get_max(dfield)
-                 - gwy_data_field_get_min(dfield);
-    args.xres = gwy_data_field_get_xres(dfield);
-    args.yres = gwy_data_field_get_yres(dfield);
-    args.x0orig = gwy_data_field_get_xoffset(dfield);
-    args.y0orig = gwy_data_field_get_yoffset(dfield);
+    calibrate_load_args(gwy_app_settings_get(), &args);
+    args.xorig = gwy_data_field_get_xreal(dfields[0]);
+    args.yorig = gwy_data_field_get_yreal(dfields[0]);
+    args.zorig = gwy_data_field_get_max(dfields[0])
+                 - gwy_data_field_get_min(dfields[0]);
+    args.xres = gwy_data_field_get_xres(dfields[0]);
+    args.yres = gwy_data_field_get_yres(dfields[0]);
+    args.x0orig = gwy_data_field_get_xoffset(dfields[0]);
+    args.y0orig = gwy_data_field_get_yoffset(dfields[0]);
     args.xyorigexp = 3*floor(log10(args.xorig*args.yorig)/6);
     args.zorigexp = 3*floor(log10(args.zorig)/3);
     args.xreal = args.xratio * args.xorig;
@@ -187,20 +189,36 @@ calibrate(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    data = gwy_container_duplicate(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    //data = gwy_container_duplicate(data);
+    //dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+//"/0/data"));
+
+    dfields[0] = gwy_data_field_duplicate(dfields[0]);
 
     if (args.xreal != args.xorig)
-        gwy_data_field_set_xreal(dfield, args.xreal);
+        gwy_data_field_set_xreal(dfields[0], args.xreal);
     if (args.yreal != args.yorig)
-        gwy_data_field_set_yreal(dfield, args.yreal);
+        gwy_data_field_set_yreal(dfields[0], args.yreal);
     if (args.zratio != 1.0)
-        gwy_data_field_multiply(dfield, args.zratio);
+        gwy_data_field_multiply(dfields[0], args.zratio);
     if (args.x0 != args.x0orig)
-        gwy_data_field_set_xoffset(dfield, args.x0);
+        gwy_data_field_set_xoffset(dfields[0], args.x0);
     if (args.y0 != args.y0orig)
-        gwy_data_field_set_yoffset(dfield, args.y0);
+        gwy_data_field_set_yoffset(dfields[0], args.y0);
 
+    if (dfields[1]) {
+        dfields[1] = gwy_data_field_duplicate(dfields[1]);
+        gwy_data_field_set_xreal(dfields[1], args.xreal);
+        gwy_data_field_set_yreal(dfields[1], args.yreal);
+    }
+
+    if (dfields[2]) {
+        dfields[2] = gwy_data_field_duplicate(dfields[2]);
+        gwy_data_field_set_xreal(dfields[1], args.xreal);
+        gwy_data_field_set_yreal(dfields[1], args.yreal);
+    }
+
+    /*
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         gwy_data_field_set_xreal(dfield, args.xreal);
         gwy_data_field_set_yreal(dfield, args.yreal);
@@ -209,10 +227,31 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_set_xreal(dfield, args.xreal);
         gwy_data_field_set_yreal(dfield, args.yreal);
     }
+    */
+    newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
+    g_object_unref(dfields[0]);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    if (dfields[1]) {
+        quark = gwy_app_get_mask_key_for_id(newid);
+        gwy_container_set_object(data, quark, dfields[1]);
+        g_object_unref(dfields[1]);
+    }
+    if (dfields[2]) {
+        quark = gwy_app_get_presentation_key_for_id(newid);
+        gwy_container_set_object(data, quark, dfields[2]);
+        g_object_unref(dfields[2]);
+    }
 
+    gwy_app_set_data_field_title(data, newid, _("Recalibrated Data"));
+
+    /*
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    g_object_unref(data);*/
 }
 
 static gboolean
