@@ -262,9 +262,9 @@ gwy_app_toolbox_create(void)
             "grain_dist",
         },
         {
-            GWY_STOCK_FRACTAL,
-            N_("Calculate fractal dimension"),
-            "fractal",
+            GWY_STOCK_MASK_REMOVE,
+            N_("Remove mask"),
+            "mask_remove",
         },
         {
             GWY_STOCK_SHADER,
