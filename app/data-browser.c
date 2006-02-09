@@ -2029,6 +2029,49 @@ gwy_app_get_presentation_key_for_id(gint id)
     return g_quark_from_string(key);
 }
 
+/**
+ * gwy_app_set_data_field_title:
+ * @data: A data container.
+ * @id: The data channel id.
+ * @name: The title to set.  It can be %NULL to use somthing like "Untitled".
+ *        The id will be appended to it or (replaced in it if it already ends
+ *        with digits).
+ *
+ * Sets channel title.
+ **/
+void
+gwy_app_set_data_field_title(GwyContainer *data,
+                             gint id,
+                             const gchar *name)
+{
+    gchar key[32], *title;
+    const gchar *p;
+
+    if (!name) {
+        name = _("Untitled");
+        p = name + strlen(name);
+    }
+    else {
+        p = name + strlen(name);
+        while (p > name && g_ascii_isdigit(*p))
+            p--;
+        if (!g_ascii_isspace(*p))
+            p = name + strlen(name);
+    }
+    title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
+    g_snprintf(key, sizeof(key), "/%i/data/title", id);
+    gwy_container_set_string_by_name(data, key, title);
+}
+
+/**
+ * gwy_app_data_browser_get_current:
+ * @what: First information about current objects to obtain.
+ * @...: pointer to store the information to (object pointer for objects,
+ *       #GQuark pointer for keys, #gint pointer for id's), followed by
+ *       0-terminated list of #GwyAppWhat, pointer couples.
+ *
+ * Gets information about current objects.
+ **/
 void
 gwy_app_data_browser_get_current(GwyAppWhat what,
                                  ...)

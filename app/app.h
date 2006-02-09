@@ -35,6 +35,7 @@ typedef enum {
     GWY_APP_WINDOW_TYPE_ANY   = 7
 } GwyAppWindowType;
 
+#ifndef GWY_DISABLE_DEPRECATED
 GwyContainer*  gwy_app_get_current_data            (void);
 GwyDataWindow* gwy_app_data_window_get_current     (void);
 gboolean       gwy_app_data_window_set_current     (GwyDataWindow *window);
@@ -63,6 +64,7 @@ gboolean       gwy_app_3d_window_set_current       (GtkWidget *window);
 GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
 gint           gwy_app_data_window_set_untitled    (GwyDataWindow *window,
                                                     const gchar *templ);
+#endif
 void           gwy_app_add_main_accel_group        (GtkWindow *window);
 void           gwy_app_save_window_position        (GtkWindow *window,
                                                     const gchar *prefix,
