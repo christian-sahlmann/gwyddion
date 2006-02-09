@@ -86,15 +86,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo scale_func_info = {
-        "scale",
-        N_("/_Basic Operations/Scale..."),
-        (GwyProcessFunc)&scale,
-        SCALE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &scale_func_info);
+    gwy_process_func_registe2("scale",
+                              (GwyProcessFunc)&scale,
+                              N_("/_Basic Operations/Scale..."),
+                              GWY_STOCK_SCALE,
+                              SCALE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Scale data"));
 
     return TRUE;
 }
@@ -102,16 +100,23 @@ module_register(const gchar *name)
 static void
 scale(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfields[3];
+    GQuark quark;
+    gint oldid, newid;
     ScaleArgs args;
     gboolean ok;
 
     g_return_if_fail(run & SCALE_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfields[0]);
+
     scale_load_args(gwy_app_settings_get(), &args);
-    args.xres = gwy_data_field_get_xres(dfield);
-    args.yres = gwy_data_field_get_yres(dfield);
+    args.xres = gwy_data_field_get_xres(dfields[0]);
+    args.yres = gwy_data_field_get_yres(dfields[0]);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = scale_dialog(&args);
         scale_save_args(gwy_app_settings_get(), &args);
@@ -119,26 +124,42 @@ scale(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    data = gwy_container_duplicate(data);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_resample(dfield,
-                            ROUND(args.ratio*args.xres),
-                            ROUND(args.ratio*args.yres),
-                            args.interp);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_resample(dfield,
-                                ROUND(args.ratio*args.xres),
-                                ROUND(args.ratio*args.yres),
-                                args.interp);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_resample(dfield,
-                                ROUND(args.ratio*args.xres),
-                                ROUND(args.ratio*args.yres),
-                                args.interp);
+    dfields[0] = gwy_data_field_new_resampled(dfields[0],
+                                              ROUND(args.ratio*args.xres),
+                                              ROUND(args.ratio*args.yres),
+                                              args.interp);
+    if (dfields[1]) {
+        dfields[1] = gwy_data_field_new_resampled(dfields[1],
+                                                  ROUND(args.ratio*args.xres),
+                                                  ROUND(args.ratio*args.yres),
+                                                  args.interp);
+    }
+    if (dfields[2]) {
+        dfields[2] = gwy_data_field_new_resampled(dfields[2],
+                                                  ROUND(args.ratio*args.xres),
+                                                  ROUND(args.ratio*args.yres),
+                                                  args.interp);
+    }
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
+    g_object_unref(dfields[0]);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    if (dfields[1]) {
+        quark = gwy_app_get_mask_key_for_id(newid);
+        gwy_container_set_object(data, quark, dfields[1]);
+        g_object_unref(dfields[1]);
+    }
+    if (dfields[2]) {
+        quark = gwy_app_get_presentation_key_for_id(newid);
+        gwy_container_set_object(data, quark, dfields[2]);
+        g_object_unref(dfields[2]);
+    }
+
+    gwy_app_set_data_field_title(data, newid, _("Scaled Data"));
 }
 
 static gboolean
