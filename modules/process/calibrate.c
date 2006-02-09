@@ -189,10 +189,6 @@ calibrate(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    //data = gwy_container_duplicate(data);
-    //dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-//"/0/data"));
-
     dfields[0] = gwy_data_field_duplicate(dfields[0]);
 
     if (args.xreal != args.xorig)
@@ -218,16 +214,6 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_set_yreal(dfields[1], args.yreal);
     }
 
-    /*
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
-        gwy_data_field_set_xreal(dfield, args.xreal);
-        gwy_data_field_set_yreal(dfield, args.yreal);
-    }
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
-        gwy_data_field_set_xreal(dfield, args.xreal);
-        gwy_data_field_set_yreal(dfield, args.yreal);
-    }
-    */
     newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
     g_object_unref(dfields[0]);
     gwy_app_copy_data_items(data, data, oldid, newid,
@@ -247,11 +233,6 @@ calibrate(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_set_data_field_title(data, newid, _("Recalibrated Data"));
-
-    /*
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);*/
 }
 
 static gboolean

@@ -90,16 +90,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo rotate_func_info = {
-        "rotate",
-        N_("/_Basic Operations/Rotate by _Angle..."),
-        (GwyProcessFunc)&rotate,
-        ROTATE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &rotate_func_info);
-
+    gwy_process_func_registe2("rotate",
+                              (GwyProcessFunc)&rotate,
+                              N_("/_Basic Operations/Rotate by _Angle..."),
+                              GWY_STOCK_ROTATE,
+                              ROTATE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Rotate by arbitrary angle"));
     return TRUE;
 }
 
@@ -142,13 +139,20 @@ rotate_datafield(GwyDataField *dfield,
 static void
 rotate(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfields[3];
+    GQuark quark;
+    gint oldid, newid;
     RotateArgs args;
     gboolean ok;
 
     g_return_if_fail(run & ROTATE_RUN_MODES);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfields[0]);
+
     rotate_load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = rotate_dialog(&args, data);
@@ -157,17 +161,36 @@ rotate(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    data = gwy_container_duplicate(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    rotate_datafield(dfield, &args);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        rotate_datafield(dfield, &args);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        rotate_datafield(dfield, &args);
+    dfields[0] = gwy_data_field_duplicate(dfields[0]);
+    rotate_datafield(dfields[0], &args);
+    if (dfields[1]) {
+        dfields[1] = gwy_data_field_duplicate(dfields[1]);
+        rotate_datafield(dfields[1], &args);
+    }
+    if (dfields[2]) {
+        dfields[2] = gwy_data_field_duplicate(dfields[2]);
+        rotate_datafield(dfields[2], &args);
+    }
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
+    g_object_unref(dfields[0]);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    if (dfields[1]) {
+        quark = gwy_app_get_mask_key_for_id(newid);
+        gwy_container_set_object(data, quark, dfields[1]);
+        g_object_unref(dfields[1]);
+    }
+    if (dfields[2]) {
+        quark = gwy_app_get_presentation_key_for_id(newid);
+        gwy_container_set_object(data, quark, dfields[2]);
+        g_object_unref(dfields[2]);
+    }
+
+    gwy_app_set_data_field_title(data, newid, _("Rotated Data"));
 }
 
 /* create a smaller copy of data */
@@ -175,25 +198,37 @@ static GwyContainer*
 create_preview_data(GwyContainer *data)
 {
     GwyContainer *preview;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *dfield_show;
+    gint oldid;
     gint xres, yres;
     gdouble zoomval;
 
-    preview = gwy_container_duplicate_by_prefix(data,
-                                                "/0/data",
-                                                "/0/base/palette",
-                                                NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(preview,
-                                                             "/0/data"));
+    preview = gwy_container_new();
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+
+    dfield = gwy_data_field_duplicate(dfield);
+    dfield_show = gwy_data_field_duplicate(dfield);
+
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
     gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
                             GWY_INTERPOLATION_BILINEAR);
-    dfield = gwy_data_field_duplicate(dfield);
-    gwy_container_set_object_by_name(preview, "/0/show", dfield);
-    g_object_unref(dfield);
+    dfield_show = gwy_data_field_duplicate(dfield);
 
+    gwy_container_set_object_by_name(preview, "/0/data", dfield);
+    g_object_unref(dfield);
+    gwy_container_set_object_by_name(preview, "/0/show", dfield_show);
+    g_object_unref(dfield_show);
+
+    gwy_app_copy_data_items(data, preview, oldid, 0,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     return preview;
 }
 
