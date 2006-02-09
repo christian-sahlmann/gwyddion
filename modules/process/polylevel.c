@@ -30,6 +30,9 @@
 #define POLYLEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
+    PREVIEW_SIZE = 120,
+    /* Polynomial fitting is numerically unstable, use Legendre polynomials
+     * or something like that */
     MAX_DEGREE = 5
 };
 
@@ -46,6 +49,9 @@ typedef struct {
     GtkObject *row_degree;
     GtkWidget *do_extract;
     GtkWidget *same_degree;
+    GtkWidget *leveled_view;
+    GtkWidget *bg_view;
+    GwyContainer *data;
     gboolean in_update;
 } PolyLevelControls;
 
@@ -53,8 +59,14 @@ static gboolean module_register                  (const gchar *name);
 static void     poly_level                       (GwyContainer *data,
                                                   GwyRunType run);
 static void     poly_level_do                    (GwyContainer *data,
+                                                  GwyDataField *dfield,
+                                                  GQuark quark,
+                                                  gint oldid,
                                                   PolyLevelArgs *args);
-static gboolean poly_level_dialog                (PolyLevelArgs *args);
+static gboolean poly_level_dialog                (PolyLevelArgs *args,
+                                                  GwyContainer *data,
+                                                  GwyDataField *dfield,
+                                                  gint id);
 static void     poly_level_dialog_update         (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
 static void     poly_level_update_values         (PolyLevelControls *controls,
@@ -63,6 +75,8 @@ static void     poly_level_same_degree_changed   (GtkWidget *button,
                                                   PolyLevelControls *controls);
 static void     poly_level_degree_changed        (GtkObject *spin,
                                                   PolyLevelControls *controls);
+static void     poly_level_update_preview        (PolyLevelControls *controls,
+                                                  PolyLevelArgs *args);
 static void     load_args                        (GwyContainer *container,
                                                   PolyLevelArgs *args);
 static void     save_args                        (GwyContainer *container,
@@ -81,7 +95,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -105,34 +119,39 @@ module_register(const gchar *name)
 static void
 poly_level(GwyContainer *data, GwyRunType run)
 {
+    GwyDataField *dfield;
+    GQuark quark;
     PolyLevelArgs args;
     gboolean ok;
+    gint id;
 
     g_return_if_fail(run & POLYLEVEL_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(dfield && quark);
+
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = poly_level_dialog(&args);
+        ok = poly_level_dialog(&args, data, dfield, id);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
-    poly_level_do(data, &args);
+    poly_level_do(data, dfield, quark, id, &args);
 }
 
 static void
 poly_level_do(GwyContainer *data,
+              GwyDataField *dfield,
+              GQuark quark,
+              gint oldid,
               PolyLevelArgs *args)
 {
-    GwyDataField *dfield;
-    GQuark quark;
-    gint xres, yres, oldid, newid;
+    gint xres, yres, newid, i;
     gdouble *coeffs;
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
-                                     GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &oldid,
-                                     0);
-    g_return_if_fail(dfield && quark);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -150,10 +169,12 @@ poly_level_do(GwyContainer *data,
     }
 
     dfield = gwy_data_field_new_alike(dfield, TRUE);
+    /* Invert coeffs, we do not have anything like add_polynom() */
+    for (i = 0; i < (args->col_degree + 1)*(args->row_degree + 1); i++)
+        coeffs[i] = -coeffs[i];
     gwy_data_field_area_subtract_polynom(dfield, 0, 0, xres, yres,
                                          args->col_degree, args->row_degree,
                                          coeffs);
-    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
     g_free(coeffs);
 
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
@@ -164,17 +185,63 @@ poly_level_do(GwyContainer *data,
     gwy_app_set_data_field_title(data, newid, _("Background"));
 }
 
+/* create a smaller copy of data */
+static GwyContainer*
+create_preview_data(GwyContainer *data,
+                    GwyDataField *dfield,
+                    gint id)
+{
+    GwyContainer *pdata;
+    GwyDataField *pfield;
+    gint xres, yres;
+    gdouble zoomval;
+
+    pdata = gwy_container_new();
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
+    xres = MAX(xres*zoomval, 3);
+    yres = MAX(yres*zoomval, 3);
+
+    /* Base data */
+    pfield = gwy_data_field_new_resampled(dfield, xres, yres,
+                                          GWY_INTERPOLATION_ROUND);
+    gwy_container_set_object_by_name(pdata, "/source", pfield);
+    g_object_unref(pfield);
+
+    /* Leveled */
+    pfield = gwy_data_field_new_alike(pfield, FALSE);
+    gwy_container_set_object_by_name(pdata, "/0/data", pfield);
+    g_object_unref(pfield);
+
+    /* Background */
+    pfield = gwy_data_field_new_alike(pfield, FALSE);
+    gwy_container_set_object_by_name(pdata, "/1/data", pfield);
+    g_object_unref(pfield);
+
+    gwy_app_copy_data_items(data, pdata, id, 0, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_copy_data_items(data, pdata, id, 1, GWY_DATA_ITEM_GRADIENT, 0);
+
+    return pdata;
+}
+
 static gboolean
-poly_level_dialog(PolyLevelArgs *args)
+poly_level_dialog(PolyLevelArgs *args,
+                  GwyContainer *data,
+                  GwyDataField *dfield,
+                  gint id)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table;
+    GtkWidget *dialog, *table, *label, *hbox;
+    GwyPixmapLayer *layer;
     PolyLevelControls controls;
     gint response;
     gint row;
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.data = create_preview_data(data, dfield, id);
+
     dialog = gtk_dialog_new_with_buttons(_("Remove Polynomial Background"),
                                          NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -184,11 +251,50 @@ poly_level_dialog(PolyLevelArgs *args)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
+
+    table = gtk_table_new(2, 2, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 8);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
+    row = 0;
+
+    controls.leveled_view = gwy_data_view_new(controls.data);
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.leveled_view), layer);
+    gtk_table_attach(GTK_TABLE(table), controls.leveled_view,
+                     0, 1, row, row+1, 0, 0, 2, 2);
+
+    controls.bg_view = gwy_data_view_new(controls.data);
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/1/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.bg_view), layer);
+    gtk_table_attach(GTK_TABLE(table), controls.bg_view,
+                     1, 2, row, row+1, 0, 0, 2, 2);
+
+    g_object_unref(controls.data);
+    row++;
+
+    label = gtk_label_new(_("Leveled data"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 2, 2);
+
+    label = gtk_label_new(_("Background"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 2, 2);
+    row++;
+
     table = gtk_table_new(4, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     row = 0;
 
     controls.col_degree = gtk_adjustment_new(args->col_degree,
@@ -227,6 +333,8 @@ poly_level_dialog(PolyLevelArgs *args)
     row++;
 
     controls.in_update = FALSE;
+    poly_level_update_preview(&controls, args);
+
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -301,6 +409,7 @@ poly_level_same_degree_changed(GtkWidget *button,
     args->row_degree = args->col_degree;
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->row_degree),
                              args->row_degree);
+    poly_level_update_preview(controls, controls->args);
     controls->in_update = FALSE;
 }
 
@@ -321,8 +430,10 @@ poly_level_degree_changed(GtkObject *spin,
     else
         args->row_degree = ROUND(v);
 
-    if (!args->same_degree)
+    if (!args->same_degree) {
+        poly_level_update_preview(controls, controls->args);
         return;
+    }
 
     controls->in_update = TRUE;
     if (spin == controls->col_degree) {
@@ -341,7 +452,44 @@ poly_level_degree_changed(GtkObject *spin,
               gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->row_degree)),
               args->row_degree);
 
+    poly_level_update_preview(controls, controls->args);
     controls->in_update = FALSE;
+}
+
+static void
+poly_level_update_preview(PolyLevelControls *controls,
+                          PolyLevelArgs *args)
+{
+    GwyDataField *source, *leveled, *bg;
+    gdouble *coeffs;
+    gint xres, yres, i;
+
+    gwy_container_gis_object_by_name(controls->data, "/source", &source);
+    gwy_container_gis_object_by_name(controls->data, "/0/data", &leveled);
+    gwy_container_gis_object_by_name(controls->data, "/1/data", &bg);
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    coeffs = gwy_data_field_area_fit_polynom(source, 0, 0, xres, yres,
+                                             args->col_degree, args->row_degree,
+                                             NULL);
+
+    gwy_data_field_copy(source, leveled, FALSE);
+    gwy_data_field_area_subtract_polynom(leveled, 0, 0, xres, yres,
+                                         args->col_degree, args->row_degree,
+                                         coeffs);
+    gwy_data_field_data_changed(leveled);
+
+    for (i = 0; i < (args->col_degree + 1)*(args->row_degree + 1); i++)
+        coeffs[i] = -coeffs[i];
+
+    gwy_data_field_clear(bg);
+    gwy_data_field_area_subtract_polynom(bg, 0, 0, xres, yres,
+                                         args->col_degree, args->row_degree,
+                                         coeffs);
+    gwy_data_field_data_changed(bg);
+
+    g_free(coeffs);
 }
 
 static const gchar col_degree_key[]  = "/module/polylevel/col_degree";

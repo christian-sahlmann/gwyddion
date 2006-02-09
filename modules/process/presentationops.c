@@ -46,7 +46,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -56,20 +56,6 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo presentation_remove_func_info = {
-        "presentation_remove",
-        N_("/_Display/_Remove Presentation"),
-        (GwyProcessFunc)&presentation_remove,
-        PRESENTATIONOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo presentation_extract_func_info = {
-        "presentation_extract",
-        N_("/_Display/E_xtract Presentation"),
-        (GwyProcessFunc)&presentation_extract,
-        PRESENTATIONOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
-    };
     static GwyProcessFuncInfo presentation_attach_func_info = {
         "presentation_attach",
         N_("/_Display/_Attach Presentation..."),
@@ -78,8 +64,20 @@ module_register(const gchar *name)
         GWY_MENU_FLAG_DATA,
     };
 
-    gwy_process_func_register(name, &presentation_remove_func_info);
-    gwy_process_func_register(name, &presentation_extract_func_info);
+    gwy_process_func_registe2("presentation_remove",
+                              (GwyProcessFunc)&presentation_remove,
+                              N_("/_Display/_Remove Presentation"),
+                              NULL,
+                              PRESENTATIONOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
+                              N_("Remove presentation from data"));
+    gwy_process_func_registe2("presentation_extract",
+                              (GwyProcessFunc)&presentation_extract,
+                              N_("/_Display/E_xtract Presentation"),
+                              NULL,
+                              PRESENTATIONOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
+                              N_("Extract presentation to a new channel"));
     gwy_process_func_register(name, &presentation_attach_func_info);
 
     return TRUE;
@@ -88,41 +86,36 @@ module_register(const gchar *name)
 static void
 presentation_remove(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GQuark quark;
 
     g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
-    g_return_if_fail(dfield);
-
-    gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    gwy_container_remove_by_name(data, "/0/show");
+    gwy_app_data_browser_get_current(GWY_APP_SHOW_FIELD_KEY, &quark, 0);
+    g_return_if_fail(quark);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
+    gwy_container_remove(data, quark);
 }
 
 static void
 presentation_extract(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     GwyDataField *dfield;
-    const guchar *pal = NULL;
+    GQuark quark;
+    gint oldid, newid;
 
     g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
-    g_return_if_fail(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &oldid,
+                                     GWY_APP_SHOW_FIELD_KEY, &quark,
+                                     GWY_APP_SHOW_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && quark);
 
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     dfield = gwy_data_field_duplicate(dfield);
-    gwy_data_field_normalize(dfield);
-
-    data = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
-    if (pal)
-        gwy_container_set_string_by_name(data, "/0/base/palette",
-                                         g_strdup(pal));
-
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            0);
+    gwy_app_set_data_field_title(data, newid, NULL);
 }
 
 static void

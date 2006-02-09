@@ -31,7 +31,7 @@
 #define SHADE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 160
+    PREVIEW_SIZE = 120
 };
 
 typedef struct {
@@ -40,12 +40,12 @@ typedef struct {
 } ShadeArgs;
 
 typedef struct {
+    ShadeArgs *args;
     GtkWidget *shader;
     GtkObject *theta;
     GtkObject *phi;
     GtkWidget *data_view;
     GwyContainer *data;
-    ShadeArgs *args;
     gboolean in_update;
 } ShadeControls;
 
@@ -64,11 +64,11 @@ static void        phi_changed_cb               (GtkObject *adj,
                                                  ShadeControls *controls);
 static void        shade_dialog_update          (ShadeControls *controls,
                                                  ShadeArgs *args);
-static void        shade_load_args              (GwyContainer *container,
+static void        load_args                    (GwyContainer *container,
                                                  ShadeArgs *args);
-static void        shade_save_args              (GwyContainer *container,
+static void        save_args                    (GwyContainer *container,
                                                  ShadeArgs *args);
-static void        shade_sanitize_args          (ShadeArgs *args);
+static void        sanitize_args                (ShadeArgs *args);
 
 
 static const ShadeArgs shade_defaults = {
@@ -121,10 +121,10 @@ shade(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && dquark && squark);
 
-    shade_load_args(gwy_app_settings_get(), &args);
+    load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = shade_dialog(&args, data, dfield, id);
-        shade_save_args(gwy_app_settings_get(), &args);
+        save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
@@ -181,13 +181,14 @@ shade_dialog(ShadeArgs *args,
 {
     GtkWidget *dialog, *hbox, *table, *spin;
     GwyPixmapLayer *layer;
-    const guchar *palette;
+    const guchar *pal;
     ShadeControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response, row;
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.data = create_preview_data(data, dfield, id);
 
     dialog = gtk_dialog_new_with_buttons(_("Shading"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -205,9 +206,9 @@ shade_dialog(ShadeArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    palette = NULL;
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &palette);
-    controls.shader = gwy_shader_new(palette);
+    pal = NULL;
+    gwy_container_gis_string_by_name(controls.data, "/0/base/palette", &pal);
+    controls.shader = gwy_shader_new(pal);
     gwy_shader_set_angle(GWY_SHADER(controls.shader), args->theta, args->phi);
     gtk_widget_set_size_request(controls.shader, 72, 72);
     g_signal_connect(controls.shader, "angle_changed",
@@ -233,7 +234,6 @@ shade_dialog(ShadeArgs *args,
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 
-    controls.data = create_preview_data(data, dfield, id);
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();
@@ -349,26 +349,26 @@ static const gchar theta_key[] = "/module/shade/theta";
 static const gchar phi_key[]   = "/module/shade/phi";
 
 static void
-shade_sanitize_args(ShadeArgs *args)
+sanitize_args(ShadeArgs *args)
 {
     args->theta = CLAMP(args->theta, 0.0, G_PI/2.0);
     args->phi = CLAMP(args->phi, 0.0, 2.0*G_PI);
 }
 
 static void
-shade_load_args(GwyContainer *container,
-                ShadeArgs *args)
+load_args(GwyContainer *container,
+          ShadeArgs *args)
 {
     *args = shade_defaults;
 
     gwy_container_gis_double_by_name(container, theta_key, &args->theta);
     gwy_container_gis_double_by_name(container, phi_key, &args->phi);
-    shade_sanitize_args(args);
+    sanitize_args(args);
 }
 
 static void
-shade_save_args(GwyContainer *container,
-                ShadeArgs *args)
+save_args(GwyContainer *container,
+          ShadeArgs *args)
 {
     gwy_container_set_double_by_name(container, theta_key, args->theta);
     gwy_container_set_double_by_name(container, phi_key, args->phi);
