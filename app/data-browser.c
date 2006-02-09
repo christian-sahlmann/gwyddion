@@ -1902,7 +1902,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 
 /**
  * gwy_app_data_browser_add_data_field:
- * @dfield: A data file to add.
+ * @dfield: A data field to add.
  * @data: A data container to add @dfield to.
  *        It can be %NULL to add the data field to current data container.
  * @showit: %TRUE to display it immediately, %FALSE to just add it.
