@@ -2201,7 +2201,8 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 }
 
 void
-gwy_app_copy_data_items(GwyContainer *data,
+gwy_app_copy_data_items(GwyContainer *source,
+                        GwyContainer *dest,
                         gint from_id,
                         gint to_id,
                         ...)
@@ -2214,9 +2215,10 @@ gwy_app_copy_data_items(GwyContainer *data,
     gdouble dbl;
     va_list ap;
 
-    g_return_if_fail(GWY_IS_CONTAINER(data));
+    g_return_if_fail(GWY_IS_CONTAINER(source));
+    g_return_if_fail(GWY_IS_CONTAINER(dest));
     g_return_if_fail(from_id >= 0 && to_id >= 0);
-    if (from_id == to_id)
+    if (source == dest && from_id == to_id)
         return;
 
     va_start(ap, to_id);
@@ -2224,36 +2226,36 @@ gwy_app_copy_data_items(GwyContainer *data,
         switch (what) {
             case GWY_DATA_ITEM_GRADIENT:
             g_snprintf(key, sizeof(key), "/%d/base/palette", from_id);
-            if (gwy_container_gis_string_by_name(data, key, &name)) {
+            if (gwy_container_gis_string_by_name(source, key, &name)) {
                 g_snprintf(key, sizeof(key), "/%d/base/palette", to_id);
-                gwy_container_set_string_by_name(data, key, g_strdup(name));
+                gwy_container_set_string_by_name(dest, key, g_strdup(name));
             }
             break;
 
             case GWY_DATA_ITEM_MASK_COLOR:
             g_snprintf(key, sizeof(key), "/%d/mask", from_id);
-            if (gwy_rgba_get_from_container(&rgba, data, key)) {
+            if (gwy_rgba_get_from_container(&rgba, source, key)) {
                 g_snprintf(key, sizeof(key), "/%d/mask", to_id);
-                gwy_rgba_store_to_container(&rgba, data, key);
+                gwy_rgba_store_to_container(&rgba, dest, key);
             }
             break;
 
             case GWY_DATA_ITEM_RANGE:
             g_snprintf(key, sizeof(key), "/%d/base/range-type", from_id);
-            if (gwy_container_gis_enum_by_name(data, key, &enumval)) {
+            if (gwy_container_gis_enum_by_name(source, key, &enumval)) {
                 g_snprintf(key, sizeof(key), "/%d/base/range-type", to_id);
-                gwy_container_set_enum_by_name(data, key, enumval);
+                gwy_container_set_enum_by_name(dest, key, enumval);
             }
 
             g_snprintf(key, sizeof(key), "/%d/base/min", from_id);
-            if (gwy_container_gis_double_by_name(data, key, &dbl)) {
+            if (gwy_container_gis_double_by_name(source, key, &dbl)) {
                 g_snprintf(key, sizeof(key), "/%d/base/min", to_id);
-                gwy_container_set_double_by_name(data, key, dbl);
+                gwy_container_set_double_by_name(dest, key, dbl);
             }
             g_snprintf(key, sizeof(key), "/%d/base/max", from_id);
-            if (gwy_container_gis_double_by_name(data, key, &dbl)) {
+            if (gwy_container_gis_double_by_name(source, key, &dbl)) {
                 g_snprintf(key, sizeof(key), "/%d/base/max", to_id);
-                gwy_container_set_double_by_name(data, key, dbl);
+                gwy_container_set_double_by_name(dest, key, dbl);
             }
             break;
 
