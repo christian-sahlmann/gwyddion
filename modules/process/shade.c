@@ -31,7 +31,7 @@
 #define SHADE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 120
+    PREVIEW_SIZE = 160
 };
 
 typedef struct {
@@ -53,7 +53,9 @@ static gboolean    module_register              (const gchar *name);
 static void        shade                        (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    shade_dialog                 (ShadeArgs *args,
-                                                 GwyContainer *data);
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 gint id);
 static void        shade_changed_cb             (GtkWidget *shader,
                                                  ShadeControls *controls);
 static void        theta_changed_cb             (GtkObject *adj,
@@ -79,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -89,15 +91,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo shade_func_info = {
-        "shade",
-        N_("/_Display/_Shading..."),
-        (GwyProcessFunc)&shade,
-        SHADE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &shade_func_info);
+    gwy_process_func_registe2("shade",
+                              (GwyProcessFunc)&shade,
+                              N_("/_Display/_Shading..."),
+                              GWY_STOCK_SHADER,
+                              SHADE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Shade data"));
 
     return TRUE;
 }
@@ -106,37 +106,38 @@ static void
 shade(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *shadefield;
+    GQuark dquark, squark;
     GwySIUnit *siunit;
     ShadeArgs args;
     gboolean ok;
+    gint id;
 
     g_return_if_fail(run & SHADE_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &shadefield,
+                                     0);
+    g_return_if_fail(dfield && dquark && squark);
 
     shade_load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = shade_dialog(&args, data);
+        ok = shade_dialog(&args, data, dfield, id);
         shade_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
 
-    gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    siunit = gwy_si_unit_new("");
-    if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(shadefield,
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_set_si_unit_z(shadefield, siunit);
-    }
-    else {
+    gwy_app_undo_qcheckpointv(data, 1, &squark);
+    if (!shadefield) {
         shadefield = gwy_data_field_new_alike(dfield, FALSE);
+        siunit = gwy_si_unit_new("");
         gwy_data_field_set_si_unit_z(shadefield, siunit);
-        gwy_container_set_object_by_name(data, "/0/show", shadefield);
+        g_object_unref(siunit);
+        gwy_container_set_object(data, squark, shadefield);
         g_object_unref(shadefield);
     }
-    g_object_unref(siunit);
 
     gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
     gwy_data_field_normalize(shadefield);
@@ -145,33 +146,38 @@ shade(GwyContainer *data, GwyRunType run)
 
 /* create a smaller copy of data */
 static GwyContainer*
-create_preview_data(GwyContainer *data)
+create_preview_data(GwyContainer *data,
+                    GwyDataField *dfield,
+                    gint id)
 {
-    GwyContainer *preview;
-    GwyDataField *dfield;
+    GwyContainer *pdata;
+    GwyDataField *pfield;
     gint xres, yres;
     gdouble zoomval;
 
-    preview = gwy_container_duplicate_by_prefix(data,
-                                                "/0/data",
-                                                "/0/base/palette",
-                                                NULL);
-    dfield = gwy_container_get_object_by_name(preview, "/0/data");
+    pdata = gwy_container_new();
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
-    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
-                            GWY_INTERPOLATION_BILINEAR);
-    dfield = gwy_data_field_duplicate(dfield);
-    gwy_container_set_object_by_name(preview, "/0/show", dfield);
-    g_object_unref(dfield);
+    xres = MAX(xres*zoomval, 3);
+    yres = MAX(yres*zoomval, 3);
+    pfield = gwy_data_field_new_resampled(dfield, xres, yres,
+                                          GWY_INTERPOLATION_ROUND);
+    gwy_container_set_object_by_name(pdata, "/0/data", pfield);
+    g_object_unref(pfield);
+    pfield = gwy_data_field_new_alike(pfield, FALSE);
+    gwy_container_set_object_by_name(pdata, "/0/show", pfield);
+    g_object_unref(pfield);
+    gwy_app_copy_data_items(data, pdata, id, 0, GWY_DATA_ITEM_GRADIENT, 0);
 
-    return preview;
+    return pdata;
 }
 
 static gboolean
 shade_dialog(ShadeArgs *args,
-             GwyContainer *data)
+             GwyContainer *data,
+             GwyDataField *dfield,
+             gint id)
 {
     GtkWidget *dialog, *hbox, *table, *spin;
     GwyPixmapLayer *layer;
@@ -227,7 +233,7 @@ shade_dialog(ShadeArgs *args,
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 
-    controls.data = create_preview_data(data);
+    controls.data = create_preview_data(data, dfield, id);
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();

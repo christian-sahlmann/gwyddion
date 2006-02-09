@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -91,15 +91,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo poly_level_func_info = {
-        "polylevel",
-        N_("/_Level/_Polynomial Background..."),
-        (GwyProcessFunc)&poly_level,
-        POLYLEVEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &poly_level_func_info);
+    gwy_process_func_registe2("polylevel",
+                              (GwyProcessFunc)&poly_level,
+                              N_("/_Level/_Polynomial Background..."),
+                              GWY_STOCK_POLYNOM,
+                              POLYLEVEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Remove polynomial backgroud"));
 
     return TRUE;
 }
@@ -125,16 +123,17 @@ static void
 poly_level_do(GwyContainer *data,
               PolyLevelArgs *args)
 {
-    GtkWidget *data_window;
-    GwyContainer *newdata;
-    const guchar *pal = NULL;
     GwyDataField *dfield;
-    gint xres, yres;
+    GQuark quark;
+    gint xres, yres, oldid, newid;
     gdouble *coeffs;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield && quark);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     coeffs = gwy_data_field_area_fit_polynom(dfield, 0, 0, xres, yres,
@@ -157,16 +156,12 @@ poly_level_do(GwyContainer *data,
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
     g_free(coeffs);
 
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-    newdata = (GwyContainer*)gwy_container_new();
-    if (pal)
-        gwy_container_set_string_by_name(newdata, "/0/base/palette",
-                                         g_strdup(pal));
-    gwy_container_set_object_by_name(newdata, "/0/data", dfield);
-    data_window = gwy_app_data_window_create(newdata);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                     _("Background"));
-    g_object_unref(newdata);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    g_object_unref(dfield);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            0);
+    gwy_app_set_data_field_title(data, newid, _("Background"));
 }
 
 static gboolean
