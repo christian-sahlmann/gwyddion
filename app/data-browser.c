@@ -1901,7 +1901,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_app_data_browser_add_channel:
+ * gwy_app_data_browser_add_data_field:
  * @dfield: A data file to add.
  * @data: A data container to add @dfield to.
  *        It can be %NULL to add the data field to current data container.
@@ -1912,9 +1912,9 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
  * Returns: The id of the data field in the container.
  **/
 gint
-gwy_app_data_browser_add_channel(GwyDataField *dfield,
-                                 GwyContainer *data,
-                                 gboolean showit)
+gwy_app_data_browser_add_data_field(GwyDataField *dfield,
+                                    GwyContainer *data,
+                                    gboolean showit)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;

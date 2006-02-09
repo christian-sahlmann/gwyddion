@@ -54,7 +54,7 @@ typedef enum {
 void   gwy_app_data_browser_add                 (GwyContainer *data);
 void   gwy_app_data_browser_select_data_view    (GwyDataView *data_view);
 void   gwy_app_data_browser_select_graph        (GwyGraph *graph);
-gint   gwy_app_data_browser_add_channel         (GwyDataField *dfield,
+gint   gwy_app_data_browser_add_data_field      (GwyDataField *dfield,
                                                  GwyContainer *data,
                                                  gboolean showit);
 gint   gwy_app_data_browser_add_graph_model     (GwyGraphModel *gmodel,
