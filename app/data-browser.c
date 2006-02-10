@@ -1403,9 +1403,97 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 }
 
 static void
-gwy_app_data_browser_delete_object(G_GNUC_UNUSED GwyAppDataBrowser *browser)
+gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 {
-    gwy_debug("Implement me!");
+    GwyAppDataProxy *proxy;
+    GtkTreeSelection *selection;
+    GtkTreeView *treeview;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GObject *object;
+    GtkWidget *widget, *window;
+    GwyContainer *data;
+    gchar key[32];
+    gint i, page;
+
+    g_return_if_fail(browser->current);
+    proxy = browser->current;
+    page = browser->active_page;
+
+    switch (page) {
+        case PAGE_CHANNELS:
+        treeview = GTK_TREE_VIEW(browser->channels);
+        break;
+
+        case PAGE_GRAPHS:
+        treeview = GTK_TREE_VIEW(browser->graphs);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
+    selection = gtk_tree_view_get_selection(treeview);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        g_warning("Nothing is selected");
+        return;
+    }
+
+    data = proxy->container;
+    g_object_add_weak_pointer(G_OBJECT(data), (gpointer*)&data);
+    gtk_tree_model_get(model, &iter,
+                       MODEL_ID, &i,
+                       MODEL_OBJECT, &object,
+                       MODEL_WIDGET, &widget,
+                       -1);
+    /* Get rid of widget displaying this object */
+    if (widget) {
+        window = gtk_widget_get_toplevel(widget);
+        gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+                           MODEL_WIDGET, NULL, -1);
+        switch (page) {
+            case PAGE_CHANNELS:
+            gwy_app_data_window_remove(GWY_DATA_WINDOW(window));
+            break;
+
+            case PAGE_GRAPHS:
+            gwy_app_graph_window_remove(window);
+            break;
+        }
+        g_object_unref(widget);
+        gtk_widget_destroy(window);
+    }
+    /* Lots of things can happen when we destroy the widget if it was the
+     * last view of the file.  Check whether the container still exists. */
+    if (!data)
+        return;
+
+    /* Remove object from container, this causes of removal from tree model
+     * too */
+    switch (page) {
+        case PAGE_CHANNELS:
+        /* XXX: Cannot just remove /0, because all graphs are under
+         * GRAPH_PREFIX == "/0/graph/graph" */
+        g_snprintf(key, sizeof(key), "/%d/data", i);
+        gwy_container_remove_by_prefix(data, key);
+        g_snprintf(key, sizeof(key), "/%d/base", i);
+        gwy_container_remove_by_prefix(data, key);
+        g_snprintf(key, sizeof(key), "/%d/mask", i);
+        gwy_container_remove_by_prefix(data, key);
+        g_snprintf(key, sizeof(key), "/%d/show", i);
+        gwy_container_remove_by_prefix(data, key);
+        g_snprintf(key, sizeof(key), "/%d/select", i);
+        gwy_container_remove_by_prefix(data, key);
+        break;
+
+        case PAGE_GRAPHS:
+        g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
+        gwy_container_remove_by_prefix(data, key);
+        break;
+    }
+    g_object_unref(object);
+    g_object_remove_weak_pointer(G_OBJECT(data), (gpointer*)&data);
 }
 
 static void
