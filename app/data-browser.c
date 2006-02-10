@@ -1475,6 +1475,8 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
         case PAGE_CHANNELS:
         /* XXX: Cannot just remove /0, because all graphs are under
          * GRAPH_PREFIX == "/0/graph/graph" */
+        /* XXX: This is too crude and makes 3D views crash. Must integrate
+         * them somehow. */
         g_snprintf(key, sizeof(key), "/%d/data", i);
         gwy_container_remove_by_prefix(data, key);
         g_snprintf(key, sizeof(key), "/%d/base", i);
