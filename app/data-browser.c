@@ -2372,12 +2372,6 @@ gwy_app_copy_data_items(GwyContainer *source,
             break;
 
             case GWY_DATA_ITEM_RANGE:
-            g_snprintf(key, sizeof(key), "/%d/base/range-type", from_id);
-            if (gwy_container_gis_enum_by_name(source, key, &enumval)) {
-                g_snprintf(key, sizeof(key), "/%d/base/range-type", to_id);
-                gwy_container_set_enum_by_name(dest, key, enumval);
-            }
-
             g_snprintf(key, sizeof(key), "/%d/base/min", from_id);
             if (gwy_container_gis_double_by_name(source, key, &dbl)) {
                 g_snprintf(key, sizeof(key), "/%d/base/min", to_id);
@@ -2387,6 +2381,12 @@ gwy_app_copy_data_items(GwyContainer *source,
             if (gwy_container_gis_double_by_name(source, key, &dbl)) {
                 g_snprintf(key, sizeof(key), "/%d/base/max", to_id);
                 gwy_container_set_double_by_name(dest, key, dbl);
+            }
+            case GWY_DATA_ITEM_RANGE_TYPE:
+            g_snprintf(key, sizeof(key), "/%d/base/range-type", from_id);
+            if (gwy_container_gis_enum_by_name(source, key, &enumval)) {
+                g_snprintf(key, sizeof(key), "/%d/base/range-type", to_id);
+                gwy_container_set_enum_by_name(dest, key, enumval);
             }
             break;
 
