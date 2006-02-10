@@ -31,7 +31,7 @@
 #include <libgwydgets/gwygraph.h>
 #include <app/gwyapp.h>
 
-#define FFTF_1D_RUN_MODES GWY_RUN_INTERACTIVE
+#define FFTF_1D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 #define MAX_PARAMS 4
 
@@ -130,16 +130,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo fftf_1d_func_info = {
-        "fft_filter_1d",
-        N_("/_Correct Data/1D _FFT filtering..."),
-        (GwyProcessFunc)&fftf_1d,
-        FFTF_1D_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &fftf_1d_func_info);
-
+    gwy_process_func_registe2("fft_filter_1d",
+                              (GwyProcessFunc)&fftf_1d,
+                              N_("/_Correct Data/1D _FFT filtering..."),
+                              NULL,
+                              FFTF_1D_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("1D FFT Filtering"));
     return TRUE;
 }
 
@@ -176,7 +173,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     };
     gint response, newsize;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
+    GwyDataField *orig_dfield, *dfield;
+    gint oldid;
     GtkWidget *label;
 
     dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0,
@@ -197,47 +195,65 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     controls.vyres = 200;
     pcontrols = &controls;
 
-    /*copy data*/
-    args->original = gwy_container_duplicate_by_prefix(data,
-                                                     "/0/data",
-                                                     "/0/base/palette",
-                                                     NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
-                                                             "/0/data"));
+    /*#### Copy/Setup Data Containers ####*/
+
+    /*setup original container*/
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &orig_dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    dfield = gwy_data_field_duplicate(orig_dfield);
     args->original_xres = dfield->xres;
     args->original_yres = dfield->yres;
     newsize = gwy_fft_find_nice_size(MAX(dfield->xres, dfield->yres));
+    gwy_data_field_resample(dfield, newsize, newsize, args->interpolation);
+    args->original = gwy_container_new();
+    gwy_container_set_object_by_name(args->original, "/0/data", dfield);
+    gwy_app_copy_data_items(data, args->original, oldid, 0,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    g_object_unref(dfield);
 
-    gwy_data_field_resample(dfield, newsize, newsize,
-                            args->interpolation);
+    /*setup result container*/
+    dfield = gwy_data_field_new_alike(orig_dfield, TRUE);
+    args->result = gwy_container_new();
+    gwy_container_set_object_by_name(args->result, "/0/data", dfield);
+    gwy_app_copy_data_items(data, args->result, oldid, 0,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    g_object_unref(dfield);
 
-    args->result = gwy_container_duplicate_by_prefix(args->original,
-                                                    "/0/data",
-                                                    "/0/base/palette",
-                                                    NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result,
-                                                             "/0/data"));
-    gwy_data_field_fill(dfield, 0);
-
-    args->original_vdata = gwy_container_duplicate_by_prefix(args->original,
-                                                             "/0/data",
-                                                             "/0/base/palette",
-                                                             NULL);
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_vdata,
-                                                             "/0/data"));
+    /*setup original_vdata container*/
+    dfield = gwy_data_field_duplicate(orig_dfield);
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
+    args->original_vdata = gwy_container_new();
+    gwy_container_set_object_by_name(args->original_vdata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, args->original_vdata, oldid, 0,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    g_object_unref(dfield);
 
-    args->result_vdata = gwy_container_duplicate_by_prefix(args->result,
-                                                             "/0/data",
-                                                             "/0/base/palette",
-                                                             NULL);
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result_vdata,
-                                                             "/0/data"));
+    /*setup result_vdata container*/
+    dfield = gwy_data_field_new_alike(orig_dfield, TRUE);
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
+    args->result_vdata = gwy_container_new();
+    gwy_container_set_object_by_name(args->result_vdata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, args->result_vdata, oldid, 0,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    g_object_unref(dfield);
+
+    /*#### End Copy/Setup Data Containers ####*/
+
 
     args->weights = NULL;
 
@@ -450,18 +466,21 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 //    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
 
     //for (i = 0; i < dline->res; i++) printf("%g\n", dline->data[i]);
-    
+
     gwy_graph_model_remove_all_curves(controls->gmodel);
-    
+
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
     gwy_graph_curve_model_set_description(cmodel, "PSDF");
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
-    
-    nofselection = gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
-    if (nofselection != 0) gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
+
+    nofselection =
+gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(controls->graph
+)));
+    if (nofselection != 0)
+gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
 
     if (args->update)
         update_view(controls, args);
@@ -476,13 +495,17 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
     gdouble *selection;
 
     /*get graph selection*/
-    nofselection = gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)));
+    nofselection =
+gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(pcontrols->
+graph)));
     if (nofselection == 0) {
         restore_ps(pcontrols, args);
     }
     else {
         selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
-        gwy_graph_area_get_selection(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)), selection);
+
+gwy_graph_area_get_selection(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)),
+selection);
 
         /*setup weights for inverse FFT computation*/
         if (args->weights == NULL)
@@ -496,9 +519,11 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
                 end = selection[2*i+1];
                 if (args->suppress == GWY_FFTF_1D_SUPPRESS_NULL)
                     gwy_data_line_part_fill(args->weights,
-                                            MAX(0, gwy_data_line_rtoi(args->weights, beg)),
+                                            MAX(0,
+gwy_data_line_rtoi(args->weights, beg)),
                                             MIN(args->weights->res,
-                                                gwy_data_line_rtoi(args->weights, end)),
+
+gwy_data_line_rtoi(args->weights, end)),
                                             0);
                 else /*TODO put there at least some linear interpolation*/
                     gwy_data_line_part_fill(args->weights,
@@ -515,7 +540,7 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
 
             for (i = 0; i < nofselection; i++) {
                 beg = selection[2*i];
-                end = selection[2*i+1]; 
+                end = selection[2*i+1];
                 gwy_data_line_part_fill(args->weights,
                                         MAX(0, gwy_data_line_rtoi(args->weights, beg)),
                                         MIN(args->weights->res,
