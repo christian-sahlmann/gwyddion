@@ -269,9 +269,9 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
     gwy_data_field_filter_canny(show, 0.1);
 
     x_gradient = gwy_data_field_duplicate(dfield);
-    gwy_data_field_filter_sobel(x_gradient, GTK_ORIENTATION_HORIZONTAL);
+    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
     y_gradient = gwy_data_field_duplicate(dfield);
-    gwy_data_field_filter_sobel(y_gradient, GTK_ORIENTATION_VERTICAL);
+    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
 
     xres = gwy_data_field_get_xres(show);
     yres = gwy_data_field_get_yres(show);

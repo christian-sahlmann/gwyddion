@@ -642,7 +642,7 @@ fftf_1d_sanitize_args(Fftf1dArgs *args)
 {
     args->suppress = MIN(args->suppress, GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD);
     args->view_type = MIN(args->view_type, GWY_FFTF_1D_VIEW_UNMARKED);
-    args->direction = MIN(args->direction, GTK_ORIENTATION_VERTICAL);
+    args->direction = MIN(args->direction, GWY_ORIENTATION_VERTICAL);
     args->interpolation = MIN(args->interpolation, GWY_INTERPOLATION_NNA);
     args->update = !!args->update;
 
@@ -656,7 +656,7 @@ fftf_1d_load_args(GwyContainer *container,
                   Fftf1dArgs *args)
 {
     args->interpolation = GWY_INTERPOLATION_BILINEAR;
-    args->direction = GTK_ORIENTATION_HORIZONTAL;
+    args->direction = GWY_ORIENTATION_HORIZONTAL;
     args->suppress = GWY_FFTF_1D_SUPPRESS_NULL;
 
     gwy_container_gis_enum_by_name(container, suppress_key, &args->suppress);
