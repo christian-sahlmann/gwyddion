@@ -59,7 +59,7 @@ typedef struct {
     GtkWidget *interpolation;
     GtkWidget *method;
     GtkWidget *color_button;
-    GwyContainer *mydata;
+    GwyContainer *viewdata;
     GwyDataLine *result;
     gboolean computed;
 } DriftControls;
@@ -86,9 +86,7 @@ static void        preview                    (DriftControls *controls,
 static void        reset                    (DriftControls *controls,
                                                DriftArgs *args);
 static void        drift_ok                    (DriftControls *controls,
-                                               DriftArgs *args);
-static void        crop                        (DriftControls *controls,
-                                                DriftArgs *args);
+                                               DriftArgs *args, GwyContainer *data);
 static void        drift_load_args              (GwyContainer *container,
                                                DriftArgs *args);
 static void        drift_save_args              (GwyContainer *container,
@@ -136,15 +134,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo drift_func_info = {
-        "drift",
-        N_("/_Correct Data/_Compensate drift..."),
-        (GwyProcessFunc)&drift,
-        DRIFT_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
+    gwy_process_func_registe2("drift",
+                              (GwyProcessFunc)&drift,
+                              N_("/_Correct Data/_Compensate drift..."),
+                              NULL,
+                              DRIFT_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Evaluate/correct thermal drift in fast scan axis."));
 
-    gwy_process_func_register(name, &drift_func_info);
 
     return TRUE;
 }
@@ -163,25 +160,48 @@ drift(GwyContainer *data, GwyRunType run)
     }
     else
         /* FIXME: This crashes.  What it was supposed to do? */
-        drift_ok(NULL, &args);
+        drift_ok(NULL, &args, data);
 }
 
-static void
-table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
-                       GtkObject **adj, gdouble value,
-                       GtkWidget **check,
-                       gpointer data)
+static GwyContainer*
+create_preview_data(GwyContainer *data)
 {
-    GtkWidget *spin;
+    GwyContainer *preview_container;
+    GwyDataField *dfield, *dfield_show;
+    gint oldid;
+    gint xres, yres;
+    gdouble zoomval;
 
-    *adj = gtk_adjustment_new(value, 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_hscale(table, *row, name, "%", *adj,
-                                   GWY_HSCALE_CHECK);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
-    *check = g_object_get_data(G_OBJECT(*adj), "check");
-    g_signal_connect(*adj, "value_changed", G_CALLBACK(drift_invalidate), data);
-    (*row)++;
+    preview_container = gwy_container_new();
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+
+    dfield = gwy_data_field_duplicate(dfield);
+    dfield_show = gwy_data_field_duplicate(dfield);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
+    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
+                            GWY_INTERPOLATION_BILINEAR);
+    dfield_show = gwy_data_field_duplicate(dfield);
+
+    gwy_container_set_object_by_name(preview_container, "/0/data", dfield);
+    g_object_unref(dfield);
+    gwy_container_set_object_by_name(preview_container, "/0/show", dfield_show);
+    g_object_unref(dfield_show);
+
+    gwy_app_copy_data_items(data, preview_container, oldid, 0,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    return preview_container;
 }
+
+
 
 /* FIXME: What is the return value good for when drift_dialog() does all the
  * work itself? */
@@ -214,16 +234,18 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = gwy_container_duplicate_by_prefix(data, "/0/data", NULL);
-    controls.view = gwy_data_view_new(controls.mydata);
+    controls.viewdata = create_preview_data(data);
+    controls.view = gwy_data_view_new(controls.viewdata);
+    g_object_unref(controls.viewdata);
     layer = GTK_OBJECT(gwy_layer_basic_new());
 
     gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
-                                                             "/0/data"));
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+					0);
 
     controls.result = GWY_DATA_LINE(gwy_data_line_new(dfield->yres, dfield->yreal, TRUE));
 
@@ -354,7 +376,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             drift_dialog_update_values(&controls, args);
-            g_object_unref(controls.mydata);
+            g_object_unref(controls.viewdata);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -382,8 +404,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     save_mask_color(controls.color_button, data);
     drift_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
-    drift_ok(&controls, args);
-    g_object_unref(controls.mydata);
+    drift_ok(&controls, args, data);
 
     return TRUE;
 }
@@ -467,13 +488,13 @@ preview(DriftControls *controls,
 {
     GwyDataField *dfield;
     GObject *maskfield;
-    GwyPixmapLayer *layer;
+    GwyPixmapLayer *layer = NULL;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                             "/0/data"));
+    dfield = gwy_container_get_object_by_name(controls->viewdata,
+                                                     "/0/data");
 
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield = gwy_container_get_object_by_name(controls->mydata,
+    if (gwy_container_contains_by_name(controls->viewdata, "/0/mask")) {
+        maskfield = gwy_container_get_object_by_name(controls->viewdata,
                                                      "/0/mask");
         gwy_data_field_copy(dfield, GWY_DATA_FIELD(maskfield), FALSE);
         if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
@@ -484,7 +505,7 @@ preview(DriftControls *controls,
     }
     else {
         maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
+        gwy_container_set_object_by_name(controls->viewdata, "/0/mask",
                                          maskfield);
         g_object_unref(maskfield);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
@@ -507,8 +528,8 @@ reset(DriftControls *controls,
 {
     GObject *maskfield;
 
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield = gwy_container_get_object_by_name(controls->mydata,
+    if (gwy_container_contains_by_name(controls->viewdata, "/0/mask")) {
+        maskfield = gwy_container_get_object_by_name(controls->viewdata,
                                                      "/0/mask");
         gwy_data_field_clear(GWY_DATA_FIELD(maskfield));
     }
@@ -519,35 +540,43 @@ reset(DriftControls *controls,
 
 static void
 drift_ok(DriftControls *controls,
-         DriftArgs *args)
+         DriftArgs *args,
+	 GwyContainer *data)
 {
 
-    GtkWidget *graph;
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
-
-    GwyContainer *newdata;
     GwyDataField *data_field, *newdata_field;
-    GtkWidget *data_window;
+    gint newid, oldid;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &data_field,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(data_field);
 
     if (!controls->computed) return;
 
+    newdata_field = gwy_data_field_duplicate(data_field); 
+
+    newdata_field = gwy_data_field_correct_drift(data_field,
+                                                 newdata_field,
+                                                 controls->result,
+                                                 args->is_crop);
+
     if (args->is_correct)
     {
-        newdata = gwy_container_duplicate_by_prefix(controls->mydata, "/0/data", NULL);
-        newdata_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata, "/0/data"));
-        data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
+	newid = gwy_app_data_browser_add_data_field(newdata_field, data, TRUE);
 
-        newdata_field = gwy_data_field_correct_drift(
-                                                     data_field,
-                                                     newdata_field,
-                                                     controls->result,
-                                                     args->is_crop);
+        gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
 
-        data_window = gwy_app_data_window_create(newdata);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-        g_object_unref(newdata);
+        gwy_app_set_data_field_title(data, newid, _("Drift corected data"));
+
     }
+    g_object_unref(newdata_field); 
 
     if (args->is_graph)
     {
@@ -560,11 +589,11 @@ drift_ok(DriftControls *controls,
         gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
         gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result, 0, 0);
 
-        graph = gwy_graph_new(gmodel);
+	newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         gwy_object_unref(cmodel);
         gwy_object_unref(gmodel);
         gwy_object_unref(controls->result);
-        gwy_app_graph_window_create(GWY_GRAPH(graph), controls->mydata);
+        gwy_app_set_data_field_title(data, newid, _("X axis Drift"));
     }
 }
 
