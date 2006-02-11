@@ -83,7 +83,6 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    
     gwy_process_func_registe2("cwt",
                               (GwyProcessFunc)&cwt,
                               N_("/_Integral Transforms/_2D CWT..."),
@@ -91,7 +90,6 @@ module_register(const gchar *name)
                               CWT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Compute continuous wavelet transform"));
-    
 
     return TRUE;
 }

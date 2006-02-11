@@ -106,9 +106,7 @@ module_register(const gchar *name)
                               GWY_MENU_FLAG_DATA,
                               N_("Compute Fast Fourier Transform"));
 
-
     return TRUE;
-
 }
 
 static void
@@ -224,8 +222,9 @@ fft_create_output(GwyContainer *data,
                   gint oldid,
                   const gchar *output_name)
 {
-    
-    gint newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    gint newid;
+
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, output_name);
 }

@@ -28,7 +28,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/hough.h>
 #include <libprocess/level.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define EDGE_RUN_MODES GWY_RUN_IMMEDIATE
@@ -58,7 +58,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -70,56 +70,53 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo laplacian_func_info = {
-        "laplacian",
-        N_("/_Display/_Edge detection/_Laplacian of Gaussian"),
-        (GwyProcessFunc)&edge,
-        EDGE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo canny_func_info = {
-        "canny",
-        N_("/_Display/_Edge detection/_Canny"),
-        (GwyProcessFunc)&edge,
-        EDGE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo rms_func_info = {
-        "rms",
-        N_("/_Display/_Edge detection/_RMS"),
-        (GwyProcessFunc)&edge,
-        EDGE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo rms_edge_func_info = {
-        "rms_edge",
-        N_("/_Display/_Edge detection/RMS _Edge"),
-        (GwyProcessFunc)&edge,
-        EDGE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo nonlinearity_func_info = {
-        "nonlinearity",
-        N_("/_Display/_Edge detection/Local _Nonlinearity"),
-        (GwyProcessFunc)&edge,
-        EDGE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo hough_lines_func_info = {
-        "hough_lines",
-        N_("/_Display/_Edge detection/Hough L_ines"),
-        (GwyProcessFunc)&edge,
-        EDGE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-
-    gwy_process_func_register(name, &laplacian_func_info);
-    gwy_process_func_register(name, &canny_func_info);
-    gwy_process_func_register(name, &rms_func_info);
-    gwy_process_func_register(name, &rms_edge_func_info);
-    gwy_process_func_register(name, &nonlinearity_func_info);
-    gwy_process_func_register(name, &hough_lines_func_info);
+    gwy_process_func_registe2("edge_laplacian",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Laplacian of Gaussian"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Laplacian of Gaussian edge detection "
+                                 "presentation"));
+    gwy_process_func_registe2("edge_canny",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Canny"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Canny edge detection presentation"));
+    gwy_process_func_registe2("edge_rms",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_RMS"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Local RMS value based edge detection "
+                                 "presentation"));
+    gwy_process_func_registe2("edge_rms_edge",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/RMS _Edge"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Local RMS value based edge detection "
+                                 "with postprocession"));
+    gwy_process_func_registe2("edge_nonlinearity",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/Local _Nonlinearity"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Local nonlinearity based edge detection "
+                                 "presentation"));
+    gwy_process_func_registe2("edge_hough_lines",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Hough Lines"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              /* FIXME */
+                              N_("Hough lines presentation"));
 
     return TRUE;
 }
@@ -127,48 +124,49 @@ module_register(const gchar *name)
 static void
 edge(GwyContainer *data, GwyRunType run, const gchar *name)
 {
-    GwyDataField *dfield, *show;
+    GwyDataField *dfield, *showfield;
+    GQuark dquark, squark;
     GwySIUnit *siunit;
+    gint id;
 
     g_return_if_fail(run & EDGE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &showfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && squark);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    siunit = gwy_si_unit_new("");
-    if (gwy_container_gis_object_by_name(data, "/0/show", &show)) {
-        gwy_data_field_resample(show,
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_set_si_unit_z(show, siunit);
+    gwy_app_undo_qcheckpointv(data, 1, &squark);
+    if (!showfield) {
+        showfield = gwy_data_field_new_alike(dfield, FALSE);
+        siunit = gwy_si_unit_new("");
+        gwy_data_field_set_si_unit_z(showfield, siunit);
+        g_object_unref(siunit);
+        gwy_container_set_object(data, squark, showfield);
+        g_object_unref(showfield);
     }
-    else {
-        show = gwy_data_field_new_alike(dfield, FALSE);
-        gwy_data_field_set_si_unit_z(show, siunit);
-        gwy_container_set_object_by_name(data, "/0/show", show);
-        g_object_unref(show);
-    }
-    g_object_unref(siunit);
 
-    if (gwy_strequal(name, "laplacian"))
-        laplacian_do(dfield, show);
-    else if (gwy_strequal(name, "canny"))
-        canny_do(dfield, show);
-    else if (gwy_strequal(name, "rms"))
-        rms_do(dfield, show);
-    else if (gwy_strequal(name, "rms_edge"))
-        rms_edge_do(dfield, show);
-    else if (gwy_strequal(name, "nonlinearity"))
-        nonlinearity_do(dfield, show);
-    else if (gwy_strequal(name, "hough_lines"))
-        hough_lines_do(dfield, show);
+    if (gwy_strequal(name, "edge_laplacian"))
+        laplacian_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_canny"))
+        canny_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_rms"))
+        rms_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_rms_edge"))
+        rms_edge_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_nonlinearity"))
+        nonlinearity_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_hough_lines"))
+        hough_lines_do(dfield, showfield);
     else {
         g_warning("Function called under unregistered name: %s", name);
-        gwy_data_field_copy(dfield, show, FALSE);
+        gwy_data_field_copy(dfield, showfield, FALSE);
     }
 
-    gwy_data_field_normalize(show);
-    gwy_data_field_data_changed(show);
+    gwy_data_field_normalize(showfield);
+    gwy_data_field_data_changed(showfield);
 }
 
 static void
@@ -265,8 +263,7 @@ static void
 hough_lines_do(GwyDataField *dfield, GwyDataField *show)
 {
     GwyDataField *x_gradient, *y_gradient;
-    gint xres, yres, i;
-    gdouble *data;
+    gint xres, yres;
 
     gwy_data_field_copy(dfield, show, FALSE);
     gwy_data_field_filter_canny(show, 0.1);

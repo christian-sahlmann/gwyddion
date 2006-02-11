@@ -93,7 +93,7 @@ module_register(const gchar *name)
 {
     gwy_process_func_registe2("shade",
                               (GwyProcessFunc)&shade,
-                              N_("/_Display/_Shading..."),
+                              N_("/_Presentation/_Shading..."),
                               GWY_STOCK_SHADER,
                               SHADE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

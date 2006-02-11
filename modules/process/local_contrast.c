@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Maximizes local contrast."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -84,15 +84,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo max_local_contrast_func_info = {
-        "local_contrast",
-        N_("/_Display/_Local Contrast..."),
-        (GwyProcessFunc)&maximize_local_contrast,
-        CONTRAST_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &max_local_contrast_func_info);
+    gwy_process_func_registe2("local_contrast",
+                              (GwyProcessFunc)&maximize_local_contrast,
+                              N_("/_Presentation/_Local Contrast..."),
+                              NULL,
+                              CONTRAST_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Presentation with maximized local contrast"));
 
     return TRUE;
 }
@@ -205,14 +203,21 @@ static void
 contrast_do(GwyContainer *data, ContrastArgs *args)
 {
     GwyDataField *dfield, *minfield, *maxfield, *showfield;
+    GQuark dquark, squark;
     GwySIUnit *siunit;
     const gdouble *dat, *min, *max;
     gdouble *show, *weight;
     gdouble mins, maxs, v, vc, minv, maxv;
     gdouble sum, gmin, gmax;
-    gint xres, yres, i, j, k, l;
+    gint xres, yres, i, j, k, l, id;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &showfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && squark);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     gmin = gwy_data_field_get_min(dfield);
@@ -220,19 +225,15 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
     if (gmax == gmin)
         return;
 
-    gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    siunit = gwy_si_unit_new("");
-    if (gwy_container_gis_object_by_name(data, "/0/show", &showfield)) {
-        gwy_data_field_resample(showfield, xres, yres, GWY_INTERPOLATION_NONE);
-        gwy_data_field_set_si_unit_z(showfield, siunit);
-    }
-    else {
+    gwy_app_undo_qcheckpointv(data, 1, &squark);
+    if (!showfield) {
         showfield = gwy_data_field_new_alike(dfield, FALSE);
+        siunit = gwy_si_unit_new("");
         gwy_data_field_set_si_unit_z(showfield, siunit);
-        gwy_container_set_object_by_name(data, "/0/show", showfield);
+        g_object_unref(siunit);
+        gwy_container_set_object(data, squark, showfield);
         g_object_unref(showfield);
     }
-    g_object_unref(siunit);
 
     minfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_minimum(minfield, args->size);
