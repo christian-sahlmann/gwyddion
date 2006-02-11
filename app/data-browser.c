@@ -1458,6 +1458,13 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
                        MODEL_OBJECT, &object,
                        MODEL_WIDGET, &widget,
                        -1);
+    /* XXX */
+    if (page == PAGE_CHANNELS && i == 0) {
+        g_warning("Cowardly refusing to delete \"/0/data\" as it is likely to "
+                  "lead to an instant crash in active tool.");
+        return;
+    }
+
     /* Get rid of widget displaying this object.  This may invoke complete
      * destruction later in idle handler. */
     if (widget) {
