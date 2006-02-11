@@ -57,6 +57,7 @@ static void     fft                (GwyContainer *data,
                                     GwyRunType run);
 static void     fft_create_output  (GwyContainer *data,
                                     GwyDataField *dfield,
+                                    gint oldid,
                                     const gchar *window_name);
 static gboolean fft_dialog         (FFTArgs *args);
 static void     preserve_changed_cb(GtkToggleButton *button,
@@ -97,17 +98,17 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo fft_func_info = {
-        "fft",
-        N_("/_Integral Transforms/_2D FFT..."),
-        (GwyProcessFunc)&fft,
-        FFT_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
+    gwy_process_func_registe2("fft",
+                              (GwyProcessFunc)&fft,
+                              N_("/_Integral Transforms/_2D FFT..."),
+                              NULL,
+                              FFT_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Compute Fast Fourier Transform"));
 
-    gwy_process_func_register(name, &fft_func_info);
 
     return TRUE;
+
 }
 
 static void
@@ -120,9 +121,15 @@ fft(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint xsize, ysize, newsize;
     gdouble newreals;
+    gint oldid;
 
     g_return_if_fail(run & FFT_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
+
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -185,25 +192,25 @@ fft(GwyContainer *data, GwyRunType run)
         || args.out == GWY_FFT_OUTPUT_REAL) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(raout, tmp, 0, 0, xsize, ysize, 0, 0);
-        fft_create_output(data, tmp, _("FFT Real"));
+        fft_create_output(data, tmp, oldid, _("FFT Real"));
     }
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(ipout, tmp, 0, 0, xsize, ysize, 0, 0);
-        fft_create_output(data, tmp, _("FFT Imag"));
+        fft_create_output(data, tmp, oldid, _("FFT Imag"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         set_dfield_modulus(raout, ipout, tmp);
-        fft_create_output(data, tmp, _("FFT Modulus"));
+        fft_create_output(data, tmp, oldid, _("FFT Modulus"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_PHASE) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         set_dfield_phase(raout, ipout, tmp);
-        fft_create_output(data, tmp, _("FFT Phase"));
+        fft_create_output(data, tmp, oldid, _("FFT Phase"));
     }
 
     g_object_unref(dfield);
@@ -214,24 +221,13 @@ fft(GwyContainer *data, GwyRunType run)
 static void
 fft_create_output(GwyContainer *data,
                   GwyDataField *dfield,
-                  const gchar *window_name)
+                  gint oldid,
+                  const gchar *output_name)
 {
-    GtkWidget *data_window;
-    GwyContainer *newdata;
-    const guchar *pal = NULL;
-
-    newdata = gwy_container_new();
-    gwy_container_set_object_by_name(newdata, "/0/data", dfield);
+    
+    gint newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
-
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-    if (pal)
-        gwy_container_set_string_by_name(newdata, "/0/base/palette",
-                                         g_strdup(pal));
-
-    data_window = gwy_app_data_window_create(newdata);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), window_name);
-    g_object_unref(newdata);
+    gwy_app_set_data_field_title(data, newid, output_name);
 }
 
 static void
