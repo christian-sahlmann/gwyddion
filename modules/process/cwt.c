@@ -83,15 +83,15 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo cwt_func_info = {
-        "cwt",
-        N_("/_Integral Transforms/_2D CWT..."),
-        (GwyProcessFunc)&cwt,
-        CWT_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &cwt_func_info);
+    
+    gwy_process_func_registe2("cwt",
+                              (GwyProcessFunc)&cwt,
+                              N_("/_Integral Transforms/_2D CWT..."),
+                              NULL,
+                              CWT_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Compute continuous wavelet transform"));
+    
 
     return TRUE;
 }
@@ -99,17 +99,23 @@ module_register(const gchar *name)
 static void
 cwt(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window, *dialog;
+    GtkWidget *dialog;
     GwyDataField *dfield;
     CWTArgs args;
     gboolean ok;
     gint xsize, ysize;
     gint newsize;
+    gint oldid, newid;
 
     g_return_if_fail(run & CWT_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
+    
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
+    
     if (xsize != ysize) {
         dialog = gtk_message_dialog_new
             (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
@@ -130,13 +136,7 @@ cwt(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/select",
-                                             "/0/base/palette",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
+    dfield = gwy_data_field_duplicate(dfield);
     newsize = gwy_fft_find_nice_size(xsize);
     gwy_data_field_resample(dfield, newsize, newsize, args.interp);
 
@@ -148,9 +148,11 @@ cwt(GwyContainer *data, GwyRunType run)
     if (args.preserve)
         gwy_data_field_resample(dfield, xsize, ysize, args.interp);
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+
+    
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    g_object_unref(dfield);
+    gwy_app_set_data_field_title(data, newid, _("CWT"));
 }
 
 
