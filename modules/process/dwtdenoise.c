@@ -86,15 +86,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dwt_denoise_func_info = {
-        "dwtdenoise",
-        N_("/_Integral Transforms/DWT De_noise..."),
-        (GwyProcessFunc)&dwt_denoise,
-        DWT_DENOISE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
+    gwy_process_func_registe2("dwtdenoise",
+                              (GwyProcessFunc)&dwt_denoise,
+                              N_("/_Integral Transforms/DWT De_noise..."),
+                              NULL,
+                              DWT_DENOISE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Perform 2D DWT denoising"));
 
-    gwy_process_func_register(name, &dwt_denoise_func_info);
 
     return TRUE;
 }
@@ -108,9 +107,14 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
     DWTDenoiseArgs args;
     gboolean ok;
     gint xsize, ysize, newsize;
+    gint oldid, newid;
 
     g_return_if_fail(run & DWT_DENOISE_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
+
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -132,11 +136,7 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfield = gwy_data_field_duplicate(dfield);
 
     newsize = gwy_fft_find_nice_size(xsize);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
@@ -150,10 +150,16 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
     if (args.preserve)
         gwy_data_field_resample(dfield, xsize, ysize, args.interp);
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                     _("DWT Denoise"));
-    g_object_unref(data);
+
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+
+    g_object_unref(dfield);
+    gwy_app_set_data_field_title(data, newid, _("DWT denoised"));
+
     g_object_unref(wtcoefs);
 }
 
