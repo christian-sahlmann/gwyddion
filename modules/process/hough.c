@@ -49,15 +49,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo hough_func_info = {
-        "hough",
-        N_("/_Integral Transforms/_Hough"),
-        (GwyProcessFunc)&hough,
-        HOUGH_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
+    gwy_process_func_registe2("hough",
+                              (GwyProcessFunc)&hough,
+                              N_("/_Integral Transforms/_Hough"),
+                              NULL,
+                              HOUGH_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Detect lines by Hough transform"));
 
-    gwy_process_func_register(name, &hough_func_info);
 
     return TRUE;
 }
@@ -66,24 +65,30 @@ static void
 hough(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *edgefield, *result, *f1, *f2;
-    GwyContainer *resdata;
-    GtkWidget *data_window;
+    GQuark squark;
+    GwySIUnit *siunit;
 
     g_return_if_fail(run & HOUGH_RUN_MODES);
 
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &result,
+                                     0);
+    g_return_if_fail(dfield);
+        
+    
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    resdata = gwy_container_duplicate_by_prefix(data,
-                                                "/0/data",
-                                                "/0/base/palette",
-                                                NULL);
 
-    result = GWY_DATA_FIELD(gwy_container_get_object_by_name(resdata, "/0/data"));
-//    gwy_data_field_resample(result,
-//			    sqrt(gwy_data_field_get_xres(result)*gwy_data_field_get_xres(result)
-//				 +gwy_data_field_get_yres(result)*gwy_data_field_get_yres(result)),
-//			    360,
-//			    GWY_INTERPOLATION_NONE);
-
+    if (!result){
+        result = gwy_data_field_new_alike(dfield, FALSE);
+        siunit = gwy_si_unit_new("");
+        gwy_data_field_set_si_unit_z(result, siunit);
+        g_object_unref(siunit);
+        gwy_container_set_object(data, squark, result);
+        g_object_unref(result);
+    }
+    
     edgefield = gwy_data_field_duplicate(dfield);
     f1 = gwy_data_field_duplicate(dfield);
     f2 = gwy_data_field_duplicate(dfield);
@@ -92,23 +97,19 @@ hough(GwyContainer *data, GwyRunType run)
     gwy_data_field_filter_canny(edgefield, 0.1);
     gwy_data_field_filter_sobel(f1, GTK_ORIENTATION_HORIZONTAL);
     gwy_data_field_filter_sobel(f2, GTK_ORIENTATION_VERTICAL);
-    /*gwy_data_field_hough_line(edgefield,
+    gwy_data_field_hough_line(edgefield,
 			      NULL,
 			      NULL,
 			      result,
 			      1);
-    */
-    gwy_data_field_hough_circle(edgefield,
+    
+    /*gwy_data_field_hough_circle(edgefield,
                                 f1,
                                 f2,
                                 result,
                                 10);
-
-
-    data_window = gwy_app_data_window_create(resdata);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                     _("Hough transform"));
-    g_object_unref(resdata);
+    */
+    g_object_unref(edgefield);    
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
