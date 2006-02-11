@@ -2176,6 +2176,21 @@ gwy_app_set_data_field_title(GwyContainer *data,
  *       0-terminated list of #GwyAppWhat, pointer couples.
  *
  * Gets information about current objects.
+ *
+ * All output arguments are always set to some value, even if the requested
+ * object does not exist.  Object arguments are set to pointer to the object if
+ * it exists (no reference added), or cleared to %NULL if no such object
+ * exists.
+ *
+ * Quark arguments are set to the corresponding key even if no such object is
+ * actually present (use object arguments to check for object presence) but the
+ * location where it would be stored is known.  This is commond with
+ * presentations and masks.  They are be set to 0 if no corresponding location
+ * exists -- for example, when current mask key is requested but the current
+ * data contain no data field (or there is no current data at all).
+ *
+ * The rules for id arguments are similar to quarks, except they are set to -1
+ * to indicate undefined result.
  **/
 void
 gwy_app_data_browser_get_current(GwyAppWhat what,
