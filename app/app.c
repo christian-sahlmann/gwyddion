@@ -307,6 +307,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     gwy_app_data_browser_select_data_view(data_view);
 
     if (already_current == window) {
+        /* FIXME: Data browser seems to make this sometimes fail, but rarely */
         g_assert(current_data && current_data->data == (gpointer)window);
         return FALSE;
     }
