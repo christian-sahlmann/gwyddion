@@ -35,6 +35,7 @@ pixmapdata_DATA = \
 	gwy_cwt-24.png \
 	gwy_distance-24.png \
 	gwy_dwt-24.png \
+	gwy_edge-24.png \
 	gwy_facet_level-24.png \
 	gwy_favourite-24.png \
 	gwy_fft-24.png \
