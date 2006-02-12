@@ -43,6 +43,42 @@ struct _GwyFunctionUse {
 
 static GwyFunctionUse *process_use_info  = NULL;
 
+/**
+ * gwy_func_use_info_compare:
+ * @a: First #GwyFunctionUseInfo pointer.
+ * @b: Second #GwyFunctionUseInfo pointer.
+ *
+ * Compares two func use infos for sorting.
+ *
+ * Returns: -1 if @a is used more than @b, 1 if @b is used more than @a, 0 if
+ *          they are used the same.
+ **/
+static gint
+gwy_func_use_info_compare(gconstpointer a,
+                          gconstpointer b)
+{
+    const GwyFunctionUseInfo *ainfo, *binfo;
+    gdouble aw, bw;
+
+    ainfo = (const GwyFunctionUseInfo*)a;
+    binfo = (const GwyFunctionUseInfo*)b;
+    aw = ainfo->global + ainfo->local;
+    bw = binfo->global + binfo->local;
+    if (aw < bw)
+        return 1;
+    else if (aw > bw)
+        return -1;
+    return 0;
+}
+
+/**
+ * gwy_func_use_sort_up:
+ * @functions: #GArray with function use info.
+ * @pos: Position of function whose usage count has increased (or which was
+ *       newly inserted).
+ *
+ * Moves a function whose usage increased towards the head.
+ **/
 static void
 gwy_func_use_sort_up(GArray *functions,
                      guint pos)
@@ -179,6 +215,8 @@ gwy_func_use_load(const gchar *filename)
         g_array_append_val(funcs, info);
     }
     g_free(buffer);
+
+    g_array_sort(funcs, &gwy_func_use_info_compare);
 
     return functions;
 }
