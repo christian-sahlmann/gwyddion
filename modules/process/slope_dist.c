@@ -57,36 +57,36 @@ typedef struct {
     GtkObject *kernel_size;
 } SlopeControls;
 
-static gboolean      module_register              (const gchar *name);
-static void          slope_dist                   (GwyContainer *data,
+static gboolean       module_register             (const gchar *name);
+static void           slope_dist                  (GwyContainer *data,
                                                    GwyRunType run);
-static gboolean      slope_dialog                 (SlopeArgs *args);
-static void          slope_dialog_update_controls (SlopeControls *controls,
+static gboolean       slope_dialog                (SlopeArgs *args);
+static void           slope_dialog_update_controls(SlopeControls *controls,
                                                    SlopeArgs *args);
-static void          slope_dialog_update_values   (SlopeControls *controls,
+static void           slope_dialog_update_values  (SlopeControls *controls,
                                                    SlopeArgs *args);
-static void          slope_fit_plane_cb           (GtkToggleButton *check,
+static void           slope_fit_plane_cb          (GtkToggleButton *check,
                                                    SlopeControls *controls);
-static void          slope_output_type_cb         (GObject *radio,
+static void           slope_output_type_cb        (GObject *radio,
                                                    SlopeControls *controls);
-static GwyDataField* slope_do                     (GwyDataField *dfield,
+static GwyDataField*  slope_do                    (GwyDataField *dfield,
                                                    SlopeArgs *args);
-static GtkWidget*    slope_do_graph               (GwyContainer *data,
+static GwyGraphModel* slope_do_graph              (GwyDataField *dfield,
                                                    SlopeArgs *args);
-static gdouble       compute_slopes               (GwyDataField *dfield,
+static gdouble        compute_slopes              (GwyDataField *dfield,
                                                    gint kernel_size,
                                                    gdouble *xder,
                                                    gdouble *yder);
-static GwyDataField* make_datafield               (GwyDataField *old,
+static GwyDataField*  make_datafield              (GwyDataField *old,
                                                    gint res,
                                                    gulong *count,
                                                    gdouble real,
                                                    gboolean logscale);
-static void          load_args                    (GwyContainer *container,
+static void           load_args                   (GwyContainer *container,
                                                    SlopeArgs *args);
-static void          save_args                    (GwyContainer *container,
+static void           save_args                   (GwyContainer *container,
                                                    SlopeArgs *args);
-static void          sanitize_args                (SlopeArgs *args);
+static void           sanitize_args               (SlopeArgs *args);
 
 static const SlopeArgs slope_defaults = {
     SLOPE_DIST_2D_DIST,
@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -112,15 +112,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo slope_dist_func_info = {
-        "slope_dist",
-        N_("/_Statistics/_Slope Distribution..."),
-        (GwyProcessFunc)&slope_dist,
-        SLOPE_DIST_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &slope_dist_func_info);
+    gwy_process_func_registe2("slope_dist",
+                              (GwyProcessFunc)&slope_dist,
+                              N_("/_Statistics/_Slope Distribution..."),
+                              NULL,
+                              SLOPE_DIST_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Calculate angular slope distribution"));
 
     return TRUE;
 }
@@ -128,13 +126,17 @@ module_register(const gchar *name)
 static void
 slope_dist(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     GwyDataField *dfield;
+    GwyGraphModel *gmodel;
     SlopeArgs args;
-    const guchar *pal = NULL;
+    gint oldid, newid;
     gboolean ok;
 
     g_return_if_fail(run & SLOPE_DIST_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = slope_dialog(&args);
@@ -143,30 +145,25 @@ slope_dist(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     switch (args.output_type) {
         case SLOPE_DIST_2D_DIST:
-        gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
         dfield = slope_do(dfield, &args);
-        data = gwy_container_new();
-        gwy_container_set_object_by_name(data, "/0/data", dfield);
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
         g_object_unref(dfield);
-        if (pal)
-            gwy_container_set_string_by_name(data, "/0/base/palette",
-                                             g_strdup(pal));
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("Slope"));
-        g_object_unref(data);
+        gwy_app_copy_data_items(data, data, oldid, newid,
+                                GWY_DATA_ITEM_PALETTE,
+                                0);
+        gwy_app_set_data_field_title(data, newid, _("Slope"));
         break;
 
         case SLOPE_DIST_GRAPH:
-        slope_do_graph(data, &args);
+        gmodel = slope_do_graph(dfield, &args);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        g_object_unref(gmodel);
         break;
 
         default:
-        g_assert_not_reached();
+        g_return_if_reached();
         break;
     }
 }
@@ -365,21 +362,17 @@ slope_do(GwyDataField *dfield,
     return make_datafield(dfield, args->size, count, 2.0*max, args->logscale);
 }
 
-static GtkWidget*
-slope_do_graph(GwyContainer *container,
+static GwyGraphModel*
+slope_do_graph(GwyDataField *dfield,
                SlopeArgs *args)
 {
-    GtkWidget *graph;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *cmodel;
-    GwyDataField *dfield;
     GwyDataLine *dataline;
     GwySIUnit *siunit;
     gdouble *xder, *yder, *data;
     gint xres, yres, n, i, iphi;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
-                                                             "/0/data"));
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
@@ -404,25 +397,21 @@ slope_do_graph(GwyContainer *container,
 
     gmodel = gwy_graph_model_new();
     gwy_graph_model_set_title(gmodel, _("Angular Slope Distribution"));
-    siunit = gwy_si_unit_new("");
     /* This is actualy (z/x)^2, but for users it's in arbitrary units */
+    siunit = gwy_si_unit_new("");
     gwy_graph_model_set_si_unit_y(gmodel, siunit);
-    gwy_graph_model_set_si_unit_x(gmodel, siunit);
+    gwy_graph_model_set_si_unit_x(gmodel, gwy_si_unit_duplicate(siunit));
     g_object_unref(siunit);
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_description(cmodel, "slopes");
+    gwy_graph_curve_model_set_description(cmodel, "Slopes");
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
     gwy_graph_model_add_curve(gmodel, cmodel);
     g_object_unref(cmodel);
 
-    graph = gwy_graph_new(gmodel);
-    g_object_unref(gmodel);
-    gwy_app_graph_window_create(GWY_GRAPH(graph), container);
-
-    return graph;
+    return gmodel;
 }
 
 static gdouble
