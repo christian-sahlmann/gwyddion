@@ -519,7 +519,7 @@ tip_process(TipModelArgs *args,
     xres = CLAMP(xres, 20, 1000);
     yres = CLAMP(yres, 20, 1000);
 
-    g_snprintf(label, sizeof(label), _("Tip resolution: %d x %d pixels"),
+    g_snprintf(label, sizeof(label), _("Tip resolution: %d × %d pixels"),
                xres, yres);
     gtk_label_set_text(GTK_LABEL(controls->labsize), label);
 
