@@ -101,7 +101,8 @@ static void  gwy_data_field_mult_wav       (GwyDataField *real_field,
                                             Gwy2DCWTWaveletType wtype);
 static void  gwy_level_simple              (gint n,
                                             gint stride,
-                                            gdouble *data);
+                                            gdouble *data,
+                                            gint level);
 static void  gwy_preserve_rms_simple       (gint nsrc,
                                             gint stridesrc,
                                             const gdouble *src1,
@@ -227,7 +228,9 @@ gwy_fft_find_nice_size(gint size)
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS value while windowing.
- * @level: %TRUE to level line before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         line (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Calculates Fast Fourier Transform of a data line.
  *
@@ -262,7 +265,9 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS value while windowing.
- * @level: %TRUE to level line before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         line (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Calculates Fast Fourier Transform of a part of a data line.
  *
@@ -287,6 +292,7 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
     g_return_if_fail(rsrc->res == isrc->res);
+    g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(from >= 0
                      && len >= 4
                      && from + len <= rsrc->res);
@@ -300,15 +306,13 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     out_idata = idest->data;
 
     rbuf = gwy_data_line_part_extract(rsrc, from, len);
-    if (level)
-        gwy_level_simple(len, 1, rbuf->data);
+    gwy_level_simple(len, 1, rbuf->data, level);
     gwy_fft_window(len, rbuf->data, windowing);
     gwy_data_line_resample(rbuf, newres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_line_part_extract(isrc, from, len);
-    if (level)
-        gwy_level_simple(len, 1, ibuf->data);
+    gwy_level_simple(len, 1, ibuf->data, level);
     gwy_fft_window(len, ibuf->data, windowing);
     gwy_data_line_resample(ibuf, newres, interpolation);
     in_idata = ibuf->data;
@@ -373,7 +377,9 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         plane (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Calculates 2D Fast Fourier Transform of a rectangular area of a data field.
  *
@@ -388,7 +394,7 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
                           GwyWindowingType windowing,
                           GwyTransformDirection direction,
                           GwyInterpolationType interpolation,
-                          gboolean preserverms, gboolean level)
+                          gboolean preserverms, gint level)
 {
     gint j, k, newxres, newyres;
     GwyDataField *rbuf, *ibuf;
@@ -408,6 +414,7 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ia));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
                      && col + width <= ra->xres
@@ -423,10 +430,12 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
-    if (level) {
-        gwy_data_field_fit_plane(rbuf, &a,  &bx, &by);
+    if (level == 2) {
+        gwy_data_field_fit_plane(rbuf, &a, &bx, &by);
         gwy_data_field_plane_level(rbuf, a, bx, by);
     }
+    else if (level == 1)
+        gwy_data_field_add(rbuf, -gwy_data_field_get_avg(rbuf));
     if (preserverms)
         rmsa = gwy_data_field_get_rms(rbuf);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
@@ -435,10 +444,12 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
-    if (level) {
-        gwy_data_field_fit_plane(ibuf, &a,  &bx, &by);
+    if (level == 2) {
+        gwy_data_field_fit_plane(ibuf, &a, &bx, &by);
         gwy_data_field_plane_level(ibuf, a, bx, by);
     }
+    else if (level == 1)
+        gwy_data_field_add(ibuf, -gwy_data_field_get_avg(ibuf));
     if (preserverms)
         rmsa = hypot(rmsa, gwy_data_field_get_rms(ibuf));
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
@@ -530,7 +541,9 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         plane (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Calculates 2D Fast Fourier Transform of a rectangular area of a data field.
  *
@@ -570,10 +583,12 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
-    if (level) {
-        gwy_data_field_fit_plane(rbuf, &a,  &bx, &by);
+    if (level == 2) {
+        gwy_data_field_fit_plane(rbuf, &a, &bx, &by);
         gwy_data_field_plane_level(rbuf, a, bx, by);
     }
+    else if (level == 1)
+        gwy_data_field_add(rbuf, -gwy_data_field_get_avg(rbuf));
     if (preserverms)
         rmsa = gwy_data_field_get_rms(rbuf);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
@@ -698,7 +713,9 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         plane (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Calculates 2D Fast Fourier Transform of a rectangular a data field.
  *
@@ -793,7 +810,9 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         lines (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Transforms all rows or columns in a rectangular part of a data field with
  * Fast Fourier Transform.
@@ -861,7 +880,9 @@ gwy_data_field_area_1dfft(GwyDataField *rin, GwyDataField *iin,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         line (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Transforms all rows or columns in a data field with Fast Fourier Transform.
  *
@@ -929,7 +950,9 @@ gwy_data_field_1dfft(GwyDataField *rin, GwyDataField *iin,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         lines (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Transforms all rows in a data field with Fast Fourier Transform.
  *
@@ -971,7 +994,7 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     if (level) {
         for (k = 0; k < height; k++)
-            gwy_level_simple(width, 1, rbuf->data + k*width);
+            gwy_level_simple(width, 1, rbuf->data + k*width, level);
     }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_data_field_resample(rbuf, newxres, height, interpolation);
@@ -980,7 +1003,7 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
     if (level) {
         for (k = 0; k < height; k++)
-            gwy_level_simple(width, 1, ibuf->data + k*width);
+            gwy_level_simple(width, 1, ibuf->data + k*width, level);
     }
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_data_field_resample(ibuf, newxres, height, interpolation);
@@ -1053,7 +1076,9 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         lines (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Transforms all rows in a data real field with Fast Fourier Transform.
  *
@@ -1093,7 +1118,7 @@ gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     if (level) {
         for (k = 0; k < height; k++)
-            gwy_level_simple(width, 1, rbuf->data + k*width);
+            gwy_level_simple(width, 1, rbuf->data + k*width, level);
     }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_data_field_resample(rbuf, newxres, height, interpolation);
@@ -1204,7 +1229,9 @@ gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         lines (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Transforms all columns in a data field with Fast Fourier Transform.
  *
@@ -1246,7 +1273,7 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     if (level) {
         for (k = 0; k < width; k++)
-            gwy_level_simple(height, width, rbuf->data + k);
+            gwy_level_simple(height, width, rbuf->data + k, level);
     }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, width, newyres, interpolation);
@@ -1255,7 +1282,7 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
     if (level) {
         for (k = 0; k < width; k++)
-            gwy_level_simple(height, width, ibuf->data + k);
+            gwy_level_simple(height, width, ibuf->data + k, level);
     }
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(ibuf, width, newyres, interpolation);
@@ -1328,7 +1355,9 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
+ * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
+ *         lines (the number can be interpreted as the first polynomial degree
+ *         to keep, but only the enumerated three values are available).
  *
  * Transforms all columns in a data real field with Fast Fourier Transform.
  *
@@ -1368,7 +1397,7 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     if (level) {
         for (k = 0; k < width; k++)
-            gwy_level_simple(height, width, rbuf->data + k);
+            gwy_level_simple(height, width, rbuf->data + k, level);
     }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, width, newyres, interpolation);
@@ -1468,11 +1497,31 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
 static void
 gwy_level_simple(gint n,
                  gint stride,
-                 gdouble *data)
+                 gdouble *data,
+                 gint level)
 {
     gdouble sumxi, sumxixi, sumsi, sumsixi, a, b;
     gdouble *pdata;
     gint i;
+
+    if (!level)
+        return;
+
+    if (level == 1) {
+        sumsi = 0.0;
+        pdata = data;
+        for (i = n; i; i--, pdata += stride)
+            sumsi += *pdata;
+
+        a = sumsi/n;
+        pdata = data;
+        for (i = n; i; i--, pdata += stride)
+            *pdata -= a;
+
+        return;
+    }
+
+    g_return_if_fail(level == 2);
 
     /* These are already averages, not sums */
     sumxi = (n - 1.0)/2.0;
