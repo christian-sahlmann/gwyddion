@@ -11,6 +11,7 @@
   <xi:include href="xml/settings.xml"/>
   <xi:include href="xml/file.xml"/>
   <xi:include href="xml/filelist.xml"/>
+  <xi:include href="xml/funcuse.xml"/>
   <xi:include href="xml/resource-editor.xml"/>
   <xi:include href="xml/glmaterial-editor.xml"/>
   <xi:include href="xml/gradient-editor.xml"/>
