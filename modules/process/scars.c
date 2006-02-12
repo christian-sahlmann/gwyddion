@@ -28,7 +28,7 @@
 #include <app/gwyapp.h>
 
 #define SCARS_MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
-#define SCARS_RUN_MODES GWY_RUN_IMMEDIATE
+#define SCARS_REMOVE_RUN_MODES GWY_RUN_IMMEDIATE
 
 typedef enum {
     FEATURES_POSITIVE = 1 << 0,
@@ -110,23 +110,20 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo scars_mark_func_info = {
-        "scars_mark",
-        N_("/_Correct Data/M_ark Scars..."),
-        (GwyProcessFunc)&scars_mark,
-        SCARS_MARK_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo scars_remove_func_info = {
-        "scars_remove",
-        N_("/_Correct Data/Remove _Scars"),
-        (GwyProcessFunc)&scars_remove,
-        SCARS_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &scars_mark_func_info);
-    gwy_process_func_register(name, &scars_remove_func_info);
+    gwy_process_func_registe2("scars_mark",
+                              (GwyProcessFunc)&scars_mark,
+                              N_("/_Correct Data/M_ark Scars..."),
+                              GWY_STOCK_SCARS,
+                              SCARS_MARK_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Mark horizontal scars (strokes)"));
+    gwy_process_func_registe2("scars_remove",
+                              (GwyProcessFunc)&scars_remove,
+                              N_("/_Correct Data/Remove _Scars"),
+                              GWY_STOCK_SCARS,
+                              SCARS_REMOVE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Correct horizontal scars (strokes)"));
 
     return TRUE;
 }
@@ -287,18 +284,22 @@ scars_remove(GwyContainer *data, GwyRunType run)
 {
     ScarsArgs args;
     GwyDataField *dfield, *mask;
+    GQuark dquark;
     gint xres, yres, i, j, k;
     gdouble *d, *m;
 
-    g_return_if_fail(run & SCARS_RUN_MODES);
+    g_return_if_fail(run & SCARS_REMOVE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && dquark);
     scars_mark_load_args(gwy_app_settings_get(), &args);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
 
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
     mask = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_mark_scars(dfield, mask,
                               args.threshold_high, args.threshold_low,
@@ -327,8 +328,8 @@ scars_remove(GwyContainer *data, GwyRunType run)
             }
         }
     }
-
     g_object_unref(mask);
+
     gwy_data_field_data_changed(dfield);
 }
 
