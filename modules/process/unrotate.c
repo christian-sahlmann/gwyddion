@@ -56,6 +56,8 @@ static void             unrotate                 (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean         unrotate_dialog          (UnrotateArgs *args,
                                                   GwyContainer *data,
+                                                  GwyDataField *dfield,
+                                                  gint id,
                                                   gdouble *correction,
                                                   GwyPlaneSymmetry guess);
 static void             unrotate_dialog_update   (UnrotateControls *controls,
@@ -81,7 +83,7 @@ static GwyModuleInfo module_info = {
     N_("Rotates data to make characteristic directions parallel "
        "with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -91,15 +93,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo unrotate_func_info = {
-        "unrotate",
-        N_("/_Correct Data/_Unrotate..."),
-        (GwyProcessFunc)&unrotate,
-        UNROTATE_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &unrotate_func_info);
+    gwy_process_func_registe2("unrotate",
+                              (GwyProcessFunc)&unrotate,
+                              N_("/_Correct Data/_Unrotate..."),
+                              GWY_STOCK_UNROTATE,
+                              UNROTATE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Automatically correct rotation in "
+                                 "horizontal plane"));
 
     return TRUE;
 }
@@ -108,26 +109,35 @@ static void
 unrotate(GwyContainer *data, GwyRunType run)
 {
     enum { nder = 4800 };
-    GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield, *sfield;
     UnrotateArgs args;
     gdouble correction[GWY_SYMMETRY_LAST];
     GwyPlaneSymmetry symm;
     GwyDataLine *derdist;
+    GQuark dquark, mquark, squark;
     gdouble phi;
     gboolean ok = TRUE;
+    gint id;
 
     g_return_if_fail(run & UNROTATE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &sfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && mquark && squark);
 
     load_args(gwy_app_settings_get(), &args);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     derdist = GWY_DATA_LINE(gwy_data_line_new(nder, 2*G_PI, FALSE));
     gwy_data_field_slope_distribution(dfield, derdist, 5);
     symm = gwy_data_field_unrotate_find_corrections(derdist, correction);
     g_object_unref(derdist);
 
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = unrotate_dialog(&args, data, correction, symm);
+        ok = unrotate_dialog(&args, data, dfield, id, correction, symm);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -136,49 +146,60 @@ unrotate(GwyContainer *data, GwyRunType run)
     if (args.symmetry)
         symm = args.symmetry;
     phi = correction[symm];
-    data = gwy_container_duplicate(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                             "/0/data"));
 
+    if (!mfield)
+        mquark = 0;
+    if (!sfield)
+        squark = 0;
+    if (!mfield && sfield)
+        GWY_SWAP(GQuark, mquark, squark);
+    gwy_app_undo_qcheckpoint(data, dquark, mquark, squark, 0);
     gwy_data_field_rotate(dfield, phi, args.interp);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_rotate(dfield, phi, args.interp);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_rotate(dfield, phi, args.interp);
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    gwy_data_field_data_changed(dfield);
+    if (mfield) {
+        gwy_data_field_rotate(mfield, phi, args.interp);
+        gwy_data_field_data_changed(mfield);
+    }
+    if (sfield) {
+        gwy_data_field_rotate(sfield, phi, args.interp);
+        gwy_data_field_data_changed(sfield);
+    }
 }
 
 /* create a smaller copy of data */
 static GwyContainer*
-create_preview_data(GwyContainer *data)
+create_preview_data(GwyContainer *data,
+                    GwyDataField *dfield,
+                    gint id)
 {
-    GwyContainer *preview;
-    GwyDataField *dfield;
+    GwyContainer *pdata;
+    GwyDataField *pfield;
     gint xres, yres;
     gdouble zoomval;
 
-    preview = gwy_container_duplicate_by_prefix(data,
-                                                "/0/data",
-                                                "/0/base/palette",
-                                                NULL);
-    dfield = gwy_container_get_object_by_name(preview, "/0/data");
+    pdata = gwy_container_new();
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
-    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
-                            GWY_INTERPOLATION_BILINEAR);
-    dfield = gwy_data_field_duplicate(dfield);
-    gwy_container_set_object_by_name(preview, "/0/show", dfield);
-    g_object_unref(dfield);
+    xres = MAX(xres*zoomval, 3);
+    yres = MAX(yres*zoomval, 3);
+    pfield = gwy_data_field_new_resampled(dfield, xres, yres,
+                                          GWY_INTERPOLATION_ROUND);
+    gwy_container_set_object_by_name(pdata, "/0/data", pfield);
+    g_object_unref(pfield);
+    pfield = gwy_data_field_new_alike(pfield, FALSE);
+    gwy_container_set_object_by_name(pdata, "/0/show", pfield);
+    g_object_unref(pfield);
+    gwy_app_copy_data_items(data, pdata, id, 0, GWY_DATA_ITEM_GRADIENT, 0);
 
-    return preview;
+    return pdata;
 }
 
 static gboolean
 unrotate_dialog(UnrotateArgs *args,
                 GwyContainer *data,
+                GwyDataField *dfield,
+                gint id,
                 gdouble *correction,
                 GwyPlaneSymmetry guess)
 {
@@ -255,7 +276,7 @@ unrotate_dialog(UnrotateArgs *args,
     gwy_table_attach_row(table, row, _("_Interpolation type:"), "",
                          controls.interp);
 
-    controls.data = create_preview_data(data);
+    controls.data = create_preview_data(data, dfield, id);
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();
