@@ -34,7 +34,7 @@ enum {
     MAX_OUT_SIZE = 1024,
     MAX_STEPS = 65536
 };
-/* Data for this function. */
+
 typedef struct {
     gint size;
     gint steps;
@@ -94,34 +94,30 @@ static const AngleArgs angle_defaults = {
     5,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculates two-dimensional distribution of angles, "
        "that is projections of slopes to all directions."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo angle_dist_func_info = {
-        "angle_dist",
-        N_("/_Statistics/_Angle Distribution..."),
-        (GwyProcessFunc)&angle_dist,
-        ANGLE_DIST_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &angle_dist_func_info);
+    gwy_process_func_registe2("angle_dist",
+                              (GwyProcessFunc)&angle_dist,
+                              N_("/_Statistics/_Angle Distribution..."),
+                              NULL,
+                              ANGLE_DIST_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Calculate two-dimensional angle "
+                                 "distribution"));
 
     return TRUE;
 }
@@ -129,13 +125,16 @@ module_register(const gchar *name)
 static void
 angle_dist(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
-    GwyDataField *dfield = NULL;
+    GwyDataField *dfield;
     AngleArgs args;
-    const guchar *pal = NULL;
-    gboolean ok = TRUE;
+    gint oldid, newid;
+    gboolean ok;
 
     g_return_if_fail(run & ANGLE_DIST_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     NULL);
+    g_return_if_fail(dfield);
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = angle_dialog(&args);
@@ -144,8 +143,6 @@ angle_dist(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
                        _("Computing angle distribution"));
     dfield = angle_do(dfield, &args);
@@ -153,16 +150,12 @@ angle_dist(GwyContainer *data, GwyRunType run)
     if (!dfield)
         return;
 
-    data = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
-    if (pal)
-        gwy_container_set_string_by_name(data, "/0/base/palette",
-                                         g_strdup(pal));
-
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), _("Angle"));
-    g_object_unref(data);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_PALETTE,
+                            0);
+    gwy_app_set_data_field_title(data, newid, _("Angle distribution"));
 }
 
 static gboolean

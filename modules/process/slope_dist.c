@@ -153,7 +153,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
         gwy_app_copy_data_items(data, data, oldid, newid,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
-        gwy_app_set_data_field_title(data, newid, _("Slope"));
+        gwy_app_set_data_field_title(data, newid, _("Slope distribution"));
         break;
 
         case SLOPE_DIST_GRAPH:
