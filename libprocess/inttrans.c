@@ -978,6 +978,7 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ia));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
                      && col + width <= ra->xres
@@ -1102,6 +1103,7 @@ gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
                      && col + width <= ra->xres
@@ -1257,6 +1259,7 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ia));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
                      && col + width <= ra->xres
@@ -1381,6 +1384,7 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
                      && col + width <= ra->xres

@@ -1400,7 +1400,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                                   windowing,
                                   GWY_TRANSFORM_DIRECTION_FORWARD,
                                   interpolation,
-                                  TRUE, TRUE);
+                                  TRUE, 2);
         re = re_field->data;
         im = im_field->data;
         for (i = 0; i < height; i++) {
@@ -1420,7 +1420,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                                   windowing,
                                   GWY_TRANSFORM_DIRECTION_FORWARD,
                                   interpolation,
-                                  TRUE, TRUE);
+                                  TRUE, 2);
         re = re_field->data;
         im = im_field->data;
         for (i = 0; i < width; i++) {

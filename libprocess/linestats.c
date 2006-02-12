@@ -386,7 +386,7 @@ gwy_data_line_psdf(GwyDataLine *data_line,
                       windowing,
                       GWY_TRANSFORM_DIRECTION_FORWARD,
                       interpolation,
-                      TRUE, TRUE);
+                      TRUE, 2);
 
     gwy_data_line_resample(target_line, newres/2.0, GWY_INTERPOLATION_NONE);
 
