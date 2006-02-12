@@ -157,12 +157,11 @@ fft(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    dfield = gwy_data_field_duplicate(dfield);
+    dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
+                                          GWY_INTERPOLATION_BILINEAR);
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_power(xyunit, -1, xyunit);
 
-    gwy_data_field_resample(dfield, newsize, newsize,
-                            GWY_INTERPOLATION_BILINEAR);
     raout = gwy_data_field_new_alike(dfield, FALSE);
     ipout = gwy_data_field_new_alike(dfield, FALSE);
 
