@@ -950,7 +950,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
 
     has_dfield = gwy_container_contains(data, quark);
     has_layer = gwy_data_view_get_alpha_layer(data_view) != NULL;
-    gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
+    gwy_debug("has_dfield: %d, has_layer: %d", has_dfield, has_layer);
 
     if (has_dfield && !has_layer) {
         strkey = g_quark_to_string(quark);
