@@ -30,13 +30,19 @@
 #define SCARS_MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 #define SCARS_RUN_MODES GWY_RUN_IMMEDIATE
 
+typedef enum {
+    FEATURES_POSITIVE = 1 << 0,
+    FEATURES_NEGATIVE = 1 << 2,
+    FEATURES_BOTH     = (FEATURES_POSITIVE | FEATURES_NEGATIVE),
+} GwyFeaturesType;
+
 enum {
     PREVIEW_SIZE = 320,
     MAX_LENGTH = 1024
 };
 
 typedef struct {
-    gboolean inverted;
+    GwyFeaturesType type;
     gdouble threshold_high;
     gdouble threshold_low;
     gint min_len;
@@ -44,7 +50,8 @@ typedef struct {
 } ScarsArgs;
 
 typedef struct {
-    GtkWidget *inverted;
+    ScarsArgs *args;
+    GSList *type;
     GtkWidget *view;
     GtkObject *threshold_high;
     GtkObject *threshold_low;
@@ -52,7 +59,6 @@ typedef struct {
     GtkObject *max_width;
     GtkWidget *color_button;
     GwyContainer *mydata;
-    ScarsArgs *args;
 } ScarsControls;
 
 static gboolean    module_register                   (const gchar *name);
@@ -62,10 +68,10 @@ static void        scars_mark                        (GwyContainer *data,
                                                       GwyRunType run);
 static void        load_mask_color                   (GtkWidget *color_button,
                                                       GwyContainer *data);
-static void        save_mask_color                   (GtkWidget *color_button,
-                                                      GwyContainer *data);
 static gboolean    scars_mark_dialog                 (ScarsArgs *args,
-                                                      GwyContainer *data);
+                                                      GwyContainer *data,
+                                                      GwyDataField *dfield,
+                                                      int id);
 static void        scars_mark_dialog_update_controls (ScarsControls *controls,
                                                       ScarsArgs *args);
 static void        scars_mark_dialog_update_values   (ScarsControls *controls,
@@ -74,18 +80,15 @@ static void        scars_mark_dialog_update_thresholds(GtkObject *adj,
                                                        ScarsControls *controls);
 static void        mask_color_change_cb              (GtkWidget *color_button,
                                                       ScarsControls *controls);
-static void        add_mask_layer                    (GtkWidget *data_view);
 static void        preview                           (ScarsControls *controls,
                                                       ScarsArgs *args);
-static void        scars_mark_do                     (ScarsArgs *args,
-                                                      GwyContainer *data);
 static void        scars_mark_load_args              (GwyContainer *container,
                                                       ScarsArgs *args);
 static void        scars_mark_save_args              (GwyContainer *container,
                                                       ScarsArgs *args);
 
 static const ScarsArgs scars_defaults = {
-    FALSE,
+    FEATURES_BOTH,
     0.666,
     0.25,
     16,
@@ -97,7 +100,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -139,8 +142,7 @@ module_register(const gchar *name)
  * @min_scar_len: Minimum length of a scar, shorter ones are discarded
  *                (must be at least one).
  * @max_scar_width: Maximum width of a scar, must be at least one.
- * @inverted: If TRUE, positive scars are marked, otherwise negative scars
- *            are marked.
+ * @which: Which type of defects to mark (positive, negative, both).
  *
  * Find and marks scars in a data field.
  *
@@ -155,7 +157,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
                           gdouble threshold_low,
                           gdouble min_scar_len,
                           gdouble max_scar_width,
-                          gboolean inverted)
+                          GwyFeaturesType which)
 {
     gint xres, yres, i, j, k;
     gdouble rms;
@@ -200,7 +202,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
             gdouble top, bottom;
             const gdouble *row = d + i*xres + j;
 
-            if (inverted) {
+            if (which & FEATURES_NEGATIVE) {
                 top = row[0];
                 bottom = row[xres];
                 for (k = 1; k <= max_scar_width; k++) {
@@ -218,7 +220,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
                     }
                 }
             }
-            else {
+            if (which & FEATURES_POSITIVE) {
                 bottom = row[0];
                 top = row[xres];
                 for (k = 1; k <= max_scar_width; k++) {
@@ -300,7 +302,7 @@ scars_remove(GwyContainer *data, GwyRunType run)
     mask = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_mark_scars(dfield, mask,
                               args.threshold_high, args.threshold_low,
-                              args.min_len, args.max_width, args.inverted);
+                              args.min_len, args.max_width, args.type);
     m = gwy_data_field_get_data(mask);
 
     /* interpolate */
@@ -333,53 +335,67 @@ scars_remove(GwyContainer *data, GwyRunType run)
 static void
 scars_mark(GwyContainer *data, GwyRunType run)
 {
+    GwyDataField *dfield, *mfield;
+    GQuark dquark, mquark;
+    GwySIUnit *siunit;
     ScarsArgs args;
     gboolean ok;
+    gint id;
 
     g_return_if_fail(run & SCARS_MARK_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && mquark);
+
     scars_mark_load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = scars_mark_dialog(&args, data);
+        ok = scars_mark_dialog(&args, data, dfield, id);
         scars_mark_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
 
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    scars_mark_do(&args, data);
-}
-
-static void
-scars_mark_do(ScarsArgs *args, GwyContainer *data)
-{
-    GwyDataField *dfield, *mask;
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
-        mask = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(data, "/0/mask", mask);
-        g_object_unref(mask);
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    if (!mfield) {
+        mfield = gwy_data_field_new_alike(dfield, FALSE);
+        siunit = gwy_si_unit_new("");
+        gwy_data_field_set_si_unit_z(mfield, siunit);
+        g_object_unref(siunit);
+        gwy_container_set_object(data, mquark, mfield);
+        g_object_unref(mfield);
     }
-    gwy_data_field_mark_scars(dfield, mask,
-                              args->threshold_high, args->threshold_low,
-                              args->min_len, args->max_width, args->inverted);
-    gwy_data_field_data_changed(mask);
+
+    gwy_data_field_mark_scars(dfield, mfield,
+                              args.threshold_high, args.threshold_low,
+                              args.min_len, args.max_width, args.type);
+    gwy_data_field_data_changed(mfield);
 }
 
 static gboolean
-scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
+scars_mark_dialog(ScarsArgs *args,
+                  GwyContainer *data,
+                  GwyDataField *dfield,
+                  int id)
 {
     enum {
         RESPONSE_RESET = 1,
         RESPONSE_PREVIEW = 2
     };
-    GtkWidget *dialog, *table, *spin, *hbox;
+    static const GwyEnum types[] = {
+        { N_("Positive"), FEATURES_POSITIVE, },
+        { N_("Negative"), FEATURES_NEGATIVE, },
+        { N_("Both"),     FEATURES_BOTH,     },
+    };
+    GtkWidget *dialog, *table, *spin, *hbox, *label;
     ScarsControls controls;
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
+    GSList *group;
     gint row;
 
     controls.args = args;
@@ -398,16 +414,19 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = gwy_container_duplicate(data);
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
-                                                             "/0/data"));
-
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
@@ -446,12 +465,21 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    controls.inverted = gtk_check_button_new_with_mnemonic(_("_Negative"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
-                                 args->inverted);
-    gtk_table_attach(GTK_TABLE(table), controls.inverted,
+    label = gtk_label_new(_("Scars type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
+
+    group = gwy_radio_buttons_create(types, G_N_ELEMENTS(types), "type",
+                                     NULL, NULL, args->type);
+    controls.type = group;
+    while (group) {
+        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
+                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        group = g_slist_next(group);
+        row++;
+    }
 
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
@@ -496,7 +524,9 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     } while (response != GTK_RESPONSE_OK);
 
     scars_mark_dialog_update_values(&controls, args);
-    save_mask_color(controls.color_button, data);
+    gwy_app_copy_data_items(controls.mydata, data, 0, id,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -545,8 +575,7 @@ scars_mark_dialog_update_controls(ScarsControls *controls,
                              args->min_len);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_width),
                              args->max_width);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverted),
-                                 args->inverted);
+    gwy_radio_buttons_set_current(controls->type, "type", args->type);
 }
 
 static void
@@ -559,8 +588,7 @@ scars_mark_dialog_update_values(ScarsControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_low));
     args->min_len = gwy_adjustment_get_int(controls->min_len);
     args->max_width = gwy_adjustment_get_int(controls->max_width);
-    args->inverted
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->inverted));
+    args->type = gwy_radio_buttons_get_current(controls->type, "type");
 }
 
 static void
@@ -589,52 +617,40 @@ load_mask_color(GtkWidget *color_button,
 }
 
 static void
-save_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
-    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-}
-
-static void
-add_mask_layer(GtkWidget *data_view)
-{
-    GwyPixmapLayer *layer;
-
-    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
-    }
-}
-
-static void
 preview(ScarsControls *controls,
         ScarsArgs *args)
 {
     GwyDataField *mask, *dfield;
+    GwyPixmapLayer *layer;
+    GwySIUnit *siunit;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
-    /*set up the mask*/
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask))
-        gwy_data_field_copy(dfield, mask, FALSE);
-    else {
+    /* Set up the mask */
+    if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
         mask = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-    }
+        siunit = gwy_si_unit_new("");
+        gwy_data_field_set_si_unit_z(mask, siunit);
+        g_object_unref(siunit);
 
-    scars_mark_do(args, controls->mydata);
-    add_mask_layer(controls->view);
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
+    }
+    else
+        gwy_data_field_copy(dfield, mask, FALSE);
+
+    gwy_data_field_mark_scars(dfield, mask,
+                              args->threshold_high, args->threshold_low,
+                              args->min_len, args->max_width, args->type);
     gwy_data_field_data_changed(mask);
 }
 
-static const gchar inverted_key[]       = "/module/scars/inverted";
+static const gchar type_key[]           = "/module/scars/type";
 static const gchar threshold_low_key[]  = "/module/scars/threshold_low";
 static const gchar threshold_high_key[] = "/module/scars/threshold_high";
 static const gchar min_len_key[]        = "/module/scars/min_len";
@@ -643,7 +659,7 @@ static const gchar max_width_key[]      = "/module/scars/max_width";
 static void
 scars_mark_sanitize_args(ScarsArgs *args)
 {
-    args->inverted = !!args->inverted;
+    args->type = CLAMP(args->type, FEATURES_POSITIVE, FEATURES_BOTH);
     args->threshold_low = MAX(args->threshold_low, 0.0);
     args->threshold_high = MAX(args->threshold_low, args->threshold_high);
     args->min_len = CLAMP(args->min_len, 1, MAX_LENGTH);
@@ -656,7 +672,7 @@ scars_mark_load_args(GwyContainer *container,
 {
     *args = scars_defaults;
 
-    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
+    gwy_container_gis_enum_by_name(container, type_key, &args->type);
     gwy_container_gis_double_by_name(container, threshold_high_key,
                                      &args->threshold_high);
     gwy_container_gis_double_by_name(container, threshold_low_key,
@@ -670,7 +686,7 @@ static void
 scars_mark_save_args(GwyContainer *container,
                      ScarsArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
+    gwy_container_set_enum_by_name(container, type_key, args->type);
     gwy_container_set_double_by_name(container, threshold_high_key,
                                      args->threshold_high);
     gwy_container_set_double_by_name(container, threshold_low_key,
