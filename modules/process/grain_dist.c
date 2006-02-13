@@ -28,11 +28,12 @@
 #include <app/gwyapp.h>
 
 #define DIST_RUN_MODES GWY_RUN_IMMEDIATE
+#define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 static gboolean module_register(const gchar *name);
-static void     dist           (GwyContainer *data,
+static void     grain_dist     (GwyContainer *data,
                                 GwyRunType run);
-static void     stats          (GwyContainer *data,
+static void     grain_stat     (GwyContainer *data,
                                 GwyRunType run);
 
 static GwyModuleInfo module_info = {
@@ -40,7 +41,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -50,64 +51,59 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dist_func_info = {
-        "grain_dist",
-        N_("/_Grains/_Size Distribution"),
-        (GwyProcessFunc)&dist,
-        DIST_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo stats_func_info = {
-        "grain_stats",
-        N_("/_Grains/S_tatistics"),
-        (GwyProcessFunc)&stats,
-        DIST_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &dist_func_info);
-    gwy_process_func_register(name, &stats_func_info);
+    gwy_process_func_registe2("grain_dist",
+                              (GwyProcessFunc)&grain_dist,
+                              N_("/_Grains/_Size Distribution"),
+                              GWY_STOCK_GRAINS_GRAPH,
+                              DIST_RUN_MODES,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
+                              N_("Calculate grain size distribution"));
+    gwy_process_func_registe2("grain_stat",
+                              (GwyProcessFunc)&grain_stat,
+                              N_("/_Grains/S_tatistics"),
+                              NULL,
+                              STAT_RUN_MODES,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
+                              N_("Simple grain statistics"));
 
     return TRUE;
 }
 
 static void
-dist(GwyContainer *data, GwyRunType run)
+grain_dist(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *graph;
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *dataline;
-    GwyDataField *dfield;
+    GwyDataField *mfield;
 
     g_return_if_fail(run & DIST_RUN_MODES);
-    g_return_if_fail(gwy_container_contains_by_name(data, "/0/mask"));
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield, 0);
+    g_return_if_fail(mfield);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dataline = gwy_data_line_new(10, 10, TRUE);
-    gwy_data_field_grains_get_distribution(dfield, dataline);
+    gwy_data_field_grains_get_distribution(mfield, dataline);
 
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_model_add_curve(gmodel, cmodel);
+    g_object_unref(cmodel);
 
     gwy_graph_model_set_title(gmodel, _("Grain Size Histogram"));
     gwy_graph_model_set_units_from_data_line(gmodel, dataline);
-    gwy_graph_curve_model_set_description(cmodel, "grain sizes");
+    gwy_graph_curve_model_set_description(cmodel, "Grain sizes");
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
+    g_object_unref(dataline);
 
-    graph = gwy_graph_new(gmodel);
-    gwy_object_unref(cmodel);
-    gwy_object_unref(gmodel);
-    gwy_object_unref(dataline);
-    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+    g_object_unref(gmodel);
 }
 
 static void
-stats(GwyContainer *data, GwyRunType run)
+grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog, *table, *label;
-    GwyDataField *dfield;
+    GwyDataField *mfield;
     GwySIUnit *siunit, *siunit2;
     GwySIValueFormat *vf;
     gint i, xres, yres, ngrains, npix;
@@ -116,27 +112,25 @@ stats(GwyContainer *data, GwyRunType run)
     gint *grains;
     gint row;
 
-    g_return_if_fail(run & DIST_RUN_MODES);
-    g_return_if_fail(gwy_container_contains_by_name(data, "/0/mask"));
+    g_return_if_fail(run & STAT_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield, 0);
+    g_return_if_fail(mfield);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    area = gwy_data_field_get_xreal(dfield)*gwy_data_field_get_yreal(dfield);
+    xres = gwy_data_field_get_xres(mfield);
+    yres = gwy_data_field_get_yres(mfield);
+    area = gwy_data_field_get_xreal(mfield)*gwy_data_field_get_yreal(mfield);
     grains = g_new0(gint, xres*yres);
 
-    ngrains = gwy_data_field_number_grains(dfield, grains);
+    ngrains = gwy_data_field_number_grains(mfield, grains);
     npix = 0;
     for (i = 0; i < xres*yres; i++)
         npix += (grains[i] != 0);
-
     g_free(grains);
 
     dialog = gtk_dialog_new_with_buttons(_("Grain Statistics"), NULL, 0,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
 
     table = gtk_table_new(4, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
@@ -155,7 +149,7 @@ stats(GwyContainer *data, GwyRunType run)
                      GTK_FILL, 0, 2, 2);
     row++;
 
-    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    siunit = gwy_data_field_get_si_unit_xy(mfield);
     siunit2 = gwy_si_unit_power(siunit, 2, NULL);
 
     label = gtk_label_new(_("Total projected area (abs.):"));
@@ -217,7 +211,10 @@ stats(GwyContainer *data, GwyRunType run)
     gwy_si_unit_value_format_free(vf);
     g_string_free(str, TRUE);
     g_object_unref(siunit2);
+
     gtk_widget_show_all(dialog);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -58,15 +58,13 @@ typedef struct {
 } WshedControls;
 
 static gboolean    module_register              (const gchar *name);
-static void        wshed                        (GwyContainer *data,
+static void        grain_wshed                  (GwyContainer *data,
                                                  GwyRunType run);
 static void        wshed_dialog                 (WshedArgs *args,
                                                  GwyContainer *data);
 static void        mask_color_change_cb         (GtkWidget *color_button,
                                                  WshedControls *controls);
 static void        load_mask_color              (GtkWidget *color_button,
-                                                 GwyContainer *data);
-static void        save_mask_color              (GtkWidget *color_button,
                                                  GwyContainer *data);
 static void        wshed_dialog_update_controls (WshedControls *controls,
                                                  WshedArgs *args);
@@ -76,11 +74,7 @@ static void        wshed_invalidate             (GtkObject *adj,
                                                  WshedControls *controls);
 static void        preview                      (WshedControls *controls,
                                                  WshedArgs *args);
-static void        add_mask_layer               (GtkWidget *data_view);
-static gboolean    wshed_ok                     (WshedControls *controls,
-                                                 WshedArgs *args,
-                                                 GwyContainer *data);
-static gboolean    run_noninteractive           (WshedArgs *args,
+static void        run_noninteractive           (WshedArgs *args,
                                                  GwyContainer *data);
 static gboolean    mask_process                 (GwyDataField *dfield,
                                                  GwyDataField *maskfield,
@@ -106,7 +100,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -116,21 +110,19 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo wshed_func_info = {
-        "grain_wshed",
-        N_("/_Grains/Mark by _Watershed..."),
-        (GwyProcessFunc)&wshed,
-        WSHED_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &wshed_func_info);
+    gwy_process_func_registe2("grain_wshed",
+                              (GwyProcessFunc)&grain_wshed,
+                              N_("/_Grains/Mark by _Watershed..."),
+                              GWY_STOCK_GRAINS_WATER,
+                              WSHED_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Mark grains by watershed"));
 
     return TRUE;
 }
 
 static void
-wshed(GwyContainer *data, GwyRunType run)
+grain_wshed(GwyContainer *data, GwyRunType run)
 {
     WshedArgs args;
 
@@ -144,7 +136,6 @@ wshed(GwyContainer *data, GwyRunType run)
     }
 }
 
-
 static void
 wshed_dialog(WshedArgs *args, GwyContainer *data)
 {
@@ -157,8 +148,16 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
-    gint row;
+    GwyDataField *dfield, *mfield;
+    GQuark dquark, mquark;
+    gint id, row;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(dfield && dquark && mquark);
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Watershed"),
                                          NULL, 0,
@@ -176,20 +175,20 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(hbox),
                        FALSE, FALSE, 4);
 
-    controls.mydata = gwy_container_duplicate(data);
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
-                                                             "/0/data"));
-
-    if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
-        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
-    else
-        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
-
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
@@ -317,11 +316,22 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    save_mask_color(controls.color_button, data);
     wshed_dialog_update_values(&controls, args);
+    gwy_app_copy_data_items(controls.mydata, data, 0, id,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     gtk_widget_destroy(dialog);
-    wshed_ok(&controls, args, data);
-    g_object_unref(controls.mydata);
+
+    if (controls.computed) {
+        mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
+        gwy_app_undo_qcheckpointv(data, 1, &mquark);
+        gwy_container_set_object(data, mquark, mfield);
+        g_object_unref(controls.mydata);
+    }
+    else {
+        g_object_unref(controls.mydata);
+        run_noninteractive(args, data);
+    }
 }
 
 static void
@@ -390,109 +400,61 @@ load_mask_color(GtkWidget *color_button,
 }
 
 static void
-save_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
-    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-}
-
-static void
 preview(WshedControls *controls,
         WshedArgs *args)
 {
     GwyDataField *mask, *dfield;
+    GwyPixmapLayer *layer;
+    GwySIUnit *siunit;
 
+    wshed_dialog_update_values(controls, args);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
-    /*set up the mask*/
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask))
-        gwy_data_field_copy(dfield, mask, FALSE);
-    else {
-        mask = gwy_data_field_duplicate(dfield);
+    /* Set up the mask */
+    if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
+        mask = gwy_data_field_new_alike(dfield, TRUE);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-    }
+        siunit = gwy_si_unit_new("");
+        gwy_data_field_set_si_unit_z(mask, siunit);
+        g_object_unref(siunit);
 
-    wshed_dialog_update_values(controls, args);
-    controls->computed = mask_process(dfield, mask, args, controls->dialog);
-
-    if (controls->computed) {
-        add_mask_layer(controls->view);
-        gwy_data_field_data_changed(mask);
-    }
-}
-
-static void
-add_mask_layer(GtkWidget *data_view)
-{
-    GwyPixmapLayer *layer;
-
-    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
+
+    controls->computed = mask_process(dfield, mask, args, controls->dialog);
+    if (controls->computed)
+        gwy_data_field_data_changed(mask);
 }
 
-static gboolean
-wshed_ok(WshedControls *controls,
-         WshedArgs *args,
-         GwyContainer *data)
-{
-    GwyDataField *dfield, *maskfield;
-
-    if (controls->computed) {
-        maskfield = gwy_container_get_object_by_name(controls->mydata,
-                                                     "/0/mask");
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
-            gwy_data_field_copy(maskfield, dfield, FALSE);
-            gwy_data_field_data_changed(dfield);
-        }
-        else
-            gwy_container_set_object_by_name(data, "/0/mask", maskfield);
-        return TRUE;
-    }
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    maskfield = gwy_data_field_duplicate(dfield);
-    if (mask_process(dfield, maskfield, args,
-                     GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-            gwy_data_field_copy(maskfield, dfield, FALSE);
-        else
-            gwy_container_set_object_by_name(data, "/0/mask", maskfield);
-        controls->computed = TRUE;
-        gwy_data_field_data_changed(maskfield);
-    }
-    g_object_unref(maskfield);
-
-    return controls->computed;
-}
-
-static gboolean
+static void
 run_noninteractive(WshedArgs *args, GwyContainer *data)
 {
-    GwyDataField *dfield, *maskfield;
-    gboolean computed = FALSE;
+    GwyDataField *dfield, *mfield;
+    GQuark dquark, mquark;
+    GwySIUnit *siunit;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    maskfield = gwy_data_field_duplicate(dfield);
-    if (mask_process(dfield, maskfield, args,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(dfield && dquark && mquark);
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    if (mask_process(dfield, mfield, args,
                      GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
-        computed = TRUE;
+        gwy_app_undo_qcheckpointv(data, 1, &mquark);
+        gwy_container_set_object(data, mquark, mfield);
     }
-    g_object_unref(maskfield);
-
-    return computed;
+    g_object_unref(mfield);
 }
 
 static gboolean

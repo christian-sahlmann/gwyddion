@@ -423,7 +423,6 @@ scars_mark_dialog(ScarsArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
-    g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
@@ -502,6 +501,7 @@ scars_mark_dialog(ScarsArgs *args,
             scars_mark_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            g_object_unref(controls.mydata);
             return FALSE;
             break;
 
@@ -529,6 +529,7 @@ scars_mark_dialog(ScarsArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);
+    g_object_unref(controls.mydata);
 
     return TRUE;
 }
