@@ -41,7 +41,7 @@ typedef struct {
 } MaskGrowControls;
 
 static gboolean    module_register            (const gchar *name);
-static void        mask_grow                  (GwyContainer *data,
+static void        mask_grow_shrink           (GwyContainer *data,
                                                GwyRunType run,
                                                const gchar *name);
 static gboolean    mask_grow_dialog           (MaskGrowArgs *args,
@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -77,29 +77,26 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo mask_grow_func_info = {
-        "mask_grow",
-        N_("/_Mask/_Grow Mask..."),
-        (GwyProcessFunc)&mask_grow,
-        MASK_GROW_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo mask_shrink_func_info = {
-        "mask_shrink",
-        N_("/_Mask/_Shrink Mask..."),
-        (GwyProcessFunc)&mask_grow,
-        MASK_GROW_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &mask_shrink_func_info);
-    gwy_process_func_register(name, &mask_grow_func_info);
+    gwy_process_func_registe2("mask_grow",
+                              (GwyProcessFunc)&mask_grow_shrink,
+                              N_("/_Mask/_Grow Mask..."),
+                              GWY_STOCK_MASK_GROW,
+                              MASK_GROW_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Grows (expands) mask"));
+    gwy_process_func_registe2("mask_shrink",
+                              (GwyProcessFunc)&mask_grow_shrink,
+                              N_("/_Mask/_Shrink Mask..."),
+                              GWY_STOCK_MASK_SHRINK,
+                              MASK_GROW_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Shrinks mask"));
 
     return TRUE;
 }
 
 static void
-mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
+mask_grow_shrink(GwyContainer *data, GwyRunType run, const gchar *name)
 {
     static struct {
         const gchar *name;
@@ -122,20 +119,26 @@ mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
         },
     };
     GwyContainer *settings;
-    GwyDataField *dfield;
+    GwyDataField *mfield;
+    GQuark mquark;
     MaskGrowArgs args;
     gboolean ok;
     gsize i;
 
     g_return_if_fail(run & MASK_GROW_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    g_return_if_fail(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(mfield && mquark);
 
     for (i = 0; i < G_N_ELEMENTS(grow_shrink_meta); i++) {
         if (gwy_strequal(grow_shrink_meta[i].name, name))
             break;
     }
-    g_return_if_fail(i < G_N_ELEMENTS(grow_shrink_meta));
+    if (i == G_N_ELEMENTS(grow_shrink_meta)) {
+        g_warning("Function called under unregistered name: %s", name);
+        return;
+    }
 
     settings = gwy_app_settings_get();
     mask_grow_load_args(settings, &args, name);
@@ -147,8 +150,9 @@ mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
         if (!ok)
             return;
     }
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    grow_shrink_meta[i].func(dfield, args.pixels);
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    grow_shrink_meta[i].func(mfield, args.pixels);
+    gwy_data_field_data_changed(mfield);
 }
 
 static gboolean
@@ -268,7 +272,6 @@ mask_grow_do(GwyDataField *dfield,
     }
     g_free(buffer);
     g_free(prow);
-    gwy_data_field_data_changed(dfield);
 }
 
 static void
@@ -325,7 +328,6 @@ mask_shrink_do(GwyDataField *dfield,
     }
     g_free(buffer);
     g_free(prow);
-    gwy_data_field_data_changed(dfield);
 }
 
 static const gchar pixels_key[] = "/module/%s/pixels";
