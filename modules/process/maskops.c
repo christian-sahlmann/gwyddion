@@ -22,6 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define MASKOPS_RUN_MODES GWY_RUN_IMMEDIATE
@@ -34,49 +35,42 @@ static void     mask_invert    (GwyContainer *data,
 static void     mask_extract   (GwyContainer *data,
                                 GwyRunType run);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Basic operations with mask: inversion, removal, extraction."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0.1",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo mask_remove_func_info = {
-        "mask_remove",
-        N_("/_Mask/_Remove Mask"),
-        (GwyProcessFunc)&mask_remove,
-        MASKOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo mask_invert_func_info = {
-        "mask_invert",
-        N_("/_Mask/_Invert Mask"),
-        (GwyProcessFunc)&mask_invert,
-        MASKOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo mask_extract_func_info = {
-        "mask_extract",
-        N_("/_Mask/_Extract Mask"),
-        (GwyProcessFunc)&mask_extract,
-        MASKOPS_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &mask_remove_func_info);
-    gwy_process_func_register(name, &mask_invert_func_info);
-    gwy_process_func_register(name, &mask_extract_func_info);
+    gwy_process_func_registe2("mask_remove",
+                              (GwyProcessFunc)&mask_remove,
+                              N_("/_Mask/_Remove Mask"),
+                              GWY_STOCK_MASK_REMOVE,
+                              MASKOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Remove mask from data"));
+    gwy_process_func_registe2("mask_invert",
+                              (GwyProcessFunc)&mask_invert,
+                              N_("/_Mask/_Invert Mask"),
+                              GWY_STOCK_MASK_INVERT,
+                              MASKOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Invert mask"));
+    gwy_process_func_registe2("mask_extract",
+                              (GwyProcessFunc)&mask_extract,
+                              N_("/_Mask/_Extract Mask"),
+                              NULL,
+                              MASKOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Extract mask to a new channel"));
 
     return TRUE;
 }
@@ -84,60 +78,58 @@ module_register(const gchar *name)
 static void
 mask_invert(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GwyDataField *mfield;
+    GQuark mquark;
 
     g_return_if_fail(run & MASKOPS_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    g_return_if_fail(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(mfield && mquark);
 
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    gwy_data_field_multiply(dfield, -1.0);
-    gwy_data_field_add(dfield, 1.0);
-    gwy_data_field_data_changed(dfield);
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    gwy_data_field_multiply(mfield, -1.0);
+    gwy_data_field_add(mfield, 1.0);
+    gwy_data_field_data_changed(mfield);
 }
 
 static void
 mask_remove(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GQuark mquark;
 
     g_return_if_fail(run & MASKOPS_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    g_return_if_fail(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD_KEY, &mquark, 0);
+    g_return_if_fail(mquark);
 
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    gwy_container_remove_by_name(data, "/0/mask");
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    gwy_container_remove(data, mquark);
 }
 
 static void
 mask_extract(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    const guchar *pal = NULL;
+    gint oldid, newid;
 
     g_return_if_fail(run & MASKOPS_RUN_MODES);
-    dfield = gwy_container_get_object_by_name(data, "/0/mask");
+    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
     g_return_if_fail(dfield);
 
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_clamp(dfield, 0.0, 1.0);
+
+    /* Other functions should set the units correctly, but do not trust them */
     siunit = gwy_si_unit_new("");
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
-    data = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
-    if (pal)
-        gwy_container_set_string_by_name(data, "/0/base/palette",
-                                         g_strdup(pal));
-
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    gwy_app_set_data_field_title(data, newid, _("Mask"));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
