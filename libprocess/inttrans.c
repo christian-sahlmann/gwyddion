@@ -44,7 +44,7 @@ static void  gwy_data_field_area_2dfft_real(GwyDataField *ra,
                                             GwyTransformDirection direction,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
-                                            gboolean level);
+                                            gint level);
 static void  gwy_data_field_area_xfft      (GwyDataField *ra,
                                             GwyDataField *ia,
                                             GwyDataField *rb,
@@ -57,7 +57,7 @@ static void  gwy_data_field_area_xfft      (GwyDataField *ra,
                                             GwyTransformDirection direction,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
-                                            gboolean level);
+                                            gint level);
 static void  gwy_data_field_area_xfft_real (GwyDataField *ra,
                                             GwyDataField *rb,
                                             GwyDataField *ib,
@@ -69,7 +69,7 @@ static void  gwy_data_field_area_xfft_real (GwyDataField *ra,
                                             GwyTransformDirection direction,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
-                                            gboolean level);
+                                            gint level);
 static void  gwy_data_field_area_yfft      (GwyDataField *ra,
                                             GwyDataField *ia,
                                             GwyDataField *rb,
@@ -82,7 +82,7 @@ static void  gwy_data_field_area_yfft      (GwyDataField *ra,
                                             GwyTransformDirection direction,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
-                                            gboolean level);
+                                            gint level);
 static void  gwy_data_field_area_yfft_real (GwyDataField *ra,
                                             GwyDataField *rb,
                                             GwyDataField *ib,
@@ -94,7 +94,7 @@ static void  gwy_data_field_area_yfft_real (GwyDataField *ra,
                                             GwyTransformDirection direction,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
-                                            gboolean level);
+                                            gint level);
 static void  gwy_data_field_mult_wav       (GwyDataField *real_field,
                                             GwyDataField *imag_field,
                                             gdouble scale,
@@ -243,7 +243,7 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                   GwyTransformDirection direction,
                   GwyInterpolationType interpolation,
                   gboolean preserverms,
-                  gboolean level)
+                  gint level)
 {
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
 
@@ -281,7 +281,7 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                        GwyTransformDirection direction,
                        GwyInterpolationType interpolation,
                        gboolean preserverms,
-                       gboolean level)
+                       gint level)
 {
     gint newres;
     GwyDataLine *rbuf, *ibuf;
@@ -558,7 +558,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
                                GwyWindowingType windowing,
                                GwyTransformDirection direction,
                                GwyInterpolationType interpolation,
-                               gboolean preserverms, gboolean level)
+                               gboolean preserverms, gint level)
 {
     gint newxres, newyres, j, k;
     GwyDataField *rbuf, *ibuf;
@@ -728,7 +728,7 @@ gwy_data_field_2dfft(GwyDataField *rin, GwyDataField *iin,
                      GwyWindowingType windowing,
                      GwyTransformDirection direction,
                      GwyInterpolationType interpolation,
-                     gboolean preserverms, gboolean level)
+                     gboolean preserverms, gint level)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(rin));
 
@@ -830,7 +830,7 @@ gwy_data_field_area_1dfft(GwyDataField *rin, GwyDataField *iin,
                           GwyTransformDirection direction,
                           GwyInterpolationType interpolation,
                           gboolean preserverms,
-                          gboolean level)
+                          gint level)
 {
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
@@ -897,7 +897,7 @@ gwy_data_field_1dfft(GwyDataField *rin, GwyDataField *iin,
                      GwyTransformDirection direction,
                      GwyInterpolationType interpolation,
                      gboolean preserverms,
-                     gboolean level)
+                     gint level)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(rin));
 
@@ -967,7 +967,7 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
                          GwyWindowingType windowing,
                          GwyTransformDirection direction,
                          GwyInterpolationType interpolation,
-                         gboolean preserverms, gboolean level)
+                         gboolean preserverms, gint level)
 {
     gint k, newxres;
     GwyDataField *rbuf, *ibuf;
@@ -1094,7 +1094,7 @@ gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
                               GwyWindowingType windowing,
                               GwyTransformDirection direction,
                               GwyInterpolationType interpolation,
-                              gboolean preserverms, gboolean level)
+                              gboolean preserverms, gint level)
 {
     gint newxres, j, k;
     GwyDataField *rbuf, *ibuf;
@@ -1248,7 +1248,7 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
                          GwyWindowingType windowing,
                          GwyTransformDirection direction,
                          GwyInterpolationType interpolation,
-                         gboolean preserverms, gboolean level)
+                         gboolean preserverms, gint level)
 {
     gint k, newyres;
     GwyDataField *rbuf, *ibuf;
@@ -1375,7 +1375,7 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
                               GwyWindowingType windowing,
                               GwyTransformDirection direction,
                               GwyInterpolationType interpolation,
-                              gboolean preserverms, gboolean level)
+                              gboolean preserverms, gint level)
 {
     gint newyres, j, k;
     GwyDataField *rbuf, *ibuf;
@@ -1528,8 +1528,8 @@ gwy_level_simple(gint n,
     g_return_if_fail(level == 2);
 
     /* These are already averages, not sums */
-    sumxi = (n - 1.0)/2.0;
-    sumxixi = (2.0*n - 1.0)*(n - 1.0)/6.0;
+    sumxi = (n + 1.0)/2.0;
+    sumxixi = (2.0*n + 1.0)*(n + 1.0)/6.0;
 
     sumsi = sumsixi = 0.0;
 
@@ -1545,8 +1545,11 @@ gwy_level_simple(gint n,
     a = (sumsi*sumxixi - sumxi*sumsixi)/(sumxixi - sumxi*sumxi);
 
     pdata = data;
-    for (i = n; i; i--, pdata += stride)
+    sumsi = 0;
+    for (i = n; i; i--, pdata += stride) {
         *pdata -= a + b*i;
+        sumsi += *pdata;
+    }
 }
 
 static void
