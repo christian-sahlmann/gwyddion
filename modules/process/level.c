@@ -61,8 +61,7 @@ module_register(const gchar *name)
                               GWY_STOCK_LEVEL,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Automatically level data by plane "
-                                 "subtraction"));
+                              N_("Level data by plane subtraction"));
     gwy_process_func_registe2("level_rotate",
                               (GwyProcessFunc)&level_rotate,
                               N_("/_Level/Level _Rotate"),

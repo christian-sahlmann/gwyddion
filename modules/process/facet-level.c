@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define LEVEL_RUN_MODES GWY_RUN_IMMEDIATE
@@ -39,7 +40,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -49,15 +50,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo facet_level_func_info = {
-        "facet-level",
-        N_("/_Level/_Facet Level"),
-        (GwyProcessFunc)&facet_level,
-        LEVEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &facet_level_func_info);
+    gwy_process_func_registe2("facet-level",
+                              (GwyProcessFunc)&facet_level,
+                              N_("/_Level/_Facet Level"),
+                              GWY_STOCK_FACET_LEVEL,
+                              LEVEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Level data to make facets point upward"));
 
     return TRUE;
 }
@@ -66,13 +65,17 @@ static void
 facet_level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *old;
+    GQuark quark;
     gdouble c, bx, by, b2;
     gdouble p, progress, maxb2 = 666, eps = 1e-8;
     gint i;
     gboolean cancelled = FALSE;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && quark);
     old = dfield;
     dfield = gwy_data_field_duplicate(dfield);
 
@@ -81,7 +84,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     i = 0;
     progress = 0.0;
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
-                       _("Facet-levelling"));
+                       _("Facet-leveling"));
     while (i < 100) {
         facet_level_coeffs(dfield, &bx, &by);
         b2 = bx*bx + by*by;
@@ -105,7 +108,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     };
     gwy_app_wait_finish();
     if (!cancelled) {
-        gwy_app_undo_checkpoint(data, "/0/data", NULL);
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
         gwy_data_field_copy(dfield, old, FALSE);
         gwy_data_field_data_changed(old);
     }
