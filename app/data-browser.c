@@ -1772,6 +1772,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GtkTreeSelection *selection;
+    GtkWidget *data_window;
     GwyPixmapLayer *layer;
     GtkTreeIter iter;
     GwyContainer *data;
@@ -1797,6 +1798,11 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     gtk_tree_selection_select_iter(selection, &iter);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook),
                                   PAGE_CHANNELS);
+
+    /* FIXME: This updated the other notion of current data */
+    data_window = gtk_widget_get_toplevel(GTK_WIDGET(data_view));
+    if (data_window != (GtkWidget*)gwy_app_data_window_get_current())
+        gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
 }
 
 /**
@@ -1813,6 +1819,7 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     GwyAppDataProxy *proxy;
     GwyGraphModel *gmodel;
     GtkTreeSelection *selection;
+    GtkWidget *graph_window;
     GtkTreeIter iter;
     GwyContainer *data;
     const gchar *strkey;
@@ -1841,6 +1848,11 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     gtk_tree_selection_select_iter(selection, &iter);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook),
                                   PAGE_GRAPHS);
+
+    /* FIXME: This updated the other notion of current graph */
+    graph_window = gtk_widget_get_toplevel(GTK_WIDGET(graph));
+    if (graph_window != gwy_app_graph_window_get_current())
+        gwy_app_graph_window_set_current(graph_window);
 }
 
 static gboolean

@@ -455,6 +455,7 @@ gwy_app_build_process_menu(GtkAccelGroup *accel_group)
                                           G_CALLBACK(gwy_app_run_process_func),
                                           gwy_process_func_get_sensitivity_mask);
     gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    gtk_menu_set_accel_path(GTK_MENU(menu), "<proc>/Data Process");
     process_menu = menu;
 
     return menu;
@@ -483,6 +484,7 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
                                           G_CALLBACK(gwy_app_run_graph_func),
                                           gwy_graph_func_get_sensitivity_mask);
     gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    gtk_menu_set_accel_path(GTK_MENU(menu), "<graph>/Graph");
     graph_menu = menu;
 
     return menu;

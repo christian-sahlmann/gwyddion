@@ -55,7 +55,7 @@ static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                                       GtkWidget *view);
 static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
-static void       gwy_app_set_current_window       (GtkWidget *window);
+static gboolean   gwy_app_set_current_window       (GtkWidget *window);
 static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
@@ -301,7 +301,8 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     GwyContainer *data;
 
     gwy_debug("win = %p, tool = %p", window, current_tool);
-    gwy_app_set_current_window(GTK_WIDGET(window));
+    if (gwy_app_set_current_window(GTK_WIDGET(window)))
+        return FALSE;
 
     data_view = gwy_data_window_get_data_view(window);
     gwy_app_data_browser_select_data_view(data_view);
@@ -582,6 +583,8 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     GList *item;
 
     gwy_debug("%p", window);
+    if (gwy_app_set_current_window(window))
+        return FALSE;
 
     item = g_list_find(current_graph, window);
     if (item) {
@@ -594,7 +597,6 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
     graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(window));
     gwy_app_data_browser_select_graph(GWY_GRAPH(graph));
-    gwy_app_set_current_window(window);
 
     return FALSE;
 }
@@ -800,13 +802,13 @@ gwy_app_3d_window_set_current(GtkWidget *window)
     GList *item;
 
     gwy_debug("%p", window);
+    if (gwy_app_set_current_window(window))
+        return FALSE;
 
     item = g_list_find(current_3d, window);
     g_return_val_if_fail(item, FALSE);
     current_3d = g_list_remove_link(current_3d, item);
     current_3d = g_list_concat(item, current_3d);
-
-    gwy_app_set_current_window(window);
 
     return FALSE;
 }
@@ -899,12 +901,16 @@ gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
  *                                                                           *
  *****************************************************************************/
 
-static void
+static gboolean
 gwy_app_set_current_window(GtkWidget *window)
 {
-    g_return_if_fail(GTK_IS_WINDOW(window));
+    g_return_val_if_fail(GTK_IS_WINDOW(window), FALSE);
+
+    if (current_any == window)
+        return TRUE;
 
     current_any = window;
+    return FALSE;
 }
 
 /**
