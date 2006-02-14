@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     N_("Removes data under mask, "
        "interpolating them with Laplace equation solution."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -50,15 +50,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo laplace_func_info = {
-        "laplace",
-        N_("/_Correct Data/_Remove Data Under Mask"),
-        (GwyProcessFunc)&laplace,
-        LAPLACE_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &laplace_func_info);
+    gwy_process_func_registe2("laplace",
+                              (GwyProcessFunc)&laplace,
+                              N_("/_Correct Data/_Remove Data Under Mask"),
+                              NULL,
+                              LAPLACE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Interpolate data under mask by solution of "
+                                 "Laplace equation"));
 
     return TRUE;
 }
@@ -67,36 +66,39 @@ module_register(const gchar *name)
 static void
 laplace(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *maskfield, *buffer;
+    GwyDataField *dfield, *mfield, *buffer, *old;
+    GQuark dquark, mquark;
     gdouble error, cor, maxer, lastfrac, frac, starter;
     gint i;
+    gboolean cancelled = FALSE;
 
     g_return_if_fail(run & LAPLACE_RUN_MODES);
-    g_return_if_fail(gwy_container_contains_by_name(data, "/0/mask"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && mfield && mquark);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                "/0/mask"));
-    buffer = gwy_data_field_new_alike(dfield, TRUE);
-
-    gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
-
-    cor = 0.2;
-    error = 0;
     maxer = gwy_data_field_get_rms(dfield)/1.0e4;
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
                        _("Laplace correction"));
 
-    gwy_data_field_correct_average(dfield, maskfield);
+    old = dfield;
+    dfield = gwy_data_field_duplicate(dfield);
+    buffer = gwy_data_field_new_alike(dfield, TRUE);
+    gwy_data_field_correct_average(dfield, mfield);
 
-    lastfrac = 0;
-    starter = 0;
+    cor = 0.2;
+    error = 0.0;
+    lastfrac = 0.0;
+    starter = 0.0;
     for (i = 0; i < 5000; i++) {
-        gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
+        gwy_data_field_correct_laplace_iteration(dfield, mfield, buffer,
                                                  &error, &cor);
         if (error < maxer)
             break;
-        if (i==0)
+        if (!i)
             starter = error;
 
         frac = log(error/starter)/log(maxer/starter);
@@ -105,15 +107,21 @@ laplace(GwyContainer *data, GwyRunType run)
         if (lastfrac > frac)
             frac = lastfrac;
 
-        if (!gwy_app_wait_set_fraction(frac))
+        if (!gwy_app_wait_set_fraction(frac)) {
+            cancelled = TRUE;
             break;
+        }
         lastfrac = frac;
     }
     gwy_app_wait_finish();
-
-    gwy_container_remove_by_name(data, "/0/mask");
+    if (!cancelled) {
+        gwy_app_undo_qcheckpoint(data, dquark, mquark, NULL);
+        gwy_container_remove(data, mquark);
+        gwy_data_field_copy(dfield, old, FALSE);
+        gwy_data_field_data_changed(dfield);
+    }
+    g_object_unref(dfield);
     g_object_unref(buffer);
-    gwy_data_field_data_changed(dfield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
