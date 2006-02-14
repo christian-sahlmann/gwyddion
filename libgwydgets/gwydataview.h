@@ -65,6 +65,7 @@ struct _GwyDataView {
     gint xoff;    /* x offset of the pixbuf from widget->allocation.x */
     gint yoff;    /* y offset of the pixbuf from widget->allocation.y */
 
+    gboolean realsquare;
     gint xres;
     gint yres;
     gdouble xreal;

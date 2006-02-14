@@ -279,18 +279,12 @@ gwy_data_view_finalize(GObject *object)
 {
     GwyDataView *data_view;
 
-    gwy_debug("finalizing a GwyDataView (refcount = %u)",
-              object->ref_count);
-
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
-
     gwy_object_unref(data_view->base_layer);
     gwy_object_unref(data_view->alpha_layer);
     gwy_object_unref(data_view->top_layer);
-    gwy_debug("    child data ref count %d",
-              G_OBJECT(data_view->data)->ref_count);
     gwy_object_unref(data_view->data);
 
     G_OBJECT_CLASS(gwy_data_view_parent_class)->finalize(object);
@@ -426,8 +420,18 @@ gwy_data_view_size_request(GtkWidget *widget,
     key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
     if (!key)
         return;
-    requisition->width = data_view->newzoom * data_view->xres;
-    requisition->height = data_view->newzoom * data_view->yres;
+
+    if (data_view->realsquare) {
+        gdouble scale = MAX(data_view->xres/data_view->xreal,
+                            data_view->yres/data_view->yreal);
+        scale *= data_view->newzoom;
+        requisition->width = ROUND(scale * data_view->xreal);
+        requisition->height = ROUND(scale * data_view->yreal);
+    }
+    else {
+        requisition->width = ROUND(data_view->newzoom * data_view->xres);
+        requisition->height = ROUND(data_view->newzoom * data_view->yres);
+    }
 
     data_view->size_requested = TRUE;
     gwy_debug("requesting %d x %d",
@@ -468,6 +472,7 @@ gwy_data_view_size_allocate(GtkWidget *widget,
 static void
 gwy_data_view_make_pixmap(GwyDataView *data_view)
 {
+    const GtkAllocation *alloc;
     GtkWidget *widget;
     gint width, height, scwidth, scheight;
 
@@ -494,14 +499,27 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         width = height = -1;
 
     widget = GTK_WIDGET(data_view);
-    data_view->zoom = MIN((gdouble)widget->allocation.width/data_view->xres,
-                          (gdouble)widget->allocation.height/data_view->yres);
-    scwidth = floor(data_view->xres * data_view->zoom + 0.000001);
-    scheight = floor(data_view->yres * data_view->zoom + 0.000001);
+    alloc = &widget->allocation;
+
+    if (data_view->realsquare) {
+        gdouble scale = MAX(data_view->xres/data_view->xreal,
+                            data_view->yres/data_view->yreal);
+        data_view->zoom = MIN(alloc->width/(scale*data_view->xreal),
+                              alloc->height/(scale*data_view->yreal));
+        scale *= data_view->zoom;
+        scwidth = ROUND(scale * data_view->xreal);
+        scheight = ROUND(scale * data_view->yreal);
+    }
+    else {
+        data_view->zoom = MIN((gdouble)alloc->width/data_view->xres,
+                              (gdouble)alloc->height/data_view->yres);
+        scwidth = ROUND(data_view->xres * data_view->zoom);
+        scheight = ROUND(data_view->yres * data_view->zoom);
+    }
     data_view->xmeasure = data_view->xreal/scwidth;
     data_view->ymeasure = data_view->yreal/scheight;
-    data_view->xoff = (widget->allocation.width - scwidth)/2;
-    data_view->yoff = (widget->allocation.height - scheight)/2;
+    data_view->xoff = (alloc->width - scwidth)/2;
+    data_view->yoff = (alloc->height - scheight)/2;
     if (scwidth != width || scheight != height) {
         gwy_object_unref(data_view->pixbuf);
         data_view->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
