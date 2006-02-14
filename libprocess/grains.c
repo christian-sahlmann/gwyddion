@@ -849,6 +849,8 @@ mark_grain_boundaries(GwyDataField *grain_field)
 
     xres = grain_field->xres;
     yres = grain_field->yres;
+    /* FIXME: it is not necessary to duplicate complete data field to check
+     * a few boundary pixels. */
     buffer = gwy_data_field_duplicate(grain_field);
     data = buffer->data;
 
