@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -70,39 +70,34 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo line_correct_modus_func_info = {
-        "line_correct_modus",
-        N_("/_Correct Data/M_odus Line Correction"),
-        (GwyProcessFunc)&line_correct_modus,
-        LINECORR_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo line_correct_median_func_info = {
-        "line_correct_median",
-        N_("/_Correct Data/M_edian Line Correction"),
-        (GwyProcessFunc)&line_correct_median,
-        LINECORR_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo line_correct_match_func_info = {
-        "line_correct_match",
-        N_("/_Correct Data/Ma_tch Line Correction"),
-        (GwyProcessFunc)&line_correct_match,
-        LINECORR_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-    static GwyProcessFuncInfo line_correct_step_func_info = {
-        "line_correct_step",
-        N_("/_Correct Data/Ste_p Line Correction"),
-        (GwyProcessFunc)&line_correct_step,
-        LINECORR_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &line_correct_modus_func_info);
-    gwy_process_func_register(name, &line_correct_median_func_info);
-    gwy_process_func_register(name, &line_correct_match_func_info);
-    gwy_process_func_register(name, &line_correct_step_func_info);
+    gwy_process_func_registe2("line_correct_modus",
+                              (GwyProcessFunc)&line_correct_modus,
+                              N_("/_Correct Data/M_odus Line Correction"),
+                              NULL,
+                              LINECORR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Correct lines by matching height modus"));
+    gwy_process_func_registe2("line_correct_median",
+                              (GwyProcessFunc)&line_correct_median,
+                              N_("/_Correct Data/M_edian Line Correction"),
+                              NULL,
+                              LINECORR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Correct lines by matching height median"));
+    gwy_process_func_registe2("line_correct_match",
+                              (GwyProcessFunc)&line_correct_match,
+                              N_("/_Correct Data/Ma_tch Line Correction"),
+                              NULL,
+                              LINECORR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Correct lines by matching flat segments"));
+    gwy_process_func_registe2("line_correct_step",
+                              (GwyProcessFunc)&line_correct_step,
+                              N_("/_Correct Data/Ste_p Line Correction"),
+                              NULL,
+                              LINECORR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Correct steps in lines"));
 
     return TRUE;
 }
@@ -113,10 +108,15 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     GwyDataLine *line, *modi;
     gint xres, yres, i;
+    GQuark dquark;
     gdouble modus;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
     xres = gwy_data_field_get_xres(dfield);
     line = gwy_data_line_new(xres, 1.0, FALSE);
@@ -130,7 +130,6 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     }
     modus = gwy_data_line_get_modus(modi, 0);
 
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
     for (i = 0; i < yres; i++) {
         gwy_data_field_area_add(dfield, 0, i, xres, i+1,
                                 modus - gwy_data_line_get_val(modi, i));
@@ -149,10 +148,14 @@ line_correct_median(GwyContainer *data, GwyRunType run)
     gint xres, yres, i, j;
     gdouble shift, csum, mindiff, maxdiff, x;
     gdouble *d;
+    GQuark dquark;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
     yres = gwy_data_field_get_yres(dfield);
     xres = gwy_data_field_get_xres(dfield);
@@ -253,10 +256,14 @@ line_correct_match(GwyContainer *data,
     gdouble m, wsum, lambda, x;
     gdouble *d, *s, *w;
     const gdouble *a, *b;
+    GQuark dquark;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
     yres = gwy_data_field_get_yres(dfield);
     xres = gwy_data_field_get_xres(dfield);
@@ -295,7 +302,7 @@ line_correct_match(GwyContainer *data,
         lambda += (a[xres-1] - b[xres-1])*w[xres-2];
         lambda /= 2.0*wsum;
 
-        g_printerr("%g %g %g\n", m, wsum, lambda);
+        gwy_debug("%g %g %g", m, wsum, lambda);
 
         s[i] = lambda;
     }
@@ -399,10 +406,14 @@ line_correct_step(GwyContainer *data,
                   GwyRunType run)
 {
     GwyDataField *dfield, *mask;
+    GQuark dquark;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
     mask = gwy_data_field_new_alike(dfield, TRUE);
     line_correct_step_iter(dfield, mask);
