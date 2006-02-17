@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts background using a rank-based algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -89,15 +89,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo median_func_info = {
-        "median-bg",
-        N_("/_Level/_Median Level..."),
-        (GwyProcessFunc)&median,
-        MEDIANBG_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &median_func_info);
+    gwy_process_func_registe2("median-bg",
+                              (GwyProcessFunc)&median,
+                              N_("/_Level/_Median Level..."),
+                              NULL,
+                              MEDIANBG_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Level data by local median subtraction"));
 
     return TRUE;
 }
@@ -105,14 +103,20 @@ module_register(const gchar *name)
 static void
 median(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     GwyDataField *dfield, *background = NULL;
     MedianBgArgs args;
+    gint oldid, newid;
+    GQuark dquark;
     gdouble xr, yr;
     gboolean ok = TRUE;
 
     g_return_if_fail(run & MEDIANBG_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+
     median_load_args(gwy_app_settings_get(), &args);
 
     /* FIXME: this is bogus for non-square pixels anyway */
@@ -142,7 +146,7 @@ median(GwyContainer *data, GwyRunType run)
     if (!background)
         return;
 
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
     gwy_data_field_subtract_fields(dfield, dfield, background);
     gwy_data_field_data_changed(dfield);
 
@@ -151,15 +155,12 @@ median(GwyContainer *data, GwyRunType run)
         return;
     }
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/base/palette",
-                                             "/0/select",
-                                             NULL);
-    gwy_container_set_object_by_name(data, "/0/data", background);
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                     _("Background"));
-    g_object_unref(data);
+    newid = gwy_app_data_browser_add_data_field(background, data, TRUE);
+    g_object_unref(dfield);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            0);
+    gwy_app_set_data_field_title(data, newid, _("Background"));
 }
 
 static gboolean
