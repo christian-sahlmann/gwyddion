@@ -36,6 +36,8 @@
 
 #define FACETS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+#define FVIEW_GRADIENT "DFit"
+
 enum {
     PREVIEW_SIZE = 320,
     /* XXX: don't change */
@@ -50,7 +52,7 @@ typedef struct {
 } FacetsArgs;
 
 typedef struct {
-    gboolean in_update;
+    FacetsArgs *args;
     GtkWidget *inverted;
     GtkWidget *view;
     GtkWidget *fview;
@@ -62,7 +64,8 @@ typedef struct {
     GtkWidget *color_button;
     GwyContainer *mydata;
     GwyContainer *fdata;
-    FacetsArgs *args;
+    gboolean in_update;
+    gboolean computed;
 } FacetsControls;
 
 static gboolean module_register                  (const gchar *name);
@@ -70,9 +73,10 @@ static void     facets_analyse                   (GwyContainer *data,
                                                   GwyRunType run);
 static void     load_mask_color                  (GtkWidget *color_button,
                                                   GwyContainer *data);
-static void     save_mask_color                  (GtkWidget *color_button,
-                                                  GwyContainer *data);
 static gboolean facets_dialog                    (FacetsArgs *args,
+                                                  GwyContainer *data,
+                                                  GwyContainer *fdata);
+static void     run_noninteractive               (FacetsArgs *args,
                                                   GwyContainer *data,
                                                   GwyContainer *fdata);
 static void     facets_dialog_update_controls    (FacetsControls *controls,
@@ -111,14 +115,12 @@ static void     compute_slopes                   (GwyDataField *dfield,
                                                   gint kernel_size,
                                                   GwyDataField *xder,
                                                   GwyDataField *yder);
+static void     facets_invalidate                (FacetsControls *controls);
 static void     preview                          (FacetsControls *controls,
                                                   FacetsArgs *args);
 static void     add_mask_layer                   (GwyDataView *view,
                                                   const GwyRGBA *color);
 static void     facets_mark_fdata                (FacetsArgs *args,
-                                                  GwyContainer *fdata);
-static void     facets_do                        (FacetsArgs *args,
-                                                  GwyContainer *data,
                                                   GwyContainer *fdata);
 static void     facets_load_args                 (GwyContainer *container,
                                                   FacetsArgs *args);
@@ -137,7 +139,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -147,15 +149,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo facet_analysis_func_info = {
-        "facet_analysis",
-        N_("/_Statistics/Facet _Analysis..."),
-        (GwyProcessFunc)&facets_analyse,
-        FACETS_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &facet_analysis_func_info);
+    gwy_process_func_registe2("facet_analysis",
+                              (GwyProcessFunc)&facets_analyse,
+                              N_("/_Statistics/Facet _Analysis..."),
+                              NULL,
+                              FACETS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Mark areas by 2D slope"));
 
     return TRUE;
 }
@@ -167,24 +167,23 @@ facets_analyse(GwyContainer *data, GwyRunType run)
     GwyContainer *fdata;
     GwyDataField *dfield;
     FacetsArgs args;
-    gboolean ok = TRUE;
 
     g_return_if_fail(run & FACETS_RUN_MODES);
     g_return_if_fail(g_type_from_name("GwyLayerPoint"));
     facets_load_args(gwy_app_settings_get(), &args);
 
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+    g_return_if_fail(dfield);
+
     fdata = gwy_container_new();
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_facet_distribution(dfield, 3, fdata);
     args.theta0 = gwy_container_get_double_by_name(fdata, "/theta0");
     args.phi0 = gwy_container_get_double_by_name(fdata, "/phi0");
-    if (run == GWY_RUN_INTERACTIVE) {
-        ok = facets_dialog(&args, data, fdata);
+    if (run == GWY_RUN_IMMEDIATE)
+        run_noninteractive(&args, data, fdata);
+    else {
+        facets_dialog(&args, data, fdata);
         facets_save_args(gwy_app_settings_get(), &args);
-    }
-    if (ok) {
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        facets_do(&args, data, fdata);
     }
     g_object_unref(fdata);
 }
@@ -231,10 +230,13 @@ facets_dialog(FacetsArgs *args,
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
-    GwyDataField *dfield;
-    const guchar *pal;
-    GwyRGBA rgba;
-    gint row;
+    GwyDataField *dfield, *mfield;
+    GQuark mquark;
+    gint row, id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
 
     controls.in_update = FALSE;
     controls.args = args;
@@ -256,16 +258,14 @@ facets_dialog(FacetsArgs *args,
     /* Shallow-copy stuff to temporary container */
     controls.fdata = fdata;
     controls.mydata = gwy_container_new();
-    if (gwy_container_gis_string_by_name(data, "/0/base/palette", &pal))
-        gwy_container_set_string_by_name(controls.mydata, "/0/base/palette",
-                                         g_strdup(pal));
-    if (gwy_rgba_get_from_container(&rgba, data, "/0/mask"))
-        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
 
     controls.view = gwy_data_view_new(controls.mydata);
-    g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
@@ -350,6 +350,8 @@ facets_dialog(FacetsArgs *args,
     scale = gwy_table_attach_hscale(table, row++, _("_Tolerance:"), "deg",
                                     controls.tolerance, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(scale), 3);
+    g_signal_connect_swapped(controls.tolerance, "value-changed",
+                             G_CALLBACK(facets_invalidate), &controls);
 
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
@@ -373,6 +375,8 @@ facets_dialog(FacetsArgs *args,
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
         row++;
     }
+
+    controls.computed = FALSE;
 
     gtk_widget_show_all(dialog);
     facet_view_select_angle(&controls, args->theta0, args->phi0);
@@ -408,8 +412,21 @@ facets_dialog(FacetsArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     facets_dialog_update_values(&controls, args);
-    save_mask_color(controls.color_button, data);
+    gwy_app_copy_data_items(controls.mydata, data, 0, id,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     gtk_widget_destroy(dialog);
+
+    if (controls.computed) {
+        mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
+        gwy_app_undo_qcheckpointv(data, 1, &mquark);
+        gwy_container_set_object(data, mquark, mfield);
+        g_object_unref(controls.mydata);
+    }
+    else {
+        g_object_unref(controls.mydata);
+        run_noninteractive(args, data, fdata);
+    }
 
     return TRUE;
 }
@@ -459,6 +476,7 @@ facet_view_reset_maximum(FacetsControls *controls)
         gwy_data_field_clear(mask);
         gwy_data_field_data_changed(mask);
     }
+    facets_invalidate(controls);
 }
 
 static void
@@ -511,6 +529,7 @@ facet_view_selection_updated(GwySelection *selection,
             gwy_selection_clear(selection);
     }
 
+    controls->computed = FALSE;
 }
 
 static void
@@ -563,25 +582,46 @@ preview_selection_updated(GwySelection *selection,
     facet_view_select_angle(controls, theta, phi);
 }
 
-static void
-facets_do(FacetsArgs *args,
-          GwyContainer *data,
-          GwyContainer *fdata)
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
 {
-    GwyDataField *dtheta, *dphi, *dfield, *mask;
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
 
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
+}
+
+static void
+run_noninteractive(FacetsArgs *args,
+                   GwyContainer *data,
+                   GwyContainer *fdata)
+{
+    GwyDataField *dfield, *mfield, *dtheta, *dphi;
+    GQuark mquark;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield && mquark);
+
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    if (!mfield) {
+        mfield = create_mask_field(dfield);
+        gwy_container_set_object(data, mquark, mfield);
+        g_object_unref(mfield);
+    }
+
     dtheta = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/theta"));
     dphi = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/phi"));
-
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
-        mask = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(data, "/0/mask", mask);
-        g_object_unref(mask);
-    }
-    gwy_data_field_mark_facets(dtheta, dphi,
-                               args->theta0, args->phi0, args->tolerance, mask);
-    gwy_data_field_data_changed(mask);
+    gwy_data_field_mark_facets(dtheta, dphi, args->theta0, args->phi0,
+                               args->tolerance, mfield);
+    gwy_data_field_data_changed(mfield);
 }
 
 static void
@@ -752,7 +792,7 @@ gwy_data_field_facet_distribution(GwyDataField *dfield,
     gwy_container_set_object_by_name(container, "/phi", dphi);
     g_object_unref(dphi);
     gwy_container_set_string_by_name(container, "/0/base/palette",
-                                     g_strdup("DFit"));
+                                     g_strdup(FVIEW_GRADIENT));
 }
 
 static void
@@ -830,6 +870,12 @@ facets_dialog_update_values(FacetsControls *controls,
 }
 
 static void
+facets_invalidate(FacetsControls *controls)
+{
+    controls->computed = FALSE;
+}
+
+static void
 mask_color_change_cb(GtkWidget *color_button,
                      FacetsControls *controls)
 {
@@ -853,26 +899,29 @@ load_mask_color(GtkWidget *color_button,
 }
 
 static void
-save_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
-    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-}
-
-static void
 preview(FacetsControls *controls,
         FacetsArgs *args)
 {
-    const GwyRGBA mask_color = { 0.56, 0.39, 0.07, 0.6 };
+    static const GwyRGBA mask_color = { 0.56, 0.39, 0.07, 0.6 };
+    GwyDataField *dtheta, *dphi, *dfield, *mfield;
+    GwyContainer *data, *fdata;
+
+    data = controls->mydata;
+    fdata = controls->fdata;
 
     add_mask_layer(GWY_DATA_VIEW(controls->view), NULL);
     add_mask_layer(GWY_DATA_VIEW(controls->fview), &mask_color);
 
-    facets_do(args, controls->mydata, controls->fdata);
-    facets_mark_fdata(args, controls->fdata);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+    dtheta = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/theta"));
+    dphi = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/phi"));
+
+    gwy_data_field_mark_facets(dtheta, dphi, args->theta0, args->phi0,
+                               args->tolerance, mfield);
+    gwy_data_field_data_changed(mfield);
+    facets_mark_fdata(args, fdata);
+    facets_invalidate(controls);
 }
 
 static void
@@ -880,33 +929,24 @@ add_mask_layer(GwyDataView *view,
                const GwyRGBA *color)
 {
     GwyContainer *data;
-    GwyDataField *mask, *dfield;
+    GwyDataField *mfield, *dfield;
     GwyPixmapLayer *layer;
 
     data = gwy_data_view_get_data(view);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
-        gwy_data_field_resample(mask,
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, mask, TRUE);
-    }
-    else {
-        mask = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(data, "/0/mask", mask);
-        g_object_unref(mask);
-    }
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mfield)) {
+        gwy_container_gis_object_by_name(data, "/0/data", &dfield);
+        mfield = create_mask_field(dfield);
+        gwy_container_set_object_by_name(data, "/0/mask", mfield);
+        g_object_unref(mfield);
 
-    if (!gwy_data_view_get_alpha_layer(view)) {
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(view, layer);
-    }
 
-    if (color)
-        gwy_rgba_store_to_container(color, data, "/0/mask");
+        if (color)
+            gwy_rgba_store_to_container(color, data, "/0/mask");
+    }
 }
 
 static void

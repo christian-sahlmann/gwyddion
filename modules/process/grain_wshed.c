@@ -70,8 +70,7 @@ static void        wshed_dialog_update_controls (WshedControls *controls,
                                                  WshedArgs *args);
 static void        wshed_dialog_update_values   (WshedControls *controls,
                                                  WshedArgs *args);
-static void        wshed_invalidate             (GtkObject *adj,
-                                                 WshedControls *controls);
+static void        wshed_invalidate             (WshedControls *controls);
 static void        preview                      (WshedControls *controls,
                                                  WshedArgs *args);
 static void        run_noninteractive           (WshedArgs *args,
@@ -149,15 +148,14 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gdouble zoomval;
     GwyPixmapLayer *layer;
     GwyDataField *dfield, *mfield;
-    GQuark dquark, mquark;
+    GQuark mquark;
     gint id, row;
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
-                                     GWY_APP_DATA_FIELD, &dfield,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      0);
-    g_return_if_fail(dfield && dquark && mquark);
+    g_return_if_fail(dfield && mquark);
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Watershed"),
                                          NULL, 0,
@@ -208,8 +206,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                                1.0, 100.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("_Number of steps:"), "",
                             controls.locate_steps, 0);
-    g_signal_connect(controls.locate_steps, "value-changed",
-                     G_CALLBACK(wshed_invalidate), &controls);
+    g_signal_connect_swapped(controls.locate_steps, "value-changed",
+                             G_CALLBACK(wshed_invalidate), &controls);
     row++;
 
     controls.locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
@@ -217,16 +215,16 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("_Drop size:"), "%",
                                    controls.locate_dropsize, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.locate_dropsize, "value-changed",
-                     G_CALLBACK(wshed_invalidate), &controls);
+    g_signal_connect_swapped(controls.locate_dropsize, "value-changed",
+                             G_CALLBACK(wshed_invalidate), &controls);
 
     row++;
     controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
                                                 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("_Threshold:"), "px<sup>2</sup>",
                             controls.locate_thresh, 0);
-    g_signal_connect(controls.locate_thresh, "value-changed",
-                     G_CALLBACK(wshed_invalidate), &controls);
+    g_signal_connect_swapped(controls.locate_thresh, "value-changed",
+                             G_CALLBACK(wshed_invalidate), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -241,8 +239,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                               1.0, 1000.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("Num_ber of steps:"), "",
                             controls.wshed_steps, 0);
-    g_signal_connect(controls.wshed_steps, "value-changed",
-                     G_CALLBACK(wshed_invalidate), &controls);
+    g_signal_connect_swapped(controls.wshed_steps, "value-changed",
+                             G_CALLBACK(wshed_invalidate), &controls);
     row++;
 
     controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
@@ -250,8 +248,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("Dr_op size:"), "%",
                                    controls.wshed_dropsize, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.wshed_dropsize, "value-changed",
-                     G_CALLBACK(wshed_invalidate), &controls);
+    g_signal_connect_swapped(controls.wshed_dropsize, "value-changed",
+                             G_CALLBACK(wshed_invalidate), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -267,8 +265,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                  args->inverted);
     gtk_table_attach(GTK_TABLE(table), controls.inverted,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    g_signal_connect(controls.inverted, "toggled",
-                     G_CALLBACK(wshed_invalidate), &controls);
+    g_signal_connect_swapped(controls.inverted, "toggled",
+                             G_CALLBACK(wshed_invalidate), &controls);
     row++;
 
     controls.color_button = gwy_color_button_new();
@@ -368,8 +366,7 @@ wshed_dialog_update_values(WshedControls *controls,
 }
 
 static void
-wshed_invalidate(G_GNUC_UNUSED GtkObject *adj,
-                 WshedControls *controls)
+wshed_invalidate(WshedControls *controls)
 {
     controls->computed = FALSE;
 }
@@ -399,26 +396,37 @@ load_mask_color(GtkWidget *color_button,
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
+}
+
 static void
 preview(WshedControls *controls,
         WshedArgs *args)
 {
-    GwyDataField *mask, *dfield;
+    GwyDataField *mfield, *dfield;
     GwyPixmapLayer *layer;
-    GwySIUnit *siunit;
 
     wshed_dialog_update_values(controls, args);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
     /* Set up the mask */
-    if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
-        mask = gwy_data_field_new_alike(dfield, TRUE);
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
-        g_object_unref(mask);
-        siunit = gwy_si_unit_new("");
-        gwy_data_field_set_si_unit_z(mask, siunit);
-        g_object_unref(siunit);
+    if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                          &mfield)) {
+        mfield = create_mask_field(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", mfield);
+        g_object_unref(mfield);
 
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
@@ -426,29 +434,23 @@ preview(WshedControls *controls,
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
 
-    controls->computed = mask_process(dfield, mask, args, controls->dialog);
+    controls->computed = mask_process(dfield, mfield, args, controls->dialog);
     if (controls->computed)
-        gwy_data_field_data_changed(mask);
+        gwy_data_field_data_changed(mfield);
 }
 
 static void
 run_noninteractive(WshedArgs *args, GwyContainer *data)
 {
     GwyDataField *dfield, *mfield;
-    GQuark dquark, mquark;
-    GwySIUnit *siunit;
+    GQuark mquark;
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
-                                     GWY_APP_DATA_FIELD, &dfield,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      0);
-    g_return_if_fail(dfield && dquark && mquark);
+    g_return_if_fail(dfield && mquark);
 
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
-    siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
+    mfield = create_mask_field(dfield);
     if (mask_process(dfield, mfield, args,
                      GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
         gwy_app_undo_qcheckpointv(data, 1, &mquark);
