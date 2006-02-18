@@ -34,7 +34,7 @@
 #define ARITH_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
-    WIN_ARGS = 3
+    WIN_ARGS = 5
 };
 
 enum {
@@ -79,34 +79,29 @@ static void         arithmetic_do             (ArithmeticArgs *args);
 
 static const gchar default_expression[] = "d1 - d2";
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Simple arithmetic operations with two data fields "
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo arithmetic_func_info = {
-        "arithmetic",
-        N_("/M_ultidata/_Arithmetic..."),
-        (GwyProcessFunc)&arithmetic,
-        ARITH_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &arithmetic_func_info);
+    gwy_process_func_registe2("arithmetic",
+                              (GwyProcessFunc)&arithmetic,
+                              N_("/M_ultidata/_Arithmetic..."),
+                              NULL,
+                              ARITH_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Arithmetic operations on data"));
 
     return TRUE;
 }
@@ -273,7 +268,8 @@ arithmetic_expr_cb(GtkWidget *entry,
                                               GTK_RESPONSE_OK, FALSE);
         }
         else {
-            if (!gwy_expr_resolve_variables(args->expr, WIN_ARGS, args->name,
+            if (!gwy_expr_resolve_variables(args->expr, WIN_ARGS,
+                                            (const gchar*const*)args->name,
                                             args->pos)) {
                 arithmetic_maybe_preview(controls);
             }
@@ -373,7 +369,6 @@ arithmetic_check(ArithmeticArgs *args)
 static void
 arithmetic_do(ArithmeticArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield, *result = NULL;
     /* We know the expression can't contain more variables than WIN_ARGS */
@@ -381,6 +376,7 @@ arithmetic_do(ArithmeticArgs *args)
     gdouble *r = NULL;
     gboolean first = TRUE;
     guint n = 0, i;
+    gint newid;
 
     g_return_if_fail(!args->err);
 
@@ -404,13 +400,11 @@ arithmetic_do(ArithmeticArgs *args)
 
     gwy_expr_vector_execute(args->expr, n, d, r);
 
-    data = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", result);
+    /* FIXME FIXME */
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     g_object_unref(result);
-
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
+    gwy_app_copy_data_items(data, data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
 }
 
 static const gchar expression_key[] = "/module/arithmetic/expression";
