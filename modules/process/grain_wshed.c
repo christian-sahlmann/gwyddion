@@ -280,7 +280,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
 
-    controls.computed = FALSE;
+    wshed_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
     do {

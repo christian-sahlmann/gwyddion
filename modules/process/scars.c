@@ -24,7 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include <libprocess/datafield.h>
+#include <libprocess/arithmetic.h>
 #include <app/gwyapp.h>
 
 #define SCARS_MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -59,33 +59,35 @@ typedef struct {
     GtkObject *max_width;
     GtkWidget *color_button;
     GwyContainer *mydata;
+    gboolean computed;
 } ScarsControls;
 
-static gboolean    module_register                   (const gchar *name);
-static void        scars_remove                      (GwyContainer *data,
-                                                      GwyRunType run);
-static void        scars_mark                        (GwyContainer *data,
-                                                      GwyRunType run);
-static void        load_mask_color                   (GtkWidget *color_button,
-                                                      GwyContainer *data);
-static gboolean    scars_mark_dialog                 (ScarsArgs *args,
-                                                      GwyContainer *data,
-                                                      GwyDataField *dfield,
-                                                      int id);
-static void        scars_mark_dialog_update_controls (ScarsControls *controls,
-                                                      ScarsArgs *args);
-static void        scars_mark_dialog_update_values   (ScarsControls *controls,
-                                                      ScarsArgs *args);
-static void        scars_mark_dialog_update_thresholds(GtkObject *adj,
-                                                       ScarsControls *controls);
-static void        mask_color_change_cb              (GtkWidget *color_button,
-                                                      ScarsControls *controls);
-static void        preview                           (ScarsControls *controls,
-                                                      ScarsArgs *args);
-static void        scars_mark_load_args              (GwyContainer *container,
-                                                      ScarsArgs *args);
-static void        scars_mark_save_args              (GwyContainer *container,
-                                                      ScarsArgs *args);
+static gboolean module_register                    (const gchar *name);
+static void     scars_remove                       (GwyContainer *data,
+                                                    GwyRunType run);
+static void     scars_mark                         (GwyContainer *data,
+                                                    GwyRunType run);
+static void     run_noninteractive                 (ScarsArgs *args,
+                                                    GwyContainer *data);
+static void     load_mask_color                    (GtkWidget *color_button,
+                                                    GwyContainer *data);
+static void     scars_mark_dialog                  (ScarsArgs *args,
+                                                    GwyContainer *data);
+static void     scars_mark_dialog_update_controls  (ScarsControls *controls,
+                                                    ScarsArgs *args);
+static void     scars_mark_dialog_update_values    (ScarsControls *controls,
+                                                    ScarsArgs *args);
+static void     scars_mark_dialog_update_thresholds(GtkObject *adj,
+                                                    ScarsControls *controls);
+static void     scars_invalidate                   (ScarsControls *controls);
+static void     mask_color_change_cb               (GtkWidget *color_button,
+                                                    ScarsControls *controls);
+static void     preview                            (ScarsControls *controls,
+                                                    ScarsArgs *args);
+static void     scars_mark_load_args               (GwyContainer *container,
+                                                    ScarsArgs *args);
+static void     scars_mark_save_args               (GwyContainer *container,
+                                                    ScarsArgs *args);
 
 static const ScarsArgs scars_defaults = {
     FEATURES_BOTH,
@@ -139,7 +141,7 @@ module_register(const gchar *name)
  * @min_scar_len: Minimum length of a scar, shorter ones are discarded
  *                (must be at least one).
  * @max_scar_width: Maximum width of a scar, must be at least one.
- * @which: Which type of defects to mark (positive, negative, both).
+ * @negative: %TRUE to detect negative scars, %FALSE to positive.
  *
  * Find and marks scars in a data field.
  *
@@ -154,7 +156,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
                           gdouble threshold_low,
                           gdouble min_scar_len,
                           gdouble max_scar_width,
-                          GwyFeaturesType which)
+                          gboolean negative)
 {
     gint xres, yres, i, j, k;
     gdouble rms;
@@ -199,7 +201,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
             gdouble top, bottom;
             const gdouble *row = d + i*xres + j;
 
-            if (which & FEATURES_NEGATIVE) {
+            if (negative) {
                 top = row[0];
                 bottom = row[xres];
                 for (k = 1; k <= max_scar_width; k++) {
@@ -217,7 +219,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
                     }
                 }
             }
-            if (which & FEATURES_POSITIVE) {
+            else {
                 bottom = row[0];
                 top = row[xres];
                 for (k = 1; k <= max_scar_width; k++) {
@@ -280,10 +282,40 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
 }
 
 static void
+mark_scars(GwyDataField *dfield,
+           GwyDataField *mfield,
+           const ScarsArgs *args)
+{
+    GwyDataField *tmp;
+
+    switch (args->type) {
+        case FEATURES_POSITIVE:
+        case FEATURES_NEGATIVE:
+        gwy_data_field_mark_scars(dfield, mfield,
+                                  args->threshold_high, args->threshold_low,
+                                  args->min_len, args->max_width,
+                                  args->type == FEATURES_NEGATIVE);
+        break;
+
+        case FEATURES_BOTH:
+        gwy_data_field_mark_scars(dfield, mfield,
+                                  args->threshold_high, args->threshold_low,
+                                  args->min_len, args->max_width, FALSE);
+        tmp = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_mark_scars(dfield, tmp,
+                                  args->threshold_high, args->threshold_low,
+                                  args->min_len, args->max_width, TRUE);
+        gwy_data_field_max_of_fields(mfield, mfield, tmp);
+        g_object_unref(tmp);
+        break;
+    }
+}
+
+static void
 scars_remove(GwyContainer *data, GwyRunType run)
 {
     ScarsArgs args;
-    GwyDataField *dfield, *mask;
+    GwyDataField *dfield, *mfield;
     GQuark dquark;
     gint xres, yres, i, j, k;
     gdouble *d, *m;
@@ -300,11 +332,9 @@ scars_remove(GwyContainer *data, GwyRunType run)
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
 
-    mask = gwy_data_field_new_alike(dfield, FALSE);
-    gwy_data_field_mark_scars(dfield, mask,
-                              args.threshold_high, args.threshold_low,
-                              args.min_len, args.max_width, args.type);
-    m = gwy_data_field_get_data(mask);
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    mark_scars(dfield, mfield, &args);
+    m = gwy_data_field_get_data(mfield);
 
     /* interpolate */
     for (i = 1; i < yres-1; i++) {
@@ -328,59 +358,61 @@ scars_remove(GwyContainer *data, GwyRunType run)
             }
         }
     }
-    g_object_unref(mask);
+    g_object_unref(mfield);
 
     gwy_data_field_data_changed(dfield);
+}
+
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
 }
 
 static void
 scars_mark(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *mfield;
-    GQuark dquark, mquark;
-    GwySIUnit *siunit;
     ScarsArgs args;
-    gboolean ok;
-    gint id;
 
     g_return_if_fail(run & SCARS_MARK_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
-                                     GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     GWY_APP_MASK_FIELD, &mfield,
-                                     0);
-    g_return_if_fail(dfield && dquark && mquark);
-
     scars_mark_load_args(gwy_app_settings_get(), &args);
-    if (run == GWY_RUN_INTERACTIVE) {
-        ok = scars_mark_dialog(&args, data, dfield, id);
+    if (run == GWY_RUN_IMMEDIATE)
+        run_noninteractive(&args, data);
+    else {
+        scars_mark_dialog(&args, data);
         scars_mark_save_args(gwy_app_settings_get(), &args);
-        if (!ok)
-            return;
     }
-
-    gwy_app_undo_qcheckpointv(data, 1, &mquark);
-    if (!mfield) {
-        mfield = gwy_data_field_new_alike(dfield, FALSE);
-        siunit = gwy_si_unit_new("");
-        gwy_data_field_set_si_unit_z(mfield, siunit);
-        g_object_unref(siunit);
-        gwy_container_set_object(data, mquark, mfield);
-        g_object_unref(mfield);
-    }
-
-    gwy_data_field_mark_scars(dfield, mfield,
-                              args.threshold_high, args.threshold_low,
-                              args.min_len, args.max_width, args.type);
-    gwy_data_field_data_changed(mfield);
 }
 
-static gboolean
+static void
+run_noninteractive(ScarsArgs *args, GwyContainer *data)
+{
+    GwyDataField *dfield, *mfield;
+    GQuark mquark;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(dfield && mquark);
+
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    mfield = create_mask_field(dfield);
+    mark_scars(dfield, mfield, args);
+    gwy_container_set_object(data, mquark, mfield);
+    g_object_unref(mfield);
+}
+
+static void
 scars_mark_dialog(ScarsArgs *args,
-                  GwyContainer *data,
-                  GwyDataField *dfield,
-                  int id)
+                  GwyContainer *data)
 {
     enum {
         RESPONSE_RESET = 1,
@@ -392,12 +424,20 @@ scars_mark_dialog(ScarsArgs *args,
         { N_("Both"),     FEATURES_BOTH,     },
     };
     GtkWidget *dialog, *table, *spin, *hbox, *label;
+    GwyDataField *dfield, *mfield;
+    GQuark mquark;
     ScarsControls controls;
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
     GSList *group;
-    gint row;
+    gint row, id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(dfield);
 
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Mark Scars"),
@@ -441,11 +481,15 @@ scars_mark_dialog(ScarsArgs *args,
                                             1.0, 16.0, 1, 3, 0);
     gwy_table_attach_hscale(table, row++, _("Maximum _width:"), "px",
                             controls.max_width, 0);
+    g_signal_connect_swapped(controls.max_width, "value-changed",
+                             G_CALLBACK(scars_invalidate), &controls);
 
     controls.min_len = gtk_adjustment_new(args->min_len,
                                           1.0, MAX_LENGTH, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("Minimum _length:"), "px",
                             controls.min_len, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.min_len, "value-changed",
+                             G_CALLBACK(scars_invalidate), &controls);
 
     controls.threshold_high = gtk_adjustment_new(args->threshold_high,
                                                  0.0, 2.0, 0.01, 0.1, 0);
@@ -477,6 +521,8 @@ scars_mark_dialog(ScarsArgs *args,
     while (group) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
                          0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        g_signal_connect_swapped(group->data, "toggled",
+                                 G_CALLBACK(scars_invalidate), &controls);
         group = g_slist_next(group);
         row++;
     }
@@ -492,6 +538,8 @@ scars_mark_dialog(ScarsArgs *args,
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
 
+    scars_invalidate(&controls);
+
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -502,7 +550,7 @@ scars_mark_dialog(ScarsArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -529,9 +577,17 @@ scars_mark_dialog(ScarsArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);
-    g_object_unref(controls.mydata);
 
-    return TRUE;
+    if (controls.computed) {
+        mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
+        gwy_app_undo_qcheckpointv(data, 1, &mquark);
+        gwy_container_set_object(data, mquark, mfield);
+        g_object_unref(controls.mydata);
+    }
+    else {
+        g_object_unref(controls.mydata);
+        run_noninteractive(args, data);
+    }
 }
 
 static void
@@ -563,6 +619,7 @@ scars_mark_dialog_update_thresholds(GtkObject *adj,
     }
 
     in_update = FALSE;
+    scars_invalidate(controls);
 }
 
 static void
@@ -591,6 +648,12 @@ scars_mark_dialog_update_values(ScarsControls *controls,
     args->min_len = gwy_adjustment_get_int(controls->min_len);
     args->max_width = gwy_adjustment_get_int(controls->max_width);
     args->type = gwy_radio_buttons_get_current(controls->type, "type");
+}
+
+static void
+scars_invalidate(ScarsControls *controls)
+{
+    controls->computed = FALSE;
 }
 
 static void
@@ -624,32 +687,26 @@ preview(ScarsControls *controls,
 {
     GwyDataField *mask, *dfield;
     GwyPixmapLayer *layer;
-    GwySIUnit *siunit;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
     /* Set up the mask */
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
-        mask = gwy_data_field_duplicate(dfield);
+        mask = create_mask_field(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-        siunit = gwy_si_unit_new("");
-        gwy_data_field_set_si_unit_z(mask, siunit);
-        g_object_unref(siunit);
 
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
-    else
-        gwy_data_field_copy(dfield, mask, FALSE);
-
-    gwy_data_field_mark_scars(dfield, mask,
-                              args->threshold_high, args->threshold_low,
-                              args->min_len, args->max_width, args->type);
+    gwy_data_field_copy(dfield, mask, FALSE);
+    mark_scars(dfield, mask, args);
     gwy_data_field_data_changed(mask);
+
+    controls->computed = TRUE;
 }
 
 static const gchar type_key[]           = "/module/scars/type";

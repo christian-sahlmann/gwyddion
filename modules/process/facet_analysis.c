@@ -376,7 +376,7 @@ facets_dialog(FacetsArgs *args,
         row++;
     }
 
-    controls.computed = FALSE;
+    facets_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
     facet_view_select_angle(&controls, args->theta0, args->phi0);
