@@ -1349,7 +1349,7 @@ gwy_expr_new(void)
  * gwy_expr_free:
  * @expr: An expression evaluator.
  *
- * Frees all memory used by and expression evaluator.
+ * Frees all memory used by an expression evaluator.
  **/
 void
 gwy_expr_free(GwyExpr *expr)
@@ -1457,7 +1457,7 @@ gwy_expr_compile(GwyExpr *expr,
  * @names: Location to store pointer to array of variable names to (may be
  *         %NULL to get just number of variables).  The string array returned
  *         in this argument in owned by @expr and is valid only until next
- *         gwy_expr_compile(), gwy_expr_evaluate(), eventually gwy_expr_free()
+ *         gwy_expr_compile(), gwy_expr_evaluate(), or gwy_expr_free()
  *         call.
  *
  * Get the number, names, and indices of unresolved identifiers in @expr.
@@ -1507,7 +1507,7 @@ gwy_expr_get_variables(GwyExpr *expr,
 guint
 gwy_expr_resolve_variables(GwyExpr *expr,
                            guint n,
-                           gchar * const *names,
+                           const gchar * const *names,
                            guint *indices)
 {
     guint i, j;
@@ -1699,6 +1699,9 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * used to evaluate any number of expressions; when it's no longer needed, it
  * should be destroyed with gwy_expr_free().
  *
+ * Expression syntax is described in
+ * <ulink url="http://gwyddion.net/documentation/user-guide/expression-syntax.html">Gwyddion user guide</ulink>.
+ *
  * Simple arithmetic expressions without variables can be directly evaluated
  * with gwy_expr_evaluate().
  *
@@ -1710,6 +1713,91 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * variable substitution is performed by gwy_expr_execute(). Eventually,
  * expression can be evaluated on each item of value arrays by
  * gwy_expr_vector_execute().
+ *
+ * One-shot evaluation of expressions without variables is easy:
+ * <informalexample><programlisting>
+ * GwyExpr *expr;
+ * GError *err = NULL;
+ * gdouble result;
+ * <!-- Hello, gtk-doc! -->
+ * expr = gwy_expr_new(<!-- Hello, gtk-doc! -->);
+ * if (!gwy_expr_evaluate(expr, "1+2", &amp;result, &amp;err)) {
+ *     /<!-- -->* Handle compilation error *<!-- -->/
+ * }
+ * g_print("The result: %g\n", result);
+ * gwy_expr_free(expr);
+ * </programlisting></informalexample>
+ *
+ * One-shot evaluation of expressions with known variables can be performed by
+ * defining them as constants beforehand:
+ * <informalexample><programlisting>
+ * GwyExpr *expr;
+ * GError *err = NULL;
+ * gdouble result;
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Create expression and define variables as constants *<!-- -->/
+ * expr = gwy_expr_new(<!-- Hello, gtk-doc! -->);
+ * gwy_expr_define_constant(expr, "x", 3.0, NULL);
+ * gwy_expr_define_constant(expr, "y", 4.0, NULL);
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Evaluate expression *<!-- -->/
+ * if (!gwy_expr_evaluate(expr, "hypot x,y", &amp;result, &amp;err)) {
+ *     /<!-- -->* Handle compilation error *<!-- -->/
+ * }
+ * g_print("The result: %g\n", result);
+ * <!-- Hello, gtk-doc! -->
+ * gwy_expr_free(expr);
+ * </programlisting></informalexample>
+ *
+ * When the same expression is evaluated multiple times with different
+ * variable values and the variables are again from some known set, the
+ * gwy_expr_resolve_variables() should be used (if the repeated evaluation
+ * happens over items of some arrays, gwy_expr_vector_execute() is more
+ * efficient and usually simplier to use too):
+ * <informalexample><programlisting>
+ * GwyExpr *expr;
+ * GError *err = NULL;
+ * const gchar *const var_names[] = { "lambda", "theta", "psi", "d", "k" };
+ * const gdouble var_values1[] = { 300.0, 0.09, 2.0, 52.3, 1.43 };
+ * const gdouble var_values2[] = { 400.0, 0.12, 2.0, 54.1, 1.44 };
+ * guint var_positions[G_N_ELEMENTS(var_names)];
+ * gdouble vars[G_N_ELEMENTS(var_names) + 1];
+ * guint i;
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Create expression and define constant pi *<!-- -->/
+ * expr = gwy_expr_new(<!-- Hello, gtk-doc! -->);
+ * gwy_expr_define_constant(expr, "pi", G_PI, NULL);
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Compile expression *<!-- -->/
+ * if (!gwy_expr_compile(expr, "2*pi/lambda*d*sin theta", &amp;err)) {
+ *     /<!-- -->* Handle compilation error *<!-- -->/
+ * }
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Resolve variables *<!-- -->/
+ * if (!gwy_expr_resolve_variables(expr, G_N_ELEMENTS(var_names),
+ *                                 var_names, var_positions)) {
+ *     /<!-- -->* Expression contains unknown variables *<!-- -->/
+ * }
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Evaluate first set *<!-- -->/
+ * for (i = 0; i < G_N_ELEMENTS(var_names); i++) {
+ *     vars[var_positions[i]] = var_values1[i];
+ * }
+ * g_print("First result: %g\n", gwy_expr_execute(expr, vars));
+ * <!-- Hello, gtk-doc! -->
+ * /<!-- -->* Evaluate second set *<!-- -->/
+ * for (i = 0; i < G_N_ELEMENTS(var_names); i++) {
+ *     vars[var_positions[i]] = var_values2[i];
+ * }
+ * g_print("Second result: %g\n", gwy_expr_execute(expr, vars));
+ * <!-- Hello, gtk-doc! -->
+ * gwy_expr_free(expr);
+ * </programlisting></informalexample>
+ *
+ * The most general case is when the variables are from a large set (or
+ * completely arbitrary).  Then it is best to get the list of variables with
+ * gwy_expr_get_variables() and supply only values of variables that
+ * are actually present in the expression.
  **/
 
 /**
