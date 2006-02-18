@@ -901,8 +901,6 @@ gwy_data_window_gradient_update(GwyDataWindow *data_window,
     layer = gwy_data_view_get_base_layer(view);
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
     gwy_container_set_string_by_name(data, key, g_strdup(gradient));
-    gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis),
-                                gradient);
 }
 
 static void
@@ -914,6 +912,7 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     GwyDataField *dfield;
     gdouble min, max;
     const gchar *key;
+    const guchar *gradname;
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -924,6 +923,10 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
+    key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
+    if (gwy_container_gis_string_by_name(data, key, &gradname))
+        gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis),
+                                    gradname);
     gwy_data_window_size_allocate(GTK_WIDGET(data_window), NULL);
     gwy_data_window_update_units(data_window);
 }
