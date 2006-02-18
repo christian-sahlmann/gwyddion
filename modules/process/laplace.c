@@ -67,7 +67,7 @@ static void
 laplace(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *mfield, *buffer, *old;
-    GQuark dquark, mquark;
+    GQuark dquark;
     gdouble error, cor, maxer, lastfrac, frac, starter;
     gint i;
     gboolean cancelled = FALSE;
@@ -75,10 +75,9 @@ laplace(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & LAPLACE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      0);
-    g_return_if_fail(dfield && dquark && mfield && mquark);
+    g_return_if_fail(dfield && dquark && mfield);
 
     maxer = gwy_data_field_get_rms(dfield)/1.0e4;
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
@@ -115,8 +114,7 @@ laplace(GwyContainer *data, GwyRunType run)
     }
     gwy_app_wait_finish();
     if (!cancelled) {
-        gwy_app_undo_qcheckpoint(data, dquark, mquark, NULL);
-        gwy_container_remove(data, mquark);
+        gwy_app_undo_qcheckpointv(data, 1, &dquark);
         gwy_data_field_copy(dfield, old, FALSE);
         gwy_data_field_data_changed(dfield);
     }

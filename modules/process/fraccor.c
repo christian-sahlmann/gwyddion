@@ -37,7 +37,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes data under mask using fractal interpolation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -47,15 +47,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo fraccor_func_info = {
-        "fraccor",
-        N_("/_Correct Data/_Fractal correction"),
-        (GwyProcessFunc)&fraccor,
-        FRACCOR_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK,
-    };
-
-    gwy_process_func_register(name, &fraccor_func_info);
+    gwy_process_func_registe2("fraccor",
+                              (GwyProcessFunc)&fraccor,
+                              N_("/_Correct Data/_Fractal correction"),
+                              NULL,
+                              FRACCOR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
+                              N_("Interpolate data under mask with fractal "
+                                 "interpolation"));
 
     return TRUE;
 }
@@ -63,19 +62,20 @@ module_register(const gchar *name)
 static void
 fraccor(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *maskfield;
+    GwyDataField *dfield, *mfield;
+    GQuark dquark;
 
     g_return_if_fail(run & FRACCOR_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield && dquark && mfield);
 
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
-        gwy_data_field_fractal_correction(dfield, maskfield,
-                                          GWY_INTERPOLATION_BILINEAR);
-        gwy_container_remove_by_name(data, "/0/mask");
-        gwy_data_field_data_changed(dfield);
-    }
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+    gwy_data_field_fractal_correction(dfield, mfield,
+                                      GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_data_changed(dfield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
