@@ -116,7 +116,7 @@ laplace(GwyContainer *data, GwyRunType run)
     if (!cancelled) {
         gwy_app_undo_qcheckpointv(data, 1, &dquark);
         gwy_data_field_copy(dfield, old, FALSE);
-        gwy_data_field_data_changed(dfield);
+        gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);
     g_object_unref(buffer);
