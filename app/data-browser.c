@@ -2375,6 +2375,16 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
     va_end(ap);
 }
 
+/**
+ * gwy_app_copy_data_items:
+ * @source: Source container.
+ * @dest: Target container (may be identical to source).
+ * @from_id: Data number to copy items from.
+ * @to_id: Data number to copy items to.
+ * @...: 0-terminated list of #GwyDataItem values defining the items to copy.
+ *
+ * Copy auxiliary data items between data containers.
+ **/
 void
 gwy_app_copy_data_items(GwyContainer *source,
                         GwyContainer *dest,
