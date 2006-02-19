@@ -122,16 +122,15 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo tip_model_func_info = {
-        "tip_model",
-        N_("/_Tip/_Model Tip..."),
-        (GwyProcessFunc)&tip_model,
-        TIP_MODEL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
 
-    gwy_process_func_register(name, &tip_model_func_info);
-
+    gwy_process_func_registe2("tip_model",
+                              (GwyProcessFunc)&tip_model,
+                              N_("/_Tip/_Model Tip..."),
+                              NULL,
+                              TIP_MODEL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Model AFM tip"));
+    
     return TRUE;
 }
 

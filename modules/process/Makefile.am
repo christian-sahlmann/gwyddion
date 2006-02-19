@@ -39,6 +39,7 @@ process_LTLIBRARIES = \
 	median-bg.la \
 	merge.la \
 	nanoindent_adjust.la \
+	nanoindent_analyze.la \
 	outliers.la \
 	polylevel.la \
 	presentationops.la \
@@ -187,8 +188,8 @@ local_contrast_la_LIBADD = $(module_libadd)
 nanoindent_adjust_la_SOURCES = nanoindent_adjust.c
 nanoindent_adjust_la_LIBADD = $(module_libadd)
 
-#nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
-#nanoindent_analyze_la_LIBADD = $(module_libadd)
+nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
+nanoindent_analyze_la_LIBADD = $(module_libadd)
 
 mask_grow_shrink_la_SOURCES = mask_grow_shrink.c
 mask_grow_shrink_la_LIBADD = $(module_libadd)

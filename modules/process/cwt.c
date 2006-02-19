@@ -1,5 +1,4 @@
 /*
- *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -149,6 +148,11 @@ cwt(GwyContainer *data, GwyRunType run)
 
     
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("CWT"));
 }

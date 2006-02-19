@@ -312,15 +312,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo indent_analyze_func_info = {
-        "indent_analyze",
-        N_("/Indento_r/_Analyze..."),
-        (GwyProcessFunc)&indent_analyze,
-        INDENT_ANALYZE_RUN_MODES ,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &indent_analyze_func_info);
+    gwy_process_func_registe2("nanoindent_analyze",
+                              (GwyProcessFunc)&indent_analyze,
+                              N_("/Indento_r/_Analyze..."),
+                              NULL,
+                              INDENT_ANALYZE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Analyze indentor imprint"));
 
     return TRUE;
 }

@@ -164,15 +164,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo fit_2d_func_info = {
-        "fit_2d",
-        N_("/_Level/_Fit Sphere..."),
-        (GwyProcessFunc)&fit_2d,
-        FIT_2D_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &fit_2d_func_info);
+    gwy_process_func_registe2("fit_2d",
+                              (GwyProcessFunc)&fit_2d,
+                              N_("/_Level/_Fit Sphere..."),
+                              NULL,
+                              FIT_2D_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Fit by sphere"));
 
     return TRUE;
 }
@@ -232,7 +230,7 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     controls.vyres = 200;
     pcontrols = &controls;
 
-    /*set initial tip properties*/
+    /*get preview*/
     args->data = gwy_container_duplicate_by_prefix(data,
                                                    "/0/data",
                                                    "/0/base/palette",

@@ -114,15 +114,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo remove_func_info = {
-        "grain_rem_threshold",
-        N_("/_Grains/_Remove by Threshold..."),
-        (GwyProcessFunc)&remove_th,
-        REMOVE_RUN_MODES,
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
-    };
 
-    gwy_process_func_register(name, &remove_func_info);
+    gwy_process_func_registe2("grain_rem_threshold",
+                              (GwyProcessFunc)&remove_th,
+                              N_("/_Grains/_Remove by Threshold..."),
+                              NULL,
+                              REMOVE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Remove grains by threshold"));
 
     return TRUE;
 }
