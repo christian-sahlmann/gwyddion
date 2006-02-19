@@ -59,6 +59,7 @@ typedef struct {
 typedef struct {
     FractalArgs *args;
     GwyContainer *data;
+    GwyDataField *dfield;
     GtkWidget *from;
     GtkWidget *to;
     GtkWidget *result;
@@ -72,7 +73,7 @@ typedef struct {
 static gboolean    module_register            (const gchar *name);
 static void        fractal                    (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    fractal_dialog             (FractalArgs *args,
+static void        fractal_dialog             (FractalArgs *args,
                                                GwyContainer *data);
 static GtkWidget*  attach_value_row           (GtkWidget *table,
                                                gint row,
@@ -83,17 +84,11 @@ static void        interp_changed_cb          (GtkWidget *combo,
 static void        out_changed_cb             (GtkWidget *combo,
                                                FractalControls *controls);
 static void        fractal_dialog_update      (FractalControls *controls,
-                                               FractalArgs *args,
-                                               GwyContainer *data);
-static void        ok_cb                      (FractalArgs *args,
-                                               FractalControls *controls,
-                                               GwyContainer *data);
+                                               FractalArgs *args);
 static gboolean    update_graph               (FractalArgs *args,
-                                               FractalControls *controls,
-                                               GwyContainer *data);
+                                               FractalControls *controls);
 static void        fractal_dialog_recompute    (FractalControls *controls,
-                                               FractalArgs *args,
-                                               GwyContainer *data);
+                                               FractalArgs *args);
 static void        graph_selected             (GwyGraphArea *area,
                                                FractalControls *controls);
 static gboolean    remove_datapoints          (GwyDataLine *xline,
@@ -138,34 +133,29 @@ static const FractalDimFunc dim_funcs[] = {
     gwy_data_field_fractal_psdf_dim,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculates fractal dimension using several methods "
        "(partitioning, box counting, triangulation, power spectrum)."),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo fractal_func_info = {
-        "fractal",
-        N_("/_Statistics/_Fractal Dimension..."),
-        (GwyProcessFunc)&fractal,
-        FRACTAL_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &fractal_func_info);
+    gwy_process_func_registe2("fractal",
+                              (GwyProcessFunc)&fractal,
+                              N_("/_Statistics/_Fractal Dimension..."),
+                              GWY_STOCK_FRACTAL,
+                              FRACTAL_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Calculate fractal dimension"));
 
     return TRUE;
 }
@@ -181,23 +171,23 @@ fractal(GwyContainer *data, GwyRunType run)
     fractal_save_args(data, &args);
 }
 
-/* FIXME: What is the return value good for when fftf_1d_dialog() does all the
- * work itself? */
-static gboolean
+static void
 fractal_dialog(FractalArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *hbox, *label, *vbox;
-
-    FractalControls controls;
     enum {
         RESPONSE_RESET = 1,
         RESPONSE_RECOMPUTE = 2
     };
+    GtkWidget *dialog, *table, *hbox, *label, *vbox;
+    FractalControls controls;
     gint response, row, i;
     gchar buffer[32];
 
     controls.args = args;
     controls.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &controls.dfield, 0);
+    g_return_if_fail(controls.dfield);
+
     dialog = gtk_dialog_new_with_buttons(_("Fractal Dimension"), NULL, 0,
                                          _("Reco_mpute"), RESPONSE_RECOMPUTE,
                                          _("_Reset"), RESPONSE_RESET,
@@ -311,22 +301,24 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
-            ok_cb(args, &controls, data);
+            gwy_app_data_browser_add_graph_model(controls.graph_model,
+                                                 controls.data,
+                                                 TRUE);
             break;
 
             case RESPONSE_RESET:
             args->from[args->out] = 0;
             args->to[args->out] = 0;
             gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
-            fractal_dialog_update(&controls, args, data);
+            fractal_dialog_update(&controls, args);
             break;
 
             case RESPONSE_RECOMPUTE:
-            fractal_dialog_recompute(&controls, args, data);
+            fractal_dialog_recompute(&controls, args);
             break;
 
             default:
@@ -336,8 +328,6 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
-
-    return TRUE;
 }
 
 static GtkWidget*
@@ -371,15 +361,16 @@ static void
 out_changed_cb(GtkWidget *combo,
                FractalControls *controls)
 {
+    GwyGraphArea *area;
     FractalArgs *args;
 
-    g_assert(controls->args && controls->data);
     args = controls->args;
     args->out = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
     gwy_graph_set_status(GWY_GRAPH(controls->graph), GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph))));
-    fractal_dialog_update(controls, args, controls->data);
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
+    gwy_graph_area_clear_selection(area);
+    fractal_dialog_update(controls, args);
     update_labels(controls, args);
 }
 
@@ -387,40 +378,23 @@ out_changed_cb(GtkWidget *combo,
 /*update dialog after any recomputation.*/
 static void
 fractal_dialog_update(FractalControls *controls,
-                      FractalArgs *args,
-                      GwyContainer *data)
+                      FractalArgs *args)
 {
     gchar buffer[16];
 
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
 
-    if (update_graph(args, controls, data)) {
+    if (update_graph(args, controls)) {
         g_snprintf(buffer, sizeof(buffer), "%2.3g", args->result[args->out]);
         gtk_label_set_text(GTK_LABEL(controls->results[args->out]), buffer);
     }
 }
 
-static void
-ok_cb(FractalArgs *args,
-      FractalControls *controls,
-      GwyContainer *data)
-{
-    GtkWidget *graph;
-    GwyDataWindow *data_window;
-
-    graph = gwy_graph_new(controls->graph_model);
-    update_graph(args, controls, data);
-    data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
-}
-
 static gboolean
 update_graph(FractalArgs *args,
-             FractalControls *controls,
-             GwyContainer *data)
+             FractalControls *controls)
 {
-    GwyDataField *dfield;
     GwyDataLine *xline, *yline, *xfit, *yfit, *xnline, *ynline;
     GwyGraphCurveModel *gcmodel;
     gint i, res;
@@ -429,14 +403,13 @@ update_graph(FractalArgs *args,
     gdouble *xdata, *ydata;
 
     g_return_val_if_fail(args->out < G_N_ELEMENTS(methods), FALSE);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     xline = gwy_data_line_new(10, 10, FALSE);
     yline = gwy_data_line_new(10, 10, FALSE);
     xnline = gwy_data_line_new(10, 10, FALSE);
     ynline = gwy_data_line_new(10, 10, FALSE);
 
-    method_funcs[args->out](dfield, xline, yline, args->interp);
+    method_funcs[args->out](controls->dfield, xline, yline, args->interp);
     if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)))
         args->result[args->out] = dim_funcs[args->out](xnline, ynline, &a, &b);
 
@@ -482,15 +455,11 @@ update_graph(FractalArgs *args,
 /*(re)compute data and dimension and fits*/
 static void
 fractal_dialog_recompute(FractalControls *controls,
-                         FractalArgs *args,
-                         GwyContainer *data)
+                         FractalArgs *args)
 {
-    GwyDataField *dfield;
-
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    fractal_dialog_update(controls, args, data);
+    fractal_dialog_update(controls, args);
 }
 
 
@@ -502,10 +471,10 @@ graph_selected(GwyGraphArea *area, FractalControls *controls)
     gdouble from, to;
     gdouble selection[2];
 
-    gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph))), selection);
+    gwy_graph_area_get_selection(area, selection);
 
     args = controls->args;
-    if (gwy_graph_area_get_selection_number(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)))) == 0
+    if (gwy_graph_area_get_selection_number(area) == 0
         || selection[0] == selection[1]) {
         gtk_label_set_text(GTK_LABEL(controls->from), _("minimum"));
         gtk_label_set_text(GTK_LABEL(controls->to), _("maximum"));
