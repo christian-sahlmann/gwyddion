@@ -84,15 +84,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dwt_func_info = {
-        "dwt",
-        N_("/_Integral Transforms/_2D DWT..."),
-        (GwyProcessFunc)&dwt,
-        DWT_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &dwt_func_info);
+    gwy_process_func_registe2("dwt",
+                              (GwyProcessFunc)&dwt,
+                              N_("/_Integral Transforms/_2D DWT..."),
+                              NULL,
+                              DWT_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Compute Discrete Wavelet Transform"));
 
     return TRUE;
 }
@@ -100,12 +98,12 @@ module_register(const gchar *name)
 static void
 dwt(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window, *dialog;
+    GtkWidget *dialog;
     GwyDataField *dfield;
     GwyDataLine *wtcoefs;
     DWTArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize;
+    gint xsize, ysize, newsize, newid, oldid;
 
     g_return_if_fail(run & DWT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -131,16 +129,15 @@ dwt(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
 
     newsize = gwy_fft_find_nice_size(xsize);
+    dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
+                                          GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
-    gwy_data_field_resample(dfield, newsize, newsize,
-                            GWY_INTERPOLATION_BILINEAR);
 
     wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
@@ -149,9 +146,14 @@ dwt(GwyContainer *data, GwyRunType run)
     if (args.preserve)
         gwy_data_field_resample(dfield, xsize, ysize, args.interp);
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), "DWT");
-    g_object_unref(data);
+
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    g_object_unref(dfield);
+    gwy_app_set_data_field_title(data, newid, _("DWT"));
+    gwy_app_copy_data_items(data, data, oldid, newid,
+                            GWY_DATA_ITEM_PALETTE,
+                            0);
+
 
     g_object_unref(wtcoefs);
 }
