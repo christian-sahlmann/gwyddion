@@ -91,15 +91,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dwt_anisotropy_func_info = {
-        "dwtanisotropy",
-        N_("/_Integral Transforms/DWT _Anisotropy..."),
-        (GwyProcessFunc)&dwt_anisotropy,
-        DWT_ANISOTROPY_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &dwt_anisotropy_func_info);
+    gwy_process_func_registe2("dwt",
+                              (GwyProcessFunc)&dwt_anisotropy,
+                              N_("/_Integral Transforms/DWT _Anisotropy..."),
+                              NULL,
+                              DWT_ANISOTROPY_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("DWT anisotropy detection"));
 
     return TRUE;
 }
@@ -109,13 +107,21 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
     GwyDataField *dfield, *mask;
+    GQuark dquark, mquark;
     GwyDataLine *wtcoefs;
     DWTAnisotropyArgs args;
     gboolean ok;
     gint xsize, ysize, newsize, limit;
 
     g_return_if_fail(run & DWT_ANISOTROPY_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mask,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -137,22 +143,19 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    mask = NULL;
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    gwy_container_gis_object_by_name(data, "/0/mask", &mask);
-
     newsize = gwy_fft_find_nice_size(xsize);
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
-    if (mask)
-        gwy_data_field_resample(mask, newsize, newsize, GWY_INTERPOLATION_NONE);
-    else {
-        mask = gwy_data_field_new_alike(dfield, TRUE);
-        gwy_container_set_object_by_name(data, "/0/mask", mask);
+    
+    gwy_app_undo_qcheckpoint(data, dquark, mquark, 0);
+    if (!mask) {
+        mask = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_container_set_object(data, mquark, mask);
         g_object_unref(mask);
     }
+    gwy_data_field_resample(mask, newsize, newsize, GWY_INTERPOLATION_NONE);
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
