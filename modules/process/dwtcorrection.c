@@ -78,15 +78,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dwt_correction_func_info = {
-        "dwtcorrection",
-        N_("/_Integral Transforms/DWT C_orrection..."),
-        (GwyProcessFunc)&dwt_correction,
-        DWT_CORRECTION_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
+    gwy_process_func_registe2("dwtcorrection",
+                              (GwyProcessFunc)&dwt_correction,
+                              N_("/_Integral Transforms/DWT C_orrection..."),
+                              NULL,
+                              DWT_CORRECTION_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Remove data under mask by DWT reconstruction"));
 
-    gwy_process_func_register(name, &dwt_correction_func_info);
 
     return TRUE;
 }
@@ -103,6 +102,8 @@ dwt_correction(GwyContainer *data, GwyRunType run)
 
     g_return_if_fail(run & DWT_CORRECTION_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
