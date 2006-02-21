@@ -152,15 +152,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo merge_func_info = {
-        "merge",
-        N_("/M_ultidata/_Merge..."),
-        (GwyProcessFunc)&merge,
-        MERGE_RUN_MODES,
-        0,
-    };
-
-    gwy_process_func_register(name, &merge_func_info);
+    gwy_process_func_registe2("merge",
+                              (GwyProcessFunc)&merge,
+                              N_("/M_ultidata/_Merge..."),
+                              NULL,
+                              MERGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Merge two images"));
 
     return TRUE;
 }
@@ -349,7 +347,6 @@ merge_check(MergeArgs *args,
 static gboolean
 merge_do(MergeArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield1, *dfield2;
     GwyDataField *correlation_data, *correlation_kernel, *correlation_score;
@@ -361,23 +358,18 @@ merge_do(MergeArgs *args)
     gint newxres, newyres;
     gdouble zshift;
     gint xshift, yshift;
+    gint newid;
 
     operand1 = args->win1;
     operand2 = args->win2;
     g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
 
-    data = gwy_data_window_get_data(operand1);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    data = gwy_data_window_get_data(operand1);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    /*result fields - after computation result should be at dfield */
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             "/0/select",
-                                             NULL);
-    result = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    result = gwy_data_field_duplicate(dfield1);
 
     /*cut data for correlation*/
     switch (args->direction) {
@@ -623,11 +615,12 @@ merge_do(MergeArgs *args)
       
     /*set right output */
     if (result) {
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+        gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+        newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+        gwy_app_set_data_field_title(data, newid, _("Merged images"));
+        g_object_unref(result);
     }
     
-    g_object_unref(data);
     g_object_unref(correlation_data);
     g_object_unref(correlation_kernel);
     g_object_unref(correlation_score);
@@ -667,7 +660,7 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
 static void
 find_score_maximum(GwyDataField *correlation_score, gint *max_col, gint *max_row)
 {
-    gint i, n, maxi;
+    gint i, n, maxi=0;
     gdouble max = -G_MAXDOUBLE;
     gdouble *data;
 

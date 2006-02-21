@@ -330,7 +330,6 @@ immerse_check(ImmerseArgs *args,
 static gboolean
 immerse_do(ImmerseArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *resampled, *score, *dfield1, *dfield2, *result;
     GwyDataWindow *operand1, *operand2;

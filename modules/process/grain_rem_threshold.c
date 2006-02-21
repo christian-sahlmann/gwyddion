@@ -157,7 +157,12 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gdouble zoomval;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
-    gint row;
+    gint row, id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0,
@@ -174,16 +179,20 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = gwy_container_duplicate(data);
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
     controls.view = gwy_data_view_new(controls.mydata);
-    g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     add_mask_layer(controls.view);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
-                                                             "/0/data"));
+    
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
         zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
     else
