@@ -226,27 +226,22 @@ tip_dilation_check(TipDilationArgs *args,
 static gboolean
 tip_dilation_do(TipDilationArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
+    gint newid;
 
     operand1 = args->win1;
     operand2 = args->win2;
     g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
 
-    data = gwy_data_window_get_data(operand1);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
+    data = gwy_data_window_get_data(operand1);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+ 
     /*result fields - after computation result should be at dfield */
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             "/0/select",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfield = gwy_data_field_duplicate(dfield1);
 
     gwy_app_wait_start(GTK_WIDGET(args->win2), "Initializing...");
     dfield = gwy_tip_dilation(dfield1, dfield2, dfield,
@@ -256,10 +251,12 @@ tip_dilation_do(TipDilationArgs *args)
     /*set right output */
 
     if (dfield) {
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+        gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        gwy_app_set_data_field_title(data, newid, _("Dilated data"));
+        g_object_unref(dfield);
+
     }
-    g_object_unref(data);
 
     return TRUE;
 }
