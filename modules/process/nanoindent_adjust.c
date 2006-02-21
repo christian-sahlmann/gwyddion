@@ -97,15 +97,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo nanoindent_adjust_func_info = {
-        "nanoindent_adjust",
-        N_("/Indento_r/Ad_just..."),
-        (GwyProcessFunc)&nanoindent_adjust,
-        NANOINDENT_ADJUST_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &nanoindent_adjust_func_info);
+    gwy_process_func_registe2("nanoindent_adjust",
+                              (GwyProcessFunc)&nanoindent_adjust,
+                              N_("/Indento_r/Ad_just..."),
+                              NULL,
+                              NANOINDENT_ADJUST_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Adjust two nanoindentation imprints"));
 
     return TRUE;
 }
@@ -305,27 +303,21 @@ nanoindent_adjust_check(NanoindentAdjustArgs *args,
 static gboolean
 nanoindent_adjust_do(NanoindentAdjustArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
+    gint newid;
 
     operand1 = args->win1;
     operand2 = args->win2;
     g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
 
-    data = gwy_data_window_get_data(operand1);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    data = gwy_data_window_get_data(operand1);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    /*result fields - after computation result should be at dfield */
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             "/0/select",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfield = gwy_data_field_duplicate(dfield1); 
 
     gwy_app_wait_start(GTK_WIDGET(args->win2), "Initializing...");
     dfield = gwy_nanoindent_adjust(dfield1, dfield,
@@ -336,10 +328,12 @@ nanoindent_adjust_do(NanoindentAdjustArgs *args)
     /*set right output */
 
     if (dfield) {
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+        gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        gwy_app_set_data_field_title(data, newid, _("Immersed detail data"));
+        g_object_unref(dfield);
+
     }
-    g_object_unref(data);
 
     return TRUE;
 }
