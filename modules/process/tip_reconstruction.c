@@ -60,15 +60,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo tip_reconstruction_func_info = {
-        "tip_reconstruction",
-        N_("/_Tip/_Surface Reconstruction..."),
-        (GwyProcessFunc)&tip_reconstruction,
-        TIP_RECONSTRUCTION_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
 
-    gwy_process_func_register(name, &tip_reconstruction_func_info);
+    gwy_process_func_registe2("tip_reconstruction",
+                              (GwyProcessFunc)&tip_reconstruction,
+                              N_("/_Tip/_Surface Reconstruction..."),
+                              NULL,
+                              TIP_RECONSTRUCTION_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Surface reconstruction by defined tip"));
 
     return TRUE;
 }

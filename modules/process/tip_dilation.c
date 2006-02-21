@@ -61,15 +61,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo tip_dilation_func_info = {
-        "tip_dilation",
-        N_("/_Tip/_Dilation..."),
-        (GwyProcessFunc)&tip_dilation,
-        TIP_DILATION_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &tip_dilation_func_info);
+    gwy_process_func_registe2("tip_dilation",
+                              (GwyProcessFunc)&tip_dilation,
+                              N_("/_Tip/_Dilation..."),
+                              NULL,
+                              TIP_DILATION_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Surface dilation by defined tip"));
 
     return TRUE;
 }

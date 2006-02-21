@@ -60,15 +60,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo tip_certainty_map_func_info = {
-        "tip_map",
-        N_("/_Tip/_Certainty Map..."),
-        (GwyProcessFunc)&tip_certainty_map,
-        TIP_CERTAINTY_MAP_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &tip_certainty_map_func_info);
+    gwy_process_func_registe2("tip_map",
+                              (GwyProcessFunc)&tip_certainty_map,
+                              N_("/_Tip/_Certainty Map..."),
+                              NULL,
+                              TIP_CERTAINTY_MAP_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Certainty map"));
 
     return TRUE;
 }

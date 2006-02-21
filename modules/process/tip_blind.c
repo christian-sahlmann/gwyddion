@@ -131,15 +131,13 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo tip_blind_func_info = {
-        "tip_blind",
-        N_("/_Tip/_Blind estimation..."),
-        (GwyProcessFunc)&tip_blind,
-        TIP_BLIND_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &tip_blind_func_info);
+    gwy_process_func_registe2("tip_blind",
+                              (GwyProcessFunc)&tip_blind,
+                              N_("/_Tip/_Blind estimation..."),
+                              NULL,
+                              TIP_BLIND_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Blind tip estimation"));
 
     return TRUE;
 }
