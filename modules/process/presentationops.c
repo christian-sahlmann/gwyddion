@@ -78,7 +78,7 @@ module_register(const gchar *name)
                               PRESENTATIONOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
                               N_("Extract presentation to a new channel"));
-    gwy_process_func_register(name, &presentation_attach_func_info);
+    /* gwy_process_func_register(name, &presentation_attach_func_info); */
 
     return TRUE;
 }
