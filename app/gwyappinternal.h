@@ -38,8 +38,8 @@ void         gwy_app_zoom_set_cb                 (gpointer data);
 void         gwy_app_3d_view_cb                  (void);
 void         gwy_app_mask_kill_cb                (void);
 void         gwy_app_show_kill_cb                (void);
-void         gwy_app_change_mask_color_cb        (gpointer unused,
-                                                  gboolean defaultc);
+void         gwy_app_change_mask_color_cb        (void);
+void         gwy_app_change_default_mask_color_cb(void);
 
 void         gwy_app_menu_set_recent_files_menu  (GtkWidget *menu);
 void         gwy_app_file_duplicate_cb           (void);

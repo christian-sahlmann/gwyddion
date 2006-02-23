@@ -1195,35 +1195,40 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
 }
 
 void
-gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
-                             gboolean defaultc)
+gwy_app_change_mask_color_cb(void)
 {
     GwyDataWindow *data_window;
     GwyDataView *data_view;
+    GwyPixmapLayer *layer;
     GwyContainer *data, *settings;
+    const gchar *key;
     GwyRGBA rgba;
-
-    gwy_debug("defaultc = %d", defaultc);
-
-    settings = gwy_app_settings_get();
-    if (defaultc) {
-        gwy_color_selector_for_mask(_("Change Default Mask Color"),
-                                    NULL, settings, "/mask");
-        return;
-    }
 
     data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
     g_assert(data);
+    layer = gwy_data_view_get_alpha_layer(data_view);
+    g_return_if_fail(GWY_IS_LAYER_MASK(layer));
+    key = gwy_layer_mask_get_color_key(GWY_LAYER_MASK(layer));
+    g_return_if_fail(key);
+    gwy_debug("<%s>", key);
 
     /* copy defaults to data container if necessary */
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+    if (!gwy_rgba_get_from_container(&rgba, data, key)) {
+        settings = gwy_app_settings_get();
         gwy_rgba_get_from_container(&rgba, settings, "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+        gwy_rgba_store_to_container(&rgba, data, key);
     }
-    gwy_color_selector_for_mask(NULL, NULL, data, "/0/mask");
+    gwy_color_selector_for_mask(NULL, NULL, data, key);
+}
+
+void
+gwy_app_change_default_mask_color_cb(void)
+{
+    gwy_color_selector_for_mask(_("Change Default Mask Color"),
+                                NULL, gwy_app_settings_get(), "/mask");
 }
 
 /* FIXME: this functionality is provided by modules now -- remove? */

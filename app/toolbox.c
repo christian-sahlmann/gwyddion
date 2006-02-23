@@ -718,8 +718,8 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         {
             N_("/Default Mask _Color..."),
             NULL,
-            gwy_app_change_mask_color_cb,
-            1,
+            gwy_app_change_default_mask_color_cb,
+            0,
             NULL,
             NULL 
         },
@@ -727,7 +727,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             N_("/Color _Gradients..."),
             NULL,
             gwy_app_gradient_editor,
-            1,
+            0,
             NULL,
             NULL 
         },
@@ -735,7 +735,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             N_("/G_L Materials..."),
             NULL,
             gwy_app_gl_material_editor,
-            1,
+            0,
             NULL,
             NULL 
         },
