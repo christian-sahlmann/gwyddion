@@ -64,28 +64,6 @@ static void       gwy_app_3d_window_title_changed  (GtkWidget *data_window,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 
-/* FIXME: A temporary hack. */
-static void
-set_sensitivity(GtkItemFactory *item_factory, ...)
-{
-    GwySensitivityGroup *sensgroup;
-    GwyMenuSensFlags mask;
-    const gchar *path;
-    GtkWidget *widget;
-    va_list ap;
-
-    sensgroup = gwy_app_sensitivity_get_group();
-    va_start(ap, item_factory);
-    while ((path = va_arg(ap, const gchar*))) {
-        mask = va_arg(ap, guint);
-        widget = gtk_item_factory_get_widget(item_factory, path);
-        if (!widget)
-            break;
-        gwy_sensitivity_group_add_widget(sensgroup, widget, mask);
-    }
-    va_end(ap);
-}
-
 /*****************************************************************************
  *                                                                           *
  *     Main, toolbox                                                         *
@@ -1006,50 +984,47 @@ static GtkWidget*
 gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 {
     static struct {
-        const gchar *path;
+        const gchar *label;
         gpointer callback;
         gpointer cbdata;
     }
     const menu_items[] = {
-        { N_("/Remove _Mask"), gwy_app_mask_kill_cb, NULL },
-        { N_("/Mask _Color..."),  gwy_app_change_mask_color_cb, NULL },
-        { N_("/Fix _Zero"), gwy_app_run_process_func, "fix_zero" },
-        { N_("/Remove _Presentation"), gwy_app_show_kill_cb, NULL },
-        { N_("/_Level"), gwy_app_run_process_func, "level" },
-        { N_("/Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
+        { N_("Remove _Mask"), gwy_app_run_process_func, "mask_remove" },
+        { N_("Mask _Color..."),  gwy_app_change_mask_color_cb, NULL },
+        { N_("Fix _Zero"), gwy_app_run_process_func, "fix_zero" },
+        { N_("Remove _Presentation"), gwy_app_run_process_func, "presentation_remove" },
+        { N_("_Level"), gwy_app_run_process_func, "level" },
+        { N_("Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
-    GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
-    GtkItemFactory *item_factory;
-    gsize i;
+    GwySensitivityGroup *sensgroup;
+    GtkWidget *menu, *item;
+    guint i, mask;
 
     /* XXX: it is probably wrong to use this accel group */
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<data-popup>",
-                                        accel_group);
-#ifdef ENABLE_NLS
-    gtk_item_factory_set_translate_func(item_factory,
-                                        (GtkTranslateFunc)&gettext,
-                                        NULL, NULL);
-#endif
+    menu = gtk_menu_new();
+    if (accel_group)
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    sensgroup = gwy_app_sensitivity_get_group();
     for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
         if (menu_items[i].callback == gwy_app_run_process_func
             && !gwy_process_func_get_run_types((gchar*)menu_items[i].cbdata)) {
-            g_warning("Data processing function <%s> for right-click menu "
-                      "is not available.", (gchar*)menu_items[i].cbdata);
+            g_warning("Data processing function <%s> for "
+                      "data context menu is not available.",
+                      (gchar*)menu_items[i].cbdata);
             continue;
         }
-        entry.path = (gchar*)menu_items[i].path;
-        entry.callback = (GtkItemFactoryCallback)menu_items[i].callback;
-        gtk_item_factory_create_item(item_factory, &entry,
-                                     menu_items[i].cbdata, 1);
+        item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
+        if (menu_items[i].callback == gwy_app_run_process_func) {
+            mask = gwy_process_func_get_sensitivity_mask(menu_items[i].cbdata);
+            gwy_sensitivity_group_add_widget(sensgroup, item, mask);
+        }
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_signal_connect_swapped(item, "activate",
+                                 G_CALLBACK(menu_items[i].callback),
+                                 menu_items[i].cbdata);
     }
 
-    set_sensitivity(item_factory,
-                    "<data-popup>/Remove Mask",         GWY_MENU_FLAG_DATA_MASK,
-                    "<data-popup>/Mask Color...",       GWY_MENU_FLAG_DATA_MASK,
-                    "<data-popup>/Remove Presentation", GWY_MENU_FLAG_DATA_SHOW,
-                    NULL);
-
-    return gtk_item_factory_get_widget(item_factory, "<data-popup>");
+    return menu;
 }
 
 static gboolean
