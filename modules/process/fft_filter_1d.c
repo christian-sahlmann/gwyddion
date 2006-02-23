@@ -451,8 +451,10 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     GwyDataField *dfield;
     GwyDataLine *dline;
     GwyGraphCurveModel *cmodel;
-    gdouble xdata[200];
-    gint i, nofselection;
+    GwyGraphArea *graph_area;
+    //gdouble xdata[200];
+    //gint i
+    gint nofselection;
 
     dline = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
@@ -480,11 +482,10 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
 
-    nofselection =
-gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(controls->graph
-)));
+    graph_area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
+    nofselection = gwy_graph_area_get_selection_number(graph_area);
     if (nofselection != 0)
-gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
+        gwy_graph_area_clear_selection(graph_area);
 
     if (args->update)
         update_view(controls, args);
@@ -497,19 +498,18 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
     gint i, nofselection;
     gdouble beg, end;
     gdouble *selection;
+    GwyGraphArea *graph_area;
+    gint fill_from, fill_to;
 
     /*get graph selection*/
-    nofselection =
-gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(pcontrols->
-graph)));
+    graph_area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)));
+    nofselection = gwy_graph_area_get_selection_number(graph_area);
     if (nofselection == 0) {
         restore_ps(pcontrols, args);
     }
     else {
         selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
-
-gwy_graph_area_get_selection(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)),
-selection);
+        gwy_graph_area_get_selection(graph_area, selection);
 
         /*setup weights for inverse FFT computation*/
         if (args->weights == NULL)
@@ -521,21 +521,17 @@ selection);
             for (i = 0; i < nofselection; i++) {
                 beg = selection[2*i];
                 end = selection[2*i+1];
+                fill_from = MAX(0, gwy_data_line_rtoi(args->weights, beg));
+                fill_from = MIN(args->weights->res, fill_from);
+                fill_to = MIN(args->weights->res,
+                              gwy_data_line_rtoi(args->weights, end));
+
                 if (args->suppress == GWY_FFTF_1D_SUPPRESS_NULL)
                     gwy_data_line_part_fill(args->weights,
-                                            MAX(0,
-gwy_data_line_rtoi(args->weights, beg)),
-                                            MIN(args->weights->res,
-
-gwy_data_line_rtoi(args->weights, end)),
-                                            0);
-                else /*TODO put there at least some linear interpolation*/
+                                            fill_from, fill_to, 0);
+                else /*TODO put here at least some linear interpolation*/
                     gwy_data_line_part_fill(args->weights,
-                                            MAX(0, args->weights->res*beg),
-                                            MIN(args->weights->res,
-                                                args->weights->res*end),
-                                            0.3);
-
+                                            fill_from, fill_to, 0.3);
             }
             if (args->update) update_view(pcontrols, args);
         }
@@ -545,12 +541,15 @@ gwy_data_line_rtoi(args->weights, end)),
             for (i = 0; i < nofselection; i++) {
                 beg = selection[2*i];
                 end = selection[2*i+1];
-                gwy_data_line_part_fill(args->weights,
-                                        MAX(0, gwy_data_line_rtoi(args->weights, beg)),
-                                        MIN(args->weights->res,
-                                            gwy_data_line_rtoi(args->weights, end)),
-                                        1);
+
+                fill_from = MAX(0, gwy_data_line_rtoi(args->weights, beg));
+                fill_from = MIN(args->weights->res, fill_from);
+                fill_to = MIN(args->weights->res,
+                              gwy_data_line_rtoi(args->weights, end));
+
+                gwy_data_line_part_fill(args->weights, fill_from, fill_to, 1);
             }
+
             if (args->update)
                 update_view(pcontrols, args);
         }
@@ -573,7 +572,7 @@ fftf_1d_do(G_GNUC_UNUSED Fftf1dControls *controls,
            Fftf1dArgs *args)
 {
     GwyDataField *rfield;
-    int newid;
+    gint newid;
 
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result,
                             "/0/data"));
