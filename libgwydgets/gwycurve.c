@@ -76,7 +76,7 @@
 //#include <libdraw/gwyrgba.h>
 
 #define RADIUS          3   /* radius of the control points */
-#define MIN_DISTANCE    20   /* min distance between control points */
+#define MIN_DISTANCE    5   /* min distance between control points */
 #define SNAP_THRESH     10   /* maximum distance to allow snap */
 
 
@@ -637,6 +637,7 @@ gwy_curve_motion_notify(GwyCurve *c)
     gint tx, ty, x, y, cx, width, height;
     gint i, j, leftbound, rightbound;
     gfloat rx, ry;
+    gfloat snapx;
     GtkWidget *w;
     GwyChannelData *channel, *channel2;
     gfloat distance, distance2;
@@ -708,7 +709,8 @@ gwy_curve_motion_notify(GwyCurve *c)
                 rx = 0;
             else if (c->grab_point == channel->num_ctlpoints-1)
                 rx = 1;
-            else if (tx <= leftbound + MIN_DISTANCE || tx >= rightbound
+            else if (tx <= leftbound + (2*MIN_DISTANCE)
+                     || tx >= rightbound - MIN_DISTANCE
                      || ty > height + RADIUS * 2 + MIN_DISTANCE
                      || ty < -MIN_DISTANCE)
                 rx = c->min_x - 1.0;
@@ -718,13 +720,13 @@ gwy_curve_motion_notify(GwyCurve *c)
             channel->ctlpoints[c->grab_point].x = rx;
             channel->ctlpoints[c->grab_point].y = ry;
 
-            if (c->snap && rx > 0) {
+            if (c->snap) {
                 /* Look in other channels for closest control point to this
                 one. If it is within the threshold, snap to it.*/
                 for (i=0, distance = 2; i < c->num_channels; i++) {
                     if (i != c->grab_channel) {
                         channel2 = &c->channel_data[i];
-                        for (j=0; j<channel->num_ctlpoints; ++j) {
+                        for (j=0; j<channel2->num_ctlpoints; ++j) {
                             distance2 = fabs(channel2->ctlpoints[j].x - rx);
                             if (distance2 < distance) {
                                 distance = distance2;
@@ -737,8 +739,11 @@ gwy_curve_motion_notify(GwyCurve *c)
                 if (project(distance,c->min_x,c->max_x,width) < SNAP_THRESH) {
                     g_debug("SNAP!");
                     channel2 = &c->channel_data[closest_channel];
-                    channel->ctlpoints[c->grab_point].x =
-                             channel2->ctlpoints[closest_point].x;
+                    snapx = channel2->ctlpoints[closest_point].x;
+
+                    if (channel->ctlpoints[c->grab_point+1].x != snapx
+                        && channel->ctlpoints[c->grab_point-1].x != snapx)
+                        channel->ctlpoints[c->grab_point].x = snapx;
                 }
             }
 
