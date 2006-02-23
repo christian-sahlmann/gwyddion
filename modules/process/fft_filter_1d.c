@@ -49,6 +49,7 @@ enum { MAX_PREV = 200 };
 
 /* Data for this function. */
 typedef struct {
+    GwyContainer *data;
     GwyContainer *original;
     GwyContainer *result;
     GwyContainer *original_vdata;
@@ -196,6 +197,9 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     pcontrols = &controls;
 
     /*#### Copy/Setup Data Containers ####*/
+
+    /* store pointer to data container */
+    args->data = data;
 
     /*setup original container*/
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &orig_dfield,
@@ -568,19 +572,20 @@ static void
 fftf_1d_do(G_GNUC_UNUSED Fftf1dControls *controls,
            Fftf1dArgs *args)
 {
-    GtkWidget *data_window;
     GwyDataField *rfield;
+    int newid;
 
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result,
-                                                                "/0/data"));
+                            "/0/data"));
     gwy_data_field_resample(rfield, args->original_xres, args->original_yres,
                             args->interpolation);
-
-    data_window = gwy_app_data_window_create(args->result);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                     _("Filtered data"));
+    newid = gwy_app_data_browser_add_data_field(rfield, args->data, TRUE);
+    gwy_app_copy_data_items(args->result, args->data, 0, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     g_object_unref(args->result);
-
+    gwy_app_set_data_field_title(args->data, newid, _("1D FFT Filtered Data"));
 }
 
 static void
