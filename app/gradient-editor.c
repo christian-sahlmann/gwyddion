@@ -74,6 +74,8 @@ struct _GwyGradientEditor {
     GtkWidget *markers;
     GtkWidget *preview;
     GdkPixbuf *preview_pixbuf;
+
+    GtkWidget *check_snap;
     GwyRGBA old;
 };
 
@@ -101,6 +103,7 @@ static void gwy_gradient_editor_marker_removed  (GwyGradientEditor *editor,
 static void gwy_resource_editor_gradient_changed(GwyGradientEditor *editor);
 static void gwy_gradient_editor_mode_changed    (GtkWidget *toggle,
                                                  GwyGradientEditor *editor);
+static void gwy_gradient_editor_snap_toggled    (GwyGradientEditor *editor);
 static void gwy_gradient_editor_save_view       (GwyGradientEditor *editor);
 static void gwy_gradient_editor_load_view       (GwyGradientEditor *editor);
 static void gwy_gradient_editor_curve_edited    (GwyGradientEditor *editor);
@@ -252,8 +255,15 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
     }
     editor->mode_group = group;
 
+    editor->check_snap =
+            gtk_check_button_new_with_mnemonic(_("_Snap to control points"));
+    g_signal_connect_swapped(editor->check_snap, "toggled",
+                             G_CALLBACK(gwy_gradient_editor_snap_toggled),
+                             editor);
+    gtk_box_pack_start(GTK_BOX(vbox), editor->check_snap, FALSE, FALSE, 0);
+
     editor->curve = gwy_curve_new();
-    g_object_set(editor->curve, "snap", TRUE, NULL);
+    g_object_set(editor->curve, "snap", FALSE, NULL);
     gwy_curve_set_range(GWY_CURVE(editor->curve), 0, 1, 0, 1);
     colors[0].r = 0.95; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
     colors[1].r = 0; colors[1].g = 0.9; colors[1].b = 0; colors[1].a = 1;
@@ -635,6 +645,8 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
         gwy_gradient_editor_update(editor);
         gtk_widget_set_no_show_all(editor->curve, TRUE);
         gtk_widget_hide(editor->curve);
+        gtk_widget_set_no_show_all(editor->check_snap, TRUE);
+        gtk_widget_hide(editor->check_snap);
         gtk_widget_set_no_show_all(editor->markers, FALSE);
         gtk_widget_show(editor->markers);
         gtk_widget_set_no_show_all(editor->colorsel, FALSE);
@@ -649,6 +661,8 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
         gtk_widget_hide(editor->markers);
         gtk_widget_set_no_show_all(editor->curve, FALSE);
         gtk_widget_show(editor->curve);
+        gtk_widget_set_no_show_all(editor->check_snap, FALSE);
+        gtk_widget_show(editor->check_snap);
         break;
 
         default:
@@ -658,25 +672,43 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
 }
 
 static void
+gwy_gradient_editor_snap_toggled(GwyGradientEditor *editor)
+{
+    gboolean snap;
+
+    snap = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(editor->check_snap));
+    g_object_set(editor->curve, "snap", snap, NULL);
+}
+
+static void
 gwy_gradient_editor_save_view(GwyGradientEditor *editor)
 {
     GwyResourceClass *klass;
     GwyContainer *settings;
     EditingMode mode;
     const gchar *name;
-    GString *key;
+    GString *key1, *key2;
+    gboolean snap;
+
+    snap = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(editor->check_snap));
 
     klass = g_type_class_ref(GWY_TYPE_GRADIENT);
     name = gwy_resource_class_get_name(klass);
     g_type_class_unref(klass);
 
-    key = g_string_new("");
-    g_string_printf(key, "/app/%s/editor/mode", name);
+    key1 = g_string_new("");
+    g_string_printf(key1, "/app/%s/editor/mode", name);
+
+    key2 = g_string_new("");
+    g_string_printf(key2, "/app/%s/editor/snap", name);
 
     settings = gwy_app_settings_get();
     mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
-    gwy_container_set_enum_by_name(settings, key->str, mode);
-    g_string_free(key, TRUE);
+    gwy_container_set_enum_by_name(settings, key1->str, mode);
+    gwy_container_set_boolean_by_name(settings, key2->str, snap);
+
+    g_string_free(key1, TRUE);
+    g_string_free(key2, TRUE);
 }
 
 static void
@@ -686,23 +718,31 @@ gwy_gradient_editor_load_view(GwyGradientEditor *editor)
     GwyContainer *settings;
     EditingMode mode;
     const gchar *name;
-    GString *key;
+    GString *key1, *key2;
+    gboolean snap;
 
     klass = g_type_class_ref(GWY_TYPE_GRADIENT);
     name = gwy_resource_class_get_name(klass);
     g_type_class_unref(klass);
 
-    key = g_string_new("");
-    g_string_printf(key, "/app/%s/editor/mode", name);
+    key1 = g_string_new("");
+    g_string_printf(key1, "/app/%s/editor/mode", name);
+
+    key2 = g_string_new("");
+    g_string_printf(key2, "/app/%s/editor/snap", name);
 
     settings = gwy_app_settings_get();
     mode = EDITING_MODE_POINTS;
-    gwy_container_gis_enum_by_name(settings, key->str, &mode);
-    g_string_free(key, TRUE);
+    snap = FALSE;
+    gwy_container_gis_enum_by_name(settings, key1->str, &mode);
+    gwy_container_gis_boolean_by_name(settings, key2->str, &snap);
+    g_string_free(key1, TRUE);
+    g_string_free(key2, TRUE);
 
     gwy_radio_buttons_set_current(editor->mode_group, "editing-mode", mode);
     /* The button doesn't emit anything when it's already in the right state. */
     gwy_gradient_editor_mode_changed(NULL, editor);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(editor->check_snap), snap);
 }
 
 /************************** Documentation ****************************/
