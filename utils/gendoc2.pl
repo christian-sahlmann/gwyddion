@@ -70,8 +70,9 @@ foreach my $dir (glob "*") {
         s#\s+cellspacing=".*?"##sg;
         s#<meta name="generator".*?>##sgi;
         s#<hr\s*/>\n##sgi;
-        # Change .html links to .php, unless they are to local gtk-doc docs
-        s#href="([^/][^"]*)\.html\b#href="$1.php#sg;
+        # Change .html links to .php, unless they are to local gtk-doc docs or
+        # to external URIs
+        s#href="((?!/|http:)[^"]*)\.html\b#href="$1.php#sg;
         # Add navigation
         my $add_topnote = s#<table class="navigation" width="100%"\s*>\s*<tr>\s*<th valign="middle">\s*<p class="title">(.*?)</p>\s*</th>\s*</tr>\s*</table>\s*<hr\s*/>#<h1>$1</h1>#sg;
         s#<h2><span class="refentrytitle">(.*?)</span></h2>#<h1>$1</h1>#s;
