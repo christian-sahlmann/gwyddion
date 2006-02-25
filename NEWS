@@ -1,4 +1,4 @@
-1.99.5cvs20060214
+1.99.5cvs20060225
 
 1.99.6
 Application:
@@ -36,6 +36,7 @@ Libraries:
 - libgwydgets: GwyDataView supports 1:1 aspect ratio in real dimensions.
 - libgwyprocess: FFT functions offer more leveling choices, line-wise leveling
   was fixed.
+- libgwyprocess: Polynomial leveling using Legendre polynomials was added.
 
 Modules:
 - All: Feature registration has changed, more, less, or different information
@@ -46,13 +47,15 @@ Modules:
 - Rawfile: It is possible to switch off automatic import of uknown files as
   raw data, presets are stored in external files, a few GUI fixes.
 - BCR file: Handling of void pixels was improved (bug #67).
-- Polynomial level: It has a preview now.
+- Polynomial level: It has a preview now, maximum degree was increased.
 - FFT: Subtract mean value preprocession option was added, correct resampled
   image size is displayed also when FFTW is used.
 - Rotate 90 deg CW, Rotate 90 deg CCW: Data are changed in place now.
 - Mark, remove scars: It is possible to mark positive and negative at once.
 - Layer modules: Support for focusing one object was added, nearest object
   search in ellipse and rectangle was fixed.
+- Pixmap: Odd preview of images with an alpha channel was fixed, full support
+  for alpha channel added.
 
 
 1.99.5 (2005-12-20)
