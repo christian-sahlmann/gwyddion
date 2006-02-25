@@ -31,9 +31,7 @@
 
 enum {
     PREVIEW_SIZE = 120,
-    /* Polynomial fitting is numerically unstable, use Legendre polynomials
-     * or something like that */
-    MAX_DEGREE = 5
+    MAX_DEGREE = 12
 };
 
 typedef struct {
@@ -95,7 +93,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -155,12 +153,12 @@ poly_level_do(GwyContainer *data,
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    coeffs = gwy_data_field_area_fit_polynom(dfield, 0, 0, xres, yres,
-                                             args->col_degree, args->row_degree,
-                                             NULL);
-    gwy_data_field_area_subtract_polynom(dfield, 0, 0, xres, yres,
+    coeffs = gwy_data_field_fit_legendre(dfield,
                                          args->col_degree, args->row_degree,
-                                         coeffs);
+                                         NULL);
+    gwy_data_field_subtract_legendre(dfield,
+                                     args->col_degree, args->row_degree,
+                                     coeffs);
     gwy_data_field_data_changed(dfield);
 
     if (!args->do_extract) {
@@ -169,12 +167,12 @@ poly_level_do(GwyContainer *data,
     }
 
     dfield = gwy_data_field_new_alike(dfield, TRUE);
-    /* Invert coeffs, we do not have anything like add_polynom() */
+    /* Invert coeffs, we do not have anything like add_polynomial() */
     for (i = 0; i < (args->col_degree + 1)*(args->row_degree + 1); i++)
         coeffs[i] = -coeffs[i];
-    gwy_data_field_area_subtract_polynom(dfield, 0, 0, xres, yres,
-                                         args->col_degree, args->row_degree,
-                                         coeffs);
+    gwy_data_field_subtract_legendre(dfield,
+                                     args->col_degree, args->row_degree,
+                                     coeffs);
     g_free(coeffs);
 
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
@@ -419,16 +417,23 @@ poly_level_degree_changed(GtkObject *spin,
 {
     PolyLevelArgs *args;
     gdouble v;
+    gint degree;
+    gboolean update;
 
     if (controls->in_update)
         return;
 
     args = controls->args;
     v = gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
-    if (spin == controls->col_degree)
-        args->col_degree = ROUND(v);
-    else
-        args->row_degree = ROUND(v);
+    degree = ROUND(v);
+    if (spin == controls->col_degree) {
+        update = args->col_degree != degree;
+        args->col_degree = degree;
+    }
+    else {
+        update = args->row_degree != degree;
+        args->row_degree = degree;
+    }
 
     if (!args->same_degree) {
         poly_level_update_preview(controls, controls->args);
@@ -452,7 +457,8 @@ poly_level_degree_changed(GtkObject *spin,
               gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->row_degree)),
               args->row_degree);
 
-    poly_level_update_preview(controls, controls->args);
+    if (update)
+        poly_level_update_preview(controls, controls->args);
     controls->in_update = FALSE;
 }
 
@@ -470,23 +476,23 @@ poly_level_update_preview(PolyLevelControls *controls,
 
     xres = gwy_data_field_get_xres(source);
     yres = gwy_data_field_get_yres(source);
-    coeffs = gwy_data_field_area_fit_polynom(source, 0, 0, xres, yres,
-                                             args->col_degree, args->row_degree,
-                                             NULL);
+    coeffs = gwy_data_field_fit_legendre(source,
+                                         args->col_degree, args->row_degree,
+                                         NULL);
 
     gwy_data_field_copy(source, leveled, FALSE);
-    gwy_data_field_area_subtract_polynom(leveled, 0, 0, xres, yres,
-                                         args->col_degree, args->row_degree,
-                                         coeffs);
+    gwy_data_field_subtract_legendre(leveled,
+                                     args->col_degree, args->row_degree,
+                                     coeffs);
     gwy_data_field_data_changed(leveled);
 
     for (i = 0; i < (args->col_degree + 1)*(args->row_degree + 1); i++)
         coeffs[i] = -coeffs[i];
 
     gwy_data_field_clear(bg);
-    gwy_data_field_area_subtract_polynom(bg, 0, 0, xres, yres,
-                                         args->col_degree, args->row_degree,
-                                         coeffs);
+    gwy_data_field_subtract_legendre(bg,
+                                     args->col_degree, args->row_degree,
+                                     coeffs);
     gwy_data_field_data_changed(bg);
 
     g_free(coeffs);
