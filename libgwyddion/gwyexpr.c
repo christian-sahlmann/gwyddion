@@ -1708,10 +1708,10 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * Expression with variables have to be compiled first with gwy_expr_compile().
  * Then either gwy_expr_resolve_variables() or gwy_expr_get_variables() can be
  * used to obtain information what variables are present in the expression and
- * at which positions (variables are references by position, not name during
+ * at which positions (variables are referenced by position, not name during
  * final evaluation because of effieiency reasons). Subsequent evaluation with
- * variable substitution is performed by gwy_expr_execute(). Eventually,
- * expression can be evaluated on each item of value arrays by
+ * variable substitution is performed by gwy_expr_execute(). It is also
+ * possible to evaluate expression on each item of value arrays with
  * gwy_expr_vector_execute().
  *
  * One-shot evaluation of expressions without variables is easy:
@@ -1774,8 +1774,8 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * }
  * <!-- Hello, gtk-doc! -->
  * /<!-- -->* Resolve variables *<!-- -->/
- * if (!gwy_expr_resolve_variables(expr, G_N_ELEMENTS(var_names),
- *                                 var_names, var_positions)) {
+ * if (gwy_expr_resolve_variables(expr, G_N_ELEMENTS(var_names),
+ *                                var_names, var_positions)) {
  *     /<!-- -->* Expression contains unknown variables *<!-- -->/
  * }
  * <!-- Hello, gtk-doc! -->
