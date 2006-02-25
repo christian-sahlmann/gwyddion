@@ -790,6 +790,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                                     MAX(zoom*xres, 1),
                                                     MAX(zoom*yres, 1),
                                                     GDK_INTERP_TILES);
+    gwy_debug_objects_creation(G_OBJECT(controls.small_pixbuf));
     data = gwy_container_new();
     controls.view = gwy_data_view_new(data);
     g_object_unref(data);
@@ -913,6 +914,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             pixmap_load_update_values(&controls, args);
             gtk_widget_destroy(dialog);
+            g_object_unref(controls.small_pixbuf);
             case GTK_RESPONSE_NONE:
             return FALSE;
             break;
@@ -933,6 +935,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
 
     pixmap_load_update_values(&controls, args);
     gtk_widget_destroy(dialog);
+    g_object_unref(controls.small_pixbuf);
 
     return TRUE;
 }
