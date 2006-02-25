@@ -684,30 +684,6 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL 
         },
         {
-            N_("/Remove _Mask"),
-            "<control>K",
-            gwy_app_mask_kill_cb,
-            0,
-            NULL,
-            NULL 
-        },
-        {
-            N_("/Remove _Presentation"),
-            "<control><shift>K",
-            gwy_app_show_kill_cb,
-            0,
-            NULL,
-            NULL 
-        },
-        {
-            "/---",
-            NULL,
-            NULL,
-            0,
-            "<Separator>",
-            NULL 
-        },
-        {
             N_("/Mask _Color..."),
             NULL,
             gwy_app_change_mask_color_cb,

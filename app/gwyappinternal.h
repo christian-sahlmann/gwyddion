@@ -22,7 +22,6 @@
 #define __GWY_APP_INTERNAL_H__
 
 #include <gtk/gtkwidget.h>
-#include <libgwymodule/gwymodule-process.h>
 
 G_BEGIN_DECLS
 
@@ -36,8 +35,6 @@ void         gwy_app_tool_use_cb                 (const gchar *toolname,
                                                   GtkWidget *button);
 void         gwy_app_zoom_set_cb                 (gpointer data);
 void         gwy_app_3d_view_cb                  (void);
-void         gwy_app_mask_kill_cb                (void);
-void         gwy_app_show_kill_cb                (void);
 void         gwy_app_change_mask_color_cb        (void);
 void         gwy_app_change_default_mask_color_cb(void);
 

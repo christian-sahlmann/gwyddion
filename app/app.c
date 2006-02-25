@@ -19,8 +19,8 @@
  */
 
 #include "config.h"
-#include <stdarg.h>
 #include <string.h>
+#include <gdk/gdkkeysyms.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>
@@ -421,7 +421,14 @@ gwy_app_data_window_setup(GwyDataWindow *data_window)
     GwyDataView *data_view;
 
     if (!popup_menu) {
-        popup_menu = gwy_app_menu_data_popup_create(NULL);
+        GtkWidget *main_window;
+        GtkAccelGroup *accel_group;
+
+        main_window = gwy_app_main_window_get();
+        g_return_if_fail(GTK_IS_WINDOW(main_window));
+        accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
+                                                        "accel_group"));
+        popup_menu = gwy_app_menu_data_popup_create(accel_group);
         gtk_widget_show_all(popup_menu);
     }
 
@@ -987,17 +994,38 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         const gchar *label;
         gpointer callback;
         gpointer cbdata;
+        guint key;
+        GdkModifierType mods;
     }
     const menu_items[] = {
-        { N_("Remove _Mask"), gwy_app_run_process_func, "mask_remove" },
-        { N_("Mask _Color..."),  gwy_app_change_mask_color_cb, NULL },
-        { N_("Fix _Zero"), gwy_app_run_process_func, "fix_zero" },
-        { N_("Remove _Presentation"), gwy_app_run_process_func, "presentation_remove" },
-        { N_("_Level"), gwy_app_run_process_func, "level" },
-        { N_("Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
+        {
+            NULL, gwy_app_run_process_func,
+            "mask_remove", GDK_K, GDK_CONTROL_MASK
+        },
+        {
+            N_("Mask _Color..."),  gwy_app_change_mask_color_cb,
+            NULL, 0, 0
+        },
+        {
+            NULL, gwy_app_run_process_func,
+            "fix_zero", 0, 0
+        },
+        {
+            NULL, gwy_app_run_process_func,
+            "presentation_remove", GDK_K, GDK_CONTROL_MASK | GDK_SHIFT_MASK
+        },
+        {
+            NULL, gwy_app_run_process_func,
+            "level", GDK_L, GDK_CONTROL_MASK
+        },
+        {
+            N_("Zoom _1:1"), gwy_app_zoom_set_cb,
+            GINT_TO_POINTER(10000), 0, 0
+        },
     };
     GwySensitivityGroup *sensgroup;
     GtkWidget *menu, *item;
+    const gchar *name;
     guint i, mask;
 
     /* XXX: it is probably wrong to use this accel group */
@@ -1008,16 +1036,30 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
         if (menu_items[i].callback == gwy_app_run_process_func
             && !gwy_process_func_get_run_types((gchar*)menu_items[i].cbdata)) {
-            g_warning("Data processing function <%s> for "
-                      "data context menu is not available.",
+            g_warning("Processing function <%s> for "
+                      "data view context menu is not available.",
                       (gchar*)menu_items[i].cbdata);
             continue;
         }
-        item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
         if (menu_items[i].callback == gwy_app_run_process_func) {
+            name = _(gwy_process_func_get_menu_path(menu_items[i].cbdata));
+            name = strrchr(name, '/');
+            if (!name) {
+                g_warning("Invalid translated menu path for <%s>",
+                          (const gchar*)menu_items[i].cbdata);
+                continue;
+            }
+            item = gtk_menu_item_new_with_mnemonic(name + 1);
             mask = gwy_process_func_get_sensitivity_mask(menu_items[i].cbdata);
             gwy_sensitivity_group_add_widget(sensgroup, item, mask);
         }
+        else
+            item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
+
+        if (menu_items[i].key)
+            gtk_widget_add_accelerator(item, "activate", accel_group,
+                                       menu_items[i].key, menu_items[i].mods,
+                                       GTK_ACCEL_VISIBLE | GTK_ACCEL_LOCKED);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_signal_connect_swapped(item, "activate",
                                  G_CALLBACK(menu_items[i].callback),
@@ -1229,45 +1271,6 @@ gwy_app_change_default_mask_color_cb(void)
 {
     gwy_color_selector_for_mask(_("Change Default Mask Color"),
                                 NULL, gwy_app_settings_get(), "/mask");
-}
-
-/* FIXME: this functionality is provided by modules now -- remove? */
-void
-gwy_app_mask_kill_cb(void)
-{
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    GwyContainer *data;
-
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(data_view);
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        gwy_container_remove_by_name(data, "/0/mask");
-    }
-}
-
-void
-gwy_app_show_kill_cb(void)
-{
-    GwyLayerBasic *layer;
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    GwyContainer *data;
-    const gchar *key;
-
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(data_window);
-    layer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
-    if (gwy_layer_basic_get_has_presentation(layer)) {
-        key = gwy_layer_basic_get_presentation_key(layer);
-        data = gwy_data_view_get_data(data_view);
-        gwy_app_undo_checkpoint(data, key, NULL);
-        gwy_container_remove_by_name(data, key);
-    }
 }
 
 /**
