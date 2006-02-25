@@ -560,6 +560,8 @@ printf("%d %d %d %d\n",                        MAX(0, -min), 0,
     if (crop)
         gwy_data_field_resize(corrected_field, MAX(0, -min), 0, 
                               MIN(newxres, gwy_data_field_get_xres(data_field) - max), gwy_data_field_get_yres(data_field));
+
+    return corrected_field;
 }
 
 

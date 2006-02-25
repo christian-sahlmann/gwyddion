@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+#include <app/data-browser.h>
 #include <app/unitool.h>
 
 #define CHECK_LAYER_TYPE(l) \
@@ -414,15 +415,17 @@ apply(GwyUnitoolState *state)
     ToolControls *controls;
     GtkWidget *graph;
     GwyGraphModel *gmodel;
+    GwyDataViewLayer *layer;
+    GwyContainer *data;
 
     controls = (ToolControls*)state->user_data;
-
     gmodel = gwy_graph_model_duplicate(controls->graphmodel);
-    graph = gwy_graph_new(gmodel);
-    g_object_unref(gmodel);
 
-    gwy_app_graph_window_create(GWY_GRAPH(graph),
-                                gwy_data_window_get_data(state->data_window));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+        
+    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+    g_object_unref(gmodel);
 }
 
 static void

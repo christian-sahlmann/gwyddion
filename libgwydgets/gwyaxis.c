@@ -240,7 +240,7 @@ gwy_axis_finalize(GObject *object)
     g_array_free(axis->mjticks, TRUE);
     g_array_free(axis->miticks, TRUE);
 
-    gwy_object_unref(axis->unit);
+    if (axis->unit) gwy_object_unref(axis->unit);
     gwy_object_unref(axis->gc);
 
     g_free(axis->par.major_font);
@@ -1403,7 +1403,6 @@ gwy_axis_get_label(GwyAxis *axis)
 {
     return axis->label_text;
 }
-
 /**
  * gwy_axis_set_unit:
  * @axis: axis widget
@@ -1415,7 +1414,9 @@ gwy_axis_get_label(GwyAxis *axis)
 void
 gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 {
-    gwy_object_unref(axis->unit);
+    if (axis->unit && gwy_si_unit_equal(axis->unit, unit)) return;
+
+    if (axis->unit) gwy_object_unref(axis->unit);
     axis->unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
     axis->has_unit = 1;
     gtk_widget_queue_draw(GTK_WIDGET(axis));

@@ -21,7 +21,6 @@
 #include "config.h"
 #include <gtk/gtkmain.h>
 #include <glib-object.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "gwygraph.h"

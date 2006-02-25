@@ -29,6 +29,7 @@
 #include <app/settings.h>
 #include <app/app.h>
 #include <app/unitool.h>
+#include <app/data-browser.h>
 
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
@@ -451,9 +452,11 @@ apply(GwyUnitoolState *state)
     ToolControls *controls;
     GwyGraphCurveModel *gcmodel;
     GwySelection *selection;
-    GwyContainer *data;
     GtkWidget *graph;
     GwyGraphModel *model;
+    GwyDataViewLayer *layer;
+    GwyContainer *data;
+        
     gint i, j, nselected;
 
     controls = (ToolControls*)state->user_data;
@@ -461,6 +464,9 @@ apply(GwyUnitoolState *state)
     nselected = gwy_selection_get_data(selection, NULL);
     if (!nselected)
         return;
+
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
 
     j = 0;
     data = gwy_data_window_get_data(state->data_window);
@@ -473,17 +479,15 @@ apply(GwyUnitoolState *state)
             gwy_graph_model_set_title(model,
                                       ((GString*)controls->str->pdata[i])->str);
 
-            graph = gwy_graph_new(model);
+            gwy_app_data_browser_add_graph_model(model, data, TRUE);
             g_object_unref(model);
-            gwy_app_graph_window_create(GWY_GRAPH(graph), data);
 
         }
     }
     else {
         model = gwy_graph_model_duplicate(controls->graphmodel);
-        graph = gwy_graph_new(model);
+        gwy_app_data_browser_add_graph_model(model, data, TRUE);
         g_object_unref(model);
-        gwy_app_graph_window_create(GWY_GRAPH(graph), data);
     }
 }
 

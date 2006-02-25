@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <stdio.h>
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -302,7 +303,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
                      "selected", G_CALLBACK(graph_selected), &controls);
 
     gtk_widget_show_all(dialog);
-    //fractal_dialog_update(&controls, args, data);
+    fractal_dialog_recompute(&controls, args, data);
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -409,10 +410,8 @@ ok_cb(FractalArgs *args,
     GtkWidget *graph;
     GwyDataWindow *data_window;
 
-    graph = gwy_graph_new(controls->graph_model);
     update_graph(args, controls, data);
-    data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+    gwy_app_data_browser_add_graph_model(controls->graph_model, data, TRUE);
 }
 
 static gboolean

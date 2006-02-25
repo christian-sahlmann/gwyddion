@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/dwt.h>
 #include <libprocess/stats.h>
+#include <stdio.h>
 
 typedef struct {
     gint ncof;
@@ -196,10 +197,8 @@ gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
  * @minsize = @dline->res/2 to perform one step of decomposition
  * or @minsize = 4 to perform full decomposition (or anything between).
  *
- * Returns: Transformed data line, that is @dline itself.
- *          XXX Why? XXX
  **/
-GwyDataLine*
+void
 gwy_data_line_dwt(GwyDataLine *dline,
                   GwyDataLine *wt_coefs,
                   GwyTransformDirection direction,
@@ -207,16 +206,14 @@ gwy_data_line_dwt(GwyDataLine *dline,
 {
     GwyDWTFilter *wt;
 
-    g_return_val_if_fail(GWY_IS_DATA_LINE(dline), NULL);
-    g_return_val_if_fail(dline->res >= 4, NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(wt_coefs), NULL);
+    g_return_if_fail(GWY_IS_DATA_LINE(dline));
+    g_return_if_fail(dline->res >= 4);
+    g_return_if_fail(GWY_IS_DATA_LINE(wt_coefs));
 
     wt = wtset_new(wt_coefs);
     wt->wksp = gwy_data_line_new(dline->res+1, dline->res+1, FALSE);
     gwy_data_line_dwt_real(dline, wt, direction, minsize);
     wtset_free(wt);
-
-    return dline;
 }
 
 /**
@@ -232,10 +229,8 @@ gwy_data_line_dwt(GwyDataLine *dline,
  * @minsize = @dfield->xres/2 to perform one step of decomposition
  * or @minsize = 4 to perform full decomposition (or anything between).
  *
- * Returns: Transformed data field (that is @dfield itself).
- *          XXX Why? XXX
  **/
-GwyDataField*
+void
 gwy_data_field_xdwt(GwyDataField *dfield,
                     GwyDataLine *wt_coefs,
                     GwyTransformDirection direction,
@@ -245,8 +240,8 @@ gwy_data_field_xdwt(GwyDataField *dfield,
     GwyDataLine *rin;
     gint k;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(wt_coefs), NULL);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_LINE(wt_coefs));
 
     rin = gwy_data_line_new(dfield->xres, dfield->xreal, FALSE);
     wt = wtset_new(wt_coefs);
@@ -261,7 +256,6 @@ gwy_data_field_xdwt(GwyDataField *dfield,
     g_object_unref(rin);
     wtset_free(wt);
 
-    return dfield;
 }
 
 /**
@@ -277,10 +271,8 @@ gwy_data_field_xdwt(GwyDataField *dfield,
  * @minsize = @dfield->yres/2 to perform one step of decomposition
  * or @minsize = 4 to perform full decomposition (or anything between).
  *
- * Returns: Transformed data field (that is @dfield itself).
- *          XXX Why? XXX
  **/
-GwyDataField*
+void
 gwy_data_field_ydwt(GwyDataField *dfield,
                     GwyDataLine *wt_coefs,
                     GwyTransformDirection direction,
@@ -290,8 +282,8 @@ gwy_data_field_ydwt(GwyDataField *dfield,
     GwyDataLine *rin;
     gint k;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(wt_coefs), NULL);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_LINE(wt_coefs));
 
     rin = gwy_data_line_new(dfield->yres, dfield->yreal, FALSE);
     wt = wtset_new(wt_coefs);
@@ -306,7 +298,6 @@ gwy_data_field_ydwt(GwyDataField *dfield,
     g_object_unref(rin);
     wtset_free(wt);
 
-    return dfield;
 }
 
 /**
@@ -322,10 +313,8 @@ gwy_data_field_ydwt(GwyDataField *dfield,
  * @minsize = @dfield->xres/2 to perform one step of decomposition
  * or @minsize = 4 to perform full decomposition (or anything between).
  *
- * Returns: Transformed data field (that is @dfield itself).
- *          XXX Why? XXX
  **/
-GwyDataField*
+void
 gwy_data_field_dwt(GwyDataField *dfield,
                    GwyDataLine *wt_coefs,
                    GwyTransformDirection direction,
@@ -335,9 +324,9 @@ gwy_data_field_dwt(GwyDataField *dfield,
     GwyDataLine *rin;
     gint nn, k;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(wt_coefs), NULL);
-    g_return_val_if_fail(dfield->xres == dfield->yres, NULL);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_LINE(wt_coefs));
+    g_return_if_fail(dfield->xres == dfield->yres);
 
     rin = gwy_data_line_new(dfield->xres, dfield->xreal, FALSE);
     wt = wtset_new(wt_coefs);
@@ -381,8 +370,6 @@ gwy_data_field_dwt(GwyDataField *dfield,
 
     g_object_unref(rin);
     wtset_free(wt);
-
-    return dfield;
 }
 
 /**
@@ -400,10 +387,8 @@ gwy_data_field_dwt(GwyDataField *dfield,
  * (obtained from high scale wvelet coefficients). This threshold can
  * be multiplied by user defined value.
  *
- * Returns: Denoised data field (that is @dfield itself).
- *          XXX Why? XXX
  **/
-GwyDataField*
+void
 gwy_data_field_dwt_denoise(GwyDataField *dfield,
                            GwyDataLine *wt_coefs,
                            gboolean hard,
@@ -413,12 +398,12 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
     gint br, ul, ulcol, ulrow, brcol, brrow, count;
     gdouble median, noise_variance, threshold;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(wt_coefs), NULL);
-    g_return_val_if_fail(dfield->xres == dfield->yres, NULL);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_LINE(wt_coefs));
+    g_return_if_fail(dfield->xres == dfield->yres);
 
-    gwy_data_field_dwt(dfield, wt_coefs, GWY_TRANSFORM_DIRECTION_FORWARD, 4);
-
+    gwy_data_field_ydwt(dfield, wt_coefs, GWY_TRANSFORM_DIRECTION_FORWARD, 4);
+/*
     ulcol = dfield->xres/2; ulrow = dfield->xres/2;
     brcol = dfield->xres; brrow = dfield->xres;
 
@@ -444,20 +429,20 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
         brrow = br;
         switch (type) {
             case GWY_DWT_DENOISE_SCALE_ADAPTIVE:
-            count = remove_by_threshold(dfield,
+            count += remove_by_threshold(dfield,
                                         ulcol, ulrow, brcol, brrow,
                                         hard, multiple_threshold,
                                         noise_variance);
             break;
 
             case GWY_DWT_DENOISE_UNIVERSAL:
-            count = remove_by_universal_threshold(dfield,
+            count += remove_by_universal_threshold(dfield,
                                                   ulcol, ulrow, brcol, brrow,
                                                   hard, threshold);
             break;
 
             case GWY_DWT_DENOISE_SPACE_ADAPTIVE:
-            count = remove_by_adaptive_threshold(dfield,
+            count += remove_by_adaptive_threshold(dfield,
                                                  ulcol, ulrow, brcol, brrow,
                                                  hard, multiple_threshold,
                                                  noise_variance);
@@ -474,20 +459,20 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
         brrow = br;
         switch (type){
             case GWY_DWT_DENOISE_SCALE_ADAPTIVE:
-            count = remove_by_threshold(dfield,
+            count += remove_by_threshold(dfield,
                                         ulcol, ulrow, brcol, brrow,
                                         hard, multiple_threshold,
                                         noise_variance);
             break;
 
             case GWY_DWT_DENOISE_UNIVERSAL:
-            count = remove_by_universal_threshold(dfield,
+            count += remove_by_universal_threshold(dfield,
                                                   ulcol, ulrow, brcol, brrow,
                                                   hard, threshold);
             break;
 
             case GWY_DWT_DENOISE_SPACE_ADAPTIVE:
-            count = remove_by_adaptive_threshold(dfield,
+            count += remove_by_adaptive_threshold(dfield,
                                                  ulcol, ulrow, brcol, brrow,
                                                  hard, multiple_threshold,
                                                  noise_variance);
@@ -504,20 +489,20 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
         brrow = ul;
         switch (type){
             case GWY_DWT_DENOISE_SCALE_ADAPTIVE:
-            count = remove_by_threshold(dfield,
+            count += remove_by_threshold(dfield,
                                         ulcol, ulrow, brcol, brrow,
                                         hard, multiple_threshold,
                                         noise_variance);
             break;
 
             case GWY_DWT_DENOISE_UNIVERSAL:
-            count = remove_by_universal_threshold(dfield,
+            count += remove_by_universal_threshold(dfield,
                                                   ulcol, ulrow, brcol, brrow,
                                                   hard, threshold);
             break;
 
             case GWY_DWT_DENOISE_SPACE_ADAPTIVE:
-            count = remove_by_adaptive_threshold(dfield,
+            count += remove_by_adaptive_threshold(dfield,
                                                  ulcol, ulrow, brcol, brrow,
                                                  hard, multiple_threshold,
                                                  noise_variance);
@@ -529,9 +514,9 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
         }
 
     }
-
-    gwy_data_field_dwt(dfield, wt_coefs, GWY_TRANSFORM_DIRECTION_BACKWARD, 4);
-    return dfield;
+*/
+    gwy_data_field_ydwt(dfield, wt_coefs, GWY_TRANSFORM_DIRECTION_BACKWARD, 4);
+  //  printf("coutn: %d\n", count);
 }
 
 
@@ -547,10 +532,8 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
  * @minsize = @dfield->xres/2 to perform one step of decomposition
  * or @minsize = 4 to perform full decomposition (or anything between).
  *
- * Returns: Transformed data field (that is @dfield itself).
- *          XXX Why? XXX
  **/
-GwyDataField*
+void
 gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
                                    GwyDataField *mask,
                                    GwyDataLine *wt_coefs,
@@ -560,10 +543,10 @@ gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
     GwyDataField *buffer;
     gint br, ul, count;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(wt_coefs), NULL);
-    g_return_val_if_fail(dfield->xres == dfield->yres, NULL);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_FIELD(mask));
+    g_return_if_fail(GWY_IS_DATA_LINE(wt_coefs));
+    g_return_if_fail(dfield->xres == dfield->yres);
 
     buffer = gwy_data_field_duplicate(dfield);
     gwy_data_field_clear(mask);
@@ -576,7 +559,6 @@ gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
     }
 
     g_object_unref(buffer);
-    return mask;
 }
 
 /*private functions*/

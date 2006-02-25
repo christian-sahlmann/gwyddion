@@ -145,6 +145,7 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
+    printf("%d\n", wtcoefs->res);
     gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 20, args.method);
 
     if (args.preserve)

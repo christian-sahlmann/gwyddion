@@ -30,31 +30,31 @@ G_BEGIN_DECLS
 GwyDataLine*  gwy_dwt_set_coefficients(GwyDataLine *dline,
                                        GwyDWTType type);
 
-GwyDataLine*  gwy_data_line_dwt(GwyDataLine *dline,
+void gwy_data_line_dwt(GwyDataLine *dline,
                                 GwyDataLine *wt_coefs,
                                 GwyTransformDirection direction,
                                 gint minsize);
 
-GwyDataField* gwy_data_field_xdwt(GwyDataField *dfield,
+void gwy_data_field_xdwt(GwyDataField *dfield,
                                   GwyDataLine *wt_coefs,
                                   GwyTransformDirection direction,
                                   gint minsize);
-GwyDataField* gwy_data_field_ydwt(GwyDataField *dfield,
+void gwy_data_field_ydwt(GwyDataField *dfield,
                                   GwyDataLine *wt_coefs,
                                   GwyTransformDirection direction,
                                   gint minsize);
-GwyDataField* gwy_data_field_dwt(GwyDataField *dfield,
+void gwy_data_field_dwt(GwyDataField *dfield,
                                  GwyDataLine *wt_coefs,
                                  GwyTransformDirection direction,
                                  gint minsize);
 
-GwyDataField* gwy_data_field_dwt_denoise(GwyDataField *dfield,
+void gwy_data_field_dwt_denoise(GwyDataField *dfield,
                                          GwyDataLine *wt_coefs,
                                          gboolean hard,
                                          gdouble multiple_threshold,
                                          GwyDWTDenoiseType type);
 
-GwyDataField* gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
+void gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
                                                  GwyDataField *mask,
                                                  GwyDataLine *wt_coefs,
                                                  gdouble ratio,

@@ -23,7 +23,6 @@
 #include <gtk/gtksignal.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-
 #include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
 #include "gwyvectorlayer.h"
@@ -818,6 +817,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             selection_areadata[3] = dy;
 
          gwy_selection_set_object(GWY_SELECTION(area->areasdata), GWY_SELECTION(area->areasdata)->n - 1, selection_areadata);
+         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)

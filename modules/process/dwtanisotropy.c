@@ -162,7 +162,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 
     /*justo for sure clamp the lowlimit again*/
     limit = pow(2, CLAMP(args.lowlimit, 1, 20));
-    mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio,
+    gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio,
                                               limit);
 
     gwy_data_field_resample(mask, xsize, ysize, GWY_INTERPOLATION_BILINEAR);
@@ -208,7 +208,7 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "", controls.wavelet);
 
     controls.ratio = gtk_adjustment_new(args->ratio,
-                                        0.0001, 10.0, 0.01, 0.1, 0);
+                                        0.0001, 10.0, 1, 0.1, 0);
     spin = gwy_table_attach_spinbutton(table, 3,
                                        _("X/Y ratio threshold:"), NULL,
                                        controls.ratio);

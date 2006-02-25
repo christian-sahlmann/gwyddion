@@ -24,7 +24,6 @@
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
 #include "stats.h"
-
 /*
  * @data_field: A data field.
  * @xresult: X-values for log-log plot.
@@ -51,20 +50,20 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
 
     buffer = gwy_data_field_new_resampled(data_field, xnewres, xnewres,
                                           interpolation);
-    gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(xresult, dimexp-1, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(yresult, dimexp-1, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(yresult);
 
-    for (l = 0; l < dimexp; l++) {
+    for (l = 1; l < dimexp; l++) {
         rp = ROUND(pow(2, l));
         for (i = 0; i < ((buffer->xres - 1)/rp - 1); i++) {
             for (j = 0; j < ((buffer->yres - 1)/rp - 1); j++) {
                 rms = gwy_data_field_area_get_rms(buffer, i*rp, j*rp, rp, rp);
-                yresult->data[l] += rms * rms;
+                yresult->data[l-1] += rms * rms;
             }
         }
-        xresult->data[l] = log(rp);
-        yresult->data[l] = log(yresult->data[l]
+        xresult->data[l-1] = log(rp);
+        yresult->data[l-1] = log(yresult->data[l-1]
                            /(((xnewres - 1)/rp - 1) * ((xnewres - 1)/rp - 1)));
 
     }
