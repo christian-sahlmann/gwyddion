@@ -255,6 +255,9 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
  * The coefficients are stored by row into @coeffs, like data in a datafield.
  * Row index is y-degree, column index is x-degree.
  *
+ * Note naive x^n y^m polynomial fitting is numerically unstable, therefore
+ * this method works only up to @col_degree = @row_degree = 6.
+ *
  * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
  *          with coefficients.
  **/
@@ -271,7 +274,7 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     g_return_val_if_fail(row_degree >= 0 && col_degree >= 0, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width > 0 && height > 0
+                         && width > col_degree && height > row_degree
                          && col + width <= data_field->xres
                          && row + height <= data_field->yres,
                          NULL);
@@ -445,6 +448,412 @@ gwy_data_field_subtract_polynom(GwyDataField *data_field,
                                          col_degree, row_degree, coeffs);
 }
 
+/* Calculate values of Legendre polynomials from 0 to @n in @x. */
+static void
+legendre_all(gdouble x,
+             guint n,
+             gdouble *p)
+{
+    guint m;
+
+    p[0] = 1.0;
+    if (n == 0)
+        return;
+    p[1] = x;
+    if (n == 1)
+        return;
+
+    for (m = 2; m <= n; m++)
+        p[m] = (x*(2*m - 1)*p[m-1] - (m - 1)*p[m-2])/m;
+}
+
+/**
+ * gwy_data_field_area_fit_legendre:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @col_degree: Degree of polynomial to fit column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to fit row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
+ *          coefficients to, or %NULL (a fresh array is allocated then).
+ *
+ * Fits two-dimensional Legendre polynomial to a rectangular part of a data
+ * field.
+ *
+ * The coefficients are organized exactly like in
+ * gwy_data_field_area_fit_polynom(), but they are not coefficients of
+ * x^n y^m, instead they are coefficients of P_n(x) P_m(x), where P are
+ * Legendre polynomials.  The polynomials are evaluated in coordinates where
+ * first row (column) corresponds to -1.0, and the last row (column) to 1.0.
+ *
+ * Note the polynomials are normal Legendre polynomials that are not exactly
+ * orthogonal on a discrete point set (if their degrees are equal mod 2).
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ **/
+gdouble*
+gwy_data_field_area_fit_legendre(GwyDataField *data_field,
+                                 gint col, gint row,
+                                 gint width, gint height,
+                                 gint col_degree, gint row_degree,
+                                 gdouble *coeffs)
+{
+    gint r, c, i, j, size, maxsize, xres, yres, col_n, row_n;
+    gint isize, jsize, thissize;
+    gdouble *data, *m, *pmx, *pmy, *sumsx, *sumsy, *rhs;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(row_degree >= 0 && col_degree >= 0, NULL);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > col_degree && height > row_degree
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
+                         NULL);
+
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    col_n = col_degree + 1;
+    row_n = row_degree + 1;
+    size = col_n*row_n;
+    /* The maximum necessary matrix size (order), it is approximately four
+     * times smaller thanks to separation of even and odd polynomials */
+    maxsize = ((col_n + 1)/2)*((row_n + 1)/2);
+    if (!coeffs)
+        coeffs = g_new0(gdouble, size);
+    else
+        memset(coeffs, 0, size*sizeof(gdouble));
+
+    sumsx = g_new0(gdouble, col_n*col_n);
+    sumsy = g_new0(gdouble, row_n*row_n);
+    rhs = g_new(gdouble, maxsize);
+    m = g_new(gdouble, MAX(maxsize*(maxsize + 1)/2, col_n + row_n));
+    /* pmx, pmy and m are not needed at the same time, reuse it */
+    pmx = m;
+    pmy = m + col_n;
+
+    /* Calculate <P_m(x) P_n(y) z(x,y)> (normalized to complete area) */
+    for (r = 0; r < height; r++) {
+        legendre_all(2*r/(height - 1.0) - 1.0, row_degree, pmy);
+        for (c = 0; c < width; c++) {
+            gdouble z = data[(row + r)*xres + (col + c)];
+
+            legendre_all(2*c/(width - 1.0) - 1.0, col_degree, pmx);
+            for (i = 0; i < row_n; i++) {
+                for (j = 0; j < col_n; j++)
+                    coeffs[i*col_n + j] += z*pmx[j]*pmy[i];
+            }
+        }
+    }
+
+    /* Calculate <P_m(x) P_a(x)> (normalized to single row).
+     * 3/4 of these values are zeroes, but it only takes O(width) time. */
+    for (c = 0; c < width; c++) {
+        legendre_all(2*c/(width - 1.0) - 1.0, col_degree, pmx);
+        for (i = 0; i < col_n; i++) {
+            for (j = 0; j < col_n; j++)
+                sumsx[i*col_n + j] += pmx[i]*pmx[j];
+        }
+    }
+
+    /* Calculate <P_n(y) P_b(y)> (normalized to single column)
+     * 3/4 of these values are zeroes, but it only takes O(height) time. */
+    for (r = 0; r < height; r++) {
+        legendre_all(2*r/(height - 1.0) - 1.0, row_degree, pmy);
+        for (i = 0; i < row_n; i++) {
+            for (j = 0; j < row_n; j++)
+                sumsy[i*row_n + j] += pmy[i]*pmy[j];
+        }
+    }
+
+    /* (Even, Even) */
+    isize = (row_n + 1)/2;
+    jsize = (col_n + 1)/2;
+    thissize = jsize*isize;
+    /* This is always true */
+    if (thissize) {
+        /* Construct the submatrix */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize);
+            gint iy = 2*(i/jsize);
+            gdouble *mrow = m + i*(i + 1)/2;
+
+            for (j = 0; j <= i; j++) {
+                gint jx = 2*(j % jsize);
+                gint jy = 2*(j/jsize);
+
+                mrow[j] = sumsx[ix*col_n + jx]*sumsy[iy*row_n + jy];
+            }
+        }
+        /* Construct the subrhs */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize);
+            gint iy = 2*(i/jsize);
+
+            rhs[i] = coeffs[iy*col_n + ix];
+        }
+        /* Solve */
+        if (!gwy_math_choleski_decompose(thissize, m)) {
+            memset(coeffs, 0, size*sizeof(gdouble));
+            goto fail;
+        }
+        gwy_math_choleski_solve(thissize, m, rhs);
+        /* Copy back */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize);
+            gint iy = 2*(i/jsize);
+
+            coeffs[iy*col_n + ix] = rhs[i];
+        }
+    }
+
+    /* (Even, Odd) */
+    isize = (row_n + 1)/2;
+    jsize = col_n/2;
+    thissize = jsize*isize;
+    if (thissize) {
+        /* Construct the submatrix */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize) + 1;
+            gint iy = 2*(i/jsize);
+            gdouble *mrow = m + i*(i + 1)/2;
+
+            for (j = 0; j <= i; j++) {
+                gint jx = 2*(j % jsize) + 1;
+                gint jy = 2*(j/jsize);
+
+                mrow[j] = sumsx[ix*col_n + jx]*sumsy[iy*row_n + jy];
+            }
+        }
+        /* Construct the subrhs */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize) + 1;
+            gint iy = 2*(i/jsize);
+
+            rhs[i] = coeffs[iy*col_n + ix];
+        }
+        /* Solve */
+        if (!gwy_math_choleski_decompose(thissize, m)) {
+            memset(coeffs, 0, size*sizeof(gdouble));
+            goto fail;
+        }
+        gwy_math_choleski_solve(thissize, m, rhs);
+        /* Copy back */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize) + 1;
+            gint iy = 2*(i/jsize);
+
+            coeffs[iy*col_n + ix] = rhs[i];
+        }
+    }
+
+    /* (Odd, Even) */
+    isize = row_n/2;
+    jsize = (col_n + 1)/2;
+    thissize = jsize*isize;
+    if (thissize) {
+        /* Construct the submatrix */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize);
+            gint iy = 2*(i/jsize) + 1;
+            gdouble *mrow = m + i*(i + 1)/2;
+
+            for (j = 0; j <= i; j++) {
+                gint jx = 2*(j % jsize);
+                gint jy = 2*(j/jsize) + 1;
+
+                mrow[j] = sumsx[ix*col_n + jx]*sumsy[iy*row_n + jy];
+            }
+        }
+        /* Construct the subrhs */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize);
+            gint iy = 2*(i/jsize) + 1;
+
+            rhs[i] = coeffs[iy*col_n + ix];
+        }
+        /* Solve */
+        if (!gwy_math_choleski_decompose(thissize, m)) {
+            memset(coeffs, 0, size*sizeof(gdouble));
+            goto fail;
+        }
+        gwy_math_choleski_solve(thissize, m, rhs);
+        /* Copy back */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize);
+            gint iy = 2*(i/jsize) + 1;
+
+            coeffs[iy*col_n + ix] = rhs[i];
+        }
+    }
+
+    /* (Odd, Odd) */
+    isize = row_n/2;
+    jsize = col_n/2;
+    thissize = jsize*isize;
+    if (thissize) {
+        /* Construct the submatrix */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize) + 1;
+            gint iy = 2*(i/jsize) + 1;
+            gdouble *mrow = m + i*(i + 1)/2;
+
+            for (j = 0; j <= i; j++) {
+                gint jx = 2*(j % jsize) + 1;
+                gint jy = 2*(j/jsize) + 1;
+
+                mrow[j] = sumsx[ix*col_n + jx]*sumsy[iy*row_n + jy];
+            }
+        }
+        /* Construct the subrhs */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize) + 1;
+            gint iy = 2*(i/jsize) + 1;
+
+            rhs[i] = coeffs[iy*col_n + ix];
+        }
+        /* Solve */
+        if (!gwy_math_choleski_decompose(thissize, m)) {
+            memset(coeffs, 0, size*sizeof(gdouble));
+            goto fail;
+        }
+        gwy_math_choleski_solve(thissize, m, rhs);
+        /* Copy back */
+        for (i = 0; i < thissize; i++) {
+            gint ix = 2*(i % jsize) + 1;
+            gint iy = 2*(i/jsize) + 1;
+
+            coeffs[iy*col_n + ix] = rhs[i];
+        }
+    }
+
+fail:
+    g_free(m);
+    g_free(rhs);
+    g_free(sumsx);
+    g_free(sumsy);
+
+    return coeffs;
+}
+
+/**
+ * gwy_data_field_fit_legendre:
+ * @data_field: A data field.
+ * @col_degree: Degree of polynomial to fit column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to fit row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
+ *          coefficients to, or %NULL (a fresh array is allocated then).
+ *
+ * Fits two-dimensional Legendre polynomial to a data field.
+ *
+ * See gwy_data_field_area_fit_legendre() for details.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ **/
+gdouble*
+gwy_data_field_fit_legendre(GwyDataField *data_field,
+                            gint col_degree, gint row_degree,
+                            gdouble *coeffs)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    return gwy_data_field_area_fit_legendre(data_field, 0, 0,
+                                            data_field->xres, data_field->yres,
+                                            col_degree, row_degree, coeffs);
+}
+
+/**
+ * gwy_data_field_area_subtract_legendre:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @col_degree: Degree of polynomial to subtract column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to subtract row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients,
+ *          see gwy_data_field_area_fit_legendre() for details.
+ *
+ * Subtracts a two-dimensional Legendre polynomial fit from a rectangular part
+ * of a data field.
+ *
+ * Due to the transform of coordinates to [-1,1] x [-1,1], this method can be
+ * used on a data field of dimensions different than the data field the
+ * coefficients were calculated for.
+ **/
+void
+gwy_data_field_area_subtract_legendre(GwyDataField *data_field,
+                                      gint col, gint row,
+                                      gint width, gint height,
+                                      gint col_degree, gint row_degree,
+                                      const gdouble *coeffs)
+{
+    gint r, c, i, j, size, xres, yres, col_n, row_n;
+    gdouble *data, *pmx, *pmy;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(coeffs);
+    g_return_if_fail(row_degree >= 0 && col_degree >= 0);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    col_n = col_degree + 1;
+    row_n = row_degree + 1;
+    size = col_n*row_n;
+
+    pmx = g_new0(gdouble, col_n + row_n);
+    pmy = pmx + col_n;
+
+    for (r = 0; r < height; r++) {
+        legendre_all(2*r/(height - 1.0) - 1.0, row_degree, pmy);
+        for (c = 0; c < width; c++) {
+            gdouble z = data[(row + r)*xres + (col + c)];
+
+            legendre_all(2*c/(width - 1.0) - 1.0, col_degree, pmx);
+            for (i = 0; i <= row_degree; i++) {
+                for (j = 0; j <= col_degree; j++) {
+                    z -= coeffs[i*col_n + j]*pmx[j]*pmy[i];
+                }
+            }
+
+            data[(row + r)*xres + (col + c)] = z;
+        }
+    }
+
+    g_free(pmx);
+
+    gwy_data_field_invalidate(data_field);
+}
+
+/**
+ * gwy_data_field_subtract_legendre:
+ * @data_field: A data field.
+ * @col_degree: Degree of polynomial to subtract column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to subtract row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients,
+ *          see gwy_data_field_area_fit_legendre() for details.
+ *
+ * Subtracts a two-dimensional Legendre polynomial fit from a data field.
+ **/
+void
+gwy_data_field_subtract_legendre(GwyDataField *data_field,
+                                 gint col_degree, gint row_degree,
+                                 const gdouble *coeffs)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_subtract_legendre(data_field,
+                                          0, 0,
+                                          data_field->xres, data_field->yres,
+                                          col_degree, row_degree, coeffs);
+}
 /**
  * gwy_data_field_area_fit_local_planes:
  * @data_field: A data field.

@@ -75,6 +75,32 @@ void gwy_data_field_area_subtract_polynom (GwyDataField *data_field,
                                            gint row_degree,
                                            const gdouble *coeffs);
 
+gdouble* gwy_data_field_fit_legendre      (GwyDataField *data_field,
+                                           gint col_degree,
+                                           gint row_degree,
+                                           gdouble *coeffs);
+gdouble* gwy_data_field_area_fit_legendre (GwyDataField *data_field,
+                                           gint col,
+                                           gint row,
+                                           gint width,
+                                           gint height,
+                                           gint col_degree,
+                                           gint row_degree,
+                                           gdouble *coeffs);
+
+void gwy_data_field_subtract_legendre     (GwyDataField *data_field,
+                                           gint col_degree,
+                                           gint row_degree,
+                                           const gdouble *coeffs);
+void gwy_data_field_area_subtract_legendre(GwyDataField *data_field,
+                                           gint col,
+                                           gint row,
+                                           gint width,
+                                           gint height,
+                                           gint col_degree,
+                                           gint row_degree,
+                                           const gdouble *coeffs);
+
 GwyDataField** gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
                                                     gint size,
                                                     gint col, gint row,
