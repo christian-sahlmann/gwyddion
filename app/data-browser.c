@@ -557,19 +557,20 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         case KEY_IS_SHOW:
         /* FIXME */
         found = gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter);
-        if (found)
+        if (found) {
             emit_row_changed(proxy->channels.list, &iter);
-        gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
-                           MODEL_WIDGET, &data_view,
-                           -1);
-        /* XXX: This is not a good place to do that, DataProxy should be
-         * non-GUI */
-        if (data_view) {
-            if (type == KEY_IS_MASK)
-                gwy_app_data_browser_sync_mask(data, quark, data_view);
-            else
-                gwy_app_data_browser_sync_show(data, quark, data_view);
-            g_object_unref(data_view);
+            gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+            /* XXX: This is not a good place to do that, DataProxy should be
+             * non-GUI */
+            if (data_view) {
+                if (type == KEY_IS_MASK)
+                    gwy_app_data_browser_sync_mask(data, quark, data_view);
+                else
+                    gwy_app_data_browser_sync_show(data, quark, data_view);
+                g_object_unref(data_view);
+            }
         }
         break;
 
