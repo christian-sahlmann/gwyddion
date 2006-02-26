@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it1.99.4\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2006-02-26 21:34+0100\n"
+"POT-Creation-Date: 2006-02-26 22:58+0100\n"
 "PO-Revision-Date: 2005-12-01 12:31+0100\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -355,7 +355,7 @@ msgstr "_Verticale:"
 msgid "Scale size _automatically"
 msgstr "Ridimensiona _automaticamente"
 
-#: libgwydgets/gwy3dwindow.c:738 modules/tools/filter.c:258
+#: libgwydgets/gwy3dwindow.c:738 modules/tools/filter.c:255
 msgid "Si_ze:"
 msgstr "Dimensione:"
 
@@ -966,8 +966,8 @@ msgstr "Nuovo"
 msgid "_Close"
 msgstr ""
 
-#: app/meta.c:179 modules/tools/level3.c:169 modules/tools/level3.c:248
-#: modules/tools/readvalue.c:166 modules/tools/readvalue.c:238
+#: app/meta.c:179 modules/tools/level3.c:166 modules/tools/level3.c:245
+#: modules/tools/readvalue.c:163 modules/tools/readvalue.c:235
 msgid "Value"
 msgstr "Valore"
 
@@ -1234,7 +1234,7 @@ msgstr "Larghezza"
 
 #: app/unitool.c:870 app/unitool.c:874 app/unitool.c:881 app/unitool.c:888
 #: modules/file/pixmap.c:775 modules/file/pixmap.c:782
-#: modules/tools/level3.c:205 modules/tools/readvalue.c:194
+#: modules/tools/level3.c:202 modules/tools/readvalue.c:191
 msgid "px"
 msgstr "px"
 
@@ -1242,11 +1242,11 @@ msgstr "px"
 msgid "Please wait"
 msgstr "Attendere"
 
-#: modules/file/apefile.c:118
+#: modules/file/apefile.c:117
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Importa file dati APE (Applied Physics and Engineering)"
 
-#: modules/file/apefile.c:133
+#: modules/file/apefile.c:130
 msgid "APE files (.dat)"
 msgstr "File APE (.dat)"
 
@@ -1757,7 +1757,7 @@ msgstr "Altezza:"
 
 #: modules/file/rawfile.c:645 modules/process/grain_mark.c:281
 #: modules/process/grain_rem_threshold.c:232 modules/process/grain_wshed.c:257
-#: modules/tools/profile.c:262 modules/tools/sfunctions.c:219
+#: modules/tools/profile.c:259 modules/tools/sfunctions.c:216
 msgid "<b>Options</b>"
 msgstr "<b>Opzioni</b>"
 
@@ -2493,8 +2493,8 @@ msgstr "Da"
 msgid "To"
 msgstr "a"
 
-#: modules/graph/graph_fit.c:659 modules/tools/stats.c:310
-#: modules/tools/stats.c:311 modules/tools/stats.c:312
+#: modules/graph/graph_fit.c:659 modules/tools/stats.c:307
+#: modules/tools/stats.c:308 modules/tools/stats.c:309
 msgid "N.A."
 msgstr "N.A."
 
@@ -2597,7 +2597,7 @@ msgstr ""
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Permette la selezione di aree rettangolari"
 
-#: modules/plugin-proxy.c:149
+#: modules/plugin-proxy.c:145
 msgid ""
 "Plug-in proxy is a module capable of querying, registering, and running "
 "external programs (plug-ins) on data pretending they are data processing or "
@@ -2607,80 +2607,80 @@ msgstr ""
 "programmi esterni (plug in) sui dati come se fossero moduli di elaborazione "
 "dati o di caricamento/salvataggio file."
 
-#: modules/plugin-proxy.c:467
+#: modules/plugin-proxy.c:457
 msgid "/_Plug-Ins"
 msgstr "/_Plug-In"
 
-#: modules/plugin-proxy.c:468
+#: modules/plugin-proxy.c:458
 #, c-format
 msgid "Run plug-in %s"
 msgstr ""
 
-#: modules/plugin-proxy.c:696 modules/plugin-proxy.c:792
+#: modules/plugin-proxy.c:684 modules/plugin-proxy.c:780
 msgid "Plugin-proxy must be run as interactive."
 msgstr ""
 
-#: modules/plugin-proxy.c:702
+#: modules/plugin-proxy.c:690
 #, c-format
 msgid "Plug-in `%s' does not implement file loading."
 msgstr ""
 
-#: modules/plugin-proxy.c:720
+#: modules/plugin-proxy.c:708
 #, c-format
 msgid "Cannot read temporary file: %s."
 msgstr ""
 
-#: modules/plugin-proxy.c:727 modules/plugin-proxy.c:817
+#: modules/plugin-proxy.c:715 modules/plugin-proxy.c:805
 #, c-format
 msgid "Cannot execute plug-in `%s': %s."
 msgstr ""
 
-#: modules/plugin-proxy.c:736 modules/plugin-proxy.c:826
+#: modules/plugin-proxy.c:724 modules/plugin-proxy.c:814
 #, c-format
 msgid "Plug-in `%s' returned non-zero exit status: %d."
 msgstr ""
 
-#: modules/plugin-proxy.c:749
+#: modules/plugin-proxy.c:737
 #, c-format
 msgid "Plug-in `%s' did not return any meaningful data."
 msgstr ""
 
-#: modules/plugin-proxy.c:798
+#: modules/plugin-proxy.c:786
 #, c-format
 msgid "Plug-in `%s' does not implement file saving."
 msgstr ""
 
-#: modules/plugin-proxy.c:1176 modules/plugin-proxy.c:1185
+#: modules/plugin-proxy.c:1164 modules/plugin-proxy.c:1173
 #, c-format
 msgid "Cannot create a temporary file: %s."
 msgstr ""
 
-#: modules/plugin-proxy.c:1193
+#: modules/plugin-proxy.c:1181
 #, c-format
 msgid "Cannot fdopen() already open file: %s."
 msgstr ""
 
-#: modules/plugin-proxy.c:1232
+#: modules/plugin-proxy.c:1220
 msgid "End of file reached when value was expected."
 msgstr ""
 
-#: modules/plugin-proxy.c:1261
+#: modules/plugin-proxy.c:1249
 msgid "Missing data field width."
 msgstr ""
 
-#: modules/plugin-proxy.c:1274
+#: modules/plugin-proxy.c:1262
 msgid "Missing data field height."
 msgstr ""
 
-#: modules/plugin-proxy.c:1304
+#: modules/plugin-proxy.c:1292
 msgid "Data field dimensions are not positive numbers."
 msgstr ""
 
-#: modules/plugin-proxy.c:1338
+#: modules/plugin-proxy.c:1326
 msgid "End of file reached inside a data field."
 msgstr ""
 
-#: modules/plugin-proxy.c:1359
+#: modules/plugin-proxy.c:1347
 msgid "Missing end of data field marker."
 msgstr ""
 
@@ -2954,7 +2954,7 @@ msgstr "Dimensioni finestra"
 
 #: modules/process/crosscor.c:255 modules/process/fft.c:332
 #: modules/process/fractal.c:241 modules/process/maskcor.c:180
-#: modules/tools/sfunctions.c:225
+#: modules/tools/sfunctions.c:222
 msgid "_Output type:"
 msgstr "Tipo output:"
 
@@ -3025,7 +3025,7 @@ msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 #: modules/process/fft_filter_1d.c:352 modules/process/fractal.c:225
 #: modules/process/nanoindent_adjust.c:228 modules/process/rotate.c:275
 #: modules/process/scale.c:218 modules/process/unrotate.c:276
-#: modules/tools/profile.c:302
+#: modules/tools/profile.c:299
 msgid "_Interpolation type:"
 msgstr "Tipo di interpolazione:"
 
@@ -3445,7 +3445,7 @@ msgstr "Tipo eliminazione:"
 msgid "Preview type:"
 msgstr "Tipo Anteprima:"
 
-#: modules/process/fft_filter_1d.c:360 modules/tools/filter.c:244
+#: modules/process/fft_filter_1d.c:360 modules/tools/filter.c:241
 msgid "_Direction:"
 msgstr "_Direzione:"
 
@@ -4802,11 +4802,11 @@ msgstr "/_Livella/Ruota _Arco..."
 msgid "Level data by arc revolution"
 msgstr ""
 
-#: modules/process/sphere-revolve.c:203 modules/tools/polynom.c:149
+#: modules/process/sphere-revolve.c:203 modules/tools/polynom.c:146
 msgid "_Horizontal direction"
 msgstr "Direzione orizzontale"
 
-#: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:150
+#: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:147
 msgid "_Vertical direction"
 msgstr "Direzione verticale"
 
@@ -5031,23 +5031,23 @@ msgstr "Taglia"
 msgid "Keep lateral offsets"
 msgstr ""
 
-#: modules/tools/distance.c:62
+#: modules/tools/distance.c:61
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Strumento misura distanze, misura distanze ed angoli."
 
-#: modules/tools/distance.c:89
+#: modules/tools/distance.c:86
 msgid "Measure distances between points."
 msgstr "Misura distanze tra punti"
 
-#: modules/tools/distance.c:144
+#: modules/tools/distance.c:141
 msgid "Distances"
 msgstr "Distanze"
 
-#: modules/tools/distance.c:169
+#: modules/tools/distance.c:166
 msgid "<b>Angle</b> [deg]"
 msgstr "<b>Angolo</b> deg"
 
-#: modules/tools/filter.c:96
+#: modules/tools/filter.c:95
 msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
@@ -5055,94 +5055,94 @@ msgstr ""
 "Strumento filtro, fltra i dati selezionati con differenti criteri "
 "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."
 
-#: modules/tools/filter.c:124
+#: modules/tools/filter.c:121
 msgid "Basic filters"
 msgstr "Filtri Base."
 
-#: modules/tools/filter.c:191
+#: modules/tools/filter.c:188
 msgid "Mean value"
 msgstr "Valore medio"
 
-#: modules/tools/filter.c:192
+#: modules/tools/filter.c:189
 msgid "Median value"
 msgstr "Valore mediano"
 
-#: modules/tools/filter.c:193
+#: modules/tools/filter.c:190
 msgid "Conservative denoise"
 msgstr "Denoise conservativo"
 
-#: modules/tools/filter.c:194 modules/tools/stats.c:188
+#: modules/tools/filter.c:191 modules/tools/stats.c:185
 msgid "Minimum"
 msgstr "Minimo"
 
-#: modules/tools/filter.c:195 modules/tools/stats.c:189
+#: modules/tools/filter.c:192 modules/tools/stats.c:186
 msgid "Maximum"
 msgstr "Massimo"
 
-#: modules/tools/filter.c:196
+#: modules/tools/filter.c:193
 msgid "Kuwahara"
 msgstr "Kuwahara"
 
-#: modules/tools/filter.c:208
+#: modules/tools/filter.c:205
 msgid "Filters"
 msgstr "Filtri"
 
-#: modules/tools/filter.c:229
+#: modules/tools/filter.c:226
 msgid "<b>Filter</b>"
 msgstr "<b>Filtra</b>"
 
-#: modules/tools/filter.c:237 modules/tools/polynom.c:199
+#: modules/tools/filter.c:234 modules/tools/polynom.c:196
 msgid "_Type:"
 msgstr "_Tipo:"
 
-#: modules/tools/filter.c:264
+#: modules/tools/filter.c:261
 msgid "_Update preview dynamically"
 msgstr "Aggiorna vista dinamicamente"
 
-#: modules/tools/grain_remove_manually.c:80
+#: modules/tools/grain_remove_manually.c:79
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
 "Strumento rimozione grana, rimuove parti continue di maschera e/o dati "
 "sottostanti."
 
-#: modules/tools/grain_remove_manually.c:99
+#: modules/tools/grain_remove_manually.c:98
 msgid "_Mask"
 msgstr "_Maschera"
 
-#: modules/tools/grain_remove_manually.c:100
+#: modules/tools/grain_remove_manually.c:99
 msgid "_Data"
 msgstr "_Dati"
 
-#: modules/tools/grain_remove_manually.c:101
+#: modules/tools/grain_remove_manually.c:100
 msgid "_Both"
 msgstr "Entrambi"
 
-#: modules/tools/grain_remove_manually.c:105 modules/tools/spotremove.c:132
+#: modules/tools/grain_remove_manually.c:104 modules/tools/spotremove.c:131
 msgid "Laplace solver"
 msgstr "Risolutore Laplaciano"
 
-#: modules/tools/grain_remove_manually.c:106 modules/tools/spotremove.c:133
+#: modules/tools/grain_remove_manually.c:105 modules/tools/spotremove.c:132
 msgid "Fractal correction"
 msgstr "Correzione frattale"
 
-#: modules/tools/grain_remove_manually.c:119
+#: modules/tools/grain_remove_manually.c:116
 msgid "Manually remove grains (continuous parts of mask)"
 msgstr "Rimuovi grana manualmente (maschera continua)"
 
-#: modules/tools/grain_remove_manually.c:193
+#: modules/tools/grain_remove_manually.c:190
 msgid "Remove Grains"
 msgstr "Rimuovi grana"
 
-#: modules/tools/grain_remove_manually.c:205
+#: modules/tools/grain_remove_manually.c:202
 msgid "Remove:"
 msgstr "Rimuovi:"
 
-#: modules/tools/grain_remove_manually.c:222
+#: modules/tools/grain_remove_manually.c:219
 msgid "_Data removal method:"
 msgstr "Metodo rimozione dati:"
 
-#: modules/tools/icolorange.c:90
+#: modules/tools/icolorange.c:89
 msgid ""
 "Interactive color range tool, allows to select data range false color scale "
 "should map to, either on data or on height distribution histogram."
@@ -5151,40 +5151,40 @@ msgstr ""
 "l'intervallo dati a cui deve riferirsi la scala cromatica di riferimento, "
 "per i dati o per l'altezza dell'istogramma di distribuzione"
 
-#: modules/tools/icolorange.c:119
+#: modules/tools/icolorange.c:116
 msgid "Stretch color range to part of data."
 msgstr "Estendi intervallo colore a parte dei dati"
 
-#: modules/tools/icolorange.c:198 modules/tools/icolorange.c:288
+#: modules/tools/icolorange.c:195 modules/tools/icolorange.c:285
 msgid "Full"
 msgstr "Completo"
 
-#: modules/tools/icolorange.c:199
+#: modules/tools/icolorange.c:196
 msgid "Fixed"
 msgstr "Fissato"
 
-#: modules/tools/icolorange.c:200
+#: modules/tools/icolorange.c:197
 msgid "Auto"
 msgstr "Auto"
 
-#: modules/tools/icolorange.c:201
+#: modules/tools/icolorange.c:198
 #, fuzzy
 msgid "Adaptive"
 msgstr "Adattativo"
 
-#: modules/tools/icolorange.c:212
+#: modules/tools/icolorange.c:209
 msgid "Color Range"
 msgstr "Intervallo colore"
 
-#: modules/tools/icolorange.c:236
+#: modules/tools/icolorange.c:233
 msgid "Height histogram"
 msgstr "Istogramma altezze"
 
-#: modules/tools/icolorange.c:273
+#: modules/tools/icolorange.c:270
 msgid "Range"
 msgstr "Intervallo"
 
-#: modules/tools/level3.c:59
+#: modules/tools/level3.c:58
 msgid ""
 "Three-point level tool, levels data by subtracting a plane fitted through "
 "three selected points."
@@ -5192,143 +5192,143 @@ msgstr ""
 "Strumento livella su tre punti, livella i dati sottraendo un piano passante "
 "per tre punti dati."
 
-#: modules/tools/level3.c:87
+#: modules/tools/level3.c:84
 msgid "Level data using three points."
 msgstr "Livella dati utilizzando tre punti."
 
-#: modules/tools/level3.c:143
+#: modules/tools/level3.c:140
 msgid "Level"
 msgstr "Livella"
 
-#: modules/tools/level3.c:205 modules/tools/readvalue.c:194
+#: modules/tools/level3.c:202 modules/tools/readvalue.c:191
 msgid "_Averaging radius:"
 msgstr "Media raggio:"
 
-#: modules/tools/maskedit.c:72
+#: modules/tools/maskedit.c:71
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
 "Strumento modifica maschere, permette di aggiungere o rimuovere aree "
 "selezionate interattivamente"
 
-#: modules/tools/maskedit.c:100
+#: modules/tools/maskedit.c:97
 msgid "Edit mask"
 msgstr "Modifica maschera"
 
-#: modules/tools/maskedit.c:171
+#: modules/tools/maskedit.c:168
 msgid "Set mask to selection"
 msgstr "Seleziona Maschera"
 
-#: modules/tools/maskedit.c:176
+#: modules/tools/maskedit.c:173
 msgid "Add selection to mask"
 msgstr "Aggiungi selezione "
 
-#: modules/tools/maskedit.c:181
+#: modules/tools/maskedit.c:178
 msgid "Subtract selection from mask"
 msgstr "Sottrai selezione"
 
-#: modules/tools/maskedit.c:186
+#: modules/tools/maskedit.c:183
 msgid "Intersect selection with mask"
 msgstr "Interseca selezione e maschera"
 
-#: modules/tools/maskedit.c:199
+#: modules/tools/maskedit.c:196
 msgid "Mask Editor"
 msgstr "Modifica maschera"
 
-#: modules/tools/maskedit.c:215
+#: modules/tools/maskedit.c:212
 msgid "Mode:"
 msgstr "Modo:"
 
-#: modules/tools/polynom.c:71
+#: modules/tools/polynom.c:70
 msgid "Polynom fit tool, fits polynoms to X or Y profiles and subtracts them."
 msgstr ""
 "Strumento fit polinomiale, adatta polinomio al profilo X o Y e lo sottrae."
 
-#: modules/tools/polynom.c:99
+#: modules/tools/polynom.c:96
 msgid "Fit X or Y profiles by polynom"
 msgstr "Fit polinomiale profilo X o Y"
 
-#: modules/tools/polynom.c:143
+#: modules/tools/polynom.c:140
 msgid "Fit height"
 msgstr "Adatta altezza"
 
-#: modules/tools/polynom.c:144
+#: modules/tools/polynom.c:141
 msgid "Fit linear"
 msgstr "Fit lineare"
 
-#: modules/tools/polynom.c:145
+#: modules/tools/polynom.c:142
 msgid "Fit quadratic"
 msgstr "Fit quadratico"
 
-#: modules/tools/polynom.c:146
+#: modules/tools/polynom.c:143
 msgid "Fit cubic"
 msgstr "Fit cubico"
 
-#: modules/tools/polynom.c:167
+#: modules/tools/polynom.c:164
 msgid "X/Y Profile Level"
 msgstr "Livella profilo X/Y"
 
-#: modules/tools/polynom.c:189
+#: modules/tools/polynom.c:186
 msgid "<b>Fiting mode</b>"
 msgstr "<b>Fitting mode</b>"
 
-#: modules/tools/polynom.c:216
+#: modules/tools/polynom.c:213
 msgid "_Exclude area if selected"
 msgstr "_Escludi area selezionata"
 
-#: modules/tools/polynom.c:225
+#: modules/tools/polynom.c:222
 msgid "(otherwise will be used for fitting)"
 msgstr "(altrimenti utilizzata per il fitting)"
 
-#: modules/tools/profile.c:90
+#: modules/tools/profile.c:89
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Strumento profilo, crea grafico del profilo da linee selezionate."
 
-#: modules/tools/profile.c:117
+#: modules/tools/profile.c:114
 msgid "Extract profiles from data."
 msgstr "Estrai profilo dai dati"
 
-#: modules/tools/profile.c:182
+#: modules/tools/profile.c:179
 msgid "Extract Profile"
 msgstr "Estrai Profilo"
 
-#: modules/tools/profile.c:206
+#: modules/tools/profile.c:203
 msgid "<b>Profile Positions</b> [pixels]"
 msgstr "<b>Posizioni Profilo</b> pixels"
 
-#: modules/tools/profile.c:246
+#: modules/tools/profile.c:243
 #, c-format
 msgid "Profile %d"
 msgstr "Profilo %d"
 
-#: modules/tools/profile.c:270
+#: modules/tools/profile.c:267
 msgid "Thickness:"
 msgstr "Spessore:"
 
-#: modules/tools/profile.c:278 modules/tools/sfunctions.c:257
+#: modules/tools/profile.c:275 modules/tools/sfunctions.c:254
 msgid "Fix res.:"
 msgstr "Fix res.:"
 
-#: modules/tools/profile.c:292
+#: modules/tools/profile.c:289
 msgid "_Separate profiles"
 msgstr "_Separa Profili"
 
-#: modules/tools/profile.c:398
+#: modules/tools/profile.c:395
 msgid "Profiles"
 msgstr "Profili"
 
-#: modules/tools/readvalue.c:60
+#: modules/tools/readvalue.c:59
 msgid "Pointer tool, reads value under pointer."
 msgstr "Strumento puntatore, legge valore sotto il puntatore."
 
-#: modules/tools/readvalue.c:87
+#: modules/tools/readvalue.c:84
 msgid "Read value under mouse cursor."
 msgstr "Legge valore sotto il cursore del mouse"
 
-#: modules/tools/readvalue.c:142
+#: modules/tools/readvalue.c:139
 msgid "Read Value"
 msgstr "Leggi Valore"
 
-#: modules/tools/sfunctions.c:97
+#: modules/tools/sfunctions.c:96
 msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
 "(height distribution, correlations, PSDF, Minkowski functionals) of selected "
@@ -5338,64 +5338,64 @@ msgstr ""
 "unidimensionali (distribuzione delle altezze, correlazioni, PSDF, funzioni "
 "di Minkowski) di una parte selezionata di dati."
 
-#: modules/tools/sfunctions.c:117
+#: modules/tools/sfunctions.c:116
 msgid "Height distribution"
 msgstr "Distribuzione Altezze"
 
-#: modules/tools/sfunctions.c:118
+#: modules/tools/sfunctions.c:117
 msgid "Cum. height distribution"
 msgstr "Distribuzione altezze cum."
 
-#: modules/tools/sfunctions.c:119
+#: modules/tools/sfunctions.c:118
 msgid "Distribution of angles"
 msgstr "Distribuzione angoli"
 
-#: modules/tools/sfunctions.c:120
+#: modules/tools/sfunctions.c:119
 msgid "Cum. distribution of angles"
 msgstr "Distribuzione angoli cum"
 
-#: modules/tools/sfunctions.c:121
+#: modules/tools/sfunctions.c:120
 msgid "ACF"
 msgstr "ACF"
 
-#: modules/tools/sfunctions.c:122
+#: modules/tools/sfunctions.c:121
 msgid "HHCF"
 msgstr "HHCF"
 
-#: modules/tools/sfunctions.c:123
+#: modules/tools/sfunctions.c:122
 msgid "PSDF"
 msgstr "PSDF"
 
-#: modules/tools/sfunctions.c:124
+#: modules/tools/sfunctions.c:123
 msgid "Minkowski volume"
 msgstr "Volume di Minkowski"
 
-#: modules/tools/sfunctions.c:125
+#: modules/tools/sfunctions.c:124
 #, fuzzy
 msgid "Minkowski boundary"
 msgstr "Confine di Minkowski"
 
-#: modules/tools/sfunctions.c:126
+#: modules/tools/sfunctions.c:125
 msgid "Minkowski connectivity"
 msgstr "Connettività di Minkowski"
 
-#: modules/tools/sfunctions.c:139
+#: modules/tools/sfunctions.c:136
 msgid "Compute 1D statistical functions."
 msgstr "Calcola funzioni statistiche 1D"
 
-#: modules/tools/sfunctions.c:192
+#: modules/tools/sfunctions.c:189
 msgid "Statistical Functions"
 msgstr "Funzioni Statistiche"
 
-#: modules/tools/sfunctions.c:240
+#: modules/tools/sfunctions.c:237
 msgid "Computation _direction:"
 msgstr "Direzione calcolo:"
 
-#: modules/tools/sfunctions.c:270
+#: modules/tools/sfunctions.c:267
 msgid "Interpolation type:"
 msgstr "Tipo interpolazione:"
 
-#: modules/tools/spotremove.c:111
+#: modules/tools/spotremove.c:110
 msgid ""
 "Spot removal tool, interpolates small parts of data (displayed on a zoomed "
 "view) using selected algorithm."
@@ -5403,27 +5403,27 @@ msgstr ""
 "Strumento rimozione macchie, interpola piccoli intervalli dati (mostrati in "
 "una vista ingrandita) utilizzando l'algoritmo selezionato."
 
-#: modules/tools/spotremove.c:130
+#: modules/tools/spotremove.c:129
 msgid "Hyperbolic flatten"
 msgstr "Appiattisci iperbolico"
 
-#: modules/tools/spotremove.c:131
+#: modules/tools/spotremove.c:130
 msgid "Pseudo-Laplace"
 msgstr "Pseudo-Laplace"
 
-#: modules/tools/spotremove.c:146
+#: modules/tools/spotremove.c:143
 msgid "Manually remove spots"
 msgstr "Rimuovi macchie manualmente"
 
-#: modules/tools/spotremove.c:220
+#: modules/tools/spotremove.c:217
 msgid "Remove Spots"
 msgstr "Rimuovi macchie"
 
-#: modules/tools/spotremove.c:272
+#: modules/tools/spotremove.c:269
 msgid "Removal _method:"
 msgstr "Metodo rimozione:"
 
-#: modules/tools/stats.c:67
+#: modules/tools/stats.c:66
 msgid ""
 "Statistical quantities tool, calculates various statistical characteristics "
 "(mean, median, RMS, skew, kurtosis, inclination, area, projected area) of "
@@ -5433,55 +5433,55 @@ msgstr ""
 "mediani, RMS, deviazione, inclinazione, curtosi, area, area proiettata) di "
 "dati selezionati"
 
-#: modules/tools/stats.c:96
+#: modules/tools/stats.c:93
 msgid "Statistical quantities"
 msgstr "Quantità statistiche."
 
-#: modules/tools/stats.c:183
+#: modules/tools/stats.c:180
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/stats.c:184
+#: modules/tools/stats.c:181
 msgid "Rms"
 msgstr "Rms"
 
-#: modules/tools/stats.c:185
+#: modules/tools/stats.c:182
 msgid "Skew"
 msgstr "Skew"
 
-#: modules/tools/stats.c:186
+#: modules/tools/stats.c:183
 msgid "Kurtosis"
 msgstr "curtosi"
 
-#: modules/tools/stats.c:187
+#: modules/tools/stats.c:184
 msgid "Average height"
 msgstr "Altezza media"
 
-#: modules/tools/stats.c:190
+#: modules/tools/stats.c:187
 msgid "Median"
 msgstr "Mediana"
 
-#: modules/tools/stats.c:191
+#: modules/tools/stats.c:188
 msgid "Projected area"
 msgstr "Proiezione area"
 
-#: modules/tools/stats.c:192
+#: modules/tools/stats.c:189
 msgid "Area"
 msgstr "Area"
 
-#: modules/tools/stats.c:193
+#: modules/tools/stats.c:190
 msgid "Inclination theta"
 msgstr "Inclinazione theta"
 
-#: modules/tools/stats.c:194
+#: modules/tools/stats.c:191
 msgid "Inclination phi"
 msgstr "Inclinazione phi"
 
-#: modules/tools/stats.c:206
+#: modules/tools/stats.c:203
 msgid "Statistical Quantities"
 msgstr "Quantità statistiche"
 
-#: modules/tools/stats.c:220
+#: modules/tools/stats.c:217
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametri</b>"
 
