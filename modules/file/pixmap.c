@@ -1440,7 +1440,7 @@ static GdkPixbuf*
 pixmap_real_draw_pixbuf(GwyContainer *data,
                         PixmapSaveArgs *args)
 {
-    GwyDataWindow *data_window;
+    GtkWidget *data_window;
     GwyDataView *data_view;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
@@ -1459,21 +1459,18 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     gint gap = 20;
     gint fmw = 18;
 
-    data_window = gwy_app_data_window_get_for_data(data);
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
-    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
+    data_window = gtk_widget_get_toplevel(GTK_WIDGET(data_view));
     g_return_val_if_fail(gwy_data_view_get_data(data_view) == data, NULL);
     layer = gwy_data_view_get_base_layer(data_view);
-    key = gwy_pixmap_layer_get_data_key(layer);
-    g_return_val_if_fail(key, NULL);
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
-    siunit_xy = gwy_data_field_get_si_unit_xy(dfield);
-    /* XXX XXX XXX */
-    has_presentation = g_str_has_suffix(key, "/mask");
-
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
+
+    siunit_xy = gwy_data_field_get_si_unit_xy(dfield);
+    has_presentation
+        = gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer));
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
     name = NULL;
     if (key)
@@ -1509,7 +1506,8 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
             siunit_z = gwy_si_unit_new("");
         else
             siunit_z = gwy_data_field_get_si_unit_z(dfield);
-        coloraxis = gwy_data_window_get_color_axis(data_window);
+        coloraxis
+            = gwy_data_window_get_color_axis(GWY_DATA_WINDOW(data_window));
         gwy_color_axis_get_range(GWY_COLOR_AXIS(coloraxis), &min, &max);
         scalepixbuf = fmscale(zheight + 2*lw, min, max, args->zoom, siunit_z);
         scw = gdk_pixbuf_get_width(scalepixbuf);

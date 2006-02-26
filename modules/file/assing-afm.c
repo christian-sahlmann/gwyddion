@@ -33,6 +33,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
+#include <app/gwyapp.h>
 
 #include "err.h"
 #include "get.h"
@@ -67,7 +68,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -189,7 +190,7 @@ read_binary_data(guint res,
 }
 
 static gboolean
-aafm_export(GwyContainer *data,
+aafm_export(G_GNUC_UNUSED GwyContainer *data,
             const gchar *filename,
             G_GNUC_UNUSED GwyRunType mode,
             GError **error)
@@ -205,12 +206,13 @@ aafm_export(GwyContainer *data,
     FILE *fh;
     gboolean ok = TRUE;
 
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     d = gwy_data_field_get_data_const(dfield);
 
     xres = gwy_data_field_get_xres(dfield);
