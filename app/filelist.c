@@ -28,8 +28,6 @@
  */
 
 /* TODO:
- * - add some equivalent of file_real_open() to API and use it from the other
- *   places
  * - Do NOT store thumbnails for anything in ~/.thumbnails
  */
 
