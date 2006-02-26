@@ -149,7 +149,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("facet_analysis",
+    gwy_process_func_register("facet_analysis",
                               (GwyProcessFunc)&facets_analyse,
                               N_("/_Statistics/Facet _Analysis..."),
                               NULL,

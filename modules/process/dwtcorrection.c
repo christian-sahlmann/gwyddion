@@ -78,7 +78,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("dwtcorrection",
+    gwy_process_func_register("dwtcorrection",
                               (GwyProcessFunc)&dwt_correction,
                               N_("/_Integral Transforms/DWT C_orrection..."),
                               NULL,

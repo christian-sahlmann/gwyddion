@@ -112,7 +112,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("slope_dist",
+    gwy_process_func_register("slope_dist",
                               (GwyProcessFunc)&slope_dist,
                               N_("/_Statistics/_Slope Distribution..."),
                               NULL,

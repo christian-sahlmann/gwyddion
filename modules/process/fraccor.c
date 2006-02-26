@@ -47,7 +47,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("fraccor",
+    gwy_process_func_register("fraccor",
                               (GwyProcessFunc)&fraccor,
                               N_("/_Correct Data/_Fractal correction"),
                               NULL,

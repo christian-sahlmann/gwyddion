@@ -30,21 +30,7 @@ typedef void (*GwyProcessFunc)(GwyContainer *data,
                                GwyRunType run,
                                const gchar *name);
 
-#ifndef GWY_DISABLE_DEPRECATED
-typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
-
-struct _GwyProcessFuncInfo {
-    const gchar *name;
-    const gchar *menu_path;
-    GwyProcessFunc process;
-    GwyRunType run;
-    guint sens_flags;    /* guint, don't depend on libgwyapp */
-};
-#endif
-
-gboolean       gwy_process_func_register      (const gchar *modname,
-                                               GwyProcessFuncInfo *func_info);
-gboolean     gwy_process_func_registe2            (const gchar *name,
+gboolean     gwy_process_func_register            (const gchar *name,
                                                    GwyProcessFunc func,
                                                    const gchar *menu_path,
                                                    const gchar *stock_id,

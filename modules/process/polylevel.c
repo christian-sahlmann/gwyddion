@@ -103,7 +103,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("polylevel",
+    gwy_process_func_register("polylevel",
                               (GwyProcessFunc)&poly_level,
                               N_("/_Level/_Polynomial Background..."),
                               GWY_STOCK_POLYNOM,

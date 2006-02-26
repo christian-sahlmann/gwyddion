@@ -95,7 +95,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("arithmetic",
+    gwy_process_func_register("arithmetic",
                               (GwyProcessFunc)&arithmetic,
                               N_("/M_ultidata/_Arithmetic..."),
                               NULL,

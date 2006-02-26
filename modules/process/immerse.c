@@ -136,7 +136,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("immerse",
+    gwy_process_func_register("immerse",
                               (GwyProcessFunc)&immerse,
                               N_("/M_ultidata/_Immerse..."),
                               NULL,

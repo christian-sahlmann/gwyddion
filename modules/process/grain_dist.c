@@ -51,14 +51,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("grain_dist",
+    gwy_process_func_register("grain_dist",
                               (GwyProcessFunc)&grain_dist,
                               N_("/_Grains/_Size Distribution"),
                               GWY_STOCK_GRAINS_GRAPH,
                               DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Calculate grain size distribution"));
-    gwy_process_func_registe2("grain_stat",
+    gwy_process_func_register("grain_stat",
                               (GwyProcessFunc)&grain_stat,
                               N_("/_Grains/S_tatistics"),
                               NULL,

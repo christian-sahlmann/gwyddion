@@ -97,7 +97,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("nanoindent_adjust",
+    gwy_process_func_register("nanoindent_adjust",
                               (GwyProcessFunc)&nanoindent_adjust,
                               N_("/Indento_r/Ad_just..."),
                               NULL,

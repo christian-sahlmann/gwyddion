@@ -312,7 +312,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("nanoindent_analyze",
+    gwy_process_func_register("nanoindent_analyze",
                               (GwyProcessFunc)&indent_analyze,
                               N_("/Indento_r/_Analyze..."),
                               NULL,

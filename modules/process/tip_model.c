@@ -123,7 +123,7 @@ static gboolean
 module_register(const gchar *name)
 {
 
-    gwy_process_func_registe2("tip_model",
+    gwy_process_func_register("tip_model",
                               (GwyProcessFunc)&tip_model,
                               N_("/_Tip/_Model Tip..."),
                               NULL,

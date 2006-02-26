@@ -36,7 +36,7 @@ typedef struct {
     GwyRunType run;
     guint sens_mask;
     GwyProcessFunc func;
-} GwyProcessFuncInf2;
+} GwyProcessFuncInfo;
 
 /* Auxiliary structure to pass both user callback function and data to
  * g_hash_table_foreach() lambda argument in gwy_process_func_foreach() */
@@ -47,53 +47,8 @@ typedef struct {
 
 static GHashTable *process_funcs = NULL;
 
-gboolean
-gwy_process_func_register(const gchar *modname,
-                          GwyProcessFuncInfo *z)
-{
-    GwyProcessFuncInf2 *func_info;
-
-    g_return_val_if_fail(z->name, FALSE);
-    g_return_val_if_fail(z->process, FALSE);
-    g_return_val_if_fail(z->menu_path, FALSE);
-    g_return_val_if_fail(z->run & GWY_RUN_MASK, FALSE);
-    gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
-              z->name, z->menu_path, z->run, z->process);
-
-    if (!process_funcs) {
-        gwy_debug("Initializing...");
-        process_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                              NULL, g_free);
-    }
-
-    if (!gwy_strisident(z->name, "_-", NULL))
-        g_warning("Function name `%s' is not a valid identifier. "
-                  "It may be rejected in future.", z->name);
-    if (g_hash_table_lookup(process_funcs, z->name)) {
-        g_warning("Duplicate function `%s', keeping only first",
-                  z->name);
-        return FALSE;
-    }
-
-    func_info = g_new0(GwyProcessFuncInf2, 1);
-    /* Memory leak, but we don't care, this function will be removed. */
-    func_info->name = g_strdup(z->name);
-    func_info->func = z->process;
-    func_info->menu_path = g_strdup(z->menu_path);
-    func_info->run = z->run;
-    func_info->sens_mask = z->sens_flags;
-
-    g_hash_table_insert(process_funcs, (gpointer)func_info->name, func_info);
-    if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_PROC, z->name)) {
-        g_hash_table_remove(process_funcs, func_info->name);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
 /**
- * gwy_process_func_registe2:
+ * gwy_process_func_register:
  * @name: Name of function to register.  It should be a valid identifier.
  * @func: The function itself.
  * @menu_path: Menu path under Data Process menu.
@@ -110,15 +65,10 @@ gwy_process_func_register(const gchar *modname,
  * vanish.  If they are constructed (non-constant) strings, do not free them.
  * Should modules ever become unloadable they will get chance to clean-up.
  *
- * XXX: The function name is not typo.  It will eventually replace
- * gwy_process_func_register() and it will be renamed to it.  Therefore the
- * name should have the same number of characters to avoid code alignment
- * issues.
- *
  * Returns: Normally %TRUE; %FALSE on failure.
  **/
 gboolean
-gwy_process_func_registe2(const gchar *name,
+gwy_process_func_register(const gchar *name,
                           GwyProcessFunc func,
                           const gchar *menu_path,
                           const gchar *stock_id,
@@ -126,7 +76,7 @@ gwy_process_func_registe2(const gchar *name,
                           guint sens_mask,
                           const gchar *tooltip)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     g_return_val_if_fail(name, FALSE);
     g_return_val_if_fail(func, FALSE);
@@ -149,7 +99,7 @@ gwy_process_func_registe2(const gchar *name,
         return FALSE;
     }
 
-    func_info = g_new0(GwyProcessFuncInf2, 1);
+    func_info = g_new0(GwyProcessFuncInfo, 1);
     func_info->name = name;
     func_info->func = func;
     func_info->menu_path = menu_path;
@@ -180,7 +130,7 @@ gwy_process_func_run(const guchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_if_fail(run & func_info->run);
@@ -248,7 +198,7 @@ gwy_process_func_exists(const gchar *name)
 GwyRunType
 gwy_process_func_get_run_types(const gchar *name)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
@@ -270,7 +220,7 @@ gwy_process_func_get_run_types(const gchar *name)
 const gchar*
 gwy_process_func_get_menu_path(const gchar *name)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);
@@ -289,7 +239,7 @@ gwy_process_func_get_menu_path(const gchar *name)
 const gchar*
 gwy_process_func_get_stock_id(const gchar *name)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     g_return_val_if_fail(process_funcs, NULL);
     func_info = g_hash_table_lookup(process_funcs, name);
@@ -309,7 +259,7 @@ gwy_process_func_get_stock_id(const gchar *name)
 const gchar*
 gwy_process_func_get_tooltip(const gchar *name)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     g_return_val_if_fail(process_funcs, NULL);
     func_info = g_hash_table_lookup(process_funcs, name);
@@ -330,7 +280,7 @@ gwy_process_func_get_tooltip(const gchar *name)
 guint
 gwy_process_func_get_sensitivity_mask(const gchar *name)
 {
-    GwyProcessFuncInf2 *func_info;
+    GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, 0);

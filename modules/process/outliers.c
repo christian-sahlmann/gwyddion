@@ -46,7 +46,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("outliers",
+    gwy_process_func_register("outliers",
                               (GwyProcessFunc)&outliers,
                               N_("/_Correct Data/Mask of _Outliers"),
                               NULL,

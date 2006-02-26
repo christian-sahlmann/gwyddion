@@ -124,7 +124,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("grain_mark",
+    gwy_process_func_register("grain_mark",
                               (GwyProcessFunc)&grain_mark,
                               N_("/_Grains/_Mark by Threshold..."),
                               GWY_STOCK_GRAINS,

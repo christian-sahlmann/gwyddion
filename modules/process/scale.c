@@ -86,7 +86,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("scale",
+    gwy_process_func_register("scale",
                               (GwyProcessFunc)&scale,
                               N_("/_Basic Operations/Scale..."),
                               GWY_STOCK_SCALE,

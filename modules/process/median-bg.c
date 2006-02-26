@@ -89,7 +89,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("median-bg",
+    gwy_process_func_register("median-bg",
                               (GwyProcessFunc)&median,
                               N_("/_Level/_Median Level..."),
                               NULL,

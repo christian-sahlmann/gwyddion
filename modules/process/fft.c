@@ -105,7 +105,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("fft",
+    gwy_process_func_register("fft",
                               (GwyProcessFunc)&fft,
                               N_("/_Integral Transforms/_2D FFT..."),
                               NULL,

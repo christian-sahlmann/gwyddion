@@ -58,29 +58,30 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo presentation_attach_func_info = {
-        "presentation_attach",
-        N_("/_Presentation/_Attach Presentation..."),
-        (GwyProcessFunc)&presentation_attach,
-        PRESENTATION_ATTACH_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_registe2("presentation_remove",
+    gwy_process_func_register("presentation_remove",
                               (GwyProcessFunc)&presentation_remove,
                               N_("/_Presentation/_Remove Presentation"),
                               NULL,
                               PRESENTATIONOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
                               N_("Remove presentation from data"));
-    gwy_process_func_registe2("presentation_extract",
+    gwy_process_func_register("presentation_extract",
                               (GwyProcessFunc)&presentation_extract,
                               N_("/_Presentation/E_xtract Presentation"),
                               NULL,
                               PRESENTATIONOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
                               N_("Extract presentation to a new channel"));
-    gwy_process_func_registe2("presentation_logscale",
+    /* XXX: not really ported */
+    gwy_process_func_register("presentation_attach",
+                              (GwyProcessFunc)&presentation_attach,
+                              N_("/_Presentation/_Attach Presentation..."),
+                              NULL,
+                              PRESENTATION_ATTACH_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Attaches another data field as "
+                                 "presentation"));
+    gwy_process_func_register("presentation_logscale",
                               (GwyProcessFunc)&presentation_logscale,
                               N_("/_Presentation/_Logscale"),
                               NULL,
@@ -88,7 +89,6 @@ module_register(const gchar *name)
                               GWY_MENU_FLAG_DATA,
                               N_("Creates a presentation with logarithmic "
                                  "color scale"));
-    /* gwy_process_func_register(name, &presentation_attach_func_info); */
 
     return TRUE;
 }

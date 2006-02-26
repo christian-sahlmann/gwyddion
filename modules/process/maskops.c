@@ -50,21 +50,21 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("mask_remove",
+    gwy_process_func_register("mask_remove",
                               (GwyProcessFunc)&mask_remove,
                               N_("/_Mask/_Remove Mask"),
                               GWY_STOCK_MASK_REMOVE,
                               MASKOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Remove mask from data"));
-    gwy_process_func_registe2("mask_invert",
+    gwy_process_func_register("mask_invert",
                               (GwyProcessFunc)&mask_invert,
                               N_("/_Mask/_Invert Mask"),
                               GWY_STOCK_MASK_INVERT,
                               MASKOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Invert mask"));
-    gwy_process_func_registe2("mask_extract",
+    gwy_process_func_register("mask_extract",
                               (GwyProcessFunc)&mask_extract,
                               N_("/_Mask/_Extract Mask"),
                               NULL,

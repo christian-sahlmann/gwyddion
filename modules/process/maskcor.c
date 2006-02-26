@@ -85,7 +85,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("maskcor",
+    gwy_process_func_register("maskcor",
                               (GwyProcessFunc)&maskcor,
                               N_("/M_ultidata/_Mask by Correlation..."),
                               NULL,

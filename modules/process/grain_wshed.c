@@ -109,7 +109,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("grain_wshed",
+    gwy_process_func_register("grain_wshed",
                               (GwyProcessFunc)&grain_wshed,
                               N_("/_Grains/Mark by _Watershed..."),
                               GWY_STOCK_GRAINS_WATER,

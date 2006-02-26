@@ -50,7 +50,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("facet-level",
+    gwy_process_func_register("facet-level",
                               (GwyProcessFunc)&facet_level,
                               N_("/_Level/_Facet Level"),
                               GWY_STOCK_FACET_LEVEL,

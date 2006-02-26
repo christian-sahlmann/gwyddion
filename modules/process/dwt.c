@@ -84,7 +84,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("dwt",
+    gwy_process_func_register("dwt",
                               (GwyProcessFunc)&dwt,
                               N_("/_Integral Transforms/_2D DWT..."),
                               NULL,

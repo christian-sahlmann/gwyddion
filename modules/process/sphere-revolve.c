@@ -105,7 +105,7 @@ module_register(const gchar *name)
 {
     /* The name mismatch is intentional, there should be a sphere_revolve
      * function too */
-    gwy_process_func_registe2("arc_revolve",
+    gwy_process_func_register("arc_revolve",
                               (GwyProcessFunc)&sphrev,
                               N_("/_Level/Revolve _Arc..."),
                               NULL,

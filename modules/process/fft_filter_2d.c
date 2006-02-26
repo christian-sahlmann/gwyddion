@@ -217,7 +217,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("fft_filter_2d",
+    gwy_process_func_register("fft_filter_2d",
                               (GwyProcessFunc)&run_main,
                               N_("/_Correct Data/_2D FFT filtering..."),
                               NULL,

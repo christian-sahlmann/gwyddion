@@ -86,7 +86,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("dwtdenoise",
+    gwy_process_func_register("dwtdenoise",
                               (GwyProcessFunc)&dwt_denoise,
                               N_("/_Integral Transforms/DWT De_noise..."),
                               NULL,

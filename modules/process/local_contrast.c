@@ -84,7 +84,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("local_contrast",
+    gwy_process_func_register("local_contrast",
                               (GwyProcessFunc)&maximize_local_contrast,
                               N_("/_Presentation/_Local Contrast..."),
                               NULL,

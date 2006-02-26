@@ -158,7 +158,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("fractal",
+    gwy_process_func_register("fractal",
                               (GwyProcessFunc)&fractal,
                               N_("/_Statistics/_Fractal Dimension..."),
                               NULL,

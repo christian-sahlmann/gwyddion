@@ -70,28 +70,28 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("line_correct_modus",
+    gwy_process_func_register("line_correct_modus",
                               (GwyProcessFunc)&line_correct_modus,
                               N_("/_Correct Data/M_odus Line Correction"),
                               NULL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching height modus"));
-    gwy_process_func_registe2("line_correct_median",
+    gwy_process_func_register("line_correct_median",
                               (GwyProcessFunc)&line_correct_median,
                               N_("/_Correct Data/M_edian Line Correction"),
                               NULL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching height median"));
-    gwy_process_func_registe2("line_correct_match",
+    gwy_process_func_register("line_correct_match",
                               (GwyProcessFunc)&line_correct_match,
                               N_("/_Correct Data/Ma_tch Line Correction"),
                               NULL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching flat segments"));
-    gwy_process_func_registe2("line_correct_step",
+    gwy_process_func_register("line_correct_step",
                               (GwyProcessFunc)&line_correct_step,
                               N_("/_Correct Data/Ste_p Line Correction"),
                               NULL,

@@ -70,7 +70,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("edge_laplacian",
+    gwy_process_func_register("edge_laplacian",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/_Laplacian of Gaussian"),
                               NULL,
@@ -78,14 +78,14 @@ module_register(const gchar *name)
                               GWY_MENU_FLAG_DATA,
                               N_("Laplacian of Gaussian edge detection "
                                  "presentation"));
-    gwy_process_func_registe2("edge_canny",
+    gwy_process_func_register("edge_canny",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/_Canny"),
                               NULL,
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Canny edge detection presentation"));
-    gwy_process_func_registe2("edge_rms",
+    gwy_process_func_register("edge_rms",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/_RMS"),
                               NULL,
@@ -93,7 +93,7 @@ module_register(const gchar *name)
                               GWY_MENU_FLAG_DATA,
                               N_("Local RMS value based edge detection "
                                  "presentation"));
-    gwy_process_func_registe2("edge_rms_edge",
+    gwy_process_func_register("edge_rms_edge",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/RMS _Edge"),
                               NULL,
@@ -101,7 +101,7 @@ module_register(const gchar *name)
                               GWY_MENU_FLAG_DATA,
                               N_("Local RMS value based edge detection "
                                  "with postprocession"));
-    gwy_process_func_registe2("edge_nonlinearity",
+    gwy_process_func_register("edge_nonlinearity",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/Local _Nonlinearity"),
                               NULL,
@@ -109,7 +109,7 @@ module_register(const gchar *name)
                               GWY_MENU_FLAG_DATA,
                               N_("Local nonlinearity based edge detection "
                                  "presentation"));
-    gwy_process_func_registe2("edge_hough_lines",
+    gwy_process_func_register("edge_hough_lines",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/_Hough Lines"),
                               NULL,

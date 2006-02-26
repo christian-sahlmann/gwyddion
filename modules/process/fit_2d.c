@@ -164,7 +164,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("fit_2d",
+    gwy_process_func_register("fit_2d",
                               (GwyProcessFunc)&fit_2d,
                               N_("/_Level/_Fit Sphere..."),
                               NULL,

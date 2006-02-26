@@ -152,7 +152,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("merge",
+    gwy_process_func_register("merge",
                               (GwyProcessFunc)&merge,
                               N_("/M_ultidata/_Merge..."),
                               NULL,

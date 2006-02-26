@@ -116,7 +116,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("crosscor",
+    gwy_process_func_register("crosscor",
                               (GwyProcessFunc)&crosscor,
                               N_("/M_ultidata/_Cross-Correlation..."),
                               NULL,

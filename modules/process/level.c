@@ -55,28 +55,28 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("level",
+    gwy_process_func_register("level",
                               (GwyProcessFunc)&level,
                               N_("/_Level/_Level"),
                               GWY_STOCK_LEVEL,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Level data by plane subtraction"));
-    gwy_process_func_registe2("level_rotate",
+    gwy_process_func_register("level_rotate",
                               (GwyProcessFunc)&level_rotate,
                               N_("/_Level/Level _Rotate"),
                               NULL,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Automatically level data by plane rotation"));
-    gwy_process_func_registe2("fix_zero",
+    gwy_process_func_register("fix_zero",
                               (GwyProcessFunc)&fix_zero,
                               N_("/_Level/Fix _Zero"),
                               GWY_STOCK_FIX_ZERO,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Shift minimum data value to zero"));
-    gwy_process_func_registe2("zero_mean",
+    gwy_process_func_register("zero_mean",
                               (GwyProcessFunc)&zero_mean,
                               N_("/_Level/Zero _Mean Value"),
                               NULL,

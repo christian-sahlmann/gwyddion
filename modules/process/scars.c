@@ -112,14 +112,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("scars_mark",
+    gwy_process_func_register("scars_mark",
                               (GwyProcessFunc)&scars_mark,
                               N_("/_Correct Data/M_ark Scars..."),
                               GWY_STOCK_SCARS,
                               SCARS_MARK_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Mark horizontal scars (strokes)"));
-    gwy_process_func_registe2("scars_remove",
+    gwy_process_func_register("scars_remove",
                               (GwyProcessFunc)&scars_remove,
                               N_("/_Correct Data/Remove _Scars"),
                               GWY_STOCK_SCARS,

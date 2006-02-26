@@ -52,28 +52,28 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("sobel_horizontal",
+    gwy_process_func_register("sobel_horizontal",
                               (GwyProcessFunc)&gradient,
                               N_("/_Presentation/_Gradient/_Sobel (horizontal)"),
                               NULL,
                               GRADIENT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Horizontal Sobel gradient presentation"));
-    gwy_process_func_registe2("sobel_vertical",
+    gwy_process_func_register("sobel_vertical",
                               (GwyProcessFunc)&gradient,
                               N_("/_Presentation/_Gradient/_Sobel (vertical)"),
                               NULL,
                               GRADIENT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Vertical Sobel gradient presentation"));
-    gwy_process_func_registe2("prewitt_horizontal",
+    gwy_process_func_register("prewitt_horizontal",
                               (GwyProcessFunc)&gradient,
                               N_("/_Presentation/_Gradient/_Prewitt (horizontal)"),
                               NULL,
                               GRADIENT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Horizontal Prewitt gradient presentation"));
-    gwy_process_func_registe2("prewitt_vertical",
+    gwy_process_func_register("prewitt_vertical",
                               (GwyProcessFunc)&gradient,
                               N_("/_Presentation/_Gradient/_Prewitt (vertical)"),
                               NULL,

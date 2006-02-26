@@ -131,7 +131,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("tip_blind",
+    gwy_process_func_register("tip_blind",
                               (GwyProcessFunc)&tip_blind,
                               N_("/_Tip/_Blind estimation..."),
                               NULL,

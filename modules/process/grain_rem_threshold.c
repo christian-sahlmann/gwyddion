@@ -115,7 +115,7 @@ static gboolean
 module_register(const gchar *name)
 {
 
-    gwy_process_func_registe2("grain_rem_threshold",
+    gwy_process_func_register("grain_rem_threshold",
                               (GwyProcessFunc)&remove_th,
                               N_("/_Grains/_Remove by Threshold..."),
                               NULL,

@@ -135,7 +135,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("calibrate",
+    gwy_process_func_register("calibrate",
                               (GwyProcessFunc)&calibrate,
                               N_("/_Basic Operations/_Recalibrate..."),
                               NULL,

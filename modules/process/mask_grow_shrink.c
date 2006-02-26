@@ -77,14 +77,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("mask_grow",
+    gwy_process_func_register("mask_grow",
                               (GwyProcessFunc)&mask_grow_shrink,
                               N_("/_Mask/_Grow Mask..."),
                               GWY_STOCK_MASK_GROW,
                               MASK_GROW_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Grows (expands) mask"));
-    gwy_process_func_registe2("mask_shrink",
+    gwy_process_func_register("mask_shrink",
                               (GwyProcessFunc)&mask_grow_shrink,
                               N_("/_Mask/_Shrink Mask..."),
                               GWY_STOCK_MASK_SHRINK,

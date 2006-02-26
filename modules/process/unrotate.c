@@ -93,7 +93,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("unrotate",
+    gwy_process_func_register("unrotate",
                               (GwyProcessFunc)&unrotate,
                               N_("/_Correct Data/_Unrotate..."),
                               GWY_STOCK_UNROTATE,

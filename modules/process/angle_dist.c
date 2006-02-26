@@ -110,7 +110,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("angle_dist",
+    gwy_process_func_register("angle_dist",
                               (GwyProcessFunc)&angle_dist,
                               N_("/_Statistics/_Angle Distribution..."),
                               NULL,

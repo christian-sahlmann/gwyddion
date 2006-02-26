@@ -90,7 +90,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("rotate",
+    gwy_process_func_register("rotate",
                               (GwyProcessFunc)&rotate,
                               N_("/_Basic Operations/Rotate by _Angle..."),
                               GWY_STOCK_ROTATE,

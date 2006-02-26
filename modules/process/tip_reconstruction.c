@@ -61,7 +61,7 @@ static gboolean
 module_register(const gchar *name)
 {
 
-    gwy_process_func_registe2("tip_reconstruction",
+    gwy_process_func_register("tip_reconstruction",
                               (GwyProcessFunc)&tip_reconstruction,
                               N_("/_Tip/_Surface Reconstruction..."),
                               NULL,

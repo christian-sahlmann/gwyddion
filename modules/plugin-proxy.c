@@ -59,7 +59,10 @@
 #include <app/gwyapp.h>
 
 typedef struct {
-    GwyProcessFuncInfo func;
+    gchar *name;
+    gchar *menu_path;
+    gchar *tooltip;
+    GwyRunType run;
     gchar *file;  /* The file to execute to run the plug-in */
 } ProcPluginInfo;
 
@@ -147,7 +150,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.5",
+    "3.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -460,19 +463,24 @@ proc_register_plugins(GList *plugins,
             && (run = gwy_string_to_flags(run_modes,
                                           run_mode_names, -1, NULL))) {
             info = g_new(ProcPluginInfo, 1);
-            info->func.name = g_strdup(pname);
-            info->func.menu_path = g_strconcat(_("/_Plug-Ins"), menu_path,
-                                               NULL);
-            info->func.process = proc_plugin_proxy_run;
-            info->func.run = run;
-            info->func.sens_flags = 0;
-            if (gwy_process_func_register(name, &info->func)) {
+            info->name = g_strdup(pname);
+            info->menu_path = g_strconcat(_("/_Plug-Ins"), menu_path, NULL);
+            info->tooltip = g_strdup_printf(_("Run plug-in %s"), menu_path+1);
+            info->run = run;
+            if (gwy_process_func_register(info->name,
+                                          proc_plugin_proxy_run,
+                                          info->menu_path,
+                                          NULL,
+                                          info->run,
+                                          GWY_MENU_FLAG_DATA,
+                                          info->tooltip)) {
                 info->file = g_strdup(file);
                 plugins = g_list_prepend(plugins, info);
             }
             else {
-                g_free((gpointer)info->func.name);
-                g_free((gpointer)info->func.menu_path);
+                g_free((gpointer)info->name);
+                g_free((gpointer)info->menu_path);
+                g_free((gpointer)info->tooltip);
                 g_free(info);
             }
         }
@@ -567,14 +575,14 @@ proc_find_plugin(const gchar *name,
 
     for (l = proc_plugins; l; l = g_list_next(l)) {
         info = (ProcPluginInfo*)l->data;
-        if (gwy_strequal(info->func.name, name))
+        if (gwy_strequal(info->name, name))
             break;
     }
     if (!l) {
         g_critical("Don't know anything about plug-in `%s'.", name);
         return NULL;
     }
-    if (!(info->func.run & run)) {
+    if (!(info->run & run)) {
         g_critical("Plug-in `%s' doesn't suport this run mode.", name);
         return NULL;
     }

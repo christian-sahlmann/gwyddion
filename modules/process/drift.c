@@ -134,7 +134,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("drift",
+    gwy_process_func_register("drift",
                               (GwyProcessFunc)&drift,
                               N_("/_Correct Data/_Compensate drift..."),
                               NULL,

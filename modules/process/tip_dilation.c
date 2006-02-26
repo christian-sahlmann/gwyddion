@@ -61,7 +61,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    gwy_process_func_registe2("tip_dilation",
+    gwy_process_func_register("tip_dilation",
                               (GwyProcessFunc)&tip_dilation,
                               N_("/_Tip/_Dilation..."),
                               NULL,
