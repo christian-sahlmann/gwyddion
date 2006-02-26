@@ -36,8 +36,14 @@ Libraries:
 - libgwyprocess: FFT functions offer more leveling choices, line-wise leveling
   was fixed.
 - libgwyprocess: Polynomial leveling using Legendre polynomials was added.
+- libgwydgets: GwyCurve support snapping to control points positions.
+- libgwydgets: Miscellaneous graph fixes.
+- libgwyapp: Process function usage statistics are gathered (no effect on
+  GUI yet).
 
 Modules:
+- Immerse (new): Immerse higher-resolution detain into an image.
+- Merge (new): Merge (join) images together.
 - All: Feature registration has changed, more, less, or different information
   is provided for particular function types during registration.
 - File modules: Import all (importable) data present in files instead of
@@ -55,6 +61,7 @@ Modules:
   search in ellipse and rectangle was fixed.
 - Pixmap: Odd preview of images with an alpha channel was fixed, full support
   for alpha channel added.
+- Presentationops: Logscale presentation was added.
 
 
 1.99.5 (2005-12-20)
