@@ -75,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask by correlation with another data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -85,15 +85,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo maskcor_func_info = {
-        "maskcor",
-        N_("/M_ultidata/_Mask by Correlation..."),
-        (GwyProcessFunc)&maskcor,
-        MASKCOR_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &maskcor_func_info);
+    gwy_process_func_registe2("maskcor",
+                              (GwyProcessFunc)&maskcor,
+                              N_("/M_ultidata/_Mask by Correlation..."),
+                              NULL,
+                              MASKCOR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Create mask by correlation with another "
+                                 "data"));
 
     return TRUE;
 }

@@ -101,33 +101,28 @@ static const CrosscorArgs crosscor_defaults = {
     GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, NULL, NULL, 1, 0.95
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo crosscor_func_info = {
-        "crosscor",
-        N_("/M_ultidata/_Cross-Correlation..."),
-        (GwyProcessFunc)&crosscor,
-        CROSSCOR_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &crosscor_func_info);
+    gwy_process_func_registe2("crosscor",
+                              (GwyProcessFunc)&crosscor,
+                              N_("/M_ultidata/_Cross-Correlation..."),
+                              NULL,
+                              CROSSCOR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Cross-correlate two data fields"));
 
     return TRUE;
 }
