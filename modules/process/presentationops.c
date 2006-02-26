@@ -34,6 +34,8 @@ static void     presentation_remove       (GwyContainer *data,
                                            GwyRunType run);
 static void     presentation_extract      (GwyContainer *data,
                                            GwyRunType run);
+static void     presentation_logscale     (GwyContainer *data,
+                                           GwyRunType run);
 static void     presentation_attach       (GwyContainer *data,
                                            GwyRunType run);
 static void     presentation_attach_do    (GwyContainer *source,
@@ -46,7 +48,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -78,6 +80,14 @@ module_register(const gchar *name)
                               PRESENTATIONOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
                               N_("Extract presentation to a new channel"));
+    gwy_process_func_registe2("presentation_logscale",
+                              (GwyProcessFunc)&presentation_logscale,
+                              N_("/_Presentation/_Logscale"),
+                              NULL,
+                              PRESENTATIONOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Creates a presentation with logarithmic "
+                                 "color scale"));
     /* gwy_process_func_register(name, &presentation_attach_func_info); */
 
     return TRUE;
@@ -116,6 +126,62 @@ presentation_extract(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, NULL);
+}
+
+static void
+presentation_logscale(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield, *sfield;
+    GQuark squark;
+    gdouble *d;
+    gdouble min, max, m0;
+    gint xres, yres, i, zeroes;
+
+    g_return_if_fail(run & PRESENTATIONOPS_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     GWY_APP_SHOW_FIELD, &sfield,
+                                     0);
+    g_return_if_fail(dfield && squark);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_app_undo_qcheckpointv(data, 1, &squark);
+    if (!sfield) {
+        sfield = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object(data, squark, sfield);
+        g_object_unref(sfield);
+    }
+    else {
+        gwy_data_field_resample(sfield, xres, yres, GWY_INTERPOLATION_NONE);
+        gwy_data_field_copy(dfield, sfield, FALSE);
+    }
+
+    d = gwy_data_field_get_data(sfield);
+    zeroes = 0;
+    max = 0;
+    min = G_MAXDOUBLE;
+    for (i = 0; i < xres*yres; i++) {
+        d[i] = ABS(d[i]);
+        if (G_UNLIKELY(d[i] > max))
+            max = d[i];
+        if (d[i] == 0.0)
+            zeroes++;
+        else if (G_UNLIKELY(d[i] < min))
+            min = d[i];
+    }
+    if (min == max || zeroes == xres*yres)
+        return;
+
+    if (!zeroes) {
+        for (i = 0; i < xres*yres; i++)
+            d[i] = log(d[i]);
+    }
+    else {
+        m0 = log(min) - log(max/min)/512.0;
+        for (i = 0; i < xres*yres; i++)
+            d[i] = d[i] ? log(d[i]) : m0;
+    }
 }
 
 static void
