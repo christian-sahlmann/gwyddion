@@ -94,7 +94,7 @@ struct _GwySelectionLineClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean   module_register                (const gchar *name);
+static gboolean   module_register                (void);
 static GType      gwy_layer_line_get_type        (void) G_GNUC_CONST;
 static GType      gwy_selection_line_get_type    (void) G_GNUC_CONST;
 static void       gwy_layer_line_set_property    (GObject *object,
@@ -167,7 +167,7 @@ G_DEFINE_TYPE(GwySelectionLine, gwy_selection_line, GWY_TYPE_SELECTION)
 G_DEFINE_TYPE(GwyLayerLine, gwy_layer_line, GWY_TYPE_VECTOR_LAYER)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_layer_func_register(GWY_TYPE_LAYER_LINE);
     return TRUE;

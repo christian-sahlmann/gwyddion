@@ -31,7 +31,7 @@
 
 #define GRADIENT_RUN_MODES GWY_RUN_IMMEDIATE
 
-static gboolean module_register(const gchar *name);
+static gboolean module_register(void);
 static void     gradient       (GwyContainer *data,
                                 GwyRunType run,
                                 const gchar *name);
@@ -50,7 +50,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("sobel_horizontal",
                               (GwyProcessFunc)&gradient,

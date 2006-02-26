@@ -38,8 +38,7 @@ struct _GwyToolFuncInfo {
     GwyToolUseFunc use;
 };
 
-gboolean     gwy_tool_func_register      (const gchar *modname,
-                                          GwyToolFuncInfo *func_info);
+gboolean     gwy_tool_func_register      (GwyToolFuncInfo *func_info);
 gboolean     gwy_tool_func_use           (const guchar *name,
                                           GwyDataWindow *data_window,
                                           GwyToolSwitchEvent event);

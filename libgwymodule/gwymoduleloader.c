@@ -281,7 +281,7 @@ gwy_module_do_register_module(const gchar *filename,
         iinfo->loaded = TRUE;
         iinfo->funcs = NULL;
         g_hash_table_insert(mods, (gpointer)iinfo->name, iinfo);
-        ok = mod_info->register_func(iinfo->name);
+        ok = mod_info->register_func();
         if (!ok) {
             g_warning("Module `%s' feature registration failed", iinfo->name);
             gwy_module_get_rid_of(iinfo->name);
@@ -562,7 +562,6 @@ _gwy_module_unwatch_settings(void)
 
 /**
  * GwyModuleRegisterFunc:
- * @name: An unique module name.
  *
  * Module registration function type.
  *

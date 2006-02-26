@@ -46,7 +46,7 @@ typedef enum {
     BCR_FILE_FLOAT = 4
 } BCRFileType;
 
-static gboolean      module_register           (const gchar *name);
+static gboolean      module_register           (void);
 static gint          bcrfile_detect          (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
 static GwyContainer* bcrfile_load              (const gchar *filename,
@@ -86,7 +86,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("bcrfile",
                            N_("BCR files (.bcr, .bcrf)"),

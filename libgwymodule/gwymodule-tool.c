@@ -32,7 +32,6 @@ static GHashTable *tool_funcs = NULL;
 
 /**
  * gwy_tool_func_register:
- * @modname: Module identifier (name).
  * @func_info: Tool use function info.
  *
  * Registeres a tool use function.
@@ -43,8 +42,7 @@ static GHashTable *tool_funcs = NULL;
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
-gwy_tool_func_register(const gchar *modname,
-                       GwyToolFuncInfo *func_info)
+gwy_tool_func_register(GwyToolFuncInfo *func_info)
 {
     GwyToolFuncInfo *tfinfo;
 

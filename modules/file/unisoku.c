@@ -95,7 +95,7 @@ typedef struct {
     gchar *ad_name;
 } UnisokuFile;
 
-static gboolean      module_register        (const gchar *name);
+static gboolean      module_register        (void);
 static gint          unisoku_detect         (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
 static GwyContainer* unisoku_load           (const gchar *filename,
@@ -134,7 +134,7 @@ static const guint type_sizes[] = { 0, 0, 1, 1, 2, 2, 0, 0, 4 };
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("unisoku",
                            N_("Unisoku files (.hdr + .dat)"),

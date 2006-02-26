@@ -62,7 +62,7 @@ typedef struct {
     GwyGraphModel *histogram_model;
 } ToolControls;
 
-static gboolean   module_register             (const gchar *name);
+static gboolean   module_register             (void);
 static gboolean   use                         (GwyDataWindow *data_window,
                                                GwyToolSwitchEvent reason);
 static void       layer_setup                 (GwyUnitoolState *state);
@@ -83,7 +83,6 @@ static void       set_min_max                 (GwyUnitoolState *state,
 static void       range_mode_changed          (GtkWidget *button,
                                                GwyUnitoolState *state);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -106,12 +105,10 @@ static GwyUnitoolSlots func_slots = {
     NULL,                          /* nonstandard response handler */
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     static GwyToolFuncInfo icolorange_func_info = {
         "icolorange",
@@ -120,7 +117,7 @@ module_register(const gchar *name)
         &use,
     };
 
-    gwy_tool_func_register(name, &icolorange_func_info);
+    gwy_tool_func_register(&icolorange_func_info);
 
     return TRUE;
 }

@@ -65,7 +65,7 @@ typedef struct {
     GtkWidget *sampling;
 } ImmerseControls;
 
-static gboolean   module_register               (const gchar *name);
+static gboolean   module_register               (void);
 static gboolean   immerse                  (GwyContainer *data,
                                                  GwyRunType run);
 static GtkWidget* immerse_window_construct (ImmerseArgs *args);
@@ -134,7 +134,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("immerse",
                               (GwyProcessFunc)&immerse,

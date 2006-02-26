@@ -35,7 +35,7 @@ typedef struct {
     GwyDataWindow *win2;
 } TipCertaintyMapArgs;
 
-static gboolean   module_register                    (const gchar *name);
+static gboolean   module_register                    (void);
 static void       tip_certainty_map                  (GwyContainer *data,
                                                       GwyRunType run);
 static GtkWidget* tip_certainty_map_window_construct (TipCertaintyMapArgs *args);
@@ -58,7 +58,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("tip_map",
                               (GwyProcessFunc)&tip_certainty_map,

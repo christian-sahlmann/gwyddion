@@ -75,7 +75,7 @@ struct _GwySelectionPointClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                (const gchar *name);
+static gboolean module_register                (void);
 static GType    gwy_layer_point_get_type       (void) G_GNUC_CONST;
 static GType    gwy_selection_point_get_type   (void) G_GNUC_CONST;
 static void     gwy_layer_point_class_init     (GwyLayerPointClass *klass);
@@ -129,7 +129,7 @@ G_DEFINE_TYPE(GwySelectionPoint, gwy_selection_point, GWY_TYPE_SELECTION)
 G_DEFINE_TYPE(GwyLayerPoint, gwy_layer_point, GWY_TYPE_VECTOR_LAYER)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_layer_func_register(GWY_TYPE_LAYER_POINT);
     return TRUE;

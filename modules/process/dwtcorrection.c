@@ -41,7 +41,7 @@ typedef struct {
     GtkWidget *interp;
 } DWTCorrectionControls;
 
-static gboolean module_register             (const gchar *name);
+static gboolean module_register             (void);
 static void     dwt_correction              (GwyContainer *data,
                                              GwyRunType run);
 static gboolean dwt_correction_dialog       (DWTCorrectionArgs *args);
@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("dwtcorrection",
                               (GwyProcessFunc)&dwt_correction,

@@ -51,7 +51,7 @@ typedef struct {
     gdouble *correction;
 } UnrotateControls;
 
-static gboolean         module_register          (const gchar *name);
+static gboolean         module_register          (void);
 static void             unrotate                 (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean         unrotate_dialog          (UnrotateArgs *args,
@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("unrotate",
                               (GwyProcessFunc)&unrotate,

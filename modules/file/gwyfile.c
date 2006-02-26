@@ -58,7 +58,7 @@ typedef struct {
     GString *str;   /* scratch space */
 } CompressIdData;
 
-static gboolean      module_register         (const gchar *name);
+static gboolean      module_register         (void);
 static gint          gwyfile_detect          (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
 static GwyContainer* gwyfile_load            (const gchar *filename,
@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("gwyfile",
                            N_("Gwyddion native format (.gwy)"),

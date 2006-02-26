@@ -189,7 +189,7 @@ typedef struct {
     RHKColorInformation color_info;
 } RHKPage;
 
-static gboolean      module_register       (const gchar *name);
+static gboolean      module_register       (void);
 static gint          rhk_sm3_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static GwyContainer* rhk_sm3_load          (const gchar *filename,
@@ -258,7 +258,7 @@ static const GwyEnum scan_directions[] = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("rhk-sm3",
                            N_("RHK SM3 files (.sm3)"),

@@ -29,7 +29,7 @@
 
 #define PRESENTATION_ATTACH_RUN_MODES GWY_RUN_INTERACTIVE
 
-static gboolean module_register           (const gchar *name);
+static gboolean module_register           (void);
 static void     presentation_remove       (GwyContainer *data,
                                            GwyRunType run);
 static void     presentation_extract      (GwyContainer *data,
@@ -56,7 +56,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("presentation_remove",
                               (GwyProcessFunc)&presentation_remove,

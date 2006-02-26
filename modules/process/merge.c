@@ -70,7 +70,7 @@ typedef struct {
     GtkWidget *boundary;
 } MergeControls;
 
-static gboolean   module_register               (const gchar *name);
+static gboolean   module_register               (void);
 static gboolean   merge                  (GwyContainer *data,
                                                  GwyRunType run);
 static GtkWidget* merge_window_construct (MergeArgs *args);
@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("merge",
                               (GwyProcessFunc)&merge,

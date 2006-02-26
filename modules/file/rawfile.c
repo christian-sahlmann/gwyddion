@@ -131,7 +131,7 @@ typedef struct {
     RawFileFile *file;
 } RawFileControls;
 
-static gboolean      module_register               (const gchar *name);
+static gboolean      module_register               (void);
 static gint          rawfile_detect                (void);
 static GwyContainer* rawfile_load                  (const gchar *filename,
                                                     GwyRunType mode,
@@ -277,7 +277,7 @@ static GQuark error_domain = 0;
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     static gint types_initialized = 0;
     GwyResourceClass *klass;

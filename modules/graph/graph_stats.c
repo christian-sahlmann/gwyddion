@@ -58,7 +58,7 @@ typedef struct {
     gint curve_index;
 } StatsControls;
 
-static gboolean    module_register             (const gchar *name);
+static gboolean    module_register             (void);
 static void        stats                       (GwyGraph *graph);
 static gboolean    stats_dialog                (StatsControls *data);
 static void        selection_updated_cb        (StatsControls *data);
@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_graph_func_register("graph_stats",
                             (GwyGraphFunc)&stats,

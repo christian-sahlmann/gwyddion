@@ -91,7 +91,7 @@ typedef struct {
     GwyDataField **data;
 } APEFile;
 
-static gboolean      module_register    (const gchar *name);
+static gboolean      module_register    (void);
 static gint          apefile_detect     (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
 static GwyContainer* apefile_load       (const gchar *filename,
@@ -111,7 +111,6 @@ static const GwyEnum spm_modes[] = {
     { "Phase detection AFM",   SPM_MODE_PHASE_DETECT_AFM },
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -122,12 +121,10 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("apefile",
                            N_("APE files (.dat)"),

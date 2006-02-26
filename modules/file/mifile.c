@@ -80,7 +80,7 @@ typedef struct {
 } MetaDataFormat;
 
 /* Gwyddion File Module Functions */
-static gboolean         module_register      (const gchar *name);
+static gboolean         module_register      (void);
 static gint             mifile_detect        (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
 static GwyContainer*    mifile_load          (const gchar *filename,
@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("mifile",
                            N_("PicoView Data Files (.mi)"),

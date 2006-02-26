@@ -57,7 +57,7 @@ typedef struct {
     GtkObject *kernel_size;
 } SlopeControls;
 
-static gboolean       module_register             (const gchar *name);
+static gboolean       module_register             (void);
 static void           slope_dist                  (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean       slope_dialog                (SlopeArgs *args);
@@ -110,7 +110,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("slope_dist",
                               (GwyProcessFunc)&slope_dist,

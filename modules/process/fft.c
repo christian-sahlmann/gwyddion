@@ -54,7 +54,7 @@ typedef struct {
     GtkWidget *out;
 } FFTControls;
 
-static gboolean module_register    (const gchar *name);
+static gboolean module_register    (void);
 static void     fft                (GwyContainer *data,
                                     GwyRunType run);
 static void     fft_create_output  (GwyContainer *data,
@@ -103,7 +103,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("fft",
                               (GwyProcessFunc)&fft,

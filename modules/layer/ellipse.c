@@ -78,7 +78,7 @@ struct _GwySelectionEllipseClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                  (const gchar *name);
+static gboolean module_register                  (void);
 static GType    gwy_layer_ellipse_get_type       (void) G_GNUC_CONST;
 static GType    gwy_selection_ellipse_get_type   (void) G_GNUC_CONST;
 static void     gwy_layer_ellipse_set_property   (GObject *object,
@@ -141,7 +141,7 @@ G_DEFINE_TYPE(GwyLayerEllipse, gwy_layer_ellipse,
               GWY_TYPE_VECTOR_LAYER)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_layer_func_register(GWY_TYPE_LAYER_ELLIPSE);
     return TRUE;

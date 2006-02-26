@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 
 typedef struct _GwyModuleInfo GwyModuleInfo;
 
-typedef gboolean       (*GwyModuleRegisterFunc) (const gchar *name);
+typedef gboolean       (*GwyModuleRegisterFunc) (void);
 typedef GwyModuleInfo* (*GwyModuleQueryFunc)    (void);
 
 struct _GwyModuleInfo {

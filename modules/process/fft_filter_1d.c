@@ -79,7 +79,7 @@ typedef struct {
     GwyGraphModel *gmodel;
 } Fftf1dControls;
 
-static gboolean   module_register         (const gchar *name);
+static gboolean   module_register         (void);
 static void       fftf_1d                 (GwyContainer *data,
                                            GwyRunType run);
 static gboolean   fftf_1d_dialog          (Fftf1dArgs *args,
@@ -129,7 +129,7 @@ Fftf1dControls *pcontrols;
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("fft_filter_1d",
                               (GwyProcessFunc)&fftf_1d,

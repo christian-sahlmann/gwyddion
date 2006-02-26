@@ -35,7 +35,7 @@ typedef struct {
     GwyDataWindow *win2;
 } TipDilationArgs;
 
-static gboolean   module_register               (const gchar *name);
+static gboolean   module_register               (void);
 static void       tip_dilation                  (GwyContainer *data,
                                                  GwyRunType run);
 static GtkWidget* tip_dilation_window_construct (TipDilationArgs *args);
@@ -59,7 +59,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("tip_dilation",
                               (GwyProcessFunc)&tip_dilation,

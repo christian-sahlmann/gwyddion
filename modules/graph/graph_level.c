@@ -26,7 +26,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-static gboolean module_register(const gchar *name);
+static gboolean module_register(void);
 static void     level          (GwyGraph *graph);
 static void     level_do       (const gdouble *x,
                                 gdouble *y,
@@ -45,7 +45,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_graph_func_register("graph_level",
                             (GwyGraphFunc)&level,

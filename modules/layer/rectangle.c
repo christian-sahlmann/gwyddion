@@ -80,7 +80,7 @@ struct _GwySelectionRectangleClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                    (const gchar *name);
+static gboolean module_register                    (void);
 static GType    gwy_layer_rectangle_get_type       (void) G_GNUC_CONST;
 static GType    gwy_selection_rectangle_get_type   (void) G_GNUC_CONST;
 static void     gwy_layer_rectangle_set_property   (GObject *object,
@@ -144,7 +144,7 @@ G_DEFINE_TYPE(GwyLayerRectangle, gwy_layer_rectangle,
               GWY_TYPE_VECTOR_LAYER)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_layer_func_register(GWY_TYPE_LAYER_RECTANGLE);
     return TRUE;

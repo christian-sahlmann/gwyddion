@@ -128,7 +128,7 @@ typedef struct {
     const GdkPixbufFormat *pixbuf_format;
 } PixmapFormatInfo;
 
-static gboolean          module_register           (const gchar *name);
+static gboolean          module_register           (void);
 static gint              pixmap_detect       (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name,
                                               const gchar *name);
@@ -305,7 +305,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     PixmapFormatInfo *format_info;
     GSList *formats, *l;

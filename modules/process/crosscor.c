@@ -66,7 +66,7 @@ typedef struct {
     GtkObject *threshold;
 } CrosscorControls;
 
-static gboolean   module_register             (const gchar *name);
+static gboolean   module_register             (void);
 static void       crosscor                    (GwyContainer *data,
                                                GwyRunType run);
 static GtkWidget* crosscor_window_construct   (CrosscorArgs *args,
@@ -114,7 +114,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("crosscor",
                               (GwyProcessFunc)&crosscor,

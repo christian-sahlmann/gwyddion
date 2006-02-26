@@ -49,7 +49,7 @@ typedef struct {
     gboolean in_update;
 } ShadeControls;
 
-static gboolean    module_register              (const gchar *name);
+static gboolean    module_register              (void);
 static void        shade                        (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    shade_dialog                 (ShadeArgs *args,
@@ -89,7 +89,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("shade",
                               (GwyProcessFunc)&shade,

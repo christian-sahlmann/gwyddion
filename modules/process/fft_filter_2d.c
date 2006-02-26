@@ -146,7 +146,7 @@ typedef struct {
 } ControlsType;
 
 /* Gwyddion Module Routines */
-static gboolean     module_register     (const gchar *name);
+static gboolean     module_register     (void);
 static void         run_main            (GwyContainer *data,
                                          GwyRunType run);
 
@@ -215,7 +215,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("fft_filter_2d",
                               (GwyProcessFunc)&run_main,

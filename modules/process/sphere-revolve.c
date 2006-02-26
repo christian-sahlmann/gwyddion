@@ -54,7 +54,7 @@ typedef struct {
     gboolean in_update;
 } Sphrev1DControls;
 
-static gboolean      module_register           (const gchar *name);
+static gboolean      module_register           (void);
 static void          sphrev                    (GwyContainer *data,
                                                 GwyRunType run);
 static GwyDataField* sphrev_horizontal         (Sphrev1DArgs *args,
@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     /* The name mismatch is intentional, there should be a sphere_revolve
      * function too */

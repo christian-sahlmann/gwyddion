@@ -77,16 +77,14 @@ typedef struct {
 } FilePluginInfo;
 
 typedef GList* (*ProxyRegister)(GList *plugins,
-                                const gchar *name,
                                 const gchar *dir,
                                 gchar *buffer);
 
 /* top-level */
 static gboolean        create_user_plugin_dirs   (void);
-static gboolean        module_register           (const gchar *name);
+static gboolean        module_register           (void);
 static GList*          register_plugins          (GList *plugins,
                                                   const gchar *dir,
-                                                  const gchar *name,
                                                   ProxyRegister register_func);
 static GSList*         find_plugin_executables   (const gchar *dir,
                                                   GSList *list,
@@ -95,7 +93,6 @@ static gchar**         construct_rgi_names       (const gchar *pluginname);
 
 /* process plug-in proxy */
 static GList*          proc_register_plugins     (GList *plugins,
-                                                  const gchar *name,
                                                   const gchar *dir,
                                                   gchar *buffer);
 static void            proc_plugin_proxy_run     (GwyContainer *data,
@@ -106,7 +103,6 @@ static ProcPluginInfo* proc_find_plugin          (const gchar *name,
 
 /* file plug-in-proxy */
 static GList*          file_register_plugins     (GList *plugins,
-                                                  const gchar *name,
                                                   const gchar *dir,
                                                   gchar *buffer);
 static GwyContainer*   file_plugin_proxy_load    (const gchar *filename,
@@ -181,7 +177,7 @@ static const GwyEnum file_op_names[] = {
 };
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gchar *plugin_path, *libpath;
     gchar *dir;
@@ -199,23 +195,21 @@ module_register(const gchar *name)
     gwy_debug("plug-in path is: %s", plugin_path);
 
     dir = g_build_filename(plugin_path, "process", NULL);
-    proc_plugins = register_plugins(NULL, dir, name, proc_register_plugins);
+    proc_plugins = register_plugins(NULL, dir, proc_register_plugins);
     g_free(dir);
 
     dir = g_build_filename(plugin_path, "file", NULL);
-    file_plugins = register_plugins(NULL, dir, name, file_register_plugins);
+    file_plugins = register_plugins(NULL, dir, file_register_plugins);
     g_free(dir);
 
     create_user_plugin_dirs();
 
     dir = g_build_filename(gwy_get_user_dir(), "plugins", "process", NULL);
-    proc_plugins = register_plugins(proc_plugins,
-                                    dir, name, proc_register_plugins);
+    proc_plugins = register_plugins(proc_plugins, dir, proc_register_plugins);
     g_free(dir);
 
     dir = g_build_filename(gwy_get_user_dir(), "plugins", "file", NULL);
-    file_plugins = register_plugins(file_plugins,
-                                    dir, name, file_register_plugins);
+    file_plugins = register_plugins(file_plugins, dir, file_register_plugins);
     g_free(dir);
 
     g_free(plugin_path);
@@ -262,7 +256,6 @@ create_user_plugin_dirs(void)
  * register_plugins:
  * @plugins: Existing plug-in list.
  * @dir: Plug-in directory to search them in.
- * @name: Plug-in proxy module name (to be used passed to @register_func).
  * @register_func: Particular registration function.
  *
  * Register all plug-ins in a directory @dir with @register_func and add
@@ -273,7 +266,6 @@ create_user_plugin_dirs(void)
 static GList*
 register_plugins(GList *plugins,
                  const gchar *dir,
-                 const gchar *name,
                  ProxyRegister register_func)
 {
     gchar *args[] = { NULL, "register", NULL };
@@ -295,7 +287,7 @@ register_plugins(GList *plugins,
         }
         if (rginame) {
             gwy_debug("registering using %s data", rginame);
-            plugins = register_func(plugins, name, pluginname, buffer);
+            plugins = register_func(plugins, pluginname, buffer);
             g_free(pluginname);
             g_free(buffer);
             g_strfreev(rginames);
@@ -309,7 +301,7 @@ register_plugins(GList *plugins,
         ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                           &buffer, NULL, &exit_status, &err);
         if (ok)
-            plugins = register_func(plugins, name, pluginname, buffer);
+            plugins = register_func(plugins, pluginname, buffer);
         else {
             g_warning("Cannot register plug-in %s: %s",
                       pluginname, err->message);
@@ -434,7 +426,6 @@ find_plugin_executables(const gchar *dir,
 /**
  * proc_register_plugins:
  * @plugins: Plug-in list to eventually add the plug-in to.
- * @name: Module name for gwy_process_func_register().
  * @file: Plug-in file (full path).
  * @buffer: The output from "plugin register".
  *
@@ -445,7 +436,6 @@ find_plugin_executables(const gchar *dir,
  **/
 static GList*
 proc_register_plugins(GList *plugins,
-                      const gchar *name,
                       const gchar *file,
                       gchar *buffer)
 {
@@ -485,9 +475,9 @@ proc_register_plugins(GList *plugins,
             }
         }
         else if (pname && *pname) {
-            g_warning("%s failed; "
+            g_warning("failed; "
                       "pname = %s, menu_path = %s, run_modes = %s",
-                      name, pname, menu_path, run_modes);
+                      pname, menu_path, run_modes);
         }
         while (buffer && *buffer)
             gwy_str_next_line(&buffer);
@@ -595,7 +585,6 @@ proc_find_plugin(const gchar *name,
 /**
  * file_register_plugins:
  * @plugins: Plug-in list to eventually add the plug-in to.
- * @name: Module name for gwy_file_func_register().
  * @file: Plug-in file (full path).
  * @buffer: The output from "plugin register".
  *
@@ -606,7 +595,6 @@ proc_find_plugin(const gchar *name,
  **/
 static GList*
 file_register_plugins(GList *plugins,
-                      const gchar *name,
                       const gchar *file,
                       gchar *buffer)
 {
@@ -649,9 +637,9 @@ file_register_plugins(GList *plugins,
             }
         }
         else if (pname && *pname) {
-            g_warning("%s failed; "
+            g_warning("failed; "
                       "pname = %s, file_desc = %s, run_modes = %s, glob = %s",
-                      name, pname, file_desc, run_modes, glob);
+                      pname, file_desc, run_modes, glob);
         }
         while (buffer && *buffer)
             gwy_str_next_line(&buffer);

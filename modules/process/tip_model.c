@@ -61,7 +61,7 @@ typedef struct {
     gboolean tipdone;
 } TipModelControls;
 
-static gboolean    module_register                 (const gchar *name);
+static gboolean    module_register                 (void);
 static void        tip_model                       (GwyContainer *data,
                                                     GwyRunType run);
 static gboolean    tip_model_dialog                (TipModelArgs *args,
@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
 
     gwy_process_func_register("tip_model",

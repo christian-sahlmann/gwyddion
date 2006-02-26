@@ -69,7 +69,7 @@ typedef struct {
     gint expected_size;
 } SDFile;
 
-static gboolean      module_register        (const gchar *name);
+static gboolean      module_register        (void);
 static gint          sdfile_detect          (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
 static GwyContainer* sdfile_load            (const gchar *filename,
@@ -112,7 +112,7 @@ static const guint type_sizes[] = { 1, 2, 4, 4, 1, 2, 4, 8 };
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("sdfile",
                            N_("Surfstand SDF files (.sdf)"),

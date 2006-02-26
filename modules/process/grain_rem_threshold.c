@@ -55,7 +55,7 @@ typedef struct {
     GwyContainer *mydata;
 } RemoveControls;
 
-static gboolean    module_register               (const gchar *name);
+static gboolean    module_register               (void);
 static void        remove_th                     (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean    remove_dialog                 (RemoveArgs *args,
@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
 
     gwy_process_func_register("grain_rem_threshold",

@@ -52,7 +52,7 @@ typedef struct {
     gboolean in_update;
 } AngleControls;
 
-static gboolean      module_register              (const gchar *name);
+static gboolean      module_register              (void);
 static void          angle_dist                   (GwyContainer *data,
                                                    GwyRunType run);
 static gboolean      angle_dialog                 (AngleArgs *args);
@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("angle_dist",
                               (GwyProcessFunc)&angle_dist,

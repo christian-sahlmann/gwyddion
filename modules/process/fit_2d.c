@@ -79,7 +79,7 @@ typedef struct {
     GtkWidget *menu_function;
 } Fit2DControls;
 
-static gboolean    module_register          (const gchar *name);
+static gboolean    module_register          (void);
 static void        fit_2d                   (GwyContainer *data,
                                              GwyRunType run);
 static gboolean    fit_2d_dialog            (Fit2DArgs *args,
@@ -162,7 +162,7 @@ Fit2DControls *pcontrols;
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("fit_2d",
                               (GwyProcessFunc)&fit_2d,

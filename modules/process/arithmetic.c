@@ -60,7 +60,7 @@ typedef struct {
     GtkWidget *win[WIN_ARGS];
 } ArithmeticControls;
 
-static gboolean     module_register           (const gchar *name);
+static gboolean     module_register           (void);
 static void         arithmetic                (GwyContainer *data,
                                                GwyRunType run);
 static void         arithmetic_load_args      (GwyContainer *settings,
@@ -93,7 +93,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("arithmetic",
                               (GwyProcessFunc)&arithmetic,

@@ -49,7 +49,7 @@ typedef struct {
     GtkObject *lowlimit;
 } DWTAnisotropyControls;
 
-static gboolean module_register             (const gchar *name);
+static gboolean module_register             (void);
 static void     dwt_anisotropy              (GwyContainer *data,
                                              GwyRunType run);
 static gboolean dwt_anisotropy_dialog       (DWTAnisotropyArgs *args);
@@ -89,7 +89,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("dwtanisotropy",
                               (GwyProcessFunc)&dwt_anisotropy,

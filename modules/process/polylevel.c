@@ -53,7 +53,7 @@ typedef struct {
     gboolean in_update;
 } PolyLevelControls;
 
-static gboolean module_register                  (const gchar *name);
+static gboolean module_register                  (void);
 static void     poly_level                       (GwyContainer *data,
                                                   GwyRunType run);
 static void     poly_level_do                    (GwyContainer *data,
@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("polylevel",
                               (GwyProcessFunc)&poly_level,

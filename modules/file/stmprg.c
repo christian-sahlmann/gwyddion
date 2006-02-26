@@ -47,7 +47,7 @@
 #define MAGIC_TXT "MPAR"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
 
-static gboolean      module_register     (const gchar *name);
+static gboolean      module_register     (void);
 static gint          stmprg_detect       (const GwyFileDetectInfo *fileinfo,
                                           gboolean only_name);
 static GwyContainer* stmprg_load         (const gchar *filename,
@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("stmprg",
                            N_("Omicron STMPRG files (tp ta)"),

@@ -48,7 +48,7 @@ typedef struct {
     RotateArgs *args;
 } RotateControls;
 
-static gboolean module_register     (const gchar *name);
+static gboolean module_register     (void);
 static void     rotate              (GwyContainer *data,
                                      GwyRunType run);
 static gboolean rotate_dialog       (RotateArgs *args,
@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("rotate",
                               (GwyProcessFunc)&rotate,

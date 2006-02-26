@@ -65,7 +65,7 @@ typedef struct {
 } FitArgs;
 
 
-static gboolean    module_register           (const gchar *name);
+static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
 static gboolean    fit_dialog                (FitArgs *args);
 static void        recompute                 (FitArgs *args,
@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_graph_func_register("graph_cd",
                             (GwyGraphFunc)&fit,

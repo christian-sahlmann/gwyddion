@@ -77,7 +77,7 @@ struct _GwySelectionAxisClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                   (const gchar *name);
+static gboolean module_register                   (void);
 static GType    gwy_layer_axis_get_type           (void) G_GNUC_CONST;
 static GType    gwy_selection_axis_get_type       (void) G_GNUC_CONST;
 static void   gwy_selection_axis_serializable_init(GwySerializableIface *iface);
@@ -142,7 +142,7 @@ G_DEFINE_TYPE_EXTENDED
 G_DEFINE_TYPE(GwyLayerAxis, gwy_layer_axis, GWY_TYPE_VECTOR_LAYER)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_layer_func_register(GWY_TYPE_LAYER_AXIS);
     return TRUE;

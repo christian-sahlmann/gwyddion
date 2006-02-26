@@ -30,7 +30,7 @@
 
 #define HOUGH_RUN_MODES GWY_RUN_IMMEDIATE
 
-static gboolean module_register(const gchar *name);
+static gboolean module_register(void);
 static void     hough          (GwyContainer *data,
                                 GwyRunType run);
 
@@ -47,7 +47,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("hough",
                               (GwyProcessFunc)&hough,

@@ -39,7 +39,7 @@ typedef struct {
     GwyUnitoolRectLabels labels;
 } ToolControls;
 
-static gboolean   module_register     (const gchar *name);
+static gboolean   module_register     (void);
 static gboolean   use                 (GwyDataWindow *data_window,
                                        GwyToolSwitchEvent reason);
 static void       layer_setup         (GwyUnitoolState *state);
@@ -81,7 +81,7 @@ static GwyUnitoolSlots func_slots = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     static GwyToolFuncInfo crop_func_info = {
         "crop",
@@ -90,7 +90,7 @@ module_register(const gchar *name)
         &use,
     };
 
-    gwy_tool_func_register(name, &crop_func_info);
+    gwy_tool_func_register(&crop_func_info);
 
     return TRUE;
 }

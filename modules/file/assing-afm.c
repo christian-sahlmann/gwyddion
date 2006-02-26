@@ -48,7 +48,7 @@ typedef struct {
     gdouble range;
 } AFMFile;
 
-static gboolean      module_register       (const gchar *name);
+static gboolean      module_register       (void);
 static gint          aafm_detect           (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static GwyContainer* aafm_load             (const gchar *filename,
@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("assing-afm",
                            N_("Assing AFM files (.afm)"),

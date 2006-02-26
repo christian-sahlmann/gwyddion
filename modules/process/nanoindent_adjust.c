@@ -49,7 +49,7 @@ typedef struct {
     GtkWidget *move;
 } NanoindentAdjustControls;
 
-static gboolean      module_register                   (const gchar *name);
+static gboolean      module_register                   (void);
 static void          nanoindent_adjust                 (GwyContainer *data,
                                                         GwyRunType run);
 static GtkWidget*    nanoindent_adjust_window_construct(NanoindentAdjustArgs *args);
@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_process_func_register("nanoindent_adjust",
                               (GwyProcessFunc)&nanoindent_adjust,

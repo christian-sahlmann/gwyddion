@@ -43,7 +43,7 @@ typedef struct {
 } ExportControls;
 
 
-static gboolean module_register          (const gchar *name);
+static gboolean module_register          (void);
 static void     export                   (GwyGraph *graph);
 static gboolean export_dialog            (GwyGraph *graph);
 static void     export_dialog_closed_cb  (GwyGraph *graph);
@@ -86,7 +86,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_graph_func_register("graph_export_ascii",
                             (GwyGraphFunc)&export,

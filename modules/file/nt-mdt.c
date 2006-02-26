@@ -215,7 +215,7 @@ typedef struct {
     MDTFile *mdtfile;
 } MDTDialogControls;
 
-static gboolean       module_register     (const gchar *name);
+static gboolean       module_register     (void);
 static gint           mdt_detect          (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
 static GwyContainer*  mdt_load            (const gchar *filename,
@@ -308,7 +308,7 @@ static GwyModuleInfo module_info = {
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
     gwy_file_func_register("nt-mdt",
                            N_("NT-MDT files (.mdt)"),
