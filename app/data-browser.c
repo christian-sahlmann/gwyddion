@@ -2376,6 +2376,82 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
     va_end(ap);
 }
 
+static gint*
+gwy_app_data_list_get_objects(GwyAppDataList *list)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gint *ids;
+    gint n;
+
+    model = GTK_TREE_MODEL(list->list);
+    n = gtk_tree_model_iter_n_children(model, NULL);
+    ids = g_new(gint, n+1);
+    ids[n] = -1;
+    if (n) {
+        n = 0;
+        gtk_tree_model_get_iter_first(model, &iter);
+        do {
+            gtk_tree_model_get(model, &iter, MODEL_ID, ids + n, -1);
+            n++;
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    return ids;
+}
+
+/**
+ * gwy_app_data_broswer_get_data_ids:
+ * @data: A data container.
+ *
+ * Gets the list of all channels in a data container.
+ *
+ * The container must be known to the data browser.
+ *
+ * Returns: A newly allocated array with channels ids, -1 terminated.
+ **/
+gint*
+gwy_app_data_broswer_get_data_ids(GwyContainer *data)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    if (!proxy) {
+        g_warning("Nothing is known about Container %p", data);
+        return NULL;
+    }
+
+    return gwy_app_data_list_get_objects(&proxy->channels);
+}
+
+/**
+ * gwy_app_data_broswer_get_graph_ids:
+ * @data: A data container.
+ *
+ * Gets the list of all graphs in a data container.
+ *
+ * The container must be known to the data browser.
+ *
+ * Returns: A newly allocated array with graph ids, -1 terminated.
+ **/
+gint*
+gwy_app_data_broswer_get_graph_ids(GwyContainer *data)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    if (!proxy) {
+        g_warning("Nothing is known about Container %p", data);
+        return NULL;
+    }
+
+    return gwy_app_data_list_get_objects(&proxy->graphs);
+}
+
 /**
  * gwy_app_copy_data_items:
  * @source: Source container.

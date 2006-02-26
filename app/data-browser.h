@@ -63,6 +63,8 @@ gint   gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
                                              gboolean showit);
 void   gwy_app_data_browser_get_current     (GwyAppWhat what,
                                              ...);
+gint*  gwy_app_data_broswer_get_data_ids    (GwyContainer *data);
+gint*  gwy_app_data_broswer_get_graph_ids   (GwyContainer *data);
 void   gwy_app_copy_data_items              (GwyContainer *source,
                                              GwyContainer *dest,
                                              gint from_id,
