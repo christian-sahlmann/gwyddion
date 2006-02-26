@@ -241,12 +241,6 @@ tip_reconstruction_do(TipReconstructionArgs *args)
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfield */
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             "/0/select",
-                                             NULL);
-
     dfield = gwy_data_field_duplicate(dfield1);
     gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing"));
     dfield = gwy_tip_erosion(dfield1, dfield2, dfield,

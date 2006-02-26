@@ -55,7 +55,7 @@ typedef struct {
     GtkWidget *threshold_spin;
     GtkWidget *threshold_unit;
     GtkWidget *boundaries;
-    GwyContainer *tip;
+    GwyDataField *tip;
     GwyContainer *vtip;
     GtkObject *xres;
     GtkObject *yres;
@@ -149,6 +149,7 @@ tip_blind(GwyContainer *data, GwyRunType run)
 
     g_return_if_fail(run & TIP_BLIND_RUN_MODES);
     tip_blind_load_args(gwy_app_settings_get(), &args);
+    args.data = data;
     tip_blind_dialog(&args, data);
     tip_blind_save_args(gwy_app_settings_get(), &args);
 }
@@ -168,7 +169,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GwySIUnit *unit;
-    gint response, row;
+    gint response, row, id;
 
     dialog = gtk_dialog_new_with_buttons(_("Blind Tip Estimation"), NULL, 0,
                                          _("Run _Partial"), RESPONSE_PARTIAL,
@@ -195,23 +196,28 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.vyres = 200;
 
     /*set initial tip properties*/
-    controls.tip = gwy_container_duplicate_by_prefix(data,
-                                                     "/0/data",
-                                                     "/0/base/palette",
-                                                     NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip,
-                                                             "/0/data"));
-    gwy_data_field_resample(dfield, args->xres, args->yres,
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    
+    controls.tip = gwy_data_field_new_alike(dfield, TRUE);
+    gwy_data_field_resample(controls.tip, args->xres, args->yres,
                             GWY_INTERPOLATION_NONE);
-    gwy_data_field_fill(dfield, 0);
+    gwy_data_field_clear(controls.tip);
 
     /*set up data of rescaled image of the tip*/
-    controls.vtip = gwy_container_duplicate(controls.tip);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip,
-                                                             "/0/data"));
+    controls.vtip = gwy_container_new();
+    gwy_app_copy_data_items(data, controls.vtip, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            0);
+    
+    dfield = gwy_data_field_new_alike(controls.tip, TRUE);
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
-
+    gwy_container_set_object_by_name(controls.vtip,
+                                      "/0/data",
+                                      dfield);
+     
     /*set up rescaled image of the tip*/
     controls.view = gwy_data_view_new(controls.vtip);
     layer = gwy_layer_basic_new();
@@ -227,7 +233,6 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     row = 0;
 
     controls.data_window = gwy_app_data_window_get_current();
-    args->data = gwy_data_window_get_data(controls.data_window);
     controls.data
         = gwy_option_menu_data_window(G_CALLBACK(data_window_cb), &controls,
                                       NULL, GTK_WIDGET(controls.data_window));
@@ -466,15 +471,10 @@ data_window_cb(GtkWidget *item, TipBlindControls *controls)
 static void
 reset(TipBlindControls *controls, TipBlindArgs *args)
 {
-    GwyDataField *tipfield;
-
-    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
-                                                               "/0/data"));
-    gwy_data_field_fill(tipfield, 0);
+    gwy_data_field_fill(controls->tip, 0);
     controls->good_tip = FALSE;
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, controls->good_tip);
-
     tip_update(controls, args);
 }
 
@@ -516,36 +516,33 @@ tip_blind_run(TipBlindControls *controls,
               TipBlindArgs *args,
               gboolean full)
 {
-    GwyDataField *tipfield, *surface;
+    GwyDataField *surface;
     GwyContainer *data;
     gint count = -1;
 
     data = args->data;
     surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                               "/0/data"));
-    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
-                                                               "/0/data"));
-
     gwy_app_wait_start(controls->dialog, _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
-    prepare_fields(tipfield, surface, args->xres, args->yres);
+    prepare_fields(controls->tip, surface, args->xres, args->yres);
     if (full) {
-        tipfield = gwy_tip_estimate_full(tipfield, surface, args->thresh,
+        controls->tip = gwy_tip_estimate_full(controls->tip, surface, args->thresh,
                                          args->use_boundaries,
                                          &count,
                                          gwy_app_wait_set_fraction,
                                          gwy_app_wait_set_message);
-        controls->good_tip = (tipfield != NULL && count > 0);
+        controls->good_tip = (controls->tip != NULL && count > 0);
     }
     else {
-        gwy_data_field_fill(tipfield, 0);
-        tipfield = gwy_tip_estimate_partial(tipfield, surface, args->thresh,
+        gwy_data_field_fill(controls->tip, 0);
+        controls->tip = gwy_tip_estimate_partial(controls->tip, surface, args->thresh,
                                             args->use_boundaries,
                                             &count,
                                             gwy_app_wait_set_fraction,
                                             gwy_app_wait_set_message);
-        controls->good_tip = (tipfield != NULL && count > 0);
+        controls->good_tip = (controls->tip != NULL && count > 0);
     }
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, controls->good_tip);
@@ -559,11 +556,9 @@ static void
 tip_update(TipBlindControls *controls,
            G_GNUC_UNUSED TipBlindArgs *args)
 {
-    GwyDataField *tipfield, *vtipfield, *buffer;
+    GwyDataField *vtipfield, *buffer;
 
-    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
-                                                               "/0/data"));
-    buffer = gwy_data_field_duplicate(tipfield);
+    buffer = gwy_data_field_duplicate(controls->tip);
     gwy_data_field_resample(buffer, controls->vxres, controls->vyres,
                             GWY_INTERPOLATION_ROUND);
 
@@ -579,16 +574,12 @@ static void
 tip_blind_do(TipBlindControls *controls,
              TipBlindArgs *args)
 {
-    GtkWidget *data_window;
-    const guchar *pal;
+    gint newid;
 
-    if (gwy_container_gis_string_by_name(args->data, "/0/base/palette", &pal))
-        gwy_container_set_string_by_name(controls->tip, "/0/base/palette",
-                                         g_strdup(pal));
-
-    data_window = gwy_app_data_window_create(controls->tip);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    newid = gwy_app_data_browser_add_data_field(controls->tip, args->data, TRUE);
     g_object_unref(controls->tip);
+    gwy_app_copy_data_items(args->data, args->data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_set_data_field_title(args->data, newid, _("Estimated tip"));
     controls->tipdone = TRUE;
 }
 

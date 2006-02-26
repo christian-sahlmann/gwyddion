@@ -280,11 +280,10 @@ plot_maxima(GwyDataField * retfield, gdouble threshold)
 static gboolean
 maskcor_do(MaskcorArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data, *ret, *kernel;
     GwyDataField *dfield, *kernelfield, *retfield, *scorefield;
     GwyDataWindow *operand1, *operand2;
-    gint iteration = 0;
+    gint iteration = 0, newid;
     GwyComputationStateType state;
 
     operand1 = args->win1;
@@ -319,17 +318,12 @@ maskcor_do(MaskcorArgs *args)
 
     /*score - do new data with score*/
     if (args->result == GWY_MASKCOR_SCORE) {
-        ret = gwy_container_duplicate_by_prefix(data,
-                                                "/0/data",
-                                                "/0/base/palette",
-                                                NULL);
-        scorefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
-                                                                     "/0/data"));
-        gwy_data_field_resample(scorefield, retfield->xres, retfield->yres, 0);
+        scorefield = gwy_data_field_new_alike(retfield, TRUE);
         gwy_data_field_copy(retfield, scorefield, TRUE);
-        data_window = gwy_app_data_window_create(ret);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-        g_object_unref(ret);
+        newid = gwy_app_data_browser_add_data_field(scorefield, data, TRUE);
+        gwy_app_copy_data_items(data, data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_set_data_field_title(data, newid, _("Correlation score"));
+        g_object_unref(scorefield);
     }
     else { /*add mask*/
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);

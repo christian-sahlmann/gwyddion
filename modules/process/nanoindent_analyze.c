@@ -18,17 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TO DO
-controls_changed => computed = FALSE
-
-in fact: rewrite from scratch.
-
+/* TODO
+Create separate masks for each feature and notepad for their results
+(that would be swithcing also the mask. Conceps should be similar as
+for fractal dimension calculation module.
 */
 
 
 #include "config.h"
 #include <string.h>
+#include <stdio.h>
 #include <glib/gstdio.h>
+#include <gdk/gdk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -42,14 +43,12 @@ in fact: rewrite from scratch.
 
 
 #define  SURE_IMPRESSION_COEFF   0.3
-
 #define INDENT_ANALYZE_RUN_MODES GWY_RUN_INTERACTIVE
-
-enum {
-    GWY_PLANE_NONE = 0,
-    GWY_PLANE_LEVEL,
-    GWY_PLANE_ROTATE
-};
+#define FLOOD_MAX_POINTS    500
+#define FLOOD_QUEUED        1.0
+#define  INDENT_INSIDE   100.0
+#define  INDENT_BORDER   2.0
+#define   FLOOD_MAX_DEPTH  1000
 
 enum {
     GWY_HOW_MARK_NEW = 0,
@@ -96,10 +95,6 @@ typedef struct {
     gdouble phi_tol;
     gdouble theta_tol;
 
-    gdouble plane_x;
-    gdouble plane_y;
-    gdouble plane_c;
-
     gdouble volume_above;
     gdouble volume_below;
     gdouble area_above;
@@ -133,7 +128,6 @@ typedef struct {
 } IndentAnalyzeArgs;
 
 typedef struct {
-    GtkWidget *w_plane_correct;
     GtkWidget *w_how_mark;
     GtkWidget *w_what_mark;
     GtkWidget *w_indentor;
@@ -145,6 +139,7 @@ typedef struct {
 
     GtkWidget *view;
     GwyContainer *mydata;
+    GtkWidget *color_button;
 
     IndentAnalyzeArgs *args;
     gboolean computed;
@@ -212,7 +207,6 @@ static void     set_mask_at                     (GwyDataField *mask,
                                                  gint y,
                                                  gdouble m,
                                                  gint how );
-static void     level_data                      (IndentAnalyzeControls *c);
 static void     get_field_xymin                 (GwyDataField *dfield,
                                                  gdouble *min,
                                                  gint *posx,
@@ -256,16 +250,16 @@ static gdouble  gwy_vec_abs                     (GwyVec v);
 static gdouble  gwy_vec_cos                     (GwyVec v1,
                                                  GwyVec v2);
 static void  gwy_vec_normalize (GwyVec *v);
+static void        load_mask_color            (GtkWidget *color_button,
+                                               GwyContainer *data);
+static void        mask_color_change_cb       (GtkWidget *color_button,
+                                               IndentAnalyzeControls *controls);
+
+
 /*
 static gdouble gwy_vec_arg_phi (GwyVec v);
 static gdouble gwy_vec_arg_theta (GwyVec v);
 */
-
-GwyEnum plane_correct_enum[] = {
-    { N_("Do nothing"),   GWY_PLANE_NONE,   },
-    { N_("Plane level"),  GWY_PLANE_LEVEL,  },
-    { N_("Plane rotate"), GWY_PLANE_ROTATE, },
-};
 
 GwyEnum how_mark_enum[] = {
     { N_("New"), GWY_HOW_MARK_NEW, },
@@ -351,20 +345,26 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     };
     gdouble zoomval;
     GwyPixmapLayer *layer;
-
+    GwyRGBA rgba;
     gchar siu[30];
     GwySIValueFormat* siformat;
-    GwyRGBA rgba;
-    gint row;
+    gint row, id;
+
 
     controls.args = args;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
 
-    /* XXX: move, where it belongs, once someone adds mask color button */
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-    }
+    /* what is this for?
+     if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+                 gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+                         gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+                             }
+    */
 
+    
+    
     dialog = gtk_dialog_new_with_buttons(_("Indentaion statistics"), NULL, 0,
                                          _("_Compute & mark"), RESPONSE_COMPUTE,
                                          _("_Save statistics"), RESPONSE_SAVE,
@@ -378,7 +378,14 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(hbox),
                        FALSE, FALSE, 4);
     /* VIEW */
-    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
+    
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
@@ -401,16 +408,6 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox), table,
                        FALSE, FALSE, 4);
     row = 0;
-
-    controls.w_plane_correct
-        = gwy_enum_combo_box_new(plane_correct_enum,
-                                 G_N_ELEMENTS(plane_correct_enum),
-                                 G_CALLBACK(gwy_enum_combo_box_update_int),
-                                 &args->plane_correct, args->plane_correct,
-                                 TRUE);
-    gwy_table_attach_row(table, row, _("Data field leveling:"), "",
-                         controls.w_plane_correct);
-    row++;
 
     controls.w_what_mark
         = gwy_enum_combo_box_new(what_mark_enum, G_N_ELEMENTS(what_mark_enum),
@@ -449,6 +446,18 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     temp = GTK_WIDGET(gtk_spin_button_new (GTK_ADJUSTMENT (controls.w_theta_tol), 1, 2));
     gwy_table_attach_row(table, row, _("Theta range:"), "deg",temp);
     row++;
+
+    controls.color_button = gwy_color_button_new();
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
+                                   TRUE);
+    load_mask_color(controls.color_button,
+                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
+    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+                            GTK_OBJECT(controls.color_button),
+                            GWY_HSCALE_WIDGET_NO_EXPAND);
+    g_signal_connect(controls.color_button, "clicked",
+                     G_CALLBACK(mask_color_change_cb), &controls);
+
 
     gtk_table_attach (GTK_TABLE (table), gtk_hseparator_new (), 0, 2, row, row+1,
 		    (GtkAttachOptions) (GTK_FILL),
@@ -532,16 +541,16 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     row++;
 
     controls.w_volume_indent = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Indent. volume"), siu,controls.w_volume_indent);
+    gwy_table_attach_row(table, row, _("Indent: volume"), siu,controls.w_volume_indent);
     row++;
 
     strcpy(siu, siformat->units);
     strcat(siu, "^2");
     controls.w_surface_indent = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Indent. A_d"), siu,controls.w_surface_indent);
+    gwy_table_attach_row(table, row, _("surface"), siu,controls.w_surface_indent);
     row++;
     controls.w_area_indent = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Indent. A_p"), siu,controls.w_area_indent);
+    gwy_table_attach_row(table, row, _("projected area"), siu,controls.w_area_indent);
     row++;
 
     gtk_table_attach (GTK_TABLE (table), gtk_hseparator_new (), 0, 2, row, row+1,
@@ -550,16 +559,16 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     row++;
 
     controls.w_surface_innerpileup = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Inner Pile-Up A_d"), siu,controls.w_surface_innerpileup);
+    gwy_table_attach_row(table, row, _("Inner Pile-Up: surface"), siu,controls.w_surface_innerpileup);
     row++;
     controls.w_area_innerpileup = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Inner Pile-Up A_p"), siu,controls.w_area_innerpileup);
+    gwy_table_attach_row(table, row, _("projected area"), siu,controls.w_area_innerpileup);
     row++;
     controls.w_surface_outerpileup = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Outer Pile-Up A_d"), siu,controls.w_surface_outerpileup);
+    gwy_table_attach_row(table, row, _("Outer Pile-Up: surface"), siu,controls.w_surface_outerpileup);
     row++;
     controls.w_area_outerpileup = gtk_label_new ("");
-    gwy_table_attach_row(table, row, _("Outer Pile-Up A_p"), siu,controls.w_area_outerpileup);
+    gwy_table_attach_row(table, row, _("projected area"), siu,controls.w_area_outerpileup);
     row++;
 
     gwy_si_unit_value_format_free(siformat);
@@ -603,8 +612,31 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     return controls.computed;
 }
 
+static void
+mask_color_change_cb(GtkWidget *color_button,
+                     IndentAnalyzeControls *controls)
+{
+    GwyContainer *data;
 
-/* ====================================================================================== */
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
+    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button), data,
+                                "/0/mask");
+    load_mask_color(color_button, data);
+}
+
+static void
+load_mask_color(GtkWidget *color_button,
+                GwyContainer *data)
+{
+    GwyRGBA rgba;
+
+    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+    }
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
+}
+
 
 static void get_field_slope_from_border (GwyDataField *dfield, gdouble *c, gdouble *bx, gdouble *by)
 {
@@ -714,25 +746,6 @@ static GwyVec data_field_average_normal_vector (GwyDataField *dfield, gint x, gi
        v.z /= n;
     }
 
-/*
-FILE* deb = g_fopen("anv.txt","a");
-fprintf(deb,"%lf %lf %lf->", v.x,v.y,v.z);
-
-    if(r) {
-        gwy_data_field_area_fit_plane(dfield, x-r, y-r,2*r+1, 2*r+1, NULL, &a, &b);
-        v.x = -a;
-        v.y = -b;
-        v.z = 1;
-    }
-    else {
-        v.x = -gwy_data_field_get_xder(dfield, x, y);
-        v.y = -gwy_data_field_get_yder(dfield, x, y);
-        v.z = 1;
-    }
-
-fprintf(deb,"%lf %lf %lf\n", v.x,v.y,v.z);
-fclose(deb);
-*/
     return v;
 }
 
@@ -753,13 +766,6 @@ static void set_mask_at (GwyDataField *mask, gint x, gint y, gdouble m,  gint ho
 
         case GWY_HOW_MARK_OR:
         act_mask = (act_mask || im);
-   /*    if(act_mask){
-             FILE* fl = g_fopen ("setmask.txt","a");
-                            fprintf(fl, "[%d %d]%d %d %lf\n", x,y,act_mask, im, (double)(act_mask || im));
-                            fclose(fl);
-                            }
-                            gwy_data_field_area_fill(mask,10,10,20,20,(double)act_mask);
-             */
         break;
 
         case GWY_HOW_MARK_NOT:
@@ -773,54 +779,6 @@ static void set_mask_at (GwyDataField *mask, gint x, gint y, gdouble m,  gint ho
     gwy_data_field_set_val(mask,x,y,(double)act_mask);
 }
 
-void level_data (IndentAnalyzeControls *c)
-{
-    gint iter = 3;
-    IndentAnalyzeArgs *args= c->args;
-    GwyDataField *dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(c->mydata, "/0/data"));
-
-    get_field_slope_from_border (dfield, &(args->plane_c), &(args->plane_x), &(args->plane_y));
-
-
-    while (iter--) {
-               gwy_data_field_plane_level(dfield, args->plane_c, args->plane_x, args->plane_y);
-               get_field_slope_from_border (dfield, &(args->plane_c), &(args->plane_x), &(args->plane_y));
-            }
-
-/*
-    switch(args->plane_correct)
-    {
-        case GWY_PLANE_LEVEL:
-            while (iter--) {
-               gwy_data_field_plane_level(dfield, args->plane_c, args->plane_x, args->plane_y);
-               get_field_slope_from_border (dfield, &(args->plane_c), &(args->plane_x), &(args->plane_y));
-            }
-            break;
-
-        case GWY_PLANE_ROTATE:
-            gwy_data_field_plane_rotate(dfield,
-                                180/G_PI*atan2(args->plane_x, 1),
-                                180/G_PI*atan2(args->plane_y, 1),
-                                GWY_INTERPOLATION_BILINEAR);
-            break;
-    }
-*/
-
-}
-
-
-typedef struct {
-    gint x;
-    gint y;
-} FFPoint;
-
-#define FLOOD_MAX_POINTS    500
-#define FLOOD_QUEUED        1.0
-#define  INDENT_INSIDE   100.0
-#define  INDENT_BORDER   2.0
-
-#define   FLOOD_MAX_DEPTH  1000
-
 static void  indentmask_flood_fill (GwyDataField *indentmask, gint i, gint j,
                                    GwyDataField *dfield, FloodFillInfo* ffi)
 {
@@ -833,13 +791,13 @@ static void  indentmask_flood_fill (GwyDataField *indentmask, gint i, gint j,
     GwyVec tmp;
     gint rr, s;
 
-    FFPoint* pq; /* points queue */
-    FFPoint* tail, *head;     /* head points on free position */
+    GdkPoint* pq; /* points queue */
+    GdkPoint* tail, *head;     /* head points on free position */
     gint count;
 
     val = gwy_data_field_get_val(indentmask, i, j);
 
-    pq = g_new(FFPoint, FLOOD_MAX_POINTS);
+    pq = g_new(GdkPoint, FLOOD_MAX_POINTS);
     count = 0;
     tail = pq;
     head = pq;
@@ -961,8 +919,6 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
             g_object_unref(mask);
     }
     read_data_from_controls (controls);
-    level_data (controls);
-
     switch(controls->args->indentor) {
        case GWY_INDENTOR_VICKERS:
        case GWY_INDENTOR_KNOOP:
@@ -1147,7 +1103,7 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
            }
            if(args->what_mark != GWY_WHAT_MARK_NOTHING &&
               args->what_mark != GWY_WHAT_MARK_POINTS)
-              set_mask_at (mask, i,j, mark_it, args->how_mark);
+                    set_mask_at (mask, i,j, mark_it, args->how_mark);
 
        }
    }
@@ -1223,8 +1179,6 @@ static void
 dialog_update(IndentAnalyzeControls *controls,
                        IndentAnalyzeArgs *args)
 {
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_plane_correct),
-                                  args->plane_correct);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_how_mark),
                                   args->how_mark);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_what_mark),
@@ -1235,7 +1189,6 @@ dialog_update(IndentAnalyzeControls *controls,
 
 static const gchar what_mark_key[]     = "/module/nanoindent/what_mark";
 static const gchar how_mark_key[]      = "/module/nanoindent/how_mark";
-static const gchar plane_correct_key[] = "/module/nanoindent/plane_correct";
 static const gchar indentor_key[]      = "/module/nanoindent/indentor";
 static const gchar plane_tol_key[]     = "/module/nanoindent/plane_tol";
 static const gchar phi_tol_key[]       = "/module/nanoindent/phi_tol";
@@ -1252,8 +1205,6 @@ static void
 load_args(GwyContainer *container,
           IndentAnalyzeArgs *args)
 {
-    if(!gwy_container_gis_enum_by_name(container, plane_correct_key, &args->plane_correct))
-       args->plane_correct = GWY_PLANE_LEVEL;
     if(!gwy_container_gis_enum_by_name(container, what_mark_key, &args->what_mark))
        args->what_mark = GWY_WHAT_MARK_NOTHING;
     if(!gwy_container_gis_enum_by_name(container, how_mark_key, &args->how_mark))
@@ -1276,7 +1227,6 @@ static void
 save_args(GwyContainer *container,
           IndentAnalyzeArgs *args)
 {
-    gwy_container_set_enum_by_name(container, plane_correct_key, args->plane_correct);
     gwy_container_set_enum_by_name(container, what_mark_key, args->what_mark);
     gwy_container_set_enum_by_name(container, how_mark_key, args->how_mark);
     gwy_container_set_enum_by_name(container, indentor_key, args->indentor);
@@ -1439,8 +1389,8 @@ static void save_statistics_dialog (IndentAnalyzeControls* c)
     fprintf (out, "Area (projected) of    plane:             %g (%.1lf %%)\n", c->args->area_plane/mag/mag, 100.*(c->args->area_plane/sxy));
     fprintf (out, "\n");
 
-    fprintf (out, "Area (developed) above %g (+%.1f %%)\n", args->surface_above/mag/mag, 100.*args->surface_above/sxy);
-    fprintf (out, "Area (developed) above %g (+%.1lf %%)\n", args->surface_below/mag/mag, 100.*args->surface_below/sxy);
+    fprintf (out, "Surface above %g (+%.1f %%)\n", args->surface_above/mag/mag, 100.*args->surface_above/sxy);
+    fprintf (out, "Surface below %g (+%.1lf %%)\n", args->surface_below/mag/mag, 100.*args->surface_below/sxy);
 
     fprintf (out, "Volume above:     %g\n", c->args->volume_above/mag/mag/mag);
     fprintf (out, "Volume below:     %g\n", c->args->volume_below/mag/mag/mag);

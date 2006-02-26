@@ -54,7 +54,7 @@ typedef struct {
     GtkObject *nsides;
     GtkWidget *labsize;
     GtkObject *slope;
-    GwyContainer *tip;
+    GwyDataField *tip;
     GwyContainer *vtip;
     gint vxres;
     gint vyres;
@@ -142,6 +142,7 @@ tip_model(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & TIP_MODEL_RUN_MODES);
 
     tip_model_load_args(gwy_app_settings_get(), &args);
+    args.data = data;
     tip_model_dialog(&args, data);
     tip_model_save_args(gwy_app_settings_get(), &args);
 }
@@ -160,7 +161,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GwySIUnit *unit;
-    gint response, row;
+    gint response, row, id;
 
     dialog = gtk_dialog_new_with_buttons(_("Model Tip"), NULL, 0,
                                          _("_Update Preview"), RESPONSE_PREVIEW,
@@ -180,20 +181,25 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     controls.vyres = 200;
 
     /* set up initial tip field*/
-    controls.tip = gwy_container_duplicate_by_prefix(data,
-                                                     "/0/data",
-                                                     "/0/base/palette",
-                                                     NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip,
-                                                             "/0/data"));
-    gwy_data_field_fill(dfield, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
 
-    /* set up resamplev view data */
-    controls.vtip = gwy_container_duplicate(controls.tip);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip,
-                                                             "/0/data"));
-    gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
-                            GWY_INTERPOLATION_ROUND);
+    controls.tip = gwy_data_field_new_alike(dfield, TRUE);
+    gwy_data_field_resample(controls.tip, controls.vxres, controls.vyres,
+                            GWY_INTERPOLATION_NONE);
+    gwy_data_field_clear(controls.tip);
+
+    /*set up data of rescaled image of the tip*/
+    controls.vtip = gwy_container_new();
+    gwy_app_copy_data_items(data, controls.vtip, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            0);
+
+    dfield = gwy_data_field_new_alike(controls.tip, TRUE);
+    gwy_container_set_object_by_name(controls.vtip,
+                                      "/0/data",
+                                      dfield);
 
     /* set up resampled view */
     controls.view = gwy_data_view_new(controls.vtip);
@@ -434,9 +440,7 @@ tip_update(TipModelControls *controls,
 {
    GwyDataField *tipfield, *vtipfield, *buffer;
 
-   tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
-                                                              "/0/data"));
-   buffer = gwy_data_field_duplicate(tipfield);
+   buffer = gwy_data_field_duplicate(controls->tip);
    gwy_data_field_resample(buffer, controls->vxres, controls->vyres,
                            GWY_INTERPOLATION_ROUND);
 
@@ -460,17 +464,12 @@ static void
 tip_model_do(TipModelArgs *args,
              TipModelControls *controls)
 {
-    GtkWidget *data_window;
-    const guchar *pal;
+    gint newid;
 
-    tip_process(args, controls);
-    if (gwy_container_gis_string_by_name(args->data, "/0/base/palette", &pal))
-        gwy_container_set_string_by_name(controls->tip, "/0/base/palette",
-                                         g_strdup(pal));
-
-    data_window = gwy_app_data_window_create(controls->tip);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    newid = gwy_app_data_browser_add_data_field(controls->tip, args->data, TRUE);
     g_object_unref(controls->tip);
+    gwy_app_copy_data_items(args->data, args->data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_set_data_field_title(args->data, newid, _("Modelled tip"));
     controls->tipdone = TRUE;
 }
 
@@ -492,8 +491,7 @@ tip_process(TipModelArgs *args,
     tip_model_dialog_update_values(controls, args);
 
     /*guess x and y size*/
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
-                                                             "/0/data"));
+    dfield = controls->tip;
     sfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
                                                              "/0/data"));
 

@@ -55,7 +55,7 @@ typedef struct {
     gboolean par_fix[MAX_PARAMS];
     GwyNLFitter *fitter;
     gboolean is_fitted;
-    GwyContainer *data;
+    GwyDataField *dfield;
     GwyContainer *original_data;
     GwyContainer *vdata;
     GwyFit2DDisplayType display_type;
@@ -206,7 +206,7 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
         RESPONSE_INITS = 2,
         RESPONSE_GUESS = 3
     };
-    gint response, i, j;
+    gint response, i, j, id;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GtkWidget *label;
@@ -230,25 +230,26 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     controls.vyres = 200;
     pcontrols = &controls;
 
-    /*get preview*/
-    args->data = gwy_container_duplicate_by_prefix(data,
-                                                   "/0/data",
-                                                   "/0/base/palette",
-                                                   NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
-                                                             "/0/data"));
-    gwy_data_field_fill(dfield, 0);
+    /*get data*/
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                                             0);
+    
+    args->dfield = gwy_data_field_duplicate(dfield);
+    gwy_data_field_clear(args->dfield);
 
     /*set up data of rescaled image of the surface*/
-    args->vdata = gwy_container_duplicate_by_prefix(args->data,
-                                                    "/0/data",
-                                                    "/0/base/palette",
-                                                    NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->vdata,
-                                                             "/0/data"));
+    args->vdata = gwy_container_new();
+    gwy_app_copy_data_items(data, args->vdata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                                               0);
+    
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
-
+    gwy_container_set_object_by_name(args->vdata,
+                                    "/0/data",
+                                     dfield);
+    
     /*set up rescaled image of the surface*/
     controls.view = gwy_data_view_new(args->vdata);
     layer = gwy_layer_basic_new();
@@ -475,9 +476,7 @@ update_view(Fit2DControls *controls, Fit2DArgs *args)
     originalfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
                                                                     "/0/data"));
 
-    fitfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
-                                                                "/0/data"));
-
+    fitfield = args->dfield;
     resultfield = gwy_data_field_new(originalfield->xres, originalfield->yres,
                                      originalfield->xreal, originalfield->yreal,
                                      TRUE);
@@ -558,8 +557,8 @@ plot_inits(Fit2DControls *controls, Fit2DArgs *args)
     gdouble dimdata[4];
     gboolean fres;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
-                                                              "/0/data"));
+    dfield = args->dfield;
+    
     dimdata[0] = (gdouble)dfield->xres;
     dimdata[1] = (gdouble)dfield->yres;
     dimdata[2] = dfield->xreal;
@@ -590,9 +589,7 @@ fit_2d_run(Fit2DControls *controls,
     gchar buffer[20];
     gint i, j, nparams;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
-                                  "/0/data"));
-
+    dfield = args->dfield;
     original_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
                                   "/0/data"));
 
@@ -682,11 +679,12 @@ static void
 fit_2d_do(Fit2DControls *controls,
              Fit2DArgs *args)
 {
-    GtkWidget *data_window;
-
-    data_window = gwy_app_data_window_create(args->data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(args->data);
+    gint newid;
+    
+    newid = gwy_app_data_browser_add_data_field(args->dfield, args->original_data, TRUE);
+    g_object_unref(args->dfield);
+    gwy_app_copy_data_items(args->original_data, args->original_data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_set_data_field_title(args->original_data, newid, _("Fitted sphere"));
 }
 
 /*display mode menu*/

@@ -393,27 +393,21 @@ crosscor_do(CrosscorArgs *args)
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
     GwyDataWindow *operand1, *operand2;
-    gint iteration = 0;
+    gint iteration = 0, newid;
     GwyComputationStateType state;
 
     operand1 = args->win1;
     operand2 = args->win2;
     g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
 
-    data = gwy_data_window_get_data(operand1);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
+    data = gwy_data_window_get_data(operand1);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+ 
     /*result fields - after computation result should be at dfieldx */
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             "/0/mask/red",
-                                             "/0/mask/green",
-                                             "/0/mask/blue",
-                                             NULL);
-    dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfieldx = gwy_data_field_duplicate(
+                   GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data")));
     dfieldy = gwy_data_field_duplicate(dfieldx);
     score = gwy_data_field_duplicate(dfieldx);
 
@@ -446,6 +440,9 @@ crosscor_do(CrosscorArgs *args)
         abs_field(dfieldx, dfieldy);
         break;
 
+        case GWY_CROSSCOR_X:
+        break;
+
         case GWY_CROSSCOR_Y:
         gwy_data_field_copy(dfieldy, dfieldx, FALSE);
         break;
@@ -465,10 +462,35 @@ crosscor_do(CrosscorArgs *args)
         gwy_container_set_object_by_name(data, "/0/mask", score);
     }
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    g_object_unref(data);
 
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
+    g_object_unref(dfieldx);
+    gwy_app_copy_data_items(data, data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
+                
+    switch (args->result) {
+        case GWY_CROSSCOR_ABS:        
+        gwy_app_set_data_field_title(data, newid, _("Absolute difference"));
+        break;
+
+        case GWY_CROSSCOR_X:
+        gwy_app_set_data_field_title(data, newid, _("X difference"));
+        break;
+
+        case GWY_CROSSCOR_Y:
+        gwy_app_set_data_field_title(data, newid, _("Y difference"));
+        break;
+
+        case GWY_CROSSCOR_DIR:
+        gwy_app_set_data_field_title(data, newid, _("Direction difference"));
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    
     g_object_unref(score);
     g_object_unref(dfieldy);
 
