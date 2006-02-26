@@ -18,7 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*TODO: Only allow 2^n sized images */
+/*TODO: Only allow 2^n sized images (XXX: this is no longer useful with FFTW) */
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgwyddion/gwymacros.h>
@@ -202,32 +202,28 @@ static void         dfield_to_screen    (gdouble *x,
                                          gdouble *y,
                                          ControlsType *controls);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.0",
+    "1.1",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
 
-/* This is the ONLY exported symbol. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo do_main_func_info = {
-        "fft_filter_2d",
-        N_("/_Correct Data/_2D FFT filtering..."),
-        (GwyProcessFunc)&run_main,
-        FFTF_2D_RUN_MODES,
-        GWY_MENU_FLAG_DATA,
-    };
-
-    gwy_process_func_register(name, &do_main_func_info);
+    gwy_process_func_registe2("fft_filter_2d",
+                              (GwyProcessFunc)&run_main,
+                              N_("/_Correct Data/_2D FFT filtering..."),
+                              NULL,
+                              FFTF_2D_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Two-dimensional FFT filtering"));
 
     return TRUE;
 }
