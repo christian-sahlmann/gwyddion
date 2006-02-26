@@ -475,14 +475,14 @@ update_view(Fit2DControls *controls, Fit2DArgs *args)
 
     originalfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
                                                                     "/0/data"));
-
+    
     fitfield = args->dfield;
+    g_return_if_fail(GWY_IS_DATA_FIELD(originalfield));
+    g_return_if_fail(GWY_IS_DATA_FIELD(fitfield));
+    
     resultfield = gwy_data_field_new(originalfield->xres, originalfield->yres,
                                      originalfield->xreal, originalfield->yreal,
                                      TRUE);
-
-    g_return_if_fail(GWY_IS_DATA_FIELD(originalfield));
-    g_return_if_fail(GWY_IS_DATA_FIELD(fitfield));
 
     if (args->display_type == GWY_FIT_2D_DISPLAY_DATA)
         gwy_data_field_copy(originalfield, resultfield, FALSE);
