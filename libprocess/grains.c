@@ -527,7 +527,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_grains_get_distribution:
+ * gwy_data_field_grains_get_size_distribution:
  * @grain_field: Data field of marked grains (mask).
  * @distribution: Grain size distribution.
  *
@@ -537,8 +537,8 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
  * @distribution.  Grain size means grain side if it was square.
  **/
 void
-gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
-                                       GwyDataLine *distribution)
+gwy_data_field_grains_get_size_distribution(GwyDataField *grain_field,
+                                            GwyDataLine *distribution)
 {
     GwySIUnit *fieldunit, *lineunit;
     gint i, xres, yres, ngrains, nhist;
@@ -590,6 +590,85 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
 
     /* Set proper units */
     fieldunit = gwy_data_field_get_si_unit_xy(grain_field);
+    lineunit = gwy_data_line_get_si_unit_x(distribution);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(distribution);
+    gwy_si_unit_set_unit_string(lineunit, "");
+}
+
+/**
+ * gwy_data_field_grains_get_height_distribution:
+ * @data_field: Data to be used for marking.
+ * @grain_field: Data field of marked grains (mask).
+ * @distribution: Grain height distribution.
+ *
+ * Computes grain height distribution.
+ *
+ * Puts number of grains vs. grain height (in real units) data into
+ * @distribution.
+ **/
+void
+gwy_data_field_grains_get_height_distribution(GwyDataField *data_field,
+                                              GwyDataField *grain_field,
+                                              GwyDataLine *distribution)
+{
+    GwySIUnit *fieldunit, *lineunit;
+    gint i, xres, yres, ngrains, nhist;
+    gdouble maxpnt;
+    gdouble *grain_height;
+    gint *grains;
+    gdouble s, sigma;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+
+    grains = g_new0(gint, xres*yres);
+    ngrains = gwy_data_field_number_grains(grain_field, grains);
+    if (!ngrains) {
+        gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
+        gwy_data_line_clear(distribution);
+        gwy_data_line_set_real(distribution, xres);
+        return;
+    }
+
+    /* sum grain heights */
+    grain_height = g_new(gdouble, ngrains + 1);
+    for (i = 0; i < ngrains + 1; i++) {
+        grain_height[i] = - G_MAXDOUBLE;
+    }
+    for (i = 0; i < xres*yres; i++) {
+        if (grains[i] && data_field->data[i] > grain_height[grains[i]]) {
+            grain_height[grains[i]] = data_field->data[i];
+        }
+    }
+    g_free(grains);
+
+    maxpnt = - G_MAXDOUBLE;
+    s = sigma = 0.0;
+    for (i = 1; i <= ngrains; i++) {
+        if (maxpnt < grain_height[i])
+            maxpnt = grain_height[i];
+        s += grain_height[i];
+        sigma += grain_height[i] * grain_height[i];
+    }
+    sigma = sqrt(ngrains*sigma - s*s)/ngrains;
+    s = 2.49/cbrt(ngrains)*sigma;
+    nhist = maxpnt/s + 1;
+
+    gwy_data_line_resample(distribution, nhist, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(distribution);
+
+    for (i = 1; i <= ngrains; i++)
+        distribution->data[(gint)(grain_height[i]/s)] += 1;
+    g_free(grain_height);
+
+    gwy_data_line_set_real(distribution, maxpnt);
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(distribution);
     gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
     lineunit = gwy_data_line_get_si_unit_y(distribution);

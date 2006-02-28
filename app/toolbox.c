@@ -259,7 +259,7 @@ gwy_app_toolbox_create(void)
         {
             GWY_STOCK_GRAINS_GRAPH,
             N_("Grain size distribution"),
-            "grain_dist",
+            "grain_size_dist",
         },
         {
             GWY_STOCK_MASK_REMOVE,

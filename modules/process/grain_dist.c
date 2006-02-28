@@ -30,20 +30,22 @@
 #define DIST_RUN_MODES GWY_RUN_IMMEDIATE
 #define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-static gboolean module_register(void);
-static void     grain_dist     (GwyContainer *data,
-                                GwyRunType run);
-static void     grain_stat     (GwyContainer *data,
-                                GwyRunType run);
+static gboolean module_register   (void);
+static void     grain_size_dist   (GwyContainer *data,
+                                   GwyRunType run);
+static void     grain_height_dist (GwyContainer *data,
+                                   GwyRunType run);
+static void     grain_stat        (GwyContainer *data,
+                                   GwyRunType run);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Evaluates distribution of grains (continuous parts of mask)."),
-    "Petr Klapetek <petr@klapetek.cz>",
-    "1.4",
-    "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>",
+    "1.5",
+    "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
+    "2003-2006",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -51,13 +53,20 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_process_func_register("grain_dist",
-                              (GwyProcessFunc)&grain_dist,
+    gwy_process_func_register("grain_size_dist",
+                              (GwyProcessFunc)&grain_size_dist,
                               N_("/_Grains/_Size Distribution"),
                               GWY_STOCK_GRAINS_GRAPH,
                               DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Calculate grain size distribution"));
+    gwy_process_func_register("grain_height_dist",
+                              (GwyProcessFunc)&grain_height_dist,
+                              N_("/_Grains/_Height Distribution"),
+                              GWY_STOCK_GRAINS_GRAPH,
+                              DIST_RUN_MODES,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
+                              N_("Calculate grain height distribution"));
     gwy_process_func_register("grain_stat",
                               (GwyProcessFunc)&grain_stat,
                               N_("/_Grains/S_tatistics"),
@@ -70,7 +79,7 @@ module_register(void)
 }
 
 static void
-grain_dist(GwyContainer *data, GwyRunType run)
+grain_size_dist(GwyContainer *data, GwyRunType run)
 {
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
@@ -82,7 +91,7 @@ grain_dist(GwyContainer *data, GwyRunType run)
     g_return_if_fail(mfield);
 
     dataline = gwy_data_line_new(10, 10, TRUE);
-    gwy_data_field_grains_get_distribution(mfield, dataline);
+    gwy_data_field_grains_get_size_distribution(mfield, dataline);
 
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
@@ -92,6 +101,41 @@ grain_dist(GwyContainer *data, GwyRunType run)
     gwy_graph_model_set_title(gmodel, _("Grain Size Histogram"));
     gwy_graph_model_set_units_from_data_line(gmodel, dataline);
     gwy_graph_curve_model_set_description(cmodel, "Grain sizes");
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
+    g_object_unref(dataline);
+
+    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+    g_object_unref(gmodel);
+}
+
+static void
+grain_height_dist(GwyContainer *data, GwyRunType run)
+{
+    GwyGraphCurveModel *cmodel;
+    GwyGraphModel *gmodel;
+    GwyDataLine *dataline;
+    GwyDataField *dfield;
+    GwyDataField *mfield;
+
+    g_return_if_fail(run & DIST_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield);
+    g_return_if_fail(mfield);
+
+    /*  height distribution  */
+    dataline = gwy_data_line_new(10, 10, TRUE);
+    gwy_data_field_grains_get_height_distribution(dfield, mfield, dataline);
+
+    gmodel = gwy_graph_model_new();
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_model_add_curve(gmodel, cmodel);
+    g_object_unref(cmodel);
+
+    gwy_graph_model_set_title(gmodel, _("Grain Height Histogram"));
+    gwy_graph_model_set_units_from_data_line(gmodel, dataline);
+    gwy_graph_curve_model_set_description(cmodel, "Grain heights");
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
 
