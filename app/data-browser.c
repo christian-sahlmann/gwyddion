@@ -1550,7 +1550,6 @@ gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
     }
 
     g_return_if_fail(!proxy->refcount);
-    gwy_app_data_proxy_deserted(proxy);
 }
 
 static void
