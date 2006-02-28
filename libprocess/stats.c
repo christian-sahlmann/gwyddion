@@ -39,6 +39,27 @@
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
+static void
+gwy_data_field_calculate_min_max(GwyDataField *data_field)
+{
+    gint i;
+    gdouble min, max;
+    gdouble *p;
+
+    min = data_field->data[0];
+    max = data_field->data[0];
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++) {
+        if (G_UNLIKELY(min > *p))
+            min = *p;
+        if (G_UNLIKELY(max < *p))
+            max = *p;
+    }
+    CVAL(data_field, MIN) = min;
+    CVAL(data_field, MAX) = max;
+    data_field->cached |= CBIT(MIN) | CBIT(MAX);
+}
+
 /**
  * gwy_data_field_get_max:
  * @data_field: A data field.
@@ -52,26 +73,13 @@
 gdouble
 gwy_data_field_get_max(GwyDataField *data_field)
 {
-    gint i;
-    gdouble max;
-    gdouble *p;
-
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -G_MAXDOUBLE);
 
     gwy_debug("%s", CTEST(data_field, MAX) ? "cache" : "lame");
-    if (CTEST(data_field, MAX))
-        return CVAL(data_field, MAX);
+    if (!CTEST(data_field, MAX))
+        gwy_data_field_calculate_min_max(data_field);
 
-    max = data_field->data[0];
-    p = data_field->data;
-    for (i = data_field->xres * data_field->yres; i; i--, p++) {
-        if (G_UNLIKELY(max < *p))
-            max = *p;
-    }
-    CVAL(data_field, MAX) = max;
-    data_field->cached |= CBIT(MAX);
-
-    return max;
+    return CVAL(data_field, MAX);
 }
 
 
@@ -135,26 +143,13 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
 gdouble
 gwy_data_field_get_min(GwyDataField *data_field)
 {
-    gint i;
-    gdouble min;
-    gdouble *p;
-
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), G_MAXDOUBLE);
 
     gwy_debug("%s", CTEST(data_field, MIN) ? "cache" : "lame");
-    if (CTEST(data_field, MIN))
-        return CVAL(data_field, MIN);
+    if (!CTEST(data_field, MIN))
+        gwy_data_field_calculate_min_max(data_field);
 
-    min = data_field->data[0];
-    p = data_field->data;
-    for (i = data_field->xres * data_field->yres; i; i--, p++) {
-        if (G_UNLIKELY(min > *p))
-            min = *p;
-    }
-    CVAL(data_field, MIN) = min;
-    data_field->cached |= CBIT(MIN);
-
-    return min;
+    return CVAL(data_field, MIN);
 }
 
 
