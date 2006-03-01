@@ -1524,6 +1524,7 @@ gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
 
     proxy = browser->current;
     g_return_if_fail(proxy);
+    proxy->refcount++;
 
     model = GTK_TREE_MODEL(proxy->channels.list);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
@@ -1549,7 +1550,9 @@ gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
-    g_return_if_fail(!proxy->refcount);
+    g_return_if_fail(proxy->refcount == 1);
+    proxy->refcount--;
+    gwy_app_data_proxy_deserted(proxy);
 }
 
 static void
