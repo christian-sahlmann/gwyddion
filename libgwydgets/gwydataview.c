@@ -1327,8 +1327,12 @@ gwy_data_view_get_pixbuf(GwyDataView *data_view,
     xscale = (max_width > 0) ? (gdouble)max_width/width : 1.0;
     yscale = (max_height > 0) ? (gdouble)max_height/height : 1.0;
     scale = MIN(MIN(xscale, yscale), 1.0);
-    width_scaled = CLAMP((gint)(scale*width), 1, max_width);
-    height_scaled = CLAMP((gint)(scale*height), 1, max_height);
+    width_scaled = (gint)(scale*width);
+    height_scaled = (gint)(scale*height);
+    if (max_width)
+        width_scaled = CLAMP(width_scaled, 1, max_width);
+    if (max_height)
+        height_scaled = CLAMP(height_scaled, 1, max_height);
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                             BITS_PER_SAMPLE, width_scaled, height_scaled);
