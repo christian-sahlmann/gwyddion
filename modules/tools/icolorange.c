@@ -348,8 +348,9 @@ dialog_update(GwyUnitoolState *state,
     else if (reason == GWY_UNITOOL_UPDATED_CONTROLS)
         controls->range_source = USE_HISTOGRAM;
 
-    min = selection[0] = gwy_data_field_get_min(dfield);
-    max = selection[1] = gwy_data_field_get_max(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    selection[0] = min;
+    selection[1] = max;
 
     if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
         if (gwy_graph_area_get_selection_number(GWY_GRAPH_AREA(gwy_graph_get_area(graph)))) {
@@ -361,14 +362,11 @@ dialog_update(GwyUnitoolState *state,
             if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
                                                  NULL, isel))
                 has_selection = TRUE;
-            selection[0] = gwy_data_field_area_get_min(dfield,
-                                                       isel[0], isel[1],
-                                                       isel[2] - isel[0],
-                                                       isel[3] - isel[1]);
-            selection[1] = gwy_data_field_area_get_max(dfield,
-                                                       isel[0], isel[1],
-                                                       isel[2] - isel[0],
-                                                       isel[3] - isel[1]);
+            gwy_data_field_area_get_min_max(dfield,
+                                            isel[0], isel[1],
+                                            isel[2] - isel[0],
+                                            isel[3] - isel[1],
+                                            &selection[0], &selection[1]);
             update_graph_selection(state, selection);
         }
         if (has_selection)
@@ -437,8 +435,7 @@ update_graph_selection(GwyUnitoolState *state,
     graph = GWY_GRAPH(controls->histogram);
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
 
     if (min == selection[0] && max == selection[1])
         gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)));

@@ -296,8 +296,7 @@ process_metadata(GHashTable *meta,
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
 
-        min = gwy_data_field_get_min(dfield);
-        max = gwy_data_field_get_max(dfield);
+        gwy_data_field_get_min_max(dfield, &min, &max);
         gwy_data_field_multiply(dfield, r/(max - min));
     }
 

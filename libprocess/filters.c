@@ -57,9 +57,7 @@ gwy_data_field_normalize(GwyDataField *data_field)
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    min = gwy_data_field_get_min(data_field);
-    max = gwy_data_field_get_max(data_field);
-
+    gwy_data_field_get_min_max(data_field, &min, &max);
     if (min == max) {
         gwy_data_field_clear(data_field);
         return;
@@ -121,8 +119,7 @@ gwy_data_field_renormalize(GwyDataField *data_field,
         return;
     }
 
-    min = gwy_data_field_get_min(data_field);
-    max = gwy_data_field_get_max(data_field);
+    gwy_data_field_get_min_max(data_field, &min, &max);
     if (min == max) {
         gwy_data_field_fill(data_field, offset);
         return;

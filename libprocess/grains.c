@@ -81,8 +81,7 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
     gwy_data_field_copy(data_field, grain_field, FALSE);
-    min = gwy_data_field_get_min(grain_field);
-    max = gwy_data_field_get_max(grain_field);
+    gwy_data_field_get_min_max(grain_field, &min, &max);
     if (below)
         gwy_data_field_threshold(grain_field,
                                  min + threshval*(max - min)/100.0, 1, 0);
@@ -117,8 +116,7 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field,
     gwy_data_field_copy(data_field, grain_field, FALSE);
     gwy_data_field_filter_laplacian(grain_field);
 
-    min = gwy_data_field_get_min(grain_field);
-    max = gwy_data_field_get_max(grain_field);
+    gwy_data_field_get_min_max(grain_field, &min, &max);
     if (below)
         gwy_data_field_threshold(grain_field,
                                  min + threshval*(max - min)/100.0, 1, 0);
@@ -165,8 +163,7 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
     for (i = 0; i < xres*yres; i++)
         gdata[i] = hypot(gdata[i], masky->data[i]);
 
-    min = gwy_data_field_get_min(grain_field);
-    max = gwy_data_field_get_max(grain_field);
+    gwy_data_field_get_min_max(grain_field, &min, &max);
     if (below)
         gwy_data_field_threshold(grain_field,
                                  min + threshval*(max - min)/100.0, 1, 0);
@@ -1061,9 +1058,8 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
 
-    min = gwy_data_field_area_get_min(data_field, col, row, width, height);
-    max = gwy_data_field_area_get_max(data_field, col, row, width, height);
-
+    gwy_data_field_area_get_min_max(data_field, col, row, width, height,
+                                    &min, &max);
     n = width*height;
     if (max == min || n == 0) {
         gwy_data_line_clear(target_line);

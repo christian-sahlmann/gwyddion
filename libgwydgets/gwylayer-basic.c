@@ -595,8 +595,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     switch (range_type) {
         case GWY_LAYER_BASIC_RANGE_FULL:
         case GWY_LAYER_BASIC_RANGE_ADAPT:
-        rmin = gwy_data_field_get_min(data_field);
-        rmax = gwy_data_field_get_max(data_field);
+        gwy_data_field_get_min_max(data_field, &rmin, &rmax);
         break;
 
         case GWY_LAYER_BASIC_RANGE_FIXED:
@@ -631,8 +630,7 @@ gwy_layer_basic_get_fixed_range(GwyLayerBasic *basic_layer,
     guint len;
 
     if (!basic_layer->fixed_key) {
-        *rmin = gwy_data_field_get_min(data_field);
-        *rmax = gwy_data_field_get_max(data_field);
+        gwy_data_field_get_min_max(data_field, rmin, rmax);
         return;
     }
 

@@ -149,8 +149,7 @@ aafm_load(const gchar *filename,
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
     p += 2*afmfile.res*afmfile.res;
     afmfile.range = get_FLOAT(&p);
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
     if (min == max)
         gwy_data_field_clear(dfield);
     else
@@ -222,8 +221,7 @@ aafm_export(G_GNUC_UNUSED GwyContainer *data,
     r = GUINT16_TO_LE(res);
     fwrite(&res, 1, sizeof(r), fh);
 
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
     if (min == max) {
         q = 0.0;
         z0 = 0.0;

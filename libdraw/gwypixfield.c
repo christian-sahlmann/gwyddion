@@ -118,8 +118,7 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
     g_return_if_fail(xres == gdk_pixbuf_get_width(pixbuf));
     g_return_if_fail(yres == gdk_pixbuf_get_height(pixbuf));
 
-    maximum = gwy_data_field_get_max(data_field);
-    minimum = gwy_data_field_get_min(data_field);
+    gwy_data_field_get_min_max(data_field, &minimum, &maximum);
     if (minimum == maximum)
         maximum = G_MAXDOUBLE;
 
@@ -169,8 +168,7 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
     const guchar *samples, *s;
     gint xres, yres, i, j, h, rowstride, palsize;
 
-    min = gwy_data_field_get_min(data_field);
-    max = gwy_data_field_get_max(data_field);
+    gwy_data_field_get_min_max(data_field, &min, &max);
     if (min == max) {
         gwy_pixbuf_draw_data_field(pixbuf, data_field, gradient);
         return;

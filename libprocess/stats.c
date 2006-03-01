@@ -557,8 +557,7 @@ gwy_data_field_get_autorange(GwyDataField *data_field,
         return;
     }
 
-    min = gwy_data_field_get_min(data_field);
-    max = gwy_data_field_get_max(data_field);
+    gwy_data_field_get_min_max(data_field, &min, &max);
     if (min == max) {
         rmin = min;
         rmax = max;
@@ -765,8 +764,8 @@ gwy_data_field_area_dh(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
-    min = gwy_data_field_area_get_min(data_field, col, row, width, height);
-    max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+    gwy_data_field_area_get_min_max(data_field, col, row, width, height,
+                                    &min, &max);
 
     /* Set proper units */
     fieldunit = gwy_data_field_get_si_unit_z(data_field);
@@ -1689,8 +1688,8 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
-    min = gwy_data_field_area_get_min(data_field, col, row, width, height);
-    max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+    gwy_data_field_area_get_min_max(data_field, col, row, width, height,
+                                    &min, &max);
     /* There are no boundaries on a totally flat sufrace */
     if (min == max || width == 0 || height == 0)
         return;

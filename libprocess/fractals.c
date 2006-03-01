@@ -149,8 +149,8 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(yresult);
 
-    imin = gwy_data_field_get_min(buffer);
-    height = gwy_data_field_get_max(buffer) - imin;
+    gwy_data_field_get_min_max(buffer, &imin, &height);
+    height -= imin;
 
     for (l = 0; l < dimexp; l++) {
         rp = ROUND(pow(2, l + 1));

@@ -620,8 +620,7 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
 
     xreal = gwy_data_field_get_xreal(gwy3dview->data_field);
     yreal = gwy_data_field_get_yreal(gwy3dview->data_field);
-    data_min = gwy_data_field_get_min(gwy3dview->data_field);
-    data_max = gwy_data_field_get_max(gwy3dview->data_field);
+    gwy_data_field_get_min_max(gwy3dview->data_field, &data_min, &data_max);
     range = fabs(data_max - data_min);
     maximum = MAX(fabs(data_min), fabs(data_max));
 
@@ -2070,59 +2069,58 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
                  GwyDataField *dfield,
                  gint shape)
 {
-   gint i, j, xres, yres, res;
-   gdouble data_min, data_max;
-   GLdouble zdifr;
-   Gwy3DVector *normals;
-   const gdouble *data;
-   GwyGradient *grad;
-   GwyRGBA color;
+    gint i, j, xres, yres, res;
+    gdouble data_min, data_max;
+    GLdouble zdifr;
+    Gwy3DVector *normals;
+    const gdouble *data;
+    GwyGradient *grad;
+    GwyRGBA color;
 
-   xres = gwy_data_field_get_xres(dfield);
-   yres = gwy_data_field_get_yres(dfield);
-   data_min = gwy_data_field_get_min(dfield);
-   data_max = gwy_data_field_get_max(dfield);
-   data = gwy_data_field_get_data_const(dfield);
-   res  = xres > yres ? xres : yres;
-   grad = gwy3dview->gradient;
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_data_field_get_min_max(gwy3dview->data_field, &data_min, &data_max);
+    data = gwy_data_field_get_data_const(dfield);
+    res  = xres > yres ? xres : yres;
+    grad = gwy3dview->gradient;
 
-   glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
-   glPushMatrix();
-   glTranslatef(-(xres/(double)res), -(yres/(double)res),
-                GWY_3D_Z_DISPLACEMENT);
-   glScalef(2.0/res, 2.0/res, GWY_3D_Z_TRANSFORMATION/(data_max - data_min));
-   glTranslatef(0.0, 0.0, -data_min);
-   zdifr = 1.0/(data_max - data_min);
-   normals = g_new(Gwy3DVector, xres * yres);
-   if (!gwy_3d_make_normals(dfield, normals)) {
-       /*TODO solve not enough momory problem*/
-   }
+    glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
+    glPushMatrix();
+    glTranslatef(-(xres/(double)res), -(yres/(double)res),
+                 GWY_3D_Z_DISPLACEMENT);
+    glScalef(2.0/res, 2.0/res, GWY_3D_Z_TRANSFORMATION/(data_max - data_min));
+    glTranslatef(0.0, 0.0, -data_min);
+    zdifr = 1.0/(data_max - data_min);
+    normals = g_new(Gwy3DVector, xres * yres);
+    if (!gwy_3d_make_normals(dfield, normals)) {
+        /*TODO solve not enough momory problem*/
+    }
 
-   for (j = 0; j < yres-1; j++) {
-       glBegin(GL_TRIANGLE_STRIP);
-       for (i = 0; i < xres-1; i++) {
-           gdouble a, b;
+    for (j = 0; j < yres-1; j++) {
+        glBegin(GL_TRIANGLE_STRIP);
+        for (i = 0; i < xres-1; i++) {
+            gdouble a, b;
 
-           a = data[(yres-1 - j)*xres + i];
-           b = data[(yres-2 - j)*xres + i];
-           glNormal3d(normals[j*xres+i].x,
-                      normals[j*xres+i].y,
-                      normals[j*xres+i].z);
-           gwy_gradient_get_color(grad, (a - data_min)*zdifr, &color);
-           glColor3d(color.r , color.g, color.b);
-           glVertex3d((double)i, (double)j, a);
-           glNormal3d(normals[(j+1)*xres+i].x,
-                      normals[(j+1)*xres+i].y,
-                      normals[(j+1)*xres+i].z);
-           gwy_gradient_get_color(grad, (b - data_min)*zdifr, &color);
-           glColor3d(color.r , color.g, color.b);
-           glVertex3d((double)i, (double)(j+1), b);
-       }
-       glEnd();
-   }
-   g_free(normals);
-   glPopMatrix();
-   glEndList();
+            a = data[(yres-1 - j)*xres + i];
+            b = data[(yres-2 - j)*xres + i];
+            glNormal3d(normals[j*xres+i].x,
+                       normals[j*xres+i].y,
+                       normals[j*xres+i].z);
+            gwy_gradient_get_color(grad, (a - data_min)*zdifr, &color);
+            glColor3d(color.r , color.g, color.b);
+            glVertex3d((double)i, (double)j, a);
+            glNormal3d(normals[(j+1)*xres+i].x,
+                       normals[(j+1)*xres+i].y,
+                       normals[(j+1)*xres+i].z);
+            gwy_gradient_get_color(grad, (b - data_min)*zdifr, &color);
+            glColor3d(color.r , color.g, color.b);
+            glVertex3d((double)i, (double)(j+1), b);
+        }
+        glEnd();
+    }
+    g_free(normals);
+    glPopMatrix();
+    glEndList();
 
 }
 
@@ -2139,8 +2137,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 
     xres = gwy_data_field_get_xres(widget->data_field);
     yres = gwy_data_field_get_yres(widget->data_field);
-    data_min = gwy_data_field_get_min(widget->data_field);
-    data_max = gwy_data_field_get_max(widget->data_field);
+    gwy_data_field_get_min_max(widget->data_field, &data_min, &data_max);
     res  = xres > yres ? xres : yres;
 
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
@@ -2267,8 +2264,7 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
 
     gwy_debug(" ");
 
-    data_min = gwy_data_field_get_min(widget->data_field);
-    data_max = gwy_data_field_get_max(widget->data_field);
+    gwy_data_field_get_min_max(widget->data_field, &data_min, &data_max);
     data_mean = gwy_data_field_get_avg(widget->data_field);
 
     mat_none = gwy_gl_materials_get_gl_material(GWY_GL_MATERIAL_NONE);

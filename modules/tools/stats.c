@@ -271,8 +271,7 @@ dialog_update(GwyUnitoolState *state,
     h = isel[3] - isel[1];
     gwy_data_field_area_get_stats(dfield, isel[0], isel[1], w, h,
                                   &avg, &ra, &rms, &skew, &kurtosis);
-    min = gwy_data_field_area_get_min(dfield, isel[0], isel[1], w, h);
-    max = gwy_data_field_area_get_max(dfield, isel[0], isel[1], w, h);
+    gwy_data_field_area_get_min_max(dfield, isel[0], isel[1], w, h, &min, &max);
     median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
     q = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
         *gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);

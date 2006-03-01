@@ -157,8 +157,7 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
     gwy_data_field_hough_line(dfield, x_gradient, y_gradient, result, hwidth);
 
-    hmax = gwy_data_field_get_max(result);
-    hmin = gwy_data_field_get_min(result);
+    gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
 
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
@@ -232,8 +231,7 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
     gwy_data_field_hough_circle(dfield, x_gradient, y_gradient, result, radius);
 
-    hmax = gwy_data_field_get_max(result);
-    hmin = gwy_data_field_get_min(result);
+    gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
 
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);

@@ -178,8 +178,7 @@ use(GwyDataWindow *data_window,
         mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        min = gwy_data_field_get_min(dfield);
-        max = gwy_data_field_get_max(dfield);
+        gwy_data_field_get_min_max(dfield, &min, &max);
         gwy_container_set_double_by_name(mydata, "/0/base/min", min);
         gwy_container_set_double_by_name(mydata, "/0/base/max", max);
     }
@@ -224,8 +223,7 @@ dialog_create(GwyUnitoolState *state)
     pal = NULL;
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     controls->pal = g_strdup(pal);
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
+    gwy_data_field_get_min_max(dfield, &min, &max);
 
     table = gtk_table_new(1, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
@@ -318,8 +316,7 @@ dialog_update(GwyUnitoolState *state,
         gdouble min, max;
 
         gwy_debug("Recomputing min, max");
-        min = gwy_data_field_get_min(dfield);
-        max = gwy_data_field_get_max(dfield);
+        gwy_data_field_get_min_max(dfield, &min, &max);
         gwy_container_set_double_by_name(mydata, "/0/base/min", min);
         gwy_container_set_double_by_name(mydata, "/0/base/max", max);
     }
