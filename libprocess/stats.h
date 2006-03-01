@@ -27,6 +27,9 @@ G_BEGIN_DECLS
 
 gdouble gwy_data_field_get_max              (GwyDataField *data_field);
 gdouble gwy_data_field_get_min              (GwyDataField *data_field);
+void    gwy_data_field_get_min_max          (GwyDataField *data_field,
+                                             gdouble *min,
+                                             gdouble *max);
 gdouble gwy_data_field_get_avg              (GwyDataField *data_field);
 gdouble gwy_data_field_get_rms              (GwyDataField *data_field);
 gdouble gwy_data_field_get_sum              (GwyDataField *data_field);
@@ -42,6 +45,11 @@ gdouble gwy_data_field_area_get_min         (GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+void    gwy_data_field_area_get_min_max     (GwyDataField *data_field,
+                                             gint col, gint row,
+                                             gint width, gint height,
+                                             gdouble *min,
+                                             gdouble *max);
 gdouble gwy_data_field_area_get_avg         (GwyDataField *data_field,
                                              gint col,
                                              gint row,

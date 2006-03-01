@@ -39,27 +39,6 @@
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
-static void
-gwy_data_field_calculate_min_max(GwyDataField *data_field)
-{
-    gint i;
-    gdouble min, max;
-    gdouble *p;
-
-    min = data_field->data[0];
-    max = data_field->data[0];
-    p = data_field->data;
-    for (i = data_field->xres * data_field->yres; i; i--, p++) {
-        if (G_UNLIKELY(min > *p))
-            min = *p;
-        if (G_UNLIKELY(max < *p))
-            max = *p;
-    }
-    CVAL(data_field, MIN) = min;
-    CVAL(data_field, MAX) = max;
-    data_field->cached |= CBIT(MIN) | CBIT(MAX);
-}
-
 /**
  * gwy_data_field_get_max:
  * @data_field: A data field.
@@ -74,10 +53,22 @@ gdouble
 gwy_data_field_get_max(GwyDataField *data_field)
 {
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -G_MAXDOUBLE);
-
     gwy_debug("%s", CTEST(data_field, MAX) ? "cache" : "lame");
-    if (!CTEST(data_field, MAX))
-        gwy_data_field_calculate_min_max(data_field);
+
+    if (!CTEST(data_field, MAX)) {
+        const gdouble *p;
+        gdouble max;
+        gint i;
+
+        max = data_field->data[0];
+        p = data_field->data;
+        for (i = data_field->xres * data_field->yres; i; i--, p++) {
+            if (G_UNLIKELY(max < *p))
+                max = *p;
+        }
+        CVAL(data_field, MAX) = max;
+        data_field->cached |= CBIT(MAX);
+    }
 
     return CVAL(data_field, MAX);
 }
@@ -101,7 +92,7 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
 {
     gint i, j;
     gdouble max = -G_MAXDOUBLE;
-    gdouble *datapos;
+    const gdouble *datapos;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), max);
     g_return_val_if_fail(col >= 0 && row >= 0
@@ -118,7 +109,7 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
-        gdouble *drow = datapos + i*dfield->xres;
+        const gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++) {
             if (G_UNLIKELY(max < *drow))
@@ -143,11 +134,23 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
 gdouble
 gwy_data_field_get_min(GwyDataField *data_field)
 {
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), G_MAXDOUBLE);
-
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -G_MAXDOUBLE);
     gwy_debug("%s", CTEST(data_field, MIN) ? "cache" : "lame");
-    if (!CTEST(data_field, MIN))
-        gwy_data_field_calculate_min_max(data_field);
+
+    if (!CTEST(data_field, MIN)) {
+        gdouble min;
+        const gdouble *p;
+        gint i;
+
+        min = data_field->data[0];
+        p = data_field->data;
+        for (i = data_field->xres * data_field->yres; i; i--, p++) {
+            if (G_UNLIKELY(min > *p))
+                min = *p;
+        }
+        CVAL(data_field, MIN) = min;
+        data_field->cached |= CBIT(MIN);
+    }
 
     return CVAL(data_field, MIN);
 }
@@ -171,7 +174,7 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
 {
     gint i, j;
     gdouble min = G_MAXDOUBLE;
-    gdouble *datapos;
+    const gdouble *datapos;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), min);
     g_return_val_if_fail(col >= 0 && row >= 0
@@ -188,7 +191,7 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
-        gdouble *drow = datapos + i*dfield->xres;
+        const gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++) {
             if (G_UNLIKELY(min > *drow))
@@ -198,6 +201,117 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
     }
 
     return min;
+}
+
+void
+gwy_data_field_get_min_max(GwyDataField *data_field,
+                           gdouble *min,
+                           gdouble *max)
+{
+    gboolean need_min = FALSE, need_max = FALSE;
+    gdouble min1, max1;
+    const gdouble *p;
+    gint i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    if (min) {
+        if (CTEST(data_field, MIN))
+            *min = CVAL(data_field, MIN);
+        else
+            need_min = TRUE;
+    }
+    if (max) {
+        if (CTEST(data_field, MAX))
+            *max = CVAL(data_field, MAX);
+        else
+            need_max = TRUE;
+    }
+
+    if (!need_max && !need_max)
+        return;
+    else if (!need_min) {
+        *max = gwy_data_field_get_max(data_field);
+        return;
+    }
+    else if (!need_max) {
+        *min = gwy_data_field_get_min(data_field);
+        return;
+    }
+
+    min1 = data_field->data[0];
+    max1 = data_field->data[0];
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++) {
+        if (G_UNLIKELY(min1 > *p))
+            min1 = *p;
+        if (G_UNLIKELY(max1 < *p))
+            max1 = *p;
+    }
+
+    *min = min1;
+    *max = max1;
+    CVAL(data_field, MIN) = min1;
+    CVAL(data_field, MAX) = max1;
+    data_field->cached |= CBIT(MIN) | CBIT(MAX);
+}
+
+void
+gwy_data_field_area_get_min_max(GwyDataField *data_field,
+                                gint col, gint row,
+                                gint width, gint height,
+                                gdouble *min,
+                                gdouble *max)
+{
+    gdouble min1 = G_MAXDOUBLE, max1 = -G_MAXDOUBLE;
+    const gdouble *datapos;
+    gint i, j;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+    if (!width || !height) {
+        if (min)
+            *min = min1;
+        if (max)
+            *max = max1;
+        return;
+    }
+
+    if (col == 0 && width == data_field->xres
+        && row == 0 && height == data_field->yres) {
+        gwy_data_field_get_min_max(data_field, min, max);
+        return;
+    }
+
+    if (!min && !max)
+        return;
+    else if (!min) {
+        *max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+        return;
+    }
+    else if (!max) {
+        *min = gwy_data_field_area_get_min(data_field, col, row, width, height);
+        return;
+    }
+
+    datapos = data_field->data + row*data_field->xres + col;
+    for (i = 0; i < height; i++) {
+        const gdouble *drow = datapos + i*data_field->xres;
+
+        for (j = 0; j < width; j++) {
+            if (G_UNLIKELY(min1 > *drow))
+                min1 = *drow;
+            if (G_UNLIKELY(max1 < *drow))
+                max1 = *drow;
+            drow++;
+        }
+    }
+
+    *min = min1;
+    *max = max1;
 }
 
 /**
