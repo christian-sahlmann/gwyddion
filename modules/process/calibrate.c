@@ -29,7 +29,6 @@
 
 #define CALIBRATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-/* Data for this function. */
 typedef struct {
     gdouble xratio;
     gdouble yratio;
@@ -119,13 +118,12 @@ static const CalibrateArgs calibrate_defaults = {
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -360,7 +358,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    unit = gwy_data_field_get_si_unit_xy(dfield);
+    unit = gwy_data_field_get_si_unit_z(dfield);
     controls.zexponent
         = gwy_combo_box_metric_unit_new(G_CALLBACK(zexponent_changed_cb),
                                         &controls, -15, 6, unit,
