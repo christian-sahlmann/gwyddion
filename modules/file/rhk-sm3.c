@@ -198,13 +198,12 @@ static GwyContainer* rhk_sm3_load          (const gchar *filename,
 static void          rhk_sm3_store_metadata(RHKPage *rhkpage,
                                             GwyContainer *container);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -253,8 +252,6 @@ static const GwyEnum scan_directions[] = {
     { "Down",  RHK_SCAN_DOWN,  },
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -505,6 +502,9 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
         unit = page->strings[RHK_STRING_Z_UNITS];
     else
         unit = "";
+    /* Fix some silly units */
+    if (gwy_strequal(unit, "N/sec"))
+        unit = "s^-1";
     siunit = gwy_si_unit_new(unit);
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
@@ -572,15 +572,24 @@ rhk_sm3_load(const gchar *filename,
     container = gwy_container_new();
     key = g_string_new("");
     for (i = 0; i < rhkfile->len; i++) {
+        const gchar *cs;
+        gchar *s;
+
         rhkpage = g_ptr_array_index(rhkfile, i);
         dfield = rhk_sm3_page_to_data_field(rhkpage);
         g_string_printf(key, "/%d/data", i);
         gwy_container_set_object_by_name(container, key->str, dfield);
         g_object_unref(dfield);
         p = rhkpage->strings[RHK_STRING_LABEL];
+        cs = gwy_enum_to_string(rhkpage->scan_dir,
+                                scan_directions, G_N_ELEMENTS(scan_directions));
         if (p && *p) {
             g_string_append(key, "/title");
-            gwy_container_set_string_by_name(container, key->str, g_strdup(p));
+            if (cs)
+                s = g_strdup_printf("%s [%s]", p, cs);
+            else
+                s = g_strdup(p);
+            gwy_container_set_string_by_name(container, key->str, s);
         }
         /* FIXME: not yet
         rhk_sm3_store_metadata(rhkpage, container); */

@@ -23,7 +23,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -41,6 +41,13 @@ typedef enum {
     RHK_TYPE_LINE =             1,
     RHK_TYPE_ANNOTATED_LINE =   3
 } RHKType;
+
+typedef enum {
+    RHK_SCAN_RIGHT = 0,
+    RHK_SCAN_LEFT  = 1,
+    RHK_SCAN_UP    = 2,
+    RHK_SCAN_DOWN  = 3
+} RHKScanType;
 
 typedef enum {
     RHK_DATA_SIGNLE    = 0,
@@ -129,19 +136,23 @@ static void          rhkspm32_store_metadata (RHKPage *rhkpage,
                                               GwyContainer *container);
 static GwyDataField* rhkspm32_read_data      (RHKPage *rhkpage);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
+static const GwyEnum scan_directions[] = {
+    { "Right", RHK_SCAN_RIGHT, },
+    { "Left",  RHK_SCAN_LEFT,  },
+    { "Up",    RHK_SCAN_UP,    },
+    { "Down",  RHK_SCAN_DOWN,  },
+};
+
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -238,14 +249,22 @@ rhkspm32_load(const gchar *filename,
     container = gwy_container_new();
     key = g_string_new("");
     for (i = 0; i < rhkfile->len; i++) {
+        const gchar *cs;
+        gchar *s;
+
         rhkpage = &g_array_index(rhkfile, RHKPage, i);
         dfield = rhkspm32_read_data(rhkpage);
         g_string_printf(key, "/%d/data", i);
         gwy_container_set_object_by_name(container, key->str, dfield);
         g_object_unref(dfield);
         g_string_append(key, "/title");
-        gwy_container_set_string_by_name(container, key->str,
-                                         g_strdup(rhkpage->label));
+        cs = gwy_enum_to_string(rhkpage->scan,
+                                scan_directions, G_N_ELEMENTS(scan_directions));
+        if (cs)
+            s = g_strdup_printf("%s [%s]", rhkpage->label, cs);
+        else
+            s = g_strdup(rhkpage->label);
+        gwy_container_set_string_by_name(container, key->str, s);
         /* FIXME: not yet
         rhkspm32_store_metadata(rhkpage, container); */
     }
@@ -329,7 +348,7 @@ rhkspm32_read_header(RHKPage *rhkpage,
         return FALSE;
     }
 
-    if (!g_str_has_prefix(buffer + 0xe0, "scan "))
+    if (g_str_has_prefix(buffer + 0xe0, "scan "))
         pos = 0xe0 + sizeof("scan");
     rhkpage->scan = strtol(buffer + pos, &end, 10);
     if (end == buffer + pos) {
@@ -406,35 +425,6 @@ static void
 rhkspm32_store_metadata(RHKPage *rhkpage,
                         GwyContainer *container)
 {
-    const GwyEnum page_types[] = {
-        { "Topographic",              RHK_IMAGE_TOPOGAPHIC               },
-        { "Current",                  RHK_IMAGE_CURRENT                  },
-        { "Aux",                      RHK_IMAGE_AUX                      },
-        { "Force",                    RHK_IMAGE_FORCE                    },
-        { "Signal",                   RHK_IMAGE_SIGNAL                   },
-        { "FFT transform",            RHK_IMAGE_FFT                      },
-        { "Noise power spectrum",     RHK_IMAGE_NOISE_POWER_SPECTRUM     },
-        { "Line test",                RHK_IMAGE_LINE_TEST                },
-        { "Oscilloscope",             RHK_IMAGE_OSCILLOSCOPE             },
-        { "IV spectra",               RHK_IMAGE_IV_SPECTRA               },
-        { "Image IV 4x4",             RHK_IMAGE_IV_4x4                   },
-        { "Image IV 8x8",             RHK_IMAGE_IV_8x8                   },
-        { "Image IV 16x16",           RHK_IMAGE_IV_16x16                 },
-        { "Image IV 32x32",           RHK_IMAGE_IV_32x32                 },
-        { "Image IV Center",          RHK_IMAGE_IV_CENTER                },
-        { "Interactive spectra",      RHK_IMAGE_INTERACTIVE_SPECTRA      },
-        { "Autocorrelation",          RHK_IMAGE_AUTOCORRELATION          },
-        { "IZ spectra",               RHK_IMAGE_IZ_SPECTRA               },
-        { "4 gain topography",        RHK_IMAGE_4_GAIN_TOPOGRAPHY        },
-        { "8 gain topography",        RHK_IMAGE_8_GAIN_TOPOGRAPHY        },
-        { "4 gain current",           RHK_IMAGE_4_GAIN_CURRENT           },
-        { "8 gain current",           RHK_IMAGE_8_GAIN_CURRENT           },
-        { "Image IV 64x64",           RHK_IMAGE_IV_64x64                 },
-        { "Autocorrelation spectrum", RHK_IMAGE_AUTOCORRELATION_SPECTRUM },
-        { "Counter data",             RHK_IMAGE_COUNTER                  },
-        { "Multichannel analyser",    RHK_IMAGE_MULTICHANNEL_ANALYSER    },
-        { "AFM using AFM-100",        RHK_IMAGE_AFM_100                  },
-    };
     const gchar *s;
 
     gwy_container_set_string_by_name(container, "/meta/Tunneling voltage",
@@ -457,7 +447,7 @@ rhkspm32_store_metadata(RHKPage *rhkpage,
     }
 
     s = gwy_enum_to_string(rhkpage->page_type,
-                           page_types, G_N_ELEMENTS(page_types));
+                           scan_directions, G_N_ELEMENTS(scan_directions));
     if (s && *s)
         gwy_container_set_string_by_name(container, "/meta/Image type",
                                          g_strdup(s));
@@ -470,6 +460,7 @@ rhkspm32_read_data(RHKPage *rhkpage)
     const guint16 *p;
     GwySIUnit *siunit;
     gdouble *data;
+    const gchar *s;
     guint i;
 
     p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
@@ -483,12 +474,17 @@ rhkspm32_read_data(RHKPage *rhkpage)
         data[i] = GINT16_FROM_LE(p[i]);
 
     gwy_data_field_multiply(dfield, rhkpage->z.scale);
+    gwy_data_field_add(dfield, rhkpage->z.offset);
 
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_set_unit_string(siunit, rhkpage->x.units);
 
     siunit = gwy_data_field_get_si_unit_z(dfield);
-    gwy_si_unit_set_unit_string(siunit, rhkpage->z.units);
+    s = rhkpage->z.units;
+    /* Fix some silly units */
+    if (gwy_strequal(s, "N/sec"))
+        s = "s^-1";
+    gwy_si_unit_set_unit_string(siunit, s);
 
     return dfield;
 }
