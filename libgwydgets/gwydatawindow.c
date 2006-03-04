@@ -54,7 +54,7 @@ static gboolean gwy_data_window_update_statusbar  (GwyDataView *data_view,
 static void     gwy_data_window_update_title      (GwyDataWindow *data_window);
 static void     gwy_data_window_resize_view       (GwyDataWindow *data_window);
 static void     gwy_data_window_zoom_changed      (GwyDataWindow *data_window);
-static gboolean gwy_data_window_key_pressed       (GwyDataWindow *data_window,
+static gboolean gwy_data_window_key_pressed       (GtkWidget *widget,
                                                    GdkEventKey *event);
 static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
                                                    GdkEventButton *event);
@@ -85,13 +85,12 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
-    object_class = (GtkObjectClass*)klass;
-
     gobject_class->finalize = gwy_data_window_finalize;
 
     object_class->destroy = gwy_data_window_destroy;
 
     widget_class->size_allocate = gwy_data_window_size_allocate;
+    widget_class->key_press_event = gwy_data_window_key_pressed;
 
     klass->title_changed = NULL;
 
@@ -288,9 +287,6 @@ gwy_data_window_new(GwyDataView *data_view)
     gwy_data_window_update_statusbar(NULL, NULL, data_window);
 
     gtk_widget_show_all(vbox);
-
-    g_signal_connect(data_window, "key-press-event",
-                     G_CALLBACK(gwy_data_window_key_pressed), NULL);
 
     return GTK_WIDGET(data_window);
 }
@@ -753,16 +749,36 @@ gwy_data_window_zoom_changed(GwyDataWindow *data_window)
     gwy_data_window_update_title(data_window);
 }
 
+static void
+gwy_data_window_copy_to_clipboard(GwyDataWindow *data_window)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkPixbuf *pixbuf;
+    GdkAtom atom;
+
+    display = gtk_widget_get_display(GTK_WIDGET(data_window));
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    pixbuf = gwy_data_view_get_pixbuf(GWY_DATA_VIEW(data_window->data_view),
+                                      0, 0);
+    gtk_clipboard_set_image(clipboard, pixbuf);
+    g_object_unref(pixbuf);
+}
+
 static gboolean
-gwy_data_window_key_pressed(GwyDataWindow *data_window,
+gwy_data_window_key_pressed(GtkWidget *widget,
                             GdkEventKey *event)
 {
     enum {
         important_mods = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK
     };
+    GwyDataWindow *data_window;
+    gboolean (*method)(GtkWidget*, GdkEventKey*);
     guint state, key;
 
     gwy_debug("state = %u, keyval = %u", event->state, event->keyval);
+    data_window = GWY_DATA_WINDOW(widget);
     state = event->state & important_mods;
     key = event->keyval;
     if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
@@ -772,8 +788,13 @@ gwy_data_window_key_pressed(GwyDataWindow *data_window,
         gwy_data_window_set_zoom(data_window, 1);
     else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
         gwy_data_window_set_zoom(data_window, 10000);
+    else if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
+        gwy_data_window_copy_to_clipboard(data_window);
+        return TRUE;
+    }
 
-    return FALSE;
+    method = GTK_WIDGET_CLASS(gwy_data_window_parent_class)->key_press_event;
+    return method ? method(widget, event) : FALSE;
 }
 
 static gboolean

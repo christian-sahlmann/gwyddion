@@ -65,6 +65,8 @@ static void     gwy_3d_window_map                  (GtkWidget *widget);
 static void     gwy_3d_window_unmap                (GtkWidget *widget);
 static gboolean gwy_3d_window_button_press         (GtkWidget *widget,
                                                     GdkEventButton *event);
+static gboolean gwy_3d_window_key_pressed          (GtkWidget *widget,
+                                                    GdkEventKey *event);
 static gboolean gwy_3d_window_expose               (GtkWidget *widget,
                                                     GdkEventExpose *event);
 static void     gwy_3d_window_pack_buttons         (Gwy3DWindow *gwy3dwindow,
@@ -138,6 +140,7 @@ gwy_3d_window_class_init(Gwy3DWindowClass *klass)
     widget_class->configure_event = gwy_3d_window_configure;
     widget_class->expose_event = gwy_3d_window_expose;
     widget_class->button_press_event = gwy_3d_window_button_press;
+    widget_class->key_press_event = gwy_3d_window_key_pressed;
 
     widget_class->direction_changed = gwy_3d_window_direction_changed;
 
@@ -357,6 +360,55 @@ gwy_3d_window_button_press(GtkWidget *widget,
         return FALSE;
 
     return TRUE;
+}
+
+static void
+gwy_3d_window_copy_to_clipboard(Gwy3DWindow *gwy3dwindow)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkPixbuf *pixbuf;
+    GdkAtom atom;
+
+    display = gtk_widget_get_display(GTK_WIDGET(gwy3dwindow));
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dwindow->gwy3dview));
+    gtk_clipboard_set_image(clipboard, pixbuf);
+    g_object_unref(pixbuf);
+}
+
+static gboolean
+gwy_3d_window_key_pressed(GtkWidget *widget,
+                          GdkEventKey *event)
+{
+    enum {
+        important_mods = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK
+    };
+    Gwy3DWindow *gwy3dwindow;
+    gboolean (*method)(GtkWidget*, GdkEventKey*);
+    guint state, key;
+
+    gwy_debug("state = %u, keyval = %u", event->state, event->keyval);
+    gwy3dwindow = GWY_3D_WINDOW(widget);
+    state = event->state & important_mods;
+    key = event->keyval;
+    /* TODO: it would be nice to have these working too
+    if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
+        gwy_3d_view_window_set_zoom(3d_view_window, -1);
+    else if (!state && (key == GDK_equal || key == GDK_KP_Equal
+                        || key == GDK_plus || key == GDK_KP_Add))
+        gwy_3d_view_window_set_zoom(3d_view_window, 1);
+    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
+        gwy_3d_view_window_set_zoom(3d_view_window, 10000);
+    else */
+    if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
+        gwy_3d_window_copy_to_clipboard(gwy3dwindow);
+        return TRUE;
+    }
+
+    method = GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->key_press_event;
+    return method ? method(widget, event) : FALSE;
 }
 
 static gboolean

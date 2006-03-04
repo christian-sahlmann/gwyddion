@@ -36,6 +36,8 @@
 
 static void gwy_graph_window_destroy            (GtkObject *object);
 static void gwy_graph_window_finalize           (GObject *object);
+static gboolean gwy_graph_window_key_pressed    (GtkWidget *widget,
+                                                 GdkEventKey *event);
 static void gwy_graph_cursor_motion_cb          (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_measure_cb         (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_in_cb         (GwyGraphWindow *graphwindow);
@@ -55,20 +57,20 @@ static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
 static GtkTooltips *tooltips = NULL;
 static gboolean tooltips_set = FALSE;
 
-/*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
-
 G_DEFINE_TYPE(GwyGraphWindow, gwy_graph_window, GTK_TYPE_WINDOW)
 
 static void
 gwy_graph_window_class_init(GwyGraphWindowClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GtkObjectClass *object_class;
-
-    object_class = (GtkObjectClass*)klass;
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_graph_window_finalize;
+
     object_class->destroy = gwy_graph_window_destroy;
+
+    widget_class->key_press_event = gwy_graph_window_key_pressed;
 }
 
 static void
@@ -123,7 +125,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_container_add(GTK_CONTAINER(GTK_WINDOW(graphwindow)), vbox);
 
     graphwindow->graph = GTK_WIDGET(graph);
-    graphwindow->last_status = gwy_graph_get_status(graphwindow->graph);
+    graphwindow->last_status = gwy_graph_get_status(graph);
 
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
@@ -305,20 +307,72 @@ gwy_graph_window_class_get_tooltips(void)
 }
 
 static void
+gwy_graph_window_copy_to_clipboard(GwyGraphWindow *graph_window)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkPixbuf *pixbuf;
+    GdkAtom atom;
+
+    display = gtk_widget_get_display(GTK_WIDGET(graph_window));
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    pixbuf = gwy_graph_export_pixmap(GWY_GRAPH(graph_window->graph),
+                                     FALSE, TRUE, TRUE, NULL);
+    gtk_clipboard_set_image(clipboard, pixbuf);
+    g_object_unref(pixbuf);
+}
+
+static gboolean
+gwy_graph_window_key_pressed(GtkWidget *widget,
+                             GdkEventKey *event)
+{
+    enum {
+        important_mods = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK
+    };
+    GwyGraphWindow *graph_window;
+    gboolean (*method)(GtkWidget*, GdkEventKey*);
+    guint state, key;
+
+    gwy_debug("state = %u, keyval = %u", event->state, event->keyval);
+    graph_window = GWY_GRAPH_WINDOW(widget);
+    state = event->state & important_mods;
+    key = event->keyval;
+    /* TODO: it would be nice to have these working too
+    if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
+        gwy_graph_window_set_zoom(graph_window, -1);
+    else if (!state && (key == GDK_equal || key == GDK_KP_Equal
+                        || key == GDK_plus || key == GDK_KP_Add))
+        gwy_graph_window_set_zoom(graph_window, 1);
+    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
+        gwy_graph_window_set_zoom(graph_window, 10000);
+    else */
+    if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
+        gwy_graph_window_copy_to_clipboard(graph_window);
+        return TRUE;
+    }
+
+    method = GTK_WIDGET_CLASS(gwy_graph_window_parent_class)->key_press_event;
+    return method ? method(widget, event) : FALSE;
+}
+
+static void
 gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 {
+    GString *xstring, *ystring;
+    GwyGraph *graph;
     gdouble x, y;
     gchar buffer[200];
     gdouble xmag, ymag;
-    GString *xstring, *ystring;
 
-    gwy_graph_get_cursor(GWY_GRAPH(graphwindow->graph), &x, &y);
+    graph = GWY_GRAPH(graphwindow->graph);
+    gwy_graph_get_cursor(graph, &x, &y);
 
-    xmag = gwy_axis_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_top);
-    xstring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_top);
+    xmag = gwy_axis_get_magnification(graph->axis_top);
+    xstring = gwy_axis_get_magnification_string(graph->axis_top);
 
-    ymag = gwy_axis_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_left);
-    ystring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_left);
+    ymag = gwy_axis_get_magnification(graph->axis_left);
+    ystring = gwy_axis_get_magnification_string(graph->axis_left);
 
     g_snprintf(buffer, sizeof(buffer), "%.4f %s, %.4f %s",
                x/xmag, xstring->str, y/ymag, ystring->str);
@@ -365,13 +419,15 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 static void
 gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
 {
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
-    {
-        graphwindow->last_status = gwy_graph_get_status(GWY_GRAPH(graphwindow->graph));
-        gwy_graph_zoom_in(GWY_GRAPH(graphwindow->graph));
+    GwyGraph *graph;
+
+    graph = GWY_GRAPH(graphwindow->graph);
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in))) {
+        graphwindow->last_status = gwy_graph_get_status(graph);
+        gwy_graph_zoom_in(graph);
     }
     else
-        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), graphwindow->last_status);
+        gwy_graph_set_status(graph, graphwindow->last_status);
 }
 
 static void
