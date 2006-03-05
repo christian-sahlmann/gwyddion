@@ -454,7 +454,7 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
  * @axis: graph axis
  * @is_logarithmic: logarithmic mode
  *
- * Sets logarithmic mode. 
+ * Sets logarithmic mode.
  **/
 void
 gwy_axis_set_logarithmic(GwyAxis *axis,
@@ -497,11 +497,11 @@ gwy_axis_expose(GtkWidget *widget,
  * gwy_axis_draw_on_drawable:
  * @drawable: a #GdkDrawable
  * @gc: a #GdkGC graphics context
- * @xmin: minimum x-axis value
- * @ymin: minimum y-axis value
- * @width: width of the x-axis
- * @hieght: hieght of the y-axis
- * @axis: axis
+ * @xmin: The minimum x-axis value.
+ * @ymin: The minimum y-axis value.
+ * @width: The width of the x-axis.
+ * @height: The height of the y-axis.
+ * @axis: An axis.
  *
  * Draws the x and y-axis on a drawable
  **/
@@ -520,12 +520,11 @@ gwy_axis_draw_on_drawable(GdkDrawable *drawable,
 
     if (axis->is_standalone && axis->is_visible)
         gwy_axis_draw_axis(drawable, gc, &specs, axis);
-    if (axis->is_visible)
+    if (axis->is_visible) {
         gwy_axis_draw_ticks(drawable, gc, &specs, axis);
-    if (axis->is_visible)
         gwy_axis_draw_tlabels(drawable, gc, &specs, axis);
-    if (axis->is_visible)
         gwy_axis_draw_label(drawable, gc, &specs, axis);
+    }
 }
 
 static void
@@ -749,7 +748,7 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     PangoRectangle rect;
     //PangoMatrix matrix = PANGO_MATRIX_INIT; // TODO fix all code marked by comments - it does nothing
     //gint width, height; //
-    
+
     GString *plotlabel;
 
    context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
@@ -757,10 +756,10 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     pango_layout_set_font_description(layout, axis->par.major_font);
 
     plotlabel = g_string_new(axis->label_text->str);
-    if ((axis->has_unit && axis->magnification_string->len > 0) 
+    if ((axis->has_unit && axis->magnification_string->len > 0)
         || strlen(gwy_si_unit_get_unit_string(axis->unit))>0) {
         g_string_append(plotlabel, " [");
-        if (axis->magnification_string) g_string_append(plotlabel, 
+        if (axis->magnification_string) g_string_append(plotlabel,
                                                         axis->magnification_string->str);
         else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
         g_string_append(plotlabel, "]");
@@ -769,7 +768,7 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
     pango_layout_get_pixel_extents(layout, NULL, &rect);
     //context = gtk_widget_create_pango_context (GTK_WIDGET(axis)); //
-    
+
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
@@ -786,7 +785,7 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
 
         case GTK_POS_LEFT:
-        //pango_matrix_rotate (&matrix, 90); // 
+        //pango_matrix_rotate (&matrix, 90); //
         //pango_context_set_matrix (context, &matrix); //
         //pango_layout_context_changed (layout); //
         //pango_layout_get_size (layout, &width, &height);//
@@ -1085,7 +1084,7 @@ gwy_axis_scale(GwyAxis *a)
     }
     g_array_set_size(a->mjticks, 0);
     g_array_set_size(a->miticks, 0);
-    
+
     /*find tick positions*/
     if (!a->is_logarithmic)
         gwy_axis_normalscale(a);
@@ -1231,7 +1230,7 @@ gwy_axis_formatticks(GwyAxis *a)
         g_free(format->units);
         g_free(format);
     }
-    
+
 
     /*guess whether we dont have too many or not enough ticks*/
     if (a->orientation == GTK_POS_LEFT
@@ -1477,8 +1476,8 @@ gwy_axis_get_magnification_string(GwyAxis *axis)
  * Returns: Magnification string of the axis
  **/
 GString*
-gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
-                        gint width, gint height, gint fontsize)
+gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
+                       gint width, gint height, gint fontsize)
 {
     GString *out;
     gdouble mult;
@@ -1537,50 +1536,50 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
 
         switch (axis->orientation) {
             case GTK_POS_TOP:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d M\n",
+                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5),
                                    ymin);
-            g_string_append_printf(out, "%d %d L\n", 
-                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d L\n",
+                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5),
                                    ymin+axis->par.major_length);
-            g_string_append_printf(out, "%d %d R\n", 
-                                   -(gint)(pmjt->ttext->len*(fontsize/4)), 
+            g_string_append_printf(out, "%d %d R\n",
+                                   -(gint)(pmjt->ttext->len*(fontsize/4)),
                                    5);
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
             case GTK_POS_BOTTOM:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d M\n",
+                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5),
                                    ymin + height);
-            g_string_append_printf(out, "%d %d L\n", 
-                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d L\n",
+                                   (gint)(xmin + pmjt->t.value*mult - axis->min*mult + 0.5),
                                    ymin + height - axis->par.major_length);
-            g_string_append_printf(out, "%d %d R\n", 
-                                   -(gint)(pmjt->ttext->len*(fontsize/4)), 
+            g_string_append_printf(out, "%d %d R\n",
+                                   -(gint)(pmjt->ttext->len*(fontsize/4)),
                                    -fontsize);
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
             case GTK_POS_RIGHT:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   xmin + width, 
+            g_string_append_printf(out, "%d %d M\n",
+                                   xmin + width,
                                    (gint)(ymin + pmjt->t.value*mult - axis->min*mult + 0.5));
-            g_string_append_printf(out, "%d %d L\n", 
-                                   xmin + width - axis->par.major_length, 
+            g_string_append_printf(out, "%d %d L\n",
+                                   xmin + width - axis->par.major_length,
                                    (gint)(ymin + pmjt->t.value*mult - axis->min*mult + 0.5));
-            g_string_append_printf(out, "%d %d R\n", 
-                                   -(gint)(pmjt->ttext->len*(fontsize/2)) - 5, 
+            g_string_append_printf(out, "%d %d R\n",
+                                   -(gint)(pmjt->ttext->len*(fontsize/2)) - 5,
                                    -(gint)(fontsize/2.5));
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
             case GTK_POS_LEFT:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   xmin, 
+            g_string_append_printf(out, "%d %d M\n",
+                                   xmin,
                                    (gint)(ymin + pmjt->t.value*mult - axis->min*mult + 0.5));
-            g_string_append_printf(out, "%d %d L\n", 
-                                   xmin + axis->par.major_length, 
+            g_string_append_printf(out, "%d %d L\n",
+                                   xmin + axis->par.major_length,
                                    (gint)(ymin + pmjt->t.value*mult - axis->min*mult + 0.5));
             g_string_append_printf(out, "%d %d R\n", 5, -(gint)(fontsize/2.5));
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
@@ -1599,38 +1598,38 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
 
         switch (axis->orientation) {
             case GTK_POS_TOP:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d M\n",
+                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5),
                                    ymin);
-            g_string_append_printf(out, "%d %d L\n", 
-                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d L\n",
+                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5),
                                    ymin+axis->par.minor_length);
             break;
 
             case GTK_POS_BOTTOM:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d M\n",
+                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5),
                                    ymin + height);
-            g_string_append_printf(out, "%d %d L\n", 
-                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5), 
+            g_string_append_printf(out, "%d %d L\n",
+                                   (gint)(xmin + pmit->value*mult - axis->min*mult + 0.5),
                                    ymin + height - axis->par.minor_length);
             break;
 
             case GTK_POS_RIGHT:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   xmin + width, 
+            g_string_append_printf(out, "%d %d M\n",
+                                   xmin + width,
                                    (gint)(ymin + pmit->value*mult - axis->min*mult + 0.5));
-            g_string_append_printf(out, "%d %d L\n", 
-                                   xmin + width - axis->par.minor_length, 
+            g_string_append_printf(out, "%d %d L\n",
+                                   xmin + width - axis->par.minor_length,
                                    (gint)(ymin + pmit->value*mult - axis->min*mult + 0.5));
             break;
 
             case GTK_POS_LEFT:
-            g_string_append_printf(out, "%d %d M\n", 
-                                   xmin, 
+            g_string_append_printf(out, "%d %d M\n",
+                                   xmin,
                                    (gint)(ymin + pmit->value*mult - axis->min*mult + 0.5));
-            g_string_append_printf(out, "%d %d L\n", 
-                                   xmin +  axis->par.minor_length, 
+            g_string_append_printf(out, "%d %d L\n",
+                                   xmin +  axis->par.minor_length,
                                    (gint)(ymin + pmit->value*mult - axis->min*mult + 0.5));
             break;
 
@@ -1644,11 +1643,11 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
     g_string_append_printf(out, "%%AxisLabel\n");
 
     plotlabel = g_string_new(axis->label_text->str);
-    if ((axis->has_unit && 
-         (axis->magnification_string->len > 0)) 
+    if ((axis->has_unit &&
+         (axis->magnification_string->len > 0))
         || strlen(gwy_si_unit_get_unit_string(axis->unit))>0) {
         g_string_append(plotlabel, " [");
-        if (axis->magnification_string) 
+        if (axis->magnification_string)
             g_string_append(plotlabel, axis->magnification_string->str);
         else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
         g_string_append(plotlabel, "]");
@@ -1657,22 +1656,22 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
 
     switch (axis->orientation) {
         case GTK_POS_TOP:
-        g_string_append_printf(out, "%d %d M\n", 
-                               (gint)(xmin + width/2 - plotlabel->len*fontsize/4), 
+        g_string_append_printf(out, "%d %d M\n",
+                               (gint)(xmin + width/2 - plotlabel->len*fontsize/4),
                                ymin + height - 20);
         g_string_append_printf(out, "(%s) show\n", plotlabel->str);
         break;
 
         case GTK_POS_BOTTOM:
-        g_string_append_printf(out, "%d %d M\n", 
-                               (gint)(xmin + width/2 - plotlabel->len*fontsize/4), 
+        g_string_append_printf(out, "%d %d M\n",
+                               (gint)(xmin + width/2 - plotlabel->len*fontsize/4),
                                ymin + 20);
         g_string_append_printf(out, "(%s) show\n", plotlabel->str);
         break;
 
         case GTK_POS_RIGHT:
-        g_string_append_printf(out, "%d %d M\n", 
-                               (gint)(xmin + fontsize/2 + 8), 
+        g_string_append_printf(out, "%d %d M\n",
+                               (gint)(xmin + fontsize/2 + 8),
                                (gint)(ymin + height/2 - plotlabel->len*fontsize/4));
         g_string_append_printf(out, "gsave\n");
         g_string_append_printf(out, "90 rotate\n");
@@ -1681,8 +1680,8 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
          break;
 
         case GTK_POS_LEFT:
-        g_string_append_printf(out, "%d %d M\n", 
-                               (gint)(xmin + width - fontsize/2 - 8), 
+        g_string_append_printf(out, "%d %d M\n",
+                               (gint)(xmin + width - fontsize/2 - 8),
                                (gint)(ymin + height/2 + plotlabel->len*fontsize/4));
         g_string_append_printf(out, "gsave\n");
         g_string_append_printf(out, "270 rotate\n");
@@ -1728,7 +1727,7 @@ gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
  *
  * Determine whether axis is set to be visible..
  **/
-gboolean    
+gboolean
 gwy_axis_is_visible(GwyAxis *axis)
 {
     return axis->is_visible;
@@ -1740,7 +1739,7 @@ gwy_axis_is_visible(GwyAxis *axis)
  *
  * Determine whether axis is set to be locarithmic
  **/
-gboolean    
+gboolean
 gwy_axis_is_logarithmic(GwyAxis *axis)
 {
     return axis->is_logarithmic;

@@ -810,24 +810,24 @@ gwy_curve_motion_notify(GwyCurve *c)
 
 /**
  * gwy_curve_reset:
- * @c: a #GwyCurve widget.
+ * @curve: a #GwyCurve widget.
  *
  * Removes all control points, resetting the curves to their initial state.
  *
  **/
 void
-gwy_curve_reset(GwyCurve *c)
+gwy_curve_reset(GwyCurve *curve)
 {
     GwyCurveType old_type;
 
-    old_type = c->curve_type;
-    c->curve_type = GWY_CURVE_TYPE_LINEAR;
-    gwy_curve_reset_vector(c);
+    old_type = curve->curve_type;
+    curve->curve_type = GWY_CURVE_TYPE_LINEAR;
+    gwy_curve_reset_vector(curve);
 
     if (old_type != GWY_CURVE_TYPE_LINEAR)
     {
-        g_signal_emit(c, curve_type_changed_signal, 0);
-        g_object_notify(G_OBJECT(c), "curve-type");
+        g_signal_emit(curve, curve_type_changed_signal, 0);
+        g_object_notify(G_OBJECT(curve), "curve-type");
     }
 }
 
@@ -915,7 +915,9 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
 }
 
 void
-gwy_curve_set_channels(GwyCurve *c, gint num_channels, GwyRGBA *colors)
+gwy_curve_set_channels(GwyCurve *c,
+                       gint num_channels,
+                       GwyRGBA *colors)
 {
     gint width, height;
     gint i;

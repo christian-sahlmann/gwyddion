@@ -141,7 +141,7 @@ void        gwy_curve_set_range             (GwyCurve *curve,
                                              gfloat min_y, gfloat max_y);
 void        gwy_curve_set_curve_type        (GwyCurve *curve,
                                              GwyCurveType type);
-void        gwy_curve_set_channels          (GwyCurve *c,
+void        gwy_curve_set_channels          (GwyCurve *curve,
                                              gint num_channels,
                                              GwyRGBA *colors);
 

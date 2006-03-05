@@ -1619,7 +1619,7 @@ gwy_graph_area_get_selection_number(GwyGraphArea *area)
 
 /**
   * gwy_graph_area_get_selection:
-  * @graph: A graph widget.
+  * @area: A graph area widget.
   * @selection: allocated field of gdoubles
   *
   * Fills the @selection field with current selection values.
@@ -1639,7 +1639,8 @@ gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
     gint i;
     gdouble data_value=0, area_selection[4];
 
-    if (selection == NULL) return;
+    if (selection == NULL)
+        return;
 
     switch (area->status) {
         case GWY_GRAPH_STATUS_XSEL:

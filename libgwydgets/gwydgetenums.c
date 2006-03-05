@@ -53,7 +53,6 @@ gwy_graph_curve_type_get_enum(void)
 
 /**
  * GwyAxisScaleFormat:
- * @GWY_AXIS_SCALE_FORMAT_FLOAT: Floating point format.
  * @GWY_AXIS_SCALE_FORMAT_EXP: Exponential (`scienfitic') format.
  * @GWY_AXIS_SCALE_FORMAT_INT: Integer format.
  * @GWY_AXIS_SCALE_FORMAT_AUTO: Automatical format.
