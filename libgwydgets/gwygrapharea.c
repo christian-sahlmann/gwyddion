@@ -436,12 +436,12 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.ymin = y;
     specs.height = height;
     specs.width = width;
-    specs.real_xmin = model->x_min;
-    specs.real_ymin = model->y_min;
-    specs.real_width = model->x_max - model->x_min;
-    specs.real_height = model->y_max - model->y_min;
-    specs.log_x = model->x_is_logarithmic;
-    specs.log_y = model->y_is_logarithmic;
+    specs.real_xmin = gwy_graph_model_get_xmin(area->graph_model);
+    specs.real_ymin = gwy_graph_model_get_ymin(area->graph_model);
+    specs.real_width = gwy_graph_model_get_xmax(area->graph_model) - gwy_graph_model_get_xmin(area->graph_model);;
+    specs.real_height = gwy_graph_model_get_ymax(area->graph_model) - gwy_graph_model_get_ymin(area->graph_model);;
+    specs.log_x = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL);
+    specs.log_y = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL);
     /*draw continuous selection*/
     if (area->status == GWY_GRAPH_STATUS_XSEL
         || area->status == GWY_GRAPH_STATUS_YSEL)
@@ -622,13 +622,13 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             {
                 selection_areadata[0] = dx;
                 selection_areadata[2] = dx;
-                selection_areadata[1] = gmodel->y_min;
-                selection_areadata[3] = gmodel->y_max;
+                selection_areadata[1] = gwy_graph_model_get_ymin(gmodel);
+                selection_areadata[3] = gwy_graph_model_get_ymax(gmodel);
             }
             else
             {
-                selection_areadata[0] = gmodel->x_min;
-                selection_areadata[2] = gmodel->x_max;
+                selection_areadata[0] = gwy_graph_model_get_xmin(gmodel);
+                selection_areadata[2] = gwy_graph_model_get_xmax(gmodel);
                 selection_areadata[1] = dy;
                 selection_areadata[3] = dy;
             }
@@ -904,7 +904,7 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
             }
         }
     }
-    if (fabs(closestdistance/(model->y_max - model->y_min)) < 0.05)
+    if (fabs(closestdistance/(gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))) < 0.05)
         return closestid;
     else
         return -1;
@@ -938,8 +938,8 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
     gdouble xmin, ymin, xmax, ymax, xoff, yoff, selection_data[2];
 
     model = GWY_GRAPH_MODEL(area->graph_model);
-    xoff = (model->x_max - model->x_min)/100;
-    yoff = (model->y_max - model->y_min)/100;
+    xoff = (gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))/100;
+    yoff = (gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))/100;
 
     for (i=0; i<GWY_SELECTION(area->pointsdata)->n; i++)
     {
@@ -963,8 +963,9 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     gdouble min = 0, max = 0, xoff, yoff, selection_data;
 
     model = GWY_GRAPH_MODEL(area->graph_model);
-    xoff = (model->x_max - model->x_min)/100;
-    yoff = (model->y_max - model->y_min)/100;
+    xoff = (gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))/100;
+    yoff = (gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))/100;
+
 
     for (i=0; i<GWY_SELECTION(area->linesdata)->n; i++)
     {
@@ -1055,12 +1056,12 @@ scr_to_data_x(GtkWidget *widget, gint scr)
     model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
-    if (!model->x_is_logarithmic)
-        return model->x_min
-           + scr*(model->x_max - model->x_min)/(widget->allocation.width-1);
+    if (gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL))
+        return gwy_graph_model_get_xmin(model)
+           + scr*(gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))/(widget->allocation.width-1);
     else
-        return pow(10, log10(model->x_min)
-           + scr*(log10(model->x_max) - log10(model->x_min))/(widget->allocation.width-1));
+        return pow(10, log10(gwy_graph_model_get_xmin(model))
+           + scr*(log10(gwy_graph_model_get_xmax(model) - log10(gwy_graph_model_get_xmin(model))))/(widget->allocation.width-1));
 }
 
 static gint
@@ -1072,12 +1073,12 @@ data_to_scr_x(GtkWidget *widget, gdouble data)
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
 
-    if (!model->x_is_logarithmic)
-        return (data - model->x_min)
-           /((model->x_max - model->x_min)/(widget->allocation.width-1));
+    if (gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL))
+        return (data - gwy_graph_model_get_xmin(model))
+           /((gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))/(widget->allocation.width-1));
     else
-       return (log10(data) - log10(model->x_min))
-           /((log10(model->x_max) - log10(model->x_min))/(widget->allocation.width-1));
+       return (log10(data) - log10(gwy_graph_model_get_xmin(model)))
+           /((log10(gwy_graph_model_get_xmax(model)) - log10(gwy_graph_model_get_xmin(model)))/(widget->allocation.width-1));
 }
 
 static gdouble
@@ -1090,13 +1091,13 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
-    if (!model->y_is_logarithmic)
-        return model->y_min
-           + (widget->allocation.height - scr)*(model->y_max - model->y_min)
+    if (gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
+        return gwy_graph_model_get_ymin(model)
+           + (widget->allocation.height - scr)*(gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))
              /(widget->allocation.height-1);
     else
-        return pow(10, log10(model->y_min)
-                   + (widget->allocation.height - scr)*(log10(model->y_max) - log10(model->y_min))
+        return pow(10, log10(gwy_graph_model_get_ymin(model))
+                   + (widget->allocation.height - scr)*(log10(gwy_graph_model_get_ymax(model)) - log10(gwy_graph_model_get_ymin(model)))
                                                         /(widget->allocation.height-1));
 }
 
@@ -1108,14 +1109,14 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
-    if (!model->y_is_logarithmic)
+    if (gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
         return widget->allocation.height
-           - (data - model->y_min)
-             /((model->y_max - model->y_min)/((gdouble)widget->allocation.height-1));
+           - (data - gwy_graph_model_get_ymin(model))
+             /((gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))/((gdouble)widget->allocation.height-1));
     else
         return widget->allocation.height
-            - (log10(data) - log10(model->y_min))
-            /((log10(model->y_max) - log10(model->y_min))/((gdouble)widget->allocation.height-1));
+            - (log10(data) - log10(gwy_graph_model_get_ymin(model)))
+            /((log10(gwy_graph_model_get_ymax(model)) - log10(gwy_graph_model_get_ymin(model)))/((gdouble)widget->allocation.height-1));
 }
 
 /**
@@ -1162,7 +1163,7 @@ void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
     /*refresh label*/
-    if (GWY_GRAPH_MODEL(area->graph_model)->label_visible)
+    if (gwy_graph_model_get_label_visible(GWY_GRAPH_MODEL(area->graph_model)))
     {
         gtk_widget_show(GTK_WIDGET(area->lab));
         gwy_graph_label_refresh(area->lab);
@@ -1282,8 +1283,8 @@ gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
 
             selection_areadata[0] = selection[2*i];
             selection_areadata[2] = selection[2*i + 1];
-            selection_areadata[1] = GWY_GRAPH_MODEL(area->graph_model)->y_min;
-            selection_areadata[3] = GWY_GRAPH_MODEL(area->graph_model)->y_max;
+            selection_areadata[1] = gwy_graph_model_get_ymin(GWY_GRAPH_MODEL(area->graph_model));
+            selection_areadata[3] = gwy_graph_model_get_ymax(GWY_GRAPH_MODEL(area->graph_model));
             gwy_selection_set_object(GWY_SELECTION(area->areasdata),
                                      i, selection_areadata);
         }
@@ -1293,8 +1294,8 @@ gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
         for (i = 0; i < n_of_selections; i++) {
             gdouble selection_areadata[4];
 
-            selection_areadata[0] = GWY_GRAPH_MODEL(area->graph_model)->x_min;
-            selection_areadata[2] = GWY_GRAPH_MODEL(area->graph_model)->x_max;
+            selection_areadata[0] = gwy_graph_model_get_xmin(GWY_GRAPH_MODEL(area->graph_model));
+            selection_areadata[2] = gwy_graph_model_get_xmax(GWY_GRAPH_MODEL(area->graph_model));
             selection_areadata[1] = selection[2*i];
             selection_areadata[3] = selection[2*i + 1];
             gwy_selection_set_object(GWY_SELECTION(area->areasdata),
@@ -1403,14 +1404,14 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     out = g_string_new("%%Area\n");
 
     model = GWY_GRAPH_MODEL(area->graph_model);
-    if ((model->x_max - model->x_min)==0 || (model->y_max - model->y_min)==0)
+    if ((gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))==0 || (gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))==0)
     {
         g_warning("Graph null range.\n");
         return out;
     }
 
-    xmult = width/(model->x_max - model->x_min);
-    ymult = height/(model->y_max - model->y_min);
+    xmult = width/(gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model));
+    ymult = height/(gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model));
 
     g_string_append_printf(out, "/box {\n"
                            "newpath\n"
@@ -1449,23 +1450,23 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
                 || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
             {
                 if (j==0) g_string_append_printf(out, "%d %d M\n",
-                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult),
-                                   (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult));
+                                   (gint)(x + (curvemodel->xdata[j] - gwy_graph_model_get_xmin(model))*xmult),
+                                   (gint)(y + (curvemodel->ydata[j] - gwy_graph_model_get_ymin(model))*ymult));
                 else
                 {
                     g_string_append_printf(out, "%d %d M\n",
-                                   (gint)(x + (curvemodel->xdata[j-1] - model->x_min)*xmult),
-                                   (gint)(y + (curvemodel->ydata[j-1] - model->y_min)*ymult));
+                                   (gint)(x + (curvemodel->xdata[j-1] - gwy_graph_model_get_xmin(model))*xmult),
+                                   (gint)(y + (curvemodel->ydata[j-1] - gwy_graph_model_get_ymin(model))*ymult));
                     g_string_append_printf(out, "%d %d L\n",
-                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult),
-                                   (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult));
+                                   (gint)(x + (curvemodel->xdata[j] - gwy_graph_model_get_xmin(model))*xmult),
+                                   (gint)(y + (curvemodel->ydata[j] - gwy_graph_model_get_ymin(model))*ymult));
                 }
             }
             if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
             {
                 g_string_append_printf(out, "%d %d %s\n",
-                          (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult),
-                          (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult),
+                          (gint)(x + (curvemodel->xdata[j] - gwy_graph_model_get_xmin(model))*xmult),
+                          (gint)(y + (curvemodel->ydata[j] - gwy_graph_model_get_ymin(model))*ymult),
                           symbols[curvemodel->point_type]);
 
             }

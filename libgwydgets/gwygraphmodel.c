@@ -31,6 +31,7 @@
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
+
 static void     gwy_graph_model_finalize         (GObject *object);
 static void     gwy_graph_model_serializable_init(GwySerializableIface *iface);
 static GByteArray* gwy_graph_model_serialize     (GObject *obj,
@@ -976,6 +977,188 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
     }
     return TRUE;
 }
+
+/**
+ * gwy_graph_model_get_xmin:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ * Returns: x minimum bounding value of the curves
+ **/
+gdouble           
+gwy_graph_model_get_xmin(GwyGraphModel *model)
+{
+    return model->x_min;
+}
+/**
+ * gwy_graph_model_get_ymin:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ * Returns: y minimum bounding value of the curves
+ **/
+gdouble           
+gwy_graph_model_get_ymin(GwyGraphModel *model)
+{
+    return model->y_min;
+}
+
+/**
+ * gwy_graph_model_get_xmax:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ * Returns: x maximum bounding value of the curves
+ **/
+gdouble           
+gwy_graph_model_get_xmax(GwyGraphModel *model)
+{
+    return model->x_min;
+}
+
+/**
+ * gwy_graph_model_get_ymax:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ * Returns: y maximum bounding value of the curves
+ **/
+gdouble           
+gwy_graph_model_get_ymax(GwyGraphModel *model)
+{
+    return model->y_min;
+}
+
+/**
+ * gwy_graph_model_set_xmin:
+ * @model: a #GwyGraphModel.
+ *
+ * Sets bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ **/
+void          
+gwy_graph_model_set_xmin(GwyGraphModel *model, gdouble value)
+{
+    model->x_min = value;
+}
+
+/**
+ * gwy_graph_model_set_xmax:
+ * @model: a #GwyGraphModel.
+ *
+ * Sets bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ **/
+void          
+gwy_graph_model_set_xmax(GwyGraphModel *model, gdouble value)
+{
+    model->x_max = value;
+}
+/**
+ * gwy_graph_model_set_ymin:
+ * @model: a #GwyGraphModel.
+ *
+ * Sets bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ **/
+void          
+gwy_graph_model_set_ymin(GwyGraphModel *model, gdouble value)
+{
+    model->y_min = value;
+}
+/**
+ * gwy_graph_model_set_ymax:
+ * @model: a #GwyGraphModel.
+ *
+ * Sets bounding value for all the curves within model.
+ * This value is recomputed while adding curves to the
+ * graph depending on actual graph settings.
+ *
+ **/
+void          
+gwy_graph_model_set_ymax(GwyGraphModel *model, gdouble value)
+{
+    model->y_max = value;
+}
+
+/**
+ * gwy_graph_model_get_top_label:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns string corresponding to graph axis label.
+ * It should be not freed.
+ *
+ * Returns: top graph axis label string
+ **/
+const gchar*   
+gwy_graph_model_get_top_label(GwyGraphModel *model)
+{
+    return model->top_label->str;
+}
+
+/**
+ * gwy_graph_model_get_bottom_label:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns string corresponding to graph axis label.
+ * It should be not freed.
+ *
+ * Returns: bottom graph axis label string
+ **/
+const gchar*   
+gwy_graph_model_get_bottom_label(GwyGraphModel *model)
+{
+    return model->bottom_label->str;
+}
+
+/**
+ * gwy_graph_model_get_left_label:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns string corresponding to graph axis label.
+ * It should be not freed.
+ *
+ * Returns: left graph axis label string
+ **/
+const gchar*   
+gwy_graph_model_get_left_label(GwyGraphModel *model)
+{
+    return model->left_label->str;
+}
+
+/**
+ * gwy_graph_model_get_right_label:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns string corresponding to graph axis label.
+ * It should be not freed.
+ *
+ * Returns: right graph axis label string
+ **/
+const gchar*   
+gwy_graph_model_get_right_label(GwyGraphModel *model)
+{
+    return model->right_label->str;
+}
+
 
 /**
  * gwy_graph_model_export_ascii:

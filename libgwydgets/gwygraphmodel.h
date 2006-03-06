@@ -149,6 +149,10 @@ GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          GString *string);
 
 void           gwy_graph_model_signal_layout_changed    (GwyGraphModel *model);
+const gchar*   gwy_graph_model_get_top_label            (GwyGraphModel *model);
+const gchar*   gwy_graph_model_get_bottom_label         (GwyGraphModel *model);
+const gchar*   gwy_graph_model_get_left_label           (GwyGraphModel *model);
+const gchar*   gwy_graph_model_get_right_label          (GwyGraphModel *model);
 
 void           gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
                                                          GtkOrientation direction,
@@ -157,6 +161,18 @@ gboolean       gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
                                                          GtkOrientation direction);
 gboolean       gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model);
 gboolean       gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model);
+
+gdouble        gwy_graph_model_get_xmin                  (GwyGraphModel *model);
+gdouble        gwy_graph_model_get_xmax                  (GwyGraphModel *model);
+gdouble        gwy_graph_model_get_ymin                  (GwyGraphModel *model);
+gdouble        gwy_graph_model_get_ymax                  (GwyGraphModel *model);
+void           gwy_graph_model_set_xmin                  (GwyGraphModel *model, gdouble value);
+void           gwy_graph_model_set_xmax                  (GwyGraphModel *model, gdouble value);
+void           gwy_graph_model_set_ymin                  (GwyGraphModel *model, gdouble value);
+void           gwy_graph_model_set_ymax                  (GwyGraphModel *model, gdouble value);
+
+
+
 
 G_END_DECLS
 

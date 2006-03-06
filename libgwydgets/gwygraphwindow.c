@@ -112,6 +112,7 @@ gwy_graph_window_new(GwyGraph *graph)
     GtkScrolledWindow *swindow;
     GtkWidget *vbox, *hbox;
     GtkWidget *label;
+    GString *title = NULL;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
@@ -129,8 +130,10 @@ gwy_graph_window_new(GwyGraph *graph)
 
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
-    if (graph->graph_model->title->str)
-        gtk_window_set_title(GTK_WINDOW(graphwindow), graph->graph_model->title->str);
+
+    title = gwy_graph_model_get_title(graph->graph_model);
+    if (title)
+        gtk_window_set_title(GTK_WINDOW(graphwindow), title);
     else
         gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
 

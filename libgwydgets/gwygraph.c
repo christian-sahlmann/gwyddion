@@ -174,16 +174,16 @@ gwy_graph_new(GwyGraphModel *gmodel)
     if (gmodel != NULL) {
         graph->axis_top
             = GWY_AXIS(gwy_axis_new(GTK_POS_TOP, 2.24, 5.21,
-                                    graph->graph_model->top_label->str));
+                                    gwy_graph_model_get_top_label(gmodel)));
         graph->axis_bottom
             = GWY_AXIS(gwy_axis_new(GTK_POS_BOTTOM, 2.24, 5.21,
-                                    graph->graph_model->bottom_label->str));
+                                    gwy_graph_model_get_bottom_label(gmodel)));
         graph->axis_left
             = GWY_AXIS(gwy_axis_new(GTK_POS_LEFT, 100, 500,
-                                    graph->graph_model->left_label->str));
+                                    gwy_graph_model_get_left_label(gmodel)));
         graph->axis_right
             = GWY_AXIS(gwy_axis_new(GTK_POS_RIGHT, 100, 500,
-                                    graph->graph_model->right_label->str));
+                                    gwy_graph_model_get_right_label(gmodel)));
     }
 
     gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
@@ -275,15 +275,15 @@ gwy_graph_refresh(GwyGraph *graph)
         return;
     model = GWY_GRAPH_MODEL(graph->graph_model);
 
-    gwy_axis_set_logarithmic(graph->axis_left,   model->y_is_logarithmic);
-    gwy_axis_set_logarithmic(graph->axis_right,  model->y_is_logarithmic);
-    gwy_axis_set_logarithmic(graph->axis_top,    model->x_is_logarithmic);
-    gwy_axis_set_logarithmic(graph->axis_bottom, model->x_is_logarithmic);
+    gwy_axis_set_logarithmic(graph->axis_left,   gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL));
+    gwy_axis_set_logarithmic(graph->axis_right,  gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL));
+    gwy_axis_set_logarithmic(graph->axis_top,    gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL));
+    gwy_axis_set_logarithmic(graph->axis_bottom, gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL));
 
-    gwy_axis_set_unit(graph->axis_top, model->x_unit);
-    gwy_axis_set_unit(graph->axis_bottom, model->x_unit);
-    gwy_axis_set_unit(graph->axis_left, model->y_unit);
-    gwy_axis_set_unit(graph->axis_right, model->y_unit);
+    gwy_axis_set_unit(graph->axis_top, gwy_graph_model_get_si_unit_x(model));
+    gwy_axis_set_unit(graph->axis_bottom, gwy_graph_model_get_si_unit_x(model));
+    gwy_axis_set_unit(graph->axis_left, gwy_graph_model_get_si_unit_y(model));
+    gwy_axis_set_unit(graph->axis_right, gwy_graph_model_get_si_unit_y(model));
     nc = gwy_graph_model_get_n_curves(model);
     if (nc > 0) {
         /*refresh axis and reset axis requirements*/
@@ -316,10 +316,10 @@ gwy_graph_refresh(GwyGraph *graph)
         gwy_axis_set_req(graph->axis_left, y_reqmin, y_reqmax);
         gwy_axis_set_req(graph->axis_right, y_reqmin, y_reqmax);
 
-        model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
-        model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
-        model->y_max = gwy_axis_get_maximum(graph->axis_left);
-        model->y_min = gwy_axis_get_minimum(graph->axis_left);
+        gwy_graph_model_set_xmax(model, gwy_axis_get_maximum(graph->axis_bottom));
+        gwy_graph_model_set_xmin(model, gwy_axis_get_minimum(graph->axis_bottom));
+        gwy_graph_model_set_ymax(model, gwy_axis_get_maximum(graph->axis_left));
+        gwy_graph_model_set_ymin(model, gwy_axis_get_minimum(graph->axis_left));
     }
     else {
         gwy_axis_set_req(graph->axis_top, 0, 1);
@@ -327,10 +327,10 @@ gwy_graph_refresh(GwyGraph *graph)
         gwy_axis_set_req(graph->axis_left, 0, 1);
         gwy_axis_set_req(graph->axis_right, 0, 1);
 
-        model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
-        model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
-        model->y_max = gwy_axis_get_maximum(graph->axis_left);
-        model->y_min = gwy_axis_get_minimum(graph->axis_left);
+        gwy_graph_model_set_xmax(model, gwy_axis_get_maximum(graph->axis_bottom));
+        gwy_graph_model_set_xmin(model, gwy_axis_get_minimum(graph->axis_bottom));
+        gwy_graph_model_set_ymax(model, gwy_axis_get_maximum(graph->axis_left));
+        gwy_graph_model_set_ymin(model, gwy_axis_get_minimum(graph->axis_left));
 
     }
 
@@ -401,10 +401,10 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
 
     array = g_array_new(FALSE, FALSE, sizeof(gdouble));
     model = GWY_GRAPH_MODEL(graph->graph_model);
-    model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
-    model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
-    model->y_max = gwy_axis_get_maximum(graph->axis_left);
-    model->y_min = gwy_axis_get_minimum(graph->axis_left);
+    gwy_graph_model_set_xmax(model, gwy_axis_get_maximum(graph->axis_bottom));
+    gwy_graph_model_set_xmin(model, gwy_axis_get_minimum(graph->axis_bottom));
+    gwy_graph_model_set_ymax(model, gwy_axis_get_maximum(graph->axis_left));
+    gwy_graph_model_set_ymin(model, gwy_axis_get_minimum(graph->axis_left));
 
     if (graph->grid_type == GWY_GRAPH_GRID_AUTO) {
         gwy_axis_set_grid_data(graph->axis_left, array);
@@ -561,8 +561,8 @@ gwy_graph_request_x_range(GwyGraph *graph,
     gwy_axis_set_req(graph->axis_top, x_min_req, x_max_req);
     gwy_axis_set_req(graph->axis_bottom, x_min_req, x_max_req);
 
-    model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
-    model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
+    gwy_graph_model_set_xmax(model, gwy_axis_get_maximum(graph->axis_bottom));
+    gwy_graph_model_set_xmin(model, gwy_axis_get_minimum(graph->axis_bottom));
 
     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
@@ -593,8 +593,8 @@ gwy_graph_request_y_range(GwyGraph *graph,
     gwy_axis_set_req(graph->axis_left, y_min_req, y_max_req);
     gwy_axis_set_req(graph->axis_right, y_min_req, y_max_req);
 
-    model->y_max = gwy_axis_get_maximum(graph->axis_left);
-    model->y_min = gwy_axis_get_minimum(graph->axis_left);
+    gwy_graph_model_set_ymax(model, gwy_axis_get_maximum(graph->axis_left));
+    gwy_graph_model_set_ymin(model, gwy_axis_get_minimum(graph->axis_left));
 
      /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
@@ -721,10 +721,10 @@ zoomed_cb(GwyGraph *graph)
     gwy_axis_set_req(graph->axis_left, y_reqmin, y_reqmax);
     gwy_axis_set_req(graph->axis_right, y_reqmin, y_reqmax);
 
-    graph->graph_model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
-    graph->graph_model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
-    graph->graph_model->y_max = gwy_axis_get_maximum(graph->axis_left);
-    graph->graph_model->y_min = gwy_axis_get_minimum(graph->axis_left);
+    gwy_graph_model_set_xmax(graph->graph_model, gwy_axis_get_maximum(graph->axis_bottom));
+    gwy_graph_model_set_xmin(graph->graph_model, gwy_axis_get_minimum(graph->axis_bottom));
+    gwy_graph_model_set_ymax(graph->graph_model, gwy_axis_get_maximum(graph->axis_left));
+    gwy_graph_model_set_ymin(graph->graph_model, gwy_axis_get_minimum(graph->axis_left));
 
     /*refresh widgets*/
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_PLAIN);
