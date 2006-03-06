@@ -32,17 +32,21 @@
 #include "err.h"
 #include "get.h"
 
-/* Ugly Microsfot UTF-16... */
+/* Ugly Microsoft UTF-16...
+ * It reads: `STiMage 004.NNN N', but we do not check the NNN N */
 static const guchar MAGIC[] = {
-  0x9e, 0x00, 0x53, 0x00, 0x54, 0x00, 0x69, 0x00, 0x4d, 0x00, 0x61, 0x00,
-  0x67, 0x00, 0x65, 0x00, 0x20, 0x00, 0x30, 0x00, 0x30, 0x00, 0x34, 0x00,
-  0x2e, 0x00, 0x30, 0x00, 0x30, 0x00, 0x31, 0x00, 0x20, 0x00, 0x31, 0x00
+  0x53, 0x00, 0x54, 0x00, 0x69, 0x00, 0x4d, 0x00, 0x61, 0x00, 0x67, 0x00,
+  0x65, 0x00, 0x20, 0x00, 0x30, 0x00, 0x30, 0x00, 0x34, 0x00, 0x2e, 0x00,
 };
-#define MAGIC_SIZE (G_N_ELEMENTS(MAGIC))
 
 #define EXTENSION ".sm3"
 
-enum { HEADER_SIZE = MAGIC_SIZE + 2*4 + 15*4 + 11*4 + 16 };
+enum {
+    MAGIC_OFFSET = 2,
+    MAGIC_SIZE = G_N_ELEMENTS(MAGIC),
+    MAGIC_TOTAL_SIZE = 36,   /* including the version part we do not check */
+    HEADER_SIZE = 2 + MAGIC_TOTAL_SIZE + 2*4 + 15*4 + 11*4 + 16
+};
 
 typedef enum {
     RHK_TYPE_IMAGE          = 0,
@@ -203,7 +207,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -276,8 +280,8 @@ rhk_sm3_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0)
+    if (fileinfo->buffer_len > MAGIC_TOTAL_SIZE
+        && memcmp(fileinfo->buffer + MAGIC_OFFSET, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
 
     return score;
@@ -341,7 +345,7 @@ rhk_sm3_read_page(const guchar **buffer,
                     _("End of file reached in page header."));
         return NULL;
     }
-    if (memcmp(*buffer, MAGIC, MAGIC_SIZE) != 0) {
+    if (memcmp(p + MAGIC_OFFSET, MAGIC, MAGIC_SIZE) != 0) {
         err_INVALID(error, _("magic page header"));
         return NULL;
     }
@@ -354,9 +358,9 @@ rhk_sm3_read_page(const guchar **buffer,
                     _("End of file reached in page header."));
         goto FAIL;
     }
-    /* Convert to UTF-8 */
-    memcpy(page->version, p, 36);
-    p += 36;
+    /* TODO: Convert to UTF-8, store to meta */
+    memcpy(page->version, p, MAGIC_TOTAL_SIZE);
+    p += MAGIC_TOTAL_SIZE;
     page->string_count = get_WORD(&p);
     gwy_debug("string_count = %u", page->string_count);
     page->type = get_DWORD(&p);
