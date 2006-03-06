@@ -112,7 +112,7 @@ module_register(void)
                               BASICOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Resample data with non-1:1 aspect ratio to "
-                                 "square samples."));
+                                 "square samples"));
 
     return TRUE;
 }

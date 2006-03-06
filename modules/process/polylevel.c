@@ -395,7 +395,7 @@ poly_level_dialog(PolyLevelArgs *args,
     controls.max_degree = gtk_adjustment_new(args->max_degree,
                                              0, MAX_DEGREE, 1, 1, 0);
     gwy_table_attach_hscale(table, row,
-                            _("Maximum polynom degree:"), NULL,
+                            _("_Maximum polynom degree:"), NULL,
                             controls.max_degree, 0);
     g_signal_connect(controls.max_degree, "value-changed",
                      G_CALLBACK(poly_level_max_degree_changed), &controls);

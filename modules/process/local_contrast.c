@@ -86,7 +86,7 @@ module_register(void)
 {
     gwy_process_func_register("local_contrast",
                               (GwyProcessFunc)&maximize_local_contrast,
-                              N_("/_Presentation/_Local Contrast..."),
+                              N_("/_Presentation/Local _Contrast..."),
                               NULL,
                               CONTRAST_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
