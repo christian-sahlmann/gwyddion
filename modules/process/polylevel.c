@@ -37,16 +37,21 @@ enum {
 typedef struct {
     gint col_degree;
     gint row_degree;
+    gint max_degree;
     gboolean do_extract;
     gboolean same_degree;
+    gboolean independent;
 } PolyLevelArgs;
 
 typedef struct {
     PolyLevelArgs *args;
     GtkObject *col_degree;
     GtkObject *row_degree;
-    GtkWidget *do_extract;
+    GtkObject *max_degree;
+    GSList *type_group;
     GtkWidget *same_degree;
+    GtkWidget *independent;
+    GtkWidget *do_extract;
     GtkWidget *leveled_view;
     GtkWidget *bg_view;
     GwyContainer *data;
@@ -69,9 +74,13 @@ static void     poly_level_dialog_update         (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
 static void     poly_level_update_values         (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
+static void     poly_level_type_changed          (GtkToggleButton *button,
+                                                  PolyLevelControls *controls);
 static void     poly_level_same_degree_changed   (GtkWidget *button,
                                                   PolyLevelControls *controls);
 static void     poly_level_degree_changed        (GtkObject *spin,
+                                                  PolyLevelControls *controls);
+static void     poly_level_max_degree_changed    (GtkObject *spin,
                                                   PolyLevelControls *controls);
 static void     poly_level_update_preview        (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
@@ -84,7 +93,9 @@ static void     sanitize_args                    (PolyLevelArgs *args);
 static const PolyLevelArgs poly_level_defaults = {
     3,
     3,
+    3,
     FALSE,
+    TRUE,
     TRUE,
 };
 
@@ -93,7 +104,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -141,42 +152,82 @@ poly_level(GwyContainer *data, GwyRunType run)
 }
 
 static void
+poly_level_do_independent(GwyDataField *dfield,
+                          GwyDataField *result,
+                          GwyDataField *bg,
+                          gint col_degree, gint row_degree)
+{
+    gint xres, yres, i;
+    gdouble *coeffs;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    coeffs = gwy_data_field_fit_legendre(dfield, col_degree, row_degree, NULL);
+    gwy_data_field_subtract_legendre(result, col_degree, row_degree, coeffs);
+    gwy_data_field_data_changed(result);
+
+    if (bg) {
+        /* Invert coeffs, we do not have anything like add_polynomial() */
+        for (i = 0; i < (col_degree + 1)*(row_degree + 1); i++)
+            coeffs[i] = -coeffs[i];
+        gwy_data_field_subtract_legendre(bg, col_degree, row_degree, coeffs);
+        gwy_data_field_data_changed(bg);
+    }
+
+    g_free(coeffs);
+}
+
+static void
+poly_level_do_maximum(GwyDataField *dfield,
+                      GwyDataField *result,
+                      GwyDataField *bg,
+                      gint max_degree)
+{
+    gint xres, yres, i;
+    gdouble *coeffs;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    coeffs = gwy_data_field_fit_poly_max(dfield, max_degree, NULL);
+    gwy_data_field_subtract_poly_max(result, max_degree, coeffs);
+    gwy_data_field_data_changed(result);
+
+    if (bg) {
+        /* Invert coeffs, we do not have anything like add_polynomial() */
+        for (i = 0; i < (max_degree + 1)*(max_degree + 2)/2; i++)
+            coeffs[i] = -coeffs[i];
+        gwy_data_field_subtract_poly_max(bg, max_degree, coeffs);
+        gwy_data_field_data_changed(bg);
+    }
+
+    g_free(coeffs);
+}
+
+static void
 poly_level_do(GwyContainer *data,
               GwyDataField *dfield,
               GQuark quark,
               gint oldid,
               PolyLevelArgs *args)
 {
-    gint xres, yres, newid, i;
-    gdouble *coeffs;
+    GwyDataField *bg = NULL;
+    gint newid;
 
     gwy_app_undo_qcheckpointv(data, 1, &quark);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    coeffs = gwy_data_field_fit_legendre(dfield,
-                                         args->col_degree, args->row_degree,
-                                         NULL);
-    gwy_data_field_subtract_legendre(dfield,
-                                     args->col_degree, args->row_degree,
-                                     coeffs);
-    gwy_data_field_data_changed(dfield);
+    if (args->do_extract)
+        bg = gwy_data_field_new_alike(dfield, TRUE);
 
-    if (!args->do_extract) {
-        g_free(coeffs);
+    if (args->independent)
+        poly_level_do_independent(dfield, dfield, bg,
+                                  args->col_degree, args->row_degree);
+    else
+        poly_level_do_maximum(dfield, dfield, bg, args->max_degree);
+
+    if (!args->do_extract)
         return;
-    }
 
-    dfield = gwy_data_field_new_alike(dfield, TRUE);
-    /* Invert coeffs, we do not have anything like add_polynomial() */
-    for (i = 0; i < (args->col_degree + 1)*(args->row_degree + 1); i++)
-        coeffs[i] = -coeffs[i];
-    gwy_data_field_subtract_legendre(dfield,
-                                     args->col_degree, args->row_degree,
-                                     coeffs);
-    g_free(coeffs);
-
-    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-    g_object_unref(dfield);
+    newid = gwy_app_data_browser_add_data_field(bg, data, TRUE);
+    g_object_unref(bg);
     gwy_app_copy_data_items(data, data, oldid, newid,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
@@ -230,6 +281,10 @@ poly_level_dialog(PolyLevelArgs *args,
                   gint id)
 {
     enum { RESPONSE_RESET = 1 };
+    static const GwyEnum types[] = {
+        { N_("Independent degrees"),  TRUE,  },
+        { N_("Limited total degree"), FALSE, },
+    };
     GtkWidget *dialog, *table, *label, *hbox;
     GwyPixmapLayer *layer;
     PolyLevelControls controls;
@@ -289,11 +344,21 @@ poly_level_dialog(PolyLevelArgs *args,
                      GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 2, 2);
     row++;
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     row = 0;
+
+    controls.type_group
+        = gwy_radio_buttons_create(types, G_N_ELEMENTS(types),
+                                   "independent",
+                                   G_CALLBACK(poly_level_type_changed),
+                                   &controls,
+                                   args->independent);
+    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.type_group->data),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls.col_degree = gtk_adjustment_new(args->col_degree,
                                              0, MAX_DEGREE, 1, 1, 0);
@@ -322,6 +387,21 @@ poly_level_dialog(PolyLevelArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    gtk_table_attach(GTK_TABLE(table),
+                     GTK_WIDGET(controls.type_group->next->data),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    controls.max_degree = gtk_adjustment_new(args->max_degree,
+                                             0, MAX_DEGREE, 1, 1, 0);
+    gwy_table_attach_hscale(table, row,
+                            _("Maximum polynom degree:"), NULL,
+                            controls.max_degree, 0);
+    g_signal_connect(controls.max_degree, "value-changed",
+                     G_CALLBACK(poly_level_max_degree_changed), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
     gtk_table_attach(GTK_TABLE(table), controls.do_extract,
@@ -331,6 +411,10 @@ poly_level_dialog(PolyLevelArgs *args,
     row++;
 
     controls.in_update = FALSE;
+    gtk_widget_set_sensitive(controls.same_degree, args->independent);
+    gwy_table_hscale_set_sensitive(controls.row_degree, args->independent);
+    gwy_table_hscale_set_sensitive(controls.col_degree, args->independent);
+    gwy_table_hscale_set_sensitive(controls.max_degree, !args->independent);
     poly_level_update_preview(&controls, args);
 
     gtk_widget_show_all(dialog);
@@ -373,10 +457,14 @@ poly_level_dialog_update(PolyLevelControls *controls,
                              args->col_degree);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->row_degree),
                              args->row_degree);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_degree),
+                             args->max_degree);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
                                  args->do_extract);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->same_degree),
                                  args->same_degree);
+    gwy_radio_buttons_set_current(controls->type_group, "independent",
+                                  args->independent);
 }
 
 static void
@@ -385,10 +473,32 @@ poly_level_update_values(PolyLevelControls *controls,
 {
     args->col_degree = gwy_adjustment_get_int(controls->col_degree);
     args->row_degree = gwy_adjustment_get_int(controls->row_degree);
+    args->max_degree = gwy_adjustment_get_int(controls->max_degree);
     args->do_extract
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_extract));
     args->same_degree
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->same_degree));
+    args->independent
+        = gwy_radio_buttons_get_current(controls->type_group, "independent");
+}
+
+static void
+poly_level_type_changed(GtkToggleButton *button,
+                        PolyLevelControls *controls)
+{
+    PolyLevelArgs *args;
+
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    args = controls->args;
+    args->independent = gwy_radio_buttons_get_current(controls->type_group,
+                                                      "independent");
+    gtk_widget_set_sensitive(controls->same_degree, args->independent);
+    gwy_table_hscale_set_sensitive(controls->row_degree, args->independent);
+    gwy_table_hscale_set_sensitive(controls->col_degree, args->independent);
+    gwy_table_hscale_set_sensitive(controls->max_degree, !args->independent);
+    poly_level_update_preview(controls, args);
 }
 
 static void
@@ -463,52 +573,61 @@ poly_level_degree_changed(GtkObject *spin,
 }
 
 static void
+poly_level_max_degree_changed(GtkObject *spin,
+                              PolyLevelControls *controls)
+{
+    PolyLevelArgs *args;
+    gdouble v;
+    gint degree;
+
+    if (controls->in_update)
+        return;
+
+    args = controls->args;
+    v = gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
+    degree = ROUND(v);
+    if (degree == args->max_degree)
+        return;
+
+    args->max_degree = degree;
+    poly_level_update_preview(controls, controls->args);
+}
+
+static void
 poly_level_update_preview(PolyLevelControls *controls,
                           PolyLevelArgs *args)
 {
     GwyDataField *source, *leveled, *bg;
-    gdouble *coeffs;
-    gint xres, yres, i;
 
     gwy_container_gis_object_by_name(controls->data, "/source", &source);
     gwy_container_gis_object_by_name(controls->data, "/0/data", &leveled);
     gwy_container_gis_object_by_name(controls->data, "/1/data", &bg);
 
-    xres = gwy_data_field_get_xres(source);
-    yres = gwy_data_field_get_yres(source);
-    coeffs = gwy_data_field_fit_legendre(source,
-                                         args->col_degree, args->row_degree,
-                                         NULL);
-
     gwy_data_field_copy(source, leveled, FALSE);
-    gwy_data_field_subtract_legendre(leveled,
-                                     args->col_degree, args->row_degree,
-                                     coeffs);
-    gwy_data_field_data_changed(leveled);
-
-    for (i = 0; i < (args->col_degree + 1)*(args->row_degree + 1); i++)
-        coeffs[i] = -coeffs[i];
-
     gwy_data_field_clear(bg);
-    gwy_data_field_subtract_legendre(bg,
-                                     args->col_degree, args->row_degree,
-                                     coeffs);
-    gwy_data_field_data_changed(bg);
 
-    g_free(coeffs);
+    if (args->independent)
+        poly_level_do_independent(source, leveled, bg,
+                                  args->col_degree, args->row_degree);
+    else
+        poly_level_do_maximum(source, leveled, bg, args->max_degree);
 }
 
 static const gchar col_degree_key[]  = "/module/polylevel/col_degree";
 static const gchar row_degree_key[]  = "/module/polylevel/row_degree";
+static const gchar max_degree_key[]  = "/module/polylevel/max_degree";
 static const gchar do_extract_key[]  = "/module/polylevel/do_extract";
 static const gchar same_degree_key[] = "/module/polylevel/same_degree";
+static const gchar independent_key[] = "/module/polylevel/independent";
 
 static void
 sanitize_args(PolyLevelArgs *args)
 {
     args->col_degree = CLAMP(args->col_degree, 0, MAX_DEGREE);
     args->row_degree = CLAMP(args->row_degree, 0, MAX_DEGREE);
+    args->max_degree = CLAMP(args->max_degree, 0, MAX_DEGREE);
     args->do_extract = !!args->do_extract;
+    args->independent = !!args->independent;
     args->same_degree = !!args->same_degree;
     if (args->same_degree)
         args->row_degree = args->col_degree;
@@ -524,10 +643,14 @@ load_args(GwyContainer *container,
                                     &args->col_degree);
     gwy_container_gis_int32_by_name(container, row_degree_key,
                                     &args->row_degree);
+    gwy_container_gis_int32_by_name(container, max_degree_key,
+                                    &args->max_degree);
     gwy_container_gis_boolean_by_name(container, do_extract_key,
                                       &args->do_extract);
     gwy_container_gis_boolean_by_name(container, same_degree_key,
                                       &args->same_degree);
+    gwy_container_gis_boolean_by_name(container, independent_key,
+                                      &args->independent);
     sanitize_args(args);
 }
 
@@ -539,10 +662,14 @@ save_args(GwyContainer *container,
                                     args->col_degree);
     gwy_container_set_int32_by_name(container, row_degree_key,
                                     args->row_degree);
+    gwy_container_set_int32_by_name(container, max_degree_key,
+                                    args->max_degree);
     gwy_container_set_boolean_by_name(container, do_extract_key,
                                       args->do_extract);
     gwy_container_set_boolean_by_name(container, same_degree_key,
                                       args->same_degree);
+    gwy_container_set_boolean_by_name(container, independent_key,
+                                      args->independent);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

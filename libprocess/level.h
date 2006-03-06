@@ -101,6 +101,24 @@ void gwy_data_field_area_subtract_legendre(GwyDataField *data_field,
                                            gint row_degree,
                                            const gdouble *coeffs);
 
+gdouble* gwy_data_field_fit_poly_max      (GwyDataField *data_field,
+                                           gint max_degree,
+                                           gdouble *coeffs);
+gdouble* gwy_data_field_area_fit_poly_max (GwyDataField *data_field,
+                                           gint col, gint row,
+                                           gint width, gint height,
+                                           gint max_degree,
+                                           gdouble *coeffs);
+
+void gwy_data_field_subtract_poly_max     (GwyDataField *data_field,
+                                           gint max_degree,
+                                           const gdouble *coeffs);
+void gwy_data_field_area_subtract_poly_max(GwyDataField *data_field,
+                                           gint col, gint row,
+                                           gint width, gint height,
+                                           gint max_degree,
+                                           const gdouble *coeffs);
+
 GwyDataField** gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
                                                     gint size,
                                                     gint col, gint row,

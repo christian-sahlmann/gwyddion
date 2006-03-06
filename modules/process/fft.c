@@ -349,7 +349,7 @@ fft_dialog(FFTArgs *args,
     row++;
 
     controls.zeromean
-        = gtk_check_button_new_with_mnemonic(_("Subtract mean value "
+        = gtk_check_button_new_with_mnemonic(_("Subtract mean _value "
                                                "beforehand"));
     gtk_table_attach(GTK_TABLE(table), controls.zeromean, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);

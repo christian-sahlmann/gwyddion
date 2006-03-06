@@ -482,6 +482,11 @@ legendre_all(gdouble x,
  * Fits two-dimensional Legendre polynomial to a rectangular part of a data
  * field.
  *
+ * The @col_degree and @row_degree parameters limit the maximum powers of x and
+ * y exactly as if simple powers were fitted, therefore if you do not intend to
+ * interpret contents of @coeffs youself, the only difference is that this
+ * method is much more numerically stable.
+ *
  * The coefficients are organized exactly like in
  * gwy_data_field_area_fit_polynom(), but they are not coefficients of
  * x^n y^m, instead they are coefficients of P_n(x) P_m(x), where P are
@@ -781,8 +786,8 @@ gwy_data_field_fit_legendre(GwyDataField *data_field,
  * of a data field.
  *
  * Due to the transform of coordinates to [-1,1] x [-1,1], this method can be
- * used on a data field of dimensions different than the data field the
- * coefficients were calculated for.
+ * used on an area of dimensions different than the area the coefficients were
+ * calculated for.
  **/
 void
 gwy_data_field_area_subtract_legendre(GwyDataField *data_field,
@@ -818,10 +823,9 @@ gwy_data_field_area_subtract_legendre(GwyDataField *data_field,
             gdouble z = data[(row + r)*xres + (col + c)];
 
             legendre_all(2*c/(width - 1.0) - 1.0, col_degree, pmx);
-            for (i = 0; i <= row_degree; i++) {
-                for (j = 0; j <= col_degree; j++) {
+            for (i = 0; i < row_n; i++) {
+                for (j = 0; j < col_n; j++)
                     z -= coeffs[i*col_n + j]*pmx[j]*pmy[i];
-                }
             }
 
             data[(row + r)*xres + (col + c)] = z;
@@ -854,6 +858,252 @@ gwy_data_field_subtract_legendre(GwyDataField *data_field,
                                           data_field->xres, data_field->yres,
                                           col_degree, row_degree, coeffs);
 }
+
+/**
+ * gwy_data_field_area_fit_poly_max:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @max_degree: Maximum total polynomial degree, that is the maximum of m+n
+ *              in x^n y^m terms.
+ * @coeffs: An array of size (@max_degree+1)*(@max_degree+2)/2 to store the
+ *          coefficients to, or %NULL (a fresh array is allocated then).
+ *
+ * Fits two-dimensional polynomial with limited total degree to a rectangular
+ * part of a data field.
+ *
+ * See gwy_data_field_area_fit_legendre() for description.  This function
+ * differs by limiting the total maximum degree, while
+ * gwy_data_field_area_fit_legendre() limits the maximum degrees in horizontal
+ * and vertical directions independently.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ **/
+gdouble*
+gwy_data_field_area_fit_poly_max(GwyDataField *data_field,
+                                 gint col, gint row,
+                                 gint width, gint height,
+                                 gint max_degree,
+                                 gdouble *coeffs)
+{
+    gint r, c, i, j, size, xres, yres, degree_n;
+    gint ix, jx, iy, jy;
+    gdouble *data, *m, *pmx, *pmy, *sumsx, *sumsy;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(max_degree >= 0, NULL);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
+                         NULL);
+
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    degree_n = max_degree + 1;
+    size = degree_n*(degree_n + 1)/2;
+    g_return_val_if_fail(width*height > size, NULL);
+    /* The maximum necessary matrix size (order), it is approximately four
+     * times smaller thanks to separation of even and odd polynomials */
+    if (!coeffs)
+        coeffs = g_new0(gdouble, size);
+    else
+        memset(coeffs, 0, size*sizeof(gdouble));
+
+    sumsx = g_new0(gdouble, degree_n*degree_n);
+    sumsy = g_new0(gdouble, degree_n*degree_n);
+    m = g_new(gdouble, MAX(size*(size + 1)/2, 2*degree_n));
+    /* pmx, pmy and m are not needed at the same time, reuse it */
+    pmx = m;
+    pmy = m + degree_n;
+
+    /* Calculate <P_m(x) P_n(y) z(x,y)> (normalized to complete area) */
+    for (r = 0; r < height; r++) {
+        legendre_all(2*r/(height - 1.0) - 1.0, max_degree, pmy);
+        for (c = 0; c < width; c++) {
+            gdouble z = data[(row + r)*xres + (col + c)];
+
+            legendre_all(2*c/(width - 1.0) - 1.0, max_degree, pmx);
+            for (i = 0; i < degree_n; i++) {
+                for (j = 0; j < degree_n - i; j++)
+                    coeffs[i*(2*degree_n + 1 - i)/2 + j] += z*pmx[j]*pmy[i];
+            }
+        }
+    }
+
+    /* Calculate <P_m(x) P_a(x)> (normalized to single row).
+     * 3/4 of these values are zeroes, but it only takes O(width) time. */
+    for (c = 0; c < width; c++) {
+        legendre_all(2*c/(width - 1.0) - 1.0, max_degree, pmx);
+        for (i = 0; i < degree_n; i++) {
+            for (j = 0; j < degree_n; j++)
+                sumsx[i*degree_n + j] += pmx[i]*pmx[j];
+        }
+    }
+
+    /* Calculate <P_n(y) P_b(y)> (normalized to single column)
+     * 3/4 of these values are zeroes, but it only takes O(height) time. */
+    for (r = 0; r < height; r++) {
+        legendre_all(2*r/(height - 1.0) - 1.0, max_degree, pmy);
+        for (i = 0; i < degree_n; i++) {
+            for (j = 0; j < degree_n; j++)
+                sumsy[i*degree_n + j] += pmy[i]*pmy[j];
+        }
+    }
+
+    /* Construct the matrix */
+    for (iy = 0; iy < degree_n; iy++) {
+        for (jy = 0; jy < degree_n - iy; jy++) {
+            gdouble *mrow;
+
+            i = iy*(2*degree_n + 1 - iy)/2 + jy;
+            mrow = m + i*(i + 1)/2;
+            for (ix = 0; ix < degree_n; ix++) {
+                for (jx = 0; jx < degree_n - ix; jx++) {
+                    j = ix*(2*degree_n + 1 - ix)/2 + jx;
+                    /* It is easier to go through all the coeffs and ignore
+                     * the upper right triangle than to construct conditions
+                     * directly for jy, jy, etc. */
+                    if (j > i)
+                        continue;
+                    mrow[j] = sumsx[jy*degree_n + jx]*sumsy[iy*degree_n + ix];
+                }
+            }
+        }
+    }
+    /* Solve */
+    if (!gwy_math_choleski_decompose(size, m)) {
+        memset(coeffs, 0, size*sizeof(gdouble));
+        goto fail;
+    }
+    gwy_math_choleski_solve(size, m, coeffs);
+
+fail:
+    g_free(m);
+    g_free(sumsx);
+    g_free(sumsy);
+
+    return coeffs;
+}
+
+/**
+ * gwy_data_field_fit_poly_max:
+ * @data_field: A data field.
+ * @max_degree: Maximum total polynomial degree, that is the maximum of m+n
+ *              in x^n y^m terms.
+ * @coeffs: An array of size (@max_degree+1)*(@max_degree+2)/2 to store the
+ *          coefficients to, or %NULL (a fresh array is allocated then).
+ *
+ * Fits two-dimensional polynomial with limited total degree to a data field.
+ *
+ * See gwy_data_field_area_fit_poly_max() for details.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ **/
+gdouble*
+gwy_data_field_fit_poly_max(GwyDataField *data_field,
+                            gint max_degree,
+                            gdouble *coeffs)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    return gwy_data_field_area_fit_poly_max(data_field, 0, 0,
+                                            data_field->xres, data_field->yres,
+                                            max_degree, coeffs);
+}
+
+/**
+ * gwy_data_field_area_subtract_poly_max:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @max_degree: Maximum total polynomial degree, that is the maximum of m+n
+ *              in x^n y^m terms.
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+2)/2 with
+ *          coefficients, see gwy_data_field_area_fit_poly_max() for details.
+ *
+ * Subtracts a two-dimensional polynomial with limited total degree from a
+ * rectangular part of a data field.
+ *
+ * Due to the transform of coordinates to [-1,1] x [-1,1], this method can be
+ * used on an area of dimensions different than the area the coefficients were
+ * calculated for.
+ **/
+void
+gwy_data_field_area_subtract_poly_max(GwyDataField *data_field,
+                                      gint col, gint row,
+                                      gint width, gint height,
+                                      gint max_degree,
+                                      const gdouble *coeffs)
+{
+    gint r, c, i, j, size, xres, yres, degree_n;
+    gdouble *data, *pmx, *pmy;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(coeffs);
+    g_return_if_fail(max_degree >= 0);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    degree_n = max_degree + 1;
+    size = degree_n*(degree_n + 1)/2;
+
+    pmx = g_new0(gdouble, 2*degree_n);
+    pmy = pmx + degree_n;
+
+    for (r = 0; r < height; r++) {
+        legendre_all(2*r/(height - 1.0) - 1.0, max_degree, pmy);
+        for (c = 0; c < width; c++) {
+            gdouble z = data[(row + r)*xres + (col + c)];
+
+            legendre_all(2*c/(width - 1.0) - 1.0, max_degree, pmx);
+            for (i = 0; i < degree_n; i++) {
+                for (j = 0; j < degree_n - i; j++)
+                    z -= coeffs[i*(2*degree_n + 1 - i)/2 + j]*pmx[j]*pmy[i];
+            }
+
+            data[(row + r)*xres + (col + c)] = z;
+        }
+    }
+
+    g_free(pmx);
+
+    gwy_data_field_invalidate(data_field);
+}
+
+/**
+ * gwy_data_field_subtract_poly_max:
+ * @data_field: A data field.
+ * @max_degree: Maximum total polynomial degree, that is the maximum of m+n
+ *              in x^n y^m terms.
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+2)/2 with
+ *          coefficients, see gwy_data_field_area_fit_poly_max() for details.
+ *
+ * Subtracts a two-dimensional polynomial with limited total degree from
+ * a data field.
+ **/
+void
+gwy_data_field_subtract_poly_max(GwyDataField *data_field,
+                                 gint max_degree,
+                                 const gdouble *coeffs)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_subtract_poly_max(data_field,
+                                          0, 0,
+                                          data_field->xres, data_field->yres,
+                                          max_degree, coeffs);
+}
+
 /**
  * gwy_data_field_area_fit_local_planes:
  * @data_field: A data field.
