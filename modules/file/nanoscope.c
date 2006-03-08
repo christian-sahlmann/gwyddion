@@ -283,6 +283,9 @@ nanoscope_load(const gchar *filename,
     g_free(buffer);
     g_list_free(list);
 
+    if (!container && ok)
+        err_NO_DATA(error);
+
     return container;
 }
 
