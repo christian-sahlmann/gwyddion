@@ -16,6 +16,7 @@ libgwyappinclude_HEADERS = \
 	funcuse.h \
 	glmaterial-editor.h \
 	gradient-editor.h \
+	gwytool.h \
 	gwyapp.h \
 	menu.h \
 	menu-windowlist.h \
@@ -60,6 +61,7 @@ libgwyapp_la_SOURCES = \
 	funcuse.c \
 	glmaterial-editor.c \
 	gradient-editor.c \
+	gwytool.c \
 	menu.c \
 	menu-windowlist.c \
 	settings.c \
