@@ -24,6 +24,7 @@ file_LTLIBRARIES = \
 	$(tiff_modules) \
 	nanoscope.la \
 	nt-mdt.la \
+	omicron.la \
 	pixmap.la \
 	rawfile.la \
 	rhk-sm3.la \
@@ -111,6 +112,9 @@ nt_mdt_la_LIBADD = $(module_libadd)
 
 mifile_la_SOURCES = mifile.c
 mifile_la_LIBADD = $(module_libadd)
+
+omicron_la_SOURCES = omicron.c
+omicron_la_LIBADD = $(module_libadd)
 
 pixmap_la_SOURCES = pixmap.c
 pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
