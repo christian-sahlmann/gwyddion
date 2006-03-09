@@ -32,6 +32,8 @@
 #include "gwydgetutils.h"
 #include "gwygraphselections.h"
 
+#include <stdio.h>
+
 enum {
     SELECTED_SIGNAL,
     ZOOMED_SIGNAL,
@@ -438,8 +440,9 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.width = width;
     specs.real_xmin = gwy_graph_model_get_xmin(area->graph_model);
     specs.real_ymin = gwy_graph_model_get_ymin(area->graph_model);
-    specs.real_width = gwy_graph_model_get_xmax(area->graph_model) - gwy_graph_model_get_xmin(area->graph_model);;
-    specs.real_height = gwy_graph_model_get_ymax(area->graph_model) - gwy_graph_model_get_ymin(area->graph_model);;
+    specs.real_width = gwy_graph_model_get_xmax(area->graph_model) - gwy_graph_model_get_xmin(area->graph_model);
+    specs.real_height = gwy_graph_model_get_ymax(area->graph_model) - gwy_graph_model_get_ymin(area->graph_model);
+    
     specs.log_x = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL);
     specs.log_y = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL);
     /*draw continuous selection*/

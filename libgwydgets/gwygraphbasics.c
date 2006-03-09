@@ -27,6 +27,7 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
+
 static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {

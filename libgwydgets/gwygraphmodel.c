@@ -1022,7 +1022,7 @@ gwy_graph_model_get_ymin(GwyGraphModel *model)
 gdouble           
 gwy_graph_model_get_xmax(GwyGraphModel *model)
 {
-    return model->x_min;
+    return model->x_max;
 }
 
 /**
@@ -1038,7 +1038,7 @@ gwy_graph_model_get_xmax(GwyGraphModel *model)
 gdouble           
 gwy_graph_model_get_ymax(GwyGraphModel *model)
 {
-    return model->y_min;
+    return model->y_max;
 }
 
 /**
