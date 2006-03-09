@@ -55,7 +55,9 @@ typedef enum {
 
 /*
  * Old-style record is
- * \Foo: HardValue
+ * \Foo: HardValue (HardScale)
+ * where HardScale is optional.
+ * 
  * New-style record is
  * \@Bar: V [SoftScale] (HardScale) HardValue
  * where SoftScale and HardScale are optional.
@@ -85,6 +87,7 @@ static GwyDataField*   hash_to_data_field  (GHashTable *hash,
                                             GHashTable *scannerlist,
                                             GHashTable *scanlist,
                                             NanoscopeFileType file_type,
+                                            gboolean has_version,
                                             guint bufsize,
                                             gchar *buffer,
                                             gint gxres,
@@ -110,6 +113,7 @@ static void            get_scan_list_res   (GHashTable *hash,
 static GwySIUnit*      get_physical_scale  (GHashTable *hash,
                                             GHashTable *scannerlist,
                                             GHashTable *scanlist,
+                                            gboolean has_version,
                                             gdouble *scale,
                                             GError **error);
 static void            fill_metadata       (GwyContainer *data,
@@ -121,19 +125,16 @@ static gboolean        require_keys        (GHashTable *hash,
                                             GError **error,
                                             ...);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Veeco Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -183,7 +184,7 @@ nanoscope_load(const gchar *filename,
     GHashTable *hash, *scannerlist = NULL, *scanlist = NULL;
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0;
-    gboolean ok;
+    gboolean ok, has_version = FALSE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -231,17 +232,25 @@ nanoscope_load(const gchar *filename,
             scannerlist = hash;
             continue;
         }
+        if (gwy_strequal(self, "File list")) {
+            has_version = !!g_hash_table_lookup(hash, "Version");
+            gwy_debug("has Version: %d", has_version);
+            continue;
+        }
         if (gwy_strequal(self, "Ciao scan list")
-            || gwy_strequal(self, "Afm list")) {
+            || gwy_strequal(self, "Afm list")
+            || gwy_strequal(self, "NC Afm list")) {
             get_scan_list_res(hash, &xres, &yres);
             scanlist = hash;
         }
         if (!gwy_strequal(self, "Ciao image list")
-            && !gwy_strequal(self, "AFM image list"))
+            && !gwy_strequal(self, "AFM image list")
+            && !gwy_strequal(self, "NCAFM image list"))
             continue;
 
         ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
-                                               file_type, size, buffer,
+                                               file_type, has_version,
+                                               size, buffer,
                                                xres, yres,
                                                &p, error);
         ok = ok && ndata->data_field;
@@ -368,6 +377,7 @@ hash_to_data_field(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
                    NanoscopeFileType file_type,
+                   gboolean has_version,
                    guint bufsize,
                    gchar *buffer,
                    gint gxres,
@@ -405,20 +415,23 @@ hash_to_data_field(GHashTable *hash,
                     _("Cannot parse `Scan size' field."));
         return NULL;
     }
+    gwy_debug("xreal = %g", xreal);
     s = end+1;
     yreal = g_ascii_strtod(s, &end);
     if (errno || *end != ' ') {
-        /* Nanoscope E files don't have two numbers here */
+        /* Old files don't have two numbers here, assume equal dimensions */
         yreal = xreal;
         end = s;
-        /*g_warning("Cannot parse <Scan size>: <%s>", s);
-        return NULL;*/
     }
-    if (sscanf(end+1, "%4s", un) != 1) {
+    gwy_debug("yreal = %g", yreal);
+    while (g_ascii_isspace(*end))
+        end++;
+    if (sscanf(end, "%4s", un) != 1) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Cannot parse `Scan size' field."));
         return NULL;
     }
+    gwy_debug("xy unit: <%s>", un);
     unitxy = gwy_si_unit_new_parse(un, &power10);
     q = pow10(power10);
     xreal *= q;
@@ -454,7 +467,8 @@ hash_to_data_field(GHashTable *hash,
     }
 
     q = 1.0;
-    unitz = get_physical_scale(hash, scannerlist, scanlist, &q, error);
+    unitz = get_physical_scale(hash, scannerlist, scanlist, has_version,
+                               &q, error);
     if (!unitz)
         return NULL;
 
@@ -494,6 +508,7 @@ static GwySIUnit*
 get_physical_scale(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
+                   gboolean has_version,
                    gdouble *scale,
                    GError **error)
 {
@@ -502,12 +517,38 @@ get_physical_scale(GHashTable *hash,
     gchar *key;
     gint q;
 
+    /* Very old style scales (files with Version field) */
+    if (!has_version) {
+        if (!(val = g_hash_table_lookup(hash, "Z magnify image"))) {
+            err_MISSING_FIELD(error, "Z magnify image");
+            return NULL;
+        }
+
+        /* TODO: Luminescence */
+        siunit = gwy_si_unit_new("m");
+        /* According to Markus, the units are 1/100 nm, but his scale
+         * calculation is raw/655.36 [nm].  We have the factor 1/65536 applied
+         * automatically, that gives 1e-7 [m].  Whatever. */
+        *scale = 1e-7 * val->hard_value;
+        return siunit;
+    }
+
     /* XXX: This is a damned heuristics.  For some value types we try to guess
      * a different quantity scale to look up. */
     if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
-        err_MISSING_FIELD(error, "@2:Z scale");
-        return NULL;
+        if (!(val = g_hash_table_lookup(hash, "Z scale"))) {
+            err_MISSING_FIELD(error, "Z scale");
+            return NULL;
+        }
+
+        /* Old style scales */
+        siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
+        *scale = val->hard_value * pow10(q);
+        if (val->hard_scale)
+            *scale *= 65536.0/val->hard_scale;
+        return siunit;
     }
+
     key = g_strdup_printf("@%s", val->soft_scale);
 
     if (!(sval = g_hash_table_lookup(scannerlist, key))
@@ -698,10 +739,17 @@ parse_value(const gchar *key, gchar *line)
     /* old-style values */
     if (key[0] != '@') {
         val->hard_value = g_ascii_strtod(line, &p);
-        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' ')) {
+        if (p-line > 0 && *p == ' ') {
             do {
                 p++;
             } while (g_ascii_isspace(*p));
+            if ((q = strchr(p, '('))) {
+                *q = '\0';
+                q++;
+                val->hard_scale = g_ascii_strtod(q, &q);
+                if (*q != ')')
+                    val->hard_scale = 0.0;
+            }
             val->hard_value_units = p;
         }
         val->hard_value_str = line;
