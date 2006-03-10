@@ -1,7 +1,8 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Markus Pristovsek
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net,
+ *  prissi@gift.physik.tu-berlin.de.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,20 +22,15 @@
 /* TODO: metadata */
 
 #include "config.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <libprocess/stats.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
 
 #include "err.h"
-#include "get.h"
 
 #define MAGIC "Omicron SPM Control"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -95,7 +91,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
 
