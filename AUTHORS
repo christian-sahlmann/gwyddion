@@ -69,3 +69,9 @@ Mindaugas Rackaitis, Penn State University
     ReadSTP Matlab method helped us in writing our stpfile import module,
     although we wrote it from scratch.
 
+Markus Pristovsek
+    Several file import modules were written or improved using the source
+    code of Snomputz, particularly:
+    Omicron, Nanoscope.
+    See the respective modules for more information.
+
