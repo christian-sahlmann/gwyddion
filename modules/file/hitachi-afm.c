@@ -87,7 +87,7 @@ hitachi_detect(const GwyFileDetectInfo *fileinfo,
     gint score = 0;
 
     if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
         && fileinfo->file_size >= HEADER_SIZE + 2
