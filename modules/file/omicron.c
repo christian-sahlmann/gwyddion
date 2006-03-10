@@ -17,7 +17,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
+/* TODO: metadata */
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -39,6 +41,8 @@
 
 #define EXTENSION_HEADER ".par"
 
+#define Nanometer 1e-9
+
 typedef enum {
     SCAN_UNKNOWN = 0,
     SCAN_FORWARD = 1,
@@ -59,36 +63,31 @@ typedef struct {
 } OmicronTopoChannel;
 
 typedef struct {
+    const gchar *filename;
+    gint xres;
+    gint yres;
+    gdouble xreal;
+    gdouble yreal;
     GHashTable *meta;
     GPtrArray *topo_channels;
-    GPtrArray *spec_channels;
 } OmicronFile;
 
-static gboolean      module_register        (void);
-static gint          omicron_detect         (const GwyFileDetectInfo *fileinfo,
-                                             gboolean only_name);
-static GwyContainer* omicron_load           (const gchar *filename,
-                                             GwyRunType mode,
-                                             GError **error);
-static gboolean      omicron_read_header    (gchar *buffer,
-                                             OmicronFile *ofile,
-                                             GError **error);
+static gboolean      module_register         (void);
+static gint          omicron_detect          (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer* omicron_load            (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
+static gboolean      omicron_read_header     (gchar *buffer,
+                                              OmicronFile *ofile,
+                                              GError **error);
 static gboolean      omicron_read_topo_header(gchar **buffer,
                                               OmicronTopoChannel *channel,
                                               GError **error);
-/*
-static gint          omicron_sscanf         (const gchar *str,
-                                             const gchar *format,
-                                             ...);
-static GwyDataField* omicron_read_data_field(const guchar *buffer,
-                                             gsize size,
-                                             OmicronFile *ofile,
-                                             GError **error);
-static void          omicron_store_metadata (OmicronFile *ofile,
-                                             GwyContainer *container);
-static gchar*        omicron_find_data_name (const gchar *header_name);
-*/
-static void          omicron_file_free      (OmicronFile *ofile);
+static GwyDataField* omicron_read_data       (OmicronFile *ofile,
+                                              OmicronTopoChannel *channel,
+                                              GError **error);
+static void          omicron_file_free       (OmicronFile *ofile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -147,65 +146,68 @@ omicron_load(const gchar *filename,
 {
     OmicronFile ofile;
     GwyContainer *container = NULL;
-    guchar *buffer = NULL;
     gchar *text = NULL;
-    gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    guint i, idx;
+    gchar key[32];
 
+    /* @text must not be destroyed while @ofile is still in used because
+     * all strings are only references there */
     if (!g_file_get_contents(filename, &text, NULL, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
     memset(&ofile, 0, sizeof(OmicronFile));
-    if (!omicron_read_header(text, &ofile, error)) {
-        omicron_file_free(&ofile);
-        g_free(text);
-        return NULL;
-    }
+    ofile.filename = filename;
+    if (!omicron_read_header(text, &ofile, error))
+        goto fail;
 
-    /*
-    if (ofile.data_type < OMICRON_UINT8
-        || ofile.data_type > OMICRON_FLOAT
-        || type_sizes[ofile.data_type] == 0) {
-        err_UNSUPPORTED(error, _("data type"));
-        omicron_file_free(&ofile);
-        return NULL;
-    }
-
-    if (!(data_name = omicron_find_data_name(filename))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("No corresponding data file was found for header file."));
-        omicron_file_free(&ofile);
-        return NULL;
-    }
-
-    if (!gwy_file_get_contents(data_name, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        omicron_file_free(&ofile);
-        return NULL;
-    }
-
-    dfield = omicron_read_data_field(buffer, size, &ofile, error);
-    gwy_file_abandon_contents(buffer, size, NULL);
-
-    if (!dfield) {
-        omicron_file_free(&ofile);
-        return NULL;
+    if (!ofile.topo_channels || !ofile.topo_channels->len) {
+        err_NO_DATA(error);
+        goto fail;
     }
 
     container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    g_object_unref(dfield);
-    omicron_store_metadata(&ofile, container);
-    */
+    idx = 0;
+    for (i = 0; i < ofile.topo_channels->len; i++) {
+        OmicronTopoChannel *channel;
+
+        channel = g_ptr_array_index(ofile.topo_channels, i);
+        dfield = omicron_read_data(&ofile, channel, error);
+        if (!dfield) {
+            gwy_object_unref(container);
+            goto fail;
+        }
+
+        g_snprintf(key, sizeof(key), "/%u/data", idx);
+        gwy_container_set_object_by_name(container, key, dfield);
+        g_object_unref(dfield);
+
+        if (channel->name) {
+            g_snprintf(key, sizeof(key), "/%u/data/title", idx);
+            gwy_container_set_string_by_name(container, key,
+                                             g_strdup(channel->name));
+        }
+
+        idx++;
+    }
+
+fail:
     omicron_file_free(&ofile);
     g_free(text);
 
-    err_NO_DATA(error);
     return container;
 }
+
+#define GET_FIELD(hash, val, field, err) \
+    do { \
+        if (!(val = g_hash_table_lookup(hash, field))) { \
+            err_MISSING_FIELD(err, field); \
+            return FALSE; \
+        } \
+    } while (FALSE)
 
 static gboolean
 omicron_read_header(gchar *buffer,
@@ -217,19 +219,23 @@ omicron_read_header(gchar *buffer,
     ofile->meta = g_hash_table_new(g_str_hash, g_str_equal);
 
     while ((line = gwy_str_next_line(&buffer))) {
-        while (g_ascii_isspace(*line))
-            line++;
-        if (!line[0] || line[0] == ';')
+        /* FIXME: This strips 2nd and following lines from possibly multiline
+         * fields like Comment. */
+        if (!line[0] || line[0] == ';' || g_ascii_isspace(line[0]))
             continue;
 
         val = strchr(line, ':');
         if (!val) {
-            /* TODO: no colon */
-            continue;
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing colon in header line."));
+            return FALSE;
         }
         if (val == line) {
-            /* TODO: line starts with colon */
-            continue;
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Header line starts with a colon."));
+            return FALSE;
         }
         *val = '\0';
         val++;
@@ -259,12 +265,23 @@ omicron_read_header(gchar *buffer,
         }
         else if (gwy_strequal(line, "Spectroscopic Channel")) {
             gwy_debug("Spectroscopic Channel found");
+            /* FIXME */
         }
         else {
             gwy_debug("<%s> = <%s>", line, val);
             g_hash_table_insert(ofile->meta, line, val);
         }
     }
+
+    GET_FIELD(ofile->meta, val, "Image Size in X", error);
+    ofile->xres = abs(atoi(val));
+    GET_FIELD(ofile->meta, val, "Image Size in Y", error);
+    ofile->yres = abs(atoi(val));
+
+    GET_FIELD(ofile->meta, val, "Field X Size in nm", error);
+    ofile->xreal = fabs(g_ascii_strtod(val, NULL)) * Nanometer;
+    GET_FIELD(ofile->meta, val, "Field Y Size in nm", error);
+    ofile->yreal = fabs(g_ascii_strtod(val, NULL)) * Nanometer;
 
     return TRUE;
 }
@@ -343,314 +360,134 @@ omicron_read_topo_header(gchar **buffer,
     return TRUE;
 }
 
-#if 0
-#define NEXT(buffer, line, err) \
-    do { \
-        if (!(line = gwy_str_next_line(&buffer))) { \
-            g_set_error(error, GWY_MODULE_FILE_ERROR, \
-                        GWY_MODULE_FILE_ERROR_DATA, \
-                        _("File header ended unexpectedly.")); \
-            return FALSE; \
-        } \
-    } while (g_str_has_prefix(line, "\t:")); \
-    g_strstrip(line)
-
-static gboolean
-omicron_read_header(gchar *buffer,
-                    OmicronFile *ofile,
-                    GError **error)
+/* In most Omicron files, the letter case is arbitrary.  Try miscellaneous
+ * variations till we finally give up */
+static gchar*
+omicron_fix_file_name(const gchar *parname,
+                      const gchar *orig,
+                      GError **error)
 {
-    gchar *line;
-    gint type1, type2;
+    gchar *filename, *dirname, *base;
+    guint len, i;
 
-    line = gwy_str_next_line(&buffer);
-    if (!line)
-        return FALSE;
-
-    NEXT(buffer, line, error);
-    /* garbage */
-
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "i", &ofile->format_version) != 1) {
-        err_UNSUPPORTED(error, _("format version"));
-        return FALSE;
+    if (!g_path_is_absolute(orig)) {
+        dirname = g_path_get_dirname(parname);
+        filename = g_build_filename(dirname, orig, NULL);
     }
-
-    NEXT(buffer, line, error);
-    ofile->date = g_strdup(line);
-    NEXT(buffer, line, error);
-    ofile->time = g_strdup(line);
-    NEXT(buffer, line, error);
-    ofile->sample_name = g_strdup(line);
-    NEXT(buffer, line, error);
-    ofile->remark = g_strdup(line);
-
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "ii", &ofile->ascii_flag, &type1) != 2) {
-        err_INVALID(error, _("format flags"));
-        return FALSE;
+    else {
+        dirname = g_path_get_dirname(orig);
+        base = g_path_get_basename(orig);
+        filename = g_build_filename(dirname, base, NULL);
+        g_free(base);
     }
-    ofile->data_type = type1;
+    g_free(dirname);
+    base = filename + strlen(filename) - strlen(orig);
+    len = strlen(base);
 
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "ii", &ofile->xres, &ofile->yres) != 2) {
-        err_INVALID(error, _("resolution"));
-        return FALSE;
-    }
+    gwy_debug("Trying <%s> (original)", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK))
+        return filename;
 
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "ii", &type1, &type2) != 2) {
-        /* FIXME */
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid some integers heaven knows what "
-                      "they mean but that should be here."));
-        return FALSE;
-    }
-    ofile->dim_x = type1;
-    ofile->dim_y = type2;
+    /* All upper */
+    for (i = 0; i < len; i++)
+        base[i] = g_ascii_toupper(base[i]);
+    gwy_debug("Trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK))
+        return filename;
 
-    NEXT(buffer, line, error);
-    ofile->unit_x = g_strdup(line);
+    /* All lower */
+    for (i = 0; i < len; i++)
+        base[i] = g_ascii_tolower(base[i]);
+    gwy_debug("Trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK))
+        return filename;
 
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "ddi",
-                       &ofile->start_x, &ofile->end_x,
-                       &ofile->log_flag_x) != 3) {
-        err_INVALID(error, _("x scale parameters"));
-        return FALSE;
-    }
+    /* Capitalize */
+    base[0] = g_ascii_toupper(base[0]);
+    gwy_debug("Trying <%s>", filename);
+    if (g_file_test(filename, G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK))
+        return filename;
 
-    NEXT(buffer, line, error);
-    ofile->unit_y = g_strdup(line);
-
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "ddii",
-                       &ofile->start_y, &ofile->end_y,
-                       &ofile->ineq_flag, &ofile->log_flag_y) != 4) {
-        err_INVALID(error, _("y scale parameters"));
-        return FALSE;
-    }
-
-    NEXT(buffer, line, error);
-    ofile->unit_z = g_strdup(line);
-
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "ddddi",
-                       &ofile->max_raw_z, &ofile->min_raw_z,
-                       &ofile->max_z, &ofile->min_z,
-                       &ofile->log_flag_z) != 5) {
-        err_INVALID(error, _("z scale parameters"));
-        return FALSE;
-    }
-
-    NEXT(buffer, line, error);
-    if (omicron_sscanf(line, "dddi",
-                       &ofile->stm_voltage, &ofile->stm_current,
-                       &ofile->scan_time, &ofile->accum) != 4) {
-        err_INVALID(error, _("data type parameters"));
-        return FALSE;
-    }
-
-    NEXT(buffer, line, error);
-    /* reserved */
-
-    NEXT(buffer, line, error);
-    ofile->stm_voltage_unit = g_strdup(line);
-
-    NEXT(buffer, line, error);
-    ofile->stm_current_unit = g_strdup(line);
-
-    NEXT(buffer, line, error);
-    ofile->ad_name = g_strdup(line);
-
-    /* There is more stuff after that, but heaven knows what it means... */
-
-    return TRUE;
-}
-
-static gint
-omicron_sscanf(const gchar *str,
-               const gchar *format,
-               ...)
-{
-    va_list ap;
-    gchar *endptr;
-    gint *pi;
-    gdouble *pd;
-    gint count = 0;
-
-    va_start(ap, format);
-    while (*format) {
-        switch (*format++) {
-            case 'i':
-            pi = va_arg(ap, gint*);
-            g_assert(pi);
-            *pi = strtol(str, &endptr, 10);
-            break;
-
-            case 'd':
-            pd = va_arg(ap, gdouble*);
-            g_assert(pd);
-            *pd = g_ascii_strtod(str, &endptr);
-            break;
-
-            default:
-            g_return_val_if_reached(0);
-            break;
-        }
-        if ((gchar*)str == endptr)
-            break;
-
-        count++;
-        str = endptr;
-    }
-    va_end(ap);
-
-    return count;
+    g_free(filename);
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("No data file corresponding to `%s' was found."), orig);
+    return NULL;
 }
 
 static GwyDataField*
-omicron_read_data_field(const guchar *buffer,
-                        gsize size,
-                        OmicronFile *ofile,
-                        GError **error)
+omicron_read_data(OmicronFile *ofile,
+                  OmicronTopoChannel *channel,
+                  GError **error)
 {
-    gint i, n, power10;
-    const gchar *unit;
+    GError *err = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    gdouble q, pmin, pmax, rmin, rmax;
+    gchar *filename;
     gdouble *data;
+    guchar *buffer;
+    gint16 *d;
+    gdouble scale;
+    gsize size;
+    guint i, n;
+    gint power10 = 0;
 
-    n = ofile->xres * ofile->yres;
-    if (n*type_sizes[ofile->data_type] > size) {
-        err_SIZE_MISMATCH(error, n*type_sizes[ofile->data_type], size);
+    filename = omicron_fix_file_name(ofile->filename, channel->filename, error);
+    if (!filename)
+        return NULL;
+
+    gwy_debug("Succeeded with <%s>", filename);
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        g_free(filename);
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+    g_free(filename);
+
+    n = ofile->xres*ofile->yres;
+    if (size != 2*n) {
+        err_SIZE_MISMATCH(error, 2*n, size);
+        gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
+    scale = (channel->max_phys - channel->min_phys)
+            /(channel->max_raw - channel->min_raw);
     dfield = gwy_data_field_new(ofile->xres, ofile->yres,
-                                fabs((ofile->end_x - ofile->start_x)),
-                                fabs((ofile->end_y - ofile->start_y)),
+                                ofile->xreal, ofile->yreal,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
+    d = (gint16*)buffer;
+    for (i = 0; i < n; i++)
+        data[i] = scale*GINT16_FROM_BE(d[i]);
+    gwy_file_abandon_contents(buffer, size, NULL);
 
-    /* FIXME: what to do when ascii_flag is set? */
-    switch (ofile->data_type) {
-        case OMICRON_UINT8:
-        for (i = 0; i < n; i++)
-            data[i] = buffer[i];
-        break;
-
-        case OMICRON_SINT8:
-        for (i = 0; i < n; i++)
-            data[i] = (signed char)buffer[i];
-        break;
-
-        case OMICRON_UINT16:
-        {
-            const guint16 *pdata = (const guint16*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = GUINT16_FROM_LE(pdata[i]);
-        }
-        break;
-
-        case OMICRON_SINT16:
-        {
-            const gint16 *pdata = (const gint16*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = GINT16_FROM_LE(pdata[i]);
-        }
-        break;
-
-        case OMICRON_FLOAT:
-        for (i = 0; i < n; i++)
-            data[i] = get_FLOAT(&buffer);
-        break;
-
-        default:
-        g_return_val_if_reached(NULL);
-        break;
-    }
-
-    unit = ofile->unit_x;
-    if (!*unit)
-        unit = "nm";
-    siunit = gwy_si_unit_new_parse(unit, &power10);
+    siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
-    q = pow10((gdouble)power10);
-    gwy_data_field_set_xreal(dfield, q*gwy_data_field_get_xreal(dfield));
-    gwy_data_field_set_yreal(dfield, q*gwy_data_field_get_yreal(dfield));
     g_object_unref(siunit);
 
-    unit = ofile->unit_z;
-    /* XXX: No fallback yet, just make z unitless */
-    siunit = gwy_si_unit_new_parse(unit, &power10);
+    siunit = gwy_si_unit_new_parse(channel->units, &power10);
     gwy_data_field_set_si_unit_z(dfield, siunit);
-    q = pow10((gdouble)power10);
-    pmin = q*ofile->min_z;
-    pmax = q*ofile->max_z;
-    rmin = ofile->min_raw_z;
-    rmax = ofile->max_raw_z;
-    gwy_data_field_multiply(dfield, (pmax - pmin)/(rmax - rmin));
-    gwy_data_field_add(dfield, (pmin*rmax - pmax*rmin)/(rmax - rmin));
     g_object_unref(siunit);
+    if (power10)
+        gwy_data_field_multiply(dfield, pow10(power10));
 
     return dfield;
 }
 
 static void
-omicron_store_metadata(OmicronFile *ofile,
-                       GwyContainer *container)
-{
-    gwy_container_set_string_by_name(container, "/meta/Date",
-                                     g_strconcat(ofile->date, " ",
-                                                 ofile->time, NULL));
-    if (*ofile->remark)
-        gwy_container_set_string_by_name(container, "/meta/Remark",
-                                         g_strdup(ofile->remark));
-    if (*ofile->sample_name)
-        gwy_container_set_string_by_name(container, "/meta/Sample name",
-                                         g_strdup(ofile->sample_name));
-    if (*ofile->ad_name)
-        gwy_container_set_string_by_name(container, "/meta/AD name",
-                                         g_strdup(ofile->ad_name));
-}
-
-static gchar*
-omicron_find_data_name(const gchar *header_name)
-{
-    GString *data_name;
-    gchar *retval;
-    gboolean ok = FALSE;
-
-    data_name = g_string_new(header_name);
-    g_string_truncate(data_name,
-                      data_name->len - (sizeof(EXTENSION_HEADER) - 1));
-    g_string_append(data_name, EXTENSION_DATA);
-    if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
-        ok = TRUE;
-    else {
-        g_ascii_strup(data_name->str
-                      + data_name->len - (sizeof(EXTENSION_DATA) - 1),
-                      -1);
-        if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
-            ok = TRUE;
-    }
-    retval = data_name->str;
-    g_string_free(data_name, !ok);
-
-    return ok ? retval : NULL;
-}
-#endif
-
-static void
 omicron_file_free(OmicronFile *ofile)
 {
+    guint i;
+
     if (ofile->meta) {
         g_hash_table_destroy(ofile->meta);
         ofile->meta = NULL;
+    }
+    if (ofile->topo_channels) {
+        for (i = 0; i < ofile->topo_channels->len; i++)
+            g_free(g_ptr_array_index(ofile->topo_channels, i));
+        g_ptr_array_free(ofile->topo_channels, TRUE);
+        ofile->topo_channels = NULL;
     }
 }
 
