@@ -182,9 +182,16 @@ omicron_load(const gchar *filename,
         g_object_unref(dfield);
 
         if (channel->name) {
+            gchar *s;
+
             g_snprintf(key, sizeof(key), "/%u/data/title", idx);
-            gwy_container_set_string_by_name(container, key,
-                                             g_strdup(channel->name));
+            if (channel->scandir == SCAN_FORWARD)
+                s = g_strdup_printf("%s (Forward)", channel->name);
+            else if (channel->scandir = SCAN_BACKWARD)
+                s = g_strdup_printf("%s (Backward)", channel->name);
+            else
+                s = g_strdup(channel->name);
+            gwy_container_set_string_by_name(container, key, s);
         }
 
         idx++;
