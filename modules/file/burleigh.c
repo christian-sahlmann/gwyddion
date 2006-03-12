@@ -1,7 +1,8 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Hans-Peter Doerr.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net,
+ *          doerr@cip.physik.uni-freiburg.de.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,8 +20,8 @@
  */
 
 /* See:
- * http://www.weizmann.ac.il/Chemical_Research_Support/surflab/peter/headers/burl.html
  * http://www.physik.uni-freiburg.de/~doerr/readimg
+ * http://www.weizmann.ac.il/Chemical_Research_Support/surflab/peter/headers/burl.html
  */
 #define DEBUG 1
 #include "config.h"
@@ -94,7 +95,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Burleigh IMG data files version 2.1."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "David Nečas (Yeti) & Petr Klapetek & Hans-Peter Doerr",
     "2006",
 };
 
