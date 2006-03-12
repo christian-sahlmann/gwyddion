@@ -118,7 +118,8 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
                 gboolean only_name)
 {
     const guchar *buffer;
-    guint version, xres, yres;
+    guint version_int, xres, yres;
+    gdouble version;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
@@ -127,9 +128,11 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     buffer = fileinfo->buffer;
-    version = ROUND(10*get_FLOAT(&buffer));
+    version = get_FLOAT(&buffer);
+    version_int = ROUND(10*version);
+    gwy_debug("Version: %g", version);
 
-    if (version == 21) {
+    if (version_int == 21) {
         if (fileinfo->file_size < TOTAL_SIZE_V21 + 2)
             return 0;
 
