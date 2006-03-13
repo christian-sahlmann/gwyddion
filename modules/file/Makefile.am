@@ -31,6 +31,7 @@ file_LTLIBRARIES = \
 	rhk-sm3.la \
 	rhk-spm32.la \
 	sdfile.la \
+	seiko.la \
 	sis.la \
 	spmlab.la \
 	stmprg.la \
@@ -134,6 +135,9 @@ rhk_spm32_la_LIBADD = $(module_libadd)
 
 sdfile_la_SOURCES = sdfile.c
 sdfile_la_LIBADD = $(module_libadd)
+
+seiko_la_SOURCES = seiko.c
+seiko_la_LIBADD = $(module_libadd)
 
 sis_la_SOURCES = sis.c
 sis_la_LIBADD = $(module_libadd)
