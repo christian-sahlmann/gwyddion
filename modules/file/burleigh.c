@@ -78,16 +78,16 @@ typedef struct {
     guint32 tunneling_current;
 } IMGFile;
 
-static gboolean      module_register(void);
-static gint          burleigh_detect(const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* burleigh_load  (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static gint16* burleigh_load_v21(IMGFile *imgfile,
-                                 const guchar *buffer,
-                                 gsize size,
-                                 GError **error);
+static gboolean      module_register  (void);
+static gint          burleigh_detect  (const GwyFileDetectInfo *fileinfo,
+                                       gboolean only_name);
+static GwyContainer* burleigh_load    (const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
+static const gint16* burleigh_load_v21(IMGFile *imgfile,
+                                       const guchar *buffer,
+                                       gsize size,
+                                       GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -161,7 +161,7 @@ burleigh_load(const gchar *filename,
     IMGFile imgfile;
     GwyDataField *dfield;
     gdouble *data;
-    gint16 *d;
+    const gint16 *d;
     gdouble scale;
     guint i;
 
@@ -237,7 +237,7 @@ burleigh_load(const gchar *filename,
     return container;
 }
 
-static gint16*
+static const gint16*
 burleigh_load_v21(IMGFile *imgfile,
                   const guchar *buffer,
                   gsize size,
@@ -269,7 +269,7 @@ burleigh_load_v21(IMGFile *imgfile,
     imgfile->bias_volts = get_FLOAT(&p);
     imgfile->tunneling_current = get_FLOAT(&p);
 
-    return (gint16*)(buffer + HEADER_SIZE_V21);
+    return (const gint16*)(buffer + HEADER_SIZE_V21);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

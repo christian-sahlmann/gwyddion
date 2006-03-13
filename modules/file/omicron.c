@@ -428,7 +428,7 @@ omicron_read_data(OmicronFile *ofile,
     gchar *filename;
     gdouble *data;
     guchar *buffer;
-    gint16 *d;
+    const gint16 *d;
     gdouble scale;
     gsize size;
     guint i, n;
@@ -459,7 +459,7 @@ omicron_read_data(OmicronFile *ofile,
                                 ofile->xreal, ofile->yreal,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
-    d = (gint16*)buffer;
+    d = (const gint16*)buffer;
     for (i = 0; i < n; i++)
         data[i] = scale*GINT16_FROM_BE(d[i]);
     gwy_file_abandon_contents(buffer, size, NULL);
