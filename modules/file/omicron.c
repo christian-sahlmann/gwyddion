@@ -187,7 +187,7 @@ omicron_load(const gchar *filename,
             g_snprintf(key, sizeof(key), "/%u/data/title", idx);
             if (channel->scandir == SCAN_FORWARD)
                 s = g_strdup_printf("%s (Forward)", channel->name);
-            else if (channel->scandir = SCAN_BACKWARD)
+            else if (channel->scandir == SCAN_BACKWARD)
                 s = g_strdup_printf("%s (Backward)", channel->name);
             else
                 s = g_strdup(channel->name);
