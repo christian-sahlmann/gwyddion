@@ -1450,6 +1450,13 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
     return pixbuf;
 }
 
+/**
+ * gwy_data_view_set_data_prefix:
+ * @data_view: A data view.
+ * @prefix: Container prefix for data.
+ *
+ * Sets the prefix for container data items of a data view.
+ **/
 void
 gwy_data_view_set_data_prefix(GwyDataView *data_view,
                               const gchar *prefix)
@@ -1470,6 +1477,14 @@ gwy_data_view_set_data_prefix(GwyDataView *data_view,
     g_object_notify(G_OBJECT(data_view), "data-prefix");
 }
 
+/**
+ * gwy_data_view_set_data_prefix:
+ * @data_view: A data view.
+ *
+ * Gets the prefix for container data items of a data view.
+ *
+ * Returns: The container data prefix.
+ **/
 const gchar*
 gwy_data_view_get_data_prefix(GwyDataView *data_view)
 {
@@ -1515,6 +1530,7 @@ gwy_data_view_connect_data(GwyDataView *data_view)
         = g_signal_connect_swapped(data_view->data, s,
                                    G_CALLBACK(gwy_data_view_square_changed),
                                    data_view);
+    gwy_data_view_square_changed(data_view, g_quark_from_string(s));
     g_free(s);
 }
 
