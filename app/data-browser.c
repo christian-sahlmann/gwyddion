@@ -1023,6 +1023,7 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     gwy_layer_basic_set_gradient_key(layer_basic, key);
 
     data_view = gwy_data_view_new(data);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(data_view), strkey);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));

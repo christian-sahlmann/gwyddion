@@ -50,6 +50,11 @@ static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
+static GtkWidget* gwy_app_menu_data_corner_create  (GtkAccelGroup *accel_group);
+static void       gwy_app_data_window_change_square(gpointer user_data);
+static gboolean   gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
+                                                       GdkEventButton *event,
+                                                       GtkWidget *view);
 static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                                       GdkEventButton *event,
                                                       GtkWidget *view);
@@ -417,8 +422,10 @@ void
 gwy_app_data_window_setup(GwyDataWindow *data_window)
 {
     static GtkWidget *popup_menu = NULL;
+    static GtkWidget *corner_menu = NULL;
 
     GwyDataView *data_view;
+    GtkWidget *corner, *ebox;
 
     if (!popup_menu) {
         GtkWidget *main_window;
@@ -432,6 +439,29 @@ gwy_app_data_window_setup(GwyDataWindow *data_window)
         gtk_widget_show_all(popup_menu);
     }
 
+    if (!corner_menu) {
+        GtkWidget *main_window;
+        GtkAccelGroup *accel_group;
+
+        main_window = gwy_app_main_window_get();
+        g_return_if_fail(GTK_IS_WINDOW(main_window));
+        accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
+                                                        "accel_group"));
+        corner_menu = gwy_app_menu_data_corner_create(accel_group);
+        gtk_widget_show_all(corner_menu);
+    }
+
+    corner = gtk_arrow_new(GTK_ARROW_RIGHT, GTK_SHADOW_ETCHED_OUT);
+    gtk_misc_set_alignment(GTK_MISC(corner), 0.5, 0.5);
+    gtk_misc_set_padding(GTK_MISC(corner), 2, 0);
+
+    ebox = gtk_event_box_new();
+    gtk_container_add(GTK_CONTAINER(ebox), corner);
+    gtk_widget_add_events(ebox, GDK_BUTTON_PRESS_MASK);
+    gtk_widget_show_all(ebox);
+
+    gwy_data_window_set_ul_corner_widget(data_window, ebox);
+
     data_view = gwy_data_window_get_data_view(data_window);
     g_signal_connect_swapped(data_view, "button-press-event",
                              G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
@@ -439,6 +469,9 @@ gwy_app_data_window_setup(GwyDataWindow *data_window)
     g_signal_connect_swapped(data_window, "popup-menu",
                              G_CALLBACK(gwy_app_data_popup_menu_popup_key),
                              popup_menu);
+    g_signal_connect_swapped(ebox, "button-press-event",
+                             G_CALLBACK(gwy_app_data_corner_menu_popup_mouse),
+                             corner_menu);
 }
 
 /**
@@ -1070,6 +1103,26 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 }
 
 static gboolean
+gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
+                                     GdkEventButton *event,
+                                     GtkWidget *view)
+{
+    GtkWidget *window;
+
+    if (event->button != 1)
+        return FALSE;
+
+    window = gtk_widget_get_toplevel(view);
+    g_return_val_if_fail(window, FALSE);
+    gwy_app_data_window_set_current(GWY_DATA_WINDOW(window));
+
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return FALSE;
+}
+
+static gboolean
 gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                     GdkEventButton *event,
                                     GtkWidget *view)
@@ -1113,9 +1166,60 @@ gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                    0, gtk_get_current_event_time());
 }
 
+static GtkWidget*
+gwy_app_menu_data_corner_create(GtkAccelGroup *accel_group)
+{
+    GtkWidget *menu, *item;
+    GtkRadioMenuItem *r;
+
+    /* XXX: it is probably wrong to use this accel group */
+    menu = gtk_menu_new();
+    if (accel_group)
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+
+    item = gtk_radio_menu_item_new_with_mnemonic(NULL,
+                                                 _("Pixelwise Square"));
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_signal_connect_swapped(item, "activate",
+                             G_CALLBACK(gwy_app_data_window_change_square),
+                             GINT_TO_POINTER(FALSE));
+
+    r = GTK_RADIO_MENU_ITEM(item);
+    item = gtk_radio_menu_item_new_with_mnemonic_from_widget(r,
+                                                             _("Physically "
+                                                               "Square"));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_signal_connect_swapped(item, "activate",
+                             G_CALLBACK(gwy_app_data_window_change_square),
+                             GINT_TO_POINTER(TRUE));
+
+    return menu;
+}
+
+static void
+gwy_app_data_window_change_square(gpointer user_data)
+{
+    gboolean realsquare = GPOINTER_TO_INT(user_data);
+    GwyDataWindow *data_window;
+    GwyDataView *data_view;
+    GwyContainer *data;
+    const gchar *key;
+    gchar *s;
+
+    data_window = gwy_app_data_window_get_current();
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(data_view);
+    key = gwy_data_view_get_data_prefix(data_view);
+    g_return_if_fail(key);
+    s = g_strconcat(key, "/realsquare", NULL);
+    gwy_container_set_boolean_by_name(data, s, realsquare);
+    g_free(s);
+}
+
 void
 gwy_app_tool_use_cb(const gchar *toolname,
-                     GtkWidget *button)
+                    GtkWidget *button)
 {
     static GtkWidget *old_button = NULL;
     GwyDataWindow *data_window;
