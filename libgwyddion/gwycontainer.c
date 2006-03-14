@@ -693,7 +693,7 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
     GValue *p;
 
     p = gwy_container_get_value_of_type(container, key, G_TYPE_BOOLEAN);
-    return G_LIKELY(p) ? g_value_get_boolean(p) : FALSE;
+    return G_LIKELY(p) ? !!g_value_get_boolean(p) : FALSE;
 }
 
 /**
@@ -727,7 +727,7 @@ gwy_container_gis_boolean(GwyContainer *container,
     GValue *p;
 
     if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_BOOLEAN))) {
-        *value = g_value_get_boolean(p);
+        *value = !!g_value_get_boolean(p);
         return TRUE;
     }
     return FALSE;
@@ -1223,7 +1223,7 @@ gwy_container_values_equal(GValue *value1,
 
     switch (type) {
         case G_TYPE_BOOLEAN:
-        return g_value_get_boolean(value1) == g_value_get_boolean(value2);
+        return !g_value_get_boolean(value1) == !g_value_get_boolean(value2);
 
         case G_TYPE_UCHAR:
         return g_value_get_uchar(value1) == g_value_get_uchar(value2);
@@ -1447,7 +1447,7 @@ gwy_container_set_boolean(GwyContainer *container,
 
     memset(&gvalue, 0, sizeof(GValue));
     g_value_init(&gvalue, G_TYPE_BOOLEAN);
-    g_value_set_boolean(&gvalue, value);
+    g_value_set_boolean(&gvalue, !!value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
@@ -1739,7 +1739,7 @@ hash_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     switch (type) {
         case G_TYPE_BOOLEAN:
         it->ctype = 'b';
-        it->value.v_boolean = g_value_get_boolean(value);
+        it->value.v_boolean = !!g_value_get_boolean(value);
         break;
 
         case G_TYPE_UCHAR:
