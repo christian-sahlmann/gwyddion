@@ -176,12 +176,10 @@ read_data_field(const guchar *buffer,
               xres, 2*xres*xres == endfile - datastart ? "OK" : "Not square!");
 
     p = buffer + XSCALE_OFFSET;
-    xreal = get_DOUBLE(&p) * Nanometer;
+    xreal = get_DOUBLE(&p) * xres * Nanometer;
     p = buffer + YSCALE_OFFSET;
-    yreal = get_DOUBLE(&p) * Nanometer;
+    yreal = get_DOUBLE(&p) * yres * Nanometer;
     p = buffer + ZSCALE_OFFSET;
-    /* FIXME: This is what Snomputz seems to do, but the values are quite
-     * large so */
     q = get_DOUBLE(&p) * Nanometer;
     gwy_debug("xreal: %g, yreal: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
@@ -190,7 +188,7 @@ read_data_field(const guchar *buffer,
     data = gwy_data_field_get_data(dfield);
     pdata = (const gint16*)(buffer + HEADER_SIZE);
     for (i = 0; i < yres; i++) {
-        row = data + (yres-1 - i)*xres;
+        row = data + i*xres;
         for (j = 0; j < xres; j++)
             row[j] = GUINT16_TO_LE(pdata[i*xres + j])*q;
     }
