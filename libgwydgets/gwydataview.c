@@ -42,7 +42,8 @@ enum {
 
 enum {
     PROP_0,
-    PROP_ZOOM
+    PROP_ZOOM,
+    PROP_DATA_PREFIX,
 };
 
 static void     gwy_data_view_destroy              (GtkObject *object);
@@ -84,6 +85,10 @@ static void     gwy_data_view_set_layer            (GwyDataView *data_view,
                                                     gulong *hid,
                                                     GwyDataViewLayer *layer,
                                                     GwyDataViewLayerType type);
+static void     gwy_data_view_square_changed       (GwyDataView *data_view,
+                                                    GQuark quark);
+static void     gwy_data_view_connect_data         (GwyDataView *data_view);
+static void     gwy_data_view_disconnect_data      (GwyDataView *data_view);
 
 static guint data_view_signals[LAST_SIGNAL] = { 0 };
 
@@ -131,6 +136,23 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
                              1/16.0, 16.0, 1.0, G_PARAM_READWRITE));
 
     /**
+     * GwyDataView:data-prefix:
+     *
+     * The :data-prefix property is the container prefix the data displayed
+     * by this view lies under.
+     *
+     * Note it is only used for items used by #GwyDataView itself, layers have
+     * their own keys.
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DATA_PREFIX,
+         g_param_spec_string("data-prefix",
+                             "Data prefix",
+                             "Container data prefix",
+                             NULL, G_PARAM_READWRITE));
+
+    /**
      * GwyDataView::redrawn:
      * @gwydataview: The #GwyDataView which received the signal.
      *
@@ -152,7 +174,8 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
      * @gwydataview: The #GwyDataView which received the signal.
      *
      * The ::resized signal is emitted when #GwyDataView wants to be resized,
-     * that is when the dimensions of base data field changes.
+     * that is when the dimensions of base data field changes or square mode
+     * is changed.
      * Its purpose is to subvert the normal resizing logic of #GwyDataWindow
      * (due to geometry hints, its size requests are generally ignored, so
      * an explicit resize is needed).  You should usually ignore it.
@@ -216,6 +239,68 @@ gwy_data_view_init(GwyDataView *data_view)
     data_view->newzoom = 1.0;
 }
 
+static void
+gwy_data_view_set_property(GObject *object,
+                           guint prop_id,
+                           const GValue *value,
+                           GParamSpec *pspec)
+{
+    GwyDataView *data_view = GWY_DATA_VIEW(object);
+
+    switch (prop_id) {
+        case PROP_ZOOM:
+        gwy_data_view_set_zoom(data_view, g_value_get_double(value));
+        break;
+
+        case PROP_DATA_PREFIX:
+        gwy_data_view_set_data_prefix(data_view, g_value_get_string(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_data_view_get_property(GObject *object,
+                           guint prop_id,
+                           GValue *value,
+                           GParamSpec *pspec)
+{
+    GwyDataView *data_view = GWY_DATA_VIEW(object);
+
+    switch (prop_id) {
+        case PROP_ZOOM:
+        g_value_set_double(value, gwy_data_view_get_zoom(data_view));
+        break;
+
+        case PROP_DATA_PREFIX:
+        g_value_set_string(value, gwy_data_view_get_data_prefix(data_view));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_data_view_finalize(GObject *object)
+{
+    GwyDataView *data_view;
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(object));
+
+    data_view = GWY_DATA_VIEW(object);
+    gwy_object_unref(data_view->base_layer);
+    gwy_object_unref(data_view->alpha_layer);
+    gwy_object_unref(data_view->top_layer);
+    gwy_object_unref(data_view->data);
+
+    G_OBJECT_CLASS(gwy_data_view_parent_class)->finalize(object);
+}
+
 /**
  * gwy_data_view_new:
  * @data: A #GwyContainer containing the data to display.
@@ -255,12 +340,10 @@ gwy_data_view_destroy(GtkObject *object)
 {
     GwyDataView *data_view;
 
-    gwy_debug("destroying a GwyDataView %p (refcount = %u)",
-              object, G_OBJECT(object)->ref_count);
-
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
+    gwy_data_view_disconnect_data(data_view);
     gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL, NULL,
                             GWY_DATA_VIEW_LAYER_TOP);
     gwy_data_view_set_layer(data_view, &data_view->alpha_layer,
@@ -272,22 +355,6 @@ gwy_data_view_destroy(GtkObject *object)
 
     if (GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)
         (*GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)(object);
-}
-
-static void
-gwy_data_view_finalize(GObject *object)
-{
-    GwyDataView *data_view;
-
-    g_return_if_fail(GWY_IS_DATA_VIEW(object));
-
-    data_view = GWY_DATA_VIEW(object);
-    gwy_object_unref(data_view->base_layer);
-    gwy_object_unref(data_view->alpha_layer);
-    gwy_object_unref(data_view->top_layer);
-    gwy_object_unref(data_view->data);
-
-    G_OBJECT_CLASS(gwy_data_view_parent_class)->finalize(object);
 }
 
 static void
@@ -312,44 +379,6 @@ gwy_data_view_unrealize(GtkWidget *widget)
         GTK_WIDGET_CLASS(gwy_data_view_parent_class)->unrealize(widget);
 }
 
-
-static void
-gwy_data_view_set_property(GObject *object,
-                           guint prop_id,
-                           const GValue *value,
-                           GParamSpec *pspec)
-{
-    GwyDataView *data_view = GWY_DATA_VIEW(object);
-
-    switch (prop_id) {
-        case PROP_ZOOM:
-        gwy_data_view_set_zoom(data_view, g_value_get_double(value));
-        break;
-
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gwy_data_view_get_property(GObject *object,
-                           guint prop_id,
-                           GValue *value,
-                           GParamSpec *pspec)
-{
-    GwyDataView *data_view = GWY_DATA_VIEW(object);
-
-    switch (prop_id) {
-        case PROP_ZOOM:
-        g_value_set_double(value, gwy_data_view_get_zoom(data_view));
-        break;
-
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
 
 static void
 gwy_data_view_realize(GtkWidget *widget)
@@ -464,8 +493,10 @@ gwy_data_view_size_allocate(GtkWidget *widget,
     /* Update ideal zoom after a `spontanoues' size-allocate when someone
      * simply changed the size w/o asking us.  But if we were queried first,
      * be persistent and request the same zoom also next time */
-    if (!data_view->size_requested)
+    if (!data_view->size_requested) {
         data_view->newzoom = data_view->zoom;
+        g_object_notify(G_OBJECT(data_view), "zoom");
+    }
     data_view->size_requested = FALSE;
 }
 
@@ -994,6 +1025,7 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
         return;
 
     data_view->newzoom = zoom;
+    g_object_notify(G_OBJECT(data_view), "zoom");
     gtk_widget_queue_resize(GTK_WIDGET(data_view));
 }
 
@@ -1416,6 +1448,83 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
     g_object_unref(aux_pixbuf);
 
     return pixbuf;
+}
+
+void
+gwy_data_view_set_data_prefix(GwyDataView *data_view,
+                              const gchar *prefix)
+{
+    GQuark quark;
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    quark = prefix ? g_quark_from_string(prefix) : 0;
+    if (quark == data_view->data_prefix)
+        return;
+
+    gwy_data_view_disconnect_data(data_view);
+    data_view->data_prefix = quark;
+    if (quark)
+        gwy_data_view_connect_data(data_view);
+
+    g_object_notify(G_OBJECT(data_view), "data-prefix");
+}
+
+const gchar*
+gwy_data_view_get_data_prefix(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
+
+    return g_quark_to_string(data_view->data_prefix);
+}
+
+static void
+gwy_data_view_square_changed(GwyDataView *data_view,
+                             GQuark quark)
+{
+    gboolean realsquare;
+
+    realsquare = data_view->realsquare;
+    gwy_container_gis_boolean(data_view->data, quark, &realsquare);
+    if (realsquare != data_view->realsquare) {
+        GtkWidget *widget = GTK_WIDGET(data_view);
+
+        data_view->realsquare = realsquare;
+        if (GTK_WIDGET_REALIZED(widget)) {
+            gtk_widget_queue_resize(widget);
+            g_signal_emit(widget, data_view_signals[RESIZED], 0);
+        }
+    }
+}
+
+static void
+gwy_data_view_connect_data(GwyDataView *data_view)
+{
+    gchar *s;
+
+    g_return_if_fail(data_view->data);
+    g_return_if_fail(data_view->square_hid == 0);
+    if (!data_view->data_prefix)
+        return;
+
+    s = g_strconcat("item-changed::",
+                    g_quark_to_string(data_view->data_prefix),
+                    "/realsquare",
+                    NULL);
+    data_view->square_hid
+        = g_signal_connect_swapped(data_view->data, s,
+                                   G_CALLBACK(gwy_data_view_square_changed),
+                                   data_view);
+    g_free(s);
+}
+
+static void
+gwy_data_view_disconnect_data(GwyDataView *data_view)
+{
+    if (data_view->square_hid) {
+        g_signal_handler_disconnect(data_view->data, data_view->square_hid);
+        data_view->square_hid = 0;
+    }
 }
 
 /************************** Documentation ****************************/

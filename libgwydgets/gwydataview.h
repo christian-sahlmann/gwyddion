@@ -47,6 +47,9 @@ struct _GwyDataView {
 
     GwyContainer *data;
 
+    GQuark data_prefix;
+    gulong square_hid;
+
     GwyPixmapLayer *base_layer;
     GwyPixmapLayer *alpha_layer;
     GwyVectorLayer *top_layer;
@@ -96,14 +99,17 @@ struct _GwyDataViewClass {
 GType           gwy_data_view_get_type            (void) G_GNUC_CONST;
 GtkWidget*      gwy_data_view_new                 (GwyContainer *data);
 GwyPixmapLayer* gwy_data_view_get_base_layer      (GwyDataView *data_view);
-GwyPixmapLayer* gwy_data_view_get_alpha_layer     (GwyDataView *data_view);
-GwyVectorLayer* gwy_data_view_get_top_layer       (GwyDataView *data_view);
 void            gwy_data_view_set_base_layer      (GwyDataView *data_view,
                                                    GwyPixmapLayer *layer);
+GwyPixmapLayer* gwy_data_view_get_alpha_layer     (GwyDataView *data_view);
 void            gwy_data_view_set_alpha_layer     (GwyDataView *data_view,
                                                    GwyPixmapLayer *layer);
+GwyVectorLayer* gwy_data_view_get_top_layer       (GwyDataView *data_view);
 void            gwy_data_view_set_top_layer       (GwyDataView *data_view,
                                                    GwyVectorLayer *layer);
+const gchar*    gwy_data_view_get_data_prefix     (GwyDataView *data_view);
+void            gwy_data_view_set_data_prefix     (GwyDataView *data_view,
+                                                   const gchar *prefix);
 gdouble         gwy_data_view_get_hexcess         (GwyDataView* data_view);
 gdouble         gwy_data_view_get_vexcess         (GwyDataView* data_view);
 void            gwy_data_view_set_zoom            (GwyDataView *data_view,
