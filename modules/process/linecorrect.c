@@ -38,22 +38,23 @@ typedef struct {
     guint n;
 } MedianLineData;
 
-static gboolean module_register    (void);
-static void     line_correct_modus (GwyContainer *data,
-                                    GwyRunType run);
-static void     line_correct_median(GwyContainer *data,
-                                    GwyRunType run);
-static void     line_correct_match (GwyContainer *data,
-                                    GwyRunType run);
-static void     line_correct_step  (GwyContainer *data,
-                                    GwyRunType run);
-static gdouble  find_minima_golden (gdouble (*func)(gdouble x,
-                                    gpointer data),
-                                    gdouble from,
-                                    gdouble to,
-                                    gpointer data);
-static gdouble  sum_of_abs_diff    (gdouble shift,
-                                    gpointer data);
+static gboolean module_register                   (void);
+static void     line_correct_modus                (GwyContainer *data,
+                                                   GwyRunType run);
+static void     line_correct_median               (GwyContainer *data,
+                                                   GwyRunType run);
+static void     line_correct_match                (GwyContainer *data,
+                                                   GwyRunType run);
+static void     line_correct_step                 (GwyContainer *data,
+                                                   GwyRunType run);
+static gdouble  find_minima_golden                (gdouble (*func)(gdouble x,
+                                                   gpointer data),
+                                                   gdouble from,
+                                                   gdouble to,
+                                                   gpointer data);
+static void     gwy_data_field_median_line_correct(GwyDataField *dfield);
+static gdouble  sum_of_abs_diff                   (gdouble shift,
+                                                   gpointer data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -143,11 +144,7 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
 static void
 line_correct_median(GwyContainer *data, GwyRunType run)
 {
-    MedianLineData mldata;
     GwyDataField *dfield;
-    gint xres, yres, i, j;
-    gdouble shift, csum, mindiff, maxdiff, x;
-    gdouble *d;
     GQuark dquark;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
@@ -156,30 +153,7 @@ line_correct_median(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
-
-    yres = gwy_data_field_get_yres(dfield);
-    xres = gwy_data_field_get_xres(dfield);
-    d = gwy_data_field_get_data(dfield);
-
-    csum = 0.0;
-    mldata.n = xres;
-    for (i = 1; i < yres; i++) {
-        mldata.a = d + xres*(i - 1);
-        mldata.b = d + xres*i;
-        mindiff = G_MAXDOUBLE;
-        maxdiff = -G_MAXDOUBLE;
-        for (j = 0; j < xres; j++) {
-            x = mldata.b[j] - mldata.a[j];
-            if (x < mindiff)
-                mindiff = x;
-            if (x > maxdiff)
-                maxdiff = x;
-        }
-        shift = find_minima_golden(sum_of_abs_diff, mindiff, maxdiff, &mldata);
-        gwy_data_field_area_add(dfield, 0, i, xres, i+1, -shift);
-        csum -= shift;
-    }
-    gwy_data_field_add(dfield, -csum/(xres*yres));
+    gwy_data_field_median_line_correct(dfield);
     gwy_data_field_data_changed(dfield);
 }
 
@@ -227,6 +201,39 @@ find_minima_golden(gdouble (*func)(gdouble x, gpointer data),
     }
 
     return (c + d)/2.0;
+}
+
+static void
+gwy_data_field_median_line_correct(GwyDataField *dfield)
+{
+    MedianLineData mldata;
+    gint xres, yres, i, j;
+    gdouble shift, csum, mindiff, maxdiff, x;
+    gdouble *d;
+
+    yres = gwy_data_field_get_yres(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+
+    csum = 0.0;
+    mldata.n = xres;
+    for (i = 1; i < yres; i++) {
+        mldata.a = d + xres*(i - 1);
+        mldata.b = d + xres*i;
+        mindiff = G_MAXDOUBLE;
+        maxdiff = -G_MAXDOUBLE;
+        for (j = 0; j < xres; j++) {
+            x = mldata.b[j] - mldata.a[j];
+            if (x < mindiff)
+                mindiff = x;
+            if (x > maxdiff)
+                maxdiff = x;
+        }
+        shift = find_minima_golden(sum_of_abs_diff, mindiff, maxdiff, &mldata);
+        gwy_data_field_area_add(dfield, 0, i, xres, i+1, -shift);
+        csum -= shift;
+    }
+    gwy_data_field_add(dfield, -csum/(xres*yres));
 }
 
 static gdouble
@@ -414,6 +421,8 @@ line_correct_step(GwyContainer *data,
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
+
+    gwy_data_field_median_line_correct(dfield);
 
     mask = gwy_data_field_new_alike(dfield, TRUE);
     line_correct_step_iter(dfield, mask);
