@@ -94,7 +94,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Burleigh IMG data files version 2.1."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Hans-Peter Doerr",
     "2006",
 };

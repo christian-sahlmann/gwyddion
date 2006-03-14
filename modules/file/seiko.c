@@ -57,7 +57,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQD files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
