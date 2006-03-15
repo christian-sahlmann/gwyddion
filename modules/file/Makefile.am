@@ -20,6 +20,7 @@ file_LTLIBRARIES = \
 	burleigh.la \
 	createc.la \
 	ezdfile.la \
+	ecsfile.la \
 	gwyfile.la \
 	hitachi-afm.la \
 	$(tiff_modules) \
@@ -94,6 +95,9 @@ burleigh_la_LIBADD = $(module_libadd)
 
 createc_la_SOURCES = createc.c
 createc_la_LIBADD = $(module_libadd)
+
+ecsfile_la_SOURCES = ecsfile.c
+ecsfile_la_LIBADD = $(module_libadd)
 
 ezdfile_la_SOURCES = ezdfile.c
 ezdfile_la_LIBADD = $(module_libadd)
