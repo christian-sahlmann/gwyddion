@@ -11,6 +11,7 @@ Application:
 - When gwyddion is run with a directory argument, it opens a file selector
   in this directory.
 - Metadata is editable.
+- Color Gradient Editor allows control point snapping
 
 Libraries:
 - libgwyapp: A data browser was added, taking over most of app.h
@@ -201,7 +202,7 @@ Library:
   exports lower-level functions usable for undo outside main app windows.
 - libgwyprocess: FFT backend argument was removed from FFT functions.
 - libgwydgets: Vertical rulers look like rotated horizontal rulers now.
-- libgwydgets: Graph: API cleaned, logarithmic axis reworked and enabled, 
+- libgwydgets: Graph: API cleaned, logarithmic axis reworked and enabled,
   offsets introduced, GwySelection implemented, signals properly implemented,
   set/get properties implemented, export GUI moved to modules, graph selection
   can be moved while creating it.
@@ -222,7 +223,8 @@ Modules:
 - Distance: Displays value difference too.
 - Pixmap: The same unit selection/formatting is used for false color scale
   as on data windows (bug #63).
-- Graph export vector, ascii and bitmap: functionality moved from Graph (withing bugs)
+- Graph export vector, ascii and bitmap: functionality moved from Graph (withing
+bugs)
   moved here
 - Graph level: simple line leveling by 1st order polynome
 
@@ -296,7 +298,7 @@ Library:
   and is constructed to be easily exported to various formats.
 - libgwydgets: GwyGraphWindow is now being constructed as a result
   of any processing module creating graphs. This widget supports graph zooms
-  and graph measuring that was previously in several graph modules. 
+  and graph measuring that was previously in several graph modules.
   It is also possible to see the data values directly as a table.
   GwyGraphWindow currently handles also exports to bitmap, text and postscript,
   which will be probably moved to modules in next verison.
@@ -576,7 +578,7 @@ Other:
 Application:
 - Option --no-splash recognized anywhere in command line, --debug-objects
   added.
-- Document history now displays physical dimensions too, starts faster, and 
+- Document history now displays physical dimensions too, starts faster, and
   rememberes more files.
 
 Modules:
