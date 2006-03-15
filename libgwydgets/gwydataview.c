@@ -1453,9 +1453,10 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
 /**
  * gwy_data_view_set_data_prefix:
  * @data_view: A data view.
- * @prefix: Container prefix for data.
+ * @prefix: Container prefix for data  (eg. "/0/data").
  *
- * Sets the prefix for container data items of a data view.
+ * Sets the prefix for the container data channel that the data view ought
+ * to display.
  **/
 void
 gwy_data_view_set_data_prefix(GwyDataView *data_view,
@@ -1478,12 +1479,13 @@ gwy_data_view_set_data_prefix(GwyDataView *data_view,
 }
 
 /**
- * gwy_data_view_set_data_prefix:
+ * gwy_data_view_get_data_prefix:
  * @data_view: A data view.
  *
- * Gets the prefix for container data items of a data view.
+ * Gets the prefix for the container data channel that the data view is
+ * currently set to display.
  *
- * Returns: The container data prefix.
+ * Returns: The container data prefix (eg. "/0/data").
  **/
 const gchar*
 gwy_data_view_get_data_prefix(GwyDataView *data_view)
