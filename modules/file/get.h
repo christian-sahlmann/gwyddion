@@ -120,6 +120,32 @@ get_BBOOLEAN(const guchar **p)
     return b;
 }
 
+/* Get a non-terminated string preceded by one byte containing the length.
+ * Size is the size of buffer pointer by *p.  Returns %NULL if size is too
+ * small. */
+static inline gchar*
+get_PASCAL_STRING(const guchar **p,
+                  gsize size)
+{
+    guint len;
+    gchar *s;
+
+    if (!size)
+        return NULL;
+
+    len = **p;
+    (*p)++;
+    if (size < len + 1)
+        return NULL;
+
+    s = g_new(gchar, len+1);
+    memcpy(s, *p, len);
+    s[len] = '\0';
+    *p += len;
+
+    return s;
+}
+
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
