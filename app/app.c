@@ -30,6 +30,11 @@
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
+enum {
+    ITEM_PIXELSQUARE,
+    ITEM_REALSQUARE
+};
+
 static GtkWidget *gwy_app_main_window = NULL;
 
 /* list of existing windows of different kinds. FIXME: maybe some common
@@ -42,6 +47,7 @@ static GtkWidget *current_any = NULL;
 
 static const gchar* current_tool = NULL;
 static gint untitled_no = 0;
+static GQuark corner_item_quark = 0;
 
 static GHookList window_list_hook_list;
 
@@ -51,7 +57,8 @@ static void       gather_unsaved_cb                (GwyDataWindow *data_window,
 static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_data_corner_create  (GtkAccelGroup *accel_group);
-static void       gwy_app_data_window_change_square(gpointer user_data);
+static void       gwy_app_data_window_change_square(GtkWidget *item,
+                                                    gpointer user_data);
 static gboolean   gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
                                                        GdkEventButton *event,
                                                        GtkWidget *view);
@@ -1061,7 +1068,6 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     const gchar *name;
     guint i, mask;
 
-    /* XXX: it is probably wrong to use this accel group */
     menu = gtk_menu_new();
     if (accel_group)
         gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
@@ -1100,26 +1106,6 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     }
 
     return menu;
-}
-
-static gboolean
-gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
-                                     GdkEventButton *event,
-                                     GtkWidget *view)
-{
-    GtkWidget *window;
-
-    if (event->button != 1)
-        return FALSE;
-
-    window = gtk_widget_get_toplevel(view);
-    g_return_val_if_fail(window, FALSE);
-    gwy_app_data_window_set_current(GWY_DATA_WINDOW(window));
-
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
-                   event->button, event->time);
-
-    return FALSE;
 }
 
 static gboolean
@@ -1166,39 +1152,138 @@ gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                    0, gtk_get_current_event_time());
 }
 
+/**
+ * gwy_app_data_corner_menu_update:
+ * @menu: Data window corner menu.
+ * @window: The corresponding data window.
+ *
+ * Updates corner menu to reflect data window's state before we show it.
+ **/
+static void
+gwy_app_data_corner_menu_update(GtkWidget *menu,
+                                GtkWidget *window)
+{
+    gboolean realsquare = FALSE;
+    GwyDataView *data_view;
+    GwyContainer *data;
+    const gchar *key;
+    gchar *s;
+    GtkWidget *item;
+    GList *l;
+    gulong id;
+    guint i;
+
+    /* Square mode */
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+    data = gwy_data_view_get_data(data_view);
+    key = gwy_data_view_get_data_prefix(data_view);
+    s = g_strconcat(key, "/realsquare", NULL);
+    gwy_container_gis_boolean_by_name(data, s, &realsquare);
+    gwy_debug("view's realsquare: %d", realsquare);
+    g_free(s);
+
+    /* Update stuff */
+    l = gtk_container_get_children(GTK_CONTAINER(menu));
+    while (l) {
+        item = GTK_WIDGET(l->data);
+        i = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(item),
+                                                corner_item_quark));
+        switch (i) {
+            case ITEM_PIXELSQUARE:
+            if (!realsquare) {
+                gwy_debug("setting Pixelwise active");
+                id = g_signal_handler_find(item, G_SIGNAL_MATCH_FUNC,
+                                           0, 0, NULL,
+                                           gwy_app_data_window_change_square,
+                                           NULL);
+                g_signal_handler_block(item, id);
+                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
+                g_signal_handler_unblock(item, id);
+                gwy_debug("...");
+            }
+            break;
+
+            case ITEM_REALSQUARE:
+            if (realsquare) {
+                gwy_debug("setting Physical active");
+                id = g_signal_handler_find(item, G_SIGNAL_MATCH_FUNC,
+                                           0, 0, NULL,
+                                           gwy_app_data_window_change_square,
+                                           NULL);
+                g_signal_handler_block(item, id);
+                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
+                g_signal_handler_unblock(item, id);
+                gwy_debug("...");
+            }
+            break;
+
+            default:
+            break;
+        }
+        l = g_list_next(l);
+    }
+}
+
+static gboolean
+gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
+                                     GdkEventButton *event,
+                                     GtkWidget *view)
+{
+    GtkWidget *window;
+
+    if (event->button != 1)
+        return FALSE;
+
+    window = gtk_widget_get_toplevel(view);
+    g_return_val_if_fail(window, FALSE);
+    gwy_app_data_window_set_current(GWY_DATA_WINDOW(window));
+
+    gwy_app_data_corner_menu_update(menu, window);
+
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return FALSE;
+}
+
 static GtkWidget*
 gwy_app_menu_data_corner_create(GtkAccelGroup *accel_group)
 {
     GtkWidget *menu, *item;
     GtkRadioMenuItem *r;
 
-    /* XXX: it is probably wrong to use this accel group */
+    corner_item_quark = g_quark_from_static_string("id");
+
     menu = gtk_menu_new();
     if (accel_group)
         gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
 
     item = gtk_radio_menu_item_new_with_mnemonic(NULL,
-                                                 _("Pixelwise Square"));
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
+                                                 _("Pi_xelwise Square"));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_signal_connect_swapped(item, "activate",
-                             G_CALLBACK(gwy_app_data_window_change_square),
-                             GINT_TO_POINTER(FALSE));
+    g_object_set_qdata(G_OBJECT(item), corner_item_quark,
+                       GUINT_TO_POINTER(ITEM_PIXELSQUARE));
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_app_data_window_change_square),
+                     GINT_TO_POINTER(FALSE));
 
     r = GTK_RADIO_MENU_ITEM(item);
     item = gtk_radio_menu_item_new_with_mnemonic_from_widget(r,
-                                                             _("Physically "
+                                                             _("_Physically "
                                                                "Square"));
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_signal_connect_swapped(item, "activate",
-                             G_CALLBACK(gwy_app_data_window_change_square),
-                             GINT_TO_POINTER(TRUE));
+    g_object_set_qdata(G_OBJECT(item), corner_item_quark,
+                       GUINT_TO_POINTER(ITEM_REALSQUARE));
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_app_data_window_change_square),
+                     GINT_TO_POINTER(TRUE));
 
     return menu;
 }
 
 static void
-gwy_app_data_window_change_square(gpointer user_data)
+gwy_app_data_window_change_square(GtkWidget *item,
+                                  gpointer user_data)
 {
     gboolean realsquare = GPOINTER_TO_INT(user_data);
     GwyDataWindow *data_window;
@@ -1207,6 +1292,12 @@ gwy_app_data_window_change_square(gpointer user_data)
     const gchar *key;
     gchar *s;
 
+    if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(item))) {
+        gwy_debug("bogus update");
+        return;
+    }
+
+    gwy_debug("new square mode: %s", realsquare ? "Physical" : "Pixelwise");
     data_window = gwy_app_data_window_get_current();
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
