@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 
@@ -619,17 +619,31 @@ gchar*
 gwy_data_window_get_base_name(GwyDataWindow *data_window)
 {
     GwyContainer *data;
-    const gchar *data_title = NULL;
-    const gchar *fnm = "Untitled";
+    GwyDataView *view;
+    const guchar *data_title = NULL;
+    const guchar *fnm = "Untitled";
+    const guchar *channel_key = NULL;
+    gchar *title_key = NULL;
     gchar *s1, *s2;
 
     data = gwy_data_window_get_data(data_window);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
-    gwy_container_gis_string_by_name(data, "/filename/title",
-                                     (const guchar**)&data_title);
-    if (gwy_container_gis_string_by_name(data, "/filename",
-                                         (const guchar**)&fnm)) {
+    view = gwy_data_window_get_data_view(data_window);
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(view), NULL);
+
+    /* Get the channel title */
+    channel_key = gwy_data_view_get_data_prefix(view);
+    title_key = g_strdup_printf("%s/title", channel_key);
+    gwy_container_gis_string_by_name(data, title_key, &data_title);
+    g_free(title_key);
+    /* If no title is found, this might be a gwyddion 1.x file, so look for a
+       title in under the "old" title key */
+    if (data_title == NULL)
+        gwy_container_gis_string_by_name(data, "/filename/title", &data_title);
+
+    /* Get the filename and concatenate channel title */
+    if (gwy_container_gis_string_by_name(data, "/filename", &fnm)) {
         if (!data_title)
             return g_path_get_basename(fnm);
         s1 = g_path_get_basename(fnm);
@@ -638,8 +652,7 @@ gwy_data_window_get_base_name(GwyDataWindow *data_window)
         return s2;
     }
     else {
-        gwy_container_gis_string_by_name(data, "/filename/untitled",
-                                         (const guchar**)&fnm);
+        gwy_container_gis_string_by_name(data, "/filename/untitled", &fnm);
         if (!data_title)
             return g_strdup(fnm);
         else
