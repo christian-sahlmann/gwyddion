@@ -1,7 +1,8 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek, Markus Pristovsek
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  prissi@gift.physik.tu-berlin.de.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,40 +40,64 @@
 
 #define Nanometer 1e-9
 
-enum { HEADER_SIZE = 640 };
+enum {
+    HEADER_SIZE   = 0x280,
+    REAL_OFFSET   = 0x16c,
+    ZSCALE_OFFSET = 0x184,
+    RES_OFFSET    = 0x1dc,
+};
 
-static gboolean      module_register(void);
-static gint          hitachi_detect (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* hitachi_load   (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static GwyDataField* read_data_field(const guchar *buffer,
-                                     guint size,
-                                     GError **error);
+enum {
+    HEADER_SIZE_OLD  = 0x100,
+    RES_OFFSET_OLD   = 0xc2,
+    SCALE_OFFSET_OLD = 0x42,
+    UNIT_OFFSET_OLD  = 0x62,
+    SPEED_OFFSET_OLD = 0x82,
+    NS_OFFSET_OLD    = 0xc8,
+};
 
+static gboolean      module_register    (void);
+static gint          hitachi_detect     (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static gint          hitachi_old_detect (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer* hitachi_load       (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error,
+                                         const gchar *name);
+static GwyDataField* read_data_field    (const guchar *buffer,
+                                         guint size,
+                                         GError **error);
+static GwyDataField* read_data_field_old(const guchar *buffer,
+                                         guint size,
+                                         GError **error);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "0.4",
+    "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(void)
 {
+    /* Register two functions to keep the disctinction in the app although
+     * the load function physically the same */
     gwy_file_func_register("hitachi-afm",
                            N_("Hitachi AFM files (.afm)"),
                            (GwyFileDetectFunc)&hitachi_detect,
+                           (GwyFileLoadFunc)&hitachi_load,
+                           NULL,
+                           NULL);
+    gwy_file_func_register("hitachi-afm-old",
+                           N_("Hitachi AFM files, old (.afm)"),
+                           (GwyFileDetectFunc)&hitachi_old_detect,
                            (GwyFileLoadFunc)&hitachi_load,
                            NULL,
                            NULL);
@@ -97,6 +122,32 @@ hitachi_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
+static gint
+hitachi_old_detect(const GwyFileDetectInfo *fileinfo,
+                   gboolean only_name)
+{
+    guint xres, yres;
+    const guchar *p;
+
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
+
+    if (fileinfo->buffer_len < HEADER_SIZE_OLD
+        || fileinfo->file_size < HEADER_SIZE_OLD + 2
+        /* This is actually header size (0x100), just weed out non-AFM files */
+        || fileinfo->buffer[0] != 0 || fileinfo->buffer[1] != 1)
+        return 0;
+
+    p = fileinfo->buffer + RES_OFFSET_OLD;
+    xres = get_WORD(&p);
+    yres = get_WORD(&p);
+
+    if (fileinfo->file_size == 2*xres*yres + HEADER_SIZE_OLD)
+        return 100;
+
+    return 0;
+}
+
 static gboolean
 data_field_has_highly_nosquare_samples(GwyDataField *dfield)
 {
@@ -118,26 +169,44 @@ data_field_has_highly_nosquare_samples(GwyDataField *dfield)
 static GwyContainer*
 hitachi_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
-             GError **error)
+             GError **error,
+             const gchar *name)
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    GwyDataField *(*do_load)(const guchar*, guint, GError**);
+    guint header_size;
+
+    if (gwy_strequal(name, "hitachi-afm")) {
+        do_load = &read_data_field;
+        header_size = HEADER_SIZE;
+    }
+    else if (gwy_strequal(name, "hitachi-afm-old")) {
+        do_load = &read_data_field_old;
+        header_size = HEADER_SIZE_OLD;
+    }
+    else {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+                    _("Hitachi-AFM has not registered file type `%s'."), name);
+        return NULL;
+    }
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         g_clear_error(&err);
         return NULL;
     }
-    if (size < HEADER_SIZE + 2) {
+    if (size < header_size + 2) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
-    dfield = read_data_field(buffer, size, error);
+    dfield = do_load(buffer, size, error);
     gwy_file_abandon_contents(buffer, size, NULL);
     if (!dfield)
         return NULL;
@@ -159,13 +228,6 @@ read_data_field(const guchar *buffer,
                 guint size,
                 GError **error)
 {
-    enum {
-        XREAL_OFFSET  = 0x16c,
-        YREAL_OFFSET  = 0x176,
-        ZSCALE_OFFSET = 0x184,
-        XRES_OFFSET   = 0x1dc,
-        YRES_OFFSET   = 0x1e0,
-    };
     gint xres, yres, n, i, j;
     gdouble xreal, yreal, q;
     GwyDataField *dfield;
@@ -174,9 +236,8 @@ read_data_field(const guchar *buffer,
     const gint16 *pdata;
     const guchar *p;
 
-    p = buffer + XRES_OFFSET;
+    p = buffer + RES_OFFSET;
     xres = get_DWORD(&p);
-    p = buffer + YRES_OFFSET;
     yres = get_DWORD(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
 
@@ -186,9 +247,8 @@ read_data_field(const guchar *buffer,
         return NULL;
     }
 
-    p = buffer + XREAL_OFFSET;
+    p = buffer + REAL_OFFSET;
     xreal = get_DOUBLE(&p) * Nanometer;
-    p = buffer + YREAL_OFFSET;
     yreal = get_DOUBLE(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
     q = get_DOUBLE(&p) * Nanometer;
@@ -197,6 +257,7 @@ read_data_field(const guchar *buffer,
     /* XXX: I don't know where the factor of 0.5 comes from.  But it makes
      * the imported data match the original software. */
     q /= 2.0;
+    q /= 65536.0;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
@@ -204,7 +265,69 @@ read_data_field(const guchar *buffer,
     for (i = 0; i < yres; i++) {
         row = data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
-            row[j] = GUINT16_TO_LE(pdata[i*xres + j])/65536.0*q;
+            row[j] = GUINT16_TO_LE(pdata[i*xres + j])*q;
+    }
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    return dfield;
+}
+
+static GwyDataField*
+read_data_field_old(const guchar *buffer,
+                    guint size,
+                    GError **error)
+{
+    gint xres, yres, n, i, j, vx, vy, vz;
+    gdouble xscale, yscale, zscale, xunit, yunit, zunit, xreal, yreal, q;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    gdouble *data, *row;
+    const gint16 *pdata;
+    const guchar *p;
+
+    p = buffer + RES_OFFSET_OLD;
+    xres = get_WORD(&p);
+    yres = get_WORD(&p);
+    gwy_debug("xres: %d, yres: %d", xres, yres);
+
+    n = xres*yres;
+    if (size != 2*n + HEADER_SIZE_OLD) {
+        err_SIZE_MISMATCH(error, 2*n + HEADER_SIZE_OLD, size);
+        return NULL;
+    }
+
+    p = buffer + SCALE_OFFSET_OLD;
+    xscale = get_DOUBLE(&p);
+    yscale = get_DOUBLE(&p);
+    zscale = get_DOUBLE(&p);
+    p = buffer + UNIT_OFFSET_OLD;
+    xunit = get_DOUBLE(&p);
+    yunit = get_DOUBLE(&p);
+    zunit = get_DOUBLE(&p);
+    p = buffer + SPEED_OFFSET_OLD;
+    vx = get_DWORD(&p);
+    vy = get_DWORD(&p);
+    vz = get_DWORD(&p);
+
+    xreal = xscale * vx;
+    yreal = yscale * vy;
+    q = zscale;
+    gwy_debug("xreal: %g, yreal: %g, zscale: %g", xreal, yreal, q);
+
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    data = gwy_data_field_get_data(dfield);
+    pdata = (const gint16*)(buffer + HEADER_SIZE_OLD);
+    for (i = 0; i < yres; i++) {
+        row = data + i*xres;
+        for (j = 0; j < xres; j++)
+            row[j] = GUINT16_TO_LE(pdata[i*xres + j])*q;
     }
 
     siunit = gwy_si_unit_new("m");
