@@ -720,7 +720,10 @@ gwy_curve_motion_notify(GwyCurve *c)
             channel->ctlpoints[c->grab_point].x = rx;
             channel->ctlpoints[c->grab_point].y = ry;
 
-            if (c->snap) {
+            /*If "snap" mode is on, and the user has not grabbed an endpoint:*/
+            if (c->snap &&
+                c->grab_point != 0 &&
+                c->grab_point != channel->num_ctlpoints-1) {
                 /* Look in other channels for closest control point to this
                 one. If it is within the threshold, snap to it.*/
                 for (i=0, distance = 2; i < c->num_channels; i++) {
@@ -737,7 +740,6 @@ gwy_curve_motion_notify(GwyCurve *c)
                     }
                 }
                 if (project(distance,c->min_x,c->max_x,width) < SNAP_THRESH) {
-                    g_debug("SNAP!");
                     channel2 = &c->channel_data[closest_channel];
                     snapx = channel2->ctlpoints[closest_point].x;
 
