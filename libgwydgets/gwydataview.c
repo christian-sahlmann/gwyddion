@@ -1502,7 +1502,8 @@ gwy_data_view_square_changed(GwyDataView *data_view,
     gboolean realsquare;
 
     realsquare = data_view->realsquare;
-    gwy_container_gis_boolean(data_view->data, quark, &realsquare);
+    if (!gwy_container_gis_boolean(data_view->data, quark, &realsquare))
+        realsquare = FALSE;
     if (realsquare != data_view->realsquare) {
         GtkWidget *widget = GTK_WIDGET(data_view);
 

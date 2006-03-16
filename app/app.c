@@ -1199,7 +1199,6 @@ gwy_app_data_corner_menu_update(GtkWidget *menu,
                 g_signal_handler_block(item, id);
                 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
                 g_signal_handler_unblock(item, id);
-                gwy_debug("...");
             }
             break;
 
@@ -1213,7 +1212,6 @@ gwy_app_data_corner_menu_update(GtkWidget *menu,
                 g_signal_handler_block(item, id);
                 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
                 g_signal_handler_unblock(item, id);
-                gwy_debug("...");
             }
             break;
 
@@ -1304,7 +1302,10 @@ gwy_app_data_window_change_square(GtkWidget *item,
     key = gwy_data_view_get_data_prefix(data_view);
     g_return_if_fail(key);
     s = g_strconcat(key, "/realsquare", NULL);
-    gwy_container_set_boolean_by_name(data, s, realsquare);
+    if (realsquare)
+        gwy_container_set_boolean_by_name(data, s, realsquare);
+    else
+        gwy_container_remove_by_name(data, s);
     g_free(s);
 }
 
