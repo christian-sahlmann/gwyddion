@@ -23,7 +23,7 @@
  * http://www.physik.uni-freiburg.de/~doerr/readimg
  * http://www.weizmann.ac.il/Chemical_Research_Support/surflab/peter/headers/burl.html
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -140,7 +140,7 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
         xres = get_WORD(&buffer);
         yres = get_WORD(&buffer);
         if (fileinfo->file_size == TOTAL_SIZE_V21 + 2*xres*yres)
-            return 95;
+            return 100;
         return 0;
     }
 
