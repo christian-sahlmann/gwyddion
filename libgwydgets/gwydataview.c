@@ -1517,6 +1517,7 @@ gwy_data_view_square_changed(GwyDataView *data_view,
 static void
 gwy_data_view_connect_data(GwyDataView *data_view)
 {
+    static const gchar ichg[] = "item-changed::";
     gchar *s;
 
     g_return_if_fail(data_view->data);
@@ -1524,7 +1525,7 @@ gwy_data_view_connect_data(GwyDataView *data_view)
     if (!data_view->data_prefix)
         return;
 
-    s = g_strconcat("item-changed::",
+    s = g_strconcat(ichg,
                     g_quark_to_string(data_view->data_prefix),
                     "/realsquare",
                     NULL);
@@ -1532,7 +1533,8 @@ gwy_data_view_connect_data(GwyDataView *data_view)
         = g_signal_connect_swapped(data_view->data, s,
                                    G_CALLBACK(gwy_data_view_square_changed),
                                    data_view);
-    gwy_data_view_square_changed(data_view, g_quark_from_string(s));
+    gwy_data_view_square_changed(data_view,
+                                 g_quark_from_string(s + sizeof(ichg) - 1));
     g_free(s);
 }
 
