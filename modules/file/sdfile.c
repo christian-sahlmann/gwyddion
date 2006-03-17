@@ -64,7 +64,8 @@ typedef struct {
     gint compression;
     SDFDataType data_type;
     gint check_type;
-    const guchar *data;
+    GHashTable *extras;
+    gchar *data;
 
     gint expected_size;
 } SDFile;
@@ -82,7 +83,7 @@ static gboolean      sdfile_read_header_bin (const guchar **p,
                                              gsize *len,
                                              SDFile *sdfile,
                                              GError **error);
-static gboolean      sdfile_read_header_text(const guchar **buffer,
+static gboolean      sdfile_read_header_text(const gchar **buffer,
                                              gsize *len,
                                              SDFile *sdfile,
                                              gint *steps,
@@ -94,21 +95,18 @@ static GwyDataField* sdfile_read_data_bin   (SDFile *sdfile);
 static GwyDataField* sdfile_read_data_text  (SDFile *sdfile,
                                              GError **error);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
 
 static const guint type_sizes[] = { 1, 2, 4, 4, 1, 2, 4, 8 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -129,7 +127,7 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
               gboolean only_name)
 {
     SDFile sdfile;
-    const guchar *p;
+    const gchar *p;
     gsize len;
     gint steps;
 
@@ -138,7 +136,7 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
 
     p = fileinfo->buffer;
     len = fileinfo->buffer_len;
-    if (sdfile_read_header_bin(&p, &len, &sdfile, NULL)
+    if (sdfile_read_header_bin((const guchar**)&p, &len, &sdfile, NULL)
         && SDF_HEADER_SIZE_BIN + sdfile.expected_size == fileinfo->file_size
         && !sdfile.compression
         && !sdfile.check_type)
@@ -162,8 +160,7 @@ sdfile_load(const gchar *filename,
 {
     SDFile sdfile;
     GwyContainer *container = NULL;
-    guchar *buffer = NULL;
-    const guchar *p;
+    gchar *p, *buffer = NULL;
     gsize len, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
@@ -171,28 +168,29 @@ sdfile_load(const gchar *filename,
     gint steps;
 
     steps = 0;
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     len = size;
     p = buffer;
-    if (sdfile_read_header_text(&p, &len, &sdfile, &steps, error)) {
+    if (sdfile_read_header_text((const gchar**)&p, &len, &sdfile, &steps, error)) {
         if (check_params(&sdfile, len, error))
             dfield = sdfile_read_data_text(&sdfile, error);
     }
     else if (steps == 0) {
         p = buffer;
         len = size;
-        if (sdfile_read_header_bin(&p, &len, &sdfile, error)) {
+        if (sdfile_read_header_bin((const guchar**)&p, &len, &sdfile, error)) {
             if (check_params(&sdfile, len, error))
                 dfield = sdfile_read_data_bin(&sdfile);
         }
     }
 
-    gwy_file_abandon_contents(buffer, size, NULL);
-    if (!dfield)
+    if (!dfield) {
+        g_free(buffer);
         return NULL;
+    }
 
     gwy_data_field_multiply(dfield, sdfile.zscale);
 
@@ -207,6 +205,10 @@ sdfile_load(const gchar *filename,
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+
+    g_free(buffer);
+    if (sdfile.extras)
+        g_hash_table_destroy(sdfile.extras);
 
     return container;
 }
@@ -264,7 +266,7 @@ sdfile_read_header_bin(const guchar **p,
     (*p)++;
     sdfile->check_type = **p;
     (*p)++;
-    sdfile->data = *p;
+    sdfile->data = (gchar*)*p;
 
     if (sdfile->data_type < SDF_NTYPES)
         sdfile->expected_size = type_sizes[sdfile->data_type]
@@ -305,13 +307,13 @@ sdfile_read_header_bin(const guchar **p,
     }
 
 static gboolean
-sdfile_read_header_text(const guchar **buffer,
+sdfile_read_header_text(const gchar **buffer,
                         gsize *len,
                         SDFile *sdfile,
                         gint *steps,
                         GError **error)
 {
-    enum { PING_SIZE = 400 };
+    enum { PING_SIZE = 600 };
     gchar *val, *p, *header;
     gsize size;
 
@@ -357,7 +359,17 @@ sdfile_read_header_text(const guchar **buffer,
     else
         sdfile->expected_size = -1;
 
-    val = g_strstrip(gwy_str_next_line(&p));
+    /* Skip possible extra header lines */
+    do {
+        val = gwy_str_next_line(&p);
+        if (!val)
+            break;
+        val = g_strstrip(val);
+        if (g_ascii_isupper(val[0])) {
+            gwy_debug("Extra header line: <%s>\n", val);
+        }
+    } while (val[0] == ';' || g_ascii_isupper(val[0]));
+
     if (!val || *val != '*') {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Missing data start marker (*)."));
@@ -366,7 +378,7 @@ sdfile_read_header_text(const guchar **buffer,
 
     *buffer += p - header;
     *len -= p - header;
-    sdfile->data = *buffer;
+    sdfile->data = (gchar*)*buffer;
     return TRUE;
 }
 
@@ -378,7 +390,10 @@ sdfile_next_line(gchar **buffer,
     guint klen;
     gchar *value, *line;
 
-    line = gwy_str_next_line(buffer);
+    do {
+        line = gwy_str_next_line(buffer);
+    } while (line && line[0] == ';');
+
     if (!line) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("End of file reached when looking for `%s' field."), key);
@@ -395,6 +410,10 @@ sdfile_next_line(gchar **buffer,
 
     value = line + klen;
     g_strstrip(value);
+    if (value[0] == '=') {
+        value++;
+        g_strstrip(value);
+    }
 
     return value;
 }
@@ -490,7 +509,7 @@ sdfile_read_data_text(SDFile *sdfile,
     gint i, n;
     GwyDataField *dfield;
     gdouble *data;
-    const gchar *p, *end;
+    gchar *p, *end, *line;
 
     dfield = gwy_data_field_new(sdfile->xres, sdfile->yres,
                                 sdfile->xres * sdfile->xscale,
@@ -505,7 +524,7 @@ sdfile_read_data_text(SDFile *sdfile,
         case SDF_SINT16:
         case SDF_UINT32:
         case SDF_SINT32:
-        p = (const gchar*)sdfile->data;
+        p = sdfile->data;
         for (i = 0; i < n; i++) {
             data[i] = strtol(p, (gchar**)&end, 10);
             if (p == end) {
@@ -522,7 +541,7 @@ sdfile_read_data_text(SDFile *sdfile,
 
         case SDF_FLOAT:
         case SDF_DOUBLE:
-        p = (const gchar*)sdfile->data;
+        p = sdfile->data;
         for (i = 0; i < n; i++) {
             data[i] = g_ascii_strtod(p, (gchar**)&end);
             if (p == end) {
@@ -540,6 +559,42 @@ sdfile_read_data_text(SDFile *sdfile,
         default:
         g_return_val_if_reached(NULL);
         break;
+    }
+
+    /* Find out if there is anything beyond the end-of-data-marker */
+    while (*end && *end != '*')
+        end++;
+    if (!*end) {
+        gwy_debug("Missing end-of-data marker `*' was ignored");
+        return dfield;
+    }
+
+    do {
+        end++;
+    } while (g_ascii_isspace(*end));
+    if (!*end)
+        return dfield;
+
+    /* Read the extra stuff */
+    end--;
+    sdfile->extras = g_hash_table_new(g_str_hash, g_str_equal);
+    while ((line = gwy_str_next_line(&end))) {
+        g_strstrip(line);
+        if (!*line || *line == ';')
+            continue;
+        for (p = line; g_ascii_isalnum(*p); p++)
+            ;
+        if (!*p || (*p != '=' && !g_ascii_isspace(*p)))
+            continue;
+        *p = '\0';
+        p++;
+        while (*p == '=' || g_ascii_isspace(*p))
+            p++;
+        if (!*p)
+            continue;
+        g_strstrip(p);
+        gwy_debug("extra: <%s> = <%s>", line, p);
+        g_hash_table_insert(sdfile->extras, line, p);
     }
 
     return dfield;
