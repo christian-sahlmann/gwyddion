@@ -80,7 +80,7 @@ LIBICONV_CFLAGS =
 LIBICONV_LIBS = iconv.lib
 
 JPEG_CFLAGS =
-JPEG_LIBS = libjpeg.lib
+JPEG_LIBS = jpeg.lib
 
 PANGO_CFLAGS = -I "$(GTK_TOP)\include\pango-$(PANGO_VER)"
 PANGO_LIBS = pango-$(PANGO_VER).lib
