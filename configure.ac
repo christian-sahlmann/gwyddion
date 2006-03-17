@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.6cvs20060317, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -35,6 +35,7 @@ AC_CONFIG_FILES(\
   data/glmaterials/Makefile \
   data/gradients/Makefile \
   utils/Makefile \
+  utils/gwywin32.bat \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
   devel-docs/libgwyddion/Makefile \

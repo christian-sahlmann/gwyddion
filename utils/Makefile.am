@@ -11,6 +11,7 @@ moduledir = $(top_srcdir)/modules
 GUIDE_MAP = user-guide-modules
 
 EXTRA_DIST = \
+	gwywin32.bat.in \
 	modules-web.xsl \
 	update-msvc.py \
 	update-potfiles.sh \
@@ -34,6 +35,7 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyddion)
 
 CLEANFILES = \
+	gwywin32.bat \
 	modules.xml \
 	module-list.html \
 	module-list-nocss.html
