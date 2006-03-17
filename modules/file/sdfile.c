@@ -38,6 +38,10 @@ enum {
     SDF_HEADER_SIZE_BIN = 8 + 10 + 2*12 + 2*2 + 4*8 + 3*1
 };
 
+enum {
+    PING_SIZE = GWY_FILE_DETECT_BUFFER_SIZE
+};
+
 typedef enum {
     SDF_UINT8  = 0,
     SDF_UINT16 = 1,
@@ -71,9 +75,14 @@ typedef struct {
 } SDFile;
 
 static gboolean      module_register        (void);
-static gint          sdfile_detect          (const GwyFileDetectInfo *fileinfo,
+static gint          sdfile_detect_bin      (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
-static GwyContainer* sdfile_load            (const gchar *filename,
+static gint          sdfile_detect_text     (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer* sdfile_load_bin        (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static GwyContainer* sdfile_load_text       (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
 static gboolean      check_params           (const SDFile *sdfile,
@@ -83,10 +92,9 @@ static gboolean      sdfile_read_header_bin (const guchar **p,
                                              gsize *len,
                                              SDFile *sdfile,
                                              GError **error);
-static gboolean      sdfile_read_header_text(const gchar **buffer,
+static gboolean      sdfile_read_header_text(gchar **buffer,
                                              gsize *len,
                                              SDFile *sdfile,
-                                             gint *steps,
                                              GError **error);
 static gchar*        sdfile_next_line       (gchar **buffer,
                                              const gchar *key,
@@ -112,10 +120,16 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("sdfile",
-                           N_("Surfstand SDF files (.sdf)"),
-                           (GwyFileDetectFunc)&sdfile_detect,
-                           (GwyFileLoadFunc)&sdfile_load,
+    gwy_file_func_register("sdfile-bin",
+                           N_("Surfstand SDF files, binary (.sdf)"),
+                           (GwyFileDetectFunc)&sdfile_detect_bin,
+                           (GwyFileLoadFunc)&sdfile_load_bin,
+                           NULL,
+                           NULL);
+    gwy_file_func_register("sdfile-txt",
+                           N_("Surfstand SDF files, text (.sdf)"),
+                           (GwyFileDetectFunc)&sdfile_detect_text,
+                           (GwyFileLoadFunc)&sdfile_load_text,
                            NULL,
                            NULL);
 
@@ -123,16 +137,15 @@ module_register(void)
 }
 
 static gint
-sdfile_detect(const GwyFileDetectInfo *fileinfo,
-              gboolean only_name)
+sdfile_detect_bin(const GwyFileDetectInfo *fileinfo,
+                  gboolean only_name)
 {
     SDFile sdfile;
     const gchar *p;
     gsize len;
-    gint steps;
 
     if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
 
     p = fileinfo->head;
     len = fileinfo->buffer_len;
@@ -142,57 +155,42 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
         && !sdfile.check_type)
         return 100;
 
-    p = fileinfo->head;
-    len = fileinfo->buffer_len;
-    if (sdfile_read_header_text(&p, &len, &sdfile, &steps, NULL)
-        && sdfile.expected_size <= fileinfo->file_size
-        && !sdfile.compression
-        && !sdfile.check_type)
-        return 100;
-
     return 0;
 }
 
-static GwyContainer*
-sdfile_load(const gchar *filename,
-            G_GNUC_UNUSED GwyRunType mode,
-            GError **error)
+static gint
+sdfile_detect_text(const GwyFileDetectInfo *fileinfo,
+                   gboolean only_name)
 {
     SDFile sdfile;
-    GwyContainer *container = NULL;
-    gchar *p, *buffer = NULL;
-    gsize len, size = 0;
-    GError *err = NULL;
-    GwyDataField *dfield = NULL;
+    gchar *p;
+    gsize len;
+    gint score = 0;
+
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
+
+    len = fileinfo->buffer_len;
+    p = g_memdup(fileinfo->head, len + 1);
+    p[len] = '\0';
+    if (sdfile_read_header_text(&p, &len, &sdfile, NULL)
+        && sdfile.expected_size <= fileinfo->file_size
+        && !sdfile.compression
+        && !sdfile.check_type)
+        score = 100;
+
+    g_free(p);
+
+    return score;
+}
+
+static void
+sdfile_set_units(SDFile *sdfile,
+                 GwyDataField *dfield)
+{
     GwySIUnit *siunit;
-    gint steps;
 
-    steps = 0;
-    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        return NULL;
-    }
-    len = size;
-    p = buffer;
-    if (sdfile_read_header_text((const gchar**)&p, &len, &sdfile, &steps, error)) {
-        if (check_params(&sdfile, len, error))
-            dfield = sdfile_read_data_text(&sdfile, error);
-    }
-    else if (steps == 0) {
-        p = buffer;
-        len = size;
-        if (sdfile_read_header_bin((const guchar**)&p, &len, &sdfile, error)) {
-            if (check_params(&sdfile, len, error))
-                dfield = sdfile_read_data_bin(&sdfile);
-        }
-    }
-
-    if (!dfield) {
-        g_free(buffer);
-        return NULL;
-    }
-
-    gwy_data_field_multiply(dfield, sdfile.zscale);
+    gwy_data_field_multiply(dfield, sdfile->zscale);
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
@@ -201,6 +199,75 @@ sdfile_load(const gchar *filename,
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
+}
+
+static GwyContainer*
+sdfile_load_bin(const gchar *filename,
+                G_GNUC_UNUSED GwyRunType mode,
+                GError **error)
+{
+    SDFile sdfile;
+    GwyContainer *container = NULL;
+    guchar *buffer = NULL;
+    const guchar *p;
+    gsize len, size = 0;
+    GError *err = NULL;
+    GwyDataField *dfield = NULL;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+
+    len = size;
+    p = buffer;
+    if (sdfile_read_header_bin(&p, &len, &sdfile, error)) {
+        if (check_params(&sdfile, len, error))
+            dfield = sdfile_read_data_bin(&sdfile);
+    }
+
+    gwy_file_abandon_contents(buffer, size, NULL);
+    if (!dfield)
+        return NULL;
+
+    sdfile_set_units(&sdfile, dfield);
+
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    g_object_unref(dfield);
+
+    return container;
+}
+
+static GwyContainer*
+sdfile_load_text(const gchar *filename,
+                 G_GNUC_UNUSED GwyRunType mode,
+                 GError **error)
+{
+    SDFile sdfile;
+    GwyContainer *container = NULL;
+    gchar *p, *buffer = NULL;
+    gsize len, size = 0;
+    GError *err = NULL;
+    GwyDataField *dfield = NULL;
+
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+    len = size;
+    p = buffer;
+    if (sdfile_read_header_text(&p, &len, &sdfile, error)) {
+        if (check_params(&sdfile, len, error))
+            dfield = sdfile_read_data_text(&sdfile, error);
+    }
+
+    if (!dfield) {
+        g_free(buffer);
+        return NULL;
+    }
+
+    sdfile_set_units(&sdfile, dfield);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -306,52 +373,40 @@ sdfile_read_header_bin(const guchar **p,
         return FALSE; \
     }
 
+/* NB: Buffer must be writable and nul-terminated, its initial part is
+ * overwritten */
 static gboolean
-sdfile_read_header_text(const gchar **buffer,
+sdfile_read_header_text(gchar **buffer,
                         gsize *len,
                         SDFile *sdfile,
-                        gint *steps,
                         GError **error)
 {
-    enum { PING_SIZE = 600 };
-    gchar *val, *p, *header;
-    gsize size;
+    gchar *val, *p;
 
     /* We do not need exact lenght of the minimum file */
-    *steps = 0;
     if (*len < 160) {
         err_TOO_SHORT(error);
         return FALSE;
     }
 
-    /* Make a nul-terminated copy */
-    size = MIN(*len+1, PING_SIZE);
-    header = g_newa(gchar, size);
-    memcpy(header, *buffer, size-1);
-    header[size-1] = '\0';
-
     memset(sdfile, 0, sizeof(SDFile));
-    p = header;
+    p = *buffer;
 
     val = g_strstrip(gwy_str_next_line(&p));
     strncpy(sdfile->version, val, sizeof(sdfile->version));
 
     READ_STRING(p, "ManufacID", val, sdfile->manufacturer, error)
-    (*steps)++;
     READ_STRING(p, "CreateDate", val, sdfile->creation, error)
     READ_STRING(p, "ModDate", val, sdfile->modification, error)
     READ_INT(p, "NumPoints", val, sdfile->xres, TRUE, error)
     READ_INT(p, "NumProfiles", val, sdfile->yres, TRUE, error)
-    (*steps)++;
     READ_FLOAT(p, "Xscale", val, sdfile->xscale, TRUE, error)
     READ_FLOAT(p, "Yscale", val, sdfile->yscale, TRUE, error)
     READ_FLOAT(p, "Zscale", val, sdfile->zscale, TRUE, error)
     READ_FLOAT(p, "Zresolution", val, sdfile->zres, FALSE, error)
-    (*steps)++;
     READ_INT(p, "Compression", val, sdfile->compression, FALSE, error)
     READ_INT(p, "DataType", val, sdfile->data_type, FALSE, error)
     READ_INT(p, "CheckType", val, sdfile->check_type, FALSE, error)
-    (*steps)++;
 
     /* at least */
     if (sdfile->data_type < SDF_NTYPES)
@@ -376,8 +431,8 @@ sdfile_read_header_text(const gchar **buffer,
         return FALSE;
     }
 
-    *buffer += p - header;
-    *len -= p - header;
+    *buffer = p;
+    *len -= p - *buffer;
     sdfile->data = (gchar*)*buffer;
     return TRUE;
 }
