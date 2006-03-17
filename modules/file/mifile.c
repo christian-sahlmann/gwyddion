@@ -40,9 +40,13 @@ reference to BINARY or ASCII. Also, implement loading of ASCII files */
 
 #include "err.h"
 
-#define MAGIC "fileType      Image"
-#define MAGIC_SIZE (sizeof(MAGIC) - 1)
+#define IMAGE_MAGIC "fileType      Image"
+#define IMAGE_MAGIC_SIZE (sizeof(IMAGE_MAGIC) - 1)
+#define SPECT_MAGIC "fileType      Spectroscopy"
+#define SPECT_MAGIC_SIZE (sizeof(SPECT_MAGIC) - 1)
 
+#define DATA_MAGIC "data          \n"
+#define DATA_MAGIC_SIZE (sizeof(DATA_MAGIC) - 1)
 #define BINARY_DATA_MAGIC "data          BINARY\n"
 #define BINARY_DATA_MAGIC_SIZE (sizeof(BINARY_DATA_MAGIC) - 1)
 #define ASCII_DATA_MAGIC  "data          ASCII\n"
@@ -50,9 +54,9 @@ reference to BINARY or ASCII. Also, implement loading of ASCII files */
 
 #define EXTENSION ".mi"
 #define KEY_LEN 14
+#define GRAPH_PREFIX "/0/graph/graph"
 
-#define Angstrom (1e-10)
-
+/* These two structs are for MI Image Files only */
 typedef struct {
     gchar *id;
     const gint16 *data;
@@ -67,17 +71,28 @@ typedef struct {
     GHashTable *meta;
 } MIFile;
 
+/* This struct is for MI Spectroscopy Files only */
 typedef struct {
-    MIFile *file;
-    GwyContainer *data;
-    GtkWidget *data_view;
-} MIControls;
+    gchar *label;
+    gchar *unit;
+} MISpectData;
+
+typedef struct {
+    gint num_buffers;
+    MISpectData *buffers;
+
+    gint num_points;
+    const gfloat *data;
+
+    GHashTable *meta;
+} MISpectFile;
 
 typedef struct {
     const gchar *key;
     const gchar *meta;
     const gchar *format;
 } MetaDataFormat;
+
 
 /* Gwyddion File Module Functions */
 static gboolean         module_register      (void);
@@ -88,22 +103,23 @@ static GwyContainer*    mifile_load          (const gchar *filename,
                                               GError **error);
 
 /* Helper Functions */
-static guint            find_data_start      (const guchar *buffer,
-                                              gsize size,
-                                              gboolean *isbinary);
-static guint            file_read_header     (MIFile *mifile,
-                                              gchar *buffer);
-static void             read_data_field      (GwyDataField *dfield,
-                                              MIData *midata,
-                                              gint xres, gint yres);
-static void             mifile_free          (MIFile *mifile);
-static gboolean         mifile_get_double    (GHashTable *meta,
-                                              const gchar *key,
-                                              gdouble *value);
-static void             process_metadata     (MIFile *mifile,
-                                              guint id,
-                                              GwyContainer *container,
-                                              const gchar *container_key);
+static guint        find_data_start         (const guchar *buffer, gsize size,
+                                             gboolean *isbinary);
+static guint        image_file_read_header  (MIFile *mifile,
+                                             gchar *buffer);
+static guint        spect_file_read_header  (MISpectFile *mifile,
+                                             gchar *buffer);
+static void         read_data_field         (GwyDataField *dfield,
+                                             MIData *midata,
+                                             gint xres, gint yres);
+static void         mifile_free             (MIFile *mifile);
+static gboolean     mifile_get_double       (GHashTable *meta,
+                                             const gchar *key,
+                                             gdouble *value);
+static void         process_metadata        (MIFile *mifile,
+                                             guint id,
+                                             GwyContainer *container,
+                                             const gchar *container_key);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -111,7 +127,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.3.0",
+    "0.9.0",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -141,8 +157,9 @@ mifile_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    if (fileinfo->buffer_len > MAGIC_SIZE
-        && !memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE))
+    if (fileinfo->buffer_len > IMAGE_MAGIC_SIZE
+        && (!memcmp(fileinfo->buffer, IMAGE_MAGIC, IMAGE_MAGIC_SIZE)
+            || !memcmp(fileinfo->buffer, SPECT_MAGIC, SPECT_MAGIC_SIZE)))
         score = 100;
 
     return score;
@@ -153,18 +170,24 @@ mifile_load(const gchar *filename,
             G_GNUC_UNUSED GwyRunType mode,
             GError **error)
 {
-    MIFile *mifile;
+    MIFile *mifile = NULL;
+    MISpectFile *mifile_spect = NULL;
     GwyContainer *container = NULL;
     gchar *container_key = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    GwyGraphCurveModel *cmodel;
+    GwyGraphModel *gmodel;
+    gdouble *xdata, *ydata;
     guint header_size;
     gchar *p;
-    gboolean ok;
-    gboolean isbinary;
-    guint i = 0, pos;
+    gboolean ok = TRUE;
+    gboolean isbinary = TRUE;
+    gboolean isimage = TRUE;
+    guint i=0, j=0, pos, buffi;
+    gfloat value;
 
     /* Open the file and load in its contents into "buffer" */
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -172,81 +195,184 @@ mifile_load(const gchar *filename,
         return NULL;
     }
 
-    /* Find out the length of the file header */
-    if (strncmp(buffer, MAGIC, MAGIC_SIZE)
-        || size <= BINARY_DATA_MAGIC_SIZE
-        || !(header_size = find_data_start(buffer, size, &isbinary))) {
+    /* Make sure file is of reasonable size */
+    if (size <= BINARY_DATA_MAGIC_SIZE)
+        ok = FALSE;
+
+    /* Find out if this is an Image or Spectroscopy file */
+    if (!strncmp(buffer, IMAGE_MAGIC, IMAGE_MAGIC_SIZE))
+        isimage = TRUE;
+    else if (!strncmp(buffer, SPECT_MAGIC, SPECT_MAGIC_SIZE))
+        isimage = FALSE;
+    else
+        ok = FALSE;
+
+    g_debug("*************************************");
+    g_debug("*************************************");
+    g_debug("*************************************");
+    g_debug("isimage: %i    ok: %i", isimage, ok);
+
+    /* Find out the length of the file header (and binary/ascii mode) */
+    header_size = find_data_start(buffer, size, &isbinary);
+    if (!header_size)
+         ok = FALSE;
+
+    g_debug("header_size: %i", header_size);
+    g_debug("*************************************");
+    g_debug("*************************************");
+    g_debug("*************************************");
+
+    /* Report error if file is invalid */
+    if (!ok) {
         err_FILE_TYPE(error, "MI");
         gwy_file_abandon_contents(buffer, size, &err);
         return NULL;
     }
-
-    /* Load the header information into the MIFile structure */
-    mifile = g_new0(MIFile, 1);
+    /* Load the header information into the appropriate structure */
     p = g_strndup(buffer, header_size);
-    ok = file_read_header(mifile, p);
+    ok = TRUE;
+    if (isimage) {
+        mifile = g_new0(MIFile, 1);
+        ok = image_file_read_header(mifile, p);
+    }
+    else {
+        mifile_spect = g_new0(MISpectFile, 1);
+        ok = spect_file_read_header(mifile_spect, p);
+    }
     g_free(p);
 
-    // TODO: check size
-    /* Load the actual image data into the MIFile structure */
+    /* Load the image data or spectroscopy data */
     if (ok) {
-        pos = header_size;
-        for (i = 0; i < mifile->n; i++) {
-            /*XXX: shouldn't this be gint16? */
-            mifile->buffers[i].data = (const guint16*)(buffer + pos);
-            pos += 2*mifile->xres * mifile->yres;
+        if (isimage) {
+            /* Load image data: */
+            pos = header_size;
+            for (i = 0; i < mifile->n; i++) {
+                mifile->buffers[i].data = (const gint16*)(buffer + pos);
+                pos += 2*mifile->xres * mifile->yres;
 
-            dfield = gwy_data_field_new(mifile->xres, mifile->yres,
-                                        1.0, 1.0, FALSE);
-            read_data_field(dfield, mifile->buffers + i,
-                            mifile->xres, mifile->yres);
+                dfield = gwy_data_field_new(mifile->xres, mifile->yres,
+                                            1.0, 1.0, FALSE);
+                read_data_field(dfield, mifile->buffers + i,
+                                mifile->xres, mifile->yres);
 
-            if (!container)
-                container = gwy_container_new();
+                if (!container)
+                    container = gwy_container_new();
 
-            container_key = g_strdup_printf("/%i/data", i);
+                container_key = g_strdup_printf("/%i/data", i);
+                gwy_container_set_object_by_name(container, container_key,
+                                                 dfield);
+                g_object_unref(dfield);
+                process_metadata(mifile, i, container, container_key);
+                g_free(container_key);
+            }
+
+            mifile_free(mifile);
+        }
+        else {
+            /* Load spectroscopy data: */
+
+            /* create a container */
+            container = gwy_container_new();
+
+            /* create a dummy dfield and add to container
+            XXX: This is a temporary cheap hack */
+            dfield = gwy_data_field_new(256, 256, 1.0, 1.0, TRUE);
+            container_key = g_strdup("/0/data");
             gwy_container_set_object_by_name(container, container_key, dfield);
             g_object_unref(dfield);
-            process_metadata(mifile, i, container, container_key);
             g_free(container_key);
+            container_key = g_strdup("/0/data/title");
+            gwy_container_set_string_by_name(container, container_key,
+                                             g_strdup("Ignore Me"));
+
+            /* get a pointer to the spectroscopy data */
+            pos = header_size;
+            mifile_spect->data = (const gfloat*)(buffer + pos);
+
+            /* load xdata */
+            buffi = mifile_spect->num_points; /* skip time data */
+            xdata = g_new0(gdouble, mifile_spect->num_points);
+            for (i=0; i<mifile_spect->num_points; i++) {
+                xdata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
+                g_debug("i: %i   xdata: %f", i, xdata[i]);
+            }
+
+            /* The first buffer always represents the x axis. All
+            remaining buffers represent the corresponding Y axes of seperate
+            graphs. As a result, we need to create a num_buffers-1 graphs. */
+            for (j=0; j<mifile_spect->num_buffers-1; j++) {
+                buffi += mifile_spect->num_points;
+
+                ydata = g_new0(gdouble, mifile_spect->num_points);
+                for (i=0; i<mifile_spect->num_points; i++) {
+                    ydata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
+                    g_debug("i: %i   ydata: %f", i, ydata[i]);
+                }
+
+                /* create graph model and curve model */
+                gmodel = gwy_graph_model_new();
+                cmodel = gwy_graph_curve_model_new();
+                gwy_graph_model_add_curve(gmodel, cmodel);
+                g_object_unref(cmodel);
+
+                gwy_graph_model_set_title(gmodel, _("Spectroscopy Graph"));
+                //XXXSET UNITS HERE gwy_graph_model_set_si_unit_x
+                gwy_graph_curve_model_set_description(cmodel, "Curve 1");
+                gwy_graph_curve_model_set_curve_type(cmodel,
+                                                     GWY_GRAPH_CURVE_POINTS);
+                gwy_graph_curve_model_set_data(cmodel, xdata, ydata,
+                                               mifile_spect->num_points);
+                g_free(ydata);
+
+                /* add gmodel to container */
+                container_key = g_strdup_printf("%s/%d", GRAPH_PREFIX, j+1);
+                gwy_container_set_object_by_name(container, container_key,
+                                                 gmodel);
+                g_object_unref(gmodel);
+                g_free(container_key);
+            }
+            g_free(xdata);
         }
     }
+    else
+        container = NULL;
 
     gwy_file_abandon_contents(buffer, size, NULL);
-    mifile_free(mifile);
-
-    if (!container) {
+    if (container == NULL)
         err_NO_DATA(error);
-        return NULL;
-    }
-
     return container;
 }
 
 static guint
 find_data_start(const guchar *buffer, gsize size, gboolean *isbinary)
 {
-    /* NOTE: TRY USING g_strrstr () INSTEAD */
-    const guchar *p;
+    const guchar *locate_none, *locate_binary, *locate_ascii;
+    guint value = 0;
 
-    size -= BINARY_DATA_MAGIC_SIZE;
+    locate_none = g_strstr_len(buffer, size, DATA_MAGIC);
+    locate_binary = g_strstr_len(buffer, size, BINARY_DATA_MAGIC);
+    locate_ascii = g_strstr_len(buffer, size, ASCII_DATA_MAGIC);
 
-    for (p = buffer;
-         p && strncmp(p, BINARY_DATA_MAGIC, BINARY_DATA_MAGIC_SIZE);
-         p = memchr(p+1, (BINARY_DATA_MAGIC)[0], size - (p - buffer) - 1))
-        ;
-
-    if (p)
+    if (locate_none != NULL) {
         *isbinary = TRUE;
-    else
+        value = (locate_none - buffer) + DATA_MAGIC_SIZE;
+    }
+    else if (locate_binary != NULL) {
+        *isbinary = TRUE;
+        value = (locate_binary - buffer) + BINARY_DATA_MAGIC_SIZE;
+    }
+    else if (locate_ascii != NULL) {
         *isbinary = FALSE;
+        value = (locate_ascii - buffer) + ASCII_DATA_MAGIC_SIZE;
+    }
+    else
+        value = 0;
 
-    return p ? (p - buffer) + BINARY_DATA_MAGIC_SIZE : 0;
+    return value;
 }
 
 static guint
-file_read_header(MIFile *mifile,
-                 gchar *buffer)
+image_file_read_header(MIFile *mifile, gchar *buffer)
 {
     MIData *data = NULL;
     GHashTable *meta;
@@ -281,6 +407,54 @@ file_read_header(MIFile *mifile,
     }
 
     return mifile->n;
+}
+
+static guint
+spect_file_read_header(MISpectFile *mifile, gchar *buffer)
+{
+    MISpectData *data = NULL;
+    GHashTable *meta;
+    gchar *line, *key, *value = NULL;
+
+    mifile->meta = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                               g_free, g_free);
+    meta = mifile->meta;
+
+    while ((line = gwy_str_next_line(&buffer))) {
+        if (!strncmp(line, "bufferLabel   ", KEY_LEN)) {
+            mifile->num_buffers++;
+            mifile->buffers = g_renew(MISpectData, mifile->buffers,
+                                      mifile->num_buffers);
+            data = mifile->buffers + (mifile->num_buffers - 1);
+
+            data->label = NULL;
+            data->unit = NULL;
+
+            /* store buffer label */
+            data->label = g_strstrip(g_strdup(line + KEY_LEN));
+
+            /* store buffer unit (by geting next line which should be
+               "bufferUnit") */
+            if ((line = gwy_str_next_line(&buffer))) {
+                if (!strncmp(line, "bufferUnit    ", KEY_LEN)) {
+                    data->unit = g_strstrip(g_strdup(line + KEY_LEN));
+                } else
+                    return 0;
+            } else
+                return 0;
+        }
+        if (line[0] == ' ')
+            continue;
+
+        key = g_strstrip(g_strndup(line, KEY_LEN));
+        value = g_strstrip(g_strdup(line + KEY_LEN));
+        g_hash_table_replace(meta, key, value);
+
+        if (!strcmp(key, "DataPoints"))
+            mifile->num_points = atol(value);
+    }
+
+    return mifile->num_buffers;
 }
 
 static void
