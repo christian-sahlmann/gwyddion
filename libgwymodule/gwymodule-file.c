@@ -436,6 +436,7 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
     }
     else {
         fileinfo->head = g_new0(guchar, 2*GWY_FILE_DETECT_BUFFER_SIZE);
+        fileinfo->tail = fileinfo->head + GWY_FILE_DETECT_BUFFER_SIZE;
         if (fread((gchar*)fileinfo->head, 1, GWY_FILE_DETECT_BUFFER_SIZE, fh)
             < GWY_FILE_DETECT_BUFFER_SIZE) {
             fclose(fh);
