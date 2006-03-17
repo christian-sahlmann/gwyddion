@@ -90,13 +90,13 @@ PANGOFT2_CFLAGS = $(PANGO_CFLAGS) -I "$(GTK_TOP)\include\freetype2"
 PANGOFT2_LIBS = $(PANGO_LIBS) pangoft2-$(PANGO_VER).lib freetype.lib
 
 PNG_CFLAGS = -I "$(GTK_TOP)\include\libpng12" $(ZLIB_CFLAGS)
-PNG_LIBS = libpng.lib $(ZLIB_LIBS)
+PNG_LIBS = png.lib $(ZLIB_LIBS)
 
 TIFF_CFLAGS =
-TIFF_LIBS = libtiff.lib $(JPEG_LIBS) $(ZLIB_LIBS) user32.lib
+TIFF_LIBS = tiff.lib $(JPEG_LIBS) $(ZLIB_LIBS) user32.lib
 
 ZLIB_CFLAGS =
-ZLIB_LIBS = libz.lib
+ZLIB_LIBS = z.lib
 
 INSTALL = copy
 LINK32 = link.exe
