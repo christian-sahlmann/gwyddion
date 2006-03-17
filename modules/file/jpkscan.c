@@ -144,7 +144,7 @@ jpkscan_detect (const GwyFileDetectInfo *fileinfo,
     return score;
 
   if (fileinfo->buffer_len > JPK_SCAN_MAGIC_SIZE
-      && memcmp (fileinfo->buffer, JPK_SCAN_MAGIC, JPK_SCAN_MAGIC_SIZE) == 0)
+      && memcmp (fileinfo->head, JPK_SCAN_MAGIC, JPK_SCAN_MAGIC_SIZE) == 0)
     score += 50;
 
   return score;

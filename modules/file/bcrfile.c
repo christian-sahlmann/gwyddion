@@ -110,8 +110,8 @@ bcrfile_detect(const GwyFileDetectInfo *fileinfo,
                 ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && (!memcmp(fileinfo->buffer, MAGIC1, MAGIC_SIZE1)
-            || !memcmp(fileinfo->buffer, MAGIC2, MAGIC_SIZE2)))
+        && (!memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE1)
+            || !memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE2)))
         score = 100;
 
     return score;

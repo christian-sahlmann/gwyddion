@@ -402,7 +402,8 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
     fileinfo->name_lowercase = g_ascii_strdown(fileinfo->name, -1);
     fileinfo->file_size = 0;
     fileinfo->buffer_len = 0;
-    fileinfo->buffer = NULL;
+    fileinfo->head = NULL;
+    fileinfo->tail = NULL;
     if (only_name)
         return TRUE;
 
@@ -417,23 +418,53 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
         return FALSE;
     }
 
-    fileinfo->buffer = g_new0(guchar, GWY_FILE_DETECT_BUFFER_SIZE);
-    fileinfo->buffer_len = fread((gchar*)fileinfo->buffer,
-                                 1, GWY_FILE_DETECT_BUFFER_SIZE, fh);
-    fclose(fh);
+    if (fileinfo->file_size <= 2*GWY_FILE_DETECT_BUFFER_SIZE) {
+        fileinfo->head = g_new0(guchar, fileinfo->file_size);
+        fileinfo->buffer_len = fread((gchar*)fileinfo->head,
+                                     1, fileinfo->file_size, fh);
+        fclose(fh);
+        if (fileinfo->buffer_len < fileinfo->file_size) {
+            gwy_file_detect_free_info(fileinfo);
+            return FALSE;
+        }
+        if (fileinfo->file_size >= GWY_FILE_DETECT_BUFFER_SIZE)
+            fileinfo->tail = fileinfo->head
+                             + (fileinfo->file_size
+                                - GWY_FILE_DETECT_BUFFER_SIZE);
+        else
+            fileinfo->tail = fileinfo->head;
+    }
+    else {
+        fileinfo->head = g_new0(guchar, 2*GWY_FILE_DETECT_BUFFER_SIZE);
+        if (fread((gchar*)fileinfo->head, 1, GWY_FILE_DETECT_BUFFER_SIZE, fh)
+            < GWY_FILE_DETECT_BUFFER_SIZE) {
+            fclose(fh);
+            gwy_file_detect_free_info(fileinfo);
+            return FALSE;
+        }
+        if (fseek(fh, -GWY_FILE_DETECT_BUFFER_SIZE, SEEK_END) != 0) {
+            fclose(fh);
+            gwy_file_detect_free_info(fileinfo);
+            return FALSE;
+        }
+        if (fread((gchar*)fileinfo->tail, 1, GWY_FILE_DETECT_BUFFER_SIZE, fh)
+            < GWY_FILE_DETECT_BUFFER_SIZE) {
+            fclose(fh);
+            gwy_file_detect_free_info(fileinfo);
+            return FALSE;
+        }
+        fclose(fh);
+        fileinfo->buffer_len = GWY_FILE_DETECT_BUFFER_SIZE;
+    }
 
-    if (fileinfo->buffer_len)
-        return TRUE;
-
-    gwy_file_detect_free_info(fileinfo);
-    return FALSE;
+    return TRUE;
 }
 
 static void
 gwy_file_detect_free_info(GwyFileDetectInfo *fileinfo)
 {
     g_free((gpointer)fileinfo->name_lowercase);
-    g_free((gpointer)fileinfo->buffer);
+    g_free((gpointer)fileinfo->head);
 }
 
 /**
@@ -854,10 +885,11 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * @name_lowercase: File name in lowercase (for eventual case-insensitive
  *                  name check).
  * @file_size: File size in bytes.  Undefined if @only_name.
- * @buffer_len: The size of @buffer in bytes.  Normally it's
+ * @buffer_len: The size of @head and @tail in bytes.  Normally it's
  *              @GWY_FILE_DETECT_BUFFER_SIZE except when file is shorter than
  *              that.  Undefined if @only_name.
- * @buffer: Initial part of file.  Undefined if @only_name.
+ * @head: Initial part of file.  Undefined if @only_name.
+ * @tail: Final part of file.  Undefined if @only_name.
  *
  * File detection data.
  *

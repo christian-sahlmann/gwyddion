@@ -150,7 +150,7 @@ apefile_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < HEADER_SIZE)
         return 0;
 
-    buffer = fileinfo->buffer;
+    buffer = fileinfo->head;
     version = *(buffer++);
     mode = *(buffer++);
     vbtype = get_WORD(&buffer);

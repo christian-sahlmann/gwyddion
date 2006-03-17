@@ -88,7 +88,7 @@ seiko_detect(const GwyFileDetectInfo *fileinfo,
 
     if (fileinfo->buffer_len > MAGIC_SIZE
         && fileinfo->file_size >= HEADER_SIZE + 2
-        && !memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE))
+        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
         score = 100;
 
     return score;

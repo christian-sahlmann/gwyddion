@@ -102,7 +102,7 @@ stmprg_detect(const GwyFileDetectInfo *fileinfo,
         return strstr(fileinfo->name, "tp") ? 10 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->buffer, MAGIC_TXT, MAGIC_SIZE) == 0)
+        && memcmp(fileinfo->head, MAGIC_TXT, MAGIC_SIZE) == 0)
         score = 100;
 
     return score;

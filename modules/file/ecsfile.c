@@ -91,11 +91,11 @@ ecs_detect(const GwyFileDetectInfo *fileinfo,
 
     if (fileinfo->buffer_len < ECS_RESOLUTION + 2*2
         || fileinfo->file_size < HEADER_SIZE + 2
-        || memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) != 0)
+        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
     /* Check if file size matches */
-    p = fileinfo->buffer + ECS_RESOLUTION;
+    p = fileinfo->head + ECS_RESOLUTION;
     xres = get_WORD(&p);
     yres = get_WORD(&p);
 

@@ -102,11 +102,11 @@ spmlab_detect(const GwyFileDetectInfo *fileinfo,
     }
 
     if (fileinfo->buffer_len >= 2048
-        && fileinfo->buffer[0] == '#'
-        && fileinfo->buffer[1] == 'R'
-        && fileinfo->buffer[2] >= '3'
-        && fileinfo->buffer[2] <= '6'
-        && memchr(fileinfo->buffer+1, '#', 11))
+        && fileinfo->head[0] == '#'
+        && fileinfo->head[1] == 'R'
+        && fileinfo->head[2] >= '3'
+        && fileinfo->head[2] <= '6'
+        && memchr(fileinfo->head+1, '#', 11))
         score = 15;   /* XXX: must be below plug-in score to allow overriding */
 
     return score;

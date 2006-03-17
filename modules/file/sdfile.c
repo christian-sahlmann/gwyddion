@@ -134,7 +134,7 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    p = fileinfo->buffer;
+    p = fileinfo->head;
     len = fileinfo->buffer_len;
     if (sdfile_read_header_bin((const guchar**)&p, &len, &sdfile, NULL)
         && SDF_HEADER_SIZE_BIN + sdfile.expected_size == fileinfo->file_size
@@ -142,7 +142,7 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
         && !sdfile.check_type)
         return 100;
 
-    p = fileinfo->buffer;
+    p = fileinfo->head;
     len = fileinfo->buffer_len;
     if (sdfile_read_header_text(&p, &len, &sdfile, &steps, NULL)
         && sdfile.expected_size <= fileinfo->file_size

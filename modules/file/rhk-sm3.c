@@ -281,7 +281,7 @@ rhk_sm3_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_TOTAL_SIZE
-        && memcmp(fileinfo->buffer + MAGIC_OFFSET, MAGIC, MAGIC_SIZE) == 0)
+        && memcmp(fileinfo->head + MAGIC_OFFSET, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
 
     return score;

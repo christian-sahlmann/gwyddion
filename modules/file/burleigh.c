@@ -128,7 +128,7 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < 4)
         return 0;
 
-    buffer = fileinfo->buffer;
+    buffer = fileinfo->head;
     version = get_FLOAT(&buffer);
     version_int = ROUND(10*version);
     gwy_debug("Version: %g", version);

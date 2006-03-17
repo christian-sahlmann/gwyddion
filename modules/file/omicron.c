@@ -122,14 +122,14 @@ omicron_detect(const GwyFileDetectInfo *fileinfo,
 
     /* Quick check to skip most non-matching files */
     if (fileinfo->buffer_len < 100
-        || fileinfo->buffer[0] != ';')
+        || fileinfo->head[0] != ';')
         return 0;
 
     for (i = 1; i + MAGIC_SIZE+1 < fileinfo->buffer_len; i++) {
-        if (fileinfo->buffer[i] != ';' && !g_ascii_isspace(fileinfo->buffer[i]))
+        if (fileinfo->head[i] != ';' && !g_ascii_isspace(fileinfo->head[i]))
             break;
     }
-    if (memcmp(fileinfo->buffer + i, MAGIC, MAGIC_SIZE) == 0)
+    if (memcmp(fileinfo->head + i, MAGIC, MAGIC_SIZE) == 0)
         return 100;
 
     return 0;

@@ -158,8 +158,8 @@ mifile_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
     if (fileinfo->buffer_len > IMAGE_MAGIC_SIZE
-        && (!memcmp(fileinfo->buffer, IMAGE_MAGIC, IMAGE_MAGIC_SIZE)
-            || !memcmp(fileinfo->buffer, SPECT_MAGIC, SPECT_MAGIC_SIZE)))
+        && (!memcmp(fileinfo->head, IMAGE_MAGIC, IMAGE_MAGIC_SIZE)
+            || !memcmp(fileinfo->head, SPECT_MAGIC, SPECT_MAGIC_SIZE)))
         score = 100;
 
     return score;

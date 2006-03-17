@@ -140,7 +140,7 @@ ezdfile_detect(const GwyFileDetectInfo *fileinfo,
                 ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && !memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE))
+        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
         score = 100;
 
     return score;

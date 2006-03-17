@@ -433,35 +433,35 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     /* FIXME: GdkPixbuf doesn't good a good job regarding detection
      * we do some sanity check ourselves */
     if (gwy_strequal(name, "png")
-        && memcmp(fileinfo->buffer, "\x89PNG\r\n\x1a\n", 8) != 0)
+        && memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n", 8) != 0)
         return 0;
     if (gwy_strequal(name, "bmp")
-        && strncmp(fileinfo->buffer, "BM", 2) != 0)
+        && strncmp(fileinfo->head, "BM", 2) != 0)
         return 0;
     if (gwy_strequal(name, "pnm")
-        && (fileinfo->buffer[0] != 'P' || !g_ascii_isdigit(fileinfo->buffer[1])))
+        && (fileinfo->head[0] != 'P' || !g_ascii_isdigit(fileinfo->head[1])))
         return 0;
     if (gwy_strequal(name, "xpm")
-        && strncmp(fileinfo->buffer, "/* XPM */", 9) != 0)
+        && strncmp(fileinfo->head, "/* XPM */", 9) != 0)
         return 0;
     if (gwy_strequal(name, "tiff")
-        && memcmp(fileinfo->buffer, "MM\x00\x2a", 4) != 0
-        && memcmp(fileinfo->buffer, "II\x2a\x00", 4) != 0)
+        && memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
+        && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
         return 0;
     if (gwy_strequal(name, "jpeg")
-        && memcmp(fileinfo->buffer, "\xff\xd8", 2) != 0)
+        && memcmp(fileinfo->head, "\xff\xd8", 2) != 0)
         return 0;
     if (gwy_strequal(name, "pcx")
-        && (fileinfo->buffer[0] != '\x0a' || fileinfo->buffer[1] > 0x05))
+        && (fileinfo->head[0] != '\x0a' || fileinfo->head[1] > 0x05))
         return 0;
     if (gwy_strequal(name, "gif")
-        && strncmp(fileinfo->buffer, "GIF8", 4) != 0)
+        && strncmp(fileinfo->head, "GIF8", 4) != 0)
         return 0;
     if (gwy_strequal(name, "svg")
-        && strncmp(fileinfo->buffer, "<?xml", 5) != 0)
+        && strncmp(fileinfo->head, "<?xml", 5) != 0)
         return 0;
     if (gwy_strequal(name, "ras")
-        && memcmp(fileinfo->buffer, "\x59\xa6\x6a\x95", 4) != 0)
+        && memcmp(fileinfo->head, "\x59\xa6\x6a\x95", 4) != 0)
         return 0;
     /* FIXME: cannot detect targa, must try loader */
 
@@ -470,7 +470,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     if (gdk_pixbuf_loader_write(loader,
-                                fileinfo->buffer, fileinfo->buffer_len, &err))
+                                fileinfo->head, fileinfo->buffer_len, &err))
         score = 80;
     else {
         gwy_debug("%s", err->message);

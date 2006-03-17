@@ -44,7 +44,8 @@ typedef struct {
     const gchar *name_lowercase;
     gsize file_size;
     guint buffer_len;
-    const guchar *buffer;
+    const guchar *head;
+    const guchar *tail;
 } GwyFileDetectInfo;
 
 typedef gint           (*GwyFileDetectFunc) (const GwyFileDetectInfo *fileinfo,

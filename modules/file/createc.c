@@ -102,7 +102,7 @@ createc_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, ".dat") ? 10 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->buffer, MAGIC_TXT, MAGIC_SIZE) == 0)
+        && memcmp(fileinfo->head, MAGIC_TXT, MAGIC_SIZE) == 0)
         score = 100;
 
     return score;

@@ -160,8 +160,8 @@ nanoscope_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && (memcmp(fileinfo->buffer, MAGIC_TXT, MAGIC_SIZE) == 0
-            || memcmp(fileinfo->buffer, MAGIC_BIN, MAGIC_SIZE) == 0))
+        && (memcmp(fileinfo->head, MAGIC_TXT, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC_BIN, MAGIC_SIZE) == 0))
         score = 100;
 
     return score;

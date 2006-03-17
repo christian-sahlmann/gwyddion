@@ -233,7 +233,7 @@ witec_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->file_size >= WITEC_SIZE_MIN
         && fileinfo->buffer_len >= WITEC_SIZE_HEADER) {
         WITecHeader header;
-        const guchar *p = fileinfo->buffer;
+        const guchar *p = fileinfo->head;
         gsize len = fileinfo->file_size;
         gsize expected;
 

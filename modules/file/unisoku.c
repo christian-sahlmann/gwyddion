@@ -157,7 +157,7 @@ unisoku_detect(const GwyFileDetectInfo *fileinfo,
                ? 10 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0
+        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0
         && g_str_has_suffix(fileinfo->name_lowercase, EXTENSION_HEADER)) {
         gchar *data_name;
 

@@ -116,7 +116,7 @@ hitachi_detect(const GwyFileDetectInfo *fileinfo,
 
     if (fileinfo->buffer_len > MAGIC_SIZE
         && fileinfo->file_size >= HEADER_SIZE + 2
-        && !memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE))
+        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
         score = 100;
 
     return score;
@@ -135,10 +135,10 @@ hitachi_old_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < HEADER_SIZE_OLD
         || fileinfo->file_size < HEADER_SIZE_OLD + 2
         /* This is actually header size (0x100), just weed out non-AFM files */
-        || fileinfo->buffer[0] != 0 || fileinfo->buffer[1] != 1)
+        || fileinfo->head[0] != 0 || fileinfo->head[1] != 1)
         return 0;
 
-    p = fileinfo->buffer + RES_OFFSET_OLD;
+    p = fileinfo->head + RES_OFFSET_OLD;
     xres = get_WORD(&p);
     yres = get_WORD(&p);
 

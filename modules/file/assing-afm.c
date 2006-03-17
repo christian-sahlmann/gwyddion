@@ -101,7 +101,7 @@ aafm_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 12 : 0;
 
     if (fileinfo->buffer_len >= 12
-        && (res = ((guint)fileinfo->buffer[1] << 8 | fileinfo->buffer[0]))
+        && (res = ((guint)fileinfo->head[1] << 8 | fileinfo->head[0]))
         && fileinfo->file_size == 2*res*res + 10)
         score = 90;
 

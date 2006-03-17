@@ -100,7 +100,7 @@ wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, ".tom") ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && !memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE))
+        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
         score = 100;
 
     return score;
