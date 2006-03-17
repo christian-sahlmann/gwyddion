@@ -96,31 +96,27 @@ static const RemoveArgs remove_defaults = {
     GWY_MERGE_UNION,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.7",
+    "1.7.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
 module_register(void)
 {
-
     gwy_process_func_register("grain_rem_threshold",
                               (GwyProcessFunc)&remove_th,
                               N_("/_Grains/_Remove by Threshold..."),
                               NULL,
                               REMOVE_RUN_MODES,
-                              GWY_MENU_FLAG_DATA,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Remove grains by threshold"));
 
     return TRUE;
