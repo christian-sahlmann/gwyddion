@@ -35,10 +35,12 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyddion)
 
 CLEANFILES = \
-	gwywin32.bat \
 	modules.xml \
 	module-list.html \
 	module-list-nocss.html
+
+DISTCLEANFILES = \
+	gwywin32.bat
 
 INCLUDES = -I$(top_srcdir)
 
