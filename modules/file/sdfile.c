@@ -39,7 +39,7 @@ enum {
 };
 
 enum {
-    PING_SIZE = GWY_FILE_DETECT_BUFFER_SIZE
+    SDF_MIN_TEXT_SIZE = 160
 };
 
 typedef enum {
@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -149,6 +149,8 @@ sdfile_detect_bin(const GwyFileDetectInfo *fileinfo,
 
     p = fileinfo->head;
     len = fileinfo->buffer_len;
+    if (len <= SDF_HEADER_SIZE_BIN || fileinfo->head[0] != 'b')
+        return 0;
     if (sdfile_read_header_bin((const guchar**)&p, &len, &sdfile, NULL)
         && SDF_HEADER_SIZE_BIN + sdfile.expected_size == fileinfo->file_size
         && !sdfile.compression
@@ -171,6 +173,9 @@ sdfile_detect_text(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
 
     len = fileinfo->buffer_len;
+    if (len <= SDF_MIN_TEXT_SIZE || fileinfo->head[0] != 'a')
+        return 0;
+
     p = g_memdup(fileinfo->head, len + 1);
     p[len] = '\0';
     if (sdfile_read_header_text(&p, &len, &sdfile, NULL)
@@ -384,7 +389,7 @@ sdfile_read_header_text(gchar **buffer,
     gchar *val, *p;
 
     /* We do not need exact lenght of the minimum file */
-    if (*len < 160) {
+    if (*len < SDF_MIN_TEXT_SIZE) {
         err_TOO_SHORT(error);
         return FALSE;
     }
