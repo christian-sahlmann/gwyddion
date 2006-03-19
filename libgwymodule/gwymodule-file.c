@@ -408,55 +408,33 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
         return TRUE;
 
     if (g_stat(fileinfo->name, &st) != 0) {
-        g_free((gpointer)fileinfo->name_lowercase);
+        gwy_file_detect_free_info(fileinfo);
         return FALSE;
     }
     fileinfo->file_size = st.st_size;
+    if (!fileinfo->file_size)
+        return FALSE;
 
     if (!(fh = g_fopen(fileinfo->name, "rb"))) {
-        g_free((gpointer)fileinfo->name_lowercase);
+        gwy_file_detect_free_info(fileinfo);
         return FALSE;
     }
 
-    if (fileinfo->file_size <= 2*GWY_FILE_DETECT_BUFFER_SIZE) {
-        fileinfo->head = g_new0(guchar, fileinfo->file_size);
-        fileinfo->buffer_len = fread((gchar*)fileinfo->head,
-                                     1, fileinfo->file_size, fh);
+    fileinfo->buffer_len = MIN(fileinfo->file_size + 1,
+                               GWY_FILE_DETECT_BUFFER_SIZE);
+    fileinfo->head = g_new0(guchar, 2*fileinfo->buffer_len);
+    fileinfo->tail = fileinfo->head + fileinfo->buffer_len;
+    if (fread((gchar*)fileinfo->head, fileinfo->buffer_len - 1, 1, fh) < 1
+        || fseek(fh, -fileinfo->buffer_len, SEEK_END) != 0
+        || fread((gchar*)fileinfo->tail, fileinfo->buffer_len - 1, 1, fh) < 1) {
         fclose(fh);
-        if (fileinfo->buffer_len < fileinfo->file_size) {
-            gwy_file_detect_free_info(fileinfo);
-            return FALSE;
-        }
-        if (fileinfo->file_size >= GWY_FILE_DETECT_BUFFER_SIZE)
-            fileinfo->tail = fileinfo->head
-                             + (fileinfo->file_size
-                                - GWY_FILE_DETECT_BUFFER_SIZE);
-        else
-            fileinfo->tail = fileinfo->head;
+        gwy_file_detect_free_info(fileinfo);
+        return FALSE;
     }
-    else {
-        fileinfo->head = g_new0(guchar, 2*GWY_FILE_DETECT_BUFFER_SIZE);
-        fileinfo->tail = fileinfo->head + GWY_FILE_DETECT_BUFFER_SIZE;
-        if (fread((gchar*)fileinfo->head, 1, GWY_FILE_DETECT_BUFFER_SIZE, fh)
-            < GWY_FILE_DETECT_BUFFER_SIZE) {
-            fclose(fh);
-            gwy_file_detect_free_info(fileinfo);
-            return FALSE;
-        }
-        if (fseek(fh, -GWY_FILE_DETECT_BUFFER_SIZE, SEEK_END) != 0) {
-            fclose(fh);
-            gwy_file_detect_free_info(fileinfo);
-            return FALSE;
-        }
-        if (fread((gchar*)fileinfo->tail, 1, GWY_FILE_DETECT_BUFFER_SIZE, fh)
-            < GWY_FILE_DETECT_BUFFER_SIZE) {
-            fclose(fh);
-            gwy_file_detect_free_info(fileinfo);
-            return FALSE;
-        }
-        fclose(fh);
-        fileinfo->buffer_len = GWY_FILE_DETECT_BUFFER_SIZE;
-    }
+
+    fclose(fh);
+    ((gchar*)fileinfo->head)[fileinfo->buffer_len - 1] = '\0';
+    ((gchar*)fileinfo->tail)[fileinfo->buffer_len - 1] = '\0';
 
     return TRUE;
 }
@@ -466,6 +444,10 @@ gwy_file_detect_free_info(GwyFileDetectInfo *fileinfo)
 {
     g_free((gpointer)fileinfo->name_lowercase);
     g_free((gpointer)fileinfo->head);
+    fileinfo->head = NULL;
+    fileinfo->tail = NULL;
+    fileinfo->name_lowercase = NULL;
+    fileinfo->buffer_len = 0;
 }
 
 /**
@@ -897,6 +879,14 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * It contains common information file type detection routines need to obtain.
  * It is shared between file detection functions and they must not modify its
  * contents.
+ *
+ * The @head and @tail buffers are always nul-terminated and thus safely usable
+ * with string functions.  When file is shorter than
+ * @GWY_FILE_DETECT_BUFFER_SIZE bytes, <literal>'\0'</literal> is appended
+ * to the end (therefore @buffer_len = @file_size + 1), otherwise the last
+ * byte is overwritten with <literal>'\0'</literal>.  In either case the
+ * last byte of @head and @tail cannot be assumed to be identical as in
+ * the file (or being part of the file at all).
  **/
 
 /**
