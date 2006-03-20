@@ -415,7 +415,7 @@ fit_graph_cb(StatsControls *data)
     /* NOTE: these will change depending on the deg of poly */
     const gchar *fit_func_name = "Polynom (order 1)";
     gint deg_of_poly = 1;
-    gdouble coeffs[deg_of_poly + 1];
+    gdouble coeffs[2];
     gint fit_func_index;
 
     graph = GWY_GRAPH(data->graph);
