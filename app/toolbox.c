@@ -62,7 +62,7 @@ static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 gint y,
                                                 GtkSelectionData *data,
                                                 guint info,
-                                                guint time,
+                                                guint time_,
                                                 gpointer user_data);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
@@ -816,7 +816,7 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
                           G_GNUC_UNUSED gint y,
                           GtkSelectionData *data,
                           G_GNUC_UNUSED guint info,
-                          guint time,
+                          guint time_,
                           G_GNUC_UNUSED gpointer user_data)
 {
     gchar *filename;
@@ -825,13 +825,13 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
     gint i, n;
 
     if (data->length <= 0 || data->format != 8) {
-        gtk_drag_finish(context, FALSE, FALSE, time);
+        gtk_drag_finish(context, FALSE, FALSE, time_);
         return;
     }
 
     file_list = g_strsplit((gchar*)data->data, "\n", 0);
     if (!file_list) {
-        gtk_drag_finish(context, FALSE, FALSE, time);
+        gtk_drag_finish(context, FALSE, FALSE, time_);
         return;
     }
 
@@ -854,7 +854,7 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         }
     }
     g_strfreev(file_list);
-    gtk_drag_finish(context, ok, FALSE, time);
+    gtk_drag_finish(context, ok, FALSE, time_);
 }
 
 static void

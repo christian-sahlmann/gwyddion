@@ -55,9 +55,9 @@ gwy_debug_objects_enable(gboolean enable)
 static void
 debug_objects_set_time(gpointer data, G_GNUC_UNUSED GObject *exobject)
 {
-    gdouble *time = (gdouble*)data;
+    gdouble *elapsed_time = (gdouble*)data;
 
-    *time = g_timer_elapsed(debug_objects_timer, NULL);
+    *elapsed_time = g_timer_elapsed(debug_objects_timer, NULL);
 }
 
 /**
