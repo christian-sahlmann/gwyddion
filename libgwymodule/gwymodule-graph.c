@@ -126,9 +126,7 @@ gwy_graph_func_run(const guchar *name,
     func_info = g_hash_table_lookup(graph_funcs, name);
     g_return_if_fail(func_info);
     g_return_if_fail(GWY_IS_GRAPH(graph));
-    _gwy_module_watch_settings(GWY_MODULE_PREFIX_GRAPH, name);
     func_info->func(graph, name);
-    _gwy_module_unwatch_settings();
 }
 
 static void

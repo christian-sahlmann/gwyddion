@@ -135,9 +135,7 @@ gwy_process_func_run(const guchar *name,
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_if_fail(run & func_info->run);
     g_return_if_fail(GWY_IS_CONTAINER(data));
-    _gwy_module_watch_settings(GWY_MODULE_PREFIX_PROC, name);
     func_info->func(data, run, name);
-    _gwy_module_unwatch_settings();
 }
 
 static void

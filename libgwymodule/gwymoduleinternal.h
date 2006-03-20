@@ -60,16 +60,6 @@ gboolean _gwy_graph_func_remove             (const gchar *name);
 G_GNUC_INTERNAL
 gboolean _gwy_layer_func_remove             (const gchar *name);
 
-/* XXX XXX XXX: pedantic check */
-G_GNUC_INTERNAL
-void
-_gwy_module_watch_settings(const gchar *modname,
-                           const gchar *funcname);
-
-G_GNUC_INTERNAL
-void
-_gwy_module_unwatch_settings(void);
-
 G_END_DECLS
 
 #endif /* __GWY_MODULE_INTERNAL_H__ */
