@@ -1,9 +1,9 @@
 rem vim: set ff=dos :
 deltree /y gwyddion-cvs
 wget -t 1 http://trific.ath.cx/Ftp/gwyddion/gwyddion-@VERSION@.tar.gz
-"c:\Program Files\7-Zip\7z.exe" x -y gwyddion-@VERSION@.tar.gz
-"c:\Program Files\7-Zip\7z.exe" x -y gwyddion-@VERSION@.tar
-ren gwyddion-@VERSION@ gwyddion-cvs
+"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-@VERSION@.tar.gz"
+"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-@VERSION@.tar"
+rename "gwyddion-@VERSION@" gwyddion-cvs
 copy unix2dos.exe "gwyddion-cvs\unix2dos.exe"
 copy upload.bat "gwyddion-cvs\upload.bat"
 cd gwyddion-cvs
@@ -13,8 +13,8 @@ nmake -f makefile.msc install -x install_log > install_log2
 unix2dos.exe data\gwyddion.iss inst\gwyddion.iss
 cd inst
 "c:\Program Files\Inno Setup 4\iscc.exe" gwyddion.iss
-ren Gwyddion-@VERSION@.exe Gwyddion-cvs.exe
+rename "Gwyddion-@VERSION@.exe" Gwyddion-cvs.exe
 cd ..
-upload.bat download/test inst\Gwyddion-cvs.exe
-upload.bat logs make_log2
-upload.bat logs install_log2
+upload.bat /public_html/download/test inst\Gwyddion-cvs.exe
+upload.bat /public_html/logs make_log2
+upload.bat /public_html/logs install_log2
