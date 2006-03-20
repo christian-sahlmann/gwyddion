@@ -297,25 +297,25 @@ AC_SUBST([GTKGLEXT_DEPENDENCY])
 # TIFF
 # TODO: Add some message to end of configure what is supported and what isn't
 # Missing libtiff is not fatal.
-GWY_WITH([libtiff],,[build with TIFF support])
-if test x$enable_libtiff != xno && test -z "$LIBTIFF"; then
+GWY_WITH([tiff],,[build with TIFF support])
+if test x$enable_tiff != xno && test -z "$LIBTIFF"; then
   AC_CHECK_LIB(tiff, TIFFReadScanline,
-    [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff', [enable_libtiff=no])],
+    [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff', [enable_tiff=no])],
     [AC_CHECK_LIB(tiff, TIFFWriteScanline,
       [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff -ljpeg -lz',
-        [enable_libtiff=no])],
+        [enable_tiff=no])],
       [AC_CHECK_LIB(tiff34, TIFFFlushData,
         [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff34 -ljpeg -lz',
-          [enable_libtiff=no])],
-        [enable_libtiff=no;],
+          [enable_tiff=no])],
+        [enable_tiff=no;],
         [-ljpeg -lz])],
       [-ljpeg -lz])],
     [])
 fi
-if test x$enable_libtiff != xno && test -n "$LIBTIFF"; then
+if test x$enable_tiff != xno && test -n "$LIBTIFF"; then
   AC_DEFINE(HAVE_TIFF,1,[Define if we have the TIFF library.])
 fi
-AM_CONDITIONAL([HAVE_TIFF],[test x$enable_libtiff != xno && test -n "$LIBTIFF"])
+AM_CONDITIONAL([HAVE_TIFF],[test x$enable_tiff != xno && test -n "$LIBTIFF"])
 AC_SUBST(LIBTIFF)
 
 #############################################################################
@@ -337,8 +337,8 @@ AC_ARG_WITH([hdf4],
 AC_ARG_WITH([extra-hdf4-libs],
   AS_HELP_STRING(
     [--extra-hdf4-libs=LIBS],
-    [Extra libraries HDF4 depends on @<:@default=-ldf -ljpeg -lz@:>@]),
-    [extra_hdf4_libs="${withval}"],
+    [Extra libraries HDF4 depends on @<:@default=-ljpeg -lz@:>@]),
+    [extra_hdf4_libs="-ldf ${withval}"],
     [extra_hdf4_libs="-ldf -ljpeg -lz"])
 if test x$enable_libhdf4 != xno; then
   SAVEDLDFLAGS="${LDFLAGS}"
@@ -533,7 +533,7 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF support (including JPK files):  $enable_libtiff"
+echo "  TIFF support (including JPK files):  $enable_tiff"
 echo "  With FFTW3:                          $enable_fftw3"
 echo "  With HDF4:                           $enable_hdf4"
 echo "  With OpenGL 3D widgets:              $enable_gl"
