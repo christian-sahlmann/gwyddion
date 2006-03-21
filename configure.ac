@@ -434,10 +434,8 @@ AM_CONDITIONAL([ENABLE_PLUGIN_PROXY],[test "$enable_plugin_proxy" != no])
 
 #############################################################################
 # RPM
-RPM_RELEASE=1
 RPM_VERSION=`echo AC_PACKAGE_VERSION`
 
-AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
 AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",

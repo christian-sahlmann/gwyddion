@@ -7,7 +7,7 @@
 Summary: An SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
-Release: @RPM_RELEASE@
+Release: 1
 License: GNU GPL
 Group: Applications/Engineering
 Source: http://trific.ath.cx/Ftp/%{name}/@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2
