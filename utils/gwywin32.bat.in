@@ -16,5 +16,7 @@ cd inst
 rename "Gwyddion-@VERSION@.exe" Gwyddion-cvs.exe
 cd ..
 upload.bat /public_html/download/test inst\Gwyddion-cvs.exe
+upload.bat /public_html/logs make_log
+upload.bat /public_html/logs install_log
 upload.bat /public_html/logs make_log2
 upload.bat /public_html/logs install_log2
