@@ -4,7 +4,7 @@
 %{expand:%global distro_is_mdk %(test ! -f /etc/mandrake-release; echo $?)}
 %{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
-Summary: An SPM data analysis framework.
+Summary: An SPM data visualization and analysis tool
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
 Release: 1
@@ -12,25 +12,32 @@ License: GNU GPL
 Group: Applications/Engineering
 Source: http://trific.ath.cx/Ftp/%{name}/@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2
 URL: @PACKAGE_URL@
-Prefix: %{_prefix}
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
-Prereq: /sbin/ldconfig
-Prereq: desktop-file-utils >= 0.9
-BuildPrereq: xorg-x11-devel
-BuildPrereq: pango-devel >= 1.8
-BuildPrereq: gtk2-devel >= 2.6
-BuildPrereq: glib2-devel >= 2.6
-BuildPrereq: gtkglext-devel >= 1.0
-BuildPrereq: libpng-devel
-BuildPrereq: libjpeg-devel
-BuildPrereq: libtiff-devel >= 3.6
-BuildPrereq: python >= 2.2
-BuildPrereq: ruby >= 1.8
-BuildPrereq: perl >= 5.005
-BuildPrereq: gettext
-BuildPrereq: sed
+Requires(pre): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
+Requires(pre): desktop-file-utils >= 0.9
+Requires(postun): desktop-file-utils >= 0.9
+BuildRequires: xorg-x11-devel
+BuildRequires: hdf-devel
+BuildRequires: pango-devel >= 1.8
+BuildRequires: gtk2-devel >= 2.6
+BuildRequires: glib2-devel >= 2.6
+BuildRequires: gtkglext-devel >= 1.0
+BuildRequires: libpng-devel
+BuildRequires: libjpeg-devel
+BuildRequires: libtiff-devel >= 3.6
+BuildRequires: python >= 2.2
+BuildRequires: ruby >= 1.8
+BuildRequires: perl >= 5.005
+BuildRequires: gettext >= 0.13
+BuildRequires: sed
+%ifarch %ix86
+BuildRequires: fftw >= 3.0
+%else
+BuildRequires: fftw >= 3.1
+%endif
 %if %{distro_is_suse}
-BuildPrereq: xorg-x11-Mesa-devel
+BuildRequires: xorg-x11-Mesa-devel
 %endif
 
 %package devel
@@ -69,7 +76,7 @@ your own plug-ins.
 %setup -q
 
 %build
-%configure --disable-desktop-file-update
+%configure --disable-pascal --disable-desktop-file-update
 %__make
 
 %install
@@ -77,7 +84,8 @@ your own plug-ins.
 make install DESTDIR=$RPM_BUILD_ROOT
 find $RPM_BUILD_ROOT%{_libdir}/%{name}/modules -name \*.so | xargs strip
 # We don't need these
-find $RPM_BUILD_ROOT%{_libdir}/%{name}/modules -name \*.la | xargs rm
+find $RPM_BUILD_ROOT%{_libdir} -name \*.la | xargs rm
+%find_lang %{name}
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
@@ -92,7 +100,7 @@ update-mime-database %{_datadir}/mime
 update-desktop-database %{_datadir}/applications
 update-mime-database %{_datadir}/mime
 
-%files
+%files -f %{name}.lang
 %defattr(755,root,root)
 %{_bindir}/%{name}
 %defattr(-,root,root)
@@ -106,7 +114,7 @@ update-mime-database %{_datadir}/mime
 %dir %{_datadir}/%{name}/gradients
 %dir %{_datadir}/%{name}
 %{_mandir}/man1/%{name}.*
-%dir %{_datadir}/pixmaps/%{name}.png
+%{_datadir}/pixmaps/%{name}.png
 %{_libdir}/%{name}/modules/file/*.so
 %{_libdir}/%{name}/modules/graph/*.so
 %{_libdir}/%{name}/modules/layer/*.so
@@ -120,12 +128,6 @@ update-mime-database %{_datadir}/mime
 %dir %{_libdir}/%{name}/modules/tool
 %dir %{_libdir}/%{name}/modules
 %dir %{_libdir}/%{name}
-#%{_libdir}/libgwyapp.so.*
-#%{_libdir}/libgwyddion.so.*
-#%{_libdir}/libgwydgets.so.*
-#%{_libdir}/libgwydraw.so.*
-#%{_libdir}/libgwymodule.so.*
-#%{_libdir}/libgwyprocess.so.*
 %{_libdir}/libgwyapp-1.99.*.so
 %{_libdir}/libgwyddion-1.99.*.so
 %{_libdir}/libgwydgets-1.99.*.so
@@ -134,7 +136,6 @@ update-mime-database %{_datadir}/mime
 %{_libdir}/libgwyprocess-1.99.*.so
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
-%{_datadir}/locale/*/LC_MESSAGES/*.mo
 
 %files devel
 %defattr(-,root,root)
@@ -180,18 +181,6 @@ update-mime-database %{_datadir}/mime
 %doc %dir %{_mandir}/man3
 %{_libdir}/pkgconfig/%{name}.pc
 %dir %{_libdir}/pkgconfig
-#%{_libdir}/libgwyapp.so
-#%{_libdir}/libgwyddion.so
-#%{_libdir}/libgwydgets.so
-#%{_libdir}/libgwydraw.so
-#%{_libdir}/libgwymodule.so
-#%{_libdir}/libgwyprocess.so
-%{_libdir}/libgwyapp.la
-%{_libdir}/libgwyddion.la
-%{_libdir}/libgwydgets.la
-%{_libdir}/libgwydraw.la
-%{_libdir}/libgwymodule.la
-%{_libdir}/libgwyprocess.la
 
 %files plugins
 %defattr(755,root,root)
