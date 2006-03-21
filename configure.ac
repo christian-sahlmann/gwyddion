@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060320, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.6cvs20060321, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -340,7 +340,7 @@ AC_ARG_WITH([extra-hdf4-libs],
     [Extra libraries HDF4 depends on @<:@default=-ljpeg -lz@:>@]),
     [extra_hdf4_libs="-ldf ${withval}"],
     [extra_hdf4_libs="-ldf -ljpeg -lz"])
-if test x$enable_libhdf4 != xno; then
+if test x$enable_hdf4 != xno; then
   SAVEDLDFLAGS="${LDFLAGS}"
   # If someone is really really lucky, we can find the library just by trying
   # to link with it.
@@ -352,12 +352,12 @@ if test x$enable_libhdf4 != xno; then
   LDFLAGS="${SAVEDLDFLAGS} ${flags}"
   AC_CHECK_LIB(mfhdf,SDgetdimid,
                [HDF4LIBS="$flags -lmfhdf $extra_hdf4_libs"],
-               [enable_libhdf4=no],
+               [enable_hdf4=no],
                [$extra_hdf4_libs])
   LDFLAGS="${SAVEDLDFLAGS}"
 fi
 # Headers
-if test x$enable_libhdf4 != xno; then
+if test x$enable_hdf4 != xno; then
   SAVEDCPPFLAGS="${CPPFLAGS}"
   # If someone is really really lucky, we can find the header files just by
   # trying to include them.
@@ -369,10 +369,10 @@ if test x$enable_libhdf4 != xno; then
   CPPFLAGS="${SAVEDCPPFLAGS} ${flags}"
   AC_CHECK_HEADER(mfhdf.h,
                   [HDF4CPPFLAGS="$flags"],
-                  [enable_libhdf4=no])
+                  [enable_hdf4=no])
   CPPFLAGS="${SAVEDCPPFLAGS}"
 fi
-AM_CONDITIONAL([HAVE_HDF4],[test x$enable_libhdf4 != xno])
+AM_CONDITIONAL([HAVE_HDF4],[test x$enable_hdf4 != xno])
 AC_SUBST(HDF4LIBS)
 AC_SUBST(HDF4CPPFLAGS)
 
