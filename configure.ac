@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060321, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.6cvs20060322, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -336,7 +336,7 @@ AC_ARG_WITH([hdf4],
 # Linking
 AC_ARG_WITH([extra-hdf4-libs],
   AS_HELP_STRING(
-    [--extra-hdf4-libs=LIBS],
+    [--with-extra-hdf4-libs=LIBS],
     [Extra libraries HDF4 depends on @<:@default=-ljpeg -lz@:>@]),
     [extra_hdf4_libs="-ldf ${withval}"],
     [extra_hdf4_libs="-ldf -ljpeg -lz"])

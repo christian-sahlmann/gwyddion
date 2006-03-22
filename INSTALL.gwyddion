@@ -32,6 +32,13 @@ Recommended though optional, for 3D data view:
 Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
 
+Optional, for Hierarchical Data Format v4 import:
+- libHDF4, including development files; note automatic detection of HDF4
+  is problematic, you may need to explicitly specify --with-hdf4=/usr,
+  --with-hdf4=/usr/local, --with-hdf4=/opt/hdf, or something similar to
+  configure.  The configure option --with-extra-hdf4-libs controls additional
+  libraries to use for linking with HDF4.
+
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
 - Ruby-1.8 or newer
@@ -41,8 +48,9 @@ Optional, for development of plug-in in various languages:
 Read generic GNU installation instruction in INSTALL that describe the build
 process, common program arguments, and important environment variables.
 
-If you have Gtk+ in a nonstandard directory, assure PKG_CONFIG_PATH
-environment variable points to directory where gtk+-2.0.pc et al. resides.
+If you have Gtk+ (or other packages, e.g., FFTW) in a nonstandard directory,
+assure PKG_CONFIG_PATH environment variable points to directory where
+gtk+-2.0.pc (e.g.) resides.
 
 Quick instructions:
 Unpack tarball with sources, cd to the created directory, then run:
