@@ -26,14 +26,16 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 
-/* On MIPS (hypotetically) we get _MIPS_SZLONG from limits.h, otherwise
- * the value does not matter */
+/* Fix netcdf.h using _MIPS_SZLONG unconditionally.
+ * On MIPS (hypotetically) we get _MIPS_SZLONG from limits.h, otherwise
+ * the value does not matter. */
 #ifndef _MIPS_SZLONG
 #define _MIPS_SZLONG 4
 #endif
 
 #include <mfhdf.h>
 
+#include "get.h"
 #include "err.h"
 
 #define MAGIC "\x0e\x03\x13\x01"
@@ -81,12 +83,21 @@ hdf_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
 
     /* Whatver Hishdf() does, we check magic header ourselves because it
-     * weeds out non-HDF files very quickly */
+     * weeds out non-HDF files very quickly, namely no fopen() is needed. */
     if (fileinfo->buffer_len > MAGIC_SIZE
         && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
         return Hishdf(fileinfo->name) ? 90 : 0;
 
     return 0;
+}
+
+static inline void
+err_HDF(GError **error,
+        const gchar *funcname)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("HDF library function %s failed with error: %s."),
+                funcname, HEstring(HEvalue(1)));
 }
 
 #ifdef DEBUG
@@ -126,13 +137,229 @@ describe_data_type(int32 id)
 }
 #endif
 
-static inline void
-err_HDF(GError **error,
-        const gchar *funcname)
+static guint
+get_data_type_size(int32 id,
+                   GError **error)
 {
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("HDF library function %s failed with error: %s."),
-                funcname, HEstring(HEvalue(1)));
+    /* Native data format is Evil. */
+    if (id & DFNT_NATIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    N_("HDF data type is `native', in other words only the "
+                       "creator knows what the data type is.  Such a data "
+                       "cannot be reliably imported to other applications, "
+                       "please urge on the creator of this file to write "
+                       "portable HDF files."));
+        return 0;
+    }
+
+    switch (id & ~(DFNT_NATIVE | DFNT_LITEND)) {
+        case DFNT_CHAR8:
+        case DFNT_UCHAR8:
+        case DFNT_INT8:
+        case DFNT_UINT8:
+        return 1;
+        break;
+
+        case DFNT_INT16:
+        case DFNT_UINT16:
+        return 2;
+        break;
+
+        case DFNT_INT32:
+        case DFNT_UINT32:
+        case DFNT_FLOAT32:
+        return 4;
+        break;
+
+        case DFNT_FLOAT64:
+        return 8;
+        break;
+
+        default:
+        err_UNSUPPORTED(error, "data_type");
+        return 0;
+        break;
+    }
+}
+
+static GwyDataField*
+read_data_field(int32 sd_id,
+                int32 sds_id,
+                int32 data_type,
+                int32 *dim_sizes,
+                GError **error)
+{
+    gchar label[MAX_NC_NAME], unit[MAX_NC_NAME];
+    GwyDataField *dfield;
+    int32 start[2], edges[2];
+    guint data_size;
+    guchar *d;
+    gint i, xres, yres;
+    gdouble *data;
+    intn status;
+
+    if ((data_size = get_data_type_size(data_type, error)) == 0)
+        return NULL;
+
+    status = SDgetdatastrs(sds_id, label, unit, NULL, NULL, MAX_NC_NAME);
+    gwy_debug("label: `%s'", label);
+    gwy_debug("unit: `%s'", unit);
+
+    start[0] = start[1] = 0;
+    yres = edges[0] = dim_sizes[0];
+    xres = edges[1] = dim_sizes[1];
+    d = g_malloc(edges[0] * edges[1] * data_size);
+    if ((status = SDreaddata(sds_id, start, NULL, edges, d)) == FAIL) {
+        err_HDF(error, "SDreaddata");
+        g_free(d);
+        return NULL;
+    }
+
+    dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+    data = gwy_data_field_get_data(dfield);
+    switch (data_type) {
+        case DFNT_CHAR8:
+        case DFNT_CHAR8 | DFNT_LITEND:
+        case DFNT_INT8:
+        case DFNT_INT8 | DFNT_LITEND:
+        {
+            gint8 *d8 = (gint8*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = d8[i];
+        }
+        break;
+
+        case DFNT_UCHAR8:
+        case DFNT_UCHAR8 | DFNT_LITEND:
+        case DFNT_UINT8:
+        case DFNT_UINT8 | DFNT_LITEND:
+        {
+            guint8 *d8 = (guint8*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = d8[i];
+        }
+        break;
+
+        case DFNT_INT16:
+        {
+            gint16 *d16 = (gint16*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT16_FROM_BE(d16[i]);
+        }
+        break;
+
+        case DFNT_INT16 | DFNT_LITEND:
+        {
+            gint16 *d16 = (gint16*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT16_FROM_LE(d16[i]);
+        }
+        break;
+
+        case DFNT_UINT16:
+        {
+            gint16 *d16 = (gint16*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GUINT16_FROM_BE(d16[i]);
+        }
+        break;
+
+        case DFNT_UINT16 | DFNT_LITEND:
+        {
+            gint16 *d16 = (gint16*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GUINT16_FROM_LE(d16[i]);
+        }
+        break;
+
+        case DFNT_INT32:
+        {
+            gint32 *d32 = (gint32*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT32_FROM_BE(d32[i]);
+        }
+        break;
+
+        case DFNT_INT32 | DFNT_LITEND:
+        {
+            gint32 *d32 = (gint32*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT32_FROM_LE(d32[i]);
+        }
+        break;
+
+        case DFNT_UINT32:
+        {
+            gint32 *d32 = (gint32*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GUINT32_FROM_BE(d32[i]);
+        }
+        break;
+
+        case DFNT_UINT32 | DFNT_LITEND:
+        {
+            gint32 *d32 = (gint32*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GUINT32_FROM_LE(d32[i]);
+        }
+        break;
+
+        case DFNT_FLOAT32:
+        {
+            const guchar *p = d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = get_FLOAT_BE(&p);
+        }
+        break;
+
+        case DFNT_FLOAT32 | DFNT_LITEND:
+        {
+            const guchar *p = d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = get_FLOAT(&p);
+        }
+        break;
+
+        case DFNT_FLOAT64:
+        {
+            const guchar *p = d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = get_DOUBLE_BE(&p);
+        }
+        break;
+
+        case DFNT_FLOAT64 | DFNT_LITEND:
+        {
+            const guchar *p = d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = get_DOUBLE(&p);
+        }
+        break;
+
+        default:
+        err_UNSUPPORTED(error, "data_type");
+        gwy_object_unref(dfield);
+        g_free(d);
+        return NULL;
+    }
+
+    g_free(d);
+
+    return dfield;
 }
 
 static GwyContainer*
@@ -147,8 +374,9 @@ hdf_load(const gchar *filename,
     int32 dim_sizes[MAX_VAR_DIMS];
     int32 rank, data_type, n_attrs;
     char name[MAX_NC_NAME+1];
+    gchar key[24];
     intn status;
-    guint i;
+    guint i, ndata;
     gchar *s;
 
     if (!Hishdf(filename)) {
@@ -170,12 +398,22 @@ hdf_load(const gchar *filename,
               (guint)n_datasets, (guint)n_file_attrs);
 
     name[MAX_NC_NAME] = '\0';
+    ndata = 0;
+    container = gwy_container_new();
+
     for (sds_index = 0; sds_index < n_datasets; sds_index++) {
         gwy_debug("examining data set #%u", (guint)sds_index);
         if ((sds_id = SDselect(sd_id, sds_index)) == FAIL) {
             err_HDF(error, "SDselect");
             SDend(sd_id);
+            gwy_object_unref(container);
             return NULL;
+        }
+
+        if (SDiscoordvar(sds_id)) {
+            gwy_debug("array is a dimension scale, skipping");
+            SDend(sds_id);
+            continue;
         }
 
         if ((status = SDgetinfo(sds_id, name, &rank, dim_sizes,
@@ -183,10 +421,11 @@ hdf_load(const gchar *filename,
             err_HDF(error, "SDgetinfo");
             SDendaccess(sds_id);
             SDend(sd_id);
+            gwy_object_unref(container);
             return NULL;
         }
-        gwy_debug("name: %u, rank: %u, n_attrs: %u",
-                  (guint)name, (guint)rank, (guint)n_attrs);
+        gwy_debug("name: `%s', rank: %u, n_attrs: %u",
+                  name, (guint)rank, (guint)n_attrs);
 #ifdef DEBUG
         s = describe_data_type(data_type);
         gwy_debug("data_type: %u (%s)", (guint)data_type, s);
@@ -201,16 +440,38 @@ hdf_load(const gchar *filename,
             g_string_free(str, TRUE);
         }
 #endif
+        if (rank > 2) {
+            gwy_debug("ignoring data set with rank > 2");
+        }
+        else if (rank < 2) {
+            gwy_debug("ignoring data set with rank < 2, FIXME!");
+        }
+        else {
+            dfield = read_data_field(sd_id, sds_id, data_type, dim_sizes,
+                                     error);
+            if (!dfield) {
+                SDendaccess(sds_id);
+                SDend(sd_id);
+                gwy_object_unref(container);
+                return NULL;
+            }
+
+            g_snprintf(key, sizeof(key), "/%u/data", ndata);
+            gwy_container_set_object_by_name(container, key, dfield);
+            g_object_unref(dfield);
+        }
 
         if ((status = SDendaccess(sds_id)) == FAIL) {
             err_HDF(error, "SDendaccess");
             SDend(sd_id);
+            gwy_object_unref(container);
             return NULL;
         }
     }
 
     if ((status = SDend(sd_id)) == FAIL) {
         err_HDF(error, "SDend");
+        gwy_object_unref(container);
         return NULL;
     }
 
