@@ -69,7 +69,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("ecs",
+    gwy_file_func_register("ecsfile",
                            N_("ECS files (.img)"),
                            (GwyFileDetectFunc)&ecs_detect,
                            (GwyFileLoadFunc)&ecs_load,
