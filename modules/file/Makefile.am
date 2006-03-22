@@ -9,6 +9,14 @@ else
 tiff_sources = jpk.h jpkscan.c
 endif
 
+# When HDF4 is disabled, put the sources to EXTRA_DIST to include them in
+# make dist.
+if HAVE_HDF4
+hdf4_modules = hdf4file.la
+hdf4_sources =
+else
+hdf4_sources = hdf4file.c
+endif
 
 filedir = $(pkglibdir)/modules/file
 
@@ -22,6 +30,7 @@ file_LTLIBRARIES = \
 	ezdfile.la \
 	ecsfile.la \
 	gwyfile.la \
+	$(hdf4_modules) \
 	hitachi-afm.la \
 	$(tiff_modules) \
 	nanoscope.la \
@@ -47,6 +56,7 @@ noinst_HEADERS = \
 	get.h
 
 EXTRA_DIST = \
+	$(hdf4_sources) \
 	$(tiff_sources) \
 	makefile.msc \
 	makefile.msc.gwt
@@ -104,6 +114,12 @@ ezdfile_la_LIBADD = $(module_libadd)
 
 gwyfile_la_SOURCES = gwyfile.c
 gwyfile_la_LIBADD = $(module_libadd)
+
+if HAVE_HDF4
+hdf4file_la_SOURCES = hdf4file.c
+hdf4file_la_CPPFLAGS = $(HDF4CPPFLAGS)
+hdf4file_la_LIBADD = $(module_libadd) $(HDF4LIBS)
+endif
 
 hitachi_afm_la_SOURCES = hitachi-afm.c
 hitachi_afm_la_LIBADD = $(module_libadd)
