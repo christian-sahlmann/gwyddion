@@ -186,7 +186,7 @@ function webify_api() {
       cp $x/html/*.png $docdir/$(basename $x)
     fi
   done
-  rm $docdir/*/{left,right,home.up}.png
+  rm $docdir/*/{left,right,home,up}.png
   rsync --recursive --rsh=ssh $docdir $host:$(dirname $docdir)
 }
 
