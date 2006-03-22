@@ -1,5 +1,7 @@
 # @(#) $Id$
 
+tiff_modules = jpkscan.dll
+
 TOP_SRCDIR = ..\..
 MOD_TYPE = file
 <[[:MODULES:]]>
