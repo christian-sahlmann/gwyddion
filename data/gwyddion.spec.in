@@ -18,7 +18,6 @@ Requires(postun): /sbin/ldconfig
 Requires(pre): desktop-file-utils >= 0.9
 Requires(postun): desktop-file-utils >= 0.9
 BuildRequires: xorg-x11-devel
-BuildRequires: hdf-devel
 BuildRequires: pango-devel >= 1.8
 BuildRequires: gtk2-devel >= 2.6
 BuildRequires: glib2-devel >= 2.6
@@ -76,7 +75,7 @@ your own plug-ins.
 %setup -q
 
 %build
-%configure --with-hdf4=/usr --disable-pascal --disable-desktop-file-update
+%configure --disable-pascal --disable-desktop-file-update
 %__make
 
 %install

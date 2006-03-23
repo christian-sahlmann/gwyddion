@@ -26,15 +26,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 
-/* Fix netcdf.h using _MIPS_SZLONG unconditionally.
- * On MIPS (hypotetically) we get _MIPS_SZLONG from limits.h, otherwise
- * the value does not matter. */
-#ifndef _MIPS_SZLONG
-#define _MIPS_SZLONG 4
-#endif
-
-#include <mfhdf.h>
-
 #include "get.h"
 #include "err.h"
 
@@ -82,24 +73,14 @@ hdf_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
 
-    /* Whatver Hishdf() does, we check magic header ourselves because it
-     * weeds out non-HDF files very quickly, namely no fopen() is needed. */
     if (fileinfo->buffer_len > MAGIC_SIZE
         && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
-        return Hishdf(fileinfo->name) ? 90 : 0;
+        return 90;
 
     return 0;
 }
 
-static inline void
-err_HDF(GError **error,
-        const gchar *funcname)
-{
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("HDF library function %s failed with error: %s."),
-                funcname, HEstring(HEvalue(1)));
-}
-
+#if 0
 #ifdef DEBUG
 static struct {
     int32 id;
@@ -550,6 +531,16 @@ hdf_load(const gchar *filename,
     }
 
     return container;
+}
+#endif
+
+static GwyContainer*
+hdf_load(G_GNUC_UNUSED const gchar *filename,
+         G_GNUC_UNUSED GwyRunType mode,
+         GError **error)
+{
+    err_NO_DATA(error);
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

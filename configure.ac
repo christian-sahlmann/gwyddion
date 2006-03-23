@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060322, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.6cvs20060323, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -319,64 +319,6 @@ AM_CONDITIONAL([HAVE_TIFF],[test x$enable_tiff != xno && test -n "$LIBTIFF"])
 AC_SUBST(LIBTIFF)
 
 #############################################################################
-# HDF4
-# Optional.
-# First, the silly library comes with no script for automated compiler and
-# linker flag determination.  And ss if it was not enough, it is usually
-# hidden in some dark places where no paths lead.
-AC_ARG_WITH([hdf4],
-  AS_HELP_STRING([--with-hdf4=yes|no|DIR],
-                 [Build with HDF4 @<:@installed in DIR@:>@]),
-  [case "${withval}" in
-     yes|no) enable_hdf4=$withval; hdf4_path= ;;
-     *) enable_hdf4=yes; hdf4_path="${withval}" ;;
-   esac],
-  [enable_hdf4=yes; hdf4_path=]
-)
-# Linking
-AC_ARG_WITH([extra-hdf4-libs],
-  AS_HELP_STRING(
-    [--with-extra-hdf4-libs=LIBS],
-    [Extra libraries HDF4 depends on @<:@default=-ljpeg -lz@:>@]),
-    [extra_hdf4_libs="-ldf ${withval}"],
-    [extra_hdf4_libs="-ldf -ljpeg -lz"])
-if test x$enable_hdf4 != xno; then
-  SAVEDLDFLAGS="${LDFLAGS}"
-  # If someone is really really lucky, we can find the library just by trying
-  # to link with it.
-  if test x$hdf4_path = x; then
-    flags=
-  else
-    flags="-L${hdf4_path}/lib -L${hdf4_path}/lib/hdf"
-  fi
-  LDFLAGS="${SAVEDLDFLAGS} ${flags}"
-  AC_CHECK_LIB(mfhdf,SDgetdimid,
-               [HDF4LIBS="$flags -lmfhdf $extra_hdf4_libs"],
-               [enable_hdf4=no],
-               [$extra_hdf4_libs])
-  LDFLAGS="${SAVEDLDFLAGS}"
-fi
-# Headers
-if test x$enable_hdf4 != xno; then
-  SAVEDCPPFLAGS="${CPPFLAGS}"
-  # If someone is really really lucky, we can find the header files just by
-  # trying to include them.
-  if test x$hdf4_path = x; then
-    flags=
-  else
-    flags="-I${hdf4_path}/include -I${hdf4_path}/include/hdf"
-  fi
-  CPPFLAGS="${SAVEDCPPFLAGS} ${flags}"
-  AC_CHECK_HEADER(mfhdf.h,
-                  [HDF4CPPFLAGS="$flags"],
-                  [enable_hdf4=no])
-  CPPFLAGS="${SAVEDCPPFLAGS}"
-fi
-AM_CONDITIONAL([HAVE_HDF4],[test x$enable_hdf4 != xno])
-AC_SUBST(HDF4LIBS)
-AC_SUBST(HDF4CPPFLAGS)
-
-#############################################################################
 # Check for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
@@ -533,7 +475,6 @@ echo "================================================================="
 echo "Configuration:"
 echo "  TIFF support (including JPK files):  $enable_tiff"
 echo "  With FFTW3:                          $enable_fftw3"
-echo "  With HDF4:                           $enable_hdf4"
 echo "  With OpenGL 3D widgets:              $enable_gl"
 echo "================================================================="
 
