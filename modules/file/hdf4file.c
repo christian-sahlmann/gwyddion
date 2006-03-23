@@ -144,11 +144,7 @@ get_data_type_size(int32 id,
     /* Native data format is Evil. */
     if (id & DFNT_NATIVE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    N_("HDF data type is `native', in other words only the "
-                       "creator knows what the data type is.  Such a data "
-                       "cannot be reliably imported to other applications, "
-                       "please urge on the creator of this file to write "
-                       "portable HDF files."));
+                    N_("HDF data with `native' type is not supported."));
         return 0;
     }
 
@@ -189,21 +185,65 @@ read_data_field(int32 sd_id,
                 int32 *dim_sizes,
                 GError **error)
 {
-    gchar label[MAX_NC_NAME], unit[MAX_NC_NAME];
+    gchar label[MAX_NC_NAME];
+    gchar unitz[MAX_NC_NAME];
     GwyDataField *dfield;
     int32 start[2], edges[2];
+    int32 dim_id;
     guint data_size;
     guchar *d;
-    gint i, xres, yres;
+    guint i, xres, yres;
     gdouble *data;
     intn status;
 
     if ((data_size = get_data_type_size(data_type, error)) == 0)
         return NULL;
 
-    status = SDgetdatastrs(sds_id, label, unit, NULL, NULL, MAX_NC_NAME);
+    status = SDgetdatastrs(sds_id, label, unitz, NULL, NULL, MAX_NC_NAME);
+    if (status == FAIL) {
+        err_HDF(error, "SDgetdatastrs");
+        return NULL;
+    }
     gwy_debug("label: `%s'", label);
-    gwy_debug("unit: `%s'", unit);
+    gwy_debug("z-unit: `%s'", unitz);
+
+    if ((dim_id = SDgetdimid(sds_id, 0)) == FAIL) {
+        err_HDF(error, "SDgetdimid");
+        return NULL;
+    }
+    {
+        char dim_name[MAX_NC_NAME];
+        int32 n_values, dtype, n_attrs;
+
+        status = SDdiminfo(dim_id, dim_name, &n_values, &dtype, &n_attrs);
+        if (status == FAIL) {
+            err_HDF(error, "SDdiminfo");
+            return NULL;
+        }
+        gwy_debug("dim_name: `%s', n_values: %u, data_type: %u, n_attrs: %u",
+                  dim_name, (guint)n_values, (guint)dtype, (guint)n_attrs);
+    }
+    /*
+    status = SDgetdimstrs(dim_id, NULL, unity, NULL, MAX_NC_NAME);
+    if (status == FAIL) {
+        err_HDF(error, "SDgetdimstrs");
+        return NULL;
+    }
+    gwy_debug("y-unit: `%s'", unity);
+    */
+
+    if ((dim_id = SDgetdimid(sds_id, 1)) == FAIL) {
+        err_HDF(error, "SDgetdimid");
+        return NULL;
+    }
+    /*
+    status = SDgetdimstrs(dim_id, NULL, unitx, NULL, MAX_NC_NAME);
+    if (status == FAIL) {
+        err_HDF(error, "SDgetdimstrs");
+        return NULL;
+    }
+    gwy_debug("x-unit: `%s'", unitx);
+    */
 
     start[0] = start[1] = 0;
     yres = edges[0] = dim_sizes[0];
@@ -375,7 +415,7 @@ hdf_load(const gchar *filename,
     int32 rank, data_type, n_attrs;
     char name[MAX_NC_NAME+1];
     gchar key[24];
-    intn status;
+    intn status, isempty;
     guint i, ndata;
     gchar *s;
 
@@ -396,6 +436,18 @@ hdf_load(const gchar *filename,
     }
     gwy_debug("n_datasets: %u, n_file_attrs = %u",
               (guint)n_datasets, (guint)n_file_attrs);
+#ifdef DEBUG
+    for (i = 0; i < n_file_attrs; i++) {
+        char attr_name[MAX_NC_NAME];
+        int32 attr_type, attr_nvals;
+
+        status = SDattrinfo(sd_id, i, attr_name, &attr_type, &attr_nvals);
+        s = describe_data_type(attr_type);
+        gwy_debug("attr #%u (%s): data_type: %u (%s), n_vals: %u",
+                  i, attr_name, (guint)attr_type, s, (guint)attr_nvals);
+        g_free(s);
+    }
+#endif
 
     name[MAX_NC_NAME] = '\0';
     ndata = 0;
@@ -413,6 +465,18 @@ hdf_load(const gchar *filename,
         if (SDiscoordvar(sds_id)) {
             gwy_debug("array is a dimension scale, skipping");
             SDend(sds_id);
+            continue;
+        }
+
+        if ((status = SDcheckempty(sds_id, &isempty)) == FAIL) {
+            err_HDF(error, "SDcheckempty");
+            SDendaccess(sds_id);
+            SDend(sd_id);
+            gwy_object_unref(container);
+            return NULL;
+        }
+        if (isempty) {
+            SDendaccess(sds_id);
             continue;
         }
 
@@ -438,6 +502,16 @@ hdf_load(const gchar *filename,
                 g_string_append_printf(str, " %u", (guint)dim_sizes[i]);
             gwy_debug("dim_sizes:%s", str->str);
             g_string_free(str, TRUE);
+        }
+        for (i = 0; i < n_attrs; i++) {
+            char attr_name[MAX_NC_NAME];
+            int32 attr_type, attr_nvals;
+
+            status = SDattrinfo(sds_id, i, attr_name, &attr_type, &attr_nvals);
+            s = describe_data_type(attr_type);
+            gwy_debug("attr #%u (%s): data_type: %u (%s), n_vals: %u",
+                      i, attr_name, (guint)attr_type, s, (guint)attr_nvals);
+            g_free(s);
         }
 #endif
         if (rank > 2) {
