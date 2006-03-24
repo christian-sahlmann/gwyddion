@@ -406,8 +406,10 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
         return FALSE;
     }
     fileinfo->file_size = st.st_size;
-    if (!fileinfo->file_size)
+    if (!fileinfo->file_size) {
+        gwy_file_detect_free_info(fileinfo);
         return FALSE;
+    }
 
     if (!(fh = g_fopen(fileinfo->name, "rb"))) {
         gwy_file_detect_free_info(fileinfo);
@@ -419,7 +421,7 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
     fileinfo->head = g_new0(guchar, 2*fileinfo->buffer_len);
     fileinfo->tail = fileinfo->head + fileinfo->buffer_len;
     if (fread((gchar*)fileinfo->head, fileinfo->buffer_len - 1, 1, fh) < 1
-        || fseek(fh, -fileinfo->buffer_len, SEEK_END) != 0
+        || fseek(fh, 1-fileinfo->buffer_len, SEEK_END) != 0
         || fread((gchar*)fileinfo->tail, fileinfo->buffer_len - 1, 1, fh) < 1) {
         fclose(fh);
         gwy_file_detect_free_info(fileinfo);
