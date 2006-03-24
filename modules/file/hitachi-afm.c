@@ -42,7 +42,8 @@
 
 enum {
     HEADER_SIZE   = 0x280,
-    REAL_OFFSET   = 0x16c,
+    XREAL_OFFSET  = 0x16c,
+    YREAL_OFFSET  = 0x176,
     ZSCALE_OFFSET = 0x184,
     RES_OFFSET    = 0x1dc,
 };
@@ -247,8 +248,9 @@ read_data_field(const guchar *buffer,
         return NULL;
     }
 
-    p = buffer + REAL_OFFSET;
+    p = buffer + XREAL_OFFSET;
     xreal = get_DOUBLE(&p) * Nanometer;
+    p = buffer + YREAL_OFFSET;
     yreal = get_DOUBLE(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
     q = get_DOUBLE(&p) * Nanometer;
