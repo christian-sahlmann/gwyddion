@@ -323,6 +323,136 @@ line_correct_match(GwyContainer *data,
     gwy_data_field_data_changed(dfield);
 }
 
+#if 0
+static gdouble
+distance(gint n,
+         const gdouble *data1,
+         const gdouble *data2,
+         gdouble shift,
+         gdouble sigma)
+{
+    gdouble wsum = 0.0;
+    gdouble sum = 0.0;
+    gdouble w, ww;
+    gint i;
+
+    for (i = 0; i < n; i++) {
+        w = (data2[i] - data1[i] - shift)/sigma;
+        w *= w;
+        ww = 1.0/(1 + w);
+        wsum += ww;
+        sum += ww*w;
+    }
+
+    return sum/(wsum*wsum)*sigma*sigma;
+}
+
+/* The sign of the shift is (data2 - data1) */
+static double
+find_shift(gint n,
+           const gdouble *data1,
+           const gdouble *data2)
+{
+    enum { M = 5, N = 3 };
+    gdouble sigma, psigma, avg, min, max, d, m;
+    gdouble x[M], y[M];
+    gdouble coeffs[3];
+    gint i, im, iter;
+
+    sigma = avg = 0.0;
+    for (i = 0; i < n; i++) {
+        d = data2[i] - data1[i];
+        avg += d;
+        sigma += d*d;
+    }
+    avg /= n;
+    sigma /= n;
+    sigma = sqrt(sigma - avg*avg);
+
+    min = avg - 3*sigma;
+    max = avg + 3*sigma;
+
+    iter = 1;
+    do {
+        d = max - min;
+        m = G_MAXDOUBLE;
+        im = M/2;
+        for (i = 0; i < M; i++) {
+            psigma = sigma/(pow(iter, 1.6));
+            x[i] = i/(M - 1.0);
+            x[i] = max*x[i] + min*(1.0 - x[i]);
+            y[i] = distance(n, data1, data2, x[i], psigma);
+            if (y[i] < m) {
+                m = y[i];
+                im = i;
+            }
+        }
+        if (im == 0) {
+            max -= d/2.0;
+            min -= d/2.0;
+        }
+        else if (im == M-1) {
+            max += d/2.0;
+            min += d/2.0;
+        }
+        else {
+            d *= N/(gdouble)M;
+            min = x[im] - d/2.0;
+            max = x[im] + d/2.0;
+            iter++;
+        }
+    } while (d > 1e-5*sigma);
+
+    /* return x[im]; */
+    /* Use parabolic approximation to improve estimate */
+    d = (x[0] + x[M-1])/2.0;
+    for (i = 0; i < M; i++)
+        x[i] -= d;
+    gwy_math_fit_polynom(M, x, y, 2, coeffs);
+
+    return d - coeffs[1]/(2.0*coeffs[2]);
+}
+
+static void
+line_correct_match(GwyContainer *data,
+                   GwyRunType run)
+{
+    GwyDataField *dfield;
+    GwyDataLine *shifts;
+    gint xres, yres, i;
+    gdouble *d, *s;
+    GQuark dquark;
+
+    g_return_if_fail(run & LINECORR_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+
+    yres = gwy_data_field_get_yres(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+
+    shifts = gwy_data_line_new(yres, 1.0, TRUE);
+    s = gwy_data_line_get_data(shifts);
+    s[0] = 0.0;
+
+    for (i = 1; i < yres; i++) {
+        s[i] = find_shift(xres, d + i*xres, d + (i - 1)*xres);
+        g_printerr("%d %g\n", i, s[i]);
+    }
+
+    gwy_data_line_cumulate(shifts);
+    for (i = 1; i < yres; i++)
+        gwy_data_field_area_add(dfield, 0, i, xres, i+1, s[i]);
+    gwy_data_field_add(dfield, -s[yres-1]/(xres*yres));
+
+    g_object_unref(shifts);
+    gwy_data_field_data_changed(dfield);
+}
+#endif
+
 static void
 calcualte_segment_correction(const gdouble *drow,
                              gdouble *mrow,
