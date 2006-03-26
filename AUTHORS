@@ -72,10 +72,10 @@ Mindaugas Rackaitis, Penn State University
 Markus Pristovsek
     Several file import modules were written or improved using the source
     code of Snomputz, particularly:
-    Omicron, Nanoscope.
+    ECS, Hitachi AFM, Omicron, Nanoscope, Seiko.
     See the respective modules for more information.
 
 Hans-Peter Doerr
-    The burleigh file module was written using the source code of the readimg
+    The Burleigh file module was written using the source code of the readimg
     library.
 
