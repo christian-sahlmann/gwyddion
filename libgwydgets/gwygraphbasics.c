@@ -27,6 +27,7 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
+#include <stdio.h>
 
 static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
@@ -88,6 +89,9 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
             pxn = x_data_to_pixel(specs, cmodel->xdata[i + 1]);
             pyn = y_data_to_pixel(specs, cmodel->ydata[i + 1]);
         }
+        if (x < (-specs->width) || x > (2*specs->width) || y < (-specs->height) || y > (2*specs->height) ||
+            pxn < (-specs->width) || pxn > (2*specs->width) || pyn < (-specs->height) || pyn > (2*specs->height))
+            continue;
         if (i < cmodel->n - 1
             && (cmodel->type == GWY_GRAPH_CURVE_LINE
                 || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
@@ -140,6 +144,7 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
     gdk_gc_set_line_attributes(gc, size,
                                line_style, GDK_CAP_BUTT, GDK_JOIN_MITER);
 
+    /*printf("%d %d  %d %d\n", x_from, y_from, x_to, y_to);*/
     gdk_draw_line(drawable, gc, x_from, y_from, x_to, y_to);
 }
 
