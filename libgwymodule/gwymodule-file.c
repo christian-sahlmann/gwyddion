@@ -421,7 +421,7 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
     fileinfo->head = g_new0(guchar, 2*fileinfo->buffer_len);
     fileinfo->tail = fileinfo->head + fileinfo->buffer_len;
     if (fread((gchar*)fileinfo->head, fileinfo->buffer_len - 1, 1, fh) < 1
-        || fseek(fh, 1-fileinfo->buffer_len, SEEK_END) != 0
+        || fseek(fh, 1-(gint)fileinfo->buffer_len, SEEK_END) != 0
         || fread((gchar*)fileinfo->tail, fileinfo->buffer_len - 1, 1, fh) < 1) {
         fclose(fh);
         gwy_file_detect_free_info(fileinfo);
