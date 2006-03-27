@@ -1,3 +1,27 @@
+1.99.6cvs20060327
+
+1.99.7 (0000-00-00)
+Application:
+- It is possible to switch between pixelwise-square and physically-square
+  display modes (via upper left data window corner menu).
+
+Libraries:
+- libgwyprocess: Fitting of polynomials with limited total degree was added.
+
+Modules:
+- Omicron (new): Omicron (Scala) file import.
+- SEIKO (new): Seiko XQD file import.
+- Burleigh (new): Burleigh IMG v2.1 file import.
+- ECS (new): ECS IMG file import.
+- Hitachi AFM: Import of another strain of Hitachi AFM files was added.
+- BCR file: Void pixel handling was improved (bug #68).
+- Grain distribution: Height distribution was added (bug #69).
+- RHK SPM32: Value offsets are respected.
+- RHK SM3: Can import newer files (XPMPro 1.1.0.9) (bug #71).
+- Nanoscope: Import of format versions 3 and 4 was improved (or made possible
+  at all).
+- Polynomial level: Fitting of polynomials with limited total degree is
+  possible.
 
 
 1.99.6 (2006-02-26)

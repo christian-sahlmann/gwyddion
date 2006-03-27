@@ -2,11 +2,14 @@
 Gwyddion is a SPM (scanning probe microscopy) data visualization and analysis
 tool, written with Gtk+ and working in both Linux/Unix and MS Windows.
 
-Web site:            http://gwyddion.net/
-Sourceforge page:    http://sourceforge.net/projects/gwyddion/
-Public CVS:          ditto
-Bug reports:         http://trific.ath.cx/bugzilla/
-E-mail to authors:   yeti@gwyddion.net, klapetek@gwyddion.net
+Web site:         http://gwyddion.net/
+Sourceforge page: http://sourceforge.net/projects/gwyddion/
+Public CVS:       http://cvs.sourceforge.net/viewcvs.py/gwyddion/
+Bug reports:      klapetek@gwyddion.net
+Mailing lists:    gwyddion-users@lists.sourceforge.net
+                  (http://lists.sourceforge.net/lists/listinfo/gwyddion-users)
+                  gwyddion-devel@lists.sourceforge.net
+                  (http://lists.sourceforge.net/lists/listinfo/gwyddion-devel)
 
 See also:
 User-visible changes between versions: NEWS
@@ -32,12 +35,8 @@ Subdir dependencies (fully resolved):
     libgwymodule: libgwyddion libprocess libdraw libgwydgets
     app:          libgwyddion libprocess libdraw libgwydgets libgwymodule
     modules:      libgwyddion libprocess libdraw libgwydgets libgwymodule app
-    devel-docs:   libgwyddion libprocess libdraw libgwydgets libgwymodule
+    devel-docs:   libgwyddion libprocess libdraw libgwydgets libgwymodule app
     po:           libdraw libgwydgets libgwymodule app modules
-    plugins:      (none)
-    pixmaps:      (none)
-    perl:         (none)
-    python:       (none)
 
 Subdir contents:
     libgwyddion:  Gwyddion library
@@ -54,4 +53,7 @@ Subdir contents:
     pixmaps:      Stock icons and other graphics
     perl:         Perl modules for plug-in development
     python:       Python modules for plug-in development
+    ruby:         Ruby modules for plug-in development
+    utils:        Auxiliary scripts
+    m4:           Autoconf macros
 
