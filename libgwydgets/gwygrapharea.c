@@ -1096,7 +1096,7 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
-    if (gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
+    if (!gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
         return gwy_graph_model_get_ymin(model)
            + (widget->allocation.height - scr)*(gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))
              /(widget->allocation.height-1);
@@ -1114,7 +1114,7 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
-    if (gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
+    if (!gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
         return widget->allocation.height
            - (data - gwy_graph_model_get_ymin(model))
              /((gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))/((gdouble)widget->allocation.height-1));
