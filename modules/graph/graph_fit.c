@@ -540,47 +540,59 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
     gtk_label_set_markup(GTK_LABEL(controls->chisq), " ");
 }
 
+static GwyGraphCurveModel*
+update_fitted_curve(GwyGraphModel *gmodel,
+                    GwyNLFitPreset *function,
+                    const gdouble *param,
+                    GwyDataLine *xdata,
+                    GwyDataLine *ydata)
+{
+    GwyGraphCurveModel *cmodel;
+    gdouble *xd, *yd;
+    gboolean ok;   /* XXX: ignored */
+    gint i, n;
+    const gchar *desc = _("Fitted curve");
+
+    n = gwy_data_line_get_res(xdata);
+    g_return_val_if_fail(n == gwy_data_line_get_res(ydata), NULL);
+    xd = gwy_data_line_get_data(xdata);
+    yd = gwy_data_line_get_data(ydata);
+
+    for (i = 0; i < n; i++)
+        yd[i] = gwy_nlfit_preset_get_value(function, xd[i], param, &ok);
+
+    cmodel = gwy_graph_model_get_curve_by_description(gmodel, desc);
+    if (!cmodel) {
+        cmodel = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+        gwy_graph_curve_model_set_description(cmodel, desc);
+        gwy_graph_model_add_curve(gmodel, cmodel);
+        g_object_unref(cmodel);
+    }
+    gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
+
+    return cmodel;
+}
+
 static void
 plot_inits(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
     GwyNLFitPreset *function;
-    gint i;
-    gboolean ok;
-    GwyGraphCurveModel *cmodel;
 
     xdata = gwy_data_line_new(10, 10, FALSE);
     ydata = gwy_data_line_new(10, 10, FALSE);
 
-
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
-    if (!normalize_data(args, xdata, ydata, args->curve - 1))
-    {
-        g_object_unref(xdata);
-        g_object_unref(ydata);
-        return;
+    if (normalize_data(args, xdata, ydata, args->curve - 1)) {
+        function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                              args->function_type);
+        update_fitted_curve(args->graph_model, function, args->par_init,
+                            xdata, ydata);
     }
-
-    function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
-                                          args->function_type);
-
-    for (i = 0; i < xdata->res; i++)
-        ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
-                                                    args->par_init, &ok);
-
-    cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
-    gwy_graph_curve_model_set_description(cmodel, "fit");
-    gwy_graph_curve_model_set_data(cmodel,
-                             xdata->data,
-                             ydata->data,
-                             xdata->res);
-    gwy_graph_model_add_curve(args->graph_model, cmodel);
-    g_object_unref(cmodel);
     g_object_unref(xdata);
     g_object_unref(ydata);
-
 }
 
  /*recompute fit and update everything*/
@@ -593,8 +605,7 @@ recompute(FitArgs *args, FitControls *controls)
     gboolean fixed[MAX_PARAMS];
     gchar buffer[64];
     gint i, j, nparams;
-    gboolean ok, allfixed;
-    GwyGraphCurveModel *cmodel;
+    gboolean allfixed;
 
     function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                           args->function_type);
@@ -658,25 +669,11 @@ recompute(FitArgs *args, FitControls *controls)
     else
         gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N.A."));
 
-    for (i = 0; i < xdata->res; i++)
-        ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
-                                                    args->par_res, &ok);
-
-
-    cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
-
-    gwy_graph_curve_model_set_data(cmodel,
-                                   xdata->data,
-                                   ydata->data,
-                                   xdata->res);
-    gwy_graph_curve_model_set_description(cmodel, "fit");
-    gwy_graph_model_add_curve(args->graph_model, cmodel);
-    g_object_unref(cmodel);
-
-    args->is_fitted = TRUE;
+    update_fitted_curve(args->graph_model, function, args->par_res,
+                        xdata, ydata);
     g_object_unref(xdata);
     g_object_unref(ydata);
+    args->is_fitted = TRUE;
 }
 
 /*get default parameters (guessed)*/
@@ -1088,7 +1085,7 @@ create_results_window(FitArgs *args)
     mag = gwy_math_humanize_numbers((args->to - args->from)/120,
                                     MAX(fabs(args->from), fabs(args->to)),
                                     &precision);
-    g_string_printf(str, "%.*f–%.*f %s",
+    g_string_printf(str, "[%.*f, %.*f] %s",
                     precision, args->from/mag,
                     precision, args->to/mag,
                     format_magnitude(su, mag));
