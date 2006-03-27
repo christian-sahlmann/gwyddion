@@ -756,7 +756,7 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     pango_layout_set_font_description(layout, axis->par.major_font);
 
     plotlabel = g_string_new(axis->label_text->str);
-    if ((axis->has_unit && axis->magnification_string->len > 0)
+    if ((axis->has_unit || axis->magnification_string->len > 0)
         || strlen(gwy_si_unit_get_unit_string(axis->unit))>0) {
         g_string_append(plotlabel, " [");
         if (axis->magnification_string) g_string_append(plotlabel,
