@@ -38,6 +38,7 @@
 #include <libgwyddion/gwymd5.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyexpr.h>
+#include <libgwyddion/gwystringlist.h>
 
 G_BEGIN_DECLS
 
