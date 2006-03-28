@@ -4,13 +4,11 @@ wget -t 1 http://trific.ath.cx/Ftp/gwyddion/gwyddion-@VERSION@.tar.gz
 "c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-@VERSION@.tar.gz"
 "c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-@VERSION@.tar"
 rename "gwyddion-@VERSION@" gwyddion-cvs
-copy unix2dos.exe "gwyddion-cvs\unix2dos.exe"
 copy upload.bat "gwyddion-cvs\upload.bat"
 cd gwyddion-cvs
 PATH="c:\program files\microsoft visual studio\common\msdev98\bin;c:\program files\microsoft visual studio\vc98\bin;c:\windows;c:\windows\command"
 nmake -f makefile.msc -x make_log > make_log2
 nmake -f makefile.msc install -x install_log > install_log2
-unix2dos.exe data\gwyddion.iss inst\gwyddion.iss
 cd inst
 "c:\Program Files\Inno Setup 4\iscc.exe" gwyddion.iss
 rename "Gwyddion-@VERSION@.exe" Gwyddion-cvs.exe
