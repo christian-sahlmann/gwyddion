@@ -15,14 +15,17 @@ LIB_CFLAGS = \
 	$(JPEG_CFLAGS) \
 	$(PNG_CFLAGS) \
 	$(TIFF_CFLAGS) \
+	$(SPML_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 
 MOD_LINK = \
 	$(COMMON_LDFLAGS) \
+	$(SPML_LDFLAGS) \
 	$(APP_LIBS) \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
 	$(TIFF_LIBS) \
+	$(SPML_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
 	/libpath:$(TOP_SRCDIR)\libprocess \
 	/libpath:$(TOP_SRCDIR)\libdraw \

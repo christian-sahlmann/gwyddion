@@ -6,7 +6,16 @@ if HAVE_TIFF
 tiff_modules = jpkscan.la
 tiff_sources =
 else
+tiff_modules =
 tiff_sources = jpk.h jpkscan.c
+endif
+
+if HAVE_XML2
+spml_modules = spml.la
+spml_sources =
+else
+spml_modules =
+spml_sources = spml.c 
 endif
 
 filedir = $(pkglibdir)/modules/file
@@ -24,6 +33,7 @@ file_LTLIBRARIES = \
 	hdf4file.la \
 	hitachi-afm.la \
 	$(tiff_modules) \
+	mifile.la \
 	nanoscope.la \
 	nt-mdt.la \
 	omicron.la \
@@ -34,13 +44,13 @@ file_LTLIBRARIES = \
 	sdfile.la \
 	seiko.la \
 	sis.la \
+	$(spml_modules) \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
 	unisoku.la \
 	witfile.la \
-	wsxmfile.la \
-	mifile.la
+	wsxmfile.la
 
 noinst_HEADERS = \
 	err.h \
@@ -48,6 +58,7 @@ noinst_HEADERS = \
 
 EXTRA_DIST = \
 	$(tiff_sources) \
+	$(spml_sources) \
 	makefile.msc \
 	makefile.msc.gwt
 
@@ -149,6 +160,12 @@ seiko_la_LIBADD = $(module_libadd)
 sis_la_SOURCES = sis.c
 sis_la_LIBADD = $(module_libadd)
 
+if HAVE_XML2
+spml_la_SOURCES = spml.c
+spml_la_CFLAGS = @XML2_CFLAGS@
+spml_la_LIBADD = $(module_libadd) @XML2_LIBS@
+endif
+
 spmlab_la_SOURCES = spmlab.c
 spmlab_la_LIBADD = $(module_libadd)
 
@@ -166,7 +183,6 @@ witfile_la_LIBADD = $(module_libadd)
 
 wsxmfile_la_SOURCES = wsxmfile.c
 wsxmfile_la_LIBADD = $(module_libadd)
-
 
 clean-local:
 	rm -f core.* *~
