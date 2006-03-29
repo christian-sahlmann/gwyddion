@@ -22,6 +22,7 @@ BuildRequires: pango-devel >= 1.8
 BuildRequires: gtk2-devel >= 2.6
 BuildRequires: glib2-devel >= 2.6
 BuildRequires: gtkglext-devel >= 1.0
+BuildRequires: libxml2-devel
 BuildRequires: libpng-devel
 BuildRequires: libjpeg-devel
 BuildRequires: libtiff-devel >= 3.6
