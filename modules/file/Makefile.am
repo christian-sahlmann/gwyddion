@@ -15,7 +15,7 @@ spml_modules = spml.la
 spml_sources =
 else
 spml_modules =
-spml_sources = spml.c 
+spml_sources = spml.c
 endif
 
 filedir = $(pkglibdir)/modules/file
@@ -161,7 +161,7 @@ sis_la_SOURCES = sis.c
 sis_la_LIBADD = $(module_libadd)
 
 if HAVE_XML2
-spml_la_SOURCES = spml.c
+spml_la_SOURCES = spml.c spml-utils.h
 spml_la_CFLAGS = @XML2_CFLAGS@
 spml_la_LIBADD = $(module_libadd) @XML2_LIBS@
 endif
