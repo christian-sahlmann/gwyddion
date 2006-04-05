@@ -1,7 +1,8 @@
 /*
  *  $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Markus Pristovsek
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net,
+ *  prissi@gift.physik.tu-berlin.de.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,10 +18,60 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+/*
+ *  The list of HDF tags is covered by the following license (it was taken
+ *  from libHDF4 header files, mainly due to my laziness), the rest of the
+ *  HDF code is a clean-room implementation:
+ *
+ *  Copyright Notice and Statement for NCSA Hierarchical Data Format (HDF)
+ *  Software Library and Utilities
+ *
+ *  Copyright 1988-2005 The Board of Trustees of the University of Illinois
+ *
+ *  All rights reserved.
+ *
+ *  Contributors:   National Center for Supercomputing Applications
+ *  (NCSA) at the University of Illinois, Fortner Software, Unidata
+ *  Program Center (netCDF), The Independent JPEG Group (JPEG),
+ *  Jean-loup Gailly and Mark Adler (gzip), and Digital Equipment
+ *  Corporation (DEC).
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted for any purpose (including commercial
+ *  purposes) provided that the following conditions are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright
+ *  notice, this list of conditions, and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *  notice, this list of conditions, and the following disclaimer in the
+ *  documentation and/or materials provided with the distribution.
+ *
+ *  3. In addition, redistributions of modified forms of the source or
+ *  binary code must carry prominent notices stating that the original
+ *  code was changed and the date of the change.
+ *
+ *  4. All publications or advertising materials mentioning features or use
+ *  of this software are asked, but not required, to acknowledge that it was
+ *  developed by the National Center for Supercomputing Applications at the
+ *  University of Illinois at Urbana-Champaign and credit the contributors.
+ *
+ *  5. Neither the name of the University nor the names of the Contributors
+ *  may be used to endorse or promote products derived from this software
+ *  without specific prior written permission from the University or the
+ *  Contributors.
+ *
+ *  DISCLAIMER
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY AND THE CONTRIBUTORS "AS IS"
+ *  WITH NO WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED.  In no event
+ *  shall the University or the Contributors be liable for any damages
+ *  suffered by the users arising out of the use of this software, even if
+ *  advised of the possibility of such damage.
+ */
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
-#include <limits.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
@@ -34,12 +85,190 @@
 
 #define EXTENSION ".hdf"
 
+typedef enum {
+    /* Common */
+    HDF4_NULL         = 1,
+    HDF4_LINKED       = 20,
+    HDF4_VERSION      = 30,
+    HDF4_COMPRESSED   = 40,
+    HDF4_VLINKED      = 50,
+    HDF4_VLINKED_DATA = 51,
+    HDF4_CHUNKED      = 60,
+    HDF4_CHUNK        = 61,
+
+    /* Utility set */
+    HDF4_FID  = 100,
+    HDF4_FD   = 101,
+    HDF4_TID  = 102,
+    HDF4_TD   = 103,
+    HDF4_DIL  = 104,
+    HDF4_DIA  = 105,
+    HDF4_NT   = 106,
+    HDF4_MT   = 107,
+    HDF4_FREE = 108,
+
+    /* Raster-8 set, XXX unused */
+    HDF4_ID8 = 200,
+    HDF4_IP8 = 201,
+    HDF4_RI8 = 202,
+    HDF4_CI8 = 203,
+    HDF4_II8 = 204,
+
+    /* Raster image set, XXX unused */
+    HDF4_ID   = 300,
+    HDF4_LUT  = 301,
+    HDF4_RI   = 302,
+    HDF4_CI   = 303,
+    HDF4_NRI  = 304,
+    HDF4_RIG  = 306,
+    HDF4_LD   = 307,
+    HDF4_MD   = 308,
+    HDF4_MA   = 309,
+    HDF4_CCN  = 310,
+    HDF4_CFM  = 311,
+    HDF4_AR   = 312,
+    HDF4_DRAW = 400,
+    HDF4_RUN  = 401,
+    HDF4_XYP  = 500,
+    HDF4_MTO  = 501,
+
+    /* Tektronix, XXX unused */
+    HDF4_T14  = 602,
+    HDF4_T105 = 603,
+
+    /* Scientific/Numeric data sets */
+    HDF4_SDG   = 700,
+    HDF4_SDD   = 701,
+    HDF4_SD    = 702,
+    HDF4_SDS   = 703,
+    HDF4_SDL   = 704,
+    HDF4_SDU   = 705,
+    HDF4_SDF   = 706,
+    HDF4_SDM   = 707,
+    HDF4_SDC   = 708,
+    HDF4_SDT   = 709,
+    HDF4_SDLNK = 710,
+    HDF4_NDG   = 720,
+    HDF4_CAL   = 731,
+    HDF4_FV    = 732,
+    HDF4_BREQ  = 799,
+    HDF4_SDRAG = 781,
+    HDF4_EREQ  = 780,
+
+    /* VGroups */
+    HDF4_VG = 1965,
+    HDF4_VH = 1962,
+    HDF4_VS = 1963,
+
+    /* Compression schemes */
+    HDF4_RLE       = 11,
+    HDF4_IMC       = 12,
+    HDF4_IMCOMP    = 12,
+    HDF4_JPEG      = 13,
+    HDF4_GREYJPEG  = 14,
+    HDF4_JPEG5     = 15,
+    HDF4_GREYJPEG5 = 16,
+
+    /* Psi */
+    HDF4_PSI     = 0x8001,
+    HDF4_PSIHD   = 0x8009,
+    HDF4_PSISPEC = 0x800a,
+} HDF4Tag;
+
+/* Type info codes */
+typedef enum {
+    HDF4TI_HDF      = 0x00000000,   /* standard HDF format  */
+    HDF4TI_NATIVE   = 0x00001000,   /* native format        */
+    HDF4TI_CUSTOM   = 0x00002000,   /* custom format        */
+    HDF4TI_LITEND   = 0x00004000,   /* Little Endian format */
+    HDF4TI_MASK     = 0x00000fff,   /* format mask */
+    HDF4TI_NONE     = 0,  /* indicates that number type not set */
+    HDF4TI_QUERY    = 0,  /* use this code to find the current type */
+    HDF4TI_VERSION  = 1,  /* current version of NT info */
+    HDF4TI_FLOAT32  = 5,
+    HDF4TI_FLOAT    = 5,  /* For backward compat; don't use */
+    HDF4TI_FLOAT64  = 6,
+    HDF4TI_DOUBLE   = 6,  /* For backward compat; don't use */
+    HDF4TI_FLOAT128 = 7,  /* No current plans for support */
+    HDF4TI_INT8     = 20,
+    HDF4TI_UINT8    = 21,
+    HDF4TI_INT16    = 22,
+    HDF4TI_UINT16   = 23,
+    HDF4TI_INT32    = 24,
+    HDF4TI_UINT32   = 25,
+    HDF4TI_INT64    = 26,
+    HDF4TI_UINT64   = 27,
+    HDF4TI_INT128   = 28,  /* No current plans for support */
+    HDF4TI_UINT128  = 30,  /* No current plans for support */
+    HDF4TI_UCHAR8   = 3,  /* 3 chosen for backward compatibility */
+    HDF4TI_UCHAR    = 3,  /* uchar=uchar8 for backward combatibility */
+    HDF4TI_CHAR8    = 4,  /* 4 chosen for backward compatibility */
+    HDF4TI_CHAR     = 4,  /* uchar=uchar8 for backward combatibility */
+    HDF4TI_CHAR16   = 42,  /* No current plans for support */
+    HDF4TI_UCHAR16  = 43,  /* No current plans for support */
+} HDF4TypeInfo;
+
+/* Miscellaneous sizes */
+enum {
+    HDF4_DDH_SIZE     = 2 + 4,
+    HDF4_DD_SIZE      = 2 + 2 + 4 + 4,
+    HDF4_TAGREF_SIZE  = 2 + 2,
+    HDF4_VERSION_SIZE = 3*4 + 1,
+    PSI_ID_LEN        = 28,
+    PSI_HD_LEN        = 32,
+    PSI_HD_SIZE       = 202,
+};
+
+typedef struct {
+    HDF4Tag tag;
+    guint32 ref;  /* in fact 16bit */
+    guint32 offset;
+    guint32 length;
+} HDF4DataDescriptor;
+
+typedef struct {
+    guint32 unknown1;
+    gchar title[32];
+    gchar instrument[8];
+    gboolean x_dir;
+    gboolean y_dir;
+    gboolean show_offset;
+    gboolean no_units;
+    guint32 xres;
+    guint32 yres;
+    gchar unknown2[12];
+    gdouble xscale;
+    gdouble yscale;
+    gdouble xoff;
+    gdouble yoff;
+    gdouble rotation;
+    gdouble unknown3;
+    gdouble lines_per_sec;
+    gdouble set_point;
+    gchar set_point_unit[8];
+    gdouble sample_bias;
+    gdouble tip_bias;
+    gdouble zgain;
+    gchar zgain_unit[8];
+    gint32 min;
+    gint32 max;
+} PsiHeader;
+
 static gboolean      module_register(void);
-static gint          hdf_detect     (const GwyFileDetectInfo *fileinfo,
+static gint          psi_detect     (const GwyFileDetectInfo *fileinfo,
                                      gboolean only_name);
-static GwyContainer* hdf_load       (const gchar *filename,
+static GwyContainer* psi_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
+static GArray*       hdf4_read_tags (const guchar *buffer,
+                                     gsize size,
+                                     GError **error);
+#ifdef DEBUG
+static gchar*        hdf4_describe_tag(const HDF4DataDescriptor *desc,
+                                       const guchar *buffer,
+                                       gsize size);
+static gchar*        hdf4_describe_data_type(HDF4TypeInfo id);
+#endif
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -56,10 +285,18 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+    /*
     gwy_file_func_register("hdf4file",
                            N_("Hierarchical Data Format v4 (.hdf)"),
                            (GwyFileDetectFunc)&hdf_detect,
                            (GwyFileLoadFunc)&hdf_load,
+                           NULL,
+                           NULL);
+                           */
+    gwy_file_func_register("psifile",
+                           N_("Psi HDF4 files (.hdf)"),
+                           (GwyFileDetectFunc)&psi_detect,
+                           (GwyFileLoadFunc)&psi_load,
                            NULL,
                            NULL);
 
@@ -67,98 +304,45 @@ module_register(void)
 }
 
 static gint
-hdf_detect(const GwyFileDetectInfo *fileinfo,
+psi_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
+    gint score = 0;
+
+    /* Only when explicitly asked for (we cannot save anyway yet) */
     if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
+        return 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
-        return 90;
+        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0) {
+        guchar *buffer = NULL;
+        gsize size;
+        GArray *tags;
+        guint i;
 
-    return 0;
+        if (!gwy_file_get_contents(fileinfo->name, &buffer, &size, NULL))
+            return 0;
+
+        tags = hdf4_read_tags(buffer, size, NULL);
+        if (tags) {
+            for (i = 0; i < tags->len; i++) {
+                HDF4DataDescriptor *desc;
+
+                desc = &g_array_index(tags, HDF4DataDescriptor, i);
+                if (desc->tag == HDF4_PSIHD) {
+                    score = 100;
+                    break;
+                }
+            }
+        }
+        gwy_file_abandon_contents(buffer, size, NULL);
+
+    }
+
+    return score;
 }
 
 #if 0
-#ifdef DEBUG
-static struct {
-    int32 id;
-    const gchar *desc;
-}
-const data_types[] = {
-    { DFNT_CHAR8,   "signed 8-bit character"   },
-    { DFNT_UCHAR8,  "unsigned 8-bit character" },
-    { DFNT_INT8,    "signed 8-bit integer"     },
-    { DFNT_UINT8,   "unsigned 8-bit integer"   },
-    { DFNT_INT16,   "signed 16-bit integer"    },
-    { DFNT_UINT16,  "unsigned 16-bit integer"  },
-    { DFNT_INT32,   "signed 32-bit integer"    },
-    { DFNT_UINT32,  "unsigned 32-bit integer"  },
-    { DFNT_FLOAT32, "single precision float"   },
-    { DFNT_FLOAT64, "double precision float"   },
-};
-
-static gchar*
-describe_data_type(int32 id)
-{
-    guint i;
-    int32 baseid;
-
-    baseid = id & ~(DFNT_NATIVE | DFNT_LITEND);
-    for (i = 0; i < sizeof(data_types)/sizeof(data_types[0]); i++) {
-        if (baseid == data_types[i].id)
-            return g_strdup_printf("%s%s%s",
-                                   (id & DFNT_NATIVE) ? "native " : "",
-                                   (id & DFNT_LITEND) ? "little endian " : "",
-                                   data_types[i].desc);
-    }
-
-    return g_strdup("UNKNOWN");
-}
-#endif
-
-static guint
-get_data_type_size(int32 id,
-                   GError **error)
-{
-    /* Native data format is Evil. */
-    if (id & DFNT_NATIVE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    N_("HDF data with `native' type is not supported."));
-        return 0;
-    }
-
-    switch (id & ~(DFNT_NATIVE | DFNT_LITEND)) {
-        case DFNT_CHAR8:
-        case DFNT_UCHAR8:
-        case DFNT_INT8:
-        case DFNT_UINT8:
-        return 1;
-        break;
-
-        case DFNT_INT16:
-        case DFNT_UINT16:
-        return 2;
-        break;
-
-        case DFNT_INT32:
-        case DFNT_UINT32:
-        case DFNT_FLOAT32:
-        return 4;
-        break;
-
-        case DFNT_FLOAT64:
-        return 8;
-        break;
-
-        default:
-        err_UNSUPPORTED(error, "data_type");
-        return 0;
-        break;
-    }
-}
-
 static GwyDataField*
 read_data_field(int32 sd_id,
                 int32 sds_id,
@@ -382,166 +566,417 @@ read_data_field(int32 sd_id,
 
     return dfield;
 }
-
-static GwyContainer*
-hdf_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
-{
-    GwyContainer *container = NULL;
-    GwyDataField *dfield = NULL;
-    int32 sd_id, sds_index, sds_id;
-    int32 n_datasets, n_file_attrs;
-    int32 dim_sizes[MAX_VAR_DIMS];
-    int32 rank, data_type, n_attrs;
-    char name[MAX_NC_NAME+1];
-    gchar key[24];
-    intn status, isempty;
-    guint i, ndata;
-    gchar *s;
-
-    if (!Hishdf(filename)) {
-        err_FILE_TYPE(error, "HDF");
-        return NULL;
-    }
-
-    if ((sd_id = SDstart(filename, DFACC_READ)) == FAIL) {
-        err_HDF(error, "SDstart");
-        return NULL;
-    }
-
-    if ((status = SDfileinfo(sd_id, &n_datasets, &n_file_attrs)) == FAIL) {
-        err_HDF(error, "SDfileinfo");
-        SDend(sd_id);
-        return NULL;
-    }
-    gwy_debug("n_datasets: %u, n_file_attrs = %u",
-              (guint)n_datasets, (guint)n_file_attrs);
-#ifdef DEBUG
-    for (i = 0; i < n_file_attrs; i++) {
-        char attr_name[MAX_NC_NAME];
-        int32 attr_type, attr_nvals;
-
-        status = SDattrinfo(sd_id, i, attr_name, &attr_type, &attr_nvals);
-        s = describe_data_type(attr_type);
-        gwy_debug("attr #%u (%s): data_type: %u (%s), n_vals: %u",
-                  i, attr_name, (guint)attr_type, s, (guint)attr_nvals);
-        g_free(s);
-    }
-#endif
-
-    name[MAX_NC_NAME] = '\0';
-    ndata = 0;
-    container = gwy_container_new();
-
-    for (sds_index = 0; sds_index < n_datasets; sds_index++) {
-        gwy_debug("examining data set #%u", (guint)sds_index);
-        if ((sds_id = SDselect(sd_id, sds_index)) == FAIL) {
-            err_HDF(error, "SDselect");
-            SDend(sd_id);
-            gwy_object_unref(container);
-            return NULL;
-        }
-
-        if (SDiscoordvar(sds_id)) {
-            gwy_debug("array is a dimension scale, skipping");
-            SDend(sds_id);
-            continue;
-        }
-
-        if ((status = SDcheckempty(sds_id, &isempty)) == FAIL) {
-            err_HDF(error, "SDcheckempty");
-            SDendaccess(sds_id);
-            SDend(sd_id);
-            gwy_object_unref(container);
-            return NULL;
-        }
-        if (isempty) {
-            SDendaccess(sds_id);
-            continue;
-        }
-
-        if ((status = SDgetinfo(sds_id, name, &rank, dim_sizes,
-                                &data_type, &n_attrs)) == FAIL) {
-            err_HDF(error, "SDgetinfo");
-            SDendaccess(sds_id);
-            SDend(sd_id);
-            gwy_object_unref(container);
-            return NULL;
-        }
-        gwy_debug("name: `%s', rank: %u, n_attrs: %u",
-                  name, (guint)rank, (guint)n_attrs);
-#ifdef DEBUG
-        s = describe_data_type(data_type);
-        gwy_debug("data_type: %u (%s)", (guint)data_type, s);
-        g_free(s);
-        {
-            GString *str;
-
-            str = g_string_new("");
-            for (i = 0; i < rank; i++)
-                g_string_append_printf(str, " %u", (guint)dim_sizes[i]);
-            gwy_debug("dim_sizes:%s", str->str);
-            g_string_free(str, TRUE);
-        }
-        for (i = 0; i < n_attrs; i++) {
-            char attr_name[MAX_NC_NAME];
-            int32 attr_type, attr_nvals;
-
-            status = SDattrinfo(sds_id, i, attr_name, &attr_type, &attr_nvals);
-            s = describe_data_type(attr_type);
-            gwy_debug("attr #%u (%s): data_type: %u (%s), n_vals: %u",
-                      i, attr_name, (guint)attr_type, s, (guint)attr_nvals);
-            g_free(s);
-        }
-#endif
-        if (rank > 2) {
-            gwy_debug("ignoring data set with rank > 2");
-        }
-        else if (rank < 2) {
-            gwy_debug("ignoring data set with rank < 2, FIXME!");
-        }
-        else {
-            dfield = read_data_field(sd_id, sds_id, data_type, dim_sizes,
-                                     error);
-            if (!dfield) {
-                SDendaccess(sds_id);
-                SDend(sd_id);
-                gwy_object_unref(container);
-                return NULL;
-            }
-
-            g_snprintf(key, sizeof(key), "/%u/data", ndata);
-            gwy_container_set_object_by_name(container, key, dfield);
-            g_object_unref(dfield);
-        }
-
-        if ((status = SDendaccess(sds_id)) == FAIL) {
-            err_HDF(error, "SDendaccess");
-            SDend(sd_id);
-            gwy_object_unref(container);
-            return NULL;
-        }
-    }
-
-    if ((status = SDend(sd_id)) == FAIL) {
-        err_HDF(error, "SDend");
-        gwy_object_unref(container);
-        return NULL;
-    }
-
-    return container;
-}
 #endif
 
 static GwyContainer*
-hdf_load(G_GNUC_UNUSED const gchar *filename,
+psi_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
+    guchar *buffer = NULL;
+    GError *err = NULL;
+    gsize size;
+    GArray *tags;
+    const guchar *p;
+    guint i;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    p = buffer;
+    tags = hdf4_read_tags(buffer, size, error);
+    if (!tags) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    for (i = 0; i < tags->len; i++) {
+        const HDF4DataDescriptor *desc;
+        gchar *s;
+
+        desc = &g_array_index(tags, HDF4DataDescriptor, i);
+        s = hdf4_describe_tag(desc, p, size);
+        gwy_debug("%s", s);
+        g_free(s);
+    }
+    gwy_file_abandon_contents(buffer, size, NULL);
+
     err_NO_DATA(error);
+
     return NULL;
 }
+
+static gboolean
+psi_read_header(const guchar *buffer,
+                gsize size,
+                PsiHeader *header,
+                GError **error)
+{
+    const guchar *p;
+
+    if (size < PSI_HD_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("PSI binary header is too short."));
+        return FALSE;
+    }
+    p = buffer;
+
+    header->unknown1 = get_DWORD_LE(&p);
+    get_CHARARRAY0(header->title, &p);
+    gwy_debug("     title: <%s>", header->title);
+    get_CHARARRAY0(header->instrument, &p);
+    gwy_debug("     instrument: <%s>", header->instrument);
+    header->x_dir = get_WORD_LE(&p);
+    header->y_dir = get_WORD_LE(&p);
+    gwy_debug("     x_dir: %d, y_dir: %d", header->x_dir, header->y_dir);
+    header->show_offset = get_BBOOLEAN(&p);
+    header->no_units = get_BBOOLEAN(&p);
+    gwy_debug("     show_offset: %d, no_units: %d",
+            header->show_offset, header->no_units);
+    header->xres = get_WORD_LE(&p);
+    header->yres = get_WORD_LE(&p);
+    gwy_debug("     xres: %u, yres: %u", header->xres, header->yres);
+    get_CHARARRAY(header->unknown2, &p);
+    header->xscale = get_FLOAT_LE(&p);
+    header->yscale = get_FLOAT_LE(&p);
+    gwy_debug("     xscale: %g, yscale: %g", header->xscale, header->yscale);
+    header->xoff = get_FLOAT_LE(&p);
+    header->yoff = get_FLOAT_LE(&p);
+    gwy_debug("     xoff: %g, yoff: %g", header->xoff, header->yoff);
+    header->rotation = get_FLOAT_LE(&p);
+    header->unknown3 = get_FLOAT_LE(&p);
+    header->lines_per_sec = get_FLOAT_LE(&p);
+    gwy_debug("     rotation: %g, lines/s: %g",
+            header->rotation, header->lines_per_sec);
+    header->set_point = get_FLOAT_LE(&p);
+    get_CHARARRAY0(header->set_point_unit, &p);
+    gwy_debug("     set_point: %g [%s]",
+            header->set_point, header->set_point_unit);
+    header->sample_bias = get_FLOAT_LE(&p);
+    header->tip_bias = get_FLOAT_LE(&p);
+    gwy_debug("     sample_bias: %g [V], tip_bias %g [V]",
+            header->sample_bias, header->tip_bias);
+    header->zgain = get_FLOAT_LE(&p);
+    get_CHARARRAY0(header->zgain_unit, &p);
+    gwy_debug("     zgain: %g [%s]",
+            header->zgain, header->zgain_unit);
+    header->min = get_WORD_LE(&p);
+    header->max = get_WORD_LE(&p);
+
+    return TRUE;
+}
+
+static GArray*
+hdf4_read_tags(const guchar *buffer,
+               gsize size,
+               GError **error)
+{
+    GArray *tags;
+    const guchar *p;
+    guint ddb_size, ddb_offset, i;
+
+    g_return_val_if_fail(size >= MAGIC_SIZE, NULL);
+
+    tags = g_array_new(FALSE, FALSE, sizeof(HDF4DataDescriptor));
+    ddb_offset = MAGIC_SIZE;
+    do {
+        gwy_debug("Reading DDB at 0x%x", ddb_offset);
+        p = buffer + ddb_offset;
+        if ((gulong)(p - buffer) + HDF4_DDH_SIZE > size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Data descriptor header is truncated."));
+            g_array_free(tags, TRUE);
+            return NULL;
+        }
+        ddb_size = get_WORD_BE(&p);
+        ddb_offset = get_DWORD_BE(&p);
+        gwy_debug("DDB size: %u, next offset: 0x%x", ddb_size, ddb_offset);
+        if ((gulong)(p - buffer) + ddb_size * HDF4_DD_SIZE > size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Data descriptor block is truncated."));
+            g_array_free(tags, TRUE);
+            return NULL;
+        }
+
+        for (i = 0; i < ddb_size; i++) {
+            HDF4DataDescriptor desc;
+
+            desc.tag = get_WORD_BE(&p);
+            desc.ref = get_WORD_BE(&p);
+            desc.offset = get_DWORD_BE(&p);
+            desc.length = get_DWORD_BE(&p);
+            /* Ignore NULL and invalid tags */
+            if (desc.tag == HDF4_NULL
+                || desc.offset == 0xFFFFFFFFUL
+                || desc.length == 0xFFFFFFFFUL)
+                continue;
+
+            g_array_append_val(tags, desc);
+        }
+    } while (ddb_offset);
+
+    return tags;
+}
+
+static guint
+get_data_type_size(HDF4TypeInfo id,
+                   GError **error)
+{
+    /* Native data format is Evil. */
+    if (id & HDF4TI_NATIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    N_("HDF data with `native' type is not supported."));
+        return 0;
+    }
+
+    switch (id & ~(HDF4TI_NATIVE | HDF4TI_LITEND)) {
+        case HDF4TI_CHAR8:
+        case HDF4TI_UCHAR8:
+        case HDF4TI_INT8:
+        case HDF4TI_UINT8:
+        return 1;
+        break;
+
+        case HDF4TI_INT16:
+        case HDF4TI_UINT16:
+        return 2;
+        break;
+
+        case HDF4TI_INT32:
+        case HDF4TI_UINT32:
+        case HDF4TI_FLOAT32:
+        return 4;
+        break;
+
+        case HDF4TI_FLOAT64:
+        return 8;
+        break;
+
+        default:
+        err_UNSUPPORTED(error, "data_type");
+        return 0;
+        break;
+    }
+}
+
+#ifdef DEBUG
+static const GwyEnum tag_names[] = {
+    /* Common */
+    { "No data", HDF4_NULL, },
+    { "Linked blocks indicator", HDF4_LINKED, },
+    { "Version descriptor", HDF4_VERSION, },
+    { "Compressed data indicator", HDF4_COMPRESSED, },
+    { "Data chunk", HDF4_CHUNK, },
+
+    /* Utility set */
+    { "File identifier", HDF4_FID, },
+    { "File description", HDF4_FD, },
+    { "Tag identifier", HDF4_TID, },
+    { "Tag description", HDF4_TD, },
+    { "Data id label", HDF4_DIL, },
+    { "Data id annotation", HDF4_DIA, },
+    { "Number type", HDF4_NT, },
+    { "Machine type", HDF4_MT, },
+    { "Free space", HDF4_FREE, },
+
+    /* Raster-8 set, XXX unused */
+    { "Image dimensions-8", HDF4_ID8, },
+    { "Image palette-8", HDF4_IP8, },
+    { "Raster image-8", HDF4_RI8, },
+    { "RLE compressed image-8", HDF4_CI8, },
+    { "Imcomp image-8", HDF4_II8, },
+
+    /* Raster image set, XXX unused */
+    { "Image dimensions", HDF4_ID, },
+    { "Image palette", HDF4_LUT, },
+    { "Raster image data", HDF4_RI, },
+    { "Compressed image", HDF4_CI, },
+    { "Raster image group", HDF4_RIG, },
+    { "Palette dimension", HDF4_LD, },
+    { "Matte dimension", HDF4_MD, },
+    { "Matte data", HDF4_MA, },
+    { "Color correction", HDF4_CCN, },
+    { "Color format", HDF4_CFM, },
+    { "Aspect ratio", HDF4_AR, },
+    { "Sequenced images", HDF4_DRAW, },
+    { "Runable program/script", HDF4_RUN, },
+    { "X-Y position", HDF4_XYP, },
+    { "M/c-type override", HDF4_MTO, },
+
+    /* Tektronix, XXX unused */
+    { "TEK 4014 data", HDF4_T14, },
+    { "TEK 4105 data", HDF4_T105, },
+
+    /* Scientific/Numeric data sets */
+    { "Scientific data group", HDF4_SDG, },
+    { "Scientific data dimension record", HDF4_SDD, },
+    { "Scientific data", HDF4_SD, },
+    { "Scientific data scales", HDF4_SDS, },
+    { "Scientific data labels", HDF4_SDL, },
+    { "Scientific data units", HDF4_SDU, },
+    { "Scientific data formats", HDF4_SDF, },
+    { "Scientific data max/min", HDF4_SDM, },
+    { "Scientific data coordinate system", HDF4_SDC, },
+    { "Transpose", HDF4_SDT, },
+    { "Links related to the dataset", HDF4_SDLNK, },
+    { "Numeric data group", HDF4_NDG, },
+    { "Calibration information", HDF4_CAL, },
+    { "Fill value information", HDF4_FV, },
+
+    /* VGroups */
+    { "Vgroup", HDF4_VG, },
+    { "Vdata", HDF4_VH, },
+    { "Vdata storage", HDF4_VS, },
+
+    /* Compression Schemes */
+    { "Run length encoding", HDF4_RLE, },
+    { "IMCOMP encoding", HDF4_IMCOMP, },
+    { "24-bit JPEG encoding", HDF4_JPEG, },
+    { "8-bit JPEG encoding", HDF4_GREYJPEG, },
+    { "24-bit JPEG encoding", HDF4_JPEG5, },
+    { "8-bit JPEG encoding", HDF4_GREYJPEG5, },
+
+    /* Psi */
+    { "PSI ProScan version", HDF4_PSI, },
+    { "PSI binary header", HDF4_PSIHD, },
+    { "PSI spectroscopy", HDF4_PSISPEC, },
+};
+
+static gchar*
+hdf4_describe_tag(const HDF4DataDescriptor *desc,
+                  const guchar *buffer,
+                  gsize size)
+{
+    GString *str;
+    const guchar *p;
+    const gchar *name;
+    gchar *s;
+    guint i;
+
+    str = g_string_new("");
+    if (desc->tag == HDF4_NULL)
+        goto finish;
+
+    name = gwy_enum_to_string(desc->tag, tag_names, G_N_ELEMENTS(tag_names));
+    g_string_append_printf(str,
+                           "Tag: %u (%s), Ref: %u, Offset: 0x%x, Length: 0x%x;",
+                           desc->tag, name ? name : "UNKNOWN", desc->ref,
+                           desc->offset, desc->length);
+
+    if (desc->tag == HDF4_MT) {
+        /* FIXME */
+        goto finish;
+    }
+
+    if (desc->offset == 0xFFFFFFFFUL || desc->length == 0xFFFFFFFFUL) {
+        g_string_append(str, " INVALID");
+        goto finish;
+    }
+
+    if (desc->offset > size
+        || desc->length > size
+        || desc->offset + desc->length > size) {
+        g_string_append(str, " TOO LARGE DATA");
+        goto finish;
+    }
+
+    p = buffer + desc->offset;
+    switch (desc->tag) {
+        case HDF4_TID:
+        case HDF4_TD:
+        case HDF4_FID:
+        case HDF4_FD:
+        case HDF4_SDL:
+        case HDF4_SDU:
+        case HDF4_SDF:
+        case HDF4_SDC:
+        g_string_append_printf(str, " \"%.*s\"", desc->length, p);
+        break;
+
+        case HDF4_SDG:
+        case HDF4_NDG:
+        case HDF4_RIG:
+        case HDF4_VG:
+        for (i = 0; i < desc->length/HDF4_TAGREF_SIZE; i++) {
+            guint tag, ref;
+
+            tag = get_WORD_BE(&p);
+            ref = get_WORD_BE(&p);
+            g_string_append_printf(str, " (%u, %u)", tag, ref);
+        }
+        break;
+
+        case HDF4_VERSION:
+        if (desc->length >= 3*4 + 1) {
+            guint major, minor, micro;
+
+            major = get_DWORD_BE(&p);
+            minor = get_DWORD_BE(&p);
+            micro = get_DWORD_BE(&p);
+            g_string_append_printf(str, " %u.%u.%u \"%s\"",
+                                   major, minor, micro, p);
+        }
+        break;
+
+        case HDF4_PSIHD:
+        {
+            PsiHeader psi_header;
+
+            psi_read_header(p, desc->length, &psi_header, NULL);
+        }
+        break;
+
+        default:
+        break;
+    }
+
+finish:
+    s = str->str;
+    g_string_free(str, FALSE);
+
+    return s;
+}
+
+static struct {
+    HDF4TypeInfo id;
+    const gchar *desc;
+}
+const data_types[] = {
+    { HDF4TI_CHAR8,   "signed 8-bit character"   },
+    { HDF4TI_UCHAR8,  "unsigned 8-bit character" },
+    { HDF4TI_INT8,    "signed 8-bit integer"     },
+    { HDF4TI_UINT8,   "unsigned 8-bit integer"   },
+    { HDF4TI_INT16,   "signed 16-bit integer"    },
+    { HDF4TI_UINT16,  "unsigned 16-bit integer"  },
+    { HDF4TI_INT32,   "signed 32-bit integer"    },
+    { HDF4TI_UINT32,  "unsigned 32-bit integer"  },
+    { HDF4TI_FLOAT32, "single precision float"   },
+    { HDF4TI_FLOAT64, "double precision float"   },
+};
+
+static gchar*
+hdf4_describe_data_type(HDF4TypeInfo id)
+{
+    guint i;
+    HDF4TypeInfo baseid;
+
+    baseid = id & ~(HDF4TI_NATIVE | HDF4TI_LITEND);
+    for (i = 0; i < sizeof(data_types)/sizeof(data_types[0]); i++) {
+        if (baseid == data_types[i].id)
+            return g_strdup_printf("%s%s%s",
+                                   (id & HDF4TI_NATIVE) ? "native " : "",
+                                   (id & HDF4TI_LITEND) ? "little endian " : "",
+                                   data_types[i].desc);
+    }
+
+    return g_strdup("UNKNOWN");
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
