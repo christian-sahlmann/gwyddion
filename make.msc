@@ -1,14 +1,17 @@
 # @(#) $Id$
-# XXX: set following to your Gtk+-Development and MSVC paths
-# The uncommented paths should work for GladeWin32 All-in-one,
-# if you have separate Gtk+ and GtkGLext, defined GTKGLEXT_TOP accordingly
-#GTK_TOP = C:\Dev-C++
-#GTK_TOP = C:\Program Files\Common Files\Gtk\2.0
+#
+# XXX: Set following to your Gtk+-Development and MSVC paths
+#
+# The uncommented paths should work for default MSVC 6 installation and for
+# default GladeWin32 installation.
+# If you have separate Gtk+ and GtkGLext, define GTKGLEXT_TOP accordingly.
+# If you have separate Gtk+ and LibXML2, define LIBXML2_TOP accordingly.
 GTK_TOP = C:\Gtk
-#GTKGLEXT_TOP = C:\GtkGLExt\1.0
 GTKGLEXT_TOP = $(GTK_TOP)
+LIBXML2_TOP = $(GTK_TOP)
+#GTKGLEXT_TOP = C:\GtkGLExt\1.0
+#LIBXML2_TOP = C:\libxml2
 MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
-LIBXML2_TOP = C:\libxml2
 
 # Don't change this it's used by iss too
 DEST_DIR = $(TOP_SRCDIR)\inst
