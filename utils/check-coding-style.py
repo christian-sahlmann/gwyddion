@@ -65,7 +65,7 @@ def check_file(filename, lines):
     lines = [l.rstrip() for l in lines]
     for check in line_checks:
         check(lines, warnings)
-    tokens = tokenize(lines)
+    tokens = tokenize(lines, warnings)
     find_matching_parentheses(tokens)
     lines = [l.lstrip() for l in lines]
     for check in token_checks:
@@ -349,7 +349,7 @@ def check_boolean_arguments(tokens, lines, warnings):
                 warnings.append((arg.line, w % (ind, t.string,
                                                 arg.col, lines[arg.line])))
 
-def tokenize(lines):
+def tokenize(lines, warnings):
     "`Parse' a C file returning a sequence of Tokens"
     re_com = re.compile(r'/\*.*?\*/|//.*')
     re_mac = re.compile(r'#.*')
@@ -401,6 +401,9 @@ def tokenize(lines):
                 if m:
                     if token_ids[r]:
                         tokens.append(Token(i, col, token_ids[r], m.group()))
+                    else:
+                        w = 'C++/C99 style comment (col %d)'
+                        warnings.append((i, w % col))
                     col += m.end()
                     l, col = blstrip(l[m.end():], col)
                     break
