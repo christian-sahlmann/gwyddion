@@ -108,7 +108,7 @@ ZLIB_LIBS = z.lib
 
 LIBXML2_CFLAGS = -I "$(LIBXML2_TOP)\include"
 LIBXML2_LDFLAGS = /libpath:"$(LIBXML2_TOP)\lib"
-LIBXML2_LIBS = libxml2.lib
+LIBXML2_LIBS = xml2.lib
 
 INSTALL = copy
 LINK32 = link.exe
