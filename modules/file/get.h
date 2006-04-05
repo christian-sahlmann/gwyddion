@@ -20,25 +20,48 @@
 #ifndef __GWY_FILE_GET_H__
 #define __GWY_GILE_GET_H__
 
-static inline gsize
-get_WORD(const guchar **p)
+/* Compatibility */
+#define get_WORD   get_WORD_LE
+#define get_DWORD  get_DWORD_LE
+#define get_FLOAT  get_FLOAT_LE
+#define get_DOUBLE get_DOUBLE_LE
+
+static inline gulong
+get_WORD_LE(const guchar **p)
 {
-    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8);
+    gulong z = (gulong)(*p)[0] + ((gulong)(*p)[1] << 8);
     *p += 2;
     return z;
 }
 
-static inline gsize
-get_DWORD(const guchar **p)
+static inline gulong
+get_WORD_BE(const guchar **p)
 {
-    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8)
-              + ((gsize)(*p)[2] << 16) + ((gsize)(*p)[3] << 24);
+    gulong z = (gulong)((*p)[0] << 8) + (gulong)(*p)[1];
+    *p += 2;
+    return z;
+}
+
+static inline gulong
+get_DWORD_LE(const guchar **p)
+{
+    gulong z = (gulong)(*p)[0] + ((gulong)(*p)[1] << 8)
+              + ((gulong)(*p)[2] << 16) + ((gulong)(*p)[3] << 24);
+    *p += 4;
+    return z;
+}
+
+static inline gulong
+get_DWORD_BE(const guchar **p)
+{
+    gulong z = ((gulong)(*p)[0] << 24) + ((gulong)(*p)[1] << 16)
+              + ((gulong)(*p)[2] << 8) + (gulong)(*p)[3];
     *p += 4;
     return z;
 }
 
 static inline gdouble
-get_FLOAT(const guchar **p)
+get_FLOAT_LE(const guchar **p)
 {
     union { guchar pp[4]; float f; } z;
 
@@ -72,7 +95,7 @@ get_FLOAT_BE(const guchar **p)
 }
 
 static inline gdouble
-get_DOUBLE(const guchar **p)
+get_DOUBLE_LE(const guchar **p)
 {
     union { guchar pp[8]; double d; } z;
 
