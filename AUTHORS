@@ -25,6 +25,10 @@ Lukáš Chvátal <chvatal@physics.muni.cz>
     Nanoindentation modules.
 Sven Neumann <neumann@jpk.com>
     JPK file import, miscellaneous improvements.
+Jan Horák <xhorak@gmail.com>
+    SPML import module.
+Александр Ковалев <av_kov@tut.by>
+    Nanotop import module.
 
 
 === Translators ===
@@ -72,10 +76,14 @@ Mindaugas Rackaitis, Penn State University
 Markus Pristovsek
     Several file import modules were written or improved using the source
     code of Snomputz, particularly:
-    ECS, Hitachi AFM, Omicron, Nanoscope, Seiko.
+    HDF4/PSI, ECS, Hitachi AFM, Omicron, Nanoscope, Seiko.
     See the respective modules for more information.
 
 Hans-Peter Doerr
     The Burleigh file module was written using the source code of the readimg
     library.
+
+The Board of Trustees of the University of Illinois
+    The list of HDF tags in the hdf4file module was taken from libHDF4 header
+    files (the rest is a clean-room implementation).
 
