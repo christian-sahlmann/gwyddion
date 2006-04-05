@@ -425,8 +425,10 @@ gwy_byteswapped_append(guint8 *source,
         return;
     }
 
-    buffer = dest->data + dest->len;
+    i = dest->len;
+    /* This can cause dest->data to change (bug #73) */
     g_byte_array_set_size(dest, dest->len + size*len);
+    buffer = dest->data + i;
     for (i = 0; i < len; i++) {
         guint8 *b = buffer + i*size;
 
@@ -719,7 +721,7 @@ gwy_serialize_spec(GByteArray *buffer,
             g_byte_array_append(buffer, arr, asize*sizeof(gint32));
 #else
              gwy_byteswapped_append(arr, buffer, sizeof(gint32), asize,
-                                       (1 << sizeof(gint32)) - 1);
+                                    sizeof(gint32) - 1);
 #endif
         }
         break;
@@ -738,7 +740,7 @@ gwy_serialize_spec(GByteArray *buffer,
             g_byte_array_append(buffer, arr, asize*sizeof(gint64));
 #else
             gwy_byteswapped_append(arr, buffer, sizeof(gint64), asize,
-                                   (1 << sizeof(gint64)) - 1);
+                                   sizeof(gint64) - 1);
 #endif
         }
         break;
@@ -748,7 +750,7 @@ gwy_serialize_spec(GByteArray *buffer,
             g_byte_array_append(buffer, sp->value, sizeof(gdouble));
 #else
             gwy_byteswapped_append(sp->value, buffer, sizeof(gdouble), 1,
-                                   (1 << sizeof(gdouble)) - 1);
+                                   sizeof(gdouble) - 1);
 #endif
         }
         break;
@@ -759,7 +761,7 @@ gwy_serialize_spec(GByteArray *buffer,
             g_byte_array_append(buffer, arr, asize*sizeof(gdouble));
 #else
             gwy_byteswapped_append(arr, buffer, sizeof(gdouble), asize,
-                                   (1 << sizeof(gdouble)) - 1);
+                                   sizeof(gdouble) - 1);
 #endif
         }
         break;
@@ -1555,7 +1557,7 @@ gwy_deserialize_int32_array(const guchar *buffer,
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, newasize*sizeof(gint32));
 #else
-    value = g_new(gint32, newasize);
+    value = g_new(gint32, newasize*sizeof(gint32));
     gwy_byteswapped_copy(buffer + *position, (guint8*)value,
                          sizeof(gint32), newasize, sizeof(gint32) - 1);
 #endif
@@ -1630,7 +1632,7 @@ gwy_deserialize_int64_array(const guchar *buffer,
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, newasize*sizeof(gint64));
 #else
-    value = g_new(gint64, newasize);
+    value = g_new(gint64, newasize*sizeof(gint64));
     gwy_byteswapped_copy(buffer + *position, (guint8*)value,
                          sizeof(gint64), newasize, sizeof(gint64) - 1);
 #endif
@@ -1709,7 +1711,7 @@ gwy_deserialize_double_array(const guchar *buffer,
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, newasize*sizeof(gdouble));
 #else
-    value = g_new(gdouble, newasize);
+    value = g_new(gdouble, newasize*sizeof(gdouble));
     gwy_byteswapped_copy(buffer + *position, (guint8*)value,
                          sizeof(gdouble), newasize, sizeof(gdouble) - 1);
 #endif
