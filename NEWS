@@ -1,18 +1,25 @@
-1.99.6cvs20060327
+1.99.6cvs20060405
 
 1.99.7 (0000-00-00)
 Application:
 - It is possible to switch between pixelwise-square and physically-square
   display modes (via upper left data window corner menu).
+- Gwyddion now depends on libxml2 used for SPML import (optionally, if you
+  compile it from source code).
 
 Libraries:
+- libgwydddion: Memory corruption on big-endian machines in serialization and
+  deserialization was fixed (bug #73).
 - libgwyprocess: Fitting of polynomials with limited total degree was added.
+- gwy_math_humanize_numbers() behaves reasonably for zero values (bug #70).
 
 Modules:
 - Omicron (new): Omicron (Scala) file import.
 - SEIKO (new): Seiko XQD file import.
 - Burleigh (new): Burleigh IMG v2.1 file import.
 - ECS (new): ECS IMG file import.
+- Surffile (new): Surf file import.
+- Nanotop (new): Nanotop SPM file import.
 - Hitachi AFM: Import of another strain of Hitachi AFM files was added.
 - BCR file: Void pixel handling was improved (bug #68).
 - Grain distribution: Height distribution was added (bug #69).

@@ -29,8 +29,14 @@ Prerequisities:
 Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
 
+Recommended though optional, for TIFF and JPK file support:
+- LibTIFF-3.6 or newer, including development files
+
 Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
+
+Optional, for SPML file support:
+- LibXML2, including development files
 
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
@@ -60,6 +66,7 @@ Prerequisities:
   the tested one)
 - GLib-2.6 and Gtk+-2.6, including development files
 - GtkGLExt-1.0 or newer, including development files
+- LibXML2, including development files
 The prefered way to get all these is to install Gtk+ all-in-one package from
 GladeWin32.
 
