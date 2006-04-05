@@ -1,8 +1,8 @@
 rem vim: set ff=dos :
 deltree /y gwyddion-cvs
-wget -t 1 http://trific.ath.cx/Ftp/gwyddion/gwyddion-@VERSION@.tar.gz
-"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-@VERSION@.tar.gz"
-"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-@VERSION@.tar"
+wget -t 1 http://gwyddion.net/download/test/gwyddion-cvs.tar.gz
+"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-cvs.tar.gz"
+"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-cvs.tar"
 rename "gwyddion-@VERSION@" gwyddion-cvs
 copy upload.bat "gwyddion-cvs\upload.bat"
 cd gwyddion-cvs
