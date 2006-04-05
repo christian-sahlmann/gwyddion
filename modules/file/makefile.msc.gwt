@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-tiff_modules = jpkscan.dll
+tiff_modules = jpkscan
 
 TOP_SRCDIR = ..\..
 MOD_TYPE = file
