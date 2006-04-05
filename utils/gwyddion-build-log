@@ -1,7 +1,6 @@
 #!/bin/bash
 pkgname=gwyddion
 logdir=$HOME/Projects/Gwyddion/buildlog
-phpswroot=$HOME/PHP/software
 tmplog=tmplog
 
 source $HOME/.bashrc
@@ -93,18 +92,18 @@ function extract_build_documentation() {
 }
 
 function coding_style_report() {
-  phpdir=$phpswroot/$pkgname
+  n=20
   base=coding-style-byfile
   cut -d: -f1 coding-style.log  | uniq -c | sort -nr >$base.log
-  head -n 20 $base.log >$phpdir/$base.txt
-  printf '% 7d total' $(wc -l <coding-style.log) >>$phpdir/$base.txt
+  head -n $n $base.log >$base-top$n.log
+  printf '% 7d total' $(wc -l <coding-style.log) >>$base-top$n.log
 
   base=coding-style-bytype
   cut -d: -f3- coding-style.log \
     | sed -e 's/: .*//' -e 's/ (col [0-9]*)//' | sort | uniq -c | sort -nr \
     >$base.log
-  head -n 20 $base.log >$phpdir/$base.txt
-  printf '% 7d  total' $(wc -l <coding-style.log) >>$phpdir/$base.txt
+  head -n $n $base.log >$base-top$n.log
+  printf '% 7d  total' $(wc -l <coding-style.log) >>$base-top$n.log
 }
 
 printerr update_version
@@ -116,7 +115,6 @@ printerr check_coding_style
 coding_style_report
 printerr install_to_tmp grep -vFf build_project.err
 printerr make_dists grep -vFf build_project.err
-printerr release_dists
 printerr gnains_index
 printerr webify_api
 

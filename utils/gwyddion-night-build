@@ -4,7 +4,6 @@ disabled=
 pkgname=gwyddion
 basever=1.99.6
 dont_update_version=
-arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs
@@ -12,8 +11,6 @@ installroot=$HOME/tmp
 gtkdocdir="/share/gtk-doc/html/*"
 gtkdocdirs=(/usr /usr/local /opt/gnome $installroot/usr)
 gnainsindex=$HOME/lib/gtk.gnains
-phpswroot=$HOME/PHP/software
-rpmtopdir=$(rpm --showrc | grep '^-[0-9]\+: _topdir' | cut -f2)
 host=$($HOME/bin/Ftpcp)
 
 source $HOME/.bashrc
@@ -135,39 +132,13 @@ function install_to_tmp() {
 
 function make_dists() {
   rm -f .releaseme
-  toremove=$pkgname-${basever}cvs*.tar.*
-  for f in $toremove; do
-    rm -fv $f
-  done
 
   make dist
-  test -s $pkgname-$version.tar.bz2 \
-    && rpmbuild -ta --clean --target $arch $pkgname-$version.tar.bz2 \
-    && touch .releaseme
-}
-
-
-function release_dists() {
-  if ! test -f .releaseme; then
-    return
+  if test -s $pkgname-$version.tar.bz2; then
+    rpmbuild -ta --clean $pkgname-$version.tar.bz2 && touch .releaseme
+    mv $pkgname-$version.tar.bz2 $pkgname-cvs.tar.bz2
+    mv $pkgname-$version.tar.gz $pkgname-cvs.tar.gz
   fi
-
-  pver=$pkgname-$version
-  for f in $toremove; do
-    $HOME/bin/Ftprm $pkgname/$f
-  done
-
-  archdir=$rpmtopdir/RPMS/$arch
-  $HOME/bin/Ftpcp $pkgname $pver.tar.* utils/gwywin32.bat
-  $HOME/bin/Ftpcp vim/syntax data/gwyddion.vim
-  if test -f $phpswroot/$pkgname/main.xhtml; then
-    pkgpage=$phpswroot/$pkgname/main.xhtml
-  else
-    pkgpage= $phpswroot/$pkgname.xhtml
-  fi
-  sed -ri -e "2s/\\<1\\.[0-9][0-9.cvs]*/$version/" $pkgpage
-
-  rm -f .releaseme
 }
 
 
@@ -187,7 +158,6 @@ function webify_api() {
     fi
   done
   rm $docdir/*/{left,right,home,up}.png
-  rsync --recursive --rsh=ssh $docdir $host:$(dirname $docdir)
 }
 
 
@@ -221,7 +191,6 @@ else
   call check_coding_style
   call install_to_tmp
   call make_dists
-  call release_dists
   call gnains_index
   call webify_api
   # LIST-END
