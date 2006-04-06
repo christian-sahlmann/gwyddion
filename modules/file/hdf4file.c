@@ -177,19 +177,19 @@ typedef enum {
 
 /* Type info codes */
 typedef enum {
+    /* types */
     HDF4TI_HDF      = 0x00000000,   /* standard HDF format  */
     HDF4TI_NATIVE   = 0x00001000,   /* native format        */
     HDF4TI_CUSTOM   = 0x00002000,   /* custom format        */
     HDF4TI_LITEND   = 0x00004000,   /* Little Endian format */
     HDF4TI_MASK     = 0x00000fff,   /* format mask */
-    HDF4TI_NONE     = 0,  /* indicates that number type not set */
-    HDF4TI_QUERY    = 0,  /* use this code to find the current type */
-    HDF4TI_VERSION  = 1,  /* current version of NT info */
+
+    HDF4TI_NONE     = 0,   /* indicates that number type not set */
+    HDF4TI_UCHAR8   = 3,   /* 3 chosen for backward compatibility */
+    HDF4TI_CHAR8    = 4,   /* 4 chosen for backward compatibility */
     HDF4TI_FLOAT32  = 5,
-    HDF4TI_FLOAT    = 5,  /* For backward compat; don't use */
     HDF4TI_FLOAT64  = 6,
-    HDF4TI_DOUBLE   = 6,  /* For backward compat; don't use */
-    HDF4TI_FLOAT128 = 7,  /* No current plans for support */
+    HDF4TI_FLOAT128 = 7,   /* No current plans for support */
     HDF4TI_INT8     = 20,
     HDF4TI_UINT8    = 21,
     HDF4TI_INT16    = 22,
@@ -200,13 +200,41 @@ typedef enum {
     HDF4TI_UINT64   = 27,
     HDF4TI_INT128   = 28,  /* No current plans for support */
     HDF4TI_UINT128  = 30,  /* No current plans for support */
-    HDF4TI_UCHAR8   = 3,  /* 3 chosen for backward compatibility */
-    HDF4TI_UCHAR    = 3,  /* uchar=uchar8 for backward combatibility */
-    HDF4TI_CHAR8    = 4,  /* 4 chosen for backward compatibility */
-    HDF4TI_CHAR     = 4,  /* uchar=uchar8 for backward combatibility */
     HDF4TI_CHAR16   = 42,  /* No current plans for support */
     HDF4TI_UCHAR16  = 43,  /* No current plans for support */
 } HDF4TypeInfo;
+
+/* Class info codes for int */
+typedef enum {
+    HDF4TC_MBO     = 1,   /* Motorola byte order 2's compl */
+    HDF4TC_VBO     = 2,   /* Vax byte order 2's compl */
+    HDF4TC_IBO     = 4,   /* Intel byte order 2's compl */
+} HDF4IntTypeClass;
+
+/* Class info codes for float */
+typedef enum {
+    HDF4TC_NONE       = 0,   /* indicates subclass is not set */
+    HDF4TC_IEEE       = 1,   /* IEEE format */
+    HDF4TC_VAX        = 2,   /* Vax format */
+    HDF4TC_CRAY       = 3,   /* Cray format */
+    HDF4TC_PC         = 4,   /* PC floats - flipped IEEE */
+    HDF4TC_CONVEX     = 5,   /* CONVEX native format */
+    HDF4TC_VP         = 6,   /* Fujitsu VP native format */
+    HDF4TC_CRAYMPP    = 7,   /* Cray MPP format */
+} HDF4FloatTypeClass;
+
+/* Class info codes for char */
+typedef enum {
+    HDF4TC_BYTE    = 0,   /* bitwise/numeric field */
+    HDF4TC_ASCII   = 1,   /* ASCII */
+    HDF4TC_EBCDIC  = 5,   /* EBCDIC */
+} HDF4CharTypeClass;
+
+/* Array order */
+typedef enum {
+    HDF4_ORDER_FORTRAN = 1,   /* column major order */
+    HDF4_ORDER_C       = 2,   /* row major order */
+} HDF4ArrayOrder;
 
 /* Miscellaneous sizes */
 enum {
@@ -224,6 +252,7 @@ typedef struct {
     guint32 ref;  /* in fact 16bit */
     guint32 offset;
     guint32 length;
+    const guchar *data;
 } HDF4DataDescriptor;
 
 typedef struct {
@@ -263,10 +292,13 @@ static GwyContainer* psi_load       (const gchar *filename,
 static GArray*       hdf4_read_tags (const guchar *buffer,
                                      gsize size,
                                      GError **error);
+
+static guint         get_data_type_size(HDF4TypeInfo id,
+                                        GError **error);
+static HDF4TypeInfo  map_number_type(guint32 number_type);
+
 #ifdef DEBUG
-static gchar*        hdf4_describe_tag(const HDF4DataDescriptor *desc,
-                                       const guchar *buffer,
-                                       gsize size);
+static gchar*        hdf4_describe_tag(const HDF4DataDescriptor *desc);
 static gchar*        hdf4_describe_data_type(HDF4TypeInfo id);
 #endif
 
@@ -519,6 +551,42 @@ read_data_field(int32 sd_id,
         }
         break;
 
+        case DFNT_INT64:
+        {
+            gint64 *d64 = (gint64*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT64_FROM_BE(d64[i]);
+        }
+        break;
+
+        case DFNT_INT64 | DFNT_LITEND:
+        {
+            gint64 *d64 = (gint64*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT64_FROM_LE(d64[i]);
+        }
+        break;
+
+        case DFNT_UINT64:
+        {
+            gint64 *d64 = (gint64*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GUINT64_FROM_BE(d64[i]);
+        }
+        break;
+
+        case DFNT_UINT64 | DFNT_LITEND:
+        {
+            gint64 *d64 = (gint64*)d;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GUINT64_FROM_LE(d64[i]);
+        }
+        break;
+
         case DFNT_FLOAT32:
         {
             const guchar *p = d;
@@ -598,7 +666,7 @@ psi_load(const gchar *filename,
         gchar *s;
 
         desc = &g_array_index(tags, HDF4DataDescriptor, i);
-        s = hdf4_describe_tag(desc, p, size);
+        s = hdf4_describe_tag(desc);
         gwy_debug("%s", s);
         g_free(s);
     }
@@ -710,6 +778,7 @@ hdf4_read_tags(const guchar *buffer,
             desc.ref = get_WORD_BE(&p);
             desc.offset = get_DWORD_BE(&p);
             desc.length = get_DWORD_BE(&p);
+            desc.data = buffer + desc.offset;
             /* Ignore NULL and invalid tags */
             if (desc.tag == HDF4_NULL
                 || desc.offset == 0xFFFFFFFFUL
@@ -753,6 +822,8 @@ get_data_type_size(HDF4TypeInfo id,
         return 4;
         break;
 
+        case HDF4TI_INT64:
+        case HDF4TI_UINT64:
         case HDF4TI_FLOAT64:
         return 8;
         break;
@@ -762,6 +833,86 @@ get_data_type_size(HDF4TypeInfo id,
         return 0;
         break;
     }
+}
+
+static HDF4TypeInfo
+map_number_type(guint32 number_type)
+{
+    HDF4TypeInfo typeinfo;
+    guint version, bits, expected_bits, flags;
+
+    version = number_type >> 24;
+    typeinfo = (number_type >> 16) & 0xff;
+    bits = (number_type >> 8) & 0xff;
+    flags = number_type & 0xff;
+
+    if (version != 1)
+        g_warning("Type information version %u is not 1", version);
+
+    expected_bits = 8*get_data_type_size(typeinfo, NULL);
+    if (!expected_bits)
+        return 0;
+    if (bits != expected_bits) {
+        g_warning("Number of bits in type %u is %u instead of %u",
+                  typeinfo, bits, expected_bits);
+        return 0;
+    }
+
+    switch (typeinfo) {
+        case HDF4TI_UCHAR8:
+        case HDF4TI_CHAR8:
+        if (flags != HDF4TC_ASCII && flags != HDF4TC_BYTE)
+            g_warning("Unimplemented char class %u", flags);
+        break;
+
+        case HDF4TI_FLOAT32:
+        case HDF4TI_FLOAT64:
+        switch (flags) {
+            case HDF4TC_IEEE:
+            break;
+
+            case HDF4TC_PC:
+            typeinfo |= HDF4TI_LITEND;
+            break;
+
+            default:
+            g_warning("Unimplemented float class %u", flags);
+            break;
+        }
+        break;
+
+        case HDF4TI_INT8:
+        case HDF4TI_UINT8:
+        case HDF4TI_INT16:
+        case HDF4TI_UINT16:
+        case HDF4TI_INT32:
+        case HDF4TI_UINT32:
+        case HDF4TI_INT64:
+        case HDF4TI_UINT64:
+        case HDF4TI_INT128:
+        case HDF4TI_UINT128:
+        switch (flags) {
+           case HDF4TC_MBO:
+           break;
+
+           case HDF4TC_VBO:
+           case HDF4TC_IBO:
+           typeinfo |= HDF4TI_LITEND;
+           break;
+
+           default:
+           g_warning("Unimplemented int class %u", flags);
+           break;
+        }
+        break;
+
+        default:
+        g_warning("Unimplemented type %u", typeinfo);
+        return 0;
+        break;
+    }
+
+    return typeinfo;
 }
 
 #ifdef DEBUG
@@ -848,12 +999,10 @@ static const GwyEnum tag_names[] = {
 };
 
 static gchar*
-hdf4_describe_tag(const HDF4DataDescriptor *desc,
-                  const guchar *buffer,
-                  gsize size)
+hdf4_describe_tag(const HDF4DataDescriptor *desc)
 {
     GString *str;
-    const guchar *p;
+    const guchar *p, *q;
     const gchar *name;
     gchar *s;
     guint i;
@@ -878,25 +1027,31 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc,
         goto finish;
     }
 
-    if (desc->offset > size
-        || desc->length > size
-        || desc->offset + desc->length > size) {
-        g_string_append(str, " TOO LARGE DATA");
-        goto finish;
-    }
-
-    p = buffer + desc->offset;
+    p = desc->data;
     switch (desc->tag) {
         case HDF4_TID:
         case HDF4_TD:
         case HDF4_FID:
         case HDF4_FD:
-        case HDF4_SDL:
-        case HDF4_SDU:
         case HDF4_SDF:
         case HDF4_SDC:
         g_string_append_printf(str, " \"%.*s\"", desc->length, p);
         break;
+
+        /* FIXME: Psi simply stores three strings in a row.  It does not
+         * seem to be accessible via libHDF SD API though, so I wonder how
+         * big hack it is. */
+        case HDF4_SDL:
+        case HDF4_SDU:
+        {
+            i = desc->length;
+            do {
+                g_string_append_printf(str, " \"%.*s\"", i, p);
+                q = memchr(p, 0, i);
+                i -= (q - p + 1);
+                p = q+1;
+            } while (q && i);
+        }
 
         case HDF4_SDG:
         case HDF4_NDG:
@@ -922,6 +1077,29 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc,
                                    major, minor, micro, p);
         }
         break;
+
+        case HDF4_NT:
+        if (desc->length == 4) {
+            HDF4TypeInfo id;
+
+            id = get_DWORD_BE(&p);
+            id = map_number_type(id);
+            s = hdf4_describe_data_type(id);
+            g_string_append_c(str, ' ');
+            g_string_append(str, s);
+            g_free(s);
+        }
+        break;
+
+        case HDF4_SDM:
+        if (desc->length == 8) {
+            /* XXX: depends on data type */
+            guint min, max;
+
+            min = get_WORD_BE(&p);
+            max = get_WORD_BE(&p);
+            g_string_append_printf(str, " %u %u", min, max);
+        }
 
         case HDF4_PSIHD:
         {
@@ -955,6 +1133,8 @@ const data_types[] = {
     { HDF4TI_UINT16,  "unsigned 16-bit integer"  },
     { HDF4TI_INT32,   "signed 32-bit integer"    },
     { HDF4TI_UINT32,  "unsigned 32-bit integer"  },
+    { HDF4TI_INT64,   "signed 64-bit integer"    },
+    { HDF4TI_UINT64,  "unsigned 64-bit integer"  },
     { HDF4TI_FLOAT32, "single precision float"   },
     { HDF4TI_FLOAT64, "double precision float"   },
 };
@@ -965,7 +1145,7 @@ hdf4_describe_data_type(HDF4TypeInfo id)
     guint i;
     HDF4TypeInfo baseid;
 
-    baseid = id & ~(HDF4TI_NATIVE | HDF4TI_LITEND);
+    baseid = id & HDF4TI_MASK;
     for (i = 0; i < sizeof(data_types)/sizeof(data_types[0]); i++) {
         if (baseid == data_types[i].id)
             return g_strdup_printf("%s%s%s",
