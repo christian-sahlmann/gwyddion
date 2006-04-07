@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060405, [klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.99.6cvs20060407, [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -321,7 +321,7 @@ AC_SUBST(LIBTIFF)
 #############################################################################
 # SPML importer
 # Only if you want to have support for spml importer compiled
-GWY_WITH([spml],,[SPML importer])
+GWY_WITH([spml],,[SPML importer (libxml2 required)])
 if test "x$enable_spml" != "xno"; then
   PKG_CHECK_MODULES(XML2, [libxml-2.0 >= 2.6],
                     [AC_DEFINE(HAVE_XML2,1,
@@ -423,14 +423,15 @@ _______EOF
   fi
   echo >>$outfile
 
+  echo '/* Math functions become available when gwymath.h is included. */' >>$outfile
   if test x$gwy_have_pow10 = xno; then
-    echo '#define pow10(x) exp(G_LN10*(x))' >>$outfile
+    echo '#define pow10(x) pow(10.0, (x))' >>$outfile
   else
     echo '/* pow10() is defined */' >>$outfile
   fi
 
   if test x$gwy_have_hypot = xno; then
-    echo 'static inline double hypot(double x, double y) { return sqrt(x*x + y*y); }' >>$outfile
+    echo '#define hypot(x,y) _gwy_math_hypot((x),(y))' >>$outfile
   else
     echo '/* hypot() is defined */' >>$outfile
   fi
@@ -442,19 +443,19 @@ _______EOF
   fi
 
   if test x$gwy_have_acosh = xno; then
-    echo 'static inline double acosh(double x) { return log(x+sqrt(x*x - 1)); }' >>$outfile
+    echo '#define acosh(x) _gwy_math_acosh(x)' >>$outfile
   else
     echo '/* acosh() is defined */' >>$outfile
   fi
 
   if test x$gwy_have_asinh = xno; then
-    echo 'static inline double asinh(double x) { return log(x+sqrt(x*x + 1)); }' >>$outfile
+    echo '#define asinh(x) _gwy_math_asinh(x)' >>$outfile
   else
     echo '/* asinh() is defined */' >>$outfile
   fi
 
   if test x$gwy_have_atanh = xno; then
-    echo 'static inline double atanh(double x) { return log((1 + x)/(1 - x)); }' >>$outfile
+    echo '#define atanh(x) _gwy_math_atanh(x)' >>$outfile
   else
     echo '/* atanh() is defined */' >>$outfile
   fi

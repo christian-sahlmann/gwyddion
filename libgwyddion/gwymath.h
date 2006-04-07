@@ -70,6 +70,19 @@ gdouble      gwy_math_median             (gsize n,
 void         gwy_math_sort               (gsize n,
                                           gdouble *array);
 
+/* Replacements for missing math functions.  Do NOT use directly. */
+static inline double
+_gwy_math_hypot(double x, double y) { return sqrt(x*x + y*y); }
+
+static inline double
+_gwy_math_acosh(double x) { return log(x + sqrt(x*x - 1.0)); }
+
+static inline double
+_gwy_math_asinh(double x) { return log(x + sqrt(x*x + 1.0)); }
+
+static inline double
+_gwy_math_atanh(double x) { return log((1.0 + x)/(1.0 - x)); }
+
 G_END_DECLS
 
 #endif /* __GWY_MATH_H__ */

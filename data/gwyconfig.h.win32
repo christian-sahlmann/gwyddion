@@ -9,12 +9,13 @@
 
 #define GWYDDION_HAS_OPENGL 1
 
-#define pow10(x) exp(G_LN10*(x))
+/* Math functions become available when gwymath.h is included. */
+#define pow10(x) pow(10.0, (x))
 /* hypot() is defined */
 #define cbrt(x) pow((x), 1.0/3.0)
-static inline double acosh(double x) { return log(x + sqrt(x*x - 1)); }
-static inline double asinh(double x) { return log(x + sqrt(x*x + 1)); }
-static inline double atanh(double x) { return log((1 + x)/(1 - x)); }
+#define acosh(x) _gwy_math_acosh(x)
+#define asinh(x) _gwy_math_asinh(x)
+#define atanh(x) _gwy_math_atanh(x)
 
 #endif /* __GWY_CONFIG_H__ */
 
