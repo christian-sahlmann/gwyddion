@@ -48,6 +48,7 @@ file_LTLIBRARIES = \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
+	surffile.la \
 	unisoku.la \
 	witfile.la \
 	wsxmfile.la
@@ -174,6 +175,9 @@ stmprg_la_LIBADD = $(module_libadd)
 
 stpfile_la_SOURCES = stpfile.c
 stpfile_la_LIBADD = $(module_libadd)
+
+surffile_la_SOURCES = surffile.c
+surffile_la_LIBADD = $(module_libadd)
 
 unisoku_la_SOURCES = unisoku.c
 unisoku_la_LIBADD = $(module_libadd)
