@@ -1,191 +1,198 @@
 # @(#) $Id$
 %{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
+# Untested
 %{expand:%global distro_is_mdk %(test ! -f /etc/mandrake-release; echo $?)}
 %{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
-Summary: An SPM data visualization and analysis tool
-Name: @PACKAGE_TARNAME@
-Version: @RPM_VERSION@
-Release: 1
-License: GNU GPL
-Group: Applications/Engineering
-Source: http://trific.ath.cx/Ftp/%{name}/@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2
-URL: @PACKAGE_URL@
-BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
+Name:          @PACKAGE_TARNAME@
+Version:       @RPM_VERSION@
+Release:       1
+Summary:       An SPM data visualization and analysis tool
+
+Group:         Applications/Engineering
+License:       GNU GPL
+URL:           @PACKAGE_URL@
+Source0:       http://gwyddion.net/download/%{version}/%{name}-%{version}.tar.bz2
+BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(pre): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-Requires(pre): desktop-file-utils >= 0.9
-Requires(postun): desktop-file-utils >= 0.9
-BuildRequires: xorg-x11-devel
+
 BuildRequires: pango-devel >= 1.8
 BuildRequires: gtk2-devel >= 2.6
 BuildRequires: glib2-devel >= 2.6
 BuildRequires: gtkglext-devel >= 1.0
 BuildRequires: libxml2-devel
-BuildRequires: libpng-devel
-BuildRequires: libjpeg-devel
 BuildRequires: libtiff-devel >= 3.6
 BuildRequires: python >= 2.2
 BuildRequires: ruby >= 1.8
-BuildRequires: perl >= 5.005
-BuildRequires: gettext >= 0.13
-BuildRequires: sed
-%ifarch %ix86
-BuildRequires: fftw >= 3.0
-%else
-BuildRequires: fftw >= 3.1
-%endif
+BuildRequires: gettext
+BuildRequires: findutils
 %if %{distro_is_suse}
 BuildRequires: xorg-x11-Mesa-devel
+%define fftw3 fftw3
+%else
+%define fftw3 fftw
 %endif
+%ifarch %ix86
+BuildRequires: %{fftw3} >= 3.0
+%else
+BuildRequires: %{fftw3} >= 3.1
+%endif
+# Fedora guarantees these two, other may not
+BuildRequires: perl >= 5.005
+BuildRequires: sed
+
+
+%define pkglibdir %{_libdir}/%{name}
+%define pkglibexecdir %{_libexecdir}/%{name}
+%define pkgdatadir %{_datadir}/%{name}
+%define pkgincludedir %{_includedir}/%{name}
+%define gtkdocdir %{_datadir}/gtk-doc/html
+
 
 %package devel
-Summary: Headers, libraries and tools for Gwyddion module development.
-Group: Development/Libraries
-Requires: %{name} = %{version}
+Summary:       Headers, libraries and tools for Gwyddion module development
+Group:         Development/Libraries
+Requires:      %{name} = %{version}
+# This pulls everything else
+Requires:      gtk2-devel >= 2.2
+%if %{distro_is_fedora}
+Requires:      perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
+Requires:      python-abi = %(%{__python} -c "import sys ; print sys.version[:3]")
+%endif
 
-%package plugins
-Summary: Example plugins for Gwyddion.
-License: public domain
-Group: Applications/Engineering
-Requires: %{name}
-Requires: %{name}-devel
 
 %description
-Gwyddion is a modular SPM (Scanning Probe Microsope) data visualization and
+Gwyddion is a modular SPM (Scanning Probe Microsopy) data visualization and
 analysis tool written with Gtk+.
 
 It can be used for all most frequently used data processing operations
 including: leveling, false color plotting, shading, filtering, denoising, data
 editing, integral transforms, grain analysis, profile extraction, fractal
-analysis, and many more. The program is primarily focused on SPM data analysis
-(e.g. data obtained from AFM, STM, NSOM, and similar microscopes). However, it
-can also be used for analyzing SEM (scaning electron microscopy) data or any
+analysis, and many more.  The program is primarily focused on SPM data analysis
+(e.g. data obtained from AFM, STM, NSOM, and similar microscopes).  However, it
+can also be used for analysis of SEM (Scanning Electron Microscopy) data or any
 other 2D data.
 
-%description devel
-Header files, libraries and tools for Gwyddion module development.  This
-package also contains the API docmentation.
 
-%description plugins
-Example plug-ins for Gwyddion. They are mostly useless except as a basis for
-your own plug-ins.
+%description devel
+Header files, libraries and tools for Gwyddion module and plug-in development.
+This package also contains the API docmentation and sample plug-ins in various
+programming languages.
+
 
 %prep
 %setup -q
 
 %build
 %configure --disable-pascal --disable-desktop-file-update
-%__make
+make %{?_smp_mflags}
+
 
 %install
-[ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 find $RPM_BUILD_ROOT%{_libdir} -name \*.la | xargs rm
 %find_lang %{name}
+# Upstream provides and installs a .desktop file.
+# Perl, Python, and Ruby modules are private, no special actions are necessary.
+
 
 %clean
-[ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
-%post
-/sbin/ldconfig
-update-desktop-database %{_datadir}/applications
-update-mime-database %{_datadir}/mime
 
-%postun
-/sbin/ldconfig
-update-desktop-database %{_datadir}/applications
-update-mime-database %{_datadir}/mime
+%post -p /sbin/ldconfig
+
+
+%postun -p /sbin/ldconfig
+
 
 %files -f %{name}.lang
 %defattr(755,root,root)
 %{_bindir}/%{name}
 %defattr(-,root,root)
-%doc AUTHORS COPYING ChangeLog INSTALL.gwyddion NEWS README THANKS
-%{_datadir}/%{name}/pixmaps/*.png
-%{_datadir}/%{name}/pixmaps/*.ico
-%dir %{_datadir}/%{name}/pixmaps
-%{_datadir}/%{name}/glmaterials/*
-%dir %{_datadir}/%{name}/glmaterials
-%{_datadir}/%{name}/gradients/*
-%dir %{_datadir}/%{name}/gradients
-%dir %{_datadir}/%{name}
-%{_mandir}/man1/%{name}.*
+%doc AUTHORS COPYING INSTALL.%{name} NEWS README THANKS
+%{pkgdatadir}/pixmaps/*.png
+%{pkgdatadir}/pixmaps/*.ico
+%{pkgdatadir}/gradients/*
+%{pkgdatadir}/glmaterials/*
+%dir %{pkgdatadir}/pixmaps
+%dir %{pkgdatadir}/gradients
+%dir %{pkgdatadir}/glmaterials
+%dir %{pkgdatadir}
+%{_mandir}/man1/%{name}.1*
 %{_datadir}/pixmaps/%{name}.png
-%{_libdir}/%{name}/modules/file/*.so
-%{_libdir}/%{name}/modules/graph/*.so
-%{_libdir}/%{name}/modules/layer/*.so
-%{_libdir}/%{name}/modules/process/*.so
-%{_libdir}/%{name}/modules/tool/*.so
-%{_libdir}/%{name}/modules/*.so
-%dir %{_libdir}/%{name}/modules/file
-%dir %{_libdir}/%{name}/modules/graph
-%dir %{_libdir}/%{name}/modules/layer
-%dir %{_libdir}/%{name}/modules/process
-%dir %{_libdir}/%{name}/modules/tool
-%dir %{_libdir}/%{name}/modules
-%dir %{_libdir}/%{name}
-%{_libdir}/libgwyapp-1.99.*.so
-%{_libdir}/libgwyddion-1.99.*.so
-%{_libdir}/libgwydgets-1.99.*.so
-%{_libdir}/libgwydraw-1.99.*.so
-%{_libdir}/libgwymodule-1.99.*.so
-%{_libdir}/libgwyprocess-1.99.*.so
+%{pkglibdir}/modules/file/*.so
+%{pkglibdir}/modules/graph/*.so
+%{pkglibdir}/modules/layer/*.so
+%{pkglibdir}/modules/process/*.so
+%{pkglibdir}/modules/tool/*.so
+%{pkglibdir}/modules/*.so
+%dir %{pkglibdir}/modules/file
+%dir %{pkglibdir}/modules/graph
+%dir %{pkglibdir}/modules/layer
+%dir %{pkglibdir}/modules/process
+%dir %{pkglibdir}/modules/tool
+%dir %{pkglibdir}/modules
+%dir %{pkglibdir}
+#%{_libdir}/*.so.*
+%{_libdir}/*-1.99.*.so
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
+
 
 %files devel
 %defattr(-,root,root)
 %doc devel-docs/CODING-STANDARDS
-%doc devel-docs/README.QA
-%{_includedir}/%{name}/app/*.h
-%{_includedir}/%{name}/libdraw/*.h
-%{_includedir}/%{name}/libprocess/*.h
-%{_includedir}/%{name}/libgwyddion/*.h
-%{_includedir}/%{name}/libgwydgets/*.h
-%{_includedir}/%{name}/libgwymodule/*.h
-%{_libdir}/%{name}/include/gwyconfig.h
-%dir %{_includedir}/%{name}/app
-%dir %{_includedir}/%{name}/libdraw
-%dir %{_includedir}/%{name}/libprocess
-%dir %{_includedir}/%{name}/libgwyddion
-%dir %{_includedir}/%{name}/libgwydgets
-%dir %{_includedir}/%{name}/libgwymodule
-%dir %{_includedir}/%{name}
-%{_datadir}/gtk-doc/html/libgwyapp/*
-%{_datadir}/gtk-doc/html/libgwydraw/*
-%{_datadir}/gtk-doc/html/libgwyprocess/*
-%{_datadir}/gtk-doc/html/libgwyddion/*
-%{_datadir}/gtk-doc/html/libgwydgets/*
-%{_datadir}/gtk-doc/html/libgwymodule/*
-%dir %{_datadir}/gtk-doc/html/libgwyapp
-%dir %{_datadir}/gtk-doc/html/libgwydraw
-%dir %{_datadir}/gtk-doc/html/libgwyprocess
-%dir %{_datadir}/gtk-doc/html/libgwyddion
-%dir %{_datadir}/gtk-doc/html/libgwydgets
-%dir %{_datadir}/gtk-doc/html/libgwymodule
-%dir %{_datadir}/gtk-doc/html
-%{_libdir}/%{name}/perl/Gwyddion/*
-%{_libdir}/%{name}/python/Gwyddion/*
-%{_libdir}/%{name}/ruby/gwyddion/*
-%dir %{_libdir}/%{name}/perl/Gwyddion
-%dir %{_libdir}/%{name}/perl
-%dir %{_libdir}/%{name}/python/Gwyddion
-%dir %{_libdir}/%{name}/python
-%dir %{_libdir}/%{name}/ruby/gwyddion
-%dir %{_libdir}/%{name}/ruby
-%doc %{_mandir}/man3/*
-%doc %dir %{_mandir}/man3
-%{_libdir}/pkgconfig/%{name}.pc
+%{pkgincludedir}/app/*.h
+%{pkgincludedir}/libdraw/*.h
+%{pkgincludedir}/libprocess/*.h
+%{pkgincludedir}/libgwyddion/*.h
+%{pkgincludedir}/libgwydgets/*.h
+%{pkgincludedir}/libgwymodule/*.h
+%dir %{pkgincludedir}/app
+%dir %{pkgincludedir}/libdraw
+%dir %{pkgincludedir}/libprocess
+%dir %{pkgincludedir}/libgwyddion
+%dir %{pkgincludedir}/libgwydgets
+%dir %{pkgincludedir}/libgwymodule
+%dir %{pkgincludedir}
+%{_libdir}/*.so
+%exclude %{_libdir}/*-1.99.*.so
+%{_libdir}/pkgconfig/gwyddion.pc
 %dir %{_libdir}/pkgconfig
-
-%files plugins
+# Documentation
+%doc %{gtkdocdir}/libgwyapp/*
+%doc %{gtkdocdir}/libgwydraw/*
+%doc %{gtkdocdir}/libgwyprocess/*
+%doc %{gtkdocdir}/libgwyddion/*
+%doc %{gtkdocdir}/libgwydgets/*
+%doc %{gtkdocdir}/libgwymodule/*
+%doc %dir %{gtkdocdir}/libgwyapp
+%doc %dir %{gtkdocdir}/libgwydraw
+%doc %dir %{gtkdocdir}/libgwyprocess
+%doc %dir %{gtkdocdir}/libgwyddion
+%doc %dir %{gtkdocdir}/libgwydgets
+%doc %dir %{gtkdocdir}/libgwymodule
+%doc %dir %{gtkdocdir}
+%doc %dir %{_datadir}/gtk-doc
+# Plug-ins and plug-in devel stuff
+%{pkglibdir}/perl/Gwyddion/*
+%dir %{pkglibdir}/perl/Gwyddion
+%dir %{pkglibdir}/perl
+%{pkglibdir}/python/Gwyddion/*
+%dir %{pkglibdir}/python/Gwyddion
+%dir %{pkglibdir}/python
+%{pkglibdir}/ruby/gwyddion/*
+%dir %{pkglibdir}/ruby/gwyddion
+%dir %{pkglibdir}/ruby
+%doc %{_mandir}/man3/*
 %defattr(755,root,root)
-%{_libexecdir}/%{name}/plugins/file/*
-%{_libexecdir}/%{name}/plugins/process/*
-%dir %{_libexecdir}/%{name}/plugins/file
-%dir %{_libexecdir}/%{name}/plugins/process
-%dir %{_libexecdir}/%{name}/plugins
-%dir %{_libexecdir}/%{name}
-
+%{pkglibexecdir}/plugins/file/*
+%{pkglibexecdir}/plugins/process/*
+%dir %{pkglibexecdir}/plugins/file
+%dir %{pkglibexecdir}/plugins/process
+%dir %{pkglibexecdir}/plugins
+%dir %{pkglibexecdir}
