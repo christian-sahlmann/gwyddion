@@ -28,7 +28,7 @@ SCAN_OPTIONS=--deprecated-guards="GWY_DISABLE_DEPRECATED"
 REMOVE_SECTION_TITLES = yes
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS =
+MKDB_OPTIONS = --expand-content-files=""
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS = \
