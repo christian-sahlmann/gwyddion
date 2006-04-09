@@ -36,6 +36,7 @@ foreach my $dir (glob "*") {
     foreach my $f (glob "html/*.html") {
         print "$dir/$f\n";
         $_ = qx(sed -e 's:</*gtkdoc[^>]*>::gi' $f | $tidy 2>/dev/null);
+        if ( not $_ ) { die "Output is empty, do you have tidy installed?"; }
         # Lowercase attributes
         s#((?:class|rel)=".*?")#\L$1\E#sg;
         # Remove <body> attributes
