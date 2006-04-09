@@ -30,6 +30,7 @@ cat >build_documentation.ignore <<':'
 cat >make_dists.ignore <<':'
 ^+
 ^cp: cannot stat `\./html/\*\.css': No such file or directory
+^cpio: .*/<built-in>: No such file or directory
 ^make\[3\]: \[dist-hook\] Error 1 (ignored)
 ^libtool: install: warning: relinking `.*.la'
 ^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib
