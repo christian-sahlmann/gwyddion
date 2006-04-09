@@ -23,7 +23,6 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
-#include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/app.h>
 #include <app/gwytool.h>
@@ -149,6 +148,65 @@ gwy_tool_hide(GwyTool *tool)
     method = GWY_TOOL_GET_CLASS(tool)->hide;
     if (method)
         method(tool);
+}
+
+void
+gwy_tool_data_switched(GwyTool *tool,
+                       GwyDataView *data_view)
+{
+    void (*method)(GwyTool*, GwyDataView*);
+
+    g_return_if_fail(GWY_IS_TOOL(tool));
+    method = GWY_TOOL_GET_CLASS(tool)->data_switched;
+    if (method)
+        method(tool, data_view);
+}
+
+/**
+ * gwy_tool_class_get_title:
+ * @klass: A tool class.
+ *
+ * Gets the title of a tool class (this is a class method).
+ *
+ * The title is normally used as a tool dialog title.
+ *
+ * Returns: The title as a string owned by the tool class, untranslated.
+ **/
+const gchar*
+gwy_tool_class_get_title(GwyToolClass *klass)
+{
+    g_return_val_if_fail(GWY_IS_TOOL_CLASS(klass), NULL);
+    return klass->title;
+}
+
+/**
+ * gwy_tool_class_get_stock_id:
+ * @klass: A tool class.
+ *
+ * Gets the icon stock id of a tool class (this is a class method).
+ *
+ * Returns: The stock id as a string owned by the tool class.
+ **/
+const gchar*
+gwy_tool_class_get_stock_id(GwyToolClass *klass)
+{
+    g_return_val_if_fail(GWY_IS_TOOL_CLASS(klass), NULL);
+    return klass->stock_id;
+}
+
+/**
+ * gwy_tool_class_get_tooltip:
+ * @klass: A tool class.
+ *
+ * Gets the title of a tool class (this is a class method).
+ *
+ * Returns: The tooltip as a string owned by the tool class, untranslated.
+ **/
+const gchar*
+gwy_tool_class_get_tooltip(GwyToolClass *klass)
+{
+    g_return_val_if_fail(GWY_IS_TOOL_CLASS(klass), NULL);
+    return klass->tooltip;
 }
 
 /************************** Documentation ****************************/

@@ -53,16 +53,21 @@ struct _GwyToolClass {
     void (*show)(GwyTool *tool);
     void (*hide)(GwyTool *tool);
     void (*data_switched)(GwyTool *tool,
-                          GwyDataView *dataview);
+                          GwyDataView *data_view);
 };
 
-GType        gwy_tool_get_type    (void) G_GNUC_CONST;
+GType        gwy_tool_get_type          (void) G_GNUC_CONST;
 
-void         gwy_tool_add_hide_button(GwyTool *tool,
-                                      gboolean set_default);
-void         gwy_tool_show           (GwyTool *tool);
-void         gwy_tool_hide           (GwyTool *tool);
+void         gwy_tool_add_hide_button   (GwyTool *tool,
+                                         gboolean set_default);
+void         gwy_tool_show              (GwyTool *tool);
+void         gwy_tool_hide              (GwyTool *tool);
+void         gwy_tool_data_switched     (GwyTool *tool,
+                                         GwyDataView *data_view);
 
+const gchar* gwy_tool_class_get_title   (GwyToolClass *klass);
+const gchar* gwy_tool_class_get_stock_id(GwyToolClass *klass);
+const gchar* gwy_tool_class_get_tooltip (GwyToolClass *klass);
 
 G_END_DECLS
 
