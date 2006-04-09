@@ -74,7 +74,8 @@ foreach my $dir (glob "*") {
         # Change .html links to .php, unless they are to local gtk-doc docs or
         # to external URIs
         s#href="((?!/|http:)[^"]*)\.html\b#href="$1.php#sg;
-        # Add navigation
+        # Add navigation, also convert various constructs that should be
+        # really document titles to <h1>
         my $add_topnote = s#<table class="navigation" width="100%"\s*>\s*<tr>\s*<th valign="middle">\s*<p class="title">(.*?)</p>\s*</th>\s*</tr>\s*</table>\s*<hr\s*/>#<h1>$1</h1>#sg;
         s#<h2><span class="refentrytitle">(.*?)</span></h2>#<h1>$1</h1>#s;
         s#<h2 class="title"(.*?)</h2>#<h1$1</h1>#s;
@@ -87,15 +88,20 @@ foreach my $dir (glob "*") {
         }
         # Change warnings from titles to normal bold paragraphs
         s#<h3 class="title">Warning</h3>\n#<p><b class="warning">Warning:</b></p>#sg;
+        # Change navigation table to gwyddion.net style
         if ( !$add_topnote ) { s#(<table class="navigation".*?</table>)#<div class="topnote">$1</div>#s; }
         s#(.*)(<table class="navigation".*?</table>)#$1<div class="botnote">$2</div>#s;
+        # FIXME: what this does?
         s#</td>\s*<td><a#&nbsp;<a#sg;
+        # Left-center cells
         s#(<tr valign="middle">\s*<td)>#$1 align="left">#s;
+        # Change <th> to <td>
         s#(</td>\s*)<th#$1<td#s;
         s#(</th>\s*<td)#$1 align="right"#s;
         s#(<td[^>]*) align="([^"]*)"#$1 style="text-align:$2"#sg;
         s#<th\b#<th#g;
         s#\bth>#td>#g;
+        # Replace <head> completely, but grather and keep useful <link rel=...>
         my $links = '';
         foreach my $lnk ( 'home', 'next', 'previous', 'up' ) {
             if (m#<link rel="$lnk"\s+href="(.*?)"\s+title="(.*?)" />#) {
@@ -106,9 +112,11 @@ foreach my $dir (glob "*") {
         m#<title>(.*?)</title>#;
         my $title = $1;
         s#<head>.*?</head>\n#<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>\n<title>$title</title>\n<link rel="stylesheet" type="text/css" href="/main.css"/>\n<!--[if IE]>\n<style> \#LeftMenu { position: absolute; } </style>\n<![endif]-->\n<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>\n$links</head>#sg;
+        # Replace <body> with main part of gwyddion.net page body
         s#(<body>\n)#$1<div id="Main">\n#sg;
         s#(</body>)#$footer$1#;
         if ( $add_topnote ) { s#(<div id="Main">\n)#$1<?php include('../../_topnote.php'); ?>\n#s; }
+        # Change links extensions to .php and fix and paths
         $f =~ s/.*\///;
         $f =~ s/\.html$/.php/;
         open FH, ">$APIDOCS/$dir/$f" or die; print FH $_; close FH;
