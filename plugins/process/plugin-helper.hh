@@ -27,7 +27,7 @@ static bool
 run_action(int nactions, PluginAction *actions,
            int argc, char *argv[])
 {
-    unsigned int i;
+    int i;
 
     for (i = 0; i < nactions; i++) {
         if (actions[i].check(argc, argv)) {
