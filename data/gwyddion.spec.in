@@ -178,6 +178,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc %dir %{gtkdocdir}/libgwymodule
 %doc %dir %{gtkdocdir}
 %doc %dir %{_datadir}/gtk-doc
+%{pkglibdir}/include/gwyconfig.h
+%dir %{pkglibdir}/include
 # Plug-ins and plug-in devel stuff
 %{pkglibdir}/perl/Gwyddion/*
 %dir %{pkglibdir}/perl/Gwyddion
