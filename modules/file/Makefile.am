@@ -35,6 +35,7 @@ file_LTLIBRARIES = \
 	$(tiff_modules) \
 	mifile.la \
 	nanoscope.la \
+	nanotop.la \
 	nt-mdt.la \
 	omicron.la \
 	pixmap.la \
@@ -130,6 +131,9 @@ endif
 
 nanoscope_la_SOURCES = nanoscope.c
 nanoscope_la_LIBADD = $(module_libadd)
+
+nanotop_la_SOURCES = nanotop.c
+nanotop_la_LIBADD = $(module_libadd)
 
 nt_mdt_la_SOURCES = nt-mdt.c
 nt_mdt_la_LIBADD = $(module_libadd)
