@@ -35,7 +35,7 @@ cat >make_dists.ignore <<':'
 ^libtool: install: warning: relinking `.*.la'
 ^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib
 ^libtool: install: warning: remember to run `libtool --finish /usr/lib
-^/usr/bin/ld: skipping incompatible /usr/lib/lib.*.so when searching for -l.*
+^/usr/bin/ld: skipping incompatible /usr/lib/lib.* when searching for -l.*
 \.\{6,\}
 ^[0-9]\+ blocks
 ':'
