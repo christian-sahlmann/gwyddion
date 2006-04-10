@@ -445,12 +445,12 @@ sdfile_read_header_bin(const guchar **p,
     get_CHARARRAY(sdfile->manufacturer, p);
     get_CHARARRAY(sdfile->creation, p);
     get_CHARARRAY(sdfile->modification, p);
-    sdfile->xres = get_WORD(p);
-    sdfile->yres = get_WORD(p);
-    sdfile->xscale = get_DOUBLE(p);
-    sdfile->yscale = get_DOUBLE(p);
-    sdfile->zscale = get_DOUBLE(p);
-    sdfile->zres = get_DOUBLE(p);
+    sdfile->xres = get_WORD_LE(p);
+    sdfile->yres = get_WORD_LE(p);
+    sdfile->xscale = get_DOUBLE_LE(p);
+    sdfile->yscale = get_DOUBLE_LE(p);
+    sdfile->zscale = get_DOUBLE_LE(p);
+    sdfile->zres = get_DOUBLE_LE(p);
     sdfile->compression = **p;
     (*p)++;
     sdfile->data_type = **p;
@@ -663,13 +663,13 @@ sdfile_read_data_bin(SDFile *sdfile)
         case SDF_FLOAT:
         p = sdfile->data;
         for (i = 0; i < n; i++)
-            data[i] = get_FLOAT(&p);
+            data[i] = get_FLOAT_LE(&p);
         break;
 
         case SDF_DOUBLE:
         p = sdfile->data;
         for (i = 0; i < n; i++)
-            data[i] = get_DOUBLE(&p);
+            data[i] = get_DOUBLE_LE(&p);
         break;
 
         default:

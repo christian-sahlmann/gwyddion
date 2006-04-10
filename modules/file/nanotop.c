@@ -164,10 +164,10 @@ nanotop_load(const gchar *filename,
     }
 
     p = buffer;
-    spmfile.tx = get_WORD(&p);
-    spmfile.mx = get_WORD(&p);
-    spmfile.ty = get_WORD(&p);
-    spmfile.my = get_WORD(&p);
+    spmfile.tx = get_WORD_LE(&p);
+    spmfile.mx = get_WORD_LE(&p);
+    spmfile.ty = get_WORD_LE(&p);
+    spmfile.my = get_WORD_LE(&p);
 
     if (size != HEADER_SIZE + 2*spmfile.mx*spmfile.my) {
         err_SIZE_MISMATCH(error, HEADER_SIZE + 2*spmfile.mx*spmfile.my, size);
@@ -175,14 +175,14 @@ nanotop_load(const gchar *filename,
         return NULL;
     }
 
-    spmfile.Kx = get_FLOAT(&p);
-    spmfile.Ky = get_FLOAT(&p);
-    spmfile.Kz = get_FLOAT(&p);
+    spmfile.Kx = get_FLOAT_LE(&p);
+    spmfile.Ky = get_FLOAT_LE(&p);
+    spmfile.Kz = get_FLOAT_LE(&p);
     get_CHARARRAY0(spmfile.ZUnit, &p);
     get_CHARARRAY0(spmfile.XYUnit, &p);
-    spmfile.min = get_WORD(&p);
-    spmfile.max = get_WORD(&p);
-    spmfile.timeline = get_WORD(&p);
+    spmfile.min = get_WORD_LE(&p);
+    spmfile.max = get_WORD_LE(&p);
+    spmfile.timeline = get_WORD_LE(&p);
     get_CHARARRAY(spmfile.date, &p);
     get_CHARARRAY(spmfile.time, &p);
     get_CHARARRAY(spmfile.note, &p);

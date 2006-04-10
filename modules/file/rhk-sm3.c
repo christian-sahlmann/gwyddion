@@ -298,7 +298,7 @@ rhk_sm3_read_string(const guchar **buffer,
     if (len < 2)
         return NULL;
 
-    n = get_WORD(buffer);
+    n = get_WORD_LE(buffer);
     len -= 2;
     if (len < 2*n)
         return NULL;
@@ -308,7 +308,7 @@ rhk_sm3_read_string(const guchar **buffer,
 
     p = s = g_new(gchar, 6*n + 1);
     for (i = 0; i < n; i++) {
-        chr = get_WORD(buffer);
+        chr = get_WORD_LE(buffer);
         p += g_unichar_to_utf8(chr, p);
     }
     *p = '\0';
@@ -351,7 +351,7 @@ rhk_sm3_read_page(const guchar **buffer,
     }
 
     page = g_new0(RHKPage, 1);
-    page->param_size = get_WORD(&p);
+    page->param_size = get_WORD_LE(&p);
     gwy_debug("param_size = %u", page->param_size);
     if (*len < page->param_size + 4) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -361,46 +361,46 @@ rhk_sm3_read_page(const guchar **buffer,
     /* TODO: Convert to UTF-8, store to meta */
     memcpy(page->version, p, MAGIC_TOTAL_SIZE);
     p += MAGIC_TOTAL_SIZE;
-    page->string_count = get_WORD(&p);
+    page->string_count = get_WORD_LE(&p);
     gwy_debug("string_count = %u", page->string_count);
-    page->type = get_DWORD(&p);
+    page->type = get_DWORD_LE(&p);
     gwy_debug("type = %u", page->type);
-    page->page_type = get_DWORD(&p);
+    page->page_type = get_DWORD_LE(&p);
     gwy_debug("page_type = %u", page->page_type);
-    page->data_sub_source = get_DWORD(&p);
-    page->line_type = get_DWORD(&p);
-    page->x_coord = get_DWORD(&p);
-    page->y_coord = get_DWORD(&p);
-    page->x_size = get_DWORD(&p);
-    page->y_size = get_DWORD(&p);
+    page->data_sub_source = get_DWORD_LE(&p);
+    page->line_type = get_DWORD_LE(&p);
+    page->x_coord = get_DWORD_LE(&p);
+    page->y_coord = get_DWORD_LE(&p);
+    page->x_size = get_DWORD_LE(&p);
+    page->y_size = get_DWORD_LE(&p);
     gwy_debug("x_size = %u, y_size = %u", page->x_size, page->y_size);
-    page->source_type = get_DWORD(&p);
-    page->image_type = get_DWORD(&p);
+    page->source_type = get_DWORD_LE(&p);
+    page->image_type = get_DWORD_LE(&p);
     gwy_debug("image_type = %u", page->image_type);
-    page->scan_dir = get_DWORD(&p);
+    page->scan_dir = get_DWORD_LE(&p);
     gwy_debug("scan_dir = %u", page->scan_dir);
-    page->group_id = get_DWORD(&p);
+    page->group_id = get_DWORD_LE(&p);
     gwy_debug("group_id = %u", page->group_id);
-    page->data_size = get_DWORD(&p);
+    page->data_size = get_DWORD_LE(&p);
     gwy_debug("data_size = %u", page->data_size);
-    page->min_z_value = (gint)get_DWORD(&p);
-    page->max_z_value = (gint)get_DWORD(&p);
+    page->min_z_value = (gint)get_DWORD_LE(&p);
+    page->max_z_value = (gint)get_DWORD_LE(&p);
     gwy_debug("min,max_z_value = %d %d", page->min_z_value, page->max_z_value);
-    page->x_scale = get_FLOAT(&p);
-    page->y_scale = get_FLOAT(&p);
-    page->z_scale = get_FLOAT(&p);
+    page->x_scale = get_FLOAT_LE(&p);
+    page->y_scale = get_FLOAT_LE(&p);
+    page->z_scale = get_FLOAT_LE(&p);
     gwy_debug("x,y,z_scale = %g %g %g",
               page->x_scale, page->y_scale, page->z_scale);
-    page->xy_scale = get_FLOAT(&p);
-    page->x_offset = get_FLOAT(&p);
-    page->y_offset = get_FLOAT(&p);
-    page->z_offset = get_FLOAT(&p);
+    page->xy_scale = get_FLOAT_LE(&p);
+    page->x_offset = get_FLOAT_LE(&p);
+    page->y_offset = get_FLOAT_LE(&p);
+    page->z_offset = get_FLOAT_LE(&p);
     gwy_debug("x,y,z_offset = %g %g %g",
               page->x_offset, page->y_offset, page->z_offset);
-    page->period = get_FLOAT(&p);
-    page->bias = get_FLOAT(&p);
-    page->current = get_FLOAT(&p);
-    page->angle = get_FLOAT(&p);
+    page->period = get_FLOAT_LE(&p);
+    page->bias = get_FLOAT_LE(&p);
+    page->current = get_FLOAT_LE(&p);
+    page->angle = get_FLOAT_LE(&p);
     gwy_debug("period = %g, bias = %g, current = %g, angle = %g",
               page->period, page->bias, page->current, page->angle);
     get_CHARARRAY(page->page_id, &p);
@@ -444,7 +444,7 @@ rhk_sm3_read_page(const guchar **buffer,
             goto FAIL;
         }
         /* Info size includes itself */
-        page->color_info.size = get_DWORD(&p) - 2;
+        page->color_info.size = get_DWORD_LE(&p) - 2;
         if (*len < (p - *buffer) + page->color_info.size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,

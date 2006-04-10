@@ -201,21 +201,21 @@ read_data_field(const guchar *buffer,
         }
         offset = &offsets56[0];
         buffer = last;
-        getflt = &get_DOUBLE;
+        getflt = &get_DOUBLE_LE;
     }
     else {
         offset = &offsets34[0];
-        getflt = &get_FLOAT;
+        getflt = &get_FLOAT_LE;
     }
 
     p = buffer + *(offset++);
-    doffset = get_DWORD(&p);    /* this appears to be the same number as in
+    doffset = get_DWORD_LE(&p);    /* this appears to be the same number as in
                                    the ASCII miniheader -- so get it here
                                    since it's easier */
     gwy_debug("data offset = %u", doffset);
     p = buffer + *(offset++);
-    xres = get_DWORD(&p);
-    yres = get_DWORD(&p);
+    xres = get_DWORD_LE(&p);
+    yres = get_DWORD_LE(&p);
     p = buffer + *(offset++);
     xreal = -getflt(&p);
     xreal += getflt(&p);

@@ -96,8 +96,8 @@ ecs_detect(const GwyFileDetectInfo *fileinfo,
 
     /* Check if file size matches */
     p = fileinfo->head + ECS_RESOLUTION;
-    xres = get_WORD(&p);
-    yres = get_WORD(&p);
+    xres = get_WORD_LE(&p);
+    yres = get_WORD_LE(&p);
 
     if (fileinfo->file_size != 2*xres*yres + HEADER_SIZE)
         return 0;
@@ -135,8 +135,8 @@ ecs_load(const gchar *filename,
     }
 
     p = buffer + ECS_RESOLUTION;
-    xres = get_WORD(&p);
-    yres = get_WORD(&p);
+    xres = get_WORD_LE(&p);
+    yres = get_WORD_LE(&p);
     gwy_debug("xres: %u, yres: %u", xres, yres);
     if (size != HEADER_SIZE + 2*xres*yres) {
         err_SIZE_MISMATCH(error, HEADER_SIZE + 2*xres*yres, size);

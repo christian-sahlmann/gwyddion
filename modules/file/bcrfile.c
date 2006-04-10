@@ -353,7 +353,7 @@ read_data_field(const guchar *buffer,
         case BCR_FILE_FLOAT:
         if (little_endian) {
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_FLOAT(&buffer);
+                data[i] = get_FLOAT_LE(&buffer);
         }
         else {
             for (i = 0; i < xres*yres; i++)
@@ -419,7 +419,7 @@ read_data_field_with_voids(const guchar *buffer,
         case BCR_FILE_FLOAT:
         if (little_endian) {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = get_FLOAT(&buffer);
+                data[i] = get_FLOAT_LE(&buffer);
                 if (data[i] > 1.7e38)
                     voids[i] = 1.0;
                 else {

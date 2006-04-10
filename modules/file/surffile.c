@@ -245,29 +245,29 @@ surffile_load(const gchar *filename,
         return NULL;
     }
 
-    surffile.format = get_WORD(&p);
-    surffile.nobjects = get_WORD(&p);
-    surffile.version = get_WORD(&p);
-    surffile.type = get_WORD(&p);
+    surffile.format = get_WORD_LE(&p);
+    surffile.nobjects = get_WORD_LE(&p);
+    surffile.version = get_WORD_LE(&p);
+    surffile.type = get_WORD_LE(&p);
     get_CHARS0(surffile.object_name, &p, 30);
     get_CHARS0(surffile.operator_name, &p, 30);
-    surffile.material_code = get_WORD(&p);
-    surffile.acquisition = get_WORD(&p);
-    surffile.range = get_WORD(&p);
-    surffile.special_points = get_WORD(&p);
-    surffile.absolute = get_WORD(&p);
+    surffile.material_code = get_WORD_LE(&p);
+    surffile.acquisition = get_WORD_LE(&p);
+    surffile.range = get_WORD_LE(&p);
+    surffile.special_points = get_WORD_LE(&p);
+    surffile.absolute = get_WORD_LE(&p);
     /*reserved*/
     p += 8;
-    surffile.pointsize = get_WORD(&p);
-    surffile.zmin = get_DWORD(&p);
-    surffile.zmax = get_DWORD(&p);
-    surffile.xres = get_DWORD(&p);
-    surffile.yres = get_DWORD(&p);
-    surffile.nofpoints = get_DWORD(&p);
+    surffile.pointsize = get_WORD_LE(&p);
+    surffile.zmin = get_DWORD_LE(&p);
+    surffile.zmax = get_DWORD_LE(&p);
+    surffile.xres = get_DWORD_LE(&p);
+    surffile.yres = get_DWORD_LE(&p);
+    surffile.nofpoints = get_DWORD_LE(&p);
 
-    surffile.dx = get_FLOAT(&p);
-    surffile.dy = get_FLOAT(&p);
-    surffile.dz = get_FLOAT(&p);
+    surffile.dx = get_FLOAT_LE(&p);
+    surffile.dy = get_FLOAT_LE(&p);
+    surffile.dz = get_FLOAT_LE(&p);
     get_CHARS0(surffile.xaxis, &p, 16);
     get_CHARS0(surffile.yaxis, &p, 16);
     get_CHARS0(surffile.zaxis, &p, 16);
@@ -278,30 +278,30 @@ surffile_load(const gchar *filename,
     get_CHARS0(surffile.ylength_unit, &p, 16);
     get_CHARS0(surffile.zlength_unit, &p, 16);
 
-    surffile.xunit_ratio = get_FLOAT(&p);
-    surffile.yunit_ratio = get_FLOAT(&p);
-    surffile.zunit_ratio = get_FLOAT(&p);
-    surffile.imprint = get_WORD(&p);
-    surffile.inversion = get_WORD(&p);
-    surffile.leveling = get_WORD(&p);
+    surffile.xunit_ratio = get_FLOAT_LE(&p);
+    surffile.yunit_ratio = get_FLOAT_LE(&p);
+    surffile.zunit_ratio = get_FLOAT_LE(&p);
+    surffile.imprint = get_WORD_LE(&p);
+    surffile.inversion = get_WORD_LE(&p);
+    surffile.leveling = get_WORD_LE(&p);
 
     p += 12;
 
-    surffile.seconds = get_WORD(&p);
-    surffile.minutes = get_WORD(&p);
-    surffile.hours = get_WORD(&p);
-    surffile.day = get_WORD(&p);
-    surffile.month = get_WORD(&p);
-    surffile.year = get_WORD(&p);
-    surffile.measurement_duration = get_WORD(&p);
-    surffile.comment_size = get_WORD(&p);
-    surffile.private_size = get_WORD(&p);
+    surffile.seconds = get_WORD_LE(&p);
+    surffile.minutes = get_WORD_LE(&p);
+    surffile.hours = get_WORD_LE(&p);
+    surffile.day = get_WORD_LE(&p);
+    surffile.month = get_WORD_LE(&p);
+    surffile.year = get_WORD_LE(&p);
+    surffile.measurement_duration = get_WORD_LE(&p);
+    surffile.comment_size = get_WORD_LE(&p);
+    surffile.private_size = get_WORD_LE(&p);
 
     get_CHARARRAY(surffile.client_zone, &p);
 
-    surffile.XOffset = get_FLOAT(&p);
-    surffile.YOffset = get_FLOAT(&p);
-    surffile.ZOffset = get_FLOAT(&p);
+    surffile.XOffset = get_FLOAT_LE(&p);
+    surffile.YOffset = get_FLOAT_LE(&p);
+    surffile.ZOffset = get_FLOAT_LE(&p);
 
     gwy_debug("fileformat: %d,  n_of_objects: %d, "
               "version: %d, object_type: %d\n",

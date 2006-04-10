@@ -445,8 +445,8 @@ witec_read_scale(const guchar **p,
         return FALSE;
     }
 
-    scale->scale = get_FLOAT(p);
-    scale->offset = get_FLOAT(p);
+    scale->scale = get_FLOAT_LE(p);
+    scale->offset = get_FLOAT_LE(p);
     get_CHARARRAY0(scale->measure, p);
     get_CHARARRAY0(scale->name, p);
     gwy_debug("scale: %g %g <%s> [%s]",
@@ -466,12 +466,12 @@ witec_read_header(const guchar **p,
         return FALSE;
     }
 
-    header->rows = get_WORD(p);
-    header->pixels = get_WORD(p);
-    header->channels = get_WORD(p);
+    header->rows = get_WORD_LE(p);
+    header->pixels = get_WORD_LE(p);
+    header->channels = get_WORD_LE(p);
     gwy_debug("rows = %d, pixels = %d, channels = %d",
               header->rows, header->pixels, header->channels);
-    header->area = get_WORD(p);
+    header->area = get_WORD_LE(p);
     get_CHARARRAY0(header->date, p);
     gwy_debug("date = <%s>", header->date);
 
@@ -492,16 +492,16 @@ witec_read_footer(const guchar **p,
     }
 
     get_CHARARRAY0(footer->title, p);
-    footer->year = get_WORD(p);
-    footer->month = get_WORD(p);
-    footer->day = get_WORD(p);
-    footer->hour = get_WORD(p);
-    footer->minute = get_WORD(p);
-    footer->second = get_WORD(p);
+    footer->year = get_WORD_LE(p);
+    footer->month = get_WORD_LE(p);
+    footer->day = get_WORD_LE(p);
+    footer->hour = get_WORD_LE(p);
+    footer->minute = get_WORD_LE(p);
+    footer->second = get_WORD_LE(p);
     gwy_debug("time: %d-%02d-%02d %02d:%02d:%02d",
               footer->year, footer->month, footer->day,
               footer->hour, footer->minute, footer->second);
-    footer->timeline = get_FLOAT(p);
+    footer->timeline = get_FLOAT_LE(p);
 
     for (i = 0; i < G_N_ELEMENTS(footer->notebook_header); i++)
         get_CHARARRAY0(footer->notebook_header[i], p);
@@ -527,25 +527,25 @@ witec_read_range_options(const guchar **p,
         return FALSE;
     }
 
-    options->act_scan_range.from = get_FLOAT(p);
-    options->act_scan_range.to = get_FLOAT(p);
-    options->scan_origin.x = get_FLOAT(p);
-    options->scan_origin.y = get_FLOAT(p);
-    options->total_scan_range.x = get_FLOAT(p);
-    options->total_scan_range.y = get_FLOAT(p);
+    options->act_scan_range.from = get_FLOAT_LE(p);
+    options->act_scan_range.to = get_FLOAT_LE(p);
+    options->scan_origin.x = get_FLOAT_LE(p);
+    options->scan_origin.y = get_FLOAT_LE(p);
+    options->total_scan_range.x = get_FLOAT_LE(p);
+    options->total_scan_range.y = get_FLOAT_LE(p);
     get_CHARARRAY0(options->unit_x, p);
     get_CHARARRAY0(options->unit_y, p);
     gwy_debug("unit x: <%s>, y: <%s>", options->unit_x, options->unit_y);
-    options->da_nsamples = get_WORD(p);
+    options->da_nsamples = get_WORD_LE(p);
     options->zoom_in = get_BBOOLEAN(p);
-    options->overscan_range = get_FLOAT(p);
+    options->overscan_range = get_FLOAT_LE(p);
     options->is_overscan = get_BBOOLEAN(p);
-    options->fast_scan_dir.x = get_FLOAT(p);
-    options->fast_scan_dir.y = get_FLOAT(p);
+    options->fast_scan_dir.x = get_FLOAT_LE(p);
+    options->fast_scan_dir.y = get_FLOAT_LE(p);
     options->smooth_turn_around = get_BBOOLEAN(p);
-    options->flip_ud = get_WORD(p);
-    options->flip_lr = get_WORD(p);
-    options->total_scan_range_unused = get_FLOAT(p);
+    options->flip_ud = get_WORD_LE(p);
+    options->flip_lr = get_WORD_LE(p);
+    options->total_scan_range_unused = get_FLOAT_LE(p);
     options->exchange_xz = get_BBOOLEAN(p);
     options->exchange_yz = get_BBOOLEAN(p);
     get_CHARARRAY0(options->reserved, p);
@@ -566,17 +566,17 @@ witec_read_image_options(const guchar **p,
         return FALSE;
     }
 
-    options->scan_time[WITEC_FORWARD] = get_FLOAT(p);
-    options->scan_time[WITEC_BACKWARD] = get_FLOAT(p);
-    options->prestart_delay[WITEC_FORWARD] = get_FLOAT(p);
-    options->prestart_delay[WITEC_BACKWARD] = get_FLOAT(p);
-    options->points_per_line = get_WORD(p);
-    options->averages = get_WORD(p);
-    options->lines_per_image = get_WORD(p);
+    options->scan_time[WITEC_FORWARD] = get_FLOAT_LE(p);
+    options->scan_time[WITEC_BACKWARD] = get_FLOAT_LE(p);
+    options->prestart_delay[WITEC_FORWARD] = get_FLOAT_LE(p);
+    options->prestart_delay[WITEC_BACKWARD] = get_FLOAT_LE(p);
+    options->points_per_line = get_WORD_LE(p);
+    options->averages = get_WORD_LE(p);
+    options->lines_per_image = get_WORD_LE(p);
     gwy_debug("lines_per_image: %d, points_per_line = %d",
               options->lines_per_image, options->points_per_line);
-    options->cruise_time = get_FLOAT(p);
-    options->settling_time = get_FLOAT(p);
+    options->cruise_time = get_FLOAT_LE(p);
+    options->settling_time = get_FLOAT_LE(p);
     options->continuous_scan = get_BBOOLEAN(p);
     options->open_new_file = get_BBOOLEAN(p);
     options->save_without_asking = get_BBOOLEAN(p);
@@ -587,11 +587,11 @@ witec_read_image_options(const guchar **p,
     options->create_line_trigger[WITEC_FORWARD] = get_BBOOLEAN(p);
     options->create_line_trigger[WITEC_BACKWARD] = get_BBOOLEAN(p);
     options->create_image_trigger = get_BBOOLEAN(p);
-    options->dummy_lines = get_WORD(p);
-    options->line_trigger_delay = get_FLOAT(p);
-    options->line_trigger_duration = get_FLOAT(p);
-    options->image_trigger_delay = get_FLOAT(p);
-    options->image_trigger_duration = get_FLOAT(p);
+    options->dummy_lines = get_WORD_LE(p);
+    options->line_trigger_delay = get_FLOAT_LE(p);
+    options->line_trigger_duration = get_FLOAT_LE(p);
+    options->image_trigger_delay = get_FLOAT_LE(p);
+    options->image_trigger_duration = get_FLOAT_LE(p);
     options->wait_for_device_ready = get_BBOOLEAN(p);
     options->ct1_pulse_type = get_BBOOLEAN(p);
     options->ct3_pulse_type = get_BBOOLEAN(p);
@@ -599,7 +599,7 @@ witec_read_image_options(const guchar **p,
     for (i = 0; i < G_N_ELEMENTS(options->subtract_cal_surf); i++)
         options->subtract_cal_surf[i] = get_BBOOLEAN(p);
     get_CHARARRAY(options->reserved, p);
-    options->drive_counter_clockrate = get_FLOAT(p);
+    options->drive_counter_clockrate = get_FLOAT_LE(p);
 
     *len -= WITEC_SIZE_IMAGE_OPTIONS;
     return TRUE;

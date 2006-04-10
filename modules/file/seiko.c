@@ -157,11 +157,11 @@ read_data_field(const guchar *buffer,
     const guchar *p;
 
     p = buffer + VERSION_OFFSET;
-    version = get_DWORD(&p);
+    version = get_DWORD_LE(&p);
     p = buffer + ENDFILE_OFFSET;
-    endfile = get_DWORD(&p);
+    endfile = get_DWORD_LE(&p);
     p = buffer + DATASTART_OFFSET;
-    datastart = get_DWORD(&p);
+    datastart = get_DWORD_LE(&p);
     gwy_debug("version: %u, endfile: %u, datastart: %u",
               version, endfile, datastart);
 
@@ -176,11 +176,11 @@ read_data_field(const guchar *buffer,
               xres, 2*xres*xres == endfile - datastart ? "OK" : "Not square!");
 
     p = buffer + XSCALE_OFFSET;
-    xreal = get_DOUBLE(&p) * xres * Nanometer;
+    xreal = get_DOUBLE_LE(&p) * xres * Nanometer;
     p = buffer + YSCALE_OFFSET;
-    yreal = get_DOUBLE(&p) * yres * Nanometer;
+    yreal = get_DOUBLE_LE(&p) * yres * Nanometer;
     p = buffer + ZSCALE_OFFSET;
-    q = get_DOUBLE(&p) * Nanometer;
+    q = get_DOUBLE_LE(&p) * Nanometer;
     gwy_debug("xreal: %g, yreal: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
 

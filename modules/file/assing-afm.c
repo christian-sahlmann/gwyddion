@@ -135,8 +135,8 @@ aafm_load(const gchar *filename,
     }
 
     p = buffer;
-    afmfile.res = get_WORD(&p);
-    afmfile.real = Angstrom*get_FLOAT(&p);
+    afmfile.res = get_WORD_LE(&p);
+    afmfile.real = Angstrom*get_FLOAT_LE(&p);
     if (size < afmfile.res * afmfile.res + 10) {
         err_SIZE_MISMATCH(error, afmfile.res * afmfile.res + 10, size);
         gwy_file_abandon_contents(buffer, size, NULL);
@@ -148,7 +148,7 @@ aafm_load(const gchar *filename,
                                 FALSE);
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
     p += 2*afmfile.res*afmfile.res;
-    afmfile.range = get_FLOAT(&p);
+    afmfile.range = get_FLOAT_LE(&p);
     gwy_data_field_get_min_max(dfield, &min, &max);
     if (min == max)
         gwy_data_field_clear(dfield);

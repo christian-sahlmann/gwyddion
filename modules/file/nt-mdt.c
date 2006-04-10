@@ -445,9 +445,9 @@ mdt_read_axis_scales(const guchar *p,
                      MDTAxisScale *y_scale,
                      MDTAxisScale *z_scale)
 {
-    x_scale->offset = get_FLOAT(&p);
-    x_scale->step = get_FLOAT(&p);
-    x_scale->unit = (gint16)get_WORD(&p);
+    x_scale->offset = get_FLOAT_LE(&p);
+    x_scale->step = get_FLOAT_LE(&p);
+    x_scale->unit = (gint16)get_WORD_LE(&p);
     gwy_debug("x: *%g +%g [%d:%s]",
               x_scale->step, x_scale->offset, x_scale->unit,
               gwy_enum_to_string(x_scale->unit,
@@ -458,9 +458,9 @@ mdt_read_axis_scales(const guchar *p,
         x_scale->step = 1.0;
     }
 
-    y_scale->offset = get_FLOAT(&p);
-    y_scale->step = get_FLOAT(&p);
-    y_scale->unit = (gint16)get_WORD(&p);
+    y_scale->offset = get_FLOAT_LE(&p);
+    y_scale->step = get_FLOAT_LE(&p);
+    y_scale->unit = (gint16)get_WORD_LE(&p);
     gwy_debug("y: *%g +%g [%d:%s]",
               y_scale->step, y_scale->offset, y_scale->unit,
               gwy_enum_to_string(y_scale->unit,
@@ -471,9 +471,9 @@ mdt_read_axis_scales(const guchar *p,
         y_scale->step = 1.0;
     }
 
-    z_scale->offset = get_FLOAT(&p);
-    z_scale->step = get_FLOAT(&p);
-    z_scale->unit = (gint16)get_WORD(&p);
+    z_scale->offset = get_FLOAT_LE(&p);
+    z_scale->step = get_FLOAT_LE(&p);
+    z_scale->unit = (gint16)get_WORD_LE(&p);
     gwy_debug("z: *%g +%g [%d:%s]",
               z_scale->step, z_scale->offset, z_scale->unit,
               gwy_enum_to_string(z_scale->unit,
@@ -497,26 +497,26 @@ mdt_scanned_data_vars(const guchar *p,
 
     frame->channel_index = (gint)(*p++);
     frame->mode = (gint)(*p++);
-    frame->xres = get_WORD(&p);
-    frame->yres = get_WORD(&p);
+    frame->xres = get_WORD_LE(&p);
+    frame->yres = get_WORD_LE(&p);
     gwy_debug("channel_index = %d, mode = %d, xres = %d, yres = %d",
               frame->channel_index, frame->mode, frame->xres, frame->yres);
-    frame->ndacq = get_WORD(&p);
-    frame->step_length = Angstrom*get_FLOAT(&p);
-    frame->adt = get_WORD(&p);
+    frame->ndacq = get_WORD_LE(&p);
+    frame->step_length = Angstrom*get_FLOAT_LE(&p);
+    frame->adt = get_WORD_LE(&p);
     frame->adc_gain_amp_log10 = (guint)(*p++);
     frame->adc_index = (guint)(*p++);
     frame->s16.version = (guint)(*p++);
     frame->s17.pass_num = (guint)(*p++);
     frame->scan_dir = (guint)(*p++);
     frame->power_of_2 = (gboolean)(*p++);
-    frame->velocity = Angstrom*get_FLOAT(&p);
-    frame->setpoint = Nano*get_FLOAT(&p);
-    frame->bias_voltage = get_FLOAT(&p);
+    frame->velocity = Angstrom*get_FLOAT_LE(&p);
+    frame->setpoint = Nano*get_FLOAT_LE(&p);
+    frame->bias_voltage = get_FLOAT_LE(&p);
     frame->draw = (gboolean)(*p++);
     p++;
-    frame->xoff = get_DWORD(&p);  /* FIXME: sign? */
-    frame->yoff = get_DWORD(&p);  /* FIXME: sign? */
+    frame->xoff = get_DWORD_LE(&p);  /* FIXME: sign? */
+    frame->yoff = get_DWORD_LE(&p);  /* FIXME: sign? */
     frame->nl_corr = (gboolean)(*p++);
 
     p = fstart + FRAME_HEADER_SIZE + vars_size;
@@ -525,10 +525,10 @@ mdt_scanned_data_vars(const guchar *p,
                     _("Frame is too short for Frame Mode."));
         return FALSE;
     }
-    frame->fm_mode = get_WORD(&p);
-    frame->fm_xres = get_WORD(&p);
-    frame->fm_yres = get_WORD(&p);
-    frame->fm_ndots = get_WORD(&p);
+    frame->fm_mode = get_WORD_LE(&p);
+    frame->fm_xres = get_WORD_LE(&p);
+    frame->fm_yres = get_WORD_LE(&p);
+    frame->fm_ndots = get_WORD_LE(&p);
     gwy_debug("mode = %u, xres = %u, yres = %u, ndots = %u",
               frame->fm_mode, frame->fm_xres, frame->fm_yres, frame->fm_ndots);
 
@@ -567,10 +567,10 @@ mdt_real_load(const guchar *buffer,
         return FALSE;
     }
     p = buffer + 4;  /* magic header */
-    mdtfile->size = get_DWORD(&p);
+    mdtfile->size = get_DWORD_LE(&p);
     gwy_debug("File size (w/o header): %u", mdtfile->size);
     p += 4;  /* reserved */
-    mdtfile->last_frame = get_WORD(&p);
+    mdtfile->last_frame = get_WORD_LE(&p);
     gwy_debug("Last frame: %u", mdtfile->last_frame);
     p += 18;  /* reserved */
     /* XXX: documentation specifies 32 bytes long header, but zeroth frame
@@ -594,7 +594,7 @@ mdt_real_load(const guchar *buffer,
                         _("End of file reached in frame header #%u."), i);
             return FALSE;
         }
-        frame->size = get_DWORD(&p);
+        frame->size = get_DWORD_LE(&p);
         gwy_debug("Frame #%u size: %u", i, frame->size);
         if ((guint)(p - buffer) + frame->size - 4 > size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -602,7 +602,7 @@ mdt_real_load(const guchar *buffer,
                         _("End of file reached in frame data #%u."), i);
             return FALSE;
         }
-        frame->type = get_WORD(&p);
+        frame->type = get_WORD_LE(&p);
         gwy_debug("Frame #%u type: %s", i,
                   gwy_enum_to_string(frame->type,
                                      frame_types, G_N_ELEMENTS(frame_types)));
@@ -610,16 +610,16 @@ mdt_real_load(const guchar *buffer,
         p += 2;
         gwy_debug("Frame #%u version: %d.%d",
                   i, frame->version/0x100, frame->version % 0x100);
-        frame->year = get_WORD(&p);
-        frame->month = get_WORD(&p);
-        frame->day = get_WORD(&p);
-        frame->hour = get_WORD(&p);
-        frame->min = get_WORD(&p);
-        frame->sec = get_WORD(&p);
+        frame->year = get_WORD_LE(&p);
+        frame->month = get_WORD_LE(&p);
+        frame->day = get_WORD_LE(&p);
+        frame->hour = get_WORD_LE(&p);
+        frame->min = get_WORD_LE(&p);
+        frame->sec = get_WORD_LE(&p);
         gwy_debug("Frame #%u datetime: %d-%02d-%02d %02d:%02d:%02d",
                   i, frame->year, frame->month, frame->day,
                   frame->hour, frame->min, frame->sec);
-        frame->var_size = get_WORD(&p);
+        frame->var_size = get_WORD_LE(&p);
         gwy_debug("Frame #%u var size: %u", i, frame->var_size);
         if (frame->var_size + FRAME_HEADER_SIZE > frame->size) {
             err_SIZE_MISMATCH(error, frame->var_size + FRAME_HEADER_SIZE,

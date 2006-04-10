@@ -601,7 +601,7 @@ read_data_field(int32 sd_id,
             const guchar *p = d;
 
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_FLOAT(&p);
+                data[i] = get_FLOAT_LE(&p);
         }
         break;
 
@@ -619,7 +619,7 @@ read_data_field(int32 sd_id,
             const guchar *p = d;
 
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_DOUBLE(&p);
+                data[i] = get_DOUBLE_LE(&p);
         }
         break;
 

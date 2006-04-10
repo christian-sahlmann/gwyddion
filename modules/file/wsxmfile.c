@@ -359,7 +359,7 @@ read_data_field(const guchar *buffer,
 
         case WSXM_DATA_DOUBLE: {
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_DOUBLE(&buffer);
+                data[i] = get_DOUBLE_LE(&buffer);
         }
         break;
 

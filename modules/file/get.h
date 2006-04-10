@@ -20,12 +20,6 @@
 #ifndef __GWY_FILE_GET_H__
 #define __GWY_GILE_GET_H__
 
-/* Compatibility */
-#define get_WORD   get_WORD_LE
-#define get_DWORD  get_DWORD_LE
-#define get_FLOAT  get_FLOAT_LE
-#define get_DOUBLE get_DOUBLE_LE
-
 static inline gulong
 get_WORD_LE(const guchar **p)
 {

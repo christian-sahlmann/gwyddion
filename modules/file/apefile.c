@@ -153,7 +153,7 @@ apefile_detect(const GwyFileDetectInfo *fileinfo,
     buffer = fileinfo->head;
     version = *(buffer++);
     mode = *(buffer++);
-    vbtype = get_WORD(&buffer);
+    vbtype = get_WORD_LE(&buffer);
     if (version >= 1 && version <= 2
         && mode < SPM_MODE_LAST+2  /* reserve */
         && vbtype == 7) {
@@ -194,44 +194,44 @@ apefile_load(const gchar *filename,
 
     apefile.spm_mode = *(p++);
     p += 2;   /* Skip VisualBasic VARIANT type type */
-    apefile.scan_date = get_DOUBLE(&p);
-    apefile.maxr_x = get_FLOAT(&p);
-    apefile.maxr_y = get_FLOAT(&p);
-    apefile.x_offset = get_DWORD(&p);
-    apefile.y_offset = get_DWORD(&p);
-    apefile.size_flag = get_WORD(&p);
+    apefile.scan_date = get_DOUBLE_LE(&p);
+    apefile.maxr_x = get_FLOAT_LE(&p);
+    apefile.maxr_y = get_FLOAT_LE(&p);
+    apefile.x_offset = get_DWORD_LE(&p);
+    apefile.y_offset = get_DWORD_LE(&p);
+    apefile.size_flag = get_WORD_LE(&p);
     apefile.res = 16 << apefile.size_flag;
-    apefile.acquire_delay = get_FLOAT(&p);
-    apefile.raster_delay = get_FLOAT(&p);
-    apefile.tip_dist = get_FLOAT(&p);
-    apefile.v_ref = get_FLOAT(&p);
+    apefile.acquire_delay = get_FLOAT_LE(&p);
+    apefile.raster_delay = get_FLOAT_LE(&p);
+    apefile.tip_dist = get_FLOAT_LE(&p);
+    apefile.v_ref = get_FLOAT_LE(&p);
     if (apefile.version == 1) {
-        apefile.vpmt1 = get_WORD(&p);
-        apefile.vpmt2 = get_WORD(&p);
+        apefile.vpmt1 = get_WORD_LE(&p);
+        apefile.vpmt2 = get_WORD_LE(&p);
     }
     else {
-        apefile.vpmt1 = get_FLOAT(&p);
-        apefile.vpmt2 = get_FLOAT(&p);
+        apefile.vpmt1 = get_FLOAT_LE(&p);
+        apefile.vpmt2 = get_FLOAT_LE(&p);
     }
     apefile.remark = g_strndup(p, 120);
     p += 120;
-    apefile.x_piezo_factor = get_DWORD(&p);
-    apefile.y_piezo_factor = get_DWORD(&p);
-    apefile.z_piezo_factor = get_DWORD(&p);
-    apefile.hv_gain = get_FLOAT(&p);
-    apefile.freq_osc_tip = get_DOUBLE(&p);
-    apefile.rotate = get_FLOAT(&p);
-    apefile.slope_x = get_FLOAT(&p);
-    apefile.slope_y = get_FLOAT(&p);
-    apefile.topo_means = get_WORD(&p);
-    apefile.optical_means = get_WORD(&p);
-    apefile.error_means = get_WORD(&p);
-    apefile.channels = get_DWORD(&p);
+    apefile.x_piezo_factor = get_DWORD_LE(&p);
+    apefile.y_piezo_factor = get_DWORD_LE(&p);
+    apefile.z_piezo_factor = get_DWORD_LE(&p);
+    apefile.hv_gain = get_FLOAT_LE(&p);
+    apefile.freq_osc_tip = get_DOUBLE_LE(&p);
+    apefile.rotate = get_FLOAT_LE(&p);
+    apefile.slope_x = get_FLOAT_LE(&p);
+    apefile.slope_y = get_FLOAT_LE(&p);
+    apefile.topo_means = get_WORD_LE(&p);
+    apefile.optical_means = get_WORD_LE(&p);
+    apefile.error_means = get_WORD_LE(&p);
+    apefile.channels = get_DWORD_LE(&p);
     apefile.ndata = 0;
     for (b = apefile.channels; b; b = b >> 1)
         apefile.ndata += (b & 1);
-    apefile.range_x = get_FLOAT(&p);
-    apefile.range_y = get_FLOAT(&p);
+    apefile.range_x = get_FLOAT_LE(&p);
+    apefile.range_y = get_FLOAT_LE(&p);
     apefile.xreal = apefile.maxr_x * apefile.x_piezo_factor * apefile.range_x
                     * apefile.hv_gain/65535.0 * 1e-9;
     apefile.yreal = apefile.maxr_y * apefile.y_piezo_factor * apefile.range_y
@@ -317,7 +317,7 @@ fill_data_fields(APEFile *apefile,
         for (i = 0; i < apefile->res; i++) {
             buffer += sizeof(float);
             for (j = 0; j < apefile->res; j++) {
-                *(data++) = get_FLOAT(&buffer);
+                *(data++) = get_FLOAT_LE(&buffer);
             }
         }
         apefile->data[n] = dfield;

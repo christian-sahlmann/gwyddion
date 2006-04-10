@@ -129,7 +129,7 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     buffer = fileinfo->head;
-    version = get_FLOAT(&buffer);
+    version = get_FLOAT_LE(&buffer);
     version_int = ROUND(10*version);
     gwy_debug("Version: %g", version);
 
@@ -137,8 +137,8 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
         if (fileinfo->file_size < TOTAL_SIZE_V21 + 2)
             return 0;
 
-        xres = get_WORD(&buffer);
-        yres = get_WORD(&buffer);
+        xres = get_WORD_LE(&buffer);
+        yres = get_WORD_LE(&buffer);
         if (fileinfo->file_size == TOTAL_SIZE_V21 + 2*xres*yres)
             return 100;
         return 0;
@@ -178,7 +178,7 @@ burleigh_load(const gchar *filename,
 
     memset(&imgfile, 0, sizeof(imgfile));
     p = buffer;
-    imgfile.version = get_FLOAT(&p);
+    imgfile.version = get_FLOAT_LE(&p);
     imgfile.version_int = ROUND(10*imgfile.version);
     if (imgfile.version_int == 21) {
         d = burleigh_load_v21(&imgfile, buffer, size, error);
@@ -247,8 +247,8 @@ burleigh_load_v21(IMGFile *imgfile,
     guint32 n;
 
     /* Header */
-    imgfile->xres = get_WORD(&p);
-    imgfile->yres = get_WORD(&p);
+    imgfile->xres = get_WORD_LE(&p);
+    imgfile->yres = get_WORD_LE(&p);
     n = imgfile->xres * imgfile->yres;
     if (size != 2*n + TOTAL_SIZE_V21) {
         err_SIZE_MISMATCH(error, 2*n + TOTAL_SIZE_V21, size);
@@ -256,18 +256,18 @@ burleigh_load_v21(IMGFile *imgfile,
     }
     /* Skip to footer */
     p += 2*n;
-    imgfile->xrangemax = get_DWORD(&p);
-    imgfile->yrangemax = get_DWORD(&p);
-    imgfile->zrangemax = get_DWORD(&p);
-    imgfile->xrange = get_DWORD(&p);
-    imgfile->yrange = get_DWORD(&p);
-    imgfile->zrange = get_DWORD(&p);
-    imgfile->scan_speed = get_WORD(&p);
-    imgfile->zoom_level = get_WORD(&p);
-    imgfile->data_type = get_WORD(&p);
-    imgfile->z_gain = get_WORD(&p);
-    imgfile->bias_volts = get_FLOAT(&p);
-    imgfile->tunneling_current = get_FLOAT(&p);
+    imgfile->xrangemax = get_DWORD_LE(&p);
+    imgfile->yrangemax = get_DWORD_LE(&p);
+    imgfile->zrangemax = get_DWORD_LE(&p);
+    imgfile->xrange = get_DWORD_LE(&p);
+    imgfile->yrange = get_DWORD_LE(&p);
+    imgfile->zrange = get_DWORD_LE(&p);
+    imgfile->scan_speed = get_WORD_LE(&p);
+    imgfile->zoom_level = get_WORD_LE(&p);
+    imgfile->data_type = get_WORD_LE(&p);
+    imgfile->z_gain = get_WORD_LE(&p);
+    imgfile->bias_volts = get_FLOAT_LE(&p);
+    imgfile->tunneling_current = get_FLOAT_LE(&p);
 
     return (const gint16*)(buffer + HEADER_SIZE_V21);
 }

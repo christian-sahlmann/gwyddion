@@ -140,8 +140,8 @@ hitachi_old_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     p = fileinfo->head + RES_OFFSET_OLD;
-    xres = get_WORD(&p);
-    yres = get_WORD(&p);
+    xres = get_WORD_LE(&p);
+    yres = get_WORD_LE(&p);
 
     if (fileinfo->file_size == 2*xres*yres + HEADER_SIZE_OLD)
         return 100;
@@ -238,8 +238,8 @@ read_data_field(const guchar *buffer,
     const guchar *p;
 
     p = buffer + RES_OFFSET;
-    xres = get_DWORD(&p);
-    yres = get_DWORD(&p);
+    xres = get_DWORD_LE(&p);
+    yres = get_DWORD_LE(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
 
     n = xres*yres;
@@ -249,11 +249,11 @@ read_data_field(const guchar *buffer,
     }
 
     p = buffer + XREAL_OFFSET;
-    xreal = get_DOUBLE(&p) * Nanometer;
+    xreal = get_DOUBLE_LE(&p) * Nanometer;
     p = buffer + YREAL_OFFSET;
-    yreal = get_DOUBLE(&p) * Nanometer;
+    yreal = get_DOUBLE_LE(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
-    q = get_DOUBLE(&p) * Nanometer;
+    q = get_DOUBLE_LE(&p) * Nanometer;
     gwy_debug("xreal: %g, yreal: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
     /* XXX: I don't know where the factor of 0.5 comes from.  But it makes
@@ -295,8 +295,8 @@ read_data_field_old(const guchar *buffer,
     const guchar *p;
 
     p = buffer + RES_OFFSET_OLD;
-    xres = get_WORD(&p);
-    yres = get_WORD(&p);
+    xres = get_WORD_LE(&p);
+    yres = get_WORD_LE(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
 
     n = xres*yres;
@@ -306,17 +306,17 @@ read_data_field_old(const guchar *buffer,
     }
 
     p = buffer + SCALE_OFFSET_OLD;
-    xscale = get_DOUBLE(&p);
-    yscale = get_DOUBLE(&p);
-    zscale = get_DOUBLE(&p);
+    xscale = get_DOUBLE_LE(&p);
+    yscale = get_DOUBLE_LE(&p);
+    zscale = get_DOUBLE_LE(&p);
     p = buffer + UNIT_OFFSET_OLD;
-    xunit = get_DOUBLE(&p);
-    yunit = get_DOUBLE(&p);
-    zunit = get_DOUBLE(&p);
+    xunit = get_DOUBLE_LE(&p);
+    yunit = get_DOUBLE_LE(&p);
+    zunit = get_DOUBLE_LE(&p);
     p = buffer + SPEED_OFFSET_OLD;
-    vx = get_DWORD(&p);
-    vy = get_DWORD(&p);
-    vz = get_DWORD(&p);
+    vx = get_DWORD_LE(&p);
+    vy = get_DWORD_LE(&p);
+    vz = get_DWORD_LE(&p);
 
     xreal = xscale * vx;
     yreal = yscale * vy;
