@@ -16,6 +16,7 @@ host=$($HOME/bin/Ftpcp)
 source $HOME/.bashrc
 source $HOME/.ssh/current-ssh-agent
 export CFLAGS="-ggdb -O"
+PATH="$HOME/bin:$PATH"
 
 # =====[ subroutines ]=======================================================
 # execute a function/command with logging and some setup
