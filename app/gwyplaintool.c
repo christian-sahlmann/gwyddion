@@ -33,7 +33,7 @@ static void     gwy_plain_tool_hide          (GwyTool *tool);
 static void     gwy_plain_tool_data_switched (GwyTool *tool,
                                               GwyDataView *data_view);
 
-G_DEFINE_ABSTRACT_TYPE(GwyPlainTool, gwy_plain_tool, GWY_TYPE_PLAIN_TOOL)
+G_DEFINE_ABSTRACT_TYPE(GwyPlainTool, gwy_plain_tool, GWY_TYPE_TOOL)
 
 static void
 gwy_plain_tool_class_init(GwyPlainToolClass *klass)
