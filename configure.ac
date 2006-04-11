@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060411, [klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.99.6cvs20060407, [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -213,18 +213,12 @@ AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != : -a "$enable_pascal" != no])
 # With GCC, be paranoiac.  It should compile really cleanly.
 if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([WNO_EMPTY_FMT],[-Wno-format-zero-length],,)
-<<<<<<< configure.ac
-=======
-  GWY_PROG_CC_OPTION([WNO_SIGN_COMPARE],[-Wno-sign-compare],,)
-  GWY_PROG_CC_OPTION([WNO_POINTER_SIGN],[-Wno-pointer-sign],,)
->>>>>>> 1.95.2.11
   GWY_PROG_CC_OPTION([WNO_SYS_HEADERS],[-Wno-system-headers],,)
   GWY_PROG_CC_OPTION([WNO_POINTER_SIGN],[-Wno-pointer-sign],,)
   GWY_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
   # FIXME: We would like an error, but gcc can't make one w/o -std, which is
   # too much.
   GWY_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
-<<<<<<< configure.ac
   GWY_PROG_CC_OPTION([FNO_TRAP_MATH],[-fno-trapping-math],,)
   GWY_PROG_CC_OPTION([FNO_MATH_ERRNO],[-fno-math-errno],,)
   # Flags we can't use:
@@ -234,9 +228,6 @@ if test "$GCC" = yes; then
   # -Wwrite-strings because it makes all struct initializations very noisy
   WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL"
   MATH_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO"
-=======
-  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WREDUNDANT $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WNO_SIGN_COMPARE $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WMIXED_DECL"
->>>>>>> 1.95.2.11
 fi
 
 #############################################################################
