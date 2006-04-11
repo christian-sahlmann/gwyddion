@@ -349,8 +349,9 @@ store_metadata(APEFile *apefile,
         (container, "/meta/SPM mode",
          g_strdup(gwy_enum_to_string(apefile->spm_mode, spm_modes,
                                      G_N_ELEMENTS(spm_modes))));
-    gwy_container_set_string_by_name(container, "/meta/Date",
-                                     format_vt_date(apefile->scan_date));
+    p = format_vt_date(apefile->scan_date);
+    if (p)
+        gwy_container_set_string_by_name(container, "/meta/Date", p);
 }
 
 /******************** Wine date conversion code *****************************/
@@ -590,8 +591,10 @@ format_vt_date(gdouble vt_date)
     struct tm tm;
     UDATE udate;
 
+    if (!gwy_VarUdateFromDate(vt_date, &udate))
+        return NULL;
+
     memset(&tm, 0, sizeof(tm));
-    gwy_VarUdateFromDate(vt_date, &udate);
     gwy_debug("Date: %d-%d-%d %d:%d:%d",
               udate.st.wYear, udate.st.wMonth, udate.st.wDay,
               udate.st.wHour, udate.st.wMinute, udate.st.wSecond);
