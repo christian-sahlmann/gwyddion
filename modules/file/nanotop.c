@@ -22,13 +22,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
-
-#include <stdio.h>
-#include <string.h>
 
 #include "get.h"
 #include "err.h"

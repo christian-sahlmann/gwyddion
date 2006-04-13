@@ -20,15 +20,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
+#include <string.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <app/gwyapp.h>
-
-#include <string.h>
-#include <stdlib.h>
 
 #include "get.h"
 #include "err.h"
