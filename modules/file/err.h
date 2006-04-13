@@ -58,7 +58,8 @@ static inline void
 err_FILE_TYPE(GError **error, const gchar *name)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("File is not a %s file or it is seriously damaged."), name);
+                _("File is not a %s file, it is seriously damaged, "
+                  "or it is of an unknown format version."), name);
 }
 
 static inline void

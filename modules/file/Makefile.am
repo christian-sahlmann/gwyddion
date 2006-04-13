@@ -33,6 +33,7 @@ file_LTLIBRARIES = \
 	hdf4file.la \
 	hitachi-afm.la \
 	$(tiff_modules) \
+	metropro.la \
 	mifile.la \
 	nanoscope.la \
 	nanotop.la \
@@ -129,6 +130,12 @@ jpkscan_la_SOURCES = jpk.h jpkscan.c
 jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 endif
 
+metropro_la_SOURCES = metropro.c
+metropro_la_LIBADD = $(module_libadd)
+
+mifile_la_SOURCES = mifile.c
+mifile_la_LIBADD = $(module_libadd)
+
 nanoscope_la_SOURCES = nanoscope.c
 nanoscope_la_LIBADD = $(module_libadd)
 
@@ -137,9 +144,6 @@ nanotop_la_LIBADD = $(module_libadd)
 
 nt_mdt_la_SOURCES = nt-mdt.c
 nt_mdt_la_LIBADD = $(module_libadd)
-
-mifile_la_SOURCES = mifile.c
-mifile_la_LIBADD = $(module_libadd)
 
 omicron_la_SOURCES = omicron.c
 omicron_la_LIBADD = $(module_libadd)
