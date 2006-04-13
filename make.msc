@@ -4,8 +4,8 @@
 #
 # The uncommented paths should work for default MSVC 6 installation and for
 # default GladeWin32 installation.
-# If you have separate Gtk+ and GtkGLext, define GTKGLEXT_TOP accordingly.
-# If you have separate Gtk+ and LibXML2, define LIBXML2_TOP accordingly.
+# If you have GtkGLext separate from Gtk+, define GTKGLEXT_TOP accordingly.
+# If you have LibXML2 separate from Gtk+, define LIBXML2_TOP accordingly.
 GTK_TOP = C:\Gtk
 GTKGLEXT_TOP = $(GTK_TOP)
 LIBXML2_TOP = $(GTK_TOP)
@@ -106,7 +106,7 @@ SPML_LIBS = $(ZLIB_LIBS) $(LIBXML2_LIBS)
 ZLIB_CFLAGS =
 ZLIB_LIBS = z.lib
 
-LIBXML2_CFLAGS = -I "$(LIBXML2_TOP)\include"
+LIBXML2_CFLAGS = -I "$(LIBXML2_TOP)\include\libxml2"
 LIBXML2_LDFLAGS = /libpath:"$(LIBXML2_TOP)\lib"
 LIBXML2_LIBS = xml2.lib
 
