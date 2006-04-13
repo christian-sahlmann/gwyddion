@@ -201,13 +201,14 @@ static GwyContainer* rhk_sm3_load          (const gchar *filename,
                                             GError **error);
 static void          rhk_sm3_store_metadata(RHKPage *rhkpage,
                                             GwyContainer *container);
+static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -597,6 +598,10 @@ rhk_sm3_load(const gchar *filename,
         }
         /* FIXME: not yet
         rhk_sm3_store_metadata(rhkpage, container); */
+        if (data_field_has_highly_nosquare_samples(dfield)) {
+            g_string_printf(key, "/%d/data/realsquare", i);
+            gwy_container_set_boolean_by_name(container, key->str, TRUE);
+        }
     }
     g_string_free(key, TRUE);
 
@@ -680,6 +685,24 @@ rhk_sm3_store_metadata(RHKPage *rhkpage,
     }
     str[32] = '\0';
     gwy_container_set_string_by_name(container, "/meta/Page ID", str);
+}
+
+static gboolean
+data_field_has_highly_nosquare_samples(GwyDataField *dfield)
+{
+    gint xres, yres;
+    gdouble xreal, yreal, q;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+
+    q = (xreal/xres)/(yreal/yres);
+
+    /* The threshold is somewhat arbitrary.  Fortunately, most files encoutered
+     * in practice have either q very close to 1, or 2 or more */
+    return q > G_SQRT2 || q < 1.0/G_SQRT2;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
