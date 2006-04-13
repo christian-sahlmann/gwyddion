@@ -142,8 +142,8 @@ def expand_template(makefile, name):
                 lst.append(prg_object_rule % (x, x, x))
         return  '\n'.join(lst)
     elif name == 'MODULES':
-        mods = fix_suffixes(get_list(makefile, r'\w+_LTLIBRARIES'),
-                            '.la', '.dll')
+        mods = get_list(makefile, r'\w+_LTLIBRARIES')
+        mods = fix_suffixes(fix_suffixes(mods, '.la', '.dll'), ')', ').dll')
         return name + ' =' + ' \\\n\t'.join([''] + mods)
     elif name == 'MOD_DLL_RULES':
         mods = fix_suffixes(get_list(makefile, r'\w+_LTLIBRARIES'), '.la')
