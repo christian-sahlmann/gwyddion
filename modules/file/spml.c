@@ -59,7 +59,8 @@ static GwyContainer *spml_load(const gchar *filename);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Loads and saves SPML data files."),
+    N_("Loads and saves SPML (Scanning Probe Microscopy Markup Language) "
+       "data files."),
     "Jan Horak <xhorak@gmail.com>",
     "0.1.1",
     "Jan Horak",
@@ -76,7 +77,7 @@ GWY_MODULE_QUERY(module_info)
 {
     gwy_file_func_register("spml",
                            N_
-                           ("SPML: Scanning Probe Microscopy Markup Language (.xml)"),
+                           ("SPML files (.xml)"),
                            (GwyFileDetectFunc) & spml_detect,
                            (GwyFileLoadFunc) & spml_load, NULL, NULL);
     return TRUE;
