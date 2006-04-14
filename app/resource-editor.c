@@ -246,6 +246,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     }
     g_object_unref(editor->sensgroup);
 
+    gtk_window_set_default_size(GTK_WINDOW(editor), -1, 400);
     gwy_app_restore_window_position(GTK_WINDOW(editor), klass->settings_prefix,
                                     TRUE);
     gtk_widget_show_all(editor->vbox);
