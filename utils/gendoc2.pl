@@ -9,7 +9,7 @@ use POSIX qw(getcwd);
 # gwyddion.net with left bar, etc.  I should rather learn DSSSL...
 my $tidy = 'tidy -asxhtml -q';
 my $unsafe_chars = "<>\"&";
-my $base = $ENV{'HOME'} . '/Projects/Gwyddion/Web/documentation';
+my $base = $ENV{'HOME'} . '/Projects/Gwyddion/devel-docs';
 my $suffix;
 if ( not defined $ARGV[0] ) { $suffix = ''; }
 elsif ( $ARGV[0] eq 'CVS' ) { shift @ARGV; $suffix = "&nbsp;(CVS HEAD)"; }
@@ -39,6 +39,8 @@ foreach my $dir (glob "*") {
         if ( not $_ ) { die "Output is empty, do you have tidy installed?"; }
         # Lowercase attributes
         s#((?:class|rel)=".*?")#\L$1\E#sg;
+        # Fix awful line breaks
+        s#(\w+)=\n"#$1="#sg;
         # Remove <body> attributes
         s#<body[^>]*>#<body>#s;
         # Move id= attributes directly to elements
@@ -79,6 +81,8 @@ foreach my $dir (glob "*") {
         my $add_topnote = s#<table class="navigation" width="100%"\s*>\s*<tr>\s*<th valign="middle">\s*<p class="title">(.*?)</p>\s*</th>\s*</tr>\s*</table>\s*<hr\s*/>#<h1>$1</h1>#sg;
         s#<h2><span class="refentrytitle">(.*?)</span></h2>#<h1>$1</h1>#s;
         s#<h2 class="title"(.*?)</h2>#<h1$1</h1>#s;
+        # Get rid of semantical mess
+        s#<span class="\w+">(.*?)</span>#$1#sg;
         # Remove the who-knows-what-it's-good-for table from titles
         s#<table[^>]*>\s*<tr>\s*<td[^>]*>\s*(<h1>.*?</h1>)\s*(.*?)</td>.*?</table>#$1\n<p>$2</p>#si;
         # Add suffix to h1 tags
