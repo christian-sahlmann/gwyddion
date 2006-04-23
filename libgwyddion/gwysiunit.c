@@ -1257,6 +1257,9 @@ gwy_si_unit_prefix(gint power)
 
 /**
  * GwySIUnitFormatStyle:
+ * @GWY_SI_UNIT_FORMAT_NONE: No units.  This value is unused by #GwySIUnit
+ *                           itself and must not be requested as a format
+ *                           style.
  * @GWY_SI_UNIT_FORMAT_PLAIN: Plain style, as one would use on a text terminal.
  * @GWY_SI_UNIT_FORMAT_MARKUP: Pango markup, for units usable standalone.
  * @GWY_SI_UNIT_FORMAT_VFMARKUP: Pango markup, for units directly after value.
