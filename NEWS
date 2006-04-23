@@ -1,4 +1,4 @@
-1.99.6cvs20060405
+1.99.6cvs20060423
 
 1.99.7 (0000-00-00)
 Application:
@@ -21,7 +21,7 @@ Modules:
 - Surffile (new): Surf file import.
 - Nanotop (new): Nanotop SPM file import.
 - Hitachi AFM: Import of another strain of Hitachi AFM files was added.
-- BCR file: Void pixel handling was improved (bug #68).
+- BCR file: Void pixel handling was improved (bug #67).
 - Grain distribution: Height distribution was added (bug #69).
 - RHK SPM32: Value offsets are respected.
 - RHK SM3: Can import newer files (XPMPro 1.1.0.9) (bug #71).
@@ -254,9 +254,8 @@ Modules:
 - Distance: Displays value difference too.
 - Pixmap: The same unit selection/formatting is used for false color scale
   as on data windows (bug #63).
-- Graph export vector, ascii and bitmap: functionality moved from Graph (withing
-bugs)
-  moved here
+- Graph export vector, ascii and bitmap: functionality moved from Graph
+  (withing bugs) moved here
 - Graph level: simple line leveling by 1st order polynome
 
 Other:
@@ -424,6 +423,39 @@ Library:
 
 Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
+
+
+1.16 (2006-04-18)
+Application:
+- Gwyddion now depends on libxml2 used for SPML import (optionally, if you
+  compile it from source code).
+- Translations updated: Czech.
+
+Library:
+- libgwydddion: Memory corruption on big-endian machines in serialization and
+  deserialization was fixed (bug #73).
+- libgwyprocess: Grain statistics were fixed.
+- libgwyddion: gwy_math_humanize_numbers() behaves reasonably for zero values
+  (bug #70).
+- libgwydgets: Gwy3DView displays correct units on all axes.
+
+Modules:
+- Omicron (new): Omicron (Scala) file import.
+- Surffile (new): Surf file import.
+- Nanotop (new): Nanotop SPM file import.
+- SPML (new): SMPL file import.
+- MetroPro (new): Binary Zygo MetroPro file import.
+- Burleigh (new): Burleigh IMG v2.1 file import (experimental).
+- SDFile: Import support was significantly improved.
+- BCR file: Void pixel handling was improved (bug #67).
+- Grain distribution: Height distribution was added (bug #69).
+- RHK SPM32: Value offsets are respected.
+- RHK SM3: Can import newer files (XPMPro 1.1.0.9) (bug #71).
+- Line correction: Step correction function (new, experimental).
+- Nanoscope: No longer crashes when channel name is missing.
+
+Other:
+- JPK import module previously omitted in Win32 binaries was added.
 
 
 1.15 (2006-01-02)
