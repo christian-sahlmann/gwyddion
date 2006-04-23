@@ -11,8 +11,9 @@ my $tidy = 'tidy -asxhtml -q';
 my $unsafe_chars = "<>\"&";
 my $base = $ENV{'HOME'} . '/Projects/Gwyddion/devel-docs';
 my $suffix;
+my $cvs = undef;
 if ( not defined $ARGV[0] ) { $suffix = ''; }
-elsif ( $ARGV[0] eq 'CVS' ) { shift @ARGV; $suffix = "&nbsp;(CVS HEAD)"; }
+elsif ( $ARGV[0] eq 'CVS' ) { shift @ARGV; $suffix = "&nbsp;(CVS HEAD)"; $cvs = "CVS"; }
 elsif ( $ARGV[0] =~ /^\d+\.\d/ ) { $suffix = "&nbsp;(" . (shift @ARGV) . ")"; }
 if ( defined $ARGV[0] ) { $base = $ARGV[0]; }
 my $APIDOCS = "$base";
@@ -20,11 +21,19 @@ my $pkgname = "Gwyddion";
 
 undef $/;
 
-my $footer =
+my $footer;
+if ($cvs) { $footer =
 "
 </div>
 <?php include('../../../_leftmenu.php'); ?>
 ";
+}
+else { $footer =
+"
+</div>
+<?php include('../../_leftmenu.php'); ?>
+";
+}
 
 chdir "devel-docs" or die "Must be run from top-level $pkgname directory.";
 foreach my $dir (glob "*") {
