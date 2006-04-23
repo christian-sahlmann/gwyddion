@@ -19,32 +19,59 @@
 
 #include "config.h"
 #include <string.h>
-#include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/unitool.h>
+#include <app/gwyapp.h>
+
+#define GWY_TYPE_TOOL_DISTANCE            (gwy_tool_distance_get_type())
+#define GWY_TOOL_DISTANCE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistance))
+#define GWY_IS_TOOL_DISTANCE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_DISTANCE))
+#define GWY_TOOL_DISTANCE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistanceClass))
 
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
-#define NLINES 4
+enum { NLINES = 12 };
 
-typedef struct {
-    GwyUnitoolState *state;
-    GtkWidget *units[5];
-    GtkWidget *positions[NLINES * 2];
-    GtkWidget *vectors[NLINES * 2];
-    GtkWidget *diffs[NLINES];
-    GPtrArray *str;
+enum {
+    COLUMN_I,
+    COLUMN_DX,
+    COLUMN_DY,
+    COLUMN_PHI,
+    COLUMN_R,
+    COLUMN_DZ,
+    NCOLUMNS
+};
+
+typedef struct _GwyToolDistance          GwyToolDistance;
+typedef struct _GwyToolDistanceClass     GwyToolDistanceClass;
+
+struct _GwyToolDistance {
+    GwyPlainTool parent_instance;
+
+    GtkTreeView *treeview;
+    GtkListStore *store;
 } ToolControls;
 
-static gboolean   module_register     (void);
+struct _GwyToolDistanceClass {
+    GwyPlainToolClass parent_class;
+
+};
+
+static gboolean module_register                  (void);
+static GType    gwy_tool_distance_get_type       (void) G_GNUC_CONST;
+
+static void gwy_tool_distance_update_headers(GwyToolDistance *tool);
+static void gwy_tool_distance_render_cell(GtkCellLayout *layout,
+                                          GtkCellRenderer *renderer,
+                                          GtkTreeModel *model,
+                                          GtkTreeIter *iter,
+                                          gpointer user_data);
+
 static gboolean   use                 (GwyDataWindow *data_window,
                                        GwyToolSwitchEvent reason);
 static void       layer_setup         (GwyUnitoolState *state);
@@ -60,38 +87,157 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "1.4",
+    "2.0",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-static GwyUnitoolSlots func_slots = {
-    0,                             /* layer type, must be set runtime */
-    layer_setup,                   /* layer setup func */
-    dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
-    NULL,                          /* apply action */
-    NULL,                          /* nonstandard response handler */
-};
-
 GWY_MODULE_QUERY(module_info)
+
+G_DEFINE_TYPE(GwyToolDistance, gwy_tool_distance, GWY_TYPE_TOOL)
 
 static gboolean
 module_register(void)
 {
-    static GwyToolFuncInfo func_info = {
-        "distance",
-        GWY_STOCK_DISTANCE,
-        N_("Measure distances between points."),
-        use,
-    };
-
-    gwy_tool_func_register(&func_info);
+    gwy_tool_func_register(GWY_TYPE_TOOL_DISTANCE);
 
     return TRUE;
 }
 
+static void
+gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
+{
+    GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
+
+    tool_class->stock_id = GWY_STOCK_DISTANCE;
+    tool_class->title = _("Distance");
+    tool_class->tooltip = _("Measure distances and directions between points");
+}
+
+static void
+gwy_tool_distance_init(GwyToolDistance *tool)
+{
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkDialog *dialog;
+    GtkWidget *scwin, *label;
+    guint i;
+
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
+    /* XXX */
+    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 200);
+
+    tool->store = gtk_list_store_new(1, G_TYPE_INT);
+    tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model
+                                                (GTK_TREE_MODEL(tool->store)));
+    g_object_unref(tool->store);
+
+    for (i = 0; i < NCOLUMNS; i++) {
+        column = gtk_tree_view_column_new();
+        g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
+        renderer = gtk_cell_renderer_text_new();
+        gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, FALSE);
+        gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
+                                           gwy_tool_distance_render_cell, tool,
+                                           NULL);
+        label = gtk_label_new(NULL);
+        gtk_tree_view_column_set_widget(column, label);
+        gtk_widget_show(label);
+        gtk_tree_view_append_column(tool->treeview, column);
+    }
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
+
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
+    gtk_widget_show_all(dialog->vbox);
+
+    gtk_dialog_add_button(dialog, _("Hide"), 100);
+
+    gwy_tool_distance_update_headers(tool);
+}
+
+static void
+gwy_tool_distance_update_headers(GwyToolDistance *tool)
+{
+    GtkTreeViewColumn *column;
+    GwyPlainTool *plain_tool;
+    GtkLabel *label;
+    GString *str;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    str = g_string_new("");
+
+    column = gtk_tree_view_get_column(tool->treeview, COLUMN_I);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    g_string_assign(str, "n");
+    gtk_label_set_markup(label, str->str);
+
+    column = gtk_tree_view_get_column(tool->treeview, COLUMN_DX);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    g_string_assign(str, "Δx");
+    if (plain_tool->coord_format)
+        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
+    gtk_label_set_markup(label, str->str);
+
+    column = gtk_tree_view_get_column(tool->treeview, COLUMN_DY);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    g_string_assign(str, "Δy");
+    if (plain_tool->coord_format)
+        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
+    gtk_label_set_markup(label, str->str);
+
+    column = gtk_tree_view_get_column(tool->treeview, COLUMN_PHI);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    gtk_label_set_markup(label, _("Angle [deg]"));
+
+    column = gtk_tree_view_get_column(tool->treeview, COLUMN_R);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    g_string_assign(str, "R");
+    if (plain_tool->coord_format)
+        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
+    gtk_label_set_markup(label, str->str);
+
+    column = gtk_tree_view_get_column(tool->treeview, COLUMN_DZ);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    g_string_assign(str, "Δz");
+    if (plain_tool->value_format)
+        g_string_append_printf(str, " [%s]", plain_tool->value_format->units);
+    gtk_label_set_markup(label, str->str);
+
+    g_string_free(str, TRUE);
+}
+
+static void
+gwy_tool_distance_render_cell(GtkCellLayout *layout,
+                              GtkCellRenderer *renderer,
+                              GtkTreeModel *model,
+                              GtkTreeIter *iter,
+                              gpointer user_data)
+{
+    GwyToolDistance *tool = (GwyToolDistance*)user_data;
+    gchar buf[32];
+    gint idx, id;
+
+    id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
+    gtk_tree_model_get(model, iter, 0, &idx, -1);
+    switch (id) {
+        case COLUMN_I:
+        g_snprintf(buf, sizeof(buf), "<b>%d</b>", id);
+        g_object_set(renderer, "markup", buf, NULL);
+        return;
+        break;
+
+        default:
+        strcpy(buf, "FIXME");
+        break;
+    }
+    g_object_set(renderer, "text", buf, NULL);
+}
+
+#if 0
 static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
@@ -330,6 +476,7 @@ dialog_abandon(GwyUnitoolState *state)
     g_ptr_array_free(controls->str, TRUE);
     memset(state->user_data, 0, sizeof(ToolControls));
 }
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

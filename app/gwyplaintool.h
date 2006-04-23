@@ -38,6 +38,13 @@ typedef struct _GwyPlainToolClass GwyPlainToolClass;
 struct _GwyPlainTool {
     GwyTool parent_instance;
 
+    GwySIUnitFormatStyle unit_style;
+
+    GwyDataView *data_view;
+    GwyVectorLayer *layer;
+
+    GwySIValueFormat *coord_format;
+    GwySIValueFormat *value_format;
 };
 
 struct _GwyPlainToolClass {

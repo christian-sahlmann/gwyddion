@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,30 +21,13 @@
 #ifndef __GWY_MODULE_TOOL_H__
 #define __GWY_MODULE_TOOL_H__
 
-#include <libgwydgets/gwydatawindow.h>
-#include <libgwymodule/gwymoduleenums.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GwyToolFuncInfo GwyToolFuncInfo;
-
-typedef gboolean (*GwyToolUseFunc)(GwyDataWindow *data_window,
-                                   GwyToolSwitchEvent event);
-
-struct _GwyToolFuncInfo {
-    const gchar *name;
-    const gchar *stock_id;
-    const gchar *tooltip;
-    GwyToolUseFunc use;
-};
-
-gboolean     gwy_tool_func_register      (GwyToolFuncInfo *func_info);
-gboolean     gwy_tool_func_use           (const guchar *name,
-                                          GwyDataWindow *data_window,
-                                          GwyToolSwitchEvent event);
-const gchar* gwy_tool_func_get_tooltip   (const gchar *name);
-const gchar* gwy_tool_func_get_stock_id  (const gchar *name);
-gboolean     gwy_tool_func_exists        (const gchar *name);
+gboolean gwy_tool_func_register(GType type);
+void     gwy_tool_func_foreach (GFunc function,
+                                gpointer user_data);
 
 G_END_DECLS
 

@@ -22,10 +22,15 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwydgets/gwyvectorlayer.h>
 #include <libgwymodule/gwymodule-layer.h>
 #include "gwymoduleinternal.h"
+
+/* Auxiliary structure to pass both user callback function and data to
+ * g_hash_table_foreach() lambda argument in gwy_layer_func_foreach() */
+typedef struct {
+    GFunc function;
+    gpointer user_data;
+} LayerFuncForeachData;
 
 static GHashTable *layer_funcs = NULL;
 
@@ -65,6 +70,39 @@ gwy_layer_func_register(GType type)
     }
 
     return TRUE;
+}
+
+static void
+gwy_layer_func_user_cb(gpointer key,
+                       G_GNUC_UNUSED gpointer value,
+                       gpointer user_data)
+{
+    LayerFuncForeachData *lffd = (LayerFuncForeachData*)user_data;
+
+    lffd->function(key, lffd->user_data);
+}
+
+/**
+ * gwy_layer_func_foreach:
+ * @function: Function to run for each layer function.  It will get function
+ *            name (constant string owned by module system) as its first
+ *            argument, @user_data as the second argument.
+ * @user_data: Data to pass to @function.
+ *
+ * Calls a function for each layer function.
+ **/
+void
+gwy_layer_func_foreach(GFunc function,
+                       gpointer user_data)
+{
+    LayerFuncForeachData lffd;
+
+    if (!layer_funcs)
+        return;
+
+    lffd.user_data = user_data;
+    lffd.function = function;
+    g_hash_table_foreach(layer_funcs, gwy_layer_func_user_cb, &lffd);
 }
 
 gboolean

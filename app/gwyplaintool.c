@@ -23,6 +23,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libprocess/datafield.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/app.h>
 #include <app/gwyplaintool.h>
@@ -32,6 +33,7 @@ static void     gwy_plain_tool_show          (GwyTool *tool);
 static void     gwy_plain_tool_hide          (GwyTool *tool);
 static void     gwy_plain_tool_data_switched (GwyTool *tool,
                                               GwyDataView *data_view);
+static void     gwy_plain_tool_update_units  (GwyPlainTool *plain_tool);
 
 G_DEFINE_ABSTRACT_TYPE(GwyPlainTool, gwy_plain_tool, GWY_TYPE_TOOL)
 
@@ -49,13 +51,21 @@ gwy_plain_tool_class_init(GwyPlainToolClass *klass)
 }
 
 static void
-gwy_plain_tool_finalize(G_GNUC_UNUSED GObject *object)
+gwy_plain_tool_finalize(GObject *object)
 {
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(object);
+    if (plain_tool->coord_format)
+        gwy_si_unit_value_format_free(plain_tool->coord_format);
+    if (plain_tool->value_format)
+        gwy_si_unit_value_format_free(plain_tool->value_format);
+
     G_OBJECT_CLASS(gwy_plain_tool_parent_class)->finalize(object);
 }
 
 static void
-gwy_plain_tool_init(GwyPlainTool *tool)
+gwy_plain_tool_init(G_GNUC_UNUSED GwyPlainTool *tool)
 {
 }
 
@@ -75,7 +85,40 @@ void
 gwy_plain_tool_data_switched(GwyTool *tool,
                              GwyDataView *data_view)
 {
+    GwyPlainTool *plain_tool;
+
     GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched(tool, data_view);
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    /* XXX XXX XXX */
+    plain_tool->data_view = data_view;
+    if (plain_tool->unit_style)
+        gwy_plain_tool_update_units(plain_tool);
+}
+
+static void
+gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
+{
+    GwyContainer *container;
+    GwyPixmapLayer *layer;
+    GwyDataField *dfield;
+    const gchar *key;
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view));
+    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
+    key = gwy_pixmap_layer_get_data_key(layer);
+    container = gwy_data_view_get_data(plain_tool->data_view);
+    dfield = gwy_container_get_object_by_name(container, key);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+
+    plain_tool->coord_format
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             plain_tool->unit_style,
+                                             plain_tool->coord_format);
+    plain_tool->value_format
+        = gwy_data_field_get_value_format_z(dfield,
+                                            plain_tool->unit_style,
+                                            plain_tool->value_format);
 }
 
 /************************** Documentation ****************************/

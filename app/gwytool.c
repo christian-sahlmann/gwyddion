@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -58,6 +58,7 @@ gwy_tool_init(GwyTool *tool)
     GwyToolClass *klass;
 
     klass = GWY_TOOL_GET_CLASS(tool);
+    gwy_debug("%s", klass->title);
     tool->dialog = gtk_dialog_new();
     gtk_dialog_set_has_separator(GTK_DIALOG(tool->dialog), FALSE);
     gtk_window_set_title(GTK_WINDOW(tool->dialog), _(klass->title));
@@ -102,6 +103,7 @@ gwy_tool_response(GwyTool *tool,
 static void
 gwy_tool_show_real(GwyTool *tool)
 {
+    gwy_debug("");
     tool->is_visible = TRUE;
     gtk_window_present(GTK_WINDOW(tool->dialog));
 }
@@ -131,35 +133,45 @@ gwy_tool_add_hide_button(GwyTool *tool,
 void
 gwy_tool_show(GwyTool *tool)
 {
-    void (*method)(GwyTool*);
+    GwyToolClass *klass;
 
     g_return_if_fail(GWY_IS_TOOL(tool));
-    method = GWY_TOOL_GET_CLASS(tool)->show;
-    if (method)
-        method(tool);
+    klass = GWY_TOOL_GET_CLASS(tool);
+    gwy_debug("%s", klass->title);
+    if (klass->show)
+        klass->show(tool);
 }
 
 void
 gwy_tool_hide(GwyTool *tool)
 {
-    void (*method)(GwyTool*);
+    GwyToolClass *klass;
 
     g_return_if_fail(GWY_IS_TOOL(tool));
-    method = GWY_TOOL_GET_CLASS(tool)->hide;
-    if (method)
-        method(tool);
+    klass = GWY_TOOL_GET_CLASS(tool);
+    gwy_debug("%s", klass->title);
+    if (klass->hide)
+        klass->hide(tool);
+}
+
+gboolean
+gwy_tool_is_visible(GwyTool *tool)
+{
+    g_return_val_if_fail(GWY_IS_TOOL(tool), FALSE);
+    return tool->is_visible;
 }
 
 void
 gwy_tool_data_switched(GwyTool *tool,
                        GwyDataView *data_view)
 {
-    void (*method)(GwyTool*, GwyDataView*);
+    GwyToolClass *klass;
 
     g_return_if_fail(GWY_IS_TOOL(tool));
-    method = GWY_TOOL_GET_CLASS(tool)->data_switched;
-    if (method)
-        method(tool, data_view);
+    klass = GWY_TOOL_GET_CLASS(tool);
+    gwy_debug("%s", klass->title);
+    if (klass->data_switched)
+        klass->data_switched(tool, data_view);
 }
 
 /**

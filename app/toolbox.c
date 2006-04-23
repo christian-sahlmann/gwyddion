@@ -294,10 +294,15 @@ gwy_app_toolbox_create(void)
             "graph_fit",
         },
     };
+    /*
     static const gchar *tool_actions[] = {
         "readvalue", "distance", "polynom", "crop", "filter", "level3",
         "stats", "sfunctions", "profile", "grain_remove_manually",
         "spotremove", "icolorange", "maskedit",
+    };
+    */
+    static const gchar *tool_actions[] = {
+        "GwyToolDistance",
     };
     GwyMenuSensFlags sens;
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
@@ -424,11 +429,25 @@ gwy_app_toolbox_create(void)
     action.callback = G_CALLBACK(gwy_app_tool_use_cb);
     group = NULL;
     for (j = i = 0; i < G_N_ELEMENTS(tool_actions); i++) {
-        action.stock_id = gwy_tool_func_get_stock_id(tool_actions[i]);
-        action.tooltip = gwy_tool_func_get_tooltip(tool_actions[i]);
+        GType type;
+        GwyToolClass *tool_class;
+
+        type = g_type_from_name(tool_actions[i]);
+        if (!type)
+            continue;
+        tool_class = g_type_class_peek(type);
+        if (!tool_class)
+            continue;
+
+        if (!GWY_IS_TOOL_CLASS(tool_class)) {
+            g_warning("Tool class is not GwyToolClass");
+            continue;
+        }
+
+        action.stock_id = gwy_tool_class_get_stock_id(tool_class);
+        action.tooltip = gwy_tool_class_get_tooltip(tool_class);
         action.cbdata = tool_actions[i];
-        button = add_rbutton(toolbar, j, &action, group,
-                             (ActionCheckFunc)gwy_tool_func_exists, tooltips);
+        button = add_rbutton(toolbar, j, &action, group, NULL, tooltips);
         if (!button)
             continue;
         /* FIXME: implicit sensitivity, remove */

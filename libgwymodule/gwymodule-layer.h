@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,8 @@
 G_BEGIN_DECLS
 
 gboolean gwy_layer_func_register(GType type);
+void     gwy_layer_func_foreach (GFunc function,
+                                 gpointer user_data);
 
 G_END_DECLS
 

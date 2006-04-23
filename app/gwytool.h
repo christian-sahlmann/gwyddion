@@ -62,6 +62,7 @@ void         gwy_tool_add_hide_button   (GwyTool *tool,
                                          gboolean set_default);
 void         gwy_tool_show              (GwyTool *tool);
 void         gwy_tool_hide              (GwyTool *tool);
+gboolean     gwy_tool_is_visible        (GwyTool *tool);
 void         gwy_tool_data_switched     (GwyTool *tool,
                                          GwyDataView *data_view);
 

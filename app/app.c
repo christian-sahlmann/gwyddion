@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <gdk/gdkkeysyms.h>
@@ -45,7 +45,7 @@ static GList *current_graph = NULL;
 static GList *current_3d = NULL;
 static GtkWidget *current_any = NULL;
 
-static const gchar* current_tool = NULL;
+static GwyTool* current_tool = NULL;
 static gint untitled_no = 0;
 static GQuark corner_item_quark = 0;
 
@@ -313,8 +313,12 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     else
         current_data = g_list_prepend(current_data, window);
 
+    /* XXX
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
+        */
+    if (current_tool)
+        gwy_tool_data_switched(current_tool, data_view);
 
     data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
@@ -371,8 +375,11 @@ gwy_app_data_window_remove(GwyDataWindow *window)
         return;
     }
 
+    /* XXX
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
+     */
+    gwy_object_unref(current_tool);
     gwy_app_sensitivity_set_state(mask, 0);
 }
 
@@ -1326,6 +1333,7 @@ gwy_app_tool_use_cb(const gchar *toolname,
         return;
     }
 
+#if 0
     if (current_tool && (!toolname || strcmp(current_tool, toolname)))
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);
     if (toolname) {
@@ -1340,6 +1348,33 @@ gwy_app_tool_use_cb(const gchar *toolname,
     }
     /* FIXME: this is really ugly */
     g_signal_emit_by_name(old_button, "clicked");
+#endif
+    {
+        GwyTool *newtool;
+        GwyDataView *data_view;
+        GType type;
+
+        type = g_type_from_name(toolname);
+        if (current_tool && type == G_TYPE_FROM_INSTANCE(current_tool)) {
+            gwy_debug("Switch to current tool, showing tool for now.");
+            gwy_tool_show(current_tool);
+            return;
+        }
+
+        newtool = (GwyTool*)g_object_new(type, NULL);
+        g_return_if_fail(GWY_IS_TOOL(newtool));
+
+        gwy_object_unref(current_tool);
+        current_tool = newtool;
+        data_window = gwy_app_data_window_get_current();
+        if (!data_window)
+            return;
+        data_view = gwy_data_window_get_data_view(data_window);
+        g_return_if_fail(data_view);
+
+        gwy_tool_data_switched(current_tool, data_view);
+        gwy_tool_show(current_tool);
+    }
 }
 
 /* FIXME: we should zoom whatever is currently active: datawindow, 3dwindow,
