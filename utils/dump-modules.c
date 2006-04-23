@@ -21,7 +21,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwyutils.h>
-#include <app/settings.h>
+#include <app/gwyapp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -251,8 +251,12 @@ main(int argc,
                 menu_path_print(gwy_graph_func_get_menu_path(name), "info");
             else if (gwy_strequal(class, "file"))
                 menu_path_print(gwy_file_func_get_description(name), "info");
-            else if (gwy_strequal(class, "tool"))
-                tag_print("info", gwy_tool_func_get_tooltip(name));
+            else if (gwy_strequal(class, "tool")) {
+                GwyToolClass *tool_class;
+
+                tool_class = g_type_class_peek(g_type_from_name(name));
+                tag_print("info", gwy_tool_class_get_tooltip(tool_class));
+            }
 
             g_free(class);
             tag_close();
