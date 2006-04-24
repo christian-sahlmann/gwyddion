@@ -133,7 +133,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
      * GwySelection::finished:
      * @gwyselection: The #GwySelection which received the signal.
      *
-     * The ::changed signal is emitted when selection is finished.
+     * The ::finished signal is emitted when selection is finished.
      *
      * What exactly finished means is defined by corresponding
      * #GwyVectorLayer, but normally it involves user stopped changing
