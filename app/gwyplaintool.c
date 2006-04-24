@@ -87,7 +87,9 @@ gwy_plain_tool_data_switched(GwyTool *tool,
 {
     GwyPlainTool *plain_tool;
 
-    GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched(tool, data_view);
+    if (GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched)
+        GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched(tool,
+                                                                   data_view);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     /* XXX XXX XXX */
