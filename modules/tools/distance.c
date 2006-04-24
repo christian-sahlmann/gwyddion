@@ -54,7 +54,8 @@ struct _GwyToolDistance {
     GwyPlainTool parent_instance;
 
     GtkTreeView *treeview;
-    GtkListStore *store;
+    GtkTreeModel *model;
+    GwySIValueFormat *angle_format;
 } ToolControls;
 
 struct _GwyToolDistanceClass {
@@ -65,22 +66,18 @@ struct _GwyToolDistanceClass {
 static gboolean module_register                  (void);
 static GType    gwy_tool_distance_get_type       (void) G_GNUC_CONST;
 
+static void gwy_tool_finalize(GObject *object);
+static void gwy_tool_distance_data_switched(GwyTool *tool,
+                                            GwyDataView *data_view);
+static void gwy_tool_distance_selection_changed(GwySelection *selection,
+                                                gint hint,
+                                                GwyToolDistance *tool);
 static void gwy_tool_distance_update_headers(GwyToolDistance *tool);
 static void gwy_tool_distance_render_cell(GtkCellLayout *layout,
                                           GtkCellRenderer *renderer,
                                           GtkTreeModel *model,
                                           GtkTreeIter *iter,
                                           gpointer user_data);
-
-static gboolean   use                 (GwyDataWindow *data_window,
-                                       GwyToolSwitchEvent reason);
-static void       layer_setup         (GwyUnitoolState *state);
-static GtkWidget* dialog_create       (GwyUnitoolState *state);
-static void       dialog_update       (GwyUnitoolState *state,
-                                       GwyUnitoolUpdateType reason);
-static void       dialog_abandon      (GwyUnitoolState *state);
-
-
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -94,7 +91,7 @@ static GwyModuleInfo module_info = {
 
 GWY_MODULE_QUERY(module_info)
 
-G_DEFINE_TYPE(GwyToolDistance, gwy_tool_distance, GWY_TYPE_TOOL)
+G_DEFINE_TYPE(GwyToolDistance, gwy_tool_distance, GWY_TYPE_PLAIN_TOOL)
 
 static gboolean
 module_register(void)
@@ -108,10 +105,24 @@ static void
 gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
 {
     GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    gobject_class->finalize = gwy_tool_finalize;
 
     tool_class->stock_id = GWY_STOCK_DISTANCE;
     tool_class->title = _("Distance");
     tool_class->tooltip = _("Measure distances and directions between points");
+    tool_class->data_switched = gwy_tool_distance_data_switched;
+}
+
+static void
+gwy_tool_finalize(GObject *object)
+{
+    GwyToolDistance *tool;
+
+    tool = GWY_TOOL_DISTANCE(object);
+    gwy_object_unref(tool->model);
+    g_free(tool->angle_format);
 }
 
 static void
@@ -121,22 +132,31 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     GtkCellRenderer *renderer;
     GtkDialog *dialog;
     GtkWidget *scwin, *label;
+    GtkListStore *store;
     guint i;
+
+    GWY_PLAIN_TOOL(tool)->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
+
+    tool->angle_format = g_new(GwySIValueFormat, 1);
+    tool->angle_format->magnitude = 1.0;
+    tool->angle_format->precision = 0.1;
+    tool->angle_format->units_gstring = g_string_new("deg");
+    tool->angle_format->units = tool->angle_format->units_gstring->str;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     /* XXX */
     gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 200);
 
-    tool->store = gtk_list_store_new(1, G_TYPE_INT);
-    tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model
-                                                (GTK_TREE_MODEL(tool->store)));
-    g_object_unref(tool->store);
+    store = gtk_list_store_new(1, G_TYPE_INT);
+    tool->model = GTK_TREE_MODEL(store);
+    tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
 
     for (i = 0; i < NCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
         g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
         renderer = gtk_cell_renderer_text_new();
-        gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, FALSE);
+        g_object_set(renderer, "xalign", 1.0, NULL);
+        gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
         gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
                                            gwy_tool_distance_render_cell, tool,
                                            NULL);
@@ -160,52 +180,131 @@ gwy_tool_distance_init(GwyToolDistance *tool)
 }
 
 static void
-gwy_tool_distance_update_headers(GwyToolDistance *tool)
+gwy_tool_distance_data_switched(GwyTool *tool,
+                                GwyDataView *data_view)
+{
+    GwySelection *selection;
+    GwyPlainTool *plain_tool;
+    GType type;
+
+    GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(tool,
+                                                                  data_view);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    if (plain_tool->layer) {
+        selection = gwy_vector_layer_get_selection(plain_tool->layer);
+        g_signal_handlers_disconnect_by_func
+                                         (selection,
+                                          gwy_tool_distance_selection_changed,
+                                          tool);
+        gwy_object_unref(plain_tool->layer);
+    }
+
+    /* XXX */
+    type = g_type_from_name("GwyLayerLine");
+    plain_tool->layer = gwy_data_view_get_top_layer(data_view);
+    if (!plain_tool->layer
+        || G_TYPE_FROM_INSTANCE(plain_tool->layer) != type) {
+        plain_tool->layer = g_object_new(type, NULL);
+        gwy_data_view_set_top_layer(data_view, plain_tool->layer);
+    }
+    g_object_ref(plain_tool->layer);
+    g_object_set(plain_tool->layer,
+                 "selection-key", "/0/select/line",  /* XXX */
+                 "line-numbers", TRUE,
+                 NULL);
+    selection = gwy_vector_layer_get_selection(plain_tool->layer);
+    gwy_selection_set_max_objects(selection, NLINES);
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_tool_distance_selection_changed), tool);
+
+    gwy_tool_distance_update_headers(GWY_TOOL_DISTANCE(tool));
+    gwy_tool_distance_selection_changed(selection, -1, GWY_TOOL_DISTANCE(tool));
+}
+
+static void
+gwy_tool_distance_selection_changed(GwySelection *selection,
+                                    gint hint,
+                                    GwyToolDistance *tool)
+{
+    GtkTreeIter iter;
+    GtkListStore *store;
+    gint n, nsel;
+
+    n = gtk_tree_model_iter_n_children(tool->model, NULL);
+    store = GTK_LIST_STORE(tool->model);
+
+    /* One row has changed, emit signal */
+    if (hint > 0) {
+        g_return_if_fail(hint <= n);
+        if (hint < n) {
+            gwy_list_store_row_changed(store, NULL, NULL, hint);
+            return;
+        }
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, 0, n, -1);
+        return;
+    }
+
+    /* No specific hint, disconnect model, possibly updated the number of rows,
+     * rebuilt it and reconnect.  This causes full redraw in any case. */
+    gtk_tree_view_set_model(tool->treeview, NULL);
+    nsel = gwy_selection_get_data(selection, NULL);
+    while (nsel > n) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, 0, n, -1);
+        n++;
+    }
+    if (nsel < n) {
+        gtk_tree_model_iter_nth_child(tool->model, &iter, NULL, nsel);
+        while (nsel < n) {
+            gtk_list_store_remove(store, &iter);
+            n--;
+        }
+    }
+    gtk_tree_view_set_model(tool->treeview, tool->model);
+}
+
+static void
+gwy_tool_distance_update_header(GwyToolDistance *tool,
+                                guint col,
+                                GString *str,
+                                const gchar *title,
+                                GwySIValueFormat *vf)
 {
     GtkTreeViewColumn *column;
-    GwyPlainTool *plain_tool;
     GtkLabel *label;
+
+    column = gtk_tree_view_get_column(tool->treeview, col);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+
+    g_string_assign(str, title);
+    if (vf)
+        g_string_append_printf(str, " [%s]", vf->units);
+    gtk_label_set_markup(label, str->str);
+}
+
+static void
+gwy_tool_distance_update_headers(GwyToolDistance *tool)
+{
+    GwyPlainTool *plain_tool;
     GString *str;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     str = g_string_new("");
 
-    column = gtk_tree_view_get_column(tool->treeview, COLUMN_I);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-    g_string_assign(str, "n");
-    gtk_label_set_markup(label, str->str);
-
-    column = gtk_tree_view_get_column(tool->treeview, COLUMN_DX);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-    g_string_assign(str, "Δx");
-    if (plain_tool->coord_format)
-        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
-    gtk_label_set_markup(label, str->str);
-
-    column = gtk_tree_view_get_column(tool->treeview, COLUMN_DY);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-    g_string_assign(str, "Δy");
-    if (plain_tool->coord_format)
-        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
-    gtk_label_set_markup(label, str->str);
-
-    column = gtk_tree_view_get_column(tool->treeview, COLUMN_PHI);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-    gtk_label_set_markup(label, _("Angle [deg]"));
-
-    column = gtk_tree_view_get_column(tool->treeview, COLUMN_R);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-    g_string_assign(str, "R");
-    if (plain_tool->coord_format)
-        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
-    gtk_label_set_markup(label, str->str);
-
-    column = gtk_tree_view_get_column(tool->treeview, COLUMN_DZ);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-    g_string_assign(str, "Δz");
-    if (plain_tool->value_format)
-        g_string_append_printf(str, " [%s]", plain_tool->value_format->units);
-    gtk_label_set_markup(label, str->str);
+    gwy_tool_distance_update_header(tool, COLUMN_I, str,
+                                    "n", NULL);
+    gwy_tool_distance_update_header(tool, COLUMN_DX, str,
+                                    "Δx", plain_tool->coord_format);
+    gwy_tool_distance_update_header(tool, COLUMN_DY, str,
+                                    "Δy", plain_tool->coord_format);
+    gwy_tool_distance_update_header(tool, COLUMN_PHI, str,
+                                    "Angle", tool->angle_format);
+    gwy_tool_distance_update_header(tool, COLUMN_R, str,
+                                    "R", plain_tool->coord_format);
+    gwy_tool_distance_update_header(tool, COLUMN_DZ, str,
+                                    "Δz", plain_tool->value_format);
 
     g_string_free(str, TRUE);
 }
@@ -218,22 +317,73 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
                               gpointer user_data)
 {
     GwyToolDistance *tool = (GwyToolDistance*)user_data;
+    GwyPlainTool *plain_tool;
+    GwySelection *selection;
+    const GwySIValueFormat *vf;
     gchar buf[32];
+    gdouble line[4];
+    gdouble val;
     gint idx, id;
 
     id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
     gtk_tree_model_get(model, iter, 0, &idx, -1);
-    switch (id) {
-        case COLUMN_I:
-        g_snprintf(buf, sizeof(buf), "<b>%d</b>", id);
-        g_object_set(renderer, "markup", buf, NULL);
+    if (id == COLUMN_I) {
+        g_snprintf(buf, sizeof(buf), "%d", idx + 1);
+        g_object_set(renderer, "text", buf, NULL);
         return;
+    }
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    selection = gwy_vector_layer_get_selection(plain_tool->layer);
+    gwy_selection_get_object(selection, idx, line);
+
+    switch (id) {
+        case COLUMN_DX:
+        vf = plain_tool->coord_format;
+        val = line[2] - line[0];
+        break;
+
+        case COLUMN_DY:
+        vf = plain_tool->coord_format;
+        val = line[3] - line[1];
+        break;
+
+        case COLUMN_R:
+        vf = plain_tool->coord_format;
+        val = hypot(line[2] - line[0], line[3] - line[1]);
+        break;
+
+        case COLUMN_PHI:
+        vf = tool->angle_format;
+        val = atan2(line[3] - line[1], line[2] - line[0]) * 180.0/G_PI;
+        break;
+
+        case COLUMN_DZ:
+        {
+            GwyDataField *dfield;
+            gint x, y;
+
+            dfield = gwy_plain_tool_get_data_field(plain_tool);
+            x = gwy_data_field_rtoj(dfield, line[2]);
+            y = gwy_data_field_rtoi(dfield, line[3]);
+            val = gwy_data_field_get_val(dfield, x, y);
+            x = gwy_data_field_rtoj(dfield, line[0]);
+            y = gwy_data_field_rtoi(dfield, line[1]);
+            val -= gwy_data_field_get_val(dfield, x, y);
+            vf = plain_tool->value_format;
+        }
         break;
 
         default:
-        strcpy(buf, "FIXME");
+        g_return_if_reached();
         break;
     }
+
+    if (vf)
+        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
+    else
+        g_snprintf(buf, sizeof(buf), "%.3g", val);
+
     g_object_set(renderer, "text", buf, NULL);
 }
 

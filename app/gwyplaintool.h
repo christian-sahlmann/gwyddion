@@ -53,6 +53,7 @@ struct _GwyPlainToolClass {
 };
 
 GType        gwy_plain_tool_get_type    (void) G_GNUC_CONST;
+GwyDataField* gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool);
 
 G_END_DECLS
 

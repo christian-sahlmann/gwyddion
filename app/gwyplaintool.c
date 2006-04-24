@@ -87,6 +87,7 @@ gwy_plain_tool_data_switched(GwyTool *tool,
 {
     GwyPlainTool *plain_tool;
 
+    gwy_debug("%p", data_view);
     if (GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched)
         GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched(tool,
                                                                    data_view);
@@ -101,16 +102,10 @@ gwy_plain_tool_data_switched(GwyTool *tool,
 static void
 gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
 {
-    GwyContainer *container;
-    GwyPixmapLayer *layer;
     GwyDataField *dfield;
-    const gchar *key;
 
     g_return_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view));
-    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
-    key = gwy_pixmap_layer_get_data_key(layer);
-    container = gwy_data_view_get_data(plain_tool->data_view);
-    dfield = gwy_container_get_object_by_name(container, key);
+    dfield = gwy_plain_tool_get_data_field(plain_tool);
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
     plain_tool->coord_format
@@ -121,6 +116,23 @@ gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
         = gwy_data_field_get_value_format_z(dfield,
                                             plain_tool->unit_style,
                                             plain_tool->value_format);
+}
+
+GwyDataField*
+gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool)
+{
+    GwyPixmapLayer *layer;
+    GwyContainer *container;
+    const gchar *key;
+
+    g_return_val_if_fail(GWY_IS_PLAIN_TOOL(plain_tool), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view), NULL);
+
+    container = gwy_data_view_get_data(plain_tool->data_view);
+    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
+    key = gwy_pixmap_layer_get_data_key(layer);
+
+    return gwy_container_get_object_by_name(container, key);
 }
 
 /************************** Documentation ****************************/
