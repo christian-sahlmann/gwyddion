@@ -22,6 +22,7 @@
 #define __GWY_GWYDGET_UTILS_H__
 
 #include <gtk/gtkwidget.h>
+#include <gtk/gtkliststore.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwycolorbutton.h>
@@ -68,6 +69,10 @@ void         gwy_color_selector_for_mask    (const gchar *dialog_title,
                                              GwyColorButton *color_button,
                                              GwyContainer *container,
                                              const gchar *prefix);
+void         gwy_list_store_row_changed     (GtkListStore *store,
+                                             GtkTreeIter *iter,
+                                             GtkTreePath *path,
+                                             gint row);
 gboolean     gwy_dialog_prevent_delete_cb   (void);
 GtkWidget*   gwy_stock_like_button_new      (const gchar *label_text,
                                              const gchar *stock_id);

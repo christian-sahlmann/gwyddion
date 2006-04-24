@@ -551,6 +551,66 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
     g_free(mcsdata);
 }
 
+/************************** ListStore ****************************/
+
+/**
+ * gwy_list_store_row_changed:
+ * @store: A list store.
+ * @iter: A tree model iterator in @store, or %NULL for none.
+ * @path: A tree model path in @store, or %NULL for none.
+ * @row: A row number in @store, or -1 for none.
+ *
+ * Convenience function to emit "GtkTreeModel::row-changed" signal on a tree
+ * store.
+ *
+ * At least one of @iter, @path, @row must be set to identify the row to emit
+ * "row-changed" on, and usually exactly one should be set.  The remaining
+ * information necessary to call gtk_tree_model_row_changed() is inferred
+ * automatically.
+ *
+ * The behaviour of this function is undefined for specified, but inconsistent
+ * @iter, @path, and @row.
+ **/
+void
+gwy_list_store_row_changed(GtkListStore *store,
+                           GtkTreeIter *iter,
+                           GtkTreePath *path,
+                           gint row)
+{
+    GtkTreeIter myiter;
+    GtkTreeModel *model;
+    gboolean iter_ok;
+
+    g_return_if_fail(GTK_IS_LIST_STORE(store));
+    g_return_if_fail(iter || path || row >= 0);
+
+    model = GTK_TREE_MODEL(store);
+    if (iter && path) {
+        gtk_tree_model_row_changed(model, path, iter);
+        return;
+    }
+
+    if (!iter && row >= 0) {
+        iter_ok = gtk_tree_model_iter_nth_child(model, &myiter, NULL, row);
+        g_return_if_fail(iter_ok);
+        iter = &myiter;
+    }
+
+    if (!iter) {
+        iter_ok = gtk_tree_model_get_iter(model, &myiter, path);
+        g_return_if_fail(iter_ok);
+        iter = &myiter;
+    }
+
+    if (path) {
+        gtk_tree_model_row_changed(model, path, iter);
+        return;
+    }
+
+    path = gtk_tree_model_get_path(model, iter);
+    gtk_tree_model_row_changed(model, path, iter);
+    gtk_tree_path_free(path);
+}
 
 /************************** Utils ****************************/
 
