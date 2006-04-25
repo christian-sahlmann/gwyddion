@@ -47,8 +47,10 @@ gboolean
 gwy_layer_func_register(GType type)
 {
     const gchar *name;
+    gpointer klass;
 
     g_return_val_if_fail(type, FALSE);
+    klass = g_type_class_ref(type);
     name = g_type_name(type);
     gwy_debug("layer type = %s", name);
 
@@ -60,12 +62,13 @@ gwy_layer_func_register(GType type)
 
     if (g_hash_table_lookup(layer_funcs, name)) {
         g_warning("Duplicate type %s, keeping only first", name);
+        g_type_class_unref(klass);
         return FALSE;
     }
-    g_type_class_ref(type);
     g_hash_table_insert(layer_funcs, (gpointer)name, GUINT_TO_POINTER(type));
     if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_LAYER, name)) {
         g_hash_table_remove(layer_funcs, name);
+        g_type_class_unref(klass);
         return FALSE;
     }
 
