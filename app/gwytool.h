@@ -32,6 +32,10 @@ G_BEGIN_DECLS
 #define GWY_IS_TOOL_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_TOOL))
 #define GWY_TOOL_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL, GwyToolClass))
 
+typedef enum {
+    GWY_TOOL_RESPONSE_CLEAR = 1
+} GwyToolResponseType;
+
 typedef struct _GwyTool      GwyTool;
 typedef struct _GwyToolClass GwyToolClass;
 
@@ -40,7 +44,7 @@ struct _GwyTool {
 
     GtkWidget *dialog;
     gboolean is_visible;
-    gboolean update_on_show;
+    gboolean update_on_show;    /* supposed to be used by tools */
 };
 
 struct _GwyToolClass {
@@ -54,6 +58,8 @@ struct _GwyToolClass {
     void (*hide)(GwyTool *tool);
     void (*data_switched)(GwyTool *tool,
                           GwyDataView *data_view);
+    void (*response)(GwyTool *tool,
+                     gint response_id);
 };
 
 GType        gwy_tool_get_type          (void) G_GNUC_CONST;

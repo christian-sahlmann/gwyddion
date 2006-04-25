@@ -49,14 +49,15 @@ gwy_tool_get_type (void)
     if (G_UNLIKELY(gwy_tool_type == 0)) {
         static const GTypeInfo gwy_tool_type_info = {
             sizeof(GwyToolClass),
-            (GBaseInitFunc)NULL,
-            (GBaseFinalizeFunc)NULL,
-            (GClassInitFunc)gwy_tool_class_init,
-            (GClassFinalizeFunc)NULL,
             NULL,
-            sizeof (GwyTool),
+            NULL,
+            (GClassInitFunc)gwy_tool_class_init,
+            NULL,
+            NULL,
+            sizeof(GwyTool),
             0,
-            (GInstanceInitFunc) gwy_tool_init,
+            (GInstanceInitFunc)gwy_tool_init,
+            NULL,
         };
 
         gwy_tool_type = g_type_register_static(G_TYPE_OBJECT, "GwyTool",
@@ -133,6 +134,16 @@ gwy_tool_response(GwyTool *tool,
         g_signal_stop_emission(tool->dialog, response_id, 0);
         g_object_unref(tool);
         break;
+
+        default:
+        {
+            GwyToolClass *klass;
+
+            klass = GWY_TOOL_GET_CLASS(tool);
+            if (klass->response)
+                klass->response(tool, response);
+        }
+        break;
     }
 }
 
@@ -166,6 +177,12 @@ gwy_tool_add_hide_button(GwyTool *tool,
                                         GTK_RESPONSE_DELETE_EVENT);
 }
 
+/**
+ * gwy_tool_show:
+ * @tool: A tool.
+ *
+ * Shows a tool dialog.
+ **/
 void
 gwy_tool_show(GwyTool *tool)
 {
@@ -178,6 +195,12 @@ gwy_tool_show(GwyTool *tool)
         klass->show(tool);
 }
 
+/**
+ * gwy_tool_show:
+ * @tool: A tool.
+ *
+ * Hides a tool dialog.
+ **/
 void
 gwy_tool_hide(GwyTool *tool)
 {
@@ -190,6 +213,14 @@ gwy_tool_hide(GwyTool *tool)
         klass->hide(tool);
 }
 
+/**
+ * gwy_tool_is_visible:
+ * @tool: A tool.
+ *
+ * Checks whether a tool dialog is visible.
+ *
+ * Returns: %TRUE if tool dialog is visible, %FALSE if it is hidden.
+ **/
 gboolean
 gwy_tool_is_visible(GwyTool *tool)
 {
@@ -263,6 +294,16 @@ gwy_tool_class_get_tooltip(GwyToolClass *klass)
  * SECTION:gwytool
  * @title: GwyTool
  * @short_description: Base class for tools
+ **/
+
+/**
+ * GwyToolResponseType:
+ * @GWY_TOOL_RESPONSE_CLEAR: Clear selection response.
+ *
+ * Common tool dialog responses.
+ *
+ * They do not have any special meaning for #GwyTool (yet?), nonetheless you
+ * are encouraged to use them for consistency.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
