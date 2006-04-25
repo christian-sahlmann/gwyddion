@@ -402,8 +402,9 @@ def tokenize(lines, warnings):
                     if token_ids[r]:
                         tokens.append(Token(i, col, token_ids[r], m.group()))
                     else:
-                        w = 'C++/C99 style comment (col %d)'
-                        warnings.append((i, w % col))
+                        if l.startswith('//'):
+                            w = 'C++/C99 style comment (col %d)'
+                            warnings.append((i, w % col))
                     col += m.end()
                     l, col = blstrip(l[m.end():], col)
                     break
