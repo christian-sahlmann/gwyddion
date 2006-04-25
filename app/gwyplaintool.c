@@ -28,12 +28,28 @@
 #include <app/app.h>
 #include <app/gwyplaintool.h>
 
-static void     gwy_plain_tool_finalize      (GObject *object);
-static void     gwy_plain_tool_show          (GwyTool *tool);
-static void     gwy_plain_tool_hide          (GwyTool *tool);
-static void     gwy_plain_tool_data_switched (GwyTool *tool,
-                                              GwyDataView *data_view);
-static void     gwy_plain_tool_update_units  (GwyPlainTool *plain_tool);
+#define ITEM_CHANGED "item-changed::"
+
+static void gwy_plain_tool_finalize           (GObject *object);
+static void gwy_plain_tool_show               (GwyTool *tool);
+static void gwy_plain_tool_hide               (GwyTool *tool);
+static void gwy_plain_tool_data_switched      (GwyTool *tool,
+                                               GwyDataView *data_view);
+static void gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
+                                               GwyDataView *data_view);
+static void gwy_plain_tool_data_item_changed  (GwyContainer *container,
+                                               GQuark quark,
+                                               GwyPlainTool *plain_tool);
+static void gwy_plain_tool_mask_item_changed  (GwyContainer *container,
+                                               GQuark quark,
+                                               GwyPlainTool *plain_tool);
+static void gwy_plain_tool_show_item_changed  (GwyContainer *container,
+                                               GQuark quark,
+                                               GwyPlainTool *plain_tool);
+static void gwy_plain_tool_data_changed       (GwyPlainTool *plain_tool);
+static void gwy_plain_tool_mask_changed       (GwyPlainTool *plain_tool);
+static void gwy_plain_tool_show_changed       (GwyPlainTool *plain_tool);
+static void gwy_plain_tool_update_units       (GwyPlainTool *plain_tool);
 
 G_DEFINE_ABSTRACT_TYPE(GwyPlainTool, gwy_plain_tool, GWY_TYPE_TOOL)
 
@@ -56,6 +72,8 @@ gwy_plain_tool_finalize(GObject *object)
     GwyPlainTool *plain_tool;
 
     plain_tool = GWY_PLAIN_TOOL(object);
+    gwy_plain_tool_reconnect_container(plain_tool, NULL);
+
     if (plain_tool->coord_format)
         gwy_si_unit_value_format_free(plain_tool->coord_format);
     if (plain_tool->value_format)
@@ -93,18 +111,196 @@ gwy_plain_tool_data_switched(GwyTool *tool,
                                                                    data_view);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    /* XXX XXX XXX */
-    plain_tool->data_view = data_view;
+    gwy_plain_tool_reconnect_container(plain_tool, data_view);
     gwy_plain_tool_update_units(plain_tool);
 }
 
-/*
+/**
+ * gwy_plain_tool_reconnect_container:
+ * @plain_tool: A plain tool.
+ * @data_view: A new data view to switch the tool to.
+ *
+ * Performs signal diconnection and reconnection when data is swtiched.
+ *
+ * The @data_view and @container fields have to still point to the old
+ * objects (or be %NULL).
+ **/
 static void
 gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
                                    GwyDataView *data_view)
 {
+    GwyPixmapLayer *layer;
+    const gchar *data_key;
+    gchar *key, *sigdetail;
+    guint len;
+
+    gwy_signal_handler_disconnect(plain_tool->data_field, plain_tool->data_id);
+    gwy_signal_handler_disconnect(plain_tool->mask_field, plain_tool->mask_id);
+    gwy_signal_handler_disconnect(plain_tool->show_field, plain_tool->show_id);
+
+    gwy_signal_handler_disconnect(plain_tool->container,
+                                  plain_tool->data_item_id);
+    gwy_signal_handler_disconnect(plain_tool->container,
+                                  plain_tool->mask_item_id);
+    gwy_signal_handler_disconnect(plain_tool->container,
+                                  plain_tool->show_item_id);
+
+    gwy_object_unref(plain_tool->data_field);
+    gwy_object_unref(plain_tool->mask_field);
+    gwy_object_unref(plain_tool->show_field);
+    gwy_object_unref(plain_tool->container);
+
+    if (!(plain_tool->data_view = data_view))
+        return;
+
+    plain_tool->container = gwy_data_view_get_data(data_view);
+    g_object_ref(plain_tool->container);
+    layer = gwy_data_view_get_base_layer(data_view);
+    data_key = gwy_pixmap_layer_get_data_key(layer);
+
+    /* @sigdetail has the form "item-changed::/0/data", @key is a pointer to
+     * the key part.  The "data" tail is subsequently replaced with "mask"
+     * and "show". */
+    len = strlen(data_key);
+    g_return_if_fail(len > 5 && gwy_strequal(data_key + len-5, "/data"));
+    len += sizeof(ITEM_CHANGED)-1;
+    sigdetail = g_new(gchar, len+1);
+    key = sigdetail + sizeof(ITEM_CHANGED)-1;
+
+    strcpy(sigdetail, ITEM_CHANGED);
+    strcpy(sigdetail + sizeof(ITEM_CHANGED)-1, data_key);
+    plain_tool->data_item_id
+        = g_signal_connect(plain_tool->container, sigdetail,
+                           G_CALLBACK(gwy_plain_tool_data_item_changed),
+                           plain_tool);
+    if (gwy_container_gis_object_by_name(plain_tool->container, key,
+                                         &plain_tool->data_field)) {
+        g_object_ref(plain_tool->data_field);
+        plain_tool->data_id
+            = g_signal_connect_swapped(plain_tool->data_field, "data-changed",
+                                       G_CALLBACK(gwy_plain_tool_data_changed),
+                                       plain_tool);
+    }
+
+    strcpy(sigdetail + len-4, "mask");
+    plain_tool->mask_item_id
+        = g_signal_connect(plain_tool->container, sigdetail,
+                           G_CALLBACK(gwy_plain_tool_mask_item_changed),
+                           plain_tool);
+    if (gwy_container_gis_object_by_name(plain_tool->container, key,
+                                         &plain_tool->mask_field)) {
+        g_object_ref(plain_tool->mask_field);
+        plain_tool->mask_id
+            = g_signal_connect_swapped(plain_tool->mask_field, "data-changed",
+                                       G_CALLBACK(gwy_plain_tool_mask_changed),
+                                       plain_tool);
+    }
+
+    strcpy(sigdetail + len-4, "show");
+    plain_tool->show_item_id
+        = g_signal_connect(plain_tool->container, sigdetail,
+                           G_CALLBACK(gwy_plain_tool_show_item_changed),
+                           plain_tool);
+    if (gwy_container_gis_object_by_name(plain_tool->container, key,
+                                         &plain_tool->show_field)) {
+        g_object_ref(plain_tool->show_field);
+        plain_tool->show_id
+            = g_signal_connect_swapped(plain_tool->show_field, "data-changed",
+                                       G_CALLBACK(gwy_plain_tool_show_changed),
+                                       plain_tool);
+    }
+
+    g_free(sigdetail);
 }
-*/
+
+static void
+gwy_plain_tool_data_item_changed(GwyContainer *container,
+                                 GQuark quark,
+                                 GwyPlainTool *plain_tool)
+{
+    gwy_signal_handler_disconnect(plain_tool->data_field, plain_tool->data_id);
+    gwy_object_unref(plain_tool->data_field);
+
+    if (gwy_container_gis_object(container, quark, &plain_tool->data_field)) {
+        g_object_ref(plain_tool->data_field);
+        plain_tool->data_id
+            = g_signal_connect_swapped(plain_tool->data_field, "data-changed",
+                                       G_CALLBACK(gwy_plain_tool_data_changed),
+                                       plain_tool);
+    }
+
+    gwy_plain_tool_data_changed(plain_tool);
+}
+
+static void
+gwy_plain_tool_mask_item_changed(GwyContainer *container,
+                                 GQuark quark,
+                                 GwyPlainTool *plain_tool)
+{
+    gwy_signal_handler_disconnect(plain_tool->mask_field, plain_tool->mask_id);
+    gwy_object_unref(plain_tool->mask_field);
+
+    if (gwy_container_gis_object(container, quark, &plain_tool->mask_field)) {
+        g_object_ref(plain_tool->mask_field);
+        plain_tool->mask_id
+            = g_signal_connect_swapped(plain_tool->mask_field, "data-changed",
+                                       G_CALLBACK(gwy_plain_tool_mask_changed),
+                                       plain_tool);
+    }
+
+    gwy_plain_tool_mask_changed(plain_tool);
+}
+
+static void
+gwy_plain_tool_show_item_changed(GwyContainer *container,
+                                 GQuark quark,
+                                 GwyPlainTool *plain_tool)
+{
+    gwy_signal_handler_disconnect(plain_tool->show_field, plain_tool->show_id);
+    gwy_object_unref(plain_tool->show_field);
+
+    if (gwy_container_gis_object(container, quark, &plain_tool->show_field)) {
+        g_object_ref(plain_tool->show_field);
+        plain_tool->show_id
+            = g_signal_connect_swapped(plain_tool->show_field, "data-changed",
+                                       G_CALLBACK(gwy_plain_tool_show_changed),
+                                       plain_tool);
+    }
+
+    gwy_plain_tool_show_changed(plain_tool);
+}
+
+static void
+gwy_plain_tool_data_changed(GwyPlainTool *plain_tool)
+{
+    GwyPlainToolClass *klass;
+
+    gwy_plain_tool_update_units(plain_tool);
+
+    klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
+    if (klass->data_changed)
+        klass->data_changed(plain_tool);
+}
+
+static void
+gwy_plain_tool_mask_changed(GwyPlainTool *plain_tool)
+{
+    GwyPlainToolClass *klass;
+
+    klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
+    if (klass->mask_changed)
+        klass->mask_changed(plain_tool);
+}
+
+static void
+gwy_plain_tool_show_changed(GwyPlainTool *plain_tool)
+{
+    GwyPlainToolClass *klass;
+
+    klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
+    if (klass->show_changed)
+        klass->show_changed(plain_tool);
+}
 
 /**
  * gwy_plain_tool_update_units:
@@ -119,20 +315,16 @@ gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
 static void
 gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
 {
-    GwyDataField *dfield;
-
     g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
-    g_return_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view));
-    dfield = gwy_plain_tool_get_data_field(plain_tool);
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_FIELD(plain_tool->data_field));
 
     if (plain_tool->unit_style) {
         plain_tool->coord_format
-            = gwy_data_field_get_value_format_xy(dfield,
+            = gwy_data_field_get_value_format_xy(plain_tool->data_field,
                                                  plain_tool->unit_style,
                                                  plain_tool->coord_format);
         plain_tool->value_format
-            = gwy_data_field_get_value_format_z(dfield,
+            = gwy_data_field_get_value_format_z(plain_tool->data_field,
                                                 plain_tool->unit_style,
                                                 plain_tool->value_format);
     }
@@ -213,31 +405,6 @@ gwy_plain_tool_check_layer_type(GwyPlainTool *plain_tool,
     gtk_widget_show_all(GTK_WIDGET(vbox));
 
     return 0;
-}
-
-/**
- * gwy_plain_tool_get_data_field:
- * @plain_tool: A plain tool.
- *
- * Gets the data field corresponding to tool's active data.
- *
- * Returns: The data field.
- **/
-GwyDataField*
-gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool)
-{
-    GwyPixmapLayer *layer;
-    GwyContainer *container;
-    const gchar *key;
-
-    g_return_val_if_fail(GWY_IS_PLAIN_TOOL(plain_tool), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view), NULL);
-
-    container = gwy_data_view_get_data(plain_tool->data_view);
-    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
-    key = gwy_pixmap_layer_get_data_key(layer);
-
-    return gwy_container_get_object_by_name(container, key);
 }
 
 /**

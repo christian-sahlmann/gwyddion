@@ -48,18 +48,18 @@ struct _GwyPlainTool {
     GwySIValueFormat *value_format;
 
     GwyContainer *container;
-    gulong data_item_hid;
-    gulong mask_item_hid;
-    gulong show_item_hid;
+    gulong data_item_id;
+    gulong mask_item_id;
+    gulong show_item_id;
 
     GwyDataField *data_field;
-    gulong data_hid;
+    gulong data_id;
 
     GwyDataField *mask_field;
-    gulong mask_hid;
+    gulong mask_id;
 
     GwyDataField *show_field;
-    gulong show_hid;
+    gulong show_id;
 };
 
 struct _GwyPlainToolClass {
@@ -71,11 +71,10 @@ struct _GwyPlainToolClass {
 };
 
 GType        gwy_plain_tool_get_type    (void) G_GNUC_CONST;
-GType gwy_plain_tool_check_layer_type(GwyPlainTool *plain_tool,
-                                      const gchar *name);
-GwyDataField* gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool);
-void gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
-                                      const gchar *bname);
+GType         gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
+                                               const gchar *name);
+void          gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
+                                               const gchar *bname);
 
 G_END_DECLS
 
