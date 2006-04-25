@@ -445,9 +445,7 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
         return;
     }
 
-    if (layer->item_changed_id)
-        g_signal_handler_disconnect(view_layer->data, layer->item_changed_id);
-    layer->item_changed_id = 0;
+    gwy_signal_handler_disconnect(view_layer->data, layer->item_changed_id);
     gwy_vector_layer_selection_disconnect(layer);
     layer->selection_key = quark;
     gwy_vector_layer_selection_connect(layer);
@@ -522,10 +520,8 @@ gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer)
     if (!layer->selection)
         return;
 
-    if (layer->selection_changed_id)
-        g_signal_handler_disconnect(layer->selection,
-                                    layer->selection_changed_id);
-    layer->selection_changed_id = 0;
+    gwy_signal_handler_disconnect(layer->selection,
+                                  layer->selection_changed_id);
     layer->focus = layer->selecting = -1;
     gwy_object_unref(layer->selection);
 }
@@ -583,9 +579,7 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
                                          layer);
 
     gwy_vector_layer_selection_disconnect(vector_layer);
-    if (vector_layer->item_changed_id)
-        g_signal_handler_disconnect(layer->data, vector_layer->item_changed_id);
-    vector_layer->item_changed_id = 0;
+    gwy_signal_handler_disconnect(layer->data, vector_layer->item_changed_id);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unplugged(layer);
 }

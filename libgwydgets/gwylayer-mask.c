@@ -306,19 +306,10 @@ gwy_layer_mask_disconnect_color(GwyLayerMask *mask_layer)
 
     layer = GWY_DATA_VIEW_LAYER(mask_layer);
 
-    if (mask_layer->red_id)
-        g_signal_handler_disconnect(layer->data, mask_layer->red_id);
-    if (mask_layer->green_id)
-        g_signal_handler_disconnect(layer->data, mask_layer->green_id);
-    if (mask_layer->blue_id)
-        g_signal_handler_disconnect(layer->data, mask_layer->blue_id);
-    if (mask_layer->alpha_id)
-        g_signal_handler_disconnect(layer->data, mask_layer->alpha_id);
-
-    mask_layer->red_id = 0;
-    mask_layer->green_id = 0;
-    mask_layer->blue_id = 0;
-    mask_layer->alpha_id = 0;
+    gwy_signal_handler_disconnect(layer->data, mask_layer->red_id);
+    gwy_signal_handler_disconnect(layer->data, mask_layer->green_id);
+    gwy_signal_handler_disconnect(layer->data, mask_layer->blue_id);
+    gwy_signal_handler_disconnect(layer->data, mask_layer->alpha_id);
 }
 
 static void

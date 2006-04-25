@@ -1542,10 +1542,7 @@ gwy_data_view_connect_data(GwyDataView *data_view)
 static void
 gwy_data_view_disconnect_data(GwyDataView *data_view)
 {
-    if (data_view->square_hid) {
-        g_signal_handler_disconnect(data_view->data, data_view->square_hid);
-        data_view->square_hid = 0;
-    }
+    gwy_signal_handler_disconnect(data_view->data, data_view->square_hid);
 }
 
 /************************** Documentation ****************************/
