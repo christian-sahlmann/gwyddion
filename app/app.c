@@ -1322,8 +1322,6 @@ gwy_app_tool_use_cb(const gchar *toolname,
                     GtkWidget *button)
 {
     static GtkWidget *old_button = NULL;
-    GwyDataWindow *data_window;
-    gboolean ok = TRUE;
 
     gwy_debug("%s", toolname ? toolname : "NONE");
     /* don't catch deactivations */
@@ -1355,25 +1353,24 @@ gwy_app_tool_use_cb(const gchar *toolname,
         GType type;
 
         type = g_type_from_name(toolname);
+        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
         if (current_tool && type == G_TYPE_FROM_INSTANCE(current_tool)) {
-            gwy_debug("Switch to current tool, showing tool for now.");
-            gwy_tool_show(current_tool);
+            if (data_view) {
+                gwy_debug("Switch to current tool, showing tool for now.");
+                gwy_tool_show(current_tool);
+            }
             return;
         }
 
         newtool = (GwyTool*)g_object_new(type, NULL);
         g_return_if_fail(GWY_IS_TOOL(newtool));
-
         gwy_object_unref(current_tool);
         current_tool = newtool;
-        data_window = gwy_app_data_window_get_current();
-        if (!data_window)
-            return;
-        data_view = gwy_data_window_get_data_view(data_window);
-        g_return_if_fail(data_view);
 
-        gwy_tool_data_switched(current_tool, data_view);
-        gwy_tool_show(current_tool);
+        if (data_view) {
+            gwy_tool_data_switched(current_tool, data_view);
+            gwy_tool_show(current_tool);
+        }
     }
 }
 
