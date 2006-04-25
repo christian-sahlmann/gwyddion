@@ -772,16 +772,6 @@ gwy_str_next_line(gchar **buffer)
  */
 
 /**
- * gwy_object_unref:
- * @obj: A pointer to #GObject or %NULL (must be an l-value).
- *
- * If @obj is not %NULL, unreferences @obj.  In all cases sets @obj to %NULL.
- *
- * If the object reference count is greater than one, assure it should be
- * referenced elsewhere, otherwise it leaks memory.
- **/
-
-/**
  * GWY_FIND_PSPEC:
  * @type: Object type (e.g. %GWY_TYPE_CONTAINER).
  * @id: Property id.
@@ -815,6 +805,30 @@ gwy_str_next_line(gchar **buffer)
  * It is supposed to be used on results of floating-point operations that
  * should fall to a known range but may occasionaly fail to due to rounding
  * errors and in similar situations.  Under normal circumstances, use CLAMP().
+ **/
+
+/**
+ * gwy_object_unref:
+ * @obj: A pointer to #GObject or %NULL (must be an l-value).
+ *
+ * Unreferences an object if it exists.
+ *
+ * If @obj is not %NULL, g_object_unref() is called on it.
+ * In all cases @obj is set to %NULL.
+ *
+ * If the object reference count is greater than one, assure it should be
+ * referenced elsewhere, otherwise it leaks memory.
+ **/
+
+/**
+ * gwy_signal_handler_disconnect:
+ * @obj: A pointer to #GObject or %NULL.
+ * @hid: An @obj signal handler id or 0 (must be an l-value).
+ *
+ * Disconnect a signal handler if it exists.
+ *
+ * If @hid is nonzero and @obj is not %NULL, the signal handler identified by
+ * @hid is disconnected.  In all cases @hid is set to 0.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

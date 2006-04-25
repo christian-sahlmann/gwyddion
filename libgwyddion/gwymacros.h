@@ -40,13 +40,6 @@
 #define N_(x) (x)
 #endif
 
-#define gwy_object_unref(obj) \
-    do { \
-    if (obj) \
-        g_object_unref(obj); \
-    (obj) = NULL; \
-    } while (0)
-
 #define GWY_SWAP(t, x, y) \
     do { \
     t __unsafe_swap; \
@@ -64,6 +57,20 @@
 
 #define GWY_CLAMP(x, low, hi) \
     (G_UNLIKELY((x) > (hi)) ? (hi) : (G_UNLIKELY((x) < (low)) ? (low) : (x)))
+
+#define gwy_object_unref(obj) \
+    do { \
+        if (obj) \
+            g_object_unref(obj); \
+        (obj) = NULL; \
+    } while (0)
+
+#define gwy_signal_handler_disconnect(obj, hid) \
+    do { \
+        if (hid && obj) \
+            g_signal_handler_disconnect(obj, hid); \
+        (hid) = 0; \
+    } while (0)
 
 G_BEGIN_DECLS
 
