@@ -27,6 +27,7 @@ BuildRequires: libtiff-devel >= 3.6
 BuildRequires: python >= 2.2
 BuildRequires: ruby >= 1.8
 BuildRequires: gettext
+BuildRequires: pkgconfig
 BuildRequires: findutils
 %if %{distro_is_suse}
 BuildRequires: xorg-x11-Mesa-devel
