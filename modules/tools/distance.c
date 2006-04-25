@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Copyright (C) 2003-2006 Nenad Ocelic, David Necas (Yeti), Petr Klapetek.
  *  E-mail: ocelic@biochem.mpg.de, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -51,6 +52,8 @@ struct _GwyToolDistance {
 
     GtkTreeView *treeview;
     GtkTreeModel *model;
+    GtkWidget *clear;
+
     GwySIValueFormat *angle_format;
     GType layer_type_line;
 };
@@ -60,12 +63,15 @@ struct _GwyToolDistanceClass {
 };
 
 static gboolean module_register                  (void);
+
 static GType    gwy_tool_distance_get_type       (void) G_GNUC_CONST;
 
-static void gwy_tool_finalize                  (GObject *object);
+static void gwy_tool_distance_finalize         (GObject *object);
 static void gwy_tool_distance_data_switched    (GwyTool *tool,
                                                 GwyDataView *data_view);
 static void gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
+static void gwy_tool_distance_response         (GwyTool *tool,
+                                                gint response_id);
 static void gwy_tool_distance_selection_changed(GwySelection *selection,
                                                 gint hint,
                                                 GwyToolDistance *tool);
@@ -105,18 +111,19 @@ gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
     GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gobject_class->finalize = gwy_tool_finalize;
+    gobject_class->finalize = gwy_tool_distance_finalize;
 
     tool_class->stock_id = GWY_STOCK_DISTANCE;
     tool_class->title = _("Distance");
     tool_class->tooltip = _("Measure distances and directions between points");
     tool_class->data_switched = gwy_tool_distance_data_switched;
+    tool_class->response = gwy_tool_distance_response;
 
     ptool_class->data_changed = gwy_tool_distance_data_changed;
 }
 
 static void
-gwy_tool_finalize(GObject *object)
+gwy_tool_distance_finalize(GObject *object)
 {
     GwyToolDistance *tool;
 
@@ -181,6 +188,8 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
     gtk_widget_show_all(dialog->vbox);
 
+    tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
+                                        GWY_TOOL_RESPONSE_CLEAR);
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     gwy_tool_distance_update_headers(tool);
 }
@@ -242,6 +251,20 @@ gwy_tool_distance_data_changed(GwyPlainTool *plain_tool)
 }
 
 static void
+gwy_tool_distance_response(GwyTool *tool,
+                           gint response_id)
+{
+    GwyPlainTool *plain_tool;
+    GwySelection *selection;
+
+    g_return_if_fail(response_id == GWY_TOOL_RESPONSE_CLEAR);
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    selection = gwy_vector_layer_get_selection(plain_tool->layer);
+    gwy_selection_clear(selection);
+}
+
+static void
 gwy_tool_distance_selection_changed(GwySelection *selection,
                                     gint hint,
                                     GwyToolDistance *tool)
@@ -282,6 +305,8 @@ gwy_tool_distance_selection_changed(GwySelection *selection,
         }
     }
     gtk_tree_view_set_model(tool->treeview, tool->model);
+
+    gtk_widget_set_sensitive(tool->clear, nsel > 0);
 }
 
 static void
