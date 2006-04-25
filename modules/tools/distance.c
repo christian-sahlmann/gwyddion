@@ -25,16 +25,14 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_DISTANCE            (gwy_tool_distance_get_type())
 #define GWY_TOOL_DISTANCE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistance))
 #define GWY_IS_TOOL_DISTANCE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_DISTANCE))
 #define GWY_TOOL_DISTANCE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistanceClass))
-
-#define CHECK_LAYER_TYPE(l) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 enum {
     NLINES = 12
@@ -54,6 +52,9 @@ struct _GwyToolDistance {
     GtkTreeModel *model;
     GtkWidget *clear;
 
+    gulong selection_id;
+
+    /* potential class data */
     GwySIValueFormat *angle_format;
     GType layer_type_line;
 };
@@ -64,23 +65,23 @@ struct _GwyToolDistanceClass {
 
 static gboolean module_register                  (void);
 
-static GType    gwy_tool_distance_get_type       (void) G_GNUC_CONST;
+static GType  gwy_tool_distance_get_type         (void) G_GNUC_CONST;
 
-static void gwy_tool_distance_finalize         (GObject *object);
-static void gwy_tool_distance_data_switched    (GwyTool *tool,
-                                                GwyDataView *data_view);
-static void gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
-static void gwy_tool_distance_response         (GwyTool *tool,
-                                                gint response_id);
-static void gwy_tool_distance_selection_changed(GwySelection *selection,
-                                                gint hint,
-                                                GwyToolDistance *tool);
-static void gwy_tool_distance_update_headers   (GwyToolDistance *tool);
-static void gwy_tool_distance_render_cell      (GtkCellLayout *layout,
-                                                GtkCellRenderer *renderer,
-                                                GtkTreeModel *model,
-                                                GtkTreeIter *iter,
-                                                gpointer user_data);
+static void   gwy_tool_distance_finalize         (GObject *object);
+static void   gwy_tool_distance_data_switched    (GwyTool *gwytool,
+                                                  GwyDataView *data_view);
+static void   gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
+static void   gwy_tool_distance_response         (GwyTool *tool,
+                                                  gint response_id);
+static void   gwy_tool_distance_selection_changed(GwySelection *selection,
+                                                  gint hint,
+                                                  GwyToolDistance *tool);
+static void   gwy_tool_distance_update_headers   (GwyToolDistance *tool);
+static void   gwy_tool_distance_render_cell      (GtkCellLayout *layout,
+                                                  GtkCellRenderer *renderer,
+                                                  GtkTreeModel *model,
+                                                  GtkTreeIter *iter,
+                                                  gpointer user_data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -195,44 +196,35 @@ gwy_tool_distance_init(GwyToolDistance *tool)
 }
 
 static void
-gwy_tool_distance_data_switched(GwyTool *tool,
+gwy_tool_distance_data_switched(GwyTool *gwytool,
                                 GwyDataView *data_view)
 {
+    GwyToolDistance *tool;
     GwySelection *selection;
     GwyPlainTool *plain_tool;
-    GType type;
 
-    GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(tool,
+    GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(gwytool,
                                                                   data_view);
-    plain_tool = GWY_PLAIN_TOOL(tool);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
     if (plain_tool->init_failed)
         return;
 
+    tool = GWY_TOOL_DISTANCE(gwytool);
     if (plain_tool->layer) {
         selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        g_signal_handlers_disconnect_by_func
-                                         (selection,
-                                          gwy_tool_distance_selection_changed,
-                                          tool);
-        gwy_object_unref(plain_tool->layer);
+        gwy_signal_handler_disconnect(selection, tool->selection_id);
     }
-
-    plain_tool->layer = gwy_data_view_get_top_layer(data_view);
-    type = GWY_TOOL_DISTANCE(tool)->layer_type_line;
-    if (!plain_tool->layer
-        || G_TYPE_FROM_INSTANCE(plain_tool->layer) != type) {
-        plain_tool->layer = g_object_new(type, NULL);
-        gwy_data_view_set_top_layer(data_view, plain_tool->layer);
-    }
-    g_object_ref(plain_tool->layer);
+    gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_line);
     gwy_plain_tool_set_selection_key(plain_tool, "line");
     g_object_set(plain_tool->layer,
                  "line-numbers", TRUE,
                  NULL);
     selection = gwy_vector_layer_get_selection(plain_tool->layer);
     gwy_selection_set_max_objects(selection, NLINES);
-    g_signal_connect(selection, "changed",
-                     G_CALLBACK(gwy_tool_distance_selection_changed), tool);
+    tool->selection_id
+        = g_signal_connect(selection, "changed",
+                           G_CALLBACK(gwy_tool_distance_selection_changed),
+                           tool);
 
     gwy_tool_distance_data_changed(plain_tool);
 }
