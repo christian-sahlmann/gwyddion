@@ -95,29 +95,134 @@ gwy_plain_tool_data_switched(GwyTool *tool,
     plain_tool = GWY_PLAIN_TOOL(tool);
     /* XXX XXX XXX */
     plain_tool->data_view = data_view;
-    if (plain_tool->unit_style)
-        gwy_plain_tool_update_units(plain_tool);
+    gwy_plain_tool_update_units(plain_tool);
 }
 
+/*
+static void
+gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
+                                   GwyDataView *data_view)
+{
+}
+*/
+
+/**
+ * gwy_plain_tool_update_units:
+ * @plain_tool: A plain tool.
+ *
+ * Updates plain tool's unit formats.
+ *
+ * More precisely, @coord_format and @value_format are updated according to
+ * the current data field and @unit_style.  If @unit_style is
+ * %GWY_SI_UNIT_FORMAT_NONE existing formats are destroyed and set to %NULL.
+ **/
 static void
 gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
 {
     GwyDataField *dfield;
 
+    g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
     g_return_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view));
     dfield = gwy_plain_tool_get_data_field(plain_tool);
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
-    plain_tool->coord_format
-        = gwy_data_field_get_value_format_xy(dfield,
-                                             plain_tool->unit_style,
-                                             plain_tool->coord_format);
-    plain_tool->value_format
-        = gwy_data_field_get_value_format_z(dfield,
-                                            plain_tool->unit_style,
-                                            plain_tool->value_format);
+    if (plain_tool->unit_style) {
+        plain_tool->coord_format
+            = gwy_data_field_get_value_format_xy(dfield,
+                                                 plain_tool->unit_style,
+                                                 plain_tool->coord_format);
+        plain_tool->value_format
+            = gwy_data_field_get_value_format_z(dfield,
+                                                plain_tool->unit_style,
+                                                plain_tool->value_format);
+    }
+    else {
+        if (plain_tool->coord_format) {
+            gwy_si_unit_value_format_free(plain_tool->coord_format);
+            plain_tool->coord_format = NULL;
+        }
+        else if (plain_tool->value_format) {
+            gwy_si_unit_value_format_free(plain_tool->value_format);
+            plain_tool->value_format = NULL;
+        }
+    }
 }
 
+/**
+ * gwy_plain_tool_check_layer_type:
+ * @plain_tool: A plain tool.
+ * @name: Layer type name (e.g. <literal>"GwyLayerPoint"</literal>).
+ *
+ * Checks for a required layer type.
+ *
+ * If the layer exists, its #GType is returned.  If it does not exist, zero
+ * is returned and a warning message is added to the tool dialog.  In addition,
+ * it sets @init_failed to %TRUE.
+ *
+ * Therefore, this function should be called early in tool instance
+ * initialization and it should not be called again once it fails.
+ *
+ * Returns: The type of the layer, or 0 on failure.
+ **/
+GType
+gwy_plain_tool_check_layer_type(GwyPlainTool *plain_tool,
+                                const gchar *name)
+{
+    GtkWidget *label;
+    GtkBox *vbox;
+    GType type;
+    gchar *s;
+
+    g_return_val_if_fail(GWY_IS_PLAIN_TOOL(plain_tool), 0);
+    g_return_val_if_fail(name, 0);
+
+    if (plain_tool->init_failed) {
+        g_warning("Tool layer check already failed.");
+        return 0;
+    }
+
+    type = g_type_from_name(name);
+    if (type)
+        return type;
+
+    plain_tool->init_failed = TRUE;
+
+    vbox = GTK_BOX(GTK_DIALOG(GWY_TOOL(plain_tool)->dialog)->vbox);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label),
+                         _("<big><b>Missing layer module.</b></big>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(label), 12, 0);
+    gtk_box_pack_start(vbox, label, FALSE, FALSE, 6);
+
+    label = gtk_label_new(NULL);
+    s = g_strdup_printf(_("This tool requires layer of type %s to work, "
+                          "which does not seem to be installed.  "
+                          "Please check your installation."),
+                        name);
+    gtk_label_set_markup(GTK_LABEL(label), s);
+    gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(label), 12, 0);
+    gtk_box_pack_start(vbox, label, FALSE, FALSE, 6);
+    g_free(s);
+
+    gwy_tool_add_hide_button(GWY_TOOL(plain_tool), TRUE);
+
+    gtk_widget_show_all(GTK_WIDGET(vbox));
+
+    return 0;
+}
+
+/**
+ * gwy_plain_tool_get_data_field:
+ * @plain_tool: A plain tool.
+ *
+ * Gets the data field corresponding to tool's active data.
+ *
+ * Returns: The data field.
+ **/
 GwyDataField*
 gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool)
 {
@@ -133,6 +238,40 @@ gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool)
     key = gwy_pixmap_layer_get_data_key(layer);
 
     return gwy_container_get_object_by_name(container, key);
+}
+
+/**
+ * gwy_plain_tool_set_selection_key:
+ * @plain_tool: A plain tool.
+ * @bname: Selection key base name, for example <literal>"line"</literal>.
+ *
+ * Constructs selection key from data key and sets it on the vector layer.
+ **/
+void
+gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
+                                 const gchar *bname)
+{
+    GwyPixmapLayer *layer;
+    GwyContainer *container;
+    const gchar *data_key;
+    gchar *key;
+    guint len;
+
+    g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
+    g_return_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view));
+    g_return_if_fail(GWY_IS_VECTOR_LAYER(plain_tool->layer));
+    g_return_if_fail(bname);
+
+    container = gwy_data_view_get_data(plain_tool->data_view);
+    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
+    data_key = gwy_pixmap_layer_get_data_key(layer);
+    gwy_debug("data_key: <%s>", data_key);
+    len = strlen(data_key);
+    g_return_if_fail(len > 5 && gwy_strequal(data_key + len-5, "/data"));
+
+    key = g_strdup_printf("%.*s/select/%s", len-4, data_key, bname);
+    gwy_vector_layer_set_selection_key(plain_tool->layer, key);
+    g_free(key);
 }
 
 /************************** Documentation ****************************/

@@ -56,7 +56,8 @@ struct _GwyToolDistance {
     GtkTreeView *treeview;
     GtkTreeModel *model;
     GwySIValueFormat *angle_format;
-} ToolControls;
+    GType layer_type_line;
+};
 
 struct _GwyToolDistanceClass {
     GwyPlainToolClass parent_class;
@@ -122,12 +123,14 @@ gwy_tool_finalize(GObject *object)
 
     tool = GWY_TOOL_DISTANCE(object);
     gwy_object_unref(tool->model);
-    g_free(tool->angle_format);
+    if (tool->angle_format)
+        gwy_si_unit_value_format_free(tool->angle_format);
 }
 
 static void
 gwy_tool_distance_init(GwyToolDistance *tool)
 {
+    GwyPlainTool *plain_tool;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GtkDialog *dialog;
@@ -135,13 +138,18 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     GtkListStore *store;
     guint i;
 
-    GWY_PLAIN_TOOL(tool)->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->layer_type_line = gwy_plain_tool_check_layer_type(plain_tool,
+                                                            "GwyLayerLine");
+    if (!tool->layer_type_line)
+        return;
+
+    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
 
     tool->angle_format = g_new(GwySIValueFormat, 1);
     tool->angle_format->magnitude = 1.0;
     tool->angle_format->precision = 0.1;
-    tool->angle_format->units_gstring = g_string_new("deg");
-    tool->angle_format->units = tool->angle_format->units_gstring->str;
+    gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     /* XXX */
@@ -174,8 +182,7 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
     gtk_widget_show_all(dialog->vbox);
 
-    gtk_dialog_add_button(dialog, _("Hide"), 100);
-
+    gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     gwy_tool_distance_update_headers(tool);
 }
 
@@ -190,6 +197,8 @@ gwy_tool_distance_data_switched(GwyTool *tool,
     GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(tool,
                                                                   data_view);
     plain_tool = GWY_PLAIN_TOOL(tool);
+    if (plain_tool->init_failed)
+        return;
 
     if (plain_tool->layer) {
         selection = gwy_vector_layer_get_selection(plain_tool->layer);
@@ -200,17 +209,16 @@ gwy_tool_distance_data_switched(GwyTool *tool,
         gwy_object_unref(plain_tool->layer);
     }
 
-    /* XXX */
-    type = g_type_from_name("GwyLayerLine");
     plain_tool->layer = gwy_data_view_get_top_layer(data_view);
+    type = GWY_TOOL_DISTANCE(tool)->layer_type_line;
     if (!plain_tool->layer
         || G_TYPE_FROM_INSTANCE(plain_tool->layer) != type) {
         plain_tool->layer = g_object_new(type, NULL);
         gwy_data_view_set_top_layer(data_view, plain_tool->layer);
     }
     g_object_ref(plain_tool->layer);
+    gwy_plain_tool_set_selection_key(plain_tool, "line");
     g_object_set(plain_tool->layer,
-                 "selection-key", "/0/select/line",  /* XXX */
                  "line-numbers", TRUE,
                  NULL);
     selection = gwy_vector_layer_get_selection(plain_tool->layer);
@@ -300,7 +308,7 @@ gwy_tool_distance_update_headers(GwyToolDistance *tool)
     gwy_tool_distance_update_header(tool, COLUMN_DY, str,
                                     "Δy", plain_tool->coord_format);
     gwy_tool_distance_update_header(tool, COLUMN_PHI, str,
-                                    "Angle", tool->angle_format);
+                                    "φ", tool->angle_format);
     gwy_tool_distance_update_header(tool, COLUMN_R, str,
                                     "R", plain_tool->coord_format);
     gwy_tool_distance_update_header(tool, COLUMN_DZ, str,

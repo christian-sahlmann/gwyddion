@@ -42,18 +42,40 @@ struct _GwyPlainTool {
 
     GwyDataView *data_view;
     GwyVectorLayer *layer;
+    gboolean init_failed;
 
     GwySIValueFormat *coord_format;
     GwySIValueFormat *value_format;
+
+    GwyContainer *container;
+    gulong data_item_hid;
+    gulong mask_item_hid;
+    gulong show_item_hid;
+
+    GwyDataField *data_field;
+    gulong data_hid;
+
+    GwyDataField *mask_field;
+    gulong mask_hid;
+
+    GwyDataField *show_field;
+    gulong show_hid;
 };
 
 struct _GwyPlainToolClass {
     GwyToolClass parent_class;
 
+    void (*data_changed)(GwyPlainTool *plain_tool);
+    void (*mask_changed)(GwyPlainTool *plain_tool);
+    void (*show_changed)(GwyPlainTool *plain_tool);
 };
 
 GType        gwy_plain_tool_get_type    (void) G_GNUC_CONST;
+GType gwy_plain_tool_check_layer_type(GwyPlainTool *plain_tool,
+                                      const gchar *name);
 GwyDataField* gwy_plain_tool_get_data_field(GwyPlainTool *plain_tool);
+void gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
+                                      const gchar *bname);
 
 G_END_DECLS
 

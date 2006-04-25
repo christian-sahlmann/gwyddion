@@ -27,18 +27,53 @@
 #include <app/app.h>
 #include <app/gwytool.h>
 
+static void     gwy_tool_class_init    (GwyToolClass *klass);
+static void     gwy_tool_init          (GwyTool *tool,
+                                        gpointer g_class);
 static void     gwy_tool_finalize      (GObject *object);
 static void     gwy_tool_response      (GwyTool *tool,
                                         gint response);
 static void     gwy_tool_show_real     (GwyTool *tool);
 static void     gwy_tool_hide_real     (GwyTool *tool);
 
-G_DEFINE_ABSTRACT_TYPE(GwyTool, gwy_tool, G_TYPE_OBJECT)
+static gpointer gwy_tool_parent_class = NULL;
+
+/* Note: We cannot use the G_DEFINE_TYPE machinery, because we have a
+ * two-argument instance init function which would cause declaration
+ * conflict. */
+GType
+gwy_tool_get_type (void)
+{
+    static GType gwy_tool_type = 0;
+
+    if (G_UNLIKELY(gwy_tool_type == 0)) {
+        static const GTypeInfo gwy_tool_type_info = {
+            sizeof(GwyToolClass),
+            (GBaseInitFunc)NULL,
+            (GBaseFinalizeFunc)NULL,
+            (GClassInitFunc)gwy_tool_class_init,
+            (GClassFinalizeFunc)NULL,
+            NULL,
+            sizeof (GwyTool),
+            0,
+            (GInstanceInitFunc) gwy_tool_init,
+        };
+
+        gwy_tool_type = g_type_register_static(G_TYPE_OBJECT, "GwyTool",
+                                               &gwy_tool_type_info,
+                                               G_TYPE_FLAG_ABSTRACT);
+    }
+
+    return gwy_tool_type;
+}
+
 
 static void
 gwy_tool_class_init(GwyToolClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    gwy_tool_parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_tool_finalize;
 
@@ -53,15 +88,16 @@ gwy_tool_finalize(G_GNUC_UNUSED GObject *object)
 }
 
 static void
-gwy_tool_init(GwyTool *tool)
+gwy_tool_init(GwyTool *tool,
+              gpointer g_class)
 {
     GwyToolClass *klass;
 
-    klass = GWY_TOOL_GET_CLASS(tool);
+    klass = GWY_TOOL_CLASS(g_class);
     gwy_debug("%s", klass->title);
     tool->dialog = gtk_dialog_new();
     gtk_dialog_set_has_separator(GTK_DIALOG(tool->dialog), FALSE);
-    gtk_window_set_title(GTK_WINDOW(tool->dialog), _(klass->title));
+    gtk_window_set_title(GTK_WINDOW(tool->dialog), gettext(klass->title));
     gwy_app_add_main_accel_group(GTK_WINDOW(tool->dialog));
     /* Prevent too smart window managers from making big mistakes */
     gtk_window_set_position(GTK_WINDOW(tool->dialog), GTK_WIN_POS_NONE);
