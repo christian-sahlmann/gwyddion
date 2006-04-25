@@ -441,6 +441,23 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
     g_free(key);
 }
 
+void
+gwy_plain_tool_assure_layer(GwyPlainTool *plain_tool,
+                            GType layer_type)
+{
+    g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
+    g_return_if_fail(layer_type);
+
+    gwy_object_unref(plain_tool->layer);
+    plain_tool->layer = gwy_data_view_get_top_layer(plain_tool->data_view);
+    if (!plain_tool->layer
+        || G_TYPE_FROM_INSTANCE(plain_tool->layer) != layer_type) {
+        plain_tool->layer = g_object_new(layer_type, NULL);
+        gwy_data_view_set_top_layer(plain_tool->data_view, plain_tool->layer);
+    }
+    g_object_ref(plain_tool->layer);
+}
+
 /************************** Documentation ****************************/
 
 /**

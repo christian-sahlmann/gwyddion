@@ -70,11 +70,13 @@ struct _GwyPlainToolClass {
     void (*show_changed)(GwyPlainTool *plain_tool);
 };
 
-GType        gwy_plain_tool_get_type    (void) G_GNUC_CONST;
-GType         gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
-                                               const gchar *name);
-void          gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
-                                               const gchar *bname);
+GType gwy_plain_tool_get_type         (void) G_GNUC_CONST;
+GType gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
+                                       const gchar *name);
+void  gwy_plain_tool_assure_layer     (GwyPlainTool *plain_tool,
+                                       GType layer_type);
+void  gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
+                                       const gchar *bname);
 
 G_END_DECLS
 
