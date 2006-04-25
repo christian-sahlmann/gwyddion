@@ -108,6 +108,8 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
                                                      gint sdigits,
                                                      GwySIValueFormat *format);
 void              gwy_si_unit_value_format_free     (GwySIValueFormat *format);
+void              gwy_si_unit_value_format_set_units(GwySIValueFormat *format,
+                                                     const gchar *units);
 
 
 G_END_DECLS

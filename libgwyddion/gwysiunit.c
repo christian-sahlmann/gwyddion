@@ -647,6 +647,26 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
     g_free(format);
 }
 
+/**
+ * gwy_si_unit_value_format_set_units:
+ * @format: A value format to set units of.
+ * @units: The units string.
+ *
+ * Sets the units field of a value format structure.
+ *
+ * This function keeps the @units and @units_gstring fields consistent.
+ **/
+void
+gwy_si_unit_value_format_set_units(GwySIValueFormat *format,
+                                   const gchar *units)
+{
+    if (!format->units_gstring)
+        format->units_gstring = g_string_new(units);
+    else
+        g_string_assign(format->units_gstring, units);
+
+    format->units = format->units_gstring->str;
+}
 
 /**
  * gwy_si_unit_equal:
@@ -1281,8 +1301,9 @@ gwy_si_unit_prefix(gint power)
  *
  * A physical quantity formatting information.
  *
- * You should not generally modify the units part manually, if you do, modify
- * @units_gstring and update @units to @units_gstring->str.
+ * The @magnitude and @precision fields can be directly modified if necessary.
+ * Units must be always set with gwy_si_unit_value_format_set_units() to update
+ * the internal representation properly.
  */
 
 /**
