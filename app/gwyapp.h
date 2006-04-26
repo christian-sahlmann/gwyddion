@@ -34,7 +34,6 @@
 #include <app/menu-windowlist.h>
 #include <app/resource-editor.h>
 #include <app/settings.h>
-#include <app/unitool.h>
 #include <app/undo.h>
 #include <app/wait.h>
 

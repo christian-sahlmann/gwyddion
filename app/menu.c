@@ -29,9 +29,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libgwymodule/gwymodulebrowser.h>
+#include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"

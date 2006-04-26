@@ -186,6 +186,7 @@ gwy_tool_unmap(GwyTool *tool)
     if (!klass->prefix || !g_str_has_prefix(klass->prefix, "/module/"))
         return;
 
+    gwy_debug("Saving %s dialog size", klass->title);
     len = strlen(klass->prefix);
     key = g_newa(gchar, len + sizeof("/dialog"));
     strcpy(key, klass->prefix);
