@@ -140,9 +140,8 @@ gwy_inventory_store_finalize(GObject *object)
 }
 
 static GtkTreeModelFlags
-gwy_inventory_store_get_flags(GtkTreeModel *model)
+gwy_inventory_store_get_flags(G_GNUC_UNUSED GtkTreeModel *model)
 {
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
     return GTK_TREE_MODEL_ITERS_PERSIST | GTK_TREE_MODEL_LIST_ONLY;
 }
 
@@ -152,7 +151,6 @@ gwy_inventory_store_get_n_columns(GtkTreeModel *model)
     GwyInventoryStore *store;
     gint n;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
     store = GWY_INVENTORY_STORE(model);
     store->item_type->get_traits(&n);
     /* +1 for "item" column */
@@ -165,7 +163,6 @@ gwy_inventory_store_get_column_type(GtkTreeModel *model,
 {
     GwyInventoryStore *store;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
     store = GWY_INVENTORY_STORE(model);
 
     /* Zeroth is item itself */
@@ -199,7 +196,6 @@ gwy_inventory_store_get_tree_iter(GtkTreeModel *model,
     GwyInventoryStore *store;
     gint i;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), FALSE);
     g_return_val_if_fail(gtk_tree_path_get_depth(path) > 0, FALSE);
     store = GWY_INVENTORY_STORE(model);
 
@@ -236,8 +232,6 @@ gwy_inventory_store_get_path(GtkTreeModel *model,
     GwyInventoryStore *store;
     GtkTreePath *path;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), NULL);
-
     store = GWY_INVENTORY_STORE(model);
     gwy_inventory_store_update_iter(store, iter);
     path = gtk_tree_path_new();
@@ -254,7 +248,6 @@ gwy_inventory_store_get_value(GtkTreeModel *model,
 {
     GwyInventoryStore *store;
 
-    g_return_if_fail(GWY_IS_INVENTORY_STORE(model));
     store = GWY_INVENTORY_STORE(model);
 
     if (!column) {
@@ -273,7 +266,6 @@ gwy_inventory_store_iter_next(GtkTreeModel *model,
     GwyInventoryStore *store;
     gint i;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), FALSE);
     store = GWY_INVENTORY_STORE(model);
     gwy_inventory_store_update_iter(store, iter);
 
@@ -290,7 +282,6 @@ gwy_inventory_store_iter_children(GtkTreeModel *model,
 {
     GwyInventoryStore *store;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), FALSE);
     store = GWY_INVENTORY_STORE(model);
 
     if (parent)
@@ -318,7 +309,6 @@ gwy_inventory_store_iter_n_children(GtkTreeModel *model,
 {
     GwyInventoryStore *store;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), -1);
     store = GWY_INVENTORY_STORE(model);
 
     if (iter)
@@ -335,7 +325,6 @@ gwy_inventory_store_iter_nth_child(GtkTreeModel *model,
 {
     GwyInventoryStore *store;
 
-    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), FALSE);
     store = GWY_INVENTORY_STORE(model);
 
     if (parent)
@@ -367,6 +356,8 @@ gwy_inventory_store_row_changed(GwyInventory *inventory,
     GtkTreeIter iter;
 
     iter.user_data = gwy_inventory_get_nth_item(inventory, i);
+    iter.stamp = store->stamp;
+
     path = gtk_tree_path_new();
     gtk_tree_path_append_index(path, i);
     gtk_tree_model_row_changed(GTK_TREE_MODEL(store), path, &iter);
@@ -382,8 +373,10 @@ gwy_inventory_store_row_inserted(GwyInventory *inventory,
     GtkTreeIter iter;
 
     store->stamp++;
+    iter.stamp = store->stamp;
     iter.user_data = gwy_inventory_get_nth_item(inventory, i);
     iter.user_data2 = GUINT_TO_POINTER(i);
+
     path = gtk_tree_path_new();
     gtk_tree_path_append_index(path, i);
     gtk_tree_model_row_inserted(GTK_TREE_MODEL(store), path, &iter);
