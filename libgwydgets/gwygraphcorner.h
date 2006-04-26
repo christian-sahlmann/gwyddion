@@ -50,7 +50,7 @@ struct _GwyGraphCornerClass {
     GtkWidgetClass parent_class;
 
     void (*selected)(GwyGraphCorner *corner);
-    
+
     gpointer reserved1;
     gpointer reserved2;
 };

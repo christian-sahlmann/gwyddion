@@ -453,7 +453,7 @@ apply(GwyUnitoolState *state)
     GwyGraphModel *model;
     GwyDataViewLayer *layer;
     GwyContainer *data;
-        
+
     gint i, j, nselected;
 
     controls = (ToolControls*)state->user_data;

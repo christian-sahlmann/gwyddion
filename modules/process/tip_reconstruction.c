@@ -230,7 +230,7 @@ tip_reconstruction_do(TipReconstructionArgs *args)
     GwyDataField *dfield, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
     gint newid;
-    
+
     operand1 = args->win1;
     operand2 = args->win2;
     g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);

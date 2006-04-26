@@ -566,7 +566,7 @@ gwy_container_get_value_of_type(GwyContainer *container,
  * Low level function to get a value from a container.
  *
  * Causes a warning when value is of a wrong type.
- * 
+ *
  * Returns: The value identified by @key, or %NULL.
  **/
 static GValue*

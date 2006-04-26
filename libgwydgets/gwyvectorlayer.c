@@ -665,7 +665,7 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer,
  * #GwyVectorLayer is a base class for #GwyDataViewLayer's displaying
  * selections and handling user input.  It is a #GwyDataView component and it
  * is not normally usable outside of it.
- * 
+ *
  * The layer takes the selection to display from its parent #GwyDataView.
  * The key under which the selection is found must be set with
  * gwy_vector_layer_set_selection_key().  The selection object currently in

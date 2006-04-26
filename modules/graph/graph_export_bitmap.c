@@ -64,7 +64,7 @@ export(GwyGraph *graph)
     gchar *filename;
     GError *err = NULL;
     GdkPixbuf *pixbuf;
-    
+
     filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to bitmap",
                                                           NULL,
                                                           GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -79,7 +79,7 @@ export(GwyGraph *graph)
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
         if (gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
         {
-            pixbuf = gwy_graph_export_pixmap(graph, 
+            pixbuf = gwy_graph_export_pixmap(graph,
                                          TRUE, TRUE, TRUE, pixbuf);
             gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
         }

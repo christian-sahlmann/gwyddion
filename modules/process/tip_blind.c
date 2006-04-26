@@ -199,7 +199,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
-    
+
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, args->xres, args->yres,
                             GWY_INTERPOLATION_NONE);
@@ -210,14 +210,14 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gwy_app_copy_data_items(data, controls.vtip, id, 0,
                             GWY_DATA_ITEM_PALETTE,
                             0);
-    
+
     dfield = gwy_data_field_new_alike(controls.tip, TRUE);
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
     gwy_container_set_object_by_name(controls.vtip,
                                       "/0/data",
                                       dfield);
-     
+
     /*set up rescaled image of the tip*/
     controls.view = gwy_data_view_new(controls.vtip);
     layer = gwy_layer_basic_new();

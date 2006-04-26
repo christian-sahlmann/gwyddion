@@ -591,7 +591,7 @@ gwy_cdlines(void)
 }
 
 
-gdouble         
+gdouble
 gwy_cdline_get_value(GwyCDLine *preset, gdouble x,
                      const gdouble *params, gboolean *fres)
 {

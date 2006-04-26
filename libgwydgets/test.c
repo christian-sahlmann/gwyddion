@@ -38,7 +38,7 @@ destroy(GtkWidget *widget, GwyGraph *graph)
 {
     GString *str = g_string_new("");
     FILE *fw;
-        
+
     str = gwy_graph_export_postscript(graph,
                                       TRUE, TRUE, TRUE, str);
     fw = fopen("ble.eps", "w");
@@ -108,13 +108,13 @@ main(int argc, char *argv[])
 
     gmodel = gwy_graph_model_new();
     graph = gwy_graph_new(gmodel);
-    
+
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, yp, 10);
     gwy_graph_curve_model_set_description(model, "parabola");
     gwy_graph_model_add_curve(gmodel, model);
     gwy_graph_model_set_label_visible(gmodel, TRUE);
-    
+
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, yp, 10);
     gwy_graph_curve_model_set_description(model, "fd");
@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 
     gtk_main();
 
-    
+
     return 0;
     //gtk_container_add (GTK_CONTAINER (window), gwindow);
 
@@ -147,7 +147,7 @@ main(int argc, char *argv[])
 
     g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), NULL);
 
-    
+
     printf("show all!\n");
     gtk_widget_show_all(gwindow);
 

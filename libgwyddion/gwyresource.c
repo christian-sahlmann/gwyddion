@@ -684,7 +684,7 @@ gwy_resource_class_load_dir(const gchar *path,
  * Builds file name a resource should be saved to.
  *
  * If the resource has not been newly created, renamed, or system it was
- * probably loaded from file of the same name.  
+ * probably loaded from file of the same name.
  *
  * Returns: Resource file name as a newly allocated string that must be freed
  *          by caller.

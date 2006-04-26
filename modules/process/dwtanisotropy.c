@@ -148,7 +148,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
-    
+
     gwy_app_undo_qcheckpoint(data, dquark, mquark, 0);
     if (!mask) {
         mask = gwy_data_field_new_alike(dfield, FALSE);

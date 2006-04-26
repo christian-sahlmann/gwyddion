@@ -363,8 +363,8 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
                              }
     */
 
-    
-    
+
+
     dialog = gtk_dialog_new_with_buttons(_("Indentaion statistics"), NULL, 0,
                                          _("_Compute & mark"), RESPONSE_COMPUTE,
                                          _("_Save statistics"), RESPONSE_SAVE,
@@ -385,7 +385,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
                             0);
-    
+
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");

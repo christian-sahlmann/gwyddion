@@ -58,7 +58,7 @@ struct _GwyGraphLabelClass {
     GtkWidgetClass parent_class;
 
     void (*selected)(GwyGraphLabel *label);
-    
+
     gpointer reserved1;
     gpointer reserved2;
 };

@@ -988,7 +988,7 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
  *
  * Returns: x minimum bounding value of the curves
  **/
-gdouble           
+gdouble
 gwy_graph_model_get_xmin(GwyGraphModel *model)
 {
     return model->x_min;
@@ -1003,7 +1003,7 @@ gwy_graph_model_get_xmin(GwyGraphModel *model)
  *
  * Returns: y minimum bounding value of the curves
  **/
-gdouble           
+gdouble
 gwy_graph_model_get_ymin(GwyGraphModel *model)
 {
     return model->y_min;
@@ -1019,7 +1019,7 @@ gwy_graph_model_get_ymin(GwyGraphModel *model)
  *
  * Returns: x maximum bounding value of the curves
  **/
-gdouble           
+gdouble
 gwy_graph_model_get_xmax(GwyGraphModel *model)
 {
     return model->x_max;
@@ -1035,7 +1035,7 @@ gwy_graph_model_get_xmax(GwyGraphModel *model)
  *
  * Returns: y maximum bounding value of the curves
  **/
-gdouble           
+gdouble
 gwy_graph_model_get_ymax(GwyGraphModel *model)
 {
     return model->y_max;
@@ -1050,7 +1050,7 @@ gwy_graph_model_get_ymax(GwyGraphModel *model)
  * graph depending on actual graph settings.
  *
  **/
-void          
+void
 gwy_graph_model_set_xmin(GwyGraphModel *model, gdouble value)
 {
     model->x_min = value;
@@ -1065,7 +1065,7 @@ gwy_graph_model_set_xmin(GwyGraphModel *model, gdouble value)
  * graph depending on actual graph settings.
  *
  **/
-void          
+void
 gwy_graph_model_set_xmax(GwyGraphModel *model, gdouble value)
 {
     model->x_max = value;
@@ -1079,7 +1079,7 @@ gwy_graph_model_set_xmax(GwyGraphModel *model, gdouble value)
  * graph depending on actual graph settings.
  *
  **/
-void          
+void
 gwy_graph_model_set_ymin(GwyGraphModel *model, gdouble value)
 {
     model->y_min = value;
@@ -1093,7 +1093,7 @@ gwy_graph_model_set_ymin(GwyGraphModel *model, gdouble value)
  * graph depending on actual graph settings.
  *
  **/
-void          
+void
 gwy_graph_model_set_ymax(GwyGraphModel *model, gdouble value)
 {
     model->y_max = value;
@@ -1108,7 +1108,7 @@ gwy_graph_model_set_ymax(GwyGraphModel *model, gdouble value)
  *
  * Returns: top graph axis label string
  **/
-const gchar*   
+const gchar*
 gwy_graph_model_get_top_label(GwyGraphModel *model)
 {
     return model->top_label->str;
@@ -1123,7 +1123,7 @@ gwy_graph_model_get_top_label(GwyGraphModel *model)
  *
  * Returns: bottom graph axis label string
  **/
-const gchar*   
+const gchar*
 gwy_graph_model_get_bottom_label(GwyGraphModel *model)
 {
     return model->bottom_label->str;
@@ -1138,7 +1138,7 @@ gwy_graph_model_get_bottom_label(GwyGraphModel *model)
  *
  * Returns: left graph axis label string
  **/
-const gchar*   
+const gchar*
 gwy_graph_model_get_left_label(GwyGraphModel *model)
 {
     return model->left_label->str;
@@ -1153,7 +1153,7 @@ gwy_graph_model_get_left_label(GwyGraphModel *model)
  *
  * Returns: right graph axis label string
  **/
-const gchar*   
+const gchar*
 gwy_graph_model_get_right_label(GwyGraphModel *model)
 {
     return model->right_label->str;

@@ -442,7 +442,7 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.real_ymin = gwy_graph_model_get_ymin(area->graph_model);
     specs.real_width = gwy_graph_model_get_xmax(area->graph_model) - gwy_graph_model_get_xmin(area->graph_model);
     specs.real_height = gwy_graph_model_get_ymax(area->graph_model) - gwy_graph_model_get_ymin(area->graph_model);
-    
+
     specs.log_x = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL);
     specs.log_y = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL);
     /*draw continuous selection*/
@@ -1214,7 +1214,7 @@ gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
               "notify",
               G_CALLBACK(gwy_graph_area_repos_label), area);
 
- 
+
     gwy_graph_area_refresh(area);
 }
 
@@ -1364,7 +1364,7 @@ gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_curs
     }
 }
 
-static gboolean 
+static gboolean
 gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *event)
 {
     GwyGraphArea *area = GWY_GRAPH_AREA(widget);
@@ -1392,7 +1392,7 @@ static gchar *symbols[] =
  * @area: the graph area to export
  *
  **/
-GString* 
+GString*
 gwy_graph_area_export_vector(GwyGraphArea *area,
                                       gint x, gint y,
                                       gint width, gint height)
@@ -1435,7 +1435,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     g_string_append_printf(out, "box\n");
     g_string_append_printf(out, "clip\n");
 
-    
+
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve_by_index(model, i);
@@ -1488,7 +1488,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     g_string_append_printf(out, "%d %d L\n", x, y + height);
     g_string_append_printf(out, "%d %d L\n", x, y);
     g_string_append_printf(out, "stroke\n");
-    
+
     return out;
 }
 

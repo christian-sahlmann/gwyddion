@@ -130,7 +130,7 @@ module_register(void)
                               TIP_MODEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Model AFM tip"));
-    
+
     return TRUE;
 }
 

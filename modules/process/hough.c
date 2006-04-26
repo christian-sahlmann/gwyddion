@@ -76,8 +76,8 @@ hough(GwyContainer *data, GwyRunType run)
                                      GWY_APP_SHOW_FIELD, &result,
                                      0);
     g_return_if_fail(dfield);
-        
-    
+
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     if (!result){
@@ -88,7 +88,7 @@ hough(GwyContainer *data, GwyRunType run)
         gwy_container_set_object(data, squark, result);
         g_object_unref(result);
     }
-    
+
     edgefield = gwy_data_field_duplicate(dfield);
     f1 = gwy_data_field_duplicate(dfield);
     f2 = gwy_data_field_duplicate(dfield);
@@ -102,14 +102,14 @@ hough(GwyContainer *data, GwyRunType run)
 			      NULL,
 			      result,
 			      1);
-    
+
     /*gwy_data_field_hough_circle(edgefield,
                                 f1,
                                 f2,
                                 result,
                                 10);
     */
-    g_object_unref(edgefield);    
+    g_object_unref(edgefield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

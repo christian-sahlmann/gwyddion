@@ -556,7 +556,7 @@ drift_ok(DriftControls *controls,
 
     if (!controls->computed) return;
 
-    newdata_field = gwy_data_field_duplicate(data_field); 
+    newdata_field = gwy_data_field_duplicate(data_field);
 
     newdata_field = gwy_data_field_correct_drift(data_field,
                                                  newdata_field,
@@ -576,7 +576,7 @@ drift_ok(DriftControls *controls,
         gwy_app_set_data_field_title(data, newid, _("Drift corected data"));
 
     }
-    g_object_unref(newdata_field); 
+    g_object_unref(newdata_field);
 
     if (args->is_graph)
     {

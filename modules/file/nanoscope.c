@@ -57,7 +57,7 @@ typedef enum {
  * Old-style record is
  * \Foo: HardValue (HardScale)
  * where HardScale is optional.
- * 
+ *
  * New-style record is
  * \@Bar: V [SoftScale] (HardScale) HardValue
  * where SoftScale and HardScale are optional.

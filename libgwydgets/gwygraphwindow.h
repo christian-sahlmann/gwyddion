@@ -55,7 +55,7 @@ struct _GwyGraphWindow {
 
     GtkWidget *button_zoom_in;
     GtkWidget *button_zoom_out;
-    
+
     GtkWidget *button_x_log;
     GtkWidget *button_y_log;
 

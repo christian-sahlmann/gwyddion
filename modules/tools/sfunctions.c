@@ -420,7 +420,7 @@ apply(GwyUnitoolState *state)
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-        
+
     gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
     g_object_unref(gmodel);
 }

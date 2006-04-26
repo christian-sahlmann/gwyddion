@@ -2,20 +2,20 @@
 #define __SPML_UTILS_H
 /*
  * =====================================================================================
- * 
+ *
  *        Filename:  spml-utils.c
- * 
- *     Description:  ZLIB stream inflation, Base64 decoding, data types reading 
+ *
+ *     Description:  ZLIB stream inflation, Base64 decoding, data types reading
  *                   functions
- * 
+ *
  *         Version:  0.1
  *         Created:  20.02.2006 20:16:13 CET
  *        Revision:  none
  *        Compiler:  gcc
- * 
- *          Author:  Jan Horak (xhorak@gmail.com), 
- *         Company:  
- * 
+ *
+ *          Author:  Jan Horak (xhorak@gmail.com),
+ *         Company:
+ *
  * =====================================================================================
  */
 #include <stdlib.h>
@@ -26,7 +26,7 @@
 
 
 #define CHUNK 16000             /*/< size of input/output buffer for zlib inflate in bytes */
-/** 
+/**
  * Possible input data formats in SPML
  */
 typedef enum {
@@ -96,10 +96,10 @@ inflate_init(zlib_stream * zstr)
 }
 
 /**
- Set input buffer to decompress 
+ Set input buffer to decompress
  @param in_buf pointer to input buffer
  @param count number of bytes in input buffer
- @return -1 when input buffer is too long to fit into in buffer 
+ @return -1 when input buffer is too long to fit into in buffer
  (is greater than CHUNK define )
 */
 static int
@@ -123,7 +123,7 @@ inflate_set_in_buffer(zlib_stream * zstr, char *in_buf, int count)
 
 /**
  Run inflation of buffer
- Run inflation of input buffer which was previously set by inflate_set_in_buffer 
+ Run inflation of input buffer which was previously set by inflate_set_in_buffer
  and store it to output buffer.
  */
 static int
@@ -171,7 +171,7 @@ inflate_destroy(zlib_stream * zstr)
  * @param in_buf pointer to GArray of chars which contain whole zlib stream to inflate
  * @param out_buf pointer to pointer to GArray of chars which will be set to inflated
  * stream, it is dynamically allocated so it must be freed by caller.
- * @return -1 when in_buf is not complete zlib compressed array or any other error 
+ * @return -1 when in_buf is not complete zlib compressed array or any other error
  * when unpacking
  */
 static int
@@ -247,7 +247,7 @@ get_float32(char **p, byteOrder order)
 }
 
 /**
- * Read and return double value from input and move pointer 
+ * Read and return double value from input and move pointer
  * to input by its size in bytes (8).
  * Input data byteorder is respected.
  */
@@ -434,7 +434,7 @@ get_uint8(char **p)
  * Convert symbol coded in BASE64 encoding to number which it represent
  * @param ch character in A-Za-Z0-9+/=
  * @return value of @param ch character
- * Symbol '=' which does not belong to BASE64 is interpreted as '=' to 
+ * Symbol '=' which does not belong to BASE64 is interpreted as '=' to
  * get number of valid bytes for decodeblock function
  */
 static char
@@ -496,7 +496,7 @@ decodeblock(unsigned char in[4], unsigned char out[3])
  * out_buf is created in dynamic memory must be deallocated by caller.
  * @return -1 when cannot append to dynamic array out_buf
  * @return 0 when input buffer was decoded correctly.
- * 
+ *
  */
 static int
 decode_b64(char *in_buf, GArray ** out_buf, int len)

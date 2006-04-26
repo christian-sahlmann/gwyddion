@@ -834,7 +834,7 @@ gwy_undo_get_for_data(GwyContainer *data,
  * SECTION:undo
  * @title: undo
  * @short_description: Undo and redo facility
- * 
+ *
  * For a module developer, the only two useful undo/redo functions are probably
  * gwy_app_undo_checkpoint() and gwy_app_undo_checkpointv() creating a
  * checkpoint in the undo history to which is possible to return to later. You

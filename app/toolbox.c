@@ -622,7 +622,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             NULL,
             0,
             "<Separator>",
-            NULL 
+            NULL
         },
         {
             N_("/_Quit"),
@@ -666,7 +666,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL,
             0,
             "<Tearoff>",
-            NULL 
+            NULL
         },
         {
             N_("/_Undo"),
@@ -674,7 +674,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_undo_cb,
             0,
             "<StockItem>",
-            GTK_STOCK_UNDO 
+            GTK_STOCK_UNDO
         },
         {
             N_("/_Redo"),
@@ -682,7 +682,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_redo_cb,
             0,
             "<StockItem>",
-            GTK_STOCK_REDO 
+            GTK_STOCK_REDO
         },
         /*
         {
@@ -691,7 +691,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_file_duplicate_cb,
             0,
             "<StockItem>",
-            GTK_STOCK_COPY 
+            GTK_STOCK_COPY
         },
         */
         {
@@ -700,7 +700,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL,
             0,
             "<Separator>",
-            NULL 
+            NULL
         },
         {
             N_("/Mask _Color..."),
@@ -708,7 +708,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_change_mask_color_cb,
             0,
             NULL,
-            NULL 
+            NULL
         },
         {
             N_("/Default Mask _Color..."),
@@ -716,7 +716,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_change_default_mask_color_cb,
             0,
             NULL,
-            NULL 
+            NULL
         },
         {
             N_("/Color _Gradients..."),
@@ -724,7 +724,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_gradient_editor,
             0,
             NULL,
-            NULL 
+            NULL
         },
         {
             N_("/G_L Materials..."),
@@ -732,7 +732,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_gl_material_editor,
             0,
             NULL,
-            NULL 
+            NULL
         },
     };
     GtkItemFactory *item_factory;

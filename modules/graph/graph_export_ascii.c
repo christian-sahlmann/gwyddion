@@ -200,7 +200,7 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
     gchar *filename;
     GString *string = g_string_new("");
     FILE *fw;
-    
+
 
     if (response == GTK_RESPONSE_OK)
     {
@@ -220,7 +220,7 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
                 string = gwy_graph_model_export_ascii(graph->graph_model, filename,
                                          controls.units, controls.labels, controls.metadata,
                                          controls.style, string);
-            
+
                 fw = g_fopen(filename, "w");
                 fprintf(fw, "%s", string->str);
                 fclose(fw);

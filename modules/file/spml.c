@@ -424,8 +424,8 @@ get_data(gboolean read_data_only, char *filename, char *datachannel_name,
                         get_byteorder(xmlTextReaderGetAttribute
                                       (reader, "byteOrder"));
                     if (read_data_only == FALSE) {
-                        /* when read_data_only is true, we skip dimensions array to prevent 
-                           infinite cycle when calling from get_axis to get non equidistant axis from 
+                        /* when read_data_only is true, we skip dimensions array to prevent
+                           infinite cycle when calling from get_axis to get non equidistant axis from
                            datachannel */
                         read_method_name =
                             xmlTextReaderGetAttribute(reader,
@@ -524,7 +524,7 @@ get_data(gboolean read_data_only, char *filename, char *datachannel_name,
     return data_dimension;
 }
 
-/** 
+/**
  * Find node of given name in parent's children
  * @param parent node
  * @return NULL when children by given name not found otherwise
@@ -552,7 +552,7 @@ get_node_ptr(xmlNodePtr parent, xmlChar * name)
     return NULL;
 }
 
-/** 
+/**
  * Find next after previous node of given name
  * @param prev previous node
  * @return NULL when next node by given name not found otherwise

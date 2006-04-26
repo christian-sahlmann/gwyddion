@@ -126,7 +126,7 @@ gwy_statusbar_set_markup(GwyStatusbar *statusbar,
  * It also provides a simple context-free message method
  * gwy_statusbar_set_markup() for status bars that do not need all the
  * complexity of #GtkStatusbar stacks.
- * 
+ *
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

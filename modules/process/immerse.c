@@ -257,7 +257,7 @@ immerse_window_construct(ImmerseArgs *args)
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
-    
+
     gtk_widget_show_all(dialog);
 
     return dialog;
@@ -344,16 +344,16 @@ immerse_do(ImmerseArgs *args)
     data = gwy_data_window_get_data(operand1);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    result = gwy_data_field_duplicate(dfield1); 
+    result = gwy_data_field_duplicate(dfield1);
 
     if (args->sampling == GWY_IMMERSE_SAMPLING_DOWN)
     {
         resampled = gwy_data_field_new_alike(dfield2, FALSE);
         gwy_data_field_resample(result, dfield1->xres, dfield1->yres, GWY_INTERPOLATION_NONE);
-        
+
         gwy_data_field_copy(dfield1, result, FALSE);
         gwy_data_field_copy(dfield2, resampled, FALSE);
-        gwy_data_field_resample(resampled, 
+        gwy_data_field_resample(resampled,
                                 dfield1->xres*dfield2->xreal/dfield1->xreal,
                                 dfield1->yres*dfield2->xreal/dfield1->xreal,
                                 GWY_INTERPOLATION_BILINEAR);
@@ -367,8 +367,8 @@ immerse_do(ImmerseArgs *args)
             g_object_unref(score);
         }
 
-        gwy_data_field_area_copy(resampled, result, 
-                                 0, 0, 
+        gwy_data_field_area_copy(resampled, result,
+                                 0, 0,
                                  resampled->xres, resampled->yres,
                                  max_col - resampled->xres/2,
                                  max_row - resampled->yres/2);
@@ -378,27 +378,27 @@ immerse_do(ImmerseArgs *args)
     {
         gwy_data_field_resample(result, dfield1->xres, dfield1->yres, FALSE);
         gwy_data_field_copy(dfield1, result, FALSE);
-        
+
         gwy_data_field_resample(result,
                                 dfield2->xres*dfield1->xreal/dfield2->xreal,
                                 dfield2->yres*dfield1->xreal/dfield2->xreal,
                                 GWY_INTERPOLATION_BILINEAR);
-        
-       
+
+
         if (args->mode == GWY_IMMERSE_MODE_CORRELATE)
-        {                
+        {
             score = gwy_data_field_new_alike(result, FALSE);
             get_score_iteratively(result, dfield2,
                                      score, args);
             find_score_maximum(score, &max_col, &max_row);
             g_object_unref(score);
         }
-        gwy_data_field_area_copy(dfield2, result, 
-                                 0, 0, 
+        gwy_data_field_area_copy(dfield2, result,
+                                 0, 0,
                                  dfield2->xres, dfield2->yres,
                                  max_col - dfield2->xres/2,
                                  max_row - dfield2->yres/2);
-         
+
     }
 
     /*set right output */
@@ -408,7 +408,7 @@ immerse_do(ImmerseArgs *args)
         gwy_app_set_data_field_title(data, newid, _("Immersed detail data"));
         g_object_unref(result);
     }
-    
+
 
     return TRUE;
 }
@@ -463,19 +463,19 @@ find_score_maximum(GwyDataField *correlation_score, gint *max_col, gint *max_row
 }
 
 
-static void       
+static void
 immerse_leveling_cb(GtkWidget *combo, ImmerseArgs *args)
 {
     args->leveling = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
-static void       
+static void
 immerse_mode_cb(GtkWidget *combo, ImmerseArgs *args)
 {
     args->mode = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
-static void       
+static void
 immerse_sampling_cb(GtkWidget *combo, ImmerseArgs *args)
 {
     args->sampling = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));

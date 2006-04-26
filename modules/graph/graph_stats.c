@@ -167,7 +167,7 @@ stats_dialog(StatsControls *data)
 
     GwyGraph *graph;
     GwyGraphModel *gmodel;
-    
+
     GtkDialog *dialog;
     GtkWidget *table, *label;
     GtkWidget *button;
@@ -182,7 +182,7 @@ stats_dialog(StatsControls *data)
 
 //     for (i = 0; i < data->ncurves; i++)
 //     {
-//         curve_desc[i] = 
+//         curve_desc[i] =
 //     }
 
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
@@ -202,7 +202,7 @@ stats_dialog(StatsControls *data)
                                  data);
 
     data->destroy_id =
-        g_signal_connect_swapped(graph, "destroy", 
+        g_signal_connect_swapped(graph, "destroy",
                                  G_CALLBACK(stats_dialog_closed_cb),
                                  data);
 
@@ -569,7 +569,7 @@ stat_updated_cb(StatsControls *data)
                                         GWY_SI_UNIT_FORMAT_VFMARKUP,
                                         data->stat, NULL);
         g_snprintf(buffer, sizeof(buffer), "%.3f %s",
-                   data->stat/format->magnitude,                        
+                   data->stat/format->magnitude,
                    format->units);
         gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
 

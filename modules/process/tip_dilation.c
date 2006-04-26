@@ -239,7 +239,7 @@ tip_dilation_do(TipDilationArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand1);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
- 
+
     /*result fields - after computation result should be at dfield */
     dfield = gwy_data_field_duplicate(dfield1);
 

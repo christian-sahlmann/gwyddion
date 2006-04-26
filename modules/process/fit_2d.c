@@ -234,7 +234,7 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                                              0);
-    
+
     args->dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_clear(args->dfield);
 
@@ -243,13 +243,13 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     gwy_app_copy_data_items(data, args->vdata, id, 0,
                             GWY_DATA_ITEM_PALETTE,
                                                0);
-    
+
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
     gwy_container_set_object_by_name(args->vdata,
                                     "/0/data",
                                      dfield);
-    
+
     /*set up rescaled image of the surface*/
     controls.view = gwy_data_view_new(args->vdata);
     layer = gwy_layer_basic_new();
@@ -475,11 +475,11 @@ update_view(Fit2DControls *controls, Fit2DArgs *args)
 
     originalfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
                                                                     "/0/data"));
-    
+
     fitfield = args->dfield;
     g_return_if_fail(GWY_IS_DATA_FIELD(originalfield));
     g_return_if_fail(GWY_IS_DATA_FIELD(fitfield));
-    
+
     resultfield = gwy_data_field_new(originalfield->xres, originalfield->yres,
                                      originalfield->xreal, originalfield->yreal,
                                      TRUE);
@@ -558,7 +558,7 @@ plot_inits(Fit2DControls *controls, Fit2DArgs *args)
     gboolean fres;
 
     dfield = args->dfield;
-    
+
     dimdata[0] = (gdouble)dfield->xres;
     dimdata[1] = (gdouble)dfield->yres;
     dimdata[2] = dfield->xreal;
@@ -680,7 +680,7 @@ fit_2d_do(Fit2DControls *controls,
              Fit2DArgs *args)
 {
     gint newid;
-    
+
     newid = gwy_app_data_browser_add_data_field(args->dfield, args->original_data, TRUE);
     g_object_unref(args->dfield);
     gwy_app_copy_data_items(args->original_data, args->original_data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);

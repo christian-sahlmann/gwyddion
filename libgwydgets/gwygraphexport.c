@@ -29,7 +29,7 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
-GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph, 
+GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
                                      G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
                                      G_GNUC_UNUSED gboolean export_labels,
                                      GdkPixbuf *pixbuf)
@@ -56,7 +56,7 @@ GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
     labely = (GTK_WIDGET(graph->area->lab))->allocation.y + topheight;
     labelw = (GWY_GRAPH_LABEL(graph->area->lab))->reqwidth;
     labelh = (GWY_GRAPH_LABEL(graph->area->lab))->reqheight;
-    
+
     visual = gdk_visual_get_best();
     pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
     gc = gdk_gc_new(pixmap);
@@ -85,7 +85,7 @@ GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
                               rightwidth, height - topheight - bottomheight,
                               graph->axis_right);
     gwy_axis_draw_on_drawable(pixmap, gc,
-                              width - leftwidth, topheight, 
+                              width - leftwidth, topheight,
                               leftwidth, height - topheight - bottomheight,
                               graph->axis_left);
 
@@ -105,8 +105,8 @@ GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
 
 }
 
-GString *       
-gwy_graph_export_postscript(GwyGraph *graph, 
+GString *
+gwy_graph_export_postscript(GwyGraph *graph,
                                          G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
                                          G_GNUC_UNUSED gboolean export_labels,
                                          GString* string)
@@ -116,26 +116,26 @@ gwy_graph_export_postscript(GwyGraph *graph,
     GwyGraphModel *gmodel = graph->graph_model;
     gint fontsize = 20;
     gint borderskip = 30;
-   
+
     width = (GTK_WIDGET(graph))->allocation.width;
     height = (GTK_WIDGET(graph))->allocation.height;
     areax = 90;
     areay = 90;
-    
-    if (gwy_axis_is_visible(graph->axis_left) && gwy_axis_is_visible(graph->axis_right)) 
+
+    if (gwy_axis_is_visible(graph->axis_left) && gwy_axis_is_visible(graph->axis_right))
         areaw = width - 2*areax;
     else if (gwy_axis_is_visible(graph->axis_left) || gwy_axis_is_visible(graph->axis_right))
         areaw = width - areax - borderskip;
     else areaw = width - 2*borderskip;
-    
-    if (gwy_axis_is_visible(graph->axis_top) && gwy_axis_is_visible(graph->axis_bottom)) 
+
+    if (gwy_axis_is_visible(graph->axis_top) && gwy_axis_is_visible(graph->axis_bottom))
         areah = height - 2*areay;
     else if (gwy_axis_is_visible(graph->axis_top) || gwy_axis_is_visible(graph->axis_bottom))
         areah = height - areay - borderskip;
     else areah = height - 2*borderskip;
-     
+
     hpt = vpt = 1;
-   
+
     /*TODO remove the empirical part of these relations*/
     labelh = 5 + 15*gwy_graph_model_get_n_curves(gmodel)*fontsize
         /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE;
@@ -144,7 +144,7 @@ gwy_graph_export_postscript(GwyGraph *graph,
         - 0.08*fontsize*fontsize;
     labelx = width - areax - labelw - 5;
     labely = height - areay - labelh - 5;
-    
+
 
     /*write header*/
     g_string_append_printf(string, "%%!PS-Adobe EPSF-3.0\n");
@@ -197,7 +197,7 @@ gwy_graph_export_postscript(GwyGraph *graph,
     g_string_append_printf(string, "/Times-Roman findfont\n");
     g_string_append_printf(string, "%%%%EndProlog\n");
 
-    
+
     /*write axises*/
     if (gwy_axis_is_visible(graph->axis_bottom))
     {

@@ -109,10 +109,10 @@ cwt(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
     g_return_if_fail(dfield);
-    
+
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
-    
+
     if (xsize != ysize) {
         dialog = gtk_message_dialog_new
             (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
@@ -146,13 +146,13 @@ cwt(GwyContainer *data, GwyRunType run)
         gwy_data_field_resample(dfield, xsize, ysize, args.interp);
 
 
-    
+
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     gwy_app_copy_data_items(data, data, oldid, newid,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
-    
+
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("CWT"));
 }

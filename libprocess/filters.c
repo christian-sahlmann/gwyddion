@@ -1342,7 +1342,7 @@ kuwahara_block(const gdouble *a)
   ((d)->data[CLAMP((row), 0, (d)->yres-1) * (d)->xres \
   + CLAMP((col), 0, (d)->xres-1)])
 
-/** 
+/**
  * gwy_data_field_area_filter_kuwahara:
  * @data_field: A data filed to apply Kuwahara filter to.
  * @col: Upper-left column coordinate.

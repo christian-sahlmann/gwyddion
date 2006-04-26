@@ -110,7 +110,7 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
     gwy_debug("");
 
     table = gtk_table_new(2, 8, FALSE);
-   
+
     dialog->linesize = gtk_adjustment_new(1, 0, 6, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Frame thickness:"), NULL,
                                 dialog->linesize);
@@ -128,7 +128,7 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
     gtk_table_attach(GTK_TABLE(table), dialog->reversed, 1, 2, row, row + 1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    
+
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -166,13 +166,13 @@ refresh(GwyGraphLabelDialog *dialog)
     GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(dialog->graph_model);
-    
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize), model->label_frame_thickness);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->reversed), model->label_reverse);     
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->reversed), model->label_reverse);
 }
 
 
-void        
+void
 gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
 {
     GwyGraphLabelDialog *gadialog = GWY_GRAPH_LABEL_DIALOG(dialog);
@@ -181,7 +181,7 @@ gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
     refresh(GWY_GRAPH_LABEL_DIALOG(dialog));
 }
 
-static void     
+static void
 linesize_changed_cb(GtkObject *adj, GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
@@ -191,7 +191,7 @@ linesize_changed_cb(GtkObject *adj, GwyGraphLabelDialog *dialog)
     model->label_frame_thickness = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
 }
 
-static void     
+static void
 reverse_changed_cb(GtkToggleButton *button, GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;

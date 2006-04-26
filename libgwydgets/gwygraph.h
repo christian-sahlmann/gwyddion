@@ -113,10 +113,10 @@ void       gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max
 void       gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable);
 
 
-GdkPixbuf* gwy_graph_export_pixmap(GwyGraph *graph, 
+GdkPixbuf* gwy_graph_export_pixmap(GwyGraph *graph,
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels, GdkPixbuf *pixbuf);
-GString*   gwy_graph_export_postscript(GwyGraph *graph, 
+GString*   gwy_graph_export_postscript(GwyGraph *graph,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels, GString *str);
 

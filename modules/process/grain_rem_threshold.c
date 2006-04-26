@@ -188,7 +188,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     add_mask_layer(controls.view);
-    
+
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
         zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
     else

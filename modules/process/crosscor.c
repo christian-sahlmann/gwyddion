@@ -404,7 +404,7 @@ crosscor_do(CrosscorArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand1);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
- 
+
     /*result fields - after computation result should be at dfieldx */
     dfieldx = gwy_data_field_duplicate(
                    GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data")));
@@ -467,9 +467,9 @@ crosscor_do(CrosscorArgs *args)
     newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
     g_object_unref(dfieldx);
     gwy_app_copy_data_items(data, data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
-                
+
     switch (args->result) {
-        case GWY_CROSSCOR_ABS:        
+        case GWY_CROSSCOR_ABS:
         gwy_app_set_data_field_title(data, newid, _("Absolute difference"));
         break;
 
@@ -490,7 +490,7 @@ crosscor_do(CrosscorArgs *args)
         break;
     }
 
-    
+
     g_object_unref(score);
     g_object_unref(dfieldy);
 

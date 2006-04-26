@@ -157,7 +157,7 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
  * @type: graph point type
  * @size: point size
  * @color: point color
- * @clear: 
+ * @clear:
  *
  * Draw a point on the graph.
  **/

@@ -306,7 +306,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
 
         if (model->label_reverse)
             gdk_draw_layout(drawable, gc,
-                            winx + winwidth - rect.width - 25 - frame_off, 
+                            winx + winwidth - rect.width - 25 - frame_off,
                             winy + ypos,
                             layout);
         else
@@ -319,7 +319,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
             if (model->label_reverse)
                 gwy_graph_draw_line(drawable, gc,
                                     winx + winwidth - 20 - frame_off,
-                                    winy + ypos + rect.height/2, 
+                                    winy + ypos + rect.height/2,
                                     winx + winwidth - 5,
                                     winy + ypos + rect.height/2,
                                     curvemodel->line_style,
@@ -327,9 +327,9 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                                     &(curvemodel->color));
             else
                 gwy_graph_draw_line(drawable, gc,
-                                    winx + 5 + frame_off, 
+                                    winx + 5 + frame_off,
                                     winy + ypos + rect.height/2,
-                                    winx + 20 + frame_off, 
+                                    winx + 20 + frame_off,
                                     winy + ypos + rect.height/2,
                                     curvemodel->line_style,
                                     curvemodel->line_size,
@@ -346,7 +346,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                                      &(curvemodel->color), FALSE);
             else
                 gwy_graph_draw_point(drawable, gc,
-                                     winx + 12 + frame_off, 
+                                     winx + 12 + frame_off,
                                      winy + ypos + rect.height/2,
                                      curvemodel->point_type,
                                      curvemodel->point_size,
