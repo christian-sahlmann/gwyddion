@@ -19,13 +19,12 @@
  */
 
 #include "config.h"
-#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
@@ -158,7 +157,7 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     GtkCellRenderer *renderer;
     GtkDialog *dialog;
     GtkWidget *scwin, *label;
-    GtkListStore *store;
+    GwyNullStore *store;
     guint i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -176,7 +175,7 @@ gwy_tool_distance_init(GwyToolDistance *tool)
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    store = gtk_list_store_new(1, G_TYPE_INT);
+    store = gwy_null_store_new(0);
     tool->model = GTK_TREE_MODEL(store);
     tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
 
@@ -230,7 +229,7 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
     }
     if (!data_view) {
         gtk_widget_set_sensitive(tool->clear, FALSE);
-        gtk_list_store_clear(GTK_LIST_STORE(tool->model));
+        gwy_null_store_set_n_rows(GWY_NULL_STORE(tool->model), 0);
         gwy_tool_distance_update_headers(tool);
         return;
     }
@@ -282,44 +281,28 @@ gwy_tool_distance_selection_changed(GwySelection *selection,
                                     gint hint,
                                     GwyToolDistance *tool)
 {
-    GtkTreeIter iter;
-    GtkListStore *store;
-    gint n, nsel;
+    GwyNullStore *store;
+    gint n;
 
-    n = gtk_tree_model_iter_n_children(tool->model, NULL);
-    store = GTK_LIST_STORE(tool->model);
+    store = GWY_NULL_STORE(tool->model);
+    n = gwy_null_store_get_n_rows(store);
+    g_return_if_fail(hint <= n);
 
-    /* One row has changed, emit signal */
-    if (hint > 0) {
-        g_return_if_fail(hint <= n);
-        if (hint < n) {
-            gwy_list_store_row_changed(store, NULL, NULL, hint);
-            return;
-        }
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, 0, n, -1);
-        return;
+    if (hint < 0) {
+        gtk_tree_view_set_model(tool->treeview, NULL);
+        n = gwy_selection_get_data(selection, NULL);
+        gwy_null_store_set_n_rows(store, n);
+        gtk_tree_view_set_model(tool->treeview, tool->model);
+        gtk_widget_set_sensitive(tool->clear, n > 0);
     }
-
-    /* No specific hint, disconnect model, possibly updated the number of rows,
-     * rebuilt it and reconnect.  This causes full redraw in any case. */
-    gtk_tree_view_set_model(tool->treeview, NULL);
-    nsel = gwy_selection_get_data(selection, NULL);
-    while (nsel > n) {
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, 0, n, -1);
-        n++;
-    }
-    if (nsel < n) {
-        gtk_tree_model_iter_nth_child(tool->model, &iter, NULL, nsel);
-        while (nsel < n) {
-            gtk_list_store_remove(store, &iter);
-            n--;
+    else {
+        if (hint < n)
+            gwy_null_store_row_changed(store, hint);
+        else {
+            gwy_null_store_set_n_rows(store, n+1);
+            gtk_widget_set_sensitive(tool->clear, TRUE);
         }
     }
-    gtk_tree_view_set_model(tool->treeview, tool->model);
-
-    gtk_widget_set_sensitive(tool->clear, nsel > 0);
 }
 
 static void
@@ -380,7 +363,7 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
     gchar buf[32];
     gdouble line[4];
     gdouble val;
-    gint idx, id;
+    guint idx, id;
 
     id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
     gtk_tree_model_get(model, iter, 0, &idx, -1);
