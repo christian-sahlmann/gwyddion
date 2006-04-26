@@ -148,6 +148,7 @@ static const GwySIStyleSpec format_style_backwoods = {
 };
 
 static const GwySIStyleSpec *format_styles[] = {
+    NULL,
     &format_style_plain,
     &format_style_markup,
     &format_style_vfmarkup,
