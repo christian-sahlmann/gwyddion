@@ -41,6 +41,7 @@ libgwydgetsinclude_HEADERS = \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
 	gwymarkerbox.h \
+	gwynullstore.h \
 	gwyoptionmenus.h \
 	gwypixmaplayer.h \
 	gwyradiobuttons.h \
@@ -111,6 +112,7 @@ libgwydgets_la_SOURCES = \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
 	gwymarkerbox.c \
+	gwynullstore.c \
 	gwyoptionmenus.c \
 	gwypixmaplayer.c \
 	gwyradiobuttons.c \
