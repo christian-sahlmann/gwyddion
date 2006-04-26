@@ -22,6 +22,7 @@
 #define __GWY_MODULE_TOOL_H__
 
 #include <glib-object.h>
+#include <libgwymodule/gwymoduleloader.h>
 
 G_BEGIN_DECLS
 

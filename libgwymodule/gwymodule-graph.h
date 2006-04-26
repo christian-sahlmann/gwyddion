@@ -22,6 +22,7 @@
 #define __GWY_MODULE_GRAPH_H__
 
 #include <libgwydgets/gwygraph.h>
+#include <libgwymodule/gwymoduleloader.h>
 
 G_BEGIN_DECLS
 

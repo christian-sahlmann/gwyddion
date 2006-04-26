@@ -23,6 +23,7 @@
 
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleenums.h>
+#include <libgwymodule/gwymoduleloader.h>
 
 G_BEGIN_DECLS
 
