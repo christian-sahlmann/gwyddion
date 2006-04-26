@@ -345,7 +345,6 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     };
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyRGBA rgba;
     gchar siu[30];
     GwySIValueFormat* siformat;
     gint row, id;

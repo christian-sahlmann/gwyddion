@@ -7,9 +7,7 @@ process_LTLIBRARIES = \
 	arithmetic.la \
 	basicops.la \
 	calibrate.la \
-	crosscor.la \
 	cwt.la \
-	drift.la \
 	dwt.la \
 	dwtanisotropy.la \
 	dwtdenoise.la \
@@ -17,9 +15,7 @@ process_LTLIBRARIES = \
 	facet-level.la \
 	facet_analysis.la \
 	fft.la \
-	fft_filter_1d.la \
 	fft_filter_2d.la \
-	fit_2d.la \
 	fraccor.la \
 	fractal.la \
 	gradient.la \
@@ -28,18 +24,13 @@ process_LTLIBRARIES = \
 	grain_rem_threshold.la \
 	grain_wshed.la \
 	hough.la \
-	immerse.la \
 	laplace.la \
 	level.la \
 	linecorrect.la \
 	local_contrast.la \
 	mask_grow_shrink.la \
-	maskcor.la \
 	maskops.la \
 	median-bg.la \
-	merge.la \
-	nanoindent_adjust.la \
-	nanoindent_analyze.la \
 	outliers.la \
 	polylevel.la \
 	presentationops.la \
@@ -101,14 +92,14 @@ basicops_la_LIBADD = $(module_libadd)
 calibrate_la_SOURCES = calibrate.c
 calibrate_la_LIBADD = $(module_libadd)
 
-crosscor_la_SOURCES = crosscor.c
-crosscor_la_LIBADD = $(module_libadd)
+#crosscor_la_SOURCES = crosscor.c
+#crosscor_la_LIBADD = $(module_libadd)
 
 cwt_la_SOURCES = cwt.c
 cwt_la_LIBADD = $(module_libadd)
 
-drift_la_SOURCES = drift.c
-drift_la_LIBADD = $(module_libadd)
+#drift_la_SOURCES = drift.c
+#drift_la_LIBADD = $(module_libadd)
 
 dwt_la_SOURCES = dwt.c
 dwt_la_LIBADD = $(module_libadd)
@@ -116,17 +107,11 @@ dwt_la_LIBADD = $(module_libadd)
 dwtanisotropy_la_SOURCES = dwtanisotropy.c
 dwtanisotropy_la_LIBADD = $(module_libadd)
 
-#dwtcorrection_la_SOURCES = dwtcorrection.c
-#dwtcorrection_la_LIBADD = $(module_libadd)
-
-fft_filter_1d_la_SOURCES = fft_filter_1d.c
-fft_filter_1d_la_LIBADD = $(module_libadd)
-
-fft_filter_2d_la_SOURCES = fft_filter_2d.c
-fft_filter_2d_la_LIBADD = $(module_libadd)
-
 dwtdenoise_la_SOURCES = dwtdenoise.c
 dwtdenoise_la_LIBADD = $(module_libadd)
+
+#dwtcorrection_la_SOURCES = dwtcorrection.c
+#dwtcorrection_la_LIBADD = $(module_libadd)
 
 edge_la_SOURCES = edge.c
 edge_la_LIBADD = $(module_libadd)
@@ -137,11 +122,17 @@ facet_analysis_la_LIBADD = $(module_libadd)
 facet_level_la_SOURCES = facet-level.c
 facet_level_la_LIBADD = $(module_libadd)
 
-fit_2d_la_SOURCES = fit_2d.c
-fit_2d_la_LIBADD = $(module_libadd)
+#fft_filter_1d_la_SOURCES = fft_filter_1d.c
+#fft_filter_1d_la_LIBADD = $(module_libadd)
+
+fft_filter_2d_la_SOURCES = fft_filter_2d.c
+fft_filter_2d_la_LIBADD = $(module_libadd)
 
 fft_la_SOURCES = fft.c
 fft_la_LIBADD = $(module_libadd)
+
+#fit_2d_la_SOURCES = fit_2d.c
+#fit_2d_la_LIBADD = $(module_libadd)
 
 fractal_la_SOURCES = fractal.c
 fractal_la_LIBADD = $(module_libadd)
@@ -167,11 +158,8 @@ grain_dist_la_LIBADD = $(module_libadd)
 hough_la_SOURCES = hough.c
 hough_la_LIBADD = $(module_libadd)
 
-#indent_analyze_la_SOURCES = indent_analyze.c
-#indent_analyze_la_LIBADD = $(module_libadd)
-
-immerse_la_SOURCES = immerse.c
-immerse_la_LIBADD = $(module_libadd)
+#immerse_la_SOURCES = immerse.c
+#immerse_la_LIBADD = $(module_libadd)
 
 laplace_la_SOURCES = laplace.c
 laplace_la_LIBADD = $(module_libadd)
@@ -185,17 +173,11 @@ linecorrect_la_LIBADD = $(module_libadd)
 local_contrast_la_SOURCES = local_contrast.c
 local_contrast_la_LIBADD = $(module_libadd)
 
-nanoindent_adjust_la_SOURCES = nanoindent_adjust.c
-nanoindent_adjust_la_LIBADD = $(module_libadd)
-
-nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
-nanoindent_analyze_la_LIBADD = $(module_libadd)
-
 mask_grow_shrink_la_SOURCES = mask_grow_shrink.c
 mask_grow_shrink_la_LIBADD = $(module_libadd)
 
-maskcor_la_SOURCES = maskcor.c
-maskcor_la_LIBADD = $(module_libadd)
+#maskcor_la_SOURCES = maskcor.c
+#maskcor_la_LIBADD = $(module_libadd)
 
 maskops_la_SOURCES = maskops.c
 maskops_la_LIBADD = $(module_libadd)
@@ -203,9 +185,15 @@ maskops_la_LIBADD = $(module_libadd)
 median_bg_la_SOURCES = median-bg.c
 median_bg_la_LIBADD = $(module_libadd)
 
-merge_la_SOURCES = merge.c
-merge_la_LIBADD = $(module_libadd)
-    
+#merge_la_SOURCES = merge.c
+#merge_la_LIBADD = $(module_libadd)
+
+#nanoindent_adjust_la_SOURCES = nanoindent_adjust.c
+#nanoindent_adjust_la_LIBADD = $(module_libadd)
+
+#nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
+#nanoindent_analyze_la_LIBADD = $(module_libadd)
+
 outliers_la_SOURCES = outliers.c
 outliers_la_LIBADD = $(module_libadd)
 

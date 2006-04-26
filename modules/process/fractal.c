@@ -407,9 +407,6 @@ ok_cb(FractalArgs *args,
       FractalControls *controls,
       GwyContainer *data)
 {
-    GtkWidget *graph;
-    GwyDataWindow *data_window;
-
     update_graph(args, controls, data);
     gwy_app_data_browser_add_graph_model(controls->graph_model, data, TRUE);
 }
@@ -444,7 +441,9 @@ update_graph(FractalArgs *args,
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_POINTS);
     gwy_graph_curve_model_set_data(gcmodel,
-                                   xline->data, yline->data, xline->res);
+                                   gwy_data_line_get_data_const(xline),
+                                   gwy_data_line_get_data_const(yline),
+                                   gwy_data_line_get_res(xline));
     gwy_graph_curve_model_set_description(gcmodel,
                                           gettext(methods[args->out].name));
     gwy_graph_model_set_title(controls->graph_model,
@@ -463,7 +462,9 @@ update_graph(FractalArgs *args,
 
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_curve_model_set_data(gcmodel,
-                                       xfit->data, yfit->data, xfit->res);
+                                       gwy_data_line_get_data_const(xfit),
+                                       gwy_data_line_get_data_const(yfit),
+                                       gwy_data_line_get_res(xfit));
         gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
         gwy_graph_curve_model_set_description(gcmodel, _("Linear fit"));
         gwy_graph_model_add_curve(controls->graph_model, gcmodel);
@@ -553,13 +554,17 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
                   GwyDataLine *newxline, GwyDataLine *newyline,
                   FractalArgs *args)
 {
-    gint i, j;
+    gint i, j, res;
+    const gdouble *xdata, *ydata;
+    gdouble *newxdata, *newydata;
     gdouble from = 0, to = 0;
 
     from = args->from[args->out];
     to = args->to[args->out];
-    gwy_data_line_resample(newxline, xline->res, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(newyline, yline->res, GWY_INTERPOLATION_NONE);
+    res = gwy_data_line_get_res(xline);
+    g_assert(res == gwy_data_line_get_res(yline));
+    gwy_data_line_resample(newxline, res, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(newyline, res, GWY_INTERPOLATION_NONE);
 
     if (from == to) {
         gwy_data_line_copy(xline, newxline);
@@ -568,10 +573,14 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
     }
 
     j = 0;
-    for (i = 0; i < xline->res; i++) {
-        if (xline->data[i] >= from && xline->data[i] <= to) {
-            newxline->data[j] = xline->data[i];
-            newyline->data[j] = yline->data[i];
+    xdata = gwy_data_line_get_data_const(xline);
+    ydata = gwy_data_line_get_data_const(yline);
+    newxdata = gwy_data_line_get_data(newxline);
+    newydata = gwy_data_line_get_data(newyline);
+    for (i = 0; i < res; i++) {
+        if (xdata[i] >= from && xdata[i] <= to) {
+            newxdata[j] = xdata[i];
+            newydata[j] = ydata[i];
             j++;
         }
     }

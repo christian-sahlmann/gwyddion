@@ -496,7 +496,8 @@ prepare_fields(GwyDataField *tipfield,
                              *gwy_data_field_get_yres(tipfield));
 
     /*if user has changed tip size, change it*/
-    if ((xres != tipfield->xres) || (yres != tipfield->yres)) {
+    if ((xres != gwy_data_field_get_xres(tipfield))
+        || (yres != gwy_data_field_get_yres(tipfield))) {
         xoldres = gwy_data_field_get_xres(tipfield);
         yoldres = gwy_data_field_get_yres(tipfield);
         gwy_data_field_resample(tipfield, xres, yres,

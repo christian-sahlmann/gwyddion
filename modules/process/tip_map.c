@@ -207,10 +207,13 @@ tip_certainty_map_check(TipCertaintyMapArgs *args,
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (fabs((dfield1->xreal/dfield1->xres)
-             /(dfield2->xreal/dfield2->xres) - 1) > 0.01
-       || fabs((dfield1->yreal/dfield1->yres)
-               /(dfield2->yreal/dfield2->yres) - 1) > 0.01) {
+    /* FIXME: WTF?
+     * Modules MUST NOT just resample something as a side effect, without
+     * undo etc. */
+    if (fabs(gwy_data_field_jtor(dfield1, 1.0)
+             /gwy_data_field_jtor(dfield1, 1.0) - 1.0) > 0.01
+        || fabs(gwy_data_field_itor(dfield1, 1.0)
+                /gwy_data_field_itor(dfield2, 1.0) - 1.0) > 0.01) {
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_certainty_map_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,

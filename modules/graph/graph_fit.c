@@ -172,11 +172,12 @@ normalize_data(FitArgs *args,
                GwyDataLine *ydata,
                gint curve)
 {
-    gint i, j, ns;
+    gint i, j, ns, res;
     gboolean skip_first_point = FALSE;
     GwyGraphCurveModel *cmodel;
     const gdouble *xs, *ys;
     const gchar *func_name;
+    gdouble *datax, *datay;
 
     if (curve >= gwy_graph_model_get_n_curves(args->graph_model))
         return 0;
@@ -195,8 +196,10 @@ normalize_data(FitArgs *args,
         skip_first_point = TRUE;
 
     j = 0;
-    for (i = 0; i < xdata->res; i++)
-    {
+    res = gwy_data_line_get_res(xdata);
+    datax = gwy_data_line_get_data(xdata);
+    datay = gwy_data_line_get_data(ydata);
+    for (i = 0; i < res; i++) {
         if ((xs[i] >= args->from
              && xs[i] <= args->to)
             || (args->from == args->to))
@@ -204,16 +207,15 @@ normalize_data(FitArgs *args,
             if (skip_first_point && i == 0)
                 continue;
 
-            xdata->data[j] = xs[i];
-            ydata->data[j] = ys[i];
+            datax[j] = xs[i];
+            datay[j] = ys[i];
             j++;
         }
     }
     if (j == 0)
         return 0;
 
-
-    if (j < xdata->res) {
+    if (j < res) {
         gwy_data_line_resize(xdata, 0, j);
         gwy_data_line_resize(ydata, 0, j);
     }
@@ -637,7 +639,9 @@ recompute(FitArgs *args, FitControls *controls)
     if (args->fitter)
         gwy_math_nlfit_free(args->fitter);
     args->fitter = gwy_nlfit_preset_fit(function, NULL,
-                                        xdata->res, xdata->data, ydata->data,
+                                        gwy_data_line_get_res(xdata),
+                                        gwy_data_line_get_data_const(xdata),
+                                        gwy_data_line_get_data_const(ydata),
                                         args->par_res, args->err, fixed);
 
     for (i = 0; i < nparams; i++) {

@@ -520,8 +520,8 @@ tip_process(TipModelArgs *args,
                xres, yres);
     gtk_label_set_text(GTK_LABEL(controls->labsize), label);
 
-    xstep = dfield->xreal/dfield->xres;
-    ystep = dfield->yreal/dfield->yres;
+    xstep = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
+    ystep = gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
     gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_set_xreal(dfield, xstep*xres);
     gwy_data_field_set_yreal(dfield, ystep*yres);

@@ -465,11 +465,16 @@ static void
 intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask)
 {
     gint i, xres, yres;
-    xres = mask->xres;
-    yres = mask->yres;
+    const gdouble *data, *data_a, *data_b;
+
+    xres = gwy_data_field_get_xres(mask);
+    yres = gwy_data_field_get_yres(mask);
+    data = gwy_data_field_get_data_const(mask);
+    data_a = gwy_data_field_get_data_const(mask_a);
+    data_b = gwy_data_field_get_data_const(mask_b);
 
     for (i = 0; i < xres*yres; i++) {
-        if (mask->data[i] > 0 && !mask_a->data[i] && !mask_b->data[i])
+        if (data[i] > 0 && !data_a[i] && !data_b[i])
             gwy_data_field_grains_remove_grain(mask, i%xres, i/xres);
     }
 }

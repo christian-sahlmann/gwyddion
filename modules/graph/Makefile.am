@@ -6,11 +6,8 @@ graph_LTLIBRARIES = \
 	graph_export_ascii.la \
 	graph_export_bitmap.la \
 	graph_export_vector.la \
-	graph_fit.la	\
-	graph_cd.la \
-	graph_level.la \
-	graph_stats.la 
-
+	graph_fit.la \
+	graph_level.la
 
 EXTRA_DIST = \
 	makefile.msc \
@@ -52,14 +49,14 @@ graph_export_vector_la_LIBADD = $(module_libadd)
 graph_fit_la_SOURCES = graph_fit.c
 graph_fit_la_LIBADD = $(module_libadd)
 
-graph_cd_la_SOURCES = graph_cd.c
-graph_cd_la_LIBADD = $(module_libadd)
+#graph_cd_la_SOURCES = graph_cd.c
+#graph_cd_la_LIBADD = $(module_libadd)
 
 graph_level_la_SOURCES = graph_level.c
 graph_level_la_LIBADD = $(module_libadd)
 
-graph_stats_la_SOURCES = graph_stats.c
-graph_stats_la_LIBADD = $(module_libadd)
+#graph_stats_la_SOURCES = graph_stats.c
+#graph_stats_la_LIBADD = $(module_libadd)
 
 clean-local:
 	rm -f core.* *~

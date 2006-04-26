@@ -383,7 +383,7 @@ slope_do_graph(GwyDataField *dfield,
     compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0, xder, yder);
 
     dataline = GWY_DATA_LINE(gwy_data_line_new(args->size, 360, TRUE));
-    data = dataline->data;
+    data = gwy_data_line_get_data(dataline);
     for (i = 0; i < n; i++) {
         gdouble phi = fmod(atan2(-yder[i], -xder[i]) + 2*G_PI, 2*G_PI);
         gdouble d = (xder[i]*xder[i] + yder[i]*yder[i]);
