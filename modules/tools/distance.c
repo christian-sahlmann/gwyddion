@@ -229,7 +229,7 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
         gwy_signal_handler_disconnect(selection, tool->selection_id);
     }
     if (!data_view) {
-        gtk_widget_set_sensitive(tool->clear);
+        gtk_widget_set_sensitive(tool->clear, FALSE);
         gtk_list_store_clear(GTK_LIST_STORE(tool->model));
         gwy_tool_distance_update_headers(tool);
         return;
