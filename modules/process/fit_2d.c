@@ -531,7 +531,7 @@ guess
     gtk_label_set_text(GTK_LABEL(controls->param_des[3]), "z center");
 
     gtk_label_set_text(GTK_LABEL(controls->chisq), " ");
-    for (i=0; i<4; i++)
+    for (i = 0; i < 4; i++)
     {
         gtk_widget_set_sensitive(controls->param_init[i], TRUE);
         gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
@@ -565,10 +565,10 @@ plot_inits(Fit2DControls *controls, Fit2DArgs *args)
     dimdata[3] = dfield->yreal;
 
     if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP)
-        for (i=0; i<(dfield->xres*dfield->yres); i++)
+        for (i = 0; i < (dfield->xres*dfield->yres); i++)
             dfield->data[i] = fit_sphere_up((gdouble)i, 4, args->par_init, dimdata, &fres);
     else
-        for (i=0; i<(dfield->xres*dfield->yres); i++)
+        for (i = 0; i < (dfield->xres*dfield->yres); i++)
             dfield->data[i] = fit_sphere_down((gdouble)i, 4, args->par_init, dimdata, &fres);
 
     args->is_fitted = TRUE;
@@ -637,14 +637,14 @@ fit_2d_run(Fit2DControls *controls,
     gwy_app_wait_finish();
 
     if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP)
-        for (i=0; i<(dfield->xres*dfield->yres); i++)
+        for (i = 0; i < (dfield->xres*dfield->yres); i++)
             dfield->data[i] = fit_sphere_up((gdouble)i, 4, param, dimdata, &fres);
     else
-        for (i=0; i<(dfield->xres*dfield->yres); i++)
+        for (i = 0; i < (dfield->xres*dfield->yres); i++)
             dfield->data[i] = fit_sphere_down((gdouble)i, 4, param, dimdata, &fres);
 
     args->is_fitted = 1;
-    for (i=0; i<4; i++)
+    for (i = 0; i < 4; i++)
     {
         args->par_res[i] = param[i];
         args->par_err[i] = err[i];
@@ -875,7 +875,7 @@ gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
     gint i;
 
     xsc = gwy_data_field_new_alike(dfield, FALSE);
-    for (i=0; i<(dfield->xres*dfield->yres); i++) xsc->data[i] = i;
+    for (i = 0; i < (dfield->xres*dfield->yres); i++) xsc->data[i] = i;
 
 
     if (df == NULL)

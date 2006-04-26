@@ -343,7 +343,7 @@ gwy_curve_init(GwyCurve *curve)
     color.r = 0; color.b = 0; color.g = 0; color.a = 1;
 
     curve->channel_data = g_new(GwyChannelData, curve->num_channels);
-    for (i=0; i<curve->num_channels; i++) {
+    for (i = 0; i < curve->num_channels; i++) {
         curve->channel_data[i].num_points = 0;
         curve->channel_data[i].points = NULL;
         curve->channel_data[i].num_ctlpoints = 0;
@@ -385,7 +385,7 @@ gwy_curve_finalize (GObject *object)
     if (curve->pixmap)
         g_object_unref(curve->pixmap);
 
-    for (i=0; i<curve->num_channels; i++) {
+    for (i = 0; i < curve->num_channels; i++) {
         if (curve->channel_data[i].points)
             g_free(curve->channel_data[i].points);
         if (curve->channel_data[i].ctlpoints)
@@ -502,9 +502,9 @@ gwy_curve_button_press(GtkWidget *widget,
     y = CLAMP((ty - RADIUS), 0, height-1);
 
     /* determine closest channel to pointer */
-    for (i=0, distance=~0U; i<c->num_channels; i++) {
+    for (i = 0, distance = G_MAXUINT; i < c->num_channels; i++) {
         channel = &c->channel_data[i];
-        for (j=0, distance2=~0U; j<channel->num_points; j++) {
+        for (j = 0, distance2 = G_MAXUINT; j < channel->num_points; j++) {
            if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
                 distance2 = abs(x - (guint)channel->points[j].x);
                 closest_point = j;
@@ -519,7 +519,7 @@ gwy_curve_button_press(GtkWidget *widget,
     channel = &c->channel_data[closest_channel];
 
     /* determine closest control point to pointer */
-    for (i=0, distance = ~0U; i<channel->num_ctlpoints; ++i) {
+    for (i = 0, distance = G_MAXUINT; i < channel->num_ctlpoints; ++i) {
         cx = project(channel->ctlpoints[i].x, c->min_x, c->max_x, width);
         if ((guint) abs(x - cx) < distance) {
             distance = abs(x - cx);
@@ -655,9 +655,9 @@ gwy_curve_motion_notify(GwyCurve *c)
     y = CLAMP((ty - RADIUS), 1, height);
 
     /* determine closest channel to pointer */
-    for (i=0, distance=~0U; i<c->num_channels; i++) {
+    for (i = 0, distance = G_MAXUINT; i < c->num_channels; i++) {
         channel = &c->channel_data[i];
-        for (j=0, distance2=~0U; j<channel->num_points; j++) {
+        for (j = 0, distance2 = G_MAXUINT; j < channel->num_points; j++) {
            if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
                 distance2 = abs(x - (guint)channel->points[j].x);
                 closest_point = j;
@@ -672,7 +672,7 @@ gwy_curve_motion_notify(GwyCurve *c)
     channel = &c->channel_data[closest_channel];
 
     /* determine closest control point to pointer */
-    for (i=0, distance = ~0U; i<channel->num_ctlpoints; ++i) {
+    for (i = 0, distance = G_MAXUINT; i < channel->num_ctlpoints; ++i) {
         cx = project(channel->ctlpoints[i].x, c->min_x, c->max_x, width);
         if ((guint) abs(x - cx) < distance) {
             distance = abs(x - cx);
@@ -726,10 +726,10 @@ gwy_curve_motion_notify(GwyCurve *c)
                 c->grab_point != channel->num_ctlpoints-1) {
                 /* Look in other channels for closest control point to this
                 one. If it is within the threshold, snap to it.*/
-                for (i=0, distance = 2; i < c->num_channels; i++) {
+                for (i = 0, distance = 2; i < c->num_channels; i++) {
                     if (i != c->grab_channel) {
                         channel2 = &c->channel_data[i];
-                        for (j=0; j<channel2->num_ctlpoints; ++j) {
+                        for (j = 0; j < channel2->num_ctlpoints; ++j) {
                             distance2 = fabs(channel2->ctlpoints[j].x - rx);
                             if (distance2 < distance) {
                                 distance = distance2;
@@ -881,7 +881,7 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
         else if (c->curve_type == GWY_CURVE_TYPE_FREE) {
             /* Going from freehand, to some other type
             (need to generate control points based on the data): */
-            for (c_index=0; c_index<c->num_channels; c_index++) {
+            for (c_index = 0; c_index < c->num_channels; c_index++) {
                 channel = &c->channel_data[c_index];
 
                 if (channel->ctlpoints)
@@ -892,7 +892,7 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
                 rx = 0.0;
                 dx = (width - 1) / (gfloat)(channel->num_ctlpoints - 1);
 
-                for (i=0; i<channel->num_ctlpoints; ++i, rx += dx) {
+                for (i = 0; i < channel->num_ctlpoints; ++i, rx += dx) {
                     x = (int)(rx + 0.5);
                     channel->ctlpoints[i].x =
                         unproject(x, c->min_x, c->max_x, width);
@@ -928,7 +928,7 @@ gwy_curve_set_channels(GwyCurve *c,
     if (c->num_channels != num_channels) {
 
         /* Free up old channels */
-        for (i=0; i<c->num_channels; i++) {
+        for (i = 0; i < c->num_channels; i++) {
             if (c->channel_data[i].points)
                 g_free(c->channel_data[i].points);
             if (c->channel_data[i].ctlpoints)
@@ -941,7 +941,7 @@ gwy_curve_set_channels(GwyCurve *c,
         color.r = 1; color.b = 0; color.g = 0; color.a = 1;
 
         c->channel_data = g_new(GwyChannelData, c->num_channels);
-        for (i=0; i<c->num_channels; i++) {
+        for (i = 0; i < c->num_channels; i++) {
             c->channel_data[i].num_points = 0;
             c->channel_data[i].points = NULL;
             c->channel_data[i].num_ctlpoints = 2;
@@ -955,7 +955,7 @@ gwy_curve_set_channels(GwyCurve *c,
     }
 
     if (colors)
-        for (i=0; i<c->num_channels; i++)
+        for (i = 0; i < c->num_channels; i++)
             c->channel_data[i].color = colors[i];
 
     if (c->pixmap) {
@@ -979,7 +979,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     GwyChannelData *channel;
 
     /* Copy the control point data out of channel_data into our curve */
-    for (c_index=0; c_index<curve->num_channels; c_index++) {
+    for (c_index = 0; c_index < curve->num_channels; c_index++) {
         channel = &curve->channel_data[c_index];
 
         if (channel->ctlpoints)
@@ -987,7 +987,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
 
         channel->num_ctlpoints = channel_data[c_index].num_ctlpoints;
         channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
-        for (i=0; i<channel->num_ctlpoints; i++) {
+        for (i = 0; i < channel->num_ctlpoints; i++) {
             channel->ctlpoints[i].x = channel_data[c_index].ctlpoints[i].x;
             channel->ctlpoints[i].y = channel_data[c_index].ctlpoints[i].y;
         }
@@ -995,13 +995,13 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
 
     /* Redundant Control Point Pruning: */
     if (prune) {
-        for (c_index=0; c_index<curve->num_channels; c_index++) {
+        for (c_index = 0; c_index < curve->num_channels; c_index++) {
             channel = &curve->channel_data[c_index];
 
             /* Mark redundant control points for removal
                (by comparing slopes) */
             remove_points = g_array_new(FALSE, TRUE, sizeof(gint));
-            for (i=0; i<channel->num_ctlpoints-2; i++) {
+            for (i = 0; i < channel->num_ctlpoints-2; i++) {
                 slope1 =
                 find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
                         channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y);
@@ -1016,7 +1016,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
             }
 
             /* Delete marked control points: */
-            for (i=0; i < remove_points->len; i++) {
+            for (i = 0; i < remove_points->len; i++) {
                 val = g_array_index(remove_points, gint, i);
                 channel->ctlpoints[val].x = -1;
             }
@@ -1088,10 +1088,10 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     GwyPoint point, point1, point2;
 
     /* Copy curve->channel_data into ctlpoints */
-    for (c_index=0; c_index<curve->num_channels; c_index++) {
+    for (c_index = 0; c_index < curve->num_channels; c_index++) {
         curve_channel = &curve->channel_data[c_index];
         ctlpoints[c_index] = g_array_new(FALSE, FALSE, sizeof(GwyPoint));
-        for (i=0; i<curve_channel->num_ctlpoints; i++) {
+        for (i = 0; i < curve_channel->num_ctlpoints; i++) {
             point.x = curve_channel->ctlpoints[i].x;
             point.y = curve_channel->ctlpoints[i].y;
             g_array_append_val(ctlpoints[c_index], point);
@@ -1100,25 +1100,25 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
 
     /* Duplicate control points so that we have nothing but RGB triples */
     if (triplets) {
-        for (c_index=0; c_index<3; c_index++) {
+        for (c_index = 0; c_index < 3; c_index++) {
             others[0] = c_index+1; wrap(others[0]);
             others[1] = c_index+2; wrap(others[1]);
             curve_channel = &curve->channel_data[c_index];
 
             /* Loop through all middle control pts for this channel
             (we will ignore the endpoints for now) */
-            for (i=1; i<curve_channel->num_ctlpoints - 1; i++) {
+            for (i=1; i < curve_channel->num_ctlpoints - 1; i++) {
                 point = g_array_index(ctlpoints[c_index], GwyPoint, i);
                 x_val = point.x;
 
                 /* Check other channels to see if ctl
                    points exist at same x_val */
-                for (j=0; j<2; j++) {
+                for (j = 0; j < 2; j++) {
                     other_channel = &curve->channel_data[others[j]];
                     point_exists = FALSE;
                     left_point = right_point = -1;
 
-                    for (k=0; k<ctlpoints[others[j]]->len; k++) {
+                    for (k = 0; k < ctlpoints[others[j]]->len; k++) {
                         point = g_array_index(ctlpoints[others[j]],
                                               GwyPoint, k);
                         if (point.x == x_val) {
@@ -1151,17 +1151,17 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
         }
 
         /* Sort control points (in case new ones were added) */
-        for (c_index=0; c_index<3; c_index++) {
+        for (c_index = 0; c_index < 3; c_index++) {
             g_array_sort(ctlpoints[c_index], ctlpoint_compare_func);
         }
     }
 
     /* Copy ctlpoints into channel_data */
-    for (c_index=0; c_index<curve->num_channels; c_index++) {
+    for (c_index = 0; c_index < curve->num_channels; c_index++) {
         channel = &channel_data[c_index];
         channel->num_ctlpoints = ctlpoints[c_index]->len;
         channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
-        for (i=0; i<channel->num_ctlpoints; i++) {
+        for (i = 0; i < channel->num_ctlpoints; i++) {
             point = g_array_index(ctlpoints[c_index], GwyPoint, i);
             channel->ctlpoints[i].x = point.x;
             channel->ctlpoints[i].y = point.y;
@@ -1189,7 +1189,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     /* If the dimensions of the graph window have changed, then re-interpolate
     the curve points to match */
     flag = FALSE;
-    for (i=0; i<c->num_channels; i++)
+    for (i = 0; i < c->num_channels; i++)
         if (c->channel_data[i].num_points != width)
             flag = TRUE;
     if (c->height != height || flag)
@@ -1220,12 +1220,12 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     gc = gdk_gc_new(c->pixmap);
 
     /* Draw the curve points (for each channel) */
-    for (c_index=0; c_index<c->num_channels; c_index++) {
+    for (c_index = 0; c_index < c->num_channels; c_index++) {
         channel = &c->channel_data[c_index];
         gwy_rgba_set_gdk_gc_fg(&channel->color, gc);
 
         lastx = lasty = -1;
-        for (i=0; i<channel->num_points-1; i++) {
+        for (i = 0; i < channel->num_points-1; i++) {
             if (lastx > -1 && lasty > -1) {
                 gdk_draw_line(c->pixmap, gc,
                               lastx, lasty,
@@ -1239,9 +1239,9 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
 
     /* Draw the control points (for each channel) */
     if (c->curve_type != GWY_CURVE_TYPE_FREE) {
-        for (c_index=0; c_index<c->num_channels; c_index++) {
+        for (c_index = 0; c_index < c->num_channels; c_index++) {
             channel = &c->channel_data[c_index];
-            for (i=0; i<channel->num_ctlpoints; ++i) {
+            for (i = 0; i < channel->num_ctlpoints; ++i) {
                 if (channel->ctlpoints[i].x < c->min_x)
                     continue;
                 x = project(channel->ctlpoints[i].x,
@@ -1275,7 +1275,7 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gfloat vector[])
 
         /* count active points: */
         prev = c->min_x - 1.0;
-        for (i=num_active_ctlpoints=0; i<channel->num_ctlpoints; ++i) {
+        for (i = num_active_ctlpoints = 0; i < channel->num_ctlpoints; ++i) {
             if (channel->ctlpoints[i].x > prev) {
                 if (first_active < 0)
                     first_active = i;
@@ -1384,7 +1384,7 @@ gwy_curve_reset_vector(GwyCurve *curve)
     gint c_index;
     GwyChannelData *channel;
 
-    for (c_index=0; c_index<curve->num_channels; c_index++) {
+    for (c_index = 0; c_index < curve->num_channels; c_index++) {
         channel = &curve->channel_data[c_index];
 
         if (channel->ctlpoints)
@@ -1450,7 +1450,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
 
     vector = g_new(gfloat, width);
 
-    for (c_index=0; c_index<c->num_channels; c_index++) {
+    for (c_index = 0; c_index < c->num_channels; c_index++) {
         channel = &c->channel_data[c_index];
 
         gwy_curve_get_vector(c, c_index, width, vector);
@@ -1463,7 +1463,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
             channel->points = g_new(GwyPoint, channel->num_points);
         }
 
-        for (i=0; i<width; ++i) {
+        for (i = 0; i < width; ++i) {
             channel->points[i].x = RADIUS + i;
             channel->points[i].y =
                 RADIUS+height - project(vector[i], c->min_y, c->max_y, height);

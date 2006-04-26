@@ -432,7 +432,7 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
                 delete it, they will see wrong gradient until they let go of
                 mouse */
         points = g_new(GwyGradientPoint, num_pts);
-        for (i=0; i<num_pts; i++) {
+        for (i = 0; i < num_pts; i++) {
             points[i].x = CLAMP(channel_data[0].ctlpoints[i].x, 0, 1);
             points[i].color.r =
             CLAMP(channel_data[GWY_CURVE_CHANNEL_RED].ctlpoints[i].y, 0, 1);

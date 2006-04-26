@@ -506,7 +506,7 @@ gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
     }
     gwy_math_fit_polynom(shift_ndata, shift_rows, shift_cols, polynom_degree, shift_coefs);
 
-/*    for (i=0; i<=polynom_degree; i++) printf("%g\n", shift_coefs[i]);*/
+/*    for (i = 0; i <= polynom_degree; i++) printf("%g\n", shift_coefs[i]);*/
 /*    printf("\n");*/
     for (row=0; row < (data_field->yres); row++)
     {

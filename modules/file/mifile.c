@@ -186,7 +186,7 @@ mifile_load(const gchar *filename,
     gboolean ok = TRUE;
     gboolean isbinary = TRUE;
     gboolean isimage = TRUE;
-    guint i=0, j=0, pos, buffi;
+    guint i = 0, j = 0, pos, buffi;
     gfloat value;
 
     /* Open the file and load in its contents into "buffer" */
@@ -292,7 +292,7 @@ mifile_load(const gchar *filename,
             /* load xdata */
             buffi = mifile_spect->num_points; /* skip time data */
             xdata = g_new0(gdouble, mifile_spect->num_points);
-            for (i=0; i<mifile_spect->num_points; i++) {
+            for (i = 0; i < mifile_spect->num_points; i++) {
                 xdata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
                 g_debug("i: %i   xdata: %f", i, xdata[i]);
             }
@@ -300,11 +300,11 @@ mifile_load(const gchar *filename,
             /* The first buffer always represents the x axis. All
             remaining buffers represent the corresponding Y axes of seperate
             graphs. As a result, we need to create a num_buffers-1 graphs. */
-            for (j=0; j<mifile_spect->num_buffers-1; j++) {
+            for (j = 0; j < mifile_spect->num_buffers-1; j++) {
                 buffi += mifile_spect->num_points;
 
                 ydata = g_new0(gdouble, mifile_spect->num_points);
-                for (i=0; i<mifile_spect->num_points; i++) {
+                for (i = 0; i < mifile_spect->num_points; i++) {
                     ydata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
                     g_debug("i: %i   ydata: %f", i, ydata[i]);
                 }

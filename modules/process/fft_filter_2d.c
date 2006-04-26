@@ -1478,8 +1478,8 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     im_data = gwy_data_field_get_data(im);
     target_data = gwy_data_field_get_data(target);
 
-    for (i=0; i<xres; i++) {
-        for (j=0; j<xres; j++) {
+    for (i = 0; i < xres; i++) {
+        for (j = 0; j < xres; j++) {
             rval = re_data[j*xres + i];
             ival = im_data[j*xres + i];
             target_data[j*xres + i] = sqrt(sqrt(rval*rval + ival*ival));

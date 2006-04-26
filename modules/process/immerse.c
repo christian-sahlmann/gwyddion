@@ -452,7 +452,7 @@ find_score_maximum(GwyDataField *correlation_score, gint *max_col, gint *max_row
     n = gwy_data_field_get_xres(correlation_score)*gwy_data_field_get_yres(correlation_score);
     data = gwy_data_field_get_data(correlation_score);
 
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
         if (max < data[i]) {
             max = data[i];
             maxi = i;

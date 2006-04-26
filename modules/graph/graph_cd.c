@@ -532,7 +532,7 @@ recompute(FitArgs *args, FitControls *controls)
                                              args->function_type);
     nparams = gwy_cdline_get_nparams(args->fitfunc);
 
-    for (i=0; i<MAX_PARAMS; i++)
+    for (i = 0; i < MAX_PARAMS; i++)
     {
         fixed[i] = args->par_fix[i];
         args->par_res[i] = args->par_init[i];

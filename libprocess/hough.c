@@ -346,7 +346,7 @@ bresenhams_line(GwyDataField *dfield, gint x1, gint x2, gint y1, gint y2, gdoubl
 
      if (dxabs >= dyabs)
      {
-         for(i=0; i<dxabs; i++)
+         for (i = 0; i < dxabs; i++)
          {
              y += dyabs;
              if (y >= dxabs)
@@ -360,7 +360,7 @@ bresenhams_line(GwyDataField *dfield, gint x1, gint x2, gint y1, gint y2, gdoubl
      }
      else
      {
-         for(i=0; i<dyabs; i++)
+         for (i = 0; i < dyabs; i++)
          {
              x += dxabs;
              if (x >= dyabs)
@@ -449,7 +449,7 @@ find_smallest_index(gdouble *data, gint n)
     gint i, imin;
     gdouble valmin = G_MAXDOUBLE;
 
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
     {
         if (data[i] < valmin) {
             imin = i;
@@ -464,7 +464,7 @@ gboolean
 find_isthere(gint *xdata, gint *ydata, gint mcol, gint mrow, gint n)
 {
     gint i;
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
     {
         if (xdata[i] == mcol && ydata[i] == mrow) return TRUE;
     }
@@ -542,7 +542,7 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
     gint col, row, mcol, mrow, i;
     gdouble value;
 
-    for (i=0; i<ndata; i++)
+    for (i = 0; i < ndata; i++)
     {
         xdata[i] = 0;
         ydata[i] = 0;

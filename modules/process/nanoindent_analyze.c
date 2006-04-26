@@ -653,8 +653,8 @@ static void get_field_xymin(GwyDataField *dfield, gdouble *min, gint *posx, gint
    gdouble mm = 1e20;
    gdouble val;
    gint i, j;
-   for (i=0; i<dfield->xres; i++) {
-       for(j=0; j<dfield->yres; j++) {
+   for (i = 0; i < dfield->xres; i++) {
+       for (j = 0; j < dfield->yres; j++) {
            if((val=gwy_data_field_get_val(dfield,i,j)) < mm ) {
               mm = val;
               *posx = i;
@@ -671,8 +671,8 @@ static void get_field_xymax(GwyDataField *dfield, gdouble *max, gint *posx, gint
    gdouble mm = -1e20;
    gdouble val;
    gint i, j;
-   for (i=0; i<dfield->xres; i++) {
-       for(j=0; j<dfield->yres; j++) {
+   for (i = 0; i < dfield->xres; i++) {
+       for (j = 0; j < dfield->yres; j++) {
            if((val=gwy_data_field_get_val(dfield,i,j)) > mm ) {
               mm = val;
               *posx = i;
@@ -976,7 +976,7 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
     gwy_data_field_slope_distribution(dfield, derdist, 5);
 
     derdist_max = 0;
-    for(i=0;i < 360; i++)
+    for (i = 0;i < 360; i++)
     {
          if(gwy_data_line_get_val(derdist, i) > derdist_max) {
             derdist_max = gwy_data_line_get_val(derdist, i);
