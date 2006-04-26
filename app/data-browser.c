@@ -1650,9 +1650,9 @@ gwy_app_get_data_browser(void)
     browser->notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(vbox), browser->notebook, TRUE, TRUE, 0);
 
-    /* Create Data Channels tab */
+    /* Create Channels tab */
     box_page = gtk_vbox_new(FALSE, 0);
-    label = gtk_label_new(_("Data Channels"));
+    label = gtk_label_new(_("Channels"));
     gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
