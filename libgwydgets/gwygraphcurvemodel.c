@@ -698,18 +698,17 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 {
     gdouble *xdata;
     gdouble *ydata;
+    const gdouble *ldata;
     gint res, i;
     gdouble realmin, realmax, offset;
 
-    if (from_index == to_index || from_index > to_index)
-    {
+    if (from_index == to_index || from_index > to_index) {
         res = gwy_data_line_get_res(dline);
         realmin = 0;
         realmax = gwy_data_line_get_real(dline);
         from_index = 0;
     }
-    else
-    {
+    else {
         res = to_index - from_index;
         realmin = gwy_data_line_itor(dline, from_index);
         realmax = gwy_data_line_itor(dline, to_index);
@@ -720,11 +719,11 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 
     offset = gwy_data_line_get_offset(dline);
 
-    for (i=0; i<res; i++)
-    {
+    ldata = gwy_data_line_get_data(dline);
+    for (i = 0; i < res; i++) {
         xdata[i] = realmin +
                    (gdouble)i*(realmax - realmin)/(gdouble)res + offset;
-        ydata[i] = dline->data[i + from_index];
+        ydata[i] = ldata[i + from_index];
     }
 
     gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
