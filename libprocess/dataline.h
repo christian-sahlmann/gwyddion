@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 typedef struct _GwyDataLine      GwyDataLine;
 typedef struct _GwyDataLineClass GwyDataLineClass;
 
+#ifdef GWY_DATA_LINE_RAW_ACCESS
 struct _GwyDataLine {
     GObject parent_instance;
 
@@ -47,6 +48,7 @@ struct _GwyDataLine {
     GwySIUnit *si_unit_x;
     GwySIUnit *si_unit_y;
 };
+#endif
 
 struct _GwyDataLineClass {
     GObjectClass parent_class;

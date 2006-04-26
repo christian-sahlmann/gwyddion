@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define GWY_DATA_LINE_RAW_ACCESS
+#define GWY_DATA_FIELD_RAW_ACCESS
 #include "config.h"
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
@@ -56,8 +58,8 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
 
     for (l = 1; l < dimexp; l++) {
         rp = ROUND(pow(2, l));
-        for (i = 0; i < ((buffer->xres - 1)/rp - 1); i++) {
-            for (j = 0; j < ((buffer->yres - 1)/rp - 1); j++) {
+        for (i = 0; i < (buffer->xres - 1)/rp - 1; i++) {
+            for (j = 0; j < (buffer->yres - 1)/rp - 1; j++) {
                 rms = gwy_data_field_area_get_rms(buffer, i*rp, j*rp, rp, rp);
                 yresult->data[l-1] += rms * rms;
             }
@@ -96,8 +98,8 @@ fractal_partitioning_nomask(GwyDataField *data_field,
 
     for (l = 0; l < dimexp; l++) {
         rp = ROUND(pow(2, l));
-        for (i = 0; i < ((buffer->xres - 1)/rp - 1); i++) {
-            for (j = 0; j < ((buffer->yres - 1)/rp - 1); j++) {
+        for (i = 0; i < (buffer->xres - 1)/rp - 1; i++) {
+            for (j = 0; j < (buffer->yres - 1)/rp - 1; j++) {
                 /*
                 rms = get_area_rms_nomask(buffer, maskbuffer, i*rp, j*rp,
                                                   (i + 1) * (rp) + 1,

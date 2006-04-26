@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 typedef struct _GwyDataField      GwyDataField;
 typedef struct _GwyDataFieldClass GwyDataFieldClass;
 
+#ifdef GWY_DATA_FIELD_RAW_ACCESS
 struct _GwyDataField {
     GObject parent_instance;
 
@@ -52,6 +53,7 @@ struct _GwyDataField {
     guint32 cached;
     gdouble cache[GWY_DATA_FIELD_CACHE_SIZE];
 };
+#endif
 
 struct _GwyDataFieldClass {
     GObjectClass parent_class;
