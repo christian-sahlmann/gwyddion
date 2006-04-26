@@ -3,7 +3,7 @@ import sys, re, os
 
 r = re.compile(r'#define\s+(?P<type>[A-Z0-9_]+)_GET_(?:CLASS|IFACE)\b')
 
-ignore_files = os.environ.get('IGNORE_HFILES').split()
+ignore_files = os.environ.get('IGNORE_HFILES', '').split()
 ignore_files = dict([(x, 1) for x in ignore_files])
 
 for f in sys.argv[1:]:
