@@ -315,10 +315,7 @@ gwy_plain_tool_show_changed(GwyPlainTool *plain_tool)
 static void
 gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
 {
-    g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
-    g_return_if_fail(GWY_IS_DATA_FIELD(plain_tool->data_field));
-
-    if (plain_tool->unit_style) {
+    if (plain_tool->data_field && plain_tool->unit_style) {
         plain_tool->coord_format
             = gwy_data_field_get_value_format_xy(plain_tool->data_field,
                                                  plain_tool->unit_style,
@@ -333,7 +330,7 @@ gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
             gwy_si_unit_value_format_free(plain_tool->coord_format);
             plain_tool->coord_format = NULL;
         }
-        else if (plain_tool->value_format) {
+        if (plain_tool->value_format) {
             gwy_si_unit_value_format_free(plain_tool->value_format);
             plain_tool->value_format = NULL;
         }

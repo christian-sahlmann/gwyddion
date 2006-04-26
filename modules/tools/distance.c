@@ -127,11 +127,25 @@ static void
 gwy_tool_distance_finalize(GObject *object)
 {
     GwyToolDistance *tool;
+    GwyPlainTool *plain_tool;
+    GwySelection *selection;
 
+    plain_tool = GWY_PLAIN_TOOL(object);
     tool = GWY_TOOL_DISTANCE(object);
-    gwy_object_unref(tool->model);
+
+    if (plain_tool->layer) {
+        selection = gwy_vector_layer_get_selection(plain_tool->layer);
+        gwy_signal_handler_disconnect(selection, tool->selection_id);
+    }
+
+    if (tool->model) {
+        gtk_tree_view_set_model(tool->treeview, NULL);
+        gwy_object_unref(tool->model);
+    }
     if (tool->angle_format)
         gwy_si_unit_value_format_free(tool->angle_format);
+
+    G_OBJECT_CLASS(gwy_tool_distance_parent_class)->finalize(object);
 }
 
 static void
@@ -214,6 +228,13 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
         selection = gwy_vector_layer_get_selection(plain_tool->layer);
         gwy_signal_handler_disconnect(selection, tool->selection_id);
     }
+    if (!data_view) {
+        gtk_widget_set_sensitive(tool->clear);
+        gtk_list_store_clear(GTK_LIST_STORE(tool->model));
+        gwy_tool_distance_update_headers(tool);
+        return;
+    }
+
     gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_line);
     gwy_plain_tool_set_selection_key(plain_tool, "line");
     g_object_set(plain_tool->layer,

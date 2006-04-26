@@ -313,10 +313,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     else
         current_data = g_list_prepend(current_data, window);
 
-    /* XXX
-    if (current_tool)
-        gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
-        */
     if (current_tool)
         gwy_tool_data_switched(current_tool, data_view);
 
@@ -375,11 +371,8 @@ gwy_app_data_window_remove(GwyDataWindow *window)
         return;
     }
 
-    /* XXX
     if (current_tool)
-        gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
-     */
-    gwy_object_unref(current_tool);
+        gwy_tool_data_switched(current_tool, NULL);
     gwy_app_sensitivity_set_state(mask, 0);
 }
 
@@ -1321,56 +1314,35 @@ void
 gwy_app_tool_use_cb(const gchar *toolname,
                     GtkWidget *button)
 {
-    static GtkWidget *old_button = NULL;
+    GwyTool *newtool;
+    GwyDataView *data_view;
+    GType type;
 
     gwy_debug("%s", toolname ? toolname : "NONE");
     /* don't catch deactivations */
     if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
         gwy_debug("deactivation");
-        old_button = button;
         return;
     }
 
-#if 0
-    if (current_tool && (!toolname || strcmp(current_tool, toolname)))
-        gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);
-    if (toolname) {
-        data_window = gwy_app_data_window_get_current();
-        if (data_window)
-            ok = gwy_tool_func_use(toolname, data_window, GWY_TOOL_SWITCH_TOOL);
-    }
-    if (ok) {
-        current_tool = toolname;
-        old_button = button;
-        return;
-    }
-    /* FIXME: this is really ugly */
-    g_signal_emit_by_name(old_button, "clicked");
-#endif
-    {
-        GwyTool *newtool;
-        GwyDataView *data_view;
-        GType type;
-
-        type = g_type_from_name(toolname);
-        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
-        if (current_tool && type == G_TYPE_FROM_INSTANCE(current_tool)) {
-            if (data_view) {
-                gwy_debug("Switch to current tool, showing tool for now.");
-                gwy_tool_show(current_tool);
-            }
-            return;
-        }
-
-        newtool = (GwyTool*)g_object_new(type, NULL);
-        g_return_if_fail(GWY_IS_TOOL(newtool));
-        gwy_object_unref(current_tool);
-        current_tool = newtool;
-
+    type = g_type_from_name(toolname);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
+    if (current_tool && type == G_TYPE_FROM_INSTANCE(current_tool)) {
         if (data_view) {
-            gwy_tool_data_switched(current_tool, data_view);
+            gwy_debug("Switch to current tool, showing tool for now.");
             gwy_tool_show(current_tool);
         }
+        return;
+    }
+
+    newtool = (GwyTool*)g_object_new(type, NULL);
+    g_return_if_fail(GWY_IS_TOOL(newtool));
+    gwy_object_unref(current_tool);
+    current_tool = newtool;
+
+    if (data_view) {
+        gwy_tool_data_switched(current_tool, data_view);
+        gwy_tool_show(current_tool);
     }
 }
 

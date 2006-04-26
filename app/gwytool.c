@@ -83,8 +83,13 @@ gwy_tool_class_init(GwyToolClass *klass)
 }
 
 static void
-gwy_tool_finalize(G_GNUC_UNUSED GObject *object)
+gwy_tool_finalize(GObject *object)
 {
+    GwyTool *tool;
+
+    tool = GWY_TOOL(object);
+    gtk_widget_destroy(tool->dialog);
+
     G_OBJECT_CLASS(gwy_tool_parent_class)->finalize(object);
 }
 
