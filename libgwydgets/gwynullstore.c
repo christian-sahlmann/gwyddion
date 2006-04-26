@@ -366,7 +366,7 @@ gwy_null_store_row_changed(GwyNullStore *store,
     GtkTreeIter iter;
 
     g_return_if_fail(GWY_IS_NULL_STORE(store));
-    g_return_if_fail(i >= store->n);
+    g_return_if_fail(i < store->n);
 
     iter.stamp = store->stamp;
     iter.user_data = GUINT_TO_POINTER(i);
