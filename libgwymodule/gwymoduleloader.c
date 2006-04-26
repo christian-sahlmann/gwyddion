@@ -32,11 +32,12 @@ typedef struct {
     gpointer data;
 } GwyModuleForeachData;
 
-static void gwy_load_modules_in_dir (GDir *gdir,
-                                     const gchar *dirname,
-                                     GHashTable *mods);
-static void gwy_module_get_rid_of   (const gchar *modname);
-static void gwy_module_init         (void);
+static void     gwy_load_modules_in_dir  (GDir *gdir,
+                                          const gchar *dirname,
+                                          GHashTable *mods);
+static gboolean gwy_module_pedantic_check(_GwyModuleInfoInternal *iinfo);
+static void     gwy_module_get_rid_of    (const gchar *modname);
+static void     gwy_module_init          (void);
 static const GwyModuleInfo*
 gwy_module_do_register_module(const gchar *modulename,
                               GHashTable *mods);
@@ -287,15 +288,7 @@ gwy_module_do_register_module(const gchar *filename,
             gwy_module_get_rid_of(iinfo->name);
         }
 
-        /* XXX: pedantic check */
-        if (g_slist_length(iinfo->funcs) == 1) {
-            const gchar *x = strchr((gchar*)iinfo->funcs->data, ':') + 2;
-            if (!gwy_strequal(iinfo->name, x))
-                g_warning("Module `%s' registered only one function `%s' "
-                          "and its name differs from module name.  Usually, "
-                          "these two names should be the same.",
-                          iinfo->name, x);
-        }
+        gwy_module_pedantic_check(iinfo);
     }
 
     if (ok) {
@@ -356,6 +349,62 @@ gwy_load_modules_in_dir(GDir *gdir,
         gwy_module_do_register_module(modulename, mods);
         g_free(modulename);
     }
+}
+
+static gboolean
+gwy_module_pedantic_check(_GwyModuleInfoInternal *iinfo)
+{
+    const gchar *p;
+    gboolean ok = TRUE;
+    GSList *l;
+
+    if (g_str_has_prefix(iinfo->funcs->data, GWY_MODULE_PREFIX_LAYER)) {
+        for (l = iinfo->funcs; l; l = g_slist_next(l)) {
+            p = strchr((const gchar*)l->data, ':');
+            g_return_val_if_fail(p && p[1] == ':', FALSE);
+            p += 2;
+
+            if (!g_str_has_prefix(p, "GwyLayer")) {
+                g_warning("Module `%s' registered layer function `%s' "
+                          "whose name has not the form `GwyLayerFoo'.",
+                          iinfo->name, p);
+                ok = FALSE;
+            }
+        }
+        return ok;
+    }
+
+    if (g_str_has_prefix(iinfo->funcs->data, GWY_MODULE_PREFIX_TOOL)) {
+        for (l = iinfo->funcs; l; l = g_slist_next(l)) {
+            p = strchr((const gchar*)l->data, ':');
+            g_return_val_if_fail(p && p[1] == ':', FALSE);
+            p += 2;
+
+            if (!g_str_has_prefix(p, "GwyTool")) {
+                g_warning("Module `%s' registered tool function `%s' "
+                          "whose name has not the form `GwyToolFoo'.",
+                          iinfo->name, p);
+                ok = FALSE;
+            }
+        }
+        return ok;
+    }
+
+    if (g_slist_length(iinfo->funcs) == 1) {
+        p = strchr((const gchar*)iinfo->funcs->data, ':');
+        g_return_val_if_fail(p && p[1] == ':', FALSE);
+        p += 2;
+
+        if (!gwy_strequal(iinfo->name, p)) {
+            g_warning("Module `%s' registered only one function `%s' "
+                      "and its name differs from module name.  Usually, "
+                      "these two names should be the same.",
+                      iinfo->name, p);
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 static void
