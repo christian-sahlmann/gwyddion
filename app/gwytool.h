@@ -53,6 +53,10 @@ struct _GwyToolClass {
     const gchar *stock_id;
     const gchar *tooltip;
     const gchar *title;
+    const gchar *prefix;
+
+    gint default_width;
+    gint default_height;
 
     void (*show)(GwyTool *tool);
     void (*hide)(GwyTool *tool);

@@ -33,6 +33,7 @@ static void     gwy_tool_init          (GwyTool *tool,
 static void     gwy_tool_finalize      (GObject *object);
 static void     gwy_tool_response      (GwyTool *tool,
                                         gint response);
+static void     gwy_tool_unmap         (GwyTool *tool);
 static void     gwy_tool_show_real     (GwyTool *tool);
 static void     gwy_tool_hide_real     (GwyTool *tool);
 
@@ -98,18 +99,40 @@ gwy_tool_init(GwyTool *tool,
               gpointer g_class)
 {
     GwyToolClass *klass;
+    GtkWindow *window;
+    gint width, height;
 
     klass = GWY_TOOL_CLASS(g_class);
     gwy_debug("%s", klass->title);
     tool->dialog = gtk_dialog_new();
     gtk_dialog_set_has_separator(GTK_DIALOG(tool->dialog), FALSE);
-    gtk_window_set_title(GTK_WINDOW(tool->dialog), gettext(klass->title));
-    gwy_app_add_main_accel_group(GTK_WINDOW(tool->dialog));
-    /* Prevent too smart window managers from making big mistakes */
-    gtk_window_set_position(GTK_WINDOW(tool->dialog), GTK_WIN_POS_NONE);
-    gtk_window_set_type_hint(GTK_WINDOW(tool->dialog),
-                             GDK_WINDOW_TYPE_HINT_NORMAL);
 
+    window = GTK_WINDOW(tool->dialog);
+    gtk_window_set_title(window, gettext(klass->title));
+    gwy_app_add_main_accel_group(window);
+    /* Prevent too smart window managers from making big mistakes */
+    gtk_window_set_position(window, GTK_WIN_POS_NONE);
+    gtk_window_set_type_hint(window, GDK_WINDOW_TYPE_HINT_NORMAL);
+    gtk_window_set_role(window, "tool");
+
+    /* Set the default window size first from class,
+     * then let settings override it */
+    width = klass->default_width > 0 ? klass->default_width : -1;
+    height = klass->default_height > 0 ? klass->default_height : -1;
+    gtk_window_set_default_size(window, width, height);
+    if (klass->prefix && g_str_has_prefix(klass->prefix, "/module")) {
+        gchar *key;
+        guint len;
+
+        len = strlen(klass->prefix);
+        key = g_newa(gchar, len + sizeof("/dialog"));
+        strcpy(key, klass->prefix);
+        strcpy(key + len, "/dialog");
+        gwy_app_restore_window_position(GTK_WINDOW(tool->dialog), key, TRUE);
+    }
+
+    g_signal_connect_swapped(tool->dialog, "unmap",
+                             G_CALLBACK(gwy_tool_unmap), tool);
     g_signal_connect(tool->dialog, "delete-event",
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     g_signal_connect_swapped(tool->dialog, "response",
@@ -150,6 +173,24 @@ gwy_tool_response(GwyTool *tool,
         }
         break;
     }
+}
+
+static void
+gwy_tool_unmap(GwyTool *tool)
+{
+    GwyToolClass *klass;
+    gchar *key;
+    guint len;
+
+    klass = GWY_TOOL_GET_CLASS(tool);
+    if (!klass->prefix || !g_str_has_prefix(klass->prefix, "/module/"))
+        return;
+
+    len = strlen(klass->prefix);
+    key = g_newa(gchar, len + sizeof("/dialog"));
+    strcpy(key, klass->prefix);
+    strcpy(key + len, "/dialog");
+    gwy_app_save_window_position(GTK_WINDOW(tool->dialog), key, FALSE, TRUE);
 }
 
 static void
