@@ -218,7 +218,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gdouble zoomval;
     GtkObject *layer;
     GwyDataField *dfield;
-    gint row;
+    gint xres, yres,row;
 
     dialog = gtk_dialog_new_with_buttons(_("Correct drift"), NULL, 0,
                                          _("_Update Result"), RESPONSE_PREVIEW,
@@ -245,15 +245,14 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                                  GWY_PIXMAP_LAYER(layer));
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-					0);
+                                        0);
 
-    controls.result = GWY_DATA_LINE(gwy_data_line_new(dfield->yres, dfield->yreal, TRUE));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    controls.result
+        = gwy_data_line_new(yres, gwy_data_field_get_yreal(dfield), TRUE);
 
-    if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
-        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
-    else
-        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
-
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(xres, yres);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
@@ -486,62 +485,53 @@ static void
 preview(DriftControls *controls,
         DriftArgs *args)
 {
-    GwyDataField *dfield;
-    GObject *maskfield;
+    GwyDataField *dfield, *maskfield;
     GwyPixmapLayer *layer = NULL;
 
-    dfield = gwy_container_get_object_by_name(controls->viewdata,
-                                                     "/0/data");
+    dfield = gwy_container_get_object_by_name(controls->viewdata, "/0/data");
 
-    if (gwy_container_contains_by_name(controls->viewdata, "/0/mask")) {
-        maskfield = gwy_container_get_object_by_name(controls->viewdata,
-                                                     "/0/mask");
-        gwy_data_field_copy(dfield, GWY_DATA_FIELD(maskfield), FALSE);
-        if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
-            layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                          GWY_PIXMAP_LAYER(layer));
-        }
+    if (gwy_container_gis_object_by_name(controls->viewdata, "/0/mask",
+                                         &maskfield)) {
+        gwy_data_field_copy(dfield, maskfield, FALSE);
     }
     else {
-        maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
+        maskfield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->viewdata, "/0/mask",
                                          maskfield);
         g_object_unref(maskfield);
-        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                      GWY_PIXMAP_LAYER(layer));
-
     }
 
-    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-    mask_process(dfield, GWY_DATA_FIELD(maskfield), args, controls);
+    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
+    }
+
+    mask_process(dfield, maskfield, args, controls);
     controls->computed = TRUE;
 
-    gwy_data_field_data_changed(GWY_DATA_FIELD(maskfield));
+    gwy_data_field_data_changed(maskfield);
 }
 
 static void
 reset(DriftControls *controls,
       DriftArgs *args)
 {
-    GObject *maskfield;
+    GwyDataField *maskfield;
 
-    if (gwy_container_contains_by_name(controls->viewdata, "/0/mask")) {
-        maskfield = gwy_container_get_object_by_name(controls->viewdata,
-                                                     "/0/mask");
-        gwy_data_field_clear(GWY_DATA_FIELD(maskfield));
+    if (gwy_container_gis_object_by_name(controls->viewdata, "/0/mask",
+                                         &maskfield)) {
+        gwy_data_field_clear(maskfield);
+        gwy_data_field_data_changed(maskfield);
     }
     controls->computed = FALSE;
-
-    gwy_data_field_data_changed(GWY_DATA_FIELD(maskfield));
 }
 
 static void
 drift_ok(DriftControls *controls,
          DriftArgs *args,
-	 GwyContainer *data)
+         GwyContainer *data)
 {
 
     GwyGraphCurveModel *cmodel;
@@ -565,7 +555,7 @@ drift_ok(DriftControls *controls,
 
     if (args->is_correct)
     {
-	newid = gwy_app_data_browser_add_data_field(newdata_field, data, TRUE);
+        newid = gwy_app_data_browser_add_data_field(newdata_field, data, TRUE);
 
         gwy_app_copy_data_items(data, data, oldid, newid,
                             GWY_DATA_ITEM_GRADIENT,
@@ -589,7 +579,7 @@ drift_ok(DriftControls *controls,
         gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
         gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result, 0, 0);
 
-	newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         gwy_object_unref(cmodel);
         gwy_object_unref(gmodel);
         gwy_object_unref(controls->result);
@@ -603,31 +593,32 @@ mask_process(GwyDataField *dfield,
              DriftArgs *args,
              DriftControls *controls)
 {
-    gint i, j, step, pos;
-
+    gint i, j, step, pos, xres, yres;
+    gdouble *mdata, *rdata;
 
     gwy_data_field_clear(maskfield);
     gwy_data_line_clear(controls->result);
 
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
     if (args->method == GWY_DRIFT_CORRELATION)
-        gwy_data_field_get_drift_from_correlation(dfield,
-                                                  controls->result,
-                                                  MAX(1, (gint)(args->sensitivity/10)),
-                                                  100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
-                                                  1 - args->sensitivity/500.0);
+        gwy_data_field_get_drift_from_correlation
+            (dfield, controls->result,
+             MAX(1, (gint)(args->sensitivity/10)),
+             100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
+             1 - args->sensitivity/500.0);
 
-    step = dfield->yres/10;
-
-    for (i=0; i<(dfield->yres); i++)
-    {
-        for (j=-step; j<(dfield->xres+step); j+=step)
-        {
-            pos = j + gwy_data_field_rtoi(dfield, controls->result->data[i]);
-            if (pos>1 && pos < dfield->xres)
-            {
-                maskfield->data[(gint)(pos + i*dfield->xres)] = 1;
-                if (dfield->xres >= 300)
-                    maskfield->data[(gint)(pos - 1 + i*dfield->xres)] = 1;
+    step = yres/10;
+    mdata = gwy_data_field_get_data(maskfield);
+    rdata = gwy_data_line_get_data(controls->result);
+    for (i = 0; i < yres; i++) {
+        for (j = -step; j < xres + step; j += step) {
+            pos = j + gwy_data_field_rtoi(dfield, rdata[i]);
+            if (pos > 1 && pos < xres) {
+                mdata[(gint)(pos + i*xres)] = 1;
+                if (xres >= 300)
+                    mdata[(gint)(pos - 1 + i*xres)] = 1;
             }
         }
     }
