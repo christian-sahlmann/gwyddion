@@ -69,6 +69,7 @@
     <xi:include href="xml/gwystatusbar.xml"/>
     <xi:include href="xml/gwyshader.xml"/>
     <xi:include href="xml/gwyinventorystore.xml"/>
+    <xi:include href="xml/gwynullstore.xml"/>
   </chapter>
 
   <chapter id="WidgetUtilities">
