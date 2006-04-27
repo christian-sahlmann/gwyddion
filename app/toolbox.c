@@ -294,15 +294,11 @@ gwy_app_toolbox_create(void)
             "graph_fit",
         },
     };
-    /*
     static const gchar *tool_actions[] = {
-        "readvalue", "distance", "polynom", "crop", "filter", "level3",
-        "stats", "sfunctions", "profile", "grain_remove_manually",
-        "spotremove", "icolorange", "maskedit",
-    };
-    */
-    static const gchar *tool_actions[] = {
-        "GwyToolDistance",
+        "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
+        "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
+        "GwyToolProfile", "GwyToolRemoveGrain", "GwyToolRemoveSpot",
+        "GwyToolColorRange", "GwyToolMaskEdit",
     };
     GwyMenuSensFlags sens;
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
