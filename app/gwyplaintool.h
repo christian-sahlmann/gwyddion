@@ -70,6 +70,8 @@ struct _GwyPlainToolClass {
     void (*show_changed)(GwyPlainTool *plain_tool);
 };
 
+typedef struct _GwyPlainToolRectLabels GwyPlainToolRectLabels;
+
 GType gwy_plain_tool_get_type         (void) G_GNUC_CONST;
 GType gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
                                        const gchar *name);
@@ -78,8 +80,17 @@ void  gwy_plain_tool_assure_layer     (GwyPlainTool *plain_tool,
 void  gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
                                        const gchar *bname);
 
+
+GwyPlainToolRectLabels* gwy_plain_tool_rect_labels_new(gboolean none_is_full);
+GtkTable* gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels);
+gboolean  gwy_plain_tool_rect_labels_fill     (GwyPlainToolRectLabels *rlabels,
+                                               GwySelection *selection,
+                                               GwyDataField *dfield,
+                                               gdouble *selreal,
+                                               gint *selpix);
+
 G_END_DECLS
 
-#endif /*__GWY_PLAIN_TOOL_H__*/
+#endif /* __GWY_PLAIN_TOOL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
