@@ -65,7 +65,6 @@ struct _GwyToolDistanceClass {
 static gboolean module_register                  (void);
 
 static GType  gwy_tool_distance_get_type         (void) G_GNUC_CONST;
-
 static void   gwy_tool_distance_finalize         (GObject *object);
 static void   gwy_tool_distance_data_switched    (GwyTool *gwytool,
                                                   GwyDataView *data_view);
@@ -198,14 +197,14 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
-
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
-    gtk_widget_show_all(dialog->vbox);
 
     tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
                                         GWY_TOOL_RESPONSE_CLEAR);
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     gwy_tool_distance_update_headers(tool);
+
+    gtk_widget_show_all(dialog->vbox);
 }
 
 static void
@@ -236,9 +235,7 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
 
     gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_line);
     gwy_plain_tool_set_selection_key(plain_tool, "line");
-    g_object_set(plain_tool->layer,
-                 "line-numbers", TRUE,
-                 NULL);
+    g_object_set(plain_tool->layer, "line-numbers", TRUE, NULL);
     selection = gwy_vector_layer_get_selection(plain_tool->layer);
     gwy_selection_set_max_objects(selection, NLINES);
     tool->selection_id
@@ -269,11 +266,17 @@ gwy_tool_distance_response(GwyTool *tool,
     GwyPlainTool *plain_tool;
     GwySelection *selection;
 
-    g_return_if_fail(response_id == GWY_TOOL_RESPONSE_CLEAR);
+    switch (response_id) {
+        case GWY_TOOL_RESPONSE_CLEAR:
+        plain_tool = GWY_PLAIN_TOOL(tool);
+        selection = gwy_vector_layer_get_selection(plain_tool->layer);
+        gwy_selection_clear(selection);
+        break;
 
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    gwy_selection_clear(selection);
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static void
