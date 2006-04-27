@@ -82,7 +82,7 @@ void  gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
 
 
 GwyPlainToolRectLabels* gwy_plain_tool_rect_labels_new(gboolean none_is_full);
-GtkTable* gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels);
+GtkWidget* gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels);
 gboolean  gwy_plain_tool_rect_labels_fill     (GwyPlainToolRectLabels *rlabels,
                                                GwySelection *selection,
                                                GwyDataField *dfield,
