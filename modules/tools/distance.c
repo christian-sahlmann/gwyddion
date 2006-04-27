@@ -41,8 +41,8 @@ enum {
     COLUMN_I, COLUMN_DX, COLUMN_DY, COLUMN_PHI, COLUMN_R, COLUMN_DZ, NCOLUMNS
 };
 
-typedef struct _GwyToolDistance          GwyToolDistance;
-typedef struct _GwyToolDistanceClass     GwyToolDistanceClass;
+typedef struct _GwyToolDistance      GwyToolDistance;
+typedef struct _GwyToolDistanceClass GwyToolDistanceClass;
 
 struct _GwyToolDistance {
     GwyPlainTool parent_instance;
