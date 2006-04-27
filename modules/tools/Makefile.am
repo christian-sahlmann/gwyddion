@@ -17,7 +17,9 @@ toolsdir = $(pkglibdir)/modules/tool
 #	spotremove.la \
 #	stats.la
 
-tools_LTLIBRARIES = distance.la
+tools_LTLIBRARIES = \
+	crop.la \
+	distance.la
 
 
 EXTRA_DIST = \
@@ -54,8 +56,8 @@ endif
 #############################################################################
 
 
-#crop_la_SOURCES = crop.c
-#crop_la_LIBADD = $(module_libadd)
+crop_la_SOURCES = crop.c
+crop_la_LIBADD = $(module_libadd)
 
 distance_la_SOURCES = distance.c
 distance_la_LIBADD = $(module_libadd)
