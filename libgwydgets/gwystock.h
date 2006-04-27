@@ -23,6 +23,8 @@
 
 G_BEGIN_DECLS
 
+/* The following generated part is updated by running utils/stockgen.py */
+
 /* @@@ GENERATED STOCK LIST BEGIN @@@ */
 #define GWY_STOCK_3D_BASE               "gwy_3d_base"
 #define GWY_STOCK_BOLD                  "gwy_bold"
@@ -32,6 +34,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_CWT                   "gwy_cwt"
 #define GWY_STOCK_DISTANCE              "gwy_distance"
 #define GWY_STOCK_DWT                   "gwy_dwt"
+#define GWY_STOCK_EDGE                  "gwy_edge"
 #define GWY_STOCK_FACET_LEVEL           "gwy_facet_level"
 #define GWY_STOCK_FAVOURITE             "gwy_favourite"
 #define GWY_STOCK_FFT                   "gwy_fft"
