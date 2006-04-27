@@ -28,12 +28,12 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <app/app.h>
 #include <app/gwyplaintool.h>
 
 #define ITEM_CHANGED "item-changed::"
@@ -108,8 +108,9 @@ gwy_plain_tool_finalize(GObject *object)
 }
 
 static void
-gwy_plain_tool_init(G_GNUC_UNUSED GwyPlainTool *tool)
+gwy_plain_tool_init(GwyPlainTool *plain_tool)
 {
+    plain_tool->id = -1;
 }
 
 static void
@@ -175,6 +176,8 @@ gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
     gwy_object_unref(plain_tool->show_field);
     gwy_object_unref(plain_tool->container);
 
+    plain_tool->id = -1;
+
     if (!(plain_tool->data_view = data_view))
         return;
 
@@ -187,7 +190,10 @@ gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
      * the key part.  The "data" tail is subsequently replaced with "mask"
      * and "show". */
     len = strlen(data_key);
-    g_return_if_fail(len > 5 && gwy_strequal(data_key + len-5, "/data"));
+    g_return_if_fail(len > 5 && data_key[0] == '/'
+                     && gwy_strequal(data_key + len-5, "/data"));
+    plain_tool->id = atoi(data_key + 1);
+    g_return_if_fail(plain_tool->id >= 0);
     len += sizeof(ITEM_CHANGED)-1;
     sigdetail = g_new(gchar, len+1);
     key = sigdetail + sizeof(ITEM_CHANGED)-1;

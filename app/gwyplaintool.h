@@ -51,6 +51,7 @@ struct _GwyPlainTool {
     gulong data_item_id;
     gulong mask_item_id;
     gulong show_item_id;
+    gint id;
 
     GwyDataField *data_field;
     gulong data_id;
