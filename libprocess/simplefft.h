@@ -46,4 +46,4 @@ void gwy_fft_window_data_field(GwyDataField *dfield,
 
 G_END_DECLS
 
-#endif /*__GWY_PROCESS_SIMPLEFFT__*/
+#endif /* __GWY_PROCESS_SIMPLEFFT__ */

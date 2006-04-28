@@ -64,5 +64,5 @@ GwyDataField* gwy_data_field_correct_drift(GwyDataField *data_field,
 
 G_END_DECLS
 
-#endif /*__GWY_PROCESS_CORRECT__*/
+#endif /* __GWY_PROCESS_CORRECT__ */
 

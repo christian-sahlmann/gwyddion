@@ -14,6 +14,7 @@ libgwyprocessinclude_HEADERS = \
 	datafield.h \
 	dataline.h \
 	dwt.h \
+	elliptic.h \
 	filters.h \
 	fractals.h \
 	grains.h \
@@ -63,6 +64,7 @@ libgwyprocess_la_SOURCES = \
 	datafield.c \
 	dataline.c \
 	dwt.c \
+	elliptic.c \
 	filters.c \
 	fractals.c \
 	grains.c \

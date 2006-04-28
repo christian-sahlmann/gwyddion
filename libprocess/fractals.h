@@ -72,4 +72,4 @@ void gwy_data_field_fractal_correction(GwyDataField *data_field,
 
 G_END_DECLS
 
-#endif /*__GWY_PROCESS_FRACTALS__*/
+#endif /* __GWY_PROCESS_FRACTALS__ */

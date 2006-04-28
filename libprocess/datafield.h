@@ -288,15 +288,9 @@ void     gwy_data_field_fit_lines          (GwyDataField *data_field,
                                             gint degree,
                                             gboolean exclude,
                                             GwyOrientation orientation);
-void     gwy_data_field_elliptic_area_fill (GwyDataField *data_field,
-                                            gint ulcol,
-                                            gint ulrow,
-                                            gint brcol,
-                                            gint brrow,
-                                            gdouble value);
 
 G_END_DECLS
 
-#endif /*__GWY_DATAFIELD_H__*/
+#endif /* __GWY_DATAFIELD_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

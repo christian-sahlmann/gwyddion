@@ -27,6 +27,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
+#include <libprocess/elliptic.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
 #include <libdraw/gwygradient.h>

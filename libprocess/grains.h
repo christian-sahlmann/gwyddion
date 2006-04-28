@@ -113,5 +113,5 @@ void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
 
 G_END_DECLS
 
-#endif /*__GWY_PROCESS_GRAINS__*/
+#endif /* __GWY_PROCESS_GRAINS__ */
 

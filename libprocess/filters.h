@@ -123,4 +123,4 @@ void gwy_data_field_shade                      (GwyDataField *data_field,
 
 G_END_DECLS
 
-#endif /*__GWY_PROCESS_FILTERS__*/
+#endif /* __GWY_PROCESS_FILTERS__ */

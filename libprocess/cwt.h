@@ -33,4 +33,4 @@ gdouble gwy_cwt_wfunc_2d(gdouble scale,
 
 G_END_DECLS
 
-#endif /*__GWY_PROCESS_CWT__*/
+#endif /* __GWY_PROCESS_CWT__ */
