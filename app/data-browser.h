@@ -70,6 +70,7 @@ void   gwy_app_copy_data_items              (GwyContainer *source,
                                              gint from_id,
                                              gint to_id,
                                              ...);
+GQuark gwy_app_get_data_key_for_id          (gint id);
 GQuark gwy_app_get_mask_key_for_id          (gint id);
 GQuark gwy_app_get_presentation_key_for_id  (gint id);
 void   gwy_app_set_data_field_title         (GwyContainer *data,

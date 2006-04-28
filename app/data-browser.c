@@ -2097,10 +2097,37 @@ gwy_app_data_browser_mangle_key(GQuark quark,
 #endif
 
 /**
+ * gwy_app_get_data_key_for_id:
+ * @id: Data number in container.
+ *
+ * Calculates data field quark identifier from its id.
+ *
+ * Returns: The quark key identifying mask number @id.
+ **/
+GQuark
+gwy_app_get_data_key_for_id(gint id)
+{
+    static GQuark quarks[12] = { 0, };
+    gchar key[24];
+
+    g_return_val_if_fail(id >= 0, 0);
+    if (id < G_N_ELEMENTS(quarks) && quarks[id])
+        return quarks[id];
+
+    g_snprintf(key, sizeof(key), "/%d/data", id);
+
+    if (id < G_N_ELEMENTS(quarks)) {
+        quarks[id] = g_quark_from_string(key);
+        return quarks[id];
+    }
+    return g_quark_from_string(key);
+}
+
+/**
  * gwy_app_get_mask_key_for_id:
  * @id: Data number in container.
  *
- * Calculates mask quark identifier from its id.
+ * Calculates mask field quark identifier from its id.
  *
  * Returns: The quark key identifying mask number @id.
  **/
@@ -2127,7 +2154,7 @@ gwy_app_get_mask_key_for_id(gint id)
  * gwy_app_get_presentation_key_for_id:
  * @id: Data number in container.
  *
- * Calculates presentation quark identifier from its id.
+ * Calculates presentation field quark identifier from its id.
  *
  * Returns: The quark key identifying presentation number @id.
  **/
