@@ -66,6 +66,7 @@ static gboolean module_register                  (void);
 
 static GType  gwy_tool_distance_get_type         (void) G_GNUC_CONST;
 static void   gwy_tool_distance_finalize         (GObject *object);
+static void   gwy_tool_distance_init_dialog      (GwyToolDistance *tool);
 static void   gwy_tool_distance_data_switched    (GwyTool *gwytool,
                                                   GwyDataView *data_view);
 static void   gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
@@ -152,12 +153,6 @@ static void
 gwy_tool_distance_init(GwyToolDistance *tool)
 {
     GwyPlainTool *plain_tool;
-    GtkTreeViewColumn *column;
-    GtkCellRenderer *renderer;
-    GtkDialog *dialog;
-    GtkWidget *scwin, *label;
-    GwyNullStore *store;
-    guint i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_line = gwy_plain_tool_check_layer_type(plain_tool,
@@ -171,6 +166,19 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     tool->angle_format->magnitude = 1.0;
     tool->angle_format->precision = 0.1;
     gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
+
+    gwy_tool_distance_init_dialog(tool);
+}
+
+static void
+gwy_tool_distance_init_dialog(GwyToolDistance *tool)
+{
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkDialog *dialog;
+    GtkWidget *scwin, *label;
+    GwyNullStore *store;
+    guint i;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
