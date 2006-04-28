@@ -36,6 +36,7 @@ typedef struct _GwyToolCropClass GwyToolCropClass;
 
 typedef struct {
     gboolean keep_offsets;
+    gboolean new_channel;
 } ToolArgs;
 
 struct _GwyToolCrop {
@@ -45,6 +46,7 @@ struct _GwyToolCrop {
 
     GwyPlainToolRectLabels *rlabels;
     GtkWidget *keep_offsets;
+    GtkWidget *new_channel;
     GtkWidget *clear;
     GtkWidget *apply;
 
@@ -62,6 +64,7 @@ static gboolean module_register                  (void);
 
 static GType  gwy_tool_crop_get_type            (void) G_GNUC_CONST;
 static void   gwy_tool_crop_finalize            (GObject *object);
+static void   gwy_tool_crop_init_dialog         (GwyToolCrop *tool);
 static void   gwy_tool_crop_data_switched       (GwyTool *gwytool,
                                                  GwyDataView *data_view);
 static void   gwy_tool_crop_data_changed        (GwyPlainTool *plain_tool);
@@ -71,6 +74,8 @@ static void   gwy_tool_crop_selection_changed   (GwySelection *selection,
                                                  gint hint,
                                                  GwyToolCrop *tool);
 static void   gwy_tool_crop_keep_offsets_toggled(GwyToolCrop *tool,
+                                                 GtkToggleButton *toggle);
+static void   gwy_tool_crop_new_data_toggled    (GwyToolCrop *tool,
                                                  GtkToggleButton *toggle);
 static void   gwy_tool_crop_apply               (GwyToolCrop *tool);
 
@@ -85,9 +90,11 @@ static GwyModuleInfo module_info = {
 };
 
 static const gchar keep_offsets_key[] = "/module/crop/keep_offsets";
+static const gchar new_channel_key[]  = "/module/crop/new_channel";
 
 static const ToolArgs default_args = {
     FALSE,
+    TRUE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -140,6 +147,8 @@ gwy_tool_crop_finalize(GObject *object)
     settings = gwy_app_settings_get();
     gwy_container_set_boolean_by_name(settings, keep_offsets_key,
                                       tool->args.keep_offsets);
+    gwy_container_set_boolean_by_name(settings, new_channel_key,
+                                      tool->args.new_channel);
 
     G_OBJECT_CLASS(gwy_tool_crop_parent_class)->finalize(object);
 }
@@ -149,8 +158,6 @@ gwy_tool_crop_init(GwyToolCrop *tool)
 {
     GwyPlainTool *plain_tool;
     GwyContainer *settings;
-    GtkDialog *dialog;
-    GtkWidget *table;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
@@ -160,19 +167,30 @@ gwy_tool_crop_init(GwyToolCrop *tool)
 
     plain_tool->unit_style = GWY_SI_UNIT_FORMAT_VFMARKUP;
 
-    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
-
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_set_boolean_by_name(settings, keep_offsets_key,
                                       tool->args.keep_offsets);
+    gwy_container_set_boolean_by_name(settings, new_channel_key,
+                                      tool->args.new_channel);
+
+    gwy_tool_crop_init_dialog(tool);
+}
+
+static void
+gwy_tool_crop_init_dialog(GwyToolCrop *tool)
+{
+    GtkDialog *dialog;
+    GtkWidget *table;
+
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
     tool->rlabels = gwy_plain_tool_rect_labels_new(FALSE);
     gtk_box_pack_start(GTK_BOX(dialog->vbox),
                        gwy_plain_tool_rect_labels_get_table(tool->rlabels),
                        TRUE, TRUE, 0);
 
-    table = gtk_table_new(1, 1, FALSE);
+    table = gtk_table_new(2, 1, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table, FALSE, FALSE, 0);
 
@@ -184,6 +202,16 @@ gwy_tool_crop_init(GwyToolCrop *tool)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(tool->keep_offsets, "toggled",
                              G_CALLBACK(gwy_tool_crop_keep_offsets_toggled),
+                             tool);
+
+    tool->new_channel
+        = gtk_check_button_new_with_mnemonic(_("Create new channel"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->new_channel),
+                                 tool->args.new_channel);
+    gtk_table_attach(GTK_TABLE(table), tool->new_channel, 0, 1, 1, 2,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(tool->new_channel, "toggled",
+                             G_CALLBACK(gwy_tool_crop_new_data_toggled),
                              tool);
 
     tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
@@ -224,7 +252,10 @@ gwy_tool_crop_data_switched(GwyTool *gwytool,
 
     gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_rect);
     gwy_plain_tool_set_selection_key(plain_tool, "rectangle");
-    g_object_set(plain_tool->layer, "is-crop", TRUE, NULL);
+    g_object_set(plain_tool->layer,
+                 "draw-reflection", FALSE,
+                 "is-crop", TRUE,
+                 NULL);
     selection = gwy_vector_layer_get_selection(plain_tool->layer);
     gwy_selection_set_max_objects(selection, 1);
     tool->selection_id
@@ -297,13 +328,19 @@ gwy_tool_crop_keep_offsets_toggled(GwyToolCrop *tool,
     tool->args.keep_offsets = gtk_toggle_button_get_active(toggle);
 }
 
-static GwyDataField*
+static void
+gwy_tool_crop_new_data_toggled(GwyToolCrop *tool,
+                               GtkToggleButton *toggle)
+{
+    tool->args.new_channel = gtk_toggle_button_get_active(toggle);
+}
+
+static void
 gwy_tool_crop_one_field(GwyDataField *dfield,
                         const gint *isel,
                         const gdouble *sel,
                         gboolean keep_offsets)
 {
-    dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_resize(dfield, isel[0], isel[1], isel[2], isel[3]);
 
     if (keep_offsets) {
@@ -318,8 +355,6 @@ gwy_tool_crop_one_field(GwyDataField *dfield,
         gwy_data_field_set_xoffset(dfield, 0.0);
         gwy_data_field_set_yoffset(dfield, 0.0);
     }
-
-    return dfield;
 }
 
 static void
@@ -327,9 +362,11 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
 {
     GwyPlainTool *plain_tool;
     GwySelection *selection;
+    GwyContainer *container;
     GwyDataField *dfield;
-    GQuark quark;
+    GQuark quarks[3];
     gdouble sel[4];
+    gchar key[24];
     gint isel[4];
     gint id;
 
@@ -347,32 +384,63 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
     isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
     isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
 
-    dfield = gwy_tool_crop_one_field(plain_tool->data_field, isel, sel,
-                                     tool->args.keep_offsets);
-    id = gwy_app_data_browser_add_data_field(dfield, plain_tool->container,
-                                             TRUE);
-    g_object_unref(dfield);
-    gwy_app_copy_data_items(plain_tool->container, plain_tool->container,
-                            plain_tool->id, id,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_RANGE_TYPE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
-
-    if (plain_tool->mask_field) {
-        dfield = gwy_tool_crop_one_field(plain_tool->mask_field, isel, sel,
-                                         tool->args.keep_offsets);
-        quark = gwy_app_get_mask_key_for_id(id);
-        gwy_container_set_object(plain_tool->container, quark, dfield);
+    container = plain_tool->container;
+    if (tool->args.new_channel) {
+        dfield = gwy_data_field_duplicate(plain_tool->data_field);
+        gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
+        id = gwy_app_data_browser_add_data_field(dfield, container, TRUE);
         g_object_unref(dfield);
+        gwy_app_copy_data_items(plain_tool->container, container,
+                                plain_tool->id, id,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                0);
+        gwy_app_set_data_field_title(container, id, _("Detail"));
+
+        if (plain_tool->mask_field) {
+            dfield = gwy_data_field_duplicate(plain_tool->mask_field);
+            gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
+            quarks[1] = gwy_app_get_mask_key_for_id(id);
+            gwy_container_set_object(container, quarks[1], dfield);
+            g_object_unref(dfield);
+        }
+
+        if (plain_tool->show_field) {
+            dfield = gwy_data_field_duplicate(plain_tool->show_field);
+            gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
+            quarks[2] = gwy_app_get_presentation_key_for_id(id);
+            gwy_container_set_object(container, quarks[2], dfield);
+            g_object_unref(dfield);
+        }
     }
+    else {
+        quarks[0] = gwy_app_get_data_key_for_id(plain_tool->id);
+        quarks[1] = quarks[2] = 0;
+        if (plain_tool->mask_field)
+            quarks[1] = gwy_app_get_mask_key_for_id(plain_tool->id);
+        if (plain_tool->show_field)
+            quarks[2] = gwy_app_get_presentation_key_for_id(plain_tool->id);
+        gwy_app_undo_qcheckpointv(container, G_N_ELEMENTS(quarks), quarks);
 
-    if (plain_tool->show_field) {
-        dfield = gwy_tool_crop_one_field(plain_tool->show_field, isel, sel,
-                                         tool->args.keep_offsets);
-        quark = gwy_app_get_presentation_key_for_id(id);
-        gwy_container_set_object(plain_tool->container, quark, dfield);
-        g_object_unref(dfield);
+        gwy_tool_crop_one_field(plain_tool->data_field, isel, sel,
+                                tool->args.keep_offsets);
+        gwy_data_field_data_changed(plain_tool->data_field);
+
+        if (plain_tool->mask_field) {
+            gwy_tool_crop_one_field(plain_tool->mask_field, isel, sel,
+                                    tool->args.keep_offsets);
+            gwy_data_field_data_changed(plain_tool->data_field);
+        }
+
+        if (plain_tool->show_field) {
+            gwy_tool_crop_one_field(plain_tool->show_field, isel, sel,
+                                    tool->args.keep_offsets);
+            gwy_data_field_data_changed(plain_tool->data_field);
+        }
+
+        g_snprintf(key, sizeof(key), "/%d/select", plain_tool->id);
+        gwy_container_remove_by_prefix(container, key);
     }
 }
 
