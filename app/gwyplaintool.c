@@ -25,7 +25,7 @@
  *   directly in GwyPlainTool, with automatic finalization and reconnection
  *   helper
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -464,8 +464,9 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
     len = strlen(data_key);
     g_return_if_fail(len > 5 && gwy_strequal(data_key + len-5, "/data"));
 
-    key = g_strdup_printf("%.*s/select/%s", len-4, data_key, bname);
+    key = g_strdup_printf("%.*s/select/%s", len-5, data_key, bname);
     gwy_vector_layer_set_selection_key(plain_tool->layer, key);
+    gwy_debug("selection key: <%s>", key);
     g_free(key);
 }
 
