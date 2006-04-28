@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwystock.h>
@@ -60,7 +59,7 @@ struct _GwyToolCropClass {
     GwyPlainToolClass parent_class;
 };
 
-static gboolean module_register                  (void);
+static gboolean module_register(void);
 
 static GType  gwy_tool_crop_get_type            (void) G_GNUC_CONST;
 static void   gwy_tool_crop_finalize            (GObject *object);

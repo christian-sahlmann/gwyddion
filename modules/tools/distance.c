@@ -25,7 +25,6 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwynullstore.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_DISTANCE            (gwy_tool_distance_get_type())
@@ -62,7 +61,7 @@ struct _GwyToolDistanceClass {
     GwyPlainToolClass parent_class;
 };
 
-static gboolean module_register                  (void);
+static gboolean module_register(void);
 
 static GType  gwy_tool_distance_get_type         (void) G_GNUC_CONST;
 static void   gwy_tool_distance_finalize         (GObject *object);
@@ -329,7 +328,9 @@ gwy_tool_distance_update_header(GwyToolDistance *tool,
     column = gtk_tree_view_get_column(tool->treeview, col);
     label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
 
-    g_string_assign(str, title);
+    g_string_assign(str, "<b>");
+    g_string_append(str, title);
+    g_string_append(str, "</b>");
     if (vf)
         g_string_append_printf(str, " [%s]", vf->units);
     gtk_label_set_markup(label, str->str);
