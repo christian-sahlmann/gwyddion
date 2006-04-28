@@ -18,13 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/**
+/*
  * TODO:
  * Stuff to possibly move here:
  * - Selection handling, namely a standard Clear button, a selection_id
  *   directly in GwyPlainTool, with automatic finalization and reconnection
  *   helper
- **/
+ */
 
 #include "config.h"
 #include <string.h>
