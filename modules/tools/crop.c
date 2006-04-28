@@ -165,14 +165,12 @@ gwy_tool_crop_init(GwyToolCrop *tool)
     if (!tool->layer_type_rect)
         return;
 
-    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_VFMARKUP;
-
     settings = gwy_app_settings_get();
     tool->args = default_args;
-    gwy_container_set_boolean_by_name(settings, keep_offsets_key,
-                                      tool->args.keep_offsets);
-    gwy_container_set_boolean_by_name(settings, new_channel_key,
-                                      tool->args.new_channel);
+    gwy_container_gis_boolean_by_name(settings, keep_offsets_key,
+                                      &tool->args.keep_offsets);
+    gwy_container_gis_boolean_by_name(settings, new_channel_key,
+                                      &tool->args.new_channel);
 
     gwy_tool_crop_init_dialog(tool);
 }
