@@ -445,8 +445,6 @@ gwy_app_toolbox_create(void)
         button = add_rbutton(toolbar, j, &action, group, NULL, tooltips);
         if (!button)
             continue;
-        /* FIXME: implicit sensitivity, remove */
-        gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_DATA);
         if (!group) {
             group = GTK_RADIO_BUTTON(button);
             first_tool = tool_actions[i];

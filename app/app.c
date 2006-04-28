@@ -1328,12 +1328,10 @@ gwy_app_tool_use_cb(const gchar *toolname,
     type = g_type_from_name(toolname);
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
     if (current_tool && type == G_TYPE_FROM_INSTANCE(current_tool)) {
-        if (data_view) {
-            if (!button || !gwy_tool_is_visible(current_tool))
-                gwy_tool_show(current_tool);
-            else
-                gwy_tool_hide(current_tool);
-        }
+        if (!button || !gwy_tool_is_visible(current_tool))
+            gwy_tool_show(current_tool);
+        else
+            gwy_tool_hide(current_tool);
         return;
     }
 
