@@ -12,14 +12,14 @@ toolsdir = $(pkglibdir)/modules/tool
 #	maskedit.la \
 #	polynom.la \
 #	profile.la \
-#	readvalue.la \
 #	sfunctions.la \
 #	spotremove.la \
 #	stats.la
 
 tools_LTLIBRARIES = \
 	crop.la \
-	distance.la
+	distance.la \
+	readvalue.la
 
 
 EXTRA_DIST = \
@@ -82,10 +82,10 @@ distance_la_LIBADD = $(module_libadd)
 #
 #profile_la_SOURCES = profile.c
 #profile_la_LIBADD = $(module_libadd)
-#
-#readvalue_la_SOURCES = readvalue.c
-#readvalue_la_LIBADD = $(module_libadd)
-#
+
+readvalue_la_SOURCES = readvalue.c
+readvalue_la_LIBADD = $(module_libadd)
+
 #stats_la_SOURCES = stats.c
 #stats_la_LIBADD = $(module_libadd)
 #
