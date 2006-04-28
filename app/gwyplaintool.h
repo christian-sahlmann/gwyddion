@@ -81,6 +81,9 @@ void  gwy_plain_tool_assure_layer     (GwyPlainTool *plain_tool,
 void  gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
                                        const gchar *bname);
 
+gdouble gwy_plain_tool_get_z_average(GwyDataField *data_field,
+                                     const gdouble *point,
+                                     gint radius);
 
 GwyPlainToolRectLabels* gwy_plain_tool_rect_labels_new(gboolean none_is_full);
 GtkWidget* gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels);

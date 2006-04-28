@@ -32,7 +32,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
-#include <libprocess/datafield.h>
+#include <libprocess/elliptic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyplaintool.h>
 
@@ -470,6 +470,13 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
     g_free(key);
 }
 
+/**
+ * gwy_plain_tool_assure_layer:
+ * @plain_tool: A plain tool.
+ * @layer_type: Layer type.
+ *
+ * Makes sure a plain tool's layer is of the correct type.
+ **/
 void
 gwy_plain_tool_assure_layer(GwyPlainTool *plain_tool,
                             GType layer_type)
@@ -485,6 +492,56 @@ gwy_plain_tool_assure_layer(GwyPlainTool *plain_tool,
         gwy_data_view_set_top_layer(plain_tool->data_view, plain_tool->layer);
     }
     g_object_ref(plain_tool->layer);
+}
+
+/**
+ * gwy_plain_tool_get_z_average:
+ * @data_field: A data field.
+ * @point: Real X and Y-coordinate of area center in physical units.
+ * @radius: Area radius in pixels, 1 means a signle pixel.  The actual radius
+ *          passed to gwy_data_field_circular_area_extract() is @radius-0.5.
+ *
+ * Computes average value over a part of data field @dfield.
+ *
+ * It is not an error if part of it lies outside the data field borders
+ * (it is simply not counted in), however the intersection have to be nonempty.
+ *
+ * Returns: The average value.
+ **/
+gdouble
+gwy_plain_tool_get_z_average(GwyDataField *data_field,
+                             const gdouble *point,
+                             gint radius)
+{
+    gint col, row, n, i;
+    gdouble *values;
+    gdouble avg;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
+    g_return_val_if_fail(point, 0.0);
+    g_return_val_if_fail(radius > 0, 0.0);
+
+    col = gwy_data_field_rtoj(data_field, point[0]);
+    row = gwy_data_field_rtoi(data_field, point[1]);
+
+    if (radius == 1)
+        return gwy_data_field_get_val(data_field, col, row);
+
+    values = g_new(gdouble, (2*radius + 1)*(2*radius + 1));
+    n = gwy_data_field_circular_area_extract(data_field, col, row, radius - 0.5,
+                                             values);
+    avg = 0.0;
+    if (n) {
+        for (i = 0; i < n; i++)
+            avg += values[i];
+        avg /= n;
+    }
+    else
+        g_warning("Z average calculated from an empty area");
+
+    g_free(values);
+
+    return avg;
 }
 
 /**
