@@ -382,7 +382,7 @@ gwy_null_store_row_changed(GwyNullStore *store,
  * @store: A null store.
  * @iter: A #GtkTreeIter.
  *
- * Checks if the given iter is a valid iter for this index store.
+ * Checks if the given iter is a valid iter for this null store.
  *
  * Returns: %TRUE if the iter is valid, %FALSE if the iter is invalid.
  **/
