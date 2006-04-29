@@ -736,7 +736,8 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
  * for getting and setting individual selection objects
  * (gwy_selection_get_object(), gwy_selection_set_object()) or complete
  * selection (gwy_selection_get_data(), gwy_selection_set_data()) are
- * available.
+ * available.  The method gwy_selection_set_data() with %NULL second argument
+ * is also used to determine the number of selected object.
  **/
 
 /**
