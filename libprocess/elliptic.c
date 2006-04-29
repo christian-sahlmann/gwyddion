@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2005-2006 David Necas (Yeti), Petr Klapetek, Chris Anderson.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinder.asu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -63,10 +63,10 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
                          && brrow <= data_field->yres,
                          0);
 
-    a = (gdouble)(brcol - ulcol)/2;
+    a = (brcol - ulcol)/2.0;
     a2 = a*a;
-    b = (gdouble)(brrow - ulrow)/2;
-    b2 = a*a;
+    b = (brrow - ulrow)/2.0;
+    b2 = b*b;
     xres = data_field->xres;
     d = data_field->data;
     count = 0;
@@ -76,7 +76,7 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
             x = (gdouble)i - a;
             y = (gdouble)j - b;
 
-            if (x*x/a2 + y*y/b2 <= 1) {
+            if (x*x/a2 + y*y/b2 <= 1.0) {
                 d[(j + ulrow)*xres + ulcol + i] = value;
                 count++;
             }
@@ -97,7 +97,8 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
  * @brrow: Bottom-right row coordinate + 1.
  * @data: Location to store the extracted values to.  Its size has to be
  *        sufficient to contain all the extracted values.  As a conservative
- *        estimate (@brcol-@ulcol+1)(@brrow-@ulrow+1) is the recommended size.
+ *        estimate (@brcol-@ulcol+1)(@brrow-@ulrow+1) can be used, or the
+ *        size can be calculated with gwy_data_field_get_elliptic_area_size().
  *
  * Extracts values from an elliptic region of a data field.
  *
@@ -129,10 +130,10 @@ gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
                          && brrow <= data_field->yres,
                          0);
 
-    a = (gdouble)(brcol - ulcol)/2;
+    a = (brcol - ulcol)/2.0;
     a2 = a*a;
-    b = (gdouble)(brrow - ulrow)/2;
-    b2 = a*a;
+    b = (brrow - ulrow)/2.0;
+    b2 = b*b;
     xres = data_field->xres;
     d = data_field->data;
     count = 0;
@@ -142,10 +143,49 @@ gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
             x = (gdouble)i - a;
             y = (gdouble)j - b;
 
-            if (x*x/a2 + y*y/b2 <= 1) {
+            if (x*x/a2 + y*y/b2 <= 1.0) {
                 data[count] = d[(j + ulrow)*xres + ulcol + i];
                 count++;
             }
+        }
+    }
+
+    return count;
+}
+
+/**
+ * gwy_data_field_get_elliptic_area_size:
+ * @width: Bounding box width.
+ * @height: Bounding box height.
+ *
+ * Calculates an upper bound of the number of samples in an elliptic region.
+ *
+ * Returns: The number of pixels in an elliptic region with given rectangular
+ *          bounds (or its upper bound).
+ **/
+gint
+gwy_data_field_get_elliptic_area_size(gint width,
+                                      gint height)
+{
+    gint i, j, count;
+    gdouble x, y, a, b, a2, b2;
+
+    if (width <= 0 || height <= 0)
+        return 0;
+
+    a = width/2.0;
+    a2 = a*a;
+    b = height/2.0;
+    b2 = b*b;
+    count = 0;
+
+    for (i = 0; i < width; i++) {
+        for (j = 0; j < height; j++) {
+            x = (gdouble)i - a;
+            y = (gdouble)j - b;
+
+            if (x*x/a2 + y*y/b2 <= 1.0)
+                count++;
         }
     }
 
@@ -217,7 +257,8 @@ gwy_data_field_circular_area_fill(GwyDataField *data_field,
  *          integer values are NOT recommended.
  * @data: Location to store the extracted values to.  Its size has to be
  *        sufficient to contain all the extracted values.  As a conservative
- *        estimate (2*floor(@radius)+1)^2 is the recommended size.
+ *        estimate (2*floor(@radius)+1)^2 can be used, or the size can be
+ *        calculated with gwy_data_field_get_circular_area_size().
  *
  * Extracts values from an elliptic region of a data field.
  *
@@ -258,6 +299,37 @@ gwy_data_field_circular_area_extract(GwyDataField *data_field,
                 data[count] = d[(row + i)*xres + col + j];
                 count++;
             }
+        }
+    }
+
+    return count;
+}
+
+/**
+ * gwy_data_field_get_circular_area_size:
+ * @radius: Circular area radius (in pixels).
+ *
+ * Calculates an upper bound of the number of samples in a circular region.
+ *
+ * Returns: The number of pixels in a circular region with given rectangular
+ *          bounds (or its upper bound).
+ **/
+gint
+gwy_data_field_get_circular_area_size(gdouble radius)
+{
+    gint i, j, r, r2, count;
+
+    if (radius < 0.0)
+        return 0;
+
+    r2 = floor(radius*radius + 1e-12);
+    r = floor(radius + 1e-12);
+    count = 0;
+
+    for (i = -r; i <= r; i++) {
+        for (j = -r; j <= r; j++) {
+            if (i*i + j*j <= r2)
+                count++;
         }
     }
 

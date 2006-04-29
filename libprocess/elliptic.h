@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2005-2006 David Necas (Yeti), Petr Klapetek, Chris Anderson.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinder.asu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,28 +25,31 @@
 
 G_BEGIN_DECLS
 
-gint gwy_data_field_elliptic_area_fill   (GwyDataField *data_field,
-                                          gint ulcol,
-                                          gint ulrow,
-                                          gint brcol,
-                                          gint brrow,
-                                          gdouble value);
-gint gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
-                                          gint ulcol,
-                                          gint ulrow,
-                                          gint brcol,
-                                          gint brrow,
-                                          gdouble *data);
-gint gwy_data_field_circular_area_fill   (GwyDataField *data_field,
-                                          gint col,
-                                          gint row,
-                                          gdouble radius,
-                                          gdouble value);
-gint gwy_data_field_circular_area_extract(GwyDataField *data_field,
-                                          gint col,
-                                          gint row,
-                                          gdouble radius,
-                                          gdouble *data);
+gint gwy_data_field_elliptic_area_fill    (GwyDataField *data_field,
+                                           gint ulcol,
+                                           gint ulrow,
+                                           gint brcol,
+                                           gint brrow,
+                                           gdouble value);
+gint gwy_data_field_elliptic_area_extract (GwyDataField *data_field,
+                                           gint ulcol,
+                                           gint ulrow,
+                                           gint brcol,
+                                           gint brrow,
+                                           gdouble *data);
+gint gwy_data_field_get_elliptic_area_size(gint width,
+                                           gint height);
+gint gwy_data_field_circular_area_fill    (GwyDataField *data_field,
+                                           gint col,
+                                           gint row,
+                                           gdouble radius,
+                                           gdouble value);
+gint gwy_data_field_circular_area_extract (GwyDataField *data_field,
+                                           gint col,
+                                           gint row,
+                                           gdouble radius,
+                                           gdouble *data);
+gint gwy_data_field_get_circular_area_size(gdouble radius);
 
 G_END_DECLS
 
