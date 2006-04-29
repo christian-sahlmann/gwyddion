@@ -22,6 +22,8 @@ icondatadir = $(datadir)/pixmaps
 #   scars
 #   unrotate
 
+# If you add new stock icons here, run ./utils/stockgen.py from the top-level
+# directory to update source code declarations.
 pixmapdata_DATA = \
 	cd_line.png \
 	cd_rline.png \
