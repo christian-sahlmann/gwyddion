@@ -89,7 +89,10 @@ GwyRectSelectionLabels* gwy_rect_selection_labels_new(gboolean none_is_full,
                                                       GCallback callback,
                                                       gpointer cbdata);
 GtkWidget* gwy_rect_selection_labels_get_table(GwyRectSelectionLabels *rlabels);
-gboolean  gwy_rect_selection_labels_fill     (GwyRectSelectionLabels *rlabels,
+void       gwy_rect_selection_labels_select   (GwyRectSelectionLabels *rlabels,
+                                               GwySelection *selection,
+                                               GwyDataField *dfield);
+gboolean   gwy_rect_selection_labels_fill     (GwyRectSelectionLabels *rlabels,
                                                GwySelection *selection,
                                                GwyDataField *dfield,
                                                gdouble *selreal,

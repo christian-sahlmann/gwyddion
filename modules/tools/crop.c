@@ -175,6 +175,18 @@ gwy_tool_crop_init(GwyToolCrop *tool)
 }
 
 static void
+gwy_tool_crop_rect_updated(GwyToolCrop *tool)
+{
+    GwySelection *selection;
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    selection = gwy_vector_layer_get_selection(plain_tool->layer);
+    gwy_rect_selection_labels_select(tool->rlabels,
+                                     selection, plain_tool->data_field);
+}
+
+static void
 gwy_tool_crop_init_dialog(GwyToolCrop *tool)
 {
     GtkDialog *dialog;
@@ -182,7 +194,8 @@ gwy_tool_crop_init_dialog(GwyToolCrop *tool)
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    tool->rlabels = gwy_rect_selection_labels_new(FALSE, NULL, NULL);
+    tool->rlabels = gwy_rect_selection_labels_new
+                         (FALSE, G_CALLBACK(gwy_tool_crop_rect_updated), tool);
     gtk_box_pack_start(GTK_BOX(dialog->vbox),
                        gwy_rect_selection_labels_get_table(tool->rlabels),
                        TRUE, TRUE, 0);

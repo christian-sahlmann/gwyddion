@@ -207,11 +207,11 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     gtk_table_attach(table, GTK_WIDGET(tool->val), 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    table2 = gtk_table_new(1, 3, FALSE);
+    table2 = gtk_table_new(1, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table2, TRUE, TRUE, 0);
 
-    tool->radius = gtk_adjustment_new(tool->args.radius, 1, 16, 1, 5, 16);
+    tool->radius = gtk_adjustment_new(tool->args.radius, 1, 16, 1, 5, 0);
     gwy_table_attach_spinbutton(table2, 9, _("_Averaging radius:"), "px",
                                 tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",

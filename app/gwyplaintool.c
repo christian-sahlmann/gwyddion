@@ -42,10 +42,14 @@ enum {
     RLABEL_X, RLABEL_Y, RLABEL_W, RLABEL_H, NRLABELS
 };
 
+typedef void (*GwyRectSelectionLabelsFunc)(gpointer user_data);
+
 struct _GwyRectSelectionLabels {
     GtkWidget *table;
     GtkLabel *real[NRLABELS];
     GtkSpinButton *pix[NRLABELS];
+    gulong pix_id[NRLABELS];
+    gboolean in_update;
 
     gboolean none_is_full;
     GCallback callback;
@@ -73,7 +77,12 @@ static void gwy_plain_tool_mask_changed       (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_show_changed       (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_update_units       (GwyPlainTool *plain_tool);
 
+static void gwy_rect_selection_labels_spinned (GtkSpinButton *spin,
+                                               GwyRectSelectionLabels *rlabels);
+
 G_DEFINE_ABSTRACT_TYPE(GwyPlainTool, gwy_plain_tool, GWY_TYPE_TOOL)
+
+static GType selection_type_rect = 0;
 
 static void
 gwy_plain_tool_class_init(GwyPlainToolClass *klass)
@@ -559,12 +568,16 @@ gwy_rect_selection_labels_make_rlabel(GtkTable *table,
 
 static GtkSpinButton*
 gwy_rect_selection_labels_make_pspin(GtkTable *table,
-                                     gint col, gint row)
+                                     gint col, gint row,
+                                     gboolean from_1)
 {
     GtkWidget *spin, *label, *hbox;
     GtkObject *adj;
 
-    adj = gtk_adjustment_new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0);
+    if (from_1)
+        adj = gtk_adjustment_new(1.0, 1.0, 100.0, 1.0, 10.0, 0.0);
+    else
+        adj = gtk_adjustment_new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 0.0, 0);
     gtk_entry_set_width_chars(GTK_ENTRY(spin), 5);
 
@@ -604,10 +617,19 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
     GtkWidget *label;
     guint i;
 
+    if (!selection_type_rect) {
+        selection_type_rect = g_type_from_name("GwySelectionRectangle");
+        g_return_val_if_fail(selection_type_rect, FALSE);
+    }
+
+    if (!callback)
+        g_warning("Without a callback, reverse updates will hardly work");
+
     rlabels = g_new(GwyRectSelectionLabels, 1);
     rlabels->none_is_full = none_is_full;
     rlabels->callback = callback;
     rlabels->cbdata = cbdata;
+    rlabels->in_update = TRUE;
 
     rlabels->table = gtk_table_new(6, 3, FALSE);
     table = GTK_TABLE(rlabels->table);
@@ -646,8 +668,14 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
         rlabels->real[i] = gwy_rect_selection_labels_make_rlabel(table,
                                                                  1, i+1 + i/2);
         rlabels->pix[i] = gwy_rect_selection_labels_make_pspin(table,
-                                                               2, i+1 + i/2);
+                                                               2, i+1 + i/2,
+                                                               i/2);
+        g_signal_connect(rlabels->pix[i], "value-changed",
+                         G_CALLBACK(gwy_rect_selection_labels_spinned),
+                         rlabels);
     }
+
+    rlabels->in_update = FALSE;
 
     return rlabels;
 }
@@ -664,6 +692,90 @@ GtkWidget*
 gwy_rect_selection_labels_get_table(GwyRectSelectionLabels *rlabels)
 {
     return rlabels->table;
+}
+
+static void
+gwy_rect_selection_labels_spinned(GtkSpinButton *spin,
+                                  GwyRectSelectionLabels *rlabels)
+{
+    GtkAdjustment *adj, *adj2;
+    gint val;
+
+    if (rlabels->in_update)
+        return;
+
+    rlabels->in_update = TRUE;
+
+    adj = gtk_spin_button_get_adjustment(spin);
+    val = gwy_adjustment_get_int(adj);
+
+    if (spin == rlabels->pix[RLABEL_X]) {
+        adj2 = gtk_spin_button_get_adjustment(rlabels->pix[RLABEL_W]);
+        g_object_set(adj2, "upper", (gdouble)(adj->upper+1 - val), NULL);
+    }
+    else if (spin == rlabels->pix[RLABEL_Y]) {
+        adj2 = gtk_spin_button_get_adjustment(rlabels->pix[RLABEL_H]);
+        g_object_set(adj2, "upper", (gdouble)(adj->upper+1 - val), NULL);
+    }
+    else if (spin == rlabels->pix[RLABEL_W]) {
+    }
+    else if (spin == rlabels->pix[RLABEL_H]) {
+    }
+    else
+        g_critical("Stray spin button signal");
+
+    if (rlabels->callback) {
+        GwyRectSelectionLabelsFunc func;
+
+        func = (GwyRectSelectionLabelsFunc)rlabels->callback;
+        func(rlabels->cbdata);
+    }
+
+    rlabels->in_update = FALSE;
+}
+
+void
+gwy_rect_selection_labels_select(GwyRectSelectionLabels *rlabels,
+                                 GwySelection *selection,
+                                 GwyDataField *dfield)
+{
+    GtkAdjustment *adj;
+    gint isel[4];
+    gdouble sel[4];
+    guint i;
+
+    g_return_if_fail(!dfield || GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(!selection
+                     || g_type_is_a(G_TYPE_FROM_INSTANCE(selection),
+                                    selection_type_rect));
+
+    if (!GTK_WIDGET_SENSITIVE(rlabels->pix[0])) {
+        g_warning("Nothing is selected");
+        return;
+    }
+
+    rlabels->in_update = TRUE;
+
+    for (i = 0; i < NRLABELS; i++) {
+        adj = gtk_spin_button_get_adjustment(rlabels->pix[i]);
+        isel[i] = gwy_adjustment_get_int(adj);
+    }
+
+    if (isel[2] && isel[3]) {
+        isel[2] += isel[0] - 1;
+        isel[3] += isel[1] - 1;
+
+        sel[0] = gwy_data_field_jtor(dfield, isel[0] + 0.5);
+        sel[1] = gwy_data_field_itor(dfield, isel[1] + 0.5);
+        sel[2] = gwy_data_field_jtor(dfield, isel[2] + 0.5);
+        sel[3] = gwy_data_field_itor(dfield, isel[3] + 0.5);
+
+        gwy_selection_set_data(selection, 1, sel);
+    }
+    else
+        gwy_selection_clear(selection);
+
+    rlabels->in_update = FALSE;
 }
 
 /**
@@ -695,8 +807,6 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
                                gdouble *selreal,
                                gint *selpix)
 {
-    static GType selection_type_rect = 0;
-
     GwySIValueFormat *vf;
     gdouble sel[4];
     gint isel[4];
@@ -708,14 +818,12 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
     guint i;
 
     g_return_val_if_fail(!dfield || GWY_IS_DATA_FIELD(dfield), FALSE);
-    if (!selection_type_rect) {
-        selection_type_rect = g_type_from_name("GwySelectionRectangle");
-        g_return_val_if_fail(selection_type_rect, FALSE);
-    }
     g_return_val_if_fail(!selection
                          || g_type_is_a(G_TYPE_FROM_INSTANCE(selection),
                                         selection_type_rect),
                          FALSE);
+
+    rlabels->in_update = TRUE;
 
     is_selected = selection && gwy_selection_get_object(selection, 0, sel);
     if (!selection || !dfield || (!is_selected && !rlabels->none_is_full)) {
@@ -724,6 +832,8 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
             gtk_spin_button_set_value(rlabels->pix[i], 0.0);
             gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), FALSE);
         }
+
+        rlabels->in_update = FALSE;
         return is_selected;
     }
 
@@ -772,8 +882,8 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
     }
     gwy_si_unit_value_format_free(vf);
 
-    isel[2] -= isel[0];
-    isel[3] -= isel[1];
+    isel[2] -= isel[0] - 1;
+    isel[3] -= isel[1] - 1;
 
     for (i = 0; i < NRLABELS; i++) {
         gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), TRUE);
@@ -782,6 +892,8 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
         g_object_set(adj, "upper", (gdouble)(i%2 ? yres : xres), NULL);
         gtk_adjustment_set_value(adj, isel[i]);
     }
+
+    rlabels->in_update = FALSE;
 
     return is_selected;
 }
