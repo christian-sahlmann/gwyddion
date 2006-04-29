@@ -1,17 +1,26 @@
-1.99.6cvs20060423
+1.99.6cvs20060429
 
-1.99.7 (0000-00-00)
+1.99.7 (2006-04-30)
 Application:
 - It is possible to switch between pixelwise-square and physically-square
   display modes (via upper left data window corner menu).
 - Gwyddion now depends on libxml2 used for SPML import (optionally, if you
   compile it from source code).
+- There were some tool GUI behaviour changes, generally towards more
+  explicite control by the user.
 
 Libraries:
 - libgwydddion: Memory corruption on big-endian machines in serialization and
   deserialization was fixed (bug #73).
 - libgwyprocess: Fitting of polynomials with limited total degree was added.
 - gwy_math_humanize_numbers() behaves reasonably for zero values (bug #70).
+- libprocess: New elliptic and circular region functions.
+- libgwydgets: GwyNullStore `virtual' GtkTreeModel class.
+- libgwyapp: New classes GwyTool and GwyPlainTool for tool implementation.
+- libgwyapp: Unitool is finally gone.
+- libgwymodule: Unification and clean-up, all module types have foreach
+  functions, headers are includeable individually.
+- libgwydddion: New GwyStringList class (forward compatibility stub).
 
 Modules:
 - Omicron (new): Omicron (Scala) file import.
@@ -20,6 +29,8 @@ Modules:
 - ECS (new): ECS IMG file import.
 - Surffile (new): Surf file import.
 - Nanotop (new): Nanotop SPM file import.
+- MetroPro (new): Binary Zygo MetroPro file import.
+- SPML (new): SMPL file import.
 - Hitachi AFM: Import of another strain of Hitachi AFM files was added.
 - BCR file: Void pixel handling was improved (bug #67).
 - Grain distribution: Height distribution was added (bug #69).
@@ -29,6 +40,15 @@ Modules:
   at all).
 - Polynomial level: Fitting of polynomials with limited total degree is
   possible.
+- Grain distribution: Height distribution was added (bug #69).
+- Line correction: Step correction function (new, experimental).
+- Read Value, Level3: Value averaging uses circular neighbourhood instead of
+  a square.
+- Distance: The number of allowed lines was increased.
+- Crop: Can crop image in place or create a new image.
+
+Other:
+- gwyconfig.h no longer requires to include math.h first.
 
 
 1.99.6 (2006-02-26)
