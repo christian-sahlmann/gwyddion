@@ -71,8 +71,6 @@ struct _GwyPlainToolClass {
     void (*show_changed)(GwyPlainTool *plain_tool);
 };
 
-typedef struct _GwyPlainToolRectLabels GwyPlainToolRectLabels;
-
 GType gwy_plain_tool_get_type         (void) G_GNUC_CONST;
 GType gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
                                        const gchar *name);
@@ -85,9 +83,13 @@ gdouble gwy_plain_tool_get_z_average(GwyDataField *data_field,
                                      const gdouble *point,
                                      gint radius);
 
-GwyPlainToolRectLabels* gwy_plain_tool_rect_labels_new(gboolean none_is_full);
-GtkWidget* gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels);
-gboolean  gwy_plain_tool_rect_labels_fill     (GwyPlainToolRectLabels *rlabels,
+typedef struct _GwyRectSelectionLabels GwyRectSelectionLabels;
+
+GwyRectSelectionLabels* gwy_rect_selection_labels_new(gboolean none_is_full,
+                                                      GCallback callback,
+                                                      gpointer cbdata);
+GtkWidget* gwy_rect_selection_labels_get_table(GwyRectSelectionLabels *rlabels);
+gboolean  gwy_rect_selection_labels_fill     (GwyRectSelectionLabels *rlabels,
                                                GwySelection *selection,
                                                GwyDataField *dfield,
                                                gdouble *selreal,

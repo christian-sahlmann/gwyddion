@@ -38,20 +38,17 @@
 
 #define ITEM_CHANGED "item-changed::"
 
-struct _GwyPlainToolRectLabels {
-    GtkTable *table;
-    GtkLabel *xreal;
-    GtkLabel *yreal;
-    GtkLabel *wreal;
-    GtkLabel *hreal;
-    GtkLabel *xpix;
-    GtkLabel *ypix;
-    GtkLabel *wpix;
-    GtkLabel *hpix;
+enum {
+    RLABEL_X, RLABEL_Y, RLABEL_W, RLABEL_H, NRLABELS
+};
+
+struct _GwyRectSelectionLabels {
+    GtkWidget *table;
+    GtkLabel *real[NRLABELS];
+    GtkSpinButton *pix[NRLABELS];
 
     gboolean none_is_full;
-    /* unused */
-    GCallback cb;
+    GCallback callback;
     gpointer cbdata;
 };
 
@@ -544,9 +541,50 @@ gwy_plain_tool_get_z_average(GwyDataField *data_field,
     return avg;
 }
 
+static GtkLabel*
+gwy_rect_selection_labels_make_rlabel(GtkTable *table,
+                                      gint col, gint row)
+{
+    GtkLabel *label;
+
+    label = GTK_LABEL(gtk_label_new(NULL));
+    gtk_label_set_single_line_mode(label, TRUE);
+    gtk_label_set_width_chars(label, 14);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(table, GTK_WIDGET(label), col, col+1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    return label;
+}
+
+static GtkSpinButton*
+gwy_rect_selection_labels_make_pspin(GtkTable *table,
+                                     gint col, gint row)
+{
+    GtkWidget *spin, *label, *hbox;
+    GtkObject *adj;
+
+    adj = gtk_adjustment_new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 0.0, 0);
+    gtk_entry_set_width_chars(GTK_ENTRY(spin), 5);
+
+    hbox = gtk_hbox_new(FALSE, 4);
+
+    label = gtk_label_new("px");
+    gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(hbox), spin, FALSE, FALSE, 0);
+
+    gtk_table_attach(table, hbox, col, col+1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    return GTK_SPIN_BUTTON(spin);
+}
+
 /**
- * gwy_plain_tool_rect_labels_new:
+ * gwy_rect_selection_labels_new:
  * @none_is_full: %TRUE to tread unselected state as full data selected.
+ * @callback: Callback to call when the selection is edited.
+ * @cbdata: Data to pass to @callback (as the first argument).
  *
  * Creates a table displaying rectangular selection information.
  *
@@ -554,118 +592,68 @@ gwy_plain_tool_get_z_average(GwyDataField *data_field,
  *
  * Returns: The newly created rectangular selection information, as an opaque
  *          pointer.  The table widget can be obtained with
- *          gwy_plain_tool_rect_labels_get_table().
+ *          gwy_rect_selection_labels_get_table().
  **/
-GwyPlainToolRectLabels*
-gwy_plain_tool_rect_labels_new(gboolean none_is_full)
+GwyRectSelectionLabels*
+gwy_rect_selection_labels_new(gboolean none_is_full,
+                              GCallback callback,
+                              gpointer cbdata)
 {
-    GwyPlainToolRectLabels *rlabels;
+    GwyRectSelectionLabels *rlabels;
+    GtkTable *table;
     GtkWidget *label;
+    guint i;
 
-    rlabels = g_new(GwyPlainToolRectLabels, 1);
+    rlabels = g_new(GwyRectSelectionLabels, 1);
     rlabels->none_is_full = none_is_full;
+    rlabels->callback = callback;
+    rlabels->cbdata = cbdata;
 
-    rlabels->table = GTK_TABLE(gtk_table_new(6, 3, FALSE));
-    gtk_container_set_border_width(GTK_CONTAINER(rlabels->table), 4);
-    gtk_table_set_col_spacings(rlabels->table, 6);
-    gtk_table_set_row_spacings(rlabels->table, 2);
-    /*gtk_table_set_row_spacing(rlabels->table, 2, 8);*/
-    g_signal_connect_swapped(rlabels->table, "destroy",
-                             G_CALLBACK(g_free), rlabels);
+    rlabels->table = gtk_table_new(6, 3, FALSE);
+    table = GTK_TABLE(rlabels->table);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
+    g_signal_connect_swapped(table, "destroy", G_CALLBACK(g_free), rlabels);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(rlabels->table, label, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 1, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("X");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(rlabels->table, label, 0, 1, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 1, 1, 2, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("Y");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(rlabels->table, label, 0, 1, 2, 3,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 1, 2, 3, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(rlabels->table, label, 0, 1, 3, 4,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 1, 3, 4, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(_("Width"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(rlabels->table, label, 0, 1, 4, 5,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 1, 4, 5, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(_("Height"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(rlabels->table, label, 0, 1, 5, 6,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, label, 0, 1, 5, 6, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    rlabels->xreal = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->xreal, TRUE);
-    gtk_label_set_width_chars(rlabels->xreal, 14);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->xreal), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->xreal), 1, 2, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->yreal = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->yreal, TRUE);
-    gtk_label_set_width_chars(rlabels->yreal, 14);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->yreal), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->yreal), 1, 2, 2, 3,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->wreal = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->wreal, TRUE);
-    gtk_label_set_width_chars(rlabels->wreal, 14);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->wreal), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->wreal), 1, 2, 4, 5,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->hreal = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->hreal, TRUE);
-    gtk_label_set_width_chars(rlabels->hreal, 14);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->hreal), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->hreal), 1, 2, 5, 6,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->xpix = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->xpix, TRUE);
-    gtk_label_set_width_chars(rlabels->xpix, 8);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->xpix), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->xpix), 2, 3, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->ypix = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->ypix, TRUE);
-    gtk_label_set_width_chars(rlabels->ypix, 8);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->ypix), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->ypix), 2, 3, 2, 3,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->wpix = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->wpix, TRUE);
-    gtk_label_set_width_chars(rlabels->wpix, 8);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->wpix), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->wpix), 2, 3, 4, 5,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    rlabels->hpix = GTK_LABEL(gtk_label_new(NULL));
-    gtk_label_set_single_line_mode(rlabels->hpix, TRUE);
-    gtk_label_set_width_chars(rlabels->hpix, 8);
-    gtk_misc_set_alignment(GTK_MISC(rlabels->hpix), 1.0, 0.5);
-    gtk_table_attach(rlabels->table, GTK_WIDGET(rlabels->hpix), 2, 3, 5, 6,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    for (i = 0; i < NRLABELS; i++) {
+        rlabels->real[i] = gwy_rect_selection_labels_make_rlabel(table,
+                                                                 1, i+1 + i/2);
+        rlabels->pix[i] = gwy_rect_selection_labels_make_pspin(table,
+                                                               2, i+1 + i/2);
+    }
 
     return rlabels;
 }
 
 /**
- * gwy_plain_tool_rect_labels_get_table:
+ * gwy_rect_selection_labels_get_table:
  * @rlabels: Rectangular selection information table.
  *
  * Gets the table widget of a rectangular selection information.
@@ -673,13 +661,13 @@ gwy_plain_tool_rect_labels_new(gboolean none_is_full)
  * Returns: The table as a #GtkWidget.
  **/
 GtkWidget*
-gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels)
+gwy_rect_selection_labels_get_table(GwyRectSelectionLabels *rlabels)
 {
-    return GTK_WIDGET(rlabels->table);
+    return rlabels->table;
 }
 
 /**
- * gwy_plain_tool_rect_labels_fill:
+ * gwy_rect_selection_labels_fill:
  * @rlabels: Rectangular selection info table.
  * @selection: A rectangular selection to fill information from.  It can
  *             be %NULL to clear the labels.
@@ -701,11 +689,11 @@ gwy_plain_tool_rect_labels_get_table(GwyPlainToolRectLabels *rlabels)
  * Returns: %TRUE if a selection is present, %FALSE otherwise.
  **/
 gboolean
-gwy_plain_tool_rect_labels_fill(GwyPlainToolRectLabels *rlabels,
-                                GwySelection *selection,
-                                GwyDataField *dfield,
-                                gdouble *selreal,
-                                gint *selpix)
+gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
+                               GwySelection *selection,
+                               GwyDataField *dfield,
+                               gdouble *selreal,
+                               gint *selpix)
 {
     static GType selection_type_rect = 0;
 
@@ -715,6 +703,9 @@ gwy_plain_tool_rect_labels_fill(GwyPlainToolRectLabels *rlabels,
     static gchar buffer[64];
     gdouble xoff, yoff;
     gboolean is_selected;
+    GtkAdjustment *adj;
+    gint xres, yres;
+    guint i;
 
     g_return_val_if_fail(!dfield || GWY_IS_DATA_FIELD(dfield), FALSE);
     if (!selection_type_rect) {
@@ -728,17 +719,18 @@ gwy_plain_tool_rect_labels_fill(GwyPlainToolRectLabels *rlabels,
 
     is_selected = selection && gwy_selection_get_object(selection, 0, sel);
     if (!selection || !dfield || (!is_selected && !rlabels->none_is_full)) {
-        gtk_label_set_text(rlabels->xreal, "");
-        gtk_label_set_text(rlabels->yreal, "");
-        gtk_label_set_text(rlabels->wreal, "");
-        gtk_label_set_text(rlabels->hreal, "");
-        gtk_label_set_text(rlabels->xpix, "");
-        gtk_label_set_text(rlabels->ypix, "");
-        gtk_label_set_text(rlabels->wpix, "");
-        gtk_label_set_text(rlabels->hpix, "");
-
+        for (i = 0; i < NRLABELS; i++) {
+            gtk_label_set_text(rlabels->real[i], "");
+            gtk_spin_button_set_value(rlabels->pix[i], 0.0);
+            gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), FALSE);
+        }
         return is_selected;
     }
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
 
     if (is_selected) {
         if (sel[0] > sel[2])
@@ -756,53 +748,40 @@ gwy_plain_tool_rect_labels_fill(GwyPlainToolRectLabels *rlabels,
         sel[2] = gwy_data_field_get_xreal(dfield);
         sel[3] = gwy_data_field_get_yreal(dfield);
         isel[0] = isel[1] = 0;
-        isel[2] = gwy_data_field_get_xres(dfield);
-        isel[3] = gwy_data_field_get_yres(dfield);
+        isel[2] = xres;
+        isel[3] = yres;
     }
-
-    xoff = gwy_data_field_get_xoffset(dfield);
-    yoff = gwy_data_field_get_yoffset(dfield);
-    vf = gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                            NULL);
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
-               vf->precision, (sel[0] + xoff)/vf->magnitude,
-               *vf->units ? " " : "", vf->units);
-    gtk_label_set_markup(rlabels->xreal, buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
-               vf->precision, (sel[1] + yoff)/vf->magnitude,
-               *vf->units ? " " : "", vf->units);
-    gtk_label_set_markup(rlabels->yreal, buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
-               vf->precision, (sel[2] - sel[0])/vf->magnitude,
-               *vf->units ? " " : "", vf->units);
-    gtk_label_set_markup(rlabels->wreal, buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
-               vf->precision, (sel[3] - sel[1])/vf->magnitude,
-               *vf->units ? " " : "", vf->units);
-    gtk_label_set_markup(rlabels->hreal, buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%d %s", isel[0], "px");
-    gtk_label_set_text(GTK_LABEL(rlabels->xpix), buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%d %s", isel[1], "px");
-    gtk_label_set_text(GTK_LABEL(rlabels->ypix), buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%d %s", isel[2] - isel[0], "px");
-    gtk_label_set_text(GTK_LABEL(rlabels->wpix), buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%d %s", isel[3] - isel[1], "px");
-    gtk_label_set_text(GTK_LABEL(rlabels->hpix), buffer);
-
-    gwy_si_unit_value_format_free(vf);
 
     if (selreal)
         memcpy(selreal, sel, 4*sizeof(gdouble));
     if (selpix)
         memcpy(selpix, isel, 4*sizeof(gint));
+
+    sel[2] -= sel[0];
+    sel[3] -= sel[1];
+    sel[0] += xoff;
+    sel[1] += yoff;
+
+    vf = gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            NULL);
+    for (i = 0; i < NRLABELS; i++) {
+        g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
+                   vf->precision, sel[i]/vf->magnitude,
+                   *vf->units ? " " : "", vf->units);
+        gtk_label_set_markup(rlabels->real[i], buffer);
+    }
+    gwy_si_unit_value_format_free(vf);
+
+    isel[2] -= isel[0];
+    isel[3] -= isel[1];
+
+    for (i = 0; i < NRLABELS; i++) {
+        gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), TRUE);
+        adj = gtk_spin_button_get_adjustment(rlabels->pix[i]);
+        /* FIXME: this is wrong, but we do not care yet */
+        g_object_set(adj, "upper", (gdouble)(i%2 ? yres : xres), NULL);
+        gtk_adjustment_set_value(adj, isel[i]);
+    }
 
     return is_selected;
 }

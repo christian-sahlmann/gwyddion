@@ -43,7 +43,7 @@ struct _GwyToolCrop {
 
     ToolArgs args;
 
-    GwyPlainToolRectLabels *rlabels;
+    GwyRectSelectionLabels *rlabels;
     GtkWidget *keep_offsets;
     GtkWidget *new_channel;
     GtkWidget *clear;
@@ -182,9 +182,9 @@ gwy_tool_crop_init_dialog(GwyToolCrop *tool)
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    tool->rlabels = gwy_plain_tool_rect_labels_new(FALSE);
+    tool->rlabels = gwy_rect_selection_labels_new(FALSE, NULL, NULL);
     gtk_box_pack_start(GTK_BOX(dialog->vbox),
-                       gwy_plain_tool_rect_labels_get_table(tool->rlabels),
+                       gwy_rect_selection_labels_get_table(tool->rlabels),
                        TRUE, TRUE, 0);
 
     table = gtk_table_new(2, 1, FALSE);
@@ -243,7 +243,7 @@ gwy_tool_crop_data_switched(GwyTool *gwytool,
     if (!data_view) {
         gtk_widget_set_sensitive(tool->clear, FALSE);
         gtk_widget_set_sensitive(tool->apply, FALSE);
-        gwy_plain_tool_rect_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
         return;
     }
 
@@ -271,8 +271,8 @@ gwy_tool_crop_data_changed(GwyPlainTool *plain_tool)
     tool = GWY_TOOL_CROP(plain_tool);
     selection = gwy_vector_layer_get_selection(plain_tool->layer);
 
-    gwy_plain_tool_rect_labels_fill(tool->rlabels, selection,
-                                    plain_tool->data_field, NULL, NULL);
+    gwy_rect_selection_labels_fill(tool->rlabels, selection,
+                                   plain_tool->data_field, NULL, NULL);
     gwy_tool_crop_selection_changed(selection, 0, tool);
 }
 
@@ -311,9 +311,9 @@ gwy_tool_crop_selection_changed(GwySelection *selection,
     n = gwy_selection_get_data(selection, NULL);
     g_return_if_fail(n == 0 || n == 1);
 
-    gwy_plain_tool_rect_labels_fill(tool->rlabels, selection,
-                                    GWY_PLAIN_TOOL(tool)->data_field,
-                                    NULL, NULL);
+    gwy_rect_selection_labels_fill(tool->rlabels, selection,
+                                   GWY_PLAIN_TOOL(tool)->data_field,
+                                   NULL, NULL);
     gtk_widget_set_sensitive(tool->apply, n);
     gtk_widget_set_sensitive(tool->clear, n);
 }
