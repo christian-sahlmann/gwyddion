@@ -361,6 +361,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
     GwySelection *selection;
     GwyContainer *container;
     GwyDataField *dfield;
+    const gchar *s;
     GQuark quarks[3];
     gdouble sel[4];
     gchar key[24];
@@ -436,8 +437,20 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
             gwy_data_field_data_changed(plain_tool->data_field);
         }
 
+        /* Do not destroy our own selection, it has bad conseqences.
+         * XXX: If the ugly selection handling stuff gets into GwyPlainTool,
+         * we can be much more carefree. */
+        selection = gwy_vector_layer_get_selection(plain_tool->layer);
+        s = gwy_vector_layer_get_selection_key(plain_tool->layer);
+        quarks[0] = g_quark_from_string(s);
+        g_object_ref(selection);
+
         g_snprintf(key, sizeof(key), "/%d/select", plain_tool->id);
         gwy_container_remove_by_prefix(container, key);
+
+        gwy_selection_clear(selection);
+        gwy_container_set_object(plain_tool->container, quarks[0], selection);
+        g_object_unref(selection);
     }
 }
 
