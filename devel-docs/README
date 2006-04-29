@@ -1,3 +1,42 @@
+Building docs takes too much time, they are not built by default. go to the
+appropriate dir and run
+
+  make docs
+
+there if you want to update them.
+
+
+=========================
+Almost everything is generated, pay attention as other gtk-doc employing
+projects often let humans maintain much more files.
+
+- libgwy*.types is generated
+  rationale: its purpose is to instantiate all type classes a library defines,
+             such a task is better automated
+  tools: extract-types.py extracts type names from lines
+         #define GWY_FOO_GET_(CLASS|IFACE)
+
+- libgwy*-sections.txt is generated
+  rationale: if header files are organized reasonably they naturaly form
+             sections, therefore sections created by gtkdoc-scan are directly
+             used
+  tools: add-objects.py adds GwyFoo and GwyFooClass to appropriate sections
+         for classed types (using libgwy*.hierarchy as class list)
+
+- template/* are generated
+  rationale: the usual state when these files are partially generated and
+             partially human-edited causes neverending revision management
+             pain, therefore *all* section documentation is in the source
+             code
+  the directory is usually called tmpl, but it confused CVS if it was kept
+  after removal
+
+
+=========================
+gtk-doc.mk are universal rules to be included in Makefile.am.
+
+
+=========================
 gtk-doc scan may place a slightly broken doctype declaration to
 MODULE-docs.sgml
 
@@ -8,17 +47,3 @@ fix it to
 <!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
 
 or else you'll get really weird errors.
-
-
-=========================
-gtk-doc.mk are universal rules to be included in Makefile.am's
-
-
-=========================
-building docs takes too much time, they are not built by default.
-go to the appropriate dir and run
-
-  make docs
-
-there if you want to update them.
-
