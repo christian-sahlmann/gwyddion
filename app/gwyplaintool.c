@@ -156,6 +156,8 @@ gwy_plain_tool_data_switched(GwyTool *tool,
         gwy_plain_tool_assure_layer(plain_tool, plain_tool->layer_type);
         gwy_plain_tool_selection_reconnect(plain_tool);
     }
+    else
+        gwy_plain_tool_selection_changed(NULL, -1, plain_tool);
 }
 
 /**

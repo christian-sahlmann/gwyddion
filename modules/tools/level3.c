@@ -273,7 +273,7 @@ gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
 {
     GwyToolLevel3 *tool;
     GwyNullStore *store;
-    gint n;
+    gint n = 0;
 
     tool = GWY_TOOL_LEVEL3(plain_tool);
     store = GWY_NULL_STORE(tool->model);
@@ -286,7 +286,8 @@ gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
     else
         gwy_null_store_row_changed(store, hint);
 
-    n = gwy_selection_get_data(plain_tool->selection, NULL);
+    if (plain_tool->selection)
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
     gtk_widget_set_sensitive(tool->apply, n == 3);
 }
 
