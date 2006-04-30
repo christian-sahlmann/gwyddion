@@ -56,6 +56,9 @@ typedef struct _GwySelectionEllipseClass GwySelectionEllipseClass;
 struct _GwyLayerEllipse {
     GwyVectorLayer parent_instance;
 
+    GdkCursor *corner_cursor[4];
+    GdkCursor *resize_cursor;
+
     /* Properties */
     gboolean draw_reflection;
 
@@ -65,9 +68,6 @@ struct _GwyLayerEllipse {
 
 struct _GwyLayerEllipseClass {
     GwyVectorLayerClass parent_class;
-
-    GdkCursor *corner_cursor[4];
-    GdkCursor *resize_cursor;
 };
 
 struct _GwySelectionEllipse {
@@ -109,8 +109,8 @@ static gboolean gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
                                                   GdkEventButton *event);
 static void     gwy_layer_ellipse_set_reflection (GwyLayerEllipse *layer,
                                                   gboolean draw_reflection);
-static void     gwy_layer_ellipse_realize        (GwyDataViewLayer *layer);
-static void     gwy_layer_ellipse_unrealize      (GwyDataViewLayer *layer);
+static void     gwy_layer_ellipse_realize        (GwyDataViewLayer *dlayer);
+static void     gwy_layer_ellipse_unrealize      (GwyDataViewLayer *dlayer);
 static gint     gwy_layer_ellipse_near_point     (GwyVectorLayer *layer,
                                                   gdouble xreal,
                                                   gdouble yreal);
@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of elliptic areas."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -326,8 +326,8 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
                                 GdkEventMotion *event)
 {
     GwyDataView *data_view;
-    GwyLayerEllipseClass *klass;
     GdkWindow *window;
+    GdkCursor *cursor;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean circle;
@@ -354,10 +354,13 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
 
     if (!layer->button) {
         i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
-        if (i > 0)
+        if (i > 0) {
             i = i % OBJECT_SIZE;
-        klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
-        gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
+            cursor = GWY_LAYER_ELLIPSE(layer)->corner_cursor[i];
+        }
+        else
+            cursor = NULL;
+        gdk_window_set_cursor(window, cursor);
         return FALSE;
     }
 
@@ -384,7 +387,6 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerEllipseClass *klass;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean circle;
@@ -456,8 +458,7 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
                                   GWY_RENDERING_TARGET_SCREEN,
                                   layer->selecting);
 
-    klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
-    gdk_window_set_cursor(window, klass->resize_cursor);
+    gdk_window_set_cursor(window, GWY_LAYER_ELLIPSE(layer)->resize_cursor);
 
     return FALSE;
 }
@@ -468,7 +469,7 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerEllipseClass *klass;
+    GdkCursor *cursor;
     gint x, y, xx, yy, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
@@ -512,12 +513,15 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     }
 
     layer->selecting = -1;
-    klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
     i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
-    if (i > 0)
+    if (i > 0) {
         i = i % OBJECT_SIZE;
+        cursor = GWY_LAYER_ELLIPSE(layer)->corner_cursor[i];
+    }
+    else
+        cursor = NULL;
     outside = outside || (i == -1);
-    gdk_window_set_cursor(window, outside ? NULL : klass->corner_cursor[i]);
+    gdk_window_set_cursor(window, cursor);
     gwy_selection_finished(layer->selection);
 
     return FALSE;
@@ -548,35 +552,37 @@ gwy_layer_ellipse_set_reflection(GwyLayerEllipse *layer,
 }
 
 static void
-gwy_layer_ellipse_realize(GwyDataViewLayer *layer)
+gwy_layer_ellipse_realize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerEllipseClass *klass;
+    GwyLayerEllipse *layer;
+    GdkDisplay *display;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_ellipse_parent_class)->realize(layer);
 
-    klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
-    gwy_gdk_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_ellipse_parent_class)->realize(dlayer);
+    layer = GWY_LAYER_ELLIPSE(dlayer);
+    display = gtk_widget_get_display(dlayer->parent);
+    layer->resize_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
+    layer->corner_cursor[0] = gdk_cursor_new_for_display(display, GDK_UL_ANGLE);
+    layer->corner_cursor[1] = gdk_cursor_new_for_display(display, GDK_LL_ANGLE);
+    layer->corner_cursor[2] = gdk_cursor_new_for_display(display, GDK_UR_ANGLE);
+    layer->corner_cursor[3] = gdk_cursor_new_for_display(display, GDK_LR_ANGLE);
 }
 
 static void
-gwy_layer_ellipse_unrealize(GwyDataViewLayer *layer)
+gwy_layer_ellipse_unrealize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerEllipseClass *klass;
+    GwyLayerEllipse *layer;
     gint i;
 
     gwy_debug("");
 
-    klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
-    gwy_gdk_cursor_free_or_unref(&klass->resize_cursor);
+    layer = GWY_LAYER_ELLIPSE(dlayer);
+    gdk_cursor_unref(layer->resize_cursor);
     for (i = 0; i < 4; i++)
-        gwy_gdk_cursor_free_or_unref(&klass->corner_cursor[i]);
+        gdk_cursor_unref(layer->corner_cursor[i]);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_ellipse_parent_class)->unrealize(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_ellipse_parent_class)->unrealize(dlayer);
 }
 
 #if 0

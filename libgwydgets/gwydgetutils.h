@@ -79,12 +79,6 @@ GtkWidget*   gwy_stock_like_button_new      (const gchar *label_text,
 GtkWidget*   gwy_tool_like_button_new       (const gchar *label_text,
                                              const gchar *stock_id);
 PangoFontMap* gwy_get_pango_ft2_font_map    (gboolean unref);
-void         gwy_gdk_cursor_new_or_ref      (GdkCursor **cursor,
-                                             GdkCursorType type);
-void         gwy_gdk_cursor_free_or_unref   (GdkCursor **cursor);
-
-
-
 
 G_END_DECLS
 

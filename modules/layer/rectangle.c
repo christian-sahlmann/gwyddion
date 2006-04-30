@@ -58,6 +58,9 @@ typedef struct _GwySelectionRectangleClass GwySelectionRectangleClass;
 struct _GwyLayerRectangle {
     GwyVectorLayer parent_instance;
 
+    GdkCursor *corner_cursor[4];
+    GdkCursor *resize_cursor;
+
     /* Properties */
     gboolean is_crop;
     gboolean draw_reflection;
@@ -68,9 +71,6 @@ struct _GwyLayerRectangle {
 
 struct _GwyLayerRectangleClass {
     GwyVectorLayerClass parent_class;
-
-    GdkCursor *corner_cursor[4];
-    GdkCursor *resize_cursor;
 };
 
 struct _GwySelectionRectangle {
@@ -114,8 +114,8 @@ static void     gwy_layer_rectangle_set_is_crop    (GwyLayerRectangle *layer,
                                                     gboolean is_crop);
 static void     gwy_layer_rectangle_set_reflection (GwyLayerRectangle *layer,
                                                     gboolean draw_reflection);
-static void     gwy_layer_rectangle_realize        (GwyDataViewLayer *layer);
-static void     gwy_layer_rectangle_unrealize      (GwyDataViewLayer *layer);
+static void     gwy_layer_rectangle_realize        (GwyDataViewLayer *dlayer);
+static void     gwy_layer_rectangle_unrealize      (GwyDataViewLayer *dlayer);
 static gint     gwy_layer_rectangle_near_point     (GwyVectorLayer *layer,
                                                     gdouble xreal,
                                                     gdouble yreal);
@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -359,8 +359,8 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
                                   GdkEventMotion *event)
 {
     GwyDataView *data_view;
-    GwyLayerRectangleClass *klass;
     GdkWindow *window;
+    GdkCursor *cursor;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean square;
@@ -387,10 +387,13 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
 
     if (!layer->button) {
         i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
-        if (i > 0)
+        if (i > 0) {
             i = i % OBJECT_SIZE;
-        klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
-        gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
+            cursor = GWY_LAYER_RECTANGLE(layer)->corner_cursor[i];
+        }
+        else
+            cursor = NULL;
+        gdk_window_set_cursor(window, cursor);
         return FALSE;
     }
 
@@ -417,7 +420,6 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerRectangleClass *klass;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean square;
@@ -489,8 +491,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
                                     GWY_RENDERING_TARGET_SCREEN,
                                     layer->selecting);
 
-    klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
-    gdk_window_set_cursor(window, klass->resize_cursor);
+    gdk_window_set_cursor(window, GWY_LAYER_RECTANGLE(layer)->resize_cursor);
 
     return FALSE;
 }
@@ -501,7 +502,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerRectangleClass *klass;
+    GdkCursor *cursor;
     gint x, y, xx, yy, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
@@ -545,12 +546,12 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     }
 
     layer->selecting = -1;
-    klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
     i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
     if (i > 0)
         i = i % OBJECT_SIZE;
     outside = outside || (i == -1);
-    gdk_window_set_cursor(window, outside ? NULL : klass->corner_cursor[i]);
+    cursor = outside ? NULL : GWY_LAYER_RECTANGLE(layer)->corner_cursor[i];
+    gdk_window_set_cursor(window, cursor);
     gwy_selection_finished(layer->selection);
 
     return FALSE;
@@ -605,35 +606,37 @@ gwy_layer_rectangle_set_reflection(GwyLayerRectangle *layer,
 }
 
 static void
-gwy_layer_rectangle_realize(GwyDataViewLayer *layer)
+gwy_layer_rectangle_realize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerRectangleClass *klass;
+    GwyLayerRectangle *layer;
+    GdkDisplay *display;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->realize(layer);
 
-    klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
-    gwy_gdk_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
-    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->realize(dlayer);
+    layer = GWY_LAYER_RECTANGLE(dlayer);
+    display = gtk_widget_get_display(dlayer->parent);
+    layer->resize_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
+    layer->corner_cursor[0] = gdk_cursor_new_for_display(display, GDK_UL_ANGLE);
+    layer->corner_cursor[1] = gdk_cursor_new_for_display(display, GDK_LL_ANGLE);
+    layer->corner_cursor[2] = gdk_cursor_new_for_display(display, GDK_UR_ANGLE);
+    layer->corner_cursor[3] = gdk_cursor_new_for_display(display, GDK_LR_ANGLE);
 }
 
 static void
-gwy_layer_rectangle_unrealize(GwyDataViewLayer *layer)
+gwy_layer_rectangle_unrealize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerRectangleClass *klass;
+    GwyLayerRectangle *layer;
     gint i;
 
     gwy_debug("");
 
-    klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
-    gwy_gdk_cursor_free_or_unref(&klass->resize_cursor);
+    layer = GWY_LAYER_RECTANGLE(dlayer);
+    gdk_cursor_unref(layer->resize_cursor);
     for (i = 0; i < 4; i++)
-        gwy_gdk_cursor_free_or_unref(&klass->corner_cursor[i]);
+        gdk_cursor_unref(layer->corner_cursor[i]);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->unrealize(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->unrealize(dlayer);
 }
 
 static int

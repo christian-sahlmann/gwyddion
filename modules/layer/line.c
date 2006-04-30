@@ -59,12 +59,16 @@ typedef struct _GwySelectionLineClass GwySelectionLineClass;
 struct _GwyLayerLine {
     GwyVectorLayer parent_instance;
 
-    /* Properties */
-    gboolean line_numbers;
+    GdkCursor *near_cursor;
+    GdkCursor *nearline_cursor;
+    GdkCursor *move_cursor;
 
     /* FT2 stuff */
     PangoContext *ft2_context;
     PangoFontMap *ft2_font_map;
+
+    /* Properties */
+    gboolean line_numbers;
 
     /* Dynamic state */
     gint endpoint;  /* We need information which endpoint is moving; old
@@ -80,10 +84,6 @@ struct _GwyLayerLine {
 
 struct _GwyLayerLineClass {
     GwyVectorLayerClass parent_class;
-
-    GdkCursor *near_cursor;
-    GdkCursor *nearline_cursor;
-    GdkCursor *move_cursor;
 };
 
 struct _GwySelectionLine {
@@ -133,8 +133,8 @@ static gboolean   gwy_layer_line_button_released (GwyVectorLayer *layer,
                                                   GdkEventButton *event);
 static void       gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
                                                   gboolean line_numbers);
-static void       gwy_layer_line_realize         (GwyDataViewLayer *layer);
-static void       gwy_layer_line_unrealize       (GwyDataViewLayer *layer);
+static void       gwy_layer_line_realize         (GwyDataViewLayer *dlayer);
+static void       gwy_layer_line_unrealize       (GwyDataViewLayer *dlayer);
 static gint       gwy_layer_line_near_line       (GwyVectorLayer *layer,
                                                   gdouble xreal,
                                                   gdouble yreal);
@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -497,8 +497,8 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GwyLayerLine *layer_line;
-    GwyLayerLineClass *klass;
     GdkWindow *window;
+    GdkCursor *cursor;
     gint x, y, i, j;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean restricted;
@@ -533,11 +533,11 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     if (!layer->button) {
         j = gwy_layer_line_near_line(layer, xreal, yreal);
         i = gwy_layer_line_near_point(layer, xreal, yreal);
-        klass = GWY_LAYER_LINE_GET_CLASS(layer_line);
         if (i == -1 && j >= 0)
-            gdk_window_set_cursor(window, klass->nearline_cursor);
+            cursor = layer_line->nearline_cursor;
         else
-            gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
+            cursor = (i == -1) ? NULL : layer_line->near_cursor;
+        gdk_window_set_cursor(window, cursor);
         return FALSE;
     }
 
@@ -619,7 +619,6 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerLineClass *klass;
     GwyLayerLine *layer_line;
     gint x, y, i, j;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
@@ -696,8 +695,7 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     gwy_layer_line_draw_object(layer, window,
                                GWY_RENDERING_TARGET_SCREEN, layer->selecting);
 
-    klass = GWY_LAYER_LINE_GET_CLASS(layer_line);
-    gdk_window_set_cursor(window, klass->move_cursor);
+    gdk_window_set_cursor(window, layer_line->move_cursor);
 
     return FALSE;
 }
@@ -708,7 +706,7 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerLineClass *klass;
+    GdkCursor *cursor;
     GwyLayerLine *layer_line;
     gint x, y, i, j;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
@@ -751,77 +749,75 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
 
     layer_line->moving_line = FALSE;
     layer->selecting = -1;
-    klass = GWY_LAYER_LINE_GET_CLASS(layer_line);
     j = gwy_layer_line_near_line(layer, xreal, yreal);
     i = gwy_layer_line_near_point(layer, xreal, yreal);
     if (outside)
-        gdk_window_set_cursor(window, NULL);
+        cursor = NULL;
     else if (i == -1 && j >= 0)
-        gdk_window_set_cursor(window, klass->nearline_cursor);
+        cursor = layer_line->nearline_cursor;
     else
-        gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
+        cursor = (i == -1) ? NULL : layer_line->near_cursor;
+    gdk_window_set_cursor(window, cursor);
     gwy_selection_finished(layer->selection);
 
     return FALSE;
 }
 
 static void
-gwy_layer_line_realize(GwyDataViewLayer *layer)
+gwy_layer_line_realize(GwyDataViewLayer *dlayer)
 {
     PangoFontDescription *fontdesc;
     PangoContext *context;
-    GwyLayerLine *layer_line;
-    GwyLayerLineClass *klass;
+    GwyLayerLine *layer;
+    GdkDisplay *display;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->realize(layer);
 
-    layer_line = GWY_LAYER_LINE(layer);
-    klass = GWY_LAYER_LINE_GET_CLASS(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->realize(dlayer);
+    layer = GWY_LAYER_LINE(dlayer);
 
-    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
-    gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
-    gwy_gdk_cursor_new_or_ref(&klass->nearline_cursor, GDK_FLEUR);
+    display = gtk_widget_get_display(dlayer->parent);
+    layer->near_cursor = gdk_cursor_new_for_display(display, GDK_DOTBOX);
+    layer->move_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
+    layer->nearline_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
 
-    layer_line->ft2_font_map = gwy_get_pango_ft2_font_map(FALSE);
-    g_object_ref(layer_line->ft2_font_map);
-    layer_line->ft2_context = pango_ft2_font_map_create_context
-                               (PANGO_FT2_FONT_MAP(layer_line->ft2_font_map));
+    layer->ft2_font_map = gwy_get_pango_ft2_font_map(FALSE);
+    g_object_ref(layer->ft2_font_map);
+    layer->ft2_context = pango_ft2_font_map_create_context
+                                     (PANGO_FT2_FONT_MAP(layer->ft2_font_map));
 
-    context = gtk_widget_get_pango_context(layer->parent);
+    context = gtk_widget_get_pango_context(dlayer->parent);
     fontdesc = pango_context_get_font_description(context);
     fontdesc = pango_font_description_copy_static(fontdesc);
     pango_font_description_set_size(fontdesc, 12*PANGO_SCALE);
-    pango_context_set_font_description(layer_line->ft2_context, fontdesc);
+    pango_context_set_font_description(layer->ft2_context, fontdesc);
     pango_font_description_free(fontdesc);
 }
 
 static void
-gwy_layer_line_unrealize(GwyDataViewLayer *layer)
+gwy_layer_line_unrealize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerLine *layer_line;
-    GwyLayerLineClass *klass;
+    GwyLayerLine *layer;
     guint i;
 
     gwy_debug("");
-    layer_line = GWY_LAYER_LINE(layer);
 
-    klass = GWY_LAYER_LINE_GET_CLASS(layer);
-    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
-    gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
-    gwy_gdk_cursor_free_or_unref(&klass->nearline_cursor);
+    layer = GWY_LAYER_LINE(dlayer);
+    gdk_cursor_unref(layer->near_cursor);
+    gdk_cursor_unref(layer->move_cursor);
+    gdk_cursor_unref(layer->nearline_cursor);
 
-    if (layer_line->line_labels) {
-        for (i = 0; i < layer_line->line_labels->len; i++)
-            gwy_object_unref(g_ptr_array_index(layer_line->line_labels, i));
-        g_ptr_array_free(layer_line->line_labels, TRUE);
-        layer_line->line_labels = NULL;
+    if (layer->line_labels) {
+        for (i = 0; i < layer->line_labels->len; i++)
+            gwy_object_unref(g_ptr_array_index(layer->line_labels, i));
+        g_ptr_array_free(layer->line_labels, TRUE);
+        layer->line_labels = NULL;
     }
 
-    g_object_unref(layer_line->ft2_context);
-    g_object_unref(layer_line->ft2_font_map);
+    g_object_unref(layer->ft2_context);
+    g_object_unref(layer->ft2_font_map);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->unrealize(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->unrealize(dlayer);
 }
 
 static gint

@@ -59,13 +59,13 @@ typedef struct _GwySelectionAxisClass GwySelectionAxisClass;
 
 struct _GwyLayerAxis {
     GwyVectorLayer parent_instance;
+
+    GdkCursor *near_cursor;
+    GdkCursor *move_cursor;
 };
 
 struct _GwyLayerAxisClass {
     GwyVectorLayerClass parent_class;
-
-    GdkCursor *near_cursor;
-    GdkCursor *move_cursor;
 };
 
 struct _GwySelectionAxis {
@@ -113,8 +113,8 @@ static gboolean gwy_layer_axis_button_pressed     (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
 static gboolean gwy_layer_axis_button_released    (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
-static void     gwy_layer_axis_realize            (GwyDataViewLayer *layer);
-static void     gwy_layer_axis_unrealize          (GwyDataViewLayer *layer);
+static void     gwy_layer_axis_realize            (GwyDataViewLayer *dlayer);
+static void     gwy_layer_axis_unrealize          (GwyDataViewLayer *dlayer);
 static gint     gwy_layer_axis_near_point         (GwyVectorLayer *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of horizontal or vertical lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -440,8 +440,8 @@ gwy_layer_axis_motion_notify(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GwyOrientation orientation;
-    GwyLayerAxisClass *klass;
     GdkWindow *window;
+    GdkCursor *cursor;
     gint x, y, i;
     gdouble xreal, yreal, rcoord, xy[OBJECT_SIZE];
 
@@ -468,8 +468,8 @@ gwy_layer_axis_motion_notify(GwyVectorLayer *layer,
 
     if (!layer->button) {
         i = gwy_layer_axis_near_point(layer, xreal, yreal);
-        klass = GWY_LAYER_AXIS_GET_CLASS(layer);
-        gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
+        cursor = GWY_LAYER_AXIS(layer)->near_cursor;
+        gdk_window_set_cursor(window, i == -1 ? NULL : cursor);
         return FALSE;
     }
 
@@ -490,7 +490,6 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GwyOrientation orientation;
-    GwyLayerAxisClass *klass;
     GdkWindow *window;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
@@ -539,8 +538,7 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
     gwy_layer_axis_draw_object(layer, window,
                                GWY_RENDERING_TARGET_SCREEN, layer->selecting);
 
-    klass = GWY_LAYER_AXIS_GET_CLASS(layer);
-    gdk_window_set_cursor(window, klass->move_cursor);
+    gdk_window_set_cursor(window, GWY_LAYER_AXIS(layer)->move_cursor);
 
     return FALSE;
 }
@@ -552,7 +550,7 @@ gwy_layer_axis_button_released(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GdkWindow *window;
     GwyOrientation orientation;
-    GwyLayerAxisClass *klass;
+    GdkCursor *cursor;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
@@ -579,40 +577,42 @@ gwy_layer_axis_button_released(GwyVectorLayer *layer,
                                GWY_RENDERING_TARGET_SCREEN, i);
 
     layer->selecting = -1;
-    klass = GWY_LAYER_AXIS_GET_CLASS(layer);
     i = gwy_layer_axis_near_point(layer, xreal, yreal);
     outside = outside || (i == -1);
-    gdk_window_set_cursor(window, outside ? NULL : klass->near_cursor);
+    cursor = GWY_LAYER_AXIS(layer)->near_cursor;
+    gdk_window_set_cursor(window, outside ? NULL : cursor);
     gwy_selection_finished(layer->selection);
 
     return FALSE;
 }
 
 static void
-gwy_layer_axis_realize(GwyDataViewLayer *layer)
+gwy_layer_axis_realize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerAxisClass *klass;
+    GwyLayerAxis *layer;
+    GdkDisplay *display;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->realize(layer);
 
-    klass = GWY_LAYER_AXIS_GET_CLASS(layer);
-    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
-    gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->realize(dlayer);
+    layer = GWY_LAYER_AXIS(dlayer);
+    display = gtk_widget_get_display(dlayer->parent);
+    layer->near_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
+    layer->move_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
 }
 
 static void
-gwy_layer_axis_unrealize(GwyDataViewLayer *layer)
+gwy_layer_axis_unrealize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerAxisClass *klass;
+    GwyLayerAxis *layer;
 
     gwy_debug("");
 
-    klass = GWY_LAYER_AXIS_GET_CLASS(layer);
-    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
-    gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
+    layer = GWY_LAYER_AXIS(dlayer);
+    gdk_cursor_unref(layer->near_cursor);
+    gdk_cursor_unref(layer->move_cursor);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->unrealize(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->unrealize(dlayer);
 }
 
 static gint

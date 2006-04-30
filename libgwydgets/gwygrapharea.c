@@ -141,8 +141,6 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 
     klass->selected = NULL;
     klass->zoomed = NULL;
-    klass->cross_cursor = NULL;
-    klass->arrow_cursor = NULL;
     gwygrapharea_signals[SELECTED_SIGNAL]
         = g_signal_new("selected",
                        G_TYPE_FROM_CLASS (klass),
@@ -168,8 +166,6 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
-    GwyGraphAreaClass *klass;
-
     gwy_debug("");
     area->gc = NULL;
 
@@ -206,11 +202,6 @@ gwy_graph_area_init(GwyGraphArea *area)
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                    GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
                    5);
-
-    klass = GWY_GRAPH_AREA_GET_CLASS(area);
-    gwy_gdk_cursor_new_or_ref(&klass->cross_cursor, GDK_CROSS);
-    gwy_gdk_cursor_new_or_ref(&klass->arrow_cursor, GDK_LEFT_PTR);
-
 }
 
 /**
@@ -259,22 +250,12 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
 static void
 gwy_graph_area_finalize(GObject *object)
 {
-    GwyGraphAreaClass *klass;
     GwyGraphArea *area;
-
-    gwy_debug("finalizing a GwyGraphArea (refcount = %u)", object->ref_count);
-
-    g_return_if_fail(GWY_IS_GRAPH_AREA(object));
 
     area = GWY_GRAPH_AREA(object);
 
-    klass = GWY_GRAPH_AREA_GET_CLASS(area);
-    gwy_gdk_cursor_free_or_unref(&klass->cross_cursor);
-    gwy_gdk_cursor_free_or_unref(&klass->arrow_cursor);
-
     gtk_widget_destroy(GTK_WIDGET(area->area_dialog));
     gtk_widget_destroy(GTK_WIDGET(area->label_dialog));
-
 
     G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
 }
@@ -332,6 +313,7 @@ static void
 gwy_graph_area_realize(GtkWidget *widget)
 {
     GdkColormap *cmap;
+    GdkDisplay *display;
     GwyGraphArea *area;
     gboolean success[COLOR_LAST];
 
@@ -340,6 +322,10 @@ gwy_graph_area_realize(GtkWidget *widget)
 
     area = GWY_GRAPH_AREA(widget);
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
+
+    display = gtk_widget_get_display(widget);
+    area->cross_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
+    area->arrow_cursor = gdk_cursor_new_for_display(display, GDK_LEFT_PTR);
 
     cmap = gdk_gc_get_colormap(area->gc);
     area->colors = g_new(GdkColor, COLOR_LAST);
@@ -374,6 +360,8 @@ gwy_graph_area_unrealize(GtkWidget *widget)
     area = GWY_GRAPH_AREA(widget);
 
     gwy_object_unref(area->gc);
+    gwy_object_unref(area->cross_cursor);
+    gwy_object_unref(area->arrow_cursor);
 
     if (GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize(widget);
@@ -1728,9 +1716,6 @@ gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
         g_assert_not_reached();
     }
 }
-
-
-
 
 /************************** Documentation ****************************/
 

@@ -56,15 +56,15 @@ typedef struct _GwySelectionPointClass GwySelectionPointClass;
 struct _GwyLayerPoint {
     GwyVectorLayer parent_instance;
 
+    GdkCursor *near_cursor;
+    GdkCursor *move_cursor;
+
     /* Properties */
     gboolean draw_marker;
 };
 
 struct _GwyLayerPointClass {
     GwyVectorLayerClass parent_class;
-
-    GdkCursor *near_cursor;
-    GdkCursor *move_cursor;
 };
 
 struct _GwySelectionPoint {
@@ -102,8 +102,8 @@ static gboolean gwy_layer_point_button_released(GwyVectorLayer *layer,
                                                 GdkEventButton *event);
 static void     gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
                                                 gboolean draw_marker);
-static void     gwy_layer_point_realize        (GwyDataViewLayer *layer);
-static void     gwy_layer_point_unrealize      (GwyDataViewLayer *layer);
+static void     gwy_layer_point_realize        (GwyDataViewLayer *dlayer);
+static void     gwy_layer_point_unrealize      (GwyDataViewLayer *dlayer);
 static gint     gwy_layer_point_near_point     (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
@@ -118,7 +118,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -305,8 +305,8 @@ gwy_layer_point_motion_notify(GwyVectorLayer *layer,
                               GdkEventMotion *event)
 {
     GwyDataView *data_view;
-    GwyLayerPointClass *klass;
     GdkWindow *window;
+    GdkCursor *cursor;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
 
@@ -333,8 +333,8 @@ gwy_layer_point_motion_notify(GwyVectorLayer *layer,
             return FALSE;
 
         i = gwy_layer_point_near_point(layer, xreal, yreal);
-        klass = GWY_LAYER_POINT_GET_CLASS(layer);
-        gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
+        cursor = GWY_LAYER_POINT(layer)->near_cursor;
+        gdk_window_set_cursor(window, i == -1 ? NULL : cursor);
         return FALSE;
     }
 
@@ -351,7 +351,6 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
                                GdkEventButton *event)
 {
     GwyDataView *data_view;
-    GwyLayerPointClass *klass;
     GdkWindow *window;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
@@ -398,8 +397,7 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
     }
     layer->button = event->button;
 
-    klass = GWY_LAYER_POINT_GET_CLASS(layer);
-    gdk_window_set_cursor(window, klass->move_cursor);
+    gdk_window_set_cursor(window, GWY_LAYER_POINT(layer)->move_cursor);
 
     return FALSE;
 }
@@ -410,7 +408,7 @@ gwy_layer_point_button_released(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerPointClass *klass;
+    GdkCursor *cursor;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
@@ -434,10 +432,10 @@ gwy_layer_point_button_released(GwyVectorLayer *layer,
     gwy_layer_point_draw_object(layer, window, GWY_RENDERING_TARGET_SCREEN, i);
 
     layer->selecting = -1;
-    klass = GWY_LAYER_POINT_GET_CLASS(layer);
     i = gwy_layer_point_near_point(layer, xreal, yreal);
     outside = outside || (i == -1) || !GWY_LAYER_POINT(layer)->draw_marker;
-    gdk_window_set_cursor(window, outside ? NULL : klass->near_cursor);
+    cursor = GWY_LAYER_POINT(layer)->near_cursor;
+    gdk_window_set_cursor(window, outside ? NULL : cursor);
     gwy_selection_finished(layer->selection);
 
     return FALSE;
@@ -468,30 +466,32 @@ gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
 }
 
 static void
-gwy_layer_point_realize(GwyDataViewLayer *layer)
+gwy_layer_point_realize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerPointClass *klass;
+    GwyLayerPoint *layer;
+    GdkDisplay *display;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->realize(layer);
 
-    klass = GWY_LAYER_POINT_GET_CLASS(layer);
-    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
-    gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->realize(dlayer);
+    layer = GWY_LAYER_POINT(dlayer);
+    display = gtk_widget_get_display(dlayer->parent);
+    layer->near_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
+    layer->move_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
 }
 
 static void
-gwy_layer_point_unrealize(GwyDataViewLayer *layer)
+gwy_layer_point_unrealize(GwyDataViewLayer *dlayer)
 {
-    GwyLayerPointClass *klass;
+    GwyLayerPoint *layer;
 
     gwy_debug("");
 
-    klass = GWY_LAYER_POINT_GET_CLASS(layer);
-    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
-    gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
+    layer = GWY_LAYER_POINT(dlayer);
+    gdk_cursor_unref(layer->near_cursor);
+    gdk_cursor_unref(layer->move_cursor);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->unrealize(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->unrealize(dlayer);
 }
 
 static gint
