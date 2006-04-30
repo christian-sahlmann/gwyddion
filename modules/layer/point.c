@@ -25,7 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-layer.h>
 
 #include "layer.h"
 
@@ -177,6 +177,7 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
 static void
 gwy_selection_point_init(GwySelectionPoint *selection)
 {
+    /* Set max. number of objects to one */
     g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 

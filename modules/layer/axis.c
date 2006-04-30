@@ -23,10 +23,11 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocessenums.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-layer.h>
 
 #include "layer.h"
 
@@ -202,6 +203,7 @@ static void
 gwy_selection_axis_init(GwySelectionAxis *selection)
 {
     selection->orientation = GWY_ORIENTATION_HORIZONTAL;
+    /* Set max. number of objects to one */
     g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 

@@ -22,10 +22,11 @@
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-layer.h>
 
 #include "layer.h"
 
