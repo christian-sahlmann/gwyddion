@@ -38,14 +38,13 @@ typedef struct _GwyPlainToolClass GwyPlainToolClass;
 struct _GwyPlainTool {
     GwyTool parent_instance;
 
-    GwySIUnitFormatStyle unit_style;
-
-    GwyDataView *data_view;
-    GwyVectorLayer *layer;
     gboolean init_failed;
 
+    GwySIUnitFormatStyle unit_style;
     GwySIValueFormat *coord_format;
     GwySIValueFormat *value_format;
+
+    GwyDataView *data_view;
 
     GwyContainer *container;
     gulong data_item_id;
@@ -61,6 +60,14 @@ struct _GwyPlainTool {
 
     GwyDataField *show_field;
     gulong show_id;
+
+    GwyVectorLayer *layer;
+    GwySelection *selection;
+    gchar *selection_bname;
+    gulong selection_item_id;
+    gulong selection_id;
+
+    GtkWidget *clear;
 };
 
 struct _GwyPlainToolClass {
@@ -69,15 +76,21 @@ struct _GwyPlainToolClass {
     void (*data_changed)(GwyPlainTool *plain_tool);
     void (*mask_changed)(GwyPlainTool *plain_tool);
     void (*show_changed)(GwyPlainTool *plain_tool);
+    void (*selection_changed)(GwyPlainTool *plain_tool,
+                              gint hint);
 };
 
-GType gwy_plain_tool_get_type         (void) G_GNUC_CONST;
-GType gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
-                                       const gchar *name);
-void  gwy_plain_tool_assure_layer     (GwyPlainTool *plain_tool,
-                                       GType layer_type);
-void  gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
-                                       const gchar *bname);
+GType        gwy_plain_tool_get_type         (void) G_GNUC_CONST;
+GType        gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
+                                              const gchar *name);
+void         gwy_plain_tool_connect_selection(GwyPlainTool *plain_tool,
+                                              GType layer_type,
+                                              const gchar *bname);
+void         gwy_plain_tool_assure_layer     (GwyPlainTool *plain_tool,
+                                              GType layer_type);
+const gchar* gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
+                                              const gchar *bname);
+GtkWidget*   gwy_plain_tool_add_clear_button (GwyPlainTool *plain_tool);
 
 gdouble gwy_plain_tool_get_z_average(GwyDataField *data_field,
                                      const gdouble *point,
