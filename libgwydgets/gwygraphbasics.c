@@ -1,5 +1,9 @@
 /*
+<<<<<<< gwygraphbasics.c
  *  @(#) $Id$
+=======
+ *  @(#) $Id$
+>>>>>>> 1.25
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -287,7 +291,7 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
 
     size = 6;
 
-    for (i = 0; i < GWY_SELECTION(selection)->n; i++) {
+    for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(selection), NULL); i++) {
         gwy_selection_get_object(GWY_SELECTION(selection), i, selection_data);
         gwy_graph_draw_point(drawable, gc,
                              x_data_to_pixel(specs, selection_data[0]),
@@ -316,7 +320,7 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
 
-    n_of_areas = GWY_SELECTION(selection)->n;
+    n_of_areas = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
     if (n_of_areas == 0)
         return;
 
@@ -357,7 +361,7 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     gint i, n_of_lines;
     gdouble selection_linedata;
 
-    n_of_lines = GWY_SELECTION(selection)->n;
+    n_of_lines = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
     if (n_of_lines == 0)
         return;
 

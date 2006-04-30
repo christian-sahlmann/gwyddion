@@ -36,6 +36,9 @@ enum {
 };
 
 
+
+
+
 G_DEFINE_TYPE(GwySelectionGraphPoint, gwy_selection_graph_point, GWY_TYPE_SELECTION)
 
 

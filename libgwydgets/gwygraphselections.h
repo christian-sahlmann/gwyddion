@@ -63,6 +63,7 @@ GType    gwy_selection_graph_point_get_type       (void) G_GNUC_CONST;
 typedef struct _GwySelectionGraphArea      GwySelectionGraphArea;
 typedef struct _GwySelectionGraphAreaClass GwySelectionGraphAreaClass;
 
+
 struct _GwySelectionGraphArea {
         GwySelection parent_instance;
 };
@@ -85,6 +86,7 @@ GType    gwy_selection_graph_area_get_type       (void) G_GNUC_CONST;
 
 typedef struct _GwySelectionGraphLine      GwySelectionGraphLine;
 typedef struct _GwySelectionGraphLineClass GwySelectionGraphLineClass;
+
 
 struct _GwySelectionGraphLine {
         GwySelection parent_instance;
