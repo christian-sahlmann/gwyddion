@@ -48,9 +48,6 @@ struct _GwyToolDistance {
 
     GtkTreeView *treeview;
     GtkTreeModel *model;
-    GtkWidget *clear;
-
-    gulong selection_id;
 
     /* potential class data */
     GwySIValueFormat *angle_format;
@@ -69,11 +66,8 @@ static void   gwy_tool_distance_init_dialog      (GwyToolDistance *tool);
 static void   gwy_tool_distance_data_switched    (GwyTool *gwytool,
                                                   GwyDataView *data_view);
 static void   gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_distance_response         (GwyTool *tool,
-                                                  gint response_id);
-static void   gwy_tool_distance_selection_changed(GwySelection *selection,
-                                                  gint hint,
-                                                  GwyToolDistance *tool);
+static void   gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
+                                                  gint hint);
 static void   gwy_tool_distance_update_headers   (GwyToolDistance *tool);
 static void   gwy_tool_distance_render_cell      (GtkCellLayout *layout,
                                                   GtkCellRenderer *renderer,
@@ -118,25 +112,17 @@ gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
     tool_class->prefix = "/module/distance";
     tool_class->default_height = 200;
     tool_class->data_switched = gwy_tool_distance_data_switched;
-    tool_class->response = gwy_tool_distance_response;
 
     ptool_class->data_changed = gwy_tool_distance_data_changed;
+    ptool_class->selection_changed = gwy_tool_distance_selection_changed;
 }
 
 static void
 gwy_tool_distance_finalize(GObject *object)
 {
     GwyToolDistance *tool;
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
 
-    plain_tool = GWY_PLAIN_TOOL(object);
     tool = GWY_TOOL_DISTANCE(object);
-
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
-    }
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
@@ -165,6 +151,8 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     tool->angle_format->magnitude = 1.0;
     tool->angle_format->precision = 0.1;
     gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
+
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line, "line");
 
     gwy_tool_distance_init_dialog(tool);
 }
@@ -206,8 +194,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
-    tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
-                                        GWY_TOOL_RESPONSE_CLEAR);
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     gwy_tool_distance_update_headers(tool);
 
@@ -218,100 +205,52 @@ static void
 gwy_tool_distance_data_switched(GwyTool *gwytool,
                                 GwyDataView *data_view)
 {
-    GwyToolDistance *tool;
-    GwySelection *selection;
     GwyPlainTool *plain_tool;
 
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
     GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(gwytool,
                                                                   data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
-        return;
 
-    tool = GWY_TOOL_DISTANCE(gwytool);
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
+    if (data_view) {
+        g_object_set(plain_tool->layer, "line-numbers", TRUE, NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, NLINES);
     }
-    if (!data_view) {
-        gtk_widget_set_sensitive(tool->clear, FALSE);
-        gwy_null_store_set_n_rows(GWY_NULL_STORE(tool->model), 0);
-        gwy_tool_distance_update_headers(tool);
-        return;
-    }
-
-    gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_line);
-    gwy_plain_tool_set_selection_key(plain_tool, "line");
-    g_object_set(plain_tool->layer, "line-numbers", TRUE, NULL);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    gwy_selection_set_max_objects(selection, NLINES);
-    tool->selection_id
-        = g_signal_connect(selection, "changed",
-                           G_CALLBACK(gwy_tool_distance_selection_changed),
-                           tool);
-
     gwy_tool_distance_data_changed(plain_tool);
 }
 
 static void
 gwy_tool_distance_data_changed(GwyPlainTool *plain_tool)
 {
-    GwySelection *selection;
+    gwy_tool_distance_update_headers(GWY_TOOL_DISTANCE(plain_tool));
+}
+
+static void
+gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
+                                    gint hint)
+{
     GwyToolDistance *tool;
-
-    tool = GWY_TOOL_DISTANCE(plain_tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-
-    gwy_tool_distance_update_headers(tool);
-    gwy_tool_distance_selection_changed(selection, -1, tool);
-}
-
-static void
-gwy_tool_distance_response(GwyTool *tool,
-                           gint response_id)
-{
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
-
-    switch (response_id) {
-        case GWY_TOOL_RESPONSE_CLEAR:
-        plain_tool = GWY_PLAIN_TOOL(tool);
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_selection_clear(selection);
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
-}
-
-static void
-gwy_tool_distance_selection_changed(GwySelection *selection,
-                                    gint hint,
-                                    GwyToolDistance *tool)
-{
     GwyNullStore *store;
     gint n;
 
+    tool = GWY_TOOL_DISTANCE(plain_tool);
     store = GWY_NULL_STORE(tool->model);
     n = gwy_null_store_get_n_rows(store);
     g_return_if_fail(hint <= n);
 
     if (hint < 0) {
         gtk_tree_view_set_model(tool->treeview, NULL);
-        n = gwy_selection_get_data(selection, NULL);
+        if (plain_tool->selection)
+            n = gwy_selection_get_data(plain_tool->selection, NULL);
+        else
+            n = 0;
         gwy_null_store_set_n_rows(store, n);
         gtk_tree_view_set_model(tool->treeview, tool->model);
-        gtk_widget_set_sensitive(tool->clear, n > 0);
     }
     else {
         if (hint < n)
             gwy_null_store_row_changed(store, hint);
-        else {
+        else
             gwy_null_store_set_n_rows(store, n+1);
-            gtk_widget_set_sensitive(tool->clear, TRUE);
-        }
     }
 }
 
@@ -370,7 +309,6 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
 {
     GwyToolDistance *tool = (GwyToolDistance*)user_data;
     GwyPlainTool *plain_tool;
-    GwySelection *selection;
     const GwySIValueFormat *vf;
     gchar buf[32];
     gdouble line[4];
@@ -386,8 +324,7 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
     }
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    gwy_selection_get_object(selection, idx, line);
+    gwy_selection_get_object(plain_tool->selection, idx, line);
 
     switch (id) {
         case COLUMN_DX:
