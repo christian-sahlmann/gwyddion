@@ -364,7 +364,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
         return;
     }
     current_data = g_list_delete_link(current_data, item);
-    gwy_debug("Removed window, %p is new head\n",
+    gwy_debug("Removed window, %p is new head",
               current_data ? current_data->data : NULL);
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
@@ -1335,10 +1335,10 @@ gwy_app_tool_use_cb(const gchar *toolname,
         return;
     }
 
-    newtool = (GwyTool*)g_object_new(type, NULL);
-    g_return_if_fail(GWY_IS_TOOL(newtool));
     gwy_object_unref(current_tool);
+    newtool = (GwyTool*)g_object_new(type, NULL);
     current_tool = newtool;
+    g_return_if_fail(GWY_IS_TOOL(newtool));
 
     if (data_view) {
         gwy_tool_data_switched(current_tool, data_view);
