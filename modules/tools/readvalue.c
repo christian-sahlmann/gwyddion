@@ -51,8 +51,6 @@ struct _GwyToolReadValue {
     GtkLabel *zunits;
     GtkObject *radius;
 
-    gulong selection_id;
-
     /* potential class data */
     GType layer_type_point;
 };
@@ -69,13 +67,11 @@ static void   gwy_tool_read_value_init_dialog      (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_data_switched    (GwyTool *gwytool,
                                                     GwyDataView *data_view);
 static void   gwy_tool_read_value_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_read_value_selection_changed(GwySelection *selection,
-                                                    gint hint,
-                                                    GwyToolReadValue *tool);
+static void   gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
+                                                    gint hint);
 static void   gwy_tool_read_value_radius_changed   (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_update_headers   (GwyToolReadValue *tool);
-static void   gwy_tool_read_value_update_values    (GwyToolReadValue *tool,
-                                                    GwySelection *selection);
+static void   gwy_tool_read_value_update_values    (GwyToolReadValue *tool);
 
 static const gchar radius_key[] = "/module/readvalue/radius";
 
@@ -121,23 +117,16 @@ gwy_tool_read_value_class_init(GwyToolReadValueClass *klass)
     tool_class->data_switched = gwy_tool_read_value_data_switched;
 
     ptool_class->data_changed = gwy_tool_read_value_data_changed;
+    ptool_class->selection_changed = gwy_tool_read_value_selection_changed;
 }
 
 static void
 gwy_tool_read_value_finalize(GObject *object)
 {
     GwyToolReadValue *tool;
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
     GwyContainer *settings;
 
-    plain_tool = GWY_PLAIN_TOOL(object);
     tool = GWY_TOOL_READ_VALUE(object);
-
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
-    }
 
     settings = gwy_app_settings_get();
     gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
@@ -162,6 +151,9 @@ gwy_tool_read_value_init(GwyToolReadValue *tool)
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_gis_int32_by_name(settings, radius_key, &tool->args.radius);
+
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
+                                     "pointer");
 
     gwy_tool_read_value_init_dialog(tool);
 }
@@ -226,10 +218,8 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
 
 static void
 gwy_tool_read_value_data_switched(GwyTool *gwytool,
-                                GwyDataView *data_view)
+                                  GwyDataView *data_view)
 {
-    GwyToolReadValue *tool;
-    GwySelection *selection;
     GwyPlainTool *plain_tool;
 
     GWY_TOOL_CLASS(gwy_tool_read_value_parent_class)->data_switched(gwytool,
@@ -238,64 +228,34 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
-    tool = GWY_TOOL_READ_VALUE(gwytool);
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
+    if (data_view) {
+        g_object_set(plain_tool->layer, "draw-marker", FALSE, NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
-    if (!data_view) {
-        gwy_tool_read_value_update_headers(tool);
-        return;
-    }
-
-    gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_point);
-    gwy_plain_tool_set_selection_key(plain_tool, "pointer");
-    g_object_set(plain_tool->layer, "draw-marker", FALSE, NULL);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    gwy_selection_set_max_objects(selection, 1);
-    tool->selection_id
-        = g_signal_connect(selection, "changed",
-                           G_CALLBACK(gwy_tool_read_value_selection_changed),
-                           tool);
-
-    gwy_tool_read_value_data_changed(plain_tool);
+    gwy_tool_read_value_update_headers(GWY_TOOL_READ_VALUE(gwytool));
 }
 
 static void
 gwy_tool_read_value_data_changed(GwyPlainTool *plain_tool)
 {
-    GwySelection *selection;
-    GwyToolReadValue *tool;
-
-    tool = GWY_TOOL_READ_VALUE(plain_tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-
-    gwy_tool_read_value_update_headers(tool);
-    gwy_tool_read_value_selection_changed(selection, -1, tool);
+    gwy_tool_read_value_update_headers(GWY_TOOL_READ_VALUE(plain_tool));
+    gwy_tool_read_value_update_values(GWY_TOOL_READ_VALUE(plain_tool));
 }
 
 static void
-gwy_tool_read_value_selection_changed(GwySelection *selection,
-                                      gint hint,
-                                      GwyToolReadValue *tool)
+gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
+                                      gint hint)
 {
     g_return_if_fail(hint <= 0);
-    gwy_tool_read_value_update_values(tool, selection);
+    gwy_tool_read_value_update_values(GWY_TOOL_READ_VALUE(plain_tool));
 }
 
 static void
 gwy_tool_read_value_radius_changed(GwyToolReadValue *tool)
 {
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
-
     tool->args.radius = gwy_adjustment_get_int(tool->radius);
-
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_tool_read_value_update_values(tool, selection);
-    }
+    if (GWY_PLAIN_TOOL(tool)->selection)
+        gwy_tool_read_value_update_values(tool);
 }
 
 static void
@@ -341,8 +301,7 @@ gwy_tool_read_value_update_value(GtkLabel *label,
 }
 
 static void
-gwy_tool_read_value_update_values(GwyToolReadValue *tool,
-                                  GwySelection *selection)
+gwy_tool_read_value_update_values(GwyToolReadValue *tool)
 {
     GwyPlainTool *plain_tool;
     gboolean is_selected = FALSE;
@@ -350,8 +309,8 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool,
     gdouble xoff, yoff, value;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    if (plain_tool->data_field && selection)
-        is_selected = gwy_selection_get_object(selection, 0, point);
+    if (plain_tool->data_field && plain_tool->selection)
+        is_selected = gwy_selection_get_object(plain_tool->selection, 0, point);
 
     if (is_selected) {
         xoff = gwy_data_field_get_xoffset(plain_tool->data_field);
