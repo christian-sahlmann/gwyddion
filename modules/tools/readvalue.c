@@ -223,7 +223,7 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
 
     GWY_TOOL_CLASS(gwy_tool_read_value_parent_class)->data_switched(gwytool,
-                                                                  data_view);
+                                                                    data_view);
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     if (plain_tool->init_failed)
         return;

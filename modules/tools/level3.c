@@ -52,10 +52,7 @@ struct _GwyToolLevel3 {
     GtkTreeView *treeview;
     GtkTreeModel *model;
     GtkObject *radius;
-    GtkWidget *clear;
     GtkWidget *apply;
-
-    gulong selection_id;
 
     /* potential class data */
     GType layer_type_point;
@@ -75,9 +72,8 @@ static void   gwy_tool_level3_data_switched    (GwyTool *gwytool,
 static void   gwy_tool_level3_data_changed     (GwyPlainTool *plain_tool);
 static void   gwy_tool_level3_response         (GwyTool *tool,
                                                 gint response_id);
-static void   gwy_tool_level3_selection_changed(GwySelection *selection,
-                                                gint hint,
-                                                GwyToolLevel3 *tool);
+static void   gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
+                                                gint hint);
 static void   gwy_tool_level3_radius_changed   (GwyToolLevel3 *tool);
 static void   gwy_tool_level3_update_headers   (GwyToolLevel3 *tool);
 static void   gwy_tool_level3_render_cell      (GtkCellLayout *layout,
@@ -134,23 +130,16 @@ gwy_tool_level3_class_init(GwyToolLevel3Class *klass)
     tool_class->response = gwy_tool_level3_response;
 
     ptool_class->data_changed = gwy_tool_level3_data_changed;
+    ptool_class->selection_changed = gwy_tool_level3_selection_changed;
 }
 
 static void
 gwy_tool_level3_finalize(GObject *object)
 {
     GwyToolLevel3 *tool;
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
     GwyContainer *settings;
 
-    plain_tool = GWY_PLAIN_TOOL(object);
     tool = GWY_TOOL_LEVEL3(object);
-
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
-    }
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
@@ -180,6 +169,9 @@ gwy_tool_level3_init(GwyToolLevel3 *tool)
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_gis_int32_by_name(settings, radius_key, &tool->args.radius);
+
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
+                                     "point");
 
     gwy_tool_level3_init_dialog(tool);
 }
@@ -228,8 +220,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
     g_signal_connect_swapped(tool->radius, "value-changed",
                              G_CALLBACK(gwy_tool_level3_radius_changed), tool);
 
-    tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
-                                        GWY_TOOL_RESPONSE_CLEAR);
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
@@ -244,85 +235,47 @@ static void
 gwy_tool_level3_data_switched(GwyTool *gwytool,
                               GwyDataView *data_view)
 {
-    GwyToolLevel3 *tool;
-    GwySelection *selection;
     GwyPlainTool *plain_tool;
 
     GWY_TOOL_CLASS(gwy_tool_level3_parent_class)->data_switched(gwytool,
-                                                                  data_view);
+                                                                data_view);
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     if (plain_tool->init_failed)
         return;
 
-    tool = GWY_TOOL_LEVEL3(gwytool);
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
-    }
-    if (!data_view) {
-        gtk_widget_set_sensitive(tool->clear, FALSE);
-        gtk_widget_set_sensitive(tool->apply, FALSE);
-        gwy_tool_level3_update_headers(tool);
-        return;
+    if (data_view) {
+        g_object_set(plain_tool->layer, "draw-marker", TRUE, NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 3);
     }
 
-    gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_point);
-    gwy_plain_tool_set_selection_key(plain_tool, "point");
-    g_object_set(plain_tool->layer, "draw-marker", TRUE, NULL);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    gwy_selection_set_max_objects(selection, 3);
-    tool->selection_id
-        = g_signal_connect(selection, "changed",
-                           G_CALLBACK(gwy_tool_level3_selection_changed), tool);
-
-    gwy_tool_level3_data_changed(plain_tool);
+    gwy_tool_level3_update_headers(GWY_TOOL_LEVEL3(gwytool));
 }
 
 static void
 gwy_tool_level3_data_changed(GwyPlainTool *plain_tool)
 {
-    GwySelection *selection;
-    GwyToolLevel3 *tool;
-
-    tool = GWY_TOOL_LEVEL3(plain_tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-
-    gwy_tool_level3_update_headers(tool);
-    gwy_tool_level3_selection_changed(selection, -1, tool);
+    gwy_tool_level3_update_headers(GWY_TOOL_LEVEL3(plain_tool));
 }
 
 static void
 gwy_tool_level3_response(GwyTool *tool,
                          gint response_id)
 {
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
+    GWY_TOOL_CLASS(gwy_tool_level3_parent_class)->response(tool, response_id);
 
-    switch (response_id) {
-        case GWY_TOOL_RESPONSE_CLEAR:
-        plain_tool = GWY_PLAIN_TOOL(tool);
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_selection_clear(selection);
-        break;
-
-        case GTK_RESPONSE_APPLY:
+    if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_level3_apply(GWY_TOOL_LEVEL3(tool));
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
 }
 
 static void
-gwy_tool_level3_selection_changed(GwySelection *selection,
-                                  gint hint,
-                                  GwyToolLevel3 *tool)
+gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
+                                  gint hint)
 {
+    GwyToolLevel3 *tool;
     GwyNullStore *store;
     gint n;
 
+    tool = GWY_TOOL_LEVEL3(plain_tool);
     store = GWY_NULL_STORE(tool->model);
     g_return_if_fail(hint <= 3);
 
@@ -333,8 +286,7 @@ gwy_tool_level3_selection_changed(GwySelection *selection,
     else
         gwy_null_store_row_changed(store, hint);
 
-    n = gwy_selection_get_data(selection, NULL);
-    gtk_widget_set_sensitive(tool->clear, n == 3);
+    n = gwy_selection_get_data(plain_tool->selection, NULL);
     gtk_widget_set_sensitive(tool->apply, n == 3);
 }
 
@@ -342,15 +294,11 @@ static void
 gwy_tool_level3_radius_changed(GwyToolLevel3 *tool)
 {
     GwyPlainTool *plain_tool;
-    GwySelection *selection;
 
     tool->args.radius = gwy_adjustment_get_int(tool->radius);
-
     plain_tool = GWY_PLAIN_TOOL(tool);
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_tool_level3_selection_changed(selection, -1, tool);
-    }
+    if (plain_tool->selection)
+        gwy_tool_level3_selection_changed(plain_tool, -1);
 }
 
 static void
@@ -404,7 +352,6 @@ gwy_tool_level3_render_cell(GtkCellLayout *layout,
 {
     GwyToolLevel3 *tool = (GwyToolLevel3*)user_data;
     GwyPlainTool *plain_tool;
-    GwySelection *selection;
     const GwySIValueFormat *vf;
     gchar buf[32];
     gdouble point[2];
@@ -420,12 +367,8 @@ gwy_tool_level3_render_cell(GtkCellLayout *layout,
     }
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    if (!plain_tool->layer) {
-        g_object_set(renderer, "text", "", NULL);
-        return;
-    }
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    if (!gwy_selection_get_object(selection, idx, point)) {
+    if (!plain_tool->selection
+        || !gwy_selection_get_object(plain_tool->selection, idx, point)) {
         g_object_set(renderer, "text", "", NULL);
         return;
     }
@@ -464,15 +407,13 @@ static void
 gwy_tool_level3_apply(GwyToolLevel3 *tool)
 {
     GwyPlainTool *plain_tool;
-    GwySelection *selection;
     gdouble points[9], z[3], coeffs[3];
     gint xres, yres, i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
 
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    if (gwy_selection_get_data(selection, points) < 3) {
+    if (gwy_selection_get_data(plain_tool->selection, points) < 3) {
         g_warning("Apply invoked with less than 3 points");
         return;
     }

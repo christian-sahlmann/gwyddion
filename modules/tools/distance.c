@@ -152,7 +152,8 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     tool->angle_format->precision = 0.1;
     gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
 
-    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line, "line");
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
+                                     "line");
 
     gwy_tool_distance_init_dialog(tool);
 }
@@ -196,6 +197,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+
     gwy_tool_distance_update_headers(tool);
 
     gtk_widget_show_all(dialog->vbox);
@@ -207,15 +209,18 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
 
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
     GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(gwytool,
                                                                   data_view);
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    if (plain_tool->init_failed)
+        return;
 
     if (data_view) {
         g_object_set(plain_tool->layer, "line-numbers", TRUE, NULL);
         gwy_selection_set_max_objects(plain_tool->selection, NLINES);
     }
-    gwy_tool_distance_data_changed(plain_tool);
+    gwy_tool_distance_update_headers(GWY_TOOL_DISTANCE(gwytool));
 }
 
 static void

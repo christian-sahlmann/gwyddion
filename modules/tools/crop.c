@@ -46,10 +46,7 @@ struct _GwyToolCrop {
     GwyRectSelectionLabels *rlabels;
     GtkWidget *keep_offsets;
     GtkWidget *new_channel;
-    GtkWidget *clear;
     GtkWidget *apply;
-
-    gulong selection_id;
 
     /* potential class data */
     GType layer_type_rect;
@@ -69,9 +66,8 @@ static void   gwy_tool_crop_data_switched       (GwyTool *gwytool,
 static void   gwy_tool_crop_data_changed        (GwyPlainTool *plain_tool);
 static void   gwy_tool_crop_response            (GwyTool *tool,
                                                  gint response_id);
-static void   gwy_tool_crop_selection_changed   (GwySelection *selection,
-                                                 gint hint,
-                                                 GwyToolCrop *tool);
+static void   gwy_tool_crop_selection_changed   (GwyPlainTool *plain_tool,
+                                                 gint hint);
 static void   gwy_tool_crop_keep_offsets_toggled(GwyToolCrop *tool,
                                                  GtkToggleButton *toggle);
 static void   gwy_tool_crop_new_data_toggled    (GwyToolCrop *tool,
@@ -125,23 +121,16 @@ gwy_tool_crop_class_init(GwyToolCropClass *klass)
     tool_class->response = gwy_tool_crop_response;
 
     ptool_class->data_changed = gwy_tool_crop_data_changed;
+    ptool_class->selection_changed = gwy_tool_crop_selection_changed;
 }
 
 static void
 gwy_tool_crop_finalize(GObject *object)
 {
     GwyToolCrop *tool;
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
     GwyContainer *settings;
 
-    plain_tool = GWY_PLAIN_TOOL(object);
     tool = GWY_TOOL_CROP(object);
-
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
-    }
 
     settings = gwy_app_settings_get();
     gwy_container_set_boolean_by_name(settings, keep_offsets_key,
@@ -171,19 +160,21 @@ gwy_tool_crop_init(GwyToolCrop *tool)
     gwy_container_gis_boolean_by_name(settings, new_channel_key,
                                       &tool->args.new_channel);
 
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                     "rectangle");
+
     gwy_tool_crop_init_dialog(tool);
 }
 
 static void
 gwy_tool_crop_rect_updated(GwyToolCrop *tool)
 {
-    GwySelection *selection;
     GwyPlainTool *plain_tool;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
     gwy_rect_selection_labels_select(tool->rlabels,
-                                     selection, plain_tool->data_field);
+                                     plain_tool->selection,
+                                     plain_tool->data_field);
 }
 
 static void
@@ -224,8 +215,7 @@ gwy_tool_crop_init_dialog(GwyToolCrop *tool)
                              G_CALLBACK(gwy_tool_crop_new_data_toggled),
                              tool);
 
-    tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
-                                        GWY_TOOL_RESPONSE_CLEAR);
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
@@ -238,8 +228,6 @@ static void
 gwy_tool_crop_data_switched(GwyTool *gwytool,
                             GwyDataView *data_view)
 {
-    GwyToolCrop *tool;
-    GwySelection *selection;
     GwyPlainTool *plain_tool;
 
     GWY_TOOL_CLASS(gwy_tool_crop_parent_class)->data_switched(gwytool,
@@ -248,87 +236,57 @@ gwy_tool_crop_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
-    tool = GWY_TOOL_CROP(gwytool);
-    if (plain_tool->layer) {
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_signal_handler_disconnect(selection, tool->selection_id);
+    if (data_view) {
+        g_object_set(plain_tool->layer,
+                     "draw-reflection", FALSE,
+                     "is-crop", TRUE,
+                     NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
-    if (!data_view) {
-        gtk_widget_set_sensitive(tool->clear, FALSE);
-        gtk_widget_set_sensitive(tool->apply, FALSE);
-        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
-        return;
-    }
-
-    gwy_plain_tool_assure_layer(plain_tool, tool->layer_type_rect);
-    gwy_plain_tool_set_selection_key(plain_tool, "rectangle");
-    g_object_set(plain_tool->layer,
-                 "draw-reflection", FALSE,
-                 "is-crop", TRUE,
-                 NULL);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    gwy_selection_set_max_objects(selection, 1);
-    tool->selection_id
-        = g_signal_connect(selection, "changed",
-                           G_CALLBACK(gwy_tool_crop_selection_changed), tool);
-
-    gwy_tool_crop_data_changed(plain_tool);
 }
 
 static void
 gwy_tool_crop_data_changed(GwyPlainTool *plain_tool)
 {
-    GwySelection *selection;
-    GwyToolCrop *tool;
-
-    tool = GWY_TOOL_CROP(plain_tool);
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-
-    gwy_rect_selection_labels_fill(tool->rlabels, selection,
-                                   plain_tool->data_field, NULL, NULL);
-    gwy_tool_crop_selection_changed(selection, 0, tool);
+    gwy_rect_selection_labels_fill(GWY_TOOL_CROP(plain_tool)->rlabels,
+                                   plain_tool->selection,
+                                   plain_tool->data_field,
+                                   NULL, NULL);
+    gwy_tool_crop_selection_changed(plain_tool, 0);
 }
 
 static void
 gwy_tool_crop_response(GwyTool *tool,
                        gint response_id)
 {
-    GwyPlainTool *plain_tool;
-    GwySelection *selection;
+    GWY_TOOL_CLASS(gwy_tool_crop_parent_class)->response(tool, response_id);
 
-    switch (response_id) {
-        case GWY_TOOL_RESPONSE_CLEAR:
-        plain_tool = GWY_PLAIN_TOOL(tool);
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        gwy_selection_clear(selection);
-        break;
-
-        case GTK_RESPONSE_APPLY:
+    if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_crop_apply(GWY_TOOL_CROP(tool));
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
 }
 
 static void
-gwy_tool_crop_selection_changed(GwySelection *selection,
-                                gint hint,
-                                GwyToolCrop *tool)
+gwy_tool_crop_selection_changed(GwyPlainTool *plain_tool,
+                                gint hint)
 {
-    gint n;
+    GwyToolCrop *tool;
+    gint n = 0;
 
+    tool = GWY_TOOL_CROP(plain_tool);
     g_return_if_fail(hint <= 0);
-    n = gwy_selection_get_data(selection, NULL);
-    g_return_if_fail(n == 0 || n == 1);
 
-    gwy_rect_selection_labels_fill(tool->rlabels, selection,
-                                   GWY_PLAIN_TOOL(tool)->data_field,
-                                   NULL, NULL);
-    gtk_widget_set_sensitive(tool->apply, n);
-    gtk_widget_set_sensitive(tool->clear, n);
+    if (plain_tool->selection) {
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+        g_return_if_fail(n == 0 || n == 1);
+        gwy_rect_selection_labels_fill(tool->rlabels,
+                                       plain_tool->selection,
+                                       plain_tool->data_field,
+                                       NULL, NULL);
+    }
+    else
+        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+
+    gtk_widget_set_sensitive(tool->apply, n > 0);
 }
 
 static void
@@ -371,10 +329,8 @@ static void
 gwy_tool_crop_apply(GwyToolCrop *tool)
 {
     GwyPlainTool *plain_tool;
-    GwySelection *selection;
     GwyContainer *container;
     GwyDataField *dfield;
-    const gchar *s;
     GQuark quarks[3];
     gdouble sel[4];
     gchar key[24];
@@ -384,8 +340,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
 
-    selection = gwy_vector_layer_get_selection(plain_tool->layer);
-    if (!gwy_selection_get_object(selection, 0, sel)) {
+    if (!gwy_selection_get_object(plain_tool->selection, 0, sel)) {
         g_warning("Apply invoked when no selection is present");
         return;
     }
@@ -450,20 +405,8 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
             gwy_data_field_data_changed(plain_tool->data_field);
         }
 
-        /* Do not destroy our own selection, it has bad conseqences.
-         * XXX: If the ugly selection handling stuff gets into GwyPlainTool,
-         * we can be much more carefree. */
-        selection = gwy_vector_layer_get_selection(plain_tool->layer);
-        s = gwy_vector_layer_get_selection_key(plain_tool->layer);
-        quarks[0] = g_quark_from_string(s);
-        g_object_ref(selection);
-
         g_snprintf(key, sizeof(key), "/%d/select", plain_tool->id);
         gwy_container_remove_by_prefix(container, key);
-
-        gwy_selection_clear(selection);
-        gwy_container_set_object(plain_tool->container, quarks[0], selection);
-        g_object_unref(selection);
     }
 }
 
