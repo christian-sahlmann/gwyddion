@@ -26,6 +26,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
 
@@ -102,6 +103,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 static void
 gwy_vector_layer_init(GwyVectorLayer *layer)
 {
+    gwy_debug_objects_creation(G_OBJECT(layer));
     layer->selecting = -1;
     layer->focus = -1;
 }

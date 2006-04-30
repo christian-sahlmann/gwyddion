@@ -22,6 +22,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwyselection.h>
 
 enum {
@@ -162,6 +163,7 @@ gwy_selection_serializable_init(GwySerializableIface *iface)
 static void
 gwy_selection_init(GwySelection *selection)
 {
+    gwy_debug_objects_creation(G_OBJECT(selection));
     selection->objects = g_array_new(FALSE, FALSE, sizeof(gdouble));
 }
 
