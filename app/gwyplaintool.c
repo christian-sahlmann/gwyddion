@@ -151,11 +151,11 @@ gwy_plain_tool_data_switched(GwyTool *tool,
     plain_tool = GWY_PLAIN_TOOL(tool);
     gwy_plain_tool_selection_disconnect(plain_tool);
     gwy_plain_tool_reconnect_container(plain_tool, data_view);
+    gwy_plain_tool_update_units(plain_tool);
     if (data_view && plain_tool->layer_type) {
         gwy_plain_tool_assure_layer(plain_tool, plain_tool->layer_type);
         gwy_plain_tool_selection_reconnect(plain_tool);
     }
-    gwy_plain_tool_update_units(plain_tool);
 }
 
 /**
