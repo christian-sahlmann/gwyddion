@@ -64,6 +64,7 @@ struct _GwyPlainTool {
     GwyVectorLayer *layer;
     GwySelection *selection;
     gchar *selection_bname;
+    GType layer_type;
     gulong selection_item_id;
     gulong selection_id;
 

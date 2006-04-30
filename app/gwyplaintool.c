@@ -18,13 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * TODO:
- * Stuff to possibly move here:
- * - Selection handling, namely a standard Clear button, a selection_id
- *   directly in GwyPlainTool, with automatic finalization and reconnection
- *   helper
- */
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
@@ -78,11 +71,14 @@ static void gwy_plain_tool_selection_item_changed(GwyContainer *container,
 static void gwy_plain_tool_data_changed          (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_mask_changed          (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_show_changed          (GwyPlainTool *plain_tool);
+static void gwy_plain_tool_selection_disconnect  (GwyPlainTool *plain_tool);
+static void gwy_plain_tool_selection_reconnect   (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_selection_changed     (GwySelection *selection,
                                                   gint hint,
                                                   GwyPlainTool *plain_tool);
 static void gwy_plain_tool_update_units          (GwyPlainTool *plain_tool);
-static void gwy_plain_tool_selection_clear       (GwyPlainTool *plain_tool);
+static void gwy_plain_tool_response              (GwyTool *tool,
+                                                  gint response_id);
 
 static void gwy_rect_selection_labels_spinned (GtkSpinButton *spin,
                                                GwyRectSelectionLabels *rlabels);
@@ -102,6 +98,7 @@ gwy_plain_tool_class_init(GwyPlainToolClass *klass)
     tool_class->hide = gwy_plain_tool_hide;
     tool_class->show = gwy_plain_tool_show;
     tool_class->data_switched = gwy_plain_tool_data_switched;
+    tool_class->response = gwy_plain_tool_response;
 }
 
 static void
@@ -110,7 +107,7 @@ gwy_plain_tool_finalize(GObject *object)
     GwyPlainTool *plain_tool;
 
     plain_tool = GWY_PLAIN_TOOL(object);
-    gwy_plain_tool_connect_selection(plain_tool, 0, NULL);
+    gwy_plain_tool_selection_disconnect(plain_tool);
     gwy_object_unref(plain_tool->layer);
     gwy_plain_tool_reconnect_container(plain_tool, NULL);
 
@@ -146,13 +143,18 @@ gwy_plain_tool_data_switched(GwyTool *tool,
 {
     GwyPlainTool *plain_tool;
 
-    gwy_debug("%p", data_view);
+    gwy_debug("%s %p", GWY_TOOL_GET_CLASS(tool)->title, data_view);
     if (GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched)
         GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->data_switched(tool,
                                                                    data_view);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
+    gwy_plain_tool_selection_disconnect(plain_tool);
     gwy_plain_tool_reconnect_container(plain_tool, data_view);
+    if (data_view && plain_tool->layer_type) {
+        gwy_plain_tool_assure_layer(plain_tool, plain_tool->layer_type);
+        gwy_plain_tool_selection_reconnect(plain_tool);
+    }
     gwy_plain_tool_update_units(plain_tool);
 }
 
@@ -175,6 +177,7 @@ gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
     gchar *key, *sigdetail;
     guint len;
 
+    gwy_debug("%s %p", GWY_TOOL_GET_CLASS(plain_tool)->title, data_view);
     gwy_signal_handler_disconnect(plain_tool->data_field, plain_tool->data_id);
     gwy_signal_handler_disconnect(plain_tool->mask_field, plain_tool->mask_id);
     gwy_signal_handler_disconnect(plain_tool->show_field, plain_tool->show_id);
@@ -497,7 +500,7 @@ gwy_plain_tool_check_layer_type(GwyPlainTool *plain_tool,
  * Sets up a plain tool to automatically manage layer selection.
  *
  * When @layer_type is 0 and @bname %NULL, plain tool stops automatically
- * managing selection.
+ * managing selection (hopefully).
  *
  * This method performs gwy_plain_tool_assure_layer() and
  * gwy_plain_tool_set_selection_key(), connecting to the selection and making
@@ -512,32 +515,53 @@ gwy_plain_tool_connect_selection(GwyPlainTool *plain_tool,
                                  GType layer_type,
                                  const gchar *bname)
 {
-    const gchar *key;
-    gchar *sigdetail;
-
+    gwy_debug("%s %s", GWY_TOOL_GET_CLASS(plain_tool)->title, bname);
     g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
     if (layer_type || bname) {
         g_return_if_fail(g_type_is_a(layer_type, GWY_TYPE_VECTOR_LAYER));
         g_return_if_fail(bname);
-        g_return_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view));
     }
+
+    gwy_plain_tool_selection_disconnect(plain_tool);
+    g_free(plain_tool->selection_bname);
+    plain_tool->selection_bname = NULL;
+
+    plain_tool->layer_type = layer_type;
+    plain_tool->selection_bname = g_strdup(bname);
+
+    if (!bname || !layer_type || !plain_tool->data_view)
+        return;
+
+    gwy_plain_tool_assure_layer(plain_tool, layer_type);
+    gwy_plain_tool_selection_reconnect(plain_tool);
+}
+
+static void
+gwy_plain_tool_selection_disconnect(GwyPlainTool *plain_tool)
+{
+    gwy_debug("");
 
     gwy_signal_handler_disconnect(plain_tool->container,
                                   plain_tool->selection_item_id);
     gwy_signal_handler_disconnect(plain_tool->selection,
                                   plain_tool->selection_id);
     gwy_object_unref(plain_tool->selection);
-    g_free(plain_tool->selection_bname);
-    plain_tool->selection_bname = NULL;
+}
 
-    if (!layer_type)
+static void
+gwy_plain_tool_selection_reconnect(GwyPlainTool *plain_tool)
+{
+    const gchar *key;
+    gchar *sigdetail;
+
+    gwy_debug("%s", plain_tool->selection_bname);
+
+    if (!plain_tool->selection_bname)
         return;
 
-    gwy_plain_tool_assure_layer(plain_tool, layer_type);
-    key = gwy_plain_tool_set_selection_key(plain_tool, bname);
-
+    key = gwy_plain_tool_set_selection_key(plain_tool,
+                                           plain_tool->selection_bname);
     sigdetail = g_strconcat(ITEM_CHANGED, key, NULL);
-    plain_tool->selection_bname = g_strdup(bname);
 
     plain_tool->selection_item_id
         = g_signal_connect(plain_tool->container, sigdetail,
@@ -551,6 +575,8 @@ gwy_plain_tool_connect_selection(GwyPlainTool *plain_tool,
                                G_CALLBACK(gwy_plain_tool_selection_changed),
                                plain_tool);
     }
+
+    g_free(sigdetail);
 
     gwy_plain_tool_selection_changed(plain_tool->selection, -1, plain_tool);
 }
@@ -577,6 +603,7 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
     gchar *key;
     guint len;
 
+    gwy_debug("%s", bname);
     g_return_val_if_fail(GWY_IS_PLAIN_TOOL(plain_tool), NULL);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(plain_tool->data_view), NULL);
     g_return_val_if_fail(GWY_IS_VECTOR_LAYER(plain_tool->layer), NULL);
@@ -613,6 +640,8 @@ void
 gwy_plain_tool_assure_layer(GwyPlainTool *plain_tool,
                             GType layer_type)
 {
+    gwy_debug("%s %s",
+              GWY_TOOL_GET_CLASS(plain_tool)->title, g_type_name(layer_type));
     g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
     g_return_if_fail(g_type_is_a(layer_type, GWY_TYPE_VECTOR_LAYER));
 
@@ -644,14 +673,11 @@ gwy_plain_tool_add_clear_button(GwyPlainTool *plain_tool)
     GtkDialog *dialog;
 
     g_return_val_if_fail(GWY_IS_PLAIN_TOOL(plain_tool), NULL);
-    g_return_val_if_fail(plain_tool->clear, NULL);
+    g_return_val_if_fail(!plain_tool->clear, NULL);
 
     dialog = GTK_DIALOG(GWY_TOOL(plain_tool)->dialog);
     plain_tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
                                               GWY_TOOL_RESPONSE_CLEAR);
-    g_signal_connect_swapped(plain_tool->clear, "clicked",
-                             G_CALLBACK(gwy_plain_tool_selection_clear),
-                             plain_tool);
     if (!plain_tool->selection
         || !gwy_selection_get_data(plain_tool->selection, NULL))
         gtk_widget_set_sensitive(plain_tool->clear, FALSE);
@@ -660,9 +686,15 @@ gwy_plain_tool_add_clear_button(GwyPlainTool *plain_tool)
 }
 
 static void
-gwy_plain_tool_selection_clear(GwyPlainTool *plain_tool)
+gwy_plain_tool_response(GwyTool *tool,
+                        gint response_id)
 {
-    gwy_selection_clear(plain_tool->selection);
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (response_id == GWY_TOOL_RESPONSE_CLEAR && plain_tool->clear) {
+        gwy_selection_clear(plain_tool->selection);
+    }
 }
 
 /**
