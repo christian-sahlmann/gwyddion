@@ -478,12 +478,17 @@ gwy_app_data_proxy_find_object(GtkListStore *store,
     GtkTreeModel *model;
     gint objid;
 
+    gwy_debug("looking for objid %d", i);
+    if (i < 0)
+        return FALSE;
+
     model = GTK_TREE_MODEL(store);
     if (!gtk_tree_model_get_iter_first(model, iter))
         return FALSE;
 
     do {
         gtk_tree_model_get(model, iter, MODEL_ID, &objid, -1);
+        gwy_debug("found objid %d", objid);
         if (objid == i)
             return TRUE;
     } while (gtk_tree_model_iter_next(model, iter));
@@ -1740,6 +1745,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
         gtk_label_set_text(GTK_LABEL(browser->filename), "");
         gwy_sensitivity_group_set_state(browser->sensgroup,
                                         SENS_FILE | SENS_OBJECT, 0);
+        browser->current = NULL;
         return;
     }
     if (browser->current && browser->current->container == data)
