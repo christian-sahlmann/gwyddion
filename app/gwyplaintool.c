@@ -956,7 +956,7 @@ static void
 gwy_rect_selection_labels_spinned(GtkSpinButton *spin,
                                   GwyRectSelectionLabels *rlabels)
 {
-    GtkAdjustment *adj, *adj2;
+    GtkAdjustment *adj;
     gint val;
 
     if (rlabels->in_update)
@@ -968,12 +968,12 @@ gwy_rect_selection_labels_spinned(GtkSpinButton *spin,
     val = gwy_adjustment_get_int(adj);
 
     if (spin == rlabels->pix[RLABEL_X]) {
-        adj2 = gtk_spin_button_get_adjustment(rlabels->pix[RLABEL_W]);
-        g_object_set(adj2, "upper", (gdouble)(adj->upper+1 - val), NULL);
+        gtk_spin_button_set_range(rlabels->pix[RLABEL_W],
+                                  2.0, adj->upper + 1.0 - val);
     }
     else if (spin == rlabels->pix[RLABEL_Y]) {
-        adj2 = gtk_spin_button_get_adjustment(rlabels->pix[RLABEL_H]);
-        g_object_set(adj2, "upper", (gdouble)(adj->upper+1 - val), NULL);
+        gtk_spin_button_set_range(rlabels->pix[RLABEL_H],
+                                  2.0, adj->upper + 1.0 - val);
     }
     else if (spin == rlabels->pix[RLABEL_W]) {
     }
@@ -1143,11 +1143,14 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
     isel[2] -= isel[0] - 1;
     isel[3] -= isel[1] - 1;
 
+    gtk_spin_button_set_range(rlabels->pix[RLABEL_X], 0.0, xres - 1.0);
+    gtk_spin_button_set_range(rlabels->pix[RLABEL_W], 2.0, xres - isel[0]);
+    gtk_spin_button_set_range(rlabels->pix[RLABEL_Y], 0.0, yres - 1.0);
+    gtk_spin_button_set_range(rlabels->pix[RLABEL_H], 2.0, yres - isel[1]);
+
     for (i = 0; i < NRLABELS; i++) {
         gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), TRUE);
         adj = gtk_spin_button_get_adjustment(rlabels->pix[i]);
-        /* FIXME: this is wrong, but we do not care yet */
-        g_object_set(adj, "upper", (gdouble)(i%2 ? yres : xres), NULL);
         gtk_adjustment_set_value(adj, isel[i]);
     }
 
