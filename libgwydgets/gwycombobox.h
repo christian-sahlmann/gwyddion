@@ -21,8 +21,7 @@
 #ifndef __GWY_COMBO_BOX_H__
 #define __GWY_COMBO_BOX_H__
 
-#include <gtk/gtkwidget.h>
-#include <libgwydgets/gwyinventorystore.h>
+#include <gtk/gtkcombobox.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwysiunit.h>
 
