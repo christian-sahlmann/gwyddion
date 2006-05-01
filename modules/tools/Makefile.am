@@ -6,7 +6,6 @@ toolsdir = $(pkglibdir)/modules/tool
 #	distance.la \
 #	crop.la \
 #	filter.la \
-#	grain_remove_manually.la \
 #	icolorange.la \
 #	maskedit.la \
 #	polynom.la \
@@ -18,6 +17,7 @@ toolsdir = $(pkglibdir)/modules/tool
 tools_LTLIBRARIES = \
 	crop.la \
 	distance.la \
+	grainremover.la \
 	level3.la \
 	readvalue.la
 
@@ -64,10 +64,10 @@ distance_la_LIBADD = $(module_libadd)
 
 #filter_la_SOURCES = filter.c
 #filter_la_LIBADD = $(module_libadd)
-#
-#grain_remove_manually_la_SOURCES = grain_remove_manually.c
-#grain_remove_manually_la_LIBADD = $(module_libadd)
-#
+
+grainremover_la_SOURCES = grainremover.c
+grainremover_la_LIBADD = $(module_libadd)
+
 #icolorange_la_SOURCES = icolorange.c
 #icolorange_la_LIBADD = $(module_libadd)
 
