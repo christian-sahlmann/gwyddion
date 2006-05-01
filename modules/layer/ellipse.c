@@ -354,7 +354,7 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
 
     if (!layer->button) {
         i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
-        if (i > 0) {
+        if (i >= 0) {
             i = i % OBJECT_SIZE;
             cursor = GWY_LAYER_ELLIPSE(layer)->corner_cursor[i];
         }
@@ -514,7 +514,7 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
 
     layer->selecting = -1;
     i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
-    if (i > 0) {
+    if (i >= 0) {
         i = i % OBJECT_SIZE;
         cursor = GWY_LAYER_ELLIPSE(layer)->corner_cursor[i];
     }
