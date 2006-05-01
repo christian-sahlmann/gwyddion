@@ -68,6 +68,7 @@ static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
 static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
 static gboolean   gwy_app_set_current_window       (GtkWidget *window);
+static void       gwy_app_unset_current_window     (GtkWidget *window);
 static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
@@ -285,7 +286,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
                              | GWY_MENU_FLAG_DATA_MASK
                              | GWY_MENU_FLAG_DATA_SHOW);
     GwyMenuSensFlags state = GWY_MENU_FLAG_DATA;
-    static GwyDataWindow *already_current = NULL;
     GwyDataView *data_view;
     GwyPixmapLayer *layer;
     GList *item;
@@ -297,12 +297,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     data_view = gwy_data_window_get_data_view(window);
     gwy_app_data_browser_select_data_view(data_view);
-
-    if (already_current == window) {
-        /* FIXME: Data browser seems to make this sometimes fail, but rarely */
-        g_assert(current_data && current_data->data == (gpointer)window);
-        return FALSE;
-    }
 
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(window), FALSE);
     item = g_list_find(current_data, window);
@@ -329,7 +323,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         state |= GWY_MENU_FLAG_DATA_MASK;
 
     gwy_app_sensitivity_set_state(mask, state);
-    already_current = window;
 
     return FALSE;
 }
@@ -370,6 +363,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
         return;
     }
+    gwy_app_unset_current_window(GTK_WIDGET(window));
 
     if (current_tool)
         gwy_tool_data_switched(current_tool, NULL);
@@ -650,8 +644,10 @@ gwy_app_graph_window_remove(GtkWidget *window)
     current_graph = g_list_delete_link(current_graph, item);
     if (current_graph)
         gwy_app_graph_window_set_current(current_graph->data);
-    else
+    else {
+        gwy_app_unset_current_window(window);
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, 0);
+    }
 }
 
 /**
@@ -870,10 +866,13 @@ gwy_app_3d_window_remove(GtkWidget *window)
     current_3d = g_list_delete_link(current_3d, item);
     if (current_3d)
         gwy_app_3d_window_set_current(current_3d->data);
+    else {
+        gwy_app_unset_current_window(window);
     /* FIXME: hangs.
     else
         gwy_app_toolbox_update_state(&sens_data);
         */
+    }
 }
 
 static void
@@ -927,11 +926,19 @@ gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
  *                                                                           *
  *****************************************************************************/
 
+static void
+gwy_app_unset_current_window(GtkWidget *window)
+{
+    if (current_any == window)
+        current_any = NULL;
+}
+
 static gboolean
 gwy_app_set_current_window(GtkWidget *window)
 {
     g_return_val_if_fail(GTK_IS_WINDOW(window), FALSE);
 
+    gwy_debug("current_any: %p, window: %p", current_any, window);
     if (current_any == window)
         return TRUE;
 

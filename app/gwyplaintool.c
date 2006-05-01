@@ -17,7 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
@@ -149,6 +148,9 @@ gwy_plain_tool_data_switched(GwyTool *tool,
                                                                    data_view);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
+    if (data_view == plain_tool->data_view)
+        return;
+
     gwy_plain_tool_selection_disconnect(plain_tool);
     gwy_plain_tool_reconnect_container(plain_tool, data_view);
     gwy_plain_tool_update_units(plain_tool);
