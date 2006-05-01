@@ -44,7 +44,6 @@ struct _GwyTool {
 
     GtkWidget *dialog;
     gboolean is_visible;
-    gboolean update_on_show;    /* supposed to be used by tools */
 };
 
 struct _GwyToolClass {

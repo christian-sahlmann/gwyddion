@@ -127,12 +127,56 @@ gwy_plain_tool_init(GwyPlainTool *plain_tool)
 static void
 gwy_plain_tool_show(GwyTool *tool)
 {
+    GwyPlainTool *plain_tool;
+    GwyPlainToolClass *klass;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (plain_tool->lazy_updates && plain_tool->pending_updates) {
+        klass = GWY_PLAIN_TOOL_GET_CLASS(tool);
+
+        if (plain_tool->pending_updates & GWY_PLAIN_TOOL_CHANGED_DATA) {
+            gwy_plain_tool_update_units(plain_tool);
+            if (klass->data_changed)
+                klass->data_changed(plain_tool);
+            plain_tool->pending_updates &= ~GWY_PLAIN_TOOL_CHANGED_DATA;
+        }
+
+        if (plain_tool->pending_updates & GWY_PLAIN_TOOL_CHANGED_MASK) {
+            if (klass->mask_changed)
+                klass->mask_changed(plain_tool);
+            plain_tool->pending_updates &= ~GWY_PLAIN_TOOL_CHANGED_MASK;
+        }
+
+        if (plain_tool->pending_updates & GWY_PLAIN_TOOL_CHANGED_SHOW) {
+            if (klass->show_changed)
+                klass->show_changed(plain_tool);
+            plain_tool->pending_updates &= ~GWY_PLAIN_TOOL_CHANGED_SHOW;
+        }
+
+        if (plain_tool->pending_updates & GWY_PLAIN_TOOL_CHANGED_SELECTION) {
+            /* This is gross. */
+            if (klass->selection_changed)
+                klass->selection_changed(plain_tool, -1);
+            plain_tool->pending_updates &= ~GWY_PLAIN_TOOL_CHANGED_SELECTION;
+        }
+
+        /* TODO: GWY_PLAIN_TOOL_FINISHED_SELECTION does not exist yet */
+
+        if (plain_tool->pending_updates) {
+            g_warning("Stray bits in pending_updates: %u",
+                      plain_tool->pending_updates);
+            plain_tool->pending_updates = 0;
+        }
+    }
     GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->show(tool);
 }
 
 static void
 gwy_plain_tool_hide(GwyTool *tool)
 {
+    if (GWY_PLAIN_TOOL(tool)->pending_updates)
+        g_warning("We have pending updates when tool is being hidden?");
+
     GWY_TOOL_CLASS(gwy_plain_tool_parent_class)->hide(tool);
 }
 
@@ -348,11 +392,15 @@ gwy_plain_tool_data_changed(GwyPlainTool *plain_tool)
 {
     GwyPlainToolClass *klass;
 
-    gwy_plain_tool_update_units(plain_tool);
-
     klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
-    if (klass->data_changed)
-        klass->data_changed(plain_tool);
+    if (plain_tool->lazy_updates
+        && !gwy_tool_is_visible(GWY_TOOL(plain_tool)))
+        plain_tool->pending_updates |= GWY_PLAIN_TOOL_CHANGED_DATA;
+    else {
+        gwy_plain_tool_update_units(plain_tool);
+        if (klass->data_changed)
+            klass->data_changed(plain_tool);
+    }
 }
 
 static void
@@ -361,7 +409,10 @@ gwy_plain_tool_mask_changed(GwyPlainTool *plain_tool)
     GwyPlainToolClass *klass;
 
     klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
-    if (klass->mask_changed)
+    if (plain_tool->lazy_updates
+        && !gwy_tool_is_visible(GWY_TOOL(plain_tool)))
+        plain_tool->pending_updates |= GWY_PLAIN_TOOL_CHANGED_MASK;
+    else if (klass->mask_changed)
         klass->mask_changed(plain_tool);
 }
 
@@ -371,7 +422,10 @@ gwy_plain_tool_show_changed(GwyPlainTool *plain_tool)
     GwyPlainToolClass *klass;
 
     klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
-    if (klass->show_changed)
+    if (plain_tool->lazy_updates
+        && !gwy_tool_is_visible(GWY_TOOL(plain_tool)))
+        plain_tool->pending_updates |= GWY_PLAIN_TOOL_CHANGED_SHOW;
+    else if (klass->show_changed)
         klass->show_changed(plain_tool);
 }
 
@@ -388,7 +442,10 @@ gwy_plain_tool_selection_changed(GwySelection *selection,
                                  && gwy_selection_get_data(selection, NULL));
 
     klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
-    if (klass->selection_changed)
+    if (plain_tool->lazy_updates
+        && !gwy_tool_is_visible(GWY_TOOL(plain_tool)))
+        plain_tool->pending_updates |= GWY_PLAIN_TOOL_CHANGED_SELECTION;
+    else if (klass->selection_changed)
         klass->selection_changed(plain_tool, hint);
 }
 

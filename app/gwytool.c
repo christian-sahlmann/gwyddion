@@ -137,8 +137,6 @@ gwy_tool_init(GwyTool *tool,
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     g_signal_connect_swapped(tool->dialog, "response",
                              G_CALLBACK(gwy_tool_response), tool);
-
-    tool->update_on_show = TRUE;
 }
 
 static void

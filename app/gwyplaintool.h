@@ -35,10 +35,21 @@ G_BEGIN_DECLS
 typedef struct _GwyPlainTool      GwyPlainTool;
 typedef struct _GwyPlainToolClass GwyPlainToolClass;
 
+typedef enum {
+    GWY_PLAIN_TOOL_CHANGED_DATA       = (1 << 0),
+    GWY_PLAIN_TOOL_CHANGED_MASK       = (1 << 1),
+    GWY_PLAIN_TOOL_CHANGED_SHOW       = (1 << 2),
+    GWY_PLAIN_TOOL_CHANGED_SELECTION  = (1 << 3),
+    GWY_PLAIN_TOOL_FINISHED_SELECTION = (1 << 4),    /* unused */
+} GwyPlainToolChanged;
+
 struct _GwyPlainTool {
     GwyTool parent_instance;
 
     gboolean init_failed;
+
+    gboolean lazy_updates;
+    GwyPlainToolChanged pending_updates;
 
     GwySIUnitFormatStyle unit_style;
     GwySIValueFormat *coord_format;
