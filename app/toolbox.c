@@ -297,7 +297,7 @@ gwy_app_toolbox_create(void)
     static const gchar *tool_actions[] = {
         "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
         "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
-        "GwyToolProfile", "GwyToolRemoveGrain", "GwyToolRemoveSpot",
+        "GwyToolProfile", "GwyToolGrainRemover", "GwyToolRemoveSpot",
         "GwyToolColorRange", "GwyToolMaskEdit",
     };
     GwyMenuSensFlags sens;
