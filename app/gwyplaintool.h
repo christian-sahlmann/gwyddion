@@ -36,11 +36,11 @@ typedef struct _GwyPlainTool      GwyPlainTool;
 typedef struct _GwyPlainToolClass GwyPlainToolClass;
 
 typedef enum {
-    GWY_PLAIN_TOOL_CHANGED_DATA       = (1 << 0),
-    GWY_PLAIN_TOOL_CHANGED_MASK       = (1 << 1),
-    GWY_PLAIN_TOOL_CHANGED_SHOW       = (1 << 2),
-    GWY_PLAIN_TOOL_CHANGED_SELECTION  = (1 << 3),
-    GWY_PLAIN_TOOL_FINISHED_SELECTION = (1 << 4),    /* unused */
+    GWY_PLAIN_TOOL_CHANGED_DATA       = 1 << 0,
+    GWY_PLAIN_TOOL_CHANGED_MASK       = 1 << 1,
+    GWY_PLAIN_TOOL_CHANGED_SHOW       = 1 << 2,
+    GWY_PLAIN_TOOL_CHANGED_SELECTION  = 1 << 3,
+    GWY_PLAIN_TOOL_FINISHED_SELECTION = 1 << 4,
 } GwyPlainToolChanged;
 
 struct _GwyPlainTool {
@@ -77,7 +77,8 @@ struct _GwyPlainTool {
     gchar *selection_bname;
     GType layer_type;
     gulong selection_item_id;
-    gulong selection_id;
+    gulong selection_cid;
+    gulong selection_fid;
 
     GtkWidget *clear;
 };
@@ -90,6 +91,7 @@ struct _GwyPlainToolClass {
     void (*show_changed)(GwyPlainTool *plain_tool);
     void (*selection_changed)(GwyPlainTool *plain_tool,
                               gint hint);
+    void (*selection_finished)(GwyPlainTool *plain_tool);
 };
 
 GType        gwy_plain_tool_get_type         (void) G_GNUC_CONST;

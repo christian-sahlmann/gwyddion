@@ -75,6 +75,8 @@ static void gwy_plain_tool_selection_reconnect   (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_selection_changed     (GwySelection *selection,
                                                   gint hint,
                                                   GwyPlainTool *plain_tool);
+static void gwy_plain_tool_selection_finished    (GwySelection *selection,
+                                                  GwyPlainTool *plain_tool);
 static void gwy_plain_tool_update_units          (GwyPlainTool *plain_tool);
 static void gwy_plain_tool_response              (GwyTool *tool,
                                                   gint response_id);
@@ -134,6 +136,11 @@ gwy_plain_tool_show(GwyTool *tool)
     if (plain_tool->lazy_updates && plain_tool->pending_updates) {
         klass = GWY_PLAIN_TOOL_GET_CLASS(tool);
 
+        /* Since we remember only what has changed, the order can be different.
+         * The following order should cause the least odd effects.  If a tool
+         * has problems with it, it can simply look at @pending_updates in its
+         * show() method, update self and clear @pending_updates before
+         * calling parent's show(). */
         if (plain_tool->pending_updates & GWY_PLAIN_TOOL_CHANGED_DATA) {
             gwy_plain_tool_update_units(plain_tool);
             if (klass->data_changed)
@@ -160,7 +167,11 @@ gwy_plain_tool_show(GwyTool *tool)
             plain_tool->pending_updates &= ~GWY_PLAIN_TOOL_CHANGED_SELECTION;
         }
 
-        /* TODO: GWY_PLAIN_TOOL_FINISHED_SELECTION does not exist yet */
+        if (plain_tool->pending_updates & GWY_PLAIN_TOOL_FINISHED_SELECTION) {
+            if (klass->selection_finished)
+                klass->selection_finished(plain_tool);
+            plain_tool->pending_updates &= ~GWY_PLAIN_TOOL_FINISHED_SELECTION;
+        }
 
         if (plain_tool->pending_updates) {
             g_warning("Stray bits in pending_updates: %u",
@@ -373,14 +384,20 @@ gwy_plain_tool_selection_item_changed(GwyContainer *container,
                                       GwyPlainTool *plain_tool)
 {
     gwy_signal_handler_disconnect(plain_tool->selection,
-                                  plain_tool->selection_id);
+                                  plain_tool->selection_cid);
+    gwy_signal_handler_disconnect(plain_tool->selection,
+                                  plain_tool->selection_fid);
     gwy_object_unref(plain_tool->selection);
 
     if (gwy_container_gis_object(container, quark, &plain_tool->selection)) {
         g_object_ref(plain_tool->selection);
-        plain_tool->selection_id
+        plain_tool->selection_cid
             = g_signal_connect(plain_tool->selection, "changed",
                                G_CALLBACK(gwy_plain_tool_selection_changed),
+                               plain_tool);
+        plain_tool->selection_fid
+            = g_signal_connect(plain_tool->selection, "finished",
+                               G_CALLBACK(gwy_plain_tool_selection_finished),
                                plain_tool);
     }
 
@@ -447,6 +464,20 @@ gwy_plain_tool_selection_changed(GwySelection *selection,
         plain_tool->pending_updates |= GWY_PLAIN_TOOL_CHANGED_SELECTION;
     else if (klass->selection_changed)
         klass->selection_changed(plain_tool, hint);
+}
+
+static void
+gwy_plain_tool_selection_finished(G_GNUC_UNUSED GwySelection *selection,
+                                  GwyPlainTool *plain_tool)
+{
+    GwyPlainToolClass *klass;
+
+    klass = GWY_PLAIN_TOOL_GET_CLASS(plain_tool);
+    if (plain_tool->lazy_updates
+        && !gwy_tool_is_visible(GWY_TOOL(plain_tool)))
+        plain_tool->pending_updates |= GWY_PLAIN_TOOL_FINISHED_SELECTION;
+    else if (klass->selection_finished)
+        klass->selection_finished(plain_tool);
 }
 
 /**
@@ -605,7 +636,9 @@ gwy_plain_tool_selection_disconnect(GwyPlainTool *plain_tool)
     gwy_signal_handler_disconnect(plain_tool->container,
                                   plain_tool->selection_item_id);
     gwy_signal_handler_disconnect(plain_tool->selection,
-                                  plain_tool->selection_id);
+                                  plain_tool->selection_cid);
+    gwy_signal_handler_disconnect(plain_tool->selection,
+                                  plain_tool->selection_fid);
     gwy_object_unref(plain_tool->selection);
 }
 
@@ -631,9 +664,13 @@ gwy_plain_tool_selection_reconnect(GwyPlainTool *plain_tool)
     if (gwy_container_gis_object_by_name(plain_tool->container, key,
                                          &plain_tool->selection)) {
         g_object_ref(plain_tool->selection);
-        plain_tool->selection_id
+        plain_tool->selection_cid
             = g_signal_connect(plain_tool->selection, "changed",
                                G_CALLBACK(gwy_plain_tool_selection_changed),
+                               plain_tool);
+        plain_tool->selection_fid
+            = g_signal_connect(plain_tool->selection, "finished",
+                               G_CALLBACK(gwy_plain_tool_selection_finished),
                                plain_tool);
     }
 
