@@ -165,6 +165,7 @@ gwy_tool_level3_init(GwyToolLevel3 *tool)
         return;
 
     plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
+    plain_tool->lazy_updates = TRUE;
 
     settings = gwy_app_settings_get();
     tool->args = default_args;

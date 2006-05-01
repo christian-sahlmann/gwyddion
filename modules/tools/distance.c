@@ -146,6 +146,7 @@ gwy_tool_distance_init(GwyToolDistance *tool)
         return;
 
     plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
+    plain_tool->lazy_updates = TRUE;
 
     tool->angle_format = g_new0(GwySIValueFormat, 1);
     tool->angle_format->magnitude = 1.0;

@@ -153,6 +153,8 @@ gwy_tool_crop_init(GwyToolCrop *tool)
     if (!tool->layer_type_rect)
         return;
 
+    plain_tool->lazy_updates = TRUE;
+
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_gis_boolean_by_name(settings, keep_offsets_key,
