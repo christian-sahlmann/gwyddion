@@ -100,6 +100,29 @@ struct _GwySelectionGraphLineClass {
 GType    gwy_selection_graph_line_get_type       (void) G_GNUC_CONST;
 
 
+#define GWY_TYPE_SELECTION_GRAPH_ZOOM            (gwy_selection_graph_zoom_get_type())
+#define GWY_SELECTION_GRAPH_ZOOM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_ZOOM, GwySelectionGraphZoom))
+#define GWY_SELECTION_GRAPH_ZOOM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_ZOOM, GwySelectionGraphZoomClass))
+#define GWY_IS_SELECTION_GRAPH_ZOOM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_ZOOM))
+#define GWY_IS_SELECTION_GRAPH_ZOOM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_ZOOM))
+#define GWY_SELECTION_GRAPH_ZOOM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_ZOOM, GwySelectionGraphZoomClass))
+
+typedef struct _GwySelectionGraphZoom      GwySelectionGraphZoom;
+typedef struct _GwySelectionGraphZoomClass GwySelectionGraphZoomClass;
+
+
+struct _GwySelectionGraphZoom {
+        GwySelection parent_instance;
+};
+
+struct _GwySelectionGraphZoomClass {
+        GwySelectionClass parent_class;
+};
+
+
+GType    gwy_selection_graph_zoom_get_type       (void) G_GNUC_CONST;
+
+
 G_END_DECLS
 
 #endif /* __GWY_GRAPHSEL_H__ */

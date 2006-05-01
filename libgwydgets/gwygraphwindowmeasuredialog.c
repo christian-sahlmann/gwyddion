@@ -210,12 +210,27 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS ||
         gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)) return;
 
-    if ((n = gwy_graph_area_get_selection_number(GWY_GRAPH_AREA(gwy_graph_get_area(graph))))>0)
+    n = gwy_selection_get_data(
+                GWY_SELECTION(gwy_graph_area_get_point_selection(
+                                   GWY_GRAPH_AREA(gwy_graph_get_area(
+                                            graph)))), NULL);
+    if (n>0)
     {
-        if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
+        if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS) {
             spoints = (gdouble *) g_malloc(2*n*sizeof(gdouble));
-        else
+            gwy_selection_get_data(
+                GWY_SELECTION(gwy_graph_area_get_point_selection(
+                                   GWY_GRAPH_AREA(gwy_graph_get_area(
+                                            graph)))), spoints);
+                 
+        }
+        else {
             spoints = (gdouble *) g_malloc(n*sizeof(gdouble));
+            gwy_selection_get_data(
+                GWY_SELECTION(gwy_graph_area_get_line_selection(
+                                   GWY_GRAPH_AREA(gwy_graph_get_area(
+                                            graph)))), spoints);
+         }
     }
 
     str = g_string_new("");
@@ -230,8 +245,6 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     header_label_update(GTK_LABEL(dialog->header_disty), _("Height"),
                         gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
 
-
-    gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), spoints);
 
     /*update points data */
     for (i = 0; i < NMAX; i++) {
@@ -450,9 +463,17 @@ index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
 static void
 method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
+    if (dialog->mmethod == gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo)))
+        return;
+        
     dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
-    gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))));
+    gwy_selection_clear(gwy_graph_area_get_point_selection
+                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)))));
+    gwy_selection_clear(gwy_graph_area_get_line_selection
+                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)))));
+        
+    
     if (dialog->mmethod == METHOD_INTERSECTIONS)
         gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
     else

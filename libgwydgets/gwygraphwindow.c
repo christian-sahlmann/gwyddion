@@ -131,9 +131,9 @@ gwy_graph_window_new(GwyGraph *graph)
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
 
-    title = gwy_graph_model_get_title(graph->graph_model);
+    title = g_string_assign(title, gwy_graph_model_get_title(graph->graph_model));
     if (title)
-        gtk_window_set_title(GTK_WINDOW(graphwindow), title);
+        gtk_window_set_title(GTK_WINDOW(graphwindow), title->str);
     else
         gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
 
@@ -369,7 +369,7 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     gdouble xmag, ymag;
 
     graph = GWY_GRAPH(graphwindow->graph);
-    gwy_graph_get_cursor(graph, &x, &y);
+    gwy_graph_area_get_cursor(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), &x, &y);
 
     xmag = gwy_axis_get_magnification(graph->axis_top);
     xstring = gwy_axis_get_magnification_string(graph->axis_top);
@@ -406,7 +406,11 @@ static void
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
 
-    gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))));
+    gwy_selection_clear(gwy_graph_area_get_point_selection
+                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)))));
+    gwy_selection_clear(gwy_graph_area_get_line_selection
+                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)))));
+      
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
         return;
 

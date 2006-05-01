@@ -32,7 +32,9 @@
 enum {
         POINT_OBJECT_SIZE = 2,
         AREA_OBJECT_SIZE = 4,
-        LINE_OBJECT_SIZE = 1
+        LINE_OBJECT_SIZE = 1,
+        CURSOR_OBJECT_SIZE = 2,
+        ZOOM_OBJECT_SIZE = 4
 };
 
 
@@ -93,6 +95,24 @@ static void
 gwy_selection_graph_line_init(GwySelectionGraphLine *selection)
 {
         g_array_set_size(GWY_SELECTION(selection)->objects, LINE_OBJECT_SIZE);
+}
+
+
+G_DEFINE_TYPE(GwySelectionGraphZoom, gwy_selection_graph_zoom, GWY_TYPE_SELECTION)
+
+static void
+gwy_selection_graph_zoom_class_init(GwySelectionGraphZoomClass *klass)
+{
+        GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
+
+        sel_class->object_size = ZOOM_OBJECT_SIZE;
+}
+
+
+static void
+gwy_selection_graph_zoom_init(GwySelectionGraphZoom *selection)
+{
+        g_array_set_size(GWY_SELECTION(selection)->objects, ZOOM_OBJECT_SIZE);
 }
 
 

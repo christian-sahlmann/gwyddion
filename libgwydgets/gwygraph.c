@@ -28,11 +28,6 @@
 #include <libgwydgets/gwygraphcurvemodel.h>
 
 #include <stdio.h>
-enum {
-    SELECTED_SIGNAL,
-    ZOOMED_SIGNAL,
-    LAST_SIGNAL
-};
 
 
 static void gwy_graph_refresh      (GwyGraph *graph);
@@ -49,11 +44,7 @@ static void zoomed_cb              (GwyGraph *graph);
 static void label_updated_cb       (GwyAxis *axis,
                                     GwyGraph *graph);
 static void gwy_graph_finalize          (GObject *object);
-static void gwy_graph_signal_zoomed     (GwyGraph *graph);
 
-static void gwy_graph_signal_selected(GwyGraph *graph);
-
-static guint gwygraph_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE(GwyGraph, gwy_graph, GTK_TYPE_TABLE)
 
@@ -69,28 +60,6 @@ gwy_graph_class_init(GwyGraphClass *klass)
     widget_class->size_allocate = gwy_graph_size_allocate;
     gobject_class->finalize = gwy_graph_finalize;
 
-    klass->selected = NULL;
-    klass->zoomed = NULL;
-
-    gwygraph_signals[SELECTED_SIGNAL]
-                = g_signal_new("selected",
-                               G_TYPE_FROM_CLASS(klass),
-                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                               G_STRUCT_OFFSET(GwyGraphClass, selected),
-                               NULL,
-                               NULL,
-                               g_cclosure_marshal_VOID__VOID,
-                               G_TYPE_NONE, 0);
-
-    gwygraph_signals[ZOOMED_SIGNAL]
-                = g_signal_new("zoomed",
-                               G_TYPE_FROM_CLASS(klass),
-                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                               G_STRUCT_OFFSET(GwyGraphClass, zoomed),
-                               NULL,
-                               NULL,
-                               g_cclosure_marshal_VOID__VOID,
-                               G_TYPE_NONE, 0);
 }
 
 
@@ -241,10 +210,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_widget_show(GTK_WIDGET(graph->corner_tr));
     gtk_widget_show(GTK_WIDGET(graph->corner_br));
 
-    g_signal_connect_swapped(graph->area, "selected",
-                     G_CALLBACK(gwy_graph_signal_selected), graph);
-
-    g_signal_connect_swapped(graph->area, "zoomed",
+    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_zoom_selection(graph->area)), "finished",
                      G_CALLBACK(zoomed_cb), graph);
 
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
@@ -649,33 +615,6 @@ gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable)
     gwy_axis_enable_label_edit(graph->axis_right, enable);
 }
 
-static void
-gwy_graph_signal_selected(GwyGraph *graph)
-{
-    g_signal_emit(G_OBJECT(graph), gwygraph_signals[SELECTED_SIGNAL], 0);
-}
-
-static void
-gwy_graph_signal_zoomed(GwyGraph *graph)
-{
-    g_signal_emit(G_OBJECT(graph), gwygraph_signals[ZOOMED_SIGNAL], 0);
-}
-
-/**
- * gwy_graph_get_cursor:
- * @graph: A graph widget.
- * @x_cursor: x position of cursor
- * @y_cursor: y position of cursor
- *
- * Get the mouse pointer position within the graph area. Values are
- * in physical units corresponding to the graph axis.
- **/
-void
-gwy_graph_get_cursor(GwyGraph *graph, gdouble *x_cursor, gdouble *y_cursor)
-{
-    gwy_graph_area_get_cursor(graph->area, x_cursor, y_cursor);
-}
-
 /**
  * gwy_graph_zoom_in:
  * @graph: A graph widget.
@@ -705,16 +644,20 @@ static void
 zoomed_cb(GwyGraph *graph)
 {
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
-    gdouble selection[4];
+    gdouble selection_zoomdata[4];
 
-    if (graph->area->status != GWY_GRAPH_STATUS_ZOOM)
+    if (graph->area->status != GWY_GRAPH_STATUS_ZOOM || 
+        gwy_selection_get_data(gwy_graph_area_get_zoom_selection(GWY_GRAPH_AREA(graph->area)), NULL) != 1)
         return;
-    gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), selection);
+    
+    gwy_selection_get_object(GWY_SELECTION((graph->area)->zoomdata),
+                             gwy_selection_get_data(GWY_SELECTION((graph->area)->zoomdata), NULL) - 1,
+                             selection_zoomdata);
 
-    x_reqmin = selection[0];
-    x_reqmax = selection[0] + selection[1];
-    y_reqmin = selection[2];
-    y_reqmax = selection[2] + selection[3];
+    x_reqmin = selection_zoomdata[0];
+    x_reqmax = selection_zoomdata[0] + selection_zoomdata[1];
+    y_reqmin = selection_zoomdata[2];
+    y_reqmax = selection_zoomdata[2] + selection_zoomdata[3];
 
     gwy_axis_set_req(graph->axis_top, x_reqmin, x_reqmax);
     gwy_axis_set_req(graph->axis_bottom, x_reqmin, x_reqmax);
@@ -729,7 +672,6 @@ zoomed_cb(GwyGraph *graph)
     /*refresh widgets*/
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_PLAIN);
     gwy_graph_area_refresh(graph->area);
-    gwy_graph_signal_zoomed(graph);
 }
 
 static void
@@ -739,22 +681,22 @@ label_updated_cb(GwyAxis *axis, GwyGraph *graph)
     {
         case GTK_POS_TOP:
         if (graph->graph_model->top_label)
-            g_string_assign(graph->graph_model->top_label, gwy_axis_get_label(axis));
+            g_string_assign(graph->graph_model->top_label, gwy_axis_get_label(axis)->str);
         break;
 
         case GTK_POS_BOTTOM:
         if (graph->graph_model->bottom_label)
-            g_string_assign(graph->graph_model->bottom_label, gwy_axis_get_label(axis));
+            g_string_assign(graph->graph_model->bottom_label, gwy_axis_get_label(axis)->str);
         break;
 
         case GTK_POS_LEFT:
         if (graph->graph_model->left_label)
-            g_string_assign(graph->graph_model->left_label, gwy_axis_get_label(axis));
+            g_string_assign(graph->graph_model->left_label, gwy_axis_get_label(axis)->str);
         break;
 
         case GTK_POS_RIGHT:
         if (graph->graph_model->right_label)
-            g_string_assign(graph->graph_model->right_label, gwy_axis_get_label(axis));
+            g_string_assign(graph->graph_model->right_label, gwy_axis_get_label(axis)->str);
         break;
     }
 }
@@ -822,7 +764,7 @@ gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
 const GArray*
 gwy_graph_get_x_grid_data(GwyGraph *graph)
 {
-    return gwy_graph_get_x_grid_data(graph->area);
+    return gwy_graph_area_get_x_grid_data(graph->area);
 }
 
 /**
@@ -834,7 +776,7 @@ gwy_graph_get_x_grid_data(GwyGraph *graph)
 const GArray*
 gwy_graph_get_y_grid_data(GwyGraph *graph)
 {
-    return gwy_graph_get_y_grid_data(graph->area);
+    return gwy_graph_area_get_y_grid_data(graph->area);
 }
 
 /************************** Documentation ****************************/

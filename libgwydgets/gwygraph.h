@@ -77,9 +77,7 @@ struct _GwyGraph {
 struct _GwyGraphClass {
     GtkTableClass parent_class;
 
-    void (*gwygraph)(GwyGraph *grapher);
-    void (*selected)(GwyGraph *grapher);
-    void (*zoomed)(GwyGraph *grapher);
+    void (*gwygraph)(GwyGraph *graph);
 
     gpointer reserved1;
     gpointer reserved2;
@@ -101,9 +99,6 @@ GwyGraphStatusType  gwy_graph_get_status(GwyGraph *graph);
 
 GwyGraphModel *gwy_graph_get_model(GwyGraph *graph);
 
-
-void       gwy_graph_get_cursor(GwyGraph *graph,
-                                  gdouble *x_cursor, gdouble *y_cursor);
 
 void       gwy_graph_request_x_range(GwyGraph *graph, gdouble x_min_req, gdouble x_max_req);
 void       gwy_graph_request_y_range(GwyGraph *graph, gdouble y_min_req, gdouble y_max_req);
