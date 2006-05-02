@@ -207,6 +207,19 @@ gwy_tool_hide_real(GwyTool *tool)
     gtk_widget_hide(tool->dialog);
 }
 
+/**
+ * gwy_tool_add_hide_button:
+ * @tool: A tool.
+ * @set_default: Whether hide should become the default tool dialog response.
+ *
+ * Adds a Hide button to a tool dialog.
+ *
+ * All tools should have a Hide button added by this method.  The reason why
+ * it is not added automatically is because the usual placement of the Hide
+ * button is next to the execution button (Apply), which is not present
+ * for informational-only tools.  In that case Hide should become the default
+ * dialog button.
+ **/
 void
 gwy_tool_add_hide_button(GwyTool *tool,
                          gboolean set_default)
@@ -226,7 +239,7 @@ gwy_tool_add_hide_button(GwyTool *tool,
  * gwy_tool_show:
  * @tool: A tool.
  *
- * Shows a tool dialog.
+ * Shows a tool's dialog.
  **/
 void
 gwy_tool_show(GwyTool *tool)
@@ -241,10 +254,10 @@ gwy_tool_show(GwyTool *tool)
 }
 
 /**
- * gwy_tool_show:
+ * gwy_tool_hide:
  * @tool: A tool.
  *
- * Hides a tool dialog.
+ * Hides a tool's dialog.
  **/
 void
 gwy_tool_hide(GwyTool *tool)
@@ -273,6 +286,16 @@ gwy_tool_is_visible(GwyTool *tool)
     return tool->is_visible;
 }
 
+/**
+ * gwy_tool_data_switched:
+ * @tool: A tool.
+ * @data_view: A data view.  It can be %NULL, too.
+ *
+ * Instructs a tool to switch to another data view.
+ *
+ * This involves set up of the top layer of @data_view and/or its selection
+ * to the mode appropriate for @tool.
+ **/
 void
 gwy_tool_data_switched(GwyTool *tool,
                        GwyDataView *data_view)
@@ -349,6 +372,32 @@ gwy_tool_class_get_tooltip(GwyToolClass *klass)
  *
  * They do not have any special meaning for #GwyTool (yet?), nonetheless you
  * are encouraged to use them for consistency.
+ **/
+
+/**
+ * GwyToolClass:
+ * @stock_id: Tool icon stock id.
+ * @tooltip: Tooltip.
+ * @title: Tool dialog title.
+ * @prefix: Prefix in settings to store automatically remembered tool state
+ *          under, should be of the form <literal>"/module/mytool"</literal>.
+ * @default_width: Default initial window width, normally unset.
+ * @default_height: Default initial window height, normally unset.
+ * @show: Tool show virtual method.  Most tools do not need to override it,
+ *        unless they wish to handle lazy updates themselves.
+ * @hide: Tool hide virtual method.  Most tools do not need to override it.
+ * @data_switched: Data switched virtual method.
+ * @response: Dialog response virtual method.  Hiding an closing is normally
+ *            handled in the base class, particular tools can handle only
+ *            responses from their specific buttons.
+ *
+ * Tool class.
+ *
+ * The fields @default_width and @default_height should be set only if a tool
+ * dialog requires a different initial size from it would request (due to
+ * shrinkable widgets).  Since #GwyTool keeps dialog sizes stored in settings
+ * and restores them automatically, these values essentially apply only to the
+ * first use of a tool.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
