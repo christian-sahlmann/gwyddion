@@ -24,6 +24,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwycombobox.h>
 
 static void     cell_translate_func              (GtkCellLayout *cell_layout,

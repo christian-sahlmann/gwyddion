@@ -39,6 +39,7 @@
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <app/settings.h>
 
