@@ -20,68 +20,78 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
-#include <string.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwylayer-basic.h>
-#include <app/app.h>
-#include <app/settings.h>
-#include <app/unitool.h>
+#include <app/gwyapp.h>
 
-#define CHECK_LAYER_TYPE(l) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+#define GWY_TYPE_TOOL_COLOR_RANGE            (gwy_tool_color_range_get_type())
+#define GWY_TOOL_COLOR_RANGE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_COLOR_RANGE, GwyToolColorRange))
+#define GWY_IS_TOOL_COLOR_RANGE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_COLOR_RANGE))
+#define GWY_TOOL_COLOR_RANGE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_COLOR_RANGE, GwyToolColorRangeClass))
 
 typedef enum {
     USE_SELECTION = 0,
     USE_HISTOGRAM
-} IColorRangeSource;
+} ColorRangeSource;
 
-typedef struct {
-    GwyUnitoolRectLabels labels;
-    GtkWidget *histogram;
-    GtkWidget *cmin;
-    GtkWidget *cmax;
-    GtkWidget *cdatamin;
-    GtkWidget *cdatamax;
-    IColorRangeSource range_source;
-    gboolean in_update;
-    gboolean initial_use;
+typedef struct _GwyToolColorRange      GwyToolColorRange;
+typedef struct _GwyToolColorRangeClass GwyToolColorRangeClass;
+
+struct _GwyToolColorRange {
+    GwyPlainTool parent_instance;
+
+    GwyRectSelectionLabels *rlabels;
+    GtkWidget *apply;
+
+    GwyGraph *histogram;
+    GwyGraphModel *histogram_model;
     GwyDataLine *heightdist;
+
+    GtkWidget *min;
+    GtkWidget *max;
+    GtkWidget *datamin;
+    GtkWidget *datamax;
+
+    ColorRangeSource range_source;
+    gboolean in_update;
     GSList *modelist;
-    /* storable state */
+
     GQuark key_min;
     GQuark key_max;
-    GwyGraphModel *histogram_model;
-} ToolControls;
 
-static gboolean   module_register             (void);
-static gboolean   use                         (GwyDataWindow *data_window,
-                                               GwyToolSwitchEvent reason);
-static void       layer_setup                 (GwyUnitoolState *state);
-static GtkWidget* dialog_create               (GwyUnitoolState *state);
-static void       dialog_update               (GwyUnitoolState *state,
-                                               GwyUnitoolUpdateType reason);
-static void       dialog_abandon              (GwyUnitoolState *state);
-static void       histogram_selection_changed (GwyUnitoolState *state);
-static void       update_graph_selection      (GwyUnitoolState *state,
-                                               const gdouble *selection);
-static GwyLayerBasicRangeType get_range_type  (GwyUnitoolState *state);
-static void       set_range_type            (GwyUnitoolState *state,
-                                             GwyLayerBasicRangeType range_type);
-static void       get_min_max                 (GwyUnitoolState *state,
-                                               gdouble *selection);
-static void       set_min_max                 (GwyUnitoolState *state,
-                                               const gdouble *selection);
-static void       range_mode_changed          (GtkWidget *button,
-                                               GwyUnitoolState *state);
+    /* potential class data */
+    GType layer_type_rect;
+};
+
+struct _GwyToolColorRangeClass {
+    GwyPlainToolClass parent_class;
+};
+
+static gboolean module_register(void);
+
+static GType  gwy_tool_color_range_get_type         (void) G_GNUC_CONST;
+static void   gwy_tool_color_range_finalize         (GObject *object);
+static void   gwy_tool_color_range_init_dialog      (GwyToolColorRange *tool);
+static void   gwy_tool_color_range_data_switched    (GwyTool *gwytool,
+                                                     GwyDataView *data_view);
+static void   gwy_tool_color_range_data_changed     (GwyPlainTool *plain_tool);
+static void   gwy_tool_color_range_response         (GwyTool *tool,
+                                                     gint response_id);
+static void   gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
+                                                     gint hint);
+static void   gwy_tool_color_range_xsel_changed     (GwyToolColorRange *tool,
+                                                     gint hint);
+static void   gwy_tool_color_range_mode_changed     (GObject *item,
+                                                     GwyToolColorRange *tool);
+static void   gwy_tool_color_range_apply            (GwyToolColorRange *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -90,38 +100,287 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "3.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-static GwyUnitoolSlots func_slots = {
-    0,                             /* layer type, must be set runtime */
-    layer_setup,                   /* layer setup func */
-    dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
-    NULL,                          /* apply action */
-    NULL,                          /* nonstandard response handler */
-};
-
 GWY_MODULE_QUERY(module_info)
+
+G_DEFINE_TYPE(GwyToolColorRange, gwy_tool_color_range, GWY_TYPE_PLAIN_TOOL)
 
 static gboolean
 module_register(void)
 {
-    static GwyToolFuncInfo icolorange_func_info = {
-        "icolorange",
-        GWY_STOCK_COLOR_RANGE,
-        N_("Stretch color range to part of data."),
-        &use,
-    };
-
-    gwy_tool_func_register(&icolorange_func_info);
+    gwy_tool_func_register(GWY_TYPE_TOOL_COLOR_RANGE);
 
     return TRUE;
 }
 
+static void
+gwy_tool_color_range_class_init(GwyToolColorRangeClass *klass)
+{
+    GwyPlainToolClass *ptool_class = GWY_PLAIN_TOOL_CLASS(klass);
+    GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    gobject_class->finalize = gwy_tool_color_range_finalize;
+
+    tool_class->stock_id = GWY_STOCK_COLOR_RANGE;
+    tool_class->title = _("Color Range");
+    tool_class->tooltip = _("Stretch color range to part of data");
+    tool_class->prefix = "/module/colorrange";
+    tool_class->data_switched = gwy_tool_color_range_data_switched;
+    tool_class->response = gwy_tool_color_range_response;
+
+    ptool_class->data_changed = gwy_tool_color_range_data_changed;
+    ptool_class->selection_changed = gwy_tool_color_range_selection_changed;
+}
+
+static void
+gwy_tool_color_range_finalize(GObject *object)
+{
+    GwyToolColorRange *tool;
+
+    tool = GWY_TOOL_COLOR_RANGE(object);
+    gwy_object_unref(tool->heightdist);
+
+    G_OBJECT_CLASS(gwy_tool_color_range_parent_class)->finalize(object);
+}
+
+static void
+gwy_tool_color_range_init(GwyToolColorRange *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
+                                                           "GwyLayerRectangle");
+    if (!tool->layer_type_rect)
+        return;
+
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                     "rectangle");
+
+    gwy_tool_color_range_init_dialog(tool);
+}
+
+static void
+gwy_tool_crop_rect_updated(GwyToolColorRange *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    gwy_rect_selection_labels_select(tool->rlabels,
+                                     plain_tool->selection,
+                                     plain_tool->data_field);
+}
+
+static void
+gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
+{
+    static const GwyEnum range_modes[] = {
+        { N_("Full"),     GWY_LAYER_BASIC_RANGE_FULL,  },
+        { N_("Fixed"),    GWY_LAYER_BASIC_RANGE_FIXED, },
+        { N_("Auto"),     GWY_LAYER_BASIC_RANGE_AUTO,  },
+        { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT, },
+    };
+
+    GtkWidget *label, *hbox, *button;
+    GtkTable *table;
+    GtkDialog *dialog;
+    GwyGraphCurveModel *cmodel;
+    GwyGraphArea *garea;
+    GwySelection *selection;
+    GSList *modelist, *l;
+    gint row;
+
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
+
+    /* Mode switch */
+    hbox = gtk_hbox_new(TRUE, 0);
+    modelist = gwy_radio_buttons_create
+                          (range_modes, G_N_ELEMENTS(range_modes), "range-mode",
+                           G_CALLBACK(gwy_tool_color_range_mode_changed), tool,
+                           GWY_LAYER_BASIC_RANGE_FULL);
+    for (l = modelist; l; l = g_slist_next(l)) {
+        button = GTK_WIDGET(l->data);
+        gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, TRUE, 0);
+    }
+    tool->modelist = modelist;
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
+
+    /* Height distribution */
+    tool->heightdist = gwy_data_line_new(1.0, 1.0, TRUE);
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_description(cmodel,
+                                          _("Height histogram"));
+    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+
+    tool->histogram_model = gwy_graph_model_new();
+    gwy_graph_model_add_curve(tool->histogram_model, cmodel);
+    tool->histogram = GWY_GRAPH(gwy_graph_new(tool->histogram_model));
+    garea = GWY_GRAPH_AREA(gwy_graph_get_area(tool->histogram));
+    selection = gwy_graph_area_get_area_selection(garea);
+    gwy_selection_set_max_objects(selection, 1);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(gwy_tool_color_range_xsel_changed),
+                             tool);
+
+    gwy_graph_model_set_label_visible(tool->histogram_model, FALSE);
+    gwy_graph_set_axis_visible(tool->histogram, GTK_POS_TOP, FALSE);
+    gwy_graph_set_axis_visible(tool->histogram, GTK_POS_BOTTOM, FALSE);
+    gwy_graph_set_axis_visible(tool->histogram, GTK_POS_LEFT, FALSE);
+    gwy_graph_set_axis_visible(tool->histogram, GTK_POS_RIGHT, FALSE);
+    gwy_graph_set_status(tool->histogram, GWY_GRAPH_STATUS_XSEL);
+    gwy_graph_enable_user_input(tool->histogram, FALSE);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(tool->histogram),
+                       TRUE, TRUE, 2);
+
+    /* Data ranges */
+    table = GTK_TABLE(gtk_table_new(2, 3, TRUE));
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
+    row = 0;
+
+    tool->min = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(tool->min), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), tool->min, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    tool->max = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(tool->max), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), tool->max, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("Range"));
+    gtk_table_attach(GTK_TABLE(table), label, 1, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    tool->datamin = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(tool->datamin), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), tool->datamin, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    tool->datamax = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(tool->datamax), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), tool->datamax, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("Full"));
+    gtk_table_attach(GTK_TABLE(table), label, 1, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    /*
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
+    */
+
+    /* Rectangular selection info */
+    tool->rlabels = gwy_rect_selection_labels_new
+                         (TRUE, G_CALLBACK(gwy_tool_crop_rect_updated), tool);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox),
+                       gwy_rect_selection_labels_get_table(tool->rlabels),
+                       FALSE, FALSE, 0);
+
+    gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
+    tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
+                                        GTK_RESPONSE_APPLY);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+
+    gtk_widget_show_all(dialog->vbox);
+}
+
+static void
+gwy_tool_color_range_data_switched(GwyTool *gwytool,
+                                   GwyDataView *data_view)
+{
+    GwyPlainTool *plain_tool;
+
+    GWY_TOOL_CLASS(gwy_tool_color_range_parent_class)->data_switched(gwytool,
+                                                                     data_view);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    if (plain_tool->init_failed)
+        return;
+
+    if (data_view) {
+        g_object_set(plain_tool->layer,
+                     "draw-reflection", FALSE,
+                     "is-crop", FALSE,
+                     NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 1);
+    }
+}
+
+static void
+gwy_tool_color_range_data_changed(GwyPlainTool *plain_tool)
+{
+    gwy_rect_selection_labels_fill(GWY_TOOL_COLOR_RANGE(plain_tool)->rlabels,
+                                   plain_tool->selection,
+                                   plain_tool->data_field,
+                                   NULL, NULL);
+    gwy_tool_color_range_selection_changed(plain_tool, 0);
+}
+
+static void
+gwy_tool_color_range_response(GwyTool *tool,
+                       gint response_id)
+{
+    GWY_TOOL_CLASS(gwy_tool_color_range_parent_class)->response(tool,
+                                                                response_id);
+
+    if (response_id == GTK_RESPONSE_APPLY)
+        gwy_tool_color_range_apply(GWY_TOOL_COLOR_RANGE(tool));
+}
+
+static void
+gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
+                                       gint hint)
+{
+    GwyToolColorRange *tool;
+    gint n = 0;
+
+    tool = GWY_TOOL_COLOR_RANGE(plain_tool);
+    g_return_if_fail(hint <= 0);
+
+    if (plain_tool->selection) {
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+        g_return_if_fail(n == 0 || n == 1);
+        gwy_rect_selection_labels_fill(tool->rlabels,
+                                       plain_tool->selection,
+                                       plain_tool->data_field,
+                                       NULL, NULL);
+    }
+    else
+        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+}
+
+static void
+gwy_tool_color_range_xsel_changed(GwyToolColorRange *tool,
+                                  gint hint)
+{
+}
+
+static void
+gwy_tool_color_range_mode_changed(GObject *item,
+                                  GwyToolColorRange *tool)
+{
+    GwyLayerBasicRangeType range_mode;
+
+    range_mode = GPOINTER_TO_INT(g_object_get_data(item, "range-mode"));
+}
+
+static void
+gwy_tool_color_range_apply(GwyToolColorRange *tool)
+{
+}
+
+#if 0
 static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
@@ -184,7 +443,7 @@ layer_setup(GwyUnitoolState *state)
     controls->key_max = g_quark_from_string(key);
 
     if (controls->modelist)
-        gwy_radio_buttons_set_current(controls->modelist, "range-type",
+        gwy_radio_buttons_set_current(controls->modelist, "range-mode",
                                       get_range_type(state));
 }
 
@@ -215,7 +474,7 @@ dialog_create(GwyUnitoolState *state)
 
     hbox = gtk_hbox_new(TRUE, 0);
     modelist = gwy_radio_buttons_create(range_modes, G_N_ELEMENTS(range_modes),
-                                        "range-type",
+                                        "range-mode",
                                         G_CALLBACK(range_mode_changed), state,
                                         get_range_type(state));
     for (l = modelist; l; l = g_slist_next(l)) {
@@ -257,14 +516,14 @@ dialog_create(GwyUnitoolState *state)
                        FALSE, FALSE, 0);
     row = 0;
 
-    controls->cmin = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->cmin), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls->cmin, 0, 1, row, row+1,
+    controls->min = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls->min), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls->min, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    controls->cmax = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->cmax), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls->cmax, 3, 4, row, row+1,
+    controls->max = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls->max), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls->max, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("Range"));
@@ -272,14 +531,14 @@ dialog_create(GwyUnitoolState *state)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->cdatamin = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->cdatamin), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls->cdatamin, 0, 1, row, row+1,
+    controls->datamin = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls->datamin), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls->datamin, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    controls->cdatamax = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->cdatamax), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls->cdatamax, 3, 4, row, row+1,
+    controls->datamax = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls->datamax), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls->datamax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("Full"));
@@ -379,10 +638,10 @@ dialog_update(GwyUnitoolState *state,
         update_graph_selection(state, selection);
     }
 
-    gwy_unitool_update_label(state->value_format, controls->cmin, selection[0]);
-    gwy_unitool_update_label(state->value_format, controls->cmax, selection[1]);
-    gwy_unitool_update_label(state->value_format, controls->cdatamin, min);
-    gwy_unitool_update_label(state->value_format, controls->cdatamax, max);
+    gwy_unitool_update_label(state->value_format, controls->min, selection[0]);
+    gwy_unitool_update_label(state->value_format, controls->max, selection[1]);
+    gwy_unitool_update_label(state->value_format, controls->datamin, min);
+    gwy_unitool_update_label(state->value_format, controls->datamax, max);
 
     controls->in_update = FALSE;
 }
@@ -484,7 +743,7 @@ set_range_type(GwyUnitoolState *state,
 
     if (!key) {
         /* TODO: Container */
-        key = "/0/data/range-type";
+        key = "/0/data/range-mode";
         gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), key);
     }
     gwy_container_set_enum_by_name(container, key, range_type);
@@ -540,12 +799,13 @@ range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
 
     controls = (ToolControls*)state->user_data;
     range_type = gwy_radio_buttons_get_current(controls->modelist,
-                                               "range-type");
+                                               "range-mode");
     gtk_widget_set_sensitive(controls->histogram,
                              range_type == GWY_LAYER_BASIC_RANGE_FIXED);
     set_range_type(state, range_type);
     dialog_update(state, GWY_UNITOOL_UPDATED_DATA);
 }
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
