@@ -22,6 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
@@ -33,14 +34,8 @@
 typedef struct _GwyToolStats      GwyToolStats;
 typedef struct _GwyToolStatsClass GwyToolStatsClass;
 
-typedef struct {
-    gboolean same_units;
-} ToolArgs;
-
 struct _GwyToolStats {
     GwyPlainTool parent_instance;
-
-    ToolArgs args;
 
     GwyRectSelectionLabels *rlabels;
     GtkWidget *apply;
@@ -62,6 +57,8 @@ struct _GwyToolStats {
 
     /* potential class data */
     GType layer_type_rect;
+
+    gboolean same_units;
 };
 
 struct _GwyToolStatsClass {
@@ -92,11 +89,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-static const gchar same_units_key[] = "/module/stats/same_units";
-
-static const ToolArgs default_args = {
-    FALSE,
-};
 
 GWY_MODULE_QUERY(module_info)
 
@@ -133,14 +125,6 @@ gwy_tool_stats_class_init(GwyToolStatsClass *klass)
 static void
 gwy_tool_stats_finalize(GObject *object)
 {
-    GwyToolStats *tool;
-    GwyContainer *settings;
-
-    tool = GWY_TOOL_STATS(object);
-
-    settings = gwy_app_settings_get();
-    gwy_container_set_boolean_by_name(settings, same_units_key,
-                                      tool->args.same_units);
 
     G_OBJECT_CLASS(gwy_tool_stats_parent_class)->finalize(object);
 }
@@ -158,11 +142,6 @@ gwy_tool_stats_init(GwyToolStats *tool)
         return;
 
     plain_tool->lazy_updates = TRUE;
-
-    settings = gwy_app_settings_get();
-    tool->args = default_args;
-    gwy_container_gis_boolean_by_name(settings, same_units_key,
-                                      &tool->args.same_units);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -246,6 +225,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
                                         GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
 
+    gtk_widget_set_sensitive(tool->apply, TRUE);
     gtk_widget_show_all(dialog->vbox);
 }
 
@@ -295,7 +275,12 @@ gwy_tool_stats_selection_changed(GwyPlainTool *plain_tool,
                                 gint hint)
 {
     GwyToolStats *tool;
-    gint n = 0;
+    gint n = 0, w, h;
+    gdouble avg, ra, rms, skew, kurtosis, min, max, median, q;
+    gdouble projarea, area = 0.0;
+    gdouble theta, phi;    
+    gdouble sel[4];
+    gint isel[4];
 
     tool = GWY_TOOL_STATS(plain_tool);
     g_return_if_fail(hint <= 0);
@@ -311,7 +296,38 @@ gwy_tool_stats_selection_changed(GwyPlainTool *plain_tool,
     else
         gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
 
-    gtk_widget_set_sensitive(tool->apply, n > 0);
+   
+    if (!gwy_selection_get_object(plain_tool->selection, 0, sel)) {
+        isel[0] = 0;
+        isel[1] = 0;
+        isel[2] = gwy_data_field_get_xres(plain_tool->data_field);
+        isel[3] = gwy_data_field_get_yres(plain_tool->data_field);
+    }
+    else {
+        isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
+        isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
+        isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
+        isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+    }
+    w = isel[2] - isel[0];
+    h = isel[3] - isel[1];
+    gwy_data_field_area_get_stats(plain_tool->data_field, isel[0], isel[1], w, h,
+                                  &avg, &ra, &rms, &skew, &kurtosis);
+    gwy_data_field_area_get_min_max(plain_tool->data_field, isel[0], isel[1], w, h, &min, &max);
+    median = gwy_data_field_area_get_median(plain_tool->data_field, isel[0], isel[1], w, h);
+    q = gwy_data_field_get_xreal(plain_tool->data_field)/gwy_data_field_get_xres(plain_tool->data_field)
+        *gwy_data_field_get_yreal(plain_tool->data_field)/gwy_data_field_get_yres(plain_tool->data_field);
+    projarea = w*h*q;
+    if (tool->same_units) {
+        area = gwy_data_field_area_get_surface_area(plain_tool->data_field, isel[0], isel[1],
+                                                    w, h);
+        gwy_data_field_area_get_inclination(plain_tool->data_field, isel[0], isel[1], w, h,
+                                            &theta, &phi);
+    } 
+
+
+    
+
 }
 
 
