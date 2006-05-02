@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,21 +19,32 @@
  */
 
 #include "config.h"
-#include <string.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwymodule/gwymodule.h>
-#include <libprocess/stats.h>
-#include <libgwydgets/gwydgets.h>
-#include <app/app.h>
-#include <app/unitool.h>
+#include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/datafield.h>
+#include <libgwydgets/gwystock.h>
+#include <app/gwyapp.h>
 
-#define CHECK_LAYER_TYPE(l) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+#define GWY_TYPE_TOOL_STATS            (gwy_tool_stats_get_type())
+#define GWY_TOOL_STATS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_STATS, GwyToolStats))
+#define GWY_IS_TOOL_STATS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_STATS))
+#define GWY_TOOL_STATS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_STATS, GwyToolStatsClass))
+
+typedef struct _GwyToolStats      GwyToolStats;
+typedef struct _GwyToolStatsClass GwyToolStatsClass;
 
 typedef struct {
-    GwyUnitoolRectLabels labels;
+    gboolean same_units;
+} ToolArgs;
+
+struct _GwyToolStats {
+    GwyPlainTool parent_instance;
+
+    ToolArgs args;
+
+    GwyRectSelectionLabels *rlabels;
+    GtkWidget *apply;
+
     GtkWidget *ra;
     GtkWidget *rms;
     GtkWidget *skew;
@@ -48,166 +59,161 @@ typedef struct {
     GtkWidget *phi;
     GwySIValueFormat *vform2;
     GwySIValueFormat *vformdeg;
-    gboolean same_units;
-} ToolControls;
 
-static gboolean   module_register  (void);
-static gboolean   use              (GwyDataWindow *data_window,
-                                    GwyToolSwitchEvent reason);
-static void       layer_setup      (GwyUnitoolState *state);
-static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state,
-                                    GwyUnitoolUpdateType reason);
-static void       dialog_abandon   (GwyUnitoolState *state);
+    /* potential class data */
+    GType layer_type_rect;
+};
+
+struct _GwyToolStatsClass {
+    GwyPlainToolClass parent_class;
+};
+
+static gboolean module_register(void);
+
+static GType  gwy_tool_stats_get_type            (void) G_GNUC_CONST;
+static void   gwy_tool_stats_finalize            (GObject *object);
+static void   gwy_tool_stats_init_dialog         (GwyToolStats *tool);
+static void   gwy_tool_stats_data_switched       (GwyTool *gwytool,
+                                                 GwyDataView *data_view);
+static void   gwy_tool_stats_data_changed        (GwyPlainTool *plain_tool);
+static void   gwy_tool_stats_response            (GwyTool *tool,
+                                                 gint response_id);
+static void   gwy_tool_stats_selection_changed   (GwyPlainTool *plain_tool,
+                                                 gint hint);
+static void   gwy_tool_stats_apply               (GwyToolStats *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Statistical quantities tool, calculates various statistical "
-       "characteristics (mean, median, RMS, skew, kurtosis, inclination, "
-       "area, projected area) of selected part of data."),
+    N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
+    "2003",
 };
 
-static GwyUnitoolSlots func_slots = {
-    0,                             /* layer type, must be set runtime */
-    layer_setup,                   /* layer setup func */
-    dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
-    NULL,                          /* apply action */
-    NULL,                          /* nonstandard response handler */
+static const gchar same_units_key[] = "/module/stats/same_units";
+
+static const ToolArgs default_args = {
+    FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
 
+G_DEFINE_TYPE(GwyToolStats, gwy_tool_stats, GWY_TYPE_PLAIN_TOOL)
+
 static gboolean
 module_register(void)
 {
-    static GwyToolFuncInfo func_info = {
-        "stats",
-        GWY_STOCK_STAT_QUANTITIES,
-        N_("Statistical quantities"),
-        use,
-    };
-
-    gwy_tool_func_register(&func_info);
+    gwy_tool_func_register(GWY_TYPE_TOOL_STATS);
 
     return TRUE;
 }
 
-static gboolean
-use(GwyDataWindow *data_window,
-    GwyToolSwitchEvent reason)
+static void
+gwy_tool_stats_class_init(GwyToolStatsClass *klass)
 {
-    static const gchar *layer_name = "GwyLayerRectangle";
-    static GwyUnitoolState *state = NULL;
+    GwyPlainToolClass *ptool_class = GWY_PLAIN_TOOL_CLASS(klass);
+    GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    if (!state) {
-        func_slots.layer_type = g_type_from_name(layer_name);
-        if (!func_slots.layer_type) {
-            g_warning("Layer type `%s' not available", layer_name);
-            return FALSE;
-        }
-        state = g_new0(GwyUnitoolState, 1);
-        state->func_slots = &func_slots;
-        state->user_data = g_new0(ToolControls, 1);
-    }
-    /* Compute area units and find out whether we should display non-projected
-     * area. */
-    if (data_window) {
-        ToolControls *controls;
-        GwyContainer *data;
-        GwyDataField *dfield;
-        GwySIUnit *siunitxy, *siunitz, *siunitdeg;
-        gdouble xreal, yreal, q;
+    gobject_class->finalize = gwy_tool_stats_finalize;
 
-        controls = (ToolControls*)state->user_data;
-        data = gwy_data_window_get_data(data_window);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        siunitxy = gwy_data_field_get_si_unit_xy(dfield);
-        siunitz = gwy_data_field_get_si_unit_z(dfield);
-        controls->same_units = gwy_si_unit_equal(siunitxy, siunitz);
+    tool_class->stock_id = GWY_STOCK_STAT_QUANTITIES;
+    tool_class->title = _("Statistical quantities");
+    tool_class->tooltip = _("Statistical quantities");
+    tool_class->prefix = "/module/stats";
+    tool_class->data_switched = gwy_tool_stats_data_switched;
+    tool_class->response = gwy_tool_stats_response;
 
-        xreal = gwy_data_field_get_xreal(dfield);
-        yreal = gwy_data_field_get_xreal(dfield);
-        q = xreal/gwy_data_field_get_xres(dfield)
-            *yreal/gwy_data_field_get_yres(dfield);
-
-        siunitxy = gwy_si_unit_duplicate(siunitxy);
-        gwy_si_unit_power(siunitxy, 2, siunitxy);
-        controls->vform2
-            = gwy_si_unit_get_format_with_resolution(siunitxy,
-                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                     xreal*yreal, q,
-                                                     controls->vform2);
-        g_object_unref(siunitxy);
-
-        siunitdeg = (GwySIUnit*)gwy_si_unit_new("deg"); /* degree */
-        controls->vformdeg
-            = gwy_si_unit_get_format_with_resolution(siunitdeg,
-                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                     360, 0.01,
-                                                     controls->vformdeg);
-        g_object_unref(siunitdeg);
-    }
-
-    return gwy_unitool_use(state, data_window, reason);
+    ptool_class->data_changed = gwy_tool_stats_data_changed;
+    ptool_class->selection_changed = gwy_tool_stats_selection_changed;
 }
 
 static void
-layer_setup(GwyUnitoolState *state)
+gwy_tool_stats_finalize(GObject *object)
 {
-    g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer,
-                 "selection-key", "/0/select/rectangle",
-                 "is-crop", FALSE,
-                 NULL);
+    GwyToolStats *tool;
+    GwyContainer *settings;
+
+    tool = GWY_TOOL_STATS(object);
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, same_units_key,
+                                      tool->args.same_units);
+
+    G_OBJECT_CLASS(gwy_tool_stats_parent_class)->finalize(object);
 }
 
-static GtkWidget*
-dialog_create(GwyUnitoolState *state)
+static void
+gwy_tool_stats_init(GwyToolStats *tool)
 {
+    GwyPlainTool *plain_tool;
+    GwyContainer *settings;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
+                                                           "GwyLayerRectangle");
+    if (!tool->layer_type_rect)
+        return;
+
+    plain_tool->lazy_updates = TRUE;
+
+    settings = gwy_app_settings_get();
+    tool->args = default_args;
+    gwy_container_gis_boolean_by_name(settings, same_units_key,
+                                      &tool->args.same_units);
+
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                     "rectangle");
+
+    gwy_tool_stats_init_dialog(tool);
+}
+
+static void
+gwy_tool_stats_rect_updated(GwyToolStats *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    gwy_rect_selection_labels_select(tool->rlabels,
+                                     plain_tool->selection,
+                                     plain_tool->data_field);
+}
+
+static void
+gwy_tool_stats_init_dialog(GwyToolStats *tool)
+{
+    GtkDialog *dialog;
+    GtkWidget *table, *label, **plabel;
+    gint i;
     static struct {
         const gchar *name;
         gsize offset;
     }
     const values[] = {
-        { N_("Ra"),             G_STRUCT_OFFSET(ToolControls, ra)       },
-        { N_("Rms"),            G_STRUCT_OFFSET(ToolControls, rms)      },
-        { N_("Skew"),           G_STRUCT_OFFSET(ToolControls, skew)     },
-        { N_("Kurtosis"),       G_STRUCT_OFFSET(ToolControls, kurtosis) },
-        { N_("Average height"), G_STRUCT_OFFSET(ToolControls, avg)      },
-        { N_("Minimum"),        G_STRUCT_OFFSET(ToolControls, min)      },
-        { N_("Maximum"),        G_STRUCT_OFFSET(ToolControls, max)      },
-        { N_("Median"),         G_STRUCT_OFFSET(ToolControls, median)   },
-        { N_("Projected area"), G_STRUCT_OFFSET(ToolControls, projarea) },
-        { N_("Area"),           G_STRUCT_OFFSET(ToolControls, area)     },
-        { N_("Inclination theta"), G_STRUCT_OFFSET(ToolControls, theta) },
-        { N_("Inclination phi"), G_STRUCT_OFFSET(ToolControls, phi) },
+        { N_("Ra"),             G_STRUCT_OFFSET(GwyToolStats, ra)       },
+        { N_("Rms"),            G_STRUCT_OFFSET(GwyToolStats, rms)      },
+        { N_("Skew"),           G_STRUCT_OFFSET(GwyToolStats, skew)     },
+        { N_("Kurtosis"),       G_STRUCT_OFFSET(GwyToolStats, kurtosis) },
+        { N_("Average height"), G_STRUCT_OFFSET(GwyToolStats, avg)      },
+        { N_("Minimum"),        G_STRUCT_OFFSET(GwyToolStats, min)      },
+        { N_("Maximum"),        G_STRUCT_OFFSET(GwyToolStats, max)      },
+        { N_("Median"),         G_STRUCT_OFFSET(GwyToolStats, median)   },
+        { N_("Projected area"), G_STRUCT_OFFSET(GwyToolStats, projarea) },
+        { N_("Area"),           G_STRUCT_OFFSET(GwyToolStats, area)     },
+        { N_("Inclination theta"), G_STRUCT_OFFSET(GwyToolStats, theta) },
+        { N_("Inclination phi"), G_STRUCT_OFFSET(GwyToolStats, phi) },
     };
-    ToolControls *controls;
-    GwySIValueFormat *units;
-    GtkWidget *dialog, *table, *label, *frame, **plabel;
-    gint i;
 
-    gwy_debug("");
 
-    controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    dialog = gtk_dialog_new_with_buttons(_("Statistical Quantities"),
-                                         NULL, 0, NULL);
-    gwy_unitool_dialog_add_button_clear(dialog);
-    gwy_unitool_dialog_add_button_hide(dialog);
-
-    frame = gwy_unitool_windowname_frame_create(state);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
-                       FALSE, FALSE, 0);
+    tool->rlabels = gwy_rect_selection_labels_new
+                         (FALSE, G_CALLBACK(gwy_tool_stats_rect_updated), tool);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox),
+                       gwy_rect_selection_labels_get_table(tool->rlabels),
+                       TRUE, TRUE, 0);
 
     table = gtk_table_new(16, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -225,7 +231,7 @@ dialog_create(GwyUnitoolState *state)
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2,
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-        plabel = (GtkWidget**)G_STRUCT_MEMBER_P(controls, values[i].offset);
+        plabel = (GtkWidget**)G_STRUCT_MEMBER_P(tool, values[i].offset);
         *plabel = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(*plabel), 1.0, 0.5);
         gtk_label_set_selectable(GTK_LABEL(*plabel), TRUE);
@@ -233,92 +239,107 @@ dialog_create(GwyUnitoolState *state)
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
 
-    gwy_unitool_rect_info_table_setup(&controls->labels,
-                                      GTK_TABLE(table),
-                                      0, 1 + G_N_ELEMENTS(values));
-    controls->labels.unselected_is_full = TRUE;
 
-    return dialog;
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
+    gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
+    tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
+                                        GTK_RESPONSE_APPLY);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+
+    gtk_widget_show_all(dialog->vbox);
 }
 
 static void
-dialog_update(GwyUnitoolState *state,
-              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
+gwy_tool_stats_data_switched(GwyTool *gwytool,
+                            GwyDataView *data_view)
 {
-    GwySIValueFormat *units;
-    ToolControls *controls;
-    GwyContainer *data;
+    GwyPlainTool *plain_tool;
+
+    GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->data_switched(gwytool,
+                                                              data_view);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    if (plain_tool->init_failed)
+        return;
+
+    if (data_view) {
+        g_object_set(plain_tool->layer,
+                     "draw-reflection", FALSE,
+                     "is-stats", TRUE,
+                     NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 1);
+    }
+}
+
+static void
+gwy_tool_stats_data_changed(GwyPlainTool *plain_tool)
+{
+    gwy_rect_selection_labels_fill(GWY_TOOL_STATS(plain_tool)->rlabels,
+                                   plain_tool->selection,
+                                   plain_tool->data_field,
+                                   NULL, NULL);
+    gwy_tool_stats_selection_changed(plain_tool, 0);
+}
+
+static void
+gwy_tool_stats_response(GwyTool *tool,
+                       gint response_id)
+{
+    GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->response(tool, response_id);
+
+    if (response_id == GTK_RESPONSE_APPLY)
+        gwy_tool_stats_apply(GWY_TOOL_STATS(tool));
+}
+
+static void
+gwy_tool_stats_selection_changed(GwyPlainTool *plain_tool,
+                                gint hint)
+{
+    GwyToolStats *tool;
+    gint n = 0;
+
+    tool = GWY_TOOL_STATS(plain_tool);
+    g_return_if_fail(hint <= 0);
+
+    if (plain_tool->selection) {
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+        g_return_if_fail(n == 0 || n == 1);
+        gwy_rect_selection_labels_fill(tool->rlabels,
+                                       plain_tool->selection,
+                                       plain_tool->data_field,
+                                       NULL, NULL);
+    }
+    else
+        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+
+    gtk_widget_set_sensitive(tool->apply, n > 0);
+}
+
+
+static void
+gwy_tool_stats_apply(GwyToolStats *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwyContainer *container;
     GwyDataField *dfield;
-    GwyDataViewLayer *layer;
-    gdouble xy[4];
+    GQuark quarks[3];
+    gdouble sel[4];
+    gchar key[24];
     gint isel[4];
-    gint w, h;
-    gdouble avg, ra, rms, skew, kurtosis, min, max, median, q;
-    gdouble projarea, area = 0.0;
-    gdouble theta, phi;
-    gchar buffer[48];
+    gint id;
 
-    gwy_debug("");
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
 
-    controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    gwy_unitool_rect_info_table_fill(state, &controls->labels, xy, isel);
-    w = isel[2] - isel[0];
-    h = isel[3] - isel[1];
-    gwy_data_field_area_get_stats(dfield, isel[0], isel[1], w, h,
-                                  &avg, &ra, &rms, &skew, &kurtosis);
-    gwy_data_field_area_get_min_max(dfield, isel[0], isel[1], w, h, &min, &max);
-    median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
-    q = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
-        *gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
-    projarea = w*h*q;
-    if (controls->same_units) {
-        area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1],
-                                                    w, h);
-        gwy_data_field_area_get_inclination(dfield, isel[0], isel[1], w, h,
-                                            &theta, &phi);
+    if (!gwy_selection_get_object(plain_tool->selection, 0, sel)) {
+        g_warning("Apply invoked when no selection is present");
+        return;
     }
 
-    state->value_format->precision = 2;
-    gwy_unitool_update_label(state->value_format, controls->ra, ra);
-    gwy_unitool_update_label(state->value_format, controls->rms, rms);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g", skew);
-    gtk_label_set_text(GTK_LABEL(controls->skew), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g", kurtosis);
-    gtk_label_set_text(GTK_LABEL(controls->kurtosis), buffer);
-    gwy_unitool_update_label(state->value_format, controls->avg, avg);
+    isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
+    isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
+    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
+    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
 
-    gwy_unitool_update_label(state->value_format, controls->min, min);
-    gwy_unitool_update_label(state->value_format, controls->max, max);
-    gwy_unitool_update_label(state->value_format, controls->median, median);
-    gwy_unitool_update_label(controls->vform2, controls->projarea, projarea);
-    if (controls->same_units) {
-        gwy_unitool_update_label(controls->vform2, controls->area, area);
-        gwy_unitool_update_label(controls->vformdeg, controls->theta,
-                                 180.0/G_PI * theta);
-        gwy_unitool_update_label(controls->vformdeg, controls->phi,
-                                 180.0/G_PI * phi);
-    } else {
-        gtk_label_set_text(GTK_LABEL(controls->area), _("N.A."));
-        gtk_label_set_text(GTK_LABEL(controls->theta), _("N.A."));
-        gtk_label_set_text(GTK_LABEL(controls->phi), _("N.A."));
-    }
-}
-
-static void
-dialog_abandon(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-
-    controls = (ToolControls*)state->user_data;
-    if (controls->vform2)
-        gwy_si_unit_value_format_free(controls->vform2);
-    memset(state->user_data, 0, sizeof(ToolControls));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
