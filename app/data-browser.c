@@ -226,12 +226,11 @@ gwy_app_data_proxy_connect_object(GwyAppDataList *list,
 {
     GtkTreeIter iter;
 
-    gtk_list_store_append(list->list, &iter);
-    gtk_list_store_set(list->list, &iter,
-                       MODEL_ID, i,
-                       MODEL_OBJECT, object,
-                       MODEL_WIDGET, NULL,
-                       -1);
+    gtk_list_store_insert_with_values(list->list, &iter, G_MAXINT,
+                                      MODEL_ID, i,
+                                      MODEL_OBJECT, object,
+                                      MODEL_WIDGET, NULL,
+                                      -1);
     if (list->last < i)
         list->last = i;
 }

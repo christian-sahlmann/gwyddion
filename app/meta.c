@@ -201,8 +201,9 @@ gwy_meta_browser_construct(MetadataBrowser *browser)
                 gwy_container_set_string(browser->container,
                                          fd->quark, fd->value);
             }
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, META_KEY, fd->quark, -1);
+            gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                              META_KEY, fd->quark,
+                                              -1);
         }
         else
             gwy_container_remove(browser->container, fd->quark);
@@ -392,8 +393,9 @@ gwy_meta_item_changed(GwyContainer *container,
         return;
     }
 
-    gtk_list_store_append(GTK_LIST_STORE(model), &iter);
-    gtk_list_store_set(GTK_LIST_STORE(model), &iter, META_KEY, quark, -1);
+    gtk_list_store_insert_with_values(GTK_LIST_STORE(model), &iter, G_MAXINT,
+                                      META_KEY, quark,
+                                      -1);
     gwy_meta_focus_iter(browser, &iter);
 }
 

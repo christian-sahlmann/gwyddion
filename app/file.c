@@ -552,12 +552,11 @@ gwy_app_file_add_types(GtkListStore *store,
     tldata.list = g_slist_sort(tldata.list, gwy_app_file_type_compare);
 
     for (l = tldata.list; l; l = g_slist_next(l)) {
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter,
-                           COLUMN_FILETYPE, l->data,
-                           COLUMN_LABEL,
-                           gettext(gwy_file_func_get_description(l->data)),
-                           -1);
+        gtk_list_store_insert_with_values
+                (store, &iter, G_MAXINT,
+                 COLUMN_FILETYPE, l->data,
+                 COLUMN_LABEL, gettext(gwy_file_func_get_description(l->data)),
+                 -1);
     }
 
     g_slist_free(tldata.list);

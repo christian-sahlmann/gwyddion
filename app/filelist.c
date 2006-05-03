@@ -567,8 +567,9 @@ gwy_app_recent_file_list_load(const gchar *filename)
 
             gwy_debug("%s", files[n]);
             rf = gwy_recent_file_new(gwy_canonicalize_path(files[n]), NULL);
-            gtk_list_store_append(gcontrols.store, &iter);
-            gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
+            gtk_list_store_insert_with_values(gcontrols.store, &iter, G_MAXINT,
+                                              FILELIST_RAW, rf,
+                                              -1);
             if (n < (guint)gwy_app_n_recent_files) {
                 gcontrols.recent_file_list
                     = g_list_append(gcontrols.recent_file_list, rf->file_utf8);

@@ -89,12 +89,11 @@ gwy_module_browser_store_module(const gchar *name,
 {
     GtkTreeIter iter;
 
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-                       MODULE_NAME, name,
-                       MODULE_VERSION, mod_info->version,
-                       MODULE_AUTHOR, mod_info->author,
-                       -1);
+    gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                      MODULE_NAME, name,
+                                      MODULE_VERSION, mod_info->version,
+                                      MODULE_AUTHOR, mod_info->author,
+                                      -1);
 }
 
 static GtkWidget*

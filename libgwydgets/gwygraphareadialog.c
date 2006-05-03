@@ -303,14 +303,15 @@ gwy_graph_combo_box_new(GtkWidget *parent,
 
     store = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, GDK_TYPE_PIXBUF);
     for (i = 0; i <= last; i++) {
-        gtk_list_store_append(store, &iter);
         if (labels)
-            gtk_list_store_set(store, &iter,
-                               COLUMN_VALUE, i,
-                               COLUMN_NAME, _(labels[i]),
-                               -1);
+            gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                              COLUMN_VALUE, i,
+                                              COLUMN_NAME, _(labels[i]),
+                                              -1);
         else
-            gtk_list_store_set(store, &iter, COLUMN_VALUE, i, -1);
+            gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                              COLUMN_VALUE, i,
+                                              -1);
     }
 
     combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
