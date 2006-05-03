@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 tiff_modules = jpkscan
-smpl_modules = smpl
+spml_modules = spml
 
 TOP_SRCDIR = ..\..
 MOD_TYPE = file
