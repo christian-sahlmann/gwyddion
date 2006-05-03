@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -217,7 +217,9 @@ mprofile_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     gsize expected;
-    guint n;
+    GString *key;
+    const gchar *title;
+    guint n, i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -243,26 +245,30 @@ mprofile_load(const gchar *filename,
         return NULL;
     }
 
-    /*n = select_which_data(&mprofile);*/
-    gwy_debug("selected: %u", n);
-    if (n != (guint)-1) {
-        if (n < mprofile.nbuckets) {
-            dfield = mprofile.intensity_data[n];
-            vpmask = mprofile.intensity_mask[n];
+    key = g_string_new("");
+    container = gwy_container_new();
+    for (i = 0; i < n; i++) {
+        if (i < mprofile.nbuckets) {
+            dfield = mprofile.intensity_data[i];
+            vpmask = mprofile.intensity_mask[i];
+            title = "Intensity";
         }
         else {
-            g_assert(n == mprofile.nbuckets);
             dfield = mprofile.phase_data;
             vpmask = mprofile.phase_mask;
+            title = "Phase";
+        }
+        g_string_printf(key, "/%d/data", i);
+        gwy_container_set_object_by_name(container, key->str, dfield);
+        g_string_printf(key, "/%d/data/title", i);
+        gwy_container_set_string_by_name(container, key->str, g_strdup(title));
+        if (vpmask) {
+            g_string_printf(key, "/%d/mask", i);
+            gwy_container_set_object_by_name(container, key->str, vpmask);
         }
     }
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        if (vpmask)
-            gwy_container_set_object_by_name(container, "/0/mask", vpmask);
-        store_metadata(&mprofile, container);
-    }
+    g_string_free(key, TRUE);
+    store_metadata(&mprofile, container);
 
     for (n = 0; n < mprofile.nbuckets; n++) {
         gwy_object_unref(mprofile.intensity_data[n]);
