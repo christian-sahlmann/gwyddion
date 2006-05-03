@@ -1539,37 +1539,35 @@ gwy_data_field_fill(GwyDataField *data_field, gdouble value)
 /**
  * gwy_data_field_area_fill:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  * @value: Value to be entered
  *
  * Fills a rectangular part of a data field with given value.
  **/
 void
-gwy_data_field_area_fill(GwyDataField *a,
-                         gint ulcol, gint ulrow, gint brcol, gint brrow,
+gwy_data_field_area_fill(GwyDataField *data_field,
+                         gint col, gint row, gint width, gint height,
                          gdouble value)
 {
     gint i, j;
-    gdouble *row;
+    gdouble *drow;
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= a->xres && brrow <= a->yres);
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
 
-    for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++)
-            *(row++) = value;
+        for (j = 0; j < width; j++)
+            *(drow++) = value;
     }
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -1600,39 +1598,36 @@ gwy_data_field_clear(GwyDataField *data_field)
 /**
  * gwy_data_field_area_clear:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  *
  * Fills a rectangular part of a data field with zeroes.
  **/
 void
 gwy_data_field_area_clear(GwyDataField *data_field,
-                          gint ulcol, gint ulrow, gint brcol, gint brrow)
+                          gint col, gint row, gint width, gint height)
 {
     gint i;
-    gdouble *row;
+    gdouble *drow;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= data_field->xres && brrow <= data_field->yres);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
     gwy_data_field_invalidate(data_field);
-    if (brrow - ulrow == 1 || (ulcol == 0 && brcol == data_field->xres)) {
-        memset(data_field->data + data_field->xres*ulrow + ulcol, 0,
-               (brcol - ulcol)*(brrow - ulrow)*sizeof(gdouble));
+    if (height == 1 || (col == 0 && width == data_field->xres)) {
+        memset(data_field->data + data_field->xres*row + col, 0,
+               width*height*sizeof(gdouble));
         return;
     }
 
-    for (i = ulrow; i < brrow; i++) {
-        row = data_field->data + i*data_field->xres + ulcol;
-        memset(row, 0, (brcol - ulcol)*sizeof(gdouble));
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
+        memset(drow, 0, width*sizeof(gdouble));
     }
 }
 
@@ -1661,7 +1656,7 @@ gwy_data_field_multiply(GwyDataField *data_field, gdouble value)
     CVAL(data_field, MIN) *= value;
     CVAL(data_field, MAX) *= value;
     CVAL(data_field, SUM) *= value;
-    CVAL(data_field, RMS) *= value;
+    CVAL(data_field, RMS) *= fabs(value);
     CVAL(data_field, MED) *= value;
     CVAL(data_field, ARF) *= value;
     CVAL(data_field, ART) *= value;
@@ -1674,36 +1669,33 @@ gwy_data_field_multiply(GwyDataField *data_field, gdouble value)
 /**
  * gwy_data_field_area_multiply:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  * @value: Value to multiply area with.
  *
  * Multiplies values in a rectangular part of a data field by given value
  **/
 void
 gwy_data_field_area_multiply(GwyDataField *data_field,
-                             gint ulcol, gint ulrow, gint brcol, gint brrow,
+                             gint col, gint row, gint width, gint height,
                              gdouble value)
 {
     gint i, j;
-    gdouble *row;
+    gdouble *drow;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= data_field->xres && brrow <= data_field->yres);
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
 
-    for (i = ulrow; i < brrow; i++) {
-        row = data_field->data + i*data_field->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++)
-            *(row++) *= value;
+        for (j = 0; j < width; j++)
+            *(drow++) *= value;
     }
     gwy_data_field_invalidate(data_field);
 }
@@ -1742,36 +1734,33 @@ gwy_data_field_add(GwyDataField *data_field, gdouble value)
 /**
  * gwy_data_field_area_add:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  * @value: Value to be added to area values.
  *
  * Adds given value to all values in a rectangular part of a data field.
  **/
 void
 gwy_data_field_area_add(GwyDataField *data_field,
-                        gint ulcol, gint ulrow, gint brcol, gint brrow,
+                        gint col, gint row, gint width, gint height,
                         gdouble value)
 {
     gint i, j;
-    gdouble *row;
+    gdouble *drow;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= data_field->xres && brrow <= data_field->yres);
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
 
-    for (i = ulrow; i < brrow; i++) {
-        row = data_field->data + i*data_field->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++)
-            *(row++) += value;
+        for (j = 0; j < width; j++)
+            *(drow++) += value;
     }
     gwy_data_field_invalidate(data_field);
 }
@@ -1827,10 +1816,10 @@ gwy_data_field_threshold(GwyDataField *data_field,
 /**
  * gwy_data_field_area_threshold:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  * @threshval: Threshold value.
  * @bottom: Lower replacement value.
  * @top: Upper replacement value.
@@ -1844,31 +1833,27 @@ gwy_data_field_threshold(GwyDataField *data_field,
  **/
 gint
 gwy_data_field_area_threshold(GwyDataField *data_field,
-                              gint ulcol, gint ulrow, gint brcol, gint brrow,
+                              gint col, gint row, gint width, gint height,
                               gdouble threshval, gdouble bottom, gdouble top)
 {
     gint i, j, tot = 0;
-    gdouble *row;
+    gdouble *drow;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= data_field->xres
-                         && brrow <= data_field->yres,
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
                          0);
 
-    for (i = ulrow; i < brrow; i++) {
-        row = data_field->data + i*data_field->xres + ulcol;
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
 
-        for (j = 0; j < brcol - ulcol; j++) {
-            if (*row < threshval)
-                *row = bottom;
+        for (j = 0; j < width; j++) {
+            if (*drow < threshval)
+                *drow = bottom;
             else {
-                *row = top;
+                *drow = top;
                 tot++;
             }
         }
@@ -1926,10 +1911,10 @@ gwy_data_field_clamp(GwyDataField *data_field,
 /**
  * gwy_data_field_area_clamp:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  * @bottom: Lower limit value.
  * @top: Upper limit value.
  *
@@ -1940,37 +1925,29 @@ gwy_data_field_clamp(GwyDataField *data_field,
  **/
 gint
 gwy_data_field_area_clamp(GwyDataField *data_field,
-                          gint ulcol,
-                          gint ulrow,
-                          gint brcol,
-                          gint brrow,
-                          gdouble bottom,
-                          gdouble top)
+                          gint col, gint row, gint width, gint height,
+                          gdouble bottom, gdouble top)
 {
     gint i, j, tot = 0;
-    gdouble *row;
+    gdouble *drow;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol < data_field->xres
-                         && brrow < data_field->yres,
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
                          0);
 
-    for (i = ulrow; i < brrow; i++) {
-        row = data_field->data + i*data_field->xres + ulcol;
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (row + i)*data_field->xres + col;
 
-        for (j = 0; j < brcol - ulcol; j++) {
-            if (*row < bottom) {
-                *row = bottom;
+        for (j = 0; j < width; j++) {
+            if (*drow < bottom) {
+                *drow = bottom;
                 tot++;
             }
-            else if (*row > top) {
-                *row = top;
+            else if (*drow > top) {
+                *drow = top;
                 tot++;
             }
         }
@@ -2438,10 +2415,10 @@ gwy_data_field_get_angder(GwyDataField *data_field,
 /**
  * gwy_data_field_fit_lines:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  * @degree: Fitted polynom degree.
  * @exclude: If %TRUE, outside of area selected by @ulcol, @ulrow, @brcol,
  *           @brrow will be used for polynom coefficients computation, instead
@@ -2457,8 +2434,7 @@ gwy_data_field_get_angder(GwyDataField *data_field,
  **/
 void
 gwy_data_field_fit_lines(GwyDataField *data_field,
-                         gint ulcol, gint ulrow,
-                         gint brcol, gint brrow,
+                         gint col, gint row, gint width, gint height,
                          gint degree,
                          gboolean exclude,
                          GwyOrientation orientation)
@@ -2469,6 +2445,10 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
     GwyDataLine *hlp, *xdata = NULL, *ydata = NULL;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
     xres = data_field->xres;
     yres = data_field->yres;
@@ -2481,33 +2461,28 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
         ydata = gwy_data_line_new(res, real, FALSE);
     }
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
     if (orientation == GWY_ORIENTATION_HORIZONTAL) {
         if (exclude) {
             for (i = j = 0; i < xres; i++) {
-                if (i < ulcol || i >= brcol)
+                if (i < col || i >= col + width)
                     xdata->data[j++] = i;
             }
         }
 
         for (i = 0; i < yres; i++) {
             gwy_data_field_get_row(data_field, hlp, i);
-            if (i >= ulrow && i < brrow) {
+            if (i >= row && i < row + height) {
                 if (exclude) {
-                    memcpy(ydata->data, hlp->data, ulcol*sizeof(gdouble));
-                    memcpy(ydata->data + ulcol, hlp->data + brcol,
-                           (xres - brcol)*sizeof(gdouble));
-                    gwy_math_fit_polynom(xres - (brcol - ulcol),
+                    memcpy(ydata->data, hlp->data, col*sizeof(gdouble));
+                    memcpy(ydata->data + col, hlp->data + col + width,
+                           (xres - col - width)*sizeof(gdouble));
+                    gwy_math_fit_polynom(xres - width,
                                          xdata->data, ydata->data, degree,
                                          coefs);
                 }
                 else
                     gwy_data_line_part_fit_polynom(hlp, degree, coefs,
-                                                   ulcol, brcol);
+                                                   col, col + width);
             }
             else
                 gwy_data_line_fit_polynom(hlp, degree, coefs);
@@ -2518,25 +2493,25 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
     else if (orientation == GWY_ORIENTATION_VERTICAL) {
         if (exclude) {
             for (i = j = 0; i < yres; i++) {
-                if (i < ulrow || i >= brrow)
+                if (i < row || i >= row + height)
                     xdata->data[j++] = i;
             }
         }
 
         for (i = 0; i < xres; i++) {
             gwy_data_field_get_column(data_field, hlp, i);
-            if (i >= ulcol && i < brcol) {
+            if (i >= col && i < col + width) {
                 if (exclude) {
-                    memcpy(ydata->data, hlp->data, ulrow*sizeof(gdouble));
-                    memcpy(ydata->data + ulrow, hlp->data + brrow,
-                           (yres - brrow)*sizeof(gdouble));
-                    gwy_math_fit_polynom(yres - (brrow - ulrow),
+                    memcpy(ydata->data, hlp->data, row*sizeof(gdouble));
+                    memcpy(ydata->data + row, hlp->data + row + height,
+                           (yres - row - height)*sizeof(gdouble));
+                    gwy_math_fit_polynom(yres - height,
                                          xdata->data, ydata->data, degree,
                                          coefs);
                 }
                 else
                     gwy_data_line_part_fit_polynom(hlp, degree, coefs,
-                                                   ulrow, brrow);
+                                                   row, row + height);
             }
             else
                 gwy_data_line_fit_polynom(hlp, degree, coefs);

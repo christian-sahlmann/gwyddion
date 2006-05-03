@@ -253,7 +253,8 @@ apply(GwyUnitoolState *state)
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
-    gwy_data_field_fit_lines(dfield, isel[0], isel[1], isel[2], isel[3],
+    gwy_data_field_fit_lines(dfield, isel[0], isel[1],
+                             isel[2] - isel[0], isel[3] - isel[1],
                              controls->fit, controls->exc, controls->dir);
 
     gwy_selection_clear(selection);

@@ -132,7 +132,7 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     modus = gwy_data_line_get_modus(modi, 0);
 
     for (i = 0; i < yres; i++) {
-        gwy_data_field_area_add(dfield, 0, i, xres, i+1,
+        gwy_data_field_area_add(dfield, 0, i, xres, 1,
                                 modus - gwy_data_line_get_val(modi, i));
     }
 
@@ -230,7 +230,7 @@ gwy_data_field_median_line_correct(GwyDataField *dfield)
                 maxdiff = x;
         }
         shift = find_minima_golden(sum_of_abs_diff, mindiff, maxdiff, &mldata);
-        gwy_data_field_area_add(dfield, 0, i, xres, i+1, -shift);
+        gwy_data_field_area_add(dfield, 0, i, xres, 1, -shift);
         csum -= shift;
     }
     gwy_data_field_add(dfield, -csum/(xres*yres));
@@ -315,7 +315,7 @@ line_correct_match(GwyContainer *data,
     }
     gwy_data_line_cumulate(shifts);
     for (i = 1; i < yres; i++)
-        gwy_data_field_area_add(dfield, 0, i, xres, i+1, s[i]);
+        gwy_data_field_area_add(dfield, 0, i, xres, 1, s[i]);
     gwy_data_field_add(dfield, -s[yres-1]/(xres*yres));
 
     g_object_unref(shifts);
@@ -445,7 +445,7 @@ line_correct_match(GwyContainer *data,
 
     gwy_data_line_cumulate(shifts);
     for (i = 1; i < yres; i++)
-        gwy_data_field_area_add(dfield, 0, i, xres, i+1, s[i]);
+        gwy_data_field_area_add(dfield, 0, i, xres, 1, s[i]);
     gwy_data_field_add(dfield, -s[yres-1]/(xres*yres));
 
     g_object_unref(shifts);

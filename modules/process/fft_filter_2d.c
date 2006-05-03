@@ -1537,10 +1537,10 @@ fft_filter_2d(GwyDataField *input, GwyDataField *output_image,
     if (g_slist_length(list) > 0) {
         marker = list->data;
         if (!marker->inclusive)
-            gwy_data_field_fill(mask, 1);
+            gwy_data_field_fill(mask, 1.0);
     }
     else
-        gwy_data_field_fill(mask, 1);
+        gwy_data_field_fill(mask, 1.0);
     /* Draw the markers onto the mask */
     list = markers;
     while (list) {
@@ -1588,9 +1588,13 @@ fft_filter_2d(GwyDataField *input, GwyDataField *output_image,
             marker_b.bottom = -marker_a.bottom + xres;
 
             gwy_data_field_area_fill(mask, marker_a.left, marker_a.top,
-                                     marker_a.right, marker_a.bottom, fill_bit);
+                                     marker_a.right - marker_a.left,
+                                     marker_a.bottom - marker_a.top,
+                                     fill_bit);
             gwy_data_field_area_fill(mask, marker_b.left, marker_b.top,
-                                     marker_b.right, marker_b.bottom, fill_bit);
+                                     marker_b.right - marker_b.left,
+                                     marker_b.bottom - marker_b.top,
+                                     fill_bit);
         }
 
         list = g_slist_next(list);

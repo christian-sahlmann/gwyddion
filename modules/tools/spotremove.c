@@ -443,8 +443,9 @@ laplace_average(GwyDataField *dfield,
     pseudo_laplace_average(dfield, ximin, yimin, ximax, yimax);
     buffer = gwy_data_field_new_alike(dfield, FALSE);
     mask = gwy_data_field_new_alike(dfield, FALSE);
-    gwy_data_field_fill(mask, 0.0);
-    gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
+    gwy_data_field_clear(mask);
+    gwy_data_field_area_fill(mask, ximin, yimin, ximax - ximin, yimax - yimin,
+                             1.0);
 
     maxer = gwy_data_field_get_rms(dfield)/1.0e3;
     do {
@@ -466,8 +467,9 @@ fractal_average(GwyDataField *dfield,
 
     gwy_debug("fractal: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
     mask = gwy_data_field_duplicate(dfield);
-    gwy_data_field_fill(mask, 0.0);
-    gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
+    gwy_data_field_clear(mask);
+    gwy_data_field_area_fill(mask, ximin, yimin, ximax - ximin, yimax - yimin,
+                             1.0);
     gwy_data_field_fractal_correction(dfield, mask, GWY_INTERPOLATION_BILINEAR);
     g_object_unref(mask);
 }

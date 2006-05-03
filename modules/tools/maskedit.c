@@ -293,22 +293,25 @@ selection_finished_cb(GwyUnitoolState *state)
         case MASK_EDIT_SET:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         mask = maybe_add_mask(state);
-        gwy_data_field_fill(mask, 0.0);
-        gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
+        gwy_data_field_clear(mask);
+        gwy_data_field_area_fill(mask, isel[0], isel[1],
+                                 isel[2] - isel[0], isel[3] - isel[1],
                                  1.0);
         break;
 
         case MASK_EDIT_ADD:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         mask = maybe_add_mask(state);
-        gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
+        gwy_data_field_area_fill(mask, isel[0], isel[1],
+                                 isel[2] - isel[0], isel[3] - isel[1],
                                  1.0);
         break;
 
         case MASK_EDIT_REMOVE:
         if (mask) {
             gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-            gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
+            gwy_data_field_area_fill(mask, isel[0], isel[1],
+                                     isel[2] - isel[0], isel[3] - isel[1],
                                      0.0);
         }
         break;
@@ -317,7 +320,9 @@ selection_finished_cb(GwyUnitoolState *state)
         if (mask) {
             gwy_app_undo_checkpoint(data, "/0/mask", NULL);
             gwy_data_field_clamp(mask, 0.0, 1.0);
-            gwy_data_field_area_add(mask, isel[0], isel[1], isel[2], isel[3],
+            gwy_data_field_area_add(mask,
+                                    isel[0], isel[1],
+                                    isel[2] - isel[0], isel[3] - ise[1],
                                     1.0);
             gwy_data_field_add(mask, -1.0);
             gwy_data_field_clamp(mask, 0.0, 1.0);

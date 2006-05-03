@@ -249,13 +249,14 @@ plot_correlated(GwyDataField * retfield, gint xsize, gint ysize,
     gint i, j;
 
     field = gwy_data_field_duplicate(retfield);
-    gwy_data_field_fill(retfield, 0);
+    gwy_data_field_clear(retfield);
 
     for (i = 0; i < retfield->xres; i++) {
         for (j = 0; j < retfield->yres; j++) {
             if ((field->data[i + retfield->xres * j]) > threshold)
-                gwy_data_field_area_fill(retfield, i - xsize/2, j - ysize/2,
-                                         i + xsize/2, j + ysize/2, 1.0);
+                gwy_data_field_area_fill(retfield,
+                                         i - xsize/2, j - ysize/2, xsize, ysize,
+                                         1.0);
         }
     }
 

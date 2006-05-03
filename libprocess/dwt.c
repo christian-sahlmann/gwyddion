@@ -879,7 +879,8 @@ find_anisotropy(GwyDataField *dfield,
                 minrow = MAX(i*cor - scor*setsize/2.0, 0);
                 maxrow = MIN(i*cor + scor*setsize/2.0, mask->yres);
                 count++;
-                gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow,
+                gwy_data_field_area_fill(mask, mincol, minrow,
+                                         maxcol - mincol, maxrow - minrow,
                                          1.0);
             }
             else if ((fabs(*trdrow) - fabs(*bldrow)) > (rms/threshold))
@@ -892,7 +893,8 @@ find_anisotropy(GwyDataField *dfield,
                 minrow = MAX(i*cor - setsize/2.0, 0);
                 maxrow = MIN(i*cor + mcor*setsize, mask->yres);
                 count++;
-                gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow,
+                gwy_data_field_area_fill(mask, mincol, minrow,
+                                         maxcol - mincol, maxrow - minrow,
                                          1.0);
             }
 

@@ -464,8 +464,8 @@ merge_do(MergeArgs *args)
             gwy_data_field_area_add(result,
                                 xshift + ((max_col - kdata.width/2) - kdata.x),
                                 cdata.y + (max_row - kdata.height/2),
-                                xshift + ((max_col - kdata.width/2) - kdata.x) + dfield2->xres,
-                                cdata.y + (max_row - kdata.height/2) + dfield2->yres,
+                                dfield2->xres,
+                                dfield2->yres,
                                 zshift);
         }
         else
@@ -481,8 +481,8 @@ merge_do(MergeArgs *args)
             gwy_data_field_area_add(result,
                                 xshift + ((max_col - kdata.width/2) - kdata.x),
                                 cdata.y + (max_row - kdata.height/2),
-                                xshift + ((max_col - kdata.width/2) - kdata.x) + dfield2->xres,
-                                cdata.y + (max_row - kdata.height/2) + dfield2->yres,
+                                dfield2->xres,
+                                dfield2->yres,
                                 zshift);
             if (!gwy_data_field_area_copy(dfield1, result,
                              0, 0, dfield1->xres, dfield1->yres,
@@ -555,8 +555,8 @@ merge_do(MergeArgs *args)
             gwy_data_field_area_add(result,
                                 cdata.x + (max_col - kdata.width/2),
                                 yshift + ((max_row - kdata.height/2) - kdata.y),
-                                cdata.x + (max_col - kdata.width/2) + dfield2->xres,
-                                yshift + ((max_row - kdata.height/2) - kdata.y) + dfield2->yres,
+                                dfield2->xres,
+                                dfield2->yres,
                                 zshift);
         }
         else
@@ -572,8 +572,8 @@ merge_do(MergeArgs *args)
             gwy_data_field_area_add(result,
                                 cdata.x + (max_col - kdata.width/2),
                                 yshift + ((max_row - kdata.height/2) - kdata.y),
-                                cdata.x + (max_col - kdata.width/2) + dfield2->xres,
-                                yshift + ((max_row - kdata.height/2) - kdata.y) + dfield2->yres,
+                                dfield2->xres,
+                                dfield2->yres,
                                 zshift);
 
             if (!gwy_data_field_area_copy(dfield1, result,

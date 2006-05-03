@@ -937,8 +937,8 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
     get_field_xymin(dfield, &args->min_val, &args->minx, &args->miny);
     get_field_xymax(dfield, &args->max_val, &args->maxx, &args->maxy);
     if(args->what_mark == GWY_WHAT_MARK_POINTS) {
-        gwy_data_field_area_fill(mask,args->minx-2,args->miny-2,args->minx+2,args->miny+2,1.0);
-        gwy_data_field_area_fill(mask,args->maxx-2,args->maxy-2,args->maxx+2,args->maxy+2,1.0);
+        gwy_data_field_area_fill(mask, args->minx-2, args->miny-2, 4, 4, 1.0);
+        gwy_data_field_area_fill(mask, args->maxx-2, args->maxy-2, 4, 4, 1.0);
     }
     minmax = (args->max_val - args->min_val)*args->plane_tol/100.0;
 
@@ -989,7 +989,7 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
 
    /* (marking)  INDENTATION */
    indentmask = gwy_data_field_duplicate(dfield);
-   gwy_data_field_fill(indentmask, 0.0);
+   gwy_data_field_clear(indentmask);
    for(i = 0; i < args->nof_sides; i++) {
        height = -1e10;
        side_r = 0;
@@ -1003,7 +1003,7 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
 
        avg_vec[i] = data_field_average_normal_vector(dfield, sx,sy,avg_diam);
        if(args->what_mark == GWY_WHAT_MARK_POINTS) {
-           gwy_data_field_area_fill(mask,sx-2-i,sy-2-i,sx+2+i,sy+2+i,1.0);
+           gwy_data_field_area_fill(mask, sx-2-i, sy-2-i, 2*i+4, 2*i+4, 1.0);
        }
        else{
        ffi.mode = NORMAL;

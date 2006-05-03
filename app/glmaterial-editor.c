@@ -381,9 +381,9 @@ gwy_gl_material_editor_make_data(GwyDataField *dfield1)
     gwy_data_field_sum_fields(dfield1, dfield1, dfield2);
 
     gwy_data_field_clear(dfield2);
-    gwy_data_field_area_fill(dfield2, 2*n/3, 0, 3*n/4+1, n, 0.15);
-    gwy_data_field_area_fill(dfield2, 3*n/4, 0, 5*n/6+1, n, 0.1);
-    gwy_data_field_area_fill(dfield2, 5*n/6, 0, 7*n/8+1, n, 0.07);
+    gwy_data_field_area_fill(dfield2, 2*n/3, 0, 3*n/4 - 2*n/2, n, 0.15);
+    gwy_data_field_area_fill(dfield2, 3*n/4, 0, 5*n/6 - 3*n/4, n, 0.1);
+    gwy_data_field_area_fill(dfield2, 5*n/6, 0, 7*n/8 - 5*n/6, n, 0.07);
     gwy_data_field_filter_mean(dfield2, 3);
     gwy_data_field_sum_fields(dfield1, dfield1, dfield2);
 
