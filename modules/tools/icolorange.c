@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -49,7 +50,6 @@ struct _GwyToolColorRange {
     GwyPlainTool parent_instance;
 
     GwyRectSelectionLabels *rlabels;
-    GtkWidget *apply;
 
     GwyGraph *histogram;
     GwyGraphModel *histogram_model;
@@ -83,15 +83,20 @@ static void   gwy_tool_color_range_init_dialog      (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_data_switched    (GwyTool *gwytool,
                                                      GwyDataView *data_view);
 static void   gwy_tool_color_range_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_color_range_response         (GwyTool *tool,
-                                                     gint response_id);
 static void   gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
                                                      gint hint);
-static void   gwy_tool_color_range_xsel_changed     (GwyToolColorRange *tool,
-                                                     gint hint);
-static void   gwy_tool_color_range_mode_changed     (GObject *item,
+static void   gwy_tool_color_range_xsel_changed     (GwySelection *selection,
+                                                     gint hint,
                                                      GwyToolColorRange *tool);
-static void   gwy_tool_color_range_apply            (GwyToolColorRange *tool);
+static void   gwy_tool_color_range_type_changed     (GObject *item,
+                                                     GwyToolColorRange *tool);
+static GwyLayerBasicRangeType gwy_tool_color_range_get_range_type(GwyToolColorRange *tool);
+static void   gwy_tool_color_range_set_range_type   (GwyToolColorRange *tool,
+                                                     GwyLayerBasicRangeType range_type);
+static void   gwy_tool_color_range_get_min_max      (GwyToolColorRange *tool,
+                                                     gdouble *selection);
+static void   gwy_tool_color_range_set_min_max      (GwyToolColorRange *tool,
+                                                     const gdouble *selection);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -131,7 +136,6 @@ gwy_tool_color_range_class_init(GwyToolColorRangeClass *klass)
     tool_class->tooltip = _("Stretch color range to part of data");
     tool_class->prefix = "/module/colorrange";
     tool_class->data_switched = gwy_tool_color_range_data_switched;
-    tool_class->response = gwy_tool_color_range_response;
 
     ptool_class->data_changed = gwy_tool_color_range_data_changed;
     ptool_class->selection_changed = gwy_tool_color_range_selection_changed;
@@ -179,7 +183,7 @@ gwy_tool_crop_rect_updated(GwyToolColorRange *tool)
 static void
 gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
 {
-    static const GwyEnum range_modes[] = {
+    static const GwyEnum range_types[] = {
         { N_("Full"),     GWY_LAYER_BASIC_RANGE_FULL,  },
         { N_("Fixed"),    GWY_LAYER_BASIC_RANGE_FIXED, },
         { N_("Auto"),     GWY_LAYER_BASIC_RANGE_AUTO,  },
@@ -200,8 +204,8 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     /* Mode switch */
     hbox = gtk_hbox_new(TRUE, 0);
     modelist = gwy_radio_buttons_create
-                          (range_modes, G_N_ELEMENTS(range_modes), "range-mode",
-                           G_CALLBACK(gwy_tool_color_range_mode_changed), tool,
+                          (range_types, G_N_ELEMENTS(range_types), "range-type",
+                           G_CALLBACK(gwy_tool_color_range_type_changed), tool,
                            GWY_LAYER_BASIC_RANGE_FULL);
     for (l = modelist; l; l = g_slist_next(l)) {
         button = GTK_WIDGET(l->data);
@@ -224,9 +228,8 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     garea = GWY_GRAPH_AREA(gwy_graph_get_area(tool->histogram));
     selection = gwy_graph_area_get_area_selection(garea);
     gwy_selection_set_max_objects(selection, 1);
-    g_signal_connect_swapped(selection, "changed",
-                             G_CALLBACK(gwy_tool_color_range_xsel_changed),
-                             tool);
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_tool_color_range_xsel_changed), tool);
 
     gwy_graph_model_set_label_visible(tool->histogram_model, FALSE);
     gwy_graph_set_axis_visible(tool->histogram, GTK_POS_TOP, FALSE);
@@ -288,10 +291,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                        gwy_rect_selection_labels_get_table(tool->rlabels),
                        FALSE, FALSE, 0);
 
-    gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
-    tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
-                                        GTK_RESPONSE_APPLY);
-    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+    gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -301,6 +301,9 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
                                    GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
+    GwyToolColorRange *tool;
+    GwyLayerBasicRangeType range_type;
+    gchar key[32];
 
     GWY_TOOL_CLASS(gwy_tool_color_range_parent_class)->data_switched(gwytool,
                                                                      data_view);
@@ -308,13 +311,27 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
+    tool = GWY_TOOL_COLOR_RANGE(gwytool);
     if (data_view) {
         g_object_set(plain_tool->layer,
                      "draw-reflection", FALSE,
                      "is-crop", FALSE,
                      NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
+
+        g_snprintf(key, sizeof(key), "/%d/base/min", plain_tool->id);
+        tool->key_min = g_quark_from_string(key);
+        g_snprintf(key, sizeof(key), "/%d/base/max", plain_tool->id);
+        tool->key_max = g_quark_from_string(key);
     }
+    else {
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), FALSE);
+        tool->key_min = tool->key_max = 0;
+    }
+
+    tool = GWY_TOOL_COLOR_RANGE(gwytool);
+    range_type = gwy_tool_color_range_get_range_type(tool);
+    gwy_radio_buttons_set_current(tool->modelist, "range-type", range_type);
 }
 
 static void
@@ -328,21 +345,11 @@ gwy_tool_color_range_data_changed(GwyPlainTool *plain_tool)
 }
 
 static void
-gwy_tool_color_range_response(GwyTool *tool,
-                       gint response_id)
-{
-    GWY_TOOL_CLASS(gwy_tool_color_range_parent_class)->response(tool,
-                                                                response_id);
-
-    if (response_id == GTK_RESPONSE_APPLY)
-        gwy_tool_color_range_apply(GWY_TOOL_COLOR_RANGE(tool));
-}
-
-static void
 gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
                                        gint hint)
 {
     GwyToolColorRange *tool;
+    GwyLayerBasicRangeType range_type;
     gint n = 0;
 
     tool = GWY_TOOL_COLOR_RANGE(plain_tool);
@@ -358,26 +365,141 @@ gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
     }
     else
         gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+
+    range_type = gwy_tool_color_range_get_range_type(tool);
+    if (range_type != GWY_LAYER_BASIC_RANGE_FIXED)
+        return;
+
+    /*
+    gwy_data_field_area_get_min_max(dfield,
+                                    isel[0], isel[1],
+                                    isel[2] - isel[0],
+                                    isel[3] - isel[1],
+                                    &selection[0], &selection[1]);
+                                    */
 }
 
 static void
-gwy_tool_color_range_xsel_changed(GwyToolColorRange *tool,
-                                  gint hint)
-{
-}
-
-static void
-gwy_tool_color_range_mode_changed(GObject *item,
+gwy_tool_color_range_xsel_changed(GwySelection *selection,
+                                  gint hint,
                                   GwyToolColorRange *tool)
 {
-    GwyLayerBasicRangeType range_mode;
+    gdouble range[2];
 
-    range_mode = GPOINTER_TO_INT(g_object_get_data(item, "range-mode"));
+    g_return_if_fail(hint <= 0);
+
+    if (gwy_selection_get_object(selection, 0, range))
+        gwy_tool_color_range_set_min_max(tool, range);
+    else
+        gwy_tool_color_range_selection_changed(GWY_PLAIN_TOOL(tool), -1);
 }
 
 static void
-gwy_tool_color_range_apply(GwyToolColorRange *tool)
+gwy_tool_color_range_type_changed(GObject *item,
+                                  GwyToolColorRange *tool)
 {
+    GwyLayerBasicRangeType range_type, old_mode;
+    GwyPlainTool *plain_tool;
+    gboolean sensitive;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (!plain_tool->container)
+        return;
+
+    old_mode = gwy_tool_color_range_get_range_type(tool);
+    range_type = GPOINTER_TO_INT(g_object_get_data(item, "range-type"));
+    if (old_mode == range_type)
+        return;
+
+    sensitive = (range_type == GWY_LAYER_BASIC_RANGE_FIXED);
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), sensitive);
+
+    gwy_tool_color_range_set_range_type(tool, range_type);
+}
+
+static GwyLayerBasicRangeType
+gwy_tool_color_range_get_range_type(GwyToolColorRange *tool)
+{
+    GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    GwyPlainTool *plain_tool;
+    GwyPixmapLayer *layer;
+    const gchar *key;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (!plain_tool->data_view)
+        return range_type;
+
+    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
+    key = gwy_layer_basic_get_range_type_key(GWY_LAYER_BASIC(layer));
+    if (key)
+        gwy_container_gis_enum_by_name(plain_tool->container, key, &range_type);
+
+    return range_type;
+}
+
+static void
+gwy_tool_color_range_set_range_type(GwyToolColorRange *tool,
+                                    GwyLayerBasicRangeType range_type)
+{
+    GwyPlainTool *plain_tool;
+    GwyPixmapLayer *layer;
+    const gchar *key;
+    gchar buf[32];
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->data_view);
+
+    layer = gwy_data_view_get_base_layer(plain_tool->data_view);
+    key = gwy_layer_basic_get_range_type_key(GWY_LAYER_BASIC(layer));
+    if (!key) {
+        g_warning("Setting range type key.  This should be done by the app.");
+
+        g_snprintf(buf, sizeof(buf), "/%d/base", plain_tool->id);
+        gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), buf);
+        strncat(buf, "/range-type", sizeof(buf)-1);
+        gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), buf);
+        key = buf;
+    }
+    gwy_container_set_enum_by_name(plain_tool->container, key, range_type);
+}
+
+static void
+gwy_tool_color_range_get_min_max(GwyToolColorRange *tool,
+                                 gdouble *selection)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->data_view && plain_tool->data_field);
+
+    selection[0] = gwy_data_field_get_min(plain_tool->data_field);
+    gwy_container_gis_double(plain_tool->container,
+                             tool->key_min, &selection[0]);
+
+    selection[1] = gwy_data_field_get_max(plain_tool->data_field);
+    gwy_container_gis_double(plain_tool->container,
+                             tool->key_max, &selection[1]);
+}
+
+static void
+gwy_tool_color_range_set_min_max(GwyToolColorRange *tool,
+                                 const gdouble *selection)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->container);
+
+    if (selection) {
+        gwy_container_set_double(plain_tool->container,
+                                 tool->key_min, selection[0]);
+        gwy_container_set_double(plain_tool->container,
+                                 tool->key_max, selection[1]);
+    }
+    else {
+        gwy_container_remove(plain_tool->container, tool->key_min);
+        gwy_container_remove(plain_tool->container, tool->key_max);
+    }
 }
 
 #if 0
@@ -443,14 +565,14 @@ layer_setup(GwyUnitoolState *state)
     controls->key_max = g_quark_from_string(key);
 
     if (controls->modelist)
-        gwy_radio_buttons_set_current(controls->modelist, "range-mode",
+        gwy_radio_buttons_set_current(controls->modelist, "range-type",
                                       get_range_type(state));
 }
 
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
-    static const GwyEnum range_modes[] = {
+    static const GwyEnum range_types[] = {
         { N_("Full"),     GWY_LAYER_BASIC_RANGE_FULL,  },
         { N_("Fixed"),    GWY_LAYER_BASIC_RANGE_FIXED, },
         { N_("Auto"),     GWY_LAYER_BASIC_RANGE_AUTO,  },
@@ -473,9 +595,9 @@ dialog_create(GwyUnitoolState *state)
                        FALSE, FALSE, 0);
 
     hbox = gtk_hbox_new(TRUE, 0);
-    modelist = gwy_radio_buttons_create(range_modes, G_N_ELEMENTS(range_modes),
-                                        "range-mode",
-                                        G_CALLBACK(range_mode_changed), state,
+    modelist = gwy_radio_buttons_create(range_types, G_N_ELEMENTS(range_types),
+                                        "range-type",
+                                        G_CALLBACK(range_type_changed), state,
                                         get_range_type(state));
     for (l = modelist; l; l = g_slist_next(l)) {
         button = GTK_WIDGET(l->data);
@@ -743,7 +865,7 @@ set_range_type(GwyUnitoolState *state,
 
     if (!key) {
         /* TODO: Container */
-        key = "/0/data/range-mode";
+        key = "/0/data/range-type";
         gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), key);
     }
     gwy_container_set_enum_by_name(container, key, range_type);
@@ -791,7 +913,7 @@ set_min_max(GwyUnitoolState *state,
 }
 
 static void
-range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
+range_type_changed(G_GNUC_UNUSED GtkWidget *button,
                    GwyUnitoolState *state)
 {
     ToolControls *controls;
@@ -799,7 +921,7 @@ range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
 
     controls = (ToolControls*)state->user_data;
     range_type = gwy_radio_buttons_get_current(controls->modelist,
-                                               "range-mode");
+                                               "range-type");
     gtk_widget_set_sensitive(controls->histogram,
                              range_type == GWY_LAYER_BASIC_RANGE_FIXED);
     set_range_type(state, range_type);
