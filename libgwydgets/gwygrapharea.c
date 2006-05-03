@@ -144,11 +144,17 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->pointsdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_POINT, NULL);
     gwy_selection_set_max_objects(GWY_SELECTION(area->pointsdata), 10);
 
-    area->areasdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_AREA, NULL);
-    gwy_selection_set_max_objects(GWY_SELECTION(area->areasdata), 10);
+    area->xseldata = g_object_new(GWY_TYPE_SELECTION_GRAPH_AREA, NULL);
+    gwy_selection_set_max_objects(GWY_SELECTION(area->xseldata), 10);
 
-    area->linesdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_LINE, NULL);
-    gwy_selection_set_max_objects(GWY_SELECTION(area->linesdata), 10);
+    area->yseldata = g_object_new(GWY_TYPE_SELECTION_GRAPH_AREA, NULL);
+    gwy_selection_set_max_objects(GWY_SELECTION(area->yseldata), 10);
+
+    area->xlinesdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_LINE, NULL);
+    gwy_selection_set_max_objects(GWY_SELECTION(area->xlinesdata), 10);
+
+    area->ylinesdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_LINE, NULL);
+    gwy_selection_set_max_objects(GWY_SELECTION(area->ylinesdata), 10);
 
     area->zoomdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_ZOOM, NULL);
     gwy_selection_set_max_objects(GWY_SELECTION(area->zoomdata), 1);
@@ -404,9 +410,10 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.log_x = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL);
     specs.log_y = gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL);
     /*draw continuous selection*/
-    if (area->status == GWY_GRAPH_STATUS_XSEL
-        || area->status == GWY_GRAPH_STATUS_YSEL)
-        gwy_graph_draw_selection_areas(drawable, gc, &specs, area->areasdata);
+    if (area->status == GWY_GRAPH_STATUS_XSEL)
+        gwy_graph_draw_selection_areas(drawable, gc, &specs, area->xseldata);
+    if (area->status == GWY_GRAPH_STATUS_YSEL)
+        gwy_graph_draw_selection_areas(drawable, gc, &specs, area->yseldata);
 
 
     /*FIXME gc should be different and should be set to gray drawing*/
@@ -431,14 +438,14 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     if (area->status == GWY_GRAPH_STATUS_XLINES)
         gwy_graph_draw_selection_lines(drawable,
                                          gc, &specs,
-                                         area->linesdata,
+                                         area->xlinesdata,
                                          GTK_ORIENTATION_VERTICAL);
 
     /*draw discrete selection (points)*/
     if (area->status == GWY_GRAPH_STATUS_YLINES)
         gwy_graph_draw_selection_lines(drawable,
                                          gc, &specs,
-                                         area->linesdata,
+                                         area->ylinesdata,
                                          GTK_ORIENTATION_HORIZONTAL);
 
     /*draw area boundaries*/
@@ -553,10 +560,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     if (gwy_selection_get_max_objects(GWY_SELECTION(area->pointsdata)) == 1)
         gwy_selection_clear(GWY_SELECTION(area->pointsdata));
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->linesdata)) == 1)
-        gwy_selection_clear(GWY_SELECTION(area->linesdata));
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->areasdata)) == 1)
-        gwy_selection_clear(GWY_SELECTION(area->areasdata));
+    if (gwy_selection_get_max_objects(GWY_SELECTION(area->xlinesdata)) == 1)
+        gwy_selection_clear(GWY_SELECTION(area->xlinesdata));
+    if (gwy_selection_get_max_objects(GWY_SELECTION(area->ylinesdata)) == 1)
+        gwy_selection_clear(GWY_SELECTION(area->ylinesdata));
+    if (gwy_selection_get_max_objects(GWY_SELECTION(area->xseldata)) == 1)
+        gwy_selection_clear(GWY_SELECTION(area->xseldata));
+    if (gwy_selection_get_max_objects(GWY_SELECTION(area->yseldata)) == 1)
+        gwy_selection_clear(GWY_SELECTION(area->yseldata));
+
 
 
     if (area->status == GWY_GRAPH_STATUS_POINTS) {
@@ -580,24 +592,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
-    if (area->status == GWY_GRAPH_STATUS_XSEL
-        || area->status == GWY_GRAPH_STATUS_YSEL) {
+    if (area->status == GWY_GRAPH_STATUS_XSEL) {
         if (event->button == 1
-            && !gwy_selection_is_full(GWY_SELECTION(area->areasdata))) /*add selection*/
+            && !gwy_selection_is_full(GWY_SELECTION(area->xseldata))) /*add selection*/
         {
-            if (area->status == GWY_GRAPH_STATUS_XSEL) {
-                selection_areadata[0] = dx;
-                selection_areadata[2] = dx;
-                selection_areadata[1] = gwy_graph_model_get_ymin(gmodel);
-                selection_areadata[3] = gwy_graph_model_get_ymax(gmodel);
-            }
-            else {
-                selection_areadata[0] = gwy_graph_model_get_xmin(gmodel);
-                selection_areadata[2] = gwy_graph_model_get_xmax(gmodel);
-                selection_areadata[1] = dy;
-                selection_areadata[3] = dy;
-            }
-            gwy_selection_set_object(GWY_SELECTION(area->areasdata),
+            selection_areadata[0] = dx;
+            selection_areadata[2] = dx;
+            selection_areadata[1] = gwy_graph_model_get_ymin(gmodel);
+            selection_areadata[3] = gwy_graph_model_get_ymax(gmodel);
+            gwy_selection_set_object(GWY_SELECTION(area->xseldata),
                                      -1, selection_areadata);
             area->selecting = TRUE;
         }
@@ -605,25 +608,48 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         {
             selection = gwy_graph_area_find_selection(area, dx, dy);
             if (selection >= 0)
-                gwy_selection_delete_object(GWY_SELECTION(area->areasdata),
+                gwy_selection_delete_object(GWY_SELECTION(area->xseldata),
                                             selection);
-            gwy_selection_finished(GWY_SELECTION(area->areasdata));
+            gwy_selection_finished(GWY_SELECTION(area->xseldata));
+        }
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+    if (area->status == GWY_GRAPH_STATUS_YSEL) {
+        if (event->button == 1
+            && !gwy_selection_is_full(GWY_SELECTION(area->yseldata))) /*add selection*/
+        {
+            selection_areadata[0] = gwy_graph_model_get_xmin(gmodel);
+            selection_areadata[2] = gwy_graph_model_get_xmax(gmodel);
+            selection_areadata[1] = dy;
+            selection_areadata[3] = dy;
+            gwy_selection_set_object(GWY_SELECTION(area->yseldata),
+                                     -1, selection_areadata);
+            area->selecting = TRUE;
+        }
+        else /*remove selection*/
+        {
+            selection = gwy_graph_area_find_selection(area, dx, dy);
+            if (selection >= 0)
+                gwy_selection_delete_object(GWY_SELECTION(area->yseldata),
+                                            selection);
+            gwy_selection_finished(GWY_SELECTION(area->yseldata));
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
+
     if (area->status == GWY_GRAPH_STATUS_XLINES)
     {
         if (event->button == 1
-            && !gwy_selection_is_full(GWY_SELECTION(area->linesdata))) /*add selection*/
+            && !gwy_selection_is_full(GWY_SELECTION(area->xlinesdata))) /*add selection*/
         {
-            gwy_selection_set_object(GWY_SELECTION(area->linesdata), -1, &dx);
+            gwy_selection_set_object(GWY_SELECTION(area->xlinesdata), -1, &dx);
             area->selecting = TRUE;
         }
         else {
             selection = gwy_graph_area_find_line(area, dx);
             if (selection >= 0)
-                gwy_selection_delete_object(GWY_SELECTION(area->linesdata),
+                gwy_selection_delete_object(GWY_SELECTION(area->xlinesdata),
                                             selection);
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -631,15 +657,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     if (area->status == GWY_GRAPH_STATUS_YLINES) {
         if (event->button == 1
-            && !gwy_selection_is_full(GWY_SELECTION(area->linesdata))) /*add selection*/
+            && !gwy_selection_is_full(GWY_SELECTION(area->ylinesdata))) /*add selection*/
         {
-            gwy_selection_set_object(GWY_SELECTION(area->linesdata), -1, &dy);
+            gwy_selection_set_object(GWY_SELECTION(area->ylinesdata), -1, &dy);
             area->selecting = TRUE;
         }
         else {
             selection = gwy_graph_area_find_line(area, dy);
             if (selection >= 0)
-                gwy_selection_delete_object(GWY_SELECTION(area->linesdata),
+                gwy_selection_delete_object(GWY_SELECTION(area->ylinesdata),
                                             selection);
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -685,43 +711,73 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL
-                            || area->status == GWY_GRAPH_STATUS_YSEL)
-        && gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL))
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_XSEL
+         && gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL))
     {
-         gwy_selection_get_object(GWY_SELECTION(area->areasdata),
-                                  gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL) - 1,
+         gwy_selection_get_object(GWY_SELECTION(area->xseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL) - 1,
                                   selection_areadata);
          if (area->status == GWY_GRAPH_STATUS_XSEL)
             selection_areadata[2] = dx;
          else
             selection_areadata[3] = dy;
 
-         gwy_selection_set_object(GWY_SELECTION(area->areasdata),
-                                  gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL) - 1,
+         gwy_selection_set_object(GWY_SELECTION(area->xseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL) - 1,
                                   selection_areadata);
          if (selection_areadata[2] == selection_areadata[0] || selection_areadata[3] == selection_areadata[1])
-             gwy_selection_delete_object(GWY_SELECTION(area->areasdata),
-                                         gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL) - 1);
+             gwy_selection_delete_object(GWY_SELECTION(area->xseldata),
+                                         gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL) - 1);
+         area->selecting = FALSE;
+         gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_YSEL
+        && gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL))
+    {
+         gwy_selection_get_object(GWY_SELECTION(area->yseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL) - 1,
+                                  selection_areadata);
+         if (area->status == GWY_GRAPH_STATUS_XSEL)
+            selection_areadata[2] = dx;
+         else
+            selection_areadata[3] = dy;
+
+         gwy_selection_set_object(GWY_SELECTION(area->yseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL) - 1,
+                                  selection_areadata);
+         if (selection_areadata[2] == selection_areadata[0] || selection_areadata[3] == selection_areadata[1])
+             gwy_selection_delete_object(GWY_SELECTION(area->yseldata),
+                                         gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL) - 1);
          area->selecting = FALSE;
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)
-        && gwy_selection_get_data(GWY_SELECTION(area->linesdata), NULL))
+
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_XLINES 
+                            && gwy_selection_get_data(GWY_SELECTION(area->xlinesdata), NULL))
     {
-        if (area->status == GWY_GRAPH_STATUS_XLINES)
-            selection_linedata = dx;
-        else
-            selection_linedata = dy;
+        selection_linedata = dx;
 
         area->selecting = FALSE;
-        gwy_selection_set_object(GWY_SELECTION(area->linesdata),
-                                 gwy_selection_get_data(GWY_SELECTION(area->linesdata), NULL) - 1,
+        gwy_selection_set_object(GWY_SELECTION(area->xlinesdata),
+                                 gwy_selection_get_data(GWY_SELECTION(area->xlinesdata), NULL) - 1,
                                  &selection_linedata);
-        gwy_selection_finished(GWY_SELECTION(area->linesdata));
+        gwy_selection_finished(GWY_SELECTION(area->xlinesdata));
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_YLINES
+        && gwy_selection_get_data(GWY_SELECTION(area->ylinesdata), NULL))
+    {
+        selection_linedata = dy;
+
+        area->selecting = FALSE;
+        gwy_selection_set_object(GWY_SELECTION(area->ylinesdata),
+                                 gwy_selection_get_data(GWY_SELECTION(area->ylinesdata), NULL) - 1,
+                                 &selection_linedata);
+        gwy_selection_finished(GWY_SELECTION(area->ylinesdata));
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+
 
     if (area->selecting && area->status == GWY_GRAPH_STATUS_POINTS)
     {
@@ -802,39 +858,59 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL
-                            || area->status == GWY_GRAPH_STATUS_YSEL)
-        && gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL))
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_XSEL
+        && gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL))
     {
-         gwy_selection_get_object(GWY_SELECTION(area->areasdata),
-                                  gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL) - 1,
+         gwy_selection_get_object(GWY_SELECTION(area->xseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL) - 1,
                                   selection_areadata);
-         if (area->status == GWY_GRAPH_STATUS_XSEL)
-            selection_areadata[2] = dx;
-         else
-            selection_areadata[3] = dy;
+         selection_areadata[2] = dx;
 
-         gwy_selection_set_object(GWY_SELECTION(area->areasdata),
-                                  gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL) - 1,
+         gwy_selection_set_object(GWY_SELECTION(area->xseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL) - 1,
                                   selection_areadata);
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES
-                            || area->status == GWY_GRAPH_STATUS_YLINES)
-        && gwy_selection_get_data(GWY_SELECTION(area->linesdata), NULL))
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_YSEL
+        && gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL))
     {
-        if (area->status == GWY_GRAPH_STATUS_XLINES)
-            selection_linedata = dx;
-        else
-            selection_linedata = dy;
+         gwy_selection_get_object(GWY_SELECTION(area->yseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL) - 1,
+                                  selection_areadata);
+         selection_areadata[3] = dy;
 
-        gwy_selection_set_object(GWY_SELECTION(area->linesdata),
-                                 gwy_selection_get_data(GWY_SELECTION(area->linesdata), NULL) - 1,
+         gwy_selection_set_object(GWY_SELECTION(area->yseldata),
+                                  gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL) - 1,
+                                  selection_areadata);
+         gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+
+
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_XLINES
+        && gwy_selection_get_data(GWY_SELECTION(area->xlinesdata), NULL))
+    {
+        selection_linedata = dx;
+
+        gwy_selection_set_object(GWY_SELECTION(area->xlinesdata),
+                                 gwy_selection_get_data(GWY_SELECTION(area->xlinesdata), NULL) - 1,
                                  &selection_linedata);
-        gwy_selection_finished(GWY_SELECTION(area->linesdata));
+        gwy_selection_finished(GWY_SELECTION(area->xlinesdata));
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
+
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_YLINES
+        && gwy_selection_get_data(GWY_SELECTION(area->ylinesdata), NULL))
+    {
+        selection_linedata = dy;
+
+        gwy_selection_set_object(GWY_SELECTION(area->ylinesdata),
+                                 gwy_selection_get_data(GWY_SELECTION(area->ylinesdata), NULL) - 1,
+                                 &selection_linedata);
+        gwy_selection_finished(GWY_SELECTION(area->ylinesdata));
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+
 
     if (area->selecting && area->status == GWY_GRAPH_STATUS_POINTS)
     {
@@ -934,16 +1010,34 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y)
     gdouble selection_areadata[4];
     gdouble xmin, ymin, xmax, ymax;
 
-    for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL); i++) {
-        gwy_selection_get_object(GWY_SELECTION(area->areasdata),
-                                 gwy_selection_get_data(GWY_SELECTION(area->areasdata), NULL) - 1,
+    if (area->status == GWY_GRAPH_STATUS_XSEL)
+    {
+        for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL); i++) {
+            gwy_selection_get_object(GWY_SELECTION(area->xseldata),
+                                 gwy_selection_get_data(GWY_SELECTION(area->xseldata), NULL) - 1,
                                  selection_areadata);
-        xmin = MIN(selection_areadata[0], selection_areadata[2]);
-        xmax = MAX(selection_areadata[0], selection_areadata[2]);
-        ymin = MIN(selection_areadata[1], selection_areadata[3]);
-        ymax = MAX(selection_areadata[1], selection_areadata[3]);
+            xmin = MIN(selection_areadata[0], selection_areadata[2]);
+            xmax = MAX(selection_areadata[0], selection_areadata[2]);
+            ymin = MIN(selection_areadata[1], selection_areadata[3]);
+            ymax = MAX(selection_areadata[1], selection_areadata[3]);
 
-        if (xmin < x && xmax > x && ymin < y && ymax > y) return i;
+            if (xmin < x && xmax > x && ymin < y && ymax > y) return i;
+        }
+    }
+    else if (area->status == GWY_GRAPH_STATUS_YSEL)
+    {
+        for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL); i++) {
+            gwy_selection_get_object(GWY_SELECTION(area->yseldata),
+                                 gwy_selection_get_data(GWY_SELECTION(area->yseldata), NULL) - 1,
+                                 selection_areadata);
+            xmin = MIN(selection_areadata[0], selection_areadata[2]);
+            xmax = MAX(selection_areadata[0], selection_areadata[2]);
+            ymin = MIN(selection_areadata[1], selection_areadata[3]);
+            ymax = MAX(selection_areadata[1], selection_areadata[3]);
+
+            if (xmin < x && xmax > x && ymin < y && ymax > y) return i;
+        }
+         
     }
     return -1;
 }
@@ -983,27 +1077,38 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     gdouble min = 0, max = 0, xoff, yoff, selection_data;
 
     model = GWY_GRAPH_MODEL(area->graph_model);
-    xoff = (gwy_graph_model_get_xmax(model)
+    
+    if (area->status == GWY_GRAPH_STATUS_XLINES) {
+    
+        xoff = (gwy_graph_model_get_xmax(model)
             - gwy_graph_model_get_xmin(model))/100;
-    yoff = (gwy_graph_model_get_ymax(model)
+
+        for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(area->xlinesdata), NULL); i++) {
+            gwy_selection_get_object(GWY_SELECTION(area->xlinesdata),
+                                 i, &selection_data);
+
+            min = selection_data - xoff;
+            max = selection_data + xoff;
+            if (min <= position && max >= position)
+                return i;
+        }
+    }
+    else if (area->status == GWY_GRAPH_STATUS_YLINES) {
+    
+        yoff = (gwy_graph_model_get_ymax(model)
             - gwy_graph_model_get_ymin(model))/100;
 
 
-    for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(area->linesdata), NULL); i++) {
-        gwy_selection_get_object(GWY_SELECTION(area->linesdata),
+        for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(area->ylinesdata), NULL); i++) {
+            gwy_selection_get_object(GWY_SELECTION(area->ylinesdata),
                                  i, &selection_data);
 
-        if (area->status == GWY_GRAPH_STATUS_XLINES) {
-            min = selection_data - xoff;
-            max = selection_data + xoff;
-        }
-        else if (area->status == GWY_GRAPH_STATUS_YLINES) {
             min = selection_data - yoff;
             max = selection_data + yoff;
+            if (min <= position && max >= position)
+                return i;
         }
-        if (min <= position && max >= position)
-            return i;
-    }
+     }
     return -1;
 }
 
@@ -1479,33 +1584,41 @@ gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
 const GArray*
 gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
 {
+    
     return area->y_grid_data;
 }
 
 
 GwySelection* 
-gwy_graph_area_get_point_selection(GwyGraphArea *area)
+gwy_graph_area_get_selection(GwyGraphArea *area, GwyGraphStatusType status_type)
 {
-    return GWY_SELECTION(area->pointsdata);
+    if (status_type == GWY_GRAPH_STATUS_PLAIN)
+        status_type = area->status;
+    
+    switch (status_type) {
+        case GWY_GRAPH_STATUS_PLAIN:
+        return NULL;
+        
+        case GWY_GRAPH_STATUS_XSEL:
+        return GWY_SELECTION(area->xseldata);
+         
+        case GWY_GRAPH_STATUS_YSEL:
+        return GWY_SELECTION(area->yseldata);
+
+        case GWY_GRAPH_STATUS_POINTS:
+        return GWY_SELECTION(area->pointsdata);
+
+        case GWY_GRAPH_STATUS_ZOOM:
+        return GWY_SELECTION(area->zoomdata);
+        
+        case GWY_GRAPH_STATUS_XLINES:
+        return GWY_SELECTION(area->xlinesdata);
+        
+        case GWY_GRAPH_STATUS_YLINES:
+        return GWY_SELECTION(area->ylinesdata);
+       }
 }
 
-GwySelection* 
-gwy_graph_area_get_area_selection(GwyGraphArea *area)
-{
-    return GWY_SELECTION(area->areasdata);
-}
-
-GwySelection* 
-gwy_graph_area_get_line_selection(GwyGraphArea *area)
-{
-    return GWY_SELECTION(area->linesdata);
-}
-
-GwySelection* 
-gwy_graph_area_get_zoom_selection(GwyGraphArea *area)
-{
-    return GWY_SELECTION(area->zoomdata);
-}
 
 /************************** Documentation ****************************/
 

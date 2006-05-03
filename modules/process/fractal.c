@@ -300,12 +300,14 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
 
     gwy_selection_set_max_objects(
-               gwy_graph_area_get_area_selection(
+               gwy_graph_area_get_selection(
                                GWY_GRAPH_AREA(
-                                  gwy_graph_get_area(GWY_GRAPH(controls.graph)))), 1);
+                                  gwy_graph_get_area(GWY_GRAPH(controls.graph))),
+                               GWY_GRAPH_STATUS_XSEL), 1);
 
-    g_signal_connect(gwy_graph_area_get_area_selection(
-                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)))),
+    g_signal_connect(gwy_graph_area_get_selection(
+                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph))),
+                         GWY_GRAPH_STATUS_XSEL),
                      "changed",
                      G_CALLBACK(graph_selected), &controls);
  
@@ -331,8 +333,9 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             args->from[args->out] = 0;
             args->to[args->out] = 0;
             
-            gwy_selection_clear(gwy_graph_area_get_area_selection(
-                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)))));
+            gwy_selection_clear(gwy_graph_area_get_selection(
+                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph))),
+                                GWY_GRAPH_STATUS_XSEL));
 
             fractal_dialog_update(&controls, args, data);
             break;
@@ -391,8 +394,9 @@ out_changed_cb(GtkWidget *combo,
 
     gwy_graph_set_status(GWY_GRAPH(controls->graph), GWY_GRAPH_STATUS_XSEL);
 
-    gwy_selection_clear(gwy_graph_area_get_area_selection(
-                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)))));    
+    gwy_selection_clear(gwy_graph_area_get_selection(
+                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph))),
+                         GWY_GRAPH_STATUS_XSEL));    
 
     fractal_dialog_update(controls, args, controls->data);
     update_labels(controls, args);
@@ -518,10 +522,12 @@ graph_selected(GwyGraphArea *area, FractalControls *controls)
     gdouble selection[2];
 
     nselections = gwy_selection_get_data(
-                             gwy_graph_area_get_area_selection(
-                                 GWY_GRAPH_AREA(gwy_graph_get_area(controls->graph))), NULL);
-    gwy_selection_get_object(gwy_graph_area_get_area_selection(
-                               GWY_GRAPH_AREA(gwy_graph_get_area(controls->graph))),
+                             gwy_graph_area_get_selection(
+                                 GWY_GRAPH_AREA(gwy_graph_get_area(controls->graph)),
+                                 GWY_GRAPH_STATUS_XSEL), NULL);
+    gwy_selection_get_object(gwy_graph_area_get_selection(
+                               GWY_GRAPH_AREA(gwy_graph_get_area(controls->graph)),
+                               GWY_GRAPH_STATUS_XSEL),
                              0,
                              selection);
 

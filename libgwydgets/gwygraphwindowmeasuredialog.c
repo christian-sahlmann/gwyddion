@@ -211,25 +211,28 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
         gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)) return;
 
     n = gwy_selection_get_data(
-                GWY_SELECTION(gwy_graph_area_get_point_selection(
+                GWY_SELECTION(gwy_graph_area_get_selection(
                                    GWY_GRAPH_AREA(gwy_graph_get_area(
-                                            graph)))), NULL);
+                                            graph)),
+                                   GWY_GRAPH_STATUS_POINTS)), NULL);
     if (n>0)
     {
         if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS) {
             spoints = (gdouble *) g_malloc(2*n*sizeof(gdouble));
             gwy_selection_get_data(
-                GWY_SELECTION(gwy_graph_area_get_point_selection(
+                GWY_SELECTION(gwy_graph_area_get_selection(
                                    GWY_GRAPH_AREA(gwy_graph_get_area(
-                                            graph)))), spoints);
+                                            graph)),
+                              GWY_GRAPH_STATUS_POINTS)), spoints);
                  
         }
         else {
             spoints = (gdouble *) g_malloc(n*sizeof(gdouble));
             gwy_selection_get_data(
-                GWY_SELECTION(gwy_graph_area_get_line_selection(
+                GWY_SELECTION(gwy_graph_area_get_selection(
                                    GWY_GRAPH_AREA(gwy_graph_get_area(
-                                            graph)))), spoints);
+                                            graph)),
+                                   GWY_GRAPH_STATUS_XLINES)), spoints);
          }
     }
 
@@ -468,10 +471,12 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
         
     dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
-    gwy_selection_clear(gwy_graph_area_get_point_selection
-                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)))));
-    gwy_selection_clear(gwy_graph_area_get_line_selection
-                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)))));
+    gwy_selection_clear(gwy_graph_area_get_selection
+                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
+                  GWY_GRAPH_STATUS_POINTS));
+    gwy_selection_clear(gwy_graph_area_get_selection
+                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
+                  GWY_GRAPH_STATUS_XLINES));
         
     
     if (dialog->mmethod == METHOD_INTERSECTIONS)

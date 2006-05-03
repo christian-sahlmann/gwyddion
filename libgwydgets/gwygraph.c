@@ -210,7 +210,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_widget_show(GTK_WIDGET(graph->corner_tr));
     gtk_widget_show(GTK_WIDGET(graph->corner_br));
 
-    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_zoom_selection(graph->area)), "finished",
+    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_selection(graph->area, GWY_GRAPH_STATUS_ZOOM)), "finished",
                      G_CALLBACK(zoomed_cb), graph);
 
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
@@ -647,7 +647,7 @@ zoomed_cb(GwyGraph *graph)
     gdouble selection_zoomdata[4];
 
     if (graph->area->status != GWY_GRAPH_STATUS_ZOOM || 
-        gwy_selection_get_data(gwy_graph_area_get_zoom_selection(GWY_GRAPH_AREA(graph->area)), NULL) != 1)
+        gwy_selection_get_data(gwy_graph_area_get_selection(GWY_GRAPH_AREA(graph->area), GWY_GRAPH_STATUS_ZOOM), NULL) != 1)
         return;
     
     gwy_selection_get_object(GWY_SELECTION((graph->area)->zoomdata),

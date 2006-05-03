@@ -19,7 +19,8 @@ tools_LTLIBRARIES = \
 	grainremover.la \
 	icolorange.la \
 	level3.la \
-	readvalue.la
+	readvalue.la \
+	stats.la
 
 
 EXTRA_DIST = \
@@ -86,9 +87,9 @@ level3_la_LIBADD = $(module_libadd)
 readvalue_la_SOURCES = readvalue.c
 readvalue_la_LIBADD = $(module_libadd)
 
-#stats_la_SOURCES = stats.c
-#stats_la_LIBADD = $(module_libadd)
-#
+stats_la_SOURCES = stats.c
+stats_la_LIBADD = $(module_libadd)
+
 #sfunctions_la_SOURCES = sfunctions.c
 #sfunctions_la_LIBADD = $(module_libadd)
 #

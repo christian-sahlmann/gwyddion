@@ -78,7 +78,9 @@ static void   gwy_tool_stats_response            (GwyTool *tool,
 static void   gwy_tool_stats_selection_changed   (GwyPlainTool *plain_tool,
                                                  gint hint);
 static void   gwy_tool_stats_apply               (GwyToolStats *tool);
-
+static void   update_label                       (GwySIValueFormat *units, 
+                                                 GtkWidget *label, 
+                                                 gdouble value);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -133,7 +135,6 @@ static void
 gwy_tool_stats_init(GwyToolStats *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyContainer *settings;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
@@ -142,6 +143,7 @@ gwy_tool_stats_init(GwyToolStats *tool)
         return;
 
     plain_tool->lazy_updates = TRUE;
+    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -281,6 +283,7 @@ gwy_tool_stats_selection_changed(GwyPlainTool *plain_tool,
     gdouble theta, phi;    
     gdouble sel[4];
     gint isel[4];
+    gchar buffer[48];
 
     tool = GWY_TOOL_STATS(plain_tool);
     g_return_if_fail(hint <= 0);
@@ -325,8 +328,30 @@ gwy_tool_stats_selection_changed(GwyPlainTool *plain_tool,
                                             &theta, &phi);
     } 
 
+    plain_tool->value_format->precision = 2;
+    update_label(plain_tool->value_format, tool->ra, ra);
+    update_label(plain_tool->value_format, tool->rms, rms);
+    g_snprintf(buffer, sizeof(buffer), "%2.3g", skew);
+    gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
+    g_snprintf(buffer, sizeof(buffer), "%2.3g", kurtosis);
+    gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
+    update_label(plain_tool->value_format, tool->avg, avg);
 
-    
+    update_label(plain_tool->value_format, tool->min, min);
+    update_label(plain_tool->value_format, tool->max, max);
+    update_label(plain_tool->value_format, tool->median, median);
+    update_label(tool->vform2, tool->projarea, projarea);
+    if (tool->same_units) {
+        update_label(tool->vform2, tool->area, area);
+        update_label(tool->vformdeg, tool->theta,
+                                 180.0/G_PI * theta);
+        update_label(tool->vformdeg, tool->phi,
+                                 180.0/G_PI * phi);
+    } else {
+        gtk_label_set_text(GTK_LABEL(tool->area), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(tool->theta), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(tool->phi), _("N.A."));
+    }
 
 }
 
@@ -357,5 +382,21 @@ gwy_tool_stats_apply(GwyToolStats *tool)
     isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
 
 }
+
+static void
+update_label(GwySIValueFormat *units,
+                         GtkWidget *label, gdouble value)
+{
+    static gchar buffer[64];
+
+    g_return_if_fail(units);
+    g_return_if_fail(GTK_IS_LABEL(label));
+
+    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
+               units->precision, value/units->magnitude,
+               (units->units && *units->units) ? " " : "", units->units);
+    gtk_label_set_markup(GTK_LABEL(label), buffer);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

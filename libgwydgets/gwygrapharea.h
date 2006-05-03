@@ -69,8 +69,10 @@ struct _GwyGraphArea {
 
     GwyGraphStatusType status;
     GwySelectionGraphPoint *pointsdata;
-    GwySelectionGraphArea *areasdata;
-    GwySelectionGraphLine *linesdata;
+    GwySelectionGraphArea *xseldata;
+    GwySelectionGraphArea *yseldata;
+    GwySelectionGraphLine *xlinesdata;
+    GwySelectionGraphLine *ylinesdata;
     GwySelectionGraphZoom *zoomdata;
 
     GwyGraphStatus_CursorData *actual_cursor_data;
@@ -160,10 +162,7 @@ void          gwy_graph_area_set_y_grid_data      (GwyGraphArea *area,
 const GArray* gwy_graph_area_get_x_grid_data      (GwyGraphArea *area);
 const GArray* gwy_graph_area_get_y_grid_data      (GwyGraphArea *area);
 
-GwySelection* gwy_graph_area_get_point_selection  (GwyGraphArea *area);
-GwySelection* gwy_graph_area_get_area_selection   (GwyGraphArea *area);
-GwySelection* gwy_graph_area_get_line_selection   (GwyGraphArea *area);
-GwySelection* gwy_graph_area_get_zoom_selection   (GwyGraphArea *area);
+GwySelection* gwy_graph_area_get_selection  (GwyGraphArea *area, GwyGraphStatusType status_type);
 
 G_END_DECLS
 

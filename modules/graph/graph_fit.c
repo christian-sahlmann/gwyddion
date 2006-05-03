@@ -455,14 +455,16 @@ fit_dialog(FitArgs *args)
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     
     gwy_selection_set_max_objects(
-               gwy_graph_area_get_area_selection(
+               gwy_graph_area_get_selection(
                                GWY_GRAPH_AREA(
-                                  gwy_graph_get_area(GWY_GRAPH(controls.graph)))), 1);
+                                  gwy_graph_get_area(GWY_GRAPH(controls.graph))),
+                               GWY_GRAPH_STATUS_XSEL), 1);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gtk_widget_set_size_request(controls.graph, 400, 300);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-    g_signal_connect(gwy_graph_area_get_area_selection(
-                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)))), 
+    g_signal_connect(gwy_graph_area_get_selection(
+                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph))),
+                         GWY_GRAPH_STATUS_XSEL), 
                      "changed",
                      G_CALLBACK(graph_selected), &controls);
 
@@ -819,10 +821,12 @@ graph_selected(GwyGraph* graph, FitControls *controls)
     const gdouble *data;
 
     nselections = gwy_selection_get_data(
-                             gwy_graph_area_get_area_selection(
-                                 GWY_GRAPH_AREA(gwy_graph_get_area(graph))), NULL);
-    gwy_selection_get_object(gwy_graph_area_get_area_selection(
-                               GWY_GRAPH_AREA(gwy_graph_get_area(graph))), 
+                             gwy_graph_area_get_selection(
+                                 GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
+                                 GWY_GRAPH_STATUS_XSEL), NULL);
+    gwy_selection_get_object(gwy_graph_area_get_selection(
+                               GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
+                               GWY_GRAPH_STATUS_XSEL), 
                              0,
                              selection);
 

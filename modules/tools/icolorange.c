@@ -226,7 +226,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gwy_graph_model_add_curve(tool->histogram_model, cmodel);
     tool->histogram = GWY_GRAPH(gwy_graph_new(tool->histogram_model));
     garea = GWY_GRAPH_AREA(gwy_graph_get_area(tool->histogram));
-    selection = gwy_graph_area_get_area_selection(garea);
+    selection = gwy_graph_area_get_selection(garea, GWY_GRAPH_STATUS_XSEL);
     gwy_selection_set_max_objects(selection, 1);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_tool_color_range_xsel_changed), tool);

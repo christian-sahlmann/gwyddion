@@ -407,10 +407,12 @@ static void
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
 
-    gwy_selection_clear(gwy_graph_area_get_point_selection
-                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)))));
-    gwy_selection_clear(gwy_graph_area_get_line_selection
-                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)))));
+    gwy_selection_clear(gwy_graph_area_get_selection
+                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))), 
+                         GWY_GRAPH_STATUS_POINTS));
+    gwy_selection_clear(gwy_graph_area_get_selection
+                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
+                         GWY_GRAPH_STATUS_XLINES));
       
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
         return;
