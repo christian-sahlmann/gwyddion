@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,50 +19,70 @@
  */
 
 #include "config.h"
-#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/level.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <app/gwyapp.h>
 
-#define CHECK_LAYER_TYPE(l) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+#define GWY_TYPE_TOOL_POLYNOM            (gwy_tool_polynom_get_type())
+#define GWY_TOOL_POLYNOM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_POLYNOM, GwyToolPolynom))
+#define GWY_IS_TOOL_POLYNOM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_POLYNOM))
+#define GWY_TOOL_POLYNOM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_POLYNOM, GwyToolPolynomClass))
+
+typedef struct _GwyToolPolynom      GwyToolPolynom;
+typedef struct _GwyToolPolynomClass GwyToolPolynomClass;
 
 typedef struct {
-    GwyUnitoolRectLabels labels;
-    GtkWidget *fitting;
-    GtkWidget *direction;
+    gint order;
+    GwyOrientation direction;
+    gboolean exclude;
+} ToolArgs;
+
+struct _GwyToolPolynom {
+    GwyPlainTool parent_instance;
+
+    ToolArgs args;
+
+    GwyRectSelectionLabels *rlabels;
+    GtkWidget *order;
+    GSList *direction;
     GtkWidget *exclude;
-    gint fit;
-    GtkOrientation dir;
-    gboolean exc;
-} ToolControls;
+    GtkWidget *apply;
 
-static gboolean   module_register     (void);
-static gboolean   use                 (GwyDataWindow *data_window,
-                                       GwyToolSwitchEvent reason);
-static void       layer_setup         (GwyUnitoolState *state);
-static GtkWidget* dialog_create       (GwyUnitoolState *state);
-static void       dialog_update       (GwyUnitoolState *state,
-                                       GwyUnitoolUpdateType reason);
-static void       dialog_abandon      (GwyUnitoolState *state);
-static void       apply               (GwyUnitoolState *state);
+    /* potential class data */
+    GType layer_type_rect;
+};
 
-static void       direction_changed_cb(GObject *item,
-                                       GwyUnitoolState *state);
-static void       fitting_changed_cb  (GtkWidget *combo,
-                                       GwyUnitoolState *state);
-static void       exclude_changed_cb  (GtkToggleButton *button,
-                                       GwyUnitoolState *state);
+struct _GwyToolPolynomClass {
+    GwyPlainToolClass parent_class;
+};
 
-static void       load_args           (GwyContainer *container,
-                                       ToolControls *controls);
-static void       save_args           (GwyContainer *container,
-                                       ToolControls *controls);
+static gboolean module_register(void);
 
+static GType  gwy_tool_polynom_get_type         (void) G_GNUC_CONST;
+static void   gwy_tool_polynom_finalize         (GObject *object);
+static void   gwy_tool_polynom_init_dialog      (GwyToolPolynom *tool);
+static void   gwy_tool_polynom_data_switched    (GwyTool *gwytool,
+                                                 GwyDataView *data_view);
+static void   gwy_tool_polynom_data_changed     (GwyPlainTool *plain_tool);
+static void   gwy_tool_polynom_response         (GwyTool *tool,
+                                                 gint response_id);
+static void   gwy_tool_polynom_selection_changed(GwyPlainTool *plain_tool,
+                                                 gint hint);
+static void   gwy_tool_polynom_direction_changed(GObject *button,
+                                                 GwyToolPolynom *tool);
+static void   gwy_tool_polynom_exclude_changed  (GtkToggleButton *button,
+                                                 GwyToolPolynom *tool);
+static void   gwy_tool_polynom_apply            (GwyToolPolynom *tool);
+
+static const gchar order_key[]     = "/module/polynom/order";
+static const gchar direction_key[] = "/module/polynom/direction";
+static const gchar exclude_key[]   = "/module/polynom/exclude";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -70,73 +90,112 @@ static GwyModuleInfo module_info = {
     N_("Polynom fit tool, fits polynoms to X or Y profiles and subtracts "
        "them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-static GwyUnitoolSlots func_slots = {
-    0,                             /* layer type, must be set runtime */
-    layer_setup,                   /* layer setup func */
-    dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
-    apply,                         /* apply action */
-    NULL,                          /* nonstandard response handler */
+static const ToolArgs default_args = {
+    0,
+    GWY_ORIENTATION_HORIZONTAL,
+    FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
 
+G_DEFINE_TYPE(GwyToolPolynom, gwy_tool_polynom, GWY_TYPE_PLAIN_TOOL)
+
 static gboolean
 module_register(void)
 {
-    static GwyToolFuncInfo func_info = {
-        "polynom",
-        GWY_STOCK_POLYNOM,
-        N_("Fit X or Y profiles by polynom"),
-        use,
-    };
-
-    gwy_tool_func_register(&func_info);
+    gwy_tool_func_register(GWY_TYPE_TOOL_POLYNOM);
 
     return TRUE;
 }
 
-static gboolean
-use(GwyDataWindow *data_window,
-    GwyToolSwitchEvent reason)
+static void
+gwy_tool_polynom_class_init(GwyToolPolynomClass *klass)
 {
-    static const gchar *layer_name = "GwyLayerRectangle";
-    static GwyUnitoolState *state = NULL;
+    GwyPlainToolClass *ptool_class = GWY_PLAIN_TOOL_CLASS(klass);
+    GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    if (!state) {
-        func_slots.layer_type = g_type_from_name(layer_name);
-        if (!func_slots.layer_type) {
-            g_warning("Layer type `%s' not available", layer_name);
-            return FALSE;
-        }
-        state = g_new0(GwyUnitoolState, 1);
-        state->func_slots = &func_slots;
-        state->user_data = g_new0(ToolControls, 1);
-        state->apply_doesnt_close = TRUE;
-    }
-    return gwy_unitool_use(state, data_window, reason);
+    gobject_class->finalize = gwy_tool_polynom_finalize;
+
+    tool_class->stock_id = GWY_STOCK_POLYNOM;
+    tool_class->title = _("Polynom");
+    tool_class->tooltip = _("Fit X or Y profiles with polynoms"),
+    tool_class->prefix = "/module/polynom";
+    tool_class->data_switched = gwy_tool_polynom_data_switched;
+    tool_class->response = gwy_tool_polynom_response;
+
+    ptool_class->data_changed = gwy_tool_polynom_data_changed;
+    ptool_class->selection_changed = gwy_tool_polynom_selection_changed;
 }
 
 static void
-layer_setup(GwyUnitoolState *state)
+gwy_tool_polynom_finalize(GObject *object)
 {
-    g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer,
-                 "selection-key", "/0/select/rectangle",
-                 "is-crop", FALSE,
-                 NULL);
+    GwyToolPolynom *tool;
+    GwyContainer *settings;
+
+    tool = GWY_TOOL_POLYNOM(object);
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings, order_key,
+                                    tool->args.order);
+    gwy_container_set_enum_by_name(settings, direction_key,
+                                   tool->args.direction);
+    gwy_container_set_boolean_by_name(settings, exclude_key,
+                                      tool->args.exclude);
+
+    G_OBJECT_CLASS(gwy_tool_polynom_parent_class)->finalize(object);
 }
 
-static GtkWidget*
-dialog_create(GwyUnitoolState *state)
+static void
+gwy_tool_polynom_init(GwyToolPolynom *tool)
 {
-    static const GwyEnum degrees[] = {
+    GwyPlainTool *plain_tool;
+    GwyContainer *settings;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
+                                                           "GwyLayerRectangle");
+    if (!tool->layer_type_rect)
+        return;
+
+    plain_tool->lazy_updates = TRUE;
+
+    settings = gwy_app_settings_get();
+    tool->args = default_args;
+    gwy_container_gis_int32_by_name(settings, order_key,
+                                    &tool->args.order);
+    gwy_container_gis_enum_by_name(settings, direction_key,
+                                   &tool->args.direction);
+    gwy_container_gis_boolean_by_name(settings, exclude_key,
+                                      &tool->args.exclude);
+
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                     "rectangle");
+
+    gwy_tool_polynom_init_dialog(tool);
+}
+
+static void
+gwy_tool_polynom_rect_updated(GwyToolPolynom *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    gwy_rect_selection_labels_select(tool->rlabels,
+                                     plain_tool->selection,
+                                     plain_tool->data_field);
+}
+
+static void
+gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
+{
+    static const GwyEnum orders[] = {
         { N_("Fit height"),    0, },
         { N_("Fit linear"),    1, },
         { N_("Fit quadratic"), 2, },
@@ -146,228 +205,187 @@ dialog_create(GwyUnitoolState *state)
         { N_("_Horizontal direction"), GWY_ORIENTATION_HORIZONTAL, },
         { N_("_Vertical direction"),   GWY_ORIENTATION_VERTICAL,   },
     };
-    ToolControls *controls;
-    GwyContainer *settings;
-    GwySIValueFormat *units;
-    GtkWidget *dialog, *table, *table2, *label, *frame;
+
+    GtkDialog *dialog;
+    GtkTable *table;
+    GtkWidget *label;
     GSList *radio;
-    gint row;
+    guint row;
 
-    gwy_debug(" ");
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    controls = (ToolControls*)state->user_data;
-    settings = gwy_app_settings_get();
-    load_args(settings, controls);
+    tool->rlabels = gwy_rect_selection_labels_new
+                      (TRUE, G_CALLBACK(gwy_tool_polynom_rect_updated), tool);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox),
+                       gwy_rect_selection_labels_get_table(tool->rlabels),
+                       TRUE, TRUE, 0);
 
-    units = state->coord_format;
-
-    dialog = gtk_dialog_new_with_buttons(_("X/Y Profile Level"), NULL, 0, NULL);
-    gwy_unitool_dialog_add_button_hide(dialog);
-    gwy_unitool_dialog_add_button_apply(dialog);
-
-    frame = gwy_unitool_windowname_frame_create(state);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
-                       FALSE, FALSE, 0);
-
-    table = gtk_table_new(6, 4, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
-    gwy_unitool_rect_info_table_setup(&controls->labels,
-                                      GTK_TABLE(table), 0, 0);
-    controls->labels.unselected_is_full = TRUE;
-
-    table2 = gtk_table_new(4, 2, FALSE);
+    table = GTK_TABLE(gtk_table_new(4, 2, FALSE));
     row = 0;
 
-    gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table2);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Fiting mode</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, row, row+1,
+    gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->fitting
-        = gwy_enum_combo_box_new(degrees, G_N_ELEMENTS(degrees),
-                                 G_CALLBACK(fitting_changed_cb), state,
-                                 controls->fit, TRUE);
-    gwy_table_attach_row(table2, row, _("_Type:"), NULL, controls->fitting);
+    tool->order
+        = gwy_enum_combo_box_new(orders, G_N_ELEMENTS(orders),
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &tool->args.order,
+                                 tool->args.order, TRUE);
+    gwy_table_attach_row(GTK_WIDGET(table), row, _("_Type:"), NULL,
+                         tool->order);
     row++;
 
-    radio = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
-                                     "direction-type",
-                                     G_CALLBACK(direction_changed_cb), state,
-                                     controls->dir);
+    radio = gwy_radio_buttons_create
+                    (directions, G_N_ELEMENTS(directions), "direction-type",
+                     G_CALLBACK(gwy_tool_polynom_direction_changed), tool,
+                     tool->args.direction);
+    tool->direction = radio;
     while (radio) {
-        gtk_table_attach(GTK_TABLE(table2), GTK_WIDGET(radio->data),
+        gtk_table_attach(table, GTK_WIDGET(radio->data),
                          0, 3, row, row+1,
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
         row++;
         radio = g_slist_next(radio);
     }
-    gtk_table_set_row_spacing(GTK_TABLE(table2), row-1, 8);
+    gtk_table_set_row_spacing(table, row-1, 8);
 
-    controls->exclude
+    tool->exclude
         = gtk_check_button_new_with_mnemonic(_("_Exclude area if selected"));
-    gtk_table_attach(GTK_TABLE(table2), controls->exclude, 0, 3, row, row+1,
+    gtk_table_attach(table, tool->exclude, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->exclude),
-                                 controls->exc);
-    g_signal_connect(controls->exclude, "toggled",
-                     G_CALLBACK(exclude_changed_cb), state);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->exclude),
+                                 tool->args.exclude);
+    g_signal_connect(tool->exclude, "toggled",
+                     G_CALLBACK(gwy_tool_polynom_exclude_changed), tool);
     row++;
 
-    label = gtk_label_new(_("(otherwise will be used for fitting)"));
+    label = gtk_label_new(_("(otherwise it will be used for fitting)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 3, row, row+1,
+    gtk_table_attach(table, label, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    return dialog;
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
+    gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
+    tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
+                                        GTK_RESPONSE_APPLY);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
+
+    gtk_widget_show_all(dialog->vbox);
 }
 
-/* TODO */
 static void
-apply(GwyUnitoolState *state)
+gwy_tool_polynom_data_switched(GwyTool *gwytool,
+                               GwyDataView *data_view)
 {
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyDataViewLayer *layer;
-    GwySelection *selection;
-    ToolControls *controls;
+    GwyPlainTool *plain_tool;
+    GwyToolPolynom *tool;
+
+    GWY_TOOL_CLASS(gwy_tool_polynom_parent_class)->data_switched(gwytool,
+                                                                data_view);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    if (plain_tool->init_failed)
+        return;
+
+    tool = GWY_TOOL_POLYNOM(gwytool);
+    if (data_view) {
+        g_object_set(plain_tool->layer,
+                     "draw-reflection", FALSE,
+                     "is-crop", TRUE,
+                     NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 1);
+    }
+
+    gtk_widget_set_sensitive(tool->apply, data_view != NULL);
+}
+
+static void
+gwy_tool_polynom_data_changed(GwyPlainTool *plain_tool)
+{
+    gwy_rect_selection_labels_fill(GWY_TOOL_POLYNOM(plain_tool)->rlabels,
+                                   plain_tool->selection,
+                                   plain_tool->data_field,
+                                   NULL, NULL);
+    gwy_tool_polynom_selection_changed(plain_tool, 0);
+}
+
+static void
+gwy_tool_polynom_response(GwyTool *tool,
+                          gint response_id)
+{
+    GWY_TOOL_CLASS(gwy_tool_polynom_parent_class)->response(tool, response_id);
+
+    if (response_id == GTK_RESPONSE_APPLY)
+        gwy_tool_polynom_apply(GWY_TOOL_POLYNOM(tool));
+}
+
+static void
+gwy_tool_polynom_selection_changed(GwyPlainTool *plain_tool,
+                                   gint hint)
+{
+    GwyToolPolynom *tool;
+    gint n = 0;
+
+    tool = GWY_TOOL_POLYNOM(plain_tool);
+    g_return_if_fail(hint <= 0);
+
+    if (plain_tool->selection) {
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+        g_return_if_fail(n == 0 || n == 1);
+        gwy_rect_selection_labels_fill(tool->rlabels,
+                                       plain_tool->selection,
+                                       plain_tool->data_field,
+                                       NULL, NULL);
+    }
+    else
+        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+}
+
+static void
+gwy_tool_polynom_direction_changed(G_GNUC_UNUSED GObject *button,
+                                   GwyToolPolynom *tool)
+{
+    tool->args.direction
+        = gwy_radio_buttons_get_current(tool->direction, "direction-type");
+}
+
+static void
+gwy_tool_polynom_exclude_changed(GtkToggleButton *button,
+                                 GwyToolPolynom *tool)
+{
+    tool->args.exclude = gtk_toggle_button_get_active(button);
+}
+
+static void
+gwy_tool_polynom_apply(GwyToolPolynom *tool)
+{
+    GwyPlainTool *plain_tool;
     gint isel[4];
+    GQuark quark;
 
-    gwy_debug(" ");
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    selection = gwy_vector_layer_get_selection(state->layer);
+    plain_tool = GWY_PLAIN_TOOL(tool);
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    gwy_container_remove_by_name(data, "/0/show");
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    controls = (ToolControls*)state->user_data;
-    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
-
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
-
-    gwy_data_field_fit_lines(dfield, isel[0], isel[1],
+    gwy_rect_selection_labels_fill(tool->rlabels,
+                                   plain_tool->selection,
+                                   plain_tool->data_field,
+                                   NULL, isel);
+    quark = gwy_app_get_data_key_for_id(plain_tool->id);
+    gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
+    gwy_data_field_fit_lines(plain_tool->data_field,
+                             isel[0], isel[1],
                              isel[2] - isel[0], isel[3] - isel[1],
-                             controls->fit, controls->exc, controls->dir);
-
-    gwy_selection_clear(selection);
-    gwy_data_field_data_changed(dfield);
-}
-
-static void
-dialog_update(GwyUnitoolState *state,
-              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
-{
-    ToolControls *controls;
-    GwyDataViewLayer *layer;
-    GwySelection *selection;
-    gboolean is_visible, is_selected;
-
-    gwy_debug("");
-    is_visible = state->is_visible;
-
-    controls = (ToolControls*)state->user_data;
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    selection = gwy_vector_layer_get_selection(state->layer);
-    is_selected = gwy_selection_get_data(selection, NULL);
-    if (!is_visible && !is_selected)
-        return;
-
-    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, NULL);
-}
-
-static void
-dialog_abandon(GwyUnitoolState *state)
-{
-    GwyContainer *settings;
-    GwyContainer *data;
-    ToolControls *controls;
-    GwyDataViewLayer *layer;
-
-    settings = gwy_app_settings_get();
-
-    controls = (ToolControls*)state->user_data;
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-
-    save_args(settings, controls);
-    gwy_container_remove_by_name(data, "/0/show");
-
-    memset(state->user_data, 0, sizeof(ToolControls));
-}
-
-static void
-direction_changed_cb(GObject *item, GwyUnitoolState *state)
-{
-    ToolControls *controls;
-
-    gwy_debug(" ");
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(item)))
-        return;
-
-    controls = (ToolControls*)state->user_data;
-    controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
-    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-static void
-fitting_changed_cb(GtkWidget *combo, GwyUnitoolState *state)
-{
-    ToolControls *controls;
-
-    gwy_debug(" ");
-    controls = (ToolControls*)state->user_data;
-    controls->fit = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-static void
-exclude_changed_cb(GtkToggleButton *button, GwyUnitoolState *state)
-{
-    ToolControls *controls;
-
-    gwy_debug(" ");
-    controls = (ToolControls*)state->user_data;
-    controls->exc = gtk_toggle_button_get_active(button);
-    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-
-static const gchar exc_key[] = "/tool/polynom/exclude";
-static const gchar fit_key[] = "/tool/polynom/fitting";
-static const gchar dir_key[] = "/tool/polynom/direction";
-
-static void
-save_args(GwyContainer *container, ToolControls *controls)
-{
-    gwy_container_set_boolean_by_name(container, exc_key, controls->exc);
-    gwy_container_set_enum_by_name(container, fit_key, controls->fit);
-    gwy_container_set_enum_by_name(container, dir_key, controls->dir);
-}
-
-
-static void
-load_args(GwyContainer *container, ToolControls *controls)
-{
-    controls->exc = FALSE;
-    controls->fit = 1;
-    controls->dir = GTK_ORIENTATION_HORIZONTAL;
-
-    gwy_container_gis_boolean_by_name(container, exc_key, &controls->exc);
-    gwy_container_gis_enum_by_name(container, fit_key, &controls->fit);
-    gwy_container_gis_enum_by_name(container, dir_key, &controls->dir);
-
-    /* sanitize */
-    controls->exc = !!controls->exc;
-    controls->fit = CLAMP(controls->fit, 0, 3);
-    controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
+                             tool->args.order,
+                             tool->args.exclude,
+                             tool->args.direction);
+    gwy_data_field_data_changed(plain_tool->data_field);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

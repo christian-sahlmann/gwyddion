@@ -7,7 +7,6 @@ toolsdir = $(pkglibdir)/modules/tool
 #	crop.la \
 #	filter.la \
 #	maskedit.la \
-#	polynom.la \
 #	profile.la \
 #	sfunctions.la \
 #	spotremove.la \
@@ -19,6 +18,7 @@ tools_LTLIBRARIES = \
 	grainremover.la \
 	icolorange.la \
 	level3.la \
+	polynom.la \
 	readvalue.la \
 	stats.la
 
@@ -77,10 +77,10 @@ level3_la_LIBADD = $(module_libadd)
 
 #maskedit_la_SOURCES = maskedit.c
 #maskedit_la_LIBADD = $(module_libadd)
-#
-#polynom_la_SOURCES = polynom.c
-#polynom_la_LIBADD = $(module_libadd)
-#
+
+polynom_la_SOURCES = polynom.c
+polynom_la_LIBADD = $(module_libadd)
+
 #profile_la_SOURCES = profile.c
 #profile_la_LIBADD = $(module_libadd)
 
