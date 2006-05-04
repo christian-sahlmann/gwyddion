@@ -612,11 +612,10 @@ gwy_data_field_grains_get_height_distribution(GwyDataField *data_field,
                                               GwyDataLine *distribution)
 {
     GwySIUnit *fieldunit, *lineunit;
-    gint i, xres, yres, ngrains, nhist;
-    gdouble maxpnt;
+    gint i, j, xres, yres, ngrains, nhist;
     gdouble *grain_height;
     gint *grains;
-    gdouble s, sigma;
+    gdouble s, sigma, min, max;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
@@ -633,11 +632,11 @@ gwy_data_field_grains_get_height_distribution(GwyDataField *data_field,
         return;
     }
 
-    /* sum grain heights */
+    /* calculate grain heights */
     grain_height = g_new(gdouble, ngrains + 1);
-    for (i = 0; i < ngrains + 1; i++) {
-        grain_height[i] = - G_MAXDOUBLE;
-    }
+    for (i = 0; i < ngrains + 1; i++)
+        grain_height[i] = -G_MAXDOUBLE;
+
     for (i = 0; i < xres*yres; i++) {
         if (grains[i] && data_field->data[i] > grain_height[grains[i]]) {
             grain_height[grains[i]] = data_field->data[i];
@@ -645,26 +644,34 @@ gwy_data_field_grains_get_height_distribution(GwyDataField *data_field,
     }
     g_free(grains);
 
-    maxpnt = - G_MAXDOUBLE;
+    /* find the height range and sigma */
+    min = G_MAXDOUBLE;
+    max = -G_MAXDOUBLE;
     s = sigma = 0.0;
     for (i = 1; i <= ngrains; i++) {
-        if (maxpnt < grain_height[i])
-            maxpnt = grain_height[i];
+        if (G_UNLIKELY(grain_height[i] > max))
+            max = grain_height[i];
+        if (G_UNLIKELY(grain_height[i] < min))
+            min = grain_height[i];
         s += grain_height[i];
         sigma += grain_height[i] * grain_height[i];
     }
     sigma = sqrt(ngrains*sigma - s*s)/ngrains;
     s = 2.49/cbrt(ngrains)*sigma;
-    nhist = maxpnt/s + 1;
+    nhist = (max - min)/s + 1;
 
     gwy_data_line_resample(distribution, nhist, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(distribution);
 
-    for (i = 1; i <= ngrains; i++)
-        distribution->data[(gint)(grain_height[i]/s)] += 1;
+    for (i = 1; i <= ngrains; i++) {
+        j = ROUND((grain_height[i] - min)/s);
+        j = GWY_CLAMP(j, 0, nhist - 1);
+        distribution->data[j] += 1;
+    }
     g_free(grain_height);
 
-    gwy_data_line_set_real(distribution, maxpnt);
+    gwy_data_line_set_real(distribution, max - min);
+    gwy_data_line_set_offset(distribution, min);
 
     /* Set proper units */
     fieldunit = gwy_data_field_get_si_unit_z(data_field);
