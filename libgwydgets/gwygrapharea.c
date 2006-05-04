@@ -294,6 +294,7 @@ gwy_graph_area_realize(GtkWidget *widget)
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
 
     display = gtk_widget_get_display(widget);
+    /* FIXME: These are not used for anything */
     area->cross_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
     area->arrow_cursor = gdk_cursor_new_for_display(display, GDK_LEFT_PTR);
 
@@ -330,8 +331,8 @@ gwy_graph_area_unrealize(GtkWidget *widget)
     area = GWY_GRAPH_AREA(widget);
 
     gwy_object_unref(area->gc);
-    gwy_object_unref(area->cross_cursor);
-    gwy_object_unref(area->arrow_cursor);
+    gdk_cursor_unref(area->cross_cursor);
+    gdk_cursor_unref(area->arrow_cursor);
 
     if (GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize(widget);
@@ -470,9 +471,9 @@ gwy_graph_area_draw_zoom(GdkDrawable *drawable, GdkGC *gc, GwyGraphArea *area)
     n_of_zooms = gwy_selection_get_data(GWY_SELECTION(area->zoomdata), NULL);
 
     if (n_of_zooms != 1) return;
-    
+
     gwy_selection_get_object(GWY_SELECTION(area->zoomdata), 0, selection_zoomdata);
-    
+
     if (selection_zoomdata[2] == 0 || selection_zoomdata[3] == 0) return;
     gdk_gc_set_function(gc, GDK_INVERT);
 
@@ -680,9 +681,9 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         selection_zoomdata[1] = dy;
         selection_zoomdata[2] = 0;
         selection_zoomdata[3] = 0;
-        
+
         gwy_selection_set_object(GWY_SELECTION(area->zoomdata), -1, selection_zoomdata);
-         
+
         area->selecting = 1;
     }
 
@@ -753,7 +754,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     }
 
 
-    if (area->selecting && area->status == GWY_GRAPH_STATUS_XLINES 
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_XLINES
                             && gwy_selection_get_data(GWY_SELECTION(area->xlinesdata), NULL))
     {
         selection_linedata = dx;
@@ -796,7 +797,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
               && (area->selecting != 0) && gwy_selection_get_data(GWY_SELECTION(area->zoomdata), NULL)) {
-         
+
         gwy_selection_get_object(GWY_SELECTION(area->zoomdata),
                              gwy_selection_get_data(GWY_SELECTION(area->zoomdata), NULL) - 1,
                              selection_zoomdata);
@@ -807,8 +808,8 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         gwy_selection_set_object(GWY_SELECTION(area->zoomdata),
                                   gwy_selection_get_data(GWY_SELECTION(area->zoomdata), NULL) - 1,
                                   selection_zoomdata);
- 
-        
+
+
         area->selecting = FALSE;
         gwy_selection_finished(GWY_SELECTION(area->zoomdata));
     }
@@ -925,12 +926,12 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     if (area->status == GWY_GRAPH_STATUS_ZOOM
                              && (area->selecting != 0)
                              && gwy_selection_get_data(GWY_SELECTION(area->zoomdata), NULL)) {
-        
-        
+
+
          gwy_selection_get_object(GWY_SELECTION(area->zoomdata),
                              gwy_selection_get_data(GWY_SELECTION(area->zoomdata), NULL) - 1,
                              selection_zoomdata);
-     
+
          selection_zoomdata[2] = dx - selection_zoomdata[0];
          selection_zoomdata[3] = dy - selection_zoomdata[1];
 
@@ -1037,7 +1038,7 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y)
 
             if (xmin < x && xmax > x && ymin < y && ymax > y) return i;
         }
-         
+
     }
     return -1;
 }
@@ -1077,9 +1078,9 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     gdouble min = 0, max = 0, xoff, yoff, selection_data;
 
     model = GWY_GRAPH_MODEL(area->graph_model);
-    
+
     if (area->status == GWY_GRAPH_STATUS_XLINES) {
-    
+
         xoff = (gwy_graph_model_get_xmax(model)
             - gwy_graph_model_get_xmin(model))/100;
 
@@ -1094,7 +1095,7 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
         }
     }
     else if (area->status == GWY_GRAPH_STATUS_YLINES) {
-    
+
         yoff = (gwy_graph_model_get_ymax(model)
             - gwy_graph_model_get_ymin(model))/100;
 
@@ -1584,24 +1585,24 @@ gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
 const GArray*
 gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
 {
-    
+
     return area->y_grid_data;
 }
 
 
-GwySelection* 
+GwySelection*
 gwy_graph_area_get_selection(GwyGraphArea *area, GwyGraphStatusType status_type)
 {
     if (status_type == GWY_GRAPH_STATUS_PLAIN)
         status_type = area->status;
-    
+
     switch (status_type) {
         case GWY_GRAPH_STATUS_PLAIN:
         return NULL;
-        
+
         case GWY_GRAPH_STATUS_XSEL:
         return GWY_SELECTION(area->xseldata);
-         
+
         case GWY_GRAPH_STATUS_YSEL:
         return GWY_SELECTION(area->yseldata);
 
@@ -1610,13 +1611,15 @@ gwy_graph_area_get_selection(GwyGraphArea *area, GwyGraphStatusType status_type)
 
         case GWY_GRAPH_STATUS_ZOOM:
         return GWY_SELECTION(area->zoomdata);
-        
+
         case GWY_GRAPH_STATUS_XLINES:
         return GWY_SELECTION(area->xlinesdata);
-        
+
         case GWY_GRAPH_STATUS_YLINES:
         return GWY_SELECTION(area->ylinesdata);
-       }
+    }
+
+    g_return_val_if_reached(NULL);
 }
 
 
