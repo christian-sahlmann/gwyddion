@@ -41,11 +41,17 @@ MOD_LINK = \
 	libgwyddion-$(LIBGWYDDION_VER).lib
 
 ## targets
-all: mod
+all: unistd.h mod
 
 mod: $(MODULES)
 
 install: install-mod
+
+# XXX: Work around misconfigured zlib in GladeWin32 2.4 versions where zconf.h
+# unconditionally includes sys/types.h (fortunately available) and unistd.h
+# (unavailable).
+unistd.h:
+	echo. >unistd.h
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
