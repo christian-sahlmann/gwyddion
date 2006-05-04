@@ -143,15 +143,8 @@ gwy_axis_init(GwyAxis *axis)
 {
     gwy_debug("");
 
-    axis->gc = NULL;
-    axis->is_visible = 1;
-    axis->is_logarithmic = 0;
-    axis->is_auto = 1;
-    axis->is_standalone = 0;
-    axis->max = 0;
-    axis->min = 0;
-    axis->label_x_pos = 0;
-    axis->label_y_pos = 0;
+    axis->is_visible = TRUE;
+    axis->is_auto = TRUE;
     axis->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
 
     axis->par.major_length = 10;
@@ -169,8 +162,7 @@ gwy_axis_init(GwyAxis *axis)
 
     axis->enable_label_edit = TRUE;
 
-    axis->has_unit = 0;
-    axis->unit = gwy_si_unit_new("");
+    axis->unit = gwy_si_unit_new(NULL);
     axis->magnification_string = NULL;
     axis->magnification = 1;
 }
@@ -240,11 +232,14 @@ gwy_axis_finalize(GObject *object)
     g_array_free(axis->mjticks, TRUE);
     g_array_free(axis->miticks, TRUE);
 
-    if (axis->unit) gwy_object_unref(axis->unit);
+    gwy_object_unref(axis->unit);
     gwy_object_unref(axis->gc);
 
-    g_free(axis->par.major_font);
-    g_free(axis->par.label_font);
+    if (axis->par.major_font)
+        pango_font_description_free(axis->par.major_font);
+    if (axis->par.label_font)
+        pango_font_description_free(axis->par.label_font);
+
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
 }
 
