@@ -558,15 +558,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     }
 
 
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->pointsdata)) == 1)
+    if (area->status == GWY_GRAPH_STATUS_POINTS && gwy_selection_get_max_objects(GWY_SELECTION(area->pointsdata)) == 1)
         gwy_selection_clear(GWY_SELECTION(area->pointsdata));
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->xlinesdata)) == 1)
+    if (area->status == GWY_GRAPH_STATUS_XLINES && gwy_selection_get_max_objects(GWY_SELECTION(area->xlinesdata)) == 1)
         gwy_selection_clear(GWY_SELECTION(area->xlinesdata));
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->ylinesdata)) == 1)
+    if (area->status == GWY_GRAPH_STATUS_YLINES && gwy_selection_get_max_objects(GWY_SELECTION(area->ylinesdata)) == 1)
         gwy_selection_clear(GWY_SELECTION(area->ylinesdata));
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->xseldata)) == 1)
+    if (area->status == GWY_GRAPH_STATUS_XSEL && gwy_selection_get_max_objects(GWY_SELECTION(area->xseldata)) == 1)
         gwy_selection_clear(GWY_SELECTION(area->xseldata));
-    if (gwy_selection_get_max_objects(GWY_SELECTION(area->yseldata)) == 1)
+    if (area->status == GWY_GRAPH_STATUS_YSEL && gwy_selection_get_max_objects(GWY_SELECTION(area->yseldata)) == 1)
         gwy_selection_clear(GWY_SELECTION(area->yseldata));
 
 
