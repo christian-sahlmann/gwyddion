@@ -236,7 +236,10 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
                             GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
-
+    GwyToolStats *tool;
+    GwySIUnit *siunitxy, *siunitz, *siunitdeg;
+    gdouble xreal, yreal, q;
+ 
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->data_switched(gwytool,
                                                               data_view);
     plain_tool = GWY_PLAIN_TOOL(gwytool);
@@ -249,17 +252,47 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
                      "is-stats", TRUE,
                      NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
+    
+
+        tool = GWY_TOOL_STATS(plain_tool);
+        siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+        siunitz = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+        tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
+
+        xreal = gwy_data_field_get_xreal(plain_tool->data_field);
+        yreal = gwy_data_field_get_xreal(plain_tool->data_field);
+        q = xreal/gwy_data_field_get_xres(plain_tool->data_field)
+            *yreal/gwy_data_field_get_yres(plain_tool->data_field);
+
+        siunitxy = gwy_si_unit_duplicate(siunitxy);
+        gwy_si_unit_power(siunitxy, 2, siunitxy);
+        tool->vform2
+            = gwy_si_unit_get_format_with_resolution(siunitxy,
+                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                     xreal*yreal, q,
+                                                     tool->vform2);
+        g_object_unref(siunitxy);
+
+        siunitdeg = (GwySIUnit*)gwy_si_unit_new("deg"); /* degree */
+        tool->vformdeg
+            = gwy_si_unit_get_format_with_resolution(siunitdeg,
+                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                     360, 0.01,
+                                                     tool->vformdeg);
+        g_object_unref(siunitdeg);
     }
-}
+ }
 
 static void
 gwy_tool_stats_data_changed(GwyPlainTool *plain_tool)
 {
+    
     gwy_rect_selection_labels_fill(GWY_TOOL_STATS(plain_tool)->rlabels,
                                    plain_tool->selection,
                                    plain_tool->data_field,
                                    NULL, NULL);
     gwy_tool_stats_selection_changed(plain_tool, 0);
+
 }
 
 static void
