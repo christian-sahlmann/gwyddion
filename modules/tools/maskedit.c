@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
@@ -169,6 +169,7 @@ gwy_tool_mask_editor_finalize(GObject *object)
     settings = gwy_app_settings_get();
     gwy_container_set_enum_by_name(settings, mode_key,
                                    tool->args.mode);
+    gwy_debug("storing shape: %d", tool->args.shape);
     gwy_container_set_enum_by_name(settings, shape_key,
                                    tool->args.shape);
     gwy_container_set_int32_by_name(settings, gsamount_key,
@@ -206,18 +207,32 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
                                     &tool->args.gsamount);
     gwy_container_gis_boolean_by_name(settings, from_border_key,
                                       &tool->args.from_border);
+    gwy_debug("restored shape: %d", tool->args.shape);
+
+    switch (tool->args.shape) {
+        case MASK_SHAPE_RECTANGLE:
+        gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                         "rectangle");
+        break;
+
+        case MASK_SHAPE_ELLIPSE:
+        gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_ell,
+                                         "ellipse");
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 
     gwy_tool_mask_editor_init_dialog(tool);
-
-    /* This connects selection according to shape */
-    gwy_tool_mask_editor_shape_changed(tool);
 }
 
 static void
 gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
 {
     static struct {
-        MaskEditMode type;
+        guint type;
         const gchar *stock_id;
         const gchar *text;
     }
@@ -343,8 +358,6 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
 
         if (!group)
             group = GTK_RADIO_BUTTON(button);
-        if (shapes[i].type == tool->args.shape)
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     }
     tool->shape = gtk_radio_button_get_group(group);
     gtk_table_set_row_spacing(table, row, 12);
@@ -498,9 +511,12 @@ static void
 gwy_tool_mask_editor_shape_changed(GwyToolMaskEditor *tool)
 {
     GwyPlainTool *plain_tool;
+    MaskEditShape shape;
 
-    tool->args.shape = gwy_radio_buttons_get_current(tool->shape, "shape-type");
-    g_printerr("%d\n", tool->args.shape);
+    shape = gwy_radio_buttons_get_current(tool->shape, "shape-type");
+    if (shape == tool->args.shape)
+        return;
+    tool->args.shape = shape;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     switch (tool->args.shape) {
@@ -649,6 +665,7 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
     isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
     isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
     isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+    gwy_debug("(%d,%d) (%d,%d)", isel[0], isel[1], isel[2], isel[3]);
 
     switch (tool->args.shape) {
         case MASK_SHAPE_RECTANGLE:
