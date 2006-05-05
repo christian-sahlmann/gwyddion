@@ -26,19 +26,20 @@
 G_BEGIN_DECLS
 
 gint gwy_data_field_elliptic_area_fill    (GwyDataField *data_field,
-                                           gint ulcol,
-                                           gint ulrow,
-                                           gint brcol,
-                                           gint brrow,
+                                           gint col,
+                                           gint row,
+                                           gint width,
+                                           gint height,
                                            gdouble value);
 gint gwy_data_field_elliptic_area_extract (GwyDataField *data_field,
-                                           gint ulcol,
-                                           gint ulrow,
-                                           gint brcol,
-                                           gint brrow,
+                                           gint col,
+                                           gint row,
+                                           gint width,
+                                           gint height,
                                            gdouble *data);
 gint gwy_data_field_get_elliptic_area_size(gint width,
                                            gint height);
+
 gint gwy_data_field_circular_area_fill    (GwyDataField *data_field,
                                            gint col,
                                            gint row,

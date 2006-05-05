@@ -28,10 +28,10 @@
 /**
  * gwy_data_field_elliptic_area_fill:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left bounding box column coordinate.
+ * @row: Upper-left bounding box row coordinate.
+ * @width: Bounding box width (number of columns).
+ * @height: Bounding box height (number of rows).
  * @value: Value to be entered.
  *
  * Fills an elliptic region of a data field with given value.
@@ -43,41 +43,36 @@
  **/
 gint
 gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
-                                  gint ulcol, gint ulrow,
-                                  gint brcol, gint brrow,
+                                  gint col, gint row,
+                                  gint width, gint height,
                                   gdouble value)
 {
     gint i, j, xres, count;
-    gdouble x, y, a, b, a2, b2;
+    gdouble x, y, a, b, a2, b2, s;
     gdouble *d;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
-
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= data_field->xres
-                         && brrow <= data_field->yres,
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
                          0);
 
-    a = (brcol - ulcol)/2.0;
+    a = width/2.0;
     a2 = a*a;
-    b = (brrow - ulrow)/2.0;
+    b = height/2.0;
     b2 = b*b;
     xres = data_field->xres;
-    d = data_field->data;
     count = 0;
 
-    for (i = 0; i < brcol - ulcol; i++) {
-        for (j = 0; j < brrow - ulrow; j++) {
-            x = (gdouble)i - a;
-            y = (gdouble)j - b;
-
-            if (x*x/a2 + y*y/b2 <= 1.0) {
-                d[(j + ulrow)*xres + ulcol + i] = value;
+    for (i = 0; i < height; i++) {
+        d = data_field->data + (row + i)*xres + col;
+        y = i - b;
+        s = a2*(1.0 - y*y/b2);
+        for (j = 0; j < width; j++) {
+            x = j - a;
+            if (x*x <= s) {
+                d[j] = value;
                 count++;
             }
         }
@@ -91,10 +86,10 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
 /**
  * gwy_data_field_elliptic_area_extract:
  * @data_field: A data field.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
+ * @col: Upper-left bounding box column coordinate.
+ * @row: Upper-left bounding box row coordinate.
+ * @width: Bounding box width (number of columns).
+ * @height: Bounding box height (number of rows).
  * @data: Location to store the extracted values to.  Its size has to be
  *        sufficient to contain all the extracted values.  As a conservative
  *        estimate (@brcol-@ulcol+1)(@brrow-@ulrow+1) can be used, or the
@@ -109,42 +104,37 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
  **/
 gint
 gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
-                                     gint ulcol, gint ulrow,
-                                     gint brcol, gint brrow,
+                                     gint col, gint row,
+                                     gint width, gint height,
                                      gdouble *data)
 {
     gint i, j, xres, count;
-    gdouble x, y, a, b, a2, b2;
+    gdouble x, y, a, b, a2, b2, s;
     const gdouble *d;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
-    g_return_val_if_fail(data, 0);
-
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= data_field->xres
-                         && brrow <= data_field->yres,
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
                          0);
 
-    a = (brcol - ulcol)/2.0;
+    a = width/2.0;
     a2 = a*a;
-    b = (brrow - ulrow)/2.0;
+    b = height/2.0;
     b2 = b*b;
     xres = data_field->xres;
     d = data_field->data;
     count = 0;
 
-    for (i = 0; i < brcol - ulcol; i++) {
-        for (j = 0; j < brrow - ulrow; j++) {
-            x = (gdouble)i - a;
-            y = (gdouble)j - b;
-
-            if (x*x/a2 + y*y/b2 <= 1.0) {
-                data[count] = d[(j + ulrow)*xres + ulcol + i];
+    for (i = 0; i < height; i++) {
+        d = data_field->data + (row + i)*xres + col;
+        y = i - b;
+        s = a2*(1.0 - y*y/b2);
+        for (j = 0; j < width; j++) {
+            x = j - a;
+            if (x*x <= s) {
+                data[count] = d[j];
                 count++;
             }
         }
@@ -168,7 +158,7 @@ gwy_data_field_get_elliptic_area_size(gint width,
                                       gint height)
 {
     gint i, j, count;
-    gdouble x, y, a, b, a2, b2;
+    gdouble x, y, a, b, a2, b2, s;
 
     if (width <= 0 || height <= 0)
         return 0;
@@ -179,12 +169,12 @@ gwy_data_field_get_elliptic_area_size(gint width,
     b2 = b*b;
     count = 0;
 
-    for (i = 0; i < width; i++) {
-        for (j = 0; j < height; j++) {
-            x = (gdouble)i - a;
-            y = (gdouble)j - b;
-
-            if (x*x/a2 + y*y/b2 <= 1.0)
+    for (i = 0; i < height; i++) {
+        y = i - b;
+        s = a2*(1.0 - y*y/b2);
+        for (j = 0; j < width; j++) {
+            x = j - a;
+            if (x*x <= s)
                 count++;
         }
     }

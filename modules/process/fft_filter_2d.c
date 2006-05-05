@@ -1571,10 +1571,12 @@ fft_filter_2d(GwyDataField *input, GwyDataField *output_image,
             marker_b.bottom = marker_b.y_center + marker_b.radius;
 
             gwy_data_field_elliptic_area_fill(mask, marker_a.left, marker_a.top,
-                                              marker_a.right, marker_a.bottom,
+                                              marker_a.right - marker_a.left,
+                                              marker_a.bottom - marker_a.top,
                                               fill_bit);
             gwy_data_field_elliptic_area_fill(mask, marker_b.left, marker_b.top,
-                                              marker_b.right, marker_b.bottom,
+                                              marker_a.right - marker_a.left,
+                                              marker_a.bottom - marker_a.top,
                                               fill_bit);
         } else {
             marker_a.left = marker->left;
