@@ -298,7 +298,7 @@ gwy_app_toolbox_create(void)
         "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
         "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
         "GwyToolProfile", "GwyToolGrainRemover", "GwyToolRemoveSpot",
-        "GwyToolColorRange", "GwyToolMaskEdit",
+        "GwyToolColorRange", "GwyToolMaskEditor",
     };
     GwyMenuSensFlags sens;
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
