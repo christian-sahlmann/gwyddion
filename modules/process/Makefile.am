@@ -29,7 +29,6 @@ process_LTLIBRARIES = \
 	level.la \
 	linecorrect.la \
 	local_contrast.la \
-	mask_grow_shrink.la \
 	maskops.la \
 	median-bg.la \
 	outliers.la \
@@ -173,9 +172,6 @@ linecorrect_la_LIBADD = $(module_libadd)
 
 local_contrast_la_SOURCES = local_contrast.c
 local_contrast_la_LIBADD = $(module_libadd)
-
-mask_grow_shrink_la_SOURCES = mask_grow_shrink.c
-mask_grow_shrink_la_LIBADD = $(module_libadd)
 
 #maskcor_la_SOURCES = maskcor.c
 #maskcor_la_LIBADD = $(module_libadd)
