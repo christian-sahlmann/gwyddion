@@ -91,6 +91,7 @@ gwy_app_quit(void)
         return TRUE;
 
     gwy_app_data_browser_shut_down();
+    gwy_object_unref(current_tool);
 
     gtk_main_quit();
     return TRUE;
