@@ -2013,118 +2013,80 @@ gwy_data_field_set_column(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_get_data_line:
+ * gwy_data_field_get_profile:
  * @data_field: A data field.
- * @data_line: A data line.  It will be resized to @res samples.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
- * @res: Requested resolution of data line.  If nonpositive, data line
- *       resolution is chosen to match @data_field's.
- * @interpolation: Interpolation type to use.
- *
- * Extracts a profile from a data field to a data line.
- **/
-void
-gwy_data_field_get_data_line(GwyDataField *data_field,
-                             GwyDataLine* data_line,
-                             gint ulcol, gint ulrow,
-                             gint brcol, gint brrow,
-                             gint res,
-                             GwyInterpolationType interpolation)
-{
-    gint k;
-    gdouble cosa, sina, size;
-
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol >= 0 && brrow >= 0
-                     && ulrow <= data_field->yres && ulcol <= data_field->xres
-                     && brrow <= data_field->yres && brcol <= data_field->xres);
-
-    size = hypot(ulcol - brcol, ulrow - brrow);
-    if (res <= 0)
-        res = ROUND(size);
-
-    cosa = (brcol - ulcol)/(res - 1.0);
-    sina = (brrow - ulrow)/(res - 1.0);
-
-    gwy_data_line_resample(data_line, res, GWY_INTERPOLATION_NONE);
-    for (k = 0; k < res; k++)
-        data_line->data[k] = gwy_data_field_get_dval(data_field,
-                                                     ulcol + 0.5 + k*cosa,
-                                                     ulrow + 0.5 + k*sina,
-                                                     interpolation);
-
-    data_line->real = size*data_field->xreal/data_field->xres;
-    gwy_data_field_copy_units_to_data_line(data_field, data_line);
-}
-
-/**
- * gwy_data_field_get_data_line_averaged:
- * @data_field: A data field.
- * @data_line: A data line.  It will be resized to @res samples.
- * @ulcol: Upper-left column coordinate.
- * @ulrow: Upper-left row coordinate.
- * @brcol: Bottom-right column coordinate + 1.
- * @brrow: Bottom-right row coordinate + 1.
- * @res: Requested resolution of data line.  If nonpositive, data line
- *       resolution is chosen to match @data_field's.
+ * @data_line: A data line.  It will be resized to @res samples.  It is
+ *             possible to pass %NULL to instantiate and return a new
+ *             #GwyDataLine.
+ * @scol: The column the line starts at (inclusive).
+ * @srow: The row the line starts at (inclusive).
+ * @ecol: The column the line ends at (inclusive).
+ * @erow: The row the line ends at (inclusive).
+ * @res: Requested resolution of data line (the number of samples to take).
+ *       If nonpositive, data line resolution is chosen to match @data_field's.
  * @thickness: Thickness of line to be averaged.
  * @interpolation: Interpolation type to use.
  *
- * Extracts an averaged profile from data field to a data line.
+ * Extracts a possibly averaged profile from data field to a data line.
+ *
+ * Returns: @data_line itself if it was not %NULL, otherwise a newly created
+ *          data line.
  **/
-void
-gwy_data_field_get_data_line_averaged(GwyDataField *data_field,
-                                      GwyDataLine* data_line,
-                                      gint ulcol, gint ulrow,
-                                      gint brcol, gint brrow,
-                                      gint res, gint thickness,
-                                      GwyInterpolationType interpolation)
+GwyDataLine*
+gwy_data_field_get_profile(GwyDataField *data_field,
+                           GwyDataLine *data_line,
+                           gint scol, gint srow,
+                           gint ecol, gint erow,
+                           gint res,
+                           gint thickness,
+                           GwyInterpolationType interpolation)
 {
     gint k, j;
     gdouble cosa, sina, size, mid, sum;
     gdouble col, row, srcol, srrow;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol >= 0 && brrow >= 0
-                     && ulrow <= data_field->yres && ulcol <= data_field->xres
-                     && brrow <= data_field->yres && brcol <= data_field->xres);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(!data_line || GWY_IS_DATA_LINE(data_line), NULL);
+    g_return_val_if_fail(scol >= 0 && srow >= 0
+                         && ecol >= 0 && erow >= 0
+                         && srow < data_field->yres && scol < data_field->xres
+                         && erow < data_field->yres && ecol < data_field->xres,
+                         NULL);
 
-    size = hypot(ulcol - brcol, ulrow - brrow);
+    size = hypot(scol - ecol, srow - erow);
+    size = MAX(size, 1.0);
     if (res <= 0)
         res = ROUND(size);
 
-    cosa = (brcol - ulcol)/(res - 1.0);
-    sina = (brrow - ulrow)/(res - 1.0);
+    cosa = (ecol - scol)/(res - 1.0);
+    sina = (erow - srow)/(res - 1.0);
 
     /*extract regular one-pixel line*/
-    gwy_data_line_resample(data_line, res, GWY_INTERPOLATION_NONE);
+    if (data_line)
+        gwy_data_line_resample(data_line, res, GWY_INTERPOLATION_NONE);
+    else
+        data_line = gwy_data_line_new(res, 1.0, FALSE);
+
     for (k = 0; k < res; k++)
         data_line->data[k] = gwy_data_field_get_dval(data_field,
-                                                     ulcol + 0.5 + k*cosa,
-                                                     ulrow + 0.5 + k*sina,
+                                                     scol + 0.5 + k*cosa,
+                                                     srow + 0.5 + k*sina,
                                                      interpolation);
-    data_line->real = size*data_field->xreal/data_field->xres;
+    data_line->real = size * data_field->xreal/data_field->xres;
     gwy_data_field_copy_units_to_data_line(data_field, data_line);
 
     if (thickness <= 1)
-        return;
+        return data_line;
 
     /*add neighbour values to the line*/
     for (k = 0; k < res; k++) {
         mid = data_line->data[k];
         sum = 0;
         for (j = -thickness/2; j < thickness - thickness/2; j++) {
-            srcol = ulcol + 0.5 + k*cosa;
-            srrow = ulrow + 0.5 + k*sina;
-            col = (srcol + j*sina);
-            row = (srrow + j*cosa);
+            srcol = scol + 0.5 + k*cosa;
+            srrow = srow + 0.5 + k*sina;
+            col = srcol + j*sina;
+            row = srrow + j*cosa;
             if (col >= 0 && col < (data_field->xres-1)
                 && row >= 0 && row < (data_field->yres-1)) {
                 sum += gwy_data_field_get_dval(data_field,
@@ -2136,6 +2098,8 @@ gwy_data_field_get_data_line_averaged(GwyDataField *data_field,
         }
         data_line->data[k] = sum/(gdouble)thickness;
     }
+
+    return data_line;
 }
 
 /**
