@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <gdk/gdkkeysyms.h>
@@ -48,6 +48,7 @@ typedef struct {
 
 typedef gboolean (*ActionCheckFunc)(gconstpointer);
 
+static GArray*    enumerate_tools               (const gchar **default_tools);
 static GtkWidget* gwy_app_menu_create_meta_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu (GtkAccelGroup *accel_group);
@@ -298,7 +299,7 @@ gwy_app_toolbox_create(void)
         "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
         "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
         "GwyToolProfile", "GwyToolGrainRemover", "GwyToolRemoveSpot",
-        "GwyToolColorRange", "GwyToolMaskEditor",
+        "GwyToolColorRange", "GwyToolMaskEditor", NULL
     };
     GwyMenuSensFlags sens;
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
@@ -306,6 +307,7 @@ gwy_app_toolbox_create(void)
     GtkTooltips *tooltips;
     GtkAccelGroup *accel_group;
     Action action;
+    GArray *tools;
     GList *list;
     GSList *toolbars = NULL, *l;
     const gchar *first_tool = NULL;
@@ -416,47 +418,37 @@ gwy_app_toolbox_create(void)
     label = gwy_app_toolbox_create_label(_("Tools"), "tool", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    toolbar = gtk_table_new(4, 4, TRUE);
+    tools = enumerate_tools(tool_actions);
+
+    toolbar = gtk_table_new((tools->len + 3)/4, 4, TRUE);
     toolbars = g_slist_append(toolbars, toolbar);
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     action.callback = G_CALLBACK(gwy_app_tool_use_cb);
     group = NULL;
-    for (j = i = 0; i < G_N_ELEMENTS(tool_actions); i++) {
-        GType type;
+    for (i = 0; i < tools->len; i++) {
         GwyToolClass *tool_class;
 
-        type = g_type_from_name(tool_actions[i]);
-        if (!type)
-            continue;
-        tool_class = g_type_class_peek(type);
-        if (!tool_class)
-            continue;
-
-        if (!GWY_IS_TOOL_CLASS(tool_class)) {
-            g_warning("Tool class is not GwyToolClass");
-            continue;
-        }
-
+        tool_class = g_type_class_peek(g_array_index(tools, GType, i));
         action.stock_id = gwy_tool_class_get_stock_id(tool_class);
         action.tooltip = gwy_tool_class_get_tooltip(tool_class);
-        action.cbdata = tool_actions[i];
-        button = add_rbutton(toolbar, j, &action, group, NULL, tooltips);
-        if (!button)
-            continue;
+        action.cbdata = g_type_name(g_array_index(tools, GType, i));
+        button = add_rbutton(toolbar, i, &action, group, NULL, tooltips);
         if (!group) {
             group = GTK_RADIO_BUTTON(button);
             first_tool = tool_actions[i];
         }
-        j++;
     }
+    g_array_free(tools, TRUE);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     list = gtk_container_get_children(GTK_CONTAINER(toolbar));
-    gwy_app_tool_use_cb(first_tool, NULL);
-    gwy_app_tool_use_cb(first_tool, list ? GTK_WIDGET(list->data) : NULL);
+    if (first_tool) {
+        gwy_app_tool_use_cb(first_tool, NULL);
+        gwy_app_tool_use_cb(first_tool, list ? GTK_WIDGET(list->data) : NULL);
+    }
     g_list_free(list);
 
     /***************************************************************/
@@ -484,6 +476,58 @@ gwy_app_toolbox_create(void)
         gtk_main_iteration_do(FALSE);
 
     return toolbox;
+}
+
+static void
+add_tool(const gchar *typename,
+         GArray *tools)
+{
+    GType type;
+    GwyToolClass *tool_class;
+    guint i;
+
+    gwy_debug("typename: <%s>", typename);
+
+    type = g_type_from_name(typename);
+    if (!type || !G_TYPE_IS_INSTANTIATABLE(type))
+        return;
+    gwy_debug("%lu", (gulong)type);
+    tool_class = g_type_class_peek(type);
+    if (!tool_class)
+        return;
+
+    gwy_debug("%p", tool_class);
+    if (!GWY_IS_TOOL_CLASS(tool_class)) {
+        g_warning("Tool %s is not a subclass of GwyTool",
+                  g_type_name(type));
+        return;
+    }
+
+    /* Filter out already added tools (from defaults).
+     * FIXME: This is makes the tool enumeration O(n^2).  But there should
+     * not be more than a handful of tools. */
+    for (i = 0; i < tools->len; i++) {
+        if (g_array_index(tools, GType, i) == type)
+            return;
+    }
+
+    g_array_append_val(tools, type);
+}
+
+static GArray*
+enumerate_tools(const gchar **default_tools)
+{
+    GArray *tools;
+    guint i;
+
+    tools = g_array_new(TRUE, FALSE, sizeof(GType));
+
+    for (i = 0; default_tools[i]; i++)
+        add_tool(default_tools[i], tools);
+
+    gwy_tool_func_foreach((GFunc)&add_tool, tools);
+
+    return tools;
 }
 
 /*************************************************************************/
