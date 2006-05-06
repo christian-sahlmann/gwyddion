@@ -21,7 +21,7 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 

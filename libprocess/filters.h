@@ -29,6 +29,28 @@ void gwy_data_field_normalize                  (GwyDataField *data_field);
 void gwy_data_field_renormalize                (GwyDataField *data_field,
                                                 gdouble range,
                                                 gdouble offset);
+gint     gwy_data_field_threshold          (GwyDataField *data_field,
+                                            gdouble threshval,
+                                            gdouble bottom,
+                                            gdouble top);
+gint     gwy_data_field_area_threshold     (GwyDataField *data_field,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            gdouble threshval,
+                                            gdouble bottom,
+                                            gdouble top);
+gint     gwy_data_field_clamp              (GwyDataField *data_field,
+                                            gdouble bottom,
+                                            gdouble top);
+gint     gwy_data_field_area_clamp         (GwyDataField *data_field,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            gdouble bottom,
+                                            gdouble top);
 void gwy_data_field_convolve                   (GwyDataField *data_field,
                                                 GwyDataField *kernel_field);
 void gwy_data_field_area_convolve              (GwyDataField *data_field,

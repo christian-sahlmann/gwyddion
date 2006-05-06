@@ -24,6 +24,7 @@
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/stats.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>

@@ -199,28 +199,6 @@ void     gwy_data_field_area_add           (GwyDataField *data_field,
                                             gint width,
                                             gint height,
                                             gdouble value);
-gint     gwy_data_field_threshold          (GwyDataField *data_field,
-                                            gdouble threshval,
-                                            gdouble bottom,
-                                            gdouble top);
-gint     gwy_data_field_area_threshold     (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gint width,
-                                            gint height,
-                                            gdouble threshval,
-                                            gdouble bottom,
-                                            gdouble top);
-gint     gwy_data_field_clamp              (GwyDataField *data_field,
-                                            gdouble bottom,
-                                            gdouble top);
-gint     gwy_data_field_area_clamp         (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gint width,
-                                            gint height,
-                                            gdouble bottom,
-                                            gdouble top);
 void     gwy_data_field_get_data_line      (GwyDataField *data_field,
                                             GwyDataLine* data_line,
                                             gint ulcol,
