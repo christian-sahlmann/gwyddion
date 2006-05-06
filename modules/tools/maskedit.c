@@ -17,8 +17,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/elliptic.h>
@@ -169,7 +170,6 @@ gwy_tool_mask_editor_finalize(GObject *object)
     settings = gwy_app_settings_get();
     gwy_container_set_enum_by_name(settings, mode_key,
                                    tool->args.mode);
-    gwy_debug("storing shape: %d", tool->args.shape);
     gwy_container_set_enum_by_name(settings, shape_key,
                                    tool->args.shape);
     gwy_container_set_int32_by_name(settings, gsamount_key,
@@ -207,7 +207,6 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
                                     &tool->args.gsamount);
     gwy_container_gis_boolean_by_name(settings, from_border_key,
                                       &tool->args.from_border);
-    gwy_debug("restored shape: %d", tool->args.shape);
 
     switch (tool->args.shape) {
         case MASK_SHAPE_RECTANGLE:
@@ -360,6 +359,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
             group = GTK_RADIO_BUTTON(button);
     }
     tool->shape = gtk_radio_button_get_group(group);
+    gwy_radio_buttons_set_current(tool->shape, "shape-type", tool->args.shape);
     gtk_table_set_row_spacing(table, row, 12);
     row++;
 
@@ -494,8 +494,11 @@ gwy_tool_mask_editor_mask_changed(GwyPlainTool *plain_tool)
 
     tool = GWY_TOOL_MASK_EDITOR(plain_tool);
     if (plain_tool->mask_field) {
-        if (gwy_data_field_get_max(plain_tool->mask_field) > 0)
+        gwy_debug("mask field exists");
+        if (gwy_data_field_get_max(plain_tool->mask_field) > 0) {
+            gwy_debug("mask field is nonempty");
             state = SENS_MASK;
+        }
     }
 
     gwy_sensitivity_group_set_state(tool->sensgroup, SENS_MASK, state);
@@ -616,6 +619,10 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
 {
     GwyPlainTool *plain_tool;
     GQuark quark;
+    gdouble *data, *buffer, *prow;
+    gdouble min, q1, q2;
+    gint xres, yres, rowstride;
+    gint i, j, iter;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->mask_field);
@@ -623,7 +630,51 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
 
-    g_warning("Implement me!");
+    xres = gwy_data_field_get_xres(plain_tool->mask_field);
+    yres = gwy_data_field_get_yres(plain_tool->mask_field);
+    data = gwy_data_field_get_data(plain_tool->mask_field);
+
+    buffer = g_new(gdouble, xres);
+    prow = g_new(gdouble, xres);
+    for (iter = 0; iter < tool->args.gsamount; iter++) {
+        rowstride = xres;
+        min = G_MAXDOUBLE;
+        for (j = 0; j < xres; j++)
+            prow[j] = -G_MAXDOUBLE;
+        memcpy(buffer, data, xres*sizeof(gdouble));
+        for (i = 0; i < yres; i++) {
+            gdouble *row = data + i*xres;
+
+            if (i == yres-1)
+                rowstride = 0;
+
+            j = 0;
+            q2 = MAX(buffer[j], buffer[j+1]);
+            q1 = MAX(prow[j], row[j+rowstride]);
+            row[j] = MAX(q1, q2);
+            min = MIN(min, row[j]);
+            for (j = 1; j < xres-1; j++) {
+                q1 = MAX(prow[j], buffer[j-1]);
+                q2 = MAX(buffer[j], buffer[j+1]);
+                q2 = MAX(q2, row[j+rowstride]);
+                row[j] = MAX(q1, q2);
+                min = MIN(min, row[j]);
+            }
+            j = xres-1;
+            q2 = MAX(buffer[j-1], buffer[j]);
+            q1 = MAX(prow[j], row[j+rowstride]);
+            row[j] = MAX(q1, q2);
+            min = MIN(min, row[j]);
+
+            GWY_SWAP(gdouble*, prow, buffer);
+            if (i < yres-1)
+                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
+        }
+        if (min >= 1.0)
+            break;
+    }
+    g_free(buffer);
+    g_free(prow);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
 }
@@ -633,6 +684,10 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
 {
     GwyPlainTool *plain_tool;
     GQuark quark;
+    gdouble *data, *buffer, *prow;
+    gdouble q1, q2, max;
+    gint xres, yres, rowstride;
+    gint i, j, iter;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->mask_field);
@@ -640,7 +695,65 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
 
-    g_warning("Implement me!");
+    xres = gwy_data_field_get_xres(plain_tool->mask_field);
+    yres = gwy_data_field_get_yres(plain_tool->mask_field);
+    data = gwy_data_field_get_data(plain_tool->mask_field);
+
+    buffer = g_new(gdouble, xres);
+    prow = g_new(gdouble, xres);
+    for (iter = 0; iter < tool->args.gsamount; iter++) {
+        rowstride = xres;
+        max = -G_MAXDOUBLE;
+        for (j = 0; j < xres; j++)
+            prow[j] = G_MAXDOUBLE;
+        memcpy(buffer, data, xres*sizeof(gdouble));
+        for (i = 0; i < yres; i++) {
+            gdouble *row = data + i*xres;
+
+            if (i == yres-1)
+                rowstride = 0;
+
+            j = 0;
+            q2 = MIN(buffer[j], buffer[j+1]);
+            q1 = MIN(prow[j], row[j+rowstride]);
+            row[j] = MIN(q1, q2);
+            max = MAX(max, row[j]);
+            for (j = 1; j < xres-1; j++) {
+                q1 = MIN(prow[j], buffer[j-1]);
+                q2 = MIN(buffer[j], buffer[j+1]);
+                q2 = MIN(q2, row[j+rowstride]);
+                row[j] = MIN(q1, q2);
+                max = MAX(max, row[j]);
+            }
+            j = xres-1;
+            q2 = MIN(buffer[j-1], buffer[j]);
+            q1 = MIN(prow[j], row[j+rowstride]);
+            row[j] = MIN(q1, q2);
+            max = MAX(max, row[j]);
+
+            GWY_SWAP(gdouble*, prow, buffer);
+            if (i < yres-1)
+                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
+        }
+
+        /* To shrink from borders we only have to clear boundary pixels in
+         * the first iteration, then it goes on itself */
+        if (iter == 0 && tool->args.from_border) {
+            gwy_data_field_area_clear(plain_tool->mask_field,
+                                      0, 0, xres, 1);
+            gwy_data_field_area_clear(plain_tool->mask_field,
+                                      0, 0, 1, yres);
+            gwy_data_field_area_clear(plain_tool->mask_field,
+                                      xres-1, 0, 1, yres);
+            gwy_data_field_area_clear(plain_tool->mask_field,
+                                      0, yres-1, xres, 1);
+        }
+
+        if (max <= 0.0)
+            break;
+    }
+    g_free(buffer);
+    g_free(prow);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
 }
