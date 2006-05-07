@@ -780,6 +780,8 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
     isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
     isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
     gwy_debug("(%d,%d) (%d,%d)", isel[0], isel[1], isel[2], isel[3]);
+    isel[2] -= isel[0];
+    isel[3] -= isel[1];
 
     switch (tool->args.shape) {
         case MASK_SHAPE_RECTANGLE:
@@ -801,29 +803,20 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
         gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
         mfield = gwy_tool_mask_editor_maybe_add_mask(plain_tool, quark);
         gwy_data_field_clear(mfield);
-        fill_func(mfield,
-                  isel[0], isel[1],
-                  isel[2] - isel[0], isel[3] - isel[1],
-                  1.0);
+        fill_func(mfield, isel[0], isel[1], isel[2], isel[3], 1.0);
         break;
 
         case MASK_EDIT_ADD:
         gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
         mfield = gwy_tool_mask_editor_maybe_add_mask(plain_tool, quark);
-        fill_func(mfield,
-                  isel[0], isel[1],
-                  isel[2] - isel[0], isel[3] - isel[1],
-                  1.0);
+        fill_func(mfield, isel[0], isel[1], isel[2], isel[3], 1.0);
         break;
 
         case MASK_EDIT_REMOVE:
         if (plain_tool->mask_field) {
             gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
             mfield = plain_tool->mask_field;
-            fill_func(mfield,
-                      isel[0], isel[1],
-                      isel[2] - isel[0], isel[3] - isel[1],
-                      0.0);
+            fill_func(mfield, isel[0], isel[1], isel[2], isel[3], 0.0);
             if (!gwy_data_field_get_max(mfield) > 0.0) {
                 gwy_container_remove(plain_tool->container, quark);
                 mfield = NULL;
@@ -836,11 +829,29 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
             gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
             mfield = plain_tool->mask_field;
             gwy_data_field_clamp(mfield, 0.0, 1.0);
-            /* TODO for elliptic */
-            gwy_data_field_area_add(mfield,
-                                    isel[0], isel[1],
-                                    isel[2] - isel[0], isel[3] - isel[1],
-                                    1.0);
+            if (tool->args.shape == MASK_SHAPE_ELLIPSE) {
+                gdouble *data;
+                gint n;
+
+                n = gwy_data_field_get_elliptic_area_size(isel[2], isel[3]);
+                data = g_new(gdouble, n);
+                gwy_data_field_elliptic_area_extract(mfield,
+                                                     isel[0], isel[1],
+                                                     isel[2], isel[3],
+                                                     data);
+                while (n)
+                    data[--n] += 1.0;
+                gwy_data_field_elliptic_area_unextract(mfield,
+                                                       isel[0], isel[1],
+                                                       isel[2], isel[3],
+                                                       data);
+                g_free(data);
+            }
+            else {
+                gwy_data_field_area_add(mfield,
+                                        isel[0], isel[1], isel[2], isel[3],
+                                        1.0);
+            }
             gwy_data_field_add(mfield, -1.0);
             gwy_data_field_clamp(mfield, 0.0, 1.0);
             if (!gwy_data_field_get_max(mfield) > 0.0) {
