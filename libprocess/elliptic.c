@@ -18,6 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* TODO: we can calculate inner cycle boundaries explicitly and in addition
+ * to saving calculations we can use plain memcpy() to copy data. */
+
 #define GWY_DATA_FIELD_RAW_ACCESS
 #include "config.h"
 
@@ -92,7 +95,7 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
  * @height: Bounding box height (number of rows).
  * @data: Location to store the extracted values to.  Its size has to be
  *        sufficient to contain all the extracted values.  As a conservative
- *        estimate (@brcol-@ulcol+1)(@brrow-@ulrow+1) can be used, or the
+ *        estimate @width*@height can be used, or the
  *        size can be calculated with gwy_data_field_get_elliptic_area_size().
  *
  * Extracts values from an elliptic region of a data field.
@@ -141,6 +144,64 @@ gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
     }
 
     return count;
+}
+
+/**
+ * gwy_data_field_elliptic_area_unextract:
+ * @data_field: A data field.
+ * @col: Upper-left bounding box column coordinate.
+ * @row: Upper-left bounding box row coordinate.
+ * @width: Bounding box width (number of columns).
+ * @height: Bounding box height (number of rows).
+ * @data: The values to put back.  It must be the same array as in previous
+ *        gwy_data_field_elliptic_area_extract().
+ *
+ * Puts values back to an elliptic region of a data field.
+ *
+ * The elliptic region is defined by its bounding box which must be completely
+ * contained in the data field.
+ *
+ * This method does the reverse of gwy_data_field_elliptic_area_extract()
+ * allowing to implement pixel-wise filters on elliptic areas.  Values from
+ * @data are put back to the same positions
+ * gwy_data_field_elliptic_area_extract() took them from.
+ **/
+void
+gwy_data_field_elliptic_area_unextract(GwyDataField *data_field,
+                                       gint col, gint row,
+                                       gint width, gint height,
+                                       const gdouble *data)
+{
+    gint i, j, xres, count;
+    gdouble x, y, a, b, a2, b2, s;
+    gdouble *d;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    a = width/2.0;
+    a2 = a*a;
+    b = height/2.0;
+    b2 = b*b;
+    xres = data_field->xres;
+    d = data_field->data;
+    count = 0;
+
+    for (i = 0; i < height; i++) {
+        d = data_field->data + (row + i)*xres + col;
+        y = i - b;
+        s = a2*(1.0 - y*y/b2);
+        for (j = 0; j < width; j++) {
+            x = j - a;
+            if (x*x <= s) {
+                d[j] = data[count];
+                count++;
+            }
+        }
+    }
 }
 
 /**
@@ -244,13 +305,13 @@ gwy_data_field_circular_area_fill(GwyDataField *data_field,
  * @radius: Circular area radius (in pixels).  Any value is allowed, although
  *          to get areas that do not deviate from true circles after
  *          pixelization too much, half-integer values are recommended,
- *          integer values are NOT recommended.
+ *          integer radii are NOT recommended.
  * @data: Location to store the extracted values to.  Its size has to be
  *        sufficient to contain all the extracted values.  As a conservative
  *        estimate (2*floor(@radius)+1)^2 can be used, or the size can be
  *        calculated with gwy_data_field_get_circular_area_size().
  *
- * Extracts values from an elliptic region of a data field.
+ * Extracts values from a circular region of a data field.
  *
  * Returns: The number of extracted values.  It can be zero when the inside of
  *          the circle does not intersect with the data field.
@@ -296,6 +357,60 @@ gwy_data_field_circular_area_extract(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_circular_area_unextract:
+ * @data_field: A data field.
+ * @col: Row index of circular area center.
+ * @row: Column index of circular area center.
+ * @radius: Circular area radius (in pixels).
+ * @data: The values to put back.  It must be the same array as in previous
+ *        gwy_data_field_circular_area_unextract().
+ *
+ * Puts values back to a circular region of a data field.
+ *
+ * This method does the reverse of gwy_data_field_circular_area_extract()
+ * allowing to implement pixel-wise filters on circular areas.  Values from
+ * @data are put back to the same positions
+ * gwy_data_field_circular_area_extract() took them from.
+ **/
+void
+gwy_data_field_circular_area_unextract(GwyDataField *data_field,
+                                       gint col, gint row,
+                                       gdouble radius,
+                                       const gdouble *data)
+{
+    gint i, j, r, r2, count, xres;
+    gint ifrom, jfrom, ito, jto;
+    gdouble *d;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(data);
+
+    if (radius < 0.0)
+        return;
+
+    r2 = floor(radius*radius + 1e-12);
+    r = floor(radius + 1e-12);
+    xres = data_field->xres;
+    d = data_field->data;
+    count = 0;
+
+    /* Clip */
+    ifrom = MAX(row - r, 0) - row;
+    jfrom = MAX(col - r, 0) - col;
+    ito = MIN(row + r, data_field->yres-1) - row;
+    jto = MIN(col + r, data_field->xres-1) - col;
+
+    for (i = ifrom; i <= ito; i++) {
+        for (j = jfrom; j <= jto; j++) {
+            if (i*i + j*j <= r2) {
+                d[(row + i)*xres + col + j] = data[count];
+                count++;
+            }
+        }
+    }
+}
+
+/**
  * gwy_data_field_get_circular_area_size:
  * @radius: Circular area radius (in pixels).
  *
@@ -332,6 +447,45 @@ gwy_data_field_get_circular_area_size(gdouble radius)
  * SECTION:elliptic
  * @title: elliptic
  * @short_description: Functions to work with elliptic areas
+ *
+ * Method for extraction and putting back data from/to elliptic and circular
+ * areas can be used to implement sample-wise operations, that is operations
+ * that depend only on sample value not on its position, on these areas:
+ * <informalexample><programlisting>
+ * gdouble *data;
+ * gint n, i;
+ * <!-- Hello, gtk-doc! -->
+ * data = g_new(gdouble, width*height);
+ * n = gwy_data_field_elliptic_area_extract(data_field,
+ *                                          col, row, width, height,
+ *                                          data);
+ * for (i = 0; i < n; i++) {
+ *    ... do something with data[i] ...
+ * }
+ * gwy_data_field_elliptic_area_unextract(data_field,
+ *                                        col, row, width, height,
+ *                                        data);
+ * </programlisting></informalexample>
+ *
+ * Another possibility is to use #GwyDataLine methods on the extracted data
+ * (in practice one would use the same data line repeatedly, of course):
+ * <informalexample><programlisting>
+ * GwyDataLine *data_line;
+ * gdouble *data;
+ * gint n;
+ * <!-- Hello, gtk-doc! -->
+ * n = gwy_data_field_get_elliptic_area_size(data_field, width, height);
+ * data_line = gwy_data_line_new(n, 1.0, FALSE);
+ * data = gwy_data_line_get_data(data_line);
+ * gwy_data_field_elliptic_area_extract(data_field,
+ *                                      col, row, width, height,
+ *                                      data);
+ * gwy_data_line_pixelwise_filter(data_line, ...);
+ * gwy_data_field_elliptic_area_unextract(data_field,
+ *                                        col, row, width, height,
+ *                                        data);
+ * g_object_unref(data_line);
+ * </programlisting></informalexample>
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
