@@ -303,7 +303,8 @@ fft_dialog(FFTArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(5, 4, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
@@ -337,8 +338,8 @@ fft_dialog(FFTArgs *args,
                         newsize, newsize);
     controls.preserve = gtk_check_button_new_with_mnemonic(s);
     g_free(s);
-    gtk_table_attach(GTK_TABLE(table), controls.preserve, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.preserve,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
                                  args->preserve);
     if (newsize == oldsize)
@@ -351,8 +352,8 @@ fft_dialog(FFTArgs *args,
     controls.zeromean
         = gtk_check_button_new_with_mnemonic(_("Subtract mean _value "
                                                "beforehand"));
-    gtk_table_attach(GTK_TABLE(table), controls.zeromean, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.zeromean,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.zeromean),
                                  args->zeromean);
     g_signal_connect(controls.zeromean, "toggled",

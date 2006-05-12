@@ -33,8 +33,6 @@
 
 #define DWT_ANISOTROPY_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
 typedef struct {
     GwyInterpolationType interp;
     GwyDWTType wavelet;
@@ -73,7 +71,6 @@ static const DWTAnisotropyArgs dwt_anisotropy_defaults = {
     4
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -84,8 +81,6 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -189,7 +184,8 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(2, 5, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);

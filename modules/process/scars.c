@@ -474,6 +474,9 @@ scars_mark_dialog(ScarsArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(10, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
@@ -512,7 +515,7 @@ scars_mark_dialog(ScarsArgs *args,
     label = gtk_label_new(_("Scars type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     group = gwy_radio_buttons_create(types, G_N_ELEMENTS(types), "type",
@@ -520,7 +523,7 @@ scars_mark_dialog(ScarsArgs *args,
     controls.type = group;
     while (group) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
-                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         g_signal_connect_swapped(group->data, "toggled",
                                  G_CALLBACK(scars_invalidate), &controls);
         group = g_slist_next(group);

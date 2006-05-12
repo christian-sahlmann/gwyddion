@@ -189,7 +189,8 @@ crosscor_window_construct(CrosscorArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(10, 4, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
@@ -212,7 +213,7 @@ crosscor_window_construct(CrosscorArgs *args,
     label = gtk_label_new(_("Search size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls->search_area_x = gtk_adjustment_new(args->search_x,
@@ -232,7 +233,7 @@ crosscor_window_construct(CrosscorArgs *args,
     label = gtk_label_new(_("Window size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls->window_area_x = gtk_adjustment_new(args->window_x,
@@ -260,7 +261,7 @@ crosscor_window_construct(CrosscorArgs *args,
     controls->add_ls_mask = gtk_check_button_new_with_mnemonic
                                 (_("Add _low score results mask"));
     gtk_table_attach(GTK_TABLE(table), controls->add_ls_mask, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask),
                                  args->add_ls_mask);
     g_signal_connect(controls->add_ls_mask, "toggled",

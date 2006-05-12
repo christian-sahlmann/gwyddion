@@ -147,6 +147,8 @@ arithmetic_dialog(ArithmeticArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(4 + WIN_ARGS, 2, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
@@ -154,7 +156,7 @@ arithmetic_dialog(ArithmeticArgs *args)
     label = gtk_label_new(_("Operands:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     for (i = 0; i < WIN_ARGS; i++) {
@@ -163,7 +165,7 @@ arithmetic_dialog(ArithmeticArgs *args)
         gwy_strkill(args->name[i], "_");
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
         omenu = gwy_option_menu_data_window(G_CALLBACK(arithmetic_data_cb),
                                             &controls, NULL,
@@ -171,7 +173,7 @@ arithmetic_dialog(ArithmeticArgs *args)
         menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
         g_object_set_data(G_OBJECT(menu), "index", GUINT_TO_POINTER(i));
         gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
         gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
         controls.win[i] = omenu;
 
@@ -182,13 +184,13 @@ arithmetic_dialog(ArithmeticArgs *args)
     label = gtk_label_new_with_mnemonic(_("_Expression:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.expression = entry = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(entry), args->expression);
     gtk_table_attach(GTK_TABLE(table), entry, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(entry, "changed",
                      G_CALLBACK(arithmetic_expr_cb), &controls);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
@@ -197,7 +199,7 @@ arithmetic_dialog(ArithmeticArgs *args)
     controls.result = label = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     gtk_widget_grab_focus(controls.expression);
     gtk_widget_show_all(dialog);

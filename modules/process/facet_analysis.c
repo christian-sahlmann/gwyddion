@@ -201,14 +201,14 @@ add_angle_label(GtkWidget *table,
 
     gtk_label_set_text(GTK_LABEL(label), name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, *row, *row+1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, *row, *row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(NULL);
     gtk_widget_set_size_request(label, req.width, -1);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, *row, *row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     1, 2, *row, *row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     (*row)++;
 
     return label;
@@ -310,22 +310,25 @@ facets_dialog(FacetsArgs *args,
 
     /* Info table */
     table = gtk_table_new(6, 2, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox2), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Normal</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.theta_label = add_angle_label(table, _("Theta:"), &row);
     controls.phi_label = add_angle_label(table, _("Phi:"), &row);
 
     button = gtk_button_new_with_mnemonic(_("_Find Maximum"));
-    gtk_table_attach(GTK_TABLE(table), button, 0, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), button,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(facet_view_reset_maximum), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -334,14 +337,17 @@ facets_dialog(FacetsArgs *args,
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Mean Normal</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.mtheta_label = add_angle_label(table, _("Theta:"), &row);
     controls.mphi_label = add_angle_label(table, _("Phi:"), &row);
 
     table = gtk_table_new(10, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 4);
     row = 0;
 
@@ -371,8 +377,8 @@ facets_dialog(FacetsArgs *args,
                                 "Angles are not physically meaningful."));
         gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        gtk_table_attach(GTK_TABLE(table), label,
+                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
     }
 

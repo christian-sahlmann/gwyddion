@@ -218,14 +218,16 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     table = gtk_table_new(8, 2, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.interp
@@ -233,31 +235,31 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
                                  G_CALLBACK(interp_changed_cb), args,
                                  args->interp, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interp);
-    gtk_table_attach(GTK_TABLE(table), controls.interp, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.interp,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.out = gwy_enum_combo_box_new(methods, G_N_ELEMENTS(methods),
                                           G_CALLBACK(out_changed_cb), &controls,
                                           args->out, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.out);
-    gtk_table_attach(GTK_TABLE(table), controls.out, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.out,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Fit area</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.from = attach_value_row(table, row, _("From:"), _("minimum"));
@@ -277,8 +279,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Result</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     for (i = 0; i < GWY_FRACTAL_LAST; i++) {
@@ -363,13 +365,13 @@ attach_value_row(GtkWidget *table, gint row,
 
     label = gtk_label_new(description);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(value);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     return label;
 }

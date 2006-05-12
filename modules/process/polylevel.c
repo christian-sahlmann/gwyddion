@@ -309,7 +309,8 @@ poly_level_dialog(PolyLevelArgs *args,
                        FALSE, FALSE, 0);
 
     table = gtk_table_new(2, 2, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 8);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 12);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
@@ -320,7 +321,7 @@ poly_level_dialog(PolyLevelArgs *args,
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.leveled_view), layer);
     gtk_table_attach(GTK_TABLE(table), controls.leveled_view,
-                     0, 1, row, row+1, 0, 0, 2, 2);
+                     0, 1, row, row+1, 0, 0, 0, 0);
 
     controls.bg_view = gwy_data_view_new(controls.data);
     layer = gwy_layer_basic_new();
@@ -328,7 +329,7 @@ poly_level_dialog(PolyLevelArgs *args,
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.bg_view), layer);
     gtk_table_attach(GTK_TABLE(table), controls.bg_view,
-                     1, 2, row, row+1, 0, 0, 2, 2);
+                     1, 2, row, row+1, 0, 0, 0, 0);
 
     g_object_unref(controls.data);
     row++;
@@ -336,16 +337,17 @@ poly_level_dialog(PolyLevelArgs *args,
     label = gtk_label_new(_("Leveled data"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 2, 2);
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 
     label = gtk_label_new(_("Background"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 2, 2);
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
     row++;
 
     table = gtk_table_new(7, 4, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     row = 0;
@@ -357,7 +359,7 @@ poly_level_dialog(PolyLevelArgs *args,
                                    &controls,
                                    args->independent);
     gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.type_group->data),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.col_degree = gtk_adjustment_new(args->col_degree,
@@ -379,7 +381,7 @@ poly_level_dialog(PolyLevelArgs *args,
     controls.same_degree
         = gtk_check_button_new_with_mnemonic(_("_Same degrees"));
     gtk_table_attach(GTK_TABLE(table), controls.same_degree,
-                     0, 4, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.same_degree),
                                  args->same_degree);
     g_signal_connect(controls.same_degree, "toggled",
@@ -389,7 +391,7 @@ poly_level_dialog(PolyLevelArgs *args,
 
     gtk_table_attach(GTK_TABLE(table),
                      GTK_WIDGET(controls.type_group->next->data),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.max_degree = gtk_adjustment_new(args->max_degree,
@@ -405,7 +407,7 @@ poly_level_dialog(PolyLevelArgs *args,
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
     gtk_table_attach(GTK_TABLE(table), controls.do_extract,
-                     0, 4, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_extract),
                                  args->do_extract);
     row++;

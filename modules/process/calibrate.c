@@ -256,8 +256,9 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     table = gtk_table_new(12, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     row = 0;
 
@@ -266,20 +267,20 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>New Real Dimensions</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_X range:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.xreal = gtk_adjustment_new(args->xreal/pow10(args->xyexponent),
                                         0.01, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xreal), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
     unit = gwy_data_field_get_si_unit_xy(dfield);
@@ -289,52 +290,52 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                                         args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Y range:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.yreal = gtk_adjustment_new(args->yreal/pow10(args->xyexponent),
                                         0.01, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yreal), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.square
         = gtk_check_button_new_with_mnemonic(_("_Square samples"));
     gtk_table_attach(GTK_TABLE(table), controls.square,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_X offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.x0 = gtk_adjustment_new(args->x0/pow10(args->xyexponent),
                                      -10000, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.x0), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Y offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.y0 = gtk_adjustment_new(args->y0/pow10(args->xyexponent),
                                      -10000, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.y0), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -343,20 +344,20 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Value Range</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Z range:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.zreal = gtk_adjustment_new(args->zreal/pow10(args->zexponent),
                                         0.01, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.zreal), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     unit = gwy_data_field_get_si_unit_z(dfield);
     controls.zexponent
@@ -364,7 +365,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                                         &controls, -15, 6, unit,
                                         args->zexponent);
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
@@ -375,7 +376,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                          _("<b>Calibration Coefficients</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.xratio = gtk_adjustment_new(args->xratio, 0.001, 1000, 0.1, 1, 0);

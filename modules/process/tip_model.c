@@ -212,6 +212,9 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(7, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
@@ -249,29 +252,29 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     controls.radius = gtk_adjustment_new(1.0, 0.01, 1000.0, 0.01, 1.0, 0.0);
     controls.radius_spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.radius),
                                                0.1, 2);
-    gtk_table_attach(GTK_TABLE(table), controls.radius_spin, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.radius_spin,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.radius_label = gtk_label_new_with_mnemonic(_("Tip _apex radius:"));
     gtk_misc_set_alignment(GTK_MISC(controls.radius_label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(controls.radius_label),
                                   controls.radius_spin);
-    gtk_table_attach(GTK_TABLE(table), controls.radius_label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.radius_label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     unit = gwy_data_field_get_si_unit_xy(dfield);
     controls.radius_unit
         = gwy_combo_box_metric_unit_new(G_CALLBACK(radius_changed_cb),
                                         &controls,
                                         -12, -3, unit, -9);
-    gtk_table_attach(GTK_TABLE(table), controls.radius_unit, 3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.radius_unit,
+                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.radius, "value-changed",
                      G_CALLBACK(radius_changed_cb), &controls);
     row++;
 
     controls.labsize = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.labsize), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.labsize, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.labsize,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.tipdone = FALSE;

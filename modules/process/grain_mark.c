@@ -254,14 +254,17 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(10, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Threshold By</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     table_attach_threshold(table, &row, _("_Height:"),
@@ -280,15 +283,15 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
                                  args->inverted);
     gtk_table_attach(GTK_TABLE(table), controls.inverted,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.inverted, "toggled",
                              G_CALLBACK(mark_invalidate), &controls);
     row++;

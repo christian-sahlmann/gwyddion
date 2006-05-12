@@ -229,7 +229,9 @@ unrotate_dialog(UnrotateArgs *args,
                        FALSE, FALSE, 4);
 
     table = gtk_table_new(4, 3, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
@@ -237,18 +239,18 @@ unrotate_dialog(UnrotateArgs *args,
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Structure</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new(_("Detected:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     s = gwy_enum_to_string(guess, gwy_plane_symmetry_get_enum(), -1);
     label = gtk_label_new(_(s));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.symmetry
@@ -261,11 +263,11 @@ unrotate_dialog(UnrotateArgs *args,
     label = gtk_label_new(_("Correction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.corrlabel = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.corrlabel), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.corrlabel,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 

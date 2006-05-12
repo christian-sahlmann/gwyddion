@@ -124,9 +124,9 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 10, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 4);
+    table = gtk_table_new(2, 2, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
@@ -134,8 +134,8 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args)
     /***** First operand *****/
     label = gtk_label_new_with_mnemonic(_("_Tip morphology:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     omenu = tip_certainty_map_data_option_menu(&args->win1);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
@@ -145,8 +145,8 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args)
     /***** Second operand *****/
     label = gtk_label_new_with_mnemonic(_("_Surface to be analyzed:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     omenu = tip_certainty_map_data_option_menu(&args->win2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);

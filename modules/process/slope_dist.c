@@ -191,7 +191,8 @@ slope_dialog(SlopeArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(7, 4, FALSE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
@@ -200,7 +201,7 @@ slope_dialog(SlopeArgs *args)
     label = gtk_label_new(_("Output type"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     group = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
@@ -211,7 +212,7 @@ slope_dialog(SlopeArgs *args)
     controls.output_type_group = group;
     while (group) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
-                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
         group = g_slist_next(group);
     }
@@ -224,13 +225,13 @@ slope_dialog(SlopeArgs *args)
     controls.logscale
         = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
     gtk_table_attach(GTK_TABLE(table), controls.logscale,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.fit_plane
         = gtk_check_button_new_with_mnemonic(_("Use local plane _fitting"));
     gtk_table_attach(GTK_TABLE(table), controls.fit_plane,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.fit_plane, "toggled",
                      G_CALLBACK(slope_fit_plane_cb), &controls);
     row++;

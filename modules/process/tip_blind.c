@@ -229,6 +229,9 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(7, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
@@ -243,8 +246,8 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     label = gtk_label_new(_("Estimated Tip Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.xres = gtk_adjustment_new(args->xres, MIN_RES, MAX_RES, 1, 10, 0);
@@ -264,7 +267,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.same_resolution
         = gtk_check_button_new_with_mnemonic(_("_Same resolution"));
     gtk_table_attach(GTK_TABLE(table), controls.same_resolution,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.same_resolution),
                                  args->same_resolution);
     g_signal_connect(controls.same_resolution, "toggled",
@@ -276,21 +279,19 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.threshold_spin
         = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold), 0.1, 2);
     gtk_table_attach(GTK_TABLE(table), controls.threshold_spin,
-                     2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     label = gtk_label_new_with_mnemonic(_("Noise suppression _threshold:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.threshold_spin);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     unit = gwy_data_field_get_si_unit_z(dfield);
     controls.threshold_unit
         = gwy_combo_box_metric_unit_new(G_CALLBACK(thresh_changed_cb),
                                         &controls,
                                         -12, -3, unit, -9);
     gtk_table_attach(GTK_TABLE(table), controls.threshold_unit,
-                     3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.threshold, "value-changed",
                      G_CALLBACK(thresh_changed_cb), &controls);
     sci_entry_set_value(GTK_ADJUSTMENT(controls.threshold),
@@ -301,7 +302,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.boundaries
                 = gtk_check_button_new_with_mnemonic(_("Use _boundaries"));
     gtk_table_attach(GTK_TABLE(table), controls.boundaries,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
                                                  args->use_boundaries);
     g_signal_connect(controls.boundaries, "toggled",
