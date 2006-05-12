@@ -317,7 +317,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->instant_update),
                                  tool->args.instant_update);
-    g_signal_connect(tool->use_mask, "toggled",
+    g_signal_connect(tool->instant_update, "toggled",
                      G_CALLBACK(gwy_tool_stats_instant_update_changed), tool);
     row++;
 
