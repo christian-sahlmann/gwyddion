@@ -27,9 +27,6 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
-#include <stdio.h>
-
-
 static void gwy_graph_refresh      (GwyGraph *graph);
 static void gwy_graph_size_request (GtkWidget *widget,
                                     GtkRequisition *requisition);
@@ -67,8 +64,14 @@ static void
 gwy_graph_size_request(GtkWidget *widget, GtkRequisition *requisition)
 {
     GTK_WIDGET_CLASS(gwy_graph_parent_class)->size_request(widget, requisition);
+    /* Don't do this, GtkTable can calculate its size request from child
+     * requests perfectly.
+     * Request something reasonable in GwyGraphArea which does not have
+     * size_request() method at all(!) and even there it should be an order of
+     * magnitude smaller number.
     requisition->width = 300;
     requisition->height = 200;
+    */
 }
 
 static void

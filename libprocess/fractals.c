@@ -60,7 +60,8 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
         rp = ROUND(pow(2, l));
         for (i = 0; i < (buffer->xres - 1)/rp - 1; i++) {
             for (j = 0; j < (buffer->yres - 1)/rp - 1; j++) {
-                rms = gwy_data_field_area_get_rms(buffer, i*rp, j*rp, rp, rp);
+                rms = gwy_data_field_area_get_rms(buffer, NULL,
+                                                  i*rp, j*rp, rp, rp);
                 yresult->data[l-1] += rms * rms;
             }
         }
@@ -105,7 +106,8 @@ fractal_partitioning_nomask(GwyDataField *data_field,
                                                   (i + 1) * (rp) + 1,
                                                   (j + 1) * (rp) + 1);
                                                   */
-                rms = gwy_data_field_area_get_rms(buffer, i*rp, j*rp, rp, rp);
+                rms = gwy_data_field_area_get_rms(buffer, NULL,
+                                                  i*rp, j*rp, rp, rp);
                 yresult->data[l] += rms * rms;
             }
         }

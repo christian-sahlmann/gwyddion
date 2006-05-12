@@ -406,7 +406,8 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
     }
 
     hlp_df = gwy_data_field_new_alike(data_field, TRUE);
-    avgval = gwy_data_field_area_get_avg(data_field, col, row, width, height);
+    avgval = gwy_data_field_area_get_avg(data_field, NULL,
+                                         col, row, width, height);
 
     for (i = row; i < row + height; i++) {   /*0-yres */
         for (j = col; j < col + width; j++) {       /*0-xres */

@@ -41,15 +41,15 @@ enum {
 };
 
 typedef enum {
-    MASK_EDIT_SET,
-    MASK_EDIT_ADD,
-    MASK_EDIT_REMOVE,
-    MASK_EDIT_INTERSECT
+    MASK_EDIT_SET       = 0,
+    MASK_EDIT_ADD       = 1,
+    MASK_EDIT_REMOVE    = 2,
+    MASK_EDIT_INTERSECT = 3
 } MaskEditMode;
 
 typedef enum {
-    MASK_SHAPE_RECTANGLE,
-    MASK_SHAPE_ELLIPSE
+    MASK_SHAPE_RECTANGLE = 0,
+    MASK_SHAPE_ELLIPSE   = 1
 } MaskEditShape;
 
 typedef struct _GwyToolMaskEditor      GwyToolMaskEditor;
@@ -286,9 +286,9 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     tool->sensgroup = gwy_sensitivity_group_new();
 
     table = GTK_TABLE(gtk_table_new(9, 4, FALSE));
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacing(table, 0, 4);
+    gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
     row = 0;
@@ -323,13 +323,11 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_tool_mask_editor_mode_changed),
                                  tool);
-
         if (!group)
             group = GTK_RADIO_BUTTON(button);
-        if (modes[i].type == tool->args.mode)
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     }
     tool->mode = gtk_radio_button_get_group(group);
+    gwy_radio_buttons_set_current(tool->mode, "select-mode", tool->args.mode);
     row++;
 
     /* Shape */
@@ -355,7 +353,6 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_tool_mask_editor_shape_changed),
                                  tool);
-
         if (!group)
             group = GTK_RADIO_BUTTON(button);
     }
@@ -509,6 +506,8 @@ static void
 gwy_tool_mask_editor_mode_changed(GwyToolMaskEditor *tool)
 {
     tool->args.mode = gwy_radio_buttons_get_current(tool->mode, "select-mode");
+    if (tool->args.mode == -1)
+        g_warning("Mode set to -1!");
 }
 
 static void

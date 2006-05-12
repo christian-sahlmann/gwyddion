@@ -1000,7 +1000,6 @@ gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     data_field->yreal = yreal;
 }
-
 /**
  * gwy_data_field_get_xoffset:
  * @data_field: A data field.
@@ -1199,6 +1198,7 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
                                   GwySIUnitFormatStyle style,
                                   GwySIValueFormat *format)
 {
+    GwySIUnit *siunit;
     gdouble max, min;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
@@ -1209,9 +1209,10 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
         max = ABS(max);
         min = 0.0;
     }
+    siunit = gwy_data_field_get_si_unit_z(data_field);
 
-    return gwy_si_unit_get_format(gwy_data_field_get_si_unit_z(data_field),
-                                  style, max - min, format);
+    return gwy_si_unit_get_format_with_digits(siunit, style, max - min, 3,
+                                              format);
 }
 
 /**
@@ -2061,7 +2062,7 @@ gwy_data_field_get_profile(GwyDataField *data_field,
     cosa = (ecol - scol)/(res - 1.0);
     sina = (erow - srow)/(res - 1.0);
 
-    /*extract regular one-pixel line*/
+    /* Extract regular one-pixel line */
     if (data_line)
         gwy_data_line_resample(data_line, res, GWY_INTERPOLATION_NONE);
     else
@@ -2380,6 +2381,22 @@ gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
  *
  * Use gwy_data_field_new_alike() if you don't want to copy data, only
  * resolutions and units.
+ **/
+
+/**
+ * gwy_data_field_get_xmeasure:
+ * @data_field: A data field.
+ *
+ * A convenience macro to calculate
+ * gwy_data_field_get_xreal(data_field)/gwy_data_field_get_xres(data_field).
+ **/
+
+/**
+ * gwy_data_field_get_ymeasure:
+ * @data_field: A data field.
+ *
+ * A convenience macro to calculate
+ * gwy_data_field_get_yreal(data_field)/gwy_data_field_get_yres(data_field).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

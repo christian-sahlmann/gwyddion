@@ -1067,7 +1067,8 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
 
-    gwy_data_field_area_get_min_max(data_field, col, row, width, height,
+    gwy_data_field_area_get_min_max(data_field, NULL,
+                                    col, row, width, height,
                                     &min, &max);
     n = width*height;
     if (max == min || n == 0) {

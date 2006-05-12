@@ -218,20 +218,21 @@ gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
                       (TRUE, G_CALLBACK(gwy_tool_polynom_rect_updated), tool);
     gtk_box_pack_start(GTK_BOX(dialog->vbox),
                        gwy_rect_selection_labels_get_table(tool->rlabels),
-                       TRUE, TRUE, 0);
+                       FALSE, FALSE, 0);
 
     table = GTK_TABLE(gtk_table_new(4, 2, FALSE));
-    row = 0;
-
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
+    row = 0;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Fiting mode</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(table, label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     tool->order
@@ -250,8 +251,7 @@ gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
     tool->direction = radio;
     while (radio) {
         gtk_table_attach(table, GTK_WIDGET(radio->data),
-                         0, 3, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
         radio = g_slist_next(radio);
     }
@@ -259,8 +259,8 @@ gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
 
     tool->exclude
         = gtk_check_button_new_with_mnemonic(_("_Exclude area if selected"));
-    gtk_table_attach(table, tool->exclude, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(table, tool->exclude,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->exclude),
                                  tool->args.exclude);
     g_signal_connect(tool->exclude, "toggled",
@@ -269,8 +269,8 @@ gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
 
     label = gtk_label_new(_("(otherwise it will be used for fitting)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(table, label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));

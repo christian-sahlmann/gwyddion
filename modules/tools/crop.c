@@ -183,39 +183,48 @@ static void
 gwy_tool_crop_init_dialog(GwyToolCrop *tool)
 {
     GtkDialog *dialog;
-    GtkWidget *table;
+    GtkTable *table;
+    gint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
+    /* Selection info */
     tool->rlabels = gwy_rect_selection_labels_new
                          (FALSE, G_CALLBACK(gwy_tool_crop_rect_updated), tool);
     gtk_box_pack_start(GTK_BOX(dialog->vbox),
                        gwy_rect_selection_labels_get_table(tool->rlabels),
-                       TRUE, TRUE, 0);
+                       FALSE, FALSE, 0);
 
-    table = gtk_table_new(2, 1, FALSE);
+    /* Options */
+    table = GTK_TABLE(gtk_table_new(2, 1, FALSE));
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), table, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
+    row = 0;
 
     tool->keep_offsets
         = gtk_check_button_new_with_mnemonic(_("Keep lateral offsets"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->keep_offsets),
                                  tool->args.keep_offsets);
-    gtk_table_attach(GTK_TABLE(table), tool->keep_offsets, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, tool->keep_offsets,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(tool->keep_offsets, "toggled",
                              G_CALLBACK(gwy_tool_crop_keep_offsets_toggled),
                              tool);
+    row++;
 
     tool->new_channel
         = gtk_check_button_new_with_mnemonic(_("Create new channel"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->new_channel),
                                  tool->args.new_channel);
-    gtk_table_attach(GTK_TABLE(table), tool->new_channel, 0, 1, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, tool->new_channel,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(tool->new_channel, "toggled",
                              G_CALLBACK(gwy_tool_crop_new_data_toggled),
                              tool);
+    row++;
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);

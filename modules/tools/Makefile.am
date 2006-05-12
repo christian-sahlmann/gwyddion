@@ -3,23 +3,20 @@
 toolsdir = $(pkglibdir)/modules/tool
 
 #tools_LTLIBRARIES = \
-#	distance.la \
-#	crop.la \
-#	filter.la \
-#	profile.la \
-#	sfunctions.la \
-#	spotremove.la \
-#	stats.la
+#	spotremove.la
 
 tools_LTLIBRARIES = \
 	crop.la \
 	distance.la \
+	filter.la \
 	grainremover.la \
 	icolorange.la \
 	level3.la \
 	maskedit.la \
 	polynom.la \
+	profile.la \
 	readvalue.la \
+	sfunctions.la \
 	stats.la
 
 
@@ -63,8 +60,8 @@ crop_la_LIBADD = $(module_libadd)
 distance_la_SOURCES = distance.c
 distance_la_LIBADD = $(module_libadd)
 
-#filter_la_SOURCES = filter.c
-#filter_la_LIBADD = $(module_libadd)
+filter_la_SOURCES = filter.c
+filter_la_LIBADD = $(module_libadd)
 
 grainremover_la_SOURCES = grainremover.c
 grainremover_la_LIBADD = $(module_libadd)
@@ -81,8 +78,8 @@ maskedit_la_LIBADD = $(module_libadd)
 polynom_la_SOURCES = polynom.c
 polynom_la_LIBADD = $(module_libadd)
 
-#profile_la_SOURCES = profile.c
-#profile_la_LIBADD = $(module_libadd)
+profile_la_SOURCES = profile.c
+profile_la_LIBADD = $(module_libadd)
 
 readvalue_la_SOURCES = readvalue.c
 readvalue_la_LIBADD = $(module_libadd)
@@ -90,9 +87,9 @@ readvalue_la_LIBADD = $(module_libadd)
 stats_la_SOURCES = stats.c
 stats_la_LIBADD = $(module_libadd)
 
-#sfunctions_la_SOURCES = sfunctions.c
-#sfunctions_la_LIBADD = $(module_libadd)
-#
+sfunctions_la_SOURCES = sfunctions.c
+sfunctions_la_LIBADD = $(module_libadd)
+
 #spotremove_la_SOURCES = spotremove.c
 #spotremove_la_LIBADD = $(module_libadd)
 

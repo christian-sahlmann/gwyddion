@@ -114,6 +114,10 @@ void              gwy_data_field_set_xreal           (GwyDataField *data_field,
                                                       gdouble xreal);
 void              gwy_data_field_set_yreal           (GwyDataField *data_field,
                                                       gdouble yreal);
+#define gwy_data_field_get_xmeasure(data_field) \
+    (gwy_data_field_get_xreal(data_field)/gwy_data_field_get_xres(data_field))
+#define gwy_data_field_get_ymeasure(data_field) \
+    (gwy_data_field_get_yreal(data_field)/gwy_data_field_get_yres(data_field))
 gdouble           gwy_data_field_get_xoffset         (GwyDataField *data_field);
 gdouble           gwy_data_field_get_yoffset         (GwyDataField *data_field);
 void              gwy_data_field_set_xoffset         (GwyDataField *data_field,

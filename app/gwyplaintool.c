@@ -853,7 +853,7 @@ gwy_rect_selection_labels_make_rlabel(GtkTable *table,
 
     label = GTK_LABEL(gtk_label_new(NULL));
     gtk_label_set_single_line_mode(label, TRUE);
-    gtk_label_set_width_chars(label, 14);
+    gtk_label_set_width_chars(label, 10);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(table, GTK_WIDGET(label), col, col+1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -874,7 +874,7 @@ gwy_rect_selection_labels_make_pspin(GtkTable *table,
     else
         adj = gtk_adjustment_new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 0.0, 0);
-    gtk_entry_set_width_chars(GTK_ENTRY(spin), 5);
+    gtk_entry_set_width_chars(GTK_ENTRY(spin), 4);
 
     hbox = gtk_hbox_new(FALSE, 4);
 
@@ -928,9 +928,9 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
 
     rlabels->table = gtk_table_new(6, 3, FALSE);
     table = GTK_TABLE(rlabels->table);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_col_spacings(table, 8);
     gtk_table_set_row_spacings(table, 2);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     g_signal_connect_swapped(table, "destroy", G_CALLBACK(g_free), rlabels);
 
     label = gtk_label_new(NULL);

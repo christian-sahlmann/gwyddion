@@ -110,7 +110,7 @@ gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
     tool_class->title = _("Distance");
     tool_class->tooltip = _("Measure distances and directions between points");
     tool_class->prefix = "/module/distance";
-    tool_class->default_height = 200;
+    tool_class->default_height = 240;
     tool_class->data_switched = gwy_tool_distance_data_switched;
 
     ptool_class->data_changed = gwy_tool_distance_data_changed;
@@ -150,7 +150,7 @@ gwy_tool_distance_init(GwyToolDistance *tool)
 
     tool->angle_format = g_new0(GwySIValueFormat, 1);
     tool->angle_format->magnitude = 1.0;
-    tool->angle_format->precision = 0.1;
+    tool->angle_format->precision = 1;
     gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
@@ -177,6 +177,8 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
 
     for (i = 0; i < NCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_expand(column, TRUE);
+        gtk_tree_view_column_set_alignment(column, 0.5);
         g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
         renderer = gtk_cell_renderer_text_new();
         g_object_set(renderer, "xalign", 1.0, NULL);

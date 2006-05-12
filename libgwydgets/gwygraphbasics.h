@@ -36,10 +36,9 @@ typedef struct {
     gdouble y;
 } GwyGraphDataPoint;
 
-
 typedef struct {
-    gint xmin;         /*x offset of the active area with respect to drawable left border*/
-    gint ymin;         /*y offset of the active area with respect to drawable top border*/
+    gint xmin;  /*x offset of the active area with respect to drawable left border*/
+    gint ymin;  /*y offset of the active area with respect to drawable top border*/
     gint height;       /*active area height*/
     gint width;        /*active area width*/
     gdouble real_xmin; /*real units values*/
@@ -51,46 +50,47 @@ typedef struct {
 } GwyGraphActiveAreaSpecs;
 
 
-void gwy_graph_draw_point           (GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     gint x,
-                                     gint y,
-                                     GwyGraphPointType type,
-                                     gint size,
-                                     const GwyRGBA *color,
-                                     gboolean clear);
-void gwy_graph_draw_line            (GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     gint x_from,
-                                     gint y_from,
-                                     gint x_to,
-                                     gint y_to,
-                                     GdkLineStyle line_style,
-                                     gint size,
-                                     const GwyRGBA *color);
-void gwy_graph_draw_curve           (GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     GwyGraphActiveAreaSpecs *specs,
-                                     GObject *curvemodel);
-void gwy_graph_draw_selection_points(GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     GwyGraphActiveAreaSpecs *specs,
-                                     GwySelectionGraphPoint *selection);
-void gwy_graph_draw_selection_areas (GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     GwyGraphActiveAreaSpecs *specs,
-                                     GwySelectionGraphArea *selection);
-void gwy_graph_draw_selection_lines (GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     GwyGraphActiveAreaSpecs *specs,
-                                     GwySelectionGraphLine *selection,
-                                     GtkOrientation orientation);
-
-void gwy_graph_draw_grid            (GdkDrawable *drawable,
-                                     GdkGC *gc,
-                                     GwyGraphActiveAreaSpecs *specs,
-                                     GArray *x_grid_data,
-                                     GArray *y_grid_data);
+void           gwy_graph_draw_point           (GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               gint x,
+                                               gint y,
+                                               GwyGraphPointType type,
+                                               gint size,
+                                               const GwyRGBA *color,
+                                               gboolean clear);
+void           gwy_graph_draw_line            (GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               gint x_from,
+                                               gint y_from,
+                                               gint x_to,
+                                               gint y_to,
+                                               GdkLineStyle line_style,
+                                               gint size,
+                                               const GwyRGBA *color);
+void           gwy_graph_draw_curve           (GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               GwyGraphActiveAreaSpecs *specs,
+                                               GObject *curvemodel);
+void           gwy_graph_draw_selection_points(GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               GwyGraphActiveAreaSpecs *specs,
+                                               GwySelectionGraphPoint *selection);
+void           gwy_graph_draw_selection_areas (GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               GwyGraphActiveAreaSpecs *specs,
+                                               GwySelectionGraphArea *selection);
+void           gwy_graph_draw_selection_lines (GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               GwyGraphActiveAreaSpecs *specs,
+                                               GwySelectionGraphLine *selection,
+                                               GtkOrientation orientation);
+void           gwy_graph_draw_grid            (GdkDrawable *drawable,
+                                               GdkGC *gc,
+                                               GwyGraphActiveAreaSpecs *specs,
+                                               GArray *x_grid_data,
+                                               GArray *y_grid_data);
+const GwyRGBA* gwy_graph_get_preset_color     (guint i) G_GNUC_CONST;
+guint          gwy_graph_get_n_preset_colors  (void) G_GNUC_CONST;
 
 G_END_DECLS
 

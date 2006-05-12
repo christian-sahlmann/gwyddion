@@ -31,15 +31,12 @@ extern int gwy_app_n_recent_files;
 void         gwy_app_main_window_set             (GtkWidget *window);
 gboolean     gwy_app_main_window_save_position   (void);
 void         gwy_app_main_window_restore_position(void);
-void         gwy_app_tool_use_cb                 (const gchar *toolname,
-                                                  GtkWidget *button);
 void         gwy_app_zoom_set_cb                 (gpointer data);
 void         gwy_app_3d_view_cb                  (void);
 void         gwy_app_change_mask_color_cb        (void);
 void         gwy_app_change_default_mask_color_cb(void);
 
 void         gwy_app_menu_set_recent_files_menu  (GtkWidget *menu);
-void         gwy_app_file_duplicate_cb           (void);
 
 G_END_DECLS
 

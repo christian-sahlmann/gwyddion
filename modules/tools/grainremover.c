@@ -203,6 +203,8 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
     table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table), TRUE, TRUE, 0);
     row = 0;
@@ -210,7 +212,7 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
     label = gtk_label_new(_("Remove:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     group = gwy_radio_buttons_create
@@ -219,7 +221,7 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
                         tool->args.mode);
     while (group) {
         gtk_table_attach(table, GTK_WIDGET(group->data),
-                         0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
         group = g_slist_next(group);
     }
@@ -227,8 +229,8 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
 
     label = gtk_label_new_with_mnemonic(_("_Data removal method:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(table, label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     tool->algorithm_label = label;
     row++;
 
@@ -237,8 +239,8 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
                     G_CALLBACK(gwy_tool_grain_remover_algorithm_changed), tool,
                     tool->args.algorithm, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
-    gtk_table_attach(table, combo, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(table, combo,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     tool->algorithm = combo;
     row++;
 

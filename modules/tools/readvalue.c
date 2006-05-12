@@ -169,38 +169,41 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
     table = GTK_TABLE(gtk_table_new(2, 3, FALSE));
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table), TRUE, TRUE, 0);
 
     tool->xunits = GTK_LABEL(gtk_label_new(NULL));
     gtk_table_attach(table, GTK_WIDGET(tool->xunits),
-                     0, 1, 0, 1, GTK_FILL, 0, 2, 2);
+                     0, 1, 0, 1, GTK_FILL, 0, 0, 0);
 
     tool->yunits = GTK_LABEL(gtk_label_new(NULL));
     gtk_table_attach(table, GTK_WIDGET(tool->yunits),
-                     1, 2, 0, 1, GTK_FILL, 0, 2, 2);
+                     1, 2, 0, 1, GTK_FILL, 0, 0, 0);
 
     tool->zunits = GTK_LABEL(gtk_label_new(NULL));
     gtk_table_attach(table, GTK_WIDGET(tool->zunits),
-                     2, 3, 0, 1, GTK_FILL, 0, 2, 2);
+                     2, 3, 0, 1, GTK_FILL, 0, 0, 0);
 
     tool->x = GTK_LABEL(gtk_label_new(NULL));
     gtk_misc_set_alignment(GTK_MISC(tool->x), 1.0, 0.5);
     gtk_table_attach(table, GTK_WIDGET(tool->x),
-                     0, 1, 1, 2, 0, 0, 2, 2);
+                     0, 1, 1, 2, 0, 0, 0, 0);
 
     tool->y = GTK_LABEL(gtk_label_new(NULL));
     gtk_misc_set_alignment(GTK_MISC(tool->y), 1.0, 0.5);
     gtk_table_attach(table, GTK_WIDGET(tool->y),
-                     1, 2, 1, 2, 0, 0, 2, 2);
+                     1, 2, 1, 2, 0, 0, 0, 0);
 
     tool->val = GTK_LABEL(gtk_label_new(NULL));
     gtk_misc_set_alignment(GTK_MISC(tool->val), 1.0, 0.5);
-    gtk_table_attach(table, GTK_WIDGET(tool->val), 2, 3, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(table, GTK_WIDGET(tool->val),
+                     2, 3, 1, 2, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     table2 = gtk_table_new(1, 4, FALSE);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table2, TRUE, TRUE, 0);
 

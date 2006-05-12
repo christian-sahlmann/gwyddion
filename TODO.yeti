@@ -1,4 +1,5 @@
 HEAD
+- Check where we lost support for offsets during tool reworking
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
@@ -21,14 +22,11 @@ HEAD
   libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
-- Fix Indentor analysis
 - Add preview to: artithmetic
-- It should be possible to export measurement from Distance tool (and the
-  number of lines should be increased)
+- It should be possible to export measurement from Distance tool
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Write a Postscript export module based on JP's work -- or wait for Cairo?
-- Convert Logarithmic scale value to logarithmic presentation
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
@@ -38,7 +36,6 @@ HEAD
 - Make Ctrl-S save data associated with current window of whatever type, not
   with current data window -- or maybe better, switch data windows when other
   windows are switched
-- Remember app dialog sizes
 - GwyShader background is shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Finish Spot remove

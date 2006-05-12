@@ -20,6 +20,7 @@
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
@@ -224,15 +225,22 @@ void
 gwy_tool_add_hide_button(GwyTool *tool,
                          gboolean set_default)
 {
+    GtkAccelGroup *accelgroup;
     GtkWidget *button;
 
     g_return_if_fail(GWY_IS_TOOL(tool));
 
-    button = gtk_dialog_add_button(GTK_DIALOG(tool->dialog), _("_Hide"),
+    button = gtk_dialog_add_button(GTK_DIALOG(tool->dialog), _("Hide"),
                                    GTK_RESPONSE_DELETE_EVENT);
     if (set_default)
         gtk_dialog_set_default_response(GTK_DIALOG(tool->dialog),
                                         GTK_RESPONSE_DELETE_EVENT);
+
+    accelgroup = gtk_accel_group_new();
+    gtk_window_add_accel_group(GTK_WINDOW(tool->dialog), accelgroup);
+    gtk_widget_add_accelerator(button, "activate", accelgroup,
+                               GDK_Escape, 0, 0);
+    g_object_unref(accelgroup);
 }
 
 /**
@@ -367,6 +375,8 @@ gwy_tool_class_get_tooltip(GwyToolClass *klass)
 /**
  * GwyToolResponseType:
  * @GWY_TOOL_RESPONSE_CLEAR: Clear selection response.
+ * @GWY_TOOL_RESPONSE_UPDATE: Update calculated values (if not instant)
+ *                            response.
  *
  * Common tool dialog responses.
  *

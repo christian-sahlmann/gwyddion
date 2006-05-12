@@ -41,7 +41,7 @@ enum {
 
 static void       gwy_graph_area_dialog_class_init (GwyGraphAreaDialogClass *klass);
 static void       gwy_graph_area_dialog_init       (GwyGraphAreaDialog *dialog);
-static void       gwy_graph_area_dialog_finalize   (GObject *object);
+static void       gwy_graph_area_dialog_destroy    (GtkObject *object);
 static gboolean   gwy_graph_area_dialog_delete     (GtkWidget *widget,
                                                     GdkEventAny *event);
 static GtkWidget* gwy_graph_combo_box_new          (GtkWidget *parent,
@@ -60,6 +60,11 @@ static void       pointtype_cb                     (GtkWidget *combo,
 static void       linetype_cb                      (GtkWidget *combo,
                                                     GwyGraphAreaDialog *dialog);
 static void       color_change_cb                  (GtkWidget *color_button,
+                                                    GwyGraphAreaDialog *dialog);
+static void       colorsel_response_cb             (GtkWidget *selector,
+                                                    gint response,
+                                                    GwyGraphAreaDialog *dialog);
+static void       colorsel_changed_cb              (GtkColorSelection *colorsel,
                                                     GwyGraphAreaDialog *dialog);
 static void       label_change_cb                  (GtkWidget *button,
                                                     GwyGraphAreaDialog *dialog);
@@ -106,14 +111,13 @@ gwy_graph_area_dialog_get_type(void)
 static void
 gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GtkWidgetClass *widget_class;
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     gwy_debug("");
-    widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_graph_area_dialog_finalize;
+    object_class->destroy = gwy_graph_area_dialog_destroy;
     widget_class->delete_event = gwy_graph_area_dialog_delete;
 }
 
@@ -121,7 +125,13 @@ static gboolean
 gwy_graph_area_dialog_delete(GtkWidget *widget,
                              G_GNUC_UNUSED GdkEventAny *event)
 {
+    GwyGraphAreaDialog *dialog;
+
     gwy_debug("");
+
+    dialog = GWY_GRAPH_AREA_DIALOG(widget);
+    if (dialog->color_dialog)
+        gtk_widget_hide(dialog->color_dialog);
     gtk_widget_hide(widget);
 
     return TRUE;
@@ -277,13 +287,19 @@ gwy_graph_area_dialog_new()
 }
 
 static void
-gwy_graph_area_dialog_finalize(GObject *object)
+gwy_graph_area_dialog_destroy(GtkObject *object)
 {
+    GwyGraphAreaDialog *dialog;
+
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_GRAPH_AREA_DIALOG(object));
+    dialog = GWY_GRAPH_AREA_DIALOG(object);
+    if (dialog->color_dialog) {
+        gtk_widget_destroy(dialog->color_dialog);
+        dialog->color_dialog = NULL;
+    }
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
 
 static GtkWidget*
@@ -421,33 +437,6 @@ gwy_graph_line_combo_box_realize(GtkWidget *parent,
 }
 
 static void
-color_changed_cb(GtkColorSelectionDialog *selector,
-                 gint arg1,
-                 gpointer user_data)
-{
-    GdkColor gcl;
-    GwyRGBA grgba;
-    GwyGraphAreaDialog *dialog;
-    GwyGraphCurveModel *cmodel;
-
-    dialog = GWY_GRAPH_AREA_DIALOG(user_data);
-    if (dialog->curve_model == NULL)
-        return;
-    cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-
-
-    if (arg1 == GTK_RESPONSE_OK) {
-        gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector->colorsel), &gcl);
-        //gwy_rgba_from_gdk_color(&cmodel->color, &gcl);
-        gwy_rgba_from_gdk_color(&grgba, &gcl);
-        gwy_graph_curve_model_set_curve_color(cmodel, &grgba);
-        refresh(dialog);
-
-    }
-    gtk_widget_destroy(GTK_WIDGET(selector));
-}
-
-static void
 refresh(GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
@@ -480,23 +469,70 @@ color_change_cb(G_GNUC_UNUSED GtkWidget *color_button,
 {
     GdkColor gcl;
     GwyGraphCurveModel *cmodel;
-    GtkColorSelectionDialog* selector;
+    GtkWidget *selector, *colorsel;
 
-    if (dialog->curve_model == NULL)
+    if (!dialog->curve_model)
+        return;
+
+    if (dialog->color_dialog) {
+        gtk_window_present(GTK_WINDOW(dialog->color_dialog));
+        return;
+    }
+
+    cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
+    selector = gtk_color_selection_dialog_new(_("Set Curve Color"));
+    dialog->color_dialog = selector;
+    dialog->old_color = cmodel->color;
+
+    gtk_dialog_set_has_separator(GTK_DIALOG(selector), FALSE);
+    colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
+    g_signal_connect(selector, "response",
+                     G_CALLBACK(colorsel_response_cb), dialog);
+    g_signal_connect(colorsel, "color-changed",
+                     G_CALLBACK(colorsel_changed_cb), dialog);
+    gwy_rgba_to_gdk_color(&cmodel->color, &gcl);
+    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(colorsel), &gcl);
+    gtk_widget_show(selector);
+}
+
+static void
+colorsel_response_cb(GtkWidget *selector,
+                     gint response,
+                     GwyGraphAreaDialog *dialog)
+{
+    GwyGraphCurveModel *cmodel;
+    GtkWidget *colorsel;
+
+    if (!dialog->curve_model)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
+    colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
+    if (response == GTK_RESPONSE_CANCEL) {
+        gwy_graph_curve_model_set_curve_color(cmodel, &dialog->old_color);
+        refresh(dialog);
+    }
+    gtk_widget_destroy(selector);
+    dialog->color_dialog = NULL;
+}
 
-    selector = GTK_COLOR_SELECTION_DIALOG(
-                                        gtk_color_selection_dialog_new("Select curve color"));
-    g_signal_connect(GTK_WIDGET(selector), "response",
-                     G_CALLBACK(color_changed_cb), dialog);
+static void
+colorsel_changed_cb(GtkColorSelection *colorsel,
+                    GwyGraphAreaDialog *dialog)
+{
+    GwyGraphCurveModel *cmodel;
+    GwyRGBA rgba;
+    GdkColor gcl;
 
+    if (!dialog->curve_model)
+        return;
 
-    gwy_rgba_to_gdk_color(&cmodel->color, &gcl);
-    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector->colorsel), &gcl);
-    gtk_widget_show(GTK_WIDGET(selector));
-
+    cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
+    gtk_color_selection_get_current_color(colorsel, &gcl);
+    gwy_rgba_from_gdk_color(&rgba, &gcl);
+    rgba.a = 1.0;
+    gwy_graph_curve_model_set_curve_color(cmodel, &rgba);
+    refresh(dialog);
 }
 
 static void

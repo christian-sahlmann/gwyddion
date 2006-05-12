@@ -94,14 +94,16 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
         || (kernel_ulrow + kheight) > kyres)
         return -1;
 
-    avg1 = gwy_data_field_area_get_avg(data_field, ulcol, ulrow,
-                                       kwidth, kheight);
-    avg2 = gwy_data_field_area_get_avg(kernel_field, kernel_ulcol, kernel_ulrow,
+    avg1 = gwy_data_field_area_get_avg(data_field, NULL,
+                                       ulcol, ulrow, kwidth, kheight);
+    avg2 = gwy_data_field_area_get_avg(kernel_field, NULL,
+                                       kernel_ulcol, kernel_ulrow,
                                        kernel_brcol - kernel_ulcol,
                                        kernel_brrow - kernel_ulrow);
-    rms1 = gwy_data_field_area_get_rms(data_field, ulcol, ulrow,
-                                       kwidth, kheight);
-    rms2 = gwy_data_field_area_get_rms(kernel_field, kernel_ulcol, kernel_ulrow,
+    rms1 = gwy_data_field_area_get_rms(data_field, NULL,
+                                       ulcol, ulrow, kwidth, kheight);
+    rms2 = gwy_data_field_area_get_rms(kernel_field, NULL,
+                                       kernel_ulcol, kernel_ulrow,
                                        kernel_brcol - kernel_ulcol,
                                        kernel_brrow - kernel_ulrow);
 

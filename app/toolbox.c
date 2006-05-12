@@ -40,21 +40,16 @@ typedef struct {
     gconstpointer cbdata;
 } Action;
 
-typedef struct {
-    const gchar *stock_id;
-    const gchar *tooltip;
-    const gchar *name;
-} Action1;
-
-typedef gboolean (*ActionCheckFunc)(gconstpointer);
-
-static GArray*    enumerate_tools               (const gchar **default_tools);
-static GtkWidget* gwy_app_menu_create_meta_menu (GtkAccelGroup *accel_group);
-static GtkWidget* gwy_app_menu_create_file_menu (GtkAccelGroup *accel_group);
-static GtkWidget* gwy_app_menu_create_edit_menu (GtkAccelGroup *accel_group);
-static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
+static GtkWidget* gwy_app_toolbox_process_new  (void);
+static GtkWidget* gwy_app_toolbox_graph_new    (void);
+static GtkWidget* gwy_app_toolbox_tools_new    (void);
+static GtkWidget* gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group);
+static GtkWidget* gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group);
+static GtkWidget* gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group);
+static void       gwy_app_toolbox_create_group (GtkBox *box,
+                                                const gchar *text,
                                                 const gchar *id,
-                                                gboolean *pvisible);
+                                                GtkWidget *toolbox);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
                                                 GtkWidget *widget);
 static void       toolbox_dnd_data_received    (GtkWidget *widget,
@@ -70,11 +65,36 @@ static void       delete_app_window            (void);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
 static void       gwy_app_close_cb             (void);
+static void       gwy_app_tool_use_cb          (const gchar *toolname,
+                                                GtkWidget *button);
+static void       gwy_app_duplicate_cb         (void);
 static void       gwy_app_gl_view_maybe_cb     (void);
 
 static GtkTargetEntry dnd_target_table[] = {
-  { "STRING",     0, DND_TARGET_STRING },
-  { "text/plain", 0, DND_TARGET_STRING },
+    { "STRING",     0, DND_TARGET_STRING },
+    { "text/plain", 0, DND_TARGET_STRING },
+};
+
+/* Toolbox contents.  To certain degree ready to externalize */
+static const gchar *proc_functions[] = {
+    "fix_zero", "scale", "rotate", "unrotate",
+    "level", "facet-level", "fft", "cwt",
+    "grain_mark", "grain_wshed", "grain_rem_threshold", "grain_size_dist",
+    "mask_remove", "shade", "polylevel", "scars_remove",
+};
+
+static const gchar *graph_functions[] = {
+    "graph_cd", "graph_fit",
+};
+
+/* There is no way to access tools other than the toolbox, therefore we handle
+ * tools differently: after adding tools from the following list we add all
+ * remaining tools. */
+static const gchar *default_tools[] = {
+    "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
+    "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
+    "GwyToolProfile", "GwyToolGrainRemover", "GwyToolRemoveSpot",
+    "GwyToolColorRange", "GwyToolMaskEditor"
 };
 
 /* FIXME: A temporary hack. */
@@ -124,13 +144,9 @@ static GtkWidget*
 add_button(GtkWidget *toolbar,
            guint i,
            const Action *action,
-           ActionCheckFunc check_func,
            GtkTooltips *tips)
 {
     GtkWidget *button;
-
-    if (check_func && !check_func(action->cbdata))
-        return NULL;
 
     button = gtk_button_new();
     gtk_table_attach_defaults(GTK_TABLE(toolbar), button,
@@ -150,13 +166,9 @@ add_rbutton(GtkWidget *toolbar,
             guint i,
             const Action *action,
             GtkRadioButton *group,
-            ActionCheckFunc check_func,
             GtkTooltips *tips)
 {
     GtkWidget *button;
-
-    if (check_func && !check_func(action->cbdata))
-        return NULL;
 
     button = gtk_radio_button_new_from_widget(group);
     gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
@@ -201,118 +213,12 @@ gwy_app_toolbox_create(void)
             NULL,
         },
     };
-    static const Action1 proc_actions[] = {
-        {
-            GWY_STOCK_FIX_ZERO,
-            N_("Fix minimum value to zero"),
-            "fix_zero",
-        },
-        {
-            GWY_STOCK_SCALE,
-            N_("Scale data"),
-            "scale",
-        },
-        {
-            GWY_STOCK_ROTATE,
-            N_("Rotate by arbitrary angle"),
-            "rotate",
-        },
-        {
-            GWY_STOCK_UNROTATE,
-            N_("Automatically correct rotation"),
-            "unrotate",
-        },
-        {
-            GWY_STOCK_LEVEL,
-            N_("Automatically level data"),
-            "level",
-        },
-        {
-            GWY_STOCK_FACET_LEVEL,
-            N_("Facet-level data"),
-            "facet-level",
-        },
-        {
-            GWY_STOCK_FFT,
-            N_("Fast Fourier Transform"),
-            "fft",
-        },
-        {
-            GWY_STOCK_CWT,
-            N_("Continuous Wavelet Transform"),
-            "cwt",
-        },
-        {
-            GWY_STOCK_GRAINS,
-            N_("Mark grains by threshold"),
-            "grain_mark",
-        },
-        {
-            GWY_STOCK_GRAINS_WATER,
-            N_("Mark grains by watershed"),
-            "grain_wshed",
-        },
-        {
-            GWY_STOCK_GRAINS_REMOVE,
-            N_("Remove grains by threshold"),
-            "grain_rem_threshold",
-        },
-        {
-            GWY_STOCK_GRAINS_GRAPH,
-            N_("Grain size distribution"),
-            "grain_size_dist",
-        },
-        {
-            GWY_STOCK_MASK_REMOVE,
-            N_("Remove mask"),
-            "mask_remove",
-        },
-        {
-            GWY_STOCK_SHADER,
-            N_("Shade data"),
-            "shade",
-        },
-        {
-            GWY_STOCK_POLYNOM,
-            N_("Remove polynomial background"),
-            "polylevel",
-        },
-        {
-            GWY_STOCK_SCARS,
-            N_("Remove scars"),
-            "scars_remove",
-        },
-    };
-    static const Action1 graph_actions[] = {
-        {
-            GWY_STOCK_GRAPH_MEASURE,
-            N_("Fit critical dimension"),
-            "graph_cd",
-        },
-        {
-            GWY_STOCK_GRAPH_FUNCTION,
-            N_("Fit functions to graph data"),
-            "graph_fit",
-        },
-    };
-    static const gchar *tool_actions[] = {
-        "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
-        "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
-        "GwyToolProfile", "GwyToolGrainRemover", "GwyToolRemoveSpot",
-        "GwyToolColorRange", "GwyToolMaskEditor", NULL
-    };
-    GwyMenuSensFlags sens;
-    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
-    GtkRadioButton *group;
+    GtkWidget *toolbox, *toolbar, *menu, *button, *container;
+    GtkBox *vbox;
     GtkTooltips *tooltips;
     GtkAccelGroup *accel_group;
-    Action action;
-    GArray *tools;
-    GList *list;
     GSList *toolbars = NULL, *l;
-    const gchar *first_tool = NULL;
-    gboolean visible;
-    guint i, j;
+    guint i;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
@@ -324,9 +230,9 @@ gwy_app_toolbox_create(void)
     accel_group = gtk_accel_group_new();
     g_object_set_data(G_OBJECT(toolbox), "accel_group", accel_group);
 
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(toolbox), vbox);
-    container = vbox;
+    vbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
+    container = GTK_WIDGET(vbox);
+    gtk_container_add(GTK_CONTAINER(toolbox), container);
 
     tooltips = gwy_app_get_tooltips();
 
@@ -348,108 +254,25 @@ gwy_app_toolbox_create(void)
                         gwy_app_menu_create_meta_menu(accel_group), _("_Meta"));
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("View"), "zoom", &visible);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
     toolbar = gtk_table_new(1, 4, TRUE);
-    toolbars = g_slist_append(toolbars, toolbar);
-    gtk_widget_set_no_show_all(toolbar, !visible);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
     for (i = 0; i < G_N_ELEMENTS(view_actions); i++) {
-        button = add_button(toolbar, i, view_actions + i, NULL, tooltips);
+        button = add_button(toolbar, i, view_actions + i, tooltips);
         gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_DATA);
     }
-    g_signal_connect(label, "clicked",
-                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
-
-    /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Data Process"), "proc", &visible);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    toolbar = gtk_table_new(4, 4, TRUE);
+    gwy_app_toolbox_create_group(vbox, _("View"), "zoom", toolbar);
     toolbars = g_slist_append(toolbars, toolbar);
-    gtk_widget_set_no_show_all(toolbar, !visible);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    action.callback = G_CALLBACK(gwy_app_run_process_func);
-    for (j = i = 0; i < G_N_ELEMENTS(proc_actions); i++) {
-        action.stock_id = proc_actions[i].stock_id;
-        action.tooltip = proc_actions[i].tooltip;
-        action.cbdata = proc_actions[i].name;
-        button = add_button(toolbar, j, &action,
-                            (ActionCheckFunc)gwy_process_func_exists,
-                            tooltips);
-        if (!button)
-            continue;
-        sens = gwy_process_func_get_sensitivity_mask(proc_actions[i].name);
-        gwy_app_sensitivity_add_widget(button, sens);
-        j++;
-    }
-    g_signal_connect(label, "clicked",
-                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
-
-    /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Graph"), "graph", &visible);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    toolbar = gtk_table_new(1, 4, TRUE);
+    toolbar = gwy_app_toolbox_process_new();
+    gwy_app_toolbox_create_group(vbox, _("Data Process"), "proc", toolbar);
     toolbars = g_slist_append(toolbars, toolbar);
-    gtk_widget_set_no_show_all(toolbar, !visible);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    action.callback = G_CALLBACK(gwy_app_run_graph_func);
-    for (j = i = 0; i < G_N_ELEMENTS(graph_actions); i++) {
-        action.stock_id = graph_actions[i].stock_id;
-        action.tooltip = graph_actions[i].tooltip;
-        action.cbdata = graph_actions[i].name;
-        button = add_button(toolbar, j, &action,
-                            (ActionCheckFunc)gwy_graph_func_exists, tooltips);
-        if (!button)
-            continue;
-        /* FIXME: implicit sensitivity, remove */
-        gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_GRAPH);
-        j++;
-    }
-    g_signal_connect(label, "clicked",
-                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
-
-    /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Tools"), "tool", &visible);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    tools = enumerate_tools(tool_actions);
-
-    toolbar = gtk_table_new((tools->len + 3)/4, 4, TRUE);
+    toolbar = gwy_app_toolbox_graph_new();
+    gwy_app_toolbox_create_group(vbox, _("Graph"), "graph", toolbar);
     toolbars = g_slist_append(toolbars, toolbar);
-    gtk_widget_set_no_show_all(toolbar, !visible);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    action.callback = G_CALLBACK(gwy_app_tool_use_cb);
-    group = NULL;
-    for (i = 0; i < tools->len; i++) {
-        GwyToolClass *tool_class;
-
-        tool_class = g_type_class_peek(g_array_index(tools, GType, i));
-        action.stock_id = gwy_tool_class_get_stock_id(tool_class);
-        action.tooltip = gwy_tool_class_get_tooltip(tool_class);
-        action.cbdata = g_type_name(g_array_index(tools, GType, i));
-        button = add_rbutton(toolbar, i, &action, group, NULL, tooltips);
-        if (!group) {
-            group = GTK_RADIO_BUTTON(button);
-            first_tool = tool_actions[i];
-        }
-    }
-    g_array_free(tools, TRUE);
-    g_signal_connect(label, "clicked",
-                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
-
-    list = gtk_container_get_children(GTK_CONTAINER(toolbar));
-    if (first_tool) {
-        gwy_app_tool_use_cb(first_tool, NULL);
-        gwy_app_tool_use_cb(first_tool, list ? GTK_WIDGET(list->data) : NULL);
-    }
-    g_list_free(list);
+    toolbar = gwy_app_toolbox_tools_new();
+    gwy_app_toolbox_create_group(vbox, _("Tools"), "tool", toolbar);
+    toolbars = g_slist_append(toolbars, toolbar);
 
     /***************************************************************/
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
@@ -476,6 +299,80 @@ gwy_app_toolbox_create(void)
         gtk_main_iteration_do(FALSE);
 
     return toolbox;
+}
+
+static GtkWidget*
+gwy_app_toolbox_process_new(void)
+{
+    GwyMenuSensFlags sens;
+    GtkTooltips *tooltips;
+    GtkWidget *toolbar, *button;
+    GPtrArray *funcs;
+    const gchar *name;
+    Action action;
+    guint i;
+
+    funcs = g_ptr_array_new();
+    for (i = 0; i < G_N_ELEMENTS(proc_functions); i++) {
+        if (!gwy_process_func_exists(proc_functions[i])
+            || !gwy_process_func_get_stock_id(proc_functions[i]))
+            continue;
+        g_ptr_array_add(funcs, (gpointer)proc_functions[i]);
+    }
+
+    tooltips = gwy_app_get_tooltips();
+    toolbar = gtk_table_new((funcs->len + 3)/4, 4, TRUE);
+
+    action.callback = G_CALLBACK(gwy_app_run_process_func);
+    for (i = 0; i < funcs->len; i++) {
+        name = g_ptr_array_index(funcs, i);
+        action.stock_id = gwy_process_func_get_stock_id(name);
+        action.tooltip = gwy_process_func_get_tooltip(name);
+        action.cbdata = name;
+        button = add_button(toolbar, i, &action, tooltips);
+        sens = gwy_process_func_get_sensitivity_mask(name);
+        gwy_app_sensitivity_add_widget(button, sens);
+    }
+    g_ptr_array_free(funcs, TRUE);
+
+    return toolbar;
+}
+
+static GtkWidget*
+gwy_app_toolbox_graph_new(void)
+{
+    GwyMenuSensFlags sens;
+    GtkTooltips *tooltips;
+    GtkWidget *toolbar, *button;
+    GPtrArray *funcs;
+    const gchar *name;
+    Action action;
+    guint i;
+
+    funcs = g_ptr_array_new();
+    for (i = 0; i < G_N_ELEMENTS(graph_functions); i++) {
+        if (!gwy_graph_func_exists(graph_functions[i])
+            || !gwy_graph_func_get_stock_id(graph_functions[i]))
+            continue;
+        g_ptr_array_add(funcs, (gpointer)graph_functions[i]);
+    }
+
+    tooltips = gwy_app_get_tooltips();
+    toolbar = gtk_table_new((funcs->len + 3)/4, 4, TRUE);
+
+    action.callback = G_CALLBACK(gwy_app_run_graph_func);
+    for (i = 0; i < funcs->len; i++) {
+        name = g_ptr_array_index(funcs, i);
+        action.stock_id = gwy_graph_func_get_stock_id(name);
+        action.tooltip = gwy_graph_func_get_tooltip(name);
+        action.cbdata = name;
+        button = add_button(toolbar, i, &action, tooltips);
+        sens = gwy_graph_func_get_sensitivity_mask(name);
+        gwy_app_sensitivity_add_widget(button, sens);
+    }
+    g_ptr_array_free(funcs, TRUE);
+
+    return toolbar;
 }
 
 static void
@@ -514,20 +411,46 @@ add_tool(const gchar *typename,
     g_array_append_val(tools, type);
 }
 
-static GArray*
-enumerate_tools(const gchar **default_tools)
+static GtkWidget*
+gwy_app_toolbox_tools_new(void)
 {
-    GArray *tools;
+    const gchar *first_tool = NULL;
+    GtkTooltips *tooltips;
+    GtkWidget *toolbar, *button;
+    GArray *funcs;
+    GtkRadioButton *group;
+    Action action;
     guint i;
 
-    tools = g_array_new(TRUE, FALSE, sizeof(GType));
+    funcs = g_array_new(TRUE, FALSE, sizeof(GType));
+    for (i = 0; i < G_N_ELEMENTS(default_tools); i++)
+        add_tool(default_tools[i], funcs);
+    gwy_tool_func_foreach((GFunc)&add_tool, funcs);
 
-    for (i = 0; default_tools[i]; i++)
-        add_tool(default_tools[i], tools);
+    tooltips = gwy_app_get_tooltips();
+    toolbar = gtk_table_new((funcs->len + 3)/4, 4, TRUE);
 
-    gwy_tool_func_foreach((GFunc)&add_tool, tools);
+    action.callback = G_CALLBACK(gwy_app_tool_use_cb);
+    group = NULL;
+    for (i = 0; i < funcs->len; i++) {
+        GwyToolClass *tool_class;
 
-    return tools;
+        tool_class = g_type_class_peek(g_array_index(funcs, GType, i));
+        action.stock_id = gwy_tool_class_get_stock_id(tool_class);
+        action.tooltip = gwy_tool_class_get_tooltip(tool_class);
+        action.cbdata = g_type_name(g_array_index(funcs, GType, i));
+        button = add_rbutton(toolbar, i, &action, group, tooltips);
+        if (!group) {
+            group = GTK_RADIO_BUTTON(button);
+            first_tool = default_tools[i];
+        }
+    }
+    g_array_free(funcs, TRUE);
+
+    if (first_tool)
+        gwy_app_switch_tool(first_tool);
+
+    return toolbar;
 }
 
 /*************************************************************************/
@@ -721,16 +644,14 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             "<StockItem>",
             GTK_STOCK_REDO
         },
-        /*
         {
             N_("/_Duplicate"),
             "<control>D",
-            gwy_app_file_duplicate_cb,
+            gwy_app_duplicate_cb,
             0,
             "<StockItem>",
             GTK_STOCK_COPY
         },
-        */
         {
             "/---",
             NULL,
@@ -784,7 +705,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
 
     set_sensitivity(item_factory,
-                    /* "<edit>/Duplicate", GWY_MENU_FLAG_DATA, */
+                    "<edit>/Duplicate", GWY_MENU_FLAG_DATA,
                     "<edit>/Undo", GWY_MENU_FLAG_UNDO,
                     "<edit>/Redo", GWY_MENU_FLAG_REDO,
                     "<edit>/Remove Mask", GWY_MENU_FLAG_DATA_MASK,
@@ -795,10 +716,11 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
     return gtk_item_factory_get_widget(item_factory, "<edit>");
 }
 
-static GtkWidget*
-gwy_app_toolbox_create_label(const gchar *text,
+static void
+gwy_app_toolbox_create_group(GtkBox *box,
+                             const gchar *text,
                              const gchar *id,
-                             gboolean *pvisible)
+                             GtkWidget *toolbox)
 {
     GwyContainer *settings;
     GtkWidget *label, *hbox, *button, *arrow;
@@ -834,9 +756,11 @@ gwy_app_toolbox_create_label(const gchar *text,
     g_object_set_data(G_OBJECT(button), "arrow", arrow);
     g_object_set_data(G_OBJECT(button), "key", GUINT_TO_POINTER(quark));
 
-    *pvisible = visible;
-
-    return button;
+    gtk_box_pack_start(box, button, FALSE, FALSE, 0);
+    gtk_widget_set_no_show_all(toolbox, !visible);
+    gtk_box_pack_start(box, toolbox, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbox);
 }
 
 static void
@@ -954,6 +878,62 @@ gwy_app_close_cb(void)
 
     if ((window = gwy_app_get_current_window(GWY_APP_WINDOW_TYPE_ANY)))
         g_signal_emit_by_name(window, "delete-event", NULL, &boo);
+}
+
+static void
+gwy_app_tool_use_cb(const gchar *toolname,
+                    GtkWidget *button)
+{
+    /* don't catch deactivations */
+    if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
+        gwy_debug("deactivation");
+    }
+    else
+        gwy_app_switch_tool(toolname);
+}
+
+void
+gwy_app_duplicate_cb(void)
+{
+    GwyContainer *container;
+    GwyDataField *dfield, *mfield, *sfield;
+    gint oldid, id;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &container,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_SHOW_FIELD, &sfield,
+                                     0);
+    g_return_if_fail(container && dfield);
+
+    dfield = gwy_data_field_duplicate(dfield);
+    id = gwy_app_data_browser_add_data_field(dfield, container, TRUE);
+    g_object_unref(dfield);
+    gwy_app_copy_data_items(container, container, oldid, id,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    gwy_app_set_data_field_title(container, id, gwy_sgettext("noun|Copy"));
+    if (mfield) {
+        mfield = gwy_data_field_duplicate(mfield);
+        gwy_container_set_object(container,
+                                 gwy_app_get_mask_key_for_id(id),
+                                 mfield);
+        g_object_unref(mfield);
+    }
+    if (sfield) {
+        sfield = gwy_data_field_duplicate(sfield);
+        gwy_container_set_object(container,
+                                 gwy_app_get_presentation_key_for_id(id),
+                                 sfield);
+        g_object_unref(sfield);
+    }
+    /* FIXME: It would be nice to copy selection too, maybe copy everything by
+     * prefix instead? */
 }
 
 static void

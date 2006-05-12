@@ -21,7 +21,6 @@
 #ifndef __GWY_APP_APP_H__
 #define __GWY_APP_APP_H__
 
-#include <gtk/gtkwidget.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwygraph.h>
@@ -29,10 +28,10 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    GWY_APP_WINDOW_TYPE_DATA  = 1,
-    GWY_APP_WINDOW_TYPE_GRAPH = 2,
-    GWY_APP_WINDOW_TYPE_3D    = 4,
-    GWY_APP_WINDOW_TYPE_ANY   = 7
+    GWY_APP_WINDOW_TYPE_DATA  = 1 << 0,
+    GWY_APP_WINDOW_TYPE_GRAPH = 1 << 1,
+    GWY_APP_WINDOW_TYPE_3D    = 1 << 2,
+    GWY_APP_WINDOW_TYPE_ANY   = 0x7
 } GwyAppWindowType;
 
 #ifndef GWY_DISABLE_DEPRECATED
@@ -42,17 +41,12 @@ gboolean       gwy_app_data_window_set_current     (GwyDataWindow *window);
 void           gwy_app_data_window_remove          (GwyDataWindow *window);
 void           gwy_app_data_window_foreach         (GFunc func,
                                                     gpointer user_data);
-GtkWidget*     gwy_app_data_window_create          (GwyContainer *data);
 gulong         gwy_app_data_window_list_add_hook   (gpointer func,
                                                     gpointer data);
 gboolean       gwy_app_data_window_list_remove_hook(gulong hook_id);
 GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 
-GtkWidget*     gwy_app_graph_window_create         (GwyGraph *graph,
-                                                    GwyContainer *data);
 void           gwy_app_graph_window_remove         (GtkWidget *window);
-void           gwy_app_graph_window_foreach        (GFunc func,
-                                                    gpointer user_data);
 GtkWidget*     gwy_app_graph_window_get_current    (void);
 gboolean       gwy_app_graph_window_set_current    (GtkWidget *window);
 
@@ -62,9 +56,8 @@ GtkWidget*     gwy_app_3d_window_get_current       (void);
 gboolean       gwy_app_3d_window_set_current       (GtkWidget *window);
 
 GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
-gint           gwy_app_data_window_set_untitled    (GwyDataWindow *window,
-                                                    const gchar *templ);
 #endif
+void           gwy_app_switch_tool                 (const gchar *toolname);
 void           gwy_app_add_main_accel_group        (GtkWindow *window);
 void           gwy_app_save_window_position        (GtkWindow *window,
                                                     const gchar *prefix,

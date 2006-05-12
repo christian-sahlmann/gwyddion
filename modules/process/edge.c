@@ -179,7 +179,7 @@ laplacian_do(GwyDataField *dfield, GwyDataField *show)
     xres = gwy_data_field_get_xres(show);
     yres = gwy_data_field_get_yres(show);
     gwy_data_field_filter_laplacian(show);
-    avg = gwy_data_field_area_get_avg(show, 1, 1, xres-2, yres-2);
+    avg = gwy_data_field_area_get_avg(show, NULL, 1, 1, xres-2, yres-2);
     data = gwy_data_field_get_data(show);
 
     for (i = 0; i < yres; i++) {

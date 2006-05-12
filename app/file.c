@@ -49,38 +49,6 @@ static GtkWidget* gwy_app_file_types_new         (GtkFileChooserAction action);
 
 static gchar *current_dir = NULL;
 
-/*** Queer stuff that maybe even doesn't belong here ***********************/
-
-/* FIXME: This is broken.  Make it duplicate one data field, or selection.
- * File duplication could be possible too, but as a less direct function. */
-void
-gwy_app_file_duplicate_cb(void)
-{
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    GwyLayerBasic *layer;
-    GwyContainer *data;
-    GObject *show;
-    const gchar *key;
-
-    data_window = gwy_app_data_window_get_current();
-    data_view = gwy_data_window_get_data_view(data_window);
-    layer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
-    data = gwy_container_duplicate(gwy_data_view_get_data(data_view));
-    /* XXX: An ugly and largery undocumented hack: if a presentation has
-     * "is_preview" set, it is a preview and is not duplicated.  But at least
-     * it works ... so we are better than Gimp! Better than Gimp! :o)  */
-    if (gwy_layer_basic_get_has_presentation(layer)) {
-        key = gwy_layer_basic_get_presentation_key(layer);
-        show = gwy_container_get_object_by_name(data, key);
-        if (g_object_get_data(show, "is_preview"))
-            gwy_container_remove_by_name(data, key);
-    }
-    data_window = GWY_DATA_WINDOW(gwy_app_data_window_create(data));
-    gwy_app_data_window_set_untitled(data_window, NULL);
-    g_object_unref(data);
-}
-
 /*** Current directory handling ********************************************/
 
 /**

@@ -749,7 +749,7 @@ remove_by_adaptive_threshold(GwyDataField *dfield,
             pbrcol = MIN(ulcol + j + size/2, brcol);
             pbrrow = MIN(ulrow + i + size/2, brrow);
 
-            rms = gwy_data_field_area_get_rms(dfield,
+            rms = gwy_data_field_area_get_rms(dfield, NULL,
                                               pulcol, pulrow,
                                               pbrcol-pulcol, pbrrow-pulrow);
             if ((rms*rms - noise_variance*noise_variance) > 0) {
@@ -758,12 +758,10 @@ remove_by_adaptive_threshold(GwyDataField *dfield,
                 threshold *= multiple_threshold;
             }
             else {
-                max = gwy_data_field_area_get_max(dfield,
-                                                  pulcol, pulrow,
-                                                  pbrcol-pulcol, pbrrow-pulrow);
-                min = gwy_data_field_area_get_min(dfield,
-                                                  pulcol, pulrow,
-                                                  pbrcol-pulcol, pbrrow-pulrow);
+                gwy_data_field_area_get_min_max(dfield, NULL,
+                                                pulcol, pulrow,
+                                                pbrcol-pulcol, pbrrow-pulrow,
+                                                &min, &max);
                 threshold = MAX(max, -min);
             }
 
@@ -797,22 +795,18 @@ remove_by_threshold(GwyDataField *dfield,
 
     n = (brrow-ulrow)*(brcol-ulcol);
 
-    rms = gwy_data_field_area_get_rms(dfield,
+    rms = gwy_data_field_area_get_rms(dfield, NULL,
                                       ulcol, ulrow, brcol-ulcol, brrow-ulrow);
-    if ((rms*rms - noise_variance*noise_variance) > 0)
-    {
+    if ((rms*rms - noise_variance*noise_variance) > 0) {
         rms = sqrt(rms*rms - noise_variance*noise_variance);
         threshold = noise_variance*noise_variance/rms;
         threshold *= multiple_threshold;
     }
-    else
-    {
-        max = gwy_data_field_area_get_max(dfield,
-                                          ulcol, ulrow,
-                                          brcol-ulcol, brrow-ulrow);
-        min = gwy_data_field_area_get_min(dfield,
-                                          ulcol, ulrow,
-                                          brcol-ulcol, brrow-ulrow);
+    else {
+        gwy_data_field_area_get_min_max(dfield, NULL,
+                                        ulcol, ulrow,
+                                        brcol-ulcol, brrow-ulrow,
+                                        &min, &max);
         threshold = MAX(max, -min);
     }
 
@@ -861,7 +855,7 @@ find_anisotropy(GwyDataField *dfield,
     mcor = MIN(cor, 30);
     scor = MAX(cor, mcor/3.5);
 
-    rms = gwy_data_field_area_get_rms(dfield, ul, ul, br-ul, br-ul);
+    rms = gwy_data_field_area_get_rms(dfield, NULL, ul, ul, br-ul, br-ul);
 
     for (i = 0; i < (br - ul); i++) {
         brdrow = brpos + i*dfield->xres;

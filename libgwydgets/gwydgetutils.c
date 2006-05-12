@@ -102,11 +102,11 @@ gwy_table_attach_row(GtkWidget *table,
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), middle_widget,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
     g_object_set_data(G_OBJECT(middle_widget), "label", label);
     g_object_set_data(G_OBJECT(middle_widget), "middle_widget", middle_widget);
@@ -114,7 +114,7 @@ gwy_table_attach_row(GtkWidget *table,
     if (units) {
         label = gtk_label_new(units);
         gtk_table_attach(GTK_TABLE(table), label,
-                        2, 3, row, row+1, GTK_FILL, 0, 2, 2);
+                         2, 3, row, row+1, GTK_FILL, 0, 0, 0);
         gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         g_object_set_data(G_OBJECT(middle_widget), "units", label);
@@ -328,7 +328,7 @@ gwy_table_attach_hscale(GtkWidget *table,
         u = adj->value;
         gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
-        gtk_table_attach(tab, spin, 2, 3, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_table_attach(tab, spin, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
         gtk_adjustment_set_value(adj, u);
         middle_widget = spin;
 
@@ -374,7 +374,7 @@ gwy_table_attach_hscale(GtkWidget *table,
             }
         }
         gtk_table_attach(GTK_TABLE(table), align, 1, 3, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
     }
     g_object_set_data(G_OBJECT(pivot), "middle_widget", middle_widget);
 
@@ -385,14 +385,14 @@ gwy_table_attach_hscale(GtkWidget *table,
         gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
         gtk_widget_set_size_request(scale, GWY_HSCALE_WIDTH, -1);
         gtk_table_attach(tab, scale, 1, 2, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
         g_object_set_data(G_OBJECT(pivot), "scale", scale);
     }
 
 
     if (style & GWY_HSCALE_CHECK) {
         check = gtk_check_button_new_with_mnemonic(name);
-        gtk_table_attach(tab, check, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_table_attach(tab, check, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
         g_signal_connect(check, "toggled",
                          G_CALLBACK(gwy_hscale_checkbutton_cb), pivot);
         g_object_set_data(G_OBJECT(pivot), "check", check);
@@ -400,7 +400,7 @@ gwy_table_attach_hscale(GtkWidget *table,
     else {
         label = gtk_label_new_with_mnemonic(name);
         gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-        gtk_table_attach(tab, label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_table_attach(tab, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
         gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
         g_object_set_data(G_OBJECT(pivot), "label", label);
     }
@@ -409,7 +409,7 @@ gwy_table_attach_hscale(GtkWidget *table,
         label = gtk_label_new(units);
         gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-        gtk_table_attach(tab, label, 3, 4, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_table_attach(tab, label, 3, 4, row, row+1, GTK_FILL, 0, 0, 0);
         g_object_set_data(G_OBJECT(pivot), "units", label);
     }
 

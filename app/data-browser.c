@@ -2509,6 +2509,7 @@ gwy_app_copy_data_items(GwyContainer *source,
     const guchar *name;
     GwyRGBA rgba;
     guint enumval;
+    gboolean boolval;
     gdouble dbl;
     va_list ap;
 
@@ -2553,6 +2554,15 @@ gwy_app_copy_data_items(GwyContainer *source,
             if (gwy_container_gis_enum_by_name(source, key, &enumval)) {
                 g_snprintf(key, sizeof(key), "/%d/base/range-type", to_id);
                 gwy_container_set_enum_by_name(dest, key, enumval);
+            }
+            break;
+
+            case GWY_DATA_ITEM_REAL_SQUARE:
+            g_snprintf(key, sizeof(key), "/%d/data/realsquare", from_id);
+            if (gwy_container_gis_boolean_by_name(source, key, &boolval)
+                && boolval) {
+                g_snprintf(key, sizeof(key), "/%d/data/realsquare", to_id);
+                gwy_container_set_boolean_by_name(dest, key, boolval);
             }
             break;
 

@@ -78,7 +78,13 @@ gwy_data_field_get_max(GwyDataField *data_field)
 
 /**
  * gwy_data_field_area_get_max:
- * @data_field: A data field
+ * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -86,17 +92,24 @@ gwy_data_field_get_max(GwyDataField *data_field)
  *
  * Finds the maximum value in a rectangular part of a data field.
  *
- * Returns: The maximum value.
+ * Returns: The maximum value.  When the number of samples to calculate
+ *          maximum of is zero, -%G_MAXDOUBLE is returned.
  **/
 gdouble
 gwy_data_field_area_get_max(GwyDataField *dfield,
-                            gint col, gint row, gint width, gint height)
+                            GwyDataField *mask,
+                            gint col, gint row,
+                            gint width, gint height)
 {
     gint i, j;
     gdouble max = -G_MAXDOUBLE;
-    const gdouble *datapos;
+    const gdouble *datapos, *mpos;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), max);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == dfield->xres
+                                   && mask->yres == dfield->yres),
+                         max);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= dfield->xres
@@ -104,6 +117,24 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
                          max);
     if (!width || !height)
         return max;
+
+    if (mask) {
+        datapos = dfield->data + row*dfield->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (G_UNLIKELY(max < *drow) && *mrow > 0.0)
+                    max = *drow;
+                drow++;
+                mrow++;
+            }
+        }
+
+        return max;
+    }
 
     if (col == 0 && width == dfield->xres
         && row == 0 && height == dfield->yres)
@@ -161,6 +192,12 @@ gwy_data_field_get_min(GwyDataField *data_field)
 /**
  * gwy_data_field_area_get_min:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -168,17 +205,24 @@ gwy_data_field_get_min(GwyDataField *data_field)
  *
  * Finds the minimum value in a rectangular part of a data field.
  *
- * Returns: The minimum value.
+ * Returns: The minimum value.  When the number of samples to calculate
+ *          minimum of is zero, -%G_MAXDOUBLE is returned.
  **/
 gdouble
 gwy_data_field_area_get_min(GwyDataField *dfield,
-                            gint col, gint row, gint width, gint height)
+                            GwyDataField *mask,
+                            gint col, gint row,
+                            gint width, gint height)
 {
     gint i, j;
     gdouble min = G_MAXDOUBLE;
-    const gdouble *datapos;
+    const gdouble *datapos, *mpos;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), min);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == dfield->xres
+                                   && mask->yres == dfield->yres),
+                         min);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= dfield->xres
@@ -186,6 +230,24 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
                          min);
     if (!width || !height)
         return min;
+
+    if (mask) {
+        datapos = dfield->data + row*dfield->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (G_UNLIKELY(min > *drow) && *mrow > 0.0)
+                    min = *drow;
+                drow++;
+                mrow++;
+            }
+        }
+
+        return min;
+    }
 
     if (col == 0 && width == dfield->xres
         && row == 0 && height == dfield->yres)
@@ -205,6 +267,14 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
     return min;
 }
 
+/**
+ * gwy_data_field_get_min_max:
+ * @data_field: A data field.
+ * @min: Location to store minimum to.
+ * @max: Location to store maximum to.
+ *
+ * Finds minimum and maximum values of a data field.
+ **/
 void
 gwy_data_field_get_min_max(GwyDataField *data_field,
                            gdouble *min,
@@ -258,18 +328,40 @@ gwy_data_field_get_min_max(GwyDataField *data_field,
     data_field->cached |= CBIT(MIN) | CBIT(MAX);
 }
 
+/**
+ * gwy_data_field_area_get_min_max:
+ * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @min: Location to store minimum to.
+ * @max: Location to store maximum to.
+ *
+ * Finds minimum and maximum values in a rectangular part of a data field.
+ **/
 void
 gwy_data_field_area_get_min_max(GwyDataField *data_field,
+                                GwyDataField *mask,
                                 gint col, gint row,
                                 gint width, gint height,
                                 gdouble *min,
                                 gdouble *max)
 {
     gdouble min1 = G_MAXDOUBLE, max1 = -G_MAXDOUBLE;
-    const gdouble *datapos;
+    const gdouble *datapos, *mpos;
     gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                               && mask->xres == data_field->xres
+                               && mask->yres == data_field->yres));
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 0 && height >= 0
                      && col + width <= data_field->xres
@@ -282,20 +374,56 @@ gwy_data_field_area_get_min_max(GwyDataField *data_field,
         return;
     }
 
+    if (!min && !max)
+        return;
+
+    if (mask) {
+        if (!min) {
+            *max = gwy_data_field_area_get_max(data_field, mask,
+                                               col, row, width, height);
+            return;
+        }
+        if (!max) {
+            *min = gwy_data_field_area_get_min(data_field, mask,
+                                               col, row, width, height);
+            return;
+        }
+
+        datapos = data_field->data + row*data_field->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*data_field->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (G_UNLIKELY(min1 > *drow) && *mrow > 0.0)
+                    min1 = *drow;
+                if (G_UNLIKELY(max1 < *drow) && *mrow > 0.0)
+                    max1 = *drow;
+                drow++;
+                mrow++;
+            }
+        }
+        *min = min1;
+        *max = max1;
+
+        return;
+    }
+
     if (col == 0 && width == data_field->xres
         && row == 0 && height == data_field->yres) {
         gwy_data_field_get_min_max(data_field, min, max);
         return;
     }
 
-    if (!min && !max)
-        return;
-    else if (!min) {
-        *max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+    if (!min) {
+        *max = gwy_data_field_area_get_max(data_field, NULL,
+                                           col, row, width, height);
         return;
     }
-    else if (!max) {
-        *min = gwy_data_field_area_get_min(data_field, col, row, width, height);
+    if (!max) {
+        *min = gwy_data_field_area_get_min(data_field, NULL,
+                                           col, row, width, height);
         return;
     }
 
@@ -331,7 +459,7 @@ gwy_data_field_get_sum(GwyDataField *data_field)
 {
     gint i;
     gdouble sum = 0;
-    gdouble *p;
+    const gdouble *p;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), sum);
 
@@ -352,6 +480,12 @@ gwy_data_field_get_sum(GwyDataField *data_field)
 /**
  * gwy_data_field_area_get_sum:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -363,18 +497,42 @@ gwy_data_field_get_sum(GwyDataField *data_field)
  **/
 gdouble
 gwy_data_field_area_get_sum(GwyDataField *dfield,
-                            gint col, gint row, gint width, gint height)
+                            GwyDataField *mask,
+                            gint col, gint row,
+                            gint width, gint height)
 {
     gint i, j;
     gdouble sum = 0;
-    gdouble *datapos;
+    const gdouble *datapos, *mpos;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == dfield->xres
+                                   && mask->yres == dfield->yres),
+                         sum);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          sum);
+
+    if (mask) {
+        datapos = dfield->data + row*dfield->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (*mrow > 0.0)
+                    sum += *drow;
+                drow++;
+                mrow++;
+            }
+        }
+
+        return sum;
+    }
 
     if (col == 0 && width == dfield->xres
         && row == 0 && height == dfield->yres)
@@ -382,7 +540,7 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
-        gdouble *drow = datapos + i*dfield->xres;
+        const gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++)
             sum += *(drow++);
@@ -404,13 +562,19 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
 gdouble
 gwy_data_field_get_avg(GwyDataField *data_field)
 {
-    return gwy_data_field_get_sum(data_field)/((gdouble)(data_field->xres
-                                                         * data_field->yres));
+    return gwy_data_field_get_sum(data_field)/((data_field->xres
+                                                * data_field->yres));
 }
 
 /**
  * gwy_data_field_area_get_avg:
  * @data_field: A data field
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -422,10 +586,49 @@ gwy_data_field_get_avg(GwyDataField *data_field)
  **/
 gdouble
 gwy_data_field_area_get_avg(GwyDataField *dfield,
-                            gint col, gint row, gint width, gint height)
+                            GwyDataField *mask,
+                            gint col, gint row,
+                            gint width, gint height)
 {
-    return gwy_data_field_area_get_sum(dfield, col, row,
-                                       width, height)/(width*height);
+    gint i, j, nn;
+    gdouble sum = 0;
+    const gdouble *datapos, *mpos;
+
+    if (!mask) {
+        return gwy_data_field_area_get_sum(dfield, mask,
+                                           col, row,
+                                           width, height)/(width*height);
+    }
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask)
+                         && mask->xres == dfield->xres
+                         && mask->yres == dfield->yres,
+                         sum);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         sum);
+
+    datapos = dfield->data + row*dfield->xres + col;
+    mpos = mask->data + row*mask->xres + col;
+    nn = 0;
+    for (i = 0; i < height; i++) {
+        const gdouble *drow = datapos + i*dfield->xres;
+        const gdouble *mrow = mpos + i*mask->xres;
+
+        for (j = 0; j < width; j++) {
+            if (*mrow > 0.0) {
+                sum += *drow;
+                nn++;
+            }
+            drow++;
+            mrow++;
+        }
+    }
+
+    return sum/nn;
 }
 
 /**
@@ -443,7 +646,7 @@ gwy_data_field_get_rms(GwyDataField *data_field)
 {
     gint i, n;
     gdouble rms = 0.0, sum, sum2;
-    gdouble *p;
+    const gdouble *p;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), rms);
 
@@ -469,6 +672,12 @@ gwy_data_field_get_rms(GwyDataField *data_field)
 /**
  * gwy_data_field_area_get_rms:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -480,17 +689,23 @@ gwy_data_field_get_rms(GwyDataField *data_field)
  **/
 gdouble
 gwy_data_field_area_get_rms(GwyDataField *dfield,
-                            gint col, gint row, gint width, gint height)
+                            GwyDataField *mask,
+                            gint col, gint row,
+                            gint width, gint height)
 {
     gint i, j, n;
     gdouble rms = 0.0, sum2 = 0.0;
     gdouble sum;
-    gdouble *datapos;
+    const gdouble *datapos, *mpos;
 
     if (width == 0 || height == 0)
         return rms;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == dfield->xres
+                                   && mask->yres == dfield->yres),
+                         rms);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= dfield->xres
@@ -499,18 +714,41 @@ gwy_data_field_area_get_rms(GwyDataField *dfield,
     if (!width || !height)
         return rms;
 
+    if (mask) {
+        sum = gwy_data_field_area_get_sum(dfield, mask,
+                                          col, row, width, height);
+        datapos = dfield->data + row*dfield->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (*mrow > 0.0)
+                    sum2 += (*drow) * (*drow);
+                drow++;
+                mrow++;
+            }
+        }
+
+        n = width*height;
+        rms = sqrt(fabs(sum2 - sum*sum/n)/n);
+
+        return rms;
+    }
+
     if (col == 0 && width == dfield->xres
         && row == 0 && height == dfield->yres)
         return gwy_data_field_get_rms(dfield);
 
-    sum = gwy_data_field_area_get_sum(dfield, col, row, width, height);
+    sum = gwy_data_field_area_get_sum(dfield, NULL, col, row, width, height);
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
-        gdouble *drow = datapos + i*dfield->xres;
+        const gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++) {
             sum2 += (*drow) * (*drow);
-            *drow++;
+            drow++;
         }
     }
 
@@ -620,7 +858,7 @@ gwy_data_field_get_stats(GwyDataField *data_field,
 {
     gint i;
     gdouble c_sz2, c_sz3, c_sz4, c_abs1;
-    gdouble *p = data_field->data;
+    const gdouble *p = data_field->data;
     gdouble nn = data_field->xres * data_field->yres;
     gdouble dif, myavg, myrms;
 
@@ -660,6 +898,12 @@ gwy_data_field_get_stats(GwyDataField *data_field,
 /**
  * gwy_data_field_area_get_stats:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -677,45 +921,76 @@ gwy_data_field_get_stats(GwyDataField *data_field,
  **/
 void
 gwy_data_field_area_get_stats(GwyDataField *dfield,
-                              gint col, gint row, gint width, gint height,
+                              GwyDataField *mask,
+                              gint col, gint row,
+                              gint width, gint height,
                               gdouble *avg,
                               gdouble *ra,
                               gdouble *rms,
                               gdouble *skew,
                               gdouble *kurtosis)
 {
-    gint i, j;
     gdouble c_sz2, c_sz3, c_sz4, c_abs1;
     gdouble nn, dif, myavg, myrms;
-    gdouble *datapos;
+    const gdouble *datapos, *mpos;
+    gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                               && mask->xres == dfield->xres
+                               && mask->yres == dfield->yres));
     g_return_if_fail(col >= 0 && row >= 0
                      && width > 0 && height > 0
                      && col + width <= dfield->xres
                      && row + height <= dfield->yres);
 
-    nn = width*height;
     c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
-    myavg = gwy_data_field_area_get_avg(dfield, col, row, width, height);
-    if (avg)
-        *avg = myavg;
+    if (mask) {
+        myavg = gwy_data_field_area_get_avg(dfield, mask,
+                                            col, row, width, height);
+        datapos = dfield->data + row*dfield->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        nn = 0;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
 
-    datapos = dfield->data + row*dfield->xres + col;
-    for (i = 0; i < height; i++) {
-        gdouble *drow = datapos + i*dfield->xres;
+            for (j = 0; j < width; j++) {
+                if (*mrow > 0.0) {
+                    dif = *drow - myavg;
+                    c_abs1 += fabs(dif);
+                    c_sz2 += dif*dif;
+                    c_sz3 += dif*dif*dif;
+                    c_sz4 += dif*dif*dif*dif;
+                    nn++;
+                }
+                drow++;
+                mrow++;
+            }
+        }
+    }
+    else {
+        nn = width*height;
+        myavg = gwy_data_field_area_get_avg(dfield, NULL,
+                                            col, row, width, height);
+        datapos = dfield->data + row*dfield->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
 
-        for (j = 0; j < width; j++) {
-            dif = (*(drow++) - myavg);
-            c_abs1 += fabs(dif);
-            c_sz2 += dif*dif;
-            c_sz3 += dif*dif*dif;
-            c_sz4 += dif*dif*dif*dif;
+            for (j = 0; j < width; j++) {
+                dif = *(drow++) - myavg;
+                c_abs1 += fabs(dif);
+                c_sz2 += dif*dif;
+                c_sz3 += dif*dif*dif;
+                c_sz4 += dif*dif*dif*dif;
+            }
         }
     }
 
     myrms = c_sz2/nn;
+    if (avg)
+        *avg = myavg;
     if (ra)
         *ra = c_abs1/nn;
     if (skew)
@@ -727,8 +1002,109 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
 }
 
 /**
+ * gwy_data_field_area_count_in_range:
+ * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @below: Upper bound to compare data to.  The number of samples less
+ *         than or equal to @below is stored in @nbelow.
+ * @above: Lower bound to compare data to.  The number of samples greater
+ *         than or equal to @above is stored in @nabove.
+ * @nbelow: Location to store the number of samples less than or equal
+ *          to @below, or %NULL.
+ * @nabove: Location to store the number of samples greater than or equal
+ *          to @above, or %NULL.
+ *
+ * Counts data samples in given range.
+ *
+ * No assertion is made about the values of @above and @below, in other words
+ * @above may be larger than @below.  To count samples in an open interval
+ * instead of a closed interval, exchange @below and @above and then subtract
+ * the @nabove and @nbelow from @width*@height to get the complementary counts.
+ **/
+void
+gwy_data_field_area_count_in_range(GwyDataField *data_field,
+                                   GwyDataField *mask,
+                                   gint col, gint row,
+                                   gint width, gint height,
+                                   gdouble below,
+                                   gdouble above,
+                                   gint *nbelow,
+                                   gint *nabove)
+{
+    const gdouble *datapos, *mpos;
+    gint i, j, na, nb;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                               && mask->xres == data_field->xres
+                               && mask->yres == data_field->yres));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (!nabove && !nbelow)
+        return;
+
+    na = nb = 0;
+    if (mask) {
+        datapos = data_field->data + row*data_field->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*data_field->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (*mrow > 0.0) {
+                    if (*drow >= above)
+                        na++;
+                    if (*drow <= below)
+                        nb++;
+                }
+                drow++;
+                mrow++;
+            }
+        }
+    }
+    else {
+        datapos = data_field->data + row*data_field->xres + col;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*data_field->xres;
+
+            for (j = 0; j < width; j++) {
+                if (*drow >= above)
+                    na++;
+                if (*drow <= below)
+                    nb++;
+                drow++;
+            }
+        }
+    }
+
+    if (nabove)
+        *nabove = na;
+    if (nbelow)
+        *nbelow = nb;
+}
+
+/**
  * gwy_data_field_area_dh:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to requested width.
  * @col: Upper-left column coordinate.
@@ -742,6 +1118,7 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
  **/
 void
 gwy_data_field_area_dh(GwyDataField *data_field,
+                       GwyDataField *mask,
                        GwyDataLine *target_line,
                        gint col, gint row,
                        gint width, gint height,
@@ -749,24 +1126,41 @@ gwy_data_field_area_dh(GwyDataField *data_field,
 {
     GwySIUnit *fieldunit, *lineunit;
     gdouble min, max;
-    gdouble *drow;
-    gint i, j, k;
+    const gdouble *drow, *mrow;
+    gint i, j, k, nn;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                               && mask->xres == data_field->xres
+                               && mask->yres == data_field->yres));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 1 && height >= 1
                      && col + width <= data_field->xres
                      && row + height <= data_field->yres);
 
+    if (mask) {
+        nn = 0;
+        for (i = 0; i < height; i++) {
+            mrow = mask->data + (i + row)*mask->xres + col;
+            for (j = 0; j < width; j++) {
+                if (mrow[i])
+                    nn++;
+            }
+        }
+    }
+    else
+        nn = width*height;
+
     if (nstats < 1) {
-        nstats = floor(3.49*cbrt(width*height) + 0.5);
+        nstats = floor(3.49*cbrt(nn) + 0.5);
         nstats = MAX(nstats, 2);
     }
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
-    gwy_data_field_area_get_min_max(data_field, col, row, width, height,
+    gwy_data_field_area_get_min_max(data_field, mask,
+                                    col, row, width, height,
                                     &min, &max);
 
     /* Set proper units */
@@ -786,21 +1180,40 @@ gwy_data_field_area_dh(GwyDataField *data_field,
     /* Calculate height distribution */
     gwy_data_line_set_real(target_line, max - min);
     gwy_data_line_set_offset(target_line, min);
-    for (i = 0; i < height; i++) {
-        drow = data_field->data + (i + row)*data_field->xres + col;
+    if (mask) {
+        for (i = 0; i < height; i++) {
+            drow = data_field->data + (i + row)*data_field->xres + col;
+            mrow = mask->data + (i + row)*mask->xres + col;
 
-        for (j = 0; j < width; j++) {
-            k = (gint)((drow[j] - min)/(max - min)*nstats);
-            /* Fix rounding errors */
-            if (G_UNLIKELY(k >= nstats))
-                k = nstats-1;
+            for (j = 0; j < width; j++) {
+                if (mrow[j]) {
+                    k = (gint)((drow[j] - min)/(max - min)*nstats);
+                    /* Fix rounding errors */
+                    if (G_UNLIKELY(k >= nstats))
+                        k = nstats-1;
 
-            target_line->data[k] += 1;
+                    target_line->data[k] += 1;
+                }
+            }
+        }
+    }
+    else {
+        for (i = 0; i < height; i++) {
+            drow = data_field->data + (i + row)*data_field->xres + col;
+
+            for (j = 0; j < width; j++) {
+                k = (gint)((drow[j] - min)/(max - min)*nstats);
+                /* Fix rounding errors */
+                if (G_UNLIKELY(k >= nstats))
+                    k = nstats-1;
+
+                target_line->data[k] += 1;
+            }
         }
     }
 
     /* Normalize integral to 1 */
-    gwy_data_line_multiply(target_line, nstats/(max - min)/(width*height));
+    gwy_data_line_multiply(target_line, nstats/(max - min)/nn);
 }
 
 /**
@@ -819,7 +1232,7 @@ gwy_data_field_dh(GwyDataField *data_field,
                   gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    gwy_data_field_area_dh(data_field, target_line,
+    gwy_data_field_area_dh(data_field, NULL, target_line,
                            0, 0, data_field->xres, data_field->yres,
                            nstats);
 }
@@ -827,6 +1240,12 @@ gwy_data_field_dh(GwyDataField *data_field,
 /**
  * gwy_data_field_area_cdh:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to requested width.
  * @col: Upper-left column coordinate.
@@ -841,12 +1260,13 @@ gwy_data_field_dh(GwyDataField *data_field,
  **/
 void
 gwy_data_field_area_cdh(GwyDataField *data_field,
+                        GwyDataField *mask,
                         GwyDataLine *target_line,
                         gint col, gint row,
                         gint width, gint height,
                         gint nstats)
 {
-    gwy_data_field_area_dh(data_field, target_line,
+    gwy_data_field_area_dh(data_field, mask, target_line,
                            col, row, width, height,
                            nstats);
     gwy_data_line_cumulate(target_line);
@@ -869,7 +1289,7 @@ gwy_data_field_cdh(GwyDataField *data_field,
                    gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    gwy_data_field_area_dh(data_field, target_line,
+    gwy_data_field_area_dh(data_field, NULL, target_line,
                            0, 0, data_field->xres, data_field->yres,
                            nstats);
     gwy_data_line_cumulate(target_line);
@@ -901,7 +1321,8 @@ gwy_data_field_area_da(GwyDataField *data_field,
 {
     GwySIUnit *lineunit;
     GwyDataField *der;
-    gdouble *drow, *derrow;
+    const gdouble *drow;
+    gdouble *derrow;
     gdouble q;
     gint xres, yres, i, j, size;
 
@@ -1188,7 +1609,7 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
         case GWY_ORIENTATION_HORIZONTAL:
         for (i = 0; i < height; i++) {
             drow = data_field->data + (i + row)*xres + col;
-            avg = gwy_data_field_area_get_avg(data_field,
+            avg = gwy_data_field_area_get_avg(data_field, NULL,
                                               col, row+i, width, 1);
             for (j = 0; j < width; j++)
                 in[j] = drow[j] - avg;
@@ -1202,7 +1623,7 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
         case GWY_ORIENTATION_VERTICAL:
         for (i = 0; i < width; i++) {
             dcol = data_field->data + row*xres + (i + col);
-            avg = gwy_data_field_area_get_avg(data_field,
+            avg = gwy_data_field_area_get_avg(data_field, NULL,
                                               col+i, row, 1, height);
             for (j = 0; j < height; j++)
                 in[j] = dcol[j*xres] - avg;
@@ -1615,7 +2036,8 @@ gwy_data_field_area_minkowski_volume(GwyDataField *data_field,
                                      gint width, gint height,
                                      gint nstats)
 {
-    gwy_data_field_area_cdh(data_field, target_line, col, row, width, height,
+    gwy_data_field_area_cdh(data_field, NULL, target_line,
+                            col, row, width, height,
                             nstats);
     gwy_data_line_multiply(target_line, -1.0);
     gwy_data_line_add(target_line, 1.0);
@@ -1690,7 +2112,8 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
-    gwy_data_field_area_get_min_max(data_field, col, row, width, height,
+    gwy_data_field_area_get_min_max(data_field, NULL,
+                                    col, row, width, height,
                                     &min, &max);
     /* There are no boundaries on a totally flat sufrace */
     if (min == max || width == 0 || height == 0)
@@ -2121,6 +2544,12 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
 /**
  * gwy_data_field_area_get_median:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -2132,13 +2561,20 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
  **/
 gdouble
 gwy_data_field_area_get_median(GwyDataField *dfield,
-                               gint col, gint row, gint width, gint height)
+                               GwyDataField *mask,
+                               gint col, gint row,
+                               gint width, gint height)
 {
     gdouble median = 0.0;
-    gdouble *buffer, *datapos;
-    gint i;
+    const gdouble *datapos, *mpos;
+    gdouble *buffer;
+    gint i, j, nn;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), median);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == dfield->xres
+                                   && mask->yres == dfield->yres),
+                         median);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= dfield->xres
@@ -2146,6 +2582,33 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
                          median);
     if (!width || !height)
         return median;
+
+    if (mask) {
+        buffer = g_new(gdouble, width*height);
+        datapos = dfield->data + row*dfield->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        nn = 0;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+
+            for (j = 0; j < width; j++) {
+                if (*mrow > 0.0) {
+                    buffer[nn] = *drow;
+                    nn++;
+                }
+                drow++;
+                mrow++;
+            }
+        }
+
+        if (nn)
+            median = gwy_math_median(nn, buffer);
+
+        g_free(buffer);
+
+        return median;
+    }
 
     if (col == 0 && width == dfield->xres
         && row == 0 && height == dfield->yres)

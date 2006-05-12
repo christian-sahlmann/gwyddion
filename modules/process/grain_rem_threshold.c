@@ -114,7 +114,7 @@ module_register(void)
     gwy_process_func_register("grain_rem_threshold",
                               (GwyProcessFunc)&remove_th,
                               N_("/_Grains/_Remove by Threshold..."),
-                              NULL,
+                              GWY_STOCK_GRAINS_REMOVE,
                               REMOVE_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Remove grains by threshold"));

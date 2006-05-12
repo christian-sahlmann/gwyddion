@@ -596,7 +596,7 @@ gwy_cdline_get_value(GwyCDLine *preset, gdouble x,
                      const gdouble *params, gboolean *fres)
 {
     return preset->builtin->function(x, preset->builtin->nparams, params,
-                                                                          NULL, fres);
+                                     NULL, fres);
 }
 
 

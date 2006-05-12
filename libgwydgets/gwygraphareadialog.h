@@ -51,6 +51,9 @@ struct _GwyGraphAreaDialog {
     GtkObject *pointsize;
     GtkObject *linesize;
 
+    GtkWidget *color_dialog;
+    GwyRGBA old_color;
+
     GObject *curve_model;
 
     gpointer reserved1;

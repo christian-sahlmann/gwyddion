@@ -49,6 +49,7 @@ typedef enum {
     GWY_DATA_ITEM_RANGE,
     GWY_DATA_ITEM_RANGE_TYPE,
     GWY_DATA_ITEM_MASK_COLOR,
+    GWY_DATA_ITEM_REAL_SQUARE,
     /* GWY_DATA_ITEM_SELECTION: Current, all? */
 } GwyDataItem;
 

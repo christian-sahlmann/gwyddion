@@ -1,4 +1,4 @@
-1.99.6cvs20060429
+1.99.6cvs20060512
 
 1.99.7 (2006-04-30)
 Application:
@@ -18,8 +18,13 @@ Libraries:
 - libgwydgets: GwyNullStore `virtual' GtkTreeModel class.
 - libgwyapp: New classes GwyTool and GwyPlainTool for tool implementation.
 - libgwyapp: Unitool is finally gone.
+- libgwyapp: Miscellaneous deprecated functions were removed.
 - libgwymodule: Unification and clean-up, all module types have foreach
   functions, headers are includeable individually.
+- libprocess: Remaining data field area functions were converted to
+  (col, row, width, heigh) rectangle specification.
+- libprocess: Pixelwise statistical functions gained a new argument: mask of
+  pixels to take into account.
 - libgwydddion: New GwyStringList class (forward compatibility stub).
 
 Modules:
@@ -44,8 +49,14 @@ Modules:
 - Line correction: Step correction function (new, experimental).
 - Read Value, Level3: Value averaging uses circular neighbourhood instead of
   a square.
-- Distance: The number of allowed lines was increased.
+- Distance, Profile: The number of allowed lines was increased.
 - Crop: Can crop image in place or create a new image.
+- Mask Editor: Can remove, invert, fill, grow, and shrink masks; the editor
+  functions work with elliptic selections too.
+- Statistical quantities: Can calculate values only from pixels under mask
+  into account, save results to a text file, switch off instant calculation.
+- Statistical functions: Can switch off instant calculation.
+- Mask grow/shrink: Removed, superseded by the new Mask Editor.
 
 Other:
 - gwyconfig.h no longer requires to include math.h first.

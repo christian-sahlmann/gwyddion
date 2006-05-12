@@ -18,12 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TODO: we can calculate inner cycle boundaries explicitly and in addition
- * to saving calculations we can use plain memcpy() to copy data. */
-
 #define GWY_DATA_FIELD_RAW_ACCESS
 #include "config.h"
 
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/elliptic.h>
@@ -50,8 +48,8 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
                                   gint width, gint height,
                                   gdouble value)
 {
-    gint i, j, xres, count;
-    gdouble x, y, a, b, a2, b2, s;
+    gint i, j, from, to, xres, count;
+    gdouble a, b, s;
     gdouble *d;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
@@ -62,22 +60,27 @@ gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
                          0);
 
     a = width/2.0;
-    a2 = a*a;
     b = height/2.0;
-    b2 = b*b;
     xres = data_field->xres;
     count = 0;
 
     for (i = 0; i < height; i++) {
         d = data_field->data + (row + i)*xres + col;
-        y = i - b;
-        s = a2*(1.0 - y*y/b2);
-        for (j = 0; j < width; j++) {
-            x = j - a;
-            if (x*x <= s) {
+        s = (i + 0.5)/b;
+        s = s*(2.0 - s);
+        if (G_UNLIKELY(s <= 0.0))
+            continue;
+        s = sqrt(s);
+        from = ceil(a*(1.0 - s) - 0.5);
+        to = floor(a*(1.0 + s) - 0.5);
+        if (G_UNLIKELY(from < 0))
+            from = 0;
+        if (G_UNLIKELY(to >= width))
+            to = width-1;
+        if (G_LIKELY(to >= from)) {
+            for (j = from; j <= to; j++)
                 d[j] = value;
-                count++;
-            }
+            count += to - from + 1;
         }
     }
 
@@ -111,8 +114,8 @@ gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
                                      gint width, gint height,
                                      gdouble *data)
 {
-    gint i, j, xres, count;
-    gdouble x, y, a, b, a2, b2, s;
+    gint i, from, to, xres, count;
+    gdouble a, b, s;
     const gdouble *d;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
@@ -123,23 +126,26 @@ gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
                          0);
 
     a = width/2.0;
-    a2 = a*a;
     b = height/2.0;
-    b2 = b*b;
     xres = data_field->xres;
-    d = data_field->data;
     count = 0;
 
     for (i = 0; i < height; i++) {
         d = data_field->data + (row + i)*xres + col;
-        y = i - b;
-        s = a2*(1.0 - y*y/b2);
-        for (j = 0; j < width; j++) {
-            x = j - a;
-            if (x*x <= s) {
-                data[count] = d[j];
-                count++;
-            }
+        s = (i + 0.5)/b;
+        s = s*(2.0 - s);
+        if (G_UNLIKELY(s <= 0.0))
+            continue;
+        s = sqrt(s);
+        from = ceil(a*(1.0 - s) - 0.5);
+        to = floor(a*(1.0 + s) - 0.5);
+        if (G_UNLIKELY(from < 0))
+            from = 0;
+        if (G_UNLIKELY(to >= width))
+            to = width-1;
+        if (G_LIKELY(to >= from)) {
+            memcpy(data + count, d + from, (to - from + 1)*sizeof(gdouble));
+            count += to - from + 1;
         }
     }
 
@@ -172,8 +178,8 @@ gwy_data_field_elliptic_area_unextract(GwyDataField *data_field,
                                        gint width, gint height,
                                        const gdouble *data)
 {
-    gint i, j, xres, count;
-    gdouble x, y, a, b, a2, b2, s;
+    gint i, from, to, xres, count;
+    gdouble a, b, s;
     gdouble *d;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
@@ -183,23 +189,26 @@ gwy_data_field_elliptic_area_unextract(GwyDataField *data_field,
                      && row + height <= data_field->yres);
 
     a = width/2.0;
-    a2 = a*a;
     b = height/2.0;
-    b2 = b*b;
     xres = data_field->xres;
-    d = data_field->data;
     count = 0;
 
     for (i = 0; i < height; i++) {
         d = data_field->data + (row + i)*xres + col;
-        y = i - b;
-        s = a2*(1.0 - y*y/b2);
-        for (j = 0; j < width; j++) {
-            x = j - a;
-            if (x*x <= s) {
-                d[j] = data[count];
-                count++;
-            }
+        s = (i + 0.5)/b;
+        s = s*(2.0 - s);
+        if (G_UNLIKELY(s <= 0.0))
+            continue;
+        s = sqrt(s);
+        from = ceil(a*(1.0 - s) - 0.5);
+        to = floor(a*(1.0 + s) - 0.5);
+        if (G_UNLIKELY(from < 0))
+            from = 0;
+        if (G_UNLIKELY(to >= width))
+            to = width-1;
+        if (G_LIKELY(to >= from)) {
+            memcpy(d + from, data + count, (to - from + 1)*sizeof(gdouble));
+            count += to - from + 1;
         }
     }
 }
@@ -218,26 +227,27 @@ gint
 gwy_data_field_get_elliptic_area_size(gint width,
                                       gint height)
 {
-    gint i, j, count;
-    gdouble x, y, a, b, a2, b2, s;
+    gint i, from, to, count;
+    gdouble a, b, s;
 
     if (width <= 0 || height <= 0)
         return 0;
 
     a = width/2.0;
-    a2 = a*a;
     b = height/2.0;
-    b2 = b*b;
     count = 0;
 
     for (i = 0; i < height; i++) {
-        y = i - b;
-        s = a2*(1.0 - y*y/b2);
-        for (j = 0; j < width; j++) {
-            x = j - a;
-            if (x*x <= s)
-                count++;
-        }
+        s = (i + 0.5)/b;
+        s = s*(2.0 - s);
+        if (G_UNLIKELY(s <= 0))
+            continue;
+        s = sqrt(s);
+        from = ceil(a*(1.0 - s) - 0.5);
+        to = floor(a*(1.0 + s) - 0.5);
+        from = MAX(from, 0);
+        to = MIN(to, width-1);
+        count += MAX(to - from + 1, 0);
     }
 
     return count;
@@ -267,6 +277,7 @@ gwy_data_field_circular_area_fill(GwyDataField *data_field,
     gint i, j, r, r2, count, xres;
     gint ifrom, jfrom, ito, jto;
     gdouble *d;
+    gdouble s;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
 
@@ -281,17 +292,19 @@ gwy_data_field_circular_area_fill(GwyDataField *data_field,
 
     /* Clip */
     ifrom = MAX(row - r, 0) - row;
-    jfrom = MAX(col - r, 0) - col;
     ito = MIN(row + r, data_field->yres-1) - row;
-    jto = MIN(col + r, data_field->xres-1) - col;
 
     for (i = ifrom; i <= ito; i++) {
-        for (j = jfrom; j <= jto; j++) {
-            if (i*i + j*j <= r2) {
-                d[(row + i)*xres + col + j] = value;
-                count++;
-            }
-        }
+        s = sqrt(r2 - i*i);
+        jfrom = ceil(-s);
+        jto = floor(s);
+        if (jfrom + col < 0)
+            jfrom = -col;
+        if (jto + col >= xres)
+            jto = xres-1 - col;
+        for (j = jfrom; j <= jto; j++)
+            d[(row + i)*xres + col + j] = value;
+        count += MAX(jto - jfrom + 1, 0);
     }
 
     return count;
@@ -322,9 +335,10 @@ gwy_data_field_circular_area_extract(GwyDataField *data_field,
                                      gdouble radius,
                                      gdouble *data)
 {
-    gint i, j, r, r2, count, xres;
+    gint i, r, r2, count, xres;
     gint ifrom, jfrom, ito, jto;
     const gdouble *d;
+    gdouble s;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
     g_return_val_if_fail(data, 0);
@@ -340,16 +354,20 @@ gwy_data_field_circular_area_extract(GwyDataField *data_field,
 
     /* Clip */
     ifrom = MAX(row - r, 0) - row;
-    jfrom = MAX(col - r, 0) - col;
     ito = MIN(row + r, data_field->yres-1) - row;
-    jto = MIN(col + r, data_field->xres-1) - col;
 
     for (i = ifrom; i <= ito; i++) {
-        for (j = jfrom; j <= jto; j++) {
-            if (i*i + j*j <= r2) {
-                data[count] = d[(row + i)*xres + col + j];
-                count++;
-            }
+        s = sqrt(r2 - i*i);
+        jfrom = ceil(-s);
+        jto = floor(s);
+        if (jfrom + col < 0)
+            jfrom = -col;
+        if (jto + col >= xres)
+            jto = xres-1 - col;
+        if (jto >= jfrom) {
+            memcpy(data + count, d + (row + i)*xres + col + jfrom,
+                   (jto - jfrom + 1)*sizeof(gdouble));
+            count += jto - jfrom + 1;
         }
     }
 
@@ -378,9 +396,10 @@ gwy_data_field_circular_area_unextract(GwyDataField *data_field,
                                        gdouble radius,
                                        const gdouble *data)
 {
-    gint i, j, r, r2, count, xres;
+    gint i, r, r2, count, xres;
     gint ifrom, jfrom, ito, jto;
     gdouble *d;
+    gdouble s;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(data);
@@ -396,16 +415,20 @@ gwy_data_field_circular_area_unextract(GwyDataField *data_field,
 
     /* Clip */
     ifrom = MAX(row - r, 0) - row;
-    jfrom = MAX(col - r, 0) - col;
     ito = MIN(row + r, data_field->yres-1) - row;
-    jto = MIN(col + r, data_field->xres-1) - col;
 
     for (i = ifrom; i <= ito; i++) {
-        for (j = jfrom; j <= jto; j++) {
-            if (i*i + j*j <= r2) {
-                d[(row + i)*xres + col + j] = data[count];
-                count++;
-            }
+        s = sqrt(r2 - i*i);
+        jfrom = ceil(-s);
+        jto = floor(s);
+        if (jfrom + col < 0)
+            jfrom = -col;
+        if (jto + col >= xres)
+            jto = xres-1 - col;
+        if (jto >= jfrom) {
+            memcpy(d + (row + i)*xres + col + jfrom, data + count,
+                   (jto - jfrom + 1)*sizeof(gdouble));
+            count += jto - jfrom + 1;
         }
     }
 }
@@ -422,7 +445,8 @@ gwy_data_field_circular_area_unextract(GwyDataField *data_field,
 gint
 gwy_data_field_get_circular_area_size(gdouble radius)
 {
-    gint i, j, r, r2, count;
+    gint i, r, r2, count, jto, jfrom;
+    gdouble s;
 
     if (radius < 0.0)
         return 0;
@@ -432,10 +456,10 @@ gwy_data_field_get_circular_area_size(gdouble radius)
     count = 0;
 
     for (i = -r; i <= r; i++) {
-        for (j = -r; j <= r; j++) {
-            if (i*i + j*j <= r2)
-                count++;
-        }
+        s = sqrt(r2 - i*i);
+        jfrom = ceil(-s);
+        jto = floor(s);
+        count += jto - jfrom + 1;
     }
 
     return count;

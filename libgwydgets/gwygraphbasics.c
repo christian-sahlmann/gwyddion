@@ -1,9 +1,5 @@
 /*
-<<<<<<< gwygraphbasics.c
  *  @(#) $Id$
-=======
- *  @(#) $Id$
->>>>>>> 1.25
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -31,7 +27,23 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
-#include <stdio.h>
+/* FIXME: some are not distinct enough, find a better set. */
+static const GwyRGBA nice_colors[] = {
+    { 0.000, 0.000, 0.000, 1.000 },
+    { 0.812, 0.000, 0.000, 1.000 },
+    { 0.000, 0.525, 0.000, 1.000 },
+    { 0.000, 0.000, 0.596, 1.000 },
+    { 0.470, 0.470, 0.470, 1.000 },
+    { 0.694, 0.000, 0.463, 1.000 },
+    { 0.078, 0.400, 0.545, 1.000 },
+/*  { 0.220, 0.537, 0.318, 1.000 },  */
+    { 0.757, 0.580, 0.098, 1.000 },
+    { 0.000, 0.467, 0.467, 1.000 },
+    { 0.506, 0.533, 0.000, 1.000 },
+    { 0.529, 0.216, 0.000, 1.000 },
+    { 0.510, 0.000, 0.749, 1.000 },
+    { 0.831, 0.588, 0.000, 1.000 },
+};
 
 static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
@@ -148,7 +160,6 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
     gdk_gc_set_line_attributes(gc, size,
                                line_style, GDK_CAP_BUTT, GDK_JOIN_MITER);
 
-    /*printf("%d %d  %d %d\n", x_from, y_from, x_to, y_to);*/
     gdk_draw_line(drawable, gc, x_from, y_from, x_to, y_to);
 }
 
@@ -426,6 +437,39 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
                       specs->ymin + specs->height + 1);
     }
 
+}
+
+/**
+ * gwy_graph_get_preset_color:
+ * @i: Color number, starting from 0 which is always black.  It can be any
+ *     number but colors start to repeat after
+ *     gwy_graph_get_n_preset_colors() colors.
+ *
+ * Gets a preset graph color.
+ *
+ * Preset colors are a set of selected colors one can use to distingush graph
+ * curves when there is no reason to prefer a particular color.  Note they
+ * can change between version, even their number can change.
+ *
+ * Returns: A constant color that must not be neither modified nor freed.
+ **/
+const GwyRGBA*
+gwy_graph_get_preset_color(guint i)
+{
+    return nice_colors + (i % G_N_ELEMENTS(nice_colors));
+}
+
+/**
+ * gwy_graph_get_n_preset_colors:
+ *
+ * Gets the number of distinct colors gwy_graph_get_preset_color() can return.
+ *
+ * Returns: The number of distinct colors.
+ **/
+guint
+gwy_graph_get_n_preset_colors(void)
+{
+    return G_N_ELEMENTS(nice_colors);
 }
 
 /************************** Documentation ****************************/

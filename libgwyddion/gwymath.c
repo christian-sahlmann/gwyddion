@@ -480,6 +480,54 @@ gwy_math_choleski_solve(gint dim, const gdouble *a, gdouble *b)
     }
 }
 
+/**
+ * gwy_math_tridiag_solve_rewrite:
+ * @n: The dimension of @d.
+ * @d: The diagonal of a tridiagonal matrix, its contents will be overwritten.
+ * @a: The above-diagonal stripe (it has @n-1 elements).
+ * @b: The below-diagonal stripe (it has @n-1 elements).
+ * @rhs: The right hand side of the system, upon return it will contain the
+ *       solution.
+ *
+ * Solves a tridiagonal system of linear equations.
+ *
+ * Returns: %TRUE if the elimination suceeded, %FALSE if the system is
+ *          (numerically) singular.  The contents of @d and @rhs may be
+ *          overwritten in the case of failure too, but not to any meaningful
+ *          values.
+ **/
+gboolean
+gwy_math_tridiag_solve_rewrite(gint n,
+                               gdouble *d,
+                               const gdouble *a,
+                               const gdouble *b,
+                               gdouble *rhs)
+{
+    gint i;
+
+    g_return_val_if_fail(n > 0, FALSE);
+
+    /* Eliminate b[elow diagonal] */
+    for (i = 0; i < n-1; i++) {
+        /* If d[i] is zero, elimination fails (now or later) */
+        if (!d[i])
+            return FALSE;
+        d[i+1] -= b[i]/d[i]*a[i];
+        rhs[i+1] -= b[i]/d[i]*rhs[i];
+    }
+    if (!d[n-1])
+        return FALSE;
+
+    /* Eliminate a[bove diagonal] */
+    for (i = 0; i < n-1; i++) {
+        rhs[i] -= a[i]/d[i+1]*rhs[i+1];
+        /* Calculate the solution when we are at it */
+        rhs[i] /= d[i];
+    }
+
+    return TRUE;
+}
+
 /* Quickly find median value in an array
  * based on public domain code by Nicolas Devillard */
 /**
@@ -641,8 +689,7 @@ void
 gwy_math_sort(gsize n,
               gdouble *array)
 {
-
-    if (n == 0)
+    if (n < 2)
         /* Avoid lossage with unsigned arithmetic below.  */
         return;
 

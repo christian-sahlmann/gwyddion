@@ -33,7 +33,8 @@ G_BEGIN_DECLS
 #define GWY_TOOL_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL, GwyToolClass))
 
 typedef enum {
-    GWY_TOOL_RESPONSE_CLEAR = 1
+    GWY_TOOL_RESPONSE_CLEAR  = 1,
+    GWY_TOOL_RESPONSE_UPDATE = 2,
 } GwyToolResponseType;
 
 typedef struct _GwyTool      GwyTool;

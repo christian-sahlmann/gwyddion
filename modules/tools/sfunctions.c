@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,23 +17,21 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
-#include <string.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwymodule/gwymodule.h>
-#include <libprocess/linestats.h>
+#include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/stats.h>
-#include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/data-browser.h>
-#include <app/unitool.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <app/gwyapp.h>
 
-#define CHECK_LAYER_TYPE(l) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+#define GWY_TYPE_TOOL_SFUNCTIONS            (gwy_tool_sfunctions_get_type())
+#define GWY_TOOL_SFUNCTIONS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_SFUNCTIONS, GwyToolSFunctions))
+#define GWY_IS_TOOL_SFUNCTIONS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_SFUNCTIONS))
+#define GWY_TOOL_SFUNCTIONS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SFUNCTIONS, GwyToolSFunctionsClass))
 
 typedef enum {
     GWY_SF_DH                     = 0,
@@ -48,47 +46,86 @@ typedef enum {
     GWY_SF_MINKOWSKI_CONNECTIVITY = 9,
 } GwySFOutputType;
 
+enum {
+    MAX_THICKNESS = 128,
+    MIN_RESOLUTION = 4,
+    MAX_RESOLUTION = 1024
+};
+
+typedef struct _GwyToolSFunctions      GwyToolSFunctions;
+typedef struct _GwyToolSFunctionsClass GwyToolSFunctionsClass;
+
 typedef struct {
-    GwyUnitoolState *state;
-    GwyUnitoolRectLabels labels;
+    GwySFOutputType output_type;
+    gboolean options_visible;
+    gboolean instant_update;
+    gint resolution;
+    gboolean fixres;
+    GwyOrientation direction;
+    GwyInterpolationType interpolation;
+} ToolArgs;
+
+struct _GwyToolSFunctions {
+    GwyPlainTool parent_instance;
+
+    ToolArgs args;
+
+    GwyRectSelectionLabels *rlabels;
+
+    GwyDataLine *line;
+
     GtkWidget *graph;
+    GwyGraphModel *gmodel;
+
+    GtkWidget *options;
+    GtkWidget *output_type;
+    GtkWidget *instant_update;
+    GSList *direction;
+    GtkObject *resolution;
+    GtkWidget *fixres;
     GtkWidget *interpolation;
-    GtkWidget *output;
-    GtkWidget *direction;
-    GtkWidget *isnofpoints;
-    GtkObject *size;
-    GwyInterpolationType interp;
-    GwySFOutputType out;
-    GwyOrientation dir;
-    gint siz;
-    GwyGraphModel *graphmodel;
-    gboolean isnpoints;
-} ToolControls;
+    GtkWidget *interpolation_label;
+    GtkWidget *update;
+    GtkWidget *apply;
 
-static gboolean   module_register      (void);
-static gboolean   use                  (GwyDataWindow *data_window,
-                                        GwyToolSwitchEvent reason);
-static void       layer_setup          (GwyUnitoolState *state);
-static GtkWidget* dialog_create        (GwyUnitoolState *state);
-static void       dialog_update        (GwyUnitoolState *state,
-                                        GwyUnitoolUpdateType reason);
-static void       dialog_abandon       (GwyUnitoolState *state);
-static void       apply                (GwyUnitoolState *state);
-static void       interp_changed_cb    (GtkWidget *combo,
-                                        ToolControls *controls);
-static void       output_changed_cb    (GtkWidget *combo,
-                                        ToolControls *controls);
-static void       direction_changed_cb (GtkWidget *combo,
-                                        ToolControls *controls);
-static void       size_changed_cb      (GObject *adjustment,
-                                        ToolControls *controls);
-static void      isnofpoints_changed_cb(GtkToggleButton *button,
-                                        ToolControls *controls);
-static void       load_args            (GwyContainer *container,
-                                        ToolControls *controls);
-static void       save_args            (GwyContainer *container,
-                                        ToolControls *controls);
+    /* potential class data */
+    GType layer_type_rect;
+};
 
+struct _GwyToolSFunctionsClass {
+    GwyPlainToolClass parent_class;
+};
+
+static gboolean module_register(void);
+
+static GType gwy_tool_sfunctions_get_type            (void) G_GNUC_CONST;
+static void gwy_tool_sfunctions_finalize             (GObject *object);
+static void gwy_tool_sfunctions_init_dialog          (GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_data_switched        (GwyTool *gwytool,
+                                                      GwyDataView *data_view);
+static void gwy_tool_sfunctions_response             (GwyTool *tool,
+                                                      gint response_id);
+static void gwy_tool_sfunctions_data_changed         (GwyPlainTool *plain_tool);
+static void gwy_tool_sfunctions_selection_changed    (GwyPlainTool *plain_tool,
+                                                      gint hint);
+static void gwy_tool_sfunctions_update_sensitivity   (GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_update_curve         (GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_instant_update_changed(GtkToggleButton *check,
+                                                       GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_resolution_changed   (GwyToolSFunctions *tool,
+                                                      GtkAdjustment *adj);
+static void gwy_tool_sfunctions_fixres_changed       (GtkToggleButton *check,
+                                                      GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_output_type_changed  (GtkComboBox *combo,
+                                                      GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_direction_changed    (GObject *button,
+                                                      GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_interpolation_changed(GtkComboBox *combo,
+                                                      GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_options_expanded     (GtkExpander *expander,
+                                                      GParamSpec *pspec,
+                                                      GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_apply                (GwyToolSFunctions *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -97,19 +134,27 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
-static GwyUnitoolSlots func_slots = {
-    0,                             /* layer type, must be set runtime */
-    layer_setup,                   /* layer setup func */
-    dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
-    apply,                         /* apply action */
-    NULL,                          /* nonstandard response handler */
+static const gchar direction_key[]       = "/module/sfunctions/direction";
+static const gchar fixres_key[]          = "/module/sfunctions/fixres";
+static const gchar instant_update_key[]  = "/module/sfunctions/instant_update";
+static const gchar interpolation_key[]   = "/module/sfunctions/interpolation";
+static const gchar options_visible_key[] = "/module/sfunctions/options_visible";
+static const gchar output_type_key[]     = "/module/sfunctions/output_type";
+static const gchar resolution_key[]      = "/module/sfunctions/resolution";
+
+static const ToolArgs default_args = {
+    GWY_SF_DH,
+    FALSE,
+    TRUE,
+    120,
+    FALSE,
+    GWY_ORIENTATION_HORIZONTAL,
+    GWY_INTERPOLATION_BILINEAR,
 };
 
 static const GwyEnum sf_types[] =  {
@@ -127,398 +172,574 @@ static const GwyEnum sf_types[] =  {
 
 GWY_MODULE_QUERY(module_info)
 
+G_DEFINE_TYPE(GwyToolSFunctions, gwy_tool_sfunctions, GWY_TYPE_PLAIN_TOOL)
+
 static gboolean
 module_register(void)
 {
-    static GwyToolFuncInfo func_info = {
-        "sfunctions",
-        GWY_STOCK_GRAPH_HALFGAUSS,
-        N_("Compute 1D statistical functions."),
-        use,
-    };
-
-    gwy_tool_func_register(&func_info);
+    gwy_tool_func_register(GWY_TYPE_TOOL_SFUNCTIONS);
 
     return TRUE;
 }
 
-static gboolean
-use(GwyDataWindow *data_window,
-    GwyToolSwitchEvent reason)
+static void
+gwy_tool_sfunctions_class_init(GwyToolSFunctionsClass *klass)
 {
-    static const gchar *layer_name = "GwyLayerRectangle";
-    static GwyUnitoolState *state = NULL;
+    GwyPlainToolClass *ptool_class = GWY_PLAIN_TOOL_CLASS(klass);
+    GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    if (!state) {
-        func_slots.layer_type = g_type_from_name(layer_name);
-        if (!func_slots.layer_type) {
-            g_warning("Layer type `%s' not available", layer_name);
-            return FALSE;
-        }
-        state = g_new0(GwyUnitoolState, 1);
-        state->func_slots = &func_slots;
-        state->user_data = g_new0(ToolControls, 1);
-    }
-    ((ToolControls*)state->user_data)->state = state;
-    return gwy_unitool_use(state, data_window, reason);
+    gobject_class->finalize = gwy_tool_sfunctions_finalize;
+
+    tool_class->stock_id = GWY_STOCK_GRAPH_HALFGAUSS;
+    tool_class->title = _("Statistical Functions");
+    tool_class->tooltip = _("Calculate 1D statistical functions");
+    tool_class->prefix = "/module/sfunctions";
+    tool_class->default_width = 640;
+    tool_class->default_height = 400;
+    tool_class->data_switched = gwy_tool_sfunctions_data_switched;
+    tool_class->response = gwy_tool_sfunctions_response;
+
+    ptool_class->data_changed = gwy_tool_sfunctions_data_changed;
+    ptool_class->selection_changed = gwy_tool_sfunctions_selection_changed;
 }
 
 static void
-layer_setup(GwyUnitoolState *state)
+gwy_tool_sfunctions_finalize(GObject *object)
 {
-    g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer,
-                 "selection-key", "/0/select/rectangle",
-                 "is-crop", FALSE,
-                 NULL);
+    GwyToolSFunctions *tool;
+    GwyContainer *settings;
+
+    tool = GWY_TOOL_SFUNCTIONS(object);
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_enum_by_name(settings, output_type_key,
+                                   tool->args.output_type);
+    gwy_container_set_boolean_by_name(settings, options_visible_key,
+                                      tool->args.options_visible);
+    gwy_container_set_boolean_by_name(settings, instant_update_key,
+                                      tool->args.instant_update);
+    gwy_container_set_int32_by_name(settings, resolution_key,
+                                    tool->args.resolution);
+    gwy_container_set_boolean_by_name(settings, fixres_key,
+                                      tool->args.fixres);
+    gwy_container_set_enum_by_name(settings, interpolation_key,
+                                   tool->args.interpolation);
+    gwy_container_set_enum_by_name(settings, direction_key,
+                                   tool->args.direction);
+
+    gwy_object_unref(tool->line);
+
+    G_OBJECT_CLASS(gwy_tool_sfunctions_parent_class)->finalize(object);
 }
 
-static GtkWidget*
-dialog_create(GwyUnitoolState *state)
+static void
+gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
 {
-    ToolControls *controls;
+    GwyPlainTool *plain_tool;
     GwyContainer *settings;
-    GtkWidget *dialog, *spin, *table, *label, *vbox, *frame, *hbox;
-    gint row;
 
-    gwy_debug("");
-    controls = (ToolControls*)state->user_data;
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
+                                                           "GwyLayerRectangle");
+    if (!tool->layer_type_rect)
+        return;
+
+    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
+    plain_tool->lazy_updates = TRUE;
+
     settings = gwy_app_settings_get();
-    load_args(settings, controls);
+    tool->args = default_args;
+    gwy_container_gis_enum_by_name(settings, output_type_key,
+                                   &tool->args.output_type);
+    gwy_container_gis_boolean_by_name(settings, options_visible_key,
+                                      &tool->args.options_visible);
+    gwy_container_gis_boolean_by_name(settings, instant_update_key,
+                                      &tool->args.instant_update);
+    gwy_container_gis_int32_by_name(settings, resolution_key,
+                                    &tool->args.resolution);
+    gwy_container_gis_boolean_by_name(settings, fixres_key,
+                                      &tool->args.fixres);
+    gwy_container_gis_enum_by_name(settings, interpolation_key,
+                                   &tool->args.interpolation);
+    gwy_container_gis_enum_by_name(settings, direction_key,
+                                   &tool->args.direction);
 
-    dialog = gtk_dialog_new_with_buttons(_("Statistical Functions"),
-                                         NULL, 0, NULL);
-    gwy_unitool_dialog_add_button_clear(dialog);
-    gwy_unitool_dialog_add_button_hide(dialog);
-    gwy_unitool_dialog_add_button_apply(dialog);
+    tool->line = gwy_data_line_new(4, 1.0, FALSE);
 
-    hbox = gtk_hbox_new(FALSE, 2);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), hbox);
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                     "rectangle");
 
-    vbox = gtk_vbox_new(FALSE, 0);
+    gwy_tool_sfunctions_init_dialog(tool);
+}
+
+static void
+gwy_tool_sfunctions_rect_updated(GwyToolSFunctions *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    gwy_rect_selection_labels_select(tool->rlabels,
+                                     plain_tool->selection,
+                                     plain_tool->data_field);
+}
+
+static void
+gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
+{
+    static const GwyEnum directions[] = {
+        { N_("_Horizontal direction"), GWY_ORIENTATION_HORIZONTAL, },
+        { N_("_Vertical direction"),   GWY_ORIENTATION_VERTICAL,   },
+    };
+    GtkDialog *dialog;
+    GtkWidget *label, *hbox, *vbox, *hbox2, *image;
+    GtkTable *table;
+    GSList *radio;
+    guint row;
+
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
+
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, TRUE, TRUE, 0);
+
+    /* Left pane */
+    vbox = gtk_vbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
-    frame = gwy_unitool_windowname_frame_create(state);
-    gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
+    /* Selection info */
+    tool->rlabels = gwy_rect_selection_labels_new
+                         (TRUE, G_CALLBACK(gwy_tool_sfunctions_rect_updated),
+                          tool);
+    gtk_box_pack_start(GTK_BOX(vbox),
+                       gwy_rect_selection_labels_get_table(tool->rlabels),
+                       FALSE, FALSE, 0);
 
-    table = gtk_table_new(6, 3, FALSE);
+    /* Output type */
+    hbox2 = gtk_hbox_new(FALSE, 4);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox2), 4);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
+
+    tool->output_type = gwy_enum_combo_box_new
+                           (sf_types, G_N_ELEMENTS(sf_types),
+                            G_CALLBACK(gwy_tool_sfunctions_output_type_changed),
+                            tool,
+                            tool->args.output_type, TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox2), tool->output_type, FALSE, FALSE, 0);
+
+    /* Options */
+    tool->options = gtk_expander_new(_("<b>Options</b>"));
+    gtk_expander_set_use_markup(GTK_EXPANDER(tool->options), TRUE);
+    gtk_expander_set_expanded(GTK_EXPANDER(tool->options),
+                              tool->args.options_visible);
+    g_signal_connect(tool->options, "notify::expanded",
+                     G_CALLBACK(gwy_tool_sfunctions_options_expanded), tool);
+    gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
+
+    table = GTK_TABLE(gtk_table_new(6, 4, FALSE));
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(tool->options), GTK_WIDGET(table));
     row = 0;
 
-    row += gwy_unitool_rect_info_table_setup(&controls->labels,
-                                             GTK_TABLE(table), 0, row);
-    controls->labels.unselected_is_full = TRUE;
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    tool->instant_update
+        = gtk_check_button_new_with_mnemonic(_("_Instant updates"));
+    gtk_table_attach(table, tool->instant_update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->instant_update),
+                                 tool->args.instant_update);
+    g_signal_connect(tool->instant_update, "toggled",
+                     G_CALLBACK(gwy_tool_sfunctions_instant_update_changed),
+                     tool);
+    row++;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
+    tool->resolution = gtk_adjustment_new(tool->args.resolution,
+                                          MIN_RESOLUTION, MAX_RESOLUTION,
+                                          1, 10, 0);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Fix res.:"), NULL,
+                            tool->resolution,
+                            GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(tool->resolution, "value-changed",
+                             G_CALLBACK(gwy_tool_sfunctions_resolution_changed),
+                             tool);
+    tool->fixres = gwy_table_hscale_get_check(tool->resolution);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->fixres),
+                                 tool->args.fixres);
+    g_signal_connect(tool->fixres, "toggled",
+                     G_CALLBACK(gwy_tool_sfunctions_fixres_changed), tool);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    radio = gwy_radio_buttons_create
+                    (directions, G_N_ELEMENTS(directions), "direction-type",
+                     G_CALLBACK(gwy_tool_sfunctions_direction_changed), tool,
+                     tool->args.direction);
+    tool->direction = radio;
+    while (radio) {
+        gtk_table_attach(table, GTK_WIDGET(radio->data),
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+        radio = g_slist_next(radio);
+    }
+    gtk_table_set_row_spacing(table, row-1, 8);
+
+    hbox2 = gtk_hbox_new(FALSE, 4);
+    gtk_table_attach(table, hbox2,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+    tool->interpolation_label = label;
+
+    tool->interpolation = gwy_enum_combo_box_new
+                         (gwy_interpolation_type_get_enum(), -1,
+                          G_CALLBACK(gwy_tool_sfunctions_interpolation_changed),
+                          tool,
+                          tool->args.interpolation, TRUE);
+    gtk_box_pack_end(GTK_BOX(hbox2), tool->interpolation, FALSE, FALSE, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("_Output type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
+    tool->gmodel = gwy_graph_model_new();
 
-    controls->output
-        = gwy_enum_combo_box_new(sf_types, G_N_ELEMENTS(sf_types),
-                                 G_CALLBACK(output_changed_cb), controls,
-                                 controls->out, TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls->output, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
-    row++;
+    tool->graph = gwy_graph_new(tool->gmodel);
+    gtk_box_pack_start(GTK_BOX(hbox), tool->graph, TRUE, TRUE, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Computation _direction:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
+    tool->update = gtk_dialog_add_button(dialog, _("_Update"),
+                                         GWY_TOOL_RESPONSE_UPDATE);
+    image = gtk_image_new_from_stock(GTK_STOCK_EXECUTE, GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(tool->update), image);
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
+    gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
+    tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
+                                        GTK_RESPONSE_APPLY);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
 
-    controls->direction
-        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
-                                 G_CALLBACK(direction_changed_cb), controls,
-                                 controls->dir, TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls->direction, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
-    row++;
+    gwy_tool_sfunctions_update_sensitivity(tool);
 
-    controls->size = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
-
-    spin = gwy_table_attach_hscale(table, row, _("Fix res.:"), NULL,
-                                   GTK_OBJECT(controls->size),
-                                   GWY_HSCALE_CHECK);
-    g_signal_connect(controls->size, "value_changed",
-                     G_CALLBACK(size_changed_cb), controls);
-    controls->isnofpoints = gwy_table_hscale_get_check(controls->size);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->isnofpoints),
-                                 controls->isnpoints);
-    g_signal_connect(controls->isnofpoints, "toggled",
-                     G_CALLBACK(isnofpoints_changed_cb), controls);
-    gwy_table_hscale_set_sensitive(controls->size, controls->isnpoints);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("Interpolation type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    controls->interpolation
-        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), controls,
-                                 controls->interp, TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls->interpolation,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    controls->graphmodel = gwy_graph_model_new();
-    controls->graph = gwy_graph_new(controls->graphmodel);
-    gtk_widget_set_size_request(controls->graph, 400, 150);
-    gwy_graph_enable_user_input(GWY_GRAPH(controls->graph), FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
-
-    return dialog;
+    gtk_widget_show_all(dialog->vbox);
 }
 
 static void
-dialog_update(GwyUnitoolState *state,
-              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
+gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
+                                  GwyDataView *data_view)
 {
-    ToolControls *controls;
-    GwyContainer *data;
-    GwyGraphCurveModel *gcmodel;
-    GwyDataField *dfield;
-    GwyDataLine *dataline;
-    GwyDataViewLayer *layer;
-    gint isel[4], w, h, res;
-    GString *lab;
+    GwyPlainTool *plain_tool;
+    GwyToolSFunctions *tool;
 
-    gwy_debug("");
+    GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->data_switched(gwytool,
+                                                                 data_view);
 
-    /* XXX: Does not work.  We don't need to update when the dialog is
-     * visible, but we must update when it *becomes visible again* then
-    if (!state->is_visible)
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    if (plain_tool->init_failed)
         return;
-    */
 
-    controls = (ToolControls*)state->user_data;
-    gtk_widget_set_sensitive(controls->direction,
-                             controls->out == GWY_SF_DA
-                             || controls->out == GWY_SF_CDA
-                             || controls->out == GWY_SF_ACF
-                             || controls->out == GWY_SF_HHCF
-                             || controls->out == GWY_SF_PSDF);
-
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
-
-
-    gwy_graph_model_remove_all_curves(controls->graphmodel);
-    gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
-
-    dataline = gwy_data_line_new(10, 10, FALSE);
-    lab = g_string_new(gwy_enum_to_string(controls->out,
-                                          sf_types, G_N_ELEMENTS(sf_types)));
-
-    w = isel[2] - isel[0];
-    h = isel[3] - isel[1];
-    if (w >= 4 && h >= 4) {
-        res = controls->isnpoints ? controls->siz : -1;
-        switch (controls->out) {
-            case GWY_SF_DH:
-            gwy_data_field_area_dh(dfield, dataline, isel[0], isel[1], w, h,
-                                   res);
-            break;
-
-            case GWY_SF_CDH:
-            gwy_data_field_area_cdh(dfield, dataline, isel[0], isel[1], w, h,
-                                    res);
-            break;
-
-            case GWY_SF_DA:
-            gwy_data_field_area_da(dfield, dataline, isel[0], isel[1], w, h,
-                                   controls->dir, res);
-            break;
-
-            case GWY_SF_CDA:
-            gwy_data_field_area_cda(dfield, dataline, isel[0], isel[1], w, h,
-                                    controls->dir, res);
-            break;
-
-            case GWY_SF_ACF:
-            gwy_data_field_area_acf(dfield, dataline, isel[0], isel[1], w, h,
-                                    controls->dir, controls->interp, res);
-            break;
-
-            case GWY_SF_HHCF:
-            gwy_data_field_area_hhcf(dfield, dataline, isel[0], isel[1], w, h,
-                                     controls->dir, controls->interp, res);
-            break;
-
-            case GWY_SF_PSDF:
-            gwy_data_field_area_psdf(dfield, dataline, isel[0], isel[1], w, h,
-                                     controls->dir, controls->interp,
-                                     GWY_WINDOWING_HANN, res);
-            break;
-
-            case GWY_SF_MINKOWSKI_VOLUME:
-            gwy_data_field_area_minkowski_volume(dfield, dataline,
-                                                 isel[0], isel[1], w, h,
-                                                 res);
-            break;
-
-            case GWY_SF_MINKOWSKI_BOUNDARY:
-            gwy_data_field_area_minkowski_boundary(dfield, dataline,
-                                                   isel[0], isel[1], w, h,
-                                                   res);
-            break;
-
-            case GWY_SF_MINKOWSKI_CONNECTIVITY:
-            gwy_data_field_area_minkowski_euler(dfield, dataline,
-                                                isel[0], isel[1], w, h,
-                                                res);
-            break;
-        }
-
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, dataline, 0, 0);
-        gwy_graph_curve_model_set_description(gcmodel, lab->str);
-        gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
-        g_object_unref(gcmodel);
-        gwy_graph_model_set_title(controls->graphmodel,
-                                  gettext(sf_types[controls->out].name));
-        gwy_graph_model_set_units_from_data_line(controls->graphmodel,
-                                                 dataline);
+    tool = GWY_TOOL_SFUNCTIONS(gwytool);
+    if (data_view) {
+        g_object_set(plain_tool->layer,
+                     "draw-reflection", FALSE,
+                     "is-crop", FALSE,
+                     NULL);
+        gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 
-    g_string_free(lab, TRUE);
-    g_object_unref(dataline);
+    gwy_tool_sfunctions_update_curve(tool);
 }
 
 static void
-apply(GwyUnitoolState *state)
+gwy_tool_sfunctions_response(GwyTool *tool,
+                             gint response_id)
 {
+    GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->response(tool,
+                                                               response_id);
 
-    ToolControls *controls;
-    GtkWidget *graph;
+    if (response_id == GTK_RESPONSE_APPLY)
+        gwy_tool_sfunctions_apply(GWY_TOOL_SFUNCTIONS(tool));
+    else if (response_id == GWY_TOOL_RESPONSE_UPDATE)
+        gwy_tool_sfunctions_update_curve(GWY_TOOL_SFUNCTIONS(tool));
+}
+
+static void
+gwy_tool_sfunctions_data_changed(GwyPlainTool *plain_tool)
+{
+    gwy_tool_sfunctions_update_curve(GWY_TOOL_SFUNCTIONS(plain_tool));
+}
+
+static void
+gwy_tool_sfunctions_selection_changed(GwyPlainTool *plain_tool,
+                                      gint hint)
+{
+    GwyToolSFunctions *tool;
+    gint n = 0;
+
+    tool = GWY_TOOL_SFUNCTIONS(plain_tool);
+    g_return_if_fail(hint <= 0);
+
+    if (plain_tool->selection) {
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+        g_return_if_fail(n == 0 || n == 1);
+        gwy_rect_selection_labels_fill(tool->rlabels,
+                                       plain_tool->selection,
+                                       plain_tool->data_field,
+                                       NULL, NULL);
+    }
+    else
+        gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+
+    if (tool->args.instant_update)
+        gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_update_sensitivity(GwyToolSFunctions *tool)
+{
+    gboolean sensitive;
+    GSList *l;
+
+    gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
+    gtk_widget_set_sensitive(tool->apply,
+                             gwy_graph_model_get_n_curves(tool->gmodel) > 0);
+    gwy_table_hscale_set_sensitive(tool->resolution, tool->args.fixres);
+
+    sensitive = (tool->args.output_type == GWY_SF_ACF
+                 || tool->args.output_type == GWY_SF_HHCF
+                 || tool->args.output_type == GWY_SF_PSDF);
+    gtk_widget_set_sensitive(tool->interpolation, sensitive);
+    gtk_widget_set_sensitive(tool->interpolation_label, sensitive);
+
+    sensitive = (tool->args.output_type == GWY_SF_DA
+                 || tool->args.output_type == GWY_SF_CDA
+                 || tool->args.output_type == GWY_SF_ACF
+                 || tool->args.output_type == GWY_SF_HHCF
+                 || tool->args.output_type == GWY_SF_PSDF);
+    for (l = tool->direction; l; l = g_slist_next(l))
+        gtk_widget_set_sensitive(GTK_WIDGET(l->data), sensitive);
+}
+
+static void
+gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwyGraphCurveModel *gcmodel;
+    gdouble sel[4];
+    gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
+    gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
+    const gchar *title;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    n = gwy_graph_model_get_n_curves(tool->gmodel);
+    nsel = 0;
+    if (plain_tool->data_field) {
+        if (!plain_tool->selection
+            || !gwy_selection_get_object(plain_tool->selection, 0, sel)) {
+            nsel = 1;
+            isel[0] = isel[1] = 0;
+            w = gwy_data_field_get_xres(plain_tool->data_field);
+            h = gwy_data_field_get_yres(plain_tool->data_field);
+        }
+        else {
+            isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
+            isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
+            isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
+            isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+
+            w = ABS(isel[2] - isel[0]);
+            h = ABS(isel[3] - isel[1]);
+            isel[0] = MIN(isel[0], isel[2]);
+            isel[1] = MIN(isel[1], isel[3]);
+            if (w >= 4 && h >= 4)
+                nsel = 1;
+        }
+    }
+
+    if (nsel == 0 && n == 0)
+        return;
+
+    if (nsel == 0 && n > 0) {
+        gwy_graph_model_remove_all_curves(tool->gmodel);
+        return;
+    }
+
+    lineres = tool->args.fixres ? tool->args.resolution : -1;
+    switch (tool->args.output_type) {
+        case GWY_SF_DH:
+        gwy_data_field_area_dh(plain_tool->data_field, NULL,
+                               tool->line,
+                               isel[0], isel[1], w, h,
+                               lineres);
+        break;
+
+        case GWY_SF_CDH:
+        gwy_data_field_area_cdh(plain_tool->data_field, NULL,
+                                tool->line,
+                                isel[0], isel[1], w, h,
+                                lineres);
+        break;
+
+        case GWY_SF_DA:
+        gwy_data_field_area_da(plain_tool->data_field,
+                               tool->line,
+                               isel[0], isel[1], w, h,
+                               tool->args.direction,
+                               lineres);
+        break;
+
+        case GWY_SF_CDA:
+        gwy_data_field_area_cda(plain_tool->data_field,
+                                tool->line,
+                                isel[0], isel[1], w, h,
+                                tool->args.direction,
+                                lineres);
+        break;
+
+        case GWY_SF_ACF:
+        gwy_data_field_area_acf(plain_tool->data_field,
+                                tool->line,
+                                isel[0], isel[1], w, h,
+                                tool->args.direction,
+                                tool->args.interpolation,
+                                lineres);
+        break;
+
+        case GWY_SF_HHCF:
+        gwy_data_field_area_hhcf(plain_tool->data_field,
+                                 tool->line,
+                                 isel[0], isel[1], w, h,
+                                 tool->args.direction,
+                                 tool->args.interpolation,
+                                 lineres);
+        break;
+
+        case GWY_SF_PSDF:
+        gwy_data_field_area_psdf(plain_tool->data_field,
+                                 tool->line,
+                                 isel[0], isel[1], w, h,
+                                 tool->args.direction,
+                                 tool->args.interpolation,
+                                 GWY_WINDOWING_HANN,
+                                 lineres);
+        break;
+
+        case GWY_SF_MINKOWSKI_VOLUME:
+        gwy_data_field_area_minkowski_volume(plain_tool->data_field,
+                                             tool->line,
+                                             isel[0], isel[1], w, h,
+                                             lineres);
+        break;
+
+        case GWY_SF_MINKOWSKI_BOUNDARY:
+        gwy_data_field_area_minkowski_boundary(plain_tool->data_field,
+                                               tool->line,
+                                               isel[0], isel[1], w, h,
+                                               lineres);
+        break;
+
+        case GWY_SF_MINKOWSKI_CONNECTIVITY:
+        gwy_data_field_area_minkowski_euler(plain_tool->data_field,
+                                            tool->line,
+                                            isel[0], isel[1], w, h,
+                                            lineres);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
+    if (nsel > 0 && n == 0) {
+        gcmodel = gwy_graph_curve_model_new();
+        gwy_graph_model_add_curve(tool->gmodel, gcmodel);
+        gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
+        g_object_unref(gcmodel);
+    }
+    else
+        gcmodel = gwy_graph_model_get_curve_by_index(tool->gmodel, 0);
+
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
+    title = gwy_enum_to_string(tool->args.output_type,
+                               sf_types, G_N_ELEMENTS(sf_types));
+    gwy_graph_curve_model_set_description(gcmodel, title);
+    gwy_graph_model_set_title(tool->gmodel, title);
+    gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+}
+
+static void
+gwy_tool_sfunctions_instant_update_changed(GtkToggleButton *check,
+                                           GwyToolSFunctions *tool)
+{
+    tool->args.instant_update = gtk_toggle_button_get_active(check);
+    gwy_tool_sfunctions_update_sensitivity(tool);
+    if (tool->args.instant_update)
+        gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_resolution_changed(GwyToolSFunctions *tool,
+                                       GtkAdjustment *adj)
+{
+    tool->args.resolution = gwy_adjustment_get_int(adj);
+    /* Resolution can be changed only when fixres == TRUE */
+    gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_fixres_changed(GtkToggleButton *check,
+                                   GwyToolSFunctions *tool)
+{
+    tool->args.fixres = gtk_toggle_button_get_active(check);
+    gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_output_type_changed(GtkComboBox *combo,
+                                        GwyToolSFunctions *tool)
+{
+    tool->args.output_type = gwy_enum_combo_box_get_active(combo);
+    gwy_tool_sfunctions_update_sensitivity(tool);
+    gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_direction_changed(G_GNUC_UNUSED GObject *button,
+                                      GwyToolSFunctions *tool)
+{
+    tool->args.direction
+        = gwy_radio_buttons_get_current(tool->direction, "direction-type");
+    gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_interpolation_changed(GtkComboBox *combo,
+                                          GwyToolSFunctions *tool)
+{
+    tool->args.interpolation = gwy_enum_combo_box_get_active(combo);
+    gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
+gwy_tool_sfunctions_options_expanded(GtkExpander *expander,
+                                     G_GNUC_UNUSED GParamSpec *pspec,
+                                     GwyToolSFunctions *tool)
+{
+    tool->args.options_visible = gtk_expander_get_expanded(expander);
+}
+
+static void
+gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
+{
+    GwyPlainTool *plain_tool;
     GwyGraphModel *gmodel;
-    GwyDataViewLayer *layer;
-    GwyContainer *data;
+    gint n;
 
-    controls = (ToolControls*)state->user_data;
-    gmodel = gwy_graph_model_duplicate(controls->graphmodel);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->selection);
+    n = gwy_selection_get_data(plain_tool->selection, NULL);
+    g_return_if_fail(n);
 
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-
-    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+    gmodel = gwy_graph_model_duplicate(tool->gmodel);
+    gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
     g_object_unref(gmodel);
 }
 
-static void
-dialog_abandon(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-    GwyContainer *settings;
-
-    controls = (ToolControls*)state->user_data;
-    settings = gwy_app_settings_get();
-    save_args(settings, controls);
-    g_object_unref(controls->graphmodel);
-
-    memset(state->user_data, 0, sizeof(ToolControls));
-}
-
-static void
-interp_changed_cb(GtkWidget *combo, ToolControls *controls)
-{
-    gwy_debug("");
-    controls->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-static void
-output_changed_cb(GtkWidget *combo, ToolControls *controls)
-{
-    gwy_debug("");
-    controls->out = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-static void
-direction_changed_cb(GtkWidget *combo, ToolControls *controls)
-{
-    gwy_debug("");
-    controls->dir = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-static void
-size_changed_cb(GObject *adjustment, ToolControls *controls)
-{
-    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment));
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-static void
-isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
-{
-    controls->isnpoints = gtk_toggle_button_get_active(button);
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
-}
-
-
-static const gchar interp_key[]    = "/tool/sfunctions/interp";
-static const gchar out_key[]       = "/tool/sfunctions/out";
-static const gchar dir_key[]       = "/tool/sfunctions/dir";
-static const gchar siz_key[]       = "/tool/sfunctions/siz";
-static const gchar isnpoints_key[] = "/tool/sfunctions/isnpoints";
-
-static void
-load_args(GwyContainer *container, ToolControls *controls)
-{
-    controls->dir = GTK_ORIENTATION_HORIZONTAL;
-    controls->out = GWY_SF_DH;
-    controls->interp = GWY_INTERPOLATION_BILINEAR;
-    controls->siz = 100;
-    controls->isnpoints = FALSE;
-
-    gwy_container_gis_boolean_by_name(container, isnpoints_key,
-                                      &controls->isnpoints);
-    gwy_container_gis_enum_by_name(container, dir_key, &controls->dir);
-    gwy_container_gis_enum_by_name(container, out_key, &controls->out);
-    gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
-    gwy_container_gis_int32_by_name(container, siz_key, &controls->siz);
-
-    /* sanitize */
-    controls->isnpoints = !!controls->isnpoints;
-    controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
-    controls->out = MIN(controls->out, GWY_SF_MINKOWSKI_CONNECTIVITY);
-    controls->interp = CLAMP(controls->interp,
-                             GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-}
-
-static void
-save_args(GwyContainer *container, ToolControls *controls)
-{
-    gwy_container_set_boolean_by_name(container, isnpoints_key,
-                                      controls->isnpoints);
-    gwy_container_set_enum_by_name(container, interp_key, controls->interp);
-    gwy_container_set_enum_by_name(container, dir_key, controls->dir);
-    gwy_container_set_enum_by_name(container, out_key, controls->out);
-    gwy_container_set_int32_by_name(container, siz_key, controls->siz);
-
-}
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

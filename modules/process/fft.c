@@ -108,7 +108,7 @@ module_register(void)
     gwy_process_func_register("fft",
                               (GwyProcessFunc)&fft,
                               N_("/_Integral Transforms/_2D FFT..."),
-                              NULL,
+                              GWY_STOCK_FFT,
                               FFT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Compute Fast Fourier Transform"));

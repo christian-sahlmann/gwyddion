@@ -46,7 +46,6 @@ static GList *current_3d = NULL;
 static GtkWidget *current_any = NULL;
 
 static GwyTool* current_tool = NULL;
-static gint untitled_no = 0;
 static GQuark corner_item_quark = 0;
 
 static GHookList window_list_hook_list;
@@ -371,56 +370,6 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     gwy_app_sensitivity_set_state(mask, 0);
 }
 
-/**
- * gwy_app_data_window_create:
- * @data: A data container.
- *
- * Creates a new data window showing @data and does some basic setup.
- *
- * Also calls gtk_window_present() on it.
- *
- * Returns: The newly created data window.
- **/
-GtkWidget*
-gwy_app_data_window_create(GwyContainer *data)
-{
-    /*
-    GtkWidget *window, *view;
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    */
-
-    g_warning("gwy_app_data_window_create() is deprecated and broken");
-    gwy_app_data_browser_add(data);
-    return NULL;
-
-    /*
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-    if (!popup_menu) {
-        popup_menu = gwy_app_menu_data_popup_create(NULL);
-        gtk_widget_show_all(popup_menu);
-    }
-
-    view = gwy_data_view_new(data);
-    data_view = GWY_DATA_VIEW(view);
-    gwy_app_data_view_setup_layers1(data_view);
-    window = gwy_data_window_new(data_view);
-    data_window = GWY_DATA_WINDOW(window);
-
-    g_signal_connect(data_window, "focus-in-event",
-                     G_CALLBACK(gwy_app_data_window_set_current), NULL);
-    g_signal_connect(data_window, "destroy",
-                     G_CALLBACK(gwy_app_data_window_remove), NULL);
-
-    gwy_app_data_window_add(data_window);
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA);
-    gwy_app_data_view_setup_layers2(data_view);
-    gtk_window_present(GTK_WINDOW(window));
-
-    return window;
-    */
-}
-
 void
 gwy_app_data_window_setup(GwyDataWindow *data_window)
 {
@@ -649,54 +598,6 @@ gwy_app_graph_window_remove(GtkWidget *window)
         gwy_app_unset_current_window(window);
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, 0);
     }
-}
-
-/**
- * gwy_app_graph_window_foreach:
- * @func: A function to call on each graph window.
- * @user_data: Data to pass to @func.
- *
- * Calls @func on each graph window, in no particular order.
- *
- * The function should not create or remove graph windows.
- **/
-void
-gwy_app_graph_window_foreach(GFunc func,
-                             gpointer user_data)
-{
-    GList *l;
-
-    for (l = current_graph; l; l = g_list_next(l))
-        func(l->data, user_data);
-}
-
-/**
- * gwy_app_graph_window_create:
- * @graph: A graph widget.
- * @data: A data container to put the graph model to.
- *
- * Creates a new graph window showing a graph and does some basic setup.
- *
- * It calls gwy_app_graph_list_add() and does not assume a reference on the
- * graph model, so you usually wish to unreference it after this call.
- *
- * Also calls gtk_window_present() on the newly created window, associates
- * it with a data window, and sets its title.
- *
- * Returns: The newly created graph window.
- **/
-GtkWidget*
-gwy_app_graph_window_create(GwyGraph *graph,
-                            GwyContainer *data)
-{
-    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-
-    g_warning("gwy_app_graph_window_create() is deprecated and broken");
-    gwy_app_data_browser_add_graph_model(gwy_graph_get_model(graph),
-                                         data, TRUE);
-    gtk_widget_destroy(GTK_WIDGET(graph));
-    return NULL;
 }
 
 /*****************************************************************************
@@ -988,54 +889,6 @@ gwy_app_get_current_window(GwyAppWindowType type)
  *                                                                           *
  *****************************************************************************/
 
-/**
- * gwy_app_data_window_set_untitled:
- * @window: A data window.
- * @templ: A title template string.
- *
- * Clears any file name for @window and sets its "/filename/untitled"
- * data.
- *
- * The template tring @templ can be either %NULL, the window then gets a
- * title like "Untitled 37", or a string "Foo" not containing `%', the window
- * then gets a title like "Foo 42", or a string "Bar %%d" containing a single
- * '%%d', the window then gets a title like "Bar 666".
- *
- * Returns: The number that will appear in the title (probably useless).
- **/
-gint
-gwy_app_data_window_set_untitled(GwyDataWindow *window,
-                                 const gchar *templ)
-{
-    GwyDataView *data_view;
-    GwyContainer *data;
-    gchar *title, *p;
-
-    data_view = gwy_data_window_get_data_view(window);
-    data = gwy_data_view_get_data(data_view);
-    gwy_container_remove_by_prefix(data, "/filename");
-    untitled_no++;
-    if (!templ)
-        title = g_strdup_printf(_("Untitled %d"), untitled_no);
-    else {
-        do {
-            p = strchr(templ, '%');
-        } while (p && p[1] == '%' && (p += 2));
-
-        if (!p)
-            title = g_strdup_printf("%s %d", templ, untitled_no);
-        else if (p[1] == 'd' && !strchr(p+2, '%'))
-            title = g_strdup_printf(templ, untitled_no);
-        else {
-            g_warning("Wrong template `%s'", templ);
-            title = g_strdup_printf(_("Untitled %d"), untitled_no);
-        }
-    }
-    gwy_container_set_string_by_name(data, "/filename/untitled", title);
-
-    return untitled_no;
-}
-
 static GtkWidget*
 gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 {
@@ -1319,24 +1172,19 @@ gwy_app_data_window_change_square(GtkWidget *item,
 }
 
 void
-gwy_app_tool_use_cb(const gchar *toolname,
-                    GtkWidget *button)
+gwy_app_switch_tool(const gchar *toolname)
 {
     GwyTool *newtool;
     GwyDataView *data_view;
     GType type;
 
     gwy_debug("%s", toolname ? toolname : "NONE");
-    /* don't catch deactivations */
-    if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
-        gwy_debug("deactivation");
-        return;
-    }
-
     type = g_type_from_name(toolname);
+    g_return_if_fail(type);
+
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
     if (current_tool && type == G_TYPE_FROM_INSTANCE(current_tool)) {
-        if (!button || !gwy_tool_is_visible(current_tool))
+        if (!gwy_tool_is_visible(current_tool))
             gwy_tool_show(current_tool);
         else
             gwy_tool_hide(current_tool);

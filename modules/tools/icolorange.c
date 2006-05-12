@@ -290,7 +290,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
     */
 
-    /* Rectangular selection info */
+    /* Selection info */
     tool->rlabels = gwy_rect_selection_labels_new
                          (TRUE, G_CALLBACK(gwy_tool_crop_rect_updated), tool);
     gtk_box_pack_start(GTK_BOX(dialog->vbox),
@@ -545,7 +545,7 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
         isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
         isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
 
-        gwy_data_field_area_get_min_max(plain_tool->data_field,
+        gwy_data_field_area_get_min_max(plain_tool->data_field, NULL,
                                         MIN(isel[0], isel[2]),
                                         MIN(isel[1], isel[3]),
                                         ABS(isel[2] - isel[0]),

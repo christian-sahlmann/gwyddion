@@ -32,43 +32,48 @@ G_BEGIN_DECLS
 #define GWY_SQRT3 1.73205080756887729352744634150587236694280525381038
 #define GWY_SQRT_PI 1.77245385090551602729816748334114518279754945612237
 
-gdouble      gwy_math_humanize_numbers   (gdouble unit,
-                                          gdouble maximum,
-                                          gint *precision);
-gint         gwy_math_find_nearest_line  (gdouble x,
-                                          gdouble y,
-                                          gdouble *d2min,
-                                          gint n,
-                                          const gdouble *coords,
-                                          const gdouble *metric);
-gint         gwy_math_find_nearest_point (gdouble x,
-                                          gdouble y,
-                                          gdouble *d2min,
-                                          gint n,
-                                          const gdouble *coords,
-                                          const gdouble *metric);
-gdouble*     gwy_math_lin_solve          (gint n,
-                                          const gdouble *matrix,
-                                          const gdouble *rhs,
-                                          gdouble *result);
-gdouble*     gwy_math_lin_solve_rewrite  (gint n,
-                                          gdouble *matrix,
-                                          gdouble *rhs,
-                                          gdouble *result);
-gdouble*     gwy_math_fit_polynom        (gint ndata,
-                                          const gdouble *xdata,
-                                          const gdouble *ydata,
-                                          gint n,
-                                          gdouble *coeffs);
-gboolean     gwy_math_choleski_decompose (gint n,
-                                          gdouble *matrix);
-void         gwy_math_choleski_solve     (gint n,
-                                          const gdouble *decomp,
-                                          gdouble *rhs);
-gdouble      gwy_math_median             (gsize n,
-                                          gdouble *array);
-void         gwy_math_sort               (gsize n,
-                                          gdouble *array);
+gdouble  gwy_math_humanize_numbers     (gdouble unit,
+                                        gdouble maximum,
+                                        gint *precision);
+gint     gwy_math_find_nearest_line    (gdouble x,
+                                        gdouble y,
+                                        gdouble *d2min,
+                                        gint n,
+                                        const gdouble *coords,
+                                        const gdouble *metric);
+gint     gwy_math_find_nearest_point   (gdouble x,
+                                        gdouble y,
+                                        gdouble *d2min,
+                                        gint n,
+                                        const gdouble *coords,
+                                        const gdouble *metric);
+gdouble* gwy_math_lin_solve            (gint n,
+                                        const gdouble *matrix,
+                                        const gdouble *rhs,
+                                        gdouble *result);
+gdouble* gwy_math_lin_solve_rewrite    (gint n,
+                                        gdouble *matrix,
+                                        gdouble *rhs,
+                                        gdouble *result);
+gboolean gwy_math_tridiag_solve_rewrite(gint n,
+                                        gdouble *d,
+                                        const gdouble *a,
+                                        const gdouble *b,
+                                        gdouble *rhs);
+gdouble* gwy_math_fit_polynom          (gint ndata,
+                                        const gdouble *xdata,
+                                        const gdouble *ydata,
+                                        gint n,
+                                        gdouble *coeffs);
+gboolean gwy_math_choleski_decompose   (gint n,
+                                        gdouble *matrix);
+void     gwy_math_choleski_solve       (gint n,
+                                        const gdouble *decomp,
+                                        gdouble *rhs);
+gdouble  gwy_math_median               (gsize n,
+                                        gdouble *array);
+void     gwy_math_sort                 (gsize n,
+                                        gdouble *array);
 
 /* Replacements for missing math functions.  Do NOT use directly. */
 static inline double
