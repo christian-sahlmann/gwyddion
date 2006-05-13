@@ -549,7 +549,8 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
 
     tool->results_up_to_date = FALSE;
-    if (!gwy_selection_get_object(plain_tool->selection, 0, sel)) {
+    if (!gwy_selection_get_object(plain_tool->selection, 0, sel)
+        || sel[0] == sel[2] || sel[1] == sel[3]) {
         isel[0] = isel[1] = 0;
         isel[2] = gwy_data_field_get_xres(plain_tool->data_field);
         isel[3] = gwy_data_field_get_yres(plain_tool->data_field);
