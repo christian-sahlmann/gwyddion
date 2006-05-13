@@ -232,7 +232,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     garea = GWY_GRAPH_AREA(gwy_graph_get_area(tool->histogram));
     tool->graph_selection = gwy_graph_area_get_selection(garea,
                                                          GWY_GRAPH_STATUS_XSEL);
-    g_return_if_fail(GWY_IS_SELECTION(tool->graph_selection));
+    g_return_if_fail(GWY_IS_SELECTION_GRAPH_1DAREA(tool->graph_selection));
     gwy_selection_set_max_objects(tool->graph_selection, 1);
     g_signal_connect(tool->graph_selection, "changed",
                      G_CALLBACK(gwy_tool_color_range_xsel_changed), tool);
@@ -363,7 +363,7 @@ gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
     GwyToolColorRange *tool;
     GwyLayerBasicRangeType range_type;
     gboolean is_selected = FALSE;
-    gdouble range[4];
+    gdouble range[2];
 
     tool = GWY_TOOL_COLOR_RANGE(plain_tool);
     g_return_if_fail(hint <= 0);
@@ -390,10 +390,6 @@ gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
         tool->programmatic_update = TRUE;
         if (is_selected) {
             gwy_tool_color_range_get_min_max(tool, range);
-            /* XXX XXX XXX */
-            range[2] = range[1];
-            range[1] = 0.0;
-            range[3] = 1000.0;
             gwy_selection_set_object(tool->graph_selection, 0, range);
         }
         else
@@ -554,12 +550,9 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
         break;
 
         case USE_HISTOGRAM:
-        /* XXX XXX XXX */
         if (!gwy_selection_get_object(tool->graph_selection, 0, sel)
-            || sel[0] == sel[2])
+            || sel[0] == sel[1])
             clear = TRUE;
-        else
-            sel[1] = sel[2];
         break;
 
         default:
