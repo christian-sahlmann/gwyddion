@@ -430,14 +430,14 @@ gwy_tool_stats_data_changed(GwyPlainTool *plain_tool)
                                    plain_tool->selection,
                                    plain_tool->data_field,
                                    NULL, NULL);
-    gwy_tool_stats_selection_changed(plain_tool, 0);
+    gwy_tool_stats_update_labels(GWY_TOOL_STATS(plain_tool));
 }
 
 static void
 gwy_tool_stats_mask_changed(GwyPlainTool *plain_tool)
 {
     if (GWY_TOOL_STATS(plain_tool)->args.use_mask)
-        gwy_tool_stats_selection_changed(plain_tool, 0);
+        gwy_tool_stats_update_labels(GWY_TOOL_STATS(plain_tool));
 }
 
 static void
@@ -449,7 +449,7 @@ gwy_tool_stats_response(GwyTool *tool,
     if (response_id == GWY_TOOL_STATS_RESPONSE_SAVE)
         gwy_tool_stats_save(GWY_TOOL_STATS(tool));
     else if (response_id == GWY_TOOL_RESPONSE_UPDATE)
-        gwy_tool_stats_selection_changed(GWY_PLAIN_TOOL(tool), -1);
+        gwy_tool_stats_update_labels(GWY_TOOL_STATS(tool));
 }
 
 static void
