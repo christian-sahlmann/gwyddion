@@ -403,6 +403,7 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
     tool->gmodel = gwy_graph_model_new();
 
     tool->graph = gwy_graph_new(tool->gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), tool->graph, TRUE, TRUE, 2);
 
     tool->update = gtk_dialog_add_button(dialog, _("_Update"),

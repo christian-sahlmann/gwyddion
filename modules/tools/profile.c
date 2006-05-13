@@ -296,6 +296,8 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
         g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
         renderer = gtk_cell_renderer_text_new();
         g_object_set(renderer, "xalign", 1.0, NULL);
+        if (i == COLUMN_I)
+            g_object_set(renderer, "foreground-set", TRUE, NULL);
         gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
         gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
                                            gwy_tool_profile_render_cell, tool,
@@ -385,6 +387,8 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     gwy_graph_model_set_title(tool->gmodel, _("Profiles"));
 
     tool->graph = gwy_graph_new(tool->gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
+    gwy_graph_model_set_label_visible(tool->gmodel, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), tool->graph, TRUE, TRUE, 2);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
@@ -575,8 +579,15 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
     id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
     gtk_tree_model_get(model, iter, 0, &idx, -1);
     if (id == COLUMN_I) {
+        GwyGraphCurveModel *gcmodel;
+        const GwyRGBA *rgba;
+        GdkColor gdkcolor;
+
         g_snprintf(buf, sizeof(buf), "%d", idx + 1);
-        g_object_set(renderer, "text", buf, NULL);
+        gcmodel = gwy_graph_model_get_curve_by_index(tool->gmodel, idx);
+        rgba = gwy_graph_curve_model_get_curve_color(gcmodel);
+        gwy_rgba_to_gdk_color(rgba, &gdkcolor);
+        g_object_set(renderer, "foreground-gdk", &gdkcolor, "text", buf, NULL);
         return;
     }
 
@@ -677,6 +688,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
 
     if (!tool->args.separate) {
         gmodel = gwy_graph_model_duplicate(tool->gmodel);
+        gwy_graph_model_set_label_visible(gmodel, TRUE);
         gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);
@@ -686,6 +698,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
 
     for (i = 0; i < n; i++) {
         gmodel = gwy_graph_model_new_alike(tool->gmodel);
+        gwy_graph_model_set_label_visible(gmodel, TRUE);
         gcmodel = gwy_graph_model_get_curve_by_index(tool->gmodel, i);
         gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
         gwy_graph_model_add_curve(gmodel, gcmodel);
