@@ -55,9 +55,12 @@ struct _GwyColorAxis {
     GwySIUnit *siunit;
 
     gint tick_length;
+    gint labelb_size;
+    gint labele_size;
 
     gboolean has_labels : 1;
 
+    gpointer reserved1;
     gpointer reserved2;
 };
 
