@@ -350,6 +350,86 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
                            fabs(xmax - xmin), fabs(ymax - ymin));
     }
 }
+/**
+ * gwy_graph_draw_selection_xareas:
+ * @drawable: a #GdkDrawable
+ * @gc: a #GdkGC graphics context
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @selection: a #GwySelectionGraph1DArea structure
+ *
+ * Draw selected x-area on the graph
+ **/
+void
+gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
+                               GwyGraphActiveAreaSpecs *specs,
+                               GwySelectionGraph1DArea *selection)
+{
+    /* FIXME: use Gtk+ theme */
+    static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
+    gint i, n_of_areas;
+    gint xmin, xmax, ymin, ymax;
+    gdouble selection_areadata[4];
+
+    n_of_areas = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
+    if (n_of_areas == 0)
+        return;
+
+    gwy_rgba_set_gdk_gc_fg(&color, gc);
+
+    for (i = 0; i < n_of_areas; i++) {
+        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_areadata);
+        xmin = x_data_to_pixel(specs, selection_areadata[0]);
+        xmax = x_data_to_pixel(specs, selection_areadata[1]);
+        ymin = 0;
+        ymax = specs->height;
+
+        gdk_draw_rectangle(drawable, gc, TRUE,
+                           MIN(xmin, xmax),
+                           MIN(ymin, ymax),
+                           fabs(xmax - xmin), fabs(ymax - ymin));
+    }
+}
+
+/**
+ * gwy_graph_draw_selection_yareas:
+ * @drawable: a #GdkDrawable
+ * @gc: a #GdkGC graphics context
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @selection: a #GwySelectionGraph1DArea structure
+ *
+ * Draw selected y-area on the graph
+ **/
+void
+gwy_graph_draw_selection_yareas(GdkDrawable *drawable, GdkGC *gc,
+                               GwyGraphActiveAreaSpecs *specs,
+                               GwySelectionGraph1DArea *selection)
+{
+    /* FIXME: use Gtk+ theme */
+    static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
+    gint i, n_of_areas;
+    gint xmin, xmax, ymin, ymax;
+    gdouble selection_areadata[4];
+
+    n_of_areas = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
+    if (n_of_areas == 0)
+        return;
+
+    gwy_rgba_set_gdk_gc_fg(&color, gc);
+
+    for (i = 0; i < n_of_areas; i++) {
+        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_areadata);
+        xmin = 0;
+        xmax = specs->width;
+        ymin = y_data_to_pixel(specs, selection_areadata[0]);
+        ymax = y_data_to_pixel(specs, selection_areadata[1]);
+
+        gdk_draw_rectangle(drawable, gc, TRUE,
+                           MIN(xmin, xmax),
+                           MIN(ymin, ymax),
+                           fabs(xmax - xmin), fabs(ymax - ymin));
+    }
+}
+
 
 /**
  * gwy_graph_draw_selection_lines:

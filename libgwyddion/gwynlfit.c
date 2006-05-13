@@ -185,7 +185,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
 
     g_return_val_if_fail(nlfit, -1.0);
     g_return_val_if_fail(n_param > 0, -1.0);
-    g_return_val_if_fail(n_dat > n_param, -1.0);
+    /*g_return_val_if_fail(n_dat > n_param, -1.0);*/
     g_return_val_if_fail(x && y && param, -1.0);
 
     g_free(nlfit->covar);

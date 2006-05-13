@@ -57,6 +57,7 @@ gboolean     gwy_filename_ignore       (const gchar *filename_sys);
 gchar*       gwy_sgettext              (const gchar *msgid);
 gchar*       gwy_str_next_line         (gchar **buffer);
 
+
 G_END_DECLS
 
 #endif /* __GWY_UTILS_H__ */

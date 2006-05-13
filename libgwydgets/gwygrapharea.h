@@ -46,8 +46,6 @@ typedef struct {
 } GwyGraphStatus_CursorData;
 
 
-
-
 /*single curve*/
 typedef struct {
     GdkPoint *points;           /*points to be directly plotted*/
@@ -61,19 +59,22 @@ struct _GwyGraphArea {
     GtkLayout parent_instance;
 
     GdkCursor *cross_cursor;
-    GdkCursor *arrow_cursor;
+    GdkCursor *fleur_cursor;
+    GdkCursor *harrow_cursor;
+    GdkCursor *varrow_cursor;
+    
 
     GdkGC *gc;
     /*label*/
     GwyGraphLabel *lab;
 
     GwyGraphStatusType status;
-    GwySelectionGraphPoint *pointsdata;
-    GwySelectionGraphArea *xseldata;
-    GwySelectionGraphArea *yseldata;
-    GwySelectionGraphLine *xlinesdata;
-    GwySelectionGraphLine *ylinesdata;
-    GwySelectionGraphZoom *zoomdata;
+    GwySelection *pointsdata;
+    GwySelection *xseldata;
+    GwySelection *yseldata;
+    GwySelection *xlinesdata;
+    GwySelection *ylinesdata;
+    GwySelection *zoomdata;
 
     GwyGraphStatus_CursorData *actual_cursor_data;
 
@@ -83,6 +84,8 @@ struct _GwyGraphArea {
     /*selection drawing*/
     gboolean selecting;
     gboolean mouse_present;
+    gint selected_object_index;
+    gint selected_border;
 
     /*grid lines*/
     GArray *x_grid_data;

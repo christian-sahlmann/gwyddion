@@ -122,6 +122,29 @@ struct _GwySelectionGraphZoomClass {
 
 GType    gwy_selection_graph_zoom_get_type       (void) G_GNUC_CONST;
 
+#define GWY_TYPE_SELECTION_GRAPH_1DAREA            (gwy_selection_graph_1darea_get_type())
+#define GWY_SELECTION_GRAPH_1DAREA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_1DAREA, GwySelectionGraph1DArea))
+#define GWY_SELECTION_GRAPH_1DAREA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_1DAREA, GwySelectionGraph1DAreaClass))
+#define GWY_IS_SELECTION_GRAPH_1DAREA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_1DAREA))
+#define GWY_IS_SELECTION_GRAPH_1DAREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_1DAREA))
+#define GWY_SELECTION_GRAPH_1DAREA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_1DAREA, GwySelectionGraph1DAreaClass))
+
+typedef struct _GwySelectionGraph1DArea      GwySelectionGraph1DArea;
+typedef struct _GwySelectionGraph1DAreaClass GwySelectionGraph1DAreaClass;
+
+
+struct _GwySelectionGraph1DArea {
+        GwySelection parent_instance;
+};
+
+struct _GwySelectionGraph1DAreaClass {
+        GwySelectionClass parent_class;
+};
+
+
+GType    gwy_selection_graph_1darea_get_type       (void) G_GNUC_CONST;
+
+
 
 G_END_DECLS
 

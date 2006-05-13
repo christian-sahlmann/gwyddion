@@ -50,6 +50,7 @@ typedef struct {
 
 typedef struct {
     FitArgs *args;
+    GtkWidget *dialog;
     GtkWidget *graph;
     GtkWidget *from;
     GtkWidget *to;
@@ -67,9 +68,10 @@ typedef struct {
     GtkWidget *criterium;
 } FitControls;
 
+
 static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
-static gboolean    fit_dialog                (FitArgs *args);
+static void        fit_dialog                (FitArgs *args);
 static void        recompute                 (FitArgs *args,
                                               FitControls *controls);
 static void        reset                     (FitArgs *args,
@@ -94,9 +96,8 @@ static void        dialog_update             (FitControls *controls,
                                               FitArgs *args);
 static void        guess                     (FitControls *controls,
                                               FitArgs *args);
-static void        graph_update              (FitControls *controls,
-                                              FitArgs *args);
-static void        graph_selected            (GwyGraph *graph,
+static void        graph_selected            (GwySelection* selection,
+                                              gint i,
                                               FitControls *controls);
 static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
@@ -224,8 +225,7 @@ normalize_data(FitArgs *args,
 }
 
 
-/* FIXME: the return value is useless, the dialog does all work itself */
-static gboolean
+static void
 fit_dialog(FitArgs *args)
 {
     enum {
@@ -239,7 +239,9 @@ fit_dialog(FitArgs *args)
     gint response, i, j;
 
     controls.args = args;
+    
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
+    controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Fit"),
@@ -449,7 +451,7 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
     /*graph*/
-    args->graph_model = gwy_graph_model_new();
+    args->graph_model = gwy_graph_model_duplicate(gmodel);
     controls.graph = gwy_graph_new(args->graph_model);
     g_object_unref(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
@@ -474,13 +476,11 @@ fit_dialog(FitArgs *args)
     reset(args, &controls);
     dialog_update(&controls, args);
 
-    /*XXX Shouldn't need this, however, needs. */
-    graph_update(&controls, args);
-
-    graph_selected(GWY_GRAPH(controls.graph), &controls);
+    //graph_selected(GWY_GRAPH(controls.graph), &controls);
 
     gtk_widget_show_all(dialog);
 
+    
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -488,7 +488,7 @@ fit_dialog(FitArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             destroy(args, &controls);
             gtk_widget_destroy(dialog);
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -514,8 +514,6 @@ fit_dialog(FitArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
-
-    return TRUE;
 }
 
 static void
@@ -536,9 +534,9 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i, j;
 
-    /*XXX Shouldn't need this, however somehow it doesn't work without now */
-    graph_update(controls, args);
-
+    gwy_graph_model_remove_curve_by_description(args->graph_model, "Fitted curve");
+    args->is_fitted = FALSE;
+    
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
@@ -611,21 +609,24 @@ recompute(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
+    GtkWidget *dialog; 
     GwyNLFitPreset *function;
     gboolean fixed[MAX_PARAMS];
     gchar buffer[64];
-    gint i, j, nparams;
+    gint i, j, nparams, nfree = 0;
     gboolean allfixed;
 
     function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                           args->function_type);
     nparams = gwy_nlfit_preset_get_nparams(function);
 
+
     allfixed = TRUE;
     for (i = 0; i < nparams; i++) {
         fixed[i] = args->par_fix[i];
         allfixed &= fixed[i];
         args->par_res[i] = args->par_init[i];
+        if (!fixed[i]) nfree++;
     }
     if (allfixed)
         return;
@@ -643,6 +644,16 @@ recompute(FitArgs *args, FitControls *controls)
         return;
     }
 
+    if (gwy_data_line_get_res(xdata) <= nfree) {
+        dialog = gtk_message_dialog_new (GTK_WINDOW(controls->dialog),
+                                  GTK_DIALOG_DESTROY_WITH_PARENT,
+                                  GTK_MESSAGE_ERROR,
+                                  GTK_BUTTONS_CLOSE,
+                                  "Your should select more data values than fit parameters.");
+        gtk_dialog_run (GTK_DIALOG (dialog));
+        gtk_widget_destroy (dialog);
+        return;
+    }
 
     if (args->fitter)
         gwy_math_nlfit_free(args->fitter);
@@ -700,7 +711,6 @@ curve_changed_cb(GtkAdjustment *adj,
                  FitControls *controls)
 {
     controls->args->curve = gwy_adjustment_get_int(adj);
-    /* FIXME: Anything else? */
 }
 
 static void
@@ -786,51 +796,26 @@ guess(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
     g_object_unref(ydata);
 }
 
-/*
- * XXX XXX XXX: Get rid of this brain damage XXX XXX XXX
- * No one any longer needs to update graphs this way.
- */
-static void
-graph_update(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
-{
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *gcmodel;
-    gint i, n;
-
-    /*clear graph*/
-    gwy_graph_model_remove_all_curves(args->graph_model);
-
-    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
-    n = gwy_graph_model_get_n_curves(gmodel);
-    for (i = 0; i < n; i++) {
-        gcmodel = gwy_graph_model_get_curve_by_index(gmodel, i);
-        gwy_graph_model_add_curve(args->graph_model, gcmodel);
-    }
-    args->is_fitted = FALSE;
-}
 
 static void
-graph_selected(GwyGraph* graph, FitControls *controls)
+graph_selected(GwySelection* selection, gint i, FitControls *controls)
 {
     FitArgs *args = controls->args;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
+    GwyGraph *graph = GWY_GRAPH(controls->graph);
     gchar buffer[24];
-    gdouble selection[2];
+    gdouble area_selection[2];
     gint nselections;
     const gdouble *data;
-
-    nselections = gwy_selection_get_data(
-                             gwy_graph_area_get_selection(
-                                 GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
-                                 GWY_GRAPH_STATUS_XSEL), NULL);
-    gwy_selection_get_object(gwy_graph_area_get_selection(
-                               GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
-                               GWY_GRAPH_STATUS_XSEL), 
+    
+    
+    nselections = gwy_selection_get_data(selection, NULL);
+    gwy_selection_get_object(selection,
                              0,
-                             selection);
+                             area_selection);
 
-    if (nselections <= 0 || selection[0] == selection[1]) {
+    if (nselections <= 0 || area_selection[0] == area_selection[1]) {
         gmodel = gwy_graph_get_model(graph);
         gcmodel = gwy_graph_model_get_curve_by_index(gmodel,
                                                      controls->args->curve - 1);
@@ -839,8 +824,8 @@ graph_selected(GwyGraph* graph, FitControls *controls)
         args->to = data[gwy_graph_curve_model_get_ndata(gcmodel) - 1];
     }
     else {
-        args->from = selection[0];
-        args->to = selection[1];
+        args->from = area_selection[0];
+        args->to = area_selection[1];
         if (args->from > args->to)
             GWY_SWAP(gdouble, args->from, args->to);
     }

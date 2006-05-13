@@ -10,7 +10,6 @@ tools_LTLIBRARIES = \
 	distance.la \
 	filter.la \
 	grainremover.la \
-	icolorange.la \
 	level3.la \
 	maskedit.la \
 	polynom.la \
