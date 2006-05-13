@@ -116,7 +116,7 @@ GwyGraphPointType   gwy_graph_curve_model_get_curve_point_type  (GwyGraphCurveMo
 gint                gwy_graph_curve_model_get_curve_point_size  (GwyGraphCurveModel *gcmodel);
 GdkLineStyle        gwy_graph_curve_model_get_curve_line_style  (GwyGraphCurveModel *gcmodel);
 gint                gwy_graph_curve_model_get_curve_line_size   (GwyGraphCurveModel *gcmodel);
-GwyRGBA*            gwy_graph_curve_model_get_curve_color       (GwyGraphCurveModel *gcmodel);
+const GwyRGBA*      gwy_graph_curve_model_get_curve_color       (GwyGraphCurveModel *gcmodel);
 void                gwy_graph_curve_model_signal_layout_changed (GwyGraphCurveModel *model);
 
 

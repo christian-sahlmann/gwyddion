@@ -439,15 +439,15 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
 }
 
 /**
-* gwy_graph_curve_model_set_data:
-* @gcmodel: A #GwyGraphCurveModel.
-* @xdata: x data points (array of size @n)
-* @ydata: y data points (array of size @n)
-* @n: data array size (number of data points)
-*
-* Sets curve model data. Curve model will make a copy of the data, so you
-* are responsible for freeing the original arrays.
-**/
+ * gwy_graph_curve_model_set_data:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @xdata: x data points (array of size @n)
+ * @ydata: y data points (array of size @n)
+ * @n: data array size (number of data points)
+ *
+ * Sets curve model data. Curve model will make a copy of the data, so you
+ * are responsible for freeing the original arrays.
+ **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                const gdouble *xdata,
@@ -469,13 +469,13 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_description:
-* @gcmodel: A #GwyGraphCurveModel.
-* @description: curve description text
-*
-* Sets curve model description. The description should appear on graph label,
-* for example. @description is duplicated.
-**/
+ * gwy_graph_curve_model_set_description:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @description: curve description text
+ *
+ * Sets curve model description. The description should appear on graph label,
+ * for example. @description is duplicated.
+ **/
 void
 gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                       const gchar *description)
@@ -485,13 +485,13 @@ gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_curve_type:
-* @gcmodel: A #GwyGraphCurveModel.
-* @type: curve type
-*
-* Sets curve type for plotting the curve (e. g. points, lines, points &
-* lines, etc.).
-**/
+ * gwy_graph_curve_model_set_curve_type:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @type: curve type
+ *
+ * Sets curve type for plotting the curve (e. g. points, lines, points &
+ * lines, etc.).
+ **/
 void
 gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
                                      GwyGraphCurveType type)
@@ -501,13 +501,13 @@ gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_curve_point_type:
-* @gcmodel: A #GwyGraphCurveModel.
-* @point_type: point type to be used for plot
-*
-* Sets curve point type for plotting the curve. Curve type that is chosen must include
-* some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
-**/
+ * gwy_graph_curve_model_set_curve_point_type:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @point_type: point type to be used for plot
+ *
+ * Sets curve point type for plotting the curve. Curve type that is chosen must include
+ * some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
+ **/
 void
 gwy_graph_curve_model_set_curve_point_type(GwyGraphCurveModel *gcmodel,
                                            GwyGraphPointType point_type)
@@ -517,13 +517,13 @@ gwy_graph_curve_model_set_curve_point_type(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_curve_point_size:
-* @gcmodel: A #GwyGraphCurveModel.
-* @point_size: point size to be used for plot (in pixels)
-*
-* Sets curve point size for plotting the curve. Curve type that is chosen must include
-* some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
-**/
+ * gwy_graph_curve_model_set_curve_point_size:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @point_size: point size to be used for plot (in pixels)
+ *
+ * Sets curve point size for plotting the curve. Curve type that is chosen must include
+ * some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
+ **/
 void
 gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
                                            gint point_size)
@@ -533,13 +533,13 @@ gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_curve_line_style:
-* @gcmodel: A #GwyGraphCurveModel.
-* @line_style: line style to be used for plot
-*
-* Sets curve line style for plotting the curve. Curve type that is chosen must include
-* some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
-**/
+ * gwy_graph_curve_model_set_curve_line_style:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @line_style: line style to be used for plot
+ *
+ * Sets curve line style for plotting the curve. Curve type that is chosen must include
+ * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
+ **/
 void
 gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
                                            GdkLineStyle line_style)
@@ -549,13 +549,13 @@ gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_curve_line_size:
-* @gcmodel: A #GwyGraphCurveModel.
-* @line_size: line size to be used for plot (in pixels)
-*
-* Sets curve line size (thickness). Curve type that is chosen must include
-* some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
-**/
+ * gwy_graph_curve_model_set_curve_line_size:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @line_size: line size to be used for plot (in pixels)
+ *
+ * Sets curve line size (thickness). Curve type that is chosen must include
+ * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
+ **/
 void
 gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
                                           gint line_size)
@@ -565,13 +565,13 @@ gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_get_xdata:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Gets pointer to x data points. Data are used within the graph and cannot be freed.
-*
-* Returns: x data points
-**/
+ * gwy_graph_curve_model_get_xdata:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Gets pointer to x data points. Data are used within the graph and cannot be freed.
+ *
+ * Returns: x data points
+ **/
 const gdouble*
 gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
 {
@@ -579,13 +579,13 @@ gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_ydata:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Gets pointer to y data points. Data are used within the graph and cannot be freed.
-*
-* Returns: y data points
-**/
+ * gwy_graph_curve_model_get_ydata:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Gets pointer to y data points. Data are used within the graph and cannot be freed.
+ *
+ * Returns: y data points
+ **/
 const gdouble*
 gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
 {
@@ -593,11 +593,11 @@ gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_ndata:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: number of data points within the curve data
-**/
+ * gwy_graph_curve_model_get_ndata:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: number of data points within the curve data
+ **/
 gint
 gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 {
@@ -605,12 +605,12 @@ gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_description:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: Curve data description (what appears as curve label on graph) as
-*          a string owned by curve (do not free).
-**/
+ * gwy_graph_curve_model_get_description:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: Curve data description (what appears as curve label on graph) as
+ *          a string owned by curve (do not free).
+ **/
 const gchar*
 gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
 {
@@ -619,11 +619,11 @@ gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
 
 
 /**
-* gwy_graph_curve_model_get_curve_type:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: curve plot type (e. g. points, lines, points & lines, etc.)
-**/
+ * gwy_graph_curve_model_get_curve_type:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: curve plot type (e. g. points, lines, points & lines, etc.)
+ **/
 GwyGraphCurveType
 gwy_graph_curve_model_get_curve_type(GwyGraphCurveModel *gcmodel)
 {
@@ -631,11 +631,11 @@ gwy_graph_curve_model_get_curve_type(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_curve_point_type:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: curve plot point type (square, circle, etc.)
-**/
+ * gwy_graph_curve_model_get_curve_point_type:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: curve plot point type (square, circle, etc.)
+ **/
 GwyGraphPointType
 gwy_graph_curve_model_get_curve_point_type(GwyGraphCurveModel *gcmodel)
 {
@@ -643,11 +643,11 @@ gwy_graph_curve_model_get_curve_point_type(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_curve_point_size:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: curve plot point size (in pixels)
-**/
+ * gwy_graph_curve_model_get_curve_point_size:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: curve plot point size (in pixels)
+ **/
 gint
 gwy_graph_curve_model_get_curve_point_size(GwyGraphCurveModel *gcmodel)
 {
@@ -655,11 +655,11 @@ gwy_graph_curve_model_get_curve_point_size(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_curve_line_style:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: curve plot line style
-**/
+ * gwy_graph_curve_model_get_curve_line_style:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: curve plot line style
+ **/
 GdkLineStyle
 gwy_graph_curve_model_get_curve_line_style(GwyGraphCurveModel *gcmodel)
 {
@@ -667,11 +667,11 @@ gwy_graph_curve_model_get_curve_line_style(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_get_curve_line_size:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: curve plot line size (in pixels)
-**/
+ * gwy_graph_curve_model_get_curve_line_size:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: curve plot line size (in pixels)
+ **/
 gint
 gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel)
 {
@@ -679,17 +679,17 @@ gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel)
 }
 
 /**
-* gwy_graph_curve_model_set_data_from_dataline:
-* @gcmodel: A #GwyGraphCurveModel.
-* @dline: A #GwyDataLine
-* @from_index: index where to start
-* @to_index: where to stop
-*
-* Sets the curve data from #GwyDataLine. The range of import can be
-* modified using parameters @from_index and @to_index that are
-* interpreted directly as data indices within the #GwyDataLine.
-* In the case that @from_index == @to_index, the full #GwyDataLine is used.
-**/
+ * gwy_graph_curve_model_set_data_from_dataline:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @dline: A #GwyDataLine
+ * @from_index: index where to start
+ * @to_index: where to stop
+ *
+ * Sets the curve data from #GwyDataLine. The range of import can be
+ * modified using parameters @from_index and @to_index that are
+ * interpreted directly as data indices within the #GwyDataLine.
+ * In the case that @from_index == @to_index, the full #GwyDataLine is used.
+ **/
 void
 gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                              GwyDataLine *dline,
@@ -735,13 +735,12 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 
 
 /**
-* gwy_graph_curve_model_set_curve_color:
-* @gcmodel: A #GwyGraphCurveModel.
-* @color: Color to use for this curve (both line and symbols).
-          @color is duplicated.
-*
-* Sets the curve color.
-**/
+ * gwy_graph_curve_model_set_curve_color:
+ * @gcmodel: A #GwyGraphCurveModel.
+ * @color: Color to use for this curve (both line and symbols).
+ *
+ * Sets the curve color.
+ **/
 void
 gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
                                       const GwyRGBA *color)
@@ -752,25 +751,27 @@ gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_get_curve_color:
-* @gcmodel: A #GwyGraphCurveModel.
-*
-* Returns: curve color structure (directly used by curve model, do not free it
-* after use).
-**/
-GwyRGBA *
+ * gwy_graph_curve_model_get_curve_color:
+ * @gcmodel: A #GwyGraphCurveModel.
+ *
+ * Returns: Curve color (onwed by curve model, do not free nor modify).
+ **/
+const GwyRGBA*
 gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
 {
     return &gcmodel->color;
 }
 
 /**
-  * gwy_graph_curve_model_signal_layout_changed:
-  * @model: A #GwyGraphCurveModel.
-  *
-  * Emits signal that something general in curve layout (plotting style) was changed.
-  * Graph widget or other widgets connected to graph model object should react somehow.
-  **/
+ * gwy_graph_curve_model_signal_layout_changed:
+ * @model: A #GwyGraphCurveModel.
+ *
+ * Emits signal that something general in curve layout (plotting style) was
+ * changed.
+ *
+ * Graph widget or other widgets connected to graph model object should react
+ * somehow.
+ **/
 void
 gwy_graph_curve_model_signal_layout_changed(GwyGraphCurveModel *model)
 {
