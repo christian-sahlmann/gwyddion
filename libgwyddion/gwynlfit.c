@@ -128,7 +128,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
 }
 
 /**
- * gwy_math_nlfit_fit_with_fixed:
+ * gwy_math_nlfit_fit_full:
  * @nlfit: A Marquardt-Levenberg nonlinear fitter.
  * @n_dat: The number of data points in @x, @y, @weight.
  * @x: Array of independent variable values.
