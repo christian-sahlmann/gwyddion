@@ -93,7 +93,7 @@ static const gchar *graph_functions[] = {
 static const gchar *default_tools[] = {
     "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
     "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
-    "GwyToolProfile", "GwyToolGrainRemover", "GwyToolRemoveSpot",
+    "GwyToolProfile", "GwyToolGrainRemover", "GwyToolSpotRemover",
     "GwyToolColorRange", "GwyToolMaskEditor"
 };
 
