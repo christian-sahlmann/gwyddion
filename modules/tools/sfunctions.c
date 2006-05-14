@@ -498,8 +498,6 @@ gwy_tool_sfunctions_update_sensitivity(GwyToolSFunctions *tool)
     GSList *l;
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
-    gtk_widget_set_sensitive(tool->apply,
-                             gwy_graph_model_get_n_curves(tool->gmodel) > 0);
     gwy_table_hscale_set_sensitive(tool->resolution, tool->args.fixres);
 
     sensitive = (tool->args.output_type == GWY_SF_ACF
@@ -553,6 +551,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                 nsel = 1;
         }
     }
+
+    gtk_widget_set_sensitive(tool->apply, nsel > 0);
 
     if (nsel == 0 && n == 0)
         return;
