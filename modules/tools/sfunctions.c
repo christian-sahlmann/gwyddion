@@ -731,12 +731,9 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
     GwyGraphModel *gmodel;
-    gint n;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
-    n = gwy_selection_get_data(plain_tool->selection, NULL);
-    g_return_if_fail(n);
 
     gmodel = gwy_graph_model_duplicate(tool->gmodel);
     gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
