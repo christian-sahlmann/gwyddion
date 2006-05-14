@@ -97,17 +97,8 @@ gwy_graph_finalize(GObject *object)
 {
     GwyGraph *graph = GWY_GRAPH(object);
 
-    if (graph->notify_id) {
-        g_signal_handler_disconnect(graph->graph_model,
-                                    graph->notify_id);
-        graph->notify_id = 0;
-    }
-    if (graph->layout_updated_id) {
-        g_signal_handler_disconnect(graph->graph_model,
-                                    graph->layout_updated_id);
-        graph->layout_updated_id = 0;
-    }
-
+    gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
+    gwy_signal_handler_disconnect(graph->graph_model, graph->layout_updated_id);
     gwy_object_unref(graph->graph_model);
 }
 
@@ -331,16 +322,8 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
 void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 {
-    if (graph->notify_id) {
-        g_signal_handler_disconnect(graph->graph_model,
-                                    graph->notify_id);
-        graph->notify_id = 0;
-    }
-    if (graph->layout_updated_id) {
-        g_signal_handler_disconnect(graph->graph_model,
-                                    graph->layout_updated_id);
-        graph->layout_updated_id = 0;
-    }
+    gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
+    gwy_signal_handler_disconnect(graph->graph_model, graph->layout_updated_id);
 
     if (gmodel)
         g_object_ref(gmodel);
