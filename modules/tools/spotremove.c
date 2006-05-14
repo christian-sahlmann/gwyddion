@@ -21,9 +21,12 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/stats.h>
+#include <libprocess/fractals.h>
 #include <libprocess/correct.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_SPOT_REMOVER            (gwy_tool_spot_remover_get_type())
@@ -37,10 +40,10 @@ enum {
 };
 
 typedef enum {
-    GWY_SPOT_REMOVE_HYPER_FLATTEN,
-    GWY_SPOT_REMOVE_PSEUDO_LAPLACE,
-    GWY_SPOT_REMOVE_LAPLACE,
-    GWY_SPOT_REMOVE_FRACTAL,
+    GWY_SPOT_REMOVE_HYPER_FLATTEN  = 0,
+    GWY_SPOT_REMOVE_PSEUDO_LAPLACE = 1,
+    GWY_SPOT_REMOVE_LAPLACE        = 2,
+    GWY_SPOT_REMOVE_FRACTAL        = 3
 } SpotRemoveMethod;
 
 typedef struct _GwyToolSpotRemover      GwyToolSpotRemover;
@@ -62,11 +65,14 @@ struct _GwyToolSpotRemover {
     ToolArgs args;
 
     GwyContainer *data;
+    GwyDataField *detail;
 
     GwyRectSelectionLabels *rlabels;
     GtkWidget *zoomview;
     GtkWidget *method;
     GtkWidget *apply;
+
+    gulong palette_id;
 
     /* potential class data */
     GType layer_type_rect;
@@ -78,19 +84,48 @@ struct _GwyToolSpotRemoverClass {
 
 static gboolean module_register(void);
 
-static GType  gwy_tool_spot_remover_get_type            (void) G_GNUC_CONST;
-static void   gwy_tool_spot_remover_finalize         (GObject *object);
-static void   gwy_tool_spot_remover_init_dialog      (GwyToolSpotRemover *tool);
-static void   gwy_tool_spot_remover_data_switched    (GwyTool *gwytool,
-                                                GwyDataView *data_view);
-static void   gwy_tool_spot_remover_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_spot_remover_response         (GwyTool *tool,
-                                                gint response_id);
-static void   gwy_tool_spot_remover_selection_changed(GwyPlainTool *plain_tool,
-                                                gint hint);
-static void   gwy_tool_spot_remover_method_changed     (GtkComboBox *combo,
-                                                GwyToolSpotRemover *tool);
-static void   gwy_tool_spot_remover_apply            (GwyToolSpotRemover *tool);
+static GType gwy_tool_spot_remover_get_type        (void) G_GNUC_CONST;
+static void gwy_tool_spot_remover_finalize         (GObject *object);
+static void gwy_tool_spot_remover_init_dialog      (GwyToolSpotRemover *tool);
+static void gwy_tool_spot_remover_data_switched    (GwyTool *gwytool,
+                                                    GwyDataView *data_view);
+static void gwy_tool_spot_remover_data_changed     (GwyPlainTool *plain_tool);
+static void gwy_tool_spot_remover_palette_changed  (GwyToolSpotRemover *tool);
+static void gwy_tool_spot_remover_response         (GwyTool *tool,
+                                                    gint response_id);
+static void gwy_tool_spot_remover_selection_changed(GwyPlainTool *plain_tool,
+                                                    gint hint);
+static void gwy_tool_spot_remover_draw_zoom        (GwyToolSpotRemover *tool);
+static void gwy_tool_spot_remover_method_changed   (GtkComboBox *combo,
+                                                    GwyToolSpotRemover *tool);
+static void gwy_tool_spot_remover_apply            (GwyToolSpotRemover *tool);
+static void hyperbolic_average                     (GwyDataField *dfield,
+                                                    gint ximin,
+                                                    gint yimin,
+                                                    gint ximax,
+                                                    gint yimax);
+static void laplace_average                        (GwyDataField *dfield,
+                                                    gint ximin,
+                                                    gint yimin,
+                                                    gint ximax,
+                                                    gint yimax);
+static void fractal_average                        (GwyDataField *dfield,
+                                                    gint ximin,
+                                                    gint yimin,
+                                                    gint ximax,
+                                                    gint yimax);
+static void pseudo_laplace_average                 (GwyDataField *dfield,
+                                                    gint ximin,
+                                                    gint yimin,
+                                                    gint ximax,
+                                                    gint yimax);
+static gboolean find_subrange                      (gint min,
+                                                    gint max,
+                                                    gint res,
+                                                    gint size,
+                                                    gint *from,
+                                                    gint *to,
+                                                    gint *dest);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -107,6 +142,13 @@ static const gchar method_key[] = "/module/spotremover/method";
 
 static const ToolArgs default_args = {
     GWY_SPOT_REMOVE_PSEUDO_LAPLACE,
+};
+
+static const InterpolateFunc method_functions[] = {
+    &hyperbolic_average,
+    &pseudo_laplace_average,
+    &laplace_average,
+    &fractal_average,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -153,7 +195,10 @@ gwy_tool_spot_remover_finalize(GObject *object)
     gwy_container_set_enum_by_name(settings, method_key,
                                    tool->args.method);
 
+    gwy_signal_handler_disconnect(GWY_PLAIN_TOOL(object)->container,
+                                  tool->palette_id);
     gwy_object_unref(tool->data);
+    gwy_object_unref(tool->detail);
 
     G_OBJECT_CLASS(gwy_tool_spot_remover_parent_class)->finalize(object);
 }
@@ -181,6 +226,13 @@ gwy_tool_spot_remover_init(GwyToolSpotRemover *tool)
                                      "rectangle");
 
     tool->data = gwy_container_new();
+    tool->detail = gwy_data_field_new(MAX_SIZE, MAX_SIZE, MAX_SIZE, MAX_SIZE,
+                                      TRUE);
+    gwy_container_set_object_by_name(tool->data, "/0/data", tool->detail);
+    gwy_container_set_double_by_name(tool->data, "/0/base/min", 0.0);
+    gwy_container_set_double_by_name(tool->data, "/0/base/max", 0.0);
+    gwy_container_set_enum_by_name(tool->data, "/0/base/range-type",
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
 
     gwy_tool_spot_remover_init_dialog(tool);
 }
@@ -208,6 +260,7 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     GtkDialog *dialog;
     GtkTable *table;
     GtkWidget *hbox, *vbox, *label;
+    GwyPixmapLayer *layer;
     gint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
@@ -216,8 +269,19 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, TRUE, TRUE, 0);
 
     /* Zoom view */
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
     tool->zoomview = gwy_data_view_new(tool->data);
-    gtk_box_pack_start(GTK_BOX(hbox), tool->zoomview, FALSE, FALSE, 0);
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(tool->zoomview), (gdouble)SCALE);
+    gtk_box_pack_start(GTK_BOX(vbox), tool->zoomview, FALSE, FALSE, 0);
+
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
+                                       "/0/base/range-type");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(tool->zoomview), layer);
 
     /* Right pane */
     vbox = gtk_vbox_new(FALSE, 4);
@@ -225,7 +289,7 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
 
     /* Selection info */
     tool->rlabels = gwy_rect_selection_labels_new
-                         (TRUE, G_CALLBACK(gwy_tool_spot_remover_rect_updated),
+                         (FALSE, G_CALLBACK(gwy_tool_spot_remover_rect_updated),
                           tool);
     gtk_box_pack_start(GTK_BOX(vbox),
                        gwy_rect_selection_labels_get_table(tool->rlabels),
@@ -273,28 +337,43 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
 
 static void
 gwy_tool_spot_remover_data_switched(GwyTool *gwytool,
-                              GwyDataView *data_view)
+                                    GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
     GwyToolSpotRemover *tool;
+    GwyPixmapLayer *layer;
+    const gchar *key;
+    gchar *sigdetail;
+
+    tool = GWY_TOOL_SPOT_REMOVER(gwytool);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    gwy_signal_handler_disconnect(plain_tool->container, tool->palette_id);
 
     GWY_TOOL_CLASS(gwy_tool_spot_remover_parent_class)->data_switched(gwytool,
                                                                      data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
     if (plain_tool->init_failed)
         return;
 
-    tool = GWY_TOOL_SPOT_REMOVER(gwytool);
     if (data_view) {
         g_object_set(plain_tool->layer,
                      "draw-reflection", FALSE,
                      "is-crop", FALSE,
                      NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
-    }
 
-    /* XXX */
-    gtk_widget_set_sensitive(tool->apply, data_view != NULL);
+        layer = gwy_data_view_get_base_layer(data_view);
+        g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+        key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
+        if (key) {
+            sigdetail = g_strconcat("item-changed::", key, NULL);
+            tool->palette_id = g_signal_connect_swapped
+                             (plain_tool->container, sigdetail,
+                              G_CALLBACK(gwy_tool_spot_remover_palette_changed),
+                              tool);
+            g_free(sigdetail);
+        }
+        gwy_tool_spot_remover_palette_changed(tool);
+    }
 }
 
 static void
@@ -304,7 +383,21 @@ gwy_tool_spot_remover_data_changed(GwyPlainTool *plain_tool)
                                    plain_tool->selection,
                                    plain_tool->data_field,
                                    NULL, NULL);
-    gwy_tool_spot_remover_selection_changed(plain_tool, 0);
+    gwy_tool_spot_remover_selection_changed(plain_tool, -1);
+}
+
+static void
+gwy_tool_spot_remover_palette_changed(GwyToolSpotRemover *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    /* FIXME: gwy_app_copy_data_items() does not _delete_ items which is
+     * however necessary to revert to default.  Bug or feature? */
+    gwy_container_remove_by_name(tool->data, "/0/base/palette");
+    gwy_app_copy_data_items(plain_tool->container, tool->data,
+                            plain_tool->id, 0,
+                            GWY_DATA_ITEM_GRADIENT, 0);
 }
 
 static void
@@ -338,6 +431,105 @@ gwy_tool_spot_remover_selection_changed(GwyPlainTool *plain_tool,
     }
     else
         gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+
+    gwy_tool_spot_remover_draw_zoom(tool);
+}
+
+static void
+gwy_tool_spot_remover_draw_zoom(GwyToolSpotRemover *tool)
+{
+    GwyPlainTool *plain_tool;
+    gint xfrom, xto, xdest, yfrom, yto, ydest;
+    gdouble min;
+    gdouble sel[4];
+    gint isel[4];
+    gboolean complete, is_ok;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    if (!plain_tool->data_field
+        || !plain_tool->selection
+        || !gwy_selection_get_object(plain_tool->selection, 0, sel)) {
+        gwy_data_field_clear(tool->detail);
+        gwy_container_set_double_by_name(tool->data, "/0/base/min", 0.0);
+        gwy_container_set_double_by_name(tool->data, "/0/base/max", 0.0);
+        gwy_data_field_data_changed(tool->detail);
+        gtk_widget_set_sensitive(tool->apply, FALSE);
+        return;
+    }
+
+    isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
+    isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
+    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
+    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+    if (isel[0] > isel[2])
+        GWY_SWAP(gdouble, isel[0], isel[2]);
+    if (isel[1] > isel[3])
+        GWY_SWAP(gdouble, isel[1], isel[3]);
+
+    is_ok = (isel[0] > 0
+             && isel[1] > 0
+             && isel[2] < gwy_data_field_get_xres(plain_tool->data_field)-1
+             && isel[3] < gwy_data_field_get_yres(plain_tool->data_field)-1
+             && isel[2] - isel[0] <= MAX_SIZE
+             && isel[3] - isel[1] <= MAX_SIZE);
+
+    complete = TRUE;
+    complete &= find_subrange(isel[0], isel[2],
+                              gwy_data_field_get_xres(plain_tool->data_field),
+                              MAX_SIZE,
+                              &xfrom, &xto, &xdest);
+    complete &= find_subrange(isel[1], isel[3],
+                              gwy_data_field_get_yres(plain_tool->data_field),
+                              MAX_SIZE,
+                              &yfrom, &yto, &ydest);
+    if (!complete) {
+        min = gwy_data_field_area_get_min(plain_tool->data_field, NULL,
+                                          xfrom, yfrom,
+                                          xto - xfrom, yto - yfrom);
+        gwy_data_field_fill(tool->detail, min);
+    }
+    gwy_data_field_area_copy(plain_tool->data_field, tool->detail,
+                             xfrom, yfrom, xto, yto, xdest, ydest);
+    gwy_data_field_data_changed(tool->detail);
+
+    gtk_widget_set_sensitive(tool->apply, is_ok);
+}
+
+static gboolean
+find_subrange(gint min,
+              gint max,
+              gint res,
+              gint size,
+              gint *from,
+              gint *to,
+              gint *dest)
+{
+    gint length = max - min;
+
+    /* complete interval always fit in size */
+    if (res <= size) {
+        *from = 0;
+        *to = res;
+        *dest = (size - res)/2;
+        return FALSE;
+    }
+
+    /* interval larger than size */
+    if (length >= size) {
+        *from = min;
+        *to = min + size;
+        *dest = 0;
+        return TRUE;
+    }
+
+    /* interval shorter, fit intelligently */
+    *from = MAX(0, min - (size - length)/2);
+    *to = MIN(*from + size, res);
+    *from = *to - size;
+    g_assert(*from >= 0);
+    *dest = 0;
+    return TRUE;
 }
 
 static void
@@ -356,6 +548,7 @@ gwy_tool_spot_remover_apply(GwyToolSpotRemover *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
+    g_return_if_fail(tool->args.method <= GWY_SPOT_REMOVE_FRACTAL);
 
     if (gwy_selection_get_object(plain_tool->selection, 0, sel)) {
         isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
@@ -367,8 +560,6 @@ gwy_tool_spot_remover_apply(GwyToolSpotRemover *tool)
             GWY_SWAP(gdouble, sel[0], sel[2]);
         if (sel[1] > sel[3])
             GWY_SWAP(gdouble, sel[1], sel[3]);
-        isel[2] -= isel[0];
-        isel[3] -= isel[1];
     }
     else {
         isel[0] = isel[1] = 0;
@@ -376,385 +567,15 @@ gwy_tool_spot_remover_apply(GwyToolSpotRemover *tool)
         isel[3] = gwy_data_field_get_yres(plain_tool->data_field);
     }
 
-    /*
     gwy_app_undo_qcheckpoint(plain_tool->container,
                              gwy_app_get_data_key_for_id(plain_tool->id), 0);
-
-
+    method_functions[tool->args.method](plain_tool->data_field,
+                                        isel[0], isel[1], isel[2], isel[3]);
     gwy_data_field_data_changed(plain_tool->data_field);
-    */
-}
-
-#if 0
-#include "config.h"
-#include <stdlib.h>
-#include <string.h>
-#include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule.h>
-#include <libprocess/stats.h>
-#include <libprocess/correct.h>
-#include <libprocess/fractals.h>
-#include <libgwydgets/gwydgets.h>
-#include <app/gwyapp.h>
-
-typedef struct {
-    GwyUnitoolRectLabels labels;
-    GtkWidget *view;
-    gchar *pal;
-    gint algorithm;
-} ToolControls;
-
-typedef void (*InterpolateFunc)(GwyDataField *dfield,
-                            gint ximin,
-                            gint yimin,
-                            gint ximax,
-                            gint yimax);
-
-static gboolean   module_register       (void);
-static gboolean   use                   (GwyDataWindow *data_window,
-                                         GwyToolSwitchEvent reason);
-static void       layer_setup           (GwyUnitoolState *state);
-static GtkWidget* dialog_create         (GwyUnitoolState *state);
-static void       dialog_update         (GwyUnitoolState *state,
-                                         GwyUnitoolUpdateType reason);
-static void       dialog_abandon        (GwyUnitoolState *state);
-static void       apply                 (GwyUnitoolState *state);
-static void       load_args             (GwyContainer *container,
-                                         ToolControls *controls);
-static void       save_args             (GwyContainer *container,
-                                         ToolControls *controls);
-static void       draw_zoom             (ToolControls *controls,
-                                         GwyDataField *dfield,
-                                         gint ximin,
-                                         gint yimin,
-                                         gint ximax,
-                                         gint yimax);
-static gboolean   find_subrange         (gint min,
-                                         gint max,
-                                         gint res,
-                                         gint size,
-                                         gint *from,
-                                         gint *to,
-                                         gint *dest);
-static void       crisscross_average    (GwyDataField *dfield,
-                                         gint ximin,
-                                         gint yimin,
-                                         gint ximax,
-                                         gint yimax);
-static void       laplace_average       (GwyDataField *dfield,
-                                         gint ximin,
-                                         gint yimin,
-                                         gint ximax,
-                                         gint yimax);
-static void       fractal_average       (GwyDataField *dfield,
-                                         gint ximin,
-                                         gint yimin,
-                                         gint ximax,
-                                         gint yimax);
-static void       pseudo_laplace_average(GwyDataField *dfield,
-                                         gint ximin,
-                                         gint yimin,
-                                         gint ximax,
-                                         gint yimax);
-static void       algorithm_changed_cb  (GtkWidget *combo,
-                                         GwyUnitoolState *state);
-
-static GwyModuleInfo module_info = {
-    GWY_MODULE_ABI_VERSION,
-    &module_register,
-    N_("Spot removal tool, interpolates small parts of data (displayed on "
-       "a zoomed view) using selected algorithm."),
-    "Yeti <yeti@gwyddion.net>",
-    "1.3.2",
-    "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
-};
-
-static GwyUnitoolSlots func_slots = {
-    0,                             /* layer type, must be set runtime */
-    layer_setup,                   /* layer setup func */
-    dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
-    apply,                         /* apply action */
-    NULL,                          /* nonstandard response handler */
-};
-
-static const GwyEnum algorithms[] = {
-    { N_("Hyperbolic flatten"), SPOT_REMOVE_HYPER_FLATTEN },
-    { N_("Pseudo-Laplace"),     SPOT_REMOVE_PSEUDO_LAPLACE },
-    { N_("Laplace solver"),     SPOT_REMOVE_LAPLACE },
-    { N_("Fractal correction"), SPOT_REMOVE_FRACTAL },
-};
-
-GWY_MODULE_QUERY(module_info)
-
-static gboolean
-module_register(void)
-{
-    static GwyToolFuncInfo func_info = {
-        "spotremove",
-        GWY_STOCK_SPOT_REMOVE,
-        N_("Manually remove spots"),
-        use,
-    };
-
-    gwy_tool_func_register(&func_info);
-
-    return TRUE;
-}
-
-static gboolean
-use(GwyDataWindow *data_window,
-    GwyToolSwitchEvent reason)
-{
-    static const gchar *layer_name = "GwyLayerRectangle";
-    static GwyUnitoolState *state = NULL;
-    ToolControls *controls;
-
-    if (!state) {
-        func_slots.layer_type = g_type_from_name(layer_name);
-        if (!func_slots.layer_type) {
-            g_warning("Layer type `%s' not available", layer_name);
-            return FALSE;
-        }
-        state = g_new0(GwyUnitoolState, 1);
-        state->func_slots = &func_slots;
-        state->user_data = g_new0(ToolControls, 1);
-        state->apply_doesnt_close = TRUE;
-    }
-    controls = (ToolControls*)state->user_data;
-    if (controls->view && data_window) {
-        GwyContainer *data, *mydata;
-        GwyDataField *dfield;
-        gdouble min, max;
-
-        data = gwy_data_window_get_data(data_window);
-        mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        gwy_data_field_get_min_max(dfield, &min, &max);
-        gwy_container_set_double_by_name(mydata, "/0/base/min", min);
-        gwy_container_set_double_by_name(mydata, "/0/base/max", max);
-    }
-    return gwy_unitool_use(state, data_window, reason);
 }
 
 static void
-layer_setup(GwyUnitoolState *state)
-{
-    g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer,
-                 "selection-key", "/0/select/rectangle",
-                 "is-crop", FALSE,
-                 NULL);
-}
-
-static GtkWidget*
-dialog_create(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-    GwyContainer *data;
-    GwyContainer *settings;
-    GwyDataField *dfield;
-    GwyPixmapLayer *layer;
-    GtkWidget *dialog, *table, *label, *frame, *vbox, *omenu;
-    gdouble min, max;
-    const guchar *pal;
-    gint row;
-
-    gwy_debug("");
-    controls = (ToolControls*)state->user_data;
-    settings = gwy_app_settings_get();
-    load_args(settings, controls);
-
-    dialog = gtk_dialog_new_with_buttons(_("Remove Spots"), NULL, 0, NULL);
-    gwy_unitool_dialog_add_button_clear(dialog);
-    gwy_unitool_dialog_add_button_hide(dialog);
-    gwy_unitool_dialog_add_button_apply(dialog);
-
-    data = gwy_data_window_get_data(state->data_window);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    pal = NULL;
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-    controls->pal = g_strdup(pal);
-    gwy_data_field_get_min_max(dfield, &min, &max);
-
-    table = gtk_table_new(1, 2, FALSE);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 0);
-
-    dfield = gwy_data_field_new(MAX_SIZE, MAX_SIZE, 1.0, 1.0, FALSE);
-    data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
-    gwy_container_set_double_by_name(data, "/0/base/min", min);
-    gwy_container_set_double_by_name(data, "/0/base/max", max);
-    if (controls->pal)
-        gwy_container_set_string_by_name(data, "/0/base/palette",
-                                         g_strdup(controls->pal));
-    g_object_unref(dfield);
-    controls->view = gwy_data_view_new(data);
-    g_object_unref(data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), (gdouble)SCALE);
-
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
-    gtk_table_attach(GTK_TABLE(table), controls->view, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_table_attach(GTK_TABLE(table), vbox, 1, 2, 0, 1,
-                     GTK_EXPAND | GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
-
-    frame = gwy_unitool_windowname_frame_create(state);
-    gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
-
-    table = gtk_table_new(8, 4, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
-    row = gwy_unitool_rect_info_table_setup(&controls->labels,
-                                            GTK_TABLE(table), 0, 0);
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-
-    label = gtk_label_new_with_mnemonic(_("Removal _method:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    omenu = gwy_enum_combo_box_new(algorithms, G_N_ELEMENTS(algorithms),
-                                   G_CALLBACK(algorithm_changed_cb), state,
-                                   controls->algorithm, TRUE);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
-    return dialog;
-}
-
-static void
-dialog_update(GwyUnitoolState *state,
-              GwyUnitoolUpdateType reason)
-{
-    gboolean is_visible, is_selected, is_ok;
-    ToolControls *controls;
-    GwySelection *selection;
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyContainer *mydata;
-    GwyDataField *mydfield;
-    gint isel[4];
-    const guchar *pal;
-
-    gwy_debug("");
-
-    controls = (ToolControls*)state->user_data;
-
-    data = gwy_data_window_get_data(state->data_window);
-    selection = gwy_vector_layer_get_selection(state->layer);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
-                                                               "/0/data"));
-    pal = NULL;
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-    if (pal && (!controls->pal || !gwy_strequal(pal, controls->pal))) {
-        gwy_container_set_string_by_name(mydata, "/0/base/palette",
-                                         g_strdup(pal));
-        g_free(controls->pal);
-        controls->pal = g_strdup(pal);
-    }
-    if (reason == GWY_UNITOOL_UPDATED_DATA) {
-        gdouble min, max;
-
-        gwy_debug("Recomputing min, max");
-        gwy_data_field_get_min_max(dfield, &min, &max);
-        gwy_container_set_double_by_name(mydata, "/0/base/min", min);
-        gwy_container_set_double_by_name(mydata, "/0/base/max", max);
-    }
-
-    is_visible = state->is_visible;
-    is_selected = gwy_selection_get_data(selection, NULL);
-    if (!is_visible && !is_selected)
-        return;
-
-    if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
-                                         NULL, isel)) {
-        is_ok = isel[0] > 0
-                && isel[1] > 0
-                && isel[2] + 1 < gwy_data_field_get_xres(dfield)
-                && isel[3] + 1 < gwy_data_field_get_yres(dfield)
-                && isel[2] - isel[0] <= MAX_SIZE
-                && isel[3] - isel[1] <= MAX_SIZE;
-        draw_zoom(controls, dfield, isel[0], isel[1], isel[2], isel[3]);
-    }
-    else {
-        is_ok = FALSE;
-        draw_zoom(controls, NULL, -1, -1, -1, -1);
-    }
-    gwy_unitool_apply_set_sensitive(state, is_ok);
-}
-
-static void
-dialog_abandon(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-    GwyContainer *settings;
-
-    controls = (ToolControls*)state->user_data;
-    settings = gwy_app_settings_get();
-    save_args(settings, controls);
-    g_free(controls->pal);
-
-    memset(state->user_data, 0, sizeof(ToolControls));
-}
-
-static void
-apply(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyDataViewLayer *layer;
-    gint isel[4];
-
-    controls = (ToolControls*)state->user_data;
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
-
-    switch (controls->algorithm) {
-        case SPOT_REMOVE_HYPER_FLATTEN:
-        crisscross_average(dfield, isel[0], isel[1], isel[2], isel[3]);
-        break;
-
-        case SPOT_REMOVE_LAPLACE:
-        laplace_average(dfield, isel[0], isel[1], isel[2], isel[3]);
-        break;
-
-        case SPOT_REMOVE_FRACTAL:
-        fractal_average(dfield, isel[0], isel[1], isel[2], isel[3]);
-        break;
-
-        case SPOT_REMOVE_PSEUDO_LAPLACE:
-        pseudo_laplace_average(dfield, isel[0], isel[1], isel[2], isel[3]);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-    /*gwy_vector_layer_unselect(state->layer);*/
-    gwy_data_field_data_changed(dfield);
-}
-
-static void
-crisscross_average(GwyDataField *dfield,
+hyperbolic_average(GwyDataField *dfield,
                    gint ximin, gint yimin,
                    gint ximax, gint yimax)
 {
@@ -857,11 +678,11 @@ pseudo_laplace_average(GwyDataField *dfield,
             for (k = yimin-1; k < yimax+1; k++) {
                 gdouble ww;
 
-                ww = disttable[abs(k - i)*width + j-ximin+1];
+                ww = disttable[ABS(k - i)*width + j-ximin+1];
                 w += ww;
                 s += ww*data[k*rowstride + ximin-1];
 
-                ww = disttable[abs(k - i)*width + ximax-j];
+                ww = disttable[ABS(k - i)*width + ximax-j];
                 w += ww;
                 s += ww*data[k*rowstride + ximax];
             }
@@ -869,11 +690,11 @@ pseudo_laplace_average(GwyDataField *dfield,
             for (k = ximin-1; k < ximax+1; k++) {
                 gdouble ww;
 
-                ww = disttable[abs(i-yimin+1)*width + abs(k - j)];
+                ww = disttable[ABS(i-yimin+1)*width + ABS(k - j)];
                 w += ww;
                 s += ww*data[(yimin-1)*rowstride + k];
 
-                ww = disttable[abs(yimax-i)*width + abs(k - j)];
+                ww = disttable[ABS(yimax - i)*width + ABS(k - j)];
                 w += ww;
                 s += ww*data[yimax*rowstride + k];
             }
@@ -884,106 +705,6 @@ pseudo_laplace_average(GwyDataField *dfield,
 
     g_free(disttable);
 }
-
-static void
-draw_zoom(ToolControls *controls,
-          GwyDataField *dfield,
-          gint ximin, gint yimin,
-          gint ximax, gint yimax)
-{
-    GwyContainer *mydata;
-    GwyDataField *mydfield;
-    gint xfrom, xto, xdest, yfrom, yto, ydest;
-    gdouble min;
-    gboolean complete;
-
-    mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
-                                                               "/0/data"));
-    min = gwy_container_get_double_by_name(mydata, "/0/base/min");
-    if (!dfield) {
-        gwy_data_field_fill(mydfield, min);
-        gwy_data_field_data_changed(mydfield);
-        return;
-    }
-
-    complete = TRUE;
-    complete &= find_subrange(ximin, ximax,
-                              gwy_data_field_get_xres(dfield), MAX_SIZE,
-                              &xfrom, &xto, &xdest);
-    complete &= find_subrange(yimin, yimax,
-                              gwy_data_field_get_yres(dfield), MAX_SIZE,
-                              &yfrom, &yto, &ydest);
-    if (!complete)
-        gwy_data_field_fill(mydfield, min);
-    gwy_data_field_area_copy(dfield, mydfield, xfrom, yfrom, xto, yto,
-                             xdest, ydest);
-    gwy_data_field_data_changed(mydfield);
-}
-
-static gboolean
-find_subrange(gint min, gint max, gint res, gint size,
-              gint *from, gint *to, gint *dest)
-{
-    gint length = max - min;
-
-    /* complete interval always fit in size */
-    if (res <= size) {
-        *from = 0;
-        *to = res;
-        *dest = (size - res)/2;
-        return FALSE;
-    }
-
-    /* interval larger than size */
-    if (length >= size) {
-        *from = min;
-        *to = min + size;
-        *dest = 0;
-        return TRUE;
-    }
-
-    /* interval shorter, fit intelligently */
-    *from = MAX(0, min - (size - length)/2);
-    *to = MIN(*from + size, res);
-    *from = *to - size;
-    g_assert(*from >= 0);
-    *dest = 0;
-    return TRUE;
-}
-
-static void
-algorithm_changed_cb(GtkWidget *combo, GwyUnitoolState *state)
-{
-    ToolControls *controls;
-
-    controls = (ToolControls*)state->user_data;
-    controls->algorithm = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static const gchar algorithm_key[] = "/tool/spotremove/algorithm";
-
-static void
-load_args(GwyContainer *container, ToolControls *controls)
-{
-    controls->algorithm = SPOT_REMOVE_HYPER_FLATTEN;
-
-    gwy_container_gis_enum_by_name(container, algorithm_key,
-                                   &controls->algorithm);
-
-    /* sanitize */
-    controls->algorithm = CLAMP(controls->algorithm,
-                                SPOT_REMOVE_HYPER_FLATTEN,
-                                SPOT_REMOVE_FRACTAL);
-}
-
-static void
-save_args(GwyContainer *container, ToolControls *controls)
-{
-    gwy_container_set_enum_by_name(container, algorithm_key,
-                                   controls->algorithm);
-}
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
