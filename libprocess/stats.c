@@ -2270,33 +2270,6 @@ gwy_data_field_minkowski_euler(GwyDataField *data_field,
 }
 
 /**
- * square_area2:
- * @z1: Z-value in first corner.
- * @z2: Z-value in second corner.
- * @z3: Z-value in third corner.
- * @z4: Z-value in fourth corner.
- * @x: One fourth of square of rectangle width (x-size).
- * @y: One fourth of square of rectangle height (y-size).
- *
- * Calculates approximate area of a one general rectangular pixel.
- *
- * Returns: The area.
- **/
-static inline gdouble
-square_area2(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
-             gdouble x, gdouble y)
-{
-    gdouble c;
-
-    c = (z1 + z2 + z3 + z4)/2.0;
-
-    return (sqrt(1 + (z1 - z2)*(z1 - z2)/x + (z1 + z2 - c)*(z1 + z2 - c)/y)
-            + sqrt(1 + (z2 - z3)*(z2 - z3)/y + (z2 + z3 - c)*(z2 + z3 - c)/x)
-            + sqrt(1 + (z3 - z4)*(z3 - z4)/x + (z3 + z4 - c)*(z3 + z4 - c)/y)
-            + sqrt(1 + (z1 - z4)*(z1 - z4)/y + (z1 + z4 - c)*(z1 + z4 - c)/x));
-}
-
-/**
  * square_area1:
  * @z1: Z-value in first corner.
  * @z2: Z-value in second corner.
@@ -2320,10 +2293,208 @@ square_area1(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     z3 -= c;
     z4 -= c;
 
-    return (sqrt(1 + 2*(z1*z1 + z2*z2)/q)
-            + sqrt(1 + 2*(z2*z2 + z3*z3)/q)
-            + sqrt(1 + 2*(z3*z3 + z4*z4)/q)
-            + sqrt(1 + 2*(z4*z4 + z1*z1)/q));
+    return (sqrt(1.0 + 2.0*(z1*z1 + z2*z2)/q)
+            + sqrt(1.0 + 2.0*(z2*z2 + z3*z3)/q)
+            + sqrt(1.0 + 2.0*(z3*z3 + z4*z4)/q)
+            + sqrt(1.0 + 2.0*(z4*z4 + z1*z1)/q));
+}
+
+/**
+ * square_area1w:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @w1: Weight of first corner (0 or 1).
+ * @w2: Weight of second corner (0 or 1).
+ * @w3: Weight of third corner (0 or 1).
+ * @w4: Weight of fourth corner (0 or 1).
+ * @q: One fourth of rectangle projected area (x-size * ysize).
+ *
+ * Calculates approximate area of a one square pixel with some corners possibly
+ * missing.
+ *
+ * Returns: The area.
+ **/
+static inline gdouble
+square_area1w(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+              gint w1, gint w2, gint w3, gint w4,
+              gdouble q)
+{
+    gdouble c;
+
+    c = (z1 + z2 + z3 + z4)/4.0;
+    z1 -= c;
+    z2 -= c;
+    z3 -= c;
+    z4 -= c;
+
+    return ((w1 + w2)*sqrt(1.0 + 2.0*(z1*z1 + z2*z2)/q)
+            + (w2 + w3)*sqrt(1.0 + 2.0*(z2*z2 + z3*z3)/q)
+            + (w3 + w4)*sqrt(1.0 + 2.0*(z3*z3 + z4*z4)/q)
+            + (w4 + w1)*sqrt(1.0 + 2.0*(z4*z4 + z1*z1)/q))/2.0;
+}
+
+/**
+ * square_area2:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate area of a one general rectangular pixel.
+ *
+ * Returns: The area.
+ **/
+static inline gdouble
+square_area2(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+             gdouble x, gdouble y)
+{
+    gdouble c;
+
+    c = (z1 + z2 + z3 + z4)/2.0;
+
+    return (sqrt(1.0 + (z1 - z2)*(z1 - z2)/x
+                 + (z1 + z2 - c)*(z1 + z2 - c)/y)
+            + sqrt(1.0 + (z2 - z3)*(z2 - z3)/y
+                   + (z2 + z3 - c)*(z2 + z3 - c)/x)
+            + sqrt(1.0 + (z3 - z4)*(z3 - z4)/x
+                   + (z3 + z4 - c)*(z3 + z4 - c)/y)
+            + sqrt(1.0 + (z1 - z4)*(z1 - z4)/y
+                   + (z1 + z4 - c)*(z1 + z4 - c)/x));
+}
+
+/**
+ * square_area2w:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @w1: Weight of first corner (0 or 1).
+ * @w2: Weight of second corner (0 or 1).
+ * @w3: Weight of third corner (0 or 1).
+ * @w4: Weight of fourth corner (0 or 1).
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate area of a one general rectangular pixel with some
+ * corners possibly missing.
+ *
+ * Returns: The area.
+ **/
+static inline gdouble
+square_area2w(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+              gint w1, gint w2, gint w3, gint w4,
+              gdouble x, gdouble y)
+{
+    gdouble c;
+
+    c = (z1 + z2 + z3 + z4)/2.0;
+
+    return ((w1 + w2)*sqrt(1.0 + (z1 - z2)*(z1 - z2)/x
+                           + (z1 + z2 - c)*(z1 + z2 - c)/y)
+            + (w2 + w3)*sqrt(1.0 + (z2 - z3)*(z2 - z3)/y
+                             + (z2 + z3 - c)*(z2 + z3 - c)/x)
+            + (w3 + w4)*sqrt(1.0 + (z3 - z4)*(z3 - z4)/x
+                             + (z3 + z4 - c)*(z3 + z4 - c)/y)
+            + (w4 + w1)*sqrt(1.0 + (z1 - z4)*(z1 - z4)/y
+                             + (z1 + z4 - c)*(z1 + z4 - c)/x))/2.0;
+}
+
+/**
+ * stripe_area1:
+ * @n: The number of values in @r, @rr, @m.
+ * @stride: Stride in @r, @rr, @m.
+ * @r: Array of @n z-values of vertices, this row of vertices is considered
+ *     inside.
+ * @rr: Array of @n z-values of vertices, this row of vertices is considered
+ *      outside.
+ * @m: Mask for @r (@rr does not need mask since it has zero weight by
+ *     definition), or %NULL to sum over all @r vertices.
+ * @q: One fourth of rectangle projected area (x-size * ysize).
+ *
+ * Calculates approximate area of a half-pixel stripe.
+ *
+ * Returns: The area.
+ **/
+static gdouble
+stripe_area1(gint n,
+             gint stride,
+             const gdouble *r,
+             const gdouble *rr,
+             const gdouble *m,
+             gdouble q)
+{
+    gdouble sum = 0.0;
+    gint j;
+
+    if (m) {
+        for (j = 1; j < n; j++)
+            sum += square_area1w(r[j*stride], r[(j - 1)*stride],
+                                 rr[j*stride], rr[(j - 1)*stride],
+                                 m[j*stride] > 0.0, m[(j - 1)*stride] > 0.0,
+                                 0, 0,
+                                 q);
+    }
+    else {
+        for (j = 1; j < n; j++)
+            sum += square_area1w(r[j*stride], r[(j - 1)*stride],
+                                 rr[j*stride], rr[(j - 1)*stride],
+                                 1, 1, 0, 0,
+                                 q);
+    }
+
+    return sum;
+}
+
+/**
+ * stripe_area2:
+ * @n: The number of values in @r, @rr, @m.
+ * @stride: Stride in @r, @rr, @m.
+ * @r: Array of @n z-values of vertices, this row of vertices is considered
+ *     inside.
+ * @rr: Array of @n z-values of vertices, this row of vertices is considered
+ *      outside.
+ * @m: Mask for @r (@rr does not need mask since it has zero weight by
+ *     definition), or %NULL to sum over all @r vertices.
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate area of a half-pixel stripe.
+ *
+ * Returns: The area.
+ **/
+static gdouble
+stripe_area2(gint n,
+             gint stride,
+             const gdouble *r,
+             const gdouble *rr,
+             const gdouble *m,
+             gdouble x,
+             gdouble y)
+{
+    gdouble sum = 0.0;
+    gint j;
+
+    if (m) {
+        for (j = 1; j < n; j++)
+            sum += square_area2w(r[j*stride], r[(j - 1)*stride],
+                                 rr[j*stride], rr[(j - 1)*stride],
+                                 m[j*stride] > 0.0, m[(j - 1)*stride] > 0.0,
+                                 0, 0,
+                                 x, y);
+    }
+    else {
+        for (j = 1; j < n; j++)
+            sum += square_area2w(r[j*stride], r[(j - 1)*stride],
+                                 rr[j*stride], rr[(j - 1)*stride],
+                                 1, 1, 0, 0,
+                                 x, y);
+    }
+
+    return sum;
 }
 
 /**
@@ -2388,6 +2559,12 @@ gwy_data_field_get_surface_area(GwyDataField *data_field)
 /**
  * gwy_data_field_area_get_surface_area:
  * @data_field: A data field.
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -2399,14 +2576,18 @@ gwy_data_field_get_surface_area(GwyDataField *data_field)
  **/
 gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *dfield,
+                                     GwyDataField *mask,
                                      gint col, gint row,
                                      gint width, gint height)
 {
     GwyDataLine *line;
-    gint i, j, xres;
+    gint i, j, xres, yres, s;
     gdouble x, y, q, sum = 0.0;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == dfield->xres
+                                   && mask->yres == dfield->yres), sum);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width >= 0 && height >= 0
                          && col + width <= dfield->xres
@@ -2420,6 +2601,9 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
     x = dfield->xreal/dfield->xres;
     y = dfield->yreal/dfield->yres;
     if (width == 1) {
+        if (mask)
+            g_warning("Surface area of masked single-pixel stripes "
+                      "does not work yet.");
         if (height == 1)
             return x*y;
 
@@ -2430,7 +2614,10 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
 
         return sum*x;
     }
-    else if (height == 1) {
+    if (height == 1) {
+        if (mask)
+            g_warning("Surface area of masked single-pixel stripes "
+                      "does not work yet.");
         line = gwy_data_line_new(width, width*x, FALSE);
         gwy_data_field_get_row_part(dfield, line, row, col, col+width);
         sum = gwy_data_line_get_length(line);
@@ -2438,36 +2625,209 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
 
         return sum*y;
     }
-    if (col == 0 && width == dfield->xres
-        && row == 0 && height == dfield->yres)
-        return gwy_data_field_get_surface_area(dfield);
 
     xres = dfield->xres;
+    yres = dfield->yres;
     q = x*y;
     x = x*x;
     y = y*y;
 
-    if (fabs(log(x/y)) < 1e-7) {
-        for (i = 1; i < height; i++) {
-            gdouble *r = dfield->data + xres*(i + row) + col;
+    if (mask) {
+        if (fabs(log(x/y)) < 1e-7) {
+            /* Inside */
+            for (i = 1; i < height; i++) {
+                const gdouble *r = dfield->data + xres*(i + row) + col;
+                const gdouble *m = mask->data + xres*(i + row) + col;
 
-            for (j = 1; j < width; j++)
-                sum += square_area1(r[j], r[j-1], r[j-xres], r[j-xres-1], q);
+                for (j = 1; j < width; j++)
+                    sum += square_area1w(r[j], r[j-1],
+                                         r[j-xres], r[j-xres-1],
+                                         m[j] > 0.0, m[j-1] > 0.0,
+                                         m[j-xres] > 0.0, m[j-xres-1] > 0.0,
+                                         q);
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_area1(width, 1,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*(row - s) + col,
+                                mask->data + xres*row + col,
+                                q);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_area1(width, 1,
+                                dfield->data + xres*(row + height-1) + col,
+                                dfield->data + xres*(row + height-1 + s) + col,
+                                mask->data + xres*(row + height-1) + col,
+                                q);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_area1(height, xres,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*row + col - s,
+                                mask->data + xres*row + col,
+                                q);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_area1(height, xres,
+                                dfield->data + xres*row + col + width-1,
+                                dfield->data + xres*row + col + width-1 + s,
+                                mask->data + xres*row + col + width-1,
+                                q);
         }
+        else {
+            /* Inside */
+            for (i = 1; i < height; i++) {
+                const gdouble *r = dfield->data + xres*(i + row) + col;
+                const gdouble *m = mask->data + xres*(i + row) + col;
+
+                for (j = 1; j < width; j++)
+                    sum += square_area2w(r[j], r[j-1],
+                                         r[j-xres], r[j-xres-1],
+                                         m[j] > 0.0, m[j-1] > 0.0,
+                                         m[j-xres] > 0.0, m[j-xres-1] > 0.0,
+                                         x, y);
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_area2(width, 1,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*(row - s) + col,
+                                mask->data + xres*row + col,
+                                x, y);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_area2(width, 1,
+                                dfield->data + xres*(row + height-1) + col,
+                                dfield->data + xres*(row + height-1 + s) + col,
+                                mask->data + xres*(row + height-1) + col,
+                                x, y);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_area2(height, xres,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*row + col - s,
+                                mask->data + xres*row + col,
+                                x, y);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_area2(height, xres,
+                                dfield->data + xres*row + col + width-1,
+                                dfield->data + xres*row + col + width-1 + s,
+                                mask->data + xres*row + col + width-1,
+                                x, y);
+        }
+
+        /* XXX: Just take the four corner quater-pixels as flat.  */
+        if (mask->data[xres*row + col])
+            sum += 1.0;
+        if (mask->data[xres*row + col + width-1])
+            sum += 1.0;
+        if (mask->data[xres*(row + height-1) + col])
+            sum += 1.0;
+        if (mask->data[xres*(row + height-1) + col + width-1])
+            sum += 1.0;
     }
     else {
-        for (i = 1; i < height; i++) {
-            gdouble *r = dfield->data + xres*(i + row) + col;
+        if (col == 0 && width == dfield->xres
+            && row == 0 && height == dfield->yres)
+            return gwy_data_field_get_surface_area(dfield);
 
-            for (j = 1; j < width; j++)
-                sum += square_area2(r[j], r[j-1], r[j-xres], r[j-xres-1], x, y);
+        if (fabs(log(x/y)) < 1e-7) {
+            /* Inside */
+            for (i = 1; i < height; i++) {
+                const gdouble *r = dfield->data + xres*(i + row) + col;
+
+                for (j = 1; j < width; j++)
+                    sum += square_area1(r[j], r[j-1], r[j-xres], r[j-xres-1],
+                                        q);
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_area1(width, 1,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*(row - s) + col,
+                                NULL,
+                                q);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_area1(width, 1,
+                                dfield->data + xres*(row + height-1) + col,
+                                dfield->data + xres*(row + height-1 + s) + col,
+                                NULL,
+                                q);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_area1(height, xres,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*row + col - s,
+                                NULL,
+                                q);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_area1(height, xres,
+                                dfield->data + xres*row + col + width-1,
+                                dfield->data + xres*row + col + width-1 + s,
+                                NULL,
+                                q);
         }
+        else {
+            for (i = 1; i < height; i++) {
+                const gdouble *r = dfield->data + xres*(i + row) + col;
+
+                for (j = 1; j < width; j++)
+                    sum += square_area2(r[j], r[j-1], r[j-xres], r[j-xres-1],
+                                        x, y);
+            }
+
+            /* Top row */
+            s = !(row == 0);
+            sum += stripe_area2(width, 1,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*(row - s) + col,
+                                NULL,
+                                x, y);
+
+            /* Bottom row */
+            s = !(row + height == yres);
+            sum += stripe_area2(width, 1,
+                                dfield->data + xres*(row + height-1) + col,
+                                dfield->data + xres*(row + height-1 + s) + col,
+                                NULL,
+                                x, y);
+
+            /* Left column */
+            s = !(col == 0);
+            sum += stripe_area2(height, xres,
+                                dfield->data + xres*row + col,
+                                dfield->data + xres*row + col - s,
+                                NULL,
+                                x, y);
+
+            /* Right column */
+            s = !(col + width == xres);
+            sum += stripe_area2(height, xres,
+                                dfield->data + xres*row + col + width-1,
+                                dfield->data + xres*row + col + width-1 + s,
+                                NULL,
+                                x, y);
+        }
+
+        /* XXX: Just take the four corner quater-pixels as flat.  */
+        sum += 1.0;
     }
-    /* We calculate area of inner part of an area.  If we assume the average
-     * properties of border are the same as of the inner part, we can simply
-     * multiply the sum with the total/inner area ratio */
-    sum *= width/(width - 1.0);
-    sum *= height/(height - 1.0);
 
     return sum*q/4;
 }

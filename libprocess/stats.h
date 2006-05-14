@@ -80,6 +80,7 @@ gdouble gwy_data_field_area_get_median      (GwyDataField *data_field,
                                              gint width,
                                              gint height);
 gdouble gwy_data_field_area_get_surface_area(GwyDataField *data_field,
+                                             GwyDataField *mask,
                                              gint col,
                                              gint row,
                                              gint width,
