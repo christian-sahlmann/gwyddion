@@ -44,6 +44,7 @@ static void       gwy_graph_area_dialog_init       (GwyGraphAreaDialog *dialog);
 static void       gwy_graph_area_dialog_destroy    (GtkObject *object);
 static gboolean   gwy_graph_area_dialog_delete     (GtkWidget *widget,
                                                     GdkEventAny *event);
+static void       gwy_graph_area_dialog_response   (GtkDialog *gtkdialog);
 static GtkWidget* gwy_graph_combo_box_new          (GtkWidget *parent,
                                                     GCallback callback,
                                                     gpointer cbdata,
@@ -113,12 +114,14 @@ gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
 {
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+    GtkDialogClass *dialog_class = GTK_DIALOG_CLASS(klass);
 
     gwy_debug("");
     parent_class = g_type_class_peek_parent(klass);
 
     object_class->destroy = gwy_graph_area_dialog_destroy;
     widget_class->delete_event = gwy_graph_area_dialog_delete;
+    dialog_class->response = gwy_graph_area_dialog_response;
 }
 
 static gboolean
@@ -135,6 +138,15 @@ gwy_graph_area_dialog_delete(GtkWidget *widget,
     gtk_widget_hide(widget);
 
     return TRUE;
+}
+
+static void
+gwy_graph_area_dialog_response(GtkDialog *gtkdialog)
+{
+    GwyGraphAreaDialog *dialog = GWY_GRAPH_AREA_DIALOG(gtkdialog);
+
+    if (dialog->color_dialog)
+        gtk_widget_hide(dialog->color_dialog);
 }
 
 static void
