@@ -520,67 +520,71 @@ gwy_data_field_copy(GwyDataField *src,
  * gwy_data_field_area_copy:
  * @src: Source data field.
  * @dest: Destination data field.
- * @ulcol: Starting column.
- * @ulrow: Starting row.
- * @brcol: Ending column (noninclusive).
- * @brrow: Ending row (noninclusive).
- * @destcol: Destination column.
- * @destrow: Destination row.
+ * @col: Area upper-left column coordinate in @src.
+ * @row: Area upper-left row coordinate @src.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @destcol: Destination column in @dest.
+ * @destrow: Destination row in @dest.
  *
- * Copies a rectangular area from @src to @dest.
+ * Copies a rectangular area from one data field to another.
  *
- * The area starts at (@ulcol, @ulrow) in @src and ends at (@brcol, @brrow)
- * (noninclusive).  It is copied to @dest starting from (@destcol, @destrow).
+ * The area starts at (@col, @row) in @src and its dimension is @width*@height.
+ * It is copied to @dest starting from (@destcol, @destrow).
  *
- * There must be enough room in the destination data field, areas sticking
- * out are rejected.  If @src is equal to @dest, the areas may not overlap.
+ * The source area has to be completely contained in @src.  No assumptions are
+ * made about destination position, however, parts of the source area sticking
+ * out the destination data field @dest are cut off.
  *
- * Returns: Whether it succeeded (area sizes OK).
+ * If @src is equal to @dest, the areas may not overlap.
  **/
-gboolean
+void
 gwy_data_field_area_copy(GwyDataField *src,
                          GwyDataField *dest,
-                         gint ulcol, gint ulrow,
-                         gint brcol, gint brrow,
+                         gint col, gint row,
+                         gint width, gint height,
                          gint destcol, gint destrow)
 {
     gint i;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(src), FALSE);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dest), FALSE);
+    g_return_if_fail(GWY_IS_DATA_FIELD(src));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dest));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= src->xres
+                     && row + height <= src->yres);
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    if (ulcol < 0
-        || ulrow < 0
-        || brcol > src->xres
-        || brrow > src->yres
-        || destcol < 0
-        || destrow < 0
-        || destcol + brcol - ulcol > dest->xres
-        || destrow + brrow - ulrow > dest->yres)
-        return FALSE;
-
-    /* make it as fast as gwy_data_field_copy() whenever possible (and maybe
-     * faster, as we don't play with units */
-    gwy_data_field_invalidate(dest);
-    if (brrow - ulrow == 1
-        || (ulcol == 0 && brcol == src->xres && src->xres == dest->xres)) {
-        memcpy(dest->data + dest->xres*destrow + destcol,
-               src->data + src->xres*ulrow + ulcol,
-               (brcol - ulcol)*(brrow - ulrow)*sizeof(gdouble));
-        return TRUE;
+    if (destcol + width > dest->xres)
+        width = dest->xres - destcol;
+    if (destrow + height > dest->yres)
+        height = dest->yres - destrow;
+    if (destcol < 0) {
+        col -= destcol;
+        width += destcol;
+        destcol = 0;
     }
+    if (destrow < 0) {
+        row -= destrow;
+        height += destrow;
+        destrow = 0;
+    }
+    if (width <= 0 || height <= 0)
+        return;
 
-    for (i = 0; i < brrow - ulrow; i++)
-        memcpy(dest->data + dest->xres*(destrow + i) + destcol,
-               src->data + src->xres*(ulrow + i) + ulcol,
-               (brcol - ulcol)*sizeof(gdouble));
-
-    return TRUE;
+    gwy_data_field_invalidate(dest);
+    if (width == src->xres && width == dest->xres) {
+        /* make it as fast as gwy_data_field_copy() whenever possible (and
+         * maybe faster, as we don't play with units */
+        g_assert(col == 0 && destcol == 0);
+        memcpy(dest->data + width*destrow, src->data + width*row,
+               width*height*sizeof(gdouble));
+    }
+    else {
+        for (i = 0; i < height; i++)
+            memcpy(dest->data + dest->xres*(destrow + i) + destcol,
+                   src->data + src->xres*(row + i) + col,
+                   width*sizeof(gdouble));
+    }
 }
 
 /**

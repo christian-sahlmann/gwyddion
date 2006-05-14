@@ -1241,8 +1241,7 @@ gwy_data_field_area_filter_minimum(GwyDataField *data_field,
     buf2 = buffer2->data;
 
     d = 1;
-    gwy_data_field_area_copy(data_field, buffer,
-                             col, row, col + width, row + height, 0, 0);
+    gwy_data_field_area_copy(data_field, buffer, col, row, width, height, 0, 0);
     while (3*d < size) {
         for (i = 0; i < height; i++) {
             ii = i*width;
@@ -1388,8 +1387,7 @@ gwy_data_field_area_filter_maximum(GwyDataField *data_field,
     buf2 = buffer2->data;
 
     d = 1;
-    gwy_data_field_area_copy(data_field, buffer,
-                             col, row, col + width, row + height, 0, 0);
+    gwy_data_field_area_copy(data_field, buffer, col, row, width, height, 0, 0);
     while (3*d < size) {
         for (i = 0; i < height; i++) {
             ii = i*width;

@@ -448,46 +448,35 @@ merge_do(MergeArgs *args)
         xshift = MAX(0, -(max_col - cdata.width/2));
         if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH || args->boundary == GWY_MERGE_BOUNDARY_FIRST)
         {
-            if (!gwy_data_field_area_copy(dfield1, result,
-                             0, 0, dfield1->xres, dfield1->yres,
-                             xshift, 0))
-                g_warning("Error while putting field 1 at: %d %d\n", xshift, 0);
-
-            if (!gwy_data_field_area_copy(dfield2, result,
-                             0, 0, dfield2->xres, dfield2->yres,
-                             xshift + ((max_col - kdata.width/2) - kdata.x),
-                             cdata.y + (max_row - kdata.height/2)))
-                g_warning("Error while putting field 2 at: %d %d\n",
-                    xshift + ((max_col - kdata.width/2) - kdata.x),
-                    cdata.y + (max_row - kdata.height/2));
-
+            gwy_data_field_area_copy(dfield1, result,
+                                     0, 0, dfield1->xres, dfield1->yres,
+                                     xshift, 0);
+            gwy_data_field_area_copy(dfield2, result,
+                                     0, 0, dfield2->xres, dfield2->yres,
+                                     xshift + ((max_col - kdata.width/2) - kdata.x),
+                                     cdata.y + (max_row - kdata.height/2));
             gwy_data_field_area_add(result,
-                                xshift + ((max_col - kdata.width/2) - kdata.x),
-                                cdata.y + (max_row - kdata.height/2),
-                                dfield2->xres,
-                                dfield2->yres,
-                                zshift);
+                                    xshift + ((max_col - kdata.width/2) - kdata.x),
+                                    cdata.y + (max_row - kdata.height/2),
+                                    dfield2->xres,
+                                    dfield2->yres,
+                                    zshift);
         }
         else
         {
-            if (!gwy_data_field_area_copy(dfield2, result,
-                             0, 0, dfield2->xres, dfield2->yres,
-                             xshift + ((max_col - kdata.width/2) - kdata.x),
-                             cdata.y + (max_row - kdata.height/2)))
-                g_warning("Error while putting field 2 at: %d %d\n",
-                    xshift + ((max_col - kdata.width/2) - kdata.x),
-                    cdata.y + (max_row - kdata.height/2));
-
+            gwy_data_field_area_copy(dfield2, result,
+                                     0, 0, dfield2->xres, dfield2->yres,
+                                     xshift + ((max_col - kdata.width/2) - kdata.x),
+                                     cdata.y + (max_row - kdata.height/2));
             gwy_data_field_area_add(result,
                                 xshift + ((max_col - kdata.width/2) - kdata.x),
                                 cdata.y + (max_row - kdata.height/2),
                                 dfield2->xres,
                                 dfield2->yres,
                                 zshift);
-            if (!gwy_data_field_area_copy(dfield1, result,
-                             0, 0, dfield1->xres, dfield1->yres,
-                             xshift, 0))
-                g_warning("Error while putting field 1 at: %d %d\n", xshift, 0);
+            gwy_data_field_area_copy(dfield1, result,
+                                     0, 0, dfield1->xres, dfield1->yres,
+                                     xshift, 0);
           }
 
 
@@ -539,47 +528,35 @@ merge_do(MergeArgs *args)
         yshift = MAX(0, -(max_row - cdata.height/2));
         if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH || args->boundary == GWY_MERGE_BOUNDARY_FIRST)
         {
-            if (!gwy_data_field_area_copy(dfield1, result,
-                             0, 0, dfield1->xres, dfield1->yres,
-                             0, yshift))
-                g_warning("Error while putting field 1 at: %d %d\n", 0, yshift);
-
-            if (!gwy_data_field_area_copy(dfield2, result,
-                             0, 0, dfield2->xres, dfield2->yres,
-                             cdata.x + (max_col - kdata.width/2),
-                             yshift + ((max_row - kdata.height/2) - kdata.y)))
-                g_warning("Error while putting field 2 at: %d %d\n",
-                    cdata.x + (max_col - kdata.width/2),
-                    yshift + ((max_row - kdata.height/2) - kdata.y));
-
+            gwy_data_field_area_copy(dfield1, result,
+                                     0, 0, dfield1->xres, dfield1->yres,
+                                     0, yshift);
+            gwy_data_field_area_copy(dfield2, result,
+                                     0, 0, dfield2->xres, dfield2->yres,
+                                     cdata.x + (max_col - kdata.width/2),
+                                     yshift + ((max_row - kdata.height/2) - kdata.y));
             gwy_data_field_area_add(result,
-                                cdata.x + (max_col - kdata.width/2),
-                                yshift + ((max_row - kdata.height/2) - kdata.y),
-                                dfield2->xres,
-                                dfield2->yres,
-                                zshift);
+                                    cdata.x + (max_col - kdata.width/2),
+                                    yshift + ((max_row - kdata.height/2) - kdata.y),
+                                    dfield2->xres,
+                                    dfield2->yres,
+                                    zshift);
         }
         else
         {
-            if (!gwy_data_field_area_copy(dfield2, result,
-                             0, 0, dfield2->xres, dfield2->yres,
-                             cdata.x + (max_col - kdata.width/2),
-                             yshift + ((max_row - kdata.height/2) - kdata.y)))
-                g_warning("Error while putting field 2 at: %d %d\n",
-                    cdata.x + (max_col - kdata.width/2),
-                    yshift + ((max_row - kdata.height/2) - kdata.y));
-
+            gwy_data_field_area_copy(dfield2, result,
+                                     0, 0, dfield2->xres, dfield2->yres,
+                                     cdata.x + (max_col - kdata.width/2),
+                                     yshift + ((max_row - kdata.height/2) - kdata.y));
             gwy_data_field_area_add(result,
                                 cdata.x + (max_col - kdata.width/2),
                                 yshift + ((max_row - kdata.height/2) - kdata.y),
                                 dfield2->xres,
                                 dfield2->yres,
                                 zshift);
-
-            if (!gwy_data_field_area_copy(dfield1, result,
-                             0, 0, dfield1->xres, dfield1->yres,
-                             0, yshift))
-                g_warning("Error while putting field 1 at: %d %d\n", 0, yshift);
+            gwy_data_field_area_copy(dfield1, result,
+                                     0, 0, dfield1->xres, dfield1->yres,
+                                     0, yshift);
          }
 
 

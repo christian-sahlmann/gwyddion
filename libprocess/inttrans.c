@@ -766,6 +766,9 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
     jm = data_field->xres/2;
     xres = data_field->xres;
     yres = data_field->yres;
+
+    /* When both dimensions are even, we can simply swap the data without
+     * allocation of temporary buffers. */
     if (xres == 2*jm && yres == 2*im) {
         data = data_field->data;
 
@@ -783,6 +786,9 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
     }
 
     tmp = gwy_data_field_new_alike(data_field, FALSE);
+    /* FIXME: this had looked like using the new gwy_data_field_area_copy()
+     * argument convention *before* I changed it.  So either it was buggy
+     * or it is buggy now. */
     gwy_data_field_area_copy(data_field, tmp, 0, 0, xres-jm, yres-im, jm, im);
     gwy_data_field_area_copy(data_field, tmp, xres-jm, 0, jm, yres-im, 0, im);
     gwy_data_field_area_copy(data_field, tmp, 0, yres-im, xres-jm, im, jm, 0);

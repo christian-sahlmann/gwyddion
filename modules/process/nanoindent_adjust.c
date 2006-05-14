@@ -426,6 +426,8 @@ get_rotation_angle(GwyDataField *model, GwyDataField *sample)
     return sample_phi - model_phi;
 }
 
+/* FIXME: Could not this be simplified/removed with the new
+ * gwy_data_field_area_copy()? */
 static void
 data_field_move(GwyDataField *sample, gint xoff, gint yoff)
 {
@@ -444,7 +446,7 @@ data_field_move(GwyDataField *sample, gint xoff, gint yoff)
     brrow = MIN(sample->yres, sample->xres - yoff);
 
     gwy_data_field_area_copy(buffer, sample,
-                             ulcol, ulrow, brcol, brrow,
+                             ulcol, ulrow, brcol - ulrow, brrow - ulrow,
                              dest_ulcol, dest_ulrow);
 
     g_object_unref(buffer);

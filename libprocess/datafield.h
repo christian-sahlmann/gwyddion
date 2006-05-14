@@ -96,12 +96,12 @@ GwyDataField*     gwy_data_field_area_extract        (GwyDataField *data_field,
 void              gwy_data_field_copy                (GwyDataField *src,
                                                       GwyDataField *dest,
                                                       gboolean nondata_too);
-gboolean          gwy_data_field_area_copy           (GwyDataField *src,
+void              gwy_data_field_area_copy           (GwyDataField *src,
                                                       GwyDataField *dest,
-                                                      gint ulcol,
-                                                      gint ulrow,
-                                                      gint brcol,
-                                                      gint brrow,
+                                                      gint col,
+                                                      gint row,
+                                                      gint width,
+                                                      gint height,
                                                       gint destcol,
                                                       gint destrow);
 gdouble*          gwy_data_field_get_data            (GwyDataField *data_field);

@@ -490,7 +490,8 @@ gwy_tool_spot_remover_draw_zoom(GwyToolSpotRemover *tool)
         gwy_data_field_fill(tool->detail, min);
     }
     gwy_data_field_area_copy(plain_tool->data_field, tool->detail,
-                             xfrom, yfrom, xto, yto, xdest, ydest);
+                             xfrom, yfrom, xto - xfrom, yto - yfrom,
+                             xdest, ydest);
     gwy_data_field_data_changed(tool->detail);
 
     gtk_widget_set_sensitive(tool->apply, is_ok);
