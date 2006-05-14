@@ -507,6 +507,11 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     GtkWidget *widget;
     gint width, height, scwidth, scheight;
 
+    if (!data_view->xres || !data_view->yres) {
+        gwy_object_unref(data_view->base_pixbuf);
+        return;
+    }
+
     if (data_view->base_pixbuf) {
         width = gdk_pixbuf_get_width(data_view->base_pixbuf);
         height = gdk_pixbuf_get_height(data_view->base_pixbuf);
@@ -638,6 +643,9 @@ gwy_data_view_expose(GtkWidget *widget,
     gboolean emit_redrawn = FALSE;
 
     data_view = GWY_DATA_VIEW(widget);
+
+    if (!data_view->xres || !data_view->yres)
+        return FALSE;
 
     gdk_region_get_clipbox(event->region, &rect);
     gwy_debug("bbox = %dx%d  at (%d,%d)",
