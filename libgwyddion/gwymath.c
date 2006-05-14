@@ -518,12 +518,12 @@ gwy_math_tridiag_solve_rewrite(gint n,
     if (!d[n-1])
         return FALSE;
 
-    /* Eliminate a[bove diagonal] */
-    for (i = 0; i < n-1; i++) {
-        rhs[i] -= a[i]/d[i+1]*rhs[i+1];
-        /* Calculate the solution when we are at it */
+    /* Eliminate a[bove diagonal], calculating the solution */
+    for (i = n-1; i > 0; i--) {
         rhs[i] /= d[i];
+        rhs[i-1] -= a[i-1]*rhs[i];
     }
+    rhs[0] /= d[0];
 
     return TRUE;
 }
