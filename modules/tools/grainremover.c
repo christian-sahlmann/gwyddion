@@ -52,7 +52,7 @@ typedef struct _GwyToolGrainRemoverClass GwyToolGrainRemoverClass;
 
 typedef struct {
     RemoveMode mode;
-    RemoveAlgorithm algorithm;
+    RemoveAlgorithm method;
 } ToolArgs;
 
 struct _GwyToolGrainRemover {
@@ -60,8 +60,8 @@ struct _GwyToolGrainRemover {
 
     ToolArgs args;
 
-    GtkWidget *algorithm;
-    GtkWidget *algorithm_label;
+    GtkWidget *method;
+    GtkWidget *method_label;
 
     /* potential class data */
     GType layer_type_point;
@@ -80,15 +80,15 @@ static void gwy_tool_grain_remover_data_switched    (GwyTool *gwytool,
                                                      GwyDataView *data_view);
 static void gwy_tool_grain_remover_mode_changed     (GObject *item,
                                                      GwyToolGrainRemover *tool);
-static void gwy_tool_grain_remover_algorithm_changed(GtkComboBox *combo,
+static void gwy_tool_grain_remover_method_changed   (GtkComboBox *combo,
                                                      GwyToolGrainRemover *tool);
 static void gwy_tool_grain_remover_selection_finised(GwyPlainTool *plain_tool);
 
 static void laplace_interpolation                   (GwyDataField *dfield,
                                                      GwyDataField *grain);
 
-static const gchar mode_key[]      = "/module/grainremover/mode";
-static const gchar algorithm_key[] = "/module/grainremover/algorithm";
+static const gchar mode_key[]   = "/module/grainremover/mode";
+static const gchar method_key[] = "/module/grainremover/method";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -107,7 +107,7 @@ static const GwyEnum modes[] = {
     { N_("_Both"), GRAIN_REMOVE_BOTH },
 };
 
-static const GwyEnum algorithms[] = {
+static const GwyEnum methods[] = {
     { N_("Laplace solver"),     GRAIN_REMOVE_LAPLACE },
     { N_("Fractal correction"), GRAIN_REMOVE_FRACTAL },
 };
@@ -160,7 +160,7 @@ gwy_tool_grain_remover_finalize(GObject *object)
     gwy_container_set_int32_by_name(settings,
                                     mode_key, tool->args.mode);
     gwy_container_set_int32_by_name(settings,
-                                    algorithm_key, tool->args.algorithm);
+                                    method_key, tool->args.method);
 
     G_OBJECT_CLASS(gwy_tool_grain_remover_parent_class)->finalize(object);
 }
@@ -182,7 +182,7 @@ gwy_tool_grain_remover_init(GwyToolGrainRemover *tool)
     gwy_container_gis_enum_by_name(settings,
                                    mode_key, &tool->args.mode);
     gwy_container_gis_enum_by_name(settings,
-                                   algorithm_key, &tool->args.algorithm);
+                                   method_key, &tool->args.method);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "pointer");
@@ -227,27 +227,27 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
     }
     gtk_table_set_row_spacing(table, row-1, 8);
 
-    label = gtk_label_new_with_mnemonic(_("_Data removal method:"));
+    label = gtk_label_new_with_mnemonic(_("_Interpolation method:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    tool->algorithm_label = label;
+    tool->method_label = label;
     row++;
 
     combo = gwy_enum_combo_box_new
-                   (algorithms, G_N_ELEMENTS(algorithms),
-                    G_CALLBACK(gwy_tool_grain_remover_algorithm_changed), tool,
-                    tool->args.algorithm, TRUE);
+                   (methods, G_N_ELEMENTS(methods),
+                    G_CALLBACK(gwy_tool_grain_remover_method_changed), tool,
+                    tool->args.method, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
     gtk_table_attach(table, combo,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    tool->algorithm = combo;
+    tool->method = combo;
     row++;
 
     sensitive = (tool->args.mode == GRAIN_REMOVE_DATA
                  || tool->args.mode == GRAIN_REMOVE_BOTH);
-    gtk_widget_set_sensitive(tool->algorithm, sensitive);
-    gtk_widget_set_sensitive(tool->algorithm_label, sensitive);
+    gtk_widget_set_sensitive(tool->method, sensitive);
+    gtk_widget_set_sensitive(tool->method_label, sensitive);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
@@ -283,15 +283,15 @@ gwy_tool_grain_remover_mode_changed(GObject *item,
     tool->args.mode = mode;
 
     sensitive = (mode == GRAIN_REMOVE_DATA || mode == GRAIN_REMOVE_BOTH);
-    gtk_widget_set_sensitive(tool->algorithm, sensitive);
-    gtk_widget_set_sensitive(tool->algorithm_label, sensitive);
+    gtk_widget_set_sensitive(tool->method, sensitive);
+    gtk_widget_set_sensitive(tool->method_label, sensitive);
 }
 
 static void
-gwy_tool_grain_remover_algorithm_changed(GtkComboBox *combo,
-                                         GwyToolGrainRemover *tool)
+gwy_tool_grain_remover_method_changed(GtkComboBox *combo,
+                                      GwyToolGrainRemover *tool)
 {
-    tool->args.algorithm = gwy_enum_combo_box_get_active(combo);
+    tool->args.method = gwy_enum_combo_box_get_active(combo);
 }
 
 static void
@@ -323,7 +323,7 @@ gwy_tool_grain_remover_selection_finised(GwyPlainTool *plain_tool)
     if (mode & GRAIN_REMOVE_DATA) {
         tmp = gwy_data_field_duplicate(plain_tool->mask_field);
         gwy_data_field_grains_extract_grain(tmp, col, row);
-        switch (GWY_TOOL_GRAIN_REMOVER(plain_tool)->args.algorithm) {
+        switch (GWY_TOOL_GRAIN_REMOVER(plain_tool)->args.method) {
             case GRAIN_REMOVE_LAPLACE:
             laplace_interpolation(plain_tool->data_field, tmp);
             break;

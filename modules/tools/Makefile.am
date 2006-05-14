@@ -2,9 +2,6 @@
 
 toolsdir = $(pkglibdir)/modules/tool
 
-#tools_LTLIBRARIES = \
-#	spotremove.la
-
 tools_LTLIBRARIES = \
 	crop.la \
 	distance.la \
@@ -17,6 +14,7 @@ tools_LTLIBRARIES = \
 	profile.la \
 	readvalue.la \
 	sfunctions.la \
+	spotremove.la \
 	stats.la
 
 
@@ -90,8 +88,8 @@ stats_la_LIBADD = $(module_libadd)
 sfunctions_la_SOURCES = sfunctions.c
 sfunctions_la_LIBADD = $(module_libadd)
 
-#spotremove_la_SOURCES = spotremove.c
-#spotremove_la_LIBADD = $(module_libadd)
+spotremove_la_SOURCES = spotremove.c
+spotremove_la_LIBADD = $(module_libadd)
 
 
 clean-local:

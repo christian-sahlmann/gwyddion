@@ -285,11 +285,6 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    /*
-    hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
-    */
-
     /* Selection info */
     tool->rlabels = gwy_rect_selection_labels_new
                          (TRUE, G_CALLBACK(gwy_tool_crop_rect_updated), tool);

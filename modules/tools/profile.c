@@ -380,6 +380,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                              G_CALLBACK(gwy_tool_profile_interpolation_changed),
                              tool,
                              tool->args.interpolation, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->interpolation);
     gtk_box_pack_end(GTK_BOX(hbox2), tool->interpolation, FALSE, FALSE, 0);
     row++;
 
