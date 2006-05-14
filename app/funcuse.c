@@ -26,8 +26,8 @@
 #include <libgwyddion/gwyutils.h>
 #include <app/gwyapp.h>
 
-#define FUNC_DELTA_LOCAL (G_LN2/8.0)
-#define FUNC_DELTA_GLOBAL (G_LN2/240.0)
+#define FUNC_DELTA_LOCAL (G_LN2/12.0)
+#define FUNC_DELTA_GLOBAL (G_LN2/400.0)
 
 typedef struct {
     GQuark quark;
@@ -142,6 +142,7 @@ gwy_func_use_add(GwyFunctionUse *functions,
 
     gwy_func_use_sort_up(funcs, found);
 
+#ifdef DEBUG
     g_printerr("Funcs head:");
     for (i = 0; i < MIN(6, funcs->len); i++) {
         GwyFunctionUseInfo *info = &g_array_index(funcs, GwyFunctionUseInfo, i);
@@ -151,6 +152,7 @@ gwy_func_use_add(GwyFunctionUse *functions,
                    info->local + info->global);
     }
     g_printerr("\n");
+#endif
 }
 
 const gchar*
