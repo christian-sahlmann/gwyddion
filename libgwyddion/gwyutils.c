@@ -816,6 +816,8 @@ gwy_str_next_line(gchar **buffer)
  * If @obj is not %NULL, g_object_unref() is called on it.
  * In all cases @obj is set to %NULL.
  *
+ * A useful property of this macro is its idempotence.
+ *
  * If the object reference count is greater than one, assure it should be
  * referenced elsewhere, otherwise it leaks memory.
  **/
@@ -829,6 +831,8 @@ gwy_str_next_line(gchar **buffer)
  *
  * If @hid is nonzero and @obj is not %NULL, the signal handler identified by
  * @hid is disconnected.  In all cases @hid is set to 0.
+ *
+ * A useful property of this macro is its idempotence.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
