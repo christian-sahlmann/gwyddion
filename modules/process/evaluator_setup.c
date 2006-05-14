@@ -34,6 +34,7 @@ enum {
 };
 
 typedef struct {
+    gint Hi_I_am_a_dummy_struct_field_preventing_MSVC_from_going_mad_when_it_encounters_an_empty_struct_declaration_Remove_me_when_you_add_some_real_stuff_here;
 } EsetupArgs;
 
 typedef struct {
@@ -58,6 +59,7 @@ static void        esetup_sanitize_args         (EsetupArgs *args);
 
 
 static const EsetupArgs esetup_defaults = {
+    0
 };
 
 static GwyModuleInfo module_info = {
@@ -65,9 +67,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Automatic evaluator setup."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.8",
+    "1.8",  /* FIXME */
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2003",  /* FIXME */
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -93,7 +95,7 @@ esetup(GwyContainer *data, GwyRunType run)
 
     g_return_if_fail(run & ESETUP_RUN_MODES);
     esetup_load_args(gwy_app_settings_get(), &args);
-        
+
     esetup_dialog(&args, data);
     esetup_save_args(gwy_app_settings_get(), &args);
 }
