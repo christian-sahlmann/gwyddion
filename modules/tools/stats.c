@@ -615,8 +615,10 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
                                             &tool->results.phi);
     }
 
-    memcpy(tool->results.sel, sel, sizeof(sel));
     memcpy(tool->results.isel, isel, sizeof(isel));
+    memcpy(tool->results.sel, sel, sizeof(sel));
+    sel[2] += gwy_data_field_get_xoffset(plain_tool->data_field);
+    sel[3] += gwy_data_field_get_yoffset(plain_tool->data_field);
     tool->results_up_to_date = TRUE;
 
     return mask != NULL;
