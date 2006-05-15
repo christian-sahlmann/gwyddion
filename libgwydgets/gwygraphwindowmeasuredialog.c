@@ -46,7 +46,9 @@ static void     selection_updated_cb                               (GwySelection
 static void     index_changed_cb                                 (GwyGraphWindowMeasureDialog *dialog);
 static void     method_cb                                        (GtkWidget *combo,
                                                                   GwyGraphWindowMeasureDialog *dialog);
-
+static void     status_cb                                        (GwyGraphArea *area, 
+                                                                  gint status, 
+                                                                  GwyGraphWindowMeasureDialog *dialog);
 GwyEnum method_type[] = {
     {N_("Intersections"),         METHOD_INTERSECTIONS  },
     {N_("Points anywhere"),       METHOD_CROSSES },
@@ -159,6 +161,7 @@ static void
 gwy_graph_window_measure_dialog_init(G_GNUC_UNUSED GwyGraphWindowMeasureDialog *dialog)
 {
    gwy_debug("");
+
 }
 
 static gdouble
@@ -341,6 +344,10 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gwy_table_attach_spinbutton(table, 0, "Curve:", "", dialog->index);
     g_signal_connect_swapped(dialog->index, "value-changed",
                              G_CALLBACK(index_changed_cb), dialog);
+    g_signal_connect(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))), 
+                     "status-changed",
+                     G_CALLBACK(status_cb), dialog);
+
 
 
     label = gtk_label_new(NULL);
@@ -450,6 +457,8 @@ index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
 static void
 method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
+    if (gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo)))
+    {
         dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
         gwy_selection_clear(gwy_graph_area_get_selection
@@ -464,14 +473,24 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
             gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
         else
             gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_POINTS);
+    }
+}
 
+static void
+status_cb(GwyGraphArea *area, gint status, GwyGraphWindowMeasureDialog *dialog)
+{
+    printf("ble\n");
 
-        selection_id = g_signal_connect(gwy_graph_area_get_selection(
+    if (status == GWY_GRAPH_STATUS_XLINES || status == GWY_GRAPH_STATUS_POINTS)
+    {
+    
+            selection_id = g_signal_connect(gwy_graph_area_get_selection(
                                     GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
                                         GWY_GRAPH_STATUS_PLAIN), 
                                     "changed",
                                     G_CALLBACK(selection_updated_cb),
                                     dialog);
+    }
 }
 
 
