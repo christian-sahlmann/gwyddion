@@ -2580,7 +2580,8 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                                      gint col, gint row,
                                      gint width, gint height)
 {
-    GwyDataLine *line;
+    const gdouble *r;
+    const gdouble *m;
     gint i, j, xres, yres, s;
     gdouble x, y, q, sum = 0.0;
 
@@ -2598,36 +2599,10 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
     if (!width || !height)
         return sum;
 
-    x = dfield->xreal/dfield->xres;
-    y = dfield->yreal/dfield->yres;
-    if (width == 1) {
-        if (mask)
-            g_warning("Surface area of masked single-pixel stripes "
-                      "does not work yet.");
-        if (height == 1)
-            return x*y;
-
-        line = gwy_data_line_new(height, height*y, FALSE);
-        gwy_data_field_get_column_part(dfield, line, col, row, row+height);
-        sum = gwy_data_line_get_length(line);
-        g_object_unref(line);
-
-        return sum*x;
-    }
-    if (height == 1) {
-        if (mask)
-            g_warning("Surface area of masked single-pixel stripes "
-                      "does not work yet.");
-        line = gwy_data_line_new(width, width*x, FALSE);
-        gwy_data_field_get_row_part(dfield, line, row, col, col+width);
-        sum = gwy_data_line_get_length(line);
-        g_object_unref(line);
-
-        return sum*y;
-    }
-
     xres = dfield->xres;
     yres = dfield->yres;
+    x = dfield->xreal/dfield->xres;
+    y = dfield->yreal/dfield->yres;
     q = x*y;
     x = x*x;
     y = y*y;
@@ -2636,9 +2611,8 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
         if (fabs(log(x/y)) < 1e-7) {
             /* Inside */
             for (i = 1; i < height; i++) {
-                const gdouble *r = dfield->data + xres*(i + row) + col;
-                const gdouble *m = mask->data + xres*(i + row) + col;
-
+                r = dfield->data + xres*(i + row) + col;
+                m = mask->data + xres*(i + row) + col;
                 for (j = 1; j < width; j++)
                     sum += square_area1w(r[j], r[j-1],
                                          r[j-xres], r[j-xres-1],
@@ -2682,9 +2656,8 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
         else {
             /* Inside */
             for (i = 1; i < height; i++) {
-                const gdouble *r = dfield->data + xres*(i + row) + col;
-                const gdouble *m = mask->data + xres*(i + row) + col;
-
+                r = dfield->data + xres*(i + row) + col;
+                m = mask->data + xres*(i + row) + col;
                 for (j = 1; j < width; j++)
                     sum += square_area2w(r[j], r[j-1],
                                          r[j-xres], r[j-xres-1],
@@ -2744,8 +2717,7 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
         if (fabs(log(x/y)) < 1e-7) {
             /* Inside */
             for (i = 1; i < height; i++) {
-                const gdouble *r = dfield->data + xres*(i + row) + col;
-
+                r = dfield->data + xres*(i + row) + col;
                 for (j = 1; j < width; j++)
                     sum += square_area1(r[j], r[j-1], r[j-xres], r[j-xres-1],
                                         q);
@@ -2785,8 +2757,7 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
         }
         else {
             for (i = 1; i < height; i++) {
-                const gdouble *r = dfield->data + xres*(i + row) + col;
-
+                r = dfield->data + xres*(i + row) + col;
                 for (j = 1; j < width; j++)
                     sum += square_area2(r[j], r[j-1], r[j-xres], r[j-xres-1],
                                         x, y);
