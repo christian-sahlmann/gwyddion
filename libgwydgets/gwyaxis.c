@@ -87,8 +87,10 @@ static void    gwy_axis_autoset             (GwyAxis *axis,
 static void    gwy_axis_adjust              (GwyAxis *axis,
                                              gint width,
                                              gint height);
-static void    gwy_axis_entry               (GwyAxisDialog *dialog,
-                                             gint arg1,
+static void    gwy_axis_entry               (GwySciText *sci_text, 
+                                             GwyAxis *axis);
+static void    gwy_axis_hide                (GwyAxisDialog *dialog, 
+                                             gint arg1, 
                                              gpointer user_data);
 
 /* Local data */
@@ -828,10 +830,12 @@ gwy_axis_button_press(GtkWidget *widget,
     {
         if (!axis->dialog) {
             axis->dialog = gwy_axis_dialog_new();
-            g_signal_connect(axis->dialog, "response",
+            g_signal_connect(gwy_axis_dialog_get_sci_text(axis->dialog), "edited",
                              G_CALLBACK(gwy_axis_entry), axis);
+            g_signal_connect(GWY_AXIS_DIALOG(axis->dialog), "response",
+                             G_CALLBACK(gwy_axis_hide), NULL);
             gwy_sci_text_set_text
-                        (GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
+                        (GWY_SCI_TEXT(gwy_axis_dialog_get_sci_text(axis->dialog)),
                          axis->label_text->str);
         }
         gtk_widget_show_all(axis->dialog);
@@ -857,34 +861,32 @@ gwy_axis_button_release(GtkWidget *widget,
 }
 
 static void
-gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
+gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
 {
-    GwyAxis *axis;
     GdkRectangle rec;
-
+    gchar *text;
     gwy_debug("");
 
-    axis = GWY_AXIS(user_data);
     g_assert(GWY_IS_AXIS(axis));
-
     rec.x = GTK_WIDGET(axis)->allocation.x;
     rec.y = GTK_WIDGET(axis)->allocation.y;
     rec.width = GTK_WIDGET(axis)->allocation.width;
     rec.height = GTK_WIDGET(axis)->allocation.height;
 
-    if (arg1 == GTK_RESPONSE_APPLY) {
-        gchar *text;
-
-        text = gwy_sci_text_get_text(GWY_SCI_TEXT(dialog->sci_text));
-        g_string_assign(axis->label_text, text);
-        g_free(text);
-        g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
-        gtk_widget_queue_draw(GTK_WIDGET(axis));
-    }
-    else if (arg1 == GTK_RESPONSE_CLOSE) {
-        gtk_widget_hide(GTK_WIDGET(dialog));
-    }
+    text = gwy_sci_text_get_text(sci_text);
+    g_string_assign(axis->label_text, text);
+    g_free(text);
+    g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
+    gtk_widget_queue_draw(GTK_WIDGET(axis));
+   
 }
+
+static void
+gwy_axis_hide(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
+{
+    gtk_widget_hide(GTK_WIDGET(dialog));
+}
+
 
 /**
  * gwy_axis_signal_rescaled:

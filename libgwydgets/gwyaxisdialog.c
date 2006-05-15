@@ -96,8 +96,6 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     dialog->sci_text = gwy_sci_text_new();
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
-    button = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                   GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
@@ -110,7 +108,7 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
     gtk_widget_show_all(dialog->sci_text);
 }
 
-/**
+    /**
  * gwy_axis_dialog_new:
  *
  * Returns: Creates a new axis dialog
@@ -123,6 +121,11 @@ gwy_axis_dialog_new()
     return GTK_WIDGET(g_object_new(gwy_axis_dialog_get_type(), NULL));
 }
 
+GtkWidget*  
+gwy_axis_dialog_get_sci_text(GtkWidget* dialog)
+{
+    return GWY_AXIS_DIALOG(dialog)->sci_text;
+}
 
 /**
  * SECTION:gwyaxisdialog

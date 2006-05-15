@@ -57,7 +57,7 @@ struct _GwyAxisDialogClass {
 
 GType       gwy_axis_dialog_get_type (void) G_GNUC_CONST;
 GtkWidget*  gwy_axis_dialog_new      (void);
-
+GtkWidget*  gwy_axis_dialog_get_sci_text(GtkWidget* dialog);
 
 G_END_DECLS
 
