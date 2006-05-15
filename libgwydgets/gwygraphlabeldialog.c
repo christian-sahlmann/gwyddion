@@ -136,6 +136,7 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
                       table);
     gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
 
+    gtk_window_set_title(GTK_WINDOW(dialog), "Label properties");
     dialog->graph_model = NULL;
 }
 

@@ -251,6 +251,7 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                       table);
 
     dialog->curve_model = NULL;
+    gtk_window_set_title(GTK_WINDOW(dialog), "Curve properties");
 }
 
 static void

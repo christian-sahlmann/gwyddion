@@ -347,6 +347,8 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     g_signal_connect(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))), 
                      "status-changed",
                      G_CALLBACK(status_cb), dialog);
+    
+    gtk_window_set_title(GTK_WINDOW(dialog), "Measure distances");           
 
 
 

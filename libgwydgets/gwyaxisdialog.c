@@ -93,12 +93,13 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
 
     gwy_debug("");
 
+    gtk_window_set_title(GTK_WINDOW(dialog), "Axis properties");
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     dialog->sci_text = gwy_sci_text_new();
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
-
+    
     entry = gwy_sci_text_get_entry(GWY_SCI_TEXT(dialog->sci_text));
     g_signal_connect_swapped(entry, "activate",
                              G_CALLBACK(gtk_button_clicked), button);
