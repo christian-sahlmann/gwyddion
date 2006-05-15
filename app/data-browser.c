@@ -2490,6 +2490,9 @@ gwy_app_data_broswer_get_graph_ids(GwyContainer *data)
  * @...: 0-terminated list of #GwyDataItem values defining the items to copy.
  *
  * Copy auxiliary data items between data containers.
+ *
+ * Items that do not exist in @source are removed from @dest.  Therefore the
+ * operation is more of a synchronization than a copy.
  **/
 void
 gwy_app_copy_data_items(GwyContainer *source,
@@ -2522,6 +2525,8 @@ gwy_app_copy_data_items(GwyContainer *source,
                 g_snprintf(key, sizeof(key), "/%d/base/palette", to_id);
                 gwy_container_set_string_by_name(dest, key, g_strdup(name));
             }
+            else
+                gwy_container_remove_by_name(dest, key);
             break;
 
             case GWY_DATA_ITEM_MASK_COLOR:
@@ -2530,6 +2535,8 @@ gwy_app_copy_data_items(GwyContainer *source,
                 g_snprintf(key, sizeof(key), "/%d/mask", to_id);
                 gwy_rgba_store_to_container(&rgba, dest, key);
             }
+            else
+                gwy_container_remove_by_name(dest, key);
             break;
 
             case GWY_DATA_ITEM_RANGE:
@@ -2538,17 +2545,23 @@ gwy_app_copy_data_items(GwyContainer *source,
                 g_snprintf(key, sizeof(key), "/%d/base/min", to_id);
                 gwy_container_set_double_by_name(dest, key, dbl);
             }
+            else
+                gwy_container_remove_by_name(dest, key);
             g_snprintf(key, sizeof(key), "/%d/base/max", from_id);
             if (gwy_container_gis_double_by_name(source, key, &dbl)) {
                 g_snprintf(key, sizeof(key), "/%d/base/max", to_id);
                 gwy_container_set_double_by_name(dest, key, dbl);
             }
+            else
+                gwy_container_remove_by_name(dest, key);
             case GWY_DATA_ITEM_RANGE_TYPE:
             g_snprintf(key, sizeof(key), "/%d/base/range-type", from_id);
             if (gwy_container_gis_enum_by_name(source, key, &enumval)) {
                 g_snprintf(key, sizeof(key), "/%d/base/range-type", to_id);
                 gwy_container_set_enum_by_name(dest, key, enumval);
             }
+            else
+                gwy_container_remove_by_name(dest, key);
             break;
 
             case GWY_DATA_ITEM_REAL_SQUARE:
@@ -2558,6 +2571,8 @@ gwy_app_copy_data_items(GwyContainer *source,
                 g_snprintf(key, sizeof(key), "/%d/data/realsquare", to_id);
                 gwy_container_set_boolean_by_name(dest, key, boolval);
             }
+            else
+                gwy_container_remove_by_name(dest, key);
             break;
 
             default:

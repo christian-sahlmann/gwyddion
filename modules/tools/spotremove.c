@@ -392,9 +392,6 @@ gwy_tool_spot_remover_palette_changed(GwyToolSpotRemover *tool)
     GwyPlainTool *plain_tool;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    /* FIXME: gwy_app_copy_data_items() does not _delete_ items which is
-     * however necessary to revert to default.  Bug or feature? */
-    gwy_container_remove_by_name(tool->data, "/0/base/palette");
     gwy_app_copy_data_items(plain_tool->container, tool->data,
                             plain_tool->id, 0,
                             GWY_DATA_ITEM_GRADIENT, 0);
