@@ -41,7 +41,7 @@ static void     gwy_graph_window_measure_dialog_finalize         (GObject *objec
 static gboolean gwy_graph_window_measure_dialog_delete           (GtkWidget *widget,
                                                                     GdkEventAny *event);
 
-static void     selection_updated_cb                               (GwyGraph *graph,
+static void     selection_updated_cb                               (GwySelection *selection, gint k,
                                                                     GwyGraphWindowMeasureDialog *dialog);
 static void     index_changed_cb                                 (GwyGraphWindowMeasureDialog *dialog);
 static void     method_cb                                        (GtkWidget *combo,
@@ -197,7 +197,7 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
 }
 
 static void
-selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
+selection_updated_cb(GwySelection *selection, gint k, GwyGraphWindowMeasureDialog *dialog)
 {
     GtkWidget *label;
     GString *str;
@@ -206,33 +206,20 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     gdouble x=0, y=0, xp=0, yp=0;
     gboolean ret = TRUE,  prevret = TRUE;
 
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS ||
-        gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)) return;
+    if (!(gwy_graph_get_status(GWY_GRAPH(dialog->graph)) == GWY_GRAPH_STATUS_POINTS ||
+        gwy_graph_get_status(GWY_GRAPH(dialog->graph)) == GWY_GRAPH_STATUS_XLINES)) return;
 
-    n = gwy_selection_get_data(
-                GWY_SELECTION(gwy_graph_area_get_selection(
-                                   GWY_GRAPH_AREA(gwy_graph_get_area(
-                                            graph)),
-                                   GWY_GRAPH_STATUS_POINTS)), NULL);
+    n = gwy_selection_get_data(selection, NULL);
     if (n>0)
     {
-        if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS) {
+        if (gwy_graph_get_status(GWY_GRAPH(dialog->graph)) == GWY_GRAPH_STATUS_POINTS) {
             spoints = (gdouble *) g_malloc(2*n*sizeof(gdouble));
-            gwy_selection_get_data(
-                GWY_SELECTION(gwy_graph_area_get_selection(
-                                   GWY_GRAPH_AREA(gwy_graph_get_area(
-                                            graph)),
-                              GWY_GRAPH_STATUS_POINTS)), spoints);
+            gwy_selection_get_data(selection, spoints);
                  
         }
         else {
             spoints = (gdouble *) g_malloc(n*sizeof(gdouble));
-            gwy_selection_get_data(
-                GWY_SELECTION(gwy_graph_area_get_selection(
-                                   GWY_GRAPH_AREA(gwy_graph_get_area(
-                                            graph)),
-                                   GWY_GRAPH_STATUS_XLINES)), spoints);
+            gwy_selection_get_data(selection, spoints);
          }
     }
 
@@ -259,15 +246,15 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
                 prevret = ret;
             }
 
-            if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
+            if (gwy_graph_get_status(GWY_GRAPH(dialog->graph)) == GWY_GRAPH_STATUS_POINTS)
             {
                 x = spoints[2*i];
                 y = spoints[2*i + 1];
             }
-            else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)
+            else if (gwy_graph_get_status(GWY_GRAPH(dialog->graph)) == GWY_GRAPH_STATUS_XLINES)
             {
                 x = spoints[i];
-                y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
+                y = get_y_for_x(GWY_GRAPH(dialog->graph), x, dialog->curve_index - 1, &ret);
             }
             label = g_ptr_array_index(dialog->pointx, i);
             value_label(label, x/dialog->x_mag, str);
@@ -432,16 +419,13 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     }
     g_string_free(str, TRUE);
 
-    selection_id = g_signal_connect(dialog->graph, "selected",
-                                            G_CALLBACK(selection_updated_cb),
-                                            dialog);
-
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                                 GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                                 "Clear", GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR);
 
+    method_cb(dialog->method, dialog);
     return GTK_WIDGET(dialog);
 }
 
@@ -460,30 +444,35 @@ index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
 {
    dialog->curve_index =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->index));
-   selection_updated_cb(GWY_GRAPH(dialog->graph), dialog);
+   selection_updated_cb(gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(
+                                             GWY_GRAPH(dialog->graph))), GWY_GRAPH_STATUS_PLAIN), 0,  dialog);
 }
 
 static void
 method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
-    if (dialog->mmethod == gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo)))
-        return;
-        
-    dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+        dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
-    gwy_selection_clear(gwy_graph_area_get_selection
+        gwy_selection_clear(gwy_graph_area_get_selection
                  (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
                   GWY_GRAPH_STATUS_POINTS));
-    gwy_selection_clear(gwy_graph_area_get_selection
+        gwy_selection_clear(gwy_graph_area_get_selection
                  (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
                   GWY_GRAPH_STATUS_XLINES));
         
     
-    if (dialog->mmethod == METHOD_INTERSECTIONS)
-        gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
-    else
-        gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_POINTS);
+        if (dialog->mmethod == METHOD_INTERSECTIONS)
+            gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
+        else
+            gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_POINTS);
 
+
+        selection_id = g_signal_connect(gwy_graph_area_get_selection(
+                                    GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
+                                        GWY_GRAPH_STATUS_PLAIN), 
+                                    "changed",
+                                    G_CALLBACK(selection_updated_cb),
+                                    dialog);
 }
 
 
