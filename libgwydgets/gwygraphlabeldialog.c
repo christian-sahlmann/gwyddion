@@ -130,8 +130,6 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
 
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
@@ -189,6 +187,7 @@ linesize_changed_cb(GtkObject *adj, GwyGraphLabelDialog *dialog)
 
     model = GWY_GRAPH_MODEL(dialog->graph_model);
     model->label_frame_thickness = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    gtk_dialog_response(dialog, GTK_RESPONSE_APPLY);
 }
 
 static void
@@ -199,6 +198,7 @@ reverse_changed_cb(GtkToggleButton *button, GwyGraphLabelDialog *dialog)
 
     model = GWY_GRAPH_MODEL(dialog->graph_model);
     model->label_reverse = gtk_toggle_button_get_active(button);
+    gtk_dialog_response(dialog, GTK_RESPONSE_APPLY);
 }
 
 
