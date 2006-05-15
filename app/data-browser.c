@@ -70,7 +70,8 @@ typedef struct _GwyAppDataProxy   GwyAppDataProxy;
 /* Channel or graph list */
 typedef struct {
     GtkListStore *list;
-    gint last;
+    gint last;  /* The id of last object, if no object is present, it is equal
+                   to the smallest possible id minus 1 */
     gint active;
 } GwyAppDataList;
 
@@ -652,6 +653,37 @@ gwy_app_data_proxy_list_setup(GwyAppDataList *list)
                                          MODEL_ID, GTK_SORT_ASCENDING);
     list->last = -1;
     list->active = -1;
+}
+
+/**
+ * gwy_app_data_list_update_last:
+ * @list: A data proxy list.
+ * @empty_last: The value to set @last item to when there are no objects.
+ *
+ * Updates the value of @last field to the actual last object id.
+ *
+ * This function is intended to be used after object removal to keep the
+ * object id set compact (and the id numbers low).
+ **/
+static void
+gwy_app_data_list_update_last(GwyAppDataList *list,
+                              gint empty_last)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gint id, max = empty_last;
+
+    model = GTK_TREE_MODEL(list->list);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
+            if (id > max)
+                max = id;
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    gwy_debug("new last item id: %d", max);
+    list->last = max;
 }
 
 /**
@@ -1511,6 +1543,16 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
         break;
     }
     g_object_unref(object);
+
+    switch (page) {
+        case PAGE_CHANNELS:
+        gwy_app_data_list_update_last(&proxy->channels, -1);
+        break;
+
+        case PAGE_GRAPHS:
+        gwy_app_data_list_update_last(&proxy->graphs, 0);
+        break;
+    }
 }
 
 static void
