@@ -522,7 +522,12 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
     update_label(plain_tool->value_format, tool->median, tool->results.median);
 
     update_label(tool->area_format, tool->projarea, tool->results.projarea);
-    update_label(tool->area_format, tool->area, tool->results.area);
+
+    if (tool->same_units)
+        update_label(tool->area_format, tool->area, tool->results.area);
+    else
+        gtk_label_set_text(GTK_LABEL(tool->area), _("N.A."));
+
     if (tool->same_units && !mask_in_use) {
         update_label(tool->angle_format, tool->theta,
                      180.0/G_PI * tool->results.theta);
@@ -603,9 +608,10 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     tool->results.median
         = gwy_data_field_area_get_median(plain_tool->data_field, mask,
                                          isel[0], isel[1], w, h);
-    tool->results.area
-        = gwy_data_field_area_get_surface_area(plain_tool->data_field, mask,
-                                               isel[0], isel[1], w, h);
+    if (tool->same_units)
+        tool->results.area
+            = gwy_data_field_area_get_surface_area(plain_tool->data_field, mask,
+                                                   isel[0], isel[1], w, h);
 
     if (tool->same_units && !mask) {
         gwy_data_field_area_get_inclination(plain_tool->data_field,
@@ -769,7 +775,7 @@ gwy_tool_stats_save(GwyToolStats *tool)
                                                 xreal*yreal, q, vf);
     g_object_unref(siunitarea);
 
-    area = fmt_val(area);
+    area = tool->same_units ? fmt_val(area) : g_strdup(_("N.A"));
     projarea = fmt_val(projarea);
 
     gwy_si_unit_value_format_free(vf);
