@@ -479,8 +479,6 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 static void
 status_cb(GwyGraphArea *area, gint status, GwyGraphWindowMeasureDialog *dialog)
 {
-    printf("ble\n");
-
     if (status == GWY_GRAPH_STATUS_XLINES || status == GWY_GRAPH_STATUS_POINTS)
     {
     
