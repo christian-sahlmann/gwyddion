@@ -48,6 +48,13 @@ enum {
     BORDER_MAX = 2
 };
 
+enum {
+    STATUS_CHANGED,
+    LAST_SIGNAL
+};
+
+static guint area_signals[LAST_SIGNAL] = { 0 };
+
 /* Forward declarations - widget related*/
 static void     gwy_graph_area_finalize             (GObject *object);
 
@@ -133,8 +140,10 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
+    GtkObjectClass *object_class;
 
     widget_class = (GtkWidgetClass*)klass;
+    object_class = (GtkObjectClass*)klass;
 
     gobject_class->finalize = gwy_graph_area_finalize;
 
@@ -147,6 +156,16 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->button_release_event = gwy_graph_area_button_release;
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
     widget_class->leave_notify_event = gwy_graph_area_leave_notify;
+
+    klass->status_changed = NULL;
+    area_signals[STATUS_CHANGED] =
+          g_signal_new("status-changed",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyGraphAreaClass, status_changed),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 1, G_TYPE_INT);
 
 }
 
@@ -1802,6 +1821,12 @@ selection_changed_cb(GwySelection *selection, gint i, GwyGraphArea *area)
 }
 
 
+void
+gwy_graph_area_set_status(GwyGraphArea *area, GwyGraphStatusType status_type)
+{
+    area->status = status_type;
+    g_signal_emit(area, area_signals[STATUS_CHANGED], 0);
+}
 
 /************************** Documentation ****************************/
 

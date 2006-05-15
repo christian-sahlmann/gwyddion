@@ -473,7 +473,7 @@ gwy_graph_get_area(GwyGraph *graph)
 void
 gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
 {
-    graph->area->status = status;
+    gwy_graph_area_set_status(GWY_GRAPH_AREA(graph->area), status);
 }
 
 /**

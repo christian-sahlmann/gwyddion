@@ -126,6 +126,8 @@ struct _GwyGraphArea {
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
+    void (*status_changed)(GwyGraphArea *area, gint i);
+    
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -165,7 +167,10 @@ void          gwy_graph_area_set_y_grid_data      (GwyGraphArea *area,
 const GArray* gwy_graph_area_get_x_grid_data      (GwyGraphArea *area);
 const GArray* gwy_graph_area_get_y_grid_data      (GwyGraphArea *area);
 
-GwySelection* gwy_graph_area_get_selection  (GwyGraphArea *area, GwyGraphStatusType status_type);
+GwySelection* gwy_graph_area_get_selection        (GwyGraphArea *area, 
+                                                   GwyGraphStatusType status_type);
+void          gwy_graph_area_set_status           (GwyGraphArea *area, 
+                                                   GwyGraphStatusType status_type);
 
 G_END_DECLS
 
