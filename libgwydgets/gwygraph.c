@@ -27,6 +27,8 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
+#include <stdio.h>
+
 static void gwy_graph_refresh      (GwyGraph *graph);
 static void gwy_graph_size_request (GtkWidget *widget,
                                     GtkRequisition *requisition);
@@ -204,7 +206,8 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_widget_show(GTK_WIDGET(graph->corner_tr));
     gtk_widget_show(GTK_WIDGET(graph->corner_br));
 
-    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_selection(graph->area, GWY_GRAPH_STATUS_ZOOM)), "finished",
+    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_selection(graph->area, GWY_GRAPH_STATUS_ZOOM)), 
+                             "finished",
                      G_CALLBACK(zoomed_cb), graph);
 
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
@@ -632,6 +635,7 @@ zoomed_cb(GwyGraph *graph)
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gdouble selection_zoomdata[4];
 
+    
     if (graph->area->status != GWY_GRAPH_STATUS_ZOOM || 
         gwy_selection_get_data(gwy_graph_area_get_selection(GWY_GRAPH_AREA(graph->area), GWY_GRAPH_STATUS_ZOOM), NULL) != 1)
         return;
@@ -639,12 +643,13 @@ zoomed_cb(GwyGraph *graph)
     gwy_selection_get_object(GWY_SELECTION((graph->area)->zoomdata),
                              gwy_selection_get_data(GWY_SELECTION((graph->area)->zoomdata), NULL) - 1,
                              selection_zoomdata);
+    
+    x_reqmin = MIN(selection_zoomdata[0], selection_zoomdata[0] + selection_zoomdata[2]);
+    x_reqmax = MAX(selection_zoomdata[0], selection_zoomdata[0] + selection_zoomdata[2]);
+    y_reqmin = MIN(selection_zoomdata[1], selection_zoomdata[1] + selection_zoomdata[3]);
+    y_reqmax = MAX(selection_zoomdata[1], selection_zoomdata[1] + selection_zoomdata[3]);
 
-    x_reqmin = selection_zoomdata[0];
-    x_reqmax = selection_zoomdata[0] + selection_zoomdata[1];
-    y_reqmin = selection_zoomdata[2];
-    y_reqmax = selection_zoomdata[2] + selection_zoomdata[3];
-
+    
     gwy_axis_set_req(graph->axis_top, x_reqmin, x_reqmax);
     gwy_axis_set_req(graph->axis_bottom, x_reqmin, x_reqmax);
     gwy_axis_set_req(graph->axis_left, y_reqmin, y_reqmax);

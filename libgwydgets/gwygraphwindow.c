@@ -241,7 +241,9 @@ gwy_graph_window_new(GwyGraph *graph)
                              G_CALLBACK(gwy_graph_cursor_motion_cb),
                              graphwindow);
 
-    g_signal_connect_swapped(graphwindow->graph, "zoomed",
+    g_signal_connect_swapped(gwy_graph_area_get_selection(
+                                       GWY_GRAPH_AREA(gwy_graph_get_area(graphwindow->graph)),
+                                       GWY_GRAPH_STATUS_ZOOM), "finished",
                              G_CALLBACK(gwy_graph_window_zoom_finished_cb),
                              graphwindow);
 

@@ -425,7 +425,6 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                                 "Clear", GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR);
 
-    method_cb(dialog->method, dialog);
     return GTK_WIDGET(dialog);
 }
 
