@@ -165,9 +165,7 @@ static void
 gwy_option_menu_data_window_append(GwyDataWindow *data_window,
                                    MenuFilterData *filterdata)
 {
-    GtkWidget *item, *image, *label, *hbox;
-    GwyDataView *data_view;
-    GdkPixbuf *pixbuf;
+    GtkWidget *item, *label, *hbox;
     gchar *filename;
 
     gwy_debug("maybe adding %p to %p", data_window, filterdata->menu);
@@ -176,17 +174,12 @@ gwy_option_menu_data_window_append(GwyDataWindow *data_window,
         return;
     gwy_debug("%p passed filter", data_window, filterdata->menu);
 
-    data_view = gwy_data_window_get_data_view(data_window);
     filename = gwy_data_window_get_base_name(data_window);
 
-    pixbuf = gwy_data_view_get_thumbnail(data_view, THUMBNAIL_SIZE);
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    gwy_object_unref(pixbuf);
     hbox = gtk_hbox_new(FALSE, 6);
     item = gtk_menu_item_new();
     label = gtk_label_new(filename);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(item), hbox);
     gtk_menu_shell_append(GTK_MENU_SHELL(filterdata->menu), item);

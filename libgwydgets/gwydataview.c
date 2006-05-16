@@ -158,7 +158,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
      *
      * The ::redrawn signal is emitted when #GwyDataView redraws pixbufs after
      * an update.  That is, when it's the right time to get a new pixbuf from
-     * gwy_data_view_get_thumbnail() or gwy_data_view_get_pixbuf().
+     * gwy_data_view_get_pixbuf().
      **/
     data_view_signals[REDRAWN]
         = g_signal_new("redrawn",
@@ -1290,49 +1290,6 @@ gwy_data_view_get_metric(GwyDataView *data_view,
 }
 
 /**
- * gwy_data_view_get_thumbnail:
- * @data_view: A data view.
- * @size: Requested thumbnail size.
- *
- * Creates and returns a thumbnail of the data view.
- *
- * If the data is not square, it is centered onto the pixbuf, with transparent
- * borders.  The returned pixbuf always has an alpha channel, even if it fits
- * exactly.
- *
- * Returns: The thumbnail as a newly created #GdkPixbuf, which should be freed
- *          when no longer needed.
- **/
-GdkPixbuf*
-gwy_data_view_get_thumbnail(GwyDataView *data_view,
-                            gint size)
-{
-    GdkPixbuf *pixbuf;
-    gint width, height, width_scaled, height_scaled;
-    gdouble scale;
-
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
-    g_return_val_if_fail(data_view->pixbuf, NULL);
-    g_return_val_if_fail(size > 0, NULL);
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
-                            BITS_PER_SAMPLE, size, size);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    gdk_pixbuf_fill(pixbuf, 0x00000000);
-    width = gdk_pixbuf_get_width(data_view->pixbuf);
-    height = gdk_pixbuf_get_height(data_view->pixbuf);
-    scale = MIN((gdouble)size/width, (gdouble)size/height);
-    width_scaled = CLAMP((gint)(scale*width), 1, size);
-    height_scaled = CLAMP((gint)(scale*height), 1, size);
-    gdk_pixbuf_scale(data_view->pixbuf, pixbuf,
-                     (size - width_scaled)/2, (size - height_scaled)/2,
-                     width_scaled, height_scaled,
-                     (size - width_scaled)/2, (size - height_scaled)/2,
-                     scale, scale, GDK_INTERP_TILES);
-
-    return pixbuf;
-}
-
-/**
  * gwy_data_view_get_pixbuf:
  * @data_view: A data view.
  * @max_width: Pixbuf width that should not be exceeeded.  Value smaller than
@@ -1342,9 +1299,8 @@ gwy_data_view_get_thumbnail(GwyDataView *data_view,
  *
  * Creates and returns a pixbuf from the data view.
  *
- * If the data is not square, the resulting pixbuf is also nonsquare, this is
- * different from gwy_data_view_get_thumbnail().  The returned pixbuf also
- * never has alpha channel.
+ * If the data is not square, the resulting pixbuf is also nonsquare.
+ * The returned pixbuf also never has an alpha channel.
  *
  * Returns: The pixbuf as a newly created #GdkPixbuf, it should be freed
  *          when no longer needed.  It is never larger than the actual data

@@ -166,7 +166,7 @@ static GwyRecentFile* gwy_recent_file_new            (gchar *filename_utf8,
                                                       gchar *filename_sys);
 static gboolean recent_file_try_load_thumbnail       (GwyRecentFile *rf);
 static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
-                                                      GwyDataWindow *data_window);
+                                                      GwyContainer *data);
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
 static const gchar* gwy_recent_file_thumbnail_dir    (void);
@@ -673,7 +673,7 @@ gwy_app_recent_file_list_update(GwyContainer *data,
                                 const gchar *filename_utf8,
                                 const gchar *filename_sys)
 {
-    /*g_return_if_fail(GWY_IS_CONTAINER(data));*/
+    g_return_if_fail(!data || GWY_IS_CONTAINER(data));
     g_return_if_fail(gcontrols.store);
 
     /* Prepare argument to be eaten */
@@ -714,12 +714,8 @@ gwy_app_recent_file_list_update(GwyContainer *data,
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
 
-        if (data) {
-            /* XXX */
-            g_warning("Thumbnail update temporary disabled due "
-                      "to GwyDataWindow-isms.");
-            /* gwy_recent_file_update_thumbnail(rf, data_window); */
-        }
+        if (data)
+            gwy_recent_file_update_thumbnail(rf, data);
     }
 
     gwy_app_recent_file_list_update_menu(&gcontrols);
@@ -920,10 +916,8 @@ recent_file_try_load_thumbnail(GwyRecentFile *rf)
 
 static void
 gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
-                                 GwyDataWindow *data_window)
+                                 GwyContainer *data)
 {
-    GwyDataView *data_view;
-    GwyContainer *data;
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
     struct stat st;
@@ -936,8 +930,23 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     gchar str_width[22];
     gchar str_height[22];
     GError *err = NULL;
+    GQuark quark;
+    gint *ids;
+    gint i, id;
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    g_return_if_fail(GWY_CONTAINER(data));
+
+    /* Find channel with the lowest id */
+    ids = gwy_app_data_browser_get_data_ids(data);
+    for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
+        if (ids[i] < id)
+            id = ids[i];
+    }
+    g_free(ids);
+    if (id == G_MAXINT) {
+        g_warning("There is no channel in the file, cannot make thumbnail.");
+        return;
+    }
 
     if (stat(rf->file_sys, &st) != 0) {
         g_warning("File <%s> was just loaded or saved, but it doesn't seem to "
@@ -949,9 +958,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     if (rf->file_mtime == (gulong)st.st_mtime)
         return;
 
-    data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(data_view);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    quark = gwy_app_get_data_key_for_id(id);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     rf->file_mtime = st.st_mtime;
     rf->file_size = st.st_size;
@@ -976,10 +984,9 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
     }
 
-    pixbuf = gwy_data_view_get_pixbuf(data_view,
-                                      TMS_NORMAL_THUMB_SIZE,
-                                      TMS_NORMAL_THUMB_SIZE);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+    pixbuf = gwy_app_get_channel_thumbnail(data, id,
+                                           TMS_NORMAL_THUMB_SIZE,
+                                           TMS_NORMAL_THUMB_SIZE);
 
     g_snprintf(str_mtime, sizeof(str_mtime), "%lu", rf->file_mtime);
     g_snprintf(str_size, sizeof(str_size), "%lu", rf->file_size);

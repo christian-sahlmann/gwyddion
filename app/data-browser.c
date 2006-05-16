@@ -26,8 +26,14 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwydgets.h>
+#include <libdraw/gwypixfield.h>
+#include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwygraphwindow.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
 /* The container prefix all graph reside in.  This is a bit silly but it does
@@ -2113,30 +2119,6 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
     return proxy->channels.last;
 }
 
-#if 0
-static GQuark
-gwy_app_data_browser_mangle_key(GQuark quark,
-                                const gchar *suffix)
-{
-    const gchar *strkey, *p;
-    gchar *newkey;
-    guint len;
-
-    strkey = g_quark_to_string(quark);
-    g_return_val_if_fail(strkey[0] == GWY_CONTAINER_PATHSEP, 0);
-    /* Premature optimization is the root of all evil */
-    len = strlen(strkey);
-    for (p = strkey + len-1; *p != GWY_CONTAINER_PATHSEP; p--)
-        ;
-    len = strlen(suffix);
-    newkey = g_newa(gchar, p-strkey + 2 + len);
-    memcpy(newkey, strkey, p-strkey + 1);
-    memcpy(newkey + (p-strkey + 1), suffix, len+1);
-
-    return g_quark_from_string(newkey);
-}
-#endif
-
 /**
  * gwy_app_get_data_key_for_id:
  * @id: Data number in container.
@@ -2192,7 +2174,7 @@ gwy_app_get_mask_key_for_id(gint id)
 }
 
 /**
- * gwy_app_get_presentation_key_for_id:
+ * gwy_app_get_show_key_for_id:
  * @id: Data number in container.
  *
  * Calculates presentation field quark identifier from its id.
@@ -2200,7 +2182,7 @@ gwy_app_get_mask_key_for_id(gint id)
  * Returns: The quark key identifying presentation number @id.
  **/
 GQuark
-gwy_app_get_presentation_key_for_id(gint id)
+gwy_app_get_show_key_for_id(gint id)
 {
     static GQuark quarks[12] = { 0, };
     gchar key[24];
@@ -2382,7 +2364,7 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 otarget = va_arg(ap, GObject**);
                 *otarget = NULL;
                 if (dfield) {
-                    quark = gwy_app_get_presentation_key_for_id(channels->active);
+                    quark = gwy_app_get_show_key_for_id(channels->active);
                     gwy_container_gis_object(current->container, quark,
                                              otarget);
                 }
@@ -2392,7 +2374,7 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 qtarget = va_arg(ap, GQuark*);
                 *qtarget = 0;
                 if (dfield)
-                    *qtarget = gwy_app_get_presentation_key_for_id(channels->active);
+                    *qtarget = gwy_app_get_show_key_for_id(channels->active);
                 break;
 
                 default:
@@ -2472,7 +2454,7 @@ gwy_app_data_list_get_objects(GwyAppDataList *list)
 }
 
 /**
- * gwy_app_data_broswer_get_data_ids:
+ * gwy_app_data_browser_get_data_ids:
  * @data: A data container.
  *
  * Gets the list of all channels in a data container.
@@ -2482,7 +2464,7 @@ gwy_app_data_list_get_objects(GwyAppDataList *list)
  * Returns: A newly allocated array with channels ids, -1 terminated.
  **/
 gint*
-gwy_app_data_broswer_get_data_ids(GwyContainer *data)
+gwy_app_data_browser_get_data_ids(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
@@ -2498,7 +2480,7 @@ gwy_app_data_broswer_get_data_ids(GwyContainer *data)
 }
 
 /**
- * gwy_app_data_broswer_get_graph_ids:
+ * gwy_app_data_browser_get_graph_ids:
  * @data: A data container.
  *
  * Gets the list of all graphs in a data container.
@@ -2508,7 +2490,7 @@ gwy_app_data_broswer_get_data_ids(GwyContainer *data)
  * Returns: A newly allocated array with graph ids, -1 terminated.
  **/
 gint*
-gwy_app_data_broswer_get_graph_ids(GwyContainer *data)
+gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
@@ -2644,6 +2626,94 @@ gwy_app_data_browser_shut_down(void)
     }
     gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels), NULL);
     gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs), NULL);
+}
+
+/************** FIXME: where this belongs to? ***************************/
+
+enum { BITS_PER_SAMPLE = 8 };
+
+static GdkPixbuf*
+render_data_thumbnail(GwyDataField *dfield,
+                      const gchar *gradname,
+                      GwyLayerBasicRangeType range_type,
+                      gint max_width,
+                      gint max_height)
+{
+    GwyDataField *render_field;
+    GdkPixbuf *pixbuf;
+    GwyGradient *gradient;
+    gint xres, yres;
+    gdouble scale;
+
+    gradient = gwy_gradients_get_gradient(gradname);
+    gwy_resource_use(GWY_RESOURCE(gradient));
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    scale = MAX(xres/(gdouble)max_width, yres/(gdouble)max_height);
+    if (scale <= 1.0)
+        render_field = (GwyDataField*)g_object_ref(dfield);
+    else {
+        xres = scale*xres;
+        yres = scale*yres;
+        xres = CLAMP(xres, 2, max_width);
+        yres = CLAMP(yres, 2, max_height);
+        render_field = gwy_data_field_new_resampled(dfield, xres, yres,
+                                                    GWY_INTERPOLATION_NNA);
+    }
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                            xres, yres);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+
+    /* TODO: range type -- should we honour it on thumbnails anyway? */
+    gwy_pixbuf_draw_data_field(pixbuf, render_field, gradient);
+    g_object_unref(render_field);
+
+    gwy_resource_release(GWY_RESOURCE(gradient));
+
+    return pixbuf;
+}
+
+GdkPixbuf*
+gwy_app_get_channel_thumbnail(GwyContainer *data,
+                              gint id,
+                              gint max_width,
+                              gint max_height)
+{
+    GwyDataField *dfield, *mfield = NULL, *sfield = NULL;
+    GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    const guchar *gradient = NULL;
+    GdkPixbuf *pixbuf;
+    gchar key[48];
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    g_return_val_if_fail(id >= 0, NULL);
+    g_return_val_if_fail(max_width > 1 && max_height > 1, NULL);
+
+    if (!gwy_container_gis_object(data, gwy_app_get_data_key_for_id(id),
+                                  &dfield))
+        return NULL;
+
+    gwy_container_gis_object(data, gwy_app_get_mask_key_for_id(id), &mfield);
+    gwy_container_gis_object(data, gwy_app_get_show_key_for_id(id), &sfield);
+
+    g_snprintf(key, sizeof(key), "/%d/base/palette", id);
+    gwy_container_gis_string_by_name(data, key, &gradient);
+    g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
+    gwy_container_gis_enum_by_name(data, key, &range_type);
+
+    if (sfield)
+        pixbuf = render_data_thumbnail(sfield, gradient,
+                                       GWY_LAYER_BASIC_RANGE_FULL,
+                                       max_width, max_height);
+    else
+        pixbuf = render_data_thumbnail(dfield, gradient,
+                                       range_type,
+                                       max_width, max_height);
+
+    /* TODO: mask */
+
+    return pixbuf;
 }
 
 /************************** Documentation ****************************/

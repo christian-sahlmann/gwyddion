@@ -386,7 +386,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         if (plain_tool->show_field) {
             dfield = gwy_data_field_duplicate(plain_tool->show_field);
             gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
-            quarks[2] = gwy_app_get_presentation_key_for_id(id);
+            quarks[2] = gwy_app_get_show_key_for_id(id);
             gwy_container_set_object(container, quarks[2], dfield);
             g_object_unref(dfield);
         }
@@ -397,7 +397,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         if (plain_tool->mask_field)
             quarks[1] = gwy_app_get_mask_key_for_id(plain_tool->id);
         if (plain_tool->show_field)
-            quarks[2] = gwy_app_get_presentation_key_for_id(plain_tool->id);
+            quarks[2] = gwy_app_get_show_key_for_id(plain_tool->id);
         gwy_app_undo_qcheckpointv(container, G_N_ELEMENTS(quarks), quarks);
 
         gwy_tool_crop_one_field(plain_tool->data_field, isel, sel,

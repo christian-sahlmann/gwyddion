@@ -154,7 +154,7 @@ scale(GwyContainer *data, GwyRunType run)
         g_object_unref(dfields[1]);
     }
     if (dfields[2]) {
-        quark = gwy_app_get_presentation_key_for_id(newid);
+        quark = gwy_app_get_show_key_for_id(newid);
         gwy_container_set_object(data, quark, dfields[2]);
         g_object_unref(dfields[2]);
     }

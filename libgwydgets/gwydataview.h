@@ -140,8 +140,6 @@ void            gwy_data_view_get_real_data_sizes (GwyDataView *data_view,
                                                    gdouble *yreal);
 void            gwy_data_view_get_metric          (GwyDataView *data_view,
                                                    gdouble *metric);
-GdkPixbuf*      gwy_data_view_get_thumbnail       (GwyDataView *data_view,
-                                                   gint size);
 GdkPixbuf*      gwy_data_view_get_pixbuf          (GwyDataView *data_view,
                                                    gint max_width,
                                                    gint max_height);

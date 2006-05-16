@@ -928,7 +928,7 @@ gwy_app_duplicate_cb(void)
     if (sfield) {
         sfield = gwy_data_field_duplicate(sfield);
         gwy_container_set_object(container,
-                                 gwy_app_get_presentation_key_for_id(id),
+                                 gwy_app_get_show_key_for_id(id),
                                  sfield);
         g_object_unref(sfield);
     }

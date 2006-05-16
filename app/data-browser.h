@@ -64,8 +64,8 @@ gint   gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
                                              gboolean showit);
 void   gwy_app_data_browser_get_current     (GwyAppWhat what,
                                              ...);
-gint*  gwy_app_data_broswer_get_data_ids    (GwyContainer *data);
-gint*  gwy_app_data_broswer_get_graph_ids   (GwyContainer *data);
+gint*  gwy_app_data_browser_get_data_ids    (GwyContainer *data);
+gint*  gwy_app_data_browser_get_graph_ids   (GwyContainer *data);
 void   gwy_app_copy_data_items              (GwyContainer *source,
                                              GwyContainer *dest,
                                              gint from_id,
@@ -73,12 +73,16 @@ void   gwy_app_copy_data_items              (GwyContainer *source,
                                              ...);
 GQuark gwy_app_get_data_key_for_id          (gint id);
 GQuark gwy_app_get_mask_key_for_id          (gint id);
-GQuark gwy_app_get_presentation_key_for_id  (gint id);
+GQuark gwy_app_get_show_key_for_id          (gint id);
 void   gwy_app_set_data_field_title         (GwyContainer *data,
                                              gint id,
                                              const gchar *name);
 /* XXX */
 void   gwy_app_data_browser_shut_down       (void);
+GdkPixbuf* gwy_app_get_channel_thumbnail    (GwyContainer *data,
+                                             gint id,
+                                             gint max_width,
+                                             gint max_height);
 
 G_END_DECLS
 
