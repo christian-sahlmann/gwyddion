@@ -19,12 +19,19 @@
  */
 
 /*TODO: Only allow 2^n sized images (XXX: this is no longer useful with FFTW) */
+
+#include "config.h"
 #include <gtk/gtk.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
+#include <libgwydgets/gwydgets.h>
+#include <app/gwyapp.h>
+
+
+//XXX CRUFT:
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/elliptic.h>
@@ -32,11 +39,9 @@
 #include <libprocess/inttrans.h>
 #include <libdraw/gwygradient.h>
 #include <libdraw/gwypixfield.h>
-#include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwycombobox.h>
-#include <app/gwyapp.h>
 
-#define FFTF_2D_RUN_MODES GWY_RUN_INTERACTIVE
+
+#define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 #define PREVIEW_SIZE 400.0
 #define CR_DEFAULT 5
@@ -96,6 +101,11 @@ typedef struct {
 } MarkerType;
 
 typedef struct {
+    GtkWidget    *view;
+    GwyContainer *mydata;
+    GwyContainer *data;
+
+//XXX OLD CRUFT:
     GwyContainer *cont_data;
     GwyContainer *cont_fft;
 
@@ -246,6 +256,7 @@ run_main(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
     /* Setup containers and data fields */
+/*
     controls.cont_data = data;
     controls.cont_fft = gwy_container_duplicate_by_prefix(data, "/0/data",
                                                           NULL);
@@ -256,9 +267,10 @@ run_main(GwyContainer *data, GwyRunType run)
     cont_output_fft = gwy_container_duplicate_by_prefix(data, "/0/data", NULL);
     controls.data_output_image = get_container_data(cont_output_image);
     controls.data_output_fft = get_container_data(cont_output_fft);
-
+*/
+    controls.data = data;
     response = run_dialog(&controls);
-
+/*
     if (response && controls.markers) {
         dfield = get_container_data(data);
 
@@ -289,7 +301,7 @@ run_main(GwyContainer *data, GwyRunType run)
                                              _("Filtered Image"));
         }
 
-        /* Unref unused container(s) */
+        // Unref unused container(s)
         if (controls.output_fft && !controls.output_image)
             g_object_unref(cont_output_image);
         if (controls.output_image && !controls.output_fft)
@@ -298,8 +310,10 @@ run_main(GwyContainer *data, GwyRunType run)
         g_object_unref(cont_output_image);
         g_object_unref(cont_output_fft);
     }
+*/
 
     /* Finalize variables */
+/*
     g_object_unref(controls.buf_fft);
     g_object_unref(controls.bbuf_fft);
     g_object_unref(controls.buf_preview_fft);
@@ -307,8 +321,10 @@ run_main(GwyContainer *data, GwyRunType run)
     g_object_unref(controls.buf_original_image);
     g_object_unref(controls.buf_preview_diff);
     g_object_unref(controls.cont_fft);
+/*
 
     /* Free markers */
+/*
     list = controls.markers;
     while (list) {
         g_free(list->data);
@@ -316,6 +332,21 @@ run_main(GwyContainer *data, GwyRunType run)
     }
     g_slist_free(controls.markers);
     controls.markers = NULL;
+*/
+}
+
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, TRUE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
 }
 
 static gboolean
@@ -336,7 +367,7 @@ run_dialog(ControlsType *controls)
     GtkWidget *combo;
     GtkTooltips *tips;
     GHashTable *hash_tips;
-    GdkCursor *cursor;
+
     GwyDataField *data_fft;
     GwyDataField *data_original;
     GwyContainer *cont_fft;
@@ -348,30 +379,48 @@ run_dialog(ControlsType *controls)
     gint xres;
     gdouble min, max;
     gint row;
+    // OLD CRUFT ABOVE
 
-    /* Starting out, we are not in preview mode */
+
+    GwyPixmapLayer *layer, *mlayer;
+    GwyVectorLayer *vlayer;
+    GwySelection *selection;
+
+    GwyDataField *dfield = NULL, *mask;
+    GQuark mquark;
+    gint id;
+    gdouble zoomval;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    if (!dfield)
+        return FALSE;
+
+
+
+    /* Starting out, we are not in preview mode
     controls->preview = FALSE;
 
-    /* Initialize markers */
+    // Initialize markers
     controls->markers = NULL;
     controls->marker_selected = NULL;
     controls->preview_invalid = FALSE;
     controls->can_change_marker = FALSE;
 
-    /* Setup containers and data fields */
+    // Setup containers and data fields
     data_original = get_container_data(controls->cont_data);
     cont_fft = controls->cont_fft;
     data_fft = get_container_data(cont_fft);
     xres = gwy_data_field_get_xres(data_fft);
     controls->xres = xres;
-    /* TODO: possibly add zoom options:
-               100%, 200%, 300%, etc, Auto*/
-    controls->zoom_factor = ((gdouble)xres / 128.0) * 0.8;
+     controls->zoom_factor = ((gdouble)xres / 128.0) * 0.8;
 
-    /* Do the fft (for preview window) */
+    // Do the fft (for preview window)
     do_fft(data_fft, data_fft);
 
-    /* Initialize the pixbufs */
+    // Initialize the pixbufs
     gradient_fft = gwy_gradients_get_gradient("DFit");
     controls->buf_fft = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                                        xres, xres);
@@ -398,7 +447,7 @@ run_dialog(ControlsType *controls)
     gradient = gwy_gradients_get_gradient(gradient_name);
     gwy_pixbuf_draw_data_field(controls->buf_original_image, data_original,
                                gradient);
-
+*/
     /* Setup the dialog window */
     dialog = gtk_dialog_new_with_buttons(_("2D FFT Filtering"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -420,11 +469,54 @@ run_dialog(ControlsType *controls)
     hbox = gtk_hbox_new(FALSE, 5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 5);
 
+    /*OLD DRAWING WINDOW:
     controls->draw_fft = gtk_drawing_area_new();
     gtk_drawing_area_size(GTK_DRAWING_AREA(controls->draw_fft),
                           PREVIEW_SIZE, PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->draw_fft, FALSE, FALSE, 5);
+    */
 
+    /* Setup the data view */
+    controls->mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
+    gwy_app_copy_data_items(controls->data, controls->mydata, id, 0,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
+    controls->view = gwy_data_view_new(controls->mydata);
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
+
+    vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+    selection = gwy_vector_layer_get_selection(vlayer);
+    //g_signal_connect(selection, "changed",
+    //                 G_CALLBACK(preview_selection_updated), &controls);*/
+
+    mask = create_mask_field(dfield);
+    gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
+    g_object_unref(mask);
+
+    mlayer = gwy_layer_mask_new();
+    gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
+
+
+    gwy_data_field_elliptic_area_fill(mask, 10, 10, 30, 30, 1);
+    gwy_data_field_data_changed(mask);
+
+
+
+    /* Setup the control panel */
     table = gtk_table_new(20, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 10);
     row = 0;
@@ -640,6 +732,7 @@ run_dialog(ControlsType *controls)
     row++;
 
     /* Set up signal/event handlers */
+    /*
     g_signal_connect(scale_fft, "value_changed",
                      G_CALLBACK(scale_changed_fft), controls);
     g_signal_connect(controls->draw_fft, "expose_event",
@@ -656,11 +749,12 @@ run_dialog(ControlsType *controls)
                           | GDK_BUTTON_RELEASE_MASK
                           | GDK_POINTER_MOTION_MASK
                           | GDK_POINTER_MOTION_HINT_MASK);
+    */
 
     gtk_widget_show_all(dialog);
     load_settings(controls, FALSE);
-    cursor = gdk_cursor_new(GDK_CROSSHAIR);
-    gdk_window_set_cursor(controls->draw_fft->window, cursor);
+
+
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
