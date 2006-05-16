@@ -387,11 +387,11 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
     }
     if (axis->orientation == GTK_POS_LEFT
         || axis->orientation == GTK_POS_RIGHT) {
-        axis->label_y_pos = height/2;
-        if (axis->orientation == GTK_POS_LEFT)
-            axis->label_x_pos = 40;
+        axis->label_x_pos = height/2;
+        if (axis->orientation == GTK_POS_LEFT) 
+            axis->label_y_pos = 40;
         else
-            axis->label_x_pos = width - 40;
+            axis->label_y_pos = width - 40;
     }
 
 
@@ -743,12 +743,12 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
-    //PangoMatrix matrix = PANGO_MATRIX_INIT; // TODO fix all code marked by comments - it does nothing
-    //gint width, height; //
+    PangoMatrix matrix = PANGO_MATRIX_INIT; 
+    gint width, height; 
 
     GString *plotlabel;
 
-   context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+    context = gtk_widget_create_pango_context (GTK_WIDGET(axis)); 
     layout = pango_layout_new(context);
     pango_layout_set_font_description(layout, axis->par.major_font);
 
@@ -764,7 +764,8 @@ gwy_axis_draw_label(GdkDrawable *drawable,
 
     pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
     pango_layout_get_pixel_extents(layout, NULL, &rect);
-    //context = gtk_widget_create_pango_context (GTK_WIDGET(axis)); //
+    
+    
 
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
@@ -782,24 +783,24 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
 
         case GTK_POS_LEFT:
-        //pango_matrix_rotate (&matrix, 90); //
-        //pango_context_set_matrix (context, &matrix); //
-        //pango_layout_context_changed (layout); //
-        //pango_layout_get_size (layout, &width, &height);//
+        pango_matrix_rotate (&matrix, 90); 
+        pango_context_set_matrix (context, &matrix); 
+        pango_layout_context_changed (layout); 
+        pango_layout_get_size (layout, &width, &height);
         gdk_draw_layout(drawable, gc,
-                        specs->xmin + axis->label_x_pos,
                         specs->ymin + axis->label_y_pos,
+                        specs->xmin + axis->label_x_pos - rect.width/2,
                         layout);
         break;
 
         case GTK_POS_RIGHT:
-        //pango_matrix_rotate (&matrix, 90); //
-        //pango_context_set_matrix (context, &matrix); //
-        //pango_layout_context_changed (layout); //
-        //pango_layout_get_size (layout, &width, &height);//
+        pango_matrix_rotate (&matrix, 90); 
+        pango_context_set_matrix (context, &matrix); 
+        pango_layout_context_changed (layout); 
+        pango_layout_get_size (layout, &width, &height);
         gdk_draw_layout(drawable, gc,
-                        specs->xmin + axis->label_x_pos - rect.width,
-                        specs->ymin + axis->label_y_pos,
+                        specs->ymin + axis->label_y_pos - rect.height,
+                        specs->xmin + axis->label_x_pos - rect.width/2,
                         layout);
         break;
 
