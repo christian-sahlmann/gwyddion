@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060425, [klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.99.6cvs20060516, [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -328,7 +328,7 @@ if test "x$enable_spml" != "xno"; then
   PKG_CHECK_MODULES(XML2, [libxml-2.0 >= 2.6],
                     [AC_DEFINE(HAVE_XML2,1,
                                [Define if we have the libxml2 package.])],
-                    enable_gl=no)
+                    enable_spml=no)
 
 fi
 AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
