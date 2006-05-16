@@ -1,13 +1,13 @@
-1.99.6cvs20060512
+1.99.6cvs20060516
 
-1.99.7 (2006-04-30)
+1.99.7 (2006-05-17)
 Application:
 - It is possible to switch between pixelwise-square and physically-square
   display modes (via upper left data window corner menu).
 - Gwyddion now depends on libxml2 used for SPML import (optionally, if you
   compile it from source code).
-- There were some tool GUI behaviour changes, generally towards more
-  explicite control by the user.
+- There were some tool GUI behaviour changes, generally towards more explicit
+  control by the user.
 
 Libraries:
 - libgwydddion: Memory corruption on big-endian machines in serialization and
@@ -17,15 +17,25 @@ Libraries:
 - libprocess: New elliptic and circular region functions.
 - libgwydgets: GwyNullStore `virtual' GtkTreeModel class.
 - libgwyapp: New classes GwyTool and GwyPlainTool for tool implementation.
+- libgwyapp: Rectangular selection info table was reworked and it allows direct
+  user input.
+- libgwyapp: Tool dialogs can be hidden with Escape and by clicking on the
+  tool button in toolbox.
 - libgwyapp: Unitool is finally gone.
+- libgwyapp: Thumbnail creation/update works again (they show the first data
+  channel).
 - libgwyapp: Miscellaneous deprecated functions were removed.
 - libgwymodule: Unification and clean-up, all module types have foreach
   functions, headers are includeable individually.
 - libprocess: Remaining data field area functions were converted to
   (col, row, width, heigh) rectangle specification.
-- libprocess: Pixelwise statistical functions gained a new argument: mask of
-  pixels to take into account.
+- libprocess: Pixelwise statistical functions and surface area gained a new
+  argument: mask of pixels to take into account.
 - libgwydddion: New GwyStringList class (forward compatibility stub).
+- libgwydgets: GwyColorAxis draws ticks instead of just the middle marker.
+- libgwydgets: Graph selections are GwySelection based now.
+- libgwydgets: All graph property dialogs apply changes instantly.
+- libgwydgets: Miscellaneous graph fixes and clean-up.
 
 Modules:
 - Omicron (new): Omicron (Scala) file import.
@@ -57,6 +67,7 @@ Modules:
   into account, save results to a text file, switch off instant calculation.
 - Statistical functions: Can switch off instant calculation.
 - Mask grow/shrink: Removed, superseded by the new Mask Editor.
+- Filters: Instant apply was removed, it caused more troubles than it worths.
 
 Other:
 - gwyconfig.h no longer requires to include math.h first.
