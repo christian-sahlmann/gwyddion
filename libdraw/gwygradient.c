@@ -1069,12 +1069,12 @@ gwy_gradients(void)
 
 /**
  * gwy_gradients_get_gradient:
- * @name: Gradient name.  May be %NULL to get default gradient.
+ * @name: Gradient name.  May be %NULL to get the default gradient.
  *
  * Convenience function to get a gradient from gwy_gradients() by name.
  *
- * Returns: Gradient identified by @name or default gradient if it does not
- *          exist.
+ * Returns: Gradient identified by @name or the default gradient if @name does
+ *          not exist.
  **/
 GwyGradient*
 gwy_gradients_get_gradient(const gchar *name)

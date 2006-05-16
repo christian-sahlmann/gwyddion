@@ -578,9 +578,9 @@ fail:
 /**
  * gwy_gl_materials:
  *
- * Gets inventory with all the gl_materials.
+ * Gets inventory with all the GL materials.
  *
- * Returns: GLMaterial inventory.
+ * Returns: GL material inventory.
  **/
 GwyInventory*
 gwy_gl_materials(void)
@@ -591,12 +591,12 @@ gwy_gl_materials(void)
 
 /**
  * gwy_gl_materials_get_gl_material:
- * @name: GL material name.  May be %NULL to get default GL material.
+ * @name: GL material name.  May be %NULL to get the default GL material.
  *
  * Convenience function to get a GL material from gwy_gl_materials() by name.
  *
- * Returns: GL material identified by @name or default GL material if it does
- *          not exist.
+ * Returns: GL material identified by @name or the default GL material if @name
+ *          does not exist.
  **/
 GwyGLMaterial*
 gwy_gl_materials_get_gl_material(const gchar *name)
