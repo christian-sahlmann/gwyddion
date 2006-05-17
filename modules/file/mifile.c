@@ -71,7 +71,7 @@ typedef struct {
     GHashTable *meta;
 } MIFile;
 
-/* This struct is for MI Spectroscopy Files only */
+/* These two structs are for MI Spectroscopy Files only */
 typedef struct {
     gchar *label;
     gchar *unit;
@@ -112,7 +112,8 @@ static guint        spect_file_read_header  (MISpectFile *mifile,
 static void         read_data_field         (GwyDataField *dfield,
                                              MIData *midata,
                                              gint xres, gint yres);
-static void         mifile_free             (MIFile *mifile);
+static void         image_file_free         (MIFile *mifile);
+static void         spect_file_free         (MISpectFile *mifile);
 static gboolean     mifile_get_double       (GHashTable *meta,
                                              const gchar *key,
                                              gdouble *value);
@@ -187,7 +188,6 @@ mifile_load(const gchar *filename,
     gboolean isbinary = TRUE;
     gboolean isimage = TRUE;
     guint i = 0, j = 0, pos, buffi;
-    gfloat value;
 
     /* Open the file and load in its contents into "buffer" */
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -255,8 +255,7 @@ mifile_load(const gchar *filename,
                 read_data_field(dfield, mifile->buffers + i,
                                 mifile->xres, mifile->yres);
 
-                if (!container)
-                    container = gwy_container_new();
+                container = gwy_container_new();
 
                 container_key = g_strdup_printf("/%i/data", i);
                 gwy_container_set_object_by_name(container, container_key,
@@ -266,7 +265,7 @@ mifile_load(const gchar *filename,
                 g_free(container_key);
             }
 
-            mifile_free(mifile);
+            image_file_free(mifile);
         }
         else {
             /* Load spectroscopy data: */
@@ -332,6 +331,8 @@ mifile_load(const gchar *filename,
                 g_free(container_key);
             }
             g_free(xdata);
+
+            spect_file_free(mifile_spect);
         }
     }
     else
@@ -477,13 +478,30 @@ read_data_field(GwyDataField *dfield,
 }
 
 static void
-mifile_free(MIFile *mifile)
+image_file_free(MIFile *mifile)
 {
     guint i;
 
     for (i = 0; i < mifile->n; i++) {
         g_hash_table_destroy(mifile->buffers[i].meta);
         g_free(mifile->buffers[i].id);
+    }
+    g_free(mifile->buffers);
+    g_hash_table_destroy(mifile->meta);
+    g_free(mifile);
+}
+
+static void
+spect_file_free(MISpectFile *mifile)
+{
+
+    guint i;
+
+   for (i = 0; i < mifile->num_buffers; i++) {
+       if (mifile->buffers[i].label)
+           g_free(mifile->buffers[i].label);
+       if (mifile->buffers[i].unit)
+           g_free(mifile->buffers[i].unit);
     }
     g_free(mifile->buffers);
     g_hash_table_destroy(mifile->meta);
