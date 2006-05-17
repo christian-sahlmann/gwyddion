@@ -315,7 +315,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         g_object_set(button, "draw-indicator", FALSE, NULL);
         image = gtk_image_new_from_stock(modes[i].stock_id,
                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
-        gtk_button_set_image(GTK_BUTTON(button), image);
+        gtk_container_add(GTK_CONTAINER(button), image);
         g_object_set_data(G_OBJECT(button), "select-mode",
                           GUINT_TO_POINTER(modes[i].type));
         gtk_box_pack_start(hbox, button, FALSE, FALSE, 0);
@@ -345,7 +345,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         g_object_set(button, "draw-indicator", FALSE, NULL);
         image = gtk_image_new_from_stock(shapes[i].stock_id,
                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
-        gtk_button_set_image(GTK_BUTTON(button), image);
+        gtk_container_add(GTK_CONTAINER(button), image);
         g_object_set_data(G_OBJECT(button), "shape-type",
                           GUINT_TO_POINTER(shapes[i].type));
         gtk_box_pack_start(hbox, button, FALSE, FALSE, 0);
