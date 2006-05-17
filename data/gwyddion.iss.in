@@ -86,7 +86,7 @@ function InitializeSetup(): Boolean;
 begin
   Result := GetGtkInstalled ();
   if not Result then begin
-    MsgBox ('Please install the Gtk+ 2.6 (or newer) Runtime Environment before installing @PACKAGE_NAME@.  The preferred Gtk+ package is GladeWin32: http://gladewin32.sourceforge.net/.', mbError, MB_OK);
+    MsgBox ('Please install the Gtk+ 2.8 (or newer) Runtime Environment before installing @PACKAGE_NAME@.  The preferred Gtk+ package is GladeWin32: http://gladewin32.sourceforge.net/.', mbError, MB_OK);
   end;
 end;
 
