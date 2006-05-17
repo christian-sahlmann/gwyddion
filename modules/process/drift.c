@@ -471,6 +471,7 @@ load_mask_color(GtkWidget *color_button,
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
+/* FIXME: This is wrong. Look at grain_mark.c */
 static void
 save_mask_color(GtkWidget *color_button,
                 GwyContainer *data)

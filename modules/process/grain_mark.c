@@ -338,9 +338,9 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             mark_dialog_update_values(&controls, args);
-            g_object_unref(controls.mydata);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            g_object_unref(controls.mydata);
             return;
             break;
 
