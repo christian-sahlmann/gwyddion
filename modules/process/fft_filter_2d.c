@@ -71,8 +71,13 @@
     sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
 enum {
-    MARKER_CIRCLE,
-    MARKER_RECT,
+    SHAPE_CIRCLE,
+    SHAPE_RECT,
+};
+
+enum {
+    MODE_ADD,
+    MODE_SUBTRACT,
 };
 
 enum {
@@ -85,42 +90,16 @@ enum {
 };
 
 typedef struct {
-    gdouble left;
-    gdouble right;
-    gdouble top;
-    gdouble bottom;
-
-    gdouble x_center;
-    gdouble y_center;
-    gdouble radius;
-
-    gdouble proximity;
-
-    gint shape;
-    gboolean inclusive;
-} MarkerType;
-
-typedef struct {
     GtkWidget    *view;
     GwyContainer *mydata;
     GwyContainer *data;
 
+    GwyDataField *dfield;
+    GwyDataField *fft;
+
+
 //XXX OLD CRUFT:
-    GwyContainer *cont_data;
-    GwyContainer *cont_fft;
-
-    GwyDataField *data_output_fft;
-    GwyDataField *data_output_image;
-
     GtkWidget *draw_fft;
-    GtkWidget *scale_fft;
-
-    GdkPixbuf *buf_fft;
-    GdkPixbuf *bbuf_fft;
-    GdkPixbuf *buf_preview_fft;
-    GdkPixbuf *buf_preview_image;
-    GdkPixbuf *buf_original_image;
-    GdkPixbuf *buf_preview_diff;
 
     GtkWidget *dialog;
 
@@ -131,6 +110,7 @@ typedef struct {
     GtkWidget *button_drag;
     GtkWidget *button_remove;
 
+    GtkWidget *scale_fft;
     GtkWidget *check_zoom;
     GtkWidget *check_origin;
 
@@ -142,17 +122,12 @@ typedef struct {
 
     GtkWidget *combo_output;
 
-    GSList *markers;
-    MarkerType *marker_selected;
-    gboolean can_change_marker;
-
-    gint xres;
-    gdouble color_range;
-    gboolean preview;
-    gboolean preview_invalid;
-    gboolean output_image;
-    gboolean output_fft;
-    gdouble zoom_factor;
+//    gdouble color_range;
+//    gboolean preview;
+//    gboolean preview_invalid;
+//    gboolean output_image;
+//    gboolean output_fft;
+//    gdouble zoom_factor;
 
 } ControlsType;
 
@@ -162,16 +137,11 @@ static void         run_main            (GwyContainer *data,
                                          GwyRunType run);
 
 /* Signal handlers */
-static gboolean     paint_fft           (GtkWidget *widget,
-                                         GdkEventExpose *event,
+static void        selection_finished_cb (GwySelection *selection,
                                          ControlsType *controls);
-static gboolean     mouse_down_fft      (ControlsType *controls,
-                                         GdkEventButton *event);
-static gboolean     mouse_up_fft        (ControlsType *controls,
-                                         GdkEventButton *event);
-static gboolean     mouse_move_fft      (GtkWidget *widget,
-                                         GdkEventMotion *event,
-                                         ControlsType *controls);
+
+
+//XXX OLD CRUFT:
 static void         scale_changed_fft   (GtkRange *range,
                                          ControlsType *controls);
 static void         remove_all_clicked  (ControlsType *controls);
@@ -193,25 +163,6 @@ static void         do_fft              (GwyDataField *dataInput,
 static void         set_dfield_modulus  (GwyDataField *re,
                                          GwyDataField *im,
                                          GwyDataField *target);
-static void         draw_marker         (GdkDrawable *pix_target,
-                                         MarkerType *marker,
-                                         GdkFunction function,
-                                         ControlsType *controls);
-static void         draw_markers        (GdkPixmap *pix_target,
-                                         ControlsType *controls);
-static MarkerType*  get_selected_marker (gdouble x,
-                                         gdouble y,
-                                         ControlsType *controls);
-static void         calc_circle_box     (MarkerType *marker);
-static GdkColor     get_color_from_rgb  (gint red,
-                                         gint green,
-                                         gint blue);
-static void         screen_to_dfield    (gdouble *x,
-                                         gdouble *y,
-                                         ControlsType *controls);
-static void         dfield_to_screen    (gdouble *x,
-                                         gdouble *y,
-                                         ControlsType *controls);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -242,97 +193,13 @@ module_register(void)
 static void
 run_main(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
-    GwyContainer *cont_output_image;
-    GtkWidget *win_output_image;
-    GwyContainer *cont_output_fft;
-    GtkWidget *win_output_fft;
-    GwySIUnit *siunit;
     ControlsType controls;
     gboolean response;
-    gdouble min, max;
-    GSList *list;
 
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
-    /* Setup containers and data fields */
-/*
-    controls.cont_data = data;
-    controls.cont_fft = gwy_container_duplicate_by_prefix(data, "/0/data",
-                                                          NULL);
-
-    cont_output_image = gwy_container_duplicate_by_prefix(data, "/0/data",
-                                                          "/0/base/palette",
-                                                          NULL);
-    cont_output_fft = gwy_container_duplicate_by_prefix(data, "/0/data", NULL);
-    controls.data_output_image = get_container_data(cont_output_image);
-    controls.data_output_fft = get_container_data(cont_output_fft);
-*/
     controls.data = data;
     response = run_dialog(&controls);
-/*
-    if (response && controls.markers) {
-        dfield = get_container_data(data);
-
-        if (controls.preview_invalid)
-            fft_filter_2d(dfield, controls.data_output_image,
-                          controls.data_output_fft,
-                          controls.markers);
-
-        if (controls.output_fft) {
-            gwy_container_set_string_by_name(cont_output_fft, "/0/base/palette",
-                                             g_strdup("DFit"));
-            siunit = gwy_data_field_get_si_unit_xy(controls.data_output_fft);
-            gwy_si_unit_power(siunit, -1, siunit);
-            min = gwy_data_field_get_min(controls.data_output_fft);
-            max = controls.color_range;
-            gwy_container_set_double_by_name(cont_output_fft,
-                                             "/0/base/min", min);
-            gwy_container_set_double_by_name(cont_output_fft,
-                                             "/0/base/max", max);
-            win_output_fft = gwy_app_data_window_create(cont_output_fft);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(win_output_fft),
-                                             _("Filtered FFT"));
-        }
-
-        if (controls.output_image) {
-            win_output_image = gwy_app_data_window_create(cont_output_image);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(win_output_image),
-                                             _("Filtered Image"));
-        }
-
-        // Unref unused container(s)
-        if (controls.output_fft && !controls.output_image)
-            g_object_unref(cont_output_image);
-        if (controls.output_image && !controls.output_fft)
-            g_object_unref(cont_output_fft);
-    } else {
-        g_object_unref(cont_output_image);
-        g_object_unref(cont_output_fft);
-    }
-*/
-
-    /* Finalize variables */
-/*
-    g_object_unref(controls.buf_fft);
-    g_object_unref(controls.bbuf_fft);
-    g_object_unref(controls.buf_preview_fft);
-    g_object_unref(controls.buf_preview_image);
-    g_object_unref(controls.buf_original_image);
-    g_object_unref(controls.buf_preview_diff);
-    g_object_unref(controls.cont_fft);
-/*
-
-    /* Free markers */
-/*
-    list = controls.markers;
-    while (list) {
-        g_free(list->data);
-        list = g_slist_next(list);
-    }
-    g_slist_free(controls.markers);
-    controls.markers = NULL;
-*/
 }
 
 static GwyDataField*
@@ -368,16 +235,8 @@ run_dialog(ControlsType *controls)
     GtkTooltips *tips;
     GHashTable *hash_tips;
 
-    GwyDataField *data_fft;
-    GwyDataField *data_original;
-    GwyContainer *cont_fft;
-    GwyGradient *gradient_fft;
-    GwyGradient *gradient;
-    const guchar *gradient_name = NULL;
     gint response;
     gint i;
-    gint xres;
-    gdouble min, max;
     gint row;
     // OLD CRUFT ABOVE
 
@@ -385,12 +244,13 @@ run_dialog(ControlsType *controls)
     GwyPixmapLayer *layer, *mlayer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
-
     GwyDataField *dfield = NULL, *mask;
+    GwyRGBA rgba;
     GQuark mquark;
     gint id;
     gdouble zoomval;
 
+    /* Get the currently active GwyDataField */
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
@@ -398,56 +258,11 @@ run_dialog(ControlsType *controls)
     if (!dfield)
         return FALSE;
 
+    /* Duplicate the original datafield, calculate and store the fft image */
+    controls->dfield = gwy_data_field_duplicate(dfield);
+    controls->fft = gwy_data_field_new_alike(dfield, FALSE);
+    do_fft(controls->dfield, controls->fft);
 
-
-    /* Starting out, we are not in preview mode
-    controls->preview = FALSE;
-
-    // Initialize markers
-    controls->markers = NULL;
-    controls->marker_selected = NULL;
-    controls->preview_invalid = FALSE;
-    controls->can_change_marker = FALSE;
-
-    // Setup containers and data fields
-    data_original = get_container_data(controls->cont_data);
-    cont_fft = controls->cont_fft;
-    data_fft = get_container_data(cont_fft);
-    xres = gwy_data_field_get_xres(data_fft);
-    controls->xres = xres;
-     controls->zoom_factor = ((gdouble)xres / 128.0) * 0.8;
-
-    // Do the fft (for preview window)
-    do_fft(data_fft, data_fft);
-
-    // Initialize the pixbufs
-    gradient_fft = gwy_gradients_get_gradient("DFit");
-    controls->buf_fft = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                       xres, xres);
-    controls->buf_original_image = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
-                                                  FALSE, 8,
-                                                  xres, xres);
-    controls->buf_preview_fft = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                               xres, xres);
-    controls->buf_preview_image = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                                 xres, xres);
-    controls->buf_preview_diff = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                                xres, xres);
-    controls->bbuf_fft = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                        PREVIEW_SIZE, PREVIEW_SIZE);
-    min = gwy_data_field_get_min(data_fft);
-    max = gwy_data_field_get_rms(data_fft);
-    controls->color_range = max;
-    gwy_pixbuf_draw_data_field_with_range(controls->buf_fft, data_fft,
-                                          gradient_fft, min, max);
-    gwy_container_gis_string_by_name(controls->cont_data, "/0/base/palette",
-                                     &gradient_name);
-    if (!gradient_name)
-        gradient_name = GWY_GRADIENT_DEFAULT;
-    gradient = gwy_gradients_get_gradient(gradient_name);
-    gwy_pixbuf_draw_data_field(controls->buf_original_image, data_original,
-                               gradient);
-*/
     /* Setup the dialog window */
     dialog = gtk_dialog_new_with_buttons(_("2D FFT Filtering"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -458,58 +273,61 @@ run_dialog(ControlsType *controls)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls->dialog = dialog;
 
-    /* Setup tooltips */
+    /* XXX Setup tooltips XXX */
     hash_tips = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
     build_tooltips(hash_tips);
     tips = gtk_tooltips_new();
     g_object_ref(tips);
     gtk_object_sink(GTK_OBJECT(tips));
 
-    /* Setup all the widgets */
+    /* Main Horizontal Box (contains the GwyDataView and the control panel) */
     hbox = gtk_hbox_new(FALSE, 5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 5);
 
-    /*OLD DRAWING WINDOW:
-    controls->draw_fft = gtk_drawing_area_new();
-    gtk_drawing_area_size(GTK_DRAWING_AREA(controls->draw_fft),
-                          PREVIEW_SIZE, PREVIEW_SIZE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->draw_fft, FALSE, FALSE, 5);
-    */
-
-    /* Setup the data view */
+    /* Setup the GwyDataView */
     controls->mydata = gwy_container_new();
-    gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
+    gwy_container_set_object_by_name(controls->mydata, "/0/data",
+                                     controls->fft);
+    gwy_container_set_string_by_name(controls->mydata, "/0/base/fft_palette",
+                                     g_strdup("DFit"));
     gwy_app_copy_data_items(controls->data, controls->mydata, id, 0,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
                             0);
+    if (!gwy_rgba_get_from_container(&rgba, controls->mydata, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, controls->mydata, "/0/mask");
+    }
     controls->view = gwy_data_view_new(controls->mydata);
+
+    /* setup base layer */
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
+                                     "/0/base/fft_palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
 
+    /* setup vector layer */
     vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
     selection = gwy_vector_layer_get_selection(vlayer);
-    //g_signal_connect(selection, "changed",
-    //                 G_CALLBACK(preview_selection_updated), &controls);*/
+    g_signal_connect(selection, "finished",
+                     G_CALLBACK(selection_finished_cb), controls);
 
+    /* setup mask layer */
     mask = create_mask_field(dfield);
     gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
     g_object_unref(mask);
-
     mlayer = gwy_layer_mask_new();
     gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
-
 
     gwy_data_field_elliptic_area_fill(mask, 10, 10, 30, 30, 1);
     gwy_data_field_data_changed(mask);
@@ -786,8 +604,8 @@ run_dialog(ControlsType *controls)
 
     i = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->combo_output));
     //i = get_combo_index(controls->combo_output, "output-type");
-    controls->output_image = i & OUTPUT_IMAGE;
-    controls->output_fft = i & OUTPUT_FFT;
+    //controls->output_image = i & OUTPUT_IMAGE;
+    //controls->output_fft = i & OUTPUT_FFT;
 
     /* Finalize */
     gtk_widget_destroy(dialog);
@@ -796,6 +614,45 @@ run_dialog(ControlsType *controls)
 
     return TRUE;
 }
+
+static void
+selection_finished_cb(GwySelection *selection,
+                          ControlsType *controls)
+{
+    GwyDataField *mfield  = NULL;
+    gdouble sel[4];
+    gint isel[4];
+
+//    if (controls->in_update)
+//        return;
+
+    /* get the mask */
+    mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                            "/0/mask"));
+    //XXX handle no mfield?
+
+    /* get the selection coordinates */
+    if (!gwy_selection_get_object(selection, 0, sel))
+        return;
+    isel[0] = gwy_data_field_rtoj(mfield, sel[0]);
+    isel[1] = gwy_data_field_rtoj(mfield, sel[1]);
+    isel[2] = gwy_data_field_rtoj(mfield, sel[2]) + 1;
+    isel[3] = gwy_data_field_rtoj(mfield, sel[3]) + 1;
+    isel[2] -= isel[0];
+    isel[3] -= isel[1];
+
+    /* apply change to mask */
+    //XXX gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
+    gwy_data_field_elliptic_area_fill(
+                    mfield, isel[0], isel[1], isel[2], isel[3], 1.0);
+    if (mfield)
+        gwy_data_field_data_changed(mfield);
+
+    gwy_selection_clear(selection);
+}
+
+
+
 
 /*XXX: fix */
 static void
@@ -890,564 +747,9 @@ load_settings(ControlsType *controls, gboolean load_defaults)
     set_toggled(controls->check_zoom, zoom);
 }
 
-static gboolean
-paint_fft(GtkWidget *widget,
-          G_GNUC_UNUSED GdkEventExpose *event,
-          ControlsType *controls)
-{
-    GdkPixmap *pix_work;
-    GdkPixbuf *buf_temp = NULL;
-    GdkPixbuf *buf_source;
-    gboolean zoom = FALSE;
-    gdouble offset, scale;
-    zoom = get_toggled(controls->check_zoom);
-
-    /* Create temp drawable so we can draw shapes onto the FFT image */
-    pix_work = gdk_pixmap_new(widget->window, PREVIEW_SIZE, PREVIEW_SIZE, -1);
-
-    /* Create a temp pixbuf for scaling operations (only if zooming) */
-    if (zoom)
-        buf_temp = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                  PREVIEW_SIZE, PREVIEW_SIZE);
-
-    /* Pick what our source buffer is (depending on preview mode) */
-    if (controls->preview) {
-        if (get_toggled(controls->button_show_fft_preview))
-            buf_source = controls->buf_preview_fft;
-        else if (get_toggled(controls->button_show_image_preview))
-            buf_source = controls->buf_preview_image;
-        else if (get_toggled(controls->button_show_original_image))
-            buf_source = controls->buf_original_image;
-        else if (get_toggled(controls->button_show_diff_preview))
-            buf_source = controls->buf_preview_diff;
-        else
-            buf_source = controls->buf_fft;
-    } else {
-        buf_source = controls->buf_fft;
-    }
-
-    /* Resize the stored buffer to the preview size */
-    if (zoom && buf_temp) {
-        offset = -(gdouble)PREVIEW_SIZE*(controls->zoom_factor - 1.0)/2.0;
-        scale = controls->zoom_factor *
-                ((gdouble)PREVIEW_SIZE/(gdouble)controls->xres);
-
-        gdk_pixbuf_scale(buf_source, buf_temp, 0, 0,
-                         PREVIEW_SIZE, PREVIEW_SIZE,
-                         offset, offset, scale, scale,
-                         GDK_INTERP_BILINEAR);
-    }
-    else {
-        buf_temp = gdk_pixbuf_scale_simple(buf_source,
-                                           PREVIEW_SIZE, PREVIEW_SIZE,
-                                           GDK_INTERP_BILINEAR);
-    }
-
-    /* Draw the resized pixbuf onto pix_work */
-    gdk_draw_pixbuf(pix_work, NULL, buf_temp, 0, 0, 0, 0,
-                    PREVIEW_SIZE, PREVIEW_SIZE,
-                    GDK_RGB_DITHER_NONE, 0, 0);
-
-    /* Draw the markers onto pix_work */
-    if (!controls->preview)
-        draw_markers(pix_work, controls);
-
-    /* Draw the pix_work onto the backbuffer */
-    gdk_pixbuf_get_from_drawable(controls->bbuf_fft, pix_work,
-                                 gdk_drawable_get_colormap(pix_work),
-                                 0, 0, 0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
-
-    /* Flip backbuffer to window */
-    gdk_draw_pixbuf(widget->window, NULL, controls->bbuf_fft, 0, 0, 0, 0,
-                    PREVIEW_SIZE, PREVIEW_SIZE, GDK_RGB_DITHER_NONE, 0, 0);
-
-    /* Finalize */
-    g_object_unref(pix_work);
-    g_object_unref(buf_temp);
-
-    return TRUE;
-}
-
-static MarkerType*
-get_selected_marker(gdouble x, gdouble y, ControlsType *controls)
-{
-    MarkerType *marker;
-    gdouble distance;
-    gdouble distance1, distance2;
-    gdouble d1, d2, d3, d4;
-    gdouble min_proximity = 99999.9;
-    MarkerType *min_marker = NULL;
-    gdouble proximity = 0;
-    GSList *list;
-
-    /* Go through all markers, and calculate their proximity to the cursor.
-       Return the marker with the closest proximity. */
-    list = controls->markers;
-    while (list) {
-        marker = list->data;
-
-        if (marker->shape == MARKER_CIRCLE) {
-            distance = get_distance(marker->x_center, x, marker->y_center, y);
-            proximity = ABS(marker->radius - distance);
-        } else {
-            d1 = get_distance(marker->left, x, marker->top, y);
-            d2 = get_distance(marker->right, x, marker->top, y);
-            d3 = get_distance(marker->left, x, marker->bottom, y);
-            d4 = get_distance(marker->right, x, marker->bottom, y);
-            distance1 = d1 < d2 ? d1 : d2;
-            distance2 = d3 < d4 ? d3 : d4;
-            proximity = distance1 < distance2 ? distance1 : distance2;
-        }
-
-        if (proximity < min_proximity) {
-            min_proximity = proximity;
-            min_marker = marker;
-        }
-
-        list = g_slist_next(list);
-    }
-
-    /* If the minimum proximity is within tolerance, return the marker */
-    if (min_proximity <= 5)
-        return min_marker;
-
-    return NULL;
-}
-
-static void
-draw_marker(GdkDrawable *pix_target, MarkerType *marker,
-            GdkFunction function, ControlsType *controls)
-{
-    MarkerType marker_a, marker_b;
-    GdkColor color_a, color_b;
-    GdkGC *gc_a, *gc_b;
-
-    /* Setup graphics context */
-    gc_a = gdk_gc_new(pix_target);
-    gc_b = gdk_gc_new(pix_target);
-    gdk_gc_set_function(gc_a, function);
-    gdk_gc_set_function(gc_b, function);
-
-    /* Set up coordinates */
-    if (marker->shape == MARKER_CIRCLE) {
-        /* CIRCLE */
-        marker_a.radius = marker->radius;
-        marker_a.x_center = marker->x_center;
-        marker_a.y_center = marker->y_center;
-
-        marker_b.radius = marker_a.radius;
-        marker_b.x_center = -marker_a.x_center + controls->xres;
-        marker_b.y_center = -marker_a.y_center + controls->xres;
-
-        marker_a.left = marker_a.x_center - marker_a.radius;
-        marker_a.right = marker_a.x_center + marker_a.radius;
-        marker_a.top = marker_a.y_center - marker_a.radius;
-        marker_a.bottom = marker_a.y_center + marker_a.radius;
-
-        marker_b.left = marker_b.x_center - marker_b.radius;
-        marker_b.right = marker_b.x_center + marker_b.radius;
-        marker_b.top = marker_b.y_center - marker_b.radius;
-        marker_b.bottom = marker_b.y_center + marker_b.radius;
-    } else {
-        /* RECTANGLE */
-        marker_a.left = marker->left;
-        marker_a.right = marker->right;
-        marker_a.top = marker->top;
-        marker_a.bottom = marker->bottom;
-
-        /* Fix orientation */
-        if (marker_a.left > marker_a.right)
-            GWY_SWAP(gdouble, marker_a.left, marker_a.right);
-        if (marker_a.top > marker_a.bottom)
-            GWY_SWAP(gdouble, marker_a.top, marker_a.bottom);
-
-        /* Calculate secondary coordinates */
-        marker_b.left = -marker_a.left + controls->xres;
-        marker_b.right = -marker_a.right + controls->xres;
-        marker_b.top = -marker_a.top + controls->xres;
-        marker_b.bottom = -marker_a.bottom + controls->xres;
-
-        /* Fix orientation */
-        if (marker_b.left > marker_b.right)
-            GWY_SWAP(gdouble, marker_b.left, marker_b.right);
-        if (marker_b.top > marker_b.bottom)
-            GWY_SWAP(gdouble, marker_b.top, marker_b.bottom);
-    }
-
-    /* Convert to screen coordinate system */
-    dfield_to_screen(&marker_a.left, &marker_a.top, controls);
-    dfield_to_screen(&marker_a.right, &marker_a.bottom, controls);
-    dfield_to_screen(&marker_b.left, &marker_b.top, controls);
-    dfield_to_screen(&marker_b.right, &marker_b.bottom, controls);
-
-    /* Nudge (only for circles) */
-    if (marker->shape == MARKER_CIRCLE) {
-        marker_b.left+=1;
-        marker_b.right+=1;
-        marker_b.top+=1;
-        marker_b.bottom+=1;
-    }
-
-    /* Set draw color  */
-    if (function == GDK_COPY) {
-        if (marker->inclusive) {
-            color_a = get_color_from_rgb(0, 255, 0);
-            color_b = get_color_from_rgb(0, 255, 125);
-        } else {
-            color_a = get_color_from_rgb(255, 0, 0);
-            color_b = get_color_from_rgb(255, 0, 125);
-        }
-    } else {
-        color_a = get_color_from_rgb(255, 255, 255);
-        color_b = get_color_from_rgb(255, 200, 255);
-    }
-    gdk_gc_set_rgb_fg_color(gc_a, &color_a);
-    gdk_gc_set_rgb_bg_color(gc_a, &color_a);
-    gdk_gc_set_rgb_fg_color(gc_b, &color_b);
-    gdk_gc_set_rgb_bg_color(gc_b, &color_b);
-
-    if (marker->shape == MARKER_CIRCLE) {
-        gdk_draw_arc(pix_target, gc_a, function==GDK_COPY ? FALSE : TRUE,
-                     marker_a.left, marker_a.top,
-                     marker_a.right - marker_a.left,
-                     marker_a.bottom - marker_a.top,
-                     0, 23040);
-
-        if (!(marker_a.x_center == marker_b.x_center &&
-              marker_a.y_center == marker_b.y_center))
-        gdk_draw_arc(pix_target, gc_b,  function==GDK_COPY ? FALSE : TRUE,
-                     marker_b.left, marker_b.top,
-                     marker_b.right - marker_b.left,
-                     marker_b.bottom - marker_b.top,
-                     0, 23040);
-    } else {
-        gdk_draw_rectangle(pix_target, gc_a, function==GDK_COPY ? FALSE : TRUE,
-                           marker_a.left, marker_a.top,
-                           marker_a.right - marker_a.left,
-                           marker_a.bottom - marker_a.top);
-
-        gdk_draw_rectangle(pix_target, gc_b, function==GDK_COPY ? FALSE : TRUE,
-                           marker_b.left, marker_b.top,
-                           marker_b.right - marker_b.left,
-                           marker_b.bottom - marker_b.top);
-    }
-
-    /* Finalize */
-    g_object_unref(gc_a);
-    g_object_unref(gc_b);
-}
-
-static void
-draw_markers(GdkPixmap *pix_target, ControlsType *controls)
-{
-    GSList *list;
-    MarkerType *marker;
-    MarkerType *marker_selected;
-
-    marker_selected = NULL;
-    list = controls->markers;
-    while (list) {
-        marker = list->data;
-        if (marker == controls->marker_selected)
-            marker_selected = marker;
-        else
-            draw_marker(pix_target, marker, GDK_COPY, controls);
-        list = g_slist_next(list);
-    }
-
-    if (marker_selected != NULL)
-        draw_marker(pix_target, marker_selected, GDK_XOR, controls);
-}
-
-static void
-calc_circle_box(MarkerType *marker)
-{
-    marker->left = marker->x_center - marker->radius;
-    marker->right = marker->x_center + marker->radius;
-    marker->top = marker->y_center - marker->radius;
-    marker->bottom = marker->y_center + marker->radius;
-}
-
-static GdkColor
-get_color_from_rgb(gint red, gint green, gint blue)
-{
-    GdkColor col;
-
-    col.red = 256 * red;
-    col.green = 256 * green;
-    col.blue = 256 * blue;
-    col.pixel = 0;
-
-    return col;
-}
-
-static void
-screen_to_dfield(gdouble *x, gdouble *y, ControlsType *controls)
-{
-    gboolean zoom = FALSE;
-    gdouble scale_factor;
-    gdouble zoom_factor = 1.0;
-    gdouble offset;
-
-    /* Setup zooming */
-    zoom = get_toggled(controls->check_zoom);
-    if (zoom)
-        zoom_factor = controls->zoom_factor;
-
-    /* Subtract off zoom offset */
-    if (zoom) {
-        offset = (gdouble)PREVIEW_SIZE *
-                 (controls->zoom_factor - 1.0)/2.0;
-        *x += offset;
-        *y += offset;
-    }
-
-    /* Convert from screen coordinates to dfield coordinates */
-    scale_factor = ((gdouble)controls->xres/(gdouble)PREVIEW_SIZE);
-    *x *= scale_factor / zoom_factor;
-    *y *= scale_factor / zoom_factor;
-}
-
-static void
-dfield_to_screen(gdouble *x, gdouble *y, ControlsType *controls)
-{
-    gboolean zoom = FALSE;
-    gdouble scale_factor;
-    gdouble zoom_factor = 1.0;
-    gdouble offset;
-
-    /* Setup zooming */
-    zoom = get_toggled(controls->check_zoom);
-    if (zoom)
-        zoom_factor = controls->zoom_factor;
-
-    /* Convert from dfield coordinates to screen coordinates */
-    scale_factor = ((gdouble)PREVIEW_SIZE/((gdouble)controls->xres));
-    *x *= scale_factor * zoom_factor;
-    *y *= scale_factor * zoom_factor;
-
-    /* Add in zoom offset */
-    if (zoom) {
-        offset = -(gdouble)PREVIEW_SIZE *
-                  (controls->zoom_factor - 1.0)/2.0;
-        *x += offset;
-        *y += offset;
-    }
-}
-
-static gboolean
-mouse_down_fft(ControlsType *controls, GdkEventButton *event)
-{
-    gdouble x, y;
-    MarkerType *marker;
-
-    if (controls->preview)
-        return TRUE;
-
-    x = event->x; y = event->y;
-    screen_to_dfield(&x, &y, controls);
-
-    if (get_toggled(controls->button_drag)
-        || get_toggled(controls->button_remove)) {
-        controls->marker_selected = get_selected_marker(x, y, controls);
-        if (controls->marker_selected != NULL)
-            controls->can_change_marker = TRUE;
-        gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                                   PREVIEW_SIZE, PREVIEW_SIZE);
-    }
-    else {
-        /* Create new marker */
-        marker = g_new(MarkerType, 1);
-        if (get_toggled(controls->check_origin)) {
-            marker->x_center = controls->xres / 2.0;
-            marker->y_center = controls->xres / 2.0;
-        } else {
-            marker->x_center = x;
-            marker->y_center = y;
-        }
-        marker->left = marker->x_center;
-        marker->right = marker->x_center;
-        marker->top = marker->y_center;
-        marker->bottom = marker->y_center;
-        marker->radius = 0;
-
-        marker->inclusive = get_toggled(controls->button_circle_inc) ||
-                            get_toggled(controls->button_rect_inc);
-        marker->shape = get_toggled(controls->button_circle_inc) ||
-                        get_toggled(controls->button_circle_exc) ?
-                        MARKER_CIRCLE : MARKER_RECT;
-
-        /* Add marker to linked list */
-        controls->markers = g_slist_append(controls->markers, marker);
-        controls->preview_invalid = TRUE;
-        controls->can_change_marker = TRUE;
-    }
-
-    return TRUE;
-}
-
-static gboolean
-mouse_up_fft(ControlsType *controls, G_GNUC_UNUSED GdkEventButton *event)
-{
-    MarkerType *marker;
-    GSList *list;
-    gboolean remove_marker;
-    gboolean editing;
-
-    if (controls->preview)
-        return TRUE;
-
-    editing = get_toggled(controls->button_drag)
-              || get_toggled(controls->button_remove);
-    if (editing && controls->marker_selected) {
-        marker = controls->marker_selected;
-    }
-    else if (!editing && controls->markers) {
-        list = g_slist_last(controls->markers);
-        marker = list->data;
-    }
-    else {
-        return TRUE;
-    }
-
-    /* XOR Marker (clear it away) */
-    draw_marker(controls->draw_fft->window, marker, GDK_XOR, controls);
-
-    /* Remove Marker if remove button selected, or if the user resized the
-     * marker to be zero sized */
-    remove_marker = (get_toggled(controls->button_remove)
-                     && controls->marker_selected)
-                    || is_marker_zero_sized(marker);
-    if (remove_marker) {
-        list = g_slist_find(controls->markers, marker);
-        controls->markers = g_slist_delete_link(controls->markers, list);
-        g_free(marker);
-        controls->preview_invalid = TRUE;
-    } else {
-        /* Redraw marker with proper color */
-        draw_marker(controls->draw_fft->window, marker, GDK_COPY, controls);
-    }
-
-    controls->marker_selected = NULL;
-    controls->can_change_marker = FALSE;
-
-    return TRUE;
-}
-
-static gboolean
-mouse_move_fft(GtkWidget *widget, GdkEventMotion *event, ControlsType *controls)
-{
-    gint screen_x, screen_y;
-    gdouble x, y;
-    MarkerType *marker;
-    MarkerType backup_marker;
-    GdkModifierType state;
-    gdouble radius_x, radius_y;
-    gdouble width, height;
-    gboolean constrain;
-    GSList *list;
-
-    if (controls->preview)
-        return TRUE;
-
-    if (event->is_hint)
-        gdk_window_get_pointer(widget->window, &screen_x, &screen_y, &state);
-    else {
-        screen_x = event->x;
-        screen_y = event->y;
-        state = event->state;
-    }
-
-    x = (gdouble)screen_x;
-    y = (gdouble)screen_y;
-
-    if (controls->preview) {
-
-    }
-    else if ((state & GDK_BUTTON1_MASK)
-             && controls->markers
-             && controls->can_change_marker) {
-        if (get_toggled(controls->button_remove))
-            return TRUE;
-        screen_to_dfield(&x, &y, controls);
-
-        if (controls->marker_selected) {
-            marker = controls->marker_selected;
-        }
-        else if (!get_toggled(controls->button_drag)) {
-            list = g_slist_last(controls->markers);
-            marker = list->data;
-        }
-        else {
-            return TRUE;
-        }
-
-        /* XOR the last cursor marker */
-        draw_marker(widget->window, marker, GDK_XOR, controls);
-
-        /* Update the marker dimensions */
-        if (marker->shape == MARKER_CIRCLE) {
-            backup_marker.radius = marker->radius;
-            backup_marker.x_center = marker->x_center;
-            backup_marker.y_center = marker->y_center;
-            if (state & GDK_SHIFT_MASK) {
-                marker->x_center = x;
-                marker->y_center = y;
-                calc_circle_box(marker);
-            } else {
-                radius_x = ABS(x - marker->x_center);
-                radius_y = ABS(y - marker->y_center);
-                marker->radius = (radius_x > radius_y) ? radius_x : radius_y;
-                calc_circle_box(marker);
-            }
-
-            /* Constrain marker to stay within window */
-            constrain = marker->left < 0 || marker->right >= controls->xres ||
-                        marker->top < 0 || marker->bottom >= controls->xres;
-            if (constrain) {
-                marker->radius = backup_marker.radius;
-                marker->x_center = backup_marker.x_center;
-                marker->y_center = backup_marker.y_center;
-                calc_circle_box(marker);
-            }
-
-        }
-        else {
-
-            if (state & GDK_SHIFT_MASK) {
-                width = marker->right - marker->left;
-                height = marker->bottom - marker->top;
-                marker->right = x;
-                marker->bottom = y;
-                marker->left = x - width;
-                marker->top = y - height;
-            } else {
-                marker->right = x;
-                marker->bottom = y;
-            }
-
-            /* Constrain marker to stay within window */
-            if (marker->right < 0)
-                marker->right = 0;
-            if (marker->right >= controls->xres)
-                marker->right = controls->xres - 1;
-            if (marker->bottom < 0)
-                marker->bottom = 0;
-            if (marker->bottom >= controls->xres)
-                marker->bottom = controls->xres - 1;
-        }
-
-        /* XOR the new cursor marker */
-        draw_marker(widget->window, marker, GDK_XOR, controls);
-        controls->preview_invalid = TRUE;
-    }
-
-    return TRUE;
-}
-
 static void
 scale_changed_fft(GtkRange *range, ControlsType *controls)
-{
+{/*
     GwyGradient *gradient_fft;
     GwyDataField *dfield;
     gdouble value;
@@ -1468,95 +770,25 @@ scale_changed_fft(GtkRange *range, ControlsType *controls)
     controls->preview_invalid = TRUE;
     gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
                                PREVIEW_SIZE, PREVIEW_SIZE);
+ */
 }
 
 static void
 remove_all_clicked(ControlsType *controls)
 {
-    GSList *list;
 
-    list = controls->markers;
-    while (list) {
-        g_free(list->data);
-        list = g_slist_next(list);
-    }
-    g_slist_free(controls->markers);
-    controls->markers = NULL;
-    controls->preview_invalid = TRUE;
-    set_toggled(controls->button_show_fft, TRUE);
-    gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                               PREVIEW_SIZE, PREVIEW_SIZE);
 }
 
 static void
 display_mode_changed(ControlsType *controls)
 {
-    GwyDataField *dfield;
-    GwyContainer *cont_diff;
-    GwyDataField *data_diff;
-    GwyGradient *gradient;
-    GwyGradient *gradient_fft;
-    const guchar *gradient_name = NULL;
-    gdouble min, max;
 
-    if (get_toggled(controls->button_show_fft)) {
-        controls->preview = FALSE;
-        gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                                   PREVIEW_SIZE, PREVIEW_SIZE);
-    } else {
-        if (controls->preview_invalid) {
-            /* Run the 2d fft filter on the original data */
-            dfield = get_container_data(controls->cont_data);
-            fft_filter_2d(dfield, controls->data_output_image,
-                          controls->data_output_fft,
-                          controls->markers);
-
-            /* Paint the filtered image output into preview pixbuf */
-            gwy_container_gis_string_by_name(controls->cont_data,
-                                             "/0/base/palette",
-                                             &gradient_name);
-            if (gradient_name == NULL)
-                gradient_name = GWY_GRADIENT_DEFAULT;
-            gradient = gwy_gradients_get_gradient(gradient_name);
-            gwy_pixbuf_draw_data_field(controls->buf_preview_image,
-                                       controls->data_output_image,
-                                       gradient);
-
-            /* Paint the filtered fft output into preview pixbuf */
-            gradient_fft = gwy_gradients_get_gradient("DFit");
-            min = gwy_data_field_get_min(controls->data_output_fft);
-            max = controls->color_range;
-            gwy_pixbuf_draw_data_field_with_range(controls->buf_preview_fft,
-                                                  controls->data_output_fft,
-                                                  gradient_fft,
-                                                  min, max);
-
-            /* Calculate the difference between original image, and filtered
-               image, and paint it into preview pixbuf */
-            cont_diff = gwy_container_duplicate_by_prefix(controls->cont_data,
-                                                          "/0/data", NULL);
-            data_diff = get_container_data(cont_diff);
-            gwy_data_field_subtract_fields(data_diff,
-                                           controls->data_output_image,
-                                           data_diff);
-            gwy_pixbuf_draw_data_field(controls->buf_preview_diff,
-                                       data_diff,
-                                       gradient);
-            g_object_unref(cont_diff);
-        }
-
-        controls->preview = TRUE;
-        controls->preview_invalid = FALSE;
-        gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                                   PREVIEW_SIZE, PREVIEW_SIZE);
-    }
 }
 
 static void
 zoom_toggled(ControlsType *controls)
 {
-    gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                               PREVIEW_SIZE, PREVIEW_SIZE);
+
 }
 
 static void
@@ -1568,6 +800,8 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     gdouble *re_data, *im_data, *target_data;
 
     xres = gwy_data_field_get_xres(re);
+
+    g_debug("Xres: %i", xres);
 
     re_data = gwy_data_field_get_data(re);
     im_data = gwy_data_field_get_data(im);
@@ -1590,20 +824,25 @@ do_fft(GwyDataField *data_input, GwyDataField *data_output)
     GwyTransformDirection direction = GWY_TRANSFORM_DIRECTION_FORWARD;
     GwyInterpolationType interp = GWY_INTERPOLATION_BILINEAR;
 
-    i_in = GWY_DATA_FIELD(gwy_data_field_new_alike(data_input, TRUE));
-    r_out = GWY_DATA_FIELD(gwy_data_field_new_alike(data_input, TRUE));
-    i_out = GWY_DATA_FIELD(gwy_data_field_new_alike(data_input, TRUE));
+    i_in = gwy_data_field_new_alike(data_input, TRUE);
+    r_out = gwy_data_field_new_alike(data_input, TRUE);
+    i_out = gwy_data_field_new_alike(data_input, TRUE);
+
+    g_debug("Data Fields Created");
 
     gwy_data_field_2dfft(data_input, i_in, r_out, i_out,
                          window, direction, interp, FALSE, FALSE);
-    /*//
-    gwy_data_field_2dfft(data_input, i_in, r_out, i_out, gwy_data_line_fft_hum,
-                         window, 1, interp, 0, 0);
-    */
+
+    g_debug("FFT Completed");
+
     gwy_data_field_2dfft_humanize(r_out);
     gwy_data_field_2dfft_humanize(i_out);
 
+    g_debug("Data is Humanized");
+
     set_dfield_modulus(r_out, i_out, data_output);
+
+    g_debug("Get Data Worked");
 
     g_object_unref(i_out);
     g_object_unref(r_out);
@@ -1614,134 +853,7 @@ static void
 fft_filter_2d(GwyDataField *input, GwyDataField *output_image,
               GwyDataField *output_fft, GSList *markers)
 {
-    GwyDataField *r_in, *i_in, *r_out, *i_out;
-    GwyDataField *mask;
-    MarkerType marker_a, marker_b, *marker;
-    gint fill_bit;
-    gint xres;
-    GSList *list;
 
-    /* Prepare the mask dfield */
-    xres = gwy_data_field_get_xres(input);
-    mask = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
-    /* Check to see if there are any inclusive markers.
-       If there are, the mask should be 0's by default.
-       If there are not, it should be 1's by default    */
-    list = markers;
-    if (g_slist_length(list) > 0) {
-        marker = list->data;
-        if (!marker->inclusive)
-            gwy_data_field_fill(mask, 1.0);
-    }
-    else
-        gwy_data_field_fill(mask, 1.0);
-    /* Draw the markers onto the mask */
-    list = markers;
-    while (list) {
-        marker = list->data;
-
-        if (marker->inclusive)
-            fill_bit = 1;
-        else
-            fill_bit = 0;
-
-        if (marker->shape == MARKER_CIRCLE) {
-            marker_a.radius = marker->radius;
-            marker_a.x_center = marker->x_center;
-            marker_a.y_center = marker->y_center;
-
-            marker_b.radius = marker_a.radius;
-            marker_b.x_center = -marker_a.x_center + xres;
-            marker_b.y_center = -marker_a.y_center + xres;
-
-            marker_a.left = marker_a.x_center - marker_a.radius;
-            marker_a.right = marker_a.x_center + marker_a.radius;
-            marker_a.top = marker_a.y_center - marker_a.radius;
-            marker_a.bottom = marker_a.y_center + marker_a.radius;
-
-            marker_b.left = marker_b.x_center - marker_b.radius;
-            marker_b.right = marker_b.x_center + marker_b.radius;
-            marker_b.top = marker_b.y_center - marker_b.radius;
-            marker_b.bottom = marker_b.y_center + marker_b.radius;
-
-            gwy_data_field_elliptic_area_fill(mask, marker_a.left, marker_a.top,
-                                              marker_a.right - marker_a.left,
-                                              marker_a.bottom - marker_a.top,
-                                              fill_bit);
-            gwy_data_field_elliptic_area_fill(mask, marker_b.left, marker_b.top,
-                                              marker_a.right - marker_a.left,
-                                              marker_a.bottom - marker_a.top,
-                                              fill_bit);
-        } else {
-            marker_a.left = marker->left;
-            marker_a.right = marker->right;
-            marker_a.top = marker->top;
-            marker_a.bottom = marker->bottom;
-
-            marker_b.left = -marker_a.left + xres;
-            marker_b.right = -marker_a.right + xres;
-            marker_b.top = -marker_a.top + xres;
-            marker_b.bottom = -marker_a.bottom + xres;
-
-            gwy_data_field_area_fill(mask, marker_a.left, marker_a.top,
-                                     marker_a.right - marker_a.left,
-                                     marker_a.bottom - marker_a.top,
-                                     fill_bit);
-            gwy_data_field_area_fill(mask, marker_b.left, marker_b.top,
-                                     marker_b.right - marker_b.left,
-                                     marker_b.bottom - marker_b.top,
-                                     fill_bit);
-        }
-
-        list = g_slist_next(list);
-    }
-
-    /* Run the forward FFT */
-    r_in = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
-    i_in = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
-    r_out = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
-    i_out = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
-    gwy_data_field_copy(input, r_in, TRUE);
-    gwy_data_field_2dfft(r_in, i_in, r_out, i_out,
-                         GWY_WINDOWING_NONE,
-                         GWY_TRANSFORM_DIRECTION_FORWARD,
-                         GWY_INTERPOLATION_BILINEAR,
-                         FALSE, FALSE);
-    /*//
-    gwy_data_field_2dfft(r_in, i_in, r_out, i_out, gwy_data_line_fft_hum,
-                         window, 1, interp, 0, 0);
-    */
-    gwy_data_field_2dfft_humanize(r_out);
-    gwy_data_field_2dfft_humanize(i_out);
-    if (output_fft != NULL)
-       set_dfield_modulus(r_out, i_out, output_fft);
-
-    /* Apply mask to the fft */
-    gwy_data_field_multiply_fields(r_out, r_out, mask);
-    gwy_data_field_multiply_fields(i_out, i_out, mask);
-    if (output_fft != NULL)
-        gwy_data_field_multiply_fields(output_fft, output_fft, mask);
-
-    /* Run the inverse FFT */
-    gwy_data_field_2dfft_humanize(r_out);
-    gwy_data_field_2dfft_humanize(i_out);
-    gwy_data_field_2dfft(r_out, i_out, r_in, i_in,
-                         GWY_WINDOWING_NONE,
-                         GWY_TRANSFORM_DIRECTION_BACKWARD,
-                         GWY_INTERPOLATION_BILINEAR,
-                         FALSE, FALSE);
-    /*//
-    gwy_data_field_2dfft(r_out, i_out, r_in, i_in, gwy_data_line_fft_hum,
-                         window, -1, interp, 0, 0);
-    */
-    if (output_image != NULL)
-        gwy_data_field_copy(r_in, output_image, TRUE);
-
-    /* Finalize */
-    g_object_unref(i_out);
-    g_object_unref(r_out);
-    g_object_unref(i_in);
-    g_object_unref(r_in);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
