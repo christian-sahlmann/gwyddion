@@ -994,6 +994,7 @@ rawfile_read_data_field(GtkWidget *parent,
                         RawFileFile *file)
 {
     GwyDataField *dfield = NULL;
+    GwySIUnit *siunit;
     GError *err = NULL;
     guint reqsize;
     gdouble m;
@@ -1005,11 +1006,18 @@ rawfile_read_data_field(GtkWidget *parent,
     }
 
     m = pow10(args->p.xyexponent);
+    dfield = gwy_data_field_new(args->p.xres, args->p.yres,
+                                m*args->p.xreal, m*args->p.yreal,
+                                FALSE);
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+    siunit = gwy_si_unit_duplicate(siunit);
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
     switch (args->p.format) {
         case RAW_BINARY:
-        dfield = gwy_data_field_new(args->p.xres, args->p.yres,
-                                    m*args->p.xreal, m*args->p.yreal,
-                                    FALSE);
         if (args->p.builtin)
             rawfile_read_builtin(args, file->buffer,
                                  gwy_data_field_get_data(dfield));
@@ -1019,9 +1027,6 @@ rawfile_read_data_field(GtkWidget *parent,
         break;
 
         case RAW_TEXT:
-        dfield = gwy_data_field_new(args->p.xres, args->p.yres,
-                                    m*args->p.xreal, m*args->p.yreal,
-                                    FALSE);
         if (!rawfile_read_ascii(args, file->buffer,
                                 gwy_data_field_get_data(dfield), &err)) {
             rawfile_warn_parse_error(parent, file, err);
