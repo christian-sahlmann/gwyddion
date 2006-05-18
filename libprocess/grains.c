@@ -633,12 +633,13 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     zunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(distribution);
     switch (quantity) {
-        case GWY_GRAIN_VALUE_AREA:
+        case GWY_GRAIN_VALUE_PROJECTED_AREA:
         gwy_si_unit_power(xyunit, 2, lineunit);
         break;
 
         case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
         case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
+        case GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH:
         gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lineunit));
         break;
 
@@ -698,8 +699,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
     const gdouble *data;
     gdouble *tmp;
     gint *sizes, *pos;
-    gdouble q;
-    gint i, j, nn;
+    gdouble q, qh, qv;
+    gint xres, yres, i, j, nn;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     g_return_val_if_fail(grains, NULL);
@@ -707,11 +708,13 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
     if (!values)
         values = g_new(gdouble, ngrains + 1);
 
-    nn = data_field->xres*data_field->yres;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    nn = xres*yres;
     gwy_debug("ngrains: %d, nn: %d", ngrains, nn);
     data = data_field->data;
     switch (quantity) {
-        case GWY_GRAIN_VALUE_AREA:
+        case GWY_GRAIN_VALUE_PROJECTED_AREA:
         case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
         case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
         /* Find sizes */
@@ -722,7 +725,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         q = gwy_data_field_get_xmeasure(data_field)
             *gwy_data_field_get_ymeasure(data_field);
         switch (quantity) {
-            case GWY_GRAIN_VALUE_AREA:
+            case GWY_GRAIN_VALUE_PROJECTED_AREA:
             for (i = 0; i <= ngrains; i++)
                 values[i] = q*sizes[i];
             break;
@@ -800,6 +803,50 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         /* Finalize */
         g_free(sizes);
         g_free(tmp);
+        break;
+
+        case GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH:
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        qh = gwy_data_field_get_xmeasure(data_field);
+        qv = gwy_data_field_get_ymeasure(data_field);
+        q = hypot(qh, qv);
+        for (i = 0; i <= yres; i++) {
+            for (j = 0; j <= xres; j++) {
+                gint g1, g2, g3, g4, f;
+
+                /* Hope compiler will optimize this mess... */
+                g1 = (i > 0 && j > 0) ? grains[i*xres + j - xres - 1] : 0;
+                g2 = (i > 0 && j < xres) ? grains[i*xres + j - xres] : 0;
+                g3 = (i < yres && j > 0) ? grains[i*xres + j - 1] : 0;
+                g4 = (i < yres && j < xres) ? grains[i*xres + j] : 0;
+                f = (g1 > 0) + (g2 > 0) + (g3 > 0) + (g4 > 0);
+                if (f == 0 || f == 4)
+                    continue;
+
+                if (f == 1 || f == 3) {
+                    /* Try to avoid too many if-thens by using the fact they
+                     * are all either zero or an identical value */
+                    values[g1 | g2 | g3 | g4] += q/2.0;
+                }
+                else if (g1 && g4) {
+                    /* This works for both g1 == g4 and g1 != g4 */
+                    values[g1] += q/2.0;
+                    values[g4] += q/2.0;
+                }
+                else if (g2 && g3) {
+                    /* This works for both g2 == g3 and g2 != g3 */
+                    values[g1] += q/2.0;
+                    values[g4] += q/2.0;
+                }
+                else if (g1 == g2)
+                    values[g1 | g3] += qh;
+                else if (g1 == g3)
+                    values[g1 | g2] += qv;
+                else {
+                    g_assert_not_reached();
+                }
+            }
+        }
         break;
 
         default:
@@ -1583,51 +1630,6 @@ gwy_data_field_fill_one_grain(gint xres,
 
     return count;
 }
-
-/* XXX: Move the descriptions to a gtk-doc comment once it becomes public
- * again. */
-#if 0
-typedef enum {
-    GWY_GRAIN_VALUE_AREA                  = 0, /*grain projection area*/
-    GWY_GRAIN_VALUE_PERIMETER             = 1, /*grain projection perimeter*/
-    GWY_GRAIN_VALUE_AREA_RADIUS           = 2, /*projection area equivalent circle radius*/
-    GWY_GRAIN_VALUE_PERIMETER_RADIUS      = 3, /*projection perimeter equivalent circle radius*/
-    GWY_GRAIN_VALUE_MAX_Z                 = 4, /*maximum height above terrain*/
-    GWY_GRAIN_VALUE_MIN_Z                 = 5, /*minimum height below terrain*/
-    GWY_GRAIN_VALUE_VOLUME                = 6, /*volume above terrain*/
-    GWY_GRAIN_VALUE_SURFACE               = 7, /*surface above terrain*/
-    GWY_GRAIN_VALUE_MIN_BOUND             = 8, /*minimum one-directional bounding size (in any direction)*/
-    GWY_GRAIN_VALUE_MAX_BOUND             = 9, /*maximum one-directional bounding size (in any direction)*/
-    GWY_GRAIN_VALUE_MIN_BOUND_DIRECTION   = 10, /*minimum one-directional bounding direction*/
-    GWY_GRAIN_VALUE_MAX_BOUND_DIRECTION   = 11, /*maximum one-directional bounding direction*/
-    GWY_GRAIN_VALUE_MINMAX_DIFF           = 12, /*GWY_GRAIN_VALUE_MAX_BOUND - GWY_GRAIN_VALUE_MIN_BOUND*/
-    GWY_GRAIN_VALUE_MINMAX_DIFF_DIRECTION = 13  /*angle betwen minimum and maximum bound directions*/
-} GwyGrainValueType;
-
-gdouble
-gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
-                                           GwyDataField *grain_field,
-                                           gint col,
-                                           gint row,
-                                           GwyGrainValueType type)
-{
-    gint nindices, *indices;
-    gdouble pixel_to_area = data_field->xreal/data_field->xres
-                           *data_field->yreal/data_field->yres;
-
-    indices = gwy_data_field_fill_grain(grain_field, col, row, &nindices);
-
-    switch (type) {
-        case GWY_GRAIN_VALUE_AREA:
-        g_free(indices);
-        return (gdouble)(nindices)*pixel_to_area;
-
-        case GWY_GRAIN_VALUE_AREA_RADIUS:
-        g_free(indices);
-        return sqrt((gdouble)(nindices)*pixel_to_area/G_PI);
-     }
-}
-#endif
 
 /************************** Documentation ****************************/
 

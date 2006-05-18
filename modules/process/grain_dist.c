@@ -176,7 +176,7 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     grains = g_new0(gint, xres*yres);
     ngrains = gwy_data_field_number_grains(mfield, grains);
     sizes = gwy_data_field_grains_get_values(dfield, NULL, ngrains, grains,
-                                             GWY_GRAIN_VALUE_AREA);
+                                             GWY_GRAIN_VALUE_PROJECTED_AREA);
     g_free(grains);
     size = area = 0.0;
     for (i = 1; i <= ngrains; i++) {

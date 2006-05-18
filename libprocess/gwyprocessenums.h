@@ -142,13 +142,14 @@ typedef enum {
 } GwyCorrelationType;
 
 typedef enum {
-    GWY_GRAIN_VALUE_AREA              = 0,
-    GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE = 1,
-    GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS = 2,
-    GWY_GRAIN_VALUE_MAXIMUM           = 3,
-    GWY_GRAIN_VALUE_MINIMUM           = 4,
-    GWY_GRAIN_VALUE_MEAN              = 5,
-    GWY_GRAIN_VALUE_MEDIAN            = 6
+    GWY_GRAIN_VALUE_PROJECTED_AREA       = 0,
+    GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE    = 1,
+    GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS    = 2,
+    GWY_GRAIN_VALUE_MAXIMUM              = 3,
+    GWY_GRAIN_VALUE_MINIMUM              = 4,
+    GWY_GRAIN_VALUE_MEAN                 = 5,
+    GWY_GRAIN_VALUE_MEDIAN               = 6,
+    GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH = 7
 } GwyGrainValueType;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
