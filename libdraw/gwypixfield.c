@@ -230,7 +230,7 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
 void
 gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
                                    GwyDataField *data_field,
-                                   GwyRGBA *color)
+                                   const GwyRGBA *color)
 {
     int xres, yres, i, j, rowstride;
     guchar *pixels, *line;

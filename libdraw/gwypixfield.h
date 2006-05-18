@@ -38,6 +38,6 @@ void gwy_pixbuf_draw_data_field_adaptive   (GdkPixbuf *pixbuf,
                                             GwyGradient *gradient);
 void gwy_pixbuf_draw_data_field_as_mask    (GdkPixbuf *pixbuf,
                                             GwyDataField *data_field,
-                                            GwyRGBA *color);
+                                            const GwyRGBA *color);
 
 #endif /*__GWY_PIXFIELD__*/
