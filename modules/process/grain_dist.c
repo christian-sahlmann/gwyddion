@@ -170,8 +170,8 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 
     xres = gwy_data_field_get_xres(mfield);
     yres = gwy_data_field_get_yres(mfield);
-    total_area = gwy_data_field_get_xreal(mfield)
-                 *gwy_data_field_get_yreal(mfield);
+    total_area = gwy_data_field_get_xreal(dfield)
+                 *gwy_data_field_get_yreal(dfield);
 
     grains = g_new0(gint, xres*yres);
     ngrains = gwy_data_field_number_grains(mfield, grains);
@@ -183,8 +183,6 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
         area += sizes[i];
         size += sqrt(sizes[i]);
     }
-    area /= ngrains;
-    size /= ngrains;
     g_free(sizes);
 
     dialog = gtk_dialog_new_with_buttons(_("Grain Statistics"), NULL, 0,
@@ -209,7 +207,7 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
                      GTK_FILL, 0, 2, 2);
     row++;
 
-    siunit = gwy_data_field_get_si_unit_xy(mfield);
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
     siunit2 = gwy_si_unit_power(siunit, 2, NULL);
 
     label = gtk_label_new(_("Total projected area (abs.):"));
