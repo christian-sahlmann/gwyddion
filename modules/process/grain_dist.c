@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2006",
 };
@@ -66,7 +66,7 @@ module_register(void)
                               GWY_STOCK_GRAINS_GRAPH,
                               DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
-                              N_("Calculate grain height distribution"));
+                              N_("Calculate median grain height distribution"));
     gwy_process_func_register("grain_stat",
                               (GwyProcessFunc)&grain_stat,
                               N_("/_Grains/S_tatistics"),
@@ -84,14 +84,18 @@ grain_size_dist(GwyContainer *data, GwyRunType run)
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *dataline;
-    GwyDataField *mfield;
+    GwyDataField *dfield, *mfield;
 
     g_return_if_fail(run & DIST_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield);
     g_return_if_fail(mfield);
 
-    dataline = gwy_data_line_new(10, 10, TRUE);
-    gwy_data_field_grains_get_size_distribution(mfield, dataline);
+    dataline = gwy_data_field_grains_get_distribution
+                                        (dfield, mfield, NULL, 0, NULL,
+                                         GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, 0);
 
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
@@ -124,9 +128,9 @@ grain_height_dist(GwyContainer *data, GwyRunType run)
     g_return_if_fail(dfield);
     g_return_if_fail(mfield);
 
-    /*  height distribution  */
-    dataline = gwy_data_line_new(10, 10, TRUE);
-    gwy_data_field_grains_get_height_distribution(dfield, mfield, dataline);
+    dataline = gwy_data_field_grains_get_distribution
+                                                (dfield, mfield, NULL, 0, NULL,
+                                                 GWY_GRAIN_VALUE_MEDIAN, 0);
 
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
@@ -147,29 +151,41 @@ static void
 grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog, *table, *label;
-    GwyDataField *mfield;
+    GwyDataField *dfield, *mfield;
     GwySIUnit *siunit, *siunit2;
     GwySIValueFormat *vf;
-    gint i, xres, yres, ngrains, npix;
-    gdouble area, v;
-    GString *str;
+    gint i, xres, yres, ngrains;
+    gdouble total_area, area, v, size;
+    gdouble *sizes;
     gint *grains;
+    GString *str;
     gint row;
 
     g_return_if_fail(run & STAT_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &mfield, 0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     0);
+    g_return_if_fail(dfield);
     g_return_if_fail(mfield);
 
     xres = gwy_data_field_get_xres(mfield);
     yres = gwy_data_field_get_yres(mfield);
-    area = gwy_data_field_get_xreal(mfield)*gwy_data_field_get_yreal(mfield);
-    grains = g_new0(gint, xres*yres);
+    total_area = gwy_data_field_get_xreal(mfield)
+                 *gwy_data_field_get_yreal(mfield);
 
+    grains = g_new0(gint, xres*yres);
     ngrains = gwy_data_field_number_grains(mfield, grains);
-    npix = 0;
-    for (i = 0; i < xres*yres; i++)
-        npix += (grains[i] != 0);
+    sizes = gwy_data_field_grains_get_values(dfield, NULL, ngrains, grains,
+                                             GWY_GRAIN_VALUE_AREA);
     g_free(grains);
+    size = area = 0.0;
+    for (i = 1; i <= ngrains; i++) {
+        area += sizes[i];
+        size += sqrt(sizes[i]);
+    }
+    area /= ngrains;
+    size /= ngrains;
+    g_free(sizes);
 
     dialog = gtk_dialog_new_with_buttons(_("Grain Statistics"), NULL, 0,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
@@ -200,7 +216,7 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
-    v = npix*area/(xres*yres);
+    v = area;
     vf = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, NULL);
     g_string_printf(str, "%.*f %s",
                     vf->precision, v/vf->magnitude, vf->units);
@@ -215,7 +231,7 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
-    g_string_printf(str, "%.2f %%", 100.0*npix/(xres*yres));
+    g_string_printf(str, "%.2f %%", 100.0*area/total_area);
     label = gtk_label_new(str->str);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
@@ -226,7 +242,7 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
-    v = npix*area/(ngrains*xres*yres);
+    v = area/ngrains;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s",
                     vf->precision, v/vf->magnitude, vf->units);
@@ -241,7 +257,7 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
-    v = sqrt(npix*area/(ngrains*xres*yres));
+    v = size/ngrains;
     gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s",
                     vf->precision, v/vf->magnitude, vf->units);

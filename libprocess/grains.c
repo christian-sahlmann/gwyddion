@@ -24,6 +24,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/linestats.h>
 #include <libprocess/filters.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
@@ -527,158 +528,287 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 
 /**
  * gwy_data_field_grains_get_size_distribution:
- * @grain_field: Data field of marked grains (mask).
- * @distribution: Grain size distribution.
+ * @data_field: Data field used for marking.  For some quantities its values
+ *              are not used, but units and physical dimensions are always
+ *              taken from it.
+ * @grain_field: Data field (mask) of marked grains.  Note if you pass
+ *               non-%NULL @grains all grain information is taken from it and
+ *               @grain_field can be even %NULL then.
+ * @distribution: Data line to store grain distribution to.
+ * @grains: Grain numbers filled with gwy_data_field_number_grains() if you
+ *          have it, or %NULL (the function then finds grain numbers itself
+ *          which is not efficient for repeated use on the same grain field).
+ * @ngrains: The number of grains as returned by
+ *           gwy_data_field_number_grains().  Ignored in @grains is %NULL.
+ * @quantity: The quantity to calculate.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
  *
- * Computes grain size distribution.
+ * Computes distribution of requested grain characteristics.
  *
- * Puts number of grains vs. grain size (in real units) data into
- * @distribution.  Grain size means grain side if it was square.
+ * Puts number of grains vs. grain value data into @distribution, units, scales
+ * and offsets of @distribution are updated accordingly.
+ *
+ * Returns: A data line with the distribution: @distribution itself if it was
+ *          not %NULL, otherwise a newly created #GwyDataLine caller must
+ *          destroy.  If there are no grains, %NULL is returned and
+ *          @distribution is not changed.
  **/
-void
-gwy_data_field_grains_get_size_distribution(GwyDataField *grain_field,
-                                            GwyDataLine *distribution)
+GwyDataLine*
+gwy_data_field_grains_get_distribution(GwyDataField *data_field,
+                                       GwyDataField *grain_field,
+                                       GwyDataLine *distribution,
+                                       gint ngrains,
+                                       const gint *grains,
+                                       GwyGrainValueType quantity,
+                                       gint nstats)
 {
-    GwySIUnit *fieldunit, *lineunit;
-    gint i, xres, yres, ngrains, nhist;
-    gint maxpnt;
-    gint *grain_size;
-    gint *grains;
-    gdouble s, sigma;
+    GwyDataLine *values;
+    GwySIUnit *xyunit, *zunit, *lineunit;
+    gint i, j;
+    gint *mygrains = NULL;
+    gdouble min, max, s;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), FALSE);
+    g_return_val_if_fail(grains || GWY_IS_DATA_FIELD(grain_field), FALSE);
+    g_return_val_if_fail(!grain_field
+                         || (grain_field->xres == data_field->xres
+                             && grain_field->yres == data_field->yres), FALSE);
+    g_return_val_if_fail(!distribution || GWY_IS_DATA_LINE(distribution),
+                         FALSE);
 
-    xres = grain_field->xres;
-    yres = grain_field->yres;
-
-    grains = g_new0(gint, xres*yres);
-    ngrains = gwy_data_field_number_grains(grain_field, grains);
+    /* Calculate raw statistics */
+    if (!grains) {
+        grains = mygrains = g_new0(gint, grain_field->xres*grain_field->yres);
+        ngrains = gwy_data_field_number_grains(grain_field, mygrains);
+    }
     if (!ngrains) {
-        gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
+        g_free(mygrains);
+        return NULL;
+    }
+
+    values = gwy_data_line_new(ngrains + 1, 1.0, FALSE);
+    gwy_data_field_grains_get_values(data_field, values->data,
+                                     ngrains, grains, quantity);
+    g_free(mygrains);
+
+    /* Find reasonable binning */
+    min = gwy_data_line_part_get_min(values, 1, ngrains + 1);
+    max = gwy_data_line_part_get_max(values, 1, ngrains + 1);
+    if (min > 0.0 && min < 0.1*max)
+        min = 0.0;
+    if (nstats < 1) {
+        nstats = floor(3.49*cbrt(ngrains) + 0.5);
+        nstats = MAX(nstats, 2);
+    }
+    gwy_debug("min: %g, max: %g, nstats: %d", min, max, nstats);
+    s = (max - min)/(nstats - 1e-9);
+
+    /* Fill histogram */
+    if (distribution) {
+        gwy_data_line_resample(distribution, nstats, GWY_INTERPOLATION_NONE);
         gwy_data_line_clear(distribution);
-        gwy_data_line_set_real(distribution, xres);
-        return;
     }
-
-    /* sum grain sizes */
-    grain_size = g_new0(gint, ngrains + 1);
-    for (i = 0; i < xres*yres; i++)
-        grain_size[grains[i]]++;
-    g_free(grains);
-
-    maxpnt = 0;
-    s = sigma = 0.0;
-    for (i = 1; i <= ngrains; i++) {
-        if (maxpnt < grain_size[i])
-            maxpnt = grain_size[i];
-        s += sqrt(grain_size[i]);
-        sigma += grain_size[i];
-    }
-    sigma = sqrt(ngrains*sigma - s*s)/ngrains;
-    s = 2.49/cbrt(ngrains)*sigma;
-    nhist = sqrt(maxpnt)/s + 1;
-
-    gwy_data_line_resample(distribution, nhist, GWY_INTERPOLATION_NONE);
-    gwy_data_line_clear(distribution);
-    for (i = 1; i <= ngrains; i++)
-        distribution->data[(gint)(sqrt(grain_size[i])/s)] += 1;
-    g_free(grain_size);
-
-    gwy_data_line_set_real(distribution,
-                           gwy_data_field_itor(grain_field, sqrt(maxpnt)));
-
-    /* Set proper units */
-    fieldunit = gwy_data_field_get_si_unit_xy(grain_field);
-    lineunit = gwy_data_line_get_si_unit_x(distribution);
-    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
-    lineunit = gwy_data_line_get_si_unit_y(distribution);
-    gwy_si_unit_set_unit_string(lineunit, "");
-}
-
-/**
- * gwy_data_field_grains_get_height_distribution:
- * @data_field: Data to be used for marking.
- * @grain_field: Data field of marked grains (mask).
- * @distribution: Grain height distribution.
- *
- * Computes grain height distribution.
- *
- * Puts number of grains vs. grain height (in real units) data into
- * @distribution.
- **/
-void
-gwy_data_field_grains_get_height_distribution(GwyDataField *data_field,
-                                              GwyDataField *grain_field,
-                                              GwyDataLine *distribution)
-{
-    GwySIUnit *fieldunit, *lineunit;
-    gint i, j, xres, yres, ngrains, nhist;
-    gdouble *grain_height;
-    gint *grains;
-    gdouble s, sigma, min, max;
-
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
-
-    xres = grain_field->xres;
-    yres = grain_field->yres;
-
-    grains = g_new0(gint, xres*yres);
-    ngrains = gwy_data_field_number_grains(grain_field, grains);
-    if (!ngrains) {
-        gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
-        gwy_data_line_clear(distribution);
-        gwy_data_line_set_real(distribution, xres);
-        return;
-    }
-
-    /* calculate grain heights */
-    grain_height = g_new(gdouble, ngrains + 1);
-    for (i = 0; i < ngrains + 1; i++)
-        grain_height[i] = -G_MAXDOUBLE;
-
-    for (i = 0; i < xres*yres; i++) {
-        if (grains[i] && data_field->data[i] > grain_height[grains[i]]) {
-            grain_height[grains[i]] = data_field->data[i];
-        }
-    }
-    g_free(grains);
-
-    /* find the height range and sigma */
-    min = G_MAXDOUBLE;
-    max = -G_MAXDOUBLE;
-    s = sigma = 0.0;
-    for (i = 1; i <= ngrains; i++) {
-        if (G_UNLIKELY(grain_height[i] > max))
-            max = grain_height[i];
-        if (G_UNLIKELY(grain_height[i] < min))
-            min = grain_height[i];
-        s += grain_height[i];
-        sigma += grain_height[i] * grain_height[i];
-    }
-    sigma = sqrt(ngrains*sigma - s*s)/ngrains;
-    s = 2.49/cbrt(ngrains)*sigma;
-    nhist = (max - min)/s + 1;
-
-    gwy_data_line_resample(distribution, nhist, GWY_INTERPOLATION_NONE);
-    gwy_data_line_clear(distribution);
+    else
+        distribution = gwy_data_line_new(nstats, 1.0, TRUE);
 
     for (i = 1; i <= ngrains; i++) {
-        j = ROUND((grain_height[i] - min)/s);
-        j = GWY_CLAMP(j, 0, nhist - 1);
-        distribution->data[j] += 1;
+        j = (gint)((values->data[i] - min)/s);
+        j = GWY_CLAMP(j, 0, nstats-1);
+        distribution->data[j]++;
     }
-    g_free(grain_height);
+    g_object_unref(values);
 
+    /* Set proper units and scales */
+    if (max == min) {
+        if (max)
+            max += fabs(max - min);
+        else
+            max = 1.0;  /* whatever */
+    }
     gwy_data_line_set_real(distribution, max - min);
     gwy_data_line_set_offset(distribution, min);
 
-    /* Set proper units */
-    fieldunit = gwy_data_field_get_si_unit_z(data_field);
+    xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    zunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(distribution);
-    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    switch (quantity) {
+        case GWY_GRAIN_VALUE_AREA:
+        gwy_si_unit_power(xyunit, 2, lineunit);
+        break;
+
+        case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
+        case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
+        gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lineunit));
+        break;
+
+        case GWY_GRAIN_VALUE_MINIMUM:
+        case GWY_GRAIN_VALUE_MAXIMUM:
+        case GWY_GRAIN_VALUE_MEAN:
+        case GWY_GRAIN_VALUE_MEDIAN:
+        gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(lineunit));
+        break;
+
+        default:
+        g_warning("Wrong grain quantity %d", (gint)quantity);
+        break;
+    }
     lineunit = gwy_data_line_get_si_unit_y(distribution);
     gwy_si_unit_set_unit_string(lineunit, "");
+
+    return distribution;
+}
+
+/**
+ * gwy_data_field_grains_get_values:
+ * @data_field: Data field used for marking.  For some quantities its values
+ *              are not used, but its dimensions determine the dimensions of
+ *              @grains.
+ * @values: An array of size @ngrains+1 to put grain values to.  It can be
+ *          %NULL to allocate and return a new array.
+ * @grains: Grain numbers filled with gwy_data_field_number_grains().
+ * @ngrains: The number of grains as returned by
+ *           gwy_data_field_number_grains().
+ * @quantity: The quantity to calculate.
+ *
+ * Calculates characteristics of grains.
+ *
+ * This is a bit low-level function, see also
+ * gwy_data_field_grains_get_distribution().
+ *
+ * The array @values will be filled with the requested grain value for each
+ * individual grain (0th item of @values which do not correspond to any grain
+ * is overwritten with an arbitrary value and should be ignored).
+ *
+ * The grain numbers serve as indices in @values.  Therefore as long as the
+ * same @grains is used, the same position in @values corresponds to the same
+ * particular grain.  This enables one for instance to calculate grain sizes
+ * and grain heights and then correlate them.
+ *
+ * Returns: @values itself if it was not %NULL, otherwise a newly allocated
+ *          array that caller has to free.
+ **/
+gdouble*
+gwy_data_field_grains_get_values(GwyDataField *data_field,
+                                 gdouble *values,
+                                 gint ngrains,
+                                 const gint *grains,
+                                 GwyGrainValueType quantity)
+{
+    const gdouble *data;
+    gdouble *tmp;
+    gint *sizes, *pos;
+    gdouble q;
+    gint i, j, nn;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(grains, NULL);
+
+    if (!values)
+        values = g_new(gdouble, ngrains + 1);
+
+    nn = data_field->xres*data_field->yres;
+    gwy_debug("ngrains: %d, nn: %d", ngrains, nn);
+    data = data_field->data;
+    switch (quantity) {
+        case GWY_GRAIN_VALUE_AREA:
+        case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
+        case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
+        /* Find sizes */
+        sizes = g_new0(gint, ngrains + 1);
+        for (i = 0; i < nn; i++)
+            sizes[grains[i]]++;
+        /* q is the area of one pixel */
+        q = gwy_data_field_get_xmeasure(data_field)
+            *gwy_data_field_get_ymeasure(data_field);
+        switch (quantity) {
+            case GWY_GRAIN_VALUE_AREA:
+            for (i = 0; i <= ngrains; i++)
+                values[i] = q*sizes[i];
+            break;
+
+            case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
+            q /= G_PI;
+            case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
+            for (i = 0; i <= ngrains; i++)
+                values[i] = sqrt(q*sizes[i]);
+            break;
+
+            default:
+            /* Die, die, GCC! */
+            break;
+        }
+        g_free(sizes);
+        break;
+
+        case GWY_GRAIN_VALUE_MINIMUM:
+        for (i = 0; i <= ngrains; i++)
+            values[i] = G_MAXDOUBLE;
+        for (i = 0; i < nn; i++) {
+            if (data[i] < values[grains[i]])
+                values[grains[i]] = data[i];
+        }
+        break;
+
+        case GWY_GRAIN_VALUE_MAXIMUM:
+        for (i = 0; i <= ngrains; i++)
+            values[i] = -G_MAXDOUBLE;
+        for (i = 0; i < nn; i++) {
+            if (data[i] > values[grains[i]])
+                values[grains[i]] = data[i];
+        }
+        break;
+
+        case GWY_GRAIN_VALUE_MEAN:
+        sizes = g_new0(gint, ngrains + 1);
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        for (i = 0; i < nn; i++) {
+            values[grains[i]] += data[i];
+            sizes[grains[i]]++;
+        }
+        for (i = 0; i <= ngrains; i++)
+            values[i] /= sizes[i];
+        g_free(sizes);
+        break;
+
+        case GWY_GRAIN_VALUE_MEDIAN:
+        /* Find sizes */
+        sizes = g_new0(gint, 2*(ngrains + 1));
+        pos = sizes + ngrains+1;
+        for (i = 0; i < nn; i++)
+            sizes[grains[i]]++;
+        /* Find cumulative sizes (we care only about grains, ignore the
+         * outside-grains area) */
+        for (i = 2; i <= ngrains; i++)
+            sizes[i] += sizes[i-1];
+        sizes[0] = 0;
+        tmp = g_new(gdouble, sizes[ngrains]);
+        /* Find where each grain starts in tmp sorted by grain # */
+        for (i = 1; i <= ngrains; i++)
+            pos[i] = sizes[i-1];
+        /* Sort values by grain # to tmp */
+        for (i = 0; i < nn; i++) {
+            if ((j = grains[i])) {
+                tmp[pos[j]] = data[i];
+                pos[j]++;
+            }
+        }
+        /* Find medians of each block */
+        for (i = 1; i <= ngrains; i++)
+            values[i] = gwy_math_median(sizes[i] - sizes[i-1],
+                                        tmp + sizes[i-1]);
+        /* Finalize */
+        g_free(sizes);
+        g_free(tmp);
+        break;
+
+        default:
+        g_warning("Wrong grain quantity %d", (gint)quantity);
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        break;
+    }
+
+    return values;
 }
 
 /**

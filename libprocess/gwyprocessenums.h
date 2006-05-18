@@ -141,6 +141,15 @@ typedef enum {
     GWY_CORRELATION_POC     = 2
 } GwyCorrelationType;
 
+typedef enum {
+    GWY_GRAIN_VALUE_AREA              = 0,
+    GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE = 1,
+    GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS = 2,
+    GWY_GRAIN_VALUE_MAXIMUM           = 3,
+    GWY_GRAIN_VALUE_MINIMUM           = 4,
+    GWY_GRAIN_VALUE_MEAN              = 5,
+    GWY_GRAIN_VALUE_MEDIAN            = 6
+} GwyGrainValueType;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;

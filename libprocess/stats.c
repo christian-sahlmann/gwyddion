@@ -1029,6 +1029,15 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
  * @above may be larger than @below.  To count samples in an open interval
  * instead of a closed interval, exchange @below and @above and then subtract
  * the @nabove and @nbelow from @width*@height to get the complementary counts.
+ *
+ * With this trick the common task of counting positive values can be
+ * realized:
+ * <informalexample><programlisting>
+ * gwy_data_field_area_count_in_range(data_field, NULL,
+ *                                    col, row, width, height,
+ *                                    0.0, 0.0, &count, NULL);
+ * count = width*height - count;
+ * </programlisting></informalexample>
  **/
 void
 gwy_data_field_area_count_in_range(GwyDataField *data_field,

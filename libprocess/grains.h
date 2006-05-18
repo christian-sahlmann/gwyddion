@@ -86,13 +86,6 @@ void gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                       gdouble threshval,
                                       gboolean below);
 
-void gwy_data_field_grains_get_size_distribution(GwyDataField *grain_field,
-                                                 GwyDataLine *distribution);
-
-void gwy_data_field_grains_get_height_distribution(GwyDataField *data_field,
-                                                   GwyDataField *grain_field,
-                                                   GwyDataLine *distribution);
-
 void gwy_data_field_grains_add(GwyDataField *grain_field,
                               GwyDataField *add_field);
 
@@ -101,6 +94,20 @@ void gwy_data_field_grains_intersect(GwyDataField *grain_field,
 
 gint gwy_data_field_number_grains(GwyDataField *mask_field,
                                   gint *grains);
+
+GwyDataLine* gwy_data_field_grains_get_distribution(GwyDataField *data_field,
+                                                    GwyDataField *grain_field,
+                                                    GwyDataLine *distribution,
+                                                    gint ngrains,
+                                                    const gint *grains,
+                                                    GwyGrainValueType quantity,
+                                                    gint nstats);
+
+gdouble* gwy_data_field_grains_get_values(GwyDataField *data_field,
+                                          gdouble *values,
+                                          gint ngrains,
+                                          const gint *grains,
+                                          GwyGrainValueType quantity);
 
 void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      GwyDataLine *target_line,
