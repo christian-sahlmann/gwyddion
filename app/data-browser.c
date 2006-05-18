@@ -27,7 +27,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -2632,44 +2632,104 @@ gwy_app_data_browser_shut_down(void)
 
 enum { BITS_PER_SAMPLE = 8 };
 
+static GwyDataField*
+make_thumbnail_field(GwyDataField *dfield,
+                     gint *width,
+                     gint *height)
+{
+    gint xres, yres;
+    gdouble scale;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    scale = MAX(xres/(gdouble)*width, yres/(gdouble)*height);
+    if (scale > 1.0) {
+        xres = scale*xres;
+        yres = scale*yres;
+        xres = CLAMP(xres, 2, *width);
+        yres = CLAMP(yres, 2, *height);
+        dfield = gwy_data_field_new_resampled(dfield, xres, yres,
+                                              GWY_INTERPOLATION_NNA);
+    }
+    else
+        g_object_ref(dfield);
+
+    *width = xres;
+    *height = yres;
+
+    return dfield;
+}
+
 static GdkPixbuf*
 render_data_thumbnail(GwyDataField *dfield,
                       const gchar *gradname,
                       GwyLayerBasicRangeType range_type,
-                      gint max_width,
-                      gint max_height)
+                      gint width,
+                      gint height,
+                      gdouble *pmin,
+                      gdouble *pmax)
 {
     GwyDataField *render_field;
     GdkPixbuf *pixbuf;
     GwyGradient *gradient;
-    gint xres, yres;
-    gdouble scale;
+    gdouble min, max;
 
     gradient = gwy_gradients_get_gradient(gradname);
     gwy_resource_use(GWY_RESOURCE(gradient));
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    scale = MAX(xres/(gdouble)max_width, yres/(gdouble)max_height);
-    if (scale <= 1.0)
-        render_field = (GwyDataField*)g_object_ref(dfield);
-    else {
-        xres = scale*xres;
-        yres = scale*yres;
-        xres = CLAMP(xres, 2, max_width);
-        yres = CLAMP(yres, 2, max_height);
-        render_field = gwy_data_field_new_resampled(dfield, xres, yres,
-                                                    GWY_INTERPOLATION_NNA);
-    }
+    render_field = make_thumbnail_field(dfield, &width, &height);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            xres, yres);
+                            width, height);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
 
-    /* TODO: range type -- should we honour it on thumbnails anyway? */
-    gwy_pixbuf_draw_data_field(pixbuf, render_field, gradient);
+    switch (range_type) {
+        case GWY_LAYER_BASIC_RANGE_FULL:
+        gwy_pixbuf_draw_data_field(pixbuf, render_field, gradient);
+        break;
+
+        case GWY_LAYER_BASIC_RANGE_FIXED:
+        min = pmin ? *pmin : gwy_data_field_get_min(render_field);
+        max = pmax ? *pmax : gwy_data_field_get_max(render_field);
+        gwy_pixbuf_draw_data_field_with_range(pixbuf, render_field, gradient,
+                                              min, max);
+        break;
+
+        case GWY_LAYER_BASIC_RANGE_AUTO:
+        gwy_data_field_get_autorange(render_field, &min, &max);
+        gwy_pixbuf_draw_data_field_with_range(pixbuf, render_field, gradient,
+                                              min, max);
+        break;
+
+        case GWY_LAYER_BASIC_RANGE_ADAPT:
+        gwy_pixbuf_draw_data_field_adaptive(pixbuf, render_field, gradient);
+        break;
+
+        default:
+        g_warning("Bad range type: %d", range_type);
+        gwy_pixbuf_draw_data_field(pixbuf, render_field, gradient);
+        break;
+    }
     g_object_unref(render_field);
 
     gwy_resource_release(GWY_RESOURCE(gradient));
+
+    return pixbuf;
+}
+
+static GdkPixbuf*
+render_mask_thumbnail(GwyDataField *dfield,
+                      const GwyRGBA *color,
+                      gint width,
+                      gint height)
+{
+    GwyDataField *render_field;
+    GdkPixbuf *pixbuf;
+
+    render_field = make_thumbnail_field(dfield, &width, &height);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, BITS_PER_SAMPLE,
+                            width, height);
+    gwy_pixbuf_draw_data_field_as_mask(pixbuf, render_field, color);
+    g_object_unref(render_field);
 
     return pixbuf;
 }
@@ -2683,7 +2743,10 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
     GwyDataField *dfield, *mfield = NULL, *sfield = NULL;
     GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
     const guchar *gradient = NULL;
-    GdkPixbuf *pixbuf;
+    GdkPixbuf *pixbuf, *mask;
+    gdouble min, max;
+    gboolean min_set = FALSE, max_set = FALSE;
+    GwyRGBA color;
     gchar key[48];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
@@ -2699,19 +2762,46 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
 
     g_snprintf(key, sizeof(key), "/%d/base/palette", id);
     gwy_container_gis_string_by_name(data, key, &gradient);
-    g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
-    gwy_container_gis_enum_by_name(data, key, &range_type);
 
     if (sfield)
         pixbuf = render_data_thumbnail(sfield, gradient,
                                        GWY_LAYER_BASIC_RANGE_FULL,
-                                       max_width, max_height);
-    else
-        pixbuf = render_data_thumbnail(dfield, gradient,
-                                       range_type,
-                                       max_width, max_height);
+                                       max_width, max_height, NULL, NULL);
+    else {
+        g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
+        gwy_container_gis_enum_by_name(data, key, &range_type);
+        if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
+            g_snprintf(key, sizeof(key), "/%d/base/min", id);
+            min_set = gwy_container_gis_double_by_name(data, key, &min);
+            g_snprintf(key, sizeof(key), "/%d/base/max", id);
+            max_set = gwy_container_gis_double_by_name(data, key, &max);
+        }
+        /* Make thumbnails of images with defects nicer */
+        if (range_type == GWY_LAYER_BASIC_RANGE_FULL)
+            range_type = GWY_LAYER_BASIC_RANGE_AUTO;
 
-    /* TODO: mask */
+        pixbuf = render_data_thumbnail(dfield, gradient, range_type,
+                                       max_width, max_height,
+                                       min_set ? &min : NULL,
+                                       max_set ? &max : NULL);
+    }
+
+    if (mfield) {
+        g_snprintf(key, sizeof(key), "/%d/mask", id);
+        if (!gwy_rgba_get_from_container(&color, data, key))
+            gwy_rgba_get_from_container(&color, gwy_app_settings_get(),
+                                        "/mask");
+        mask = render_mask_thumbnail(mfield, &color, max_width, max_height);
+        gdk_pixbuf_composite(mask, pixbuf,
+                             0, 0,
+                             gdk_pixbuf_get_width(pixbuf),
+                             gdk_pixbuf_get_height(pixbuf),
+                             0, 0,
+                             1.0, 1.0,
+                             GDK_INTERP_NEAREST,
+                             255);
+        g_object_unref(mask);
+    }
 
     return pixbuf;
 }
