@@ -214,7 +214,7 @@ static const GScannerConfig scanner_config = {
     /* character sets */
     " \t\n\r",
     G_CSET_a_2_z G_CSET_A_2_Z,
-    G_CSET_a_2_z G_CSET_A_2_Z "0123456789_",
+    G_CSET_a_2_z G_CSET_A_2_Z "0123456789_.",
     NULL,
     /* case sensitive */
     TRUE,
