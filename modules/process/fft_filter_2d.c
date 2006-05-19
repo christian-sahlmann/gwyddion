@@ -70,15 +70,15 @@
 #define get_distance(x1, x2, y1, y2) \
     sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
-enum {
-    SHAPE_CIRCLE,
-    SHAPE_RECT,
-};
 
-enum {
-    MODE_ADD,
-    MODE_SUBTRACT,
-};
+typedef enum {
+    FFT_ELLIPSE_ADD    = 0,
+    FFT_RECT_ADD       = 1,
+    FFT_ELLIPSE_SUB    = 2,
+    FFT_RECT_SUB       = 3,
+} MaskEditMode;
+
+typedef void (*FieldFillFunc)(GwyDataField*, gint, gint, gint, gint, gdouble);
 
 enum {
     OUTPUT_FFT = 1,
@@ -90,25 +90,22 @@ enum {
 };
 
 typedef struct {
-    GtkWidget    *view;
     GwyContainer *mydata;
     GwyContainer *data;
 
     GwyDataField *dfield;
     GwyDataField *fft;
 
+    GtkWidget      *view;
+    //GwyVectorLayer *rectangle;
+    //GwyVectorLayer *ellipse;
+    GwyVectorLayer *vlayer;
+
+    MaskEditMode    edit_mode;
+    GSList          *mode;
 
 //XXX OLD CRUFT:
-    GtkWidget *draw_fft;
-
     GtkWidget *dialog;
-
-    GtkWidget *button_circle_inc;
-    GtkWidget *button_circle_exc;
-    GtkWidget *button_rect_inc;
-    GtkWidget *button_rect_exc;
-    GtkWidget *button_drag;
-    GtkWidget *button_remove;
 
     GtkWidget *scale_fft;
     GtkWidget *check_zoom;
@@ -139,7 +136,7 @@ static void         run_main            (GwyContainer *data,
 /* Signal handlers */
 static void        selection_finished_cb (GwySelection *selection,
                                          ControlsType *controls);
-
+static void        edit_mode_changed_cb  (ControlsType *controls);
 
 //XXX OLD CRUFT:
 static void         scale_changed_fft   (GtkRange *range,
@@ -198,7 +195,12 @@ run_main(GwyContainer *data, GwyRunType run)
 
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
+    /* Initialize */
+    controls.edit_mode = FFT_ELLIPSE_ADD;
+
     controls.data = data;
+
+    /* Run the dialog */
     response = run_dialog(&controls);
 }
 
@@ -241,8 +243,37 @@ run_dialog(ControlsType *controls)
     // OLD CRUFT ABOVE
 
 
+    static struct {
+        guint edit_mode;
+        const gchar *stock_id;
+        const gchar *text;
+    }
+    const modes[] = {
+        {
+            FFT_ELLIPSE_ADD,
+            GWY_STOCK_MASK_CIRCLE_INCLUSIVE,
+            N_("Add an ellipse to the FFT mask"),
+        },
+        {
+            FFT_RECT_ADD,
+            GWY_STOCK_MASK_RECT_INCLUSIVE,
+            N_("Add a rectangle to the FFT mask"),
+        },
+        {
+            FFT_ELLIPSE_SUB,
+            GWY_STOCK_MASK_CIRCLE_EXCLUSIVE,
+            N_("Subtract an ellipse from the FFT mask"),
+        },
+        {
+            FFT_RECT_SUB,
+            GWY_STOCK_MASK_RECT_EXCLUSIVE,
+            N_("Subtract a rectange from the FFT mask"),
+        },
+    };
+
+    GtkRadioButton *group;
     GwyPixmapLayer *layer, *mlayer;
-    GwyVectorLayer *vlayer;
+    //GwyVectorLayer *vlayer;
     GwySelection *selection;
     GwyDataField *dfield = NULL, *mask;
     GwyRGBA rgba;
@@ -312,11 +343,38 @@ run_dialog(ControlsType *controls)
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
 
-    /* setup vector layer */
-    vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-    selection = gwy_vector_layer_get_selection(vlayer);
+    /* setup vector layers */
+    /*
+    controls->rectangle = g_object_new(g_type_from_name("GwyLayerRectangle"),
+                                       NULL);
+    controls->ellipse = g_object_new(g_type_from_name("GwyLayerEllipse"),
+                                     NULL);
+    gwy_vector_layer_set_selection_key(controls->rectangle,
+                                       "/0/select/pointer");
+    gwy_vector_layer_set_selection_key(controls->ellipse,
+                                       "/0/select/pointer");
+    */
+    switch(controls->edit_mode)
+    {
+        case FFT_RECT_ADD:
+        case FFT_RECT_SUB:
+            controls->vlayer =
+                g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
+            break;
+
+        case FFT_ELLIPSE_ADD:
+        case FFT_ELLIPSE_SUB:
+            controls->vlayer =
+                g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+            break;
+
+        default:
+            break;
+            /*XXX Shouldn't Occur */
+    }
+    gwy_vector_layer_set_selection_key(controls->vlayer, "/0/select/pointer");
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),controls->vlayer);
+    selection = gwy_vector_layer_get_selection(controls->vlayer);
     g_signal_connect(selection, "finished",
                      G_CALLBACK(selection_finished_cb), controls);
 
@@ -328,9 +386,6 @@ run_dialog(ControlsType *controls)
     gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
-
-    gwy_data_field_elliptic_area_fill(mask, 10, 10, 30, 30, 1);
-    gwy_data_field_data_changed(mask);
 
 
 
@@ -351,67 +406,29 @@ run_dialog(ControlsType *controls)
     gtk_table_attach(GTK_TABLE(table), hbox2, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    button = gtk_radio_button_new_from_widget(GTK_RADIO_BUTTON(button));
-    image = gtk_image_new_from_stock(GWY_STOCK_MASK_CIRCLE_INCLUSIVE,
-                                     GTK_ICON_SIZE_BUTTON);
-    gtk_container_add(GTK_CONTAINER(button), image);
-    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "circle_inclusive"),
-                         "");
-    gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
-    controls->button_circle_inc = button;
+    /* MODE/SHAPE Buttons */
+    group = NULL;
+    for (i = 0; i < G_N_ELEMENTS(modes); i++) {
+        button = gtk_radio_button_new_from_widget(group);
+        g_object_set(button, "draw-indicator", FALSE, NULL);
+        image = gtk_image_new_from_stock(modes[i].stock_id,
+                                         GTK_ICON_SIZE_BUTTON
+                                         /*GTK_ICON_SIZE_LARGE_TOOLBAR*/);
+        gtk_container_add(GTK_CONTAINER(button), image);
+        g_object_set_data(G_OBJECT(button), "select-mode",
+                          GUINT_TO_POINTER(modes[i].edit_mode));
+        gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
+        gtk_tooltips_set_tip(tips, button, gettext(modes[i].text), NULL);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(edit_mode_changed_cb), controls);
+        if (!group)
+            group = GTK_RADIO_BUTTON(button);
+    }
+    controls->mode = gtk_radio_button_get_group(group);
+    gwy_radio_buttons_set_current(controls->mode, "select-mode",
+                                  controls->edit_mode);
 
-    button = gtk_radio_button_new_from_widget(GTK_RADIO_BUTTON(button));
-    image = gtk_image_new_from_stock(GWY_STOCK_MASK_RECT_INCLUSIVE,
-                                     GTK_ICON_SIZE_BUTTON);
-    gtk_container_add(GTK_CONTAINER(button), image);
-    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "rectangle_inclusive"),
-                         "");
-    gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
-    controls->button_rect_inc = button;
-
-    button = gtk_radio_button_new_from_widget(GTK_RADIO_BUTTON(button));
-    image = gtk_image_new_from_stock(GWY_STOCK_MASK_CIRCLE_EXCLUSIVE,
-                                     GTK_ICON_SIZE_BUTTON);
-    gtk_container_add(GTK_CONTAINER(button), image);
-    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "circle_exclusive"),
-                         "");
-    gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
-    controls->button_circle_exc = button;
-
-    button = gtk_radio_button_new_from_widget(GTK_RADIO_BUTTON(button));
-    image = gtk_image_new_from_stock(GWY_STOCK_MASK_RECT_EXCLUSIVE,
-                                     GTK_ICON_SIZE_BUTTON);
-    gtk_container_add(GTK_CONTAINER(button), image);
-    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "rectangle_exclusive"),
-                         "");
-    gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
-    controls->button_rect_exc = button;
-
-    hbox3 = gtk_hbox_new(TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox2), hbox3, FALSE, FALSE, 5);
-
-    button = radio_new(GTK_RADIO_BUTTON(button), _("_Edit"));
-    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "drag"), "");
-    gtk_container_add(GTK_CONTAINER(hbox3), button);
-    controls->button_drag = button;
-
-    button = radio_new(GTK_RADIO_BUTTON(button), _("Re_move"));
-    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "remove"), "");
-    gtk_container_add(GTK_CONTAINER(hbox3), button);
-    controls->button_remove = button;
-
+    /* Remaining controls: */
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
@@ -591,9 +608,9 @@ run_dialog(ControlsType *controls)
             case RESPONSE_RESET:
             load_settings(controls, TRUE);
             set_toggled(controls->button_show_fft, TRUE);
-            set_toggled(controls->button_circle_inc, TRUE);
-            gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                                       PREVIEW_SIZE, PREVIEW_SIZE);
+            //set_toggled(controls->button_circle_inc, TRUE);
+            //gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
+            //                           PREVIEW_SIZE, PREVIEW_SIZE);
             break;
 
             default:
@@ -616,10 +633,106 @@ run_dialog(ControlsType *controls)
 }
 
 static void
+edit_mode_changed_cb(ControlsType *controls)
+{
+    MaskEditMode new_mode;
+    GwyVectorLayer *vlayer;
+    GwySelection *selection;
+
+    new_mode = gwy_radio_buttons_get_current(controls->mode, "select-mode");
+
+    g_debug("Edit Mode Changed. Old Mode: %i   New Mode: %i",
+            controls->edit_mode, new_mode);
+
+
+    if (controls->edit_mode != new_mode)
+    {
+        switch(controls->edit_mode)
+        {
+            case FFT_RECT_ADD:
+            case FFT_RECT_SUB:
+            vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
+            break;
+
+            case FFT_ELLIPSE_ADD:
+            case FFT_ELLIPSE_SUB:
+            vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+            break;
+
+            default:
+                break;
+                /*XXX Shouldn't Occur */
+        }
+        gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+        gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+        selection = gwy_vector_layer_get_selection(vlayer);
+    }
+
+    controls->edit_mode = new_mode;
+
+
+    //g_signal_connect(selection, "finished",
+    //                 G_CALLBACK(selection_finished_cb), controls);
+
+
+    /*
+
+
+    switch(controls->edit_mode)
+    {
+        case FFT_RECT_ADD:
+        case FFT_RECT_SUB:
+            vlayer = controls->rectangle;
+            break;
+
+        case FFT_ELLIPSE_ADD:
+        case FFT_ELLIPSE_SUB:
+            vlayer = controls->ellipse;
+            break;
+
+        default:
+            vlayer = controls->ellipse;
+    }
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+    //selection = gwy_vector_layer_get_selection(vlayer);
+    //g_signal_connect(selection, "finished",
+    //                 G_CALLBACK(selection_finished_cb), controls);
+
+
+    /*
+    GwyPlainTool *plain_tool;
+    MaskEditShape shape;
+
+    shape = gwy_radio_buttons_get_current(tool->shape, "shape-type");
+    if (shape == tool->args.shape)
+        return;
+    tool->args.shape = shape;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    switch (tool->args.shape) {
+        case MASK_SHAPE_RECTANGLE:
+            gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
+                                             "rectangle");
+            break;
+
+        case MASK_SHAPE_ELLIPSE:
+            gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_ell,
+                                             "ellipse");
+            break;
+
+        default:
+            g_return_if_reached();
+            break;
+    }
+    */
+}
+
+static void
 selection_finished_cb(GwySelection *selection,
                           ControlsType *controls)
 {
     GwyDataField *mfield  = NULL;
+    FieldFillFunc fill_func;
     gdouble sel[4];
     gint isel[4];
 
@@ -641,10 +754,26 @@ selection_finished_cb(GwySelection *selection,
     isel[2] -= isel[0];
     isel[3] -= isel[1];
 
+    /* decide between rectangle and ellipse */
+    switch (controls->edit_mode) {
+        case FFT_RECT_ADD:
+        case FFT_RECT_SUB:
+            fill_func = &gwy_data_field_area_fill;
+            break;
+
+        case FFT_ELLIPSE_ADD:
+        case FFT_ELLIPSE_SUB:
+            fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
+            break;
+
+        default:
+            g_return_if_reached();
+            break;
+    }
+
     /* apply change to mask */
     //XXX gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-    gwy_data_field_elliptic_area_fill(
-                    mfield, isel[0], isel[1], isel[2], isel[3], 1.0);
+    fill_func(mfield, isel[0], isel[1], isel[2], isel[3], 1.0);
     if (mfield)
         gwy_data_field_data_changed(mfield);
 
