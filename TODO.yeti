@@ -1,7 +1,6 @@
-HEAD
 - Check where we lost support for offsets during tool reworking
-- Port grain remove by threshold.  It pretends to be ported but it still works
-  mostly with fixed keys
+- Fix current-data race conditions in modules, must take all current items
+  on startup, windows can be switched while module is running
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
