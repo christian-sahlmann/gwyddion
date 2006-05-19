@@ -284,8 +284,26 @@ gwy_correlation_type_get_enum(void)
  * @GWY_PLANE_FIT_S0: Residual sum of squares.
  * @GWY_PLANE_FIT_S0_REDUCED: Slope-reduced residual sum of squares.
  *
- * Quantity that can be requested from gwy_data_field_area_fit_local_planes()
- * et al.
+ * Local plane fitting quantity to request from
+ * gwy_data_field_area_fit_local_planes() and similar functions.
+ **/
+
+/**
+ * GwyGrainQuantity:
+ * @GWY_GRAIN_VALUE_PROJECTED_AREA: Projected (flat) grain area.
+ * @GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE: Side of a square with the same area
+ *                                     as the grain.
+ * @GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS: Radius of a disc with the same area
+ *                                     as the grain.
+ * @GWY_GRAIN_VALUE_SURFACE_AREA: Surface area.
+ * @GWY_GRAIN_VALUE_MAXIMUM: Minimum value.
+ * @GWY_GRAIN_VALUE_MINIMUM: Maximum value.
+ * @GWY_GRAIN_VALUE_MEAN: Mean value.
+ * @GWY_GRAIN_VALUE_MEDIAN: Median value.
+ * @GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH: Length of projected grain boundary.
+ *
+ * Grain quantity to request from gwy_data_field_grains_get_distribution()
+ * and similar functions.
  **/
 
 /**
@@ -302,7 +320,8 @@ gwy_correlation_type_get_enum(void)
  *
  * Cached data field quantity types.
  *
- * There should be little need to this enum directly.
+ * There should be little need to this enum directly except in libgwyprocess
+ * methods.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

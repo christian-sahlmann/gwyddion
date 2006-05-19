@@ -145,12 +145,13 @@ typedef enum {
     GWY_GRAIN_VALUE_PROJECTED_AREA       = 0,
     GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE    = 1,
     GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS    = 2,
-    GWY_GRAIN_VALUE_MAXIMUM              = 3,
-    GWY_GRAIN_VALUE_MINIMUM              = 4,
-    GWY_GRAIN_VALUE_MEAN                 = 5,
-    GWY_GRAIN_VALUE_MEDIAN               = 6,
-    GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH = 7
-} GwyGrainValueType;
+    GWY_GRAIN_VALUE_SURFACE_AREA         = 3,
+    GWY_GRAIN_VALUE_MAXIMUM              = 4,
+    GWY_GRAIN_VALUE_MINIMUM              = 5,
+    GWY_GRAIN_VALUE_MEAN                 = 6,
+    GWY_GRAIN_VALUE_MEDIAN               = 7,
+    GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH = 8
+} GwyGrainQuantity;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;

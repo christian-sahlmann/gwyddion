@@ -100,14 +100,14 @@ GwyDataLine* gwy_data_field_grains_get_distribution(GwyDataField *data_field,
                                                     GwyDataLine *distribution,
                                                     gint ngrains,
                                                     const gint *grains,
-                                                    GwyGrainValueType quantity,
+                                                    GwyGrainQuantity quantity,
                                                     gint nstats);
 
 gdouble* gwy_data_field_grains_get_values(GwyDataField *data_field,
                                           gdouble *values,
                                           gint ngrains,
                                           const gint *grains,
-                                          GwyGrainValueType quantity);
+                                          GwyGrainQuantity quantity);
 
 void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      GwyDataLine *target_line,

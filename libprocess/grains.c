@@ -560,7 +560,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
                                        GwyDataLine *distribution,
                                        gint ngrains,
                                        const gint *grains,
-                                       GwyGrainValueType quantity,
+                                       GwyGrainQuantity quantity,
                                        gint nstats)
 {
     GwyDataLine *values;
@@ -634,6 +634,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     lineunit = gwy_data_line_get_si_unit_x(distribution);
     switch (quantity) {
         case GWY_GRAIN_VALUE_PROJECTED_AREA:
+        case GWY_GRAIN_VALUE_SURFACE_AREA:
         gwy_si_unit_power(xyunit, 2, lineunit);
         break;
 
@@ -658,6 +659,26 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     gwy_si_unit_set_unit_string(lineunit, "");
 
     return distribution;
+}
+
+/* See stats.c for description. */
+static inline gdouble
+square_area2w(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+              gint w1, gint w2, gint w3, gint w4,
+              gdouble x, gdouble y)
+{
+    gdouble c;
+
+    c = (z1 + z2 + z3 + z4)/2.0;
+
+    return ((w1 + w2)*sqrt(1.0 + (z1 - z2)*(z1 - z2)/x
+                           + (z1 + z2 - c)*(z1 + z2 - c)/y)
+            + (w2 + w3)*sqrt(1.0 + (z2 - z3)*(z2 - z3)/y
+                             + (z2 + z3 - c)*(z2 + z3 - c)/x)
+            + (w3 + w4)*sqrt(1.0 + (z3 - z4)*(z3 - z4)/x
+                             + (z3 + z4 - c)*(z3 + z4 - c)/y)
+            + (w4 + w1)*sqrt(1.0 + (z1 - z4)*(z1 - z4)/y
+                             + (z1 + z4 - c)*(z1 + z4 - c)/x))/2.0;
 }
 
 /**
@@ -694,7 +715,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                                  gdouble *values,
                                  gint ngrains,
                                  const gint *grains,
-                                 GwyGrainValueType quantity)
+                                 GwyGrainQuantity quantity)
 {
     const gdouble *data;
     gdouble *tmp;
@@ -847,6 +868,63 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 }
             }
         }
+        break;
+
+        case GWY_GRAIN_VALUE_SURFACE_AREA:
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        qh = gwy_data_field_get_xmeasure(data_field);
+        qv = gwy_data_field_get_ymeasure(data_field);
+        q = qh*qv/4.0;
+        qh = qh*qh;
+        qv = qv*qv;
+        /* This is quite inefficient, every contribution is calculated four
+         * times for each participating pixel (every time only 1/4 of it is
+         * actually added). */
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gint ix, ipx, imx, jp, jm, gno;
+
+                if (!(gno = grains[i*xres + j]))
+                    continue;
+
+                ix = i*xres;
+                imx = (i > 0) ? ix - xres : 0;
+                ipx = (i < yres-1) ? ix + xres : (yres - 1)*xres;
+                jm = (j > 0) ? j-1 : 0;
+                jp = (j < yres-1) ? j+1 : yres-1;
+
+                values[gno] += square_area2w(data[ix + j], data[ix + jm],
+                                             data[imx + jm], data[imx + j],
+                                             1,
+                                             grains[ix + jm] == gno,
+                                             grains[imx + jm] == gno,
+                                             grains[imx + j] == gno,
+                                             qh, qv);
+                values[gno] += square_area2w(data[ix + j], data[ix + jp],
+                                             data[imx + jp], data[imx + j],
+                                             1,
+                                             grains[ix + jp] == gno,
+                                             grains[imx + jp] == gno,
+                                             grains[imx + j] == gno,
+                                             qh, qv);
+                values[gno] += square_area2w(data[ix + j], data[ix + jm],
+                                             data[ipx + jm], data[ipx + j],
+                                             1,
+                                             grains[ix + jm] == gno,
+                                             grains[ipx + jm] == gno,
+                                             grains[ipx + j] == gno,
+                                             qh, qv);
+                values[gno] += square_area2w(data[ix + j], data[ix + jp],
+                                             data[ipx + jp], data[ipx + j],
+                                             1,
+                                             grains[ix + jp] == gno,
+                                             grains[ipx + jp] == gno,
+                                             grains[ipx + j] == gno,
+                                             qh, qv);
+            }
+        }
+        for (i = 1; i <= ngrains; i++)
+            values[i] *= q;
         break;
 
         default:
