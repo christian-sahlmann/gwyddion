@@ -73,12 +73,19 @@ static void     facets_analyse                   (GwyContainer *data,
                                                   GwyRunType run);
 static void     load_mask_color                  (GtkWidget *color_button,
                                                   GwyContainer *data);
-static gboolean facets_dialog                    (FacetsArgs *args,
+static void     facets_dialog                    (FacetsArgs *args,
                                                   GwyContainer *data,
-                                                  GwyContainer *fdata);
+                                                  GwyContainer *fdata,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mfield,
+                                                  gint id,
+                                                  GQuark mquark);
 static void     run_noninteractive               (FacetsArgs *args,
                                                   GwyContainer *data,
-                                                  GwyContainer *fdata);
+                                                  GwyContainer *fdata,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mfield,
+                                                  GQuark mquark);
 static void     facets_dialog_update_controls    (FacetsControls *controls,
                                                   FacetsArgs *args);
 static void     facets_dialog_update_values      (FacetsControls *controls,
@@ -164,25 +171,31 @@ module_register(void)
 static void
 facets_analyse(GwyContainer *data, GwyRunType run)
 {
-    GwyContainer *fdata;
-    GwyDataField *dfield;
     FacetsArgs args;
+    GwyContainer *fdata;
+    GwyDataField *dfield, *mfield;
+    GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & FACETS_RUN_MODES);
     g_return_if_fail(g_type_from_name("GwyLayerPoint"));
     facets_load_args(gwy_app_settings_get(), &args);
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
-    g_return_if_fail(dfield);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(dfield && mquark);
 
     fdata = gwy_container_new();
     gwy_data_field_facet_distribution(dfield, 3, fdata);
     args.theta0 = gwy_container_get_double_by_name(fdata, "/theta0");
     args.phi0 = gwy_container_get_double_by_name(fdata, "/phi0");
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data, fdata);
+        run_noninteractive(&args, data, fdata, dfield, mfield, mquark);
     else {
-        facets_dialog(&args, data, fdata);
+        facets_dialog(&args, data, fdata, dfield, mfield, id, mquark);
         facets_save_args(gwy_app_settings_get(), &args);
     }
     g_object_unref(fdata);
@@ -214,10 +227,14 @@ add_angle_label(GtkWidget *table,
     return label;
 }
 
-static gboolean
+static void
 facets_dialog(FacetsArgs *args,
               GwyContainer *data,
-              GwyContainer *fdata)
+              GwyContainer *fdata,
+              GwyDataField *dfield,
+              GwyDataField *mfield,
+              gint id,
+              GQuark mquark)
 {
     GtkWidget *dialog, *table, *hbox, *hbox2, *vbox, *label, *scale, *button;
     FacetsControls controls;
@@ -230,13 +247,7 @@ facets_dialog(FacetsArgs *args,
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
-    GwyDataField *dfield, *mfield;
-    GQuark mquark;
-    gint row, id;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
-                                     GWY_APP_DATA_FIELD, &dfield,
-                                     0);
+    gint row;
 
     controls.in_update = FALSE;
     controls.args = args;
@@ -394,7 +405,8 @@ facets_dialog(FacetsArgs *args,
             facets_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+            g_object_unref(controls.mydata);
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -431,10 +443,8 @@ facets_dialog(FacetsArgs *args,
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data, fdata);
+        run_noninteractive(args, data, fdata, dfield, mfield, mquark);
     }
-
-    return TRUE;
 }
 
 static inline void
@@ -605,16 +615,12 @@ create_mask_field(GwyDataField *dfield)
 static void
 run_noninteractive(FacetsArgs *args,
                    GwyContainer *data,
-                   GwyContainer *fdata)
+                   GwyContainer *fdata,
+                   GwyDataField *dfield,
+                   GwyDataField *mfield,
+                   GQuark mquark)
 {
-    GwyDataField *dfield, *mfield, *dtheta, *dphi;
-    GQuark mquark;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     GWY_APP_MASK_FIELD, &mfield,
-                                     0);
-    g_return_if_fail(dfield && mquark);
+    GwyDataField *dtheta, *dphi;
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     if (!mfield) {

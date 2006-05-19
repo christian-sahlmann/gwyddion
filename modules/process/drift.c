@@ -540,6 +540,7 @@ drift_ok(DriftControls *controls,
     GwyDataField *data_field, *newdata_field;
     gint newid, oldid;
 
+    /* FIXME: too late */
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &data_field,
                                      GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
@@ -564,7 +565,7 @@ drift_ok(DriftControls *controls,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
 
-        gwy_app_set_data_field_title(data, newid, _("Drift corected data"));
+        gwy_app_set_data_field_title(data, newid, _("Drift corrected data"));
 
     }
     g_object_unref(newdata_field);

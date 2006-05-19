@@ -59,9 +59,16 @@ static gboolean    module_register               (void);
 static void        remove_th                     (GwyContainer *data,
                                                   GwyRunType run);
 static void        run_noninteractive            (RemoveArgs *args,
-                                                  GwyContainer *data);
+                                                  GwyContainer *data,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mfield,
+                                                  GQuark mquark);
 static void        remove_dialog                 (RemoveArgs *args,
-                                                  GwyContainer *data);
+                                                  GwyContainer *data,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mfield,
+                                                  gint id,
+                                                  GQuark mquark);
 static void        mask_color_change_cb          (GtkWidget *color_button,
                                                   RemoveControls *controls);
 static void        load_mask_color               (GtkWidget *color_button,
@@ -127,36 +134,46 @@ static void
 remove_th(GwyContainer *data, GwyRunType run)
 {
     RemoveArgs args;
+    GwyDataField *dfield, *mfield;
+    GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & REMOVE_RUN_MODES);
     remove_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(dfield && mfield);
+
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data);
+        run_noninteractive(&args, data, dfield, mfield, mquark);
     else {
-        remove_dialog(&args, data);
+        remove_dialog(&args, data, dfield, mfield, id, mquark);
         remove_save_args(gwy_app_settings_get(), &args);
     }
 }
 
 static void
-run_noninteractive(RemoveArgs *args, GwyContainer *data)
+run_noninteractive(RemoveArgs *args,
+                   GwyContainer *data,
+                   GwyDataField *dfield,
+                   GwyDataField *mfield,
+                   GQuark mquark)
 {
-    GwyDataField *dfield, *mfield;
-    GQuark mquark;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD, &mfield,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    g_return_if_fail(dfield && mfield);
-
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mask_process(dfield, mfield, args);
     gwy_data_field_data_changed(mfield);
 }
 
 static void
-remove_dialog(RemoveArgs *args, GwyContainer *data)
+remove_dialog(RemoveArgs *args,
+              GwyContainer *data,
+              GwyDataField *dfield,
+              GwyDataField *mfield,
+              gint id,
+              GQuark mquark)
 {
     GtkWidget *dialog, *table, *spin, *hbox, *label;
     RemoveControls controls;
@@ -167,16 +184,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield, *mfield, *mfield2;
-    GQuark mquark;
-    gint row, id;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD, &mfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    g_return_if_fail(dfield && mfield);
+    GwyDataField *mfield2;
+    gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0,
@@ -349,7 +358,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data);
+        run_noninteractive(args, data, dfield, mfield, mquark);
     }
 }
 

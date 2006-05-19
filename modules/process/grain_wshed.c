@@ -60,8 +60,15 @@ typedef struct {
 static gboolean    module_register              (void);
 static void        grain_wshed                  (GwyContainer *data,
                                                  GwyRunType run);
+static void        run_noninteractive           (WshedArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 GQuark mquark);
 static void        wshed_dialog                 (WshedArgs *args,
-                                                 GwyContainer *data);
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 gint id,
+                                                 GQuark mquark);
 static void        mask_color_change_cb         (GtkWidget *color_button,
                                                  WshedControls *controls);
 static void        load_mask_color              (GtkWidget *color_button,
@@ -73,8 +80,6 @@ static void        wshed_dialog_update_values   (WshedControls *controls,
 static void        wshed_invalidate             (WshedControls *controls);
 static void        preview                      (WshedControls *controls,
                                                  WshedArgs *args);
-static void        run_noninteractive           (WshedArgs *args,
-                                                 GwyContainer *data);
 static gboolean    mask_process                 (GwyDataField *dfield,
                                                  GwyDataField *maskfield,
                                                  WshedArgs *args,
@@ -99,7 +104,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.9",
+    "1.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -124,19 +129,32 @@ static void
 grain_wshed(GwyContainer *data, GwyRunType run)
 {
     WshedArgs args;
+    GwyDataField *dfield;
+    GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & WSHED_RUN_MODES);
     wshed_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(dfield && mquark);
+
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data);
+        run_noninteractive(&args, data, dfield, mquark);
     else {
-        wshed_dialog(&args, data);
+        wshed_dialog(&args, data, dfield, id, mquark);
         wshed_save_args(gwy_app_settings_get(), &args);
     }
 }
 
 static void
-wshed_dialog(WshedArgs *args, GwyContainer *data)
+wshed_dialog(WshedArgs *args,
+             GwyContainer *data,
+             GwyDataField *dfield,
+             gint id,
+             GQuark mquark)
 {
     GtkWidget *dialog, *table, *label, *spin, *hbox;
     WshedControls controls;
@@ -147,15 +165,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield, *mfield;
-    GQuark mquark;
-    gint id, row;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    g_return_if_fail(dfield && mquark);
+    GwyDataField *mfield;
+    gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Watershed"),
                                          NULL, 0,
@@ -331,7 +342,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data);
+        run_noninteractive(args, data, dfield, mquark);
     }
 }
 
@@ -443,15 +454,12 @@ preview(WshedControls *controls,
 }
 
 static void
-run_noninteractive(WshedArgs *args, GwyContainer *data)
+run_noninteractive(WshedArgs *args,
+                   GwyContainer *data,
+                   GwyDataField *dfield,
+                   GQuark mquark)
 {
-    GwyDataField *dfield, *mfield;
-    GQuark mquark;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    g_return_if_fail(dfield && mquark);
+    GwyDataField *mfield;
 
     mfield = create_mask_field(dfield);
     if (mask_process(dfield, mfield, args,

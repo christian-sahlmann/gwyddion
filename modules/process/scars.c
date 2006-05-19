@@ -68,10 +68,15 @@ static void     scars_remove                       (GwyContainer *data,
 static void     scars_mark                         (GwyContainer *data,
                                                     GwyRunType run);
 static void     run_noninteractive                 (ScarsArgs *args,
-                                                    GwyContainer *data);
-static void     load_mask_color                    (GtkWidget *color_button,
-                                                    GwyContainer *data);
+                                                    GwyContainer *data,
+                                                    GwyDataField *dfield,
+                                                    GQuark mquark);
 static void     scars_mark_dialog                  (ScarsArgs *args,
+                                                    GwyContainer *data,
+                                                    GwyDataField *dfield,
+                                                    gint id,
+                                                    GQuark mquark);
+static void     load_mask_color                    (GtkWidget *color_button,
                                                     GwyContainer *data);
 static void     scars_mark_dialog_update_controls  (ScarsControls *controls,
                                                     ScarsArgs *args);
@@ -102,7 +107,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -381,27 +386,33 @@ static void
 scars_mark(GwyContainer *data, GwyRunType run)
 {
     ScarsArgs args;
+    GwyDataField *dfield;
+    GQuark mquark;
+    gint id;
 
     g_return_if_fail(run & SCARS_MARK_RUN_MODES);
     scars_mark_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(dfield && mquark);
+
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data);
+        run_noninteractive(&args, data, dfield, mquark);
     else {
-        scars_mark_dialog(&args, data);
+        scars_mark_dialog(&args, data, dfield, id, mquark);
         scars_mark_save_args(gwy_app_settings_get(), &args);
     }
 }
 
 static void
-run_noninteractive(ScarsArgs *args, GwyContainer *data)
+run_noninteractive(ScarsArgs *args,
+                   GwyContainer *data,
+                   GwyDataField *dfield,
+                   GQuark mquark)
 {
-    GwyDataField *dfield, *mfield;
-    GQuark mquark;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    g_return_if_fail(dfield && mquark);
+    GwyDataField *mfield;
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
     mfield = create_mask_field(dfield);
@@ -412,7 +423,10 @@ run_noninteractive(ScarsArgs *args, GwyContainer *data)
 
 static void
 scars_mark_dialog(ScarsArgs *args,
-                  GwyContainer *data)
+                  GwyContainer *data,
+                  GwyDataField *dfield,
+                  gint id,
+                  GQuark mquark)
 {
     enum {
         RESPONSE_RESET = 1,
@@ -424,20 +438,13 @@ scars_mark_dialog(ScarsArgs *args,
         { N_("Both"),     FEATURES_BOTH,     },
     };
     GtkWidget *dialog, *table, *spin, *hbox, *label;
-    GwyDataField *dfield, *mfield;
-    GQuark mquark;
+    GwyDataField *mfield;
     ScarsControls controls;
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
     GSList *group;
-    gint row, id;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    g_return_if_fail(dfield);
+    gint row;
 
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Mark Scars"),
@@ -589,7 +596,7 @@ scars_mark_dialog(ScarsArgs *args,
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data);
+        run_noninteractive(args, data, dfield, mquark);
     }
 }
 
