@@ -255,7 +255,8 @@ mifile_load(const gchar *filename,
                 read_data_field(dfield, mifile->buffers + i,
                                 mifile->xres, mifile->yres);
 
-                container = gwy_container_new();
+                if (!container)
+                    container = gwy_container_new();
 
                 container_key = g_strdup_printf("/%i/data", i);
                 gwy_container_set_object_by_name(container, container_key,
