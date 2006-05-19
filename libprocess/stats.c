@@ -1035,7 +1035,7 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
  * <informalexample><programlisting>
  * gwy_data_field_area_count_in_range(data_field, NULL,
  *                                    col, row, width, height,
- *                                    0.0, 0.0, &count, NULL);
+ *                                    0.0, 0.0, &amp;count, NULL);
  * count = width*height - count;
  * </programlisting></informalexample>
  **/
