@@ -59,9 +59,6 @@ typedef struct {
     GtkObject *threshold_height;
     GtkObject *threshold_slope;
     GtkObject *threshold_lap;
-    GtkWidget *check_height;
-    GtkWidget *check_slope;
-    GtkWidget *check_lap;
     GtkWidget *merge;
     GtkWidget *color_button;
     GwyContainer *mydata;
@@ -164,6 +161,8 @@ table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
     *check = gwy_table_hscale_get_check(*adj);
     g_signal_connect_swapped(*adj, "value-changed",
                              G_CALLBACK(mark_invalidate), data);
+    g_signal_connect_swapped(*check, "toggled",
+                             G_CALLBACK(mark_invalidate), data);
     (*row)++;
 }
 
@@ -264,7 +263,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Threshold By</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     table_attach_threshold(table, &row, _("_Height:"),
@@ -284,7 +283,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));

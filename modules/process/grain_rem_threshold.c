@@ -33,7 +33,6 @@ enum {
     PREVIEW_SIZE = 320
 };
 
-/* Data for this function. */
 typedef struct {
     gboolean inverted;
     gdouble area;
@@ -53,28 +52,30 @@ typedef struct {
     GtkWidget *merge;
     GtkWidget *color_button;
     GwyContainer *mydata;
+    gboolean computed;
 } RemoveControls;
 
 static gboolean    module_register               (void);
 static void        remove_th                     (GwyContainer *data,
                                                   GwyRunType run);
-static gboolean    remove_dialog                 (RemoveArgs *args,
+static void        run_noninteractive            (RemoveArgs *args,
+                                                  GwyContainer *data);
+static void        remove_dialog                 (RemoveArgs *args,
                                                   GwyContainer *data);
 static void        mask_color_change_cb          (GtkWidget *color_button,
                                                   RemoveControls *controls);
 static void        load_mask_color               (GtkWidget *color_button,
                                                   GwyContainer *data);
-static void        save_mask_color               (GtkWidget *color_button,
-                                                  GwyContainer *data);
 static void        remove_dialog_update_controls (RemoveControls *controls,
                                                   RemoveArgs *args);
-static void        remove_dialog_update_args     (RemoveControls *controls,
+static void        remove_dialog_update_values   (RemoveControls *controls,
                                                   RemoveArgs *args);
+static void        remove_invalidate             (RemoveControls *controls);
+static void        remove_invalidate2            (gpointer whatever,
+                                                  RemoveControls *controls);
 static void        preview                       (RemoveControls *controls,
-                                                  RemoveArgs *args);
-static void        add_mask_layer                (GtkWidget *data_view);
-static void        remove_th_do                  (RemoveArgs *args,
-                                                  GwyContainer *data);
+                                                  RemoveArgs *args,
+                                                  GwyDataField *mfield);
 static void        mask_process                  (GwyDataField *dfield,
                                                   GwyDataField *maskfield,
                                                   RemoveArgs *args);
@@ -101,7 +102,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.7.1",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -126,21 +127,35 @@ static void
 remove_th(GwyContainer *data, GwyRunType run)
 {
     RemoveArgs args;
-    gboolean ok;
 
     g_return_if_fail(run & REMOVE_RUN_MODES);
-    g_return_if_fail(gwy_container_contains_by_name(data, "/0/mask"));
     remove_load_args(gwy_app_settings_get(), &args);
-    if (run == GWY_RUN_INTERACTIVE) {
-        ok = remove_dialog(&args, data);
+    if (run == GWY_RUN_IMMEDIATE)
+        run_noninteractive(&args, data);
+    else {
+        remove_dialog(&args, data);
         remove_save_args(gwy_app_settings_get(), &args);
-        if (!ok)
-            return;
     }
-    remove_th_do(&args, data);
 }
 
-static gboolean
+static void
+run_noninteractive(RemoveArgs *args, GwyContainer *data)
+{
+    GwyDataField *dfield, *mfield;
+    GQuark mquark;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
+    g_return_if_fail(dfield && mfield);
+
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
+    mask_process(dfield, mfield, args);
+    gwy_data_field_data_changed(mfield);
+}
+
+static void
 remove_dialog(RemoveArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *spin, *hbox, *label;
@@ -152,13 +167,16 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield, *mfield2;
+    GQuark mquark;
     gint row, id;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
                                      0);
-
+    g_return_if_fail(dfield && mfield);
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0,
@@ -177,6 +195,9 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    mfield2 = gwy_data_field_duplicate(mfield);
+    gwy_container_set_object_by_name(controls.mydata, "/0/mask", mfield2);
+    g_object_unref(mfield2);
     gwy_app_copy_data_items(data, controls.mydata, id, 0,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -187,12 +208,12 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    add_mask_layer(controls.view);
-
-    if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
-        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
-    else
-        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
+    layer = gwy_layer_mask_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
@@ -207,8 +228,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Threshold By</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.threshold_height = gtk_adjustment_new(args->height,
@@ -216,6 +237,10 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("_Height:"), "%",
                                    controls.threshold_height, GWY_HSCALE_CHECK);
     controls.is_height = gwy_table_hscale_get_check(controls.threshold_height);
+    g_signal_connect_swapped(controls.threshold_height, "value-changed",
+                             G_CALLBACK(remove_invalidate), &controls);
+    g_signal_connect_swapped(controls.is_height, "toggled",
+                             G_CALLBACK(remove_invalidate), &controls);
     row++;
 
     controls.threshold_area = gtk_adjustment_new(args->area,
@@ -224,26 +249,32 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                    controls.threshold_area,
                                    GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
     controls.is_area = gwy_table_hscale_get_check(controls.threshold_area);
+    g_signal_connect_swapped(controls.threshold_area, "value-changed",
+                             G_CALLBACK(remove_invalidate), &controls);
+    g_signal_connect_swapped(controls.is_area, "toggled",
+                             G_CALLBACK(remove_invalidate), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
                                  args->inverted);
-    gtk_table_attach(GTK_TABLE(table), controls.inverted, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), controls.inverted,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.inverted, "toggled",
+                             G_CALLBACK(remove_invalidate), &controls);
     row++;
 
     controls.merge
         = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
-                                 NULL, NULL,
+                                 G_CALLBACK(remove_invalidate2), &controls,
                                  args->merge_type, TRUE);
     gwy_table_attach_hscale(table, row, _("_Selection mode:"), NULL,
                             GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
@@ -259,6 +290,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
+
+    remove_invalidate(&controls);
 
     /* cheap sync */
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
@@ -276,10 +309,11 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            remove_dialog_update_args(&controls, args);
+            remove_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+            g_object_unref(controls.mydata);
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -291,8 +325,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_PREVIEW:
-            remove_dialog_update_args(&controls, args);
-            preview(&controls, args);
+            remove_dialog_update_values(&controls, args);
+            preview(&controls, args, mfield);
             break;
 
             default:
@@ -301,11 +335,22 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    remove_dialog_update_args(&controls, args);
-    save_mask_color(controls.color_button, data);
+    remove_dialog_update_values(&controls, args);
+    gwy_app_copy_data_items(controls.mydata, data, 0, id,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
     gtk_widget_destroy(dialog);
 
-    return TRUE;
+    if (controls.computed) {
+        mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
+        gwy_app_undo_qcheckpointv(data, 1, &mquark);
+        gwy_container_set_object(data, mquark, mfield);
+        g_object_unref(controls.mydata);
+    }
+    else {
+        g_object_unref(controls.mydata);
+        run_noninteractive(args, data);
+    }
 }
 
 static void
@@ -327,8 +372,8 @@ remove_dialog_update_controls(RemoveControls *controls,
 }
 
 static void
-remove_dialog_update_args(RemoveControls *controls,
-                          RemoveArgs *args)
+remove_dialog_update_values(RemoveControls *controls,
+                            RemoveArgs *args)
 {
     args->is_height
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_height));
@@ -342,6 +387,18 @@ remove_dialog_update_args(RemoveControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     args->merge_type
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->merge));
+}
+
+static void
+remove_invalidate(RemoveControls *controls)
+{
+    controls->computed = FALSE;
+}
+
+static void
+remove_invalidate2(G_GNUC_UNUSED gpointer whatever, RemoveControls *controls)
+{
+    controls->computed = FALSE;
 }
 
 static void
@@ -370,18 +427,9 @@ load_mask_color(GtkWidget *color_button,
 }
 
 static void
-save_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
-
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
-    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
-}
-
-static void
 preview(RemoveControls *controls,
-        RemoveArgs *args)
+        RemoveArgs *args,
+        GwyDataField *mfield)
 {
     GwyDataField *mask, *dfield;
 
@@ -389,39 +437,10 @@ preview(RemoveControls *controls,
                                                              "/0/data"));
     mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                            "/0/mask"));
+    gwy_data_field_copy(mfield, mask, FALSE);
     mask_process(dfield, mask, args);
     gwy_data_field_data_changed(mask);
-}
-
-static void
-add_mask_layer(GtkWidget *data_view)
-{
-    GwyPixmapLayer *layer;
-
-    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
-    }
-}
-
-static void
-remove_th_do(RemoveArgs *args,
-             GwyContainer *data)
-{
-
-    GwyDataField *dfield, *maskfield;
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                  "/0/mask"));
-        mask_process(dfield, maskfield, args);
-        gwy_data_field_data_changed(maskfield);
-    }
+    controls->computed = TRUE;
 }
 
 static void
