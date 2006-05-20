@@ -196,7 +196,7 @@ run_main(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
     /* Initialize */
-    controls.edit_mode = FFT_ELLIPSE_ADD;
+    controls.edit_mode = FFT_RECT_ADD;
 
     controls.data = data;
 
@@ -636,7 +636,7 @@ static void
 edit_mode_changed_cb(ControlsType *controls)
 {
     MaskEditMode new_mode;
-    GwyVectorLayer *vlayer;
+    GwyVectorLayer *vlayer = NULL;
     GwySelection *selection;
 
     new_mode = gwy_radio_buttons_get_current(controls->mode, "select-mode");
@@ -644,28 +644,26 @@ edit_mode_changed_cb(ControlsType *controls)
     g_debug("Edit Mode Changed. Old Mode: %i   New Mode: %i",
             controls->edit_mode, new_mode);
 
-
-    if (controls->edit_mode != new_mode)
+    switch(controls->edit_mode)
     {
-        switch(controls->edit_mode)
-        {
-            case FFT_RECT_ADD:
-            case FFT_RECT_SUB:
-            vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
-            break;
+        case FFT_RECT_ADD:
+        case FFT_RECT_SUB:
+        vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
+        break;
 
-            case FFT_ELLIPSE_ADD:
-            case FFT_ELLIPSE_SUB:
-            vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
-            break;
+        case FFT_ELLIPSE_ADD:
+        case FFT_ELLIPSE_SUB:
+        vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+        break;
 
-            default:
-                break;
-                /*XXX Shouldn't Occur */
-        }
-        gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+        default:
+            break;
+            /*XXX Shouldn't Occur */
+    }
+
+    if (vlayer) {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-        selection = gwy_vector_layer_get_selection(vlayer);
+        gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     }
 
     controls->edit_mode = new_mode;
