@@ -27,7 +27,13 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
+#define DIST_RUN_MODES (GWY_RUN_INTERACTIVE)
 #define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+
+enum {
+    MIN_RESOLUTION = 4,
+    MAX_RESOLUTION = 1024
+};
 
 typedef enum {
     MODE_GRAPH,
@@ -42,28 +48,38 @@ typedef struct {
 } GrainDistArgs;
 
 typedef struct {
+    GrainDistArgs *args;
     GSList *qlist;
+    GSList *mode;
+    GtkWidget *fixres;
+    GtkObject *resolution;
+    GtkWidget *ok;
 } GrainDistControls;
 
-static gboolean module_register                (void);
-static void     grain_dist                     (GwyContainer *data,
-                                                GwyRunType run);
-static void     grain_stat                     (GwyContainer *data,
-                                                GwyRunType run);
-static void     grain_dist_dialog              (GrainDistArgs *args,
-                                                GwyContainer *data,
-                                                GwyDataField *dfield,
-                                                GwyDataField *mfield);
-static void     grain_dist_dialog_update_values(GrainDistControls *controls,
-                                                GrainDistArgs *args);
-static void     grain_dist_run                 (GrainDistArgs *args,
-                                                GwyContainer *data,
-                                                GwyDataField *dfield,
-                                                GwyDataField *mfield);
-static void     grain_dist_load_args           (GwyContainer *container,
-                                                GrainDistArgs *args);
-static void     grain_dist_save_args           (GwyContainer *container,
-                                                GrainDistArgs *args);
+static gboolean module_register                 (void);
+static void grain_dist                          (GwyContainer *data,
+                                                 GwyRunType run);
+static void grain_stat                          (GwyContainer *data,
+                                                 GwyRunType run);
+static void grain_dist_dialog                   (GrainDistArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 GwyDataField *mfield);
+static void mode_changed_cb                     (GObject *unused,
+                                                 GrainDistControls *controls);
+static void selected_changed_cb                 (GrainDistControls *controls);
+static void grain_dist_dialog_update_values     (GrainDistControls *controls,
+                                                 GrainDistArgs *args);
+static void grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
+                                                 GrainDistArgs *args);
+static void grain_dist_run                      (GrainDistArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 GwyDataField *mfield);
+static void grain_dist_load_args                (GwyContainer *container,
+                                                 GrainDistArgs *args);
+static void grain_dist_save_args                (GwyContainer *container,
+                                                 GrainDistArgs *args);
 
 static const GrainDistArgs grain_dist_defaults = {
     MODE_GRAPH,
@@ -92,7 +108,7 @@ module_register(void)
                               (GwyProcessFunc)&grain_dist,
                               N_("/_Grains/_Distributions..."),
                               GWY_STOCK_GRAINS_GRAPH,
-                              STAT_RUN_MODES,
+                              DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Distributions of various grain "
                                  "characteristics"));
@@ -114,7 +130,7 @@ grain_dist(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     GwyDataField *mfield;
 
-    g_return_if_fail(run & STAT_RUN_MODES);
+    g_return_if_fail(run & DIST_RUN_MODES);
     grain_dist_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
@@ -190,15 +206,23 @@ grain_dist_dialog(GrainDistArgs *args,
         { N_("Projected _boundary length"),
             GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH, },
     };
+    static const GwyEnum modes[] = {
+        { N_("_Export raw data"), MODE_RAW,   },
+        { N_("Plot _graphs"),     MODE_GRAPH, },
+    };
 
     GrainDistControls controls;
-    GtkWidget *dialog, *table;
+    GtkWidget *dialog, *table, *label;
     gint row, response;
+    GSList *l;
+
+    controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Grain Distributions"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
+                                        GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
@@ -224,8 +248,42 @@ grain_dist_dialog(GrainDistArgs *args,
                                           G_N_ELEMENTS(quantities_boundary),
                                           quantities_boundary,
                                           args->selected);
+    for (l = controls.qlist; l; l = g_slist_next(l))
+        g_signal_connect_swapped(l->data, "toggled",
+                                 G_CALLBACK(selected_changed_cb), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes), "mode",
+                                             G_CALLBACK(mode_changed_cb),
+                                             &controls,
+                                             args->mode);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.mode->data),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.mode->next->data),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.resolution = gtk_adjustment_new(args->resolution,
+                                             MIN_RESOLUTION, MAX_RESOLUTION,
+                                             1, 10, 0);
+    gwy_table_attach_hscale(table, row, _("_Fix res.:"), NULL,
+                            controls.resolution, GWY_HSCALE_CHECK);
+    controls.fixres = gwy_table_hscale_get_check(controls.resolution);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fixres),
+                                 args->fixres);
 
     gtk_widget_show_all(dialog);
+    grain_dist_dialog_update_sensitivity(&controls, args);
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -253,6 +311,21 @@ grain_dist_dialog(GrainDistArgs *args,
 }
 
 static void
+mode_changed_cb(G_GNUC_UNUSED GObject *unused,
+                GrainDistControls *controls)
+{
+    grain_dist_dialog_update_values(controls, controls->args);
+    grain_dist_dialog_update_sensitivity(controls, controls->args);
+}
+
+static void
+selected_changed_cb(GrainDistControls *controls)
+{
+    grain_dist_dialog_update_values(controls, controls->args);
+    grain_dist_dialog_update_sensitivity(controls, controls->args);
+}
+
+static void
 grain_dist_dialog_update_values(GrainDistControls *controls,
                                 GrainDistArgs *args)
 {
@@ -265,6 +338,113 @@ grain_dist_dialog_update_values(GrainDistControls *controls,
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(l->data)))
             args->selected |= bit;
     }
+
+    args->mode = gwy_radio_buttons_get_current(controls->mode, "mode");
+    args->resolution = gwy_adjustment_get_int(controls->resolution);
+    args->fixres
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fixres));
+}
+
+static void
+grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
+                                     GrainDistArgs *args)
+{
+    GtkWidget *check, *w;
+
+    check = gwy_table_hscale_get_check(controls->resolution);
+    switch (args->mode) {
+        case MODE_GRAPH:
+        gtk_widget_set_sensitive(check, TRUE);
+        gtk_toggle_button_toggled(GTK_TOGGLE_BUTTON(check));
+        gtk_toggle_button_toggled(GTK_TOGGLE_BUTTON(check));
+        break;
+
+        case MODE_RAW:
+        gtk_widget_set_sensitive(check, FALSE);
+        w = gwy_table_hscale_get_scale(controls->resolution);
+        gtk_widget_set_sensitive(w, FALSE);
+        w = gwy_table_hscale_get_middle_widget(controls->resolution);
+        gtk_widget_set_sensitive(w, FALSE);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    gtk_widget_set_sensitive(controls->ok, args->selected);
+}
+
+static void
+add_one_distribution(GwyContainer *container,
+                     GwyDataField *dfield,
+                     GwyDataField *mfield,
+                     GwyGrainQuantity quantity,
+                     gint resolution)
+{
+    static const GwyEnum titles[] = {
+        { N_("Grain Projected Area Histogram"),
+            GWY_GRAIN_VALUE_PROJECTED_AREA, },
+        { N_("Grain Equivalent Square Side Histogram"),
+            GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, },
+        { N_("Grain Equivalent Disc Radius Histogram"),
+            GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS, },
+        { N_("Grain Surface Area Histogram"),
+            GWY_GRAIN_VALUE_SURFACE_AREA, },
+        { N_("Grain Maximum Value Histogram"),
+            GWY_GRAIN_VALUE_MAXIMUM, },
+        { N_("Grain Minimum Value Histogram"),
+            GWY_GRAIN_VALUE_MINIMUM, },
+        { N_("Grain Mean Value Histogram"),
+            GWY_GRAIN_VALUE_MEAN, },
+        { N_("Grain Median Value Histogram"),
+            GWY_GRAIN_VALUE_MEDIAN, },
+        { N_("Grain Projected Boundary Length Histogram"),
+            GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH, },
+    };
+    static const GwyEnum descriptions[] = {
+        { N_("Grain proj. areas"),
+            GWY_GRAIN_VALUE_PROJECTED_AREA, },
+        { N_("Grain equiv. square sides"),
+            GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, },
+        { N_("Grain equiv. disc radii"),
+            GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS, },
+        { N_("Grain surf. areas"),
+            GWY_GRAIN_VALUE_SURFACE_AREA, },
+        { N_("Grain max. values"),
+            GWY_GRAIN_VALUE_MAXIMUM, },
+        { N_("Grain min. values"),
+            GWY_GRAIN_VALUE_MINIMUM, },
+        { N_("Grain mean values"),
+            GWY_GRAIN_VALUE_MEAN, },
+        { N_("Grain median values"),
+            GWY_GRAIN_VALUE_MEDIAN, },
+        { N_("Grain proj. boundary lengths"),
+            GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH, },
+    };
+    GwyGraphCurveModel *cmodel;
+    GwyGraphModel *gmodel;
+    GwyDataLine *dataline;
+    const gchar *s;
+
+    dataline = gwy_data_field_grains_get_distribution(dfield, mfield, NULL,
+                                                      0, NULL, quantity,
+                                                      resolution);
+    gmodel = gwy_graph_model_new();
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_model_add_curve(gmodel, cmodel);
+    g_object_unref(cmodel);
+
+    s = gwy_enum_to_string(quantity, titles, G_N_ELEMENTS(titles));
+    gwy_graph_model_set_title(gmodel, _(s));
+    gwy_graph_model_set_units_from_data_line(gmodel, dataline);
+    s = gwy_enum_to_string(quantity, descriptions, G_N_ELEMENTS(descriptions));
+    gwy_graph_curve_model_set_description(cmodel, s);
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
+    g_object_unref(dataline);
+
+    gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+    g_object_unref(gmodel);
 }
 
 static void
@@ -273,29 +453,27 @@ grain_dist_run(GrainDistArgs *args,
                GwyDataField *dfield,
                GwyDataField *mfield)
 {
-    GwyGraphCurveModel *cmodel;
-    GwyGraphModel *gmodel;
-    GwyDataLine *dataline;
+    guint i, bits;
+    gint res;
 
-    /* TODO */
+    switch (args->mode) {
+        case MODE_GRAPH:
+        res = args->fixres ? args->resolution : 0;
+        bits = args->selected;
+        for (i = 0; bits; i++, bits /= 2) {
+            if (bits & 1)
+                add_one_distribution(data, dfield, mfield, i, res);
+        }
+        break;
 
-    dataline = gwy_data_field_grains_get_distribution
-                                        (dfield, mfield, NULL, 0, NULL,
-                                         GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, 0);
+        case MODE_RAW:
+        g_warning("Implement me!");
+        break;
 
-    gmodel = gwy_graph_model_new();
-    cmodel = gwy_graph_curve_model_new();
-    gwy_graph_model_add_curve(gmodel, cmodel);
-    g_object_unref(cmodel);
-
-    gwy_graph_model_set_title(gmodel, _("Grain Size Histogram"));
-    gwy_graph_model_set_units_from_data_line(gmodel, dataline);
-    gwy_graph_curve_model_set_description(cmodel, "Grain sizes");
-    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
-    g_object_unref(dataline);
-
-    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-    g_object_unref(gmodel);
+        default:
+        g_assert_not_reached();
+        break;
+    }
 }
 
 static void
@@ -436,7 +614,7 @@ grain_dist_sanitize_args(GrainDistArgs *args)
 {
     args->fixres = !!args->fixres;
     args->mode = MIN(args->mode, MODE_RAW);
-    /* TODO */
+    args->resolution = CLAMP(args->resolution, MIN_RESOLUTION, MAX_RESOLUTION);
 }
 
 static void
