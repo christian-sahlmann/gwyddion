@@ -595,8 +595,10 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     /* Find reasonable binning */
     min = gwy_data_line_part_get_min(values, 1, ngrains + 1);
     max = gwy_data_line_part_get_max(values, 1, ngrains + 1);
-    if (min > 0.0 && min < 0.1*max)
+    if (min > 0.0 && min <= 0.1*max)
         min = 0.0;
+    else if (max < 0.0 && max >= 0.1*min)
+        max = 0.0;
     if (nstats < 1) {
         nstats = floor(3.49*cbrt(ngrains) + 0.5);
         nstats = MAX(nstats, 2);
@@ -612,20 +614,26 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     else
         distribution = gwy_data_line_new(nstats, 1.0, TRUE);
 
-    for (i = 1; i <= ngrains; i++) {
-        j = (gint)((values->data[i] - min)/s);
-        j = GWY_CLAMP(j, 0, nstats-1);
-        distribution->data[j]++;
+    if (max > min) {
+        for (i = 1; i <= ngrains; i++) {
+            j = (gint)((values->data[i] - min)/s);
+            j = GWY_CLAMP(j, 0, nstats-1);
+            distribution->data[j]++;
+        }
+    }
+    else {
+        if (max)
+            s = fabs(max)/2.0;
+        else
+            s = 1.0;  /* whatever */
+
+        max += s;
+        min -= s;
+        distribution->data[nstats/2] = ngrains;
     }
     g_object_unref(values);
 
     /* Set proper units and scales */
-    if (max == min) {
-        if (max)
-            max += fabs(max - min);
-        else
-            max = 1.0;  /* whatever */
-    }
     gwy_data_line_set_real(distribution, max - min);
     gwy_data_line_set_offset(distribution, min);
 
