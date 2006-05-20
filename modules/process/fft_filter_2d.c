@@ -415,8 +415,7 @@ run_dialog(ControlsType *controls)
                                          GTK_ICON_SIZE_BUTTON
                                          /*GTK_ICON_SIZE_LARGE_TOOLBAR*/);
         gtk_container_add(GTK_CONTAINER(button), image);
-        g_object_set_data(G_OBJECT(button), "select-mode",
-                          GUINT_TO_POINTER(modes[i].edit_mode));
+        gwy_radio_button_set_value(button, modes[i].edit_mode);
         gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
         gtk_tooltips_set_tip(tips, button, gettext(modes[i].text), NULL);
         g_signal_connect_swapped(button, "clicked",
@@ -425,8 +424,7 @@ run_dialog(ControlsType *controls)
             group = GTK_RADIO_BUTTON(button);
     }
     controls->mode = gtk_radio_button_get_group(group);
-    gwy_radio_buttons_set_current(controls->mode, "select-mode",
-                                  controls->edit_mode);
+    gwy_radio_buttons_set_current(controls->mode, controls->edit_mode);
 
     /* Remaining controls: */
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
@@ -639,7 +637,7 @@ edit_mode_changed_cb(ControlsType *controls)
     GwyVectorLayer *vlayer = NULL;
     GwySelection *selection;
 
-    new_mode = gwy_radio_buttons_get_current(controls->mode, "select-mode");
+    new_mode = gwy_radio_buttons_get_current(controls->mode);
 
     g_debug("Edit Mode Changed. Old Mode: %i   New Mode: %i",
             controls->edit_mode, new_mode);

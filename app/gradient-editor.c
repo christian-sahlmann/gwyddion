@@ -245,7 +245,6 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
 
     group = gwy_radio_buttons_create
                         (editing_modes, G_N_ELEMENTS(editing_modes),
-                         "editing-mode",
                          G_CALLBACK(gwy_gradient_editor_mode_changed),
                          editor, EDITING_MODE_POINTS);
     for (l = group; l; l = g_slist_next(l)) {
@@ -639,7 +638,7 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
 {
     EditingMode mode;
 
-    mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
+    mode = gwy_radio_buttons_get_current(editor->mode_group);
     switch (mode) {
         case EDITING_MODE_POINTS:
         gwy_gradient_editor_update(editor);
@@ -703,7 +702,7 @@ gwy_gradient_editor_save_view(GwyGradientEditor *editor)
     g_string_printf(key2, "/app/%s/editor/snap", name);
 
     settings = gwy_app_settings_get();
-    mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
+    mode = gwy_radio_buttons_get_current(editor->mode_group);
     gwy_container_set_enum_by_name(settings, key1->str, mode);
     gwy_container_set_boolean_by_name(settings, key2->str, snap);
 
@@ -739,7 +738,7 @@ gwy_gradient_editor_load_view(GwyGradientEditor *editor)
     g_string_free(key1, TRUE);
     g_string_free(key2, TRUE);
 
-    gwy_radio_buttons_set_current(editor->mode_group, "editing-mode", mode);
+    gwy_radio_buttons_set_current(editor->mode_group, mode);
     /* The button doesn't emit anything when it's already in the right state. */
     gwy_gradient_editor_mode_changed(NULL, editor);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(editor->check_snap), snap);

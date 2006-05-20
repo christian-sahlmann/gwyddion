@@ -658,7 +658,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     visual = gwy_3d_view_get_visualization(gwy3dview);
     gwy3dwindow->visual_mode_group
         = gwy_radio_buttons_create(display_modes, G_N_ELEMENTS(display_modes),
-                                   "display-mode",
                                    G_CALLBACK(gwy_3d_window_display_mode_changed),
                                    gwy3dwindow,
                                    visual);
@@ -1085,7 +1084,7 @@ gwy_3d_window_display_mode_changed(GtkWidget *item,
         return;
 
     list = gtk_radio_button_get_group(GTK_RADIO_BUTTON(item));
-    visual = gwy_radio_buttons_get_current(list, "display-mode");
+    visual = gwy_radio_buttons_get_current(list);
     gwy_3d_window_set_visualization(window, visual);
 }
 
@@ -1211,8 +1210,7 @@ gwy_3d_window_visual_selected(GtkWidget *item,
     Gwy3DVisualization visual;
 
     visual = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "display-mode"));
-    gwy_radio_buttons_set_current(gwy3dwindow->visual_mode_group,
-                                  "display-mode", visual);
+    gwy_radio_buttons_set_current(gwy3dwindow->visual_mode_group, visual);
 }
 
 static void

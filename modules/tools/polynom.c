@@ -245,7 +245,7 @@ gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
     row++;
 
     radio = gwy_radio_buttons_create
-                    (directions, G_N_ELEMENTS(directions), "direction-type",
+                    (directions, G_N_ELEMENTS(directions),
                      G_CALLBACK(gwy_tool_polynom_direction_changed), tool,
                      tool->args.direction);
     tool->direction = radio;
@@ -353,8 +353,7 @@ static void
 gwy_tool_polynom_direction_changed(G_GNUC_UNUSED GObject *button,
                                    GwyToolPolynom *tool)
 {
-    tool->args.direction
-        = gwy_radio_buttons_get_current(tool->direction, "direction-type");
+    tool->args.direction = gwy_radio_buttons_get_current(tool->direction);
 }
 
 static void

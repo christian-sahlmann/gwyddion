@@ -682,7 +682,6 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
     controls->format = gwy_radio_buttons_create(formats, G_N_ELEMENTS(formats),
-                                                "format",
                                                 G_CALLBACK(bintext_changed_cb),
                                                 controls,
                                                 args->p.format);
@@ -1515,7 +1514,7 @@ update_dialog_controls(RawFileControls *controls)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->takeover),
                                  args->takeover);
 
-    gwy_radio_buttons_set_current(controls->format, "format", args->p.format);
+    gwy_radio_buttons_set_current(controls->format, args->p.format);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->offset));
     gtk_adjustment_set_value(adj, args->p.offset);
@@ -1671,7 +1670,7 @@ update_dialog_values(RawFileControls *controls)
 
     args->p.builtin
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->builtin));
-    args->p.format = gwy_radio_buttons_get_current(controls->format, "format");
+    args->p.format = gwy_radio_buttons_get_current(controls->format);
 
     args->takeover
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->takeover));

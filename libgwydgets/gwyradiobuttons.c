@@ -26,11 +26,19 @@
 #include <libgwyddion/gwyutils.h>
 #include "gwyradiobuttons.h"
 
+static GQuark gwyrb_quark = 0;
+
+static void
+setup_quark(void)
+{
+    if (!gwyrb_quark)
+        gwyrb_quark = g_quark_from_static_string("gwy-radiobuttons-key");
+}
+
 /**
  * gwy_radio_buttons_create:
  * @entries: Radio button group items.
  * @nentries: The number of items.
- * @key: Value object data key.
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            no callback).
  * @cbdata: User data passed to the callback.
@@ -39,7 +47,6 @@
  *
  * Creates a radio button group for an enum.
  *
- * It sets object data identified by @key for each menu item to its value.
  * Try to avoid -1 as an enum value.
  *
  * Returns: The newly created radio button group (a #GSList).  Iterate over
@@ -50,25 +57,22 @@
 GSList*
 gwy_radio_buttons_create(const GwyEnum *entries,
                          gint nentries,
-                         const gchar *key,
                          GCallback callback,
                          gpointer cbdata,
                          gint current)
 {
     GtkWidget *button, *curbutton;
     GSList *group;
-    GQuark quark;
     gint i;
 
-    quark = g_quark_from_string(key);
-
+    setup_quark();
     button = curbutton = NULL;
     /* FIXME: this relies on undocumented GtkRadioButton behaviour;
      * we assume it puts the items into the group in reverse order */
     for (i = nentries-1; i >= 0; i--) {
         button = gtk_radio_button_new_with_mnemonic_from_widget
                                (GTK_RADIO_BUTTON(button), _(entries[i].name));
-        g_object_set_qdata(G_OBJECT(button), quark,
+        g_object_set_qdata(G_OBJECT(button), gwyrb_quark,
                            GINT_TO_POINTER(entries[i].value));
         if (entries[i].value == current)
             curbutton = button;
@@ -91,8 +95,6 @@ gwy_radio_buttons_create(const GwyEnum *entries,
 /**
  * gwy_radio_buttons_set_current:
  * @group: A radio button group created by gwy_radio_buttons_create().
- * @key: Value object data key (specified as @key when called
- *       gwy_radio_buttons_create()).
  * @current: Value to be shown as currently selected.
  *
  * Sets currently selected radio button in @group based on integer item object
@@ -102,54 +104,20 @@ gwy_radio_buttons_create(const GwyEnum *entries,
  **/
 gboolean
 gwy_radio_buttons_set_current(GSList *group,
-                              const gchar *key,
                               gint current)
 {
-    GQuark quark;
+    GtkWidget *button;
 
-    g_return_val_if_fail(group, FALSE);
-    quark = g_quark_from_string(key);
-    while (group) {
-        g_return_val_if_fail(GTK_IS_RADIO_BUTTON(group->data), FALSE);
-        if (GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(group->data), quark))
-            == current) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(group->data), TRUE);
-            return TRUE;
-        }
-        group = g_slist_next(group);
-    }
+    if (!(button = gwy_radio_buttons_find(group, current)))
+        return FALSE;
 
-    return FALSE;
-}
-
-/**
- * gwy_radio_buttons_set_current_from_widget:
- * @widget: A member of a radio button group created by
- *          gwy_radio_buttons_create().
- * @key: Value object data key (specified as @key when called
- *       gwy_radio_buttons_create()).
- * @current: Value to be shown as currently selected.
- *
- * Sets currently selected radio button in @group based on integer item object
- * data (as set by gwy_radio_buttons_create()).
- *
- * Returns: %TRUE if current button was set, %FALSE if @current was not found.
- **/
-gboolean
-gwy_radio_buttons_set_current_from_widget(GtkWidget *widget,
-                                          const gchar *key,
-                                          gint current)
-{
-    return gwy_radio_buttons_set_current
-               (gtk_radio_button_get_group(GTK_RADIO_BUTTON(widget)),
-                key, current);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
+    return TRUE;
 }
 
 /**
  * gwy_radio_buttons_get_current:
  * @group: A radio button group created by gwy_radio_buttons_create().
- * @key: Value object data key (specified as @key when called
- *       gwy_radio_buttons_create()).
  *
  * Gets the integer enum value corresponding to currently selected item.
  *
@@ -157,18 +125,13 @@ gwy_radio_buttons_set_current_from_widget(GtkWidget *widget,
  *          case of failure -1 is returned.
  **/
 gint
-gwy_radio_buttons_get_current(GSList *group,
-                              const gchar *key)
+gwy_radio_buttons_get_current(GSList *group)
 {
-    GQuark quark;
-
-    quark = g_quark_from_string(key);
-
     while (group) {
         g_return_val_if_fail(GTK_IS_RADIO_BUTTON(group->data), -1);
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(group->data)))
             return GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(group->data),
-                                                      quark));
+                                                      gwyrb_quark));
         group = g_slist_next(group);
     }
 
@@ -176,23 +139,64 @@ gwy_radio_buttons_get_current(GSList *group,
 }
 
 /**
- * gwy_radio_buttons_get_current_from_widget:
- * @widget: A member of a radio button group created by
+ * gwy_radio_buttons_find:
+ * @group: A radio button group created by gwy_radio_buttons_create().
+ * @value: The value associated with the button to find.
+ *
+ * Finds a radio button by its associated integer value.
+ *
+ * Returns: The radio button corresponding to @value, or %NULL on failure.
+ **/
+GtkWidget*
+gwy_radio_buttons_find(GSList *group,
+                       gint value)
+{
+    g_return_val_if_fail(group, NULL);
+    while (group) {
+        g_return_val_if_fail(GTK_IS_RADIO_BUTTON(group->data), FALSE);
+        if (GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(group->data),
+                                               gwyrb_quark)) == value)
+            return GTK_WIDGET(group->data);
+        group = g_slist_next(group);
+    }
+
+    return NULL;
+}
+
+/**
+ * gwy_radio_button_get_value:
+ * @button: A radio button belonging to a group created by
  *          gwy_radio_buttons_create().
- * @key: Value object data key (specified as @key when called
- *       gwy_radio_buttons_create()).
  *
- * Gets the integer enum value corresponding to currently selected item.
+ * Gets the integer value associated with a radio button.
  *
- * Returns: The enum value corresponding to currently selected item.  In
- *          case of failure -1 is returned.
+ * Returns: The integer value corresponding to @button.
  **/
 gint
-gwy_radio_buttons_get_current_from_widget(GtkWidget *widget,
-                                          const gchar *key)
+gwy_radio_button_get_value(GtkWidget *button)
 {
-    return gwy_radio_buttons_get_current
-               (gtk_radio_button_get_group(GTK_RADIO_BUTTON(widget)), key);
+    g_return_val_if_fail(GTK_IS_RADIO_BUTTON(button), -1);
+    return GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(button), gwyrb_quark));
+}
+
+/**
+ * gwy_radio_button_set_value:
+ * @button: A radio button to set associated value of.
+ * @value: Value to associate.
+ *
+ * Sets the integer value associated with a radio button.
+ *
+ * This function allow to change associated radio button values after creation
+ * or even construct a radio button group with associated integers without the
+ * help of gwy_radio_buttons_create().
+ **/
+void
+gwy_radio_button_set_value(GtkWidget *button,
+                           gint value)
+{
+    g_return_if_fail(GTK_IS_RADIO_BUTTON(button));
+    setup_quark();
+    g_object_set_qdata(G_OBJECT(button), gwyrb_quark, GINT_TO_POINTER(value));
 }
 
 /************************** Documentation ****************************/
@@ -204,10 +208,8 @@ gwy_radio_buttons_get_current_from_widget(GtkWidget *widget,
  * @see_also: <link linkend="libgwydget-gwycombobox">gwycombobox</link>
  *            -- combo box constructors
  *
- * Radio button groups can be easily constructed from #GwyEnum's with
- * gwy_radio_buttons_create() specifying a key that will be used to define
- * value of each item so that it can be either fetched with g_object_get_data()
- * in a callback function or with gwy_radio_buttons_get_current().
+ * Groups of button associated with some integers can be easily constructed
+ * from #GwyEnum's with gwy_radio_buttons_create().
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

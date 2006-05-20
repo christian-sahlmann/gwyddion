@@ -1631,8 +1631,7 @@ save_type_changed(GtkWidget *button,
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
         return;
 
-    controls->args->otype = gwy_radio_buttons_get_current(controls->group,
-                                                          "output-format");
+    controls->args->otype = gwy_radio_buttons_get_current(controls->group);
     update_preview(controls);
 }
 
@@ -1715,7 +1714,6 @@ pixmap_save_dialog(GwyContainer *data,
 
     controls.group = gwy_radio_buttons_create(output_formats,
                                               G_N_ELEMENTS(output_formats),
-                                              "output-format",
                                               G_CALLBACK(save_type_changed),
                                               &controls,
                                               args->otype);
@@ -1778,8 +1776,7 @@ pixmap_save_dialog(GwyContainer *data,
             gtk_adjustment_set_value(GTK_ADJUSTMENT(zoom), args->zoom);
             args->zoom = 120.0/MAX(gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield));
-            gwy_radio_buttons_set_current(controls.group,
-                                          "output-format", args->otype);
+            gwy_radio_buttons_set_current(controls.group, args->otype);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.draw_mask),
                                          args->draw_mask);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.draw_selection),

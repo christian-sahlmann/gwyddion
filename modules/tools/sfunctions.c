@@ -371,7 +371,7 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
     row++;
 
     radio = gwy_radio_buttons_create
-                    (directions, G_N_ELEMENTS(directions), "direction-type",
+                    (directions, G_N_ELEMENTS(directions),
                      G_CALLBACK(gwy_tool_sfunctions_direction_changed), tool,
                      tool->args.direction);
     tool->direction = radio;
@@ -706,8 +706,7 @@ static void
 gwy_tool_sfunctions_direction_changed(G_GNUC_UNUSED GObject *button,
                                       GwyToolSFunctions *tool)
 {
-    tool->args.direction
-        = gwy_radio_buttons_get_current(tool->direction, "direction-type");
+    tool->args.direction = gwy_radio_buttons_get_current(tool->direction);
     gwy_tool_sfunctions_update_curve(tool);
 }
 

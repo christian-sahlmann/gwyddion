@@ -67,7 +67,7 @@ static void           slope_dialog_update_values  (SlopeControls *controls,
                                                    SlopeArgs *args);
 static void           slope_fit_plane_cb          (GtkToggleButton *check,
                                                    SlopeControls *controls);
-static void           slope_output_type_cb        (GObject *radio,
+static void           slope_output_type_cb        (GtkWidget *radio,
                                                    SlopeControls *controls);
 static GwyDataField*  slope_do                    (GwyDataField *dfield,
                                                    SlopeArgs *args);
@@ -205,7 +205,6 @@ slope_dialog(SlopeArgs *args)
     row++;
 
     group = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
-                                     "slope-output-type",
                                      G_CALLBACK(slope_output_type_cb),
                                      &controls,
                                      args->output_type);
@@ -292,7 +291,7 @@ slope_dialog_update_controls(SlopeControls *controls,
     gtk_widget_set_sensitive(controls->logscale,
                              args->output_type != SLOPE_DIST_GRAPH);
     gwy_radio_buttons_set_current(controls->output_type_group,
-                                  "slope-output-type", args->output_type);
+                                  args->output_type);
 }
 
 static void
@@ -306,8 +305,7 @@ slope_dialog_update_values(SlopeControls *controls,
     args->fit_plane =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_plane));
     args->output_type =
-        gwy_radio_buttons_get_current(controls->output_type_group,
-                                      "slope-output-type");
+        gwy_radio_buttons_get_current(controls->output_type_group);
 }
 
 static void
@@ -319,14 +317,13 @@ slope_fit_plane_cb(GtkToggleButton *check,
 }
 
 static void
-slope_output_type_cb(GObject *radio,
+slope_output_type_cb(G_GNUC_UNUSED GtkWidget *button,
                      SlopeControls *controls)
 {
     SlopeOutput otype;
 
-    otype = GPOINTER_TO_UINT(g_object_get_data(radio, "slope-output-type"));
-    gtk_widget_set_sensitive(controls->logscale,
-                             otype == SLOPE_DIST_2D_DIST);
+    otype = gwy_radio_buttons_get_current(controls->output_type_group);
+    gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);
 }
 
 static GwyDataField*

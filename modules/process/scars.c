@@ -525,7 +525,7 @@ scars_mark_dialog(ScarsArgs *args,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    group = gwy_radio_buttons_create(types, G_N_ELEMENTS(types), "type",
+    group = gwy_radio_buttons_create(types, G_N_ELEMENTS(types),
                                      NULL, NULL, args->type);
     controls.type = group;
     while (group) {
@@ -644,7 +644,7 @@ scars_mark_dialog_update_controls(ScarsControls *controls,
                              args->min_len);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_width),
                              args->max_width);
-    gwy_radio_buttons_set_current(controls->type, "type", args->type);
+    gwy_radio_buttons_set_current(controls->type, args->type);
 }
 
 static void
@@ -657,7 +657,7 @@ scars_mark_dialog_update_values(ScarsControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_low));
     args->min_len = gwy_adjustment_get_int(controls->min_len);
     args->max_width = gwy_adjustment_get_int(controls->max_width);
-    args->type = gwy_radio_buttons_get_current(controls->type, "type");
+    args->type = gwy_radio_buttons_get_current(controls->type);
 }
 
 static void

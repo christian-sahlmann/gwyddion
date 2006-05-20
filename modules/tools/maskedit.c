@@ -316,8 +316,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         image = gtk_image_new_from_stock(modes[i].stock_id,
                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
         gtk_container_add(GTK_CONTAINER(button), image);
-        g_object_set_data(G_OBJECT(button), "select-mode",
-                          GUINT_TO_POINTER(modes[i].type));
+        gwy_radio_button_set_value(button, modes[i].type);
         gtk_box_pack_start(hbox, button, FALSE, FALSE, 0);
         gtk_tooltips_set_tip(tips, button, gettext(modes[i].text), NULL);
         g_signal_connect_swapped(button, "clicked",
@@ -327,7 +326,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
             group = GTK_RADIO_BUTTON(button);
     }
     tool->mode = gtk_radio_button_get_group(group);
-    gwy_radio_buttons_set_current(tool->mode, "select-mode", tool->args.mode);
+    gwy_radio_buttons_set_current(tool->mode, tool->args.mode);
     row++;
 
     /* Shape */
@@ -346,8 +345,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         image = gtk_image_new_from_stock(shapes[i].stock_id,
                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
         gtk_container_add(GTK_CONTAINER(button), image);
-        g_object_set_data(G_OBJECT(button), "shape-type",
-                          GUINT_TO_POINTER(shapes[i].type));
+        gwy_radio_button_set_value(button, shapes[i].type);
         gtk_box_pack_start(hbox, button, FALSE, FALSE, 0);
         gtk_tooltips_set_tip(tips, button, gettext(shapes[i].text), NULL);
         g_signal_connect_swapped(button, "clicked",
@@ -357,7 +355,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
             group = GTK_RADIO_BUTTON(button);
     }
     tool->shape = gtk_radio_button_get_group(group);
-    gwy_radio_buttons_set_current(tool->shape, "shape-type", tool->args.shape);
+    gwy_radio_buttons_set_current(tool->shape, tool->args.shape);
     gtk_table_set_row_spacing(table, row, 12);
     row++;
 
@@ -505,7 +503,7 @@ gwy_tool_mask_editor_mask_changed(GwyPlainTool *plain_tool)
 static void
 gwy_tool_mask_editor_mode_changed(GwyToolMaskEditor *tool)
 {
-    tool->args.mode = gwy_radio_buttons_get_current(tool->mode, "select-mode");
+    tool->args.mode = gwy_radio_buttons_get_current(tool->mode);
     if (tool->args.mode == -1)
         g_warning("Mode set to -1!");
 }
@@ -516,7 +514,7 @@ gwy_tool_mask_editor_shape_changed(GwyToolMaskEditor *tool)
     GwyPlainTool *plain_tool;
     MaskEditShape shape;
 
-    shape = gwy_radio_buttons_get_current(tool->shape, "shape-type");
+    shape = gwy_radio_buttons_get_current(tool->shape);
     if (shape == tool->args.shape)
         return;
     tool->args.shape = shape;

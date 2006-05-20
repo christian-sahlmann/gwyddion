@@ -253,7 +253,7 @@ grain_dist_dialog(GrainDistArgs *args,
                                  G_CALLBACK(selected_changed_cb), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-    controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes), "mode",
+    controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
                                              G_CALLBACK(mode_changed_cb),
                                              &controls,
                                              args->mode);
@@ -339,7 +339,7 @@ grain_dist_dialog_update_values(GrainDistControls *controls,
             args->selected |= bit;
     }
 
-    args->mode = gwy_radio_buttons_get_current(controls->mode, "mode");
+    args->mode = gwy_radio_buttons_get_current(controls->mode);
     args->resolution = gwy_adjustment_get_int(controls->resolution);
     args->fixres
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fixres));

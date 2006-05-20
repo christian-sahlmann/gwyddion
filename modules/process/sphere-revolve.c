@@ -64,7 +64,7 @@ static GwyDataField* sphrev_vertical           (Sphrev1DArgs *args,
 static GwyDataLine*  sphrev_make_sphere        (gdouble radius,
                                                 gint maxres);
 static gboolean      sphrev_dialog             (Sphrev1DArgs *args);
-static void          direction_changed_cb      (GObject *item,
+static void          direction_changed_cb      (GtkWidget *radio,
                                                 Sphrev1DArgs *args);
 static void          radius_changed_cb         (GtkAdjustment *adj,
                                                 Sphrev1DArgs *args);
@@ -249,7 +249,6 @@ sphrev_dialog(Sphrev1DArgs *args)
     row++;
 
     radio = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
-                                     "direction-type",
                                      G_CALLBACK(direction_changed_cb), args,
                                      args->direction);
     controls.direction = radio;
@@ -306,14 +305,13 @@ sphrev_dialog(Sphrev1DArgs *args)
 }
 
 static void
-direction_changed_cb(GObject *item,
+direction_changed_cb(GtkWidget *radio,
                      Sphrev1DArgs *args)
 {
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(item)))
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
         return;
 
-    args->direction
-        = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    args->direction = gwy_radio_button_get_value(radio);
 }
 
 static void
@@ -364,8 +362,7 @@ sphrev_dialog_update(Sphrev1DControls *controls,
                              args->size
                              * args->pixelsize/args->valform->magnitude);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
-    gwy_radio_buttons_set_current(controls->direction, "direction-type",
-                                  args->direction);
+    gwy_radio_buttons_set_current(controls->direction, args->direction);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
                                  args->do_extract);
 }

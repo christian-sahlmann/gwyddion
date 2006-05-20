@@ -162,7 +162,6 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
 
     group = gwy_radio_buttons_create
                         (color_components, G_N_ELEMENTS(color_components),
-                         "color-component",
                          G_CALLBACK(gwy_gl_material_editor_component_cb),
                          editor,
                          editor->last_component);
@@ -297,8 +296,7 @@ gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
     const GwyRGBA *color;
 
     res_editor = GWY_RESOURCE_EDITOR(editor);
-    editor->last_component = gwy_radio_buttons_get_current(editor->components,
-                                                           "color-component");
+    editor->last_component = gwy_radio_buttons_get_current(editor->components);
     material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited(res_editor));
     g_return_if_fail(material
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));

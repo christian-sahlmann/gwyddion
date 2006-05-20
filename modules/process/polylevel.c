@@ -354,7 +354,6 @@ poly_level_dialog(PolyLevelArgs *args,
 
     controls.type_group
         = gwy_radio_buttons_create(types, G_N_ELEMENTS(types),
-                                   "independent",
                                    G_CALLBACK(poly_level_type_changed),
                                    &controls,
                                    args->independent);
@@ -465,8 +464,7 @@ poly_level_dialog_update(PolyLevelControls *controls,
                                  args->do_extract);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->same_degree),
                                  args->same_degree);
-    gwy_radio_buttons_set_current(controls->type_group, "independent",
-                                  args->independent);
+    gwy_radio_buttons_set_current(controls->type_group, args->independent);
 }
 
 static void
@@ -480,8 +478,7 @@ poly_level_update_values(PolyLevelControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_extract));
     args->same_degree
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->same_degree));
-    args->independent
-        = gwy_radio_buttons_get_current(controls->type_group, "independent");
+    args->independent = gwy_radio_buttons_get_current(controls->type_group);
 }
 
 static void
@@ -494,8 +491,7 @@ poly_level_type_changed(GtkToggleButton *button,
         return;
 
     args = controls->args;
-    args->independent = gwy_radio_buttons_get_current(controls->type_group,
-                                                      "independent");
+    args->independent = gwy_radio_buttons_get_current(controls->type_group);
     gtk_widget_set_sensitive(controls->same_degree, args->independent);
     gwy_table_hscale_set_sensitive(controls->row_degree, args->independent);
     gwy_table_hscale_set_sensitive(controls->col_degree, args->independent);

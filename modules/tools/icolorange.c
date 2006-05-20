@@ -89,7 +89,7 @@ static void   gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
 static void   gwy_tool_color_range_xsel_changed     (GwySelection *selection,
                                                      gint hint,
                                                      GwyToolColorRange *tool);
-static void   gwy_tool_color_range_type_changed     (GObject *item,
+static void   gwy_tool_color_range_type_changed     (GtkWidget *radio,
                                                      GwyToolColorRange *tool);
 static GwyLayerBasicRangeType gwy_tool_color_range_get_range_type(GwyToolColorRange *tool);
 static void   gwy_tool_color_range_set_range_type   (GwyToolColorRange *tool,
@@ -207,7 +207,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     /* Mode switch */
     hbox = gtk_hbox_new(TRUE, 0);
     modelist = gwy_radio_buttons_create
-                          (range_types, G_N_ELEMENTS(range_types), "range-type",
+                          (range_types, G_N_ELEMENTS(range_types),
                            G_CALLBACK(gwy_tool_color_range_type_changed), tool,
                            GWY_LAYER_BASIC_RANGE_FULL);
     for (l = modelist; l; l = g_slist_next(l)) {
@@ -334,7 +334,7 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
      * another FIXED) */
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
     range_type = gwy_tool_color_range_get_range_type(tool);
-    gwy_radio_buttons_set_current(tool->modelist, "range-type", range_type);
+    gwy_radio_buttons_set_current(tool->modelist, range_type);
     gwy_tool_color_range_update_histogram(tool);
     gwy_tool_color_range_update_fullrange(tool);
     gwy_tool_color_range_set_min_max(tool);
@@ -418,7 +418,7 @@ gwy_tool_color_range_xsel_changed(GwySelection *selection,
 /* TODO: this is not enough, we need to restore range from container.
  * add USE_CONTAINER source type? */
 static void
-gwy_tool_color_range_type_changed(GObject *item,
+gwy_tool_color_range_type_changed(GtkWidget *radio,
                                   GwyToolColorRange *tool)
 {
     GwyLayerBasicRangeType range_type, old_mode;
@@ -430,7 +430,7 @@ gwy_tool_color_range_type_changed(GObject *item,
         return;
 
     old_mode = gwy_tool_color_range_get_range_type(tool);
-    range_type = GPOINTER_TO_INT(g_object_get_data(item, "range-type"));
+    range_type = gwy_radio_button_get_value(radio);
     if (old_mode == range_type)
         return;
 

@@ -78,7 +78,7 @@ static void gwy_tool_grain_remover_finalize         (GObject *object);
 static void gwy_tool_grain_remover_init_dialog      (GwyToolGrainRemover *tool);
 static void gwy_tool_grain_remover_data_switched    (GwyTool *gwytool,
                                                      GwyDataView *data_view);
-static void gwy_tool_grain_remover_mode_changed     (GObject *item,
+static void gwy_tool_grain_remover_mode_changed     (GtkWidget *radio,
                                                      GwyToolGrainRemover *tool);
 static void gwy_tool_grain_remover_method_changed   (GtkComboBox *combo,
                                                      GwyToolGrainRemover *tool);
@@ -216,7 +216,7 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
     row++;
 
     group = gwy_radio_buttons_create
-                       (modes, G_N_ELEMENTS(modes), "mode",
+                       (modes, G_N_ELEMENTS(modes),
                         G_CALLBACK(gwy_tool_grain_remover_mode_changed), tool,
                         tool->args.mode);
     while (group) {
@@ -273,13 +273,13 @@ gwy_tool_grain_remover_data_switched(GwyTool *gwytool,
 }
 
 static void
-gwy_tool_grain_remover_mode_changed(GObject *item,
+gwy_tool_grain_remover_mode_changed(GtkWidget *radio,
                                     GwyToolGrainRemover *tool)
 {
     RemoveMode mode;
     gboolean sensitive;
 
-    mode = GPOINTER_TO_INT(g_object_get_data(item, "mode"));
+    mode = gwy_radio_button_get_value(radio);
     tool->args.mode = mode;
 
     sensitive = (mode == GRAIN_REMOVE_DATA || mode == GRAIN_REMOVE_BOTH);
