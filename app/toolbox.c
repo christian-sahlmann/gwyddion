@@ -79,7 +79,7 @@ static GtkTargetEntry dnd_target_table[] = {
 static const gchar *proc_functions[] = {
     "fix_zero", "scale", "rotate", "unrotate",
     "level", "facet-level", "fft", "cwt",
-    "grain_mark", "grain_wshed", "grain_rem_threshold", "grain_size_dist",
+    "grain_mark", "grain_wshed", "grain_rem_threshold", "grain_dist",
     "mask_remove", "shade", "polylevel", "scars_remove",
 };
 
