@@ -669,24 +669,14 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     return distribution;
 }
 
-/* See stats.c for description. */
+/* See stats.c for description, this function calculates twice `contribution
+ * of one corner' (the twice is to move multiplications from inner loops) */
 static inline gdouble
-square_area2w(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
-              gint w1, gint w2, gint w3, gint w4,
-              gdouble x, gdouble y)
+square_area2w_1c(gdouble z1, gdouble z2, gdouble z4, gdouble c,
+                 gdouble x, gdouble y)
 {
-    gdouble c;
-
-    c = (z1 + z2 + z3 + z4)/2.0;
-
-    return ((w1 + w2)*sqrt(1.0 + (z1 - z2)*(z1 - z2)/x
-                           + (z1 + z2 - c)*(z1 + z2 - c)/y)
-            + (w2 + w3)*sqrt(1.0 + (z2 - z3)*(z2 - z3)/y
-                             + (z2 + z3 - c)*(z2 + z3 - c)/x)
-            + (w3 + w4)*sqrt(1.0 + (z3 - z4)*(z3 - z4)/x
-                             + (z3 + z4 - c)*(z3 + z4 - c)/y)
-            + (w4 + w1)*sqrt(1.0 + (z1 - z4)*(z1 - z4)/y
-                             + (z1 + z4 - c)*(z1 + z4 - c)/x))/2.0;
+    return sqrt(1.0 + (z1 - z2)*(z1 - z2)/x + (z1 + z2 - c)*(z1 + z2 - c)/y)
+            + sqrt(1.0 + (z1 - z4)*(z1 - z4)/y + (z1 + z4 - c)*(z1 + z4 - c)/x);
 }
 
 /**
@@ -882,53 +872,36 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         qh = gwy_data_field_get_xmeasure(data_field);
         qv = gwy_data_field_get_ymeasure(data_field);
-        q = qh*qv/4.0;
+        q = qh*qv/8.0;
         qh = qh*qh;
         qv = qv*qv;
-        /* This is quite inefficient, every contribution is calculated four
-         * times for each participating pixel (every time only 1/4 of it is
-         * actually added). */
+        /* Every contribution is calculated twice -- for each pixel (vertex)
+         * participating to a particular triangle */
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 gint ix, ipx, imx, jp, jm, gno;
-
-                if (!(gno = grains[i*xres + j]))
-                    continue;
+                gdouble c;
 
                 ix = i*xres;
-                imx = (i > 0) ? ix - xres : 0;
-                ipx = (i < yres-1) ? ix + xres : (yres - 1)*xres;
-                jm = (j > 0) ? j-1 : 0;
-                jp = (j < yres-1) ? j+1 : yres-1;
+                if (!(gno = grains[ix + j]))
+                    continue;
 
-                values[gno] += square_area2w(data[ix + j], data[ix + jm],
-                                             data[imx + jm], data[imx + j],
-                                             1,
-                                             grains[ix + jm] == gno,
-                                             grains[imx + jm] == gno,
-                                             grains[imx + j] == gno,
-                                             qh, qv);
-                values[gno] += square_area2w(data[ix + j], data[ix + jp],
-                                             data[imx + jp], data[imx + j],
-                                             1,
-                                             grains[ix + jp] == gno,
-                                             grains[imx + jp] == gno,
-                                             grains[imx + j] == gno,
-                                             qh, qv);
-                values[gno] += square_area2w(data[ix + j], data[ix + jm],
-                                             data[ipx + jm], data[ipx + j],
-                                             1,
-                                             grains[ix + jm] == gno,
-                                             grains[ipx + jm] == gno,
-                                             grains[ipx + j] == gno,
-                                             qh, qv);
-                values[gno] += square_area2w(data[ix + j], data[ix + jp],
-                                             data[ipx + jp], data[ipx + j],
-                                             1,
-                                             grains[ix + jp] == gno,
-                                             grains[ipx + jp] == gno,
-                                             grains[ipx + j] == gno,
-                                             qh, qv);
+                imx = (i > 0) ? ix-xres : ix;
+                ipx = (i < yres-1) ? ix+xres : ix;
+                jm = (j > 0) ? j-1 : j;
+                jp = (j < yres-1) ? j+1 : j;
+
+                c = (data[ix + j] + data[ix + jm]
+                     + data[imx + jm] + data[imx + j])/2.0;
+
+                values[gno] += square_area2w_1c(data[ix + j], data[ix + jm],
+                                                data[imx + j], c, qh, qv);
+                values[gno] += square_area2w_1c(data[ix + j], data[ix + jp],
+                                                data[imx + j], c, qh, qv);
+                values[gno] += square_area2w_1c(data[ix + j], data[ix + jm],
+                                                data[ipx + j], c, qh, qv);
+                values[gno] += square_area2w_1c(data[ix + j], data[ix + jp],
+                                                data[ipx + j], c, qh, qv);
             }
         }
         for (i = 1; i <= ngrains; i++)
