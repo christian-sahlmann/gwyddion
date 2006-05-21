@@ -374,7 +374,8 @@ run_dialog(ControlsType *controls)
     }
     gwy_vector_layer_set_selection_key(controls->vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),controls->vlayer);
-    selection = gwy_vector_layer_get_selection(controls->vlayer);
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                                 "/0/select/pointer");
     g_signal_connect(selection, "finished",
                      G_CALLBACK(selection_finished_cb), controls);
 

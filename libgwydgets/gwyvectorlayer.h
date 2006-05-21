@@ -87,7 +87,6 @@ struct _GwyVectorLayerClass {
 };
 
 GType         gwy_vector_layer_get_type         (void) G_GNUC_CONST;
-GwySelection* gwy_vector_layer_get_selection    (GwyVectorLayer *layer);
 void          gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
                                                  const gchar *key);
 const gchar*  gwy_vector_layer_get_selection_key(GwyVectorLayer *layer);

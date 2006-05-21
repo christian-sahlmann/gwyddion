@@ -289,7 +289,8 @@ facets_dialog(FacetsArgs *args,
     vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
-    selection = gwy_vector_layer_get_selection(vlayer);
+    selection = gwy_container_get_object_by_name(controls.mydata,
+                                                 "/0/select/pointer");
     g_signal_connect(selection, "changed",
                      G_CALLBACK(preview_selection_updated), &controls);
 
@@ -315,7 +316,8 @@ facets_dialog(FacetsArgs *args,
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.fview),
                                 GWY_VECTOR_LAYER(vlayer));
-    selection = gwy_vector_layer_get_selection(vlayer);
+    selection = gwy_container_get_object_by_name(controls.fdata,
+                                                 "/0/select/pointer");
     g_signal_connect(selection, "changed",
                      G_CALLBACK(facet_view_selection_updated), &controls);
 
@@ -503,6 +505,7 @@ facet_view_select_angle(FacetsControls *controls,
     gdouble x, y, q, xy[2];
     GwyVectorLayer *layer;
     GwySelection *selection;
+    const gchar *key;
 
     angles_to_xy(theta, -phi, &x, &y);
     controls->in_update = TRUE;
@@ -510,7 +513,8 @@ facet_view_select_angle(FacetsControls *controls,
     xy[0] = x + G_SQRT2/q;
     xy[1] = G_SQRT2/q - y;
     layer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->fview));
-    selection = gwy_vector_layer_get_selection(layer);
+    key = gwy_vector_layer_get_selection_key(layer);
+    selection = gwy_container_get_object_by_name(controls->fdata, key);
     gwy_selection_set_object(selection, 0, xy);
     controls->in_update = FALSE;
 }
@@ -521,6 +525,7 @@ facet_view_selection_updated(GwySelection *selection,
                              FacetsControls *controls)
 {
     GwyVectorLayer *layer;
+    const gchar *key;
     gdouble theta, phi, x, y, q, xy[2];
     gchar s[24];
 
@@ -540,7 +545,8 @@ facet_view_selection_updated(GwySelection *selection,
 
     if (!controls->in_update) {
         layer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
-        selection = gwy_vector_layer_get_selection(layer);
+        key = gwy_vector_layer_get_selection_key(layer);
+        selection = gwy_container_get_object_by_name(controls->mydata, key);
         if (gwy_selection_get_data(selection, NULL))
             gwy_selection_clear(selection);
     }

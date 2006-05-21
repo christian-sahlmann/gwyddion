@@ -396,21 +396,6 @@ gwy_vector_layer_key_release(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_vector_layer_get_selection:
- * @layer: A vector data view layer.
- *
- * Gets the selection objects a vector layer currently uses.
- *
- * Returns: A #GwySelection.
- **/
-GwySelection*
-gwy_vector_layer_get_selection(GwyVectorLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), NULL);
-    return layer->selection;
-}
-
 static void
 gwy_vector_layer_update_context(GwyVectorLayer *layer)
 {
@@ -670,8 +655,7 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer,
  *
  * The layer takes the selection to display from its parent #GwyDataView.
  * The key under which the selection is found must be set with
- * gwy_vector_layer_set_selection_key().  The selection object currently in
- * use can be obtained with gwy_vector_layer_get_selection().
+ * gwy_vector_layer_set_selection_key().
  *
  * The other methods are rarely useful outside #GwyDataView implementation.
  **/
