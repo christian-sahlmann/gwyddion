@@ -40,7 +40,6 @@ typedef struct {
     GwyFileOperationType fileop;
 } TypeListData;
 
-//static gboolean   confirm_overwrite              (GtkWidget *chooser);
 static void       gwy_app_file_add_types         (GtkListStore *store,
                                                   GwyFileOperationType fileop);
 static void       gwy_app_file_select_type       (GtkWidget *selector);
@@ -443,25 +442,39 @@ gwy_app_file_save_as(void)
 }
 
 
+/**
+ * gwy_app_file_confirm_overwrite:
+ * @chooser: A file chooser for save action.
+ *
+ * Asks for file overwrite for a file save chooser.
+ *
+ * Returns: %TRUE if it is OK to overwrite the file, %FALSE when user cancelled
+ *          it or there was other problem.
+ **/
 gboolean
 gwy_app_file_confirm_overwrite(GtkWidget *chooser)
 {
-    GtkWidget *dialog;
+    GtkWidget *dialog, *toplevel;
     gchar *filename_sys, *filename_utf8, *dirname_sys, *dirname_utf8,
           *fullname_sys;
     gint response;
 
+    g_return_val_if_fail(gtk_file_chooser_get_action(GTK_FILE_CHOOSER(chooser))
+                         == GTK_FILE_CHOOSER_ACTION_SAVE,
+                         FALSE);
     fullname_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser));
-    g_return_val_if_fail(fullname_sys, FALSE);
-
-    if (!g_file_test(fullname_sys, G_FILE_TEST_EXISTS)) return TRUE;
+    if (!fullname_sys)
+        return FALSE;
+    if (!g_file_test(fullname_sys, G_FILE_TEST_EXISTS))
+        return TRUE;
 
     filename_sys = g_path_get_basename(fullname_sys);
     dirname_sys = g_path_get_dirname(fullname_sys);
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     dirname_utf8 = g_filename_to_utf8(dirname_sys, -1, NULL, NULL, NULL);
 
-    dialog = gtk_message_dialog_new(GTK_WINDOW(chooser),
+    toplevel = gtk_widget_get_toplevel(chooser);
+    dialog = gtk_message_dialog_new(GTK_WINDOW(toplevel),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_QUESTION,
                                     GTK_BUTTONS_YES_NO,
