@@ -1330,16 +1330,15 @@ static void save_statistics_dialog (IndentAnalyzeControls* c)
     GtkWidget *g;
 
 
-    if (!c->computed) /*nothing to output*/
-    {
-      g = gtk_message_dialog_new (GTK_WINDOW (gwy_app_main_window_get()),
-                                  GTK_DIALOG_DESTROY_WITH_PARENT,
-                                  GTK_MESSAGE_ERROR,
-                                  GTK_BUTTONS_CLOSE,
-                                  "There is no statistics computed yet.");
-      gtk_dialog_run (GTK_DIALOG (g));
-      gtk_widget_destroy (g);
-      return;
+    if (!c->computed) { /*nothing to output*/
+        g = gtk_message_dialog_new(GTK_WINDOW (gwy_app_main_window_get()),
+                                   GTK_DIALOG_DESTROY_WITH_PARENT,
+                                   GTK_MESSAGE_ERROR,
+                                   GTK_BUTTONS_CLOSE,
+                                   "No statistics has been computed yet.");
+        gtk_dialog_run(GTK_DIALOG(g));
+        gtk_widget_destroy(g);
+        return;
     }
 
     /* SAVE .TXT statistics */

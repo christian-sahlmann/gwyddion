@@ -239,7 +239,7 @@ fit_dialog(FitArgs *args)
     gint response, i, j;
 
     controls.args = args;
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
@@ -455,7 +455,7 @@ fit_dialog(FitArgs *args)
     controls.graph = gwy_graph_new(args->graph_model);
     g_object_unref(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-    
+
     gwy_selection_set_max_objects(
                gwy_graph_area_get_selection(
                                GWY_GRAPH_AREA(
@@ -466,7 +466,7 @@ fit_dialog(FitArgs *args)
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
     g_signal_connect(gwy_graph_area_get_selection(
                          GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph))),
-                         GWY_GRAPH_STATUS_XSEL), 
+                         GWY_GRAPH_STATUS_XSEL),
                      "changed",
                      G_CALLBACK(graph_selected), &controls);
 
@@ -480,7 +480,7 @@ fit_dialog(FitArgs *args)
 
     gtk_widget_show_all(dialog);
 
-    
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -536,7 +536,7 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 
     gwy_graph_model_remove_curve_by_description(args->graph_model, "Fitted curve");
     args->is_fitted = FALSE;
-    
+
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
@@ -609,7 +609,7 @@ recompute(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    GtkWidget *dialog; 
+    GtkWidget *dialog;
     GwyNLFitPreset *function;
     gboolean fixed[MAX_PARAMS];
     gchar buffer[64];
@@ -636,22 +636,22 @@ recompute(FitArgs *args, FitControls *controls)
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
 
-
-    if (!normalize_data(args, xdata, ydata, args->curve - 1))
-    {
+    if (!normalize_data(args, xdata, ydata, args->curve - 1)) {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
     }
 
     if (gwy_data_line_get_res(xdata) <= nfree) {
-        dialog = gtk_message_dialog_new (GTK_WINDOW(controls->dialog),
-                                  GTK_DIALOG_DESTROY_WITH_PARENT,
-                                  GTK_MESSAGE_ERROR,
-                                  GTK_BUTTONS_CLOSE,
-                                  "Your should select more data values than fit parameters.");
-        gtk_dialog_run (GTK_DIALOG (dialog));
-        gtk_widget_destroy (dialog);
+        dialog = gtk_message_dialog_new(GTK_WINDOW(controls->dialog),
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_OK,
+                                        _("It is necessary to select more "
+                                          "data points than free fit "
+                                          "parameters"));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
         return;
     }
 
@@ -808,8 +808,8 @@ graph_selected(GwySelection* selection, gint i, FitControls *controls)
     gdouble area_selection[2];
     gint nselections;
     const gdouble *data;
-    
-    
+
+
     nselections = gwy_selection_get_data(selection, NULL);
     gwy_selection_get_object(selection,
                              0,

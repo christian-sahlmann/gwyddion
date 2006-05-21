@@ -380,10 +380,11 @@ crosscor_check(CrosscorArgs *args,
     dialog = gtk_message_dialog_new(GTK_WINDOW(crosscor_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_CLOSE,
+                                    GTK_BUTTONS_OK,
                                     _("Both data fields must have same size."));
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+
     return FALSE;
 }
 

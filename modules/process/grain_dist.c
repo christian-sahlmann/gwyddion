@@ -545,7 +545,7 @@ grain_dist_export_raw(GrainDistArgs *args,
         filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
         dialog = gtk_message_dialog_new(GTK_WINDOW(parent), 0,
                                         GTK_MESSAGE_ERROR,
-                                        GTK_BUTTONS_CLOSE,
+                                        GTK_BUTTONS_OK,
                                         _("Saving of `%s' failed"),
                                         filename_utf8);
         g_free(filename_utf8);

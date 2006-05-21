@@ -126,7 +126,7 @@ gwy_app_set_current_directory(const gchar *directory)
  *
  * At least one of @filename_utf8, @filename_sys must be non-%NULL.
  *
- * The file is loaded in interactive mode, modules can ask for argument.
+ * The file is loaded in interactive mode, modules can ask for user input.
  * Upon a successful load all necessary setup tasks are performed.  If the
  * load fails, an error dialog is presented.
  *
@@ -428,8 +428,7 @@ gwy_app_file_save_as(void)
             break;
 
         filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        if (filename_sys
-            && (gwy_app_file_confirm_overwrite(dialog))) {
+        if (filename_sys && gwy_app_file_confirm_overwrite(dialog)) {
             gwy_app_file_write(data, NULL, filename_sys, name);
             break;
         }
@@ -440,7 +439,6 @@ gwy_app_file_save_as(void)
     g_free(filename_sys);
     g_free(name);
 }
-
 
 /**
  * gwy_app_file_confirm_overwrite:
