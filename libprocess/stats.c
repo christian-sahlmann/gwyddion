@@ -2538,9 +2538,9 @@ calculate_surface_area(GwyDataField *dfield,
                 m = maskul + xres*i;
                 for (j = 0; j < width-1; j++)
                     sum += square_area1w(r[j], r[j+1],
-                                         r[j+xres], r[j+xres+1],
+                                         r[j+xres+1], r[j+xres],
                                          m[j] > 0.0, m[j+1] > 0.0,
-                                         m[j+xres] > 0.0, m[j+xres+1] > 0.0,
+                                         m[j+xres+1] > 0.0, m[j+xres] > 0.0,
                                          q);
             }
 
@@ -2574,9 +2574,9 @@ calculate_surface_area(GwyDataField *dfield,
                 m = maskul + xres*i;
                 for (j = 0; j < width-1; j++)
                     sum += square_area2w(r[j], r[j+1],
-                                         r[j+xres], r[j+xres+1],
+                                         r[j+xres+1], r[j+xres],
                                          m[j] > 0.0, m[j+1] > 0.0,
-                                         m[j+xres] > 0.0, m[j+xres+1] > 0.0,
+                                         m[j+xres+1] > 0.0, m[j+xres] > 0.0,
                                          x, y);
             }
 
@@ -2621,7 +2621,7 @@ calculate_surface_area(GwyDataField *dfield,
             for (i = 0; i < height-1; i++) {
                 r = dataul + xres*i;
                 for (j = 0; j < width-1; j++)
-                    sum += square_area1(r[j], r[j+1], r[j+xres], r[j+xres+1],
+                    sum += square_area1(r[j], r[j+1], r[j+xres+1], r[j+xres],
                                         q);
             }
 
@@ -2651,7 +2651,7 @@ calculate_surface_area(GwyDataField *dfield,
             for (i = 0; i < height-1; i++) {
                 r = dataul + xres*i;
                 for (j = 0; j < width-1; j++)
-                    sum += square_area2(r[j], r[j+1], r[j+xres], r[j+xres+1],
+                    sum += square_area2(r[j], r[j+1], r[j+xres+1], r[j+xres],
                                         x, y);
             }
 
