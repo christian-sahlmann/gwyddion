@@ -20,11 +20,17 @@
 
 #include "config.h"
 #include <math.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/grains.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <app/gwyapp.h>
 
 #define DIST_RUN_MODES (GWY_RUN_INTERACTIVE)
@@ -76,6 +82,12 @@ static void grain_dist_run                      (GrainDistArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  GwyDataField *mfield);
+static gboolean grain_dist_export_raw           (GrainDistArgs *args,
+                                                 GwyDataField *dfield,
+                                                 gint ngrains,
+                                                 const gint *grains,
+                                                 const gchar *filename_sys,
+                                                 GtkWidget *parent);
 static void grain_dist_load_args                (GwyContainer *container,
                                                  GrainDistArgs *args);
 static void grain_dist_save_args                (GwyContainer *container,
@@ -378,7 +390,8 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
 static void
 add_one_distribution(GwyContainer *container,
                      GwyDataField *dfield,
-                     GwyDataField *mfield,
+                     gint ngrains,
+                     const gint *grains,
                      GwyGrainQuantity quantity,
                      gint resolution)
 {
@@ -427,8 +440,8 @@ add_one_distribution(GwyContainer *container,
     GwyDataLine *dataline;
     const gchar *s;
 
-    dataline = gwy_data_field_grains_get_distribution(dfield, mfield, NULL,
-                                                      0, NULL, quantity,
+    dataline = gwy_data_field_grains_get_distribution(dfield, NULL, NULL,
+                                                      ngrains, grains, quantity,
                                                       resolution);
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
@@ -453,8 +466,15 @@ grain_dist_run(GrainDistArgs *args,
                GwyDataField *dfield,
                GwyDataField *mfield)
 {
+    GtkWidget *dialog;
+    gint *grains;
     guint i, bits;
-    gint res;
+    gint res, ngrains, response;
+    gchar *filename;
+
+    grains = g_new0(gint, gwy_data_field_get_xres(mfield)
+                          *gwy_data_field_get_yres(mfield));
+    ngrains = gwy_data_field_number_grains(mfield, grains);
 
     switch (args->mode) {
         case MODE_GRAPH:
@@ -462,18 +482,112 @@ grain_dist_run(GrainDistArgs *args,
         bits = args->selected;
         for (i = 0; bits; i++, bits /= 2) {
             if (bits & 1)
-                add_one_distribution(data, dfield, mfield, i, res);
+                add_one_distribution(data, dfield, ngrains, grains, i, res);
         }
         break;
 
         case MODE_RAW:
-        g_warning("Implement me!");
+        dialog = gtk_file_chooser_dialog_new(_("Export Raw Grain Values"), NULL,
+                                             GTK_FILE_CHOOSER_ACTION_SAVE,
+                                             GTK_STOCK_CANCEL,
+                                             GTK_RESPONSE_CANCEL,
+                                             GTK_STOCK_SAVE,
+                                             GTK_RESPONSE_OK,
+                                             NULL);
+        gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+        gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                            gwy_app_get_current_directory());
+        while (TRUE) {
+            filename = NULL;
+            response = gtk_dialog_run(GTK_DIALOG(dialog));
+            if (response != GTK_RESPONSE_OK)
+                break;
+
+            filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+            if (filename
+                && gwy_app_file_confirm_overwrite(dialog)
+                && grain_dist_export_raw(args, dfield, ngrains, grains,
+                                         filename, dialog))
+                break;
+            g_free(filename);
+        }
+        gtk_widget_destroy(dialog);
         break;
 
         default:
         g_assert_not_reached();
         break;
     }
+
+    g_free(grains);
+}
+
+static gboolean
+grain_dist_export_raw(GrainDistArgs *args,
+                      GwyDataField *dfield,
+                      gint ngrains,
+                      const gint *grains,
+                      const gchar *filename_sys,
+                      GtkWidget *parent)
+{
+    gdouble *values[32];
+    gchar buffer[32];
+    GtkWidget *dialog;
+    gchar *filename_utf8;
+    gint myerrno, res, gno;
+    guint i, bits;
+    FILE *fh;
+
+    fh = g_fopen(filename_sys, "w");
+    if (!fh) {
+        myerrno = errno;
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+        dialog = gtk_message_dialog_new(GTK_WINDOW(parent), 0,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_CLOSE,
+                                        _("Saving of `%s' failed"),
+                                        filename_utf8);
+        g_free(filename_utf8);
+        gtk_message_dialog_format_secondary_text
+                                       (GTK_MESSAGE_DIALOG(dialog),
+                                        _("Cannot open file for writing: %s."),
+                                        g_strerror(myerrno));
+        gtk_widget_show_all(dialog);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return FALSE;
+    }
+
+    memset(values, 0, sizeof(values));
+    res = args->fixres ? args->resolution : 0;
+    bits = args->selected;
+    for (i = 0; bits; i++, bits /= 2) {
+        if (bits & 1)
+            values[i] = gwy_data_field_grains_get_values(dfield, NULL,
+                                                         ngrains, grains, i);
+    }
+
+    for (gno = 1; gno <= ngrains; gno++) {
+        bits = args->selected;
+        for (i = 0; bits; i++, bits /= 2) {
+            if (bits & 1) {
+                g_ascii_formatd(buffer, sizeof(buffer), "%g", values[i][gno]);
+                fputs(buffer, fh);
+                fputc(bits == 1 ? '\n' : '\t', fh);
+            }
+        }
+    }
+
+    fclose(fh);
+
+    bits = args->selected;
+    for (i = 0; bits; i++, bits /= 2) {
+        if (bits & 1)
+            g_free(values[i]);
+    }
+
+    return TRUE;
 }
 
 static void
