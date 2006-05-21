@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
@@ -684,7 +685,7 @@ gwy_tool_stats_save(GwyToolStats *tool)
     gboolean mask_in_use;
     gint response;
     const ToolResults *res;
-    gchar *key, *filename;
+    gchar *key, *filename_sys;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *avg, *min, *max, *median, *rms, *ra, *skew, *kurtosis;
     gchar *area, *projarea, *theta, *phi;
@@ -700,19 +701,38 @@ gwy_tool_stats_save(GwyToolStats *tool)
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
     response = gtk_dialog_run(GTK_DIALOG(dialog));
-    filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
     gtk_widget_destroy(dialog);
 
-    if (!filename || response != GTK_RESPONSE_OK) {
-        g_free(filename);
+    if (!filename_sys || response != GTK_RESPONSE_OK) {
+        g_free(filename_sys);
         return;
     }
 
-    fh = g_fopen(filename, "w");
+    fh = g_fopen(filename_sys, "w");
     if (!fh) {
-        /* TODO: make noise */
+        gint myerrno;
+        gchar *filename_utf8;
+
+        myerrno = errno;
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+        dialog = gtk_message_dialog_new(GTK_WINDOW(GWY_TOOL(tool)->dialog), 0,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_OK,
+                                        _("Saving of `%s' failed"),
+                                        filename_utf8);
+        g_free(filename_sys);
+        g_free(filename_utf8);
+        gtk_message_dialog_format_secondary_text
+                                       (GTK_MESSAGE_DIALOG(dialog),
+                                        _("Cannot open file for writing: %s."),
+                                        g_strerror(myerrno));
+        gtk_widget_show_all(dialog);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
         return;
     }
+    g_free(filename_sys);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->container);
