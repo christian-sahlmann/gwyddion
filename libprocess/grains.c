@@ -527,7 +527,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_grains_get_size_distribution:
+ * gwy_data_field_grains_get_distribution:
  * @data_field: Data field used for marking.  For some quantities its values
  *              are not used, but units and physical dimensions are always
  *              taken from it.
