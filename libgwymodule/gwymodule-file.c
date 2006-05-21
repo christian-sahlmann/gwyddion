@@ -20,6 +20,8 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -462,8 +464,18 @@ gwy_file_load(const gchar *filename,
               GError **error)
 {
     const gchar *winner;
+    FILE *fh;
 
     g_return_val_if_fail(filename, NULL);
+
+    /* When the file does not exist (for instance), we would get a correct but
+     * very unheplful message that no module can load such a file. */
+    if (!(fh = g_fopen(filename, "rb"))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot open file for reading: %s."), g_strerror(errno));
+        return NULL;
+    }
+    fclose(fh);
 
     winner = gwy_file_detect(filename, FALSE, GWY_FILE_OPERATION_LOAD);
     if (!winner) {
