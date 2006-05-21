@@ -694,7 +694,7 @@ gwy_tool_stats_save(GwyToolStats *tool)
                                          GTK_WINDOW(GWY_TOOL(tool)->dialog),
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
