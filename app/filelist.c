@@ -541,7 +541,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
     gchar *buffer = NULL;
     gsize size = 0;
     gchar **files;
-    guint n;
+    guint n, nrecent;
 
     gwy_app_recent_file_create_dirs();
 
@@ -561,6 +561,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
     if (!files)
         return TRUE;
 
+    nrecent = _gwy_app_get_n_recent_files();
     for (n = 0; files[n]; n++) {
         if (*files[n]) {
             GwyRecentFile *rf;
@@ -570,7 +571,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
             gtk_list_store_insert_with_values(gcontrols.store, &iter, G_MAXINT,
                                               FILELIST_RAW, rf,
                                               -1);
-            if (n < (guint)gwy_app_n_recent_files) {
+            if (n < nrecent) {
                 gcontrols.recent_file_list
                     = g_list_append(gcontrols.recent_file_list, rf->file_utf8);
             }
@@ -726,7 +727,7 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
 {
     GtkTreeIter iter;
     GList *l;
-    guint i;
+    guint i, nrecent;
 
     if (!controls->store) {
         g_return_if_fail(controls->recent_file_list == NULL);
@@ -736,6 +737,7 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
 
     l = controls->recent_file_list;
     if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->store), &iter)) {
+        nrecent = _gwy_app_get_n_recent_files();
         i = 0;
         do {
             GwyRecentFile *rf;
@@ -752,7 +754,7 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
                                     rf->file_utf8);
             }
             i++;
-        } while (i < (guint)gwy_app_n_recent_files
+        } while (i < nrecent
                  && gtk_tree_model_iter_next(GTK_TREE_MODEL(controls->store),
                                              &iter));
     }

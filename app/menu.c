@@ -50,8 +50,6 @@ static void       gwy_app_rerun_process_func        (gpointer user_data);
 static void       gwy_app_update_last_process_func  (const gchar *name);
 static gchar*     fix_recent_file_underscores       (gchar *s);
 
-int gwy_app_n_recent_files = 10;
-
 static GQuark repeat_last_quark = 0;
 static GQuark reshow_last_quark = 0;
 static GQuark last_name_quark   = 0;
@@ -692,7 +690,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
     GQuark quark;
     GList *l, *child;
     gchar *s, *label, *filename;
-    gint i;
+    gint i, nrecent;
 
     if (!recent_files_menu)
         return;
@@ -702,9 +700,8 @@ gwy_app_menu_recent_files_update(GList *recent_files)
         child = g_list_next(child);
 
     quark = g_quark_from_string("filename");
-    for (i = 0, l = recent_files;
-         l && i < gwy_app_n_recent_files;
-         l = g_list_next(l), i++) {
+    nrecent = _gwy_app_get_n_recent_files();
+    for (i = 0, l = recent_files; l && i < nrecent; l = g_list_next(l), i++) {
         filename = (gchar*)l->data;
         s = fix_recent_file_underscores(g_path_get_basename(filename));
         label = g_strdup_printf("%s%d. %s", i < 10 ? "_" : "", i, s);
@@ -733,7 +730,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
 
     /* keep konstant number of entries, otherwise it's just too hard to
      * manage the separated stuff at the end */
-    while (i < gwy_app_n_recent_files) {
+    while (i < nrecent) {
         if (child) {
             item = GTK_BIN(child->data)->child;
             gwy_debug("hiding item %p [#%d]", item, i);
