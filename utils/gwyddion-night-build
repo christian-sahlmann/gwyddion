@@ -88,8 +88,7 @@ function check_coding_style() {
     | cat --squeeze-blank >$logdir/coding-style.log
 
   # Libraries
-  #find . -path \*.libs/lib\*.so | grep -v '\..*\..*\..*\.'
-  echo ./app/.libs/libgwyapp.so | while read lib; do
+  find . -path \*.libs/libgwy\*.so | grep -v '[0-9]\.[0-9]' | while read lib; do
     d=${lib##./}
     d=${d%%/*}
     l=$(basename $lib .so)
@@ -100,13 +99,6 @@ function check_coding_style() {
     sed -n '/<FUNCTION>/,/<\/FUNCTION>/{s/<\/\?NAME>//g;t1;d;:1;p}' \
       devel-docs/$l/$l-decl.txt \
       | sort -u -o evil-symbols-declared.tmp
-    # XXX evil hack for private gwyapp symbols
-    if test $l = libgwyapp; then
-      {
-        cat evil-symbols-declared.tmp
-        grep -o '\<gwy_\w\+\> *(' app/gwyappinternal.h | sed -e 's/ *(//'
-      } | sort -o evil-symbols-declared.tmp
-    fi
     diff evil-symbols-declared.tmp evil-symbols-defined.tmp \
       | grep '^<' \
       | sed -re 's/< (.*)/Declared undefined symbol ('$l'): \1/' 1>&2
