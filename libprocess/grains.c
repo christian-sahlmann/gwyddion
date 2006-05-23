@@ -680,6 +680,120 @@ square_area2w_1c(gdouble z1, gdouble z2, gdouble z4, gdouble c,
 }
 
 /**
+ * find_grain_convex_hull:
+ * @xres: The number of columns in @grains.
+ * @yres: The number of rows in @grains.
+ * @grains: Grain numbers filled with gwy_data_field_number_grains().
+ * @pos: Position of the top-left vertex of grain's convex hull.
+ * @vertices: Array to fill with vertices.
+ *
+ * Finds vertices of a grain's convex hull.
+ *
+ * The grain is identified by @pos which must lie in a grain.
+ *
+ * The positions are returned as indices to vertex grid.  NB: The size of the
+ * grid is (@xres + 1)*(@yres + 1), not @xres*@yres.
+ *
+ * The method is a bit naive, some atan2() calculations could be easily saved.
+ **/
+static void
+find_grain_convex_hull(gint xres, gint yres,
+                       const gint *grains,
+                       gint pos,
+                       GArray *vertices)
+{
+    enum { RIGHT = 0, DOWN, LEFT, UP } newdir, dir;
+    gdouble phi, phim;
+    gint initpos, mid, i, j, prev, gno, n;
+
+    g_return_if_fail(grains[pos]);
+
+    g_array_set_size(vertices, 0);
+    initpos = pos;
+    gno = grains[pos];
+    n = xres + 1;
+    i = (pos/xres)*xres;
+    j = pos % xres;
+    pos = i/xres*n + j;
+    g_array_append_val(vertices, pos);
+    newdir = RIGHT;
+
+    do {
+        dir = newdir;
+        switch (dir) {
+            case RIGHT:
+            j += 1;
+            if (i > 0 && j < xres && grains[i-xres + j] == gno)
+                newdir = UP;
+            else if (j < xres && grains[i + j] == gno)
+                newdir = RIGHT;
+            else
+                newdir = DOWN;
+            break;
+
+            case DOWN:
+            i += xres;
+            if (j < xres && i < yres*xres && grains[i + j] == gno)
+                newdir = RIGHT;
+            else if (i < yres*xres && grains[i + j-1] == gno)
+                newdir = DOWN;
+            else
+                newdir = LEFT;
+            break;
+
+            case LEFT:
+            j -= 1;
+            if (i < yres*xres && j > 0 && grains[i + j-1] == gno)
+                newdir = DOWN;
+            else if (j > 0 && grains[i-xres + j-1] == gno)
+                newdir = LEFT;
+            else
+                newdir = UP;
+            break;
+
+            case UP:
+            i -= xres;
+            if (j > 0 && i > 0 && grains[i-xres + j-1] == gno)
+                newdir = LEFT;
+            else if (i > 0 && grains[i-xres + j] == gno)
+                newdir = UP;
+            else
+                newdir = RIGHT;
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+
+        /* When we turn right, the previous point is a potential vertex, and
+         * it can also supersed previous vertices. */
+        if (newdir == (dir + 1) % 4) {
+            pos = i/xres*n + j;
+            g_array_append_val(vertices, pos);
+            while (vertices->len > 2) {
+                pos = g_array_index(vertices, gint, vertices->len-1);
+                mid = g_array_index(vertices, gint, vertices->len-2);
+                prev = g_array_index(vertices, gint, vertices->len-3);
+                phi = atan2(pos/n - mid/n, pos % n - mid % n);
+                phim = atan2(mid/n - prev/n, mid % n - prev % n);
+
+                phi = fmod(phi - phim + 4.0*G_PI, 2.0*G_PI);
+                /* This should be fairly save as (a) not real harm is done
+                 * when we have an occasional extra vertex (b) the greatest
+                 * possible angle is G_PI/2.0 */
+                if (phi > 1e-12 && phi < G_PI)
+                    break;
+
+                /* Get rid of mid, it is in a locally concave part */
+                g_array_index(vertices, gint, vertices->len-2) = pos;
+                g_array_set_size(vertices, vertices->len-1);
+            }
+        }
+    } while (i + j != initpos);
+}
+
+/**
  * gwy_data_field_grains_get_values:
  * @data_field: Data field used for marking.  For some quantities its values
  *              are not used, but its dimensions determine the dimensions of
@@ -720,6 +834,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
     gint *sizes, *pos;
     gdouble q, qh, qv;
     gint xres, yres, i, j, nn;
+    GArray *vertices;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     g_return_val_if_fail(grains, NULL);
@@ -906,6 +1021,27 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         }
         for (i = 1; i <= ngrains; i++)
             values[i] *= q;
+        break;
+
+        case GWY_GRAIN_VALUE_MINIMUM_BOUND:
+        case GWY_GRAIN_VALUE_MAXIMUM_BOUND:
+        /* Find a one convex hull point of each grain */
+        pos = g_new(gint, ngrains + 1);
+        for (i = 0; i <= ngrains; i++)
+            pos[i] = -1;
+        for (i = 0; i < nn; i++) {
+            if (pos[grains[i]] == -1)
+                pos[grains[i]] = i;
+        }
+        /* Find the complete convex hulls */
+        vertices = g_array_new(FALSE, FALSE, sizeof(gint));
+        for (i = 1; i < ngrains; i++) {
+            find_grain_convex_hull(xres, yres, grains, pos[grains[i]],
+                                   vertices);
+
+            /* TODO */
+        }
+        g_array_free(vertices, TRUE);
         break;
 
         default:

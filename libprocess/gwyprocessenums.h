@@ -141,6 +141,7 @@ typedef enum {
     GWY_CORRELATION_POC     = 2
 } GwyCorrelationType;
 
+/* The values should not grow over 31 (to be usable as bit positions) */
 typedef enum {
     GWY_GRAIN_VALUE_PROJECTED_AREA       = 0,
     GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE    = 1,
@@ -150,7 +151,9 @@ typedef enum {
     GWY_GRAIN_VALUE_MINIMUM              = 5,
     GWY_GRAIN_VALUE_MEAN                 = 6,
     GWY_GRAIN_VALUE_MEDIAN               = 7,
-    GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH = 8
+    GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH = 10,
+    GWY_GRAIN_VALUE_MINIMUM_BOUND        = 12,
+    GWY_GRAIN_VALUE_MAXIMUM_BOUND        = 13,
 } GwyGrainQuantity;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
