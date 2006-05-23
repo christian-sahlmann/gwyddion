@@ -301,6 +301,9 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MEAN: Mean value.
  * @GWY_GRAIN_VALUE_MEDIAN: Median value.
  * @GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH: Length of projected grain boundary.
+ *                                        Note for grains not topologically
+ *                                        equivalent to disc, only the length
+ *                                        of the outer boundary is calculated.
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.
