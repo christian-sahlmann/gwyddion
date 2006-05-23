@@ -1906,7 +1906,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                          gint nstats)
 {
     GwyDataField *re_field, *im_field;
-    GwySIUnit *lineunit;
+    GwySIUnit *xyunit, *zunit, *lineunit;
     gdouble *re, *im, *target;
     gint i, j, xres, yres, size;
 
@@ -1980,13 +1980,13 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     g_object_unref(im_field);
 
     /* Set proper units */
+    xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    zunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(target_line);
-    gwy_si_unit_power(gwy_data_field_get_si_unit_xy(data_field), -1, lineunit);
+    gwy_si_unit_power(xyunit, -1, lineunit);
     lineunit = gwy_data_line_get_si_unit_y(target_line);
-    /* FIXME: God knows what units the discrete PSDF should have.  Or maybe
-     * Petr... */
-    lineunit = gwy_data_line_get_si_unit_y(target_line);
-    gwy_si_unit_set_unit_string(lineunit, "");
+    gwy_si_unit_power(zunit, 2, lineunit);
+    gwy_si_unit_multiply(lineunit, xyunit, lineunit);
 }
 
 /**
