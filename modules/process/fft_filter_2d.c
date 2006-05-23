@@ -97,9 +97,6 @@ typedef struct {
     GwyDataField *fft;
 
     GtkWidget      *view;
-    //GwyVectorLayer *rectangle;
-    //GwyVectorLayer *ellipse;
-    GwyVectorLayer *vlayer;
 
     MaskEditMode    edit_mode;
     GSList          *mode;
@@ -135,13 +132,29 @@ static void         run_main            (GwyContainer *data,
 
 /* Signal handlers */
 static void        selection_finished_cb (GwySelection *selection,
-                                         ControlsType *controls);
+                                          ControlsType *controls);
 static void        edit_mode_changed_cb  (ControlsType *controls);
+static void        remove_all_cb         (ControlsType *controls);
+static void        undo_cb               (ControlsType *controls);
+
+/* Helper Functions */
+static GwyDataField*   create_mask_field   (GwyDataField *dfield);
+static GwyVectorLayer* create_vlayer       (MaskEditMode new_mode);
+static void            do_fft              (GwyDataField *dataInput,
+                                            GwyDataField *dataOutput);
+static void            set_dfield_modulus  (GwyDataField *re,
+                                            GwyDataField *im,
+                                            GwyDataField *target);
+static void            fft_filter_2d       (GwyDataField *input,
+                                            GwyDataField *output_image,
+                                            GwyDataField *output_fft,
+                                            GwyDataField *mask);
+
+
 
 //XXX OLD CRUFT:
 static void         scale_changed_fft   (GtkRange *range,
                                          ControlsType *controls);
-static void         remove_all_clicked  (ControlsType *controls);
 static void         display_mode_changed(ControlsType *controls);
 static void         zoom_toggled        (ControlsType *controls);
 
@@ -151,15 +164,6 @@ static void         build_tooltips      (GHashTable *hash_tips);
 static void         save_settings       (ControlsType *controls);
 static void         load_settings       (ControlsType *controls,
                                          gboolean load_defaults);
-static void         fft_filter_2d       (GwyDataField *input,
-                                         GwyDataField *output_image,
-                                         GwyDataField *output_fft,
-                                         GSList *markers);
-static void         do_fft              (GwyDataField *dataInput,
-                                         GwyDataField *dataOutput);
-static void         set_dfield_modulus  (GwyDataField *re,
-                                         GwyDataField *im,
-                                         GwyDataField *target);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -190,18 +194,43 @@ module_register(void)
 static void
 run_main(GwyContainer *data, GwyRunType run)
 {
+    GwyDataField *dfield = NULL, *mfield;
+    GwyDataField *out_image, *out_fft;
+    gint id;
     ControlsType controls;
     gboolean response;
 
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
     /* Initialize */
-    controls.edit_mode = FFT_RECT_ADD;
-
+    controls.edit_mode = FFT_ELLIPSE_ADD;
     controls.data = data;
 
-    /* Run the dialog */
-    response = run_dialog(&controls);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (dfield)
+    {
+        /* Duplicate the datafield, calculate and store the fft image */
+        dfield = gwy_data_field_duplicate(dfield);
+        controls.dfield = dfield;
+        controls.fft = gwy_data_field_new_alike(dfield, FALSE);
+        do_fft(controls.dfield, controls.fft);
+
+        /* Run the dialog */
+        response = run_dialog(&controls);
+
+        /* Do the fft filtering */
+        if (response)
+        {
+            out_image = gwy_data_field_new_alike(dfield, FALSE);
+            out_fft = gwy_data_field_new_alike(dfield, FALSE);
+            mfield =
+            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
+                                                            "/0/mask"));
+            fft_filter_2d(controls.dfield, out_image, out_fft, mfield);
+        }
+    }
 }
 
 static GwyDataField*
@@ -273,26 +302,13 @@ run_dialog(ControlsType *controls)
 
     GtkRadioButton *group;
     GwyPixmapLayer *layer, *mlayer;
-    //GwyVectorLayer *vlayer;
+    GwyVectorLayer *vlayer;
     GwySelection *selection;
-    GwyDataField *dfield = NULL, *mask;
+    GwyDataField *mask;
     GwyRGBA rgba;
     GQuark mquark;
     gint id;
     gdouble zoomval;
-
-    /* Get the currently active GwyDataField */
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     GWY_APP_MASK_FIELD_KEY, &mquark,
-                                     0);
-    if (!dfield)
-        return FALSE;
-
-    /* Duplicate the original datafield, calculate and store the fft image */
-    controls->dfield = gwy_data_field_duplicate(dfield);
-    controls->fft = gwy_data_field_new_alike(dfield, FALSE);
-    do_fft(controls->dfield, controls->fft);
 
     /* Setup the dialog window */
     dialog = gtk_dialog_new_with_buttons(_("2D FFT Filtering"), NULL, 0,
@@ -338,49 +354,24 @@ run_dialog(ControlsType *controls)
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
                                      "/0/base/fft_palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
+    zoomval =
+PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(controls->dfield),
+
+gwy_data_field_get_yres(controls->dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
 
-    /* setup vector layers */
-    /*
-    controls->rectangle = g_object_new(g_type_from_name("GwyLayerRectangle"),
-                                       NULL);
-    controls->ellipse = g_object_new(g_type_from_name("GwyLayerEllipse"),
-                                     NULL);
-    gwy_vector_layer_set_selection_key(controls->rectangle,
-                                       "/0/select/pointer");
-    gwy_vector_layer_set_selection_key(controls->ellipse,
-                                       "/0/select/pointer");
-    */
-    switch(controls->edit_mode)
-    {
-        case FFT_RECT_ADD:
-        case FFT_RECT_SUB:
-            controls->vlayer =
-                g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
-            break;
-
-        case FFT_ELLIPSE_ADD:
-        case FFT_ELLIPSE_SUB:
-            controls->vlayer =
-                g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
-            break;
-
-        default:
-            break;
-            /*XXX Shouldn't Occur */
-    }
-    gwy_vector_layer_set_selection_key(controls->vlayer, "/0/select/pointer");
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),controls->vlayer);
+    /* setup vector layer */
+    vlayer = create_vlayer(controls->edit_mode);
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
     selection = gwy_container_get_object_by_name(controls->mydata,
                                                  "/0/select/pointer");
     g_signal_connect(selection, "finished",
                      G_CALLBACK(selection_finished_cb), controls);
 
     /* setup mask layer */
-    mask = create_mask_field(dfield);
+    mask = create_mask_field(controls->dfield);
     gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
     g_object_unref(mask);
     mlayer = gwy_layer_mask_new();
@@ -389,14 +380,13 @@ run_dialog(ControlsType *controls)
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
 
 
-
     /* Setup the control panel */
     table = gtk_table_new(20, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 10);
     row = 0;
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter Drawing</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter Mask</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -404,7 +394,7 @@ run_dialog(ControlsType *controls)
     row++;
 
     hbox2 = gtk_hbox_new(FALSE, 0);
-    gtk_table_attach(GTK_TABLE(table), hbox2, 0, 2, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), hbox2, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     /* MODE/SHAPE Buttons */
@@ -428,6 +418,25 @@ run_dialog(ControlsType *controls)
     gwy_radio_buttons_set_current(controls->mode, controls->edit_mode);
 
     /* Remaining controls: */
+    hbox2 = gtk_hbutton_box_new();
+    gtk_button_box_set_layout(GTK_BUTTON_BOX(hbox2), GTK_BUTTONBOX_START);
+    gtk_table_attach(GTK_TABLE(table), hbox2, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 5, 0);
+
+    button = gtk_button_new_with_mnemonic(_("Remove"));
+    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
+                         g_hash_table_lookup(hash_tips, "remove_all"), "");
+    gtk_container_add(GTK_CONTAINER(hbox2), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(remove_all_cb), controls);
+
+    button = gtk_button_new_with_mnemonic(_("Undo"));
+//    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
+//                         g_hash_table_lookup(hash_tips, "remove_all"), "");
+    gtk_container_add(GTK_CONTAINER(hbox2), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(undo_cb), controls);
+
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
@@ -436,20 +445,9 @@ run_dialog(ControlsType *controls)
                          g_hash_table_lookup(hash_tips, "origin"), "");
     gtk_table_attach(GTK_TABLE(table), controls->check_origin, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
-    row++;
+//    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
+//    row++;
 
-    hbox2 = gtk_hbutton_box_new();
-    gtk_button_box_set_layout(GTK_BUTTON_BOX(hbox2), GTK_BUTTONBOX_START);
-    gtk_table_attach(GTK_TABLE(table), hbox2, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    button = gtk_button_new_with_mnemonic(_("Remove _All"));
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "remove_all"), "");
-    gtk_container_add(GTK_CONTAINER(hbox2), button);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(remove_all_clicked), controls);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
     row++;
@@ -631,6 +629,31 @@ run_dialog(ControlsType *controls)
     return TRUE;
 }
 
+static GwyVectorLayer*
+create_vlayer(MaskEditMode new_mode)
+{
+    GwyVectorLayer *vlayer = NULL;
+
+    switch(new_mode)
+    {
+        case FFT_RECT_ADD:
+        case FFT_RECT_SUB:
+            vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
+            break;
+
+        case FFT_ELLIPSE_ADD:
+        case FFT_ELLIPSE_SUB:
+            vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+            break;
+
+        default:
+            g_assert_not_reached();
+            break;
+    }
+
+    return vlayer;
+}
+
 static void
 edit_mode_changed_cb(ControlsType *controls)
 {
@@ -639,26 +662,7 @@ edit_mode_changed_cb(ControlsType *controls)
     GwySelection *selection;
 
     new_mode = gwy_radio_buttons_get_current(controls->mode);
-
-    g_debug("Edit Mode Changed. Old Mode: %i   New Mode: %i",
-            controls->edit_mode, new_mode);
-
-    switch(controls->edit_mode)
-    {
-        case FFT_RECT_ADD:
-        case FFT_RECT_SUB:
-        vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
-        break;
-
-        case FFT_ELLIPSE_ADD:
-        case FFT_ELLIPSE_SUB:
-        vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
-        break;
-
-        default:
-            break;
-            /*XXX Shouldn't Occur */
-    }
+    vlayer = create_vlayer(controls->edit_mode);
 
     if (vlayer) {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
@@ -666,62 +670,6 @@ edit_mode_changed_cb(ControlsType *controls)
     }
 
     controls->edit_mode = new_mode;
-
-
-    //g_signal_connect(selection, "finished",
-    //                 G_CALLBACK(selection_finished_cb), controls);
-
-
-    /*
-
-
-    switch(controls->edit_mode)
-    {
-        case FFT_RECT_ADD:
-        case FFT_RECT_SUB:
-            vlayer = controls->rectangle;
-            break;
-
-        case FFT_ELLIPSE_ADD:
-        case FFT_ELLIPSE_SUB:
-            vlayer = controls->ellipse;
-            break;
-
-        default:
-            vlayer = controls->ellipse;
-    }
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-    //selection = gwy_vector_layer_get_selection(vlayer);
-    //g_signal_connect(selection, "finished",
-    //                 G_CALLBACK(selection_finished_cb), controls);
-
-
-    /*
-    GwyPlainTool *plain_tool;
-    MaskEditShape shape;
-
-    shape = gwy_radio_buttons_get_current(tool->shape, "shape-type");
-    if (shape == tool->args.shape)
-        return;
-    tool->args.shape = shape;
-
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    switch (tool->args.shape) {
-        case MASK_SHAPE_RECTANGLE:
-            gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
-                                             "rectangle");
-            break;
-
-        case MASK_SHAPE_ELLIPSE:
-            gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_ell,
-                                             "ellipse");
-            break;
-
-        default:
-            g_return_if_reached();
-            break;
-    }
-    */
 }
 
 static void
@@ -732,9 +680,13 @@ selection_finished_cb(GwySelection *selection,
     FieldFillFunc fill_func;
     gdouble sel[4];
     gint isel[4];
+    gint mirror[4];
+    gdouble value;
+    gint xwidth;
 
-//    if (controls->in_update)
-//        return;
+    /* get the image width */
+    xwidth = gwy_data_field_get_xres(controls->fft);
+    g_debug("X Width: %i", xwidth);
 
     /* get the mask */
     mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
@@ -748,19 +700,48 @@ selection_finished_cb(GwySelection *selection,
     isel[1] = gwy_data_field_rtoj(mfield, sel[1]);
     isel[2] = gwy_data_field_rtoj(mfield, sel[2]) + 1;
     isel[3] = gwy_data_field_rtoj(mfield, sel[3]) + 1;
+
+    g_debug("Sel: x1: %i y1: %i   x2: %i Y2: %i", isel[0], isel[1], isel[2],
+            isel[3]);
+
+    mirror[2] = (-isel[0] + xwidth) + 1;
+    mirror[3] = (-isel[1] + xwidth) + 1;
+    mirror[0] = (-isel[2] + xwidth) + 1;
+    mirror[1] = (-isel[3] + xwidth) + 1;
+
+    g_debug("Mir: x1: %i y1: %i   x2: %i Y2: %i", mirror[0], mirror[1],
+            mirror[2], mirror[3]);
+
     isel[2] -= isel[0];
     isel[3] -= isel[1];
+    mirror[2] -= mirror[0];
+    mirror[3] -= mirror[1];
+
+    g_debug("Sel: x1: %i y1: %i   x2: %i Y2: %i", isel[0], isel[1], isel[2],
+            isel[3]);
+    g_debug("Mir: x1: %i y1: %i   x2: %i Y2: %i", mirror[0], mirror[1],
+            mirror[2], mirror[3]);
 
     /* decide between rectangle and ellipse */
     switch (controls->edit_mode) {
         case FFT_RECT_ADD:
+            fill_func = &gwy_data_field_area_fill;
+            value = 1.0;
+            break;
+
         case FFT_RECT_SUB:
             fill_func = &gwy_data_field_area_fill;
+            value = 0.0;
             break;
 
         case FFT_ELLIPSE_ADD:
+            fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
+            value = 1.0;
+            break;
+
         case FFT_ELLIPSE_SUB:
             fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
+            value = 0.0;
             break;
 
         default:
@@ -769,16 +750,22 @@ selection_finished_cb(GwySelection *selection,
     }
 
     /* apply change to mask */
-    //XXX gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
-    fill_func(mfield, isel[0], isel[1], isel[2], isel[3], 1.0);
+    gwy_app_undo_checkpoint(controls->mydata, "/0/mask", NULL);
+    fill_func(mfield, isel[0], isel[1], isel[2], isel[3], value);
+    fill_func(mfield, mirror[0], mirror[1], mirror[2], mirror[3], value);
+
     if (mfield)
         gwy_data_field_data_changed(mfield);
 
     gwy_selection_clear(selection);
 }
 
-
-
+static void
+undo_cb(ControlsType *controls)
+{
+    if (gwy_undo_container_has_undo(controls->mydata))
+        gwy_undo_undo_container(controls->mydata);
+}
 
 /*XXX: fix */
 static void
@@ -900,9 +887,16 @@ scale_changed_fft(GtkRange *range, ControlsType *controls)
 }
 
 static void
-remove_all_clicked(ControlsType *controls)
+remove_all_cb(ControlsType *controls)
 {
+    GwyDataField *mfield;
 
+    gwy_app_undo_checkpoint(controls->mydata, "/0/mask", NULL);
+    mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                            "/0/mask"));
+
+    gwy_data_field_clear(mfield);
+    gwy_data_field_data_changed(mfield);
 }
 
 static void
@@ -976,10 +970,52 @@ do_fft(GwyDataField *data_input, GwyDataField *data_output)
 }
 
 static void
-fft_filter_2d(GwyDataField *input, GwyDataField *output_image,
-              GwyDataField *output_fft, GSList *markers)
+fft_filter_2d(GwyDataField *input,
+              GwyDataField *output_image, GwyDataField *output_fft,
+              GwyDataField *mask)
 {
+    GwyDataField *r_in, *i_in, *r_out, *i_out;
 
+    /* Run the forward FFT */
+    r_in = GWY_DATA_FIELD(gwy_data_field_new_alike(input, FALSE));
+    i_in = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
+    r_out = GWY_DATA_FIELD(gwy_data_field_new_alike(input, FALSE));
+    i_out = GWY_DATA_FIELD(gwy_data_field_new_alike(input, FALSE));
+    gwy_data_field_copy(input, r_in, TRUE);
+    gwy_data_field_2dfft(r_in, i_in, r_out, i_out,
+                         GWY_WINDOWING_NONE,
+                         GWY_TRANSFORM_DIRECTION_FORWARD,
+                         GWY_INTERPOLATION_BILINEAR,
+                         FALSE, FALSE);
+
+    gwy_data_field_2dfft_humanize(r_out);
+    gwy_data_field_2dfft_humanize(i_out);
+    if (output_fft != NULL)
+        set_dfield_modulus(r_out, i_out, output_fft);
+
+    /* Apply mask to the fft */
+    gwy_data_field_multiply_fields(r_out, r_out, mask);
+    gwy_data_field_multiply_fields(i_out, i_out, mask);
+    if (output_fft != NULL)
+        gwy_data_field_multiply_fields(output_fft, output_fft, mask);
+
+    /* Run the inverse FFT */
+    gwy_data_field_2dfft_humanize(r_out);
+    gwy_data_field_2dfft_humanize(i_out);
+    gwy_data_field_2dfft(r_out, i_out, r_in, i_in,
+                         GWY_WINDOWING_NONE,
+                         GWY_TRANSFORM_DIRECTION_BACKWARD,
+                         GWY_INTERPOLATION_BILINEAR,
+                         FALSE, FALSE);
+
+    if (output_image != NULL)
+        gwy_data_field_copy(r_in, output_image, TRUE);
+
+    /* Finalize */
+    g_object_unref(i_out);
+    g_object_unref(r_out);
+    g_object_unref(i_in);
+    g_object_unref(r_in);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
