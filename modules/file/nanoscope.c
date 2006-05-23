@@ -23,6 +23,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef HAVE_UNISTD_H
@@ -32,7 +33,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 
 #include "err.h"
 

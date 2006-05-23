@@ -21,9 +21,10 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 
 #include "err.h"

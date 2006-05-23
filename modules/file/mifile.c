@@ -28,11 +28,9 @@ reference to BINARY or ASCII. Also, implement loading of ASCII files */
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwymodule/gwymodule-file.h>
 
 #include <string.h>
 #include <stdlib.h>

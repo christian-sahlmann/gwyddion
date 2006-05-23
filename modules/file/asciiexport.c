@@ -21,13 +21,11 @@
 #include "config.h"
 #include <errno.h>
 #include <string.h>
-
+#include <stdio.h>
 #include <glib/gstdio.h>
-
 #include <libgwyddion/gwymacros.h>
-
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 
 #ifdef HAVE_UNISTD_H

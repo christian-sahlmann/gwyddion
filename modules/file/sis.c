@@ -26,7 +26,7 @@
 
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
 
 #include "err.h"

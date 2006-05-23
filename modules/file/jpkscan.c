@@ -20,14 +20,12 @@
 
 #include "config.h"
 #include <string.h>
-
+#include <stdio.h>
 #include <tiffio.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwylayer-basic.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
 
 #include "err.h"
@@ -88,7 +86,6 @@ static void           tiff_error               (const gchar        *module,
                                                 const gchar        *format,
                                                 va_list             args);
 
-static GQuark         jpkscan_data_key         (gint                idx);
 static GQuark         jpkscan_meta_key         (const gchar        *desc);
 
 static void           meta_store_double        (GwyContainer       *container,

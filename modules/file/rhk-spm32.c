@@ -22,10 +22,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "err.h"

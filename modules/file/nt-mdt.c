@@ -28,7 +28,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -208,12 +208,6 @@ typedef struct {
     guint last_frame; /* f_nt */
     MDTFrame *frames;
 } MDTFile;
-
-typedef struct {
-    GtkWidget *data_view;
-    GwyContainer *data;
-    MDTFile *mdtfile;
-} MDTDialogControls;
 
 static gboolean       module_register     (void);
 static gint           mdt_detect          (const GwyFileDetectInfo *fileinfo,

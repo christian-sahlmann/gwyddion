@@ -29,7 +29,7 @@
 
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -37,7 +37,7 @@
 #endif
 
 #include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>

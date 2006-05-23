@@ -19,17 +19,16 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
-#include <libprocess/stats.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 
 #include "err.h"
 #include "get.h"
