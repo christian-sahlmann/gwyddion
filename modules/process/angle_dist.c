@@ -23,9 +23,9 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <libprocess/level.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
 #define ANGLE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)

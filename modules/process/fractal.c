@@ -24,10 +24,10 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/fractals.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define FRACTAL_RUN_MODES GWY_RUN_INTERACTIVE

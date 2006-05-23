@@ -23,12 +23,13 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyenum.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/dwt.h>
 #include <libprocess/gwyprocesstypes.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define DWT_DENOISE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)

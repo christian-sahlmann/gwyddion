@@ -23,8 +23,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/correlation.h>
-#include <libgwydgets/gwydgets.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
 #include <app/gwyapp.h>
 
 #define CROSSCOR_RUN_MODES GWY_RUN_INTERACTIVE

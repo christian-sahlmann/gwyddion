@@ -23,10 +23,11 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define SPHREV_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)

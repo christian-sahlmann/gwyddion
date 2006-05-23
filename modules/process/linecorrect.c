@@ -22,10 +22,10 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/filters.h>
 #include <libprocess/linestats.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define LINECORR_RUN_MODES GWY_RUN_IMMEDIATE

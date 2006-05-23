@@ -25,11 +25,11 @@
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
 #include <libprocess/tip.h>
-#include <libgwydgets/gwydgets.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define NANOINDENT_ADJUST_RUN_MODES GWY_RUN_INTERACTIVE
+#define NANOINDENT_ADJUST_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 typedef struct {
     GwyDataWindow *win1;

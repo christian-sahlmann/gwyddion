@@ -21,9 +21,9 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define LEVEL_RUN_MODES GWY_RUN_IMMEDIATE

@@ -22,13 +22,12 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
-#include <libgwydgets/gwygraph.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define FFTF_1D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -47,7 +46,6 @@ typedef enum {
 
 enum { MAX_PREV = 200 };
 
-/* Data for this function. */
 typedef struct {
     GwyContainer *data;
     GwyContainer *original;

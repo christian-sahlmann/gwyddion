@@ -24,8 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/tip.h>
-#include <libgwydgets/gwydgets.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define TIP_DILATION_RUN_MODES GWY_RUN_INTERACTIVE

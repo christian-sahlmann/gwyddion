@@ -22,13 +22,13 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/tip.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define TIP_MODEL_RUN_MODES GWY_RUN_INTERACTIVE
+#define TIP_MODEL_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 typedef struct {
     gint nsides;

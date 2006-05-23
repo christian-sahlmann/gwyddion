@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 

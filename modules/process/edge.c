@@ -23,12 +23,12 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libprocess/hough.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define EDGE_RUN_MODES GWY_RUN_IMMEDIATE

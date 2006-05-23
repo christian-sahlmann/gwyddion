@@ -26,10 +26,10 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwynlfit.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define FIT_2D_RUN_MODES GWY_RUN_INTERACTIVE

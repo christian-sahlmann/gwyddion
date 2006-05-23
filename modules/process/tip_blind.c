@@ -22,10 +22,10 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/tip.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define TIP_BLIND_RUN_MODES GWY_RUN_IMMEDIATE

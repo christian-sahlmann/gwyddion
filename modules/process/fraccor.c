@@ -21,9 +21,9 @@
 #include "config.h"
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/fractals.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define FRACCOR_RUN_MODES GWY_RUN_IMMEDIATE

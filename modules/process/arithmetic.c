@@ -27,8 +27,7 @@
 #include <libgwyddion/gwyexpr.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
-#include <libgwydgets/gwydgets.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define ARITH_RUN_MODES GWY_RUN_INTERACTIVE

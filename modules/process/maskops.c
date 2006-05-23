@@ -20,9 +20,9 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define MASKOPS_RUN_MODES GWY_RUN_IMMEDIATE

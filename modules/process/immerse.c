@@ -24,8 +24,9 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/correlation.h>
-#include <libgwydgets/gwydgets.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define IMMERSE_RUN_MODES \

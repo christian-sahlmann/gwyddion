@@ -24,11 +24,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/tip.h>
-#include <libgwydgets/gwydgets.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define TIP_CERTAINTY_MAP_RUN_MODES GWY_RUN_INTERACTIVE
+#define TIP_CERTAINTY_MAP_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 typedef struct {
     GwyDataWindow *win1;

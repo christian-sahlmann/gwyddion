@@ -19,6 +19,10 @@
  */
 
 /* TODO
+
+    SCRAP IT AND START ANEW!
+    Note many stock libprocess functions accept a mask now.
+
 Create separate masks for each feature and notepad for their results
 (that would be swithcing also the mask. Conceps should be similar as
 for fractal dimension calculation module.

@@ -20,7 +20,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <libprocess/correct.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>

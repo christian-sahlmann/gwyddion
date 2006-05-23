@@ -26,11 +26,11 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/grains.h>
-#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define DIST_RUN_MODES (GWY_RUN_INTERACTIVE)
