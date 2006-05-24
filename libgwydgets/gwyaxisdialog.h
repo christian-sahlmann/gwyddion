@@ -43,6 +43,12 @@ struct _GwyAxisDialog {
     GtkDialog dialog;
 
     GtkWidget *sci_text;
+    GtkObject *major_length;
+    GtkObject *major_thickness;
+    GtkObject *major_division;
+    GtkObject *minor_length;
+    GtkObject *minor_thickness;
+    GtkObject *minor_division;
 
     gpointer reserved1;
     gpointer reserved2;

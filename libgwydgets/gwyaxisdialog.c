@@ -25,6 +25,7 @@
 
 #include "gwyaxisdialog.h"
 #include <libgwyddion/gwymacros.h>
+#include "gwydgets.h"
 
 #define GWY_AXIS_DIALOG_TYPE_NAME "GwyAxisDialog"
 
@@ -32,7 +33,7 @@ static void     gwy_axis_dialog_class_init       (GwyAxisDialogClass *klass);
 static void     gwy_axis_dialog_init             (GwyAxisDialog *dialog);
 static gboolean gwy_axis_dialog_delete           (GtkWidget *widget,
                                                   GdkEventAny *event);
-
+static void     settings_changed_cb              (GwyAxisDialog *dialog);
 static GtkDialogClass *parent_class = NULL;
 
 GType
@@ -89,12 +90,79 @@ gwy_axis_dialog_delete(GtkWidget *widget,
 static void
 gwy_axis_dialog_init(GwyAxisDialog *dialog)
 {
-    GtkWidget *entry, *button;
+    GtkWidget *entry, *button, *label, *table;
+    gint row = 0;
 
     gwy_debug("");
 
     gtk_window_set_title(GTK_WINDOW(dialog), "Axis properties");
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    
+
+    table = gtk_table_new(4, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Axis settings:</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);    
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    dialog->major_division = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    gwy_table_attach_hscale(table, row, _("Major division:"), NULL, 
+                                dialog->major_division, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(dialog->major_division, "value-changed",
+                     G_CALLBACK(settings_changed_cb), dialog);
+    row++;
+
+    dialog->major_thickness = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, row, _("Major thickness:"), NULL,
+                                dialog->major_thickness);
+    g_signal_connect_swapped(dialog->major_thickness, "value-changed",
+                     G_CALLBACK(settings_changed_cb), dialog);
+    row++;
+
+    dialog->major_length = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, row, _("Major length:"), NULL,
+                                dialog->major_length);
+    g_signal_connect_swapped(dialog->major_length, "value-changed",
+                     G_CALLBACK(settings_changed_cb), dialog);
+    row++;
+
+    dialog->minor_division = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, row, _("Minor division:"), NULL,
+                                dialog->minor_division);
+    g_signal_connect_swapped(dialog->minor_division, "value-changed",
+                     G_CALLBACK(settings_changed_cb), dialog);
+    row++;
+
+    dialog->minor_thickness = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, row, _("Minor thickness:"), NULL,
+                                dialog->minor_thickness);
+    g_signal_connect_swapped(dialog->minor_thickness, "value-changed",
+                     G_CALLBACK(settings_changed_cb), dialog);
+    row++;
+
+    dialog->minor_length = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, row, _("Minor length:"), NULL,
+                                dialog->minor_length);
+    g_signal_connect_swapped(dialog->minor_length, "value-changed",
+                     G_CALLBACK(settings_changed_cb), dialog);
+    row++;
+
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Label text:</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);    
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                                                              
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                                         table);
+    
     dialog->sci_text = gwy_sci_text_new();
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -127,6 +195,13 @@ gwy_axis_dialog_get_sci_text(GtkWidget* dialog)
 {
     return GWY_AXIS_DIALOG(dialog)->sci_text;
 }
+
+static void     
+settings_changed_cb(GwyAxisDialog *dialog)
+{
+
+}
+
 
 /**
  * SECTION:gwyaxisdialog

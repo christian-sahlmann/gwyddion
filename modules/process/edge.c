@@ -274,10 +274,9 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
     gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
 
     xres = gwy_data_field_get_xres(show);
-    yres = gwy_data_field_get_yres(show);
 
-    gwy_data_field_hough_circle_strenghten(show, x_gradient, y_gradient,
-                                           11, 0.8);
+    gwy_data_field_hough_line_strenghten(show, NULL, NULL,
+                                           1, 0.6);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

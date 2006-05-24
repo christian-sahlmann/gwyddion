@@ -420,18 +420,15 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
     GQuark quark;
 
     g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
-
     quark = key ? g_quark_from_string(key) : 0;
     if (layer->selection_key == quark)
         return;
-
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     if (!view_layer->data) {
         layer->selection_key = quark;
         g_object_notify(G_OBJECT(layer), "selection-key");
         return;
     }
-
     gwy_signal_handler_disconnect(view_layer->data, layer->item_changed_id);
     gwy_vector_layer_selection_disconnect(layer);
     layer->selection_key = quark;
@@ -460,6 +457,7 @@ gwy_vector_layer_container_connect(GwyVectorLayer *layer,
                                 gwy_vector_layer_item_changed, view_layer);
 }
 
+
 /**
  * gwy_vector_layer_selection_connect:
  * @layer: A vector layer.
@@ -475,6 +473,7 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
     if (!layer->selection_key)
         return;
 
+    
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     if (!gwy_container_gis_object(view_layer->data, layer->selection_key,
                                   &layer->selection)) {

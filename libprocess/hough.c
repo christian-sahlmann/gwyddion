@@ -139,7 +139,7 @@ gwy_data_field_hough_line(GwyDataField *dfield,
     gwy_data_field_set_yreal(result, 2*G_PI);
 
 }
-
+#include <stdio.h>
 void
 gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                                           GwyDataField *x_gradient,
@@ -148,8 +148,8 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                                           gdouble threshold)
 {
     GwyDataField *result;
-    gdouble hmax, hmin, threshval, zdata[200];
-    gint i, xdata[200], ydata[200];
+    gdouble hmax, hmin, threshval, zdata[20];
+    gint i, xdata[20], ydata[20];
 
     result = gwy_data_field_new(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
                              +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield)),
@@ -159,14 +159,18 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
     gwy_data_field_hough_line(dfield, x_gradient, y_gradient, result, hwidth);
 
     gwy_data_field_get_min_max(result, &hmin, &hmax);
-    threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
+    threshval = hmin + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
+    //threshval = hmax - (hmax - hmin)/2.5;
+    
+    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 20, 2, threshval);
 
-    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
-
-    for (i = 0; i < 200; i++)
+    for (i = 0; i < 20; i++)
     {
-        if (zdata[i]>threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
-                bresenhams_line_polar(dfield,
+        printf("zdata: %d %d %g\n", xdata[i], ydata[i], zdata[i]);
+     
+       if (zdata[i] > threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
+           //printf("point: %d %d (of %d %d), xreal: %g  yreal: %g\n", xdata[i], ydata[i], result->xres, result->yres, result->xreal, result->yreal);     
+           bresenhams_line_polar(dfield,
                                       ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres) - result->xreal/2,
                                       ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
                                       1);
@@ -234,8 +238,7 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
     gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
-
-    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
+    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2, threshval);
 
     buffer = gwy_data_field_duplicate(dfield);
     gwy_data_field_fill(buffer, 0);
@@ -268,13 +271,14 @@ signum(gint x)
     return 1;
 }
 
+#include <stdio.h>
 
-
-static void
-bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta, gdouble value)
+void
+gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield, 
+                      gdouble rho, gdouble theta,
+                     gint *px1, gint *px2, gint *py1, gint *py2)
 {
      gint x_top, x_bottom, y_left, y_right;
-     gint x1, x2, y1, y2;
      gboolean x1set = FALSE;
 
      x_top = (gint)(rho/cos(theta));
@@ -282,47 +286,56 @@ bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta, gdouble 
      y_left = (gint)(rho/sin(theta));
      y_right = (gint)((rho - dfield->xres*cos(theta))/sin(theta));
 
+     printf("%g %g %d %d %d %d\n", rho, theta, x_top, x_bottom, y_left, y_right);
      if (x_top >= 0 && x_top < dfield->xres)
      {
-         x1 = x_top;
-         y1 = 0;
+         *px1 = x_top;
+         *py1 = 0;
          x1set = TRUE;
      }
      if (x_bottom >= 0 && x_bottom < dfield->xres)
      {
          if (x1set) {
-             x2 = x_bottom;
-             y2 = dfield->yres - 1;
+             *px2 = x_bottom;
+             *py2 = dfield->yres - 1;
          }
          else {
-             x1 = x_bottom;
-             y1 = dfield->yres - 1;
+             *px1 = x_bottom;
+             *py1 = dfield->yres - 1;
              x1set = TRUE;
          }
      }
      if (y_left >= 0 && y_left < dfield->yres)
      {
          if (x1set) {
-             x2 = 0;
-             y2 = y_left;
+             *px2 = 0;
+             *py2 = y_left;
          }
          else {
-             x1 = 0;
-             y1 = y_left;
+             *px1 = 0;
+             *py1 = y_left;
              x1set = TRUE;
          }
      }
      if (y_right >= 0 && y_right < dfield->yres)
      {
-         x2 = dfield->xres - 1;
-         y2 = y_right;
+         *px2 = dfield->xres - 1;
+         *py2 = y_right;
      }
      if (!x1set) {
          g_warning("line does not intersect image\n");
          return;
      }
+}
 
-     bresenhams_line(dfield, x1, x2, y1, y2, value);
+static void
+bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta, gdouble value)
+{
+     gint px1, px2, py1, py2;
+
+     gwy_data_field_hough_polar_line_to_datafield(dfield, rho, theta, &px1, &px2, &py1, &py2);
+     
+     bresenhams_line(dfield, px1, px2, py1, py2, value);
 }
 
 static void
@@ -387,7 +400,6 @@ bresenhams_circle(GwyDataField *dfield, gdouble r, gint col, gint row, gdouble v
     gint dx = 0, dy = r-1;
     gint dxoffset, dyoffset;
     gint offset = col + row*dfield->xres;
-
     while (dx<=dy)
     {
          dxoffset = dfield->xres*dx;
@@ -526,20 +538,22 @@ find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
         find_nmax(dfield, mcol, mrow);
     }
 
+     
     return dfield->data[(*mcol) + (*mrow)*dfield->xres];
 }
 
 
 
-void
+gint
 gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
                                           gint *xdata,
                                           gint *ydata,
                                           gdouble *zdata,
                                           gint ndata,
-                                          gint skip)
+                                          gint skip,
+                                          gdouble threshold)
 {
-    gint col, row, mcol, mrow, i;
+    gint col, row, mcol, mrow, i, count;
     gdouble value;
 
     for (i = 0; i < ndata; i++)
@@ -549,26 +563,53 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
         zdata[i] = -G_MAXDOUBLE;
     }
 
-    for (col=0; col<dfield->xres; col += 1 + skip)
+    count = 0;
+    for (col=skip; col<(dfield->xres - skip); col += (1 + skip))
     {
-        for (row=0; row<dfield->yres; row+=2)
+        for (row=skip; row<(dfield->yres - skip); row += (1 + skip))
         {
             mcol = col;
             mrow = row;
             value = find_nmax(dfield, &mcol, &mrow);
 
-            if (find_isthere(xdata, ydata, mcol, mrow, ndata)) continue;
+            if (find_isthere(xdata, ydata, mcol, mrow, ndata) || value<threshold) continue;
 
             i = find_smallest_index(zdata, ndata);
             if (zdata[i] < value) {
                 zdata[i] = value;
                 xdata[i] = mcol;
                 ydata[i] = mrow;
+                count++;
             }
         }
     }
 
+    return count;
 }
+
+void 
+gwy_data_field_hough_datafield_line_to_polar(GwyDataField *dfield,
+                                                  gint px1,
+                                                  gint px2,
+                                                  gint py1,
+                                                  gint py2,
+                                                  gdouble *rho,
+                                                  gdouble *theta)
+{
+    gdouble k, q;
+   
+    
+    k = ((gdouble)py2 - (gdouble)py1)/((gdouble)px2 - (gdouble)px1);
+    q = (gdouble)py1 - ((gdouble)py2 - (gdouble)py1)/((gdouble)px2 - (gdouble)px1)*px1;
+
+    *rho = q/sqrt(k*k + 1);
+    *theta = asin(1/sqrt(k*k + 1));
+    
+    printf("line: p1 (%d, %d), p2 (%d, %d), k=%g q=%g rho=%g theta=%g\n",
+           px1, py1, px2, py2, k, q, *rho, *theta);
+
+}
+
 
 /************************** Documentation ****************************/
 
