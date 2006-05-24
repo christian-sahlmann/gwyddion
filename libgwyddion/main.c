@@ -696,8 +696,8 @@ test_si_unit()
     siunit1 = (GwySIUnit*)gwy_si_unit_new("");
     siunit2 = (GwySIUnit*)gwy_si_unit_new("");
     for (i = 0; i < G_N_ELEMENTS(pairs)/2; i++) {
-        gwy_si_unit_set_unit_string(siunit1, pairs[2*i]);
-        gwy_si_unit_set_unit_string(siunit2, pairs[2*i + 1]);
+        gwy_si_unit_set_from_string(siunit1, pairs[2*i]);
+        gwy_si_unit_set_from_string(siunit2, pairs[2*i + 1]);
         fprintf(stderr, "<%s> %s <%s>\n",
                 pairs[2*i],
                 gwy_si_unit_equal(siunit1, siunit2) ? "=" : "!=",
@@ -711,14 +711,14 @@ test_si_unit()
     vf = gwy_si_unit_get_format_with_digits(si, GWY_SI_UNIT_FORMAT_PLAIN, \
                                             val, dig, vf); \
     fprintf(stderr, "(%s,\t%g,\td=%d) -> %.*f %s\n", \
-            gwy_si_unit_get_unit_string(si), val, dig, \
+            gwy_si_unit_get_string(si, GWY_SI_UNIT_FORMAT_PLAIN), val, dig, \
             vf->precision, val/vf->magnitude, vf->units)
 
 #define dsiunitr(si, res, val, vf) \
     vf = gwy_si_unit_get_format_with_resolution(si, GWY_SI_UNIT_FORMAT_PLAIN, \
                                                 val, res, vf); \
     fprintf(stderr, "(%s,\t%g,\tr=%g)\t-> %.*f %s\n", \
-            gwy_si_unit_get_unit_string(si), val, res, \
+            gwy_si_unit_get_string(si, GWY_SI_UNIT_FORMAT_PLAIN), val, res, \
             vf->precision, val/vf->magnitude, vf->units)
 
 static void
@@ -819,7 +819,7 @@ test_si_unit_format(void)
 #define siparsecompose(str) \
     siunit = (GwySIUnit*)gwy_si_unit_new_parse(str, &power10); \
     fprintf(stderr, "<%s> -> <%s>", \
-            str, gwy_si_unit_get_unit_string(siunit)); \
+            str, gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_PLAIN)); \
     if (power10) \
         fprintf(stderr, " x 10^%d", power10); \
     fprintf(stderr, "\n")
@@ -883,7 +883,7 @@ test_si_unit_err(void)
             g_string_append_c(str, c);
         } while (g_rand_int_range(rng, 0, 12));
         g_timer_continue(timer);
-        gwy_si_unit_set_unit_string(siunit, str->str);
+        gwy_si_unit_set_from_string(siunit, str->str);
         g_timer_stop(timer);
         if (i % 12000 == 0)
             putc('.', stderr);

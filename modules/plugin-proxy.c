@@ -1104,10 +1104,12 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
             g_ascii_dtostr(buf, sizeof(buf), gwy_data_field_get_xreal(dfield)));
     fprintf(fh, "%s/yreal=%s\n", name,
             g_ascii_dtostr(buf, sizeof(buf), gwy_data_field_get_yreal(dfield)));
-    unit = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_xy(dfield));
+    unit = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                                  GWY_SI_UNIT_FORMAT_PLAIN);
     fprintf(fh, "%s/unit-xy=%s\n", name, unit);
     g_free(unit);
-    unit = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_z(dfield));
+    unit = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                                  GWY_SI_UNIT_FORMAT_PLAIN);
     fprintf(fh, "%s/unit-z=%s\n", name, unit);
     g_free(unit);
     fprintf(fh, "%s=[\n[", name);

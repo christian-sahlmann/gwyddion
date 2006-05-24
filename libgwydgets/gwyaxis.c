@@ -87,10 +87,10 @@ static void    gwy_axis_autoset             (GwyAxis *axis,
 static void    gwy_axis_adjust              (GwyAxis *axis,
                                              gint width,
                                              gint height);
-static void    gwy_axis_entry               (GwySciText *sci_text, 
+static void    gwy_axis_entry               (GwySciText *sci_text,
                                              GwyAxis *axis);
-static void    gwy_axis_hide                (GwyAxisDialog *dialog, 
-                                             gint arg1, 
+static void    gwy_axis_hide                (GwyAxisDialog *dialog,
+                                             gint arg1,
                                              gpointer user_data);
 
 /* Local data */
@@ -165,7 +165,6 @@ gwy_axis_init(GwyAxis *axis)
     axis->enable_label_edit = TRUE;
 
     axis->unit = gwy_si_unit_new(NULL);
-    axis->magnification_string = NULL;
     axis->magnification = 1;
 }
 
@@ -388,7 +387,7 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
     if (axis->orientation == GTK_POS_LEFT
         || axis->orientation == GTK_POS_RIGHT) {
         axis->label_x_pos = height/2;
-        if (axis->orientation == GTK_POS_LEFT) 
+        if (axis->orientation == GTK_POS_LEFT)
             axis->label_y_pos = 40;
         else
             axis->label_y_pos = width - 40;
@@ -743,29 +742,30 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
-    PangoMatrix matrix = PANGO_MATRIX_INIT; 
-    gint width, height; 
-
+    PangoMatrix matrix = PANGO_MATRIX_INIT;
+    gint width, height;
+    gchar *units;
     GString *plotlabel;
 
-    context = gtk_widget_create_pango_context (GTK_WIDGET(axis)); 
+    context = gtk_widget_create_pango_context (GTK_WIDGET(axis));
     layout = pango_layout_new(context);
     pango_layout_set_font_description(layout, axis->par.major_font);
 
     plotlabel = g_string_new(axis->label_text->str);
-    if ((axis->has_unit || axis->magnification_string->len > 0)
-        || strlen(gwy_si_unit_get_unit_string(axis->unit))>0) {
+    units = gwy_si_unit_get_string(axis->unit, GWY_SI_UNIT_FORMAT_MARKUP);
+    if (axis->magnification_string->len > 0 || *units) {
         g_string_append(plotlabel, " [");
-        if (axis->magnification_string) g_string_append(plotlabel,
-                                                        axis->magnification_string->str);
-        else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
+        if (axis->magnification_string)
+            g_string_append(plotlabel, axis->magnification_string->str);
+        else
+            g_string_append(plotlabel, units);
         g_string_append(plotlabel, "]");
     }
+    g_free(units);
 
     pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
     pango_layout_get_pixel_extents(layout, NULL, &rect);
-    
-    
+
 
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
@@ -783,9 +783,9 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
 
         case GTK_POS_LEFT:
-        pango_matrix_rotate (&matrix, 90); 
-        pango_context_set_matrix (context, &matrix); 
-        pango_layout_context_changed (layout); 
+        pango_matrix_rotate (&matrix, 90);
+        pango_context_set_matrix (context, &matrix);
+        pango_layout_context_changed (layout);
         pango_layout_get_size (layout, &width, &height);
         gdk_draw_layout(drawable, gc,
                         specs->ymin + axis->label_y_pos,
@@ -794,9 +794,9 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
 
         case GTK_POS_RIGHT:
-        pango_matrix_rotate (&matrix, 90); 
-        pango_context_set_matrix (context, &matrix); 
-        pango_layout_context_changed (layout); 
+        pango_matrix_rotate (&matrix, 90);
+        pango_context_set_matrix (context, &matrix);
+        pango_layout_context_changed (layout);
         pango_layout_get_size (layout, &width, &height);
         gdk_draw_layout(drawable, gc,
                         specs->ymin + axis->label_y_pos - rect.height,
@@ -879,7 +879,7 @@ gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
     g_free(text);
     g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
-   
+
 }
 
 static void
@@ -1164,17 +1164,20 @@ gwy_axis_formatticks(GwyAxis *a)
     }
 
     /*move exponents to axis label*/
-    if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO)
-    {
-        format = gwy_si_unit_get_format_with_resolution(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                 MAX(average, range), range/(double)a->mjticks->len, format);
-        if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
-        a->magnification_string = g_string_new(format->units);
+    if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
+        format = gwy_si_unit_get_format_with_resolution
+                          (a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                           MAX(average, range), range/(double)a->mjticks->len,
+                           format);
+        if (a->magnification_string)
+            g_string_assign(a->magnification_string, format->units);
+        else
+            a->magnification_string = g_string_new(format->units);
         a->magnification = format->magnitude;
     }
-    else
-    {
-        if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
+    else {
+        if (a->magnification_string)
+            g_string_free(a->magnification_string, TRUE);
         a->magnification_string = NULL;
         a->magnification = 1;
     }
@@ -1412,11 +1415,11 @@ gwy_axis_get_label(GwyAxis *axis)
 void
 gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 {
-    if (axis->unit && gwy_si_unit_equal(axis->unit, unit)) return;
+    if (axis->unit && gwy_si_unit_equal(axis->unit, unit))
+        return;
 
-    if (axis->unit) gwy_object_unref(axis->unit);
-    axis->unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
-    axis->has_unit = 1;
+    gwy_object_unref(axis->unit);
+    axis->unit = gwy_si_unit_duplicate(unit);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
@@ -1427,8 +1430,6 @@ gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
  * @enable: enable/disable user to change axis label
  *
  * Enables/disables user to change axis label by clicking on axis widget.
- *
- * Since: 1.3.
  **/
 void
 gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)
@@ -1452,16 +1453,18 @@ gwy_axis_get_magnification (GwyAxis *axis)
  * gwy_axis_get_magnification_string:
  * @axis: Axis widget
  *
- * Returns: Magnification string of the axis.(Do not free).
+ * Gets the magnification string of an axis.
+ *
+ * Returns: Magnification string of the axis, owned by the axis.
  **/
-GString*
+const gchar*
 gwy_axis_get_magnification_string(GwyAxis *axis)
 {
-    if (axis->magnification_string != NULL)
-        return g_string_new(axis->magnification_string->str);
-    else return g_string_new("");
+    if (axis->magnification_string)
+        return axis->magnification_string->str;
+    else
+        return "";
 }
-
 
 /**
  * gwy_axis_export_vector:
@@ -1483,6 +1486,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
     GwyAxisLabeledTick *pmjt;
     GwyAxisTick *pmit;
     GString *plotlabel;
+    gchar *units;
     gint i;
     gint linewidth = 2;
     gint ticklinewidth = 1;
@@ -1658,17 +1662,16 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
     g_string_append_printf(out, "%%AxisLabel\n");
 
     plotlabel = g_string_new(axis->label_text->str);
-    if ((axis->has_unit &&
-         (axis->magnification_string->len > 0))
-        || strlen(gwy_si_unit_get_unit_string(axis->unit))>0) {
+    units = gwy_si_unit_get_string(axis->unit, GWY_SI_UNIT_FORMAT_MARKUP);
+    if (axis->magnification_string->len > 0 || *units) {
         g_string_append(plotlabel, " [");
         if (axis->magnification_string)
             g_string_append(plotlabel, axis->magnification_string->str);
         else
-            g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
+            g_string_append(plotlabel, units);
         g_string_append(plotlabel, "]");
     }
-
+    g_free(units);
 
     switch (axis->orientation) {
         case GTK_POS_TOP:

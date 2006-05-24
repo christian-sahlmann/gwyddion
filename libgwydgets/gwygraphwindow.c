@@ -365,7 +365,7 @@ gwy_graph_window_key_pressed(GtkWidget *widget,
 static void
 gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 {
-    GString *xstring, *ystring;
+    const gchar* xstring, *ystring;
     GwyGraph *graph;
     gdouble x, y;
     gchar buffer[200];
@@ -381,11 +381,8 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     ystring = gwy_axis_get_magnification_string(graph->axis_left);
 
     g_snprintf(buffer, sizeof(buffer), "%.4f %s, %.4f %s",
-               x/xmag, xstring->str, y/ymag, ystring->str);
+               x/xmag, xstring, y/ymag, ystring);
     gwy_statusbar_set_markup(GWY_STATUSBAR(graphwindow->statusbar), buffer);
-
-    g_string_free(xstring, TRUE);
-    g_string_free(ystring, TRUE);
 }
 
 static void

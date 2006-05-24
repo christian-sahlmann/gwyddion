@@ -478,14 +478,14 @@ rhkspm32_read_data(RHKPage *rhkpage)
     gwy_data_field_add(dfield, rhkpage->z.offset);
 
     siunit = gwy_data_field_get_si_unit_xy(dfield);
-    gwy_si_unit_set_unit_string(siunit, rhkpage->x.units);
+    gwy_si_unit_set_from_string(siunit, rhkpage->x.units);
 
     siunit = gwy_data_field_get_si_unit_z(dfield);
     s = rhkpage->z.units;
     /* Fix some silly units */
     if (gwy_strequal(s, "N/sec"))
         s = "s^-1";
-    gwy_si_unit_set_unit_string(siunit, s);
+    gwy_si_unit_set_from_string(siunit, s);
 
     return dfield;
 }

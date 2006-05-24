@@ -592,7 +592,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
-    gwy_si_unit_set_unit_string(unit, "m");
+    gwy_si_unit_set_from_string(unit, "m");
     controls->xyexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
                                                          -12, 3, unit,
                                                          args->p.xyexponent);

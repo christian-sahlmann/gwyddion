@@ -280,8 +280,9 @@ gwy_test_ser_print_history(GwyTestSer *test_ser)
     fprintf(stderr, "** Message: unit history:");
     for (i = 0; i < test_ser->unit->len; i++)
         fprintf(stderr, " %s",
-                gwy_si_unit_get_unit_string(g_array_index(test_ser->unit,
-                                                          GwySIUnit*, i)));
+                gwy_si_unit_get_string(g_array_index(test_ser->unit,
+                                                     GwySIUnit*, i),
+                                       GWY_SI_UNIT_FORMAT_PLAIN));
     fputs("\n", stderr);
 }
 

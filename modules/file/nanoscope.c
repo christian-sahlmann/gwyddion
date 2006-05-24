@@ -577,7 +577,8 @@ get_physical_scale(GHashTable *hash,
         gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
         *scale *= pow10(q);
         gwy_debug("Total scale = %g %s/LSB",
-                  *scale, gwy_si_unit_get_unit_string(siunit));
+                  *scale, gwy_si_unit_get_string(siunit,
+                                                 GWY_SI_UNIT_FORMAT_PLAIN));
         g_object_unref(siunit2);
     }
     g_free(key);

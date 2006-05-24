@@ -84,7 +84,6 @@ struct _GwyAxis {
     gboolean is_logarithmic;
     gboolean is_auto;           /*affects: tick numbers and label positions.*/
     gboolean is_standalone;
-    gboolean has_unit;
     GtkPositionType orientation;    /*north, south, east, west*/
 
     gdouble reqmin;
@@ -144,7 +143,7 @@ gdouble    gwy_axis_get_minimum             (GwyAxis *axis);
 gdouble    gwy_axis_get_reqmaximum          (GwyAxis *axis);
 gdouble    gwy_axis_get_reqminimum          (GwyAxis *axis);
 gdouble    gwy_axis_get_magnification       (GwyAxis *axis);
-GString*   gwy_axis_get_magnification_string(GwyAxis *axis);
+const gchar* gwy_axis_get_magnification_string(GwyAxis *axis);
 void       gwy_axis_set_label               (GwyAxis *axis,
                                              GString *label_text);
 GString*   gwy_axis_get_label               (GwyAxis *axis);

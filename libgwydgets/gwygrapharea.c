@@ -1599,7 +1599,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     GwyGraphModel *model;
     GString *out;
     gdouble xmult, ymult;
-    GwyRGBA *color;
+    const GwyRGBA *color;
     gint pointsize;
     gint linesize;
 

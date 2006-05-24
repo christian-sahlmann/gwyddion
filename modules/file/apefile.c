@@ -308,9 +308,9 @@ fill_data_fields(APEFile *apefile,
         dfield = gwy_data_field_new(apefile->res, apefile->res,
                                     apefile->xreal, apefile->yreal, FALSE);
         unit = gwy_data_field_get_si_unit_xy(dfield);
-        gwy_si_unit_set_unit_string(unit, "m");
+        gwy_si_unit_set_from_string(unit, "m");
         unit = gwy_data_field_get_si_unit_z(dfield);
-        gwy_si_unit_set_unit_string(unit, "m");
+        gwy_si_unit_set_from_string(unit, "m");
 
         data = gwy_data_field_get_data(dfield);
         buffer += (apefile->res + 1)*sizeof(float);

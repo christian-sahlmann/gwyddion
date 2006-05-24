@@ -67,32 +67,33 @@ struct _GwySIUnitClass {
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
-GwySIUnit*        gwy_si_unit_new                   (const gchar *unit_string);
-GwySIUnit*        gwy_si_unit_new_parse             (const gchar *unit_string,
-                                                     gint *power10);
+GwySIUnit*        gwy_si_unit_new                  (const gchar *unit_string);
+GwySIUnit*        gwy_si_unit_new_parse            (const gchar *unit_string,
+                                                    gint *power10);
 
-void              gwy_si_unit_set_unit_string       (GwySIUnit *siunit,
-                                                     const gchar *unit_string);
-void              gwy_si_unit_set_unit_string_parse (GwySIUnit *siunit,
-                                                     const gchar *unit_string,
-                                                     gint *power10);
-gchar*            gwy_si_unit_get_unit_string       (GwySIUnit *siunit);
-GwySIUnit*        gwy_si_unit_multiply              (GwySIUnit *siunit1,
-                                                     GwySIUnit *siunit2,
-                                                     GwySIUnit *result);
-GwySIUnit*        gwy_si_unit_divide                (GwySIUnit *siunit1,
-                                                     GwySIUnit *siunit2,
-                                                     GwySIUnit *result);
-GwySIUnit*        gwy_si_unit_power                 (GwySIUnit *siunit,
-                                                     gint power,
-                                                     GwySIUnit *result);
-gboolean          gwy_si_unit_equal                 (GwySIUnit *siunit1,
-                                                     GwySIUnit *siunit2);
+void              gwy_si_unit_set_from_string      (GwySIUnit *siunit,
+                                                    const gchar *unit_string);
+void              gwy_si_unit_set_from_string_parse(GwySIUnit *siunit,
+                                                    const gchar *unit_string,
+                                                    gint *power10);
+gchar*            gwy_si_unit_get_string           (GwySIUnit *siunit,
+                                                    GwySIUnitFormatStyle style);
+GwySIUnit*        gwy_si_unit_multiply             (GwySIUnit *siunit1,
+                                                    GwySIUnit *siunit2,
+                                                    GwySIUnit *result);
+GwySIUnit*        gwy_si_unit_divide               (GwySIUnit *siunit1,
+                                                    GwySIUnit *siunit2,
+                                                    GwySIUnit *result);
+GwySIUnit*        gwy_si_unit_power                (GwySIUnit *siunit,
+                                                    gint power,
+                                                    GwySIUnit *result);
+gboolean          gwy_si_unit_equal                (GwySIUnit *siunit1,
+                                                    GwySIUnit *siunit2);
 
-GwySIValueFormat* gwy_si_unit_get_format            (GwySIUnit *siunit,
-                                                     GwySIUnitFormatStyle style,
-                                                     gdouble value,
-                                                     GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_get_format           (GwySIUnit *siunit,
+                                                    GwySIUnitFormatStyle style,
+                                                    gdouble value,
+                                                    GwySIValueFormat *format);
 GwySIValueFormat* gwy_si_unit_get_format_for_power10(GwySIUnit *siunit,
                                                      GwySIUnitFormatStyle style,
                                                      gint power10,
@@ -110,7 +111,6 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 void              gwy_si_unit_value_format_free     (GwySIValueFormat *format);
 void              gwy_si_unit_value_format_set_units(GwySIValueFormat *format,
                                                      const gchar *units);
-
 
 G_END_DECLS
 

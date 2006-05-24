@@ -274,7 +274,7 @@ set_dfield_phase(GwyDataField *re, GwyDataField *im,
         *data = atan2(*dataim, *datare);
 
     unit = gwy_data_field_get_si_unit_z(target);
-    gwy_si_unit_set_unit_string(unit, "");
+    gwy_si_unit_set_from_string(unit, "");
 }
 
 static gboolean

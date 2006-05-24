@@ -222,7 +222,8 @@ gwy_si_unit_serialize(GObject *obj,
 
     si_unit = GWY_SI_UNIT(obj);
     {
-        gchar *unitstr = gwy_si_unit_get_unit_string(si_unit);
+        gchar *unitstr = gwy_si_unit_get_string(si_unit,
+                                                GWY_SI_UNIT_FORMAT_PLAIN);
         GwySerializeSpec spec[] = {
             { 's', "unitstr", &unitstr, NULL, },
         };
@@ -318,12 +319,14 @@ gwy_si_unit_clone_real(GObject *source, GObject *copy)
 
 /**
  * gwy_si_unit_new:
- * @unit_string: Unit string.
+ * @unit_string: Unit string (it can be %NULL for an empty unit).
+ *
+ * Creates a new SI unit from string representation.
  *
  * Unit string represents unit with no prefixes
  * (e. g. "m", "N", "A", etc.)
  *
- * Returns: A new SI unit with a given string.
+ * Returns: A new SI unit.
  **/
 GwySIUnit*
 gwy_si_unit_new(const char *unit_string)
@@ -333,7 +336,7 @@ gwy_si_unit_new(const char *unit_string)
 
 /**
  * gwy_si_unit_new_parse:
- * @unit_string: Unit string.
+ * @unit_string: Unit string (it can be %NULL for an empty unit).
  * @power10: Where power of 10 should be stored (or %NULL).
  *
  * Creates a new SI unit from string representation.
@@ -344,9 +347,9 @@ gwy_si_unit_new(const char *unit_string)
  * the power of 10 one has to multiply the base unit with to get an equivalent
  * of @unit_string.
  *
- * For example, for "pA/s" it will store -12 to @power10 because 1 pA/s is
- * 1e-12 A/s, for "km^2" it will store 6 to @power10 because 1 km^2 is 1e6
- * m^2.
+ * For example, for <literal>"pA/s"</literal> it will store -12 to @power10
+ * because 1 pA/s is 1e-12 A/s, for <literal>"km^2"</literal> it will store 6
+ * to @power10 because 1 km^2 is 1e6 m^2.
  *
  * Returns: A new SI unit.
  **/
@@ -367,35 +370,37 @@ gwy_si_unit_new_parse(const char *unit_string,
 }
 
 /**
- * gwy_si_unit_set_unit_string:
+ * gwy_si_unit_set_from_string:
  * @siunit: An SI unit.
- * @unit_string: Unit string to be set.
+ * @unit_string: Unit string to set @siunit from (it can be %NULL for an empty
+ *               unit).
  *
  * Sets string that represents unit.
  *
  * It must be base unit with no prefixes (e. g. "m", "N", "A", etc.).
  **/
 void
-gwy_si_unit_set_unit_string(GwySIUnit *siunit,
+gwy_si_unit_set_from_string(GwySIUnit *siunit,
                             const gchar *unit_string)
 {
     g_return_if_fail(GWY_IS_SI_UNIT(siunit));
-    gwy_si_unit_set_unit_string_parse(siunit, unit_string, NULL);
+    gwy_si_unit_set_from_string_parse(siunit, unit_string, NULL);
 }
 
 /**
- * gwy_si_unit_set_unit_string_parse:
+ * gwy_si_unit_set_from_string_parse:
  * @siunit: An SI unit.
- * @unit_string: Unit string to be set.
+ * @unit_string: Unit string to set @siunit from (it can be %NULL for an empty
+ *               unit).
  * @power10: Where power of 10 should be stored (or %NULL).
  *
  * Changes an SI unit according to string representation.
  *
- * This is a more powerful version of gwy_si_unit_set_unit_string(), please
+ * This is a more powerful version of gwy_si_unit_set_from_string(), please
  * see gwy_si_unit_new_parse() for some discussion.
  **/
 void
-gwy_si_unit_set_unit_string_parse(GwySIUnit *siunit,
+gwy_si_unit_set_from_string_parse(GwySIUnit *siunit,
                                   const gchar *unit_string,
                                   gint *power10)
 {
@@ -408,30 +413,6 @@ gwy_si_unit_set_unit_string_parse(GwySIUnit *siunit,
     g_signal_emit(siunit, si_unit_signals[VALUE_CHANGED], 0);
 }
 
-/**
- * gwy_si_unit_get_unit_string:
- * @siunit: An SI unit.
- *
- * Obtains string representing a SI unit.
- *
- * Returns: String that represents base unit (with no prefixes).
- **/
-gchar*
-gwy_si_unit_get_unit_string(GwySIUnit *siunit)
-{
-    GString *string;
-    gchar *s;
-
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
-    siunit->power10 = 0;
-
-    string = gwy_si_unit_format(siunit, &format_style_plain, NULL);
-    s = string->str;
-    g_string_free(string, FALSE);
-
-    return s;
-}
-
 static inline const GwySIStyleSpec*
 gwy_si_unit_find_style_spec(GwySIUnitFormatStyle style)
 {
@@ -441,6 +422,34 @@ gwy_si_unit_find_style_spec(GwySIUnitFormatStyle style)
     }
 
     return format_styles[style];
+}
+
+/**
+ * gwy_si_unit_get_string:
+ * @siunit: An SI unit.
+ * @style: Unit format style.
+ *
+ * Obtains string representing a SI unit.
+ *
+ * Returns: A newly allocated string that represents the base unit (with no
+ *          prefixes).
+ **/
+gchar*
+gwy_si_unit_get_string(GwySIUnit *siunit,
+                       GwySIUnitFormatStyle style)
+{
+    GString *string;
+    gchar *s;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    siunit->power10 = 0;
+
+    string = gwy_si_unit_format(siunit, gwy_si_unit_find_style_spec(style),
+                                NULL);
+    s = string->str;
+    g_string_free(string, FALSE);
+
+    return s;
 }
 
 /**

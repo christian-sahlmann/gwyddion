@@ -13,7 +13,6 @@ process_LTLIBRARIES = \
 	dwtanisotropy.la \
 	dwtdenoise.la \
 	edge.la \
-	evaluator_setup.la \
 	facet-level.la \
 	facet_analysis.la \
 	fft.la \

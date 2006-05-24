@@ -668,7 +668,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
 
         case GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE:
         case GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE:
-        gwy_si_unit_set_unit_string(lineunit, NULL);
+        gwy_si_unit_set_from_string(lineunit, NULL);
         break;
 
         default:
@@ -676,7 +676,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
         break;
     }
     lineunit = gwy_data_line_get_si_unit_y(distribution);
-    gwy_si_unit_set_unit_string(lineunit, NULL);
+    gwy_si_unit_set_from_string(lineunit, NULL);
 
     return distribution;
 }
