@@ -35,7 +35,7 @@
 #define GWY_TOOL_SPOT_REMOVER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SPOT_REMOVER, GwyToolSpotRemoverClass))
 
 enum {
-    MAX_SIZE = 64,
+    MAX_SIZE = 65,
     SCALE = 4
 };
 
@@ -67,7 +67,9 @@ struct _GwyToolSpotRemover {
     GwyContainer *data;
     GwyDataField *detail;
 
+    /*
     GwyRectSelectionLabels *rlabels;
+    */
     GtkWidget *zoomview;
     GtkWidget *method;
     GtkWidget *apply;
@@ -119,8 +121,7 @@ static void pseudo_laplace_average                 (GwyDataField *dfield,
                                                     gint yimin,
                                                     gint ximax,
                                                     gint yimax);
-static gboolean find_subrange                      (gint min,
-                                                    gint max,
+static gboolean find_subrange                      (gint center,
                                                     gint res,
                                                     gint size,
                                                     gint *from,
@@ -211,7 +212,7 @@ gwy_tool_spot_remover_init(GwyToolSpotRemover *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
-                                                           "GwyLayerRectangle");
+                                                            "GwyLayerPoint");
     if (!tool->layer_type_rect)
         return;
 
@@ -223,7 +224,7 @@ gwy_tool_spot_remover_init(GwyToolSpotRemover *tool)
                                    &tool->args.method);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
-                                     "rectangle");
+                                     "pointer");
 
     tool->data = gwy_container_new();
     tool->detail = gwy_data_field_new(MAX_SIZE, MAX_SIZE, MAX_SIZE, MAX_SIZE,
@@ -237,6 +238,7 @@ gwy_tool_spot_remover_init(GwyToolSpotRemover *tool)
     gwy_tool_spot_remover_init_dialog(tool);
 }
 
+/*
 static void
 gwy_tool_spot_remover_rect_updated(GwyToolSpotRemover *tool)
 {
@@ -247,6 +249,7 @@ gwy_tool_spot_remover_rect_updated(GwyToolSpotRemover *tool)
                                      plain_tool->selection,
                                      plain_tool->data_field);
 }
+*/
 
 static void
 gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
@@ -288,12 +291,14 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
     /* Selection info */
+    /*
     tool->rlabels = gwy_rect_selection_labels_new
                          (FALSE, G_CALLBACK(gwy_tool_spot_remover_rect_updated),
                           tool);
     gtk_box_pack_start(GTK_BOX(vbox),
                        gwy_rect_selection_labels_get_table(tool->rlabels),
                        FALSE, FALSE, 0);
+                       */
 
     /* Options */
     table = GTK_TABLE(gtk_table_new(3, 4, FALSE));
@@ -355,10 +360,7 @@ gwy_tool_spot_remover_data_switched(GwyTool *gwytool,
         return;
 
     if (data_view) {
-        g_object_set(plain_tool->layer,
-                     "draw-reflection", FALSE,
-                     "is-crop", FALSE,
-                     NULL);
+        g_object_set(plain_tool->layer, "draw-marker", TRUE, NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
 
         layer = gwy_data_view_get_base_layer(data_view);
@@ -379,10 +381,12 @@ gwy_tool_spot_remover_data_switched(GwyTool *gwytool,
 static void
 gwy_tool_spot_remover_data_changed(GwyPlainTool *plain_tool)
 {
+    /*
     gwy_rect_selection_labels_fill(GWY_TOOL_SPOT_REMOVER(plain_tool)->rlabels,
                                    plain_tool->selection,
                                    plain_tool->data_field,
                                    NULL, NULL);
+                                   */
     gwy_tool_spot_remover_selection_changed(plain_tool, -1);
 }
 
@@ -421,13 +425,17 @@ gwy_tool_spot_remover_selection_changed(GwyPlainTool *plain_tool,
     if (plain_tool->selection) {
         n = gwy_selection_get_data(plain_tool->selection, NULL);
         g_return_if_fail(n == 0 || n == 1);
+        /*
         gwy_rect_selection_labels_fill(tool->rlabels,
                                        plain_tool->selection,
                                        plain_tool->data_field,
                                        NULL, NULL);
+                                       */
     }
+    /*
     else
         gwy_rect_selection_labels_fill(tool->rlabels, NULL, NULL, NULL, NULL);
+        */
 
     gwy_tool_spot_remover_draw_zoom(tool);
 }
@@ -438,8 +446,8 @@ gwy_tool_spot_remover_draw_zoom(GwyToolSpotRemover *tool)
     GwyPlainTool *plain_tool;
     gint xfrom, xto, xdest, yfrom, yto, ydest;
     gdouble min;
-    gdouble sel[4];
-    gint isel[4];
+    gdouble sel[2];
+    gint isel[2];
     gboolean complete, is_ok;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -457,26 +465,24 @@ gwy_tool_spot_remover_draw_zoom(GwyToolSpotRemover *tool)
 
     isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
     isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
-    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
-    if (isel[0] > isel[2])
-        GWY_SWAP(gdouble, isel[0], isel[2]);
-    if (isel[1] > isel[3])
-        GWY_SWAP(gdouble, isel[1], isel[3]);
 
+    /*
     is_ok = (isel[0] > 0
              && isel[1] > 0
              && isel[2] < gwy_data_field_get_xres(plain_tool->data_field)-1
              && isel[3] < gwy_data_field_get_yres(plain_tool->data_field)-1
              && isel[2] - isel[0] <= MAX_SIZE
              && isel[3] - isel[1] <= MAX_SIZE);
+             */
+    /* XXX: do not risk anything yet */
+    is_ok = FALSE;
 
     complete = TRUE;
-    complete &= find_subrange(isel[0], isel[2],
+    complete &= find_subrange(isel[0],
                               gwy_data_field_get_xres(plain_tool->data_field),
                               MAX_SIZE,
                               &xfrom, &xto, &xdest);
-    complete &= find_subrange(isel[1], isel[3],
+    complete &= find_subrange(isel[1],
                               gwy_data_field_get_yres(plain_tool->data_field),
                               MAX_SIZE,
                               &yfrom, &yto, &ydest);
@@ -495,16 +501,13 @@ gwy_tool_spot_remover_draw_zoom(GwyToolSpotRemover *tool)
 }
 
 static gboolean
-find_subrange(gint min,
-              gint max,
+find_subrange(gint center,
               gint res,
               gint size,
               gint *from,
               gint *to,
               gint *dest)
 {
-    gint length = max - min;
-
     /* complete interval always fit in size */
     if (res <= size) {
         *from = 0;
@@ -513,20 +516,20 @@ find_subrange(gint min,
         return FALSE;
     }
 
-    /* interval larger than size */
-    if (length >= size) {
-        *from = min;
-        *to = min + size;
-        *dest = 0;
-        return TRUE;
-    }
-
-    /* interval shorter, fit intelligently */
-    *from = MAX(0, min - (size - length)/2);
-    *to = MIN(*from + size, res);
-    *from = *to - size;
-    g_assert(*from >= 0);
+    /* try to keep center in center */
     *dest = 0;
+    *from = center - size/2;
+    *to = center + size/2 + 1;
+    /* but move it if not possible */
+    if (*from < 0) {
+        *to -= *from;
+        *from = 0;
+    }
+    if (*to > res) {
+        *from -= (*to - res);
+        *to = res;
+    }
+    g_assert(*from >= 0);
     return TRUE;
 }
 
