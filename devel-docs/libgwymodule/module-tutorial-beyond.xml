@@ -300,8 +300,8 @@ slope_dialog(gdouble *amount)
     </para>
     <para>
       Note such a module would report <literal>GWY_RUN_MODAL</literal>
-      as its <link linkend="libgwymodule-gwymodule-process-GwyRunMode">run
-      mode</link>, not <literal>GWY_RUN_INTERACTIVE</literal> since the
+      as its <link linkend="libgwymodule-gwymodule-process-GwyRunMode">run mode</link>,
+      not <literal>GWY_RUN_INTERACTIVE</literal> since the
       <function>gtk_dialog_run()</function> runs the dialog in a modal
       (exclusive) mode, blocking the rest of application until the dialog
       is closed.  This is the simpliest possibility, suficient for most
