@@ -654,6 +654,8 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
         case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
         case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
         case GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH:
+        case GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE:
+        case GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE:
         gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lineunit));
         break;
 
@@ -664,12 +666,17 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
         gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(lineunit));
         break;
 
+        case GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE:
+        case GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE:
+        gwy_si_unit_set_unit_string(lineunit, NULL);
+        break;
+
         default:
         g_warning("Wrong grain quantity %d", (gint)quantity);
         break;
     }
     lineunit = gwy_data_line_get_si_unit_y(distribution);
-    gwy_si_unit_set_unit_string(lineunit, "");
+    gwy_si_unit_set_unit_string(lineunit, NULL);
 
     return distribution;
 }
