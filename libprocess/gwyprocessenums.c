@@ -304,6 +304,20 @@ gwy_correlation_type_get_enum(void)
  *                                        Note for grains not topologically
  *                                        equivalent to disc, only the length
  *                                        of the outer boundary is calculated.
+ * @GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE: Minimum lateral bounding size, in other
+ *                                      words the minimum length of grain
+ *                                      projection to any line in the
+ *                                      horizontal plane.
+ * @GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE: Direction of the minimum lateral
+ *                                       bounding size (arbitrary one if the
+ *                                       minimum is not unique).
+ * @GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE: Minimum lateral bounding size, in other
+ *                                      words the maximum length of grain
+ *                                      projection to any line in the
+ *                                      horizontal plane.
+ * @GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE: Direction of the maximum lateral
+ *                                       bounding size (arbitrary one if the
+ *                                       maximum is not unique).
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.
