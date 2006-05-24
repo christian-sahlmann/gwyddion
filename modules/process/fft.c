@@ -274,7 +274,7 @@ set_dfield_phase(GwyDataField *re, GwyDataField *im,
         *data = atan2(*dataim, *datare);
 
     unit = gwy_data_field_get_si_unit_z(target);
-    gwy_si_unit_set_from_string(unit, "");
+    gwy_si_unit_set_from_string(unit, NULL);
 }
 
 static gboolean
@@ -316,7 +316,7 @@ fft_dialog(FFTArgs *args,
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->interp, args->interp, TRUE);
-    gwy_table_attach_row(table, row, _("_Interpolation type:"), "",
+    gwy_table_attach_row(table, row, _("_Interpolation type:"), NULL,
                          controls.interp);
     row++;
 
@@ -324,7 +324,7 @@ fft_dialog(FFTArgs *args,
         = gwy_enum_combo_box_new(gwy_windowing_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->window, args->window, TRUE);
-    gwy_table_attach_row(table, row, _("_Windowing type:"), "",
+    gwy_table_attach_row(table, row, _("_Windowing type:"), NULL,
                          controls.window);
     row++;
 
@@ -332,7 +332,7 @@ fft_dialog(FFTArgs *args,
         = gwy_enum_combo_box_new(fft_outputs, G_N_ELEMENTS(fft_outputs),
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->out, args->out, TRUE);
-    gwy_table_attach_row(table, row, _("_Output type:"), "",
+    gwy_table_attach_row(table, row, _("_Output type:"), NULL,
                          controls.out);
     row++;
 
