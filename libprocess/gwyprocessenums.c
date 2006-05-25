@@ -311,7 +311,7 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE: Direction of the minimum lateral
  *                                       bounding size (arbitrary one if the
  *                                       minimum is not unique).
- * @GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE: Minimum lateral bounding size, in other
+ * @GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE: Maximum lateral bounding size, in other
  *                                      words the maximum length of grain
  *                                      projection to any line in the
  *                                      horizontal plane.
