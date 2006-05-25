@@ -103,6 +103,8 @@ typedef struct {
 
     GwyDataField    *dfield;
     GwyDataField    *fft;
+    GwyDataField    *filtered;
+    GwyDataField    *diff;
 
     GtkWidget       *view;
 
@@ -226,34 +228,54 @@ run_main(GwyContainer *data, GwyRunType run)
                                      0);
     if (dfield)
     {
-        /* Duplicate the datafield, calculate and store the fft image */
-        dfield = gwy_data_field_duplicate(dfield);
-        controls.dfield = dfield;
+        /* Create datafields */
+        controls.dfield = gwy_data_field_duplicate(dfield);
         controls.fft = gwy_data_field_new_alike(dfield, FALSE);
         do_fft(controls.dfield, controls.fft);
+        controls.filtered = gwy_data_field_new_alike(dfield, TRUE);
+        controls.diff = gwy_data_field_new_alike(dfield, TRUE);
 
         /* Setup the mydata container */
         controls.mydata = gwy_container_new();
         gwy_container_set_object_by_name(controls.mydata, "/0/data",
                                          controls.fft);
-        gwy_container_set_object_by_name(controls.mydata, "/1/data",
-                                         controls.dfield);
         gwy_container_set_string_by_name(controls.mydata,
                                          "/0/base/palette",
                                          g_strdup("DFit"));
         gwy_app_copy_data_items(data, controls.mydata, id, 0,
                                 GWY_DATA_ITEM_MASK_COLOR,
                                 0);
+        if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
+            gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+            gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
+        }
+
+        gwy_container_set_object_by_name(controls.mydata, "/1/data",
+                                         controls.dfield);
         gwy_app_copy_data_items(data, controls.mydata, id, 1,
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_MASK_COLOR,
                                 GWY_DATA_ITEM_RANGE,
                                 GWY_DATA_ITEM_RANGE_TYPE,
                                 0);
-        if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
-            gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-            gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
-        }
+
+        gwy_container_set_object_by_name(controls.mydata, "/2/data",
+                                         controls.filtered);
+        gwy_app_copy_data_items(data, controls.mydata, id, 2,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_RANGE,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                0);
+
+        gwy_container_set_object_by_name(controls.mydata, "/3/data",
+                                         controls.diff);
+        gwy_app_copy_data_items(data, controls.mydata, id, 3,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_RANGE,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                0);
 
         /* Run the dialog */
         response = run_dialog(&controls);
@@ -722,6 +744,24 @@ prev_mode_changed_cb(ControlsType *controls)
                                                 "/1/base");
                 gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
                                                    "/1/base/range-type");
+
+                gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                              NULL);
+
+                gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),
+                                            NULL);
+
+                controls->prev_mode = new_mode;
+                break;
+
+            case PREV_FILTERED:
+                gwy_pixmap_layer_set_data_key(layer, "/2/data");
+                gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
+                        "/2/base/palette");
+                gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
+                        "/2/base");
+                gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
+                        "/2/base/range-type");
 
                 gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
                                               NULL);
