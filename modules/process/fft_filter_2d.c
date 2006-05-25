@@ -82,8 +82,8 @@ typedef enum {
 typedef enum {
     PREV_FFT,
     PREV_IMAGE,
-    PREV_FILTERED_IMAGE,
-    PREV_IMAGE_DIFF,
+    PREV_FILTERED,
+    PREV_DIFF,
 } PreviewMode;
 
 typedef void (*FieldFillFunc)(GwyDataField*, gint, gint, gint, gint, gdouble);
@@ -387,11 +387,11 @@ run_dialog(ControlsType *controls)
             N_("Original _Image"),
         },
         {
-            PREV_FILTERED_IMAGE,
+            PREV_FILTERED,
             N_("Filtered _Image"),
         },
         {
-            PREV_IMAGE_DIFF,
+            PREV_DIFF,
             N_("Image _Difference"),
         },
     };
