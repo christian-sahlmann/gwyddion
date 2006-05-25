@@ -21,6 +21,7 @@
 /*TODO: Only allow 2^n sized images (XXX: this is no longer useful with FFTW) */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -78,6 +79,13 @@ typedef enum {
     FFT_RECT_SUB       = 3,
 } MaskEditMode;
 
+typedef enum {
+    PREV_FFT,
+    PREV_IMAGE,
+    PREV_FILTERED_IMAGE,
+    PREV_IMAGE_DIFF,
+} PreviewMode;
+
 typedef void (*FieldFillFunc)(GwyDataField*, gint, gint, gint, gint, gdouble);
 
 enum {
@@ -90,16 +98,19 @@ enum {
 };
 
 typedef struct {
-    GwyContainer *mydata;
-    GwyContainer *data;
+    GwyContainer    *mydata;
+    GwyContainer    *data;
 
-    GwyDataField *dfield;
-    GwyDataField *fft;
+    GwyDataField    *dfield;
+    GwyDataField    *fft;
 
-    GtkWidget      *view;
+    GtkWidget       *view;
 
     MaskEditMode    edit_mode;
     GSList          *mode;
+
+    PreviewMode     prev_mode;
+    GSList          *pmode;
 
 //XXX OLD CRUFT:
     GtkWidget *dialog;
@@ -134,6 +145,7 @@ static void         run_main            (GwyContainer *data,
 static void        selection_finished_cb (GwySelection *selection,
                                           ControlsType *controls);
 static void        edit_mode_changed_cb  (ControlsType *controls);
+static void        prev_mode_changed_cb  (ControlsType *controls);
 static void        remove_all_cb         (ControlsType *controls);
 static void        undo_cb               (ControlsType *controls);
 
@@ -196,7 +208,8 @@ run_main(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield = NULL, *mfield;
     GwyDataField *out_image, *out_fft;
-    gint id;
+    gint id, newid;
+    GwyRGBA rgba;
     ControlsType controls;
     gboolean response;
 
@@ -204,8 +217,10 @@ run_main(GwyContainer *data, GwyRunType run)
 
     /* Initialize */
     controls.edit_mode = FFT_ELLIPSE_ADD;
+    controls.prev_mode = PREV_FFT;
     controls.data = data;
 
+    /*XXX: should the mask and presentation get carried through? */
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
@@ -216,6 +231,29 @@ run_main(GwyContainer *data, GwyRunType run)
         controls.dfield = dfield;
         controls.fft = gwy_data_field_new_alike(dfield, FALSE);
         do_fft(controls.dfield, controls.fft);
+
+        /* Setup the mydata container */
+        controls.mydata = gwy_container_new();
+        gwy_container_set_object_by_name(controls.mydata, "/0/data",
+                                         controls.fft);
+        gwy_container_set_object_by_name(controls.mydata, "/1/data",
+                                         controls.dfield);
+        gwy_container_set_string_by_name(controls.mydata,
+                                         "/0/base/palette",
+                                         g_strdup("DFit"));
+        gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                0);
+        gwy_app_copy_data_items(data, controls.mydata, id, 1,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_RANGE,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                0);
+        if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
+            gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+            gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
+        }
 
         /* Run the dialog */
         response = run_dialog(&controls);
@@ -229,6 +267,18 @@ run_main(GwyContainer *data, GwyRunType run)
             GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                             "/0/mask"));
             fft_filter_2d(controls.dfield, out_image, out_fft, mfield);
+
+            newid = gwy_app_data_browser_add_data_field(out_image, data, TRUE);
+            g_object_unref(out_image);
+            gwy_app_copy_data_items(data, data, id, newid,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    GWY_DATA_ITEM_RANGE,
+                                    GWY_DATA_ITEM_MASK_COLOR,
+                                    0);
+
+            g_object_unref(out_fft);
+
+            gwy_app_set_data_field_title(data, newid, _("Filtered Data"));
         }
     }
 }
@@ -255,6 +305,7 @@ run_dialog(ControlsType *controls)
         { N_("Filtered FFT"),   OUTPUT_FFT                },
         { N_("Both"),           OUTPUT_IMAGE | OUTPUT_FFT },
     };
+
     GtkWidget *dialog;
     GtkWidget *table, *hbox, *hbox2, *hbox3;
     GtkWidget *table2;
@@ -300,12 +351,36 @@ run_dialog(ControlsType *controls)
         },
     };
 
+    static struct {
+        guint prev_mode;
+        const gchar *text;
+    }
+    const prev_modes[] = {
+        {
+            PREV_FFT,
+            N_("_FFT Editor"),
+        },
+        {
+            PREV_IMAGE,
+            N_("Original _Image"),
+        },
+        {
+            PREV_FILTERED_IMAGE,
+            N_("Filtered _Image"),
+        },
+        {
+            PREV_IMAGE_DIFF,
+            N_("Image _Difference"),
+        },
+    };
+
     GtkRadioButton *group;
     GwyPixmapLayer *layer, *mlayer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
     GwyDataField *mask;
-    GwyRGBA rgba;
+    const gchar *key;
+    gchar buf[32];
     GQuark mquark;
     gint id;
     gdouble zoomval;
@@ -332,32 +407,25 @@ run_dialog(ControlsType *controls)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 5);
 
     /* Setup the GwyDataView */
-    controls->mydata = gwy_container_new();
-    gwy_container_set_object_by_name(controls->mydata, "/0/data",
-                                     controls->fft);
-    gwy_container_set_string_by_name(controls->mydata, "/0/base/fft_palette",
-                                     g_strdup("DFit"));
-    gwy_app_copy_data_items(controls->data, controls->mydata, id, 0,
-                            GWY_DATA_ITEM_PALETTE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_RANGE,
-                            0);
-    if (!gwy_rgba_get_from_container(&rgba, controls->mydata, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, controls->mydata, "/0/mask");
-    }
     controls->view = gwy_data_view_new(controls->mydata);
 
     /* setup base layer */
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
-                                     "/0/base/fft_palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
-    zoomval =
-PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(controls->dfield),
+                                     "/0/base/palette");
+    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
+                                    "/0/base");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
+                                       "/0/base/range-type");
+    gwy_container_set_enum_by_name(controls->mydata, "/0/base/range-type",
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
 
-gwy_data_field_get_yres(controls->dfield));
+    /* Connect pixmap layer to GwyDataView */
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
+    zoomval = PREVIEW_SIZE /
+              (gdouble)MAX(gwy_data_field_get_xres(controls->dfield),
+                           gwy_data_field_get_yres(controls->dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
 
@@ -460,6 +528,7 @@ gwy_data_field_get_yres(controls->dfield));
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
+    /*
     hbox2 = gtk_hbox_new(FALSE, 0);
     gtk_table_attach(GTK_TABLE(table), hbox2, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -481,6 +550,7 @@ gwy_data_field_get_yres(controls->dfield));
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
+    */
 
     button = gtk_check_button_new_with_mnemonic(_("_Zoom"));
     g_signal_connect_swapped(button, "toggled",
@@ -496,46 +566,28 @@ gwy_data_field_get_yres(controls->dfield));
                      GTK_FILL, GTK_FILL, 0, 2);
     row++;
 
-    table2 = gtk_table_new(3, 2, FALSE);
-    gtk_table_attach(GTK_TABLE(table), table2, 0, 2, row, row+1,
-                     GTK_FILL, GTK_FILL, 0, 2);
+    hbox2 = gtk_vbox_new(FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), hbox2, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    button = gtk_radio_button_new_with_mnemonic(NULL, _("Original _FFT"));
-    g_signal_connect_swapped(button, "toggled",
-                             G_CALLBACK(display_mode_changed), controls);
-    gtk_table_attach(GTK_TABLE(table2), button, 0, 1, 0, 1,
-                     GTK_FILL, GTK_FILL, 0, 1);
-    controls->button_show_fft = button;
-
-    button = radio_new(GTK_RADIO_BUTTON(button), _("Original _Image"));
-    g_signal_connect_swapped(button, "toggled",
-                             G_CALLBACK(display_mode_changed), controls);
-    gtk_table_attach(GTK_TABLE(table2), button, 1, 2, 0, 1,
-                     GTK_FILL, GTK_FILL, 5, 1);
-    controls->button_show_original_image = button;
-
-    button = radio_new(GTK_RADIO_BUTTON(button), _("Filtered _Image"));
-    g_signal_connect_swapped(button, "toggled",
-                             G_CALLBACK(display_mode_changed), controls);
-    gtk_table_attach(GTK_TABLE(table2), button, 1, 2, 1, 2,
-                     GTK_FILL, GTK_FILL, 5, 1);
-    controls->button_show_image_preview = button;
-
-    button = radio_new(GTK_RADIO_BUTTON(button), _("Image _Difference"));
-    g_signal_connect_swapped(button, "toggled",
-                             G_CALLBACK(display_mode_changed), controls);
-    gtk_table_attach(GTK_TABLE(table2), button, 1, 2, 2, 3,
-                     GTK_FILL, GTK_FILL, 5, 1);
-    controls->button_show_diff_preview = button;
-
-    button = radio_new(GTK_RADIO_BUTTON(button), _("Filtered _FFT"));
-    g_signal_connect_swapped(button, "toggled",
-                             G_CALLBACK(display_mode_changed), controls);
-    gtk_table_attach(GTK_TABLE(table2), button, 0, 1, 1, 2,
-                     GTK_FILL, GTK_FILL, 0, 1);
-    controls->button_show_fft_preview = button;
+    group = NULL;
+    for (i = 0; i < G_N_ELEMENTS(prev_modes); i++) {
+        button = gtk_radio_button_new_with_mnemonic_from_widget(group,
+                                                            prev_modes[i].text);
+        gwy_radio_button_set_value(button, prev_modes[i].prev_mode);
+        gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(prev_mode_changed_cb), controls);
+        if (!group)
+            group = GTK_RADIO_BUTTON(button);
+    }
+    controls->pmode = gtk_radio_button_get_group(group);
+    gwy_radio_buttons_set_current(controls->pmode, controls->prev_mode);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
     row++;
+
+
+
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Output Options</b>"));
@@ -629,6 +681,63 @@ gwy_data_field_get_yres(controls->dfield));
     return TRUE;
 }
 
+static void
+prev_mode_changed_cb(ControlsType *controls)
+{
+    GwyPixmapLayer *layer, *mlayer;
+    PreviewMode new_mode;
+
+    new_mode = gwy_radio_buttons_get_current(controls->pmode);
+
+    if (new_mode != controls->prev_mode)
+    {
+        layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+
+        switch(new_mode)
+        {
+            case PREV_FFT:
+                gwy_pixmap_layer_set_data_key(layer, "/0/data");
+                gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
+                        "/0/base/palette");
+                gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
+                        "/0/base");
+                gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
+                        "/0/base/range-type");
+
+                mlayer = gwy_layer_mask_new();
+                gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
+                gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
+                gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                              mlayer);
+
+                controls->prev_mode = new_mode;
+                edit_mode_changed_cb(controls);
+                break;
+
+            case PREV_IMAGE:
+                gwy_pixmap_layer_set_data_key(layer, "/1/data");
+                gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
+                                                 "/1/base/palette");
+                gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
+                                                "/1/base");
+                gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
+                                                   "/1/base/range-type");
+
+                gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                              NULL);
+
+                gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),
+                                            NULL);
+
+                controls->prev_mode = new_mode;
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
 static GwyVectorLayer*
 create_vlayer(MaskEditMode new_mode)
 {
@@ -662,11 +771,13 @@ edit_mode_changed_cb(ControlsType *controls)
     GwySelection *selection;
 
     new_mode = gwy_radio_buttons_get_current(controls->mode);
-    vlayer = create_vlayer(controls->edit_mode);
 
-    if (vlayer) {
-        gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-        gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+    if (controls->prev_mode == PREV_FFT) {
+        vlayer = create_vlayer(controls->edit_mode);
+        if (vlayer) {
+            gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+            gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+        }
     }
 
     controls->edit_mode = new_mode;
@@ -811,9 +922,9 @@ save_settings(ControlsType *controls)
     gwy_container_set_boolean_by_name(settings,
                                       "/module/fft_filter_2d/check_origin",
                                       get_toggled(controls->check_origin));
-    gwy_container_set_double_by_name(settings,
-                    "/module/fft_filter_2d/color_range",
-                    gtk_range_get_value(GTK_RANGE(controls->scale_fft)));
+//    gwy_container_set_double_by_name(settings,
+//                    "/module/fft_filter_2d/color_range",
+//                    gtk_range_get_value(GTK_RANGE(controls->scale_fft)));
     gwy_container_set_boolean_by_name(settings,
                                       "/module/fft_filter_2d/zoom",
                                       get_toggled(controls->check_zoom));
@@ -856,7 +967,7 @@ load_settings(ControlsType *controls, gboolean load_defaults)
                                   output);
     //set_combo_index(controls->combo_output, "output-type", output);
     set_toggled(controls->check_origin, origin);
-    gtk_range_set_value(GTK_RANGE(controls->scale_fft), color);
+//    gtk_range_set_value(GTK_RANGE(controls->scale_fft), color);
     set_toggled(controls->check_zoom, zoom);
 }
 
@@ -931,7 +1042,9 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
         for (j = 0; j < xres; j++) {
             rval = re_data[j*xres + i];
             ival = im_data[j*xres + i];
-            target_data[j*xres + i] = sqrt(sqrt(rval*rval + ival*ival));
+            //target_data[j*xres + i] = sqrt(sqrt(rval*rval + ival*ival));
+            target_data[j*xres + i] = sqrt(rval*rval + ival*ival);
+
         }
     }
 }
