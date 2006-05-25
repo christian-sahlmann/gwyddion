@@ -54,12 +54,13 @@ void gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
 
 gint gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
-                                          gint *xdata,
-                                          gint *ydata,
+                                          gdouble *xdata,
+                                          gdouble *ydata,
                                           gdouble *zdata,
                                           gint ndata,
                                           gint skip,
-                                          gdouble threshold);
+                                          gdouble threshold,
+                                          gboolean subpixel);
 
 void gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield, 
                                                   gdouble rho, 

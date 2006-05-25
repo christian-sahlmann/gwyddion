@@ -149,7 +149,8 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 {
     GwyDataField *result;
     gdouble hmax, hmin, threshval, zdata[20];
-    gint i, xdata[20], ydata[20];
+    gint i;
+    gdouble xdata[20], ydata[20];
 
     result = gwy_data_field_new(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
                              +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield)),
@@ -162,11 +163,11 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
     threshval = hmin + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
     //threshval = hmax - (hmax - hmin)/2.5;
     
-    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 20, 2, threshval);
+    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 20, 2, threshval, TRUE);
 
     for (i = 0; i < 20; i++)
     {
-        printf("zdata: %d %d %g\n", xdata[i], ydata[i], zdata[i]);
+        printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);
      
        if (zdata[i] > threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
            //printf("point: %d %d (of %d %d), xreal: %g  yreal: %g\n", xdata[i], ydata[i], result->xres, result->yres, result->xreal, result->yreal);     
@@ -230,7 +231,8 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 {
     GwyDataField *result, *buffer;
     gdouble hmax, hmin, threshval, zdata[200];
-    gint i, xdata[200], ydata[200];
+    gint i;
+    gdouble xdata[200], ydata[200];
 
     result = gwy_data_field_new_alike(dfield, FALSE);
 
@@ -238,7 +240,7 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
     gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
-    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2, threshval);
+    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2, threshval, TRUE);
 
     buffer = gwy_data_field_duplicate(dfield);
     gwy_data_field_fill(buffer, 0);
@@ -473,12 +475,12 @@ find_smallest_index(gdouble *data, gint n)
 }
 
 gboolean
-find_isthere(gint *xdata, gint *ydata, gint mcol, gint mrow, gint n)
+find_isthere(gdouble *xdata, gdouble *ydata, gint mcol, gint mrow, gint n)
 {
     gint i;
     for (i = 0; i < n; i++)
     {
-        if (xdata[i] == mcol && ydata[i] == mrow) return TRUE;
+        if (fabs(xdata[i]-mcol)<1 && fabs(ydata[i]-mrow)<1) return TRUE;
     }
     return FALSE;
 }
@@ -542,18 +544,58 @@ find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
     return dfield->data[(*mcol) + (*mrow)*dfield->xres];
 }
 
+static void
+get_local_maximum(GwyDataField *dfield, gint mcol, gint mrow,
+                                gdouble *xval, gdouble *yval, gdouble *zval)
+{
+    
+    gdouble zm, zp, z0;
+
+    z0 = gwy_data_field_get_val(dfield, mcol, mrow);
+    if (mcol > 0)
+        zm = gwy_data_field_get_val(dfield, mcol - 1, mrow);
+    else
+        zm = z0;
+    
+    if (mcol < (gwy_data_field_get_xres(dfield)-1))
+        zp = gwy_data_field_get_val(dfield, mcol + 1, mrow);
+    else
+        zp = z0;
+ 
+    if (zm == z0 && zp == z0) *xval = (gdouble)mcol;
+    else
+        *xval = (gdouble)mcol + (zm - zp)/(zm + zp - 2*z0)/2;
+
+    if (mrow > 0)
+        zm = gwy_data_field_get_val(dfield, mcol, mrow - 1);
+    else
+        zm = z0;
+    
+    if (mrow < (gwy_data_field_get_yres(dfield)-1))
+        zp = gwy_data_field_get_val(dfield, mcol, mrow + 1);
+    else
+        zp = z0;
+ 
+    if (zm == z0 && zp == z0) *yval = (gdouble)mcol;
+    else
+        *yval = (gdouble)mrow + (zm - zp)/(zm + zp - 2*z0)/2;
+
+    
+}
 
 
 gint
 gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
-                                          gint *xdata,
-                                          gint *ydata,
+                                          gdouble *xdata,
+                                          gdouble *ydata,
                                           gdouble *zdata,
                                           gint ndata,
                                           gint skip,
-                                          gdouble threshold)
+                                          gdouble threshold,
+                                          gboolean subpixel)
 {
     gint col, row, mcol, mrow, i, count;
+    gdouble xval, yval, zval;
     gdouble value;
 
     for (i = 0; i < ndata; i++)
@@ -576,10 +618,22 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
 
             i = find_smallest_index(zdata, ndata);
             if (zdata[i] < value) {
-                zdata[i] = value;
-                xdata[i] = mcol;
-                ydata[i] = mrow;
-                count++;
+                if (subpixel)
+                {
+                    get_local_maximum(dfield, mcol, mrow,
+                                      &xval, &yval, &zval);
+                    zdata[i] = value;
+                    xdata[i] = xval;
+                    ydata[i] = yval;
+                    count++;
+                }
+                else
+                {
+                    zdata[i] = value;
+                    xdata[i] = (gdouble)mcol;
+                    ydata[i] = (gdouble)mrow;
+                    count++;
+                }
             }
         }
     }

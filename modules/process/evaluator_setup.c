@@ -606,6 +606,7 @@ static void
 detected_add_cb(EsetupControls *controls)
 {
 }
+
 static void        
 detected_remove_cb(EsetupControls *controls)
 {
@@ -635,7 +636,16 @@ relative_add_cb(EsetupControls *controls)
 static void        
 relative_remove_cb(EsetupControls *controls)
 {
-}
+    GList *list;
+    guint i;
+    gint row;
+    GtkTreeIter iter;
+   
+    gtk_tree_selection_get_selected(controls->relative_selection,
+                                 &(controls->relative_list), &iter);
+    
+    gtk_list_store_remove(controls->relative_list, &iter);
+ }
 static void        
 relative_edit_cb(EsetupControls *controls)
 {
@@ -647,7 +657,16 @@ correlation_add_cb(EsetupControls *controls)
 static void        
 correlation_remove_cb(EsetupControls *controls)
 {
-}
+    GList *list;
+    guint i;
+    gint row;
+    GtkTreeIter iter;
+   
+    gtk_tree_selection_get_selected(controls->correlation_selection,
+                                 &(controls->correlation_list), &iter);
+    
+    gtk_list_store_remove(controls->correlation_list, &iter);
+ }
 static void        
 correlation_edit_cb(EsetupControls *controls)
 {
@@ -659,7 +678,16 @@ task_add_cb(EsetupControls *controls)
 static void        
 task_remove_cb(EsetupControls *controls)
 {
-}
+    GList *list;
+    guint i;
+    gint row;
+    GtkTreeIter iter;
+   
+    gtk_tree_selection_get_selected(controls->evaluator_selection,
+                                 &(controls->evaluator_list), &iter);
+    
+    gtk_list_store_remove(controls->evaluator_list, &iter);
+ }
 static void        
 task_edit_cb(EsetupControls *controls)
 {
@@ -749,10 +777,9 @@ detect_points(EsetupControls *controls)
     GwySelection *selection;
     gint ndata = 200, skip = 10;
     gint i;
-    gint xdata[200], ydata[200];
+    gdouble xdata[200], ydata[200];
     gdouble zdata[200];
     gdouble seldata[2], threshval, hmin, hmax;
-    
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
                                   controls->mydata, "/0/data"));
     filtered = gwy_data_field_new_alike(dfield, FALSE);
@@ -768,7 +795,8 @@ detect_points(EsetupControls *controls)
                                          zdata,
                                          ndata,
                                          skip,
-                                         threshval);
+                                         threshval,
+                                         TRUE);
 
     selection = gwy_container_get_object_by_name(controls->mydata,
                                        gwy_vector_layer_get_selection_key(controls->vlayer_dpoint));
@@ -786,21 +814,20 @@ static void
 detect_lines(EsetupControls *controls)
 {
     GwyDataField *dfield, *f1, *f2, *edgefield, *filtered;
-    gint xdata[20], ydata[20];
+    gdouble xdata[20], ydata[20];
     gdouble zdata[20];
     gint ndata = 20, skip = 2;
     gint i, px1, px2, py1, py2;
     GwySelection *selection;
     gdouble seldata[4], threshval, hmin, hmax;
- 
+    
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
                                        controls->mydata, "/0/data"));
-    
     edgefield = gwy_data_field_duplicate(dfield);
     f1 = gwy_data_field_duplicate(dfield);
     f2 = gwy_data_field_duplicate(dfield);
-    filtered = gwy_data_field_new(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
-                             +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield)),
+    filtered = gwy_data_field_new(3*(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
+                             +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield))),
                              720, 0, 0,
                              FALSE);
 
@@ -816,14 +843,15 @@ detect_lines(EsetupControls *controls)
                 
     hmin = gwy_data_field_get_min(filtered);
     hmax = gwy_data_field_get_max(filtered);
-    threshval = hmin + (hmax - hmin)*0.8;
+    threshval = hmin + (hmax - hmin)*0.7;
     ndata = gwy_data_field_get_local_maxima_list(filtered,
                                          xdata,
                                          ydata,
                                          zdata,
                                          ndata,
                                          skip,
-                                         threshval);
+                                         threshval,
+                                         TRUE);
 
     selection = gwy_container_get_object_by_name(controls->mydata,
                                        gwy_vector_layer_get_selection_key(controls->vlayer_dline));
@@ -831,7 +859,7 @@ detect_lines(EsetupControls *controls)
      
     for (i=0; i<ndata; i++)
     {
-        //printf("zdata: %d %d %g\n", xdata[i], ydata[i], zdata[i]);
+        //printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);
         if (zdata[i] < threshval && !(ydata[i]<gwy_data_field_get_yres(filtered)/4 
                                       || ydata[i]>=3*gwy_data_field_get_yres(filtered)/4)) continue;
         gwy_data_field_hough_polar_line_to_datafield(dfield,
