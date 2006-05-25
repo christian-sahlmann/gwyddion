@@ -102,6 +102,7 @@ typedef struct {
     GwyContainer    *data;
 
     GwyDataField    *dfield;
+    GwyDataField    *mfield;
     GwyDataField    *fft;
     GwyDataField    *filtered;
     GwyDataField    *diff;
@@ -154,6 +155,8 @@ static void        undo_cb               (ControlsType *controls);
 /* Helper Functions */
 static GwyDataField*   create_mask_field   (GwyDataField *dfield);
 static GwyVectorLayer* create_vlayer       (MaskEditMode new_mode);
+static void            set_layer_channel   (GwyPixmapLayer *layer,
+                                            gint channel);
 static void            do_fft              (GwyDataField *dataInput,
                                             GwyDataField *dataOutput);
 static void            set_dfield_modulus  (GwyDataField *re,
@@ -230,6 +233,7 @@ run_main(GwyContainer *data, GwyRunType run)
     {
         /* Create datafields */
         controls.dfield = gwy_data_field_duplicate(dfield);
+        controls.mfield = create_mask_field(controls.dfield);
         controls.fft = gwy_data_field_new_alike(dfield, FALSE);
         do_fft(controls.dfield, controls.fft);
         controls.filtered = gwy_data_field_new_alike(dfield, TRUE);
@@ -249,6 +253,9 @@ run_main(GwyContainer *data, GwyRunType run)
             gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
             gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
         }
+
+        gwy_container_set_object_by_name(controls.mydata, "/0/mask",
+                                         controls.mfield);
 
         gwy_container_set_object_by_name(controls.mydata, "/1/data",
                                          controls.dfield);
@@ -433,13 +440,7 @@ run_dialog(ControlsType *controls)
 
     /* setup base layer */
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
-                                     "/0/base/palette");
-    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
-                                    "/0/base");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
-                                       "/0/base/range-type");
+    set_layer_channel(layer, 0);
     gwy_container_set_enum_by_name(controls->mydata, "/0/base/range-type",
                                    GWY_LAYER_BASIC_RANGE_AUTO);
 
@@ -461,14 +462,10 @@ run_dialog(ControlsType *controls)
                      G_CALLBACK(selection_finished_cb), controls);
 
     /* setup mask layer */
-    mask = create_mask_field(controls->dfield);
-    gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
-    g_object_unref(mask);
     mlayer = gwy_layer_mask_new();
     gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
-
 
     /* Setup the control panel */
     table = gtk_table_new(20, 2, FALSE);
@@ -704,77 +701,77 @@ run_dialog(ControlsType *controls)
 }
 
 static void
+set_layer_channel(GwyPixmapLayer *layer, gint channel)
+{
+    gchar data_key[30];
+    gchar grad_key[30];
+    gchar mm_key[30];
+    gchar range_key[30];
+
+    g_snprintf(data_key, sizeof(data_key), "/%i/data", channel);
+    g_snprintf(grad_key, sizeof(grad_key), "/%i/base/palette", channel);
+    g_snprintf(mm_key, sizeof(mm_key), "/%i/base", channel);
+    g_snprintf(range_key, sizeof(range_key), "/%i/base/range-type", channel);
+
+    gwy_pixmap_layer_set_data_key(layer, data_key);
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), grad_key);
+    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), mm_key);
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), range_key);
+}
+
+static void
 prev_mode_changed_cb(ControlsType *controls)
 {
     GwyPixmapLayer *layer, *mlayer;
     PreviewMode new_mode;
+    GwyDataField *mfield;
 
     new_mode = gwy_radio_buttons_get_current(controls->pmode);
 
-    if (new_mode != controls->prev_mode)
-    {
+    if (new_mode != controls->prev_mode) {
         layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
 
-        switch(new_mode)
-        {
+        switch(new_mode) {
             case PREV_FFT:
-                gwy_pixmap_layer_set_data_key(layer, "/0/data");
-                gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
-                        "/0/base/palette");
-                gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
-                        "/0/base");
-                gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
-                        "/0/base/range-type");
-
-                mlayer = gwy_layer_mask_new();
-                gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
-                gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
-                gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                              mlayer);
-
-                controls->prev_mode = new_mode;
-                edit_mode_changed_cb(controls);
-                break;
+            set_layer_channel(layer, 0);
+            mlayer = gwy_layer_mask_new();
+            gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
+            gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
+            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                          mlayer);
+            controls->prev_mode = new_mode;
+            edit_mode_changed_cb(controls);
+            break;
 
             case PREV_IMAGE:
-                gwy_pixmap_layer_set_data_key(layer, "/1/data");
-                gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
-                                                 "/1/base/palette");
-                gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
-                                                "/1/base");
-                gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
-                                                   "/1/base/range-type");
-
-                gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                              NULL);
-
-                gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),
-                                            NULL);
-
-                controls->prev_mode = new_mode;
-                break;
+            set_layer_channel(layer, 1);
+            break;
 
             case PREV_FILTERED:
-                gwy_pixmap_layer_set_data_key(layer, "/2/data");
-                gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
-                        "/2/base/palette");
-                gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer),
-                        "/2/base");
-                gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer),
-                        "/2/base/range-type");
+            fft_filter_2d(controls->dfield, controls->filtered, NULL,
+                          controls->mfield);
+            set_layer_channel(layer, 2);
+            break;
 
-                gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                              NULL);
-
-                gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view),
-                                            NULL);
-
-                controls->prev_mode = new_mode;
-                break;
+            case PREV_DIFF:
+            fft_filter_2d(controls->dfield, controls->filtered, NULL,
+                          controls->mfield);
+            gwy_data_field_subtract_fields(controls->diff,
+                                           controls->dfield,
+                                           controls->filtered);
+            set_layer_channel(layer, 3);
+            break;
 
             default:
-                break;
+            g_assert_not_reached();
+            break;
         }
+
+        if (new_mode != PREV_FFT) {
+            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), NULL);
+            gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), NULL);
+        }
+        controls->prev_mode = new_mode;
     }
 }
 
@@ -787,17 +784,17 @@ create_vlayer(MaskEditMode new_mode)
     {
         case FFT_RECT_ADD:
         case FFT_RECT_SUB:
-            vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
-            break;
+        vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
+        break;
 
         case FFT_ELLIPSE_ADD:
         case FFT_ELLIPSE_SUB:
-            vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
-            break;
+        vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+        break;
 
         default:
-            g_assert_not_reached();
-            break;
+        g_assert_not_reached();
+        break;
     }
 
     return vlayer;
@@ -876,28 +873,28 @@ selection_finished_cb(GwySelection *selection,
     /* decide between rectangle and ellipse */
     switch (controls->edit_mode) {
         case FFT_RECT_ADD:
-            fill_func = &gwy_data_field_area_fill;
-            value = 1.0;
-            break;
+        fill_func = &gwy_data_field_area_fill;
+        value = 1.0;
+        break;
 
         case FFT_RECT_SUB:
-            fill_func = &gwy_data_field_area_fill;
-            value = 0.0;
-            break;
+        fill_func = &gwy_data_field_area_fill;
+        value = 0.0;
+        break;
 
         case FFT_ELLIPSE_ADD:
-            fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
-            value = 1.0;
-            break;
+        fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
+        value = 1.0;
+        break;
 
         case FFT_ELLIPSE_SUB:
-            fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
-            value = 0.0;
-            break;
+        fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
+        value = 0.0;
+        break;
 
         default:
-            g_return_if_reached();
-            break;
+        g_assert_not_reached();
+        break;
     }
 
     /* apply change to mask */
@@ -940,75 +937,6 @@ build_tooltips(GHashTable *hash_tips)
         _("Forces new markers to center around the origin."));
     g_hash_table_insert(hash_tips, "color_range",
         _("Changes the range of values displayed in the FFT."));
-}
-
-static void
-save_settings(ControlsType *controls)
-{
-    GwyContainer *settings;
-    gint i;
-
-    settings = gwy_app_settings_get();
-
-    i = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->combo_output));
-    gwy_container_set_int32_by_name(settings,
-                                    "/module/fft_filter_2d/combo_output",
-                                    i);
-    //gwy_container_set_int32_by_name(settings,
-    //                                "/module/fft_filter_2d/combo_output",
-    //                                get_combo_index(controls->combo_output,
-    //                                                "output-type"));
-
-    gwy_container_set_boolean_by_name(settings,
-                                      "/module/fft_filter_2d/check_origin",
-                                      get_toggled(controls->check_origin));
-//    gwy_container_set_double_by_name(settings,
-//                    "/module/fft_filter_2d/color_range",
-//                    gtk_range_get_value(GTK_RANGE(controls->scale_fft)));
-    gwy_container_set_boolean_by_name(settings,
-                                      "/module/fft_filter_2d/zoom",
-                                      get_toggled(controls->check_zoom));
-}
-
-static void
-load_settings(ControlsType *controls, gboolean load_defaults)
-{
-    GwyContainer *settings;
-    gint output;
-    gboolean origin;
-    gdouble color;
-    gboolean zoom;
-
-    /* Set defaults */
-    output = 2;
-    origin = FALSE;
-    color = CR_DEFAULT;
-    zoom = FALSE;
-
-    /* Load settings */
-    if (!load_defaults) {
-        settings = gwy_app_settings_get();
-        gwy_container_gis_int32_by_name(settings,
-                                        "/module/fft_filter_2d/combo_output",
-                                        &output);
-        gwy_container_gis_boolean_by_name(settings,
-                                          "/module/fft_filter_2d/check_origin",
-                                          &origin);
-        gwy_container_gis_double_by_name(settings,
-                                         "/module/fft_filter_2d/color_range",
-                                         &color);
-        gwy_container_gis_boolean_by_name(settings,
-                                          "/module/fft_filter_2d/zoom",
-                                          &zoom);
-    }
-
-    /* Change controls to match settings */
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combo_output),
-                                  output);
-    //set_combo_index(controls->combo_output, "output-type", output);
-    set_toggled(controls->check_origin, origin);
-//    gtk_range_set_value(GTK_RANGE(controls->scale_fft), color);
-    set_toggled(controls->check_zoom, zoom);
 }
 
 static void
@@ -1170,5 +1098,75 @@ fft_filter_2d(GwyDataField *input,
     g_object_unref(i_in);
     g_object_unref(r_in);
 }
+
+static void
+save_settings(ControlsType *controls)
+{
+    GwyContainer *settings;
+    gint i;
+
+    settings = gwy_app_settings_get();
+
+    i = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->combo_output));
+    gwy_container_set_int32_by_name(settings,
+                                    "/module/fft_filter_2d/combo_output",
+                                    i);
+    //gwy_container_set_int32_by_name(settings,
+    //                                "/module/fft_filter_2d/combo_output",
+    //                                get_combo_index(controls->combo_output,
+    //                                                "output-type"));
+
+    gwy_container_set_boolean_by_name(settings,
+                                      "/module/fft_filter_2d/check_origin",
+                                      get_toggled(controls->check_origin));
+//    gwy_container_set_double_by_name(settings,
+//                    "/module/fft_filter_2d/color_range",
+//                    gtk_range_get_value(GTK_RANGE(controls->scale_fft)));
+    gwy_container_set_boolean_by_name(settings,
+                                      "/module/fft_filter_2d/zoom",
+                                      get_toggled(controls->check_zoom));
+}
+
+static void
+load_settings(ControlsType *controls, gboolean load_defaults)
+{
+    GwyContainer *settings;
+    gint output;
+    gboolean origin;
+    gdouble color;
+    gboolean zoom;
+
+    /* Set defaults */
+    output = 2;
+    origin = FALSE;
+    color = CR_DEFAULT;
+    zoom = FALSE;
+
+    /* Load settings */
+    if (!load_defaults) {
+        settings = gwy_app_settings_get();
+        gwy_container_gis_int32_by_name(settings,
+                                        "/module/fft_filter_2d/combo_output",
+                                        &output);
+        gwy_container_gis_boolean_by_name(settings,
+                                          "/module/fft_filter_2d/check_origin",
+                                          &origin);
+        gwy_container_gis_double_by_name(settings,
+                                         "/module/fft_filter_2d/color_range",
+                                         &color);
+        gwy_container_gis_boolean_by_name(settings,
+                                          "/module/fft_filter_2d/zoom",
+                                          &zoom);
+    }
+
+    /* Change controls to match settings */
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combo_output),
+                                  output);
+    //set_combo_index(controls->combo_output, "output-type", output);
+    set_toggled(controls->check_origin, origin);
+//    gtk_range_set_value(GTK_RANGE(controls->scale_fft), color);
+    set_toggled(controls->check_zoom, zoom);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
