@@ -313,6 +313,7 @@ gwy_app_file_write(GwyContainer *data,
     switch (saveok) {
         case GWY_FILE_OPERATION_SAVE:
         if (free_utf8) {
+            gwy_undo_container_set_unmodified(data);
             gwy_container_set_string_by_name(data, "/filename", filename_utf8);
             free_utf8 = FALSE;
         }
