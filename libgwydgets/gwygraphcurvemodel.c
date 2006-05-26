@@ -1,4 +1,6 @@
 /*
+ *  @(#) $Id$
+ *  Copyright (C) 2005-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,9 +24,8 @@
 #include <libdraw/gwyrgba.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/dataline.h>
-#include "gwygraphcurvemodel.h"
-#include "gwydgettypes.h"
-
+#include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwydgettypes.h>
 
 #define GWY_GRAPH_CURVE_MODEL_TYPE_NAME "GwyGraphCurveModel"
 
@@ -45,9 +46,10 @@ static void     gwy_graph_curve_model_get_property     (GObject*object,
                                                         guint prop_id,
                                                         GValue *value,
                                                         GParamSpec *pspec);
+static void     gwy_graph_curve_model_data_changed  (GwyGraphCurveModel *model);
 
 enum {
-    LAYOUT_UPDATED,
+    DATA_CHANGED,
     LAST_SIGNAL
 };
 
@@ -77,7 +79,6 @@ gwy_graph_curve_model_serializable_init(GwySerializableIface *iface)
     iface->duplicate = gwy_graph_curve_model_duplicate_real;
 }
 
-
 static void
 gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
 {
@@ -89,156 +90,170 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
     gobject_class->set_property = gwy_graph_curve_model_set_property;
     gobject_class->get_property = gwy_graph_curve_model_get_property;
 
-    graph_curve_model_signals[LAYOUT_UPDATED]
-                       = g_signal_new("layout-updated",
+    /**
+     * GwyGraphCurveModel::data-changed:
+     * @gwygraphcurvemodel: The #GwyGraphCurveModel which received the signal.
+     *
+     * The ::data-changed signal is emitted whenever curve data is set with
+     * a function like gwy_graph_curve_model_set_data().
+     **/
+    graph_curve_model_signals[DATA_CHANGED]
+        = g_signal_new("data-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST,
-                       G_STRUCT_OFFSET(GwyGraphCurveModelClass, layout_updated),
+                       G_STRUCT_OFFSET(GwyGraphCurveModelClass, data_changed),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__VOID,
                        G_TYPE_NONE, 0);
 
-    g_object_class_install_property(gobject_class,
-                           PROP_DESCRIPTION,
-                           g_param_spec_string("description",
-                                "Curve description",
-                                "Changed curve description",
-                                "curve",
-                                 G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DESCRIPTION,
+         g_param_spec_string("description",
+                             "Curve description",
+                             "Changed curve description",
+                             "curve",
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-    g_object_class_install_property(gobject_class,
-                           PROP_CURVE_TYPE,
-                           g_param_spec_enum("curve-type",
-                                "Curve type",
-                                "Changed curve type",
-                                GWY_TYPE_GRAPH_CURVE_TYPE,
-                                GWY_GRAPH_CURVE_LINE,
-                                G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_CURVE_TYPE,
+         g_param_spec_enum("curve-type",
+                           "Curve type",
+                           "Changed curve type",
+                           GWY_TYPE_GRAPH_CURVE_TYPE,
+                           GWY_GRAPH_CURVE_LINE,
+                           G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-     g_object_class_install_property(gobject_class,
-                           PROP_POINT_TYPE,
-                           g_param_spec_enum("point-type",
-                                "Curve point type",
-                                "Changed curve point type",
-                                 GWY_TYPE_GRAPH_POINT_TYPE,
-                                 GWY_GRAPH_POINT_SQUARE,
-                                 G_PARAM_READABLE | G_PARAM_WRITABLE));
+     g_object_class_install_property
+         (gobject_class,
+          PROP_POINT_TYPE,
+          g_param_spec_enum("point-type",
+                            "Curve point type",
+                            "Changed curve point type",
+                            GWY_TYPE_GRAPH_POINT_TYPE,
+                            GWY_GRAPH_POINT_SQUARE,
+                            G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-     g_object_class_install_property(gobject_class,
-                           PROP_POINT_SIZE,
-                           g_param_spec_int("point-size",
-                                "Curve point size",
-                                "Changed curve point size",
-                                 0, 100,
-                                 5,
-                                 G_PARAM_READABLE | G_PARAM_WRITABLE));
+     g_object_class_install_property
+         (gobject_class,
+          PROP_POINT_SIZE,
+          g_param_spec_int("point-size",
+                           "Curve point size",
+                           "Changed curve point size",
+                           0, 100,
+                           5,
+                           G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-     g_object_class_install_property(gobject_class,
-                           PROP_LINE_STYLE,
-                           g_param_spec_enum("line-style",
-                                "Curve line style",
-                                "Changed curve line style",
-                                 GDK_TYPE_LINE_STYLE,
-                                 GDK_LINE_SOLID,
-                                 G_PARAM_READABLE | G_PARAM_WRITABLE));
+     g_object_class_install_property
+         (gobject_class,
+          PROP_LINE_STYLE,
+          g_param_spec_enum("line-style",
+                            "Curve line style",
+                            "Changed curve line style",
+                            GDK_TYPE_LINE_STYLE,
+                            GDK_LINE_SOLID,
+                            G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-     g_object_class_install_property(gobject_class,
-                           PROP_LINE_SIZE,
-                           g_param_spec_int("line-size",
-                                "Curve line size",
-                                "Changed curve line size",
-                                 0, 100,
-                                 1,
-                                 G_PARAM_READABLE | G_PARAM_WRITABLE));
-
+     g_object_class_install_property
+         (gobject_class,
+          PROP_LINE_SIZE,
+          g_param_spec_int("line-size",
+                           "Curve line size",
+                           "Changed curve line size",
+                           0, 100,
+                           1,
+                           G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
-gwy_graph_curve_model_set_property  (GObject *object,
-                                     guint prop_id,
-                                     const GValue *value,
-                                     GParamSpec *pspec)
+gwy_graph_curve_model_set_property(GObject *object,
+                                   guint prop_id,
+                                   const GValue *value,
+                                   GParamSpec *pspec)
 {
     GwyGraphCurveModel *gcmodel = GWY_GRAPH_CURVE_MODEL(object);
-    switch (prop_id)
-    {
+
+    switch (prop_id) {
         case PROP_DESCRIPTION:
-           gwy_graph_curve_model_set_description(gcmodel,
-                                                 g_value_get_string(value));
-           break;
+        gwy_graph_curve_model_set_description(gcmodel,
+                                              g_value_get_string(value));
+        break;
 
         case PROP_CURVE_TYPE:
-           gwy_graph_curve_model_set_curve_type(gcmodel,
-                                                 g_value_get_enum(value));
-           break;
+        gwy_graph_curve_model_set_curve_type(gcmodel,
+                                             g_value_get_enum(value));
+        break;
 
         case PROP_POINT_TYPE:
-           gwy_graph_curve_model_set_curve_point_type(gcmodel,
-                                                 g_value_get_enum(value));
-           break;
+        gwy_graph_curve_model_set_curve_point_type(gcmodel,
+                                                   g_value_get_enum(value));
+        break;
 
         case PROP_LINE_STYLE:
-           gwy_graph_curve_model_set_curve_line_style(gcmodel,
-                                                 g_value_get_enum(value));
-           break;
+        gwy_graph_curve_model_set_curve_line_style(gcmodel,
+                                                   g_value_get_enum(value));
+        break;
 
         case PROP_LINE_SIZE:
-           gwy_graph_curve_model_set_curve_line_size(gcmodel,
-                                                 g_value_get_int(value));
-           break;
+        gwy_graph_curve_model_set_curve_line_size(gcmodel,
+                                                  g_value_get_int(value));
+        break;
 
         case PROP_POINT_SIZE:
-           gwy_graph_curve_model_set_curve_point_size(gcmodel,
-                                                 g_value_get_int(value));
-           break;
-
-
+        gwy_graph_curve_model_set_curve_point_size(gcmodel,
+                                                   g_value_get_int(value));
+        break;
 
         default:
-           G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-           break;
-     }
-}
-
-static void
-gwy_graph_curve_model_get_property  (GObject*object,
-                                     guint prop_id,
-                                     GValue *value,
-                                     GParamSpec *pspec)
-{
-    GwyGraphCurveModel *gcmodel = GWY_GRAPH_CURVE_MODEL(object);
-    switch (prop_id)
-    {
-        case PROP_DESCRIPTION:
-           g_value_set_string(value, gwy_graph_curve_model_get_description(gcmodel));
-           break;
-
-        case PROP_CURVE_TYPE:
-           g_value_set_enum(value, gwy_graph_curve_model_get_curve_type(gcmodel));
-           break;
-
-        case PROP_POINT_TYPE:
-           g_value_set_enum(value, gwy_graph_curve_model_get_curve_point_type(gcmodel));
-           break;
-
-        case PROP_LINE_STYLE:
-           g_value_set_enum(value, gwy_graph_curve_model_get_curve_line_style(gcmodel));
-           break;
-
-        case PROP_LINE_SIZE:
-           g_value_set_int(value, gwy_graph_curve_model_get_curve_line_size(gcmodel));
-           break;
-
-        case PROP_POINT_SIZE:
-           g_value_set_int(value, gwy_graph_curve_model_get_curve_point_size(gcmodel));
-           break;
-
-
-        default:
-           G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-           break;
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
     }
+}
 
+static void
+gwy_graph_curve_model_get_property(GObject*object,
+                                   guint prop_id,
+                                   GValue *value,
+                                   GParamSpec *pspec)
+{
+    GwyGraphCurveModel *gcmodel = GWY_GRAPH_CURVE_MODEL(object);
+
+    switch (prop_id) {
+        case PROP_DESCRIPTION:
+        g_value_set_string(value,
+                           gwy_graph_curve_model_get_description(gcmodel));
+        break;
+
+        case PROP_CURVE_TYPE:
+        g_value_set_enum(value,
+                         gwy_graph_curve_model_get_curve_type(gcmodel));
+        break;
+
+        case PROP_POINT_TYPE:
+        g_value_set_enum(value,
+                         gwy_graph_curve_model_get_curve_point_type(gcmodel));
+        break;
+
+        case PROP_LINE_STYLE:
+        g_value_set_enum(value,
+                         gwy_graph_curve_model_get_curve_line_style(gcmodel));
+        break;
+
+        case PROP_LINE_SIZE:
+        g_value_set_int(value,
+                        gwy_graph_curve_model_get_curve_line_size(gcmodel));
+        break;
+
+        case PROP_POINT_SIZE:
+        g_value_set_int(value,
+                        gwy_graph_curve_model_get_curve_point_size(gcmodel));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 
@@ -247,10 +262,6 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
 {
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)gcmodel);
-
-    gcmodel->n = 0;
-    gcmodel->xdata = NULL;
-    gcmodel->ydata = NULL;
 
     gcmodel->description = g_string_new("");
     gcmodel->color.r = 0;
@@ -465,7 +476,7 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
     g_free(old);
 
     gcmodel->n = n;
-    gwy_graph_curve_model_signal_layout_changed(gcmodel);
+    gwy_graph_curve_model_data_changed(gcmodel);
 }
 
 /**
@@ -730,7 +741,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 
     g_free(xdata);
     g_free(ydata);
-    gwy_graph_curve_model_signal_layout_changed(gcmodel);
+    gwy_graph_curve_model_data_changed(gcmodel);
 }
 
 
@@ -754,6 +765,8 @@ gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
  * gwy_graph_curve_model_get_curve_color:
  * @gcmodel: A #GwyGraphCurveModel.
  *
+ * Gets the color of a graph curve model.
+ *
  * Returns: Curve color (onwed by curve model, do not free nor modify).
  **/
 const GwyRGBA*
@@ -762,20 +775,10 @@ gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
     return &gcmodel->color;
 }
 
-/**
- * gwy_graph_curve_model_signal_layout_changed:
- * @model: A #GwyGraphCurveModel.
- *
- * Emits signal that something general in curve layout (plotting style) was
- * changed.
- *
- * Graph widget or other widgets connected to graph model object should react
- * somehow.
- **/
-void
-gwy_graph_curve_model_signal_layout_changed(GwyGraphCurveModel *model)
+static void
+gwy_graph_curve_model_data_changed(GwyGraphCurveModel *model)
 {
-    g_signal_emit(model, graph_curve_model_signals[LAYOUT_UPDATED], 0);
+    g_signal_emit(model, graph_curve_model_signals[DATA_CHANGED], 0);
 }
 
 /************************** Documentation ****************************/

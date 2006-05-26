@@ -488,7 +488,7 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel,
     g_object_ref(curve);
     g_ptr_array_add(gmodel->curves, curve);
     idx = gmodel->curves->len - 1;
-    g_signal_connect_swapped(curve, "layout-updated",
+    g_signal_connect_swapped(curve, "data-changed",
                              G_CALLBACK(gwy_graph_model_layout_changed),
                              gmodel);
     g_signal_connect_swapped(curve, "notify",
