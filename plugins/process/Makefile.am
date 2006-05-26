@@ -46,19 +46,19 @@ pascal_plugins_sources = \
 	invert_pascal.pas
 
 process_PROGRAMS = \
-	invert_cpp \
 	$(pascal_plugins)
 
-invert_cpp_SOURCES = \
+cpp_plugins_sources = \
 	dump.cc \
-	invert_cpp.cc
+	dump.hh \
+	invert_cpp.cc \
+	plugin-helper.hh
 
 process_DATA = \
 	$(inst_pascal_rgis) \
 	$(inst_perl_rgis) \
 	$(inst_python_rgis) \
 	$(inst_ruby_rgis) \
-	invert_cpp.rgi \
 	yellow.sh.rgi
 
 all_rgis = \
@@ -77,15 +77,14 @@ invert_pascal_SOURCES =
 invert_pascal$(EXEEXT): invert_pascal.pas GwyddionDump.pas
 	$(PASCAL) $(PASCAL_FLAGS) -oinvert_pascal invert_pascal.pas
 
-noinst_HEADERS = \
-	dump.hh \
-	plugin-helper.hh
+EXTRA_DIST = \
+	README \
+	$(script_plugins) \
+	$(pascal_plugins_sources) \
+	$(cpp_plugins_sources) \
+	$(all_rgis)
 
-EXTRA_DIST = README $(script_plugins) $(pascal_plugins_sources) $(all_rgis)
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Plug-in\"
 PASCAL_FLAGS = -Mdelphi -l- -Sh -WC -O2 -Xc -XX
-
 
 clean-local:
 	rm -f core.* *~ *.ppu

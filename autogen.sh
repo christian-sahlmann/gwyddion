@@ -115,7 +115,7 @@ sh utils/update-potfiles.sh
 dir=.
 test -z "$QUIET" && echo processing $dir
 (cd $dir && \
-  eval $QUIET $LIBTOOLIZE --force && \
+  eval $QUIET $LIBTOOLIZE --automake --force && \
   eval $QUIET $ACLOCAL $ACLOCAL_FLAGS && \
   eval $QUIET $AUTOHEADER && \
   eval $QUIET $AUTOMAKE --add-missing $am_opt && \

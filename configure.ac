@@ -61,10 +61,9 @@ AC_SUBST(LIBRARY_RELEASE)
 #############################################################################
 # Checks for programs and systems.
 AC_DISABLE_STATIC
-AC_PROG_AWK
+CXX=no
+F77=no
 AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_F77
 AC_AIX
 AC_GNU_SOURCE
 AC_ISC_POSIX
@@ -72,8 +71,6 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AM_PROG_CC_STDC
 AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_CHECK_PROGS([STRIP],[strip])
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 GTK_DOC_CHECK(1.4)
 

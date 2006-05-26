@@ -17,6 +17,9 @@ C++
     Note it doesn't resemble Gwyddion C implementation much, it's full of STL
     stuff, a really different implementation.
 
+    It is only distributed but never built.  It seems a proper configure check
+    for *optional* C++ is next to impossible.
+
     Files:
     dump.cc, dump.hh: Dump format implementation (a really simple class).
     plugin-helper.hh: Plug-in helper simplifying command line processing.
