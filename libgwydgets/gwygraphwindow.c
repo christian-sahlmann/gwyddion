@@ -38,7 +38,7 @@ static void gwy_graph_window_destroy            (GtkObject *object);
 static void gwy_graph_window_finalize           (GObject *object);
 static gboolean gwy_graph_window_key_pressed    (GtkWidget *widget,
                                                  GdkEventKey *event);
-static void gwy_graph_cursor_motion_cb          (GwyGraphWindow *graphwindow);
+static gboolean gwy_graph_cursor_motion_cb      (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_measure_cb         (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_in_cb         (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_out_cb        (GwyGraphWindow *graphwindow);
@@ -362,7 +362,7 @@ gwy_graph_window_key_pressed(GtkWidget *widget,
     return method ? method(widget, event) : FALSE;
 }
 
-static void
+static gboolean
 gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 {
     const gchar* xstring, *ystring;
@@ -372,7 +372,8 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     gdouble xmag, ymag;
 
     graph = GWY_GRAPH(graphwindow->graph);
-    gwy_graph_area_get_cursor(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), &x, &y);
+    gwy_graph_area_get_cursor(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
+                              &x, &y);
 
     xmag = gwy_axis_get_magnification(graph->axis_top);
     xstring = gwy_axis_get_magnification_string(graph->axis_top);
@@ -383,6 +384,8 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     g_snprintf(buffer, sizeof(buffer), "%.4f %s, %.4f %s",
                x/xmag, xstring, y/ymag, ystring);
     gwy_statusbar_set_markup(GWY_STATUSBAR(graphwindow->statusbar), buffer);
+
+    return FALSE;
 }
 
 static void
