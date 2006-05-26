@@ -438,7 +438,7 @@ gwy_selection_finished(GwySelection *selection)
 static void
 gwy_selection_clear_default(GwySelection *selection)
 {
-    if (!selection->objects->n)
+    if (!selection->n)
         return;
 
     selection->n = 0;
