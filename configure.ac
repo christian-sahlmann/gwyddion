@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.6cvs20060516, [klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.99.6cvs20060526, [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.7
@@ -267,7 +267,7 @@ if test "x$enable_fftw3" != "xno"; then
       AC_MSG_WARN([FFTW3 older than 3.1 may cause crashes on 64bit systems.
                     Consider installation of FFTW3 at least 3.1.  Alternatively
                     you can disable FFTW3 with --without-fftw3.])
-      FFTW_WARN=" (with warnings)")
+      FFTW3_WARN=" (with warnings)")
   fi
   FFTW3_DEPENDENCY=fftw3
 else
@@ -284,7 +284,7 @@ if test "x$enable_gl" != "xno"; then
   PKG_CHECK_MODULES(GTKGLEXT,[pangoft2 gtkglext-1.0],
                     [AC_DEFINE(HAVE_GTKGLEXT,1,
                                [Define if we have the GtkGLExt package.])],
-                    enable_gl=no)
+                    enable_gl=no; GL_WARN=" (needs GtkGLExt)")
 fi
 if test "x$enable_gl" != "xno"; then
   GTKGLEXT_DEPENDENCY=gtkglext-1.0
@@ -316,6 +316,8 @@ if test x$enable_tiff != xno && test -z "$LIBTIFF"; then
 fi
 if test x$enable_tiff != xno && test -n "$LIBTIFF"; then
   AC_DEFINE(HAVE_TIFF,1,[Define if we have the TIFF library.])
+else
+  TIFF_WARN=" (needs libtiff)"
 fi
 AM_CONDITIONAL([HAVE_TIFF],[test x$enable_tiff != xno && test -n "$LIBTIFF"])
 AC_SUBST(LIBTIFF)
@@ -328,7 +330,7 @@ if test "x$enable_spml" != "xno"; then
   PKG_CHECK_MODULES(XML2, [libxml-2.0 >= 2.6],
                     [AC_DEFINE(HAVE_XML2,1,
                                [Define if we have the libxml2 package.])],
-                    enable_spml=no)
+                    enable_spml=no; SPML_WARN=" (needs libxml2)")
 
 fi
 AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
@@ -489,9 +491,9 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF support (including JPK files):  $enable_tiff"
-echo "  SMPL support:                        $enable_spml"
-echo "  With FFTW3:                          $enable_fftw3$FFTW_WARN"
-echo "  With OpenGL 3D widgets:              $enable_gl"
+echo "  TIFF support (including JPK files):  $enable_tiff$TIFF_WARN"
+echo "  SMPL support:                        $enable_spml$SPML_WARN"
+echo "  With FFTW3:                          $enable_fftw3$FFTW3_WARN"
+echo "  With OpenGL 3D widgets:              $enable_gl$GL_WARN"
 echo "================================================================="
 
