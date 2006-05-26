@@ -107,7 +107,7 @@ get_max_n(GwyGraphModel *model)
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
         n = gwy_graph_curve_model_get_ndata(curvemodel);
         if (n > max)
             max = n;
@@ -125,11 +125,14 @@ get_cell_string(GwyGraphModel *model,
         return g_strdup(" ");
 
     else {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, curve_index);
-        if (data_index >= curvemodel->n) return "";
+        curvemodel = gwy_graph_model_get_curve(model, curve_index);
+        if (data_index >= curvemodel->n)
+            return "";
 
-        if (axis_index == 0) return g_strdup_printf("%g", curvemodel->xdata[data_index]);
-        else return g_strdup_printf("%g", curvemodel->ydata[data_index]);
+        if (axis_index == 0)
+            return g_strdup_printf("%g", curvemodel->xdata[data_index]);
+        else
+            return g_strdup_printf("%g", curvemodel->ydata[data_index]);
     }
 }
 
@@ -187,7 +190,7 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
     /*make two columns for each curve*/
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
 
         description = g_string_new(curvemodel->description->str);
         description = g_string_prepend(description, "x (");

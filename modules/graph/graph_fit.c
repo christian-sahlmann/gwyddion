@@ -183,7 +183,7 @@ normalize_data(FitArgs *args,
     if (curve >= gwy_graph_model_get_n_curves(args->graph_model))
         return 0;
 
-    cmodel = gwy_graph_model_get_curve_by_index(args->graph_model, curve);
+    cmodel = gwy_graph_model_get_curve(args->graph_model, curve);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
@@ -817,8 +817,7 @@ graph_selected(GwySelection* selection, gint i, FitControls *controls)
 
     if (nselections <= 0 || area_selection[0] == area_selection[1]) {
         gmodel = gwy_graph_get_model(graph);
-        gcmodel = gwy_graph_model_get_curve_by_index(gmodel,
-                                                     controls->args->curve - 1);
+        gcmodel = gwy_graph_model_get_curve(gmodel, controls->args->curve - 1);
         data = gwy_graph_curve_model_get_xdata(gcmodel);
         args->from = data[0];
         args->to = data[gwy_graph_curve_model_get_ndata(gcmodel) - 1];
@@ -1027,7 +1026,7 @@ count_really_fitted_points(FitArgs *args)
 
     curve = args->curve - 1;
     n = 0;
-    cmodel = gwy_graph_model_get_curve_by_index(args->graph_model, curve);
+    cmodel = gwy_graph_model_get_curve(args->graph_model, curve);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
@@ -1072,7 +1071,8 @@ create_results_window(FitArgs *args)
 
     attach_label(table, _(_("<b>Data:</b>")), row, 0, 0.0);
     str = g_string_new(gwy_graph_curve_model_get_description(
-                              gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
+                              gwy_graph_model_get_curve(args->graph_model,
+                                                        curve)));
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -1082,7 +1082,7 @@ create_results_window(FitArgs *args)
     g_string_printf(str, "%d of %d",
                     count_really_fitted_points(args),
                     gwy_graph_curve_model_get_ndata(
-                          gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
+                          gwy_graph_model_get_curve(args->graph_model, curve)));
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -1178,13 +1178,15 @@ create_fit_report(FitArgs *args)
     g_string_append_printf(report, _("\n===== Fit Results =====\n"));
 
     str = g_string_new(gwy_graph_curve_model_get_description(
-                              gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
+                              gwy_graph_model_get_curve(args->graph_model,
+                                                        curve)));
     g_string_append_printf(report, _("Data: %s\n"), str->str);
     str = g_string_new("");
     g_string_append_printf(report, _("Number of points: %d of %d\n"),
                            count_really_fitted_points(args),
                            gwy_graph_curve_model_get_ndata(
-                              gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
+                              gwy_graph_model_get_curve(args->graph_model,
+                                                        curve)));
 
     g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);

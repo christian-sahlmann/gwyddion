@@ -494,7 +494,7 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
         gwy_graph_draw_curve(drawable, gc,
                              &specs, G_OBJECT(curvemodel));
     }
@@ -628,7 +628,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         && area->enable_user_input == TRUE) {
         curve = gwy_graph_area_find_curve(area, dx, dy);
         if (curve >= 0) {
-            cmodel = gwy_graph_model_get_curve_by_index(gmodel, curve);
+            cmodel = gwy_graph_model_get_curve(gmodel, curve);
             gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
                                                  G_OBJECT(cmodel));
             gtk_widget_show_all(GTK_WIDGET(area->area_dialog));
@@ -1139,7 +1139,7 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
     model = GWY_GRAPH_MODEL(area->graph_model);
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
         ndata = gwy_graph_curve_model_get_ndata(curvemodel);
         xdata = gwy_graph_curve_model_get_xdata(curvemodel);
         ydata = gwy_graph_curve_model_get_ydata(curvemodel);
@@ -1486,7 +1486,7 @@ gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
     for (i = 0; i < gwy_graph_model_get_n_curves(GWY_GRAPH_MODEL(gmodel)); i++)
     {
         g_signal_connect_swapped(
-                             gwy_graph_model_get_curve_by_index(GWY_GRAPH_MODEL(gmodel), i),
+                             gwy_graph_model_get_curve(GWY_GRAPH_MODEL(gmodel), i),
                              "notify",
                              G_CALLBACK(gwy_graph_area_repos_label), area);
     }
@@ -1501,25 +1501,21 @@ gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
 }
 
 static void
-gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog, gint arg1, gpointer user_data)
+gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog,
+                        gint response_id,
+                        gpointer user_data)
 {
-    if (arg1 == GTK_RESPONSE_APPLY) {
-        gwy_graph_area_refresh(GWY_GRAPH_AREA(user_data));
-    }
-    else if (arg1 == GTK_RESPONSE_CLOSE) {
+    if (response_id == GTK_RESPONSE_CLOSE)
         gtk_widget_hide(GTK_WIDGET(dialog));
-    }
 }
 
 static void
-gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog, gint arg1, gpointer user_data)
+gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog,
+                         gint response_id,
+                         gpointer user_data)
 {
-    if (arg1 == GTK_RESPONSE_APPLY) {
-        gwy_graph_area_refresh(GWY_GRAPH_AREA(user_data));
-    }
-    else if (arg1 == GTK_RESPONSE_CLOSE) {
+    if (response_id == GTK_RESPONSE_CLOSE)
         gtk_widget_hide(GTK_WIDGET(dialog));
-    }
 }
 
 
@@ -1636,7 +1632,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
         pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
         linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
         color = gwy_graph_curve_model_get_curve_color(curvemodel);

@@ -172,13 +172,13 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
     const gdouble *xdata, *ydata;
     gint ndata, i, pos;
 
-    model = GWY_GRAPH_MODEL(gwy_graph_get_model(graph));
+    model = gwy_graph_get_model(graph);
     if (gwy_graph_model_get_n_curves(model) <= curve) {
         *ret = FALSE;
         return 0;
     }
 
-    cmodel = gwy_graph_model_get_curve_by_index(model, curve);
+    cmodel = gwy_graph_model_get_curve(model, curve);
     xdata = gwy_graph_curve_model_get_xdata(cmodel);
     ydata = gwy_graph_curve_model_get_ydata(cmodel);
     ndata = gwy_graph_curve_model_get_ndata(cmodel);

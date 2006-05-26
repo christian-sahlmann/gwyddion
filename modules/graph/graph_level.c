@@ -68,8 +68,7 @@ level(GwyGraph *graph)
     ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
     newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));
     for (i = 0; i < ncurves; i++) {
-        cmodel = gwy_graph_model_get_curve_by_index(gwy_graph_get_model(graph),
-                                                    i);
+        cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph), i);
         xdata = gwy_graph_curve_model_get_xdata(cmodel);
         ydata = gwy_graph_curve_model_get_ydata(cmodel);
         ndata = gwy_graph_curve_model_get_ndata(cmodel);

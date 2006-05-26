@@ -31,8 +31,6 @@
 
 #define GWY_GRAPH_LABEL_DIALOG_TYPE_NAME "GwyGraphLabelDialog"
 
-
-
 static void     gwy_graph_label_dialog_class_init       (GwyGraphLabelDialogClass *klass);
 static void     gwy_graph_label_dialog_init             (GwyGraphLabelDialog *dialog);
 static void     gwy_graph_label_dialog_finalize         (GObject *object);
@@ -128,7 +126,6 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
     gtk_table_attach(GTK_TABLE(table), dialog->reversed, 1, 2, row, row + 1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
@@ -163,13 +160,16 @@ static void
 refresh(GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
-    if (dialog->graph_model == NULL) return;
+
+    if (dialog->graph_model == NULL)
+        return;
+
     model = GWY_GRAPH_MODEL(dialog->graph_model);
-
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize), model->label_frame_thickness);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->reversed), model->label_reverse);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize),
+                             model->label_frame_thickness);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->reversed),
+                                 model->label_reverse);
 }
-
 
 void
 gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
@@ -184,24 +184,26 @@ static void
 linesize_changed_cb(GtkObject *adj, GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
-    if (dialog->graph_model == NULL) return;
+
+    if (dialog->graph_model == NULL)
+        return;
 
     model = GWY_GRAPH_MODEL(dialog->graph_model);
-    model->label_frame_thickness = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
-    gtk_dialog_response(dialog, GTK_RESPONSE_APPLY);
+    gwy_graph_model_set_label_frame_thickness(model,
+                                              gwy_adjustment_get_int(adj));
 }
 
 static void
 reverse_changed_cb(GtkToggleButton *button, GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
-    if (dialog->graph_model == NULL) return;
+
+    if (dialog->graph_model == NULL)
+        return;
 
     model = GWY_GRAPH_MODEL(dialog->graph_model);
-    model->label_reverse = gtk_toggle_button_get_active(button);
-    gtk_dialog_response(dialog, GTK_RESPONSE_APPLY);
+    gwy_graph_model_set_label_reverse(model,
+                                      gtk_toggle_button_get_active(button));
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

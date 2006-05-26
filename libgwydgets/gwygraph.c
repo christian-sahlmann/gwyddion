@@ -254,7 +254,7 @@ gwy_graph_refresh(GwyGraph *graph)
         x_reqmax = y_reqmax = -G_MAXDOUBLE;
         has_data = FALSE;
         for (i = 0; i < nc; i++) {
-            curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+            curvemodel = gwy_graph_model_get_curve(model, i);
             ndata = gwy_graph_curve_model_get_ndata(curvemodel);
             xdata = gwy_graph_curve_model_get_xdata(curvemodel);
             ydata = gwy_graph_curve_model_get_ydata(curvemodel);

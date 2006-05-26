@@ -38,8 +38,6 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphModel GwyGraphModel;
 typedef struct _GwyGraphModelClass GwyGraphModelClass;
 
-/* XXX: really NEVER access these fields directly. They don't have to reflect
- * the graph values! */
 struct _GwyGraphModel {
     GObject parent_instance;
 
@@ -103,16 +101,18 @@ GType          gwy_graph_model_get_type                 (void) G_GNUC_CONST;
 GwyGraphModel* gwy_graph_model_new                      (void);
 GwyGraphModel* gwy_graph_model_new_alike                (GwyGraphModel *gmodel);
 gint           gwy_graph_model_get_n_curves             (GwyGraphModel *gmodel);
-void           gwy_graph_model_add_curve                (GwyGraphModel *gmodel,
+gint           gwy_graph_model_add_curve                (GwyGraphModel *gmodel,
                                                          GwyGraphCurveModel *curve);
 gint           gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
                                                          const gchar *description);
-void           gwy_graph_model_remove_curve_by_index    (GwyGraphModel *gmodel,
+void           gwy_graph_model_remove_curve             (GwyGraphModel *gmodel,
                                                          gint cindex);
 GwyGraphCurveModel* gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
                                                              const gchar *description);
-GwyGraphCurveModel* gwy_graph_model_get_curve_by_index  (GwyGraphModel *gmodel,
+GwyGraphCurveModel* gwy_graph_model_get_curve           (GwyGraphModel *gmodel,
                                                          gint cindex);
+gint           gwy_graph_model_get_curve_index          (GwyGraphModel *gmodel,
+                                                         GwyGraphCurveModel *curve);
 void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
 void           gwy_graph_model_set_title                (GwyGraphModel *model,
                                                          const gchar *title);
@@ -148,7 +148,6 @@ GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          GwyGraphModelExportStyle export_style,
                                                          GString *string);
 
-void           gwy_graph_model_signal_layout_changed    (GwyGraphModel *model);
 const gchar*   gwy_graph_model_get_top_label            (GwyGraphModel *model);
 const gchar*   gwy_graph_model_get_bottom_label         (GwyGraphModel *model);
 const gchar*   gwy_graph_model_get_left_label           (GwyGraphModel *model);
@@ -170,9 +169,6 @@ void           gwy_graph_model_set_xmin                  (GwyGraphModel *model, 
 void           gwy_graph_model_set_xmax                  (GwyGraphModel *model, gdouble value);
 void           gwy_graph_model_set_ymin                  (GwyGraphModel *model, gdouble value);
 void           gwy_graph_model_set_ymax                  (GwyGraphModel *model, gdouble value);
-
-
-
 
 G_END_DECLS
 

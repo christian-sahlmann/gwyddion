@@ -656,7 +656,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         g_object_unref(gcmodel);
     }
     else
-        gcmodel = gwy_graph_model_get_curve_by_index(tool->gmodel, 0);
+        gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
     title = gwy_enum_to_string(tool->args.output_type,

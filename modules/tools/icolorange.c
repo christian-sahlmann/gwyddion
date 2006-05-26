@@ -611,7 +611,7 @@ gwy_tool_color_range_update_histogram(GwyToolColorRange *tool)
     GwyGraphCurveModel *cmodel;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    cmodel = gwy_graph_model_get_curve_by_index(tool->histogram_model, 0);
+    cmodel = gwy_graph_model_get_curve(tool->histogram_model, 0);
     if (!plain_tool->data_field) {
         gdouble data[2] = { 0.0, 0.0 };
 

@@ -298,7 +298,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
 
         pango_layout_set_markup(layout, curvemodel->description->str,
                                 curvemodel->description->len);
@@ -423,7 +423,7 @@ set_requised_size(GwyGraphLabel *label)
     model = GWY_GRAPH_MODEL(label->graph_model);
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
 
         layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
 
@@ -524,7 +524,7 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
     GwyGraphModel *model;
     GString *out;
     gint xpos, ypos;
-    GwyRGBA *color;
+    const GwyRGBA *color;
     gint pointsize;
     gint linesize;
 
@@ -563,7 +563,7 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+        curvemodel = gwy_graph_model_get_curve(model, i);
         pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
         linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
         color = gwy_graph_curve_model_get_curve_color(curvemodel);
