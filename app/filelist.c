@@ -133,6 +133,7 @@ typedef struct {
 } Controls;
 
 static GtkWidget* gwy_app_recent_file_list_construct (Controls *controls);
+static void  gwy_app_recent_file_list_unmapped       (GtkWindow *window);
 static void  cell_renderer_desc                      (GtkTreeViewColumn *column,
                                                       GtkCellRenderer *cell,
                                                       GtkTreeModel *model,
@@ -198,15 +199,19 @@ gwy_app_recent_file_list_new(void)
 
     gcontrols.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(gcontrols.window), _("Document History"));
-    gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1,
+    gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), 400,
                                 3*gdk_screen_height()/4);
+    gwy_app_restore_window_position(GTK_WINDOW(gcontrols.window),
+                                    "/app/document-history", FALSE);
+    g_signal_connect(gcontrols.window, "unmap",
+                     G_CALLBACK(gwy_app_recent_file_list_unmapped), NULL);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(gcontrols.window), vbox);
 
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
     gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
 
     list = gwy_app_recent_file_list_construct(&gcontrols);
@@ -258,6 +263,12 @@ gwy_app_recent_file_list_new(void)
     return gcontrols.window;
 }
 
+static void
+gwy_app_recent_file_list_unmapped(GtkWindow *window)
+{
+    gwy_app_save_window_position(window, "/app/document-history", FALSE, TRUE);
+}
+
 static GtkWidget*
 gwy_app_recent_file_list_construct(Controls *controls)
 {
@@ -274,7 +285,6 @@ gwy_app_recent_file_list_construct(Controls *controls)
     GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
-    gsize i;
 
     g_return_val_if_fail(controls->store, NULL);
 
@@ -293,19 +303,16 @@ gwy_app_recent_file_list_construct(Controls *controls)
                                             NULL);  /* destroy notify */
     gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
-    /* other columns */
-    for (i = 1; i < G_N_ELEMENTS(columns); i++) {
-        renderer = gtk_cell_renderer_text_new();
-        gtk_cell_renderer_set_fixed_size(renderer, -1, THUMB_SIZE);
-        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
-                                                          renderer,
-                                                          NULL);
-        gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                                cell_renderer_desc,
-                                                GUINT_TO_POINTER(columns[i].id),
-                                                NULL);  /* destroy notify */
-        gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-    }
+    renderer = gtk_cell_renderer_text_new();
+    gtk_cell_renderer_set_fixed_size(renderer, -1, THUMB_SIZE);
+    column = gtk_tree_view_column_new_with_attributes(_(columns[1].title),
+                                                      renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            cell_renderer_desc,
+                                            GUINT_TO_POINTER(columns[1].id),
+                                            NULL);  /* destroy notify */
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
     /* selection */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
@@ -463,6 +470,7 @@ cell_renderer_desc(G_GNUC_UNUSED GtkTreeViewColumn *column,
                    gpointer userdata)
 {
     static GString *s = NULL;    /* XXX: never freed */
+    gchar *escaped;
     guint id;
     GwyRecentFile *rf;
 
@@ -470,9 +478,13 @@ cell_renderer_desc(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
     switch (id) {
         case FILELIST_FILENAME:
+        escaped = g_markup_escape_text(rf->file_utf8, -1);
         if (!s)
-            s = g_string_new("");
-        g_string_assign(s, rf->file_utf8);
+            s = g_string_new(escaped);
+        else
+            g_string_assign(s, escaped);
+        g_free(escaped);
+
         if (rf->image_width && rf->image_height)
             g_string_append_printf(s, "\n%d×%d px",
                                    rf->image_width, rf->image_height);
@@ -480,7 +492,7 @@ cell_renderer_desc(G_GNUC_UNUSED GtkTreeViewColumn *column,
             g_string_append_c(s, '\n');
             g_string_append(s, rf->image_real_size);
         }
-        g_object_set(cell, "text", s->str, NULL);
+        g_object_set(cell, "markup", s->str, NULL);
         break;
 
         default:
