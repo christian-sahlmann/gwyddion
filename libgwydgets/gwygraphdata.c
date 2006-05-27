@@ -72,7 +72,7 @@ gwy_graph_data_init(GwyGraphData *graph_data)
 
     treeview = GTK_TREE_VIEW(graph_data);
     gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(graph_data->store));
-    /*gtk_tree_view_set_fixed_height_mode(treeview, TRUE);*/
+    gtk_tree_view_set_fixed_height_mode(treeview, TRUE);
 }
 
 static void
@@ -229,16 +229,13 @@ gwy_graph_data_pack_renderer(GwyGraphData *graph_data,
     GtkCellRenderer *renderer;
 
     renderer = gtk_cell_renderer_text_new();
-    /* gtk_cell_renderer_text_set_fixed_height_from_font
-       (GTK_CELL_RENDERER_TEXT(renderer), 1);*/
-    g_object_set(renderer,
-                 "xalign", 1.0,
-                 "width-chars", COL_WIDTH,
-                 NULL);
+    gtk_cell_renderer_text_set_fixed_height_from_font
+                                        (GTK_CELL_RENDERER_TEXT(renderer), 1);
+    g_object_set(renderer, "xalign", 1.0, NULL);
     if (id)
         g_object_set_qdata(G_OBJECT(renderer), quark_id, GINT_TO_POINTER(id));
 
-    gtk_tree_view_column_pack_start(column, renderer, FALSE);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_data, graph_data, NULL);
 }
@@ -292,9 +289,10 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
     }
 
     while (ncolumns < ncurves) {
+        GtkRequisition req;
+
         gwy_debug("adding column %d", ncolumns);
         column = gtk_tree_view_column_new();
-        /*g_object_set(column, "sizing", GTK_TREE_VIEW_COLUMN_FIXED, NULL);*/
         g_object_set_qdata(G_OBJECT(column), quark_id,
                            GINT_TO_POINTER(ncolumns));
 
@@ -303,7 +301,6 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
 
         table = gtk_table_new(2, 2, TRUE);
         label = gtk_label_new(NULL);
-        gtk_label_set_width_chars(GTK_LABEL(label), COL_WIDTH);
         gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 2, 0, 1);
         label = gtk_label_new(NULL);
         gtk_label_set_width_chars(GTK_LABEL(label), COL_WIDTH);
@@ -314,6 +311,12 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
         gtk_widget_show_all(table);
         gtk_tree_view_column_set_widget(column, table);
 
+        gtk_widget_size_request(table, &req);
+
+        g_object_set(column,
+                     "sizing", GTK_TREE_VIEW_COLUMN_FIXED,
+                     "fixed-width", req.width,
+                     NULL);
         gtk_tree_view_append_column(treeview, column);
         ncolumns++;
     }
