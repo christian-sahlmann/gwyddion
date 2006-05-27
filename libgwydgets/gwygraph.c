@@ -117,6 +117,7 @@ GtkWidget*
 gwy_graph_new(GwyGraphModel *gmodel)
 {
     GwyGraph *graph;
+    const gchar *label;
 
     gwy_debug("");
 
@@ -136,22 +137,27 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
     graph->grid_type = GWY_GRAPH_GRID_AUTO;
 
+    /* XXX: does this mean that when we start with NULL model, the
+     * axes are never created??? */
     if (gmodel != NULL) {
+        label = gwy_graph_model_get_axis_label(gmodel, GTK_POS_TOP);
         graph->axis_top
-            = GWY_AXIS(gwy_axis_new(GTK_POS_TOP, 2.24, 5.21,
-                                    gwy_graph_model_get_top_label(gmodel)));
+            = GWY_AXIS(gwy_axis_new(GTK_POS_TOP, 2.24, 5.21, label));
+
+        label = gwy_graph_model_get_axis_label(gmodel, GTK_POS_BOTTOM);
         graph->axis_bottom
-            = GWY_AXIS(gwy_axis_new(GTK_POS_BOTTOM, 2.24, 5.21,
-                                    gwy_graph_model_get_bottom_label(gmodel)));
+            = GWY_AXIS(gwy_axis_new(GTK_POS_BOTTOM, 2.24, 5.21, label));
+
+        label = gwy_graph_model_get_axis_label(gmodel, GTK_POS_LEFT);
         graph->axis_left
-            = GWY_AXIS(gwy_axis_new(GTK_POS_LEFT, 100, 500,
-                                    gwy_graph_model_get_left_label(gmodel)));
+            = GWY_AXIS(gwy_axis_new(GTK_POS_LEFT, 100, 500, label));
+
+        label = gwy_graph_model_get_axis_label(gmodel, GTK_POS_RIGHT);
         graph->axis_right
-            = GWY_AXIS(gwy_axis_new(GTK_POS_RIGHT, 100, 500,
-                                    gwy_graph_model_get_right_label(gmodel)));
+            = GWY_AXIS(gwy_axis_new(GTK_POS_RIGHT, 100, 500, label));
     }
 
-    gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
     gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
 
     g_signal_connect(graph->axis_left, "rescaled",
@@ -176,10 +182,10 @@ gwy_graph_new(GwyGraphModel *gmodel)
                      1, 2, 2, 3,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->axis_left),
-                     2, 3, 1, 2,
+                     0, 1, 1, 2,
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->axis_right),
-                     0, 1, 1, 2,
+                     2, 3, 1, 2,
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     gtk_widget_show(GTK_WIDGET(graph->axis_top));
     gtk_widget_show(GTK_WIDGET(graph->axis_bottom));
@@ -206,7 +212,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_widget_show(GTK_WIDGET(graph->corner_tr));
     gtk_widget_show(GTK_WIDGET(graph->corner_br));
 
-    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_selection(graph->area, GWY_GRAPH_STATUS_ZOOM)), 
+    g_signal_connect_swapped(GWY_SELECTION(gwy_graph_area_get_selection(graph->area, GWY_GRAPH_STATUS_ZOOM)),
                              "finished",
                      G_CALLBACK(zoomed_cb), graph);
 
@@ -231,17 +237,21 @@ gwy_graph_refresh(GwyGraph *graph)
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gint i, j, nc, ndata;
     const gdouble *xdata, *ydata;
-    gboolean has_data;
-
+    gboolean has_data, logarithmic;
 
     if (graph->graph_model == NULL)
         return;
+
     model = GWY_GRAPH_MODEL(graph->graph_model);
 
-    gwy_axis_set_logarithmic(graph->axis_left,   gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL));
-    gwy_axis_set_logarithmic(graph->axis_right,  gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL));
-    gwy_axis_set_logarithmic(graph->axis_top,    gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL));
-    gwy_axis_set_logarithmic(graph->axis_bottom, gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_HORIZONTAL));
+    logarithmic = gwy_graph_model_get_direction_logarithmic
+                                             (model, GTK_ORIENTATION_VERTICAL);
+    gwy_axis_set_logarithmic(graph->axis_left, logarithmic);
+    gwy_axis_set_logarithmic(graph->axis_right, logarithmic);
+    logarithmic = gwy_graph_model_get_direction_logarithmic
+                                           (model, GTK_ORIENTATION_HORIZONTAL);
+    gwy_axis_set_logarithmic(graph->axis_top, logarithmic);
+    gwy_axis_set_logarithmic(graph->axis_bottom, logarithmic);
 
     gwy_axis_set_unit(graph->axis_top, gwy_graph_model_get_si_unit_x(model));
     gwy_axis_set_unit(graph->axis_bottom, gwy_graph_model_get_si_unit_x(model));
@@ -635,21 +645,24 @@ zoomed_cb(GwyGraph *graph)
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gdouble selection_zoomdata[4];
 
-    
-    if (graph->area->status != GWY_GRAPH_STATUS_ZOOM || 
+
+    if (graph->area->status != GWY_GRAPH_STATUS_ZOOM ||
         gwy_selection_get_data(gwy_graph_area_get_selection(GWY_GRAPH_AREA(graph->area), GWY_GRAPH_STATUS_ZOOM), NULL) != 1)
         return;
-    
+
     gwy_selection_get_object(GWY_SELECTION((graph->area)->zoomdata),
                              gwy_selection_get_data(GWY_SELECTION((graph->area)->zoomdata), NULL) - 1,
                              selection_zoomdata);
-    
-    x_reqmin = MIN(selection_zoomdata[0], selection_zoomdata[0] + selection_zoomdata[2]);
-    x_reqmax = MAX(selection_zoomdata[0], selection_zoomdata[0] + selection_zoomdata[2]);
-    y_reqmin = MIN(selection_zoomdata[1], selection_zoomdata[1] + selection_zoomdata[3]);
-    y_reqmax = MAX(selection_zoomdata[1], selection_zoomdata[1] + selection_zoomdata[3]);
 
-    
+    x_reqmin = MIN(selection_zoomdata[0],
+                   selection_zoomdata[0] + selection_zoomdata[2]);
+    x_reqmax = MAX(selection_zoomdata[0],
+                   selection_zoomdata[0] + selection_zoomdata[2]);
+    y_reqmin = MIN(selection_zoomdata[1],
+                   selection_zoomdata[1] + selection_zoomdata[3]);
+    y_reqmax = MAX(selection_zoomdata[1],
+                   selection_zoomdata[1] + selection_zoomdata[3]);
+
     gwy_axis_set_req(graph->axis_top, x_reqmin, x_reqmax);
     gwy_axis_set_req(graph->axis_bottom, x_reqmin, x_reqmax);
     gwy_axis_set_req(graph->axis_left, y_reqmin, y_reqmax);
@@ -668,28 +681,10 @@ zoomed_cb(GwyGraph *graph)
 static void
 label_updated_cb(GwyAxis *axis, GwyGraph *graph)
 {
-    switch (axis->orientation)
-    {
-        case GTK_POS_TOP:
-        if (graph->graph_model->top_label)
-            g_string_assign(graph->graph_model->top_label, gwy_axis_get_label(axis)->str);
-        break;
-
-        case GTK_POS_BOTTOM:
-        if (graph->graph_model->bottom_label)
-            g_string_assign(graph->graph_model->bottom_label, gwy_axis_get_label(axis)->str);
-        break;
-
-        case GTK_POS_LEFT:
-        if (graph->graph_model->left_label)
-            g_string_assign(graph->graph_model->left_label, gwy_axis_get_label(axis)->str);
-        break;
-
-        case GTK_POS_RIGHT:
-        if (graph->graph_model->right_label)
-            g_string_assign(graph->graph_model->right_label, gwy_axis_get_label(axis)->str);
-        break;
-    }
+    if (graph->graph_model)
+        gwy_graph_model_set_axis_label(graph->graph_model,
+                                       gwy_axis_get_orientation(axis),
+                                       gwy_axis_get_label(axis));
 }
 
 /**

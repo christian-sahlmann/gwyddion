@@ -22,12 +22,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <glib/gstdio.h>
-
 #include <libgwyddion/gwyddion.h>
-
-#include "gwygraphcurvemodel.h"
-#include "gwygraphmodel.h"
-#include "gwygraph.h"
+#include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraph.h>
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
@@ -51,15 +49,19 @@ static void     gwy_graph_model_get_property     (GObject*object,
 static void     gwy_graph_model_layout_changed   (GwyGraphModel *model);
 
 enum {
-      PROP_0,
-      PROP_N_CURVES,
-      PROP_TITLE,
-      PROP_LAST
+    PROP_0,
+    PROP_N_CURVES,
+    PROP_TITLE,
+    PROP_AXIS_LABEL_BOTTOM,
+    PROP_AXIS_LABEL_LEFT,
+    PROP_AXIS_LABEL_RIGHT,
+    PROP_AXIS_LABEL_TOP,
+    PROP_LAST
 };
 
 enum {
-      LAYOUT_UPDATED,
-      LAST_SIGNAL
+    LAYOUT_UPDATED,
+    LAST_SIGNAL
 };
 
 static guint graph_model_signals[LAST_SIGNAL] = { 0 };
@@ -105,7 +107,43 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
          g_param_spec_string("title",
                              "Title",
                              "The graph title",
-                             "new graph",
+                             "New graph",
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_AXIS_LABEL_BOTTOM,
+         g_param_spec_string("axis-label-bottom",
+                             "Axis label bottom",
+                             "The label of the bottom axis",
+                             "x",
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_AXIS_LABEL_LEFT,
+         g_param_spec_string("axis-label-left",
+                             "Axis label left",
+                             "The label of the left axis",
+                             "y",
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_AXIS_LABEL_RIGHT,
+         g_param_spec_string("axis-label-right",
+                             "Axis label right",
+                             "The label of the right axis",
+                             "",
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_AXIS_LABEL_TOP,
+         g_param_spec_string("axis-label-top",
+                             "Axis label top",
+                             "The label of the top axis",
+                             "",
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 
     /**
@@ -137,12 +175,11 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->x_unit = gwy_si_unit_new("");
     gmodel->y_unit = gwy_si_unit_new("");
 
-    /* XXX: GwyGraph has no such thing */
     gmodel->title = g_string_new("Graph");
-    gmodel->top_label = g_string_new("");
     gmodel->bottom_label = g_string_new("x");
-    gmodel->left_label = g_string_new("");
-    gmodel->right_label = g_string_new("y");
+    gmodel->top_label = g_string_new("");
+    gmodel->left_label = g_string_new("y");
+    gmodel->right_label = g_string_new("");
 
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
     gmodel->label_has_frame = 1;
@@ -939,7 +976,7 @@ gwy_graph_model_get_si_unit_y(GwyGraphModel *model)
 
 /**
  * gwy_graph_model_set_direction_logarithmic:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  * @direction: axis orientation (e. g. horizontal, vertical).
  * @is_logarithmic: the logarithmic mode
  *
@@ -961,7 +998,7 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
 
 /**
  * gwy_graph_model_get_direction_logarithmic:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  * @direction: axis orientation (e. g. horizontal, vertical).
  *
  * Returns: TRUE if the axis specified by @direction is currently set to display
@@ -979,7 +1016,7 @@ gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
 
 /**
  * gwy_graph_model_x_data_can_be_logarithmed:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Returns: TRUE if all x-values are greater than zero (thus logarithmic
  * display of x-data is safe).
@@ -1005,7 +1042,7 @@ gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
 
 /**
  * gwy_graph_model_y_data_can_be_logarithmed:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Returns: TRUE if all y-values are greater than zero (thus logarithmic
  * display of y-data is safe).
@@ -1031,7 +1068,7 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
 
 /**
  * gwy_graph_model_get_xmin:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Returns bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1046,7 +1083,7 @@ gwy_graph_model_get_xmin(GwyGraphModel *model)
 }
 /**
  * gwy_graph_model_get_ymin:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Returns bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1062,7 +1099,7 @@ gwy_graph_model_get_ymin(GwyGraphModel *model)
 
 /**
  * gwy_graph_model_get_xmax:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Returns bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1078,7 +1115,7 @@ gwy_graph_model_get_xmax(GwyGraphModel *model)
 
 /**
  * gwy_graph_model_get_ymax:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Returns bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1094,7 +1131,7 @@ gwy_graph_model_get_ymax(GwyGraphModel *model)
 
 /**
  * gwy_graph_model_set_xmin:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Sets bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1109,7 +1146,7 @@ gwy_graph_model_set_xmin(GwyGraphModel *model, gdouble value)
 
 /**
  * gwy_graph_model_set_xmax:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Sets bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1123,7 +1160,7 @@ gwy_graph_model_set_xmax(GwyGraphModel *model, gdouble value)
 }
 /**
  * gwy_graph_model_set_ymin:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Sets bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1137,7 +1174,7 @@ gwy_graph_model_set_ymin(GwyGraphModel *model, gdouble value)
 }
 /**
  * gwy_graph_model_set_ymax:
- * @model: a #GwyGraphModel.
+ * @model: A graph model.
  *
  * Sets bounding value for all the curves within model.
  * This value is recomputed while adding curves to the
@@ -1151,65 +1188,93 @@ gwy_graph_model_set_ymax(GwyGraphModel *model, gdouble value)
 }
 
 /**
- * gwy_graph_model_get_top_label:
- * @model: a #GwyGraphModel.
+ * gwy_graph_model_get_axis_label:
+ * @model: A graph model.
+ * @pos: Axis position.
  *
- * Returns string corresponding to graph axis label.
- * It should be not freed.
+ * Gets the label of a one graph model axis.
  *
- * Returns: top graph axis label string
+ * Returns: The label as a string owned by the model.
  **/
 const gchar*
-gwy_graph_model_get_top_label(GwyGraphModel *model)
+gwy_graph_model_get_axis_label(GwyGraphModel *model,
+                               GtkPositionType pos)
 {
-    return model->top_label->str;
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(model), NULL);
+    switch (pos) {
+        case GTK_POS_BOTTOM:
+        return model->bottom_label->str;
+        break;
+
+        case GTK_POS_LEFT:
+        return model->left_label->str;
+        break;
+
+        case GTK_POS_RIGHT:
+        return model->right_label->str;
+        break;
+
+        case GTK_POS_TOP:
+        return model->top_label->str;
+        break;
+
+        default:
+        g_return_val_if_reached(NULL);
+        break;
+    }
 }
 
 /**
- * gwy_graph_model_get_bottom_label:
- * @model: a #GwyGraphModel.
+ * gwy_graph_model_set_axis_label:
+ * @model: A graph model.
+ * @pos: Axis position.
+ * @label: The new label.
  *
- * Returns string corresponding to graph axis label.
- * It should be not freed.
- *
- * Returns: bottom graph axis label string
+ * Sets one axis label of a graph model.
  **/
-const gchar*
-gwy_graph_model_get_bottom_label(GwyGraphModel *model)
+void
+gwy_graph_model_set_axis_label(GwyGraphModel *model,
+                               GtkPositionType pos,
+                               const gchar *label)
 {
-    return model->bottom_label->str;
-}
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (!label)
+        label = "";
 
-/**
- * gwy_graph_model_get_left_label:
- * @model: a #GwyGraphModel.
- *
- * Returns string corresponding to graph axis label.
- * It should be not freed.
- *
- * Returns: left graph axis label string
- **/
-const gchar*
-gwy_graph_model_get_left_label(GwyGraphModel *model)
-{
-    return model->left_label->str;
-}
+    switch (pos) {
+        case GTK_POS_BOTTOM:
+        if (!gwy_strequal(model->bottom_label->str, label)) {
+            g_string_assign(model->bottom_label, label);
+            g_object_notify(G_OBJECT(model), "axis-label-bottom");
+        }
+        break;
 
-/**
- * gwy_graph_model_get_right_label:
- * @model: a #GwyGraphModel.
- *
- * Returns string corresponding to graph axis label.
- * It should be not freed.
- *
- * Returns: right graph axis label string
- **/
-const gchar*
-gwy_graph_model_get_right_label(GwyGraphModel *model)
-{
-    return model->right_label->str;
-}
+        case GTK_POS_LEFT:
+        if (!gwy_strequal(model->left_label->str, label)) {
+            g_string_assign(model->left_label, label);
+            g_object_notify(G_OBJECT(model), "axis-label-left");
+        }
+        break;
 
+        case GTK_POS_RIGHT:
+        if (!gwy_strequal(model->right_label->str, label)) {
+            g_string_assign(model->right_label, label);
+            g_object_notify(G_OBJECT(model), "axis-label-right");
+        }
+        break;
+
+        case GTK_POS_TOP:
+        if (!gwy_strequal(model->top_label->str, label)) {
+            g_string_assign(model->top_label, label);
+            g_object_notify(G_OBJECT(model), "axis-label-top");
+        }
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
 
 /**
  * gwy_graph_model_export_ascii:

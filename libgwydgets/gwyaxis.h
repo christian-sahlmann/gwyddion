@@ -131,6 +131,7 @@ void       gwy_axis_set_visible             (GwyAxis *axis,
                                              gboolean is_visible);
 gboolean   gwy_axis_is_visible              (GwyAxis *axis);
 gboolean   gwy_axis_is_logarithmic          (GwyAxis *axis);
+GtkPositionType gwy_axis_get_orientation    (GwyAxis *axis);
 void       gwy_axis_set_auto                (GwyAxis *axis,
                                              gboolean is_auto);
 void       gwy_axis_set_req                 (GwyAxis *axis,
@@ -145,13 +146,12 @@ gdouble    gwy_axis_get_reqminimum          (GwyAxis *axis);
 gdouble    gwy_axis_get_magnification       (GwyAxis *axis);
 const gchar* gwy_axis_get_magnification_string(GwyAxis *axis);
 void       gwy_axis_set_label               (GwyAxis *axis,
-                                             GString *label_text);
-GString*   gwy_axis_get_label               (GwyAxis *axis);
+                                             const gchar *label);
+const gchar* gwy_axis_get_label             (GwyAxis *axis);
 void       gwy_axis_set_unit                (GwyAxis *axis,
                                              GwySIUnit *unit);
 void       gwy_axis_enable_label_edit       (GwyAxis *axis,
                                              gboolean enable);
-void       gwy_axis_signal_rescaled         (GwyAxis *axis);
 void       gwy_axis_draw_on_drawable        (GdkDrawable *drawable,
                                              GdkGC *gc,
                                              gint xmin,

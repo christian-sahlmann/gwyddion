@@ -42,13 +42,16 @@ struct _GwyGraphData {
 
     GwyGraphModel *graph_model;
     GwyNullStore *store;
-    GPtrArray *curves;
+    GArray *curves;
 
-    gint ncolumns;
-    gulong ncurves_id;
+    gulong notify_id;
+    GwySIValueFormat *vformatx;
+    GwySIValueFormat *vformaty;
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 struct _GwyGraphDataClass {
@@ -56,6 +59,8 @@ struct _GwyGraphDataClass {
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 GType          gwy_graph_data_get_type (void) G_GNUC_CONST;

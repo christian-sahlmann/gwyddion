@@ -148,11 +148,11 @@ GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          GwyGraphModelExportStyle export_style,
                                                          GString *string);
 
-const gchar*   gwy_graph_model_get_top_label            (GwyGraphModel *model);
-const gchar*   gwy_graph_model_get_bottom_label         (GwyGraphModel *model);
-const gchar*   gwy_graph_model_get_left_label           (GwyGraphModel *model);
-const gchar*   gwy_graph_model_get_right_label          (GwyGraphModel *model);
-
+const gchar*   gwy_graph_model_get_axis_label           (GwyGraphModel *model,
+                                                         GtkPositionType pos);
+void           gwy_graph_model_set_axis_label           (GwyGraphModel *model,
+                                                         GtkPositionType pos,
+                                                         const gchar *label);
 void           gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
                                                          GtkOrientation direction,
                                                          gboolean is_logarithmic);

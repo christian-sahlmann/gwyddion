@@ -92,6 +92,7 @@ static void    gwy_axis_entry               (GwySciText *sci_text,
 static void    gwy_axis_hide                (GwyAxisDialog *dialog,
                                              gint arg1,
                                              gpointer user_data);
+static void    gwy_axis_rescaled            (GwyAxis *axis);
 
 /* Local data */
 
@@ -326,8 +327,8 @@ gwy_axis_size_request(GtkWidget *widget,
     axis = GWY_AXIS(widget);
 
     if (axis->is_visible) {
-        if (axis->orientation == GTK_POS_LEFT
-            || axis->orientation == GTK_POS_RIGHT) {
+        if (axis->orientation == GTK_POS_RIGHT
+            || axis->orientation == GTK_POS_LEFT) {
             requisition->width = 80;
             requisition->height = 100;
         }
@@ -384,10 +385,10 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
         else
             axis->label_y_pos = height - 50;
     }
-    if (axis->orientation == GTK_POS_LEFT
-        || axis->orientation == GTK_POS_RIGHT) {
+    if (axis->orientation == GTK_POS_RIGHT
+        || axis->orientation == GTK_POS_LEFT) {
         axis->label_x_pos = height/2;
-        if (axis->orientation == GTK_POS_LEFT)
+        if (axis->orientation == GTK_POS_RIGHT)
             axis->label_y_pos = 40;
         else
             axis->label_y_pos = width - 40;
@@ -434,8 +435,8 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
         else
             axis->par.minor_division = 10;
     }
-    if (axis->orientation == GTK_POS_LEFT
-        || axis->orientation == GTK_POS_RIGHT) {
+    if (axis->orientation == GTK_POS_RIGHT
+        || axis->orientation == GTK_POS_LEFT) {
 
         axis->par.major_maxticks = height/40; /*empirical equation*/
         if (height < 150)
@@ -545,13 +546,13 @@ gwy_axis_draw_axis(GdkDrawable *drawable,
                       specs->xmin + specs->width-1, specs->ymin + specs->height-1);
         break;
 
-        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
         gdk_draw_line(drawable, gc,
                       specs->xmin, specs->ymin,
                       specs->xmin, specs->ymin + specs->height-1);
         break;
 
-        case GTK_POS_RIGHT:
+        case GTK_POS_LEFT:
         gdk_draw_line(drawable, gc,
                       specs->xmin + specs->width-1, specs->ymin,
                       specs->xmin + specs->width-1, specs->ymin + specs->height-1);
@@ -597,7 +598,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable,
                           specs->ymin + specs->height-1 - axis->par.major_length);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             gdk_draw_line(drawable, gc,
                           specs->xmin,
                           specs->ymin + specs->height-1 - pmjt->t.scrpos,
@@ -605,7 +606,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable,
                           specs->ymin + specs->height-1 - pmjt->t.scrpos);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             gdk_draw_line(drawable, gc,
                           specs->xmin + specs->width-1,
                           specs->ymin + specs->height-1 - pmjt->t.scrpos,
@@ -642,7 +643,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable,
                           specs->ymin + specs->height-1 - axis->par.minor_length);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             gdk_draw_line(drawable, gc,
                           specs->xmin,
                           specs->ymin + specs->height-1 - pmit->scrpos,
@@ -650,7 +651,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable,
                           specs->ymin + specs->height-1 - pmit->scrpos);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             gdk_draw_line(drawable, gc,
                           specs->xmin + specs->width-1,
                           specs->ymin + specs->height-1 - pmit->scrpos,
@@ -702,12 +703,12 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable,
                    - axis->par.major_length - rect.height;
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             xpos = specs->xmin + axis->par.major_length + sep;
             ypos = specs->ymin + specs->height-1 - pmjt->t.scrpos - rect.height/2;
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             xpos = specs->xmin + specs->width-1
                    - axis->par.major_length - sep - rect.width;
             ypos = specs->ymin + specs->height-1
@@ -782,22 +783,22 @@ gwy_axis_draw_label(GdkDrawable *drawable,
                         layout);
         break;
 
-        case GTK_POS_LEFT:
-        pango_matrix_rotate (&matrix, 90);
-        pango_context_set_matrix (context, &matrix);
-        pango_layout_context_changed (layout);
-        pango_layout_get_size (layout, &width, &height);
+        case GTK_POS_RIGHT:
+        pango_matrix_rotate(&matrix, 90);
+        pango_context_set_matrix(context, &matrix);
+        pango_layout_context_changed(layout);
+        pango_layout_get_size(layout, &width, &height);
         gdk_draw_layout(drawable, gc,
                         specs->ymin + axis->label_y_pos,
                         specs->xmin + axis->label_x_pos - rect.width/2,
                         layout);
         break;
 
-        case GTK_POS_RIGHT:
-        pango_matrix_rotate (&matrix, 90);
-        pango_context_set_matrix (context, &matrix);
-        pango_layout_context_changed (layout);
-        pango_layout_get_size (layout, &width, &height);
+        case GTK_POS_LEFT:
+        pango_matrix_rotate(&matrix, 90);
+        pango_context_set_matrix(context, &matrix);
+        pango_layout_context_changed(layout);
+        pango_layout_get_size(layout, &width, &height);
         gdk_draw_layout(drawable, gc,
                         specs->ymin + axis->label_y_pos - rect.height,
                         specs->xmin + axis->label_x_pos - rect.width/2,
@@ -890,13 +891,13 @@ gwy_axis_hide(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 
 
 /**
- * gwy_axis_signal_rescaled:
- * @axis: axis widget
+ * gwy_axis_rescaled:
+ * @axis: An axis.
  *
  * Signals that the axis has been rescaled
  **/
 void
-gwy_axis_signal_rescaled(GwyAxis *axis)
+gwy_axis_rescaled(GwyAxis *axis)
 {
     g_signal_emit(axis, axis_signals[RESCALED], 0);
 }
@@ -1093,7 +1094,7 @@ gwy_axis_scale(GwyAxis *a)
     ret = gwy_axis_formatticks(a);
     /*precompute screen coordinates of ticks (must be done after each geometry change)*/
 
-    gwy_axis_signal_rescaled(a);
+    gwy_axis_rescaled(a);
     return ret;
 }
 
@@ -1235,16 +1236,19 @@ gwy_axis_formatticks(GwyAxis *a)
 
 
     /*guess whether we dont have too many or not enough ticks*/
-    if (a->orientation == GTK_POS_LEFT
-        || a->orientation == GTK_POS_RIGHT) {
-            if (totalheight > 200) return 1;
-            else if (a->mjticks->len < 3) return -1;
-     }
-     else {
-            if (totalwidth > 200) return 1;
-            else if (a->mjticks->len < 3) return -1;
-     }
-
+    if (a->orientation == GTK_POS_RIGHT
+        || a->orientation == GTK_POS_LEFT) {
+        if (totalheight > 200)
+            return 1;
+        else if (a->mjticks->len < 3)
+            return -1;
+    }
+    else {
+        if (totalwidth > 200)
+            return 1;
+        else if (a->mjticks->len < 3)
+            return -1;
+    }
 
     return 0;
 }
@@ -1253,7 +1257,7 @@ gwy_axis_formatticks(GwyAxis *a)
 
 /**
  * gwy_axis_set_visible:
- * @axis: axis widget
+ * @axis: An axis.
  * @is_visible: visibility
  *
  * Sets visibility of axis.
@@ -1268,7 +1272,7 @@ gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
 
 /**
  * gwy_axis_set_auto:
- * @axis: axis widget
+ * @axis: An axis.
  * @is_auto: auto preperty
  *
  * Sets the auto property. If TRUE, axis changes fonts
@@ -1284,7 +1288,7 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 
 /**
  * gwy_axis_set_req:
- * @axis: axis widget
+ * @axis: An axis.
  * @min: minimum requisition (min boundary value)
  * @max: maximum requisition (max boundary value)
  *
@@ -1305,7 +1309,7 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 
 /**
  * gwy_axis_set_style:
- * @axis: axis widget
+ * @axis: An axis.
  * @style: axis style
  *
  * Set axis style. The style affects used tick sizes, fonts etc.
@@ -1319,7 +1323,7 @@ gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 
 /**
  * gwy_axis_get_maximum:
- * @axis: axis widget
+ * @axis: An axis.
  *
  *
  *
@@ -1333,7 +1337,7 @@ gwy_axis_get_maximum(GwyAxis *axis)
 
 /**
  * gwy_axis_get_minimum:
- * @axis: axis widget
+ * @axis: An axis.
  *
  *
  *
@@ -1347,7 +1351,7 @@ gwy_axis_get_minimum(GwyAxis *axis)
 
 /**
  * gwy_axis_get_reqmaximum:
- * @axis: axis widget
+ * @axis: An axis.
  *
  *
  *
@@ -1361,7 +1365,7 @@ gwy_axis_get_reqmaximum(GwyAxis *axis)
 
 /**
  * gwy_axis_get_reqminimum:
- * @axis: axis widget
+ * @axis: An axis.
  *
  *
  *
@@ -1375,38 +1379,42 @@ gwy_axis_get_reqminimum(GwyAxis *axis)
 
 /**
  * gwy_axis_set_label:
- * @axis: axis widget
- * @label_text: label text to be set
+ * @axis: An axis.
+ * @label: The new label text (it can be %NULL for an empty label).
  *
- * sets the label text of the axis. @label_text is duplicated.
+ * Sets the label text of an axis.
  **/
 void
-gwy_axis_set_label(GwyAxis *axis, GString *label_text)
+gwy_axis_set_label(GwyAxis *axis,
+                   const gchar *label)
 {
-    gwy_debug("label_text = <%s>", label_text->str);
-    g_string_assign(axis->label_text, label_text->str);
+    if (!label)
+        label = "";
+
+    gwy_debug("label_text = <%s>", label);
+    g_string_assign(axis->label_text, label);
     gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
-                          label_text->str);
+                          label);
     g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
  * gwy_axis_get_label:
- * @axis: axis widget
+ * @axis: An axis.
  *
+ * Gets the label of an axis.
  *
- *
- * Returns: axis label string. (Do not free).
+ * Returns: Axis label as a string owned by @axis.
  **/
-GString*
+const gchar*
 gwy_axis_get_label(GwyAxis *axis)
 {
-    return axis->label_text;
+    return axis->label_text->str;
 }
 /**
  * gwy_axis_set_unit:
- * @axis: axis widget
+ * @axis: An axis.
  * @unit: axis unit
  *
  * Sets the axis unit. This will be added automatically
@@ -1515,12 +1523,12 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
             g_string_append_printf(out, "%d %d L\n", xmin + width, ymin + height);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             g_string_append_printf(out, "%d %d M\n", xmin, ymin);
             g_string_append_printf(out, "%d %d L\n", xmin, ymin + height);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             g_string_append_printf(out, "%d %d M\n", xmin + width, ymin);
             g_string_append_printf(out, "%d %d L\n", xmin + width, ymin + height);
             break;
@@ -1568,7 +1576,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             g_string_append_printf(out, "%d %d M\n",
                                    xmin + width,
                                    (gint)(ymin + pmjt->t.value*mult
@@ -1583,7 +1591,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             g_string_append_printf(out, "%d %d M\n",
                                    xmin,
                                    (gint)(ymin + pmjt->t.value*mult
@@ -1630,7 +1638,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
                                    ymin + height - axis->par.minor_length);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             g_string_append_printf(out, "%d %d M\n",
                                    xmin + width,
                                    (gint)(ymin + pmit->value*mult
@@ -1641,7 +1649,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
                                           - axis->min*mult + 0.5));
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             g_string_append_printf(out, "%d %d M\n",
                                    xmin,
                                    (gint)(ymin + pmit->value*mult
@@ -1690,7 +1698,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
         g_string_append_printf(out, "(%s) show\n", plotlabel->str);
         break;
 
-        case GTK_POS_RIGHT:
+        case GTK_POS_LEFT:
         g_string_append_printf(out, "%d %d M\n",
                                (gint)(xmin + fontsize/2 + 8),
                                (gint)(ymin + height/2
@@ -1701,7 +1709,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
         g_string_append_printf(out, "grestore\n");
         break;
 
-        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
         g_string_append_printf(out, "%d %d M\n",
                                (gint)(xmin + width - fontsize/2 - 8),
                                (gint)(ymin + height/2
@@ -1747,27 +1755,52 @@ gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
 
 /**
  * gwy_axis_is_visible:
- * @axis: axis
+ * @axis: An axis.
  *
- * Determine whether axis is set to be visible..
+ * Determines whether axis is set to be visible.
+ *
+ * Return: %TRUE if @axis is set to be visible.
  **/
 gboolean
 gwy_axis_is_visible(GwyAxis *axis)
 {
+    g_return_val_if_fail(GWY_IS_AXIS(axis), FALSE);
+
     return axis->is_visible;
 }
 
 /**
  * gwy_axis_is_logarithmic:
- * @axis: axis
+ * @axis: An axis.
  *
- * Determine whether axis is set to be locarithmic
+ * Determines whether axis is set to be locarithmic.
+ *
+ * Returns: %TRUE if @axis is logarithmic.
  **/
 gboolean
 gwy_axis_is_logarithmic(GwyAxis *axis)
 {
+    g_return_val_if_fail(GWY_IS_AXIS(axis), FALSE);
+
     return axis->is_logarithmic;
 }
+
+/**
+ * gwy_axis_get_orientation:
+ * @axis: An axis.
+ *
+ * Gets the orientation of an axis.
+ *
+ * Returns: The orientation.
+ **/
+GtkPositionType
+gwy_axis_get_orientation(GwyAxis *axis)
+{
+    g_return_val_if_fail(GWY_IS_AXIS(axis), 0);
+
+    return axis->orientation;
+}
+
 /************************** Documentation ****************************/
 
 /**
