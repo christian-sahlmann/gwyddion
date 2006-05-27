@@ -2,8 +2,8 @@
 # @(#) $Id$
 disabled=
 pkgname=gwyddion
-basever=1.99.6
-dont_update_version=
+basever=1.99.7
+dont_update_version=never
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs
@@ -75,6 +75,8 @@ function build_documentation() {
   # Note this need build_project() to pass
   cd ./devel-docs
   make -k clean >/dev/null
+  # This is removed by maintainer-clean, but that would require to rerun all
+  # the autostuff
   rm -fv */*-sections.txt */*-decl-list.txt
   make -k docs
 }
