@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,11 +21,9 @@
 #ifndef __GWY_GRAPH_DATA_H__
 #define __GWY_GRAPH_DATA_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
-#include <gtk/gtktable.h>
-
+#include <gtk/gtktreeview.h>
 #include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwynullstore.h>
 
 G_BEGIN_DECLS
 
@@ -39,12 +37,15 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphData      GwyGraphData;
 typedef struct _GwyGraphDataClass GwyGraphDataClass;
 
-
 struct _GwyGraphData {
     GtkTreeView treeview;
 
     GwyGraphModel *graph_model;
-    GtkListStore *store;
+    GwyNullStore *store;
+    GPtrArray *curves;
+
+    gint ncolumns;
+    gulong ncurves_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -53,27 +54,15 @@ struct _GwyGraphData {
 struct _GwyGraphDataClass {
     GtkTreeViewClass parent_class;
 
-    void (*selected)(GwyGraphData *data);
-
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GtkWidget *gwy_graph_data_new(GwyGraphModel *gmodel);
-GType      gwy_graph_data_get_type(void) G_GNUC_CONST;
-
-void       gwy_graph_data_refresh(GwyGraphData *graph_data);
-
-void       gwy_graph_data_change_model(GwyGraphData *graph_data,
-                                    GwyGraphModel *gmodel);
-
-GwyGraphModel *gwy_graph_data_get_model(GwyGraphData *graph_data);
-
-void       gwy_graph_data_signal_selected(GwyGraphData *graph_data);
-
-void       gwy_graph_data_clear_selection(GwyGraphData *graph_data);
-
-
+GType          gwy_graph_data_get_type (void) G_GNUC_CONST;
+GtkWidget*     gwy_graph_data_new      (GwyGraphModel *gmodel);
+void           gwy_graph_data_set_model(GwyGraphData *graph_data,
+                                        GwyGraphModel *gmodel);
+GwyGraphModel* gwy_graph_data_get_model(GwyGraphData *graph_data);
 
 G_END_DECLS
 
