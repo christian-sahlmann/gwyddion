@@ -1,11 +1,11 @@
-1.99.6cvs20060516
 
-1.99.7 (2006-05-17)
+1.99.7 (2006-05-28)
 Application:
-- It is possible to switch between pixelwise-square and physically-square
-  display modes (via upper left data window corner menu).
+- Gtk+ 2.8 is required on MS Windows.
 - Gwyddion now depends on libxml2 used for SPML import (optionally, if you
   compile it from source code).
+- It is possible to switch between pixelwise-square and physically-square
+  display modes (via upper left data window corner menu).
 - There were some tool GUI behaviour changes, generally towards more explicit
   control by the user.
 
@@ -36,6 +36,11 @@ Libraries:
 - libgwydgets: Graph selections are GwySelection based now.
 - libgwydgets: All graph property dialogs apply changes instantly.
 - libgwydgets: Miscellaneous graph fixes and clean-up.
+- libgwyprocess: Grain statistics interface is more general and powerful,
+  a few new grain characteristics were added.
+- libgwydgets: Gwyradiobuttons functions no longer use the arbitrary key
+  parameter.
+- libgwydgets: GwyGraphData works with arbitrary number of curves.
 
 Modules:
 - Omicron (new): Omicron (Scala) file import.
@@ -48,14 +53,15 @@ Modules:
 - SPML (new): SMPL file import.
 - Hitachi AFM: Import of another strain of Hitachi AFM files was added.
 - BCR file: Void pixel handling was improved (bug #67).
-- Grain distribution: Height distribution was added (bug #69).
 - RHK SPM32: Value offsets are respected.
 - RHK SM3: Can import newer files (XPMPro 1.1.0.9) (bug #71).
 - Nanoscope: Import of format versions 3 and 4 was improved (or made possible
   at all).
 - Polynomial level: Fitting of polynomials with limited total degree is
   possible.
-- Grain distribution: Height distribution was added (bug #69).
+- Grain distribution: Reworked; offers selection from several grain quantities,
+  allows to explicitly set sampling, can export raw data to a file (bug #69
+  made irrelevant).
 - Line correction: Step correction function (new, experimental).
 - Read Value, Level3: Value averaging uses circular neighbourhood instead of
   a square.
@@ -63,6 +69,8 @@ Modules:
 - Crop: Can crop image in place or create a new image.
 - Mask Editor: Can remove, invert, fill, grow, and shrink masks; the editor
   functions work with elliptic selections too.
+- Spot Remove: Only zoom center is selected on data windows, the area to
+  interpolate is selected on zoomed view.
 - Statistical quantities: Can calculate values only from pixels under mask
   into account, save results to a text file, switch off instant calculation.
 - Statistical functions: Can switch off instant calculation.
@@ -71,6 +79,8 @@ Modules:
 
 Other:
 - gwyconfig.h no longer requires to include math.h first.
+- The sample C++ plug-in is not built (but still distributed) and the build
+  should no longer require a C++ compiler.
 
 
 1.99.6 (2006-02-26)
