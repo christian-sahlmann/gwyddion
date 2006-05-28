@@ -69,7 +69,7 @@ gwy_module_browser(void)
     gtk_container_add(GTK_CONTAINER(window), paned);
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
     gtk_paned_pack1(GTK_PANED(paned), scroll, TRUE, FALSE);
     browser = gwy_module_browser_construct(window);
     gtk_container_add(GTK_CONTAINER(scroll), browser);
