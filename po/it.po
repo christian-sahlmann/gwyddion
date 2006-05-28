@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it1.99.4\n"
 "Report-Msgid-Bugs-To: klapetek@gwyddion.net\n"
-"POT-Creation-Date: 2006-05-28 16:10+0200\n"
+"POT-Creation-Date: 2006-05-28 16:55+0200\n"
 "PO-Revision-Date: 2005-12-01 12:31+0100\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -814,7 +814,7 @@ msgstr ""
 msgid "Open File"
 msgstr "Apri File"
 
-#: app/file.c:334 modules/process/grain_dist.c:573 modules/tools/stats.c:722
+#: app/file.c:334 modules/process/grain_dist.c:573 modules/tools/stats.c:737
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr ""
@@ -1310,7 +1310,7 @@ msgid "Cannot read file contents: %s"
 msgstr ""
 
 #: modules/file/err.h:39 modules/process/grain_dist.c:578
-#: modules/tools/stats.c:728
+#: modules/tools/stats.c:743
 #, c-format
 msgid "Cannot open file for writing: %s."
 msgstr ""
@@ -5873,7 +5873,7 @@ msgstr ""
 msgid "Statistics tool."
 msgstr ""
 
-#: modules/tools/stats.c:173 modules/tools/stats.c:745
+#: modules/tools/stats.c:173 modules/tools/stats.c:752
 msgid "Statistical Quantities"
 msgstr "Quantità statistiche"
 
@@ -5929,34 +5929,34 @@ msgstr ""
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametri</b>"
 
-#: modules/tools/stats.c:694
+#: modules/tools/stats.c:709
 msgid "Save Statistical Quantities"
 msgstr ""
 
-#: modules/tools/stats.c:751
+#: modules/tools/stats.c:757
 #, c-format
 msgid "File:              %s\n"
 msgstr ""
 
-#: modules/tools/stats.c:755
+#: modules/tools/stats.c:761
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr ""
 
-#: modules/tools/stats.c:773
+#: modules/tools/stats.c:779
 msgid "Yes"
 msgstr ""
 
-#: modules/tools/stats.c:773
+#: modules/tools/stats.c:779
 msgid "No"
 msgstr ""
 
-#: modules/tools/stats.c:798 modules/tools/stats.c:805
-#: modules/tools/stats.c:807
+#: modules/tools/stats.c:804 modules/tools/stats.c:811
+#: modules/tools/stats.c:813
 msgid "N.A"
 msgstr ""
 
-#: modules/tools/stats.c:810
+#: modules/tools/stats.c:816
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: klapetek@gwyddion.net\n"
-"POT-Creation-Date: 2006-05-28 16:10+0200\n"
+"POT-Creation-Date: 2006-05-28 16:55+0200\n"
 "PO-Revision-Date: 2006-05-25 15:03+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -792,7 +792,7 @@ msgstr "Načtení „%s“ se nezdařilo"
 msgid "Open File"
 msgstr "Otevření souboru"
 
-#: app/file.c:334 modules/process/grain_dist.c:573 modules/tools/stats.c:722
+#: app/file.c:334 modules/process/grain_dist.c:573 modules/tools/stats.c:737
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Zapsání „%s“ se nezdařilo"
@@ -1276,7 +1276,7 @@ msgid "Cannot read file contents: %s"
 msgstr "Obsah souboru nelze přečíst: %s"
 
 #: modules/file/err.h:39 modules/process/grain_dist.c:578
-#: modules/tools/stats.c:728
+#: modules/tools/stats.c:743
 #, c-format
 msgid "Cannot open file for writing: %s."
 msgstr "Soubor nelze otevřít pro zápis: %s."
@@ -5823,7 +5823,7 @@ msgstr "Fraktální interpolace"
 msgid "Statistics tool."
 msgstr "Statistický nástroj."
 
-#: modules/tools/stats.c:173 modules/tools/stats.c:745
+#: modules/tools/stats.c:173 modules/tools/stats.c:752
 msgid "Statistical Quantities"
 msgstr "Statistické veličiny"
 
@@ -5879,34 +5879,34 @@ msgstr "Použít _masku"
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametry</b>"
 
-#: modules/tools/stats.c:694
+#: modules/tools/stats.c:709
 msgid "Save Statistical Quantities"
 msgstr "Uložení statistických hodnot"
 
-#: modules/tools/stats.c:751
+#: modules/tools/stats.c:757
 #, c-format
 msgid "File:              %s\n"
 msgstr ""
 
-#: modules/tools/stats.c:755
+#: modules/tools/stats.c:761
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr ""
 
-#: modules/tools/stats.c:773
+#: modules/tools/stats.c:779
 msgid "Yes"
 msgstr ""
 
-#: modules/tools/stats.c:773
+#: modules/tools/stats.c:779
 msgid "No"
 msgstr ""
 
-#: modules/tools/stats.c:798 modules/tools/stats.c:805
-#: modules/tools/stats.c:807
+#: modules/tools/stats.c:804 modules/tools/stats.c:811
+#: modules/tools/stats.c:813
 msgid "N.A"
 msgstr ""
 
-#: modules/tools/stats.c:810
+#: modules/tools/stats.c:816
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
