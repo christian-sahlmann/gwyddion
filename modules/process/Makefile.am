@@ -13,7 +13,6 @@ process_LTLIBRARIES = \
 	dwtanisotropy.la \
 	dwtdenoise.la \
 	edge.la \
-	evaluator_setup.la \
 	facet-level.la \
 	facet_analysis.la \
 	fft.la \
@@ -117,8 +116,8 @@ dwtdenoise_la_LIBADD = $(module_libadd)
 edge_la_SOURCES = edge.c
 edge_la_LIBADD = $(module_libadd)
 
-evaluator_setup_la_SOURCES = evaluator_setup.c
-evaluator_setup_la_LIBADD = $(module_libadd)
+#evaluator_setup_la_SOURCES = evaluator_setup.c
+#evaluator_setup_la_LIBADD = $(module_libadd)
 
 facet_analysis_la_SOURCES = facet_analysis.c
 facet_analysis_la_LIBADD = $(module_libadd)
