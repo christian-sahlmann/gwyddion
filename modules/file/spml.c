@@ -61,9 +61,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves SPML (Scanning Probe Microscopy Markup Language) "
        "data files."),
-    "Jan Hoøák <xhorak@gmail.com>",
+    "Jan HoÅ™Ã¡k <xhorak@gmail.com>",
     "0.1.1",
-    "Jan Hoøák",
+    "Jan HoÅ™Ã¡k",
     "2006",
 };
 
