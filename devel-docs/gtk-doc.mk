@@ -32,11 +32,11 @@ EXTRA_DIST = \
 
 DOC_STAMPS = \
 	scan-build.stamp \
-	template-build.stamp \
-	xml-build.stamp \
+	tmpl-build.stamp \
+	sgml-build.stamp \
 	html-build.stamp \
-	$(srcdir)/template.stamp \
-	$(srcdir)/xml.stamp \
+	$(srcdir)/tmpl.stamp \
+	$(srcdir)/sgml.stamp \
 	$(srcdir)/html.stamp
 
 SCANOBJ_FILES = \
@@ -86,7 +86,7 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 
 #### templates ####
 
-template-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt
+tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt
 	@echo 'gtk-doc: Rebuilding template files'
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE) --output-dir=$(srcdir)/template $(MKTMPL_OPTIONS)
@@ -97,26 +97,26 @@ template-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sect
 	    fi; \
 	  done; \
 	rm -f $(DOC_MODULE).rstmpl; \
-	touch template-build.stamp
+	touch tmpl-build.stamp
 
-template.stamp: template-build.stamp
+tmpl.stamp: tmpl-build.stamp
 	@true
 
 #### xml ####
 
-xml-build.stamp: template.stamp $(CFILE_GLOB) $(srcdir)/template/*.sgml $(expand_content_files)
+sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/template/*.sgml $(expand_content_files)
 	@echo 'gtk-doc: Building XML'
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=$(srcdir)/template --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml --expand-content-files="$(expand_content_files)" --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
-	touch xml-build.stamp
+	touch sgml-build.stamp
 
-xml.stamp: xml-build.stamp
+sgml.stamp: sgml-build.stamp
 	@true
 
 #### html ####
 
-html-build.stamp: xml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
+html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo 'gtk-doc: Building HTML'
 	@-chmod -R u+w $(srcdir)
 	rm -rf $(srcdir)/html
