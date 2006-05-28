@@ -100,7 +100,7 @@ module_register(void)
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Local RMS value based edge detection "
-                                 "with postprocession"));
+                                 "with postprocessing"));
     gwy_process_func_register("edge_nonlinearity",
                               (GwyProcessFunc)&edge,
                               N_("/_Presentation/_Edge Detection/Local _Nonlinearity"),
