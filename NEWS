@@ -43,6 +43,8 @@ Libraries:
 - libgwydgets: GwyGraphData works with arbitrary number of curves.
 
 Modules:
+- Several, namely multi-data related, processing modules were temporarily
+  disabled due to excessive brokeness.
 - Omicron (new): Omicron (Scala) file import.
 - SEIKO (new): Seiko XQD file import.
 - Burleigh (new): Burleigh IMG v2.1 file import.
