@@ -64,7 +64,8 @@ and as root run:
 Prerequisities:
 - MSVC 6 or newer (it may build with Cygwin or MinGW toolchain, but MSVC is
   the tested one)
-- GLib-2.8 and Gtk+-2.8, including development files
+- GLib-2.8 and Gtk+-2.8, including development files (it is possible to
+  compile with 2.6 too, but the build system is set up for 2.8)
 - GtkGLExt-1.0 or newer, including development files
 - LibXML2, including development files
 The prefered way to get all these is to install Gtk+ all-in-one package from
