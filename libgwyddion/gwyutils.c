@@ -19,7 +19,7 @@
  */
 
 #include "config.h"
-#include "gwymacros.h"
+#include <libgwyddion/gwymacros.h>
 
 /* To be able to mmap() files.
  * On Linux we have all, on Win32 we have none, on others who knows */
@@ -38,7 +38,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "gwyutils.h"
+#include <libgwyddion/gwyutils.h>
 
 #ifdef G_OS_WIN32
 #include <windows.h>

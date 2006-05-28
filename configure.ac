@@ -1,6 +1,9 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.7, [klapetek@gwyddion.net])
+m4_define([gwy_version_major],[1])
+m4_define([gwy_version_minor],[99])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.7cvs20060528])
+AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.8
@@ -14,6 +17,7 @@ AC_CONFIG_FILES(\
   app/Makefile \
   libdraw/Makefile \
   libgwyddion/Makefile \
+  libgwyddion/gwyversion.h \
   libgwydgets/Makefile \
   libgwymodule/Makefile \
   libprocess/Makefile \
@@ -56,11 +60,19 @@ dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
 dnl strictness level.
 AM_INIT_AUTOMAKE([1.7 foreign check-news dist-bzip2])
 AM_MAINTAINER_MODE
+
+GWY_VERSION_MAJOR=gwy_version_major
+GWY_VERSION_MINOR=gwy_version_minor
+GWY_VERSION_STRING='"gwy_version_string"'
+AC_SUBST(GWY_VERSION_MAJOR)
+AC_SUBST(GWY_VERSION_MINOR)
+AC_SUBST(GWY_VERSION_STRING)
 AC_SUBST(LIBRARY_RELEASE)
 
 #############################################################################
 # Checks for programs and systems.
 AC_DISABLE_STATIC
+# Make libtool stop checking for C++ and Fortran.
 CXX=no
 F77=no
 AC_PROG_CC

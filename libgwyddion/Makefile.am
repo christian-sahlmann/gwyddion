@@ -21,9 +21,10 @@ libgwyddioninclude_HEADERS = \
 	gwynlfitpreset.h \
 	gwyresource.h \
 	gwyserializable.h \
-	gwyutils.h \
 	gwysiunit.h \
-	gwystringlist.h
+	gwystringlist.h \
+	gwyutils.h \
+	gwyversion.h
 
 built_sources = \
 	gwyddiontypes.h \
@@ -35,6 +36,7 @@ EXTRA_DIST = \
 	$(built_sources) \
 	gwyddiontypes.c.template \
 	gwyddiontypes.h.template \
+	gwyversion.h.in \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyddion.def
@@ -65,9 +67,10 @@ libgwyddion_la_SOURCES = \
 	gwynlfitpreset.c \
 	gwyresource.c \
 	gwyserializable.c \
-	gwyutils.c \
 	gwysiunit.c \
-	gwystringlist.c
+	gwystringlist.c \
+	gwyutils.c \
+	gwyversion.c
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_LIBDIR=\"$(libdir)\" -DGWY_DATADIR=\"$(datadir)\" -DGWY_LIBEXECDIR=\"$(libexecdir)\" -DGWY_LOCALEDIR=\"$(localedir)\"
