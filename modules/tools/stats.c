@@ -670,12 +670,14 @@ gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
 
 #define fmt_val(v) \
     g_strdup_printf("%.*f%s%s", \
-                    vf->precision, res->v/vf->magnitude, \
+                    vf->precision, res.v/vf->magnitude, \
                     *vf->units ? " " : "", vf->units)
 
 static void
 gwy_tool_stats_save(GwyToolStats *tool)
 {
+    GwyContainer *container;
+    GwyDataField *data_field;
     GtkWidget *dialog;
     GwySIUnit *siunitxy, *siunitarea;
     gdouble xreal, yreal, q;
@@ -683,13 +685,26 @@ gwy_tool_stats_save(GwyToolStats *tool)
     GwySIValueFormat *vf = NULL;
     const guchar *title;
     gboolean mask_in_use;
-    gint response;
-    const ToolResults *res;
+    gint response, id;
+    ToolResults res;
     gchar *key, *filename_sys;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *avg, *min, *max, *median, *rms, *ra, *skew, *kurtosis;
     gchar *area, *projarea, *theta, *phi;
     FILE *fh;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->container);
+    if (!tool->results_up_to_date)
+        gwy_tool_stats_update_labels(tool);
+
+    /* Copy everything as user can switch data during the Save dialog (though
+     * he cannot destroy them, so references are not necessary) */
+    mask_in_use = tool->args.use_mask && plain_tool->mask_field;
+    res = tool->results;
+    container = plain_tool->container;
+    data_field = plain_tool->data_field;
+    id = plain_tool->id;
 
     dialog = gtk_file_chooser_dialog_new(_("Save Statistical Quantities"),
                                          GTK_WINDOW(GWY_TOOL(tool)->dialog),
@@ -734,45 +749,36 @@ gwy_tool_stats_save(GwyToolStats *tool)
     }
     g_free(filename_sys);
 
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    g_return_if_fail(plain_tool->container);
-    if (!tool->results_up_to_date)
-        gwy_tool_stats_update_labels(tool);
-
-    mask_in_use = tool->args.use_mask && plain_tool->mask_field;
-    res = &tool->results;
-
     fputs(_("Statistical Quantities"), fh);
     fputs("\n\n", fh);
 
     /* Channel information */
-    if (gwy_container_gis_string_by_name(plain_tool->container, "/filename",
-                                         &title))
+    if (gwy_container_gis_string_by_name(container, "/filename", &title))
         fprintf(fh, _("File:              %s\n"), title);
 
-    key = g_strdup_printf("/%d/data/title", plain_tool->id);
-    if (gwy_container_gis_string_by_name(plain_tool->container, key, &title))
+    key = g_strdup_printf("/%d/data/title", id);
+    if (gwy_container_gis_string_by_name(container, key, &title))
         fprintf(fh, _("Data channel:      %s\n"), title);
     g_free(key);
 
     fputs("\n", fh);
 
-    iw = g_strdup_printf("%d", res->isel[2]);
-    ih = g_strdup_printf("%d", res->isel[3]);
-    ix = g_strdup_printf("%d", res->isel[0]);
-    iy = g_strdup_printf("%d", res->isel[1]);
+    iw = g_strdup_printf("%d", res.isel[2]);
+    ih = g_strdup_printf("%d", res.isel[3]);
+    ix = g_strdup_printf("%d", res.isel[0]);
+    iy = g_strdup_printf("%d", res.isel[1]);
 
-    vf = gwy_data_field_get_value_format_xy(plain_tool->data_field,
+    vf = gwy_data_field_get_value_format_xy(data_field,
                                             GWY_SI_UNIT_FORMAT_PLAIN, vf);
-    rw = g_strdup_printf("%.*f", vf->precision, res->sel[2]/vf->magnitude);
-    rh = g_strdup_printf("%.*f", vf->precision, res->sel[3]/vf->magnitude);
-    rx = g_strdup_printf("%.*f", vf->precision, res->sel[0]/vf->magnitude);
-    ry = g_strdup_printf("%.*f", vf->precision, res->sel[1]/vf->magnitude);
+    rw = g_strdup_printf("%.*f", vf->precision, res.sel[2]/vf->magnitude);
+    rh = g_strdup_printf("%.*f", vf->precision, res.sel[3]/vf->magnitude);
+    rx = g_strdup_printf("%.*f", vf->precision, res.sel[0]/vf->magnitude);
+    ry = g_strdup_printf("%.*f", vf->precision, res.sel[1]/vf->magnitude);
     uni = g_strdup(vf->units);
 
     muse = g_strdup(mask_in_use ? _("Yes") : _("No"));
 
-    vf = gwy_data_field_get_value_format_z(plain_tool->data_field,
+    vf = gwy_data_field_get_value_format_z(data_field,
                                            GWY_SI_UNIT_FORMAT_PLAIN, vf);
     avg = fmt_val(avg);
     min = fmt_val(min);
@@ -781,15 +787,15 @@ gwy_tool_stats_save(GwyToolStats *tool)
     ra = fmt_val(ra);
     rms = fmt_val(rms);
 
-    skew = g_strdup_printf("%2.3g", res->skew);
-    kurtosis = g_strdup_printf("%2.3g", res->kurtosis);
+    skew = g_strdup_printf("%2.3g", res.skew);
+    kurtosis = g_strdup_printf("%2.3g", res.kurtosis);
 
-    siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+    siunitxy = gwy_data_field_get_si_unit_xy(data_field);
     siunitarea = gwy_si_unit_power(siunitxy, 2, NULL);
-    xreal = gwy_data_field_get_xreal(plain_tool->data_field);
-    yreal = gwy_data_field_get_xreal(plain_tool->data_field);
-    q = xreal/gwy_data_field_get_xres(plain_tool->data_field)
-        *yreal/gwy_data_field_get_yres(plain_tool->data_field);
+    xreal = gwy_data_field_get_xreal(data_field);
+    yreal = gwy_data_field_get_xreal(data_field);
+    q = xreal/gwy_data_field_get_xres(data_field)
+        *yreal/gwy_data_field_get_yres(data_field);
     vf = gwy_si_unit_get_format_with_resolution(siunitarea,
                                                 GWY_SI_UNIT_FORMAT_PLAIN,
                                                 xreal*yreal, q, vf);
