@@ -205,7 +205,7 @@ print_help(void)
 "They may be other Gtk+, Gdk, and GtkGLExt options, depending on platform, on\n"
 "how it was compiled, and on loaded modules.  Please see Gtk+ documentation.\n"
         );
-    puts("Please report bugs to " PACKAGE_BUGREPORT ".");
+    puts("Please report bugs to <" PACKAGE_BUGREPORT ">.");
 }
 
 static void
