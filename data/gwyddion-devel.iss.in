@@ -36,7 +36,6 @@ Source: "devel-docs\libgwyprocess\*.*"; DestDir: "{app}\devel-docs\libgwyprocess
 Source: "COPYING.wri"; DestDir: "{app}"
 
 [Icons]
-Name: "{group}\@PACKAGE_NAME@ Development Website"; Filename: "http://trific.ath.cx/software/@PACKAGE_TARNAME@/"
 Name: "{group}\API reference of libgwyapp"; Filename: "{app}\devel-docs\libgwyapp\index.html"
 Name: "{group}\API reference of libgwyddion"; Filename: "{app}\devel-docs\libgwyddion\index.html"
 Name: "{group}\API reference of libgwydgets"; Filename: "{app}\devel-docs\libgwydgets\index.html"

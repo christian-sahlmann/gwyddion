@@ -4,7 +4,7 @@ subdir = po
 top_builddir = ..
 XGETTEXT_OPTIONS = --keyword=_ --keyword=N_ --keyword=gwy_sgettext --foreign-user --from-code=UTF-8
 COPYRIGHT_HOLDER = "David Necas (Yeti) & Petr Klapetek"
-MSGID_BUGS_ADDRESS = http://trific.ath.cx/bugzilla/
+MSGID_BUGS_ADDRESS = klapetek@gwyddion.net
 EXTRA_LOCALE_CATEGORIES =
 # XXX
 MSGMERGE = msgmerge --no-fuzzy-matching

@@ -119,8 +119,8 @@ nmake makefiles now.
 Essentially, the Unix instructions apply here too.
 
 It's recommended to use Darwinports for installing the dependencies.  You
-need to install ports for gtk2, gtkglext, pkg-config and tiff; that should
-pull all the other dependencies.
+need to install ports for gtk2, pkg-config; that should pull all the other
+dependencies.  It is recommended to install gtkglext, tiff and libxml2 too.
 
 To make sure headers and libraries are found where Darwinports install them
 you may want to explicitely set:
@@ -138,7 +138,9 @@ server before running Gwyddion.
 
 CVS generally doesn't contain generated files, no matter how unusual tools
 may be needed to generate them.  Consider use of nightly snapshot tarballs
-available at http://trific.ath.cx/software/gwyddion/ (ATM).
+available at
+
+  http://gwyddion.net/download.php#cvs
 
 Prerequisities:
 - everything needed for compilation from tarballs
