@@ -31,11 +31,26 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyaxis.h"
 
+#include <stdio.h>
+
 enum {
     LABEL_UPDATED,
     RESCALED,
     LAST_SIGNAL
 };
+
+enum {
+    PROP_0,
+    PROP_MAJOR_LENGTH,
+    PROP_MAJOR_THICKNESS,
+    PROP_MAJOR_MAXTICKS,
+    PROP_MINOR_LENGTH,
+    PROP_MINOR_THICKNESS,
+    PROP_MINOR_DIVISION,
+    PROP_LINE_THICKNESS,
+    PROP_LAST
+};
+
 
 /* Forward declarations - widget related*/
 static void     gwy_axis_finalize             (GObject *object);
@@ -93,6 +108,15 @@ static void    gwy_axis_hide                (GwyAxisDialog *dialog,
                                              gint arg1,
                                              gpointer user_data);
 static void    gwy_axis_rescaled            (GwyAxis *axis);
+static void    gwy_axis_set_property(GObject *object,
+                             guint prop_id,
+                             const GValue *value,
+                             GParamSpec *pspec);
+
+static void    gwy_axis_get_property(GObject*object,
+                             guint prop_id,
+                             GValue *value,
+                             GParamSpec *pspec);
 
 /* Local data */
 
@@ -111,6 +135,8 @@ gwy_axis_class_init(GwyAxisClass *klass)
     widget_class = (GtkWidgetClass*)klass;
 
     gobject_class->finalize = gwy_axis_finalize;
+    gobject_class->set_property = gwy_axis_set_property;
+    gobject_class->get_property = gwy_axis_get_property;
 
     widget_class->realize = gwy_axis_realize;
     widget_class->expose_event = gwy_axis_expose;
@@ -139,6 +165,85 @@ gwy_axis_class_init(GwyAxisClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MAJOR_LENGTH,
+         g_param_spec_int("major-length",
+                          "Major ticks length",
+                          "Major ticks length",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MAJOR_THICKNESS,
+         g_param_spec_int("major-thickness",
+                          "Major ticks thickness",
+                          "Major ticks thickness",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MAJOR_MAXTICKS,
+         g_param_spec_int("major-maxtics",
+                          "Major ticks maximum number",
+                          "Major ticks maximum number",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MINOR_LENGTH,
+         g_param_spec_int("minor-length",
+                          "Minor ticks length",
+                          "Minor ticks length",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MINOR_THICKNESS,
+         g_param_spec_int("minor-thickness",
+                          "Minor ticks thickness",
+                          "Minor ticks thickness",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MINOR_DIVISION,
+         g_param_spec_int("minor-division",
+                          "Minor ticks division",
+                          "Minor ticks division",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LINE_THICKNESS,
+         g_param_spec_int("line-thickness",
+                          "Line thickness",
+                          "Axis main line thickness",
+                          0,
+                          20,
+                          5,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+
 }
 
 static void
@@ -150,6 +255,7 @@ gwy_axis_init(GwyAxis *axis)
     axis->is_auto = TRUE;
     axis->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
 
+    
     axis->par.major_length = 10;
     axis->par.major_thickness = 1;
     axis->par.major_maxticks = 20;
@@ -514,7 +620,7 @@ gwy_axis_draw_on_drawable(GdkDrawable *drawable,
     specs.ymin = ymin;
     specs.width = width;
     specs.height = height;
-
+    
     if (axis->is_standalone && axis->is_visible)
         gwy_axis_draw_axis(drawable, gc, &specs, axis);
     if (axis->is_visible) {
@@ -532,7 +638,6 @@ gwy_axis_draw_axis(GdkDrawable *drawable,
 {
     gdk_gc_set_line_attributes(gc, axis->par.line_thickness,
                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
-
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_line(drawable, gc,
@@ -831,7 +936,7 @@ gwy_axis_button_press(GtkWidget *widget,
     if (axis->enable_label_edit)
     {
         if (!axis->dialog) {
-            axis->dialog = gwy_axis_dialog_new();
+            axis->dialog = gwy_axis_dialog_new(G_OBJECT(widget));
             g_signal_connect(gwy_axis_dialog_get_sci_text(axis->dialog), "edited",
                              G_CALLBACK(gwy_axis_entry), axis);
             g_signal_connect(GWY_AXIS_DIALOG(axis->dialog), "response",
@@ -1800,6 +1905,94 @@ gwy_axis_get_orientation(GwyAxis *axis)
 
     return axis->orientation;
 }
+
+static void
+gwy_axis_set_property(GObject *object,
+                             guint prop_id,
+                             const GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyAxis *axis = GWY_AXIS(object);
+    
+    switch (prop_id) {
+        case PROP_MAJOR_LENGTH:
+        axis->par.major_length = g_value_get_int(value);
+        break;
+
+        case PROP_MAJOR_THICKNESS:
+        axis->par.major_thickness = g_value_get_int(value);
+        break;
+
+        case PROP_MAJOR_MAXTICKS:
+        axis->par.major_maxticks = g_value_get_int(value);
+        break;
+
+        case PROP_MINOR_LENGTH:
+        axis->par.minor_length = g_value_get_int(value);
+        break;
+
+        case PROP_MINOR_THICKNESS:
+        axis->par.minor_thickness = g_value_get_int(value);
+        break;
+
+        case PROP_MINOR_DIVISION:
+        axis->par.minor_division = g_value_get_int(value);
+        break;
+
+        case PROP_LINE_THICKNESS:
+        axis->par.line_thickness = g_value_get_int(value);
+        break;
+
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_axis_get_property(GObject*object,
+                             guint prop_id,
+                             GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyAxis *axis = GWY_AXIS(object);
+
+    switch (prop_id) {
+        case PROP_MAJOR_LENGTH:
+        g_value_set_int(value, axis->par.major_length);
+        break;
+
+        case PROP_MAJOR_THICKNESS:
+        g_value_set_int(value, axis->par.major_thickness);
+        break;
+
+        case PROP_MAJOR_MAXTICKS:
+        g_value_set_int(value, axis->par.major_maxticks);
+        break;
+
+        case PROP_MINOR_LENGTH:
+        g_value_set_int(value, axis->par.minor_length);
+        break;
+
+        case PROP_MINOR_THICKNESS:
+        g_value_set_int(value, axis->par.minor_thickness);
+        break;
+
+        case PROP_MINOR_DIVISION:
+        g_value_set_int(value, axis->par.minor_division);
+        break;
+
+        case PROP_LINE_THICKNESS:
+        g_value_set_int(value, axis->par.line_thickness);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
 
 /************************** Documentation ****************************/
 

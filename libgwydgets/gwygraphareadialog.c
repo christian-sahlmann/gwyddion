@@ -555,7 +555,7 @@ label_change_cb(G_GNUC_UNUSED GtkWidget *button, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    selector = GWY_AXIS_DIALOG(gwy_axis_dialog_new());
+    selector = GWY_AXIS_DIALOG(gwy_axis_dialog_new(NULL));
     scitext = GWY_SCI_TEXT(selector->sci_text);    /* XXX */
     gwy_sci_text_set_text(scitext, cmodel->description->str);
     g_signal_connect(scitext, "edited",
