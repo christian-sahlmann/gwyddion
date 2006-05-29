@@ -297,7 +297,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "5.2",
+    "5.2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -319,8 +319,12 @@ module_register(void)
         GwyFileSaveFunc save = NULL;
         gchar *fmtname;
 
+        /* Ignore all vector formats */
+        if (gdk_pixbuf_format_is_scalable(pixbuf_format))
+            continue;
+
         fmtname = gdk_pixbuf_format_get_name(pixbuf_format);
-        /* ignore some really silly formats */
+        /* Ignore some really silly formats explicitly */
         if (gwy_strequal(fmtname, "ico")
             || gwy_strequal(fmtname, "ani")
             || gwy_strequal(fmtname, "wbmp")
@@ -328,6 +332,9 @@ module_register(void)
              * arbitrary binary data, prints error messages, and it's silly
              * to load WMF to Gwyddion anyway */
             || gwy_strequal(fmtname, "wmf")
+            /* swfdec causes strange errors and how mad one has to be to try
+             * to import Flash to Gwyddion? */
+            || gwy_strequal(fmtname, "swf")
             || gwy_strequal(fmtname, "xbm")
             || gwy_strequal(fmtname, "svg")) {
             g_free(fmtname);
