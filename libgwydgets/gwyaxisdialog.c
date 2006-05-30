@@ -105,10 +105,25 @@ gwy_axis_dialog_delete(GtkWidget *widget,
 static void
 gwy_axis_dialog_init(GwyAxisDialog *dialog)
 {
+    gwy_debug("");
+}
+
+/**
+ * gwy_axis_dialog_new:
+ *
+ * Creates a new axis dialog.
+ *
+ * Returns: A new axis dialog as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_axis_dialog_new(GtkWidget *axis)
+{
+    GwyAxisDialog *dialog = GWY_AXIS_DIALOG(g_object_new(gwy_axis_dialog_get_type(), NULL));
     GtkWidget *entry, *label, *table;
     gint row = 0;
-
+    
     gwy_debug("");
+    dialog->axis = axis;
 
     if (dialog->axis)
         gtk_window_set_title(GTK_WINDOW(dialog), "Axis properties");
@@ -121,6 +136,7 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
 
+   
     if (dialog->axis != NULL)
     {
         label = gtk_label_new(NULL);
@@ -199,24 +215,8 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       dialog->sci_text);
     gtk_widget_show_all(dialog->sci_text);
-}
-
-/**
- * gwy_axis_dialog_new:
- *
- * Creates a new axis dialog.
- *
- * Returns: A new axis dialog as a #GtkWidget.
- **/
-GtkWidget*
-gwy_axis_dialog_new(GtkWidget *axis)
-{
-    GtkWidget *dialog = GTK_WIDGET(g_object_new(gwy_axis_dialog_get_type(), NULL));
-    
-    gwy_debug("");
-    GWY_AXIS_DIALOG(dialog)->axis = axis;
-  
-    return dialog;
+ 
+    return GTK_WIDGET(dialog);
 }
 
 GtkWidget*
