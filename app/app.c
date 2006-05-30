@@ -97,7 +97,7 @@ gwy_app_quit(void)
 }
 
 gboolean
-_gwy_app_main_window_save_position(void)
+gwy_app_main_window_save_position(void)
 {
     gwy_app_save_window_position(GTK_WINDOW(gwy_app_main_window),
                                  "/app/toolbox", TRUE, FALSE);
@@ -106,7 +106,7 @@ _gwy_app_main_window_save_position(void)
 }
 
 void
-_gwy_app_main_window_restore_position(void)
+gwy_app_main_window_restore_position(void)
 {
     gwy_app_restore_window_position(GTK_WINDOW(gwy_app_main_window),
                                     "/app/toolbox", FALSE);
@@ -160,7 +160,7 @@ gwy_app_main_window_get(void)
  * startup so, ignore it.
  **/
 void
-_gwy_app_main_window_set(GtkWidget *window)
+gwy_app_main_window_set(GtkWidget *window)
 {
     if (gwy_app_main_window && window != gwy_app_main_window)
         g_critical("Trying to change app main window");

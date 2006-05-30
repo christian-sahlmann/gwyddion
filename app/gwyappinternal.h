@@ -25,10 +25,12 @@
 
 G_BEGIN_DECLS
 
+G_GNUC_INTERNAL
 gint     _gwy_app_get_n_recent_files          (void);
-void     _gwy_app_main_window_set             (GtkWidget *window);
-gboolean _gwy_app_main_window_save_position   (void);
-void     _gwy_app_main_window_restore_position(void);
+
+void     gwy_app_main_window_set              (GtkWidget *window);
+gboolean gwy_app_main_window_save_position    (void);
+void     gwy_app_main_window_restore_position (void);
 void     gwy_app_zoom_set_cb                  (gpointer data);
 void     gwy_app_3d_view_cb                   (void);
 void     gwy_app_change_mask_color_cb         (void);
