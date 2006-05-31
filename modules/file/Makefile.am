@@ -40,6 +40,7 @@ file_LTLIBRARIES = \
 	nt-mdt.la \
 	omicron.la \
 	pixmap.la \
+	pnifile.la \
 	rawfile.la \
 	rhk-sm3.la \
 	rhk-spm32.la \
@@ -150,6 +151,9 @@ omicron_la_LIBADD = $(module_libadd)
 
 pixmap_la_SOURCES = pixmap.c
 pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
+
+pnifile_la_SOURCES = pnifile.c
+pnifile_la_LIBADD = $(module_libadd)
 
 rawfile_la_SOURCES = rawfile.c rawfilepreset.h
 rawfile_la_LIBADD = $(module_libadd)
