@@ -38,3 +38,6 @@
 
 /* All Win32 Gtk+ packages has libtiff */
 #define HAVE_TIFF 1
+
+/* GladeWin32 has GtkGLExt */
+#define HAVE_GTKGLEXT 1
