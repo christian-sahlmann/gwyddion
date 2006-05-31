@@ -41,6 +41,7 @@ enum {
 
 enum {
     PROP_0,
+    PROP_AUTO,
     PROP_MAJOR_LENGTH,
     PROP_MAJOR_THICKNESS,
     PROP_MAJOR_MAXTICKS,
@@ -117,6 +118,7 @@ static void    gwy_axis_get_property(GObject*object,
                              guint prop_id,
                              GValue *value,
                              GParamSpec *pspec);
+static void    gwy_axis_refresh             (GwyAxis *axis);
 
 /* Local data */
 
@@ -168,6 +170,15 @@ gwy_axis_class_init(GwyAxisClass *klass)
 
     g_object_class_install_property
         (gobject_class,
+         PROP_AUTO,
+         g_param_spec_boolean("auto",
+                          "Autoscale",
+                          "Autoscale ticks with changing content",
+                          TRUE,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property
+        (gobject_class,
          PROP_MAJOR_LENGTH,
          g_param_spec_int("major-length",
                           "Major ticks length",
@@ -191,11 +202,11 @@ gwy_axis_class_init(GwyAxisClass *klass)
     g_object_class_install_property
         (gobject_class,
          PROP_MAJOR_MAXTICKS,
-         g_param_spec_int("major-maxtics",
+         g_param_spec_int("major-maxticks",
                           "Major ticks maximum number",
                           "Major ticks maximum number",
                           0,
-                          20,
+                          50,
                           5,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
 
@@ -319,6 +330,8 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     pango_font_description_set_weight(axis->par.label_font, PANGO_WEIGHT_NORMAL);
     pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
 
+    g_signal_connect_swapped(axis, "notify", G_CALLBACK(gwy_axis_refresh), axis);
+    
     return GTK_WIDGET(axis);
 }
 
@@ -503,7 +516,6 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 
     if (axis->is_auto)
         gwy_axis_autoset(axis, width, height);
-
     iterations = 0;
     if (axis->is_logarithmic) {gwy_axis_scale(axis);}
     else {
@@ -524,7 +536,6 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
         gwy_axis_precompute(axis, 0, width);
     else
         gwy_axis_precompute(axis, 0, height);
-
 
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
@@ -550,6 +561,13 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
         else
             axis->par.minor_division = 10;
     }
+}
+
+static void    
+gwy_axis_refresh(GwyAxis *axis)
+{
+    gwy_axis_adjust(axis, -1, -1);
+    gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
@@ -1915,6 +1933,10 @@ gwy_axis_set_property(GObject *object,
     GwyAxis *axis = GWY_AXIS(object);
     
     switch (prop_id) {
+        case PROP_AUTO:
+        axis->is_auto = g_value_get_boolean(value);
+        break;
+
         case PROP_MAJOR_LENGTH:
         axis->par.major_length = g_value_get_int(value);
         break;
@@ -1959,6 +1981,10 @@ gwy_axis_get_property(GObject*object,
     GwyAxis *axis = GWY_AXIS(object);
 
     switch (prop_id) {
+        case PROP_AUTO:
+        g_value_set_boolean(value, axis->is_auto);
+        break;
+
         case PROP_MAJOR_LENGTH:
         g_value_set_int(value, axis->par.major_length);
         break;
@@ -1991,6 +2017,7 @@ gwy_axis_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
+    
 }
 
 

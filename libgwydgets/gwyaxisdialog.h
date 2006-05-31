@@ -44,12 +44,15 @@ struct _GwyAxisDialog {
     GtkDialog dialog;
 
     GtkWidget *sci_text;
+    GtkWidget *is_auto;
     GtkObject *major_length;
     GtkObject *major_thickness;
     GtkObject *major_division;
+    GtkWidget *major_division_spin;
     GtkObject *minor_length;
     GtkObject *minor_thickness;
     GtkObject *minor_division;
+    GtkWidget *minor_division_spin;
     GtkObject *line_thickness;
 
     GObject *axis;
