@@ -91,6 +91,9 @@ gwy_app_quit(void)
 
     gwy_app_data_browser_shut_down();
     gwy_object_unref(current_tool);
+    /* XXX: EXIT-CLEAN-UP */
+    gtk_widget_destroy(gwy_app_main_window);
+    g_object_unref(gwy_app_sensitivity_get_group());
 
     gtk_main_quit();
     return TRUE;

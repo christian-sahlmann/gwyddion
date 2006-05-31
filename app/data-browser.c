@@ -453,14 +453,13 @@ gwy_app_data_proxy_finalize_list(GtkTreeModel *model,
     GObject *object;
     GtkTreeIter iter;
 
-    if (!gtk_tree_model_get_iter_first(model, &iter))
-        return;
-
-    do {
-        gtk_tree_model_get(model, &iter, column, &object, -1);
-        g_signal_handlers_disconnect_by_func(object, func, data);
-        g_object_unref(object);
-    } while (gtk_tree_model_iter_next(model, &iter));
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, column, &object, -1);
+            g_signal_handlers_disconnect_by_func(object, func, data);
+            g_object_unref(object);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
 
     g_object_unref(model);
 }
@@ -655,6 +654,7 @@ gwy_app_data_proxy_list_setup(GwyAppDataList *list)
                                     G_TYPE_INT,
                                     G_TYPE_OBJECT,
                                     G_TYPE_OBJECT);
+    gwy_debug_objects_creation(G_OBJECT(list->list));
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(list->list),
                                          MODEL_ID, GTK_SORT_ASCENDING);
     list->last = -1;
@@ -2618,6 +2618,7 @@ gwy_app_data_browser_shut_down(void)
 
     gwy_app_save_window_position(GTK_WINDOW(browser->window),
                                  "/app/data-browser", TRUE, TRUE);
+    /* XXX: EXIT-CLEAN-UP */
     /* This clean-up is only to make sure we've got the references right.
      * Remove in production version. */
     while (browser->proxy_list) {
