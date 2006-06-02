@@ -41,6 +41,7 @@
 #define Milivolt (1e-3)
 
 enum {
+    /* Relative to DATA_HEADER_START */
     DATA_NUMBER_OFFSET = 0x0006,
     DATA_TYPE_OFFSET   = 0x000a,
     DIRECTION_OFFSET   = 0x000e,
@@ -49,10 +50,14 @@ enum {
     VALUE_SCALE_OFFSET = 0x004a,
     REAL_SIZE_OFFSET   = 0x0052,
 
+    /* Absolute in file */
     HEADER_START       = 0x0090,
+    /* Palette is 3x256 8bit r,g,b components. */
     PALETTE_START      = 0x00ca,
+    /* Thumbnail is 64x64, 8 bits per sample */
     THUMB_START        = 0x03ca,
     DATA_HEADER_START  = 0x13ca,
+    /* Data is 16 bits per sample */
     DATA_START         = 0x1c90
 };
 
@@ -156,7 +161,7 @@ pni_load(const gchar *filename,
     PNIDirection direction;
     gdouble xreal, yreal, zscale;
     gdouble *data;
-    const guint16 *d16;
+    const gint16 *d16;
     GwySIUnit *siunit;
     const gchar *title;
     gchar *s;
@@ -195,7 +200,7 @@ pni_load(const gchar *filename,
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
-    d16 = (const guint16*)(buffer + DATA_START);
+    d16 = (const gint16*)(buffer + DATA_START);
     for (i = 0; i < xres*yres; i++)
         data[i] = zscale*d16[i]/65536.0;
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
