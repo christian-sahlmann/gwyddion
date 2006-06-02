@@ -124,7 +124,8 @@ gwy_axis_dialog_new(GtkWidget *axis)
     GwyAxisDialog *dialog = GWY_AXIS_DIALOG(g_object_new(gwy_axis_dialog_get_type(), NULL));
     GtkWidget *entry, *label, *table;
     gint row = 0;
-    GValue val, bval;
+    GValue val = {0,};
+    GValue bval = {0,};
     
     gwy_debug("");
     dialog->axis = axis;
@@ -334,7 +335,7 @@ static void
 autoscale_changed_cb(GtkToggleButton *button, GwyAxisDialog *dialog)
 {
     gboolean value;
-    GValue val = {FALSE,};
+    GValue val = {0,};
     GValue ival = {0,};
 
     value = gtk_toggle_button_get_active(button);
