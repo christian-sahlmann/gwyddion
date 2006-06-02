@@ -972,4 +972,20 @@ gwy_app_gl_view_maybe_cb(void)
     gtk_widget_show(dialog);
 }
 
+GtkWidget*
+gwy_app_data_browser_create(void)
+{
+    GtkWindow *browser;
+    GtkWidget *widget;
+
+    widget = gwy_app_data_browser_get_window();
+    browser = GTK_WINDOW(widget);
+    gwy_app_restore_window_position(browser, "/app/data-browser", FALSE);
+    gtk_widget_show_all(widget);
+    gtk_window_present(browser);
+    gwy_app_restore_window_position(browser, "/app/data-browser", FALSE);
+
+    return widget;
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

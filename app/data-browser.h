@@ -78,6 +78,7 @@ void   gwy_app_set_data_field_title         (GwyContainer *data,
                                              gint id,
                                              const gchar *name);
 /* XXX */
+GtkWidget* gwy_app_data_browser_get_window  (void);
 void   gwy_app_data_browser_shut_down       (void);
 GdkPixbuf* gwy_app_get_channel_thumbnail    (GwyContainer *data,
                                              gint id,

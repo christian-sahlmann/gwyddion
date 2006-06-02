@@ -52,7 +52,8 @@ typedef enum {
 /* Notebook pages */
 enum {
     PAGE_CHANNELS,
-    PAGE_GRAPHS
+    PAGE_GRAPHS,
+    NPAGES
 };
 
 /* Sensitivity flags */
@@ -75,7 +76,7 @@ typedef struct _GwyAppDataProxy   GwyAppDataProxy;
 
 /* Channel or graph list */
 typedef struct {
-    GtkListStore *list;
+    GtkListStore *store;
     gint last;  /* The id of last object, if no object is present, it is equal
                    to the smallest possible id minus 1 */
     gint active;
@@ -90,8 +91,7 @@ struct _GwyAppDataBrowser {
     GtkWidget *filename;
     GtkWidget *window;
     GtkWidget *notebook;
-    GtkWidget *channels;
-    GtkWidget *graphs;
+    GtkWidget *lists[NPAGES];
 };
 
 /* The proxy associated with each Container (this is non-GUI object) */
@@ -100,8 +100,7 @@ struct _GwyAppDataProxy {
     gint refcount;    /* the number of views we manage */
     guint deserted_id;
     GwyContainer *container;
-    GwyAppDataList channels;
-    GwyAppDataList graphs;
+    GwyAppDataList lists[NPAGES];
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -233,7 +232,7 @@ gwy_app_data_proxy_connect_object(GwyAppDataList *list,
 {
     GtkTreeIter iter;
 
-    gtk_list_store_insert_with_values(list->list, &iter, G_MAXINT,
+    gtk_list_store_insert_with_values(list->store, &iter, G_MAXINT,
                                       MODEL_ID, i,
                                       MODEL_OBJECT, object,
                                       MODEL_WIDGET, NULL,
@@ -257,7 +256,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_connect_object(&proxy->channels, i, object);
+    gwy_app_data_proxy_connect_object(&proxy->lists[PAGE_CHANNELS], i, object);
     g_snprintf(key, sizeof(key), "/%d/data", i);
     gwy_debug("Setting keys on DataField %p (%s)", object, key);
     quark = g_quark_from_string(key);
@@ -274,14 +273,14 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
 {
     GObject *object;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
     g_signal_handlers_disconnect_by_func(object,
                                          gwy_app_data_proxy_channel_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->channels.list, iter);
+    gtk_list_store_remove(proxy->lists[PAGE_CHANNELS].store, iter);
 }
 
 static void
@@ -291,7 +290,7 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
 {
     GObject *old;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &old,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
@@ -301,7 +300,7 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
                        g_object_get_qdata(old, container_quark));
     g_object_set_qdata(object, own_key_quark,
                        g_object_get_qdata(old, own_key_quark));
-    gtk_list_store_set(proxy->channels.list, iter,
+    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "data-changed",
@@ -324,7 +323,7 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
     gchar key[32];
     GQuark quark;
 
-    gwy_app_data_proxy_connect_object(&proxy->graphs, i, object);
+    gwy_app_data_proxy_connect_object(&proxy->lists[PAGE_GRAPHS], i, object);
     g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
     gwy_debug("Setting keys on GraphModel %p (%s)", object, key);
     quark = g_quark_from_string(key);
@@ -341,14 +340,14 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
 {
     GObject *object;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->graphs.list), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
     g_signal_handlers_disconnect_by_func(object,
                                          gwy_app_data_proxy_graph_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->graphs.list, iter);
+    gtk_list_store_remove(proxy->lists[PAGE_GRAPHS].store, iter);
 }
 
 static void
@@ -358,7 +357,7 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
 {
     GObject *old;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->graphs.list), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
                        MODEL_OBJECT, &old,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
@@ -368,7 +367,7 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
                        g_object_get_qdata(old, container_quark));
     g_object_set_qdata(object, own_key_quark,
                        g_object_get_qdata(old, own_key_quark));
-    gtk_list_store_set(proxy->graphs.list, iter,
+    gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "layout-updated", /* FIXME */
@@ -515,6 +514,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                                 GwyAppDataProxy *proxy)
 {
     GObject *object = NULL;
+    GwyAppDataList *list;
     const gchar *strkey;
     GwyAppKeyType type;
     GtkTreeIter iter;
@@ -530,7 +530,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     gwy_container_gis_object(data, quark, &object);
     switch (type) {
         case KEY_IS_DATA:
-        found = gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter);
+        list = &proxy->lists[PAGE_CHANNELS];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         gwy_debug("Channel <%s>: %s in container, %s in list store",
                   strkey,
                   object ? "present" : "missing",
@@ -542,12 +543,13 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_disconnect_channel(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_channel(proxy, &iter, object);
-            emit_row_changed(proxy->channels.list, &iter);
+            emit_row_changed(list->store, &iter);
         }
         break;
 
         case KEY_IS_GRAPH:
-        found = gwy_app_data_proxy_find_object(proxy->graphs.list, i, &iter);
+        list = &proxy->lists[PAGE_GRAPHS];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         gwy_debug("Graph <%s>: %s in container, %s in list store",
                   strkey,
                   object ? "present" : "missing",
@@ -559,17 +561,18 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_disconnect_graph(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_graph(proxy, &iter, object);
-            emit_row_changed(proxy->channels.list, &iter);
+            emit_row_changed(list->store, &iter);
         }
         break;
 
         case KEY_IS_MASK:
         case KEY_IS_SHOW:
         /* FIXME */
-        found = gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter);
+        list = &proxy->lists[PAGE_CHANNELS];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         if (found) {
-            emit_row_changed(proxy->channels.list, &iter);
-            gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
+            emit_row_changed(proxy->lists[PAGE_CHANNELS].store, &iter);
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
             /* XXX: This is not a good place to do that, DataProxy should be
@@ -617,14 +620,12 @@ gwy_app_data_proxy_deserted(GwyAppDataProxy *proxy)
     gwy_debug("Freeing proxy for Container %p", proxy->container);
     browser->proxy_list = g_list_remove(browser->proxy_list, proxy);
 
-    gwy_app_data_proxy_finalize_list(GTK_TREE_MODEL(proxy->channels.list),
-                                     MODEL_OBJECT,
-                                     &gwy_app_data_proxy_channel_changed,
-                                     proxy);
-    gwy_app_data_proxy_finalize_list(GTK_TREE_MODEL(proxy->graphs.list),
-                                     MODEL_OBJECT,
-                                     &gwy_app_data_proxy_graph_changed,
-                                     proxy);
+    gwy_app_data_proxy_finalize_list
+        (GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store),
+         MODEL_OBJECT, &gwy_app_data_proxy_channel_changed, proxy);
+    gwy_app_data_proxy_finalize_list
+        (GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store),
+         MODEL_OBJECT, &gwy_app_data_proxy_graph_changed, proxy);
     g_object_unref(proxy->container);
     g_free(proxy);
 
@@ -650,12 +651,12 @@ gwy_app_data_proxy_unref(GwyAppDataProxy *proxy)
 static void
 gwy_app_data_proxy_list_setup(GwyAppDataList *list)
 {
-    list->list = gtk_list_store_new(MODEL_N_COLUMNS,
+    list->store = gtk_list_store_new(MODEL_N_COLUMNS,
                                     G_TYPE_INT,
                                     G_TYPE_OBJECT,
                                     G_TYPE_OBJECT);
-    gwy_debug_objects_creation(G_OBJECT(list->list));
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(list->list),
+    gwy_debug_objects_creation(G_OBJECT(list->store));
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(list->store),
                                          MODEL_ID, GTK_SORT_ASCENDING);
     list->last = -1;
     list->active = -1;
@@ -679,7 +680,7 @@ gwy_app_data_list_update_last(GwyAppDataList *list,
     GtkTreeIter iter;
     gint id, max = empty_last;
 
-    model = GTK_TREE_MODEL(list->list);
+    model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
             gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
@@ -710,6 +711,7 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
                        GwyContainer *data)
 {
     GwyAppDataProxy *proxy;
+    guint i;
 
     gwy_debug("Creating proxy for Container %p", data);
     g_object_ref(data);
@@ -720,10 +722,10 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     g_signal_connect_after(data, "item-changed",
                            G_CALLBACK(gwy_app_data_proxy_item_changed), proxy);
 
-    gwy_app_data_proxy_list_setup(&proxy->channels);
-    gwy_app_data_proxy_list_setup(&proxy->graphs);
+    for (i = 0; i < NPAGES; i++)
+        gwy_app_data_proxy_list_setup(&proxy->lists[i]);
     /* For historical reasons, graphs are numbered from 1 */
-    proxy->graphs.last = 0;
+    proxy->lists[PAGE_GRAPHS].last = 0;
 
     gwy_container_foreach(data, NULL, gwy_app_data_proxy_scan_data, proxy);
 
@@ -806,6 +808,18 @@ gwy_app_data_browser_render_visible(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
+gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
+                                       GwyAppDataBrowser *browser)
+{
+    gboolean any;
+
+    any = gtk_tree_selection_get_selected(selection, NULL, NULL);
+    gwy_debug("Any: %d", any);
+    gwy_sensitivity_group_set_state(browser->sensgroup,
+                                    SENS_OBJECT, any ? SENS_OBJECT : 0);
+}
+
+static void
 gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                           GtkCellRenderer *renderer,
                                           GtkTreeModel *model,
@@ -836,22 +850,6 @@ gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
         title = _("Unknown channel");
 
     g_object_set(G_OBJECT(renderer), "text", title, NULL);
-}
-
-static void
-gwy_app_data_browser_channel_selection_changed(GtkTreeSelection *selection,
-                                               GwyAppDataBrowser *browser)
-{
-    gboolean any;
-
-    /* This can happen when data is manipulated programatically */
-    if (browser->active_page != PAGE_CHANNELS)
-        return;
-
-    any = gtk_tree_selection_get_selected(selection, NULL, NULL);
-    gwy_debug("Any channel: %d", any);
-    gwy_sensitivity_group_set_state(browser->sensgroup,
-                                    SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
 
 static void
@@ -899,6 +897,7 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
     GwyAppKeyType type;
     GwyContainer *data;
     GwyDataView *data_view;
@@ -923,13 +922,14 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
-    if (!gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter)) {
+    list = &proxy->lists[PAGE_CHANNELS];
+    if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find data field %p (%d)", dfield, i);
         return TRUE;
     }
 
     gwy_app_data_proxy_unref(proxy);
-    gtk_list_store_set(proxy->channels.list, &iter, MODEL_WIDGET, NULL, -1);
+    gtk_list_store_set(list->store, &iter, MODEL_WIDGET, NULL, -1);
     gwy_app_data_window_remove(data_window);
     gtk_widget_destroy(GTK_WIDGET(data_window));
 
@@ -1095,6 +1095,7 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
                                      GwyAppDataBrowser *browser)
 {
     GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
@@ -1106,8 +1107,9 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
     proxy = browser->current;
     g_return_if_fail(proxy);
 
+    list = &proxy->lists[PAGE_CHANNELS];
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->channels.list);
+    model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
@@ -1121,18 +1123,14 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
     if (!active) {
         widget = gwy_app_data_browser_create_channel(browser, proxy,
                                                      GWY_DATA_FIELD(object));
-        gtk_list_store_set(proxy->channels.list, &iter,
-                           MODEL_WIDGET, widget,
-                           -1);
+        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
     }
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_toplevel(widget);
         gwy_app_data_window_remove(GWY_DATA_WINDOW(window));
         gtk_widget_destroy(window);
-        gtk_list_store_set(proxy->channels.list, &iter,
-                           MODEL_WIDGET, NULL,
-                           -1);
+        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         gwy_app_data_proxy_unref(proxy);
     }
@@ -1198,7 +1196,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     selection = gtk_tree_view_get_selection(treeview);
     g_signal_connect(selection, "changed",
-                     G_CALLBACK(gwy_app_data_browser_channel_selection_changed),
+                     G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
 
     return retval;
@@ -1235,22 +1233,6 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
     g_object_unref(gmodel);
 }
 
-static void
-gwy_app_data_browser_graph_selection_changed(GtkTreeSelection *selection,
-                                             GwyAppDataBrowser *browser)
-{
-    gboolean any;
-
-    /* This can happen when data is manipulated programatically */
-    if (browser->active_page != PAGE_GRAPHS)
-        return;
-
-    any = gtk_tree_selection_get_selected(selection, NULL, NULL);
-    gwy_debug("Any graph: %d", any);
-    gwy_sensitivity_group_set_state(browser->sensgroup,
-                                    SENS_OBJECT, any ? SENS_OBJECT : 0);
-}
-
 /**
  * gwy_app_data_browser_graph_deleted:
  * @graph_window: A graph window that was deleted.
@@ -1267,6 +1249,7 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
     GwyAppKeyType type;
     GwyGraphModel *gmodel;
     GwyContainer *data;
@@ -1290,13 +1273,14 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
-    if (!gwy_app_data_proxy_find_object(proxy->graphs.list, i, &iter)) {
+    list = &proxy->lists[PAGE_GRAPHS];
+    if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find graph model %p (%d)", gmodel, i);
         return TRUE;
     }
 
     gwy_app_data_proxy_unref(proxy);
-    gtk_list_store_set(proxy->graphs.list, &iter, MODEL_WIDGET, NULL, -1);
+    gtk_list_store_set(list->store, &iter, MODEL_WIDGET, NULL, -1);
     gwy_app_graph_window_remove(GTK_WIDGET(graph_window));
     gtk_widget_destroy(GTK_WIDGET(graph_window));
 
@@ -1349,6 +1333,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
                                    GwyAppDataBrowser *browser)
 {
     GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
@@ -1361,7 +1346,8 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->graphs.list);
+    list = &proxy->lists[PAGE_GRAPHS];
+    model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
@@ -1375,18 +1361,14 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     if (!active) {
         widget = gwy_app_data_browser_create_graph(browser, proxy,
                                                    GWY_GRAPH_MODEL(object));
-        gtk_list_store_set(proxy->graphs.list,
-                           &iter, MODEL_WIDGET,
-                           widget, -1);
+        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
     }
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_toplevel(widget);
         gwy_app_graph_window_remove(window);
         gtk_widget_destroy(window);
-        gtk_list_store_set(proxy->graphs.list, &iter,
-                           MODEL_WIDGET, NULL,
-                           -1);
+        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         gwy_app_data_proxy_unref(proxy);
     }
@@ -1452,12 +1434,13 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     selection = gtk_tree_view_get_selection(treeview);
     g_signal_connect(selection, "changed",
-                     G_CALLBACK(gwy_app_data_browser_graph_selection_changed),
+                     G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
 
     return retval;
 }
 
+/* GUI only */
 static void
 gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 {
@@ -1476,20 +1459,7 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
     proxy = browser->current;
     page = browser->active_page;
 
-    switch (page) {
-        case PAGE_CHANNELS:
-        treeview = GTK_TREE_VIEW(browser->channels);
-        break;
-
-        case PAGE_GRAPHS:
-        treeview = GTK_TREE_VIEW(browser->graphs);
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
-
+    treeview = GTK_TREE_VIEW(browser->lists[page]);
     selection = gtk_tree_view_get_selection(treeview);
     if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
         g_warning("Nothing is selected");
@@ -1552,11 +1522,11 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 
     switch (page) {
         case PAGE_CHANNELS:
-        gwy_app_data_list_update_last(&proxy->channels, -1);
+        gwy_app_data_list_update_last(&proxy->lists[PAGE_CHANNELS], -1);
         break;
 
         case PAGE_GRAPHS:
-        gwy_app_data_list_update_last(&proxy->graphs, 0);
+        gwy_app_data_list_update_last(&proxy->lists[PAGE_GRAPHS], 0);
         break;
     }
 }
@@ -1573,7 +1543,7 @@ gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
     g_return_if_fail(proxy);
     proxy->refcount++;
 
-    model = GTK_TREE_MODEL(proxy->channels.list);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
             gtk_tree_model_get(model, &iter, MODEL_WIDGET, &widget, -1);
@@ -1585,7 +1555,7 @@ gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
-    model = GTK_TREE_MODEL(proxy->graphs.list);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
             gtk_tree_model_get(model, &iter, MODEL_WIDGET, &widget, -1);
@@ -1612,23 +1582,9 @@ gwy_app_data_browser_page_changed(GwyAppDataBrowser *browser,
     gwy_debug("Page changed to: %d", pageno);
 
     browser->active_page = pageno;
-    switch (pageno) {
-        case PAGE_CHANNELS:
-        selection
-            = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->channels));
-        gwy_app_data_browser_channel_selection_changed(selection, browser);
-        break;
-
-        case PAGE_GRAPHS:
-        selection
-            = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->graphs));
-        gwy_app_data_browser_graph_selection_changed(selection, browser);
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
+    selection
+        = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->lists[pageno]));
+    gwy_app_data_browser_selection_changed(selection, browser);
 }
 
 static gboolean
@@ -1640,43 +1596,40 @@ gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_WARNING,
                                     GTK_BUTTONS_OK,
-                                    "Write 100 times: I will never try to "
-                                    "close Data Browser again.");
-    gtk_window_set_title(GTK_WINDOW(dialog), "Punishment");
+                                    "FIXME: There is no way to get the "
+                                    "Data Browser window back once it is "
+                                    "closed.");
+    gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
     g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
     gtk_widget_show_all(dialog);
 
     return TRUE;
 }
 
-/**
- * gwy_app_get_data_browser:
- *
- * Gets the application data browser.
- *
- * When it does not exist yet, it is created as a side effect.
- *
- * Returns: The data browser.
- **/
-static GwyAppDataBrowser*
-gwy_app_get_data_browser(void)
+static void
+gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
+{
+    guint i;
+
+    browser->window = NULL;
+    browser->active_page = 0;
+    browser->sensgroup = NULL;
+    browser->filename = NULL;
+    browser->notebook = NULL;
+    for (i = 0; i < NPAGES; i++)
+        browser->lists[i] = NULL;
+}
+
+static void
+gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
 {
     GtkWidget *label, *box_page, *scwin, *vbox, *hbox, *button;
-    GwyAppDataBrowser *browser;
 
-    if (gwy_app_data_browser)
-        return gwy_app_data_browser;
-
-    own_key_quark
-        = g_quark_from_static_string("gwy-app-data-browser-own-key");
-    container_quark
-        = g_quark_from_static_string("gwy-app-data-browser-container");
-
-    /* Window setup */
-    browser = g_new0(GwyAppDataBrowser, 1);
-    gwy_app_data_browser = browser;
     browser->sensgroup = gwy_sensitivity_group_new();
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect_swapped(browser->window, "destroy",
+                             G_CALLBACK(gwy_app_data_browser_window_destroyed),
+                             browser);
 
     gtk_window_set_default_size(GTK_WINDOW(browser->window), 300, 300);
     gtk_window_set_title(GTK_WINDOW(browser->window), _("Data Browser"));
@@ -1686,8 +1639,7 @@ gwy_app_get_data_browser(void)
     gtk_container_add(GTK_CONTAINER(browser->window), vbox);
 
     browser->filename = gtk_label_new(NULL);
-    gtk_label_set_ellipsize(GTK_LABEL(browser->filename),
-                            PANGO_ELLIPSIZE_END);
+    gtk_label_set_ellipsize(GTK_LABEL(browser->filename), PANGO_ELLIPSIZE_END);
     gtk_misc_set_alignment(GTK_MISC(browser->filename), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(browser->filename), 4, 2);
     gtk_box_pack_start(GTK_BOX(vbox), browser->filename, FALSE, FALSE, 0);
@@ -1706,8 +1658,9 @@ gwy_app_get_data_browser(void)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->channels = gwy_app_data_browser_construct_channels(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->channels);
+    browser->lists[PAGE_CHANNELS]
+        = gwy_app_data_browser_construct_channels(browser);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_CHANNELS]);
 
     /* Create Graphs tab */
     box_page = gtk_vbox_new(FALSE, 0);
@@ -1719,8 +1672,9 @@ gwy_app_get_data_browser(void)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->graphs = gwy_app_data_browser_construct_graphs(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->graphs);
+    browser->lists[PAGE_GRAPHS]
+        = gwy_app_data_browser_construct_graphs(browser);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_GRAPHS]);
 
     /* Create the bottom toolbar */
     hbox = gtk_hbox_new(TRUE, 0);
@@ -1747,12 +1701,34 @@ gwy_app_get_data_browser(void)
                              G_CALLBACK(gwy_app_data_browser_deleted), browser);
     g_object_unref(browser->sensgroup);
 
-    gwy_app_restore_window_position(GTK_WINDOW(browser->window),
-                                    "/app/data-browser", FALSE);
-    gtk_widget_show_all(browser->window);
-    gtk_window_present(GTK_WINDOW(browser->window));
-    gwy_app_restore_window_position(GTK_WINDOW(browser->window),
-                                    "/app/data-browser", FALSE);
+    gtk_widget_show_all(vbox);
+}
+
+/**
+ * gwy_app_get_data_browser:
+ *
+ * Gets the application data browser.
+ *
+ * When it does not exist yet, it is created as a side effect.
+ *
+ * Returns: The data browser.
+ **/
+static GwyAppDataBrowser*
+gwy_app_get_data_browser(void)
+{
+    GwyAppDataBrowser *browser;
+
+    if (gwy_app_data_browser)
+        return gwy_app_data_browser;
+
+    own_key_quark
+        = g_quark_from_static_string("gwy-app-data-browser-own-key");
+    container_quark
+        = g_quark_from_static_string("gwy-app-data-browser-container");
+
+    /* Window setup */
+    browser = g_new0(GwyAppDataBrowser, 1);
+    gwy_app_data_browser = browser;
 
     return browser;
 }
@@ -1764,8 +1740,8 @@ gwy_app_data_browser_restore_active(GtkTreeView *treeview,
     GtkTreeSelection *selection;
     GtkTreeIter iter;
 
-    gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(list->list));
-    if (!gwy_app_data_proxy_find_object(list->list, list->active, &iter))
+    gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(list->store));
+    if (!gwy_app_data_proxy_find_object(list->store, list->active, &iter))
         return;
 
     selection = gtk_tree_view_get_selection(treeview);
@@ -1778,36 +1754,63 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     const guchar *filename;
+    guint i;
 
     browser = gwy_app_get_data_browser();
     if (!data) {
-        gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels), NULL);
-        gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs), NULL);
-        gtk_label_set_text(GTK_LABEL(browser->filename), "");
-        gwy_sensitivity_group_set_state(browser->sensgroup,
-                                        SENS_FILE | SENS_OBJECT, 0);
+        if (browser->window) {
+            for (i = 0; i < NPAGES; i++)
+                gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
+            gtk_label_set_text(GTK_LABEL(browser->filename), "");
+            gwy_sensitivity_group_set_state(browser->sensgroup,
+                                            SENS_FILE | SENS_OBJECT, 0);
+        }
         browser->current = NULL;
         return;
     }
+
     if (browser->current && browser->current->container == data)
         return;
 
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
     browser->current = proxy;
-    gwy_app_data_browser_restore_active(GTK_TREE_VIEW(browser->channels),
-                                        &proxy->channels);
-    gwy_app_data_browser_restore_active(GTK_TREE_VIEW(browser->graphs),
-                                        &proxy->graphs);
 
-    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
-        gchar *s;
+    if (browser->window) {
+        for (i = 0; i < NPAGES; i++)
+            gwy_app_data_browser_restore_active
+                          (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
 
-        s = g_path_get_basename(filename);
-        gtk_label_set_text(GTK_LABEL(browser->filename), s);
-        g_free(s);
+        if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+            gchar *s;
+
+            s = g_path_get_basename(filename);
+            gtk_label_set_text(GTK_LABEL(browser->filename), s);
+            g_free(s);
+        }
+        gwy_sensitivity_group_set_state(browser->sensgroup,
+                                        SENS_FILE, SENS_FILE);
     }
-    gwy_sensitivity_group_set_state(browser->sensgroup, SENS_FILE, SENS_FILE);
+}
+
+static void
+gwy_app_data_browser_select_object(GwyAppDataBrowser *browser,
+                                   GwyAppDataProxy *proxy,
+                                   guint pageno)
+{
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+
+    if (!browser->window)
+        return;
+
+    treeview = GTK_TREE_VIEW(browser->lists[pageno]);
+    gwy_app_data_proxy_find_object(proxy->lists[pageno].store,
+                                   proxy->lists[pageno].active, &iter);
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_select_iter(selection, &iter);
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook), pageno);
 }
 
 /**
@@ -1822,10 +1825,8 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
-    GtkTreeSelection *selection;
     GtkWidget *data_window;
     GwyPixmapLayer *layer;
-    GtkTreeIter iter;
     GwyContainer *data;
     const gchar *strkey;
     GwyAppKeyType type;
@@ -1842,13 +1843,9 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_DATA);
-    proxy->channels.active = i;
-    gwy_app_data_proxy_find_object(proxy->channels.list, i, &iter);
+    proxy->lists[PAGE_CHANNELS].active = i;
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->channels));
-    gtk_tree_selection_select_iter(selection, &iter);
-    gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook),
-                                  PAGE_CHANNELS);
+    gwy_app_data_browser_select_object(browser, proxy, PAGE_CHANNELS);
 
     /* FIXME: This updated the other notion of current data */
     data_window = gtk_widget_get_toplevel(GTK_WIDGET(data_view));
@@ -1869,9 +1866,7 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyGraphModel *gmodel;
-    GtkTreeSelection *selection;
     GtkWidget *graph_window;
-    GtkTreeIter iter;
     GwyContainer *data;
     const gchar *strkey;
     GwyAppKeyType type;
@@ -1892,13 +1887,9 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     strkey = g_quark_to_string(quark);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_GRAPH);
-    proxy->graphs.active = i;
-    gwy_app_data_proxy_find_object(proxy->graphs.list, i, &iter);
+    proxy->lists[PAGE_GRAPHS].active = i;
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(browser->graphs));
-    gtk_tree_selection_select_iter(selection, &iter);
-    gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook),
-                                  PAGE_GRAPHS);
+    gwy_app_data_browser_select_object(browser, proxy, PAGE_GRAPHS);
 
     /* FIXME: This updated the other notion of current graph */
     graph_window = gtk_widget_get_toplevel(GTK_WIDGET(graph));
@@ -1921,7 +1912,7 @@ gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
     gint count = 0;
 
     /* Data channels */
-    model = GTK_TREE_MODEL(proxy->channels.list);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
             visible = FALSE;
@@ -1934,7 +1925,7 @@ gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
             if (visible) {
                 widget = gwy_app_data_browser_create_channel(proxy->parent,
                                                              proxy, dfield);
-                gtk_list_store_set(proxy->channels.list, &iter,
+                gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
                                    MODEL_WIDGET, widget,
                                    -1);
                 count++;
@@ -1944,7 +1935,7 @@ gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
     }
 
     /* Graphs */
-    model = GTK_TREE_MODEL(proxy->graphs.list);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
             visible = FALSE;
@@ -1957,7 +1948,7 @@ gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
             if (visible) {
                 widget = gwy_app_data_browser_create_graph(proxy->parent,
                                                            proxy, gmodel);
-                gtk_list_store_set(proxy->graphs.list, &iter,
+                gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, &iter,
                                    MODEL_WIDGET, widget,
                                    -1);
                 count++;
@@ -1985,6 +1976,7 @@ void
 gwy_app_data_browser_add(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
+    GwyAppDataList *list;
     GwyAppDataProxy *proxy;
     GtkWidget *widget;
     GtkTreeIter iter;
@@ -1998,15 +1990,14 @@ gwy_app_data_browser_add(GwyContainer *data)
     /* Show first window
      * XXX: crude */
     if (!gwy_app_data_browser_reconstruct_visibility(proxy)) {
-        if (gwy_app_data_proxy_find_object(proxy->channels.list, 0, &iter)) {
-            gtk_tree_model_get(GTK_TREE_MODEL(proxy->channels.list), &iter,
+        list = &proxy->lists[PAGE_CHANNELS];
+        if (gwy_app_data_proxy_find_object(list->store, 0, &iter)) {
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_OBJECT, &dfield,
                                -1);
             widget = gwy_app_data_browser_create_channel(browser, proxy,
                                                          dfield);
-            gtk_list_store_set(proxy->channels.list, &iter,
-                               MODEL_WIDGET, widget,
-                               -1);
+            gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
             g_object_unref(dfield);
         }
         else {
@@ -2035,6 +2026,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
     gchar key[32];
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), -1);
@@ -2047,25 +2039,22 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
         proxy = browser->current;
     g_return_val_if_fail(proxy, -1);
 
-    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, proxy->graphs.last + 1);
+    list = &proxy->lists[PAGE_GRAPHS];
+    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->graphs.last. */
+     * Among other things, it will update proxy->lists[PAGE_GRAPHS].last. */
     gwy_container_set_object_by_name(proxy->container, key, gmodel);
 
     if (showit) {
         GtkWidget *widget;
         GtkTreeIter iter;
 
-        gwy_app_data_proxy_find_object(proxy->graphs.list,
-                                       proxy->graphs.last,
-                                       &iter);
+        gwy_app_data_proxy_find_object(list->store, list->last, &iter);
         widget = gwy_app_data_browser_create_graph(browser, proxy, gmodel);
-        gtk_list_store_set(proxy->graphs.list, &iter,
-                           MODEL_WIDGET, widget,
-                           -1);
+        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
     }
 
-    return proxy->graphs.last;
+    return list->last;
 }
 
 /**
@@ -2086,6 +2075,7 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
     gchar key[24];
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), -1);
@@ -2098,25 +2088,22 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
         proxy = browser->current;
     g_return_val_if_fail(proxy, -1);
 
-    g_snprintf(key, sizeof(key), "/%d/data", proxy->channels.last + 1);
+    list = &proxy->lists[PAGE_CHANNELS];
+    g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->channels.last. */
+     * Among other things, it will update proxy->lists[PAGE_CHANNELS].last. */
     gwy_container_set_object_by_name(proxy->container, key, dfield);
 
     if (showit) {
         GtkWidget *widget;
         GtkTreeIter iter;
 
-        gwy_app_data_proxy_find_object(proxy->channels.list,
-                                       proxy->channels.last,
-                                       &iter);
+        gwy_app_data_proxy_find_object(list->store, list->last, &iter);
         widget = gwy_app_data_browser_create_channel(browser, proxy, dfield);
-        gtk_list_store_set(proxy->channels.list, &iter,
-                           MODEL_WIDGET, widget,
-                           -1);
+        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
     }
 
-    return proxy->channels.last;
+    return list->last;
 }
 
 /**
@@ -2281,8 +2268,8 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
     browser = gwy_app_data_browser;
     if (browser) {
         current = browser->current;
-        channels = &current->channels;
-        graphs = &current->graphs;
+        channels = &current->lists[PAGE_CHANNELS];
+        graphs = &current->lists[PAGE_GRAPHS];
     }
 
     do {
@@ -2315,9 +2302,9 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             case GWY_APP_SHOW_FIELD_KEY:
             if (!dfield
                 && current
-                && gwy_app_data_proxy_find_object(channels->list,
+                && gwy_app_data_proxy_find_object(channels->store,
                                                   channels->active, &iter)) {
-                gtk_tree_model_get(GTK_TREE_MODEL(channels->list), &iter,
+                gtk_tree_model_get(GTK_TREE_MODEL(channels->store), &iter,
                                    MODEL_OBJECT, &object, -1);
                 dfield = object;
                 g_object_unref(object);
@@ -2388,9 +2375,9 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             case GWY_APP_GRAPH_MODEL_ID:
             if (!gmodel
                 && current
-                && gwy_app_data_proxy_find_object(graphs->list,
+                && gwy_app_data_proxy_find_object(graphs->store,
                                                   graphs->active, &iter)) {
-                gtk_tree_model_get(GTK_TREE_MODEL(graphs->list), &iter,
+                gtk_tree_model_get(GTK_TREE_MODEL(graphs->store), &iter,
                                    MODEL_OBJECT, &object, -1);
                 gmodel = object;
                 g_object_unref(object);
@@ -2430,14 +2417,24 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 }
 
 static gint*
-gwy_app_data_list_get_objects(GwyAppDataList *list)
+gwy_app_data_list_get_object_ids(GwyContainer *data,
+                                 guint pageno)
 {
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
     GtkTreeModel *model;
     GtkTreeIter iter;
     gint *ids;
     gint n;
 
-    model = GTK_TREE_MODEL(list->list);
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    if (!proxy) {
+        g_warning("Nothing is known about Container %p", data);
+        return NULL;
+    }
+
+    model = GTK_TREE_MODEL(proxy->lists[pageno].store);
     n = gtk_tree_model_iter_n_children(model, NULL);
     ids = g_new(gint, n+1);
     ids[n] = -1;
@@ -2466,17 +2463,7 @@ gwy_app_data_list_get_objects(GwyAppDataList *list)
 gint*
 gwy_app_data_browser_get_data_ids(GwyContainer *data)
 {
-    GwyAppDataBrowser *browser;
-    GwyAppDataProxy *proxy;
-
-    browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
-    if (!proxy) {
-        g_warning("Nothing is known about Container %p", data);
-        return NULL;
-    }
-
-    return gwy_app_data_list_get_objects(&proxy->channels);
+    return gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS);
 }
 
 /**
@@ -2492,17 +2479,7 @@ gwy_app_data_browser_get_data_ids(GwyContainer *data)
 gint*
 gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 {
-    GwyAppDataBrowser *browser;
-    GwyAppDataProxy *proxy;
-
-    browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
-    if (!proxy) {
-        g_warning("Nothing is known about Container %p", data);
-        return NULL;
-    }
-
-    return gwy_app_data_list_get_objects(&proxy->graphs);
+    return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS);
 }
 
 /**
@@ -2607,10 +2584,33 @@ gwy_app_copy_data_items(GwyContainer *source,
     va_end(ap);
 }
 
+/**
+ * gwy_app_data_browser_get_window:
+ *
+ * Gets the data browser window.
+ *
+ * If the window does not exist, it is created (though not shown) as a side
+ * effect.
+ *
+ * Returns: The data browser window.
+ **/
+GtkWidget*
+gwy_app_data_browser_get_window(void)
+{
+    GwyAppDataBrowser *browser;
+
+    browser = gwy_app_get_data_browser();
+    if (!browser->window)
+        gwy_app_data_browser_construct_window(browser);
+
+    return browser->window;
+}
+
 void
 gwy_app_data_browser_shut_down(void)
 {
     GwyAppDataBrowser *browser;
+    guint i;
 
     browser = gwy_app_data_browser;
     if (!browser)
@@ -2625,8 +2625,11 @@ gwy_app_data_browser_shut_down(void)
         browser->current = (GwyAppDataProxy*)browser->proxy_list->data;
         gwy_app_data_browser_close_file(browser);
     }
-    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->channels), NULL);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->graphs), NULL);
+
+    if (browser->window) {
+        for (i = 0; i < NPAGES; i++)
+            gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
+    }
 }
 
 /************** FIXME: where this belongs to? ***************************/
