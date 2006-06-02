@@ -69,6 +69,8 @@ struct _GwyGraph {
 
     gulong notify_id;
     gulong layout_updated_id;
+    gulong rescaled_left_id;
+    gulong rescaled_bottom_id;
 
     gpointer reserved1;
     gpointer reserved2;

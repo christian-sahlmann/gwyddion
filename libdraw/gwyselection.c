@@ -25,6 +25,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwyselection.h>
 
+
 enum {
     PROP_0,
     PROP_OBJECT_SIZE,

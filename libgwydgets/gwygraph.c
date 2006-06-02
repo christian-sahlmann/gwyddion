@@ -160,9 +160,9 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
     gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
 
-    g_signal_connect(graph->axis_left, "rescaled",
+    graph->rescaled_left_id = g_signal_connect(graph->axis_left, "rescaled",
                      G_CALLBACK(rescaled_cb), graph);
-    g_signal_connect(graph->axis_bottom, "rescaled",
+    graph->rescaled_bottom_id = g_signal_connect(graph->axis_bottom, "rescaled",
                      G_CALLBACK(rescaled_cb), graph);
 
     g_signal_connect(graph->axis_left, "label-updated",

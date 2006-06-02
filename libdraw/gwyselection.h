@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 typedef struct _GwySelection      GwySelection;
 typedef struct _GwySelectionClass GwySelectionClass;
 
+
 struct _GwySelection {
     GObject parent_instance;
 
@@ -78,6 +79,8 @@ struct _GwySelectionClass {
                     gint i);
     void (*finished)(GwySelection *selection);
 };
+
+
 
 GType    gwy_selection_get_type       (void) G_GNUC_CONST;
 guint    gwy_selection_get_object_size(GwySelection *selection);

@@ -330,8 +330,9 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     pango_font_description_set_weight(axis->par.label_font, PANGO_WEIGHT_NORMAL);
     pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
 
-    g_signal_connect_swapped(axis, "notify", G_CALLBACK(gwy_axis_refresh), axis);
-    
+    axis->notify_id = g_signal_connect_swapped(axis, "notify", G_CALLBACK(gwy_axis_refresh), axis);
+    g_signal_handler_disconnect(axis, axis->notify_id);
+    axis->notify_id = g_signal_connect_swapped(axis, "notify", G_CALLBACK(gwy_axis_refresh), axis);
     return GTK_WIDGET(axis);
 }
 
@@ -341,7 +342,7 @@ gwy_axis_finalize(GObject *object)
     GwyAxis *axis;
 
     gwy_debug("finalizing a GwyAxis (refcount = %u)", object->ref_count);
-
+    
     g_return_if_fail(GWY_IS_AXIS(object));
 
     axis = GWY_AXIS(object);
@@ -370,7 +371,8 @@ gwy_axis_unrealize(GtkWidget *widget)
     GwyAxis *axis;
 
     axis = GWY_AXIS(widget);
-
+    g_signal_handler_disconnect(axis, axis->notify_id);
+ 
     if (GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize(widget);
 }

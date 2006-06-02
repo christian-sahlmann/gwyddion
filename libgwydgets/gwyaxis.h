@@ -105,6 +105,9 @@ struct _GwyAxis {
     GtkWidget *dialog;      /*axis label and other properties dialog*/
 
     gboolean enable_label_edit;
+
+    gulong notify_id;
+
     gpointer reserved1;
     gpointer reserved2;
 };
