@@ -38,6 +38,7 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 #define Nanometer (1e-9)
+#define Micrometer (1e-6)
 #define Milivolt (1e-3)
 
 enum {
@@ -192,8 +193,8 @@ pni_load(const gchar *filename,
     direction = p[DIRECTION_OFFSET];
 
     p = buffer + DATA_HEADER_START + REAL_SIZE_OFFSET;
-    xreal = get_FLOAT_LE(&p) * Nanometer;
-    yreal = get_FLOAT_LE(&p) * Nanometer;
+    xreal = get_FLOAT_LE(&p) * Micrometer;
+    yreal = get_FLOAT_LE(&p) * Micrometer;
 
     p = buffer + DATA_HEADER_START + VALUE_SCALE_OFFSET;
     zscale = get_FLOAT_LE(&p);
