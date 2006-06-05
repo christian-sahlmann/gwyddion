@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 # = Gwyddion plug-in proxy dump dumb file format handling.
 #
 # Written by Nenad Ocelic <ocelic _at_ biochem.mpg.de>.

@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """Gwyddion plug-in proxy dump dumb file format handling."""
 
 # @(#) $Id$
