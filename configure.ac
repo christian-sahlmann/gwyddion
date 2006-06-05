@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[1])
 m4_define([gwy_version_minor],[99])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.7cvs20060528])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.7cvs20060605])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -53,7 +53,7 @@ AC_CONFIG_FILES(\
   data/gwyddion.pc \
   data/config.h.win32 \
 )
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_TARGET
 dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
@@ -78,7 +78,6 @@ F77=no
 AC_PROG_CC
 AC_AIX
 AC_GNU_SOURCE
-AC_ISC_POSIX
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AM_PROG_CC_STDC
@@ -346,8 +345,6 @@ AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
 
 #############################################################################
 # Check for header files.
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
@@ -360,11 +357,8 @@ AC_CHECK_HEADERS( \
 
 #############################################################################
 # Check for typedefs, structures, and compiler characteristics.
-AC_C_CONST
 AC_C_INLINE
 AC_STRUCT_TM
-AC_TYPE_SIZE_T
-AC_TYPE_SIGNAL
 
 #############################################################################
 # Check for library functions.

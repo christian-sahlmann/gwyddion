@@ -20,24 +20,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
+#ifdef TM_IN_SYS_TIME
+#include <sys/time.h>
+#endif
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#if (defined(HAVE_TIME_H) || defined(G_OS_WIN32))
-#include <time.h>
-#endif
-
-#ifdef TM_IN_SYS_TIME
-#include <sys/time.h>
-#endif
 
 #include "err.h"
 #include "get.h"
