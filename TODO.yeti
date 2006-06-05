@@ -1,20 +1,15 @@
 - Check where we lost support for offsets during tool reworking
+- Module loader confsed by duplicte functions, crashes
 - Fix current-data race conditions in modules, must take all current items
   on startup, windows can be switched while module is running
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
+- Surf file: bugs I sent to PK were never addressed
 - 3D View still not MVCized
 - 3D:
   light source grid not visible on some machines?
 - GwyColorAxis needs overhaul
-- Graphs:
-  graph titles don't work
-  property get/set not implemented
-  kill global last_status in gwygraphwindow
-  gwy_graph_model_get_*_siunit return copies -- why? (set() also sets copies)
-  selection API is strange and partially duplicated between Graph and GraphArea
-  stray "layout-updated" signal in GwyGraphModel
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
   complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
