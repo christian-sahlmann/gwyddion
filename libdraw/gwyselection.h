@@ -80,7 +80,8 @@ struct _GwySelectionClass {
     void (*finished)(GwySelection *selection);
 };
 
-
+#define gwy_selection_duplicate(selection) \
+        (GWY_SELECTION(gwy_serializable_duplicate(G_OBJECT(selection))))
 
 GType    gwy_selection_get_type       (void) G_GNUC_CONST;
 guint    gwy_selection_get_object_size(GwySelection *selection);
