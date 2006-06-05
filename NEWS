@@ -1,8 +1,24 @@
-1.99.7cvs20060528
+1.99.7cvs20060605
 
 1.99.8 (0000-00-00)
+Application:
+- Crash on app exit when Document history is open was fixed.
+- Recent files menu items have thumbnails.
+
 Libraries:
 - libgwyddion: Version information is now available.
+- libgwyapp: Data browser can be used without window creation and its window
+  can be controlled.
+- libgwyapp: Long broken window-list option menu was superseded by
+  GwyDataChooser and removed.
+- libgwyapp: Settings file manipulation function report problems via GError.
+- libgwyapp: gwy_app_init_common() for simplier initialization of Gwyddion
+  applications.
+
+Modules:
+- PNI file (new): Pacific Nanotechnology PNI file import.
+- Tip dilation, reconstruction and certainty map were merged to one: tipops
+  (but it still provides three distinct functions).
 
 
 1.99.7 (2006-05-28)
