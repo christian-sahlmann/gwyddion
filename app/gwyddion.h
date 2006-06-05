@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,6 @@ GtkWidget* gwy_app_toolbox_create            (void);
 GtkWidget* gwy_app_data_browser_create       (void);
 void       gwy_app_about                     (void);
 void       gwy_app_metadata_browser          (GwyDataWindow *data_window);
-void       gwy_app_init                      (int *argc,
-                                              char ***argv);
 
 void       gwy_app_splash_create             (void);
 void       gwy_app_splash_close              (void);

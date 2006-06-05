@@ -41,10 +41,8 @@ process_LTLIBRARIES = \
 	slope_dist.la \
 	sphere-revolve.la \
 	tip_blind.la \
-	tip_dilation.la \
-	tip_map.la \
 	tip_model.la \
-	tip_reconstruction.la \
+	tipops.la \
 	unrotate.la
 
 
@@ -224,17 +222,11 @@ sphere_revolve_la_LIBADD = $(module_libadd)
 tip_blind_la_SOURCES = tip_blind.c
 tip_blind_la_LIBADD = $(module_libadd)
 
-tip_dilation_la_SOURCES = tip_dilation.c
-tip_dilation_la_LIBADD = $(module_libadd)
-
-tip_map_la_SOURCES = tip_map.c
-tip_map_la_LIBADD = $(module_libadd)
-
 tip_model_la_SOURCES = tip_model.c
 tip_model_la_LIBADD = $(module_libadd)
 
-tip_reconstruction_la_SOURCES = tip_reconstruction.c
-tip_reconstruction_la_LIBADD = $(module_libadd)
+tipops_la_SOURCES = tipops.c
+tipops_la_LIBADD = $(module_libadd)
 
 unrotate_la_SOURCES = unrotate.c
 unrotate_la_LIBADD = $(module_libadd)

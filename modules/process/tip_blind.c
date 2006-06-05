@@ -28,7 +28,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define TIP_BLIND_RUN_MODES GWY_RUN_IMMEDIATE
+#define TIP_BLIND_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
     MIN_RES = 3,
@@ -42,6 +42,7 @@ typedef struct {
     gboolean use_boundaries;
     gboolean same_resolution;
     GwyContainer *data;
+    gint id;
 } TipBlindArgs;
 
 typedef struct {
@@ -49,7 +50,6 @@ typedef struct {
     GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *data;
-    GwyDataWindow *data_window;
     GtkWidget *type;
     GtkObject *threshold;
     GtkWidget *threshold_spin;
@@ -70,7 +70,7 @@ typedef struct {
 static gboolean    module_register            (void);
 static void        tip_blind                  (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    tip_blind_dialog           (TipBlindArgs *args,
+static void        tip_blind_dialog           (TipBlindArgs *args,
                                                GwyContainer *data);
 static void        reset                      (TipBlindControls *controls,
                                                TipBlindArgs *args);
@@ -94,7 +94,7 @@ static void        bound_changed_cb           (GtkToggleButton *button,
                                                TipBlindArgs *args);
 static void        same_resolution_changed_cb (GtkToggleButton *button,
                                                TipBlindControls *controls);
-static void        data_window_cb             (GtkWidget *item,
+static void        data_changed_cb            (GwyDataChooser *chooser,
                                                TipBlindControls *controls);
 static void        tip_update                 (TipBlindControls *controls,
                                                TipBlindArgs *args);
@@ -114,6 +114,7 @@ static const TipBlindArgs tip_blind_defaults = {
     FALSE,
     TRUE,
     NULL,
+    -1,
 };
 
 static GwyModuleInfo module_info = {
@@ -148,15 +149,15 @@ tip_blind(GwyContainer *data, GwyRunType run)
     TipBlindArgs args;
 
     g_return_if_fail(run & TIP_BLIND_RUN_MODES);
+
     tip_blind_load_args(gwy_app_settings_get(), &args);
     args.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.id, 0);
     tip_blind_dialog(&args, data);
     tip_blind_save_args(gwy_app_settings_get(), &args);
 }
 
-/* FIXME: What is the return value good for when tip_blind_dialog() does all
- * the work itself? */
-static gboolean
+static void
 tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 {
     enum {
@@ -169,7 +170,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GwySIUnit *unit;
-    gint response, row, id;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Blind Tip Estimation"), NULL, 0,
                                          _("Run _Partial"), RESPONSE_PARTIAL,
@@ -196,9 +197,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.vyres = 200;
 
     /*set initial tip properties*/
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
 
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, args->xres, args->yres,
@@ -207,16 +206,14 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     /*set up data of rescaled image of the tip*/
     controls.vtip = gwy_container_new();
-    gwy_app_copy_data_items(data, controls.vtip, id, 0,
+    gwy_app_copy_data_items(data, controls.vtip, args->id, 0,
                             GWY_DATA_ITEM_PALETTE,
                             0);
 
     dfield = gwy_data_field_new_alike(controls.tip, TRUE);
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
-    gwy_container_set_object_by_name(controls.vtip,
-                                      "/0/data",
-                                      dfield);
+    gwy_container_set_object_by_name(controls.vtip, "/0/data", dfield);
 
     /*set up rescaled image of the tip*/
     controls.view = gwy_data_view_new(controls.vtip);
@@ -235,10 +232,11 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
-    controls.data_window = gwy_app_data_window_get_current();
-    controls.data
-        = gwy_option_menu_data_window(G_CALLBACK(data_window_cb), &controls,
-                                      NULL, GTK_WIDGET(controls.data_window));
+    controls.data = gwy_data_chooser_new_channels();
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.data),
+                                args->data, args->id);
+    g_signal_connect(controls.data, "changed",
+                     G_CALLBACK(data_changed_cb), &controls);
     gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
                             GTK_OBJECT(controls.data), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -318,7 +316,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -346,7 +344,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_widget_destroy(dialog);
     tip_blind_dialog_abandon(&controls);
 
-    return TRUE;
+    return;
 }
 
 static void
@@ -462,11 +460,11 @@ same_resolution_changed_cb(GtkToggleButton *button,
 }
 
 static void
-data_window_cb(GtkWidget *item, TipBlindControls *controls)
+data_changed_cb(GwyDataChooser *chooser,
+                TipBlindControls *controls)
 {
-    controls->data_window = (GwyDataWindow*)g_object_get_data(G_OBJECT(item),
-                                                              "data-window");
-    controls->args->data = gwy_data_window_get_data(controls->data_window);
+    controls->args->data = gwy_data_chooser_get_active(chooser,
+                                                       &controls->args->id);
 }
 
 static void
@@ -519,31 +517,32 @@ tip_blind_run(TipBlindControls *controls,
               gboolean full)
 {
     GwyDataField *surface;
-    GwyContainer *data;
+    GQuark quark;
     gint count = -1;
 
-    data = args->data;
-    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                              "/0/data"));
+    quark = gwy_app_get_data_key_for_id(args->id);
+    surface = GWY_DATA_FIELD(gwy_container_get_object(args->data, quark));
     gwy_app_wait_start(controls->dialog, _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
     prepare_fields(controls->tip, surface, args->xres, args->yres);
     if (full) {
-        controls->tip = gwy_tip_estimate_full(controls->tip, surface, args->thresh,
-                                         args->use_boundaries,
-                                         &count,
-                                         gwy_app_wait_set_fraction,
-                                         gwy_app_wait_set_message);
+        controls->tip = gwy_tip_estimate_full(controls->tip,
+                                              surface, args->thresh,
+                                              args->use_boundaries,
+                                              &count,
+                                              gwy_app_wait_set_fraction,
+                                              gwy_app_wait_set_message);
         controls->good_tip = (controls->tip != NULL && count > 0);
     }
     else {
         gwy_data_field_fill(controls->tip, 0);
-        controls->tip = gwy_tip_estimate_partial(controls->tip, surface, args->thresh,
-                                            args->use_boundaries,
-                                            &count,
-                                            gwy_app_wait_set_fraction,
-                                            gwy_app_wait_set_message);
+        controls->tip = gwy_tip_estimate_partial(controls->tip,
+                                                 surface, args->thresh,
+                                                 args->use_boundaries,
+                                                 &count,
+                                                 gwy_app_wait_set_fraction,
+                                                 gwy_app_wait_set_message);
         controls->good_tip = (controls->tip != NULL && count > 0);
     }
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
@@ -578,9 +577,11 @@ tip_blind_do(TipBlindControls *controls,
 {
     gint newid;
 
-    newid = gwy_app_data_browser_add_data_field(controls->tip, args->data, TRUE);
+    newid = gwy_app_data_browser_add_data_field(controls->tip,
+                                                args->data, TRUE);
     g_object_unref(controls->tip);
-    gwy_app_copy_data_items(args->data, args->data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_copy_data_items(args->data, args->data, 0, newid,
+                            GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->data, newid, _("Estimated tip"));
     controls->tipdone = TRUE;
 }

@@ -111,6 +111,8 @@ static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
 static void gwy_app_data_browser_sync_show  (GwyContainer *data,
                                              GQuark quark,
                                              GwyDataView *data_view);
+const gchar* gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
+                                                           gint channel);
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
@@ -827,28 +829,14 @@ gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
                                           gpointer userdata)
 {
     GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
-    const guchar *title = NULL;
+    const guchar *title;
     GwyContainer *data;
-    gchar key[32];
     gint channel;
 
     /* XXX: browser->current must match what is visible in the browser */
     data = browser->current->container;
-
     gtk_tree_model_get(model, iter, MODEL_ID, &channel, -1);
-    g_snprintf(key, sizeof(key), "/%i/data/title", channel);
-    gwy_container_gis_string_by_name(data, key, &title);
-    if (!title) {
-        g_snprintf(key, sizeof(key), "/%i/data/untitled", channel);
-        gwy_container_gis_string_by_name(data, key, &title);
-    }
-    /* Support 1.x titles */
-    if (!title)
-        gwy_container_gis_string_by_name(data, "/filename/title", &title);
-
-    if (!title)
-        title = _("Unknown channel");
-
+    title = gwy_app_data_browser_figure_out_channel_title(data, channel);
     g_object_set(G_OBJECT(renderer), "text", title, NULL);
 }
 
@@ -2005,7 +1993,10 @@ gwy_app_data_browser_add(GwyContainer *data)
                       "It will be likely finalized right away.");
         }
     }
-    gwy_sensitivity_group_set_state(browser->sensgroup, SENS_FILE, SENS_FILE);
+
+    if (browser->sensgroup)
+        gwy_sensitivity_group_set_state(browser->sensgroup,
+                                        SENS_FILE, SENS_FILE);
 }
 
 /**
@@ -2219,6 +2210,52 @@ gwy_app_set_data_field_title(GwyContainer *data,
     title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
     g_snprintf(key, sizeof(key), "/%i/data/title", id);
     gwy_container_set_string_by_name(data, key, title);
+}
+
+const gchar*
+gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
+                                              gint channel)
+{
+    const guchar *title = NULL;
+    static gchar buf[80];
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    g_return_val_if_fail(channel >= 0, NULL);
+
+    g_snprintf(buf, sizeof(buf), "/%i/data/title", channel);
+    gwy_container_gis_string_by_name(data, buf, &title);
+    if (!title) {
+        g_snprintf(buf, sizeof(buf), "/%i/data/untitled", channel);
+        gwy_container_gis_string_by_name(data, buf, &title);
+    }
+    /* Support 1.x titles */
+    if (!title)
+        gwy_container_gis_string_by_name(data, "/filename/title", &title);
+
+    if (title)
+        return title;
+
+    g_snprintf(buf, sizeof(buf), _("Unknown channel %d"), channel + 1);
+    return buf;
+}
+
+/**
+ * gwy_app_get_data_field_title:
+ * @data: A data container.
+ * @id: Data channel id.
+ *
+ * Gets a data channel title.
+ *
+ * This function should return a reasoanble title for untitled channels,
+ * channels with old titles, channels with and without a file, etc.
+ *
+ * Returns: The channel title as a newly allocated string.
+ **/
+gchar*
+gwy_app_get_data_field_title(GwyContainer *data,
+                             gint id)
+{
+    return g_strdup(gwy_app_data_browser_figure_out_channel_title(data, id));
 }
 
 /**
@@ -2483,6 +2520,37 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 }
 
 /**
+ * gwy_app_data_browser_foreach:
+ * @function: Function to run on each data container.
+ * @user_data: Data to pass as second argument of @function.
+ *
+ * Calls a function for each data container managed by data browser.
+ **/
+void
+gwy_app_data_browser_foreach(GwyAppDataForeachFunc function,
+                             gpointer user_data)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GList *proxies, *l;
+
+    g_return_if_fail(function);
+
+    browser = gwy_app_data_browser;
+    if (!browser)
+        return;
+
+    /* The copy is necessary as even innocent functions can move a proxy to
+     * list head. */
+    proxies = g_list_copy(browser->proxy_list);
+    for (l = proxies; l; l = g_list_next(l)) {
+        proxy = (GwyAppDataProxy*)l->data;
+        function(proxy->container, user_data);
+    }
+    g_list_free(proxies);
+}
+
+/**
  * gwy_app_copy_data_items:
  * @source: Source container.
  * @dest: Target container (may be identical to source).
@@ -2616,8 +2684,11 @@ gwy_app_data_browser_shut_down(void)
     if (!browser)
         return;
 
-    gwy_app_save_window_position(GTK_WINDOW(browser->window),
-                                 "/app/data-browser", TRUE, TRUE);
+    /* FIXME: Not very logical when loading occurs in main app. */
+    if (browser->window)
+        gwy_app_save_window_position(GTK_WINDOW(browser->window),
+                                     "/app/data-browser", TRUE, TRUE);
+
     /* XXX: EXIT-CLEAN-UP */
     /* This clean-up is only to make sure we've got the references right.
      * Remove in production version. */

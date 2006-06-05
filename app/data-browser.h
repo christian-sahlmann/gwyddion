@@ -41,7 +41,8 @@ typedef enum {
     GWY_APP_GRAPH_MODEL,
     GWY_APP_GRAPH_MODEL_KEY,
     GWY_APP_GRAPH_MODEL_ID,
-} GwyAppWhat;   /* XXX: silly name */
+} GwyAppWhat;
+/* XXX: silly name */
 
 typedef enum {
     GWY_DATA_ITEM_GRADIENT = 1,
@@ -52,6 +53,9 @@ typedef enum {
     GWY_DATA_ITEM_REAL_SQUARE,
     /* GWY_DATA_ITEM_SELECTION: Current, all? */
 } GwyDataItem;
+
+typedef void (*GwyAppDataForeachFunc)(GwyContainer *data,
+                                      gpointer user_data);
 
 void   gwy_app_data_browser_add             (GwyContainer *data);
 void   gwy_app_data_browser_select_data_view(GwyDataView *data_view);
@@ -66,6 +70,8 @@ void   gwy_app_data_browser_get_current     (GwyAppWhat what,
                                              ...);
 gint*  gwy_app_data_browser_get_data_ids    (GwyContainer *data);
 gint*  gwy_app_data_browser_get_graph_ids   (GwyContainer *data);
+void   gwy_app_data_browser_foreach         (GwyAppDataForeachFunc function,
+                                             gpointer user_data);
 void   gwy_app_copy_data_items              (GwyContainer *source,
                                              GwyContainer *dest,
                                              gint from_id,
@@ -77,6 +83,8 @@ GQuark gwy_app_get_show_key_for_id          (gint id);
 void   gwy_app_set_data_field_title         (GwyContainer *data,
                                              gint id,
                                              const gchar *name);
+gchar* gwy_app_get_data_field_title         (GwyContainer *data,
+                                             gint id);
 /* XXX */
 GtkWidget* gwy_app_data_browser_get_window  (void);
 void   gwy_app_data_browser_shut_down       (void);

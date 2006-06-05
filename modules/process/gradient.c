@@ -125,7 +125,7 @@ gradient(GwyContainer *data,
     else if (gwy_strequal(name, "prewitt_vertical"))
         gwy_data_field_filter_prewitt(showfield, GWY_ORIENTATION_VERTICAL);
     else {
-        g_warning("Function called under unregistered name `%s'", name);
+        g_warning("gradient does not provide function `%s'", name);
     }
 
     gwy_data_field_normalize(showfield);

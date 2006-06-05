@@ -11,6 +11,7 @@ libgwyappincludedir = $(pkgincludedir)/app
 libgwyappinclude_HEADERS = \
 	app.h \
 	data-browser.h \
+	datachooser.h \
 	file.h \
 	filelist.h \
 	funcuse.h \
@@ -20,7 +21,6 @@ libgwyappinclude_HEADERS = \
 	gwytool.h \
 	gwyapp.h \
 	menu.h \
-	menu-windowlist.h \
 	resource-editor.h \
 	settings.h \
 	undo.h \
@@ -56,6 +56,7 @@ libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
 	data-browser.c \
+	datachooser.c \
 	file.c \
 	filelist.c \
 	funcuse.c \
@@ -64,7 +65,6 @@ libgwyapp_la_SOURCES = \
 	gwyplaintool.c \
 	gwytool.c \
 	menu.c \
-	menu-windowlist.c \
 	settings.c \
 	resource-editor.c \
 	undo.c \
@@ -73,7 +73,6 @@ libgwyapp_la_SOURCES = \
 gwyddion_SOURCES = \
 	about.c \
 	gwyddion.c \
-	init.c \
 	meta.c \
 	splash.c \
 	toolbox.c

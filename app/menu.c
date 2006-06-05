@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -672,9 +673,60 @@ gwy_app_recent_file_list_cb(void)
     }
 
     recent_file_list = gwy_app_recent_file_list_new();
+    gwy_app_add_main_accel_group(GTK_WINDOW(recent_file_list));
     g_object_add_weak_pointer(G_OBJECT(recent_file_list),
                               (gpointer*)&recent_file_list);
     gtk_widget_show(recent_file_list);
+}
+
+static void
+gwy_app_menu_recent_files_set_thumbnail(GtkWidget *item,
+                                        const gchar *filename_utf8)
+{
+    GtkWidget *image;
+    GdkPixbuf *thumbnail, *menuicon;
+    gint width, height, w, h;
+    gdouble hscale, wscale;
+    guint32 pixel;
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+
+    thumbnail = gwy_app_recent_file_get_thumbnail(filename_utf8);
+    w = gdk_pixbuf_get_width(thumbnail);
+    h = gdk_pixbuf_get_height(thumbnail);
+
+    wscale = (gdouble)width/w;
+    hscale = (gdouble)height/h;
+    if (wscale <= hscale) {
+        height = CLAMP(ceil(wscale*h), 2, height);
+        hscale = (gdouble)height/h;
+    }
+    else {
+        width = CLAMP(ceil(hscale*w), 2, width);
+        wscale = (gdouble)width/w;
+    }
+
+    menuicon = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                              width + 2, height + 2);
+    /* FIXME: Getting the right color as RGB is ugly. Do it later...
+    gc = item->style->text_gc[GTK_STATE_NORMAL];
+    */
+    pixel = 0x777777ff;
+    gdk_pixbuf_fill(menuicon, pixel);
+    gdk_pixbuf_scale(thumbnail, menuicon,
+                     1, 1, width, height,
+                     1, 1, wscale, hscale,
+                     GDK_INTERP_HYPER);
+    g_object_unref(thumbnail);
+
+    image = gtk_image_menu_item_get_image(GTK_IMAGE_MENU_ITEM(item));
+    if (!image) {
+        image = gtk_image_new_from_pixbuf(menuicon);
+        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+    }
+    else
+        gtk_image_set_from_pixbuf(GTK_IMAGE(image), menuicon);
+    g_object_unref(menuicon);
 }
 
 /**
@@ -711,21 +763,23 @@ gwy_app_menu_recent_files_update(GList *recent_files)
             gtk_label_set_text_with_mnemonic(GTK_LABEL(item), label);
             g_object_set_qdata_full(G_OBJECT(child->data), quark,
                                     g_strdup(filename), g_free);
-            gtk_widget_show(GTK_WIDGET(child->data));
+            item = GTK_WIDGET(child->data);
             child = g_list_next(child);
         }
         else {
-            item = gtk_menu_item_new_with_mnemonic(label);
+            item = gtk_image_menu_item_new_with_mnemonic(label);
             gwy_debug("creating item %p for <%s> [#%d]", item, s, i);
             g_object_set_qdata_full(G_OBJECT(item), quark, g_strdup(filename),
                                     g_free);
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
             g_signal_connect(item, "activate",
                              G_CALLBACK(gwy_app_file_open_recent_cb), NULL);
-            gtk_widget_show(item);
         }
         g_free(label);
         g_free(s);
+
+        gtk_widget_show(item);
+        gwy_app_menu_recent_files_set_thumbnail(item, filename);
     }
 
     /* keep konstant number of entries, otherwise it's just too hard to

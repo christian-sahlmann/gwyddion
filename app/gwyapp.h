@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 
 #include <app/app.h>
 #include <app/data-browser.h>
+#include <app/datachooser.h>
 #include <app/file.h>
 #include <app/filelist.h>
 #include <app/funcuse.h>
@@ -31,7 +32,6 @@
 #include <app/gwytool.h>
 #include <app/gwyplaintool.h>
 #include <app/menu.h>
-#include <app/menu-windowlist.h>
 #include <app/resource-editor.h>
 #include <app/settings.h>
 #include <app/undo.h>

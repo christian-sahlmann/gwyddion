@@ -161,7 +161,7 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     else if (gwy_strequal(name, "edge_hough_lines"))
         hough_lines_do(dfield, showfield);
     else {
-        g_warning("Function called under unregistered name: %s", name);
+        g_warning("edge does not provide function `%s'", name);
         gwy_data_field_copy(dfield, showfield, FALSE);
     }
 

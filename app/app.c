@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
+#include <stdarg.h>
 #include <gdk/gdkkeysyms.h>
 
 #include <libgwyddion/gwyddion.h>
@@ -93,7 +94,10 @@ gwy_app_quit(void)
     gwy_object_unref(current_tool);
     /* XXX: EXIT-CLEAN-UP */
     gtk_widget_destroy(gwy_app_main_window);
-    g_object_unref(gwy_app_sensitivity_get_group());
+    /* FIXME: sometimes fails with
+     * Sensitivity group is finialized when it still contains widget lists.
+     * g_object_unref(gwy_app_sensitivity_get_group());
+     */
 
     gtk_main_quit();
     return TRUE;
@@ -1462,6 +1466,148 @@ gint
 _gwy_app_get_n_recent_files(void)
 {
     return 10;
+}
+
+/**
+ * gwy_app_init_widget_styles:
+ *
+ * Sets up style properties for special Gwyddion widgets.
+ *
+ * Normally not needed to call explicitly.
+ **/
+void
+gwy_app_init_widget_styles(void)
+{
+    gtk_rc_parse_string(/* data window corner buttons */
+                        "style \"cornerbutton\" {\n"
+                        "GtkButton::focus_line_width = 0\n"
+                        "GtkButton::focus_padding = 0\n"
+                        "}\n"
+                        "widget \"*.cornerbutton\" style \"cornerbutton\"\n"
+                        "\n"
+                        /* toolbox group header buttons */
+                        "style \"toolboxheader\" {\n"
+                        "GtkButton::focus_line_width = 0\n"
+                        "GtkButton::focus_padding = 0\n"
+                        "}\n"
+                        "widget \"*.toolboxheader\" style \"toolboxheader\"\n"
+                        "\n"
+                        /* toolbox single-item menubars */
+                        "style \"toolboxmenubar\" {\n"
+                        "GtkMenuBar::shadow_type = 0\n"
+                        "}\n"
+                        "widget \"*.toolboxmenubar\" style \"toolboxmenubar\"\n"
+                        "\n");
+}
+
+/**
+ * gwy_app_init_i18n:
+ *
+ * Initializes internationalization.
+ *
+ * Normally not needed to call explicitly.
+ **/
+void
+gwy_app_init_i18n(void)
+{
+#ifdef ENABLE_NLS
+    gchar *locdir;
+
+    locdir = gwy_find_self_dir("locale");
+    bindtextdomain(PACKAGE, locdir);
+    g_free(locdir);
+    textdomain(PACKAGE);
+    if (!bind_textdomain_codeset(PACKAGE, "UTF-8"))
+        g_critical("Cannot bind gettext `%s' codeset to UTF-8", PACKAGE);
+#endif  /* ENABLE_NLS */
+}
+
+/**
+ * gwy_app_init_common:
+ * @error: Error location for settings loading error.
+ * @...: List of module types to load.
+ *
+ * Performs common initialization.
+ *
+ * FIXME: Much more to say.
+ *
+ * Returns: Settings loading status.
+ **/
+gboolean
+gwy_app_init_common(GError **error,
+                    ...)
+{
+    gchar *settings_file;
+    va_list ap;
+    const gchar *dir;
+    gboolean ok = TRUE;
+
+    gwy_widgets_type_init();
+    gwy_app_init_widget_styles();
+    gwy_app_init_i18n();
+
+    gwy_data_window_class_set_tooltips(gwy_app_get_tooltips());
+    gwy_3d_window_class_set_tooltips(gwy_app_get_tooltips());
+    gwy_graph_window_class_set_tooltips(gwy_app_get_tooltips());
+
+    /* Register resources */
+    gwy_stock_register_stock_items();
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
+
+    /* Load settings */
+    settings_file = gwy_app_settings_get_settings_filename();
+    if (g_file_test(settings_file, G_FILE_TEST_IS_REGULAR))
+        ok = gwy_app_settings_load(settings_file, error);
+    gwy_app_settings_get();
+
+    /* Register modules */
+    va_start(ap, error);
+    dir = va_arg(ap, const gchar*);
+    va_end(ap);
+    if (gwy_strequal(dir, "all")) {
+        gchar **module_dirs;
+
+        module_dirs = gwy_app_settings_get_module_dirs();
+        gwy_module_register_modules((const gchar**)module_dirs);
+        g_strfreev(module_dirs);
+    }
+    else {
+        GPtrArray *module_dirs;
+        const gchar *q;
+        gchar *p;
+        guint i;
+
+        module_dirs = g_ptr_array_new();
+
+        p = gwy_find_self_dir("modules");
+        va_start(ap, error);
+        while ((dir = va_arg(ap, const gchar*))) {
+            g_ptr_array_add(module_dirs,
+                            g_build_filename(p, *dir ? dir : NULL,
+                                             NULL));
+        }
+        va_end(ap);
+        g_free(p);
+
+        q = gwy_get_user_dir();
+        va_start(ap, error);
+        while ((dir = va_arg(ap, const gchar*))) {
+            g_ptr_array_add(module_dirs,
+                            g_build_filename(p, "modules", *dir ? dir : NULL,
+                                             NULL));
+        }
+        va_end(ap);
+
+        g_ptr_array_add(module_dirs, NULL);
+        gwy_module_register_modules((const gchar**)module_dirs->pdata);
+
+        for (i = 0; i < module_dirs->len-1; i++)
+            g_free(module_dirs->pdata[i]);
+        g_ptr_array_free(module_dirs, TRUE);
+    }
+
+    return ok;
 }
 
 /************************** Documentation ****************************/

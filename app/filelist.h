@@ -32,6 +32,7 @@ void       gwy_app_recent_file_list_update  (GwyContainer *data,
 gboolean   gwy_app_recent_file_list_load    (const gchar *filename);
 gboolean   gwy_app_recent_file_list_save    (const gchar *filename);
 void       gwy_app_recent_file_list_free    (void);
+GdkPixbuf* gwy_app_recent_file_get_thumbnail(const gchar *filename_utf8);
 
 G_END_DECLS
 

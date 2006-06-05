@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,9 +28,9 @@
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libdraw/gwydraw.h>
-#include <libgwydgets/gwystock.h>
-#include "gwyapp.h"
-#include "gwyappinternal.h"
+#include <libgwydgets/gwydgets.h>
+#include <app/gwyapp.h>
+#include <app/gwyappinternal.h>
 #include "gwyddion.h"
 
 #ifdef G_OS_WIN32
@@ -41,18 +41,23 @@
 
 #ifdef LOG_TO_FILE
 static void setup_logging(void);
-static void logger(const gchar *log_domain,
-                   GLogLevelFlags log_level,
-                   const gchar *message,
-                   gpointer user_data);
+static void logger       (const gchar *log_domain,
+                          GLogLevelFlags log_level,
+                          const gchar *message,
+                          gpointer user_data);
 #endif  /* LOG_TO_FILE */
+
 static void open_command_line_files  (gchar **args,
                                       gint n);
 static void print_help               (void);
 static void process_preinit_options  (int *argc,
                                       char ***argv);
 static void warn_broken_settings_file(GtkWidget *parent,
-                                      const gchar *settings_file);
+                                      const gchar *settings_file,
+                                      const gchar *reason);
+static void gwy_app_init             (int *argc,
+                                      char ***argv);
+static void gwy_app_set_window_icon  (void);
 
 static gboolean enable_object_debugging = FALSE;
 
@@ -63,10 +68,12 @@ main(int argc, char *argv[])
     gchar **module_dirs;
     gchar *settings_file, *recent_file_file;
     gboolean has_settings, settings_ok = FALSE;
+    GError *settings_err = NULL;
 
     process_preinit_options(&argc, &argv);
     gwy_debug_objects_enable(enable_object_debugging);
-    gwy_app_settings_create_config_dir();
+    /* TODO: handle failure */
+    gwy_app_settings_create_config_dir(NULL);
     /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
      * be run first can print things to console when debuggin is enabled. */
 #ifdef LOG_TO_FILE
@@ -99,7 +106,7 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message(_("Loading settings"));
     if (has_settings)
-        settings_ok = gwy_app_settings_load(settings_file);
+        settings_ok = gwy_app_settings_load(settings_file, &settings_err);
     gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
     gwy_app_settings_get();
 
@@ -114,22 +121,31 @@ main(int argc, char *argv[])
     gwy_app_splash_close();
 
     open_command_line_files(argv + 1, argc - 1);
-    if (has_settings && !settings_ok)
-        warn_broken_settings_file(toolbox, settings_file);
+    if (has_settings && !settings_ok) {
+        warn_broken_settings_file(toolbox,
+                                  settings_file, settings_err->message);
+        g_clear_error(&settings_err);
+    }
+
+    /* Move focus to toolbox */
+    gtk_window_present(GTK_WINDOW(toolbox));
 
     gtk_main();
+
+    /* TODO: handle failure */
     if (settings_ok || !has_settings)
-        gwy_app_settings_save(settings_file);
+        gwy_app_settings_save(settings_file, NULL);
     gwy_app_recent_file_list_save(recent_file_file);
     gwy_process_func_save_use();
-    /* XXX: Finalize all gradients.  Useless, but makes --debug-objects happy.
-     * Remove in production version. */
-    g_object_unref(gwy_gradients());
-    g_object_unref(gwy_gl_materials());
     gwy_app_settings_free();
     gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
     gwy_app_recent_file_list_free();
+    /* XXX: EXIT-CLEAN-UP */
+    /* Finalize all gradients.  Useless, but makes --debug-objects happy.
+     * Remove in production version. */
+    g_object_unref(gwy_gradients());
+    g_object_unref(gwy_gl_materials());
     g_free(recent_file_file);
     g_free(settings_file);
     g_strfreev(module_dirs);
@@ -211,7 +227,8 @@ print_help(void)
 
 static void
 warn_broken_settings_file(GtkWidget *parent,
-                          const gchar *settings_file)
+                          const gchar *settings_file,
+                          const gchar *reason)
 {
     GtkWidget *dialog;
 
@@ -220,14 +237,18 @@ warn_broken_settings_file(GtkWidget *parent,
                   GTK_DIALOG_DESTROY_WITH_PARENT,
                   GTK_MESSAGE_WARNING,
                   GTK_BUTTONS_OK,
-                  _("Could not read settings file `%s'.\n\n"
-                    "Settings will not be saved "
-                    "until it is repaired or removed."),
-                  settings_file);
+                  _("Could not read settings."));
+    gtk_message_dialog_format_secondary_text
+        (GTK_MESSAGE_DIALOG(dialog),
+         _("Settings file `%s' cannot be read: %s\n\n"
+           "To prevent loss of saved settings no attempt to update it will "
+           "be made until it is repaired or removed."),
+         settings_file, reason);
     /* parent is usually in a screen corner, centering on it looks ugly */
     gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
-    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
-    gtk_widget_show_all(dialog);
+    gtk_window_present(GTK_WINDOW(dialog));
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
 }
 
 #ifdef LOG_TO_FILE
@@ -313,6 +334,58 @@ open_command_line_files(gchar **args, gint n)
         g_free(filename);
     }
     g_free(cwd);
+}
+
+/**
+ * gwy_app_init:
+ * @argc: Address of the argc parameter of main(). Passed to gwy_app_gl_init().
+ * @argv: Address of the argv parameter of main(). Passed to gwy_app_gl_init().
+ *
+ * Initializes all Gwyddion data types, i.e. types that may appear in
+ * serialized data. GObject has to know about them when g_type_from_name()
+ * is called.
+ *
+ * It registeres stock items, initializes tooltip class resources, sets
+ * application icon, sets Gwyddion specific widget resources.
+ *
+ * If NLS is compiled in, it sets it up and binds text domains.
+ *
+ * If OpenGL is compiled in, it checks whether it's really available (calling
+ * gtk_gl_init_check() and gwy_widgets_gl_init()).
+ **/
+static void
+gwy_app_init(int *argc,
+             char ***argv)
+{
+    gwy_widgets_type_init();
+    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
+    g_set_application_name(PACKAGE_NAME);
+    gwy_app_gl_init(argc, argv);
+    /* XXX: These reference are never released. */
+    gwy_data_window_class_set_tooltips(gwy_app_get_tooltips());
+    gwy_3d_window_class_set_tooltips(gwy_app_get_tooltips());
+    gwy_graph_window_class_set_tooltips(gwy_app_get_tooltips());
+
+    gwy_app_set_window_icon();
+    gwy_app_init_widget_styles();
+    gwy_app_init_i18n();
+}
+
+static void
+gwy_app_set_window_icon(void)
+{
+    gchar *filename, *p;
+    GError *err = NULL;
+
+    p = gwy_find_self_dir("pixmaps");
+    filename = g_build_filename(p, "gwyddion.ico", NULL);
+    gtk_window_set_default_icon_from_file(filename, &err);
+    if (err) {
+        g_warning("Cannot load window icon: %s", err->message);
+        g_clear_error(&err);
+    }
+    g_free(filename);
+    g_free(p);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

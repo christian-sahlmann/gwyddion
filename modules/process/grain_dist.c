@@ -33,7 +33,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define DIST_RUN_MODES (GWY_RUN_INTERACTIVE)
+#define DIST_RUN_MODES GWY_RUN_INTERACTIVE
 #define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {

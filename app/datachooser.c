@@ -1,0 +1,540 @@
+/*
+ *  @(#) $Id$
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ */
+#define DEBUG 1
+#include "config.h"
+#include <string.h>
+#include <gtk/gtk.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwycontainer.h>
+#include <app/data-browser.h>
+#include <app/datachooser.h>
+
+/*****************************************************************************
+ *
+ * Declaration.  Do not make it public yet.
+ *
+ *****************************************************************************/
+
+struct _GwyDataChooser {
+    GtkComboBox parent_instance;
+
+    GtkTreeModel *filter;
+    GtkListStore *store;
+
+    GwyDataChooserFilterFunc filter_func;
+    gpointer filter_data;
+    GtkDestroyNotify filter_destroy;
+
+    GtkTreeIter none_iter;
+    gchar *none_label;
+};
+
+struct _GwyDataChooserClass {
+    GtkComboBoxClass parent_class;
+};
+
+/*****************************************************************************
+ *
+ * Implementation.
+ *
+ *****************************************************************************/
+
+enum {
+    MODEL_COLUMN_CONTAINER,
+    MODEL_COLUMN_ID,
+    MODEL_COLUMN_THUMB,
+    MODEL_COLUMN_NAME,
+    MODEL_NCOLUMNS
+};
+
+static void     gwy_data_chooser_finalize  (GObject *object);
+static void     gwy_data_chooser_destroy   (GtkObject *object);
+static gboolean gwy_data_chooser_is_visible(GtkTreeModel *model,
+                                            GtkTreeIter *iter,
+                                            gpointer data);
+
+G_DEFINE_TYPE(GwyDataChooser, gwy_data_chooser, GTK_TYPE_COMBO_BOX)
+
+static void
+gwy_data_chooser_class_init(GwyDataChooserClass *klass)
+{
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    object_class->destroy = gwy_data_chooser_destroy;
+
+    gobject_class->finalize = gwy_data_chooser_finalize;
+}
+
+static void
+gwy_data_chooser_finalize(GObject *object)
+{
+    GwyDataChooser *chooser;
+
+    chooser = GWY_DATA_CHOOSER(object);
+
+    g_free(chooser->none_label);
+    if (chooser->filter_destroy)
+        chooser->filter_destroy(chooser->filter_data);
+
+    G_OBJECT_CLASS(gwy_data_chooser_parent_class)->finalize(object);
+}
+
+static void
+gwy_data_chooser_destroy(GtkObject *object)
+{
+    GwyDataChooser *chooser;
+    GtkComboBox *combo;
+    GtkTreeModel *model;
+
+    chooser = GWY_DATA_CHOOSER(object);
+    combo = GTK_COMBO_BOX(object);
+    model = gtk_combo_box_get_model(combo);
+    if (model) {
+        gtk_combo_box_set_model(combo, NULL);
+        gwy_object_unref(chooser->filter);
+        gwy_object_unref(chooser->store);
+    }
+
+    GTK_OBJECT_CLASS(gwy_data_chooser_parent_class)->destroy(object);
+}
+
+static void
+gwy_data_chooser_init(GwyDataChooser *chooser)
+{
+    GtkTreeModelFilter *filter;
+    GdkPixbuf *pixbuf;
+    GtkTreeIter iter;
+
+    chooser->store = gtk_list_store_new(MODEL_NCOLUMNS,
+                                        GWY_TYPE_CONTAINER,
+                                        G_TYPE_INT,
+                                        GDK_TYPE_PIXBUF,
+                                        G_TYPE_STRING,
+                                        G_TYPE_STRING);
+    chooser->filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(chooser->store),
+                                                NULL);
+    filter = GTK_TREE_MODEL_FILTER(chooser->filter);
+    gtk_tree_model_filter_set_visible_func(filter,
+                                           gwy_data_chooser_is_visible, chooser,
+                                           NULL);
+
+    /* Create `none' row */
+    /* XXX: size */
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 20, 20);
+    gdk_pixbuf_fill(pixbuf, 0x00000000);
+    gtk_list_store_insert_with_values(chooser->store, &iter, 0,
+                                      MODEL_COLUMN_ID, -1,
+                                      MODEL_COLUMN_NAME, _("(None)"),
+                                      MODEL_COLUMN_THUMB, pixbuf,
+                                      -1);
+    g_object_unref(pixbuf);
+
+    gtk_combo_box_set_model(GTK_COMBO_BOX(chooser), chooser->filter);
+}
+
+/**
+ * gwy_data_chooser_set_active:
+ * @chooser: A data chooser.
+ * @data: Container to select, %NULL to select none (if the chooser contains
+ *        `none' item).
+ * @id: Id of particular data to select in @data.
+ *
+ * Selects a data in a data chooser.
+ *
+ * Returns: %TRUE if selected item was set.
+ **/
+gboolean
+gwy_data_chooser_set_active(GwyDataChooser *chooser,
+                            GwyContainer *data,
+                            gint id)
+{
+    GwyContainer *container;
+    GtkComboBox *combo;
+    GtkTreeIter iter;
+    gint dataid;
+
+    g_return_val_if_fail(GWY_IS_DATA_CHOOSER(chooser), FALSE);
+
+    if (!gtk_tree_model_get_iter_first(chooser->filter, &iter))
+        return FALSE;
+
+    combo = GTK_COMBO_BOX(chooser);
+    if (!data) {
+        if (chooser->none_label) {
+            gtk_combo_box_set_active_iter(combo, &iter);
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    do {
+        gtk_tree_model_get(chooser->filter, &iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &dataid,
+                           -1);
+        g_object_unref(container);
+        if (container == data && dataid == id) {
+            gtk_combo_box_set_active_iter(combo, &iter);
+            return TRUE;
+        }
+    } while (gtk_tree_model_iter_next(chooser->filter, &iter));
+
+    return FALSE;
+}
+
+/**
+ * gwy_data_chooser_get_active:
+ * @chooser: A data chooser.
+ * @id: Location to store selected data id to (may be %NULL).
+ *
+ * Gets the selected item in a data chooser.
+ *
+ * Returns: The container selected data lies in, %NULL if nothing is selected
+ *          or `none' item is selected.
+ **/
+GwyContainer*
+gwy_data_chooser_get_active(GwyDataChooser *chooser,
+                            gint *id)
+{
+    GwyContainer *container;
+    GtkComboBox *combo;
+    GtkTreeIter iter;
+    gint dataid;
+
+    g_return_val_if_fail(GWY_IS_DATA_CHOOSER(chooser), NULL);
+
+    combo = GTK_COMBO_BOX(chooser);
+    if (!gtk_combo_box_get_active_iter(combo, &iter))
+        return NULL;
+
+    gtk_tree_model_get(chooser->filter, &iter,
+                       MODEL_COLUMN_CONTAINER, &container,
+                       MODEL_COLUMN_ID, &dataid,
+                       -1);
+    if (container)
+        g_object_unref(container);
+
+    if (id)
+        *id = dataid;
+
+    return container;
+}
+
+static gboolean
+gwy_data_chooser_is_visible(GtkTreeModel *model,
+                            GtkTreeIter *iter,
+                            gpointer data)
+{
+    GwyDataChooser *chooser = (GwyDataChooser*)data;
+    GwyContainer *container;
+    guint id;
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_COLUMN_CONTAINER, &container,
+                       MODEL_COLUMN_ID, &id,
+                       -1);
+
+    /* Handle `none' explicitly */
+    if (!container)
+        return chooser->none_label != NULL;
+
+    g_object_unref(container);
+    if (!chooser->filter_func)
+        return TRUE;
+
+    return chooser->filter_func(container, id, chooser->filter_data);
+}
+
+/**
+ * gwy_data_chooser_set_filter:
+ * @chooser: A data chooser.
+ * @filter: The filter function.
+ * @user_data: The data passed to @filter.
+ * @destroy: Destroy notifier of @user_data or %NULL.
+ *
+ * Sets the filter applied to a data chooser.
+ *
+ * The display of an item corresponding to no data is controlled by
+ * gwy_data_chooser_set_none(), @filter function is only called for real data.
+ **/
+void
+gwy_data_chooser_set_filter(GwyDataChooser *chooser,
+                            GwyDataChooserFilterFunc filter,
+                            gpointer user_data,
+                            GtkDestroyNotify destroy)
+{
+    g_return_if_fail(GWY_IS_DATA_CHOOSER(chooser));
+
+    if (chooser->filter_destroy)
+        chooser->filter_destroy(chooser->filter_data);
+
+    chooser->filter_func = filter;
+    chooser->filter_data = user_data;
+    chooser->filter_destroy = destroy;
+    gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(chooser->filter));
+}
+
+/**
+ * gwy_data_chooser_get_none:
+ * @chooser: A data chooser.
+ *
+ * Gets the label of the item corresponding to no data.
+ *
+ * Returns: The label corresponding to no data, an empty string for the default
+ *          label and %NULL if the chooser does not display `none' item.
+ **/
+const gchar*
+gwy_data_chooser_get_none(GwyDataChooser *chooser)
+{
+    g_return_val_if_fail(GWY_IS_DATA_CHOOSER(chooser), NULL);
+
+    return chooser->none_label;
+}
+
+/**
+ * gwy_data_chooser_set_none:
+ * @chooser: A data chooser.
+ * @none: Label to use for item corresponding to no data. Passing %NULL,
+ *        disables such an item, an empty string enables it with
+ *        the default label.
+ *
+ * Sets the label of the item corresponding to no data.
+ **/
+void
+gwy_data_chooser_set_none(GwyDataChooser *chooser,
+                          const gchar *none)
+{
+    gchar *old_none;
+    GtkTreeIter iter;
+
+    g_return_if_fail(GWY_IS_DATA_CHOOSER(chooser));
+    old_none = chooser->none_label;
+    chooser->none_label = g_strdup(none);
+    g_free(old_none);
+
+    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(chooser->store), &iter);
+    if (chooser->none_label && *chooser->none_label)
+        gtk_list_store_set(chooser->store, &iter,
+                           MODEL_COLUMN_NAME, chooser->none_label,
+                           -1);
+    else
+        gtk_list_store_set(chooser->store, &iter,
+                           MODEL_COLUMN_NAME, _("(None)"),
+                           -1);
+}
+
+/*****************************************************************************
+ *
+ * Channels.
+ *
+ *****************************************************************************/
+
+static void
+gwy_data_chooser_channels_fill(GwyContainer *data,
+                               gpointer user_data)
+{
+    GtkListStore *store;
+    GtkTreeIter iter;
+    gint *ids;
+    gint i;
+
+    store = GWY_DATA_CHOOSER(user_data)->store;
+    ids = gwy_app_data_browser_get_data_ids(data);
+    for (i = 0; ids[i] >= 0; i++) {
+        gwy_debug("inserting %p %d", data, ids[i]);
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                          MODEL_COLUMN_CONTAINER, data,
+                                          MODEL_COLUMN_ID, ids[i],
+                                          -1);
+    }
+    g_free(ids);
+}
+
+static void
+gwy_data_chooser_channels_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
+                                      GtkCellRenderer *renderer,
+                                      GtkTreeModel *model,
+                                      GtkTreeIter *iter,
+                                      gpointer data)
+{
+    GwyDataChooser *chooser;
+    GwyContainer *container;
+    GtkTreeModelFilter *filter;
+    GtkTreeIter citer;
+    gchar *title;
+    gint id;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_NAME, &title, -1);
+    if (!title) {
+        chooser = (GwyDataChooser*)data;
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        title = gwy_app_get_data_field_title(container, id);
+        filter = GTK_TREE_MODEL_FILTER(model);
+        gtk_tree_model_filter_convert_iter_to_child_iter(filter, &citer, iter);
+        gtk_list_store_set(chooser->store, &citer,
+                           MODEL_COLUMN_NAME, title,
+                           -1);
+        g_object_unref(container);
+    }
+    g_object_set(renderer, "text", title, NULL);
+    g_free(title);
+}
+
+/*
+static void
+gwy_data_chooser_channels_render_file(G_GNUC_UNUSED GtkCellLayout *layout,
+                                      GtkCellRenderer *renderer,
+                                      GtkTreeModel *model,
+                                      GtkTreeIter *iter,
+                                      gpointer data)
+{
+    GwyDataChooser *chooser;
+    GwyContainer *container;
+    GtkTreeModelFilter *filter;
+    GtkTreeIter citer;
+    const guchar *title;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_FILE, &title, -1);
+    if (!title) {
+        chooser = (GwyDataChooser*)data;
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           -1);
+        gwy_container_gis_string_by_name(container, "/filename", &title);
+        filter = GTK_TREE_MODEL_FILTER(model);
+        gtk_tree_model_filter_convert_iter_to_child_iter(filter, &citer, iter);
+        gtk_list_store_set(chooser->store, &citer,
+                           MODEL_COLUMN_FILE, title,
+                           -1);
+        g_object_unref(container);
+        g_object_set(renderer, "text", title, NULL);
+    }
+    else {
+        g_object_set(renderer, "text", title, NULL);
+        g_free((gpointer)title);
+    }
+}
+*/
+
+static void
+gwy_data_chooser_channels_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
+                                      GtkCellRenderer *renderer,
+                                      GtkTreeModel *model,
+                                      GtkTreeIter *iter,
+                                      gpointer data)
+{
+    GwyDataChooser *chooser;
+    GwyContainer *container;
+    GtkTreeModelFilter *filter;
+    GtkTreeIter citer;
+    GdkPixbuf *pixbuf;
+    gint id, width, height;
+
+    /* FIXME */
+    width = height = 20;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_THUMB, &pixbuf, -1);
+    if (!pixbuf) {
+        chooser = (GwyDataChooser*)data;
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        g_object_unref(container);
+        pixbuf = gwy_app_get_channel_thumbnail(container, id, width, height);
+        filter = GTK_TREE_MODEL_FILTER(model);
+        gtk_tree_model_filter_convert_iter_to_child_iter(filter, &citer, iter);
+        gtk_list_store_set(chooser->store, &citer,
+                           MODEL_COLUMN_THUMB, pixbuf,
+                           -1);
+    }
+    g_object_set(renderer, "pixbuf", pixbuf, NULL);
+    g_object_unref(pixbuf);
+}
+
+/**
+ * gwy_data_chooser_new_channels:
+ *
+ * Creates a data chooser for data channels.
+ *
+ * Returns: A new channel chooser.  Nothing may be assumed about the type and
+ *          properties of the returned widget as they can change in the future.
+ **/
+GtkWidget*
+gwy_data_chooser_new_channels(void)
+{
+    GwyDataChooser *chooser;
+    GtkCellRenderer *renderer;
+    GtkCellLayout *layout;
+
+    chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    gwy_app_data_browser_foreach(gwy_data_chooser_channels_fill, chooser);
+    layout = GTK_CELL_LAYOUT(chooser);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(layout, renderer, FALSE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_channels_render_icon,
+                                       chooser, NULL);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.0, NULL);
+    gtk_cell_layout_pack_start(layout, renderer, TRUE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_channels_render_name,
+                                       chooser, NULL);
+
+    return (GtkWidget*)chooser;
+}
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:datachooser
+ * @title: GwyDataChooser
+ * @short_description: Data object choosers
+ *
+ * #GwyDataChooser is an base data object chooser class.  Choosers for
+ * particular data objects can be created with functions like
+ * gwy_data_chooser_new_channels() and then manipulated through
+ * #GwyDataChooser interface.
+ *
+ * The widget type used to implement choosers is not a part of the interface
+ * and may be subject of future changes.  In any case #GwyDataChooser has
+ * a <code>"changed"</code> signal emitted when the selected item changes.
+ **/
+
+/**
+ * GwyDataChooserFilterFunc:
+ * @data: Data container.
+ * @id: Id of particular data in @data.
+ * @user_data: Data passed to gwy_data_chooser_set_filter().
+ *
+ * The type of data chooser filter function.
+ *
+ * Returns: %TRUE to display this data in the chooser, %FALSE to omit it.
+ **/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+

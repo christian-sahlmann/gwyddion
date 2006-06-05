@@ -129,7 +129,6 @@ typedef struct {
     GtkWidget *list;
     GtkWidget *open;
     GtkWidget *prune;
-    GdkPixbuf *failed_pixbuf;
 } Controls;
 
 static GtkWidget* gwy_app_recent_file_list_construct (Controls *controls);
@@ -160,23 +159,41 @@ static void  gwy_app_recent_file_list_row_activated  (GtkTreeView *treeview,
 static void  gwy_app_recent_file_list_destroyed      (Controls *controls);
 static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
+static gboolean gwy_app_recent_file_find            (const gchar *filename_utf8,
+                                                     GtkTreeIter *piter,
+                                                     GwyRecentFile **prf);
 static void  gwy_app_recent_file_list_update_menu    (Controls *controls);
 
-static void  gwy_app_recent_file_create_dirs         (void);
-static GwyRecentFile* gwy_recent_file_new            (gchar *filename_utf8,
-                                                      gchar *filename_sys);
-static gboolean recent_file_try_load_thumbnail       (GwyRecentFile *rf);
-static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
-                                                      GwyContainer *data);
-static void  gwy_recent_file_free                    (GwyRecentFile *rf);
-static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
-static const gchar* gwy_recent_file_thumbnail_dir    (void);
+static void  gwy_app_recent_file_create_dirs          (void);
+static GwyRecentFile* gwy_app_recent_file_new         (gchar *filename_utf8,
+                                                       gchar *filename_sys);
+static gboolean gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf);
+static void     gwy_recent_file_update_thumbnail      (GwyRecentFile *rf,
+                                                       GwyContainer *data);
+static void     gwy_app_recent_file_free              (GwyRecentFile *rf);
+static gchar* gwy_recent_file_thumbnail_name          (const gchar *uri);
+static const gchar* gwy_recent_file_thumbnail_dir     (void);
 
 static guint remember_recent_files = 512;
 
 static Controls gcontrols = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL,
 };
+
+static GdkPixbuf*
+gwy_app_recent_file_list_get_failed_pixbuf(void)
+{
+    static GdkPixbuf *failed_pixbuf = NULL;
+
+    if (!failed_pixbuf) {
+        failed_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
+                                       THUMB_SIZE, THUMB_SIZE);
+        gwy_debug_objects_creation(G_OBJECT(failed_pixbuf));
+        gdk_pixbuf_fill(failed_pixbuf, 0);
+    }
+
+    return failed_pixbuf;
+}
 
 /**
  * gwy_app_recent_file_list_new:
@@ -252,11 +269,6 @@ gwy_app_recent_file_list_new(void)
     g_signal_connect_swapped(gcontrols.window, "destroy",
                              G_CALLBACK(gwy_app_recent_file_list_destroyed),
                              &gcontrols);
-
-    gcontrols.failed_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
-                                             THUMB_SIZE, THUMB_SIZE);
-    gwy_debug_objects_creation(G_OBJECT(gcontrols.failed_pixbuf));
-    gdk_pixbuf_fill(gcontrols.failed_pixbuf, 0);
 
     gtk_widget_show_all(vbox);
 
@@ -388,7 +400,6 @@ gwy_app_recent_file_list_selection_changed(GtkTreeSelection *selection,
 static void
 gwy_app_recent_file_list_destroyed(Controls *controls)
 {
-    gwy_object_unref(controls->failed_pixbuf);
     controls->window = NULL;
     controls->open = NULL;
     controls->prune = NULL;
@@ -418,7 +429,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
         if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
             if (rf->thumb_sys && rf->thumb_state != FILE_STATE_FAILED)
                 g_unlink(rf->thumb_sys);
-            gwy_recent_file_free(rf);
+            gwy_app_recent_file_free(rf);
             ok = gtk_list_store_remove(controls->store, &iter);
         }
         else
@@ -519,7 +530,7 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gwy_debug("<%s>", rf->file_utf8);
     switch (rf->thumb_state) {
         case FILE_STATE_UNKNOWN:
-        if (!recent_file_try_load_thumbnail(rf))
+        if (!gwy_app_recent_file_try_load_thumbnail(rf))
             return;
         case FILE_STATE_FAILED:
         case FILE_STATE_OK:
@@ -579,7 +590,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
             GwyRecentFile *rf;
 
             gwy_debug("%s", files[n]);
-            rf = gwy_recent_file_new(gwy_canonicalize_path(files[n]), NULL);
+            rf = gwy_app_recent_file_new(gwy_canonicalize_path(files[n]), NULL);
             gtk_list_store_insert_with_values(gcontrols.store, &iter, G_MAXINT,
                                               FILELIST_RAW, rf,
                                               -1);
@@ -658,7 +669,7 @@ gwy_app_recent_file_list_free(void)
         do {
             gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
                                FILELIST_RAW, &rf, -1);
-            gwy_recent_file_free(rf);
+            gwy_app_recent_file_free(rf);
         } while (gtk_list_store_remove(gcontrols.store, &iter));
     }
     gwy_object_unref(gcontrols.store);
@@ -701,28 +712,12 @@ gwy_app_recent_file_list_update(GwyContainer *data,
     if (filename_utf8) {
         GtkTreeIter iter;
         GwyRecentFile *rf;
-        gboolean found = FALSE;
 
-        if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gcontrols.store),
-                                          &iter)) {
-            do {
-                gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
-                                   FILELIST_RAW, &rf,
-                                   -1);
-                if (gwy_strequal(filename_utf8, rf->file_utf8)) {
-                    found = TRUE;
-                    break;
-                }
-            } while (gtk_tree_model_iter_next(GTK_TREE_MODEL(gcontrols.store),
-                                              &iter));
-
-            if (found)
-                gtk_list_store_move_after(gcontrols.store, &iter, NULL);
-        }
-
-        if (!found) {
-            rf = gwy_recent_file_new(gwy_canonicalize_path(filename_utf8),
-                                     gwy_canonicalize_path(filename_sys));
+        if (gwy_app_recent_file_find(filename_utf8, &iter, &rf))
+            gtk_list_store_move_after(gcontrols.store, &iter, NULL);
+        else {
+            rf = gwy_app_recent_file_new(gwy_canonicalize_path(filename_utf8),
+                                         gwy_canonicalize_path(filename_sys));
             gtk_list_store_prepend(gcontrols.store, &iter);
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
@@ -732,6 +727,34 @@ gwy_app_recent_file_list_update(GwyContainer *data,
     }
 
     gwy_app_recent_file_list_update_menu(&gcontrols);
+}
+
+static gboolean
+gwy_app_recent_file_find(const gchar *filename_utf8,
+                         GtkTreeIter *piter,
+                         GwyRecentFile **prf)
+{
+    GtkTreeIter iter;
+    GwyRecentFile *rf;
+
+    if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gcontrols.store), &iter)) {
+        do {
+            gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
+                               FILELIST_RAW, &rf,
+                               -1);
+            if (gwy_strequal(filename_utf8, rf->file_utf8)) {
+                if (piter)
+                    *piter = iter;
+                if (prf)
+                    *prf = rf;
+
+                return TRUE;
+            }
+        } while (gtk_tree_model_iter_next(GTK_TREE_MODEL(gcontrols.store),
+                                          &iter));
+    }
+
+    return FALSE;
 }
 
 static void
@@ -783,6 +806,30 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
     gwy_app_menu_recent_files_update(controls->recent_file_list);
 }
 
+/**
+ * gwy_app_recent_file_get_thumbnail:
+ * @filename_utf8: Name of a recent file, in UTF-8 encoding.
+ *
+ * Gets thumbnail of a recently open file.
+ *
+ * Returns: The thumbnail as a new pixbuf or a pixbuf with a new reference.
+ *          The caller must unreference it but not modify it.  If not
+ *          thumbnail can be obtained, a fully transparent pixbuf is returned.
+ **/
+GdkPixbuf*
+gwy_app_recent_file_get_thumbnail(const gchar *filename_utf8)
+{
+    GdkPixbuf *pixbuf;
+    GwyRecentFile *rf;
+
+    rf = gwy_app_recent_file_new(gwy_canonicalize_path(filename_utf8), NULL);
+    gwy_app_recent_file_try_load_thumbnail(rf);
+    pixbuf = (GdkPixbuf*)g_object_ref(rf->pixbuf);
+    gwy_app_recent_file_free(rf);
+
+    return pixbuf;
+}
+
 static void
 gwy_app_recent_file_create_dirs(void)
 {
@@ -805,8 +852,8 @@ gwy_app_recent_file_create_dirs(void)
 
 /* XXX: eats arguments! */
 static GwyRecentFile*
-gwy_recent_file_new(gchar *filename_utf8,
-                    gchar *filename_sys)
+gwy_app_recent_file_new(gchar *filename_utf8,
+                        gchar *filename_sys)
 {
     GError *err = NULL;
     GwyRecentFile *rf;
@@ -835,7 +882,7 @@ gwy_recent_file_new(gchar *filename_utf8,
 }
 
 static void
-gwy_recent_file_free(GwyRecentFile *rf)
+gwy_app_recent_file_free(GwyRecentFile *rf)
 {
     gwy_object_unref(rf->pixbuf);
     g_free(rf->file_utf8);
@@ -847,7 +894,7 @@ gwy_recent_file_free(GwyRecentFile *rf)
 }
 
 static gboolean
-recent_file_try_load_thumbnail(GwyRecentFile *rf)
+gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
 {
     GdkPixbuf *pixbuf;
     gint width, height;
@@ -860,13 +907,15 @@ recent_file_try_load_thumbnail(GwyRecentFile *rf)
     gwy_object_unref(rf->pixbuf);
 
     if (!rf->thumb_sys) {
-        rf->pixbuf = (GdkPixbuf*)g_object_ref(gcontrols.failed_pixbuf);
+        rf->pixbuf = gwy_app_recent_file_list_get_failed_pixbuf();
+        g_object_ref(rf->pixbuf);
         return FALSE;
     }
 
     pixbuf = gdk_pixbuf_new_from_file(rf->thumb_sys, NULL);
     if (!pixbuf) {
-        rf->pixbuf = (GdkPixbuf*)g_object_ref(gcontrols.failed_pixbuf);
+        rf->pixbuf = gwy_app_recent_file_list_get_failed_pixbuf();
+        g_object_ref(rf->pixbuf);
         return FALSE;
     }
     gwy_debug_objects_creation(G_OBJECT(pixbuf));

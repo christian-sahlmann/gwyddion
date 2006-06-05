@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,6 +72,12 @@ gboolean       gwy_app_quit                        (void);
 
 /* XXX: hack */
 void            gwy_app_data_window_setup          (GwyDataWindow *data_window);
+
+void            gwy_app_init_widget_styles         (void);
+void            gwy_app_init_i18n                  (void);
+
+gboolean        gwy_app_init_common                (GError **error,
+                                                    ...);
 
 G_END_DECLS
 

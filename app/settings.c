@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,8 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 
-static gboolean create_config_dir_real         (const gchar *cfgdir);
+static gboolean create_config_dir_real         (const gchar *cfgdir,
+                                                GError **error);
 static void     gwy_app_settings_set_defaults  (GwyContainer *settings);
 static void     gwy_app_settings_gather        (GwyContainer *settings);
 static void     gwy_app_settings_apply         (GwyContainer *settings);
@@ -83,6 +84,7 @@ gwy_app_settings_free(void)
 /**
  * gwy_app_settings_save:
  * @filename: A filename to save the settings to.
+ * @error: Location to store loading error to, or %NULL.
  *
  * Saves the settings.
  *
@@ -92,7 +94,8 @@ gwy_app_settings_free(void)
  * Returns: Whether it succeeded.
  **/
 gboolean
-gwy_app_settings_save(const gchar *filename)
+gwy_app_settings_save(const gchar *filename,
+                      GError **error)
 {
     GwyContainer *settings;
     GPtrArray *pa;
@@ -102,11 +105,10 @@ gwy_app_settings_save(const gchar *filename)
     gchar *cfgdir;
 
     cfgdir = g_path_get_dirname(filename);
-    if (!create_config_dir_real(cfgdir)) {
-        g_free(cfgdir);
-        return FALSE;
-    }
+    ok = create_config_dir_real(cfgdir, error);
     g_free(cfgdir);
+    if (!ok)
+        return FALSE;
 
     gwy_debug("Saving text settings to `%s'", filename);
     settings = gwy_app_settings_get();
@@ -114,13 +116,16 @@ gwy_app_settings_save(const gchar *filename)
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
     fh = g_fopen(filename, "w");
     if (!fh) {
-        g_warning("Cannot save text settings to `%s': %s",
-                  filename, g_strerror(errno));
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
+                    _("Cannot open file for writing: %s."),
+                    g_strerror(errno));
         return FALSE;
     }
     if (fputs(magic_header, fh) == EOF) {
-        g_warning("Cannot save text settings to `%s': %s",
-                  filename, g_strerror(errno));
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
+                    _("Cannot write to file: %s."), g_strerror(errno));
         fclose(fh);
         return FALSE;
     }
@@ -129,8 +134,9 @@ gwy_app_settings_save(const gchar *filename)
     pa = gwy_container_serialize_to_text(settings);
     for (i = 0; i < pa->len; i++) {
         if (fputs((gchar*)pa->pdata[i], fh) == EOF) {
-            g_warning("Cannot save text settings to `%s': %s",
-                      filename, g_strerror(errno));
+            g_set_error(error,
+                        GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
+                        _("Cannot write to file: %s."), g_strerror(errno));
             while (i < pa->len)
                 g_free(pa->pdata[i]);
             ok = FALSE;
@@ -148,6 +154,7 @@ gwy_app_settings_save(const gchar *filename)
 /**
  * gwy_app_settings_load:
  * @filename: A filename to read settings from.
+ * @error: Location to store loading error to, or %NULL.
  *
  * Loads settings file.
  *
@@ -156,7 +163,8 @@ gwy_app_settings_save(const gchar *filename)
  *          or the old ones (if failed), or an empty #GwyContainer.
  **/
 gboolean
-gwy_app_settings_load(const gchar *filename)
+gwy_app_settings_load(const gchar *filename,
+                      GError **error)
 {
     GwyContainer *new_settings;
     GError *err = NULL;
@@ -164,11 +172,18 @@ gwy_app_settings_load(const gchar *filename)
     gsize size = 0;
 
     gwy_debug("Loading settings from `%s'", filename);
-    if (!g_file_get_contents(filename, &buffer, &size, &err)
-        || !size || !buffer) {
-        g_warning("Cannot load settings from `%s': %s",
-                  filename, err ? err->message : "unknown error");
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
+                    _("Cannot read file contents: %s"), err->message);
         g_clear_error(&err);
+        return FALSE;
+    }
+
+    if (!size || !buffer) {
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_CORRUPT,
+                    _("File is empty."));
         g_free(buffer);
         return FALSE;
     }
@@ -176,7 +191,9 @@ gwy_app_settings_load(const gchar *filename)
     gwy_strkill(buffer, "\r");
 #endif
     if (!g_str_has_prefix(buffer, magic_header)) {
-        g_warning("Bad magic header of settings file");
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_CORRUPT,
+                    _("File is corrupted, magic header does not match."));
         g_free(buffer);
         return FALSE;
     }
@@ -185,6 +202,9 @@ gwy_app_settings_load(const gchar *filename)
     g_free(buffer);
     if (!GWY_IS_CONTAINER(new_settings)) {
         gwy_object_unref(new_settings);
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_CORRUPT,
+                    _("File is corrupted, deserialization failed."));
         return FALSE;
     }
     gwy_app_settings_free();
@@ -197,6 +217,7 @@ gwy_app_settings_load(const gchar *filename)
 
 /**
  * gwy_app_settings_create_config_dir:
+ * @error: Location to store loading error to, or %NULL.
  *
  * Create gwyddion config directory.
  *
@@ -204,13 +225,14 @@ gwy_app_settings_load(const gchar *filename)
  * exists).
  **/
 gboolean
-gwy_app_settings_create_config_dir(void)
+gwy_app_settings_create_config_dir(GError **error)
 {
-    return create_config_dir_real(gwy_get_user_dir());
+    return create_config_dir_real(gwy_get_user_dir(), error);
 }
 
 static gboolean
-create_config_dir_real(const gchar *cfgdir)
+create_config_dir_real(const gchar *cfgdir,
+                       GError **error)
 {
     gboolean ok;
     gchar **moddirs;
@@ -229,10 +251,11 @@ create_config_dir_real(const gchar *cfgdir)
     if (!ok) {
         gwy_debug("Trying to create user config directory %s", cfgdir);
         ok = !g_mkdir(cfgdir, 0700);
-        if (!ok) {
-            g_warning("Cannot create user config directory %s: %s",
-                      cfgdir, g_strerror(errno));
-        }
+        if (!ok)
+            g_set_error(error,
+                        GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_CFGDIR,
+                        _("Cannot create user config directory %s: %s"),
+                        cfgdir, g_strerror(errno));
     }
 
     if (ok) {
@@ -240,9 +263,15 @@ create_config_dir_real(const gchar *cfgdir)
             if (g_file_test(moddirs[i], G_FILE_TEST_IS_DIR))
                 continue;
             gwy_debug("Trying to create user module directory %s", moddirs[i]);
-            if (g_mkdir(moddirs[i], 0700))
-                g_warning("Cannot create user module directory %s: %s",
-                          moddirs[i], g_strerror(errno));
+            ok = !g_mkdir(moddirs[i], 0700);
+            if (!ok) {
+                g_set_error(error,
+                            GWY_APP_SETTINGS_ERROR,
+                            GWY_APP_SETTINGS_ERROR_CFGDIR,
+                            _("Cannot create user module directory %s: %s"),
+                            moddirs[i], g_strerror(errno));
+                break;
+            }
         }
     }
     g_strfreev(moddirs);
@@ -432,7 +461,7 @@ gwy_app_settings_get_module_dirs(void)
     for (i = 0; i < n; i++)
         module_dirs[n+1 + i] = g_build_filename(q, "modules", module_types[i],
                                                 NULL);
-    module_dirs[2*n + 1] = g_build_filename(q, "modules", NULL);;
+    module_dirs[2*n + 1] = g_build_filename(q, "modules", NULL);
 
     module_dirs[2*n + 2] = NULL;
 
@@ -517,6 +546,27 @@ gboolean
 gwy_app_gl_is_ok(void)
 {
     return gwy_gl_ok;
+}
+
+/**
+ * gwy_app_settings_error_quark:
+ *
+ * Returns error domain for application settings operations.
+ *
+ * See and use %GWY_APP_SETTINGS_ERROR.
+ *
+ * Returns: The error domain.
+ **/
+GQuark
+gwy_app_settings_error_quark(void)
+{
+    static GQuark error_domain = 0;
+
+    if (!error_domain)
+        error_domain
+            = g_quark_from_static_string("gwy-app-settings-error-quark");
+
+    return error_domain;
 }
 
 /************************** Documentation ****************************/

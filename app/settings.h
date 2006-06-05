@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,15 +22,28 @@
 #define __GWY_APP_SETTINGS_H__
 
 #include <libgwyddion/gwycontainer.h>
+#include <glib/gerror.h>
 
 G_BEGIN_DECLS
 
+#define GWY_APP_SETTINGS_ERROR gwy_app_settings_error_quark()
+
+typedef enum {
+    GWY_APP_SETTINGS_ERROR_FILE,
+    GWY_APP_SETTINGS_ERROR_CORRUPT,
+    GWY_APP_SETTINGS_ERROR_CFGDIR
+} GwyAppSettingsError;
+
+GQuark        gwy_app_settings_error_quark              (void);
+
 GwyContainer* gwy_app_settings_get                      (void);
 void          gwy_app_settings_free                     (void);
-gboolean      gwy_app_settings_save                     (const gchar *filename);
-gboolean      gwy_app_settings_load                     (const gchar *filename);
+gboolean      gwy_app_settings_save                     (const gchar *filename,
+                                                         GError **error);
+gboolean      gwy_app_settings_load                     (const gchar *filename,
+                                                         GError **error);
 
-gboolean      gwy_app_settings_create_config_dir        (void);
+gboolean      gwy_app_settings_create_config_dir        (GError **error);
 gchar**       gwy_app_settings_get_module_dirs          (void);
 gchar*        gwy_app_settings_get_settings_filename    (void);
 gchar*        gwy_app_settings_get_log_filename         (void);
