@@ -376,7 +376,7 @@ arithmetic_check(ArithmeticArgs *args)
 static void
 arithmetic_do(ArithmeticArgs *args)
 {
-    GwyContainer *data = NULL, *firstdata = NULL;
+    GwyContainer *data, *firstdata = NULL;
     GQuark quark;
     GwyDataField *dfield, *result = NULL;
     /* We know the expression can't contain more variables than NARGS */
@@ -384,7 +384,7 @@ arithmetic_do(ArithmeticArgs *args)
     gdouble *r = NULL;
     gboolean first = TRUE;
     guint n = 0, i;
-    gint newid;
+    gint firstid = -1, newid;
 
     g_return_if_fail(!args->err);
 
@@ -403,16 +403,17 @@ arithmetic_do(ArithmeticArgs *args)
             result = gwy_data_field_new_alike(dfield, FALSE);
             r = gwy_data_field_get_data(result);
             firstdata = data;
+            firstid = args->id[i];
         }
     }
-    g_return_if_fail(data && firstdata);
+    g_return_if_fail(firstdata);
 
     gwy_expr_vector_execute(args->expr, n, d, r);
 
     newid = gwy_app_data_browser_add_data_field(result, firstdata, TRUE);
     g_object_unref(result);
     gwy_app_set_data_field_title(firstdata, newid, _("Calculated"));
-    gwy_app_copy_data_items(data, firstdata, 0, newid,
+    gwy_app_copy_data_items(firstdata, firstdata, firstid, newid,
                             GWY_DATA_ITEM_GRADIENT, 0);
 }
 

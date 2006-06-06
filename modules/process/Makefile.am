@@ -7,6 +7,7 @@ process_LTLIBRARIES = \
 	arithmetic.la \
 	basicops.la \
 	calibrate.la \
+	crosscor.la \
 	cwt.la \
 	drift.la \
 	dwt.la \
@@ -90,8 +91,8 @@ basicops_la_LIBADD = $(module_libadd)
 calibrate_la_SOURCES = calibrate.c
 calibrate_la_LIBADD = $(module_libadd)
 
-#crosscor_la_SOURCES = crosscor.c
-#crosscor_la_LIBADD = $(module_libadd)
+crosscor_la_SOURCES = crosscor.c
+crosscor_la_LIBADD = $(module_libadd)
 
 cwt_la_SOURCES = cwt.c
 cwt_la_LIBADD = $(module_libadd)
