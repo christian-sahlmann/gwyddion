@@ -328,8 +328,10 @@ gwy_sensitivity_group_check_dirty(GwySensitivityGroup *sensgroup)
                                                gwy_sensitivity_group_commit,
                                                sensgroup,
                                                NULL);
-    else if (!dirty && sensgroup->source_id)
+    else if (!dirty && sensgroup->source_id) {
         g_source_remove(sensgroup->source_id);
+        sensgroup->source_id = 0;
+    }
 }
 
 /**
@@ -354,8 +356,9 @@ gwy_sensitivity_group_commit(gpointer data)
             continue;
 
         sens = ((senslist->mask & sensgroup->state) == senslist->mask);
-        for (wl = senslist->widgets; wl; wl = g_list_next(wl))
+        for (wl = senslist->widgets; wl; wl = g_list_next(wl)) {
             gtk_widget_set_sensitive((GtkWidget*)wl->data, sens);
+        }
     }
     sensgroup->old_state = sensgroup->state;
     sensgroup->source_id = 0;
