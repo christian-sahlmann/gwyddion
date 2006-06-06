@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -64,11 +64,12 @@ enum {
     MODEL_NCOLUMNS
 };
 
-static void     gwy_data_chooser_finalize  (GObject *object);
-static void     gwy_data_chooser_destroy   (GtkObject *object);
-static gboolean gwy_data_chooser_is_visible(GtkTreeModel *model,
-                                            GtkTreeIter *iter,
-                                            gpointer data);
+static void     gwy_data_chooser_finalize       (GObject *object);
+static void     gwy_data_chooser_destroy        (GtkObject *object);
+static gboolean gwy_data_chooser_is_visible     (GtkTreeModel *model,
+                                                 GtkTreeIter *iter,
+                                                 gpointer data);
+static void     gwy_data_chooser_choose_whatever(GwyDataChooser *chooser);
 
 G_DEFINE_TYPE(GwyDataChooser, gwy_data_chooser, GTK_TYPE_COMBO_BOX)
 
@@ -289,7 +290,9 @@ gwy_data_chooser_set_filter(GwyDataChooser *chooser,
     chooser->filter_func = filter;
     chooser->filter_data = user_data;
     chooser->filter_destroy = destroy;
+
     gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(chooser->filter));
+    gwy_data_chooser_choose_whatever(chooser);
 }
 
 /**
@@ -339,6 +342,28 @@ gwy_data_chooser_set_none(GwyDataChooser *chooser,
         gtk_list_store_set(chooser->store, &iter,
                            MODEL_COLUMN_NAME, _("(None)"),
                            -1);
+
+    gwy_data_chooser_choose_whatever(chooser);
+}
+
+/**
+ * gwy_data_chooser_choose_whatever:
+ * @chooser: A data chooser.
+ *
+ * Choose arbitrary item if none is active.
+ **/
+static void
+gwy_data_chooser_choose_whatever(GwyDataChooser *chooser)
+{
+    GtkComboBox *combo;
+    GtkTreeIter iter;
+
+    combo = GTK_COMBO_BOX(chooser);
+    if (gtk_combo_box_get_active_iter(combo, &iter))
+        return;
+
+    if (gtk_tree_model_get_iter_first(chooser->filter, &iter))
+        gtk_combo_box_set_active_iter(combo, &iter);
 }
 
 /*****************************************************************************
@@ -504,6 +529,8 @@ gwy_data_chooser_new_channels(void)
     gtk_cell_layout_set_cell_data_func(layout, renderer,
                                        gwy_data_chooser_channels_render_name,
                                        chooser, NULL);
+
+    gwy_data_chooser_choose_whatever(chooser);
 
     return (GtkWidget*)chooser;
 }
