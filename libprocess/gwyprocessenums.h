@@ -158,6 +158,15 @@ typedef enum {
     GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE  = 15
 } GwyGrainQuantity;
 
+typedef enum {
+    GWY_DATA_COMPATIBLITY_RES     = 1 << 0,
+    GWY_DATA_COMPATIBLITY_REAL    = 1 << 1,
+    GWY_DATA_COMPATIBLITY_MEASURE = 1 << 2,
+    GWY_DATA_COMPATIBLITY_LATERAL = 1 << 3,
+    GWY_DATA_COMPATIBLITY_VALUE   = 1 << 4,
+    GWY_DATA_COMPATIBLITY_ALL     = 0x001f
+} GwyDataCompatibilityFlags;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;

@@ -44,6 +44,11 @@ void gwy_data_field_max_of_fields   (GwyDataField *result,
                                      GwyDataField *operand1,
                                      GwyDataField *operand2);
 
+GwyDataCompatibilityFlags
+gwy_data_field_check_compatibility(GwyDataField *data_field1,
+                                   GwyDataField *data_field2,
+                                   GwyDataCompatibilityFlags check);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_ARITHMETIC_H__ */

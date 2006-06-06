@@ -20,6 +20,7 @@
 
 #define GWY_DATA_FIELD_RAW_ACCESS
 #include "config.h"
+#include <math.h>
 #include <libprocess/arithmetic.h>
 
 /* Cache operations */
@@ -261,6 +262,80 @@ gwy_data_field_max_of_fields(GwyDataField *result,
     }
     else
         gwy_data_field_invalidate(result);
+}
+
+/**
+ * gwy_data_field_check_compatibility:
+ * @data_field1: A data field.
+ * @data_field2: Another data field.
+ * @check: The compatibility tests to perform.
+ *
+ * Checks whether two data fields are compatible.
+ *
+ * Returns: Zero if all tested properties are compatible.  Flags corresponding
+ *          to failed tests if data fields are not compatible.
+ **/
+GwyDataCompatibilityFlags
+gwy_data_field_check_compatibility(GwyDataField *data_field1,
+                                   GwyDataField *data_field2,
+                                   GwyDataCompatibilityFlags check)
+{
+    GwyDataCompatibilityFlags result = 0;
+    gint xres1, xres2, yres1, yres2;
+    gdouble xreal1, xreal2, yreal1, yreal2;
+    GwySIUnit *unit1, *unit2;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field1), check);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field2), check);
+
+    xres1 = data_field1->xres;
+    xres2 = data_field2->xres;
+    yres1 = data_field1->yres;
+    yres2 = data_field2->yres;
+    xreal1 = data_field1->xreal;
+    xreal2 = data_field2->xreal;
+    yreal1 = data_field1->yreal;
+    yreal2 = data_field2->yreal;
+
+    /* Resolution */
+    if (check & GWY_DATA_COMPATIBLITY_RES) {
+        if (xres1 != xres2 || yres1 != yres2)
+            result |= GWY_DATA_COMPATIBLITY_RES;
+    }
+
+    /* Real size */
+    if (check & GWY_DATA_COMPATIBLITY_REAL) {
+        if (!(fabs(log(xreal1/xreal2)) <= 1e-9)
+            || !(fabs(log(yreal1/yreal2)) <= 1e-9))
+            result |= GWY_DATA_COMPATIBLITY_REAL;
+    }
+
+    /* Measure */
+    if (check & GWY_DATA_COMPATIBLITY_MEASURE) {
+        if (!(fabs(log(xreal1/xres1*xres2/xreal2)) <= 1e-9)
+            || !(fabs(log(yreal1/yres1*yres2/yreal2)) <= 1e-9))
+            result |= GWY_DATA_COMPATIBLITY_MEASURE;
+    }
+
+    /* Lateral units */
+    if (check & GWY_DATA_COMPATIBLITY_LATERAL) {
+        /* This can cause instantiation of data_field units as a side effect */
+        unit1 = gwy_data_field_get_si_unit_xy(data_field1);
+        unit2 = gwy_data_field_get_si_unit_xy(data_field2);
+        if (!gwy_si_unit_equal(unit1, unit2))
+            result |= GWY_DATA_COMPATIBLITY_LATERAL;
+    }
+
+    /* Value units */
+    if (check & GWY_DATA_COMPATIBLITY_VALUE) {
+        /* This can cause instantiation of data_field units as a side effect */
+        unit1 = gwy_data_field_get_si_unit_z(data_field1);
+        unit2 = gwy_data_field_get_si_unit_z(data_field2);
+        if (!gwy_si_unit_equal(unit1, unit2))
+            result |= GWY_DATA_COMPATIBLITY_VALUE;
+    }
+
+    return result;
 }
 
 /************************** Documentation ****************************/
