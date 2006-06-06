@@ -1724,7 +1724,7 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * if (!gwy_expr_evaluate(expr, "1+2", &amp;result, &amp;err)) {
  *     /<!-- -->* Handle compilation error *<!-- -->/
  * }
- * g_print("The result: %g\n", result);
+ * g_print("The result: %<!-- Hello, gtk-doc! -->g\n", result);
  * gwy_expr_free(expr);
  * </programlisting></informalexample>
  *
@@ -1744,7 +1744,7 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * if (!gwy_expr_evaluate(expr, "hypot x,y", &amp;result, &amp;err)) {
  *     /<!-- -->* Handle compilation error *<!-- -->/
  * }
- * g_print("The result: %g\n", result);
+ * g_print("The result: %<!-- Hello, gtk-doc! -->g\n", result);
  * <!-- Hello, gtk-doc! -->
  * gwy_expr_free(expr);
  * </programlisting></informalexample>
@@ -1783,13 +1783,13 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * for (i = 0; i < G_N_ELEMENTS(var_names); i++) {
  *     vars[var_positions[i]] = var_values1[i];
  * }
- * g_print("First result: %g\n", gwy_expr_execute(expr, vars));
+ * g_print("First result: %<!-- Hello, gtk-doc! -->g\n", gwy_expr_execute(expr, vars));
  * <!-- Hello, gtk-doc! -->
  * /<!-- -->* Evaluate second set *<!-- -->/
  * for (i = 0; i < G_N_ELEMENTS(var_names); i++) {
  *     vars[var_positions[i]] = var_values2[i];
  * }
- * g_print("Second result: %g\n", gwy_expr_execute(expr, vars));
+ * g_print("Second result: %<!-- Hello, gtk-doc! -->g\n", gwy_expr_execute(expr, vars));
  * <!-- Hello, gtk-doc! -->
  * gwy_expr_free(expr);
  * </programlisting></informalexample>
