@@ -230,7 +230,11 @@ tipops_tip_filter(GwyContainer *data,
     target = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
 
     if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
-        && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4)
+        && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4
+        && gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(tip),
+                             gwy_data_field_get_si_unit_xy(target))
+        && gwy_si_unit_equal(gwy_data_field_get_si_unit_z(tip),
+                             gwy_data_field_get_si_unit_z(target)))
         return TRUE;
 
     return FALSE;
