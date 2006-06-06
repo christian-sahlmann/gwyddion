@@ -242,7 +242,6 @@ gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(color);
 
-    /* FIXME: should be reverted on big-endian? */
     pixel = 0xff
             | ((guint32)(guchar)floor(255.99999*color->b) << 8)
             | ((guint32)(guchar)floor(255.99999*color->g) << 16)
