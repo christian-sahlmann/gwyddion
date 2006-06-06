@@ -298,41 +298,41 @@ gwy_data_field_check_compatibility(GwyDataField *data_field1,
     yreal2 = data_field2->yreal;
 
     /* Resolution */
-    if (check & GWY_DATA_COMPATIBLITY_RES) {
+    if (check & GWY_DATA_COMPATIBILITY_RES) {
         if (xres1 != xres2 || yres1 != yres2)
-            result |= GWY_DATA_COMPATIBLITY_RES;
+            result |= GWY_DATA_COMPATIBILITY_RES;
     }
 
     /* Real size */
-    if (check & GWY_DATA_COMPATIBLITY_REAL) {
+    if (check & GWY_DATA_COMPATIBILITY_REAL) {
         if (!(fabs(log(xreal1/xreal2)) <= 1e-9)
             || !(fabs(log(yreal1/yreal2)) <= 1e-9))
-            result |= GWY_DATA_COMPATIBLITY_REAL;
+            result |= GWY_DATA_COMPATIBILITY_REAL;
     }
 
     /* Measure */
-    if (check & GWY_DATA_COMPATIBLITY_MEASURE) {
+    if (check & GWY_DATA_COMPATIBILITY_MEASURE) {
         if (!(fabs(log(xreal1/xres1*xres2/xreal2)) <= 1e-9)
             || !(fabs(log(yreal1/yres1*yres2/yreal2)) <= 1e-9))
-            result |= GWY_DATA_COMPATIBLITY_MEASURE;
+            result |= GWY_DATA_COMPATIBILITY_MEASURE;
     }
 
     /* Lateral units */
-    if (check & GWY_DATA_COMPATIBLITY_LATERAL) {
+    if (check & GWY_DATA_COMPATIBILITY_LATERAL) {
         /* This can cause instantiation of data_field units as a side effect */
         unit1 = gwy_data_field_get_si_unit_xy(data_field1);
         unit2 = gwy_data_field_get_si_unit_xy(data_field2);
         if (!gwy_si_unit_equal(unit1, unit2))
-            result |= GWY_DATA_COMPATIBLITY_LATERAL;
+            result |= GWY_DATA_COMPATIBILITY_LATERAL;
     }
 
     /* Value units */
-    if (check & GWY_DATA_COMPATIBLITY_VALUE) {
+    if (check & GWY_DATA_COMPATIBILITY_VALUE) {
         /* This can cause instantiation of data_field units as a side effect */
         unit1 = gwy_data_field_get_si_unit_z(data_field1);
         unit2 = gwy_data_field_get_si_unit_z(data_field2);
         if (!gwy_si_unit_equal(unit1, unit2))
-            result |= GWY_DATA_COMPATIBLITY_VALUE;
+            result |= GWY_DATA_COMPATIBILITY_VALUE;
     }
 
     return result;

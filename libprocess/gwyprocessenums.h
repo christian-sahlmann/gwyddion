@@ -159,12 +159,12 @@ typedef enum {
 } GwyGrainQuantity;
 
 typedef enum {
-    GWY_DATA_COMPATIBLITY_RES     = 1 << 0,
-    GWY_DATA_COMPATIBLITY_REAL    = 1 << 1,
-    GWY_DATA_COMPATIBLITY_MEASURE = 1 << 2,
-    GWY_DATA_COMPATIBLITY_LATERAL = 1 << 3,
-    GWY_DATA_COMPATIBLITY_VALUE   = 1 << 4,
-    GWY_DATA_COMPATIBLITY_ALL     = 0x001f
+    GWY_DATA_COMPATIBILITY_RES     = 1 << 0,
+    GWY_DATA_COMPATIBILITY_REAL    = 1 << 1,
+    GWY_DATA_COMPATIBILITY_MEASURE = 1 << 2,
+    GWY_DATA_COMPATIBILITY_LATERAL = 1 << 3,
+    GWY_DATA_COMPATIBILITY_VALUE   = 1 << 4,
+    GWY_DATA_COMPATIBILITY_ALL     = 0x001f
 } GwyDataCompatibilityFlags;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
