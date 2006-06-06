@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/tip.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -157,7 +158,7 @@ tipops_dialog(TipOpsArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
 
-    /***** First operand *****/
+    /* Tip */
     label = gtk_label_new_with_mnemonic(_("_Tip morphology:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -231,10 +232,9 @@ tipops_tip_filter(GwyContainer *data,
 
     if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
         && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4
-        && gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(tip),
-                             gwy_data_field_get_si_unit_xy(target))
-        && gwy_si_unit_equal(gwy_data_field_get_si_unit_z(tip),
-                             gwy_data_field_get_si_unit_z(target)))
+        && !gwy_data_field_check_compatibility(tip, target,
+                                               GWY_DATA_COMPATIBILITY_LATERAL
+                                               | GWY_DATA_COMPATIBILITY_VALUE))
         return TRUE;
 
     return FALSE;
@@ -297,7 +297,7 @@ tipops_do(TipOpsArgs *args,
     target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
 
     /* result fields - after computation result should be in dfield */
-    dfield = gwy_data_field_duplicate(target);
+    dfield = gwy_data_field_new_alike(target, FALSE);
 
     /* FIXME */
     window = gwy_app_data_window_get_for_data(args->target.data);

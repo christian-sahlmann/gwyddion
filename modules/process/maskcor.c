@@ -21,7 +21,9 @@
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -37,38 +39,46 @@ typedef enum {
 } MaskcorResult;
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
     MaskcorResult result;
     gdouble threshold;
     GwyCorrelationType method;
-    GwyDataWindow *win1;
-    GwyDataWindow *win2;
+    GwyDataObjectId data;
+    GwyDataObjectId kernel;
 } MaskcorArgs;
 
 typedef struct {
-    GtkObject *threshold;
     MaskcorArgs *args;
+    GtkObject *threshold;
 } MaskcorControls;
 
-static gboolean   module_register          (void);
-static void       maskcor                  (GwyContainer *data,
-                                            GwyRunType run);
-static GtkWidget* maskcor_window_construct (MaskcorArgs *args,
-                                            MaskcorControls *controls);
-static GtkWidget* maskcor_data_option_menu (GwyDataWindow **operand);
-static void       maskcor_operation_cb     (GtkWidget *item,
-                                            MaskcorControls *controls);
-static void       maskcor_threshold_cb     (GtkAdjustment *adj,
-                                            gdouble *value);
-static void       maskcor_data_cb          (GtkWidget *item);
-static gboolean   maskcor_do               (MaskcorArgs *args);
-static void       maskcor_load_args        (GwyContainer *settings,
-                                            MaskcorArgs *args);
-static void       maskcor_save_args        (GwyContainer *settings,
-                                            MaskcorArgs *args);
-static void       maskcor_sanitize_args    (MaskcorArgs *args);
+static gboolean module_register      (void);
+static void     maskcor              (GwyContainer *data,
+                                      GwyRunType run);
+static gboolean maskcor_dialog       (MaskcorArgs *args);
+static void     maskcor_operation_cb (GtkWidget *item,
+                                      MaskcorControls *controls);
+static void     maskcor_threshold_cb (GtkAdjustment *adj,
+                                      gdouble *value);
+static void     maskcor_kernel_cb    (GwyDataChooser *chooser,
+                                      GwyDataObjectId *object);
+static gboolean maskcor_kernel_filter(GwyContainer *data,
+                                      gint id,
+                                      gpointer user_data);
+static void     maskcor_do           (MaskcorArgs *args);
+static void     maskcor_load_args    (GwyContainer *settings,
+                                      MaskcorArgs *args);
+static void     maskcor_save_args    (GwyContainer *settings,
+                                      MaskcorArgs *args);
+static void     maskcor_sanitize_args(MaskcorArgs *args);
 
 static const MaskcorArgs maskcor_defaults = {
-    GWY_MASKCOR_OBJECTS, 0.95, GWY_CORRELATION_NORMAL, NULL, NULL
+    GWY_MASKCOR_OBJECTS, 0.95, GWY_CORRELATION_NORMAL,
+    { NULL, -1 }, { NULL, -1 },
 };
 
 static GwyModuleInfo module_info = {
@@ -76,7 +86,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask by correlation with another data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -98,60 +108,41 @@ module_register(void)
     return TRUE;
 }
 
-/* FIXME: we ignore the Container argument and use current data window */
 static void
 maskcor(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *maskcor_window;
     MaskcorArgs args;
-    MaskcorControls controls;
     GwyContainer *settings;
-    gboolean ok = FALSE;
 
     g_return_if_fail(run & MASKCOR_RUN_MODES);
     settings = gwy_app_settings_get();
     maskcor_load_args(settings, &args);
-    args.win1 = args.win2 = gwy_app_data_window_get_current();
-    g_assert(gwy_data_window_get_data(args.win1) == data);
-    maskcor_window = maskcor_window_construct(&args, &controls);
-    gtk_window_present(GTK_WINDOW(maskcor_window));
 
-    do {
-        switch (gtk_dialog_run(GTK_DIALOG(maskcor_window))) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(maskcor_window);
-            maskcor_save_args(settings, &args);
-            case GTK_RESPONSE_NONE:
-            ok = TRUE;
-            break;
+    args.data.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.data.id, 0);
+    args.kernel.data = NULL;
 
-            case GTK_RESPONSE_OK:
-            gtk_widget_destroy(maskcor_window);
-            maskcor_do(&args);
-            maskcor_save_args(settings, &args);
-            ok = TRUE;
-            break;
+    if (maskcor_dialog(&args))
+        maskcor_do(&args);
 
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (!ok);
+    maskcor_save_args(settings, &args);
 }
 
-static GtkWidget*
-maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
+static gboolean
+maskcor_dialog(MaskcorArgs *args)
 {
     static const GwyEnum results[] = {
         { N_("Objects marked"),     GWY_MASKCOR_OBJECTS },
         { N_("Correlation maxima"), GWY_MASKCOR_MAXIMA },
         { N_("Correlation score"),  GWY_MASKCOR_SCORE },
     };
-    GtkWidget *dialog, *table, *omenu, *spin, *combo, *method;
+    MaskcorControls controls;
+    GtkWidget *dialog, *table, *chooser, *spin, *combo, *method;
     GtkObject *adj;
+    gint row, response;
+    gboolean ok;
 
-    controls->args = args;
+    controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Mask by Correlation"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -160,58 +151,72 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 5, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
+    row = 0;
 
-    /* Operands */
-    omenu = maskcor_data_option_menu(&args->win1);
-    gwy_table_attach_hscale(table, 0, _("_Data to modify:"), NULL,
-                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
+    /* Kernel */
+    chooser = gwy_data_chooser_new_channels();
+    g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
+                                maskcor_kernel_filter, &args->data, NULL);
+    g_signal_connect(chooser, "changed",
+                     G_CALLBACK(maskcor_kernel_cb), &args->kernel);
+    maskcor_kernel_cb(GWY_DATA_CHOOSER(chooser), &args->kernel);
+    gwy_table_attach_hscale(table, row, _("Correlation _kernel:"), NULL,
+                            GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
+    row++;
 
-    omenu = maskcor_data_option_menu(&args->win2);
-    gwy_table_attach_hscale(table, 1, _("_Correlation kernel:"), NULL,
-                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
-
-    /***** Result *****/
+    /* Result */
     combo = gwy_enum_combo_box_new(results, G_N_ELEMENTS(results),
-                                   G_CALLBACK(maskcor_operation_cb), controls,
+                                   G_CALLBACK(maskcor_operation_cb), &controls,
                                    args->result, TRUE);
-    gwy_table_attach_row(table, 2, _("_Output type:"), "", combo);
+    gwy_table_attach_row(table, row, _("Output _type:"), NULL, combo);
+    row++;
 
-    /**** Parameters ********/
+    /* Parameters */
     method = gwy_enum_combo_box_new(gwy_correlation_type_get_enum(), -1,
-                                       G_CALLBACK(gwy_enum_combo_box_update_int),
-                                              &args->method, args->method, TRUE);
-    gwy_table_attach_row(table, 3, _("_Correlation method:"), "", method);
+                                    G_CALLBACK(gwy_enum_combo_box_update_int),
+                                    &args->method, args->method, TRUE);
+    gwy_table_attach_row(table, row, _("Correlation _method:"), NULL, method);
+    row++;
 
     adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0);
-    controls->threshold = adj;
-    spin = gwy_table_attach_hscale(table, 4, _("_Threshold:"), NULL, adj, 0);
+    controls.threshold = adj;
+    spin = gwy_table_attach_hscale(table, row, _("T_hreshold:"), NULL, adj, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gwy_table_hscale_set_sensitive(adj, args->result != GWY_MASKCOR_SCORE);
     g_signal_connect(adj, "value-changed",
-                     G_CALLBACK(maskcor_threshold_cb),
-                     &args->threshold);
+                     G_CALLBACK(maskcor_threshold_cb), &args->threshold);
+    row++;
 
     gtk_widget_show_all(dialog);
 
-    return dialog;
-}
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
 
-GtkWidget*
-maskcor_data_option_menu(GwyDataWindow **operand)
-{
-    GtkWidget *omenu, *menu;
+            case GTK_RESPONSE_OK:
+            gtk_widget_destroy(dialog);
+            ok = TRUE;
+            break;
 
-    omenu = gwy_option_menu_data_window(G_CALLBACK(maskcor_data_cb),
-                                        NULL, NULL, GTK_WIDGET(*operand));
-    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    g_object_set_data(G_OBJECT(menu), "operand", operand);
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (!ok);
 
-    return omenu;
+    return ok;
 }
 
 static void
@@ -230,122 +235,146 @@ maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
 }
 
 static void
-maskcor_data_cb(GtkWidget *item)
+maskcor_kernel_cb(GwyDataChooser *chooser,
+                  GwyDataObjectId *object)
 {
-    GtkWidget *menu;
-    gpointer p, *pp;
+    GtkWidget *dialog;
 
-    menu = gtk_widget_get_parent(item);
+    object->data = gwy_data_chooser_get_active(chooser, &object->id);
+    gwy_debug("kernel: %p %d", object->data, object->id);
 
-    p = g_object_get_data(G_OBJECT(item), "data-window");
-    pp = (gpointer*)g_object_get_data(G_OBJECT(menu), "operand");
-    g_return_if_fail(pp);
-    *pp = p;
-}
-
-static void
-plot_correlated(GwyDataField * retfield, gint xsize, gint ysize,
-                gdouble threshold)
-{
-    GwyDataField *field;
-    gint i, j;
-
-    field = gwy_data_field_duplicate(retfield);
-    gwy_data_field_clear(retfield);
-
-    for (i = 0; i < retfield->xres; i++) {
-        for (j = 0; j < retfield->yres; j++) {
-            if ((field->data[i + retfield->xres * j]) > threshold)
-                gwy_data_field_area_fill(retfield,
-                                         i - xsize/2, j - ysize/2, xsize, ysize,
-                                         1.0);
-        }
-    }
-
-}
-
-static void
-plot_maxima(GwyDataField * retfield, gdouble threshold)
-{
-    gint i, j;
-
-    for (i = 0; i < retfield->xres; i++) {
-        for (j = 0; j < retfield->yres; j++) {
-            if (retfield->data[i + retfield->xres * j] > threshold)
-                retfield->data[i + retfield->xres * j] = 1;
-            else
-                retfield->data[i + retfield->xres * j] = 0;
-        }
-    }
-
+    dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
+    g_assert(GTK_IS_DIALOG(dialog));
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+                                      object->data != NULL);
 }
 
 static gboolean
+maskcor_kernel_filter(GwyContainer *data,
+                      gint id,
+                      gpointer user_data)
+{
+    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyDataField *kernel, *dfield;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    kernel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    quark = gwy_app_get_data_key_for_id(object->id);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+
+    if (gwy_data_field_get_xreal(kernel) <= gwy_data_field_get_xreal(dfield)/4
+        && gwy_data_field_get_yreal(kernel) <= gwy_data_field_get_yreal(dfield)/4
+        && !gwy_data_field_check_compatibility(kernel, dfield,
+                                               GWY_DATA_COMPATIBILITY_LATERAL
+                                               | GWY_DATA_COMPATIBILITY_VALUE))
+        return TRUE;
+
+    return FALSE;
+}
+
+static void
+plot_correlated(GwyDataField *retfield, gint xsize, gint ysize,
+                gdouble threshold)
+{
+    GwyDataField *tmp;
+    gint xres, yres, i, j, col, row, w, h;
+    const gdouble *data;
+
+    tmp = gwy_data_field_duplicate(retfield);
+    gwy_data_field_clear(retfield);
+
+    xres = gwy_data_field_get_xres(retfield);
+    yres = gwy_data_field_get_yres(retfield);
+    data = gwy_data_field_get_data_const(tmp);
+
+    /* FIXME: this is very inefficient */
+    for (i = 0; i < yres; i++) {
+        row = MAX(i - ysize/2, 0);
+        h = MIN(i + ysize - ysize/2, yres) - row;
+        for (j = 0; j < xres; j++) {
+            if (data[i*xres + j] > threshold) {
+                col = MAX(j - xsize/2, 0);
+                w = MIN(j + xsize - xsize/2, xres) - col;
+                gwy_data_field_area_fill(retfield, col, row, w, h, 1.0);
+            }
+        }
+    }
+
+    g_object_unref(tmp);
+}
+
+static void
 maskcor_do(MaskcorArgs *args)
 {
-    GwyContainer *data, *ret, *kernel;
-    GwyDataField *dfield, *kernelfield, *retfield, *scorefield;
-    GwyDataWindow *operand1, *operand2;
-    gint iteration = 0, newid;
+    GwyDataField *dfield, *kernel, *retfield, *score;
+    GwyDataWindow *window;
     GwyComputationStateType state;
+    GQuark quark;
+    gint iteration, newid;
+    gdouble max;
 
-    operand1 = args->win1;
-    operand2 = args->win2;
-    g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
+    quark = gwy_app_get_data_key_for_id(args->kernel.id);
+    kernel = GWY_DATA_FIELD(gwy_container_get_object(args->kernel.data, quark));
 
-    data = gwy_data_window_get_data(operand1);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    retfield = gwy_data_field_duplicate(dfield);
+    quark = gwy_app_get_data_key_for_id(args->data.id);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(args->data.data, quark));
 
-    kernel = gwy_data_window_get_data(operand2);
-    kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel,
-                                                                  "/0/data"));
+    retfield = gwy_data_field_new_alike(dfield, FALSE);
 
-    if (args->method == GWY_CORRELATION_NORMAL)
-    {
+    /* FIXME */
+    window = gwy_app_data_window_get_for_data(args->data.data);
+
+    if (args->method == GWY_CORRELATION_NORMAL) {
         state = GWY_COMPUTATION_STATE_INIT;
-        gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
+        gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
+        max = (gwy_data_field_get_xres(dfield)
+               - gwy_data_field_get_xres(kernel)/2);
+        iteration = 0;
         do {
-            gwy_data_field_correlate_iteration(dfield, kernelfield, retfield,
-                                           &state, &iteration);
-            gwy_app_wait_set_message("Correlating...");
-            if (!gwy_app_wait_set_fraction
-                    (iteration/(gdouble)(gwy_data_field_get_xres(dfield)
-                                     - gwy_data_field_get_xres(kernelfield)/2)))
-                return FALSE;
+            gwy_data_field_correlate_iteration(dfield, kernel, retfield,
+                                               &state, &iteration);
+            gwy_app_wait_set_message(_("Correlating..."));
+            if (!gwy_app_wait_set_fraction(iteration/max)) {
+                gwy_app_wait_finish();
+                g_object_unref(retfield);
+                return;
+            }
 
         } while (state != GWY_COMPUTATION_STATE_FINISHED);
         gwy_app_wait_finish();
     }
-    else gwy_data_field_correlate(dfield, kernelfield, retfield, args->method);
+    else
+        gwy_data_field_correlate(dfield, kernel, retfield, args->method);
 
-    /*score - do new data with score*/
+    /* score - do new data with score */
     if (args->result == GWY_MASKCOR_SCORE) {
-        scorefield = gwy_data_field_new_alike(retfield, TRUE);
-        gwy_data_field_copy(retfield, scorefield, TRUE);
-        newid = gwy_app_data_browser_add_data_field(scorefield, data, TRUE);
-        gwy_app_copy_data_items(data, data, 0, newid, GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_set_data_field_title(data, newid, _("Correlation score"));
-        g_object_unref(scorefield);
+        score = gwy_data_field_duplicate(retfield);
+        newid = gwy_app_data_browser_add_data_field(score, args->data.data,
+                                                    TRUE);
+        gwy_app_copy_data_items(args->data.data, args->data.data,
+                                args->data.id, newid,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_set_data_field_title(args->data.data, newid,
+                                     _("Correlation score"));
+        g_object_unref(score);
     }
-    else { /*add mask*/
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+    else {
+        /* add mask */
+        quark = gwy_app_get_mask_key_for_id(args->data.id);
+        gwy_app_undo_qcheckpointv(args->data.data, 1, &quark);
         if (args->result == GWY_MASKCOR_OBJECTS)
-            plot_correlated(retfield, kernelfield->xres, kernelfield->yres,
+            plot_correlated(retfield,
+                            gwy_data_field_get_xres(kernel),
+                            gwy_data_field_get_yres(kernel),
                             args->threshold);
         else if (args->result == GWY_MASKCOR_MAXIMA)
-            plot_maxima(retfield, args->threshold);
+            gwy_data_field_threshold(retfield, args->threshold, 0.0, 1.0);
 
-        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-            gwy_data_field_copy(retfield, dfield, FALSE);
-        else
-            gwy_container_set_object_by_name(data, "/0/mask", retfield);
-        gwy_app_data_window_set_current(args->win1);
-        gwy_data_field_data_changed(retfield);
+        gwy_container_set_object(args->data.data, quark, retfield);
     }
     g_object_unref(retfield);
-
-    return TRUE;
 }
 
 static const gchar result_key[]    = "/module/maskcor/result";

@@ -300,7 +300,6 @@ crosscor_data_cb(GwyDataChooser *chooser,
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
 }
 
-
 static void
 crosscor_operation_cb(GtkWidget *combo,
                       CrosscorArgs *args)
