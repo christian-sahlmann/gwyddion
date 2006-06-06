@@ -44,19 +44,21 @@ typedef struct {
     GwyDataObjectId target;
 } TipOpsArgs;
 
-static gboolean module_register     (void);
-static void     tipops              (GwyContainer *data,
-                                     GwyRunType run,
-                                     const gchar *name);
-static gboolean tipops_dialog       (TipOpsArgs *args,
-                                     TipOperation op);
-static void     tipops_data_cb      (GwyDataChooser *chooser,
-                                     GwyDataObjectId *object);
-static gboolean tipops_check        (TipOpsArgs *args,
-                                     GtkWidget *tipops_window);
-static void     tip_dilation_do     (TipOpsArgs *args);
-static void     tip_erosion_do      (TipOpsArgs *args);
-static void     tip_certainty_map_do(TipOpsArgs *args);
+static gboolean module_register  (void);
+static void     tipops           (GwyContainer *data,
+                                  GwyRunType run,
+                                  const gchar *name);
+static gboolean tipops_dialog    (TipOpsArgs *args,
+                                  TipOperation op);
+static void     tipops_tip_cb    (GwyDataChooser *chooser,
+                                  GwyDataObjectId *object);
+static gboolean tipops_tip_filter(GwyContainer *data,
+                                  gint id,
+                                  gpointer user_data);
+static gboolean tipops_check     (TipOpsArgs *args,
+                                  GtkWidget *tipops_window);
+static void     tipops_do        (TipOpsArgs *args,
+                                  TipOperation op);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -122,24 +124,10 @@ tipops(GwyContainer *data,
 
     args.target.data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.target.id, 0);
-    /* FIXME: Can't do better? */
-    args.tip = args.target;
+    args.tip.data = NULL;
 
-    if (tipops_dialog(&args, op)) {
-        switch (op) {
-            case DILATION:
-            tip_dilation_do(&args);
-            break;
-
-            case EROSION:
-            tip_erosion_do(&args);
-            break;
-
-            case CERTAINTY_MAP:
-            tip_certainty_map_do(&args);
-            break;
-        }
-    }
+    if (tipops_dialog(&args, op))
+        tipops_do(&args, op);
 }
 
 static gboolean
@@ -150,11 +138,6 @@ tipops_dialog(TipOpsArgs *args,
         N_("Tip Dilation"),
         N_("Surface Reconstruction"),
         N_("Certainty Map Analysis"),
-    };
-    static const gchar *data_labels[] = {
-        N_("_Surface to dilate:"),
-        N_("_Surface to reconstruct:"),
-        N_("_Surface to analyze:"),
     };
     GtkWidget *dialog, *table, *chooser, *label;
     gint row, response;
@@ -167,7 +150,7 @@ tipops_dialog(TipOpsArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 2, FALSE);
+    table = gtk_table_new(1, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -181,25 +164,11 @@ tipops_dialog(TipOpsArgs *args,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     chooser = gwy_data_chooser_new_channels();
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                args->tip.data, args->tip.id);
-    g_signal_connect(chooser, "changed",
-                     G_CALLBACK(tipops_data_cb), &args->tip);
-    gtk_table_attach_defaults(GTK_TABLE(table), chooser, 1, 2, row, row+1);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), chooser);
-    row++;
-
-    /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_(data_labels[op]));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    chooser = gwy_data_chooser_new_channels();
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                args->target.data, args->target.id);
-    g_signal_connect(chooser, "changed",
-                     G_CALLBACK(tipops_data_cb), &args->target);
+    g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
+                                tipops_tip_filter, &args->target, NULL);
+    g_signal_connect(chooser, "changed", G_CALLBACK(tipops_tip_cb), &args->tip);
+    tipops_tip_cb(GWY_DATA_CHOOSER(chooser), &args->tip);
     gtk_table_attach_defaults(GTK_TABLE(table), chooser, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), chooser);
     row++;
@@ -231,10 +200,40 @@ tipops_dialog(TipOpsArgs *args,
 }
 
 static void
-tipops_data_cb(GwyDataChooser *chooser,
-               GwyDataObjectId *object)
+tipops_tip_cb(GwyDataChooser *chooser,
+              GwyDataObjectId *object)
 {
+    GtkWidget *dialog;
+
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
+    gwy_debug("tip: %p %d", object->data, object->id);
+
+    dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
+    g_assert(GTK_IS_DIALOG(dialog));
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+                                      object->data != NULL);
+}
+
+static gboolean
+tipops_tip_filter(GwyContainer *data,
+                  gint id,
+                  gpointer user_data)
+{
+    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyDataField *tip, *target;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    tip = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    quark = gwy_app_get_data_key_for_id(object->id);
+    target = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+
+    if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
+        && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4)
+        return TRUE;
+
+    return FALSE;
 }
 
 static gboolean
@@ -242,137 +241,99 @@ tipops_check(TipOpsArgs *args,
              GtkWidget *tipops_window)
 {
     GtkWidget *dialog;
-    GwyDataField *dfield1, *dfield2;
+    GwyDataField *tip, *target;
+    gdouble tipxm, tipym, targetxm, targetym;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(args->tip.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
+    tip = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
 
     quark = gwy_app_get_data_key_for_id(args->target.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->target.data,
-                                                      quark));
+    target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
 
-    /* FIXME: would not gwy_data_field_get_[xy]measure() simplify it a bit? */
-    if (fabs(gwy_data_field_jtor(dfield1, 1.0)
-             /gwy_data_field_jtor(dfield1, 1.0) - 1.0) > 0.01
-        || fabs(gwy_data_field_itor(dfield1, 1.0)
-                /gwy_data_field_itor(dfield2, 1.0) - 1.0) > 0.01) {
-        dialog = gtk_message_dialog_new(GTK_WINDOW(tipops_window),
+    tipxm = gwy_data_field_get_xmeasure(tip);
+    tipym = gwy_data_field_get_ymeasure(tip);
+    targetxm = gwy_data_field_get_xmeasure(target);
+    targetym = gwy_data_field_get_ymeasure(target);
+    if (fabs(log(tipxm/targetxm)) <= 0.001
+        && fabs(log(tipym/targetym)) <= 0.001)
+        return TRUE;
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(tipops_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_OK,
-                                    _("Tip has different range/resolution "
+                                    _("Tip has different size/resolution "
                                       "ratio than image. Tip will be "
                                       "resampled."));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-    }
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
     return TRUE;
 }
 
 static void
-tip_dilation_do(TipOpsArgs *args)
+tipops_do(TipOpsArgs *args,
+          TipOperation op)
 {
-    GwyDataField *dfield, *dfield1, *dfield2;
+    static const gchar *data_titles[] = {
+        N_("Dilated data"),
+        N_("Surface reconstruction"),
+    };
+    GwyDataField *dfield, *tip, *target;
     GwyDataWindow *window;
     GQuark quark;
     gboolean ok;
     gint newid;
 
     quark = gwy_app_get_data_key_for_id(args->tip.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
+    tip = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
 
     quark = gwy_app_get_data_key_for_id(args->target.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->target.data,
-                                                      quark));
+    target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
 
-    /*result fields - after computation result should be at dfield */
-    dfield = gwy_data_field_duplicate(dfield2);
+    /* result fields - after computation result should be in dfield */
+    dfield = gwy_data_field_duplicate(target);
 
     /* FIXME */
     window = gwy_app_data_window_get_for_data(args->target.data);
     gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
-    ok = gwy_tip_dilation(dfield1, dfield2, dfield,
+
+    if (op == DILATION || op == EROSION) {
+        if (op == DILATION)
+            ok = gwy_tip_dilation(tip, target, dfield,
+                                  gwy_app_wait_set_fraction,
+                                  gwy_app_wait_set_message) != NULL;
+        else
+            ok = gwy_tip_erosion(tip, target, dfield,
+                                 gwy_app_wait_set_fraction,
+                                 gwy_app_wait_set_message) != NULL;
+        gwy_app_wait_finish();
+
+        if (ok) {
+            newid = gwy_app_data_browser_add_data_field(dfield,
+                                                        args->target.data,
+                                                        TRUE);
+            gwy_app_copy_data_items(args->target.data, args->target.data,
+                                    args->target.id, newid,
+                                    GWY_DATA_ITEM_PALETTE, 0);
+            gwy_app_set_data_field_title(args->target.data, newid,
+                                         data_titles[op]);
+        }
+    }
+    else {
+        ok = gwy_tip_cmap(tip, target, dfield,
                           gwy_app_wait_set_fraction,
                           gwy_app_wait_set_message) != NULL;
-    gwy_app_wait_finish();
-    /*set right output */
+        gwy_app_wait_finish();
 
-    if (ok) {
-        newid = gwy_app_data_browser_add_data_field(dfield, args->target.data,
-                                                    TRUE);
-        gwy_app_set_data_field_title(args->target.data, newid,
-                                     _("Dilated data"));
+        if (ok) {
+            quark = gwy_app_get_mask_key_for_id(args->target.id);
+            gwy_app_undo_qcheckpointv(args->target.data, 1, &quark);
+            gwy_container_set_object(args->target.data, quark, dfield);
+        }
     }
     g_object_unref(dfield);
-}
-
-static void
-tip_erosion_do(TipOpsArgs *args)
-{
-    GwyDataField *dfield, *dfield1, *dfield2;
-    GwyDataWindow *window;
-    GQuark quark;
-    gboolean ok;
-    gint newid;
-
-    quark = gwy_app_get_data_key_for_id(args->tip.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
-
-    quark = gwy_app_get_data_key_for_id(args->target.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->target.data,
-                                                      quark));
-
-    /*result fields - after computation result should be at dfield */
-    dfield = gwy_data_field_duplicate(dfield2);
-
-    /* FIXME */
-    window = gwy_app_data_window_get_for_data(args->target.data);
-    gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
-    ok = gwy_tip_erosion(dfield1, dfield2, dfield,
-                         gwy_app_wait_set_fraction,
-                         gwy_app_wait_set_message) != NULL;
-    gwy_app_wait_finish();
-    /*set right output */
-
-    if (ok) {
-        newid = gwy_app_data_browser_add_data_field(dfield, args->target.data,
-                                                    TRUE);
-        gwy_app_set_data_field_title(args->target.data, newid,
-                                     _("Surface reconstruction"));
-    }
-    g_object_unref(dfield);
-}
-
-static void
-tip_certainty_map_do(TipOpsArgs *args)
-{
-    GwyDataField *dfield, *dfield1, *dfield2;
-    GwyDataWindow *window;
-    GQuark quark;
-
-    quark = gwy_app_get_data_key_for_id(args->tip.id);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
-
-    quark = gwy_app_get_data_key_for_id(args->target.id);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->target.data,
-                                                      quark));
-
-    /*result fields - after computation result should be at dfield */
-    dfield = gwy_data_field_duplicate(dfield2);
-
-    /* FIXME */
-    window = gwy_app_data_window_get_for_data(args->target.data);
-    gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
-    if (gwy_tip_cmap(dfield1, dfield2, dfield,
-                      gwy_app_wait_set_fraction,
-                      gwy_app_wait_set_message)) {
-        quark = gwy_app_get_mask_key_for_id(args->target.id);
-        gwy_app_undo_qcheckpointv(args->target.data, 1, &quark);
-        gwy_container_set_object(args->target.data, quark, dfield);
-    }
-    g_object_unref(dfield);
-    gwy_app_wait_finish();
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

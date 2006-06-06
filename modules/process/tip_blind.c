@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -486,12 +486,10 @@ prepare_fields(GwyDataField *tipfield,
 
     /*set real sizes corresponding to actual data*/
     gwy_data_field_set_xreal(tipfield,
-                             gwy_data_field_get_xreal(surface)
-                             /gwy_data_field_get_xres(surface)
+                             gwy_data_field_get_xmeasure(surface)
                              *gwy_data_field_get_xres(tipfield));
     gwy_data_field_set_yreal(tipfield,
-                             gwy_data_field_get_yreal(surface)
-                             /gwy_data_field_get_yres(surface)
+                             gwy_data_field_get_ymeasure(surface)
                              *gwy_data_field_get_yres(tipfield));
 
     /*if user has changed tip size, change it*/
@@ -526,24 +524,27 @@ tip_blind_run(TipBlindControls *controls,
 
     /* control tip resolution and real/res ratio*/
     prepare_fields(controls->tip, surface, args->xres, args->yres);
+    controls->good_tip = FALSE;
     if (full) {
-        controls->tip = gwy_tip_estimate_full(controls->tip,
-                                              surface, args->thresh,
-                                              args->use_boundaries,
-                                              &count,
-                                              gwy_app_wait_set_fraction,
-                                              gwy_app_wait_set_message);
-        controls->good_tip = (controls->tip != NULL && count > 0);
+        controls->good_tip
+            = (gwy_tip_estimate_full(controls->tip,
+                                     surface, args->thresh,
+                                     args->use_boundaries,
+                                     &count,
+                                     gwy_app_wait_set_fraction,
+                                     gwy_app_wait_set_message)
+               && count > 0);
     }
     else {
         gwy_data_field_fill(controls->tip, 0);
-        controls->tip = gwy_tip_estimate_partial(controls->tip,
-                                                 surface, args->thresh,
-                                                 args->use_boundaries,
-                                                 &count,
-                                                 gwy_app_wait_set_fraction,
-                                                 gwy_app_wait_set_message);
-        controls->good_tip = (controls->tip != NULL && count > 0);
+        controls->good_tip
+            = (gwy_tip_estimate_partial(controls->tip,
+                                        surface, args->thresh,
+                                        args->use_boundaries,
+                                        &count,
+                                        gwy_app_wait_set_fraction,
+                                        gwy_app_wait_set_message)
+               && count > 0);
     }
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK, controls->good_tip);
