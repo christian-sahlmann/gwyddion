@@ -111,8 +111,9 @@ static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
 static void gwy_app_data_browser_sync_show  (GwyContainer *data,
                                              GQuark quark,
                                              GwyDataView *data_view);
-const gchar* gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
-                                                           gint channel);
+static const gchar*
+gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
+                                              gint channel);
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
@@ -2212,7 +2213,7 @@ gwy_app_set_data_field_title(GwyContainer *data,
     gwy_container_set_string_by_name(data, key, title);
 }
 
-const gchar*
+static const gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel)
 {
