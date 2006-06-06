@@ -63,7 +63,7 @@ static GHashTable *process_funcs = NULL;
  *
  * Note: the string arguments are not copied as modules are not expected to
  * vanish.  If they are constructed (non-constant) strings, do not free them.
- * Should modules ever become unloadable they will get chance to clean-up.
+ * Should modules ever become unloadable they will get a chance to clean-up.
  *
  * Returns: Normally %TRUE; %FALSE on failure.
  **/

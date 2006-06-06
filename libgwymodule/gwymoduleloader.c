@@ -282,13 +282,19 @@ gwy_module_do_register_module(const gchar *filename,
         iinfo->loaded = TRUE;
         iinfo->funcs = NULL;
         g_hash_table_insert(mods, (gpointer)iinfo->name, iinfo);
-        ok = mod_info->register_func();
-        if (!ok) {
+        if (!(ok = mod_info->register_func()))
             g_warning("Module `%s' feature registration failed", iinfo->name);
-            gwy_module_get_rid_of(iinfo->name);
+        if (ok && !iinfo->funcs) {
+            g_warning("Module `%s' did not register any function", iinfo->name);
+            ok = FALSE;
         }
 
-        gwy_module_pedantic_check(iinfo);
+        if (ok)
+            gwy_module_pedantic_check(iinfo);
+        else {
+            gwy_module_get_rid_of(iinfo->name);
+            modname = NULL;
+        }
     }
 
     if (ok) {
@@ -426,6 +432,7 @@ gwy_module_get_rid_of(const gchar *modname)
     GSList *l;
     gsize i;
 
+    gwy_debug("%s", modname);
     iinfo = g_hash_table_lookup(modules, modname);
     g_return_if_fail(iinfo);
     /* FIXME: this is quite crude, it can remove functions of the same name
