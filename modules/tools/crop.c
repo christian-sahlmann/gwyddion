@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -341,12 +341,12 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
 {
     GwyPlainTool *plain_tool;
     GwyContainer *container;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield, *sfield;
     GQuark quarks[3];
     gdouble sel[4];
     gchar key[24];
     gint isel[4];
-    gint id;
+    gint oldid, id;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->id >= 0 && plain_tool->data_field != NULL);
@@ -362,29 +362,32 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
     isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
 
     container = plain_tool->container;
+    oldid = plain_tool->id;
+    mfield = plain_tool->mask_field;
+    sfield = plain_tool->show_field;
+
     if (tool->args.new_channel) {
         dfield = gwy_data_field_duplicate(plain_tool->data_field);
         gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
         id = gwy_app_data_browser_add_data_field(dfield, container, TRUE);
         g_object_unref(dfield);
-        gwy_app_copy_data_items(plain_tool->container, container,
-                                plain_tool->id, id,
+        gwy_app_copy_data_items(container, container, oldid, id,
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_RANGE_TYPE,
                                 GWY_DATA_ITEM_MASK_COLOR,
                                 0);
         gwy_app_set_data_field_title(container, id, _("Detail"));
 
-        if (plain_tool->mask_field) {
-            dfield = gwy_data_field_duplicate(plain_tool->mask_field);
+        if (mfield) {
+            dfield = gwy_data_field_duplicate(mfield);
             gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
             quarks[1] = gwy_app_get_mask_key_for_id(id);
             gwy_container_set_object(container, quarks[1], dfield);
             g_object_unref(dfield);
         }
 
-        if (plain_tool->show_field) {
-            dfield = gwy_data_field_duplicate(plain_tool->show_field);
+        if (sfield) {
+            dfield = gwy_data_field_duplicate(sfield);
             gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
             quarks[2] = gwy_app_get_show_key_for_id(id);
             gwy_container_set_object(container, quarks[2], dfield);
