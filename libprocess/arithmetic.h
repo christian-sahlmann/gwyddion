@@ -48,6 +48,10 @@ GwyDataCompatibilityFlags
 gwy_data_field_check_compatibility(GwyDataField *data_field1,
                                    GwyDataField *data_field2,
                                    GwyDataCompatibilityFlags check);
+GwyDataCompatibilityFlags
+gwy_data_line_check_compatibility(GwyDataLine *data_line1,
+                                  GwyDataLine *data_line2,
+                                  GwyDataCompatibilityFlags check);
 
 G_END_DECLS
 

@@ -19,6 +19,7 @@
  */
 
 #define GWY_DATA_FIELD_RAW_ACCESS
+#define GWY_DATA_LINE_RAW_ACCESS
 #include "config.h"
 #include <math.h>
 #include <libprocess/arithmetic.h>
@@ -331,6 +332,74 @@ gwy_data_field_check_compatibility(GwyDataField *data_field1,
         /* This can cause instantiation of data_field units as a side effect */
         unit1 = gwy_data_field_get_si_unit_z(data_field1);
         unit2 = gwy_data_field_get_si_unit_z(data_field2);
+        if (!gwy_si_unit_equal(unit1, unit2))
+            result |= GWY_DATA_COMPATIBILITY_VALUE;
+    }
+
+    return result;
+}
+
+/**
+ * gwy_data_line_check_compatibility:
+ * @data_line1: A data line.
+ * @data_line2: Another data line.
+ * @check: The compatibility tests to perform.
+ *
+ * Checks whether two data lines are compatible.
+ *
+ * Returns: Zero if all tested properties are compatible.  Flags corresponding
+ *          to failed tests if data lines are not compatible.
+ **/
+GwyDataCompatibilityFlags
+gwy_data_line_check_compatibility(GwyDataLine *data_line1,
+                                  GwyDataLine *data_line2,
+                                  GwyDataCompatibilityFlags check)
+{
+    GwyDataCompatibilityFlags result = 0;
+    gint res1, res2;
+    gdouble real1, real2;
+    GwySIUnit *unit1, *unit2;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line1), check);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line2), check);
+
+    res1 = data_line1->res;
+    res2 = data_line2->res;
+    real1 = data_line1->real;
+    real2 = data_line2->real;
+
+    /* Resolution */
+    if (check & GWY_DATA_COMPATIBILITY_RES) {
+        if (res1 != res2)
+            result |= GWY_DATA_COMPATIBILITY_RES;
+    }
+
+    /* Real size */
+    if (check & GWY_DATA_COMPATIBILITY_REAL) {
+        if (!(fabs(log(real1/real2)) <= 1e-9))
+            result |= GWY_DATA_COMPATIBILITY_REAL;
+    }
+
+    /* Measure */
+    if (check & GWY_DATA_COMPATIBILITY_MEASURE) {
+        if (!(fabs(log(real1/res1*res2/real2)) <= 1e-9))
+            result |= GWY_DATA_COMPATIBILITY_MEASURE;
+    }
+
+    /* Lateral units */
+    if (check & GWY_DATA_COMPATIBILITY_LATERAL) {
+        /* This can cause instantiation of data_line units as a side effect */
+        unit1 = gwy_data_line_get_si_unit_x(data_line1);
+        unit2 = gwy_data_line_get_si_unit_x(data_line2);
+        if (!gwy_si_unit_equal(unit1, unit2))
+            result |= GWY_DATA_COMPATIBILITY_LATERAL;
+    }
+
+    /* Value units */
+    if (check & GWY_DATA_COMPATIBILITY_VALUE) {
+        /* This can cause instantiation of data_line units as a side effect */
+        unit1 = gwy_data_line_get_si_unit_y(data_line1);
+        unit2 = gwy_data_line_get_si_unit_y(data_line2);
         if (!gwy_si_unit_equal(unit1, unit2))
             result |= GWY_DATA_COMPATIBILITY_VALUE;
     }
