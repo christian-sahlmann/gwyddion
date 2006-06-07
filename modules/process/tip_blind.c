@@ -173,6 +173,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     TipBlindControls controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
+    GQuark quark;
     GwySIUnit *unit;
     gint response, row;
 
@@ -200,15 +201,16 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.vxres = 200;
     controls.vyres = 200;
 
-    /*set initial tip properties*/
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+    /* set initial tip properties */
+    quark = gwy_app_get_data_key_for_id(args->source.id);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, args->xres, args->yres,
                             GWY_INTERPOLATION_NONE);
     gwy_data_field_clear(controls.tip);
 
-    /*set up data of rescaled image of the tip*/
+    /* set up data of rescaled image of the tip */
     controls.vtip = gwy_container_new();
     gwy_app_copy_data_items(data, controls.vtip, args->source.id, 0,
                             GWY_DATA_ITEM_PALETTE,
@@ -219,14 +221,14 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
                             GWY_INTERPOLATION_ROUND);
     gwy_container_set_object_by_name(controls.vtip, "/0/data", dfield);
 
-    /*set up rescaled image of the tip*/
+    /* set up rescaled image of the tip */
     controls.view = gwy_data_view_new(controls.vtip);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
-    /*set up tip estimation controls*/
+    /* set up tip estimation controls */
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(7, 4, FALSE);
@@ -312,9 +314,12 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     g_signal_connect(controls.boundaries, "toggled",
                      G_CALLBACK(bound_changed_cb), args);
 
+    g_object_unref(dfield);
+
     controls.tipdone = FALSE;
     controls.in_update = FALSE;
     gtk_widget_show_all(dialog);
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -322,6 +327,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            tip_blind_dialog_abandon(&controls);
             return;
             break;
 
