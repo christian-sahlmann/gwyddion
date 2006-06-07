@@ -215,7 +215,7 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
         = gwy_enum_combo_box_new(gwy_dwt_denoise_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->method, args->method, TRUE);
-    gwy_table_attach_row(table, 3, _("_Threshold:"), "",
+    gwy_table_attach_row(table, 3, _("T_hreshold:"), "",
              controls.method);
 
     gtk_widget_show_all(dialog);

@@ -235,7 +235,7 @@ wshed_dialog(WshedArgs *args,
     row++;
     controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
                                                 0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("_Threshold:"), "px<sup>2</sup>",
+    gwy_table_attach_hscale(table, row, _("T_hreshold:"), "px<sup>2</sup>",
                             controls.locate_thresh, 0);
     g_signal_connect_swapped(controls.locate_thresh, "value-changed",
                              G_CALLBACK(wshed_invalidate), &controls);
