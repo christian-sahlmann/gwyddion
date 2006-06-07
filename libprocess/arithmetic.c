@@ -29,6 +29,9 @@
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
+/* for compatibility checks */
+#define EPSILON 1e-6
+
 /**
  * gwy_data_field_sum_fields:
  * @result: A data field to put the result to.  May be one of @operand1,
@@ -306,15 +309,17 @@ gwy_data_field_check_compatibility(GwyDataField *data_field1,
 
     /* Real size */
     if (check & GWY_DATA_COMPATIBILITY_REAL) {
-        if (!(fabs(log(xreal1/xreal2)) <= 1e-9)
-            || !(fabs(log(yreal1/yreal2)) <= 1e-9))
+        /* Keeps the condition in negative form to catch NaNs and odd values
+         * as incompatible. */
+        if (!(fabs(log(xreal1/xreal2)) <= EPSILON)
+            || !(fabs(log(yreal1/yreal2)) <= EPSILON))
             result |= GWY_DATA_COMPATIBILITY_REAL;
     }
 
     /* Measure */
     if (check & GWY_DATA_COMPATIBILITY_MEASURE) {
-        if (!(fabs(log(xreal1/xres1*xres2/xreal2)) <= 1e-9)
-            || !(fabs(log(yreal1/yres1*yres2/yreal2)) <= 1e-9))
+        if (!(fabs(log(xreal1/xres1*xres2/xreal2)) <= EPSILON)
+            || !(fabs(log(yreal1/yres1*yres2/yreal2)) <= EPSILON))
             result |= GWY_DATA_COMPATIBILITY_MEASURE;
     }
 
@@ -376,13 +381,13 @@ gwy_data_line_check_compatibility(GwyDataLine *data_line1,
 
     /* Real size */
     if (check & GWY_DATA_COMPATIBILITY_REAL) {
-        if (!(fabs(log(real1/real2)) <= 1e-9))
+        if (!(fabs(log(real1/real2)) <= EPSILON))
             result |= GWY_DATA_COMPATIBILITY_REAL;
     }
 
     /* Measure */
     if (check & GWY_DATA_COMPATIBILITY_MEASURE) {
-        if (!(fabs(log(real1/res1*res2/real2)) <= 1e-9))
+        if (!(fabs(log(real1/res1*res2/real2)) <= EPSILON))
             result |= GWY_DATA_COMPATIBILITY_MEASURE;
     }
 
