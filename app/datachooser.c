@@ -121,6 +121,7 @@ static void
 gwy_data_chooser_init(GwyDataChooser *chooser)
 {
     GtkTreeModelFilter *filter;
+    GtkComboBox *combo;
     GdkPixbuf *pixbuf;
     GtkTreeIter iter;
 
@@ -148,7 +149,9 @@ gwy_data_chooser_init(GwyDataChooser *chooser)
                                       -1);
     g_object_unref(pixbuf);
 
-    gtk_combo_box_set_model(GTK_COMBO_BOX(chooser), chooser->filter);
+    combo = GTK_COMBO_BOX(chooser);
+    gtk_combo_box_set_model(combo, chooser->filter);
+    gtk_combo_box_set_wrap_width(combo, 1);
 }
 
 /**
