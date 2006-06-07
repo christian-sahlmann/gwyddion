@@ -45,7 +45,8 @@ enum {
 
 enum {
     PROP_0,
-    PROP_DRAW_REFLECTION
+    PROP_DRAW_REFLECTION,
+    PROP_SNAP_TO_CENTER,
 };
 
 typedef struct _GwyLayerEllipse          GwyLayerEllipse;
@@ -61,6 +62,7 @@ struct _GwyLayerEllipse {
 
     /* Properties */
     gboolean draw_reflection;
+    gboolean snap;
 
     /* Dynamic state */
     gboolean circle;
@@ -109,6 +111,8 @@ static gboolean gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
                                                   GdkEventButton *event);
 static void     gwy_layer_ellipse_set_reflection (GwyLayerEllipse *layer,
                                                   gboolean draw_reflection);
+static void     gwy_layer_ellipse_set_snap       (GwyLayerEllipse *layer,
+                                                  gboolean snap);
 static void     gwy_layer_ellipse_realize        (GwyDataViewLayer *dlayer);
 static void     gwy_layer_ellipse_unrealize      (GwyDataViewLayer *dlayer);
 static gint     gwy_layer_ellipse_near_point     (GwyVectorLayer *layer,
@@ -185,6 +189,15 @@ gwy_layer_ellipse_class_init(GwyLayerEllipseClass *klass)
                              "be drawn too",
                              FALSE,
                              G_PARAM_READWRITE));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_SNAP_TO_CENTER,
+        g_param_spec_boolean("snap-to-center",
+                             "Snap to Center",
+                             "Whether the selection should snap to the center.",
+                             FALSE,
+                             G_PARAM_READWRITE));
 }
 
 static void
@@ -212,6 +225,10 @@ gwy_layer_ellipse_set_property(GObject *object,
         gwy_layer_ellipse_set_reflection(layer, g_value_get_boolean(value));
         break;
 
+        case PROP_SNAP_TO_CENTER:
+        gwy_layer_ellipse_set_snap(layer, g_value_get_boolean(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -229,6 +246,10 @@ gwy_layer_ellipse_get_property(GObject*object,
     switch (prop_id) {
         case PROP_DRAW_REFLECTION:
         g_value_set_boolean(value, layer->draw_reflection);
+        break;
+
+        case PROP_SNAP_TO_CENTER:
+        g_value_set_boolean(value, layer->snap);
         break;
 
         default:
@@ -289,7 +310,9 @@ gwy_layer_ellipse_draw_ellipse(GwyVectorLayer *layer,
                                const gdouble *xy)
 {
     gint xmin, ymin, xmax, ymax, width, height;
+    gint xcenter, ycenter, xradius, yradius;
     gdouble xreal, yreal;
+    GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
     switch (target) {
         case GWY_RENDERING_TARGET_SCREEN:
@@ -311,10 +334,24 @@ gwy_layer_ellipse_draw_ellipse(GwyVectorLayer *layer,
         break;
     }
 
-    if (xmax < xmin)
-        GWY_SWAP(gint, xmin, xmax);
-    if (ymax < ymin)
-        GWY_SWAP(gint, ymin, ymax);
+    /*XXX This is hack-ish */
+    if (layer_ellipse->snap) {
+        xcenter = xmin;
+        ycenter = ymin;
+        xradius = ABS(xmax - xmin);
+        yradius = ABS(ymax - ymin);
+
+        xmin = xcenter - xradius;
+        xmax = xcenter + xradius;
+        ymin = ycenter - yradius;
+        ymax = ycenter + yradius;
+    }
+    else {
+        if (xmax < xmin)
+            GWY_SWAP(gint, xmin, xmax);
+        if (ymax < ymin)
+            GWY_SWAP(gint, ymin, ymax);
+    }
 
     gdk_draw_arc(drawable, layer->gc, FALSE,
                  xmin, ymin, xmax - xmin, ymax - ymin,
@@ -390,6 +427,9 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean circle;
+    gint xres, yres;
+    gdouble zoom;
+    GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
     gwy_debug("");
     if (event->button != 1)
@@ -406,6 +446,15 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
+
+    /*XXX*/
+    if (layer_ellipse->snap) {
+        gwy_data_view_get_pixel_data_sizes(data_view, &xres, &yres);
+        zoom = gwy_data_view_get_real_zoom(data_view);
+        x = (xres * zoom) / 2.0;
+        y = (yres * zoom) / 2.0;
+        g_debug("xres: %i   yres: %i", xres, yres);
+    }
 
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
 
@@ -471,8 +520,11 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     GdkWindow *window;
     GdkCursor *cursor;
     gint x, y, xx, yy, i;
+    gdouble xcenter, ycenter, xradius, yradius;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
+    GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
+    gboolean snap;
 
     if (!layer->button)
         return FALSE;
@@ -502,12 +554,27 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
             xy[3] = yreal;
         }
 
-        if (xy[2] < xy[0])
+        /*XXX*/
+        if (layer_ellipse->snap) {
+            xcenter = xy[0];
+            ycenter = xy[1];
+            xradius = ABS(xy[2] - xy[0]);
+            yradius = ABS(xy[3] - xy[1]);
+            xy[0] = xcenter - xradius;
+            xy[1] = ycenter - yradius;
+            xy[2] = xcenter + xradius;
+            xy[3] = ycenter + yradius;
+            gwy_selection_set_object(layer->selection, i, xy);
+        }
+        else {
+            if (xy[2] < xy[0])
             GWY_SWAP(gdouble, xy[0], xy[2]);
-        if (xy[3] < xy[1])
+            if (xy[3] < xy[1])
             GWY_SWAP(gdouble, xy[1], xy[3]);
+        }
 
         gwy_selection_set_object(layer->selection, i, xy);
+
         gwy_layer_ellipse_draw_object(layer, window,
                                       GWY_RENDERING_TARGET_SCREEN, i);
     }
@@ -523,6 +590,7 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     outside = outside || (i == -1);
     gdk_window_set_cursor(window, cursor);
     gwy_selection_finished(layer->selection);
+
 
     return FALSE;
 }
@@ -549,6 +617,29 @@ gwy_layer_ellipse_set_reflection(GwyLayerEllipse *layer,
         gwy_layer_ellipse_draw(vector_layer, parent->window,
                                GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-reflection");
+}
+
+static void
+gwy_layer_ellipse_set_snap(GwyLayerEllipse *layer, gboolean snap)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_ELLIPSE(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (snap == layer->snap)
+        return;
+
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_ellipse_undraw(vector_layer, parent->window,
+                                 GWY_RENDERING_TARGET_SCREEN);
+    layer->snap = snap;
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_ellipse_draw(vector_layer, parent->window,
+                               GWY_RENDERING_TARGET_SCREEN);
+    g_object_notify(G_OBJECT(layer), "snap-to-center");
 }
 
 static void

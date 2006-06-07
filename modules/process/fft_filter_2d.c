@@ -18,7 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*TODO: Only allow 2^n sized images (XXX: this is no longer useful with FFTW) */
+/*TODO: Only allow square images */
 
 #include "config.h"
 #include <string.h>
@@ -28,19 +28,9 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
-
-
-//XXX CRUFT:
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <libgwyddion/gwyutils.h>
-#include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/elliptic.h>
-#include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
-#include <libdraw/gwygradient.h>
-#include <libdraw/gwypixfield.h>
-
 
 #define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -49,9 +39,6 @@
 #define CR_MAX 200
 
 /* Convenience macros */
-#define is_marker_zero_sized(marker) \
-    (marker->left == marker->right || marker->top == marker->bottom)
-
 #define get_toggled(obj) \
     gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(obj))
 #define set_toggled(obj, tog) \
@@ -62,14 +49,8 @@
 #define set_combo_index(obj, key, i) \
     gwy_option_menu_set_history(obj, key, i)
 
-#define get_container_data(obj) \
-    GWY_DATA_FIELD(gwy_container_get_object_by_name(obj, "/0/data"))
-
 #define radio_new gtk_radio_button_new_with_mnemonic_from_widget
 #define check_new gtk_check_button_new_with_mnemonic
-
-#define get_distance(x1, x2, y1, y2) \
-    sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
 
 typedef enum {
@@ -86,12 +67,14 @@ typedef enum {
     PREV_DIFF,
 } PreviewMode;
 
-typedef void (*FieldFillFunc)(GwyDataField*, gint, gint, gint, gint, gdouble);
-
-enum {
+typedef enum {
     OUTPUT_FFT = 1,
     OUTPUT_IMAGE = 2
-};
+} OutputMode;
+
+
+typedef void (*FieldFillFunc)(GwyDataField*, gint, gint, gint, gint, gdouble);
+
 
 enum {
     RESPONSE_RESET,
@@ -115,28 +98,9 @@ typedef struct {
     PreviewMode     prev_mode;
     GSList          *pmode;
 
-//XXX OLD CRUFT:
-    GtkWidget *dialog;
-
-    GtkWidget *scale_fft;
-    GtkWidget *check_zoom;
-    GtkWidget *check_origin;
-
-    GtkWidget *button_show_fft;
-    GtkWidget *button_show_original_image;
-    GtkWidget *button_show_fft_preview;
-    GtkWidget *button_show_image_preview;
-    GtkWidget *button_show_diff_preview;
-
-    GtkWidget *combo_output;
-
-//    gdouble color_range;
-//    gboolean preview;
-//    gboolean preview_invalid;
-//    gboolean output_image;
-//    gboolean output_fft;
-//    gdouble zoom_factor;
-
+    gboolean        snap;
+    gboolean        zoom;
+    OutputMode      out_mode;
 } ControlsType;
 
 /* Gwyddion Module Routines */
@@ -151,6 +115,8 @@ static void        edit_mode_changed_cb  (ControlsType *controls);
 static void        prev_mode_changed_cb  (ControlsType *controls);
 static void        remove_all_cb         (ControlsType *controls);
 static void        undo_cb               (ControlsType *controls);
+static void        snap_cb               (GtkWidget *check,
+                                          ControlsType *controls);
 
 /* Helper Functions */
 static GwyDataField*   create_mask_field   (GwyDataField *dfield);
@@ -167,12 +133,7 @@ static void            fft_filter_2d       (GwyDataField *input,
                                             GwyDataField *output_fft,
                                             GwyDataField *mask);
 
-
-
 //XXX OLD CRUFT:
-static void         scale_changed_fft   (GtkRange *range,
-                                         ControlsType *controls);
-static void         display_mode_changed(ControlsType *controls);
 static void         zoom_toggled        (ControlsType *controls);
 
 /* Helper Functions */
@@ -211,8 +172,8 @@ module_register(void)
 static void
 run_main(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield = NULL, *mfield;
-    GwyDataField *out_image, *out_fft;
+    GwyDataField *dfield = NULL;
+    GwyDataField *out_image = NULL, *out_fft = NULL;
     gint id, newid;
     GwyRGBA rgba;
     ControlsType controls;
@@ -223,91 +184,104 @@ run_main(GwyContainer *data, GwyRunType run)
     /* Initialize */
     controls.edit_mode = FFT_ELLIPSE_ADD;
     controls.prev_mode = PREV_FFT;
+    controls.out_mode = OUTPUT_FFT | OUTPUT_IMAGE;
+    controls.snap = FALSE;
+    controls.zoom = FALSE;
     controls.data = data;
 
     /*XXX: should the mask and presentation get carried through? */
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
-    if (dfield)
-    {
-        /* Create datafields */
-        controls.dfield = gwy_data_field_duplicate(dfield);
-        controls.mfield = create_mask_field(controls.dfield);
-        controls.fft = gwy_data_field_new_alike(dfield, FALSE);
-        do_fft(controls.dfield, controls.fft);
-        controls.filtered = gwy_data_field_new_alike(dfield, TRUE);
-        controls.diff = gwy_data_field_new_alike(dfield, TRUE);
 
-        /* Setup the mydata container */
-        controls.mydata = gwy_container_new();
-        gwy_container_set_object_by_name(controls.mydata, "/0/data",
-                                         controls.fft);
-        gwy_container_set_string_by_name(controls.mydata,
-                                         "/0/base/palette",
-                                         g_strdup("DFit"));
-        gwy_app_copy_data_items(data, controls.mydata, id, 0,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                0);
-        if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
-            gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-            gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
-        }
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
-        gwy_container_set_object_by_name(controls.mydata, "/0/mask",
-                                         controls.mfield);
+    /* Create datafields */
+    controls.dfield = gwy_data_field_duplicate(dfield);
+    controls.mfield = create_mask_field(controls.dfield);
+    controls.fft = gwy_data_field_new_alike(dfield, FALSE);
+    do_fft(controls.dfield, controls.fft);
+    controls.filtered = gwy_data_field_new_alike(dfield, TRUE);
+    controls.diff = gwy_data_field_new_alike(dfield, TRUE);
 
-        gwy_container_set_object_by_name(controls.mydata, "/1/data",
-                                         controls.dfield);
-        gwy_app_copy_data_items(data, controls.mydata, id, 1,
-                                GWY_DATA_ITEM_GRADIENT,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_RANGE,
-                                GWY_DATA_ITEM_RANGE_TYPE,
-                                0);
+    /* Setup the mydata container */
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", controls.fft);
+    gwy_container_set_string_by_name(controls.mydata,
+                                     "/0/base/palette",
+                                     g_strdup("DFit"));
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
+    }
+    gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
 
-        gwy_container_set_object_by_name(controls.mydata, "/2/data",
-                                         controls.filtered);
-        gwy_app_copy_data_items(data, controls.mydata, id, 2,
-                                GWY_DATA_ITEM_GRADIENT,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_RANGE,
-                                GWY_DATA_ITEM_RANGE_TYPE,
-                                0);
+    gwy_container_set_object_by_name(controls.mydata, "/0/mask",
+                                     controls.mfield);
 
-        gwy_container_set_object_by_name(controls.mydata, "/3/data",
-                                         controls.diff);
-        gwy_app_copy_data_items(data, controls.mydata, id, 3,
-                                GWY_DATA_ITEM_GRADIENT,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_RANGE,
-                                GWY_DATA_ITEM_RANGE_TYPE,
-                                0);
+    gwy_container_set_object_by_name(controls.mydata, "/1/data",
+                                     controls.dfield);
+    gwy_app_copy_data_items(data, controls.mydata, id, 1,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            0);
 
-        /* Run the dialog */
-        response = run_dialog(&controls);
+    gwy_container_set_object_by_name(controls.mydata, "/2/data",
+                                     controls.filtered);
+    gwy_app_copy_data_items(data, controls.mydata, id, 2,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            0);
 
-        /* Do the fft filtering */
-        if (response)
-        {
+    gwy_container_set_object_by_name(controls.mydata, "/3/data",
+                                     controls.diff);
+    gwy_app_copy_data_items(data, controls.mydata, id, 3,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            0);
+
+    /* Run the dialog */
+    response = run_dialog(&controls);
+
+    /* Do the fft filtering */
+    if (response) {
+        if (controls.out_mode & OUTPUT_IMAGE)
             out_image = gwy_data_field_new_alike(dfield, FALSE);
+        if (controls.out_mode & OUTPUT_FFT)
             out_fft = gwy_data_field_new_alike(dfield, FALSE);
-            mfield =
-            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
-                                                            "/0/mask"));
-            fft_filter_2d(controls.dfield, out_image, out_fft, mfield);
 
+        fft_filter_2d(controls.dfield, out_image, out_fft, controls.mfield);
+
+        if (out_image) {
             newid = gwy_app_data_browser_add_data_field(out_image, data, TRUE);
-            g_object_unref(out_image);
             gwy_app_copy_data_items(data, data, id, newid,
                                     GWY_DATA_ITEM_GRADIENT,
-                                    GWY_DATA_ITEM_RANGE,
                                     GWY_DATA_ITEM_MASK_COLOR,
+                                    GWY_DATA_ITEM_RANGE,
+                                    GWY_DATA_ITEM_RANGE_TYPE,
                                     0);
-
-            g_object_unref(out_fft);
-
             gwy_app_set_data_field_title(data, newid, _("Filtered Data"));
+        }
+
+        if (out_fft) {
+            newid = gwy_app_data_browser_add_data_field(out_fft, data, TRUE);
+            gwy_app_copy_data_items(controls.mydata, data, 0, newid,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    GWY_DATA_ITEM_MASK_COLOR,
+                                    GWY_DATA_ITEM_RANGE,
+                                    GWY_DATA_ITEM_RANGE_TYPE,
+                                    0);
+            gwy_app_set_data_field_title(data, newid, _("Filtered FFT"));
         }
     }
 }
@@ -329,29 +303,6 @@ create_mask_field(GwyDataField *dfield)
 static gboolean
 run_dialog(ControlsType *controls)
 {
-    static GwyEnum output_types[] = {
-        { N_("Filtered Image"), OUTPUT_IMAGE              },
-        { N_("Filtered FFT"),   OUTPUT_FFT                },
-        { N_("Both"),           OUTPUT_IMAGE | OUTPUT_FFT },
-    };
-
-    GtkWidget *dialog;
-    GtkWidget *table, *hbox, *hbox2, *hbox3;
-    GtkWidget *table2;
-    GtkWidget *label;
-    GtkWidget *scale_fft;
-    GtkWidget *image;
-    GtkWidget *button = NULL;
-    GtkWidget *combo;
-    GtkTooltips *tips;
-    GHashTable *hash_tips;
-
-    gint response;
-    gint i;
-    gint row;
-    // OLD CRUFT ABOVE
-
-
     static struct {
         guint edit_mode;
         const gchar *stock_id;
@@ -403,16 +354,26 @@ run_dialog(ControlsType *controls)
         },
     };
 
+    static GwyEnum output_types[] = {
+        { N_("Filtered Image"), OUTPUT_IMAGE              },
+        { N_("Filtered FFT"),   OUTPUT_FFT                },
+        { N_("Both"),           OUTPUT_IMAGE | OUTPUT_FFT },
+    };
+
+    GtkWidget *dialog;
+    GtkWidget *table, *hbox, *hbox2;
+    GtkWidget *label;
+    GtkWidget *image;
+    GtkWidget *button = NULL;
+    GtkWidget *combo;
     GtkRadioButton *group;
+    GtkTooltips *tips;
+    GHashTable *hash_tips;
     GwyPixmapLayer *layer, *mlayer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
-    GwyDataField *mask;
-    const gchar *key;
-    gchar buf[32];
-    GQuark mquark;
-    gint id;
     gdouble zoomval;
+    gint i, row, response;
 
     /* Setup the dialog window */
     dialog = gtk_dialog_new_with_buttons(_("2D FFT Filtering"), NULL, 0,
@@ -422,9 +383,8 @@ run_dialog(ControlsType *controls)
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    controls->dialog = dialog;
 
-    /* XXX Setup tooltips XXX */
+    /* Setup tooltips */
     hash_tips = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
     build_tooltips(hash_tips);
     tips = gtk_tooltips_new();
@@ -435,24 +395,21 @@ run_dialog(ControlsType *controls)
     hbox = gtk_hbox_new(FALSE, 5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 5);
 
-    /* Setup the GwyDataView */
+    /* Setup the GwyDataView and base layer */
+    g_debug("Setting up base layer and dataview...");
     controls->view = gwy_data_view_new(controls->mydata);
-
-    /* setup base layer */
     layer = gwy_layer_basic_new();
     set_layer_channel(layer, 0);
-    gwy_container_set_enum_by_name(controls->mydata, "/0/base/range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-
-    /* Connect pixmap layer to GwyDataView */
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     zoomval = PREVIEW_SIZE /
               (gdouble)MAX(gwy_data_field_get_xres(controls->dfield),
                            gwy_data_field_get_yres(controls->dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
+    g_debug("   COMPLETE");
 
     /* setup vector layer */
+    g_debug("Setting up vector layer...");
     vlayer = create_vlayer(controls->edit_mode);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
@@ -460,12 +417,15 @@ run_dialog(ControlsType *controls)
                                                  "/0/select/pointer");
     g_signal_connect(selection, "finished",
                      G_CALLBACK(selection_finished_cb), controls);
+    g_debug("   COMPLETE");
 
     /* setup mask layer */
+    g_debug("Setting up mask layer...");
     mlayer = gwy_layer_mask_new();
     gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
+    g_debug("   COMPLETE");
 
     /* Setup the control panel */
     table = gtk_table_new(20, 2, FALSE);
@@ -505,10 +465,16 @@ run_dialog(ControlsType *controls)
     gwy_radio_buttons_set_current(controls->mode, controls->edit_mode);
 
     /* Remaining controls: */
-    hbox2 = gtk_hbutton_box_new();
-    gtk_button_box_set_layout(GTK_BUTTON_BOX(hbox2), GTK_BUTTONBOX_START);
-    gtk_table_attach(GTK_TABLE(table), hbox2, 1, 2, row, row+1,
+    hbox2 = gtk_vbox_new(FALSE, 5);
+    gtk_table_attach(GTK_TABLE(table), hbox2, 1, 2, row, row+2,
                      GTK_EXPAND | GTK_FILL, 0, 5, 0);
+
+    button = gtk_button_new_with_mnemonic(_("Undo"));
+    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
+                         g_hash_table_lookup(hash_tips, "undo"), "");
+    gtk_container_add(GTK_CONTAINER(hbox2), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(undo_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("Remove"));
     gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
@@ -517,24 +483,15 @@ run_dialog(ControlsType *controls)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(remove_all_cb), controls);
 
-    button = gtk_button_new_with_mnemonic(_("Undo"));
-//    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-//                         g_hash_table_lookup(hash_tips, "remove_all"), "");
-    gtk_container_add(GTK_CONTAINER(hbox2), button);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(undo_cb), controls);
-
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
-    controls->check_origin = check_new(_("_Snap to origin"));
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), controls->check_origin,
+    button = check_new(_("_Snap to origin"));
+    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
                          g_hash_table_lookup(hash_tips, "origin"), "");
-    gtk_table_attach(GTK_TABLE(table), controls->check_origin, 0, 2, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), button, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-//    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
-//    row++;
-
+    g_signal_connect(button, "clicked", G_CALLBACK(snap_cb), controls);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
     row++;
@@ -576,7 +533,6 @@ run_dialog(ControlsType *controls)
                              G_CALLBACK(zoom_toggled), controls);
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
                      GTK_FILL, GTK_FILL, 0, 2);
-    controls->check_zoom = button;
     row++;
 
     label = gtk_label_new(_("Display mode:"));
@@ -605,9 +561,6 @@ run_dialog(ControlsType *controls)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
     row++;
 
-
-
-
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Output Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
@@ -618,12 +571,10 @@ run_dialog(ControlsType *controls)
 
     combo = gwy_enum_combo_box_new(output_types, G_N_ELEMENTS(output_types),
                                    NULL, NULL, OUTPUT_IMAGE, TRUE);
-
-    //combo = gwy_option_menu_create(output_types, G_N_ELEMENTS(output_types),
-    //                               "output-type", NULL, NULL, OUTPUT_IMAGE);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(combo), controls->out_mode);
     gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->combo_output = combo;
+
 
     label = gtk_label_new_with_mnemonic(_("Output _type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -654,10 +605,10 @@ run_dialog(ControlsType *controls)
                           | GDK_POINTER_MOTION_HINT_MASK);
     */
 
+    g_debug("Showing dialog...");
     gtk_widget_show_all(dialog);
     load_settings(controls, FALSE);
-
-
+    g_debug("   COMPLETE");
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -675,7 +626,7 @@ run_dialog(ControlsType *controls)
 
             case RESPONSE_RESET:
             load_settings(controls, TRUE);
-            set_toggled(controls->button_show_fft, TRUE);
+            //set_toggled(controls->button_show_fft, TRUE);
             //set_toggled(controls->button_circle_inc, TRUE);
             //gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
             //                           PREVIEW_SIZE, PREVIEW_SIZE);
@@ -687,10 +638,7 @@ run_dialog(ControlsType *controls)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    i = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->combo_output));
-    //i = get_combo_index(controls->combo_output, "output-type");
-    //controls->output_image = i & OUTPUT_IMAGE;
-    //controls->output_fft = i & OUTPUT_FFT;
+    controls->out_mode = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
     /* Finalize */
     gtk_widget_destroy(dialog);
@@ -724,7 +672,6 @@ prev_mode_changed_cb(ControlsType *controls)
 {
     GwyPixmapLayer *layer, *mlayer;
     PreviewMode new_mode;
-    GwyDataField *mfield;
 
     new_mode = gwy_radio_buttons_get_current(controls->pmode);
 
@@ -790,6 +737,7 @@ create_vlayer(MaskEditMode new_mode)
         case FFT_ELLIPSE_ADD:
         case FFT_ELLIPSE_SUB:
         vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+        g_object_set(G_OBJECT(vlayer), "draw-reflection", TRUE, NULL);
         break;
 
         default:
@@ -805,7 +753,6 @@ edit_mode_changed_cb(ControlsType *controls)
 {
     MaskEditMode new_mode;
     GwyVectorLayer *vlayer = NULL;
-    GwySelection *selection;
 
     new_mode = gwy_radio_buttons_get_current(controls->mode);
 
@@ -814,6 +761,8 @@ edit_mode_changed_cb(ControlsType *controls)
         if (vlayer) {
             gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
             gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+            g_object_set(G_OBJECT(vlayer), "snap-to-center",
+                         controls->snap, NULL);
         }
     }
 
@@ -839,7 +788,6 @@ selection_finished_cb(GwySelection *selection,
     /* get the mask */
     mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                             "/0/mask"));
-    //XXX handle no mfield?
 
     /* get the selection coordinates */
     if (!gwy_selection_get_object(selection, 0, sel))
@@ -905,7 +853,7 @@ selection_finished_cb(GwySelection *selection,
     if (mfield)
         gwy_data_field_data_changed(mfield);
 
-    gwy_selection_clear(selection);
+    //gwy_selection_clear(selection);
 }
 
 static void
@@ -913,56 +861,6 @@ undo_cb(ControlsType *controls)
 {
     if (gwy_undo_container_has_undo(controls->mydata))
         gwy_undo_undo_container(controls->mydata);
-}
-
-/*XXX: fix */
-static void
-build_tooltips(GHashTable *hash_tips)
-{
-    g_hash_table_insert(hash_tips, "circle_inclusive",
-        _("Draw a new inclusive circle marker."));
-    g_hash_table_insert(hash_tips, "rectangle_inclusive",
-        _("Draw a new inclusive rectangle marker."));
-    g_hash_table_insert(hash_tips, "circle_exclusive",
-        _("Draw a new exclusive circle marker."));
-    g_hash_table_insert(hash_tips, "rectangle_exclusive",
-        _("Draw a new exclusive rectangle marker."));
-    g_hash_table_insert(hash_tips, "drag",
-        _("Click and drag a marker to resize. Hold Shift to move marker."));
-    g_hash_table_insert(hash_tips, "remove",
-        _("Click on a marker to remove it."));
-    g_hash_table_insert(hash_tips, "remove_all",
-        _("Removes all markers."));
-    g_hash_table_insert(hash_tips, "origin",
-        _("Forces new markers to center around the origin."));
-    g_hash_table_insert(hash_tips, "color_range",
-        _("Changes the range of values displayed in the FFT."));
-}
-
-static void
-scale_changed_fft(GtkRange *range, ControlsType *controls)
-{/*
-    GwyGradient *gradient_fft;
-    GwyDataField *dfield;
-    gdouble value;
-    gdouble min, max;
-
-    value = gtk_range_get_value(range);
-    dfield = get_container_data(controls->cont_fft);
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_rms(dfield) * value;
-    controls->color_range = max;
-
-    gradient_fft = gwy_gradients_get_gradient("DFit");
-    gwy_pixbuf_draw_data_field_with_range(controls->buf_fft, dfield,
-                                          gradient_fft, min, max);
-
-    set_toggled(controls->button_show_fft, TRUE);
-
-    controls->preview_invalid = TRUE;
-    gtk_widget_queue_draw_area(controls->draw_fft, 0, 0,
-                               PREVIEW_SIZE, PREVIEW_SIZE);
- */
 }
 
 static void
@@ -979,9 +877,13 @@ remove_all_cb(ControlsType *controls)
 }
 
 static void
-display_mode_changed(ControlsType *controls)
+snap_cb(GtkWidget *check, ControlsType *controls)
 {
+    GwyVectorLayer *layer =
+        gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
 
+    controls->snap = get_toggled(check);
+    g_object_set(G_OBJECT(layer), "snap-to-center", controls->snap, NULL);
 }
 
 static void
@@ -990,31 +892,21 @@ zoom_toggled(ControlsType *controls)
 
 }
 
+/* set_dfield_modulus is copied from fft.c */
 static void
 set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
-    gint i, j;
-    gint xres;
-    gdouble rval, ival;
-    gdouble *re_data, *im_data, *target_data;
+    const gdouble *datare, *dataim;
+    gdouble *data;
+    gint xres, yres, i;
 
     xres = gwy_data_field_get_xres(re);
-
-    g_debug("Xres: %i", xres);
-
-    re_data = gwy_data_field_get_data(re);
-    im_data = gwy_data_field_get_data(im);
-    target_data = gwy_data_field_get_data(target);
-
-    for (i = 0; i < xres; i++) {
-        for (j = 0; j < xres; j++) {
-            rval = re_data[j*xres + i];
-            ival = im_data[j*xres + i];
-            //target_data[j*xres + i] = sqrt(sqrt(rval*rval + ival*ival));
-            target_data[j*xres + i] = sqrt(rval*rval + ival*ival);
-
-        }
-    }
+    yres = gwy_data_field_get_yres(re);
+    datare = gwy_data_field_get_data_const(re);
+    dataim = gwy_data_field_get_data_const(im);
+    data = gwy_data_field_get_data(target);
+    for (i = xres*yres; i; i--, datare++, dataim++, data++)
+        *data = hypot(*datare, *dataim);
 }
 
 static void
@@ -1056,14 +948,22 @@ fft_filter_2d(GwyDataField *input,
               GwyDataField *mask)
 {
     GwyDataField *r_in, *i_in, *r_out, *i_out;
+    GwySIUnit *siunit;
 
     /* Run the forward FFT */
-    r_in = GWY_DATA_FIELD(gwy_data_field_new_alike(input, FALSE));
-    i_in = GWY_DATA_FIELD(gwy_data_field_new_alike(input, TRUE));
-    r_out = GWY_DATA_FIELD(gwy_data_field_new_alike(input, FALSE));
-    i_out = GWY_DATA_FIELD(gwy_data_field_new_alike(input, FALSE));
-    gwy_data_field_copy(input, r_in, TRUE);
-    gwy_data_field_2dfft(r_in, i_in, r_out, i_out,
+    r_in = gwy_data_field_duplicate(input);
+    siunit = gwy_data_field_get_si_unit_xy(r_in);
+    gwy_si_unit_power(siunit, -1, siunit);
+
+    i_in = GWY_DATA_FIELD(gwy_data_field_new_alike(r_in, TRUE));
+    r_out = GWY_DATA_FIELD(gwy_data_field_new_alike(r_in, FALSE));
+    i_out = GWY_DATA_FIELD(gwy_data_field_new_alike(r_in, FALSE));
+
+    //gwy_data_field_multiply(r_in, 1.0
+    //                        /(gwy_data_field_get_max(r_in)
+    //                                - gwy_data_field_get_min(r_in)));
+
+    gwy_data_field_2dfft(r_in, NULL, r_out, i_out,
                          GWY_WINDOWING_NONE,
                          GWY_TRANSFORM_DIRECTION_FORWARD,
                          GWY_INTERPOLATION_BILINEAR,
@@ -1071,8 +971,11 @@ fft_filter_2d(GwyDataField *input,
 
     gwy_data_field_2dfft_humanize(r_out);
     gwy_data_field_2dfft_humanize(i_out);
+
     if (output_fft != NULL)
+    {
         set_dfield_modulus(r_out, i_out, output_fft);
+    }
 
     /* Apply mask to the fft */
     gwy_data_field_multiply_fields(r_out, r_out, mask);
@@ -1092,6 +995,7 @@ fft_filter_2d(GwyDataField *input,
     if (output_image != NULL)
         gwy_data_field_copy(r_in, output_image, TRUE);
 
+
     /* Finalize */
     g_object_unref(i_out);
     g_object_unref(r_out);
@@ -1102,47 +1006,49 @@ fft_filter_2d(GwyDataField *input,
 static void
 save_settings(ControlsType *controls)
 {
+    /*
     GwyContainer *settings;
     gint i;
 
     settings = gwy_app_settings_get();
 
-    i = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->combo_output));
+    i = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->outp));
     gwy_container_set_int32_by_name(settings,
                                     "/module/fft_filter_2d/combo_output",
                                     i);
-    //gwy_container_set_int32_by_name(settings,
-    //                                "/module/fft_filter_2d/combo_output",
-    //                                get_combo_index(controls->combo_output,
-    //                                                "output-type"));
+    gwy_container_set_int32_by_name(settings,
+                                    "/module/fft_filter_2d/combo_output",
+                                    get_combo_index(controls->combo_output,
+                                                    "output-type"));
 
     gwy_container_set_boolean_by_name(settings,
                                       "/module/fft_filter_2d/check_origin",
                                       get_toggled(controls->check_origin));
-//    gwy_container_set_double_by_name(settings,
-//                    "/module/fft_filter_2d/color_range",
-//                    gtk_range_get_value(GTK_RANGE(controls->scale_fft)));
+    gwy_container_set_double_by_name(settings,
+                    "/module/fft_filter_2d/color_range",
+                    gtk_range_get_value(GTK_RANGE(controls->scale_fft)));
     gwy_container_set_boolean_by_name(settings,
                                       "/module/fft_filter_2d/zoom",
                                       get_toggled(controls->check_zoom));
+    */
 }
 
 static void
 load_settings(ControlsType *controls, gboolean load_defaults)
 {
+    /*
     GwyContainer *settings;
     gint output;
     gboolean origin;
     gdouble color;
     gboolean zoom;
 
-    /* Set defaults */
     output = 2;
     origin = FALSE;
     color = CR_DEFAULT;
     zoom = FALSE;
 
-    /* Load settings */
+
     if (!load_defaults) {
         settings = gwy_app_settings_get();
         gwy_container_gis_int32_by_name(settings,
@@ -1159,14 +1065,34 @@ load_settings(ControlsType *controls, gboolean load_defaults)
                                           &zoom);
     }
 
-    /* Change controls to match settings */
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->combo_output),
+
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->outp),
                                   output);
-    //set_combo_index(controls->combo_output, "output-type", output);
+    set_combo_index(controls->combo_output, "output-type", output);
     set_toggled(controls->check_origin, origin);
-//    gtk_range_set_value(GTK_RANGE(controls->scale_fft), color);
+    gtk_range_set_value(GTK_RANGE(controls->scale_fft), color);
     set_toggled(controls->check_zoom, zoom);
+    */
 }
 
+/*XXX: fix */
+static void
+build_tooltips(GHashTable *hash_tips)
+{
+    g_hash_table_insert(hash_tips, "circle_inclusive",
+                        _("Draw a new inclusive circle marker."));
+    g_hash_table_insert(hash_tips, "rectangle_inclusive",
+                        _("Draw a new inclusive rectangle marker."));
+    g_hash_table_insert(hash_tips, "circle_exclusive",
+                        _("Draw a new exclusive circle marker."));
+    g_hash_table_insert(hash_tips, "rectangle_exclusive",
+                        _("Draw a new exclusive rectangle marker."));
+    g_hash_table_insert(hash_tips, "undo",
+                        _("Undo the last change to the filter mask."));
+    g_hash_table_insert(hash_tips, "remove_all",
+                        _("Removes the entire filter mask."));
+    g_hash_table_insert(hash_tips, "origin",
+                        _("Forces new markers to center around the origin."));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
