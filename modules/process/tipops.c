@@ -56,8 +56,6 @@ static void     tipops_tip_cb    (GwyDataChooser *chooser,
 static gboolean tipops_tip_filter(GwyContainer *data,
                                   gint id,
                                   gpointer user_data);
-static gboolean tipops_check     (TipOpsArgs *args,
-                                  GtkWidget *tipops_window);
 static void     tipops_do        (TipOpsArgs *args,
                                   TipOperation op);
 
@@ -187,7 +185,7 @@ tipops_dialog(TipOpsArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            ok = tipops_check(args, dialog);
+            ok = TRUE;
             break;
 
             default:
@@ -233,47 +231,12 @@ tipops_tip_filter(GwyContainer *data,
     if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
         && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4
         && !gwy_data_field_check_compatibility(tip, target,
-                                               GWY_DATA_COMPATIBILITY_LATERAL
+                                               GWY_DATA_COMPATIBILITY_MEASURE
+                                               | GWY_DATA_COMPATIBILITY_LATERAL
                                                | GWY_DATA_COMPATIBILITY_VALUE))
         return TRUE;
 
     return FALSE;
-}
-
-static gboolean
-tipops_check(TipOpsArgs *args,
-             GtkWidget *tipops_window)
-{
-    GtkWidget *dialog;
-    GwyDataField *tip, *target;
-    gdouble tipxm, tipym, targetxm, targetym;
-    GQuark quark;
-
-    quark = gwy_app_get_data_key_for_id(args->tip.id);
-    tip = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
-
-    quark = gwy_app_get_data_key_for_id(args->target.id);
-    target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
-
-    tipxm = gwy_data_field_get_xmeasure(tip);
-    tipym = gwy_data_field_get_ymeasure(tip);
-    targetxm = gwy_data_field_get_xmeasure(target);
-    targetym = gwy_data_field_get_ymeasure(target);
-    if (fabs(log(tipxm/targetxm)) <= 0.001
-        && fabs(log(tipym/targetym)) <= 0.001)
-        return TRUE;
-
-    dialog = gtk_message_dialog_new(GTK_WINDOW(tipops_window),
-                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_OK,
-                                    _("Tip has different size/resolution "
-                                      "ratio than image. Tip will be "
-                                      "resampled."));
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-
-    return TRUE;
 }
 
 static void
