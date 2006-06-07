@@ -553,6 +553,40 @@ gwy_data_chooser_new_channels(void)
  * The widget type used to implement choosers is not a part of the interface
  * and may be subject of future changes.  In any case #GwyDataChooser has
  * a <code>"changed"</code> signal emitted when the selected item changes.
+ *
+ * It is possible to offer only data objects matching some criteria.  For
+ * example to offer only data fields compatible with another data field,
+ * one can use:
+ * <informalexample><programlisting>
+ * GtkWidget *chooser;
+ * GwyDataField *model;
+ * <!-- Hello, gtk-doc! -->
+ * model = ...;
+ * chooser = gwy_data_chooser_new_channels(<!-- Hello, gtk-doc! -->);
+ * gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
+ *                             compatible_field_filter, model,
+ *                             NULL);
+ * </programlisting></informalexample>
+ * where the filter function looks like
+ * <informalexample><programlisting>
+ * static gboolean
+ * compatible_field_filter(GwyContainer *data,
+ *                         gint id,
+ *                         gpointer user_data)
+ * {
+ *     GwyDataField *model, *data_field;
+ *     GQuark quark;
+ *     <!-- Hello, gtk-doc! -->
+ *     quark = gwy_app_get_data_key_for_id(id);
+ *     data_field = gwy_container_get_object(data, quark);
+ *     return !gwy_data_field_check_compatibility
+ *                          (data_field, model,
+ *                           GWY_DATA_COMPATIBILITY_RES
+ *                           | GWY_DATA_COMPATIBILITY_REAL
+ *                           | GWY_DATA_COMPATIBILITY_LATERAL
+ *                           | GWY_DATA_COMPATIBILITY_VALUE);
+ * }
+ * </programlisting></informalexample>
  **/
 
 /**
