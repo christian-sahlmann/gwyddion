@@ -1009,7 +1009,6 @@ spml_load(const gchar *filename)
     return (GwyContainer *)object;
 }
 
-#define HEAD_SIZE 500
 static gint
 spml_detect(const GwyFileDetectInfo * fileinfo, gboolean only_name)
 {
