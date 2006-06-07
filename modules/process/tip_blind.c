@@ -22,7 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/datafield.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/tip.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -36,13 +36,18 @@ enum {
 };
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
     gint xres;
     gint yres;
     gdouble thresh;
     gboolean use_boundaries;
     gboolean same_resolution;
-    GwyContainer *data;
-    gint id;
+    GwyDataObjectId orig;  /* The original source, to filter out incompatible */
+    GwyDataObjectId source;
 } TipBlindArgs;
 
 typedef struct {
@@ -95,7 +100,10 @@ static void        bound_changed_cb           (GtkToggleButton *button,
 static void        same_resolution_changed_cb (GtkToggleButton *button,
                                                TipBlindControls *controls);
 static void        data_changed_cb            (GwyDataChooser *chooser,
-                                               TipBlindControls *controls);
+                                               GwyDataObjectId *object);
+static gboolean    tip_blind_source_filter    (GwyContainer *data,
+                                               gint id,
+                                               gpointer user_data);
 static void        tip_update                 (TipBlindControls *controls,
                                                TipBlindArgs *args);
 static void        tip_blind_dialog_abandon   (TipBlindControls *controls);
@@ -108,13 +116,8 @@ static void        prepare_fields             (GwyDataField *tipfield,
                                                gint yres);
 
 static const TipBlindArgs tip_blind_defaults = {
-    10,
-    10,
-    1e-10,
-    FALSE,
-    TRUE,
-    NULL,
-    -1,
+    10, 10, 1e-10, FALSE, TRUE,
+    { NULL, -1, }, { NULL, -1, },
 };
 
 static GwyModuleInfo module_info = {
@@ -151,8 +154,9 @@ tip_blind(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & TIP_BLIND_RUN_MODES);
 
     tip_blind_load_args(gwy_app_settings_get(), &args);
-    args.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.id, 0);
+    args.orig.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.orig.id, 0);
+    args.source = args.orig;
     tip_blind_dialog(&args, data);
     tip_blind_save_args(gwy_app_settings_get(), &args);
 }
@@ -206,7 +210,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     /*set up data of rescaled image of the tip*/
     controls.vtip = gwy_container_new();
-    gwy_app_copy_data_items(data, controls.vtip, args->id, 0,
+    gwy_app_copy_data_items(data, controls.vtip, args->source.id, 0,
                             GWY_DATA_ITEM_PALETTE,
                             0);
 
@@ -233,10 +237,12 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     row = 0;
 
     controls.data = gwy_data_chooser_new_channels();
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(controls.data),
+                                tip_blind_source_filter, &args->orig, NULL);
     gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.data),
-                                args->data, args->id);
+                                args->source.data, args->source.id);
     g_signal_connect(controls.data, "changed",
-                     G_CALLBACK(data_changed_cb), &controls);
+                     G_CALLBACK(data_changed_cb), &args->source);
     gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
                             GTK_OBJECT(controls.data), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -278,7 +284,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
         = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold), 0.1, 2);
     gtk_table_attach(GTK_TABLE(table), controls.threshold_spin,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new_with_mnemonic(_("Noise suppression _threshold:"));
+    label = gtk_label_new_with_mnemonic(_("Noise suppression t_hreshold:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.threshold_spin);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -298,7 +304,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     row++;
 
     controls.boundaries
-                = gtk_check_button_new_with_mnemonic(_("Use _boundaries"));
+                    = gtk_check_button_new_with_mnemonic(_("Use _boundaries"));
     gtk_table_attach(GTK_TABLE(table), controls.boundaries,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
@@ -461,10 +467,30 @@ same_resolution_changed_cb(GtkToggleButton *button,
 
 static void
 data_changed_cb(GwyDataChooser *chooser,
-                TipBlindControls *controls)
+                GwyDataObjectId *object)
 {
-    controls->args->data = gwy_data_chooser_get_active(chooser,
-                                                       &controls->args->id);
+    object->data = gwy_data_chooser_get_active(chooser, &object->id);
+}
+
+static gboolean
+tip_blind_source_filter(GwyContainer *data,
+                        gint id,
+                        gpointer user_data)
+{
+    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyDataField *source, *orig;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    source = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    quark = gwy_app_get_data_key_for_id(object->id);
+    orig = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+
+    return !gwy_data_field_check_compatibility(source, orig,
+                                               GWY_DATA_COMPATIBILITY_MEASURE
+                                               | GWY_DATA_COMPATIBILITY_LATERAL
+                                               | GWY_DATA_COMPATIBILITY_VALUE);
 }
 
 static void
@@ -518,8 +544,9 @@ tip_blind_run(TipBlindControls *controls,
     GQuark quark;
     gint count = -1;
 
-    quark = gwy_app_get_data_key_for_id(args->id);
-    surface = GWY_DATA_FIELD(gwy_container_get_object(args->data, quark));
+    quark = gwy_app_get_data_key_for_id(args->source.id);
+    surface = GWY_DATA_FIELD(gwy_container_get_object(args->source.data,
+                                                      quark));
     gwy_app_wait_start(controls->dialog, _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
@@ -579,11 +606,11 @@ tip_blind_do(TipBlindControls *controls,
     gint newid;
 
     newid = gwy_app_data_browser_add_data_field(controls->tip,
-                                                args->data, TRUE);
+                                                args->source.data, TRUE);
     g_object_unref(controls->tip);
-    gwy_app_copy_data_items(args->data, args->data, 0, newid,
+    gwy_app_copy_data_items(args->source.data, args->source.data, 0, newid,
                             GWY_DATA_ITEM_GRADIENT, 0);
-    gwy_app_set_data_field_title(args->data, newid, _("Estimated tip"));
+    gwy_app_set_data_field_title(args->source.data, newid, _("Estimated tip"));
     controls->tipdone = TRUE;
 }
 

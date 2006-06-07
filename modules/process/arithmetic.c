@@ -37,17 +37,21 @@ enum {
 };
 
 enum {
-    ARITHMETIC_OK = 0,
+    ARITHMETIC_OK   = 0,
     ARITHMETIC_DATA = 1,
     ARITHMETIC_EXPR = 2
 };
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
     GwyExpr *expr;
     gchar *expression;
     guint err;
-    GwyContainer *data[NARGS];
-    gint id[NARGS];
+    GwyDataObjectId objects[NARGS];
     gchar *name[NARGS];
     guint pos[NARGS];
 } ArithmeticArgs;
@@ -120,8 +124,8 @@ arithmetic(GwyContainer *data, GwyRunType run)
 
     settings = gwy_app_settings_get();
     for (i = 0; i < NARGS; i++) {
-        args.data[i] = data;
-        args.id[i] = id;
+        args.objects[i].data = data;
+        args.objects[i].id = id;
     }
     arithmetic_load_args(settings, &args);
     args.expr = gwy_expr_new();
@@ -173,7 +177,7 @@ arithmetic_dialog(ArithmeticArgs *args)
 
         chooser = gwy_data_chooser_new_channels();
         gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
-                                    args->data[i], args->id[i]);
+                                    args->objects[i].data, args->objects[i].id);
         g_signal_connect(chooser, "changed",
                          G_CALLBACK(arithmetic_data_cb), &controls);
         g_object_set_data(G_OBJECT(chooser), "index", GUINT_TO_POINTER(i));
@@ -242,7 +246,8 @@ arithmetic_data_cb(GwyDataChooser *chooser,
 
     args = controls->args;
     i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(chooser), "index"));
-    args->data[i] = gwy_data_chooser_get_active(chooser, &args->id[i]);
+    args->objects[i].data = gwy_data_chooser_get_active(chooser,
+                                                        &args->objects[i].id);
     if (!(args->err & ARITHMETIC_EXPR))
         arithmetic_maybe_preview(controls);
 }
@@ -340,15 +345,15 @@ arithmetic_check(ArithmeticArgs *args)
     }
 
     /* each window must match with first, this is transitive */
-    data = args->data[first];
-    quark = gwy_app_get_data_key_for_id(args->id[first]);
+    data = args->objects[first].data;
+    quark = gwy_app_get_data_key_for_id(args->objects[first].id);
     dfirst = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     for (i = first+1; i < NARGS; i++) {
         if (!args->pos[i])
             continue;
 
-        data = args->data[i];
-        quark = gwy_app_get_data_key_for_id(args->id[i]);
+        data = args->objects[i].data;
+        quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
         if ((gwy_data_field_get_xres(dfirst)
@@ -393,8 +398,8 @@ arithmetic_do(ArithmeticArgs *args)
         if (!args->pos[i])
             continue;
 
-        data = args->data[i];
-        quark = gwy_app_get_data_key_for_id(args->id[i]);
+        data = args->objects[i].data;
+        quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
         d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
         if (first) {
@@ -403,7 +408,7 @@ arithmetic_do(ArithmeticArgs *args)
             result = gwy_data_field_new_alike(dfield, FALSE);
             r = gwy_data_field_get_data(result);
             firstdata = data;
-            firstid = args->id[i];
+            firstid = args->objects[i].id;
         }
     }
     g_return_if_fail(firstdata);
