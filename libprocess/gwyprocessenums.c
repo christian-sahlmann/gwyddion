@@ -324,6 +324,18 @@ gwy_correlation_type_get_enum(void)
  **/
 
 /**
+ * GwyDataCompatibilityFlags:
+ * @GWY_DATA_COMPATIBILITY_RES: Pixel sizes.
+ * @GWY_DATA_COMPATIBILITY_REAL: Real (physical) dimensions.
+ * @GWY_DATA_COMPATIBILITY_MEASURE: Real to pixel ratios.
+ * @GWY_DATA_COMPATIBILITY_LATERAL: Units of lateral dimensions.
+ * @GWY_DATA_COMPATIBILITY_VALUE: Units of values.
+ * @GWY_DATA_COMPATIBILITY_ALL: Mask of all defined flags.
+ *
+ * Data line and field compatibility flags.
+ **/
+
+/**
  * GwyDataFieldCached:
  * @GWY_DATA_FIELD_CACHE_MIN: Overall minimum.
  * @GWY_DATA_FIELD_CACHE_MAX: Overall maximum.
