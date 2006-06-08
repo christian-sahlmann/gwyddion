@@ -602,34 +602,37 @@ simple_gdk_pixbuf_composite(GdkPixbuf *source, GdkPixbuf *dest)
                          GDK_INTERP_TILES, 0xff);
 }
 
+/* paint pixmap layers */
 static void
 gwy_data_view_paint(GwyDataView *data_view)
 {
-    GdkPixbuf *src_pixbuf;
+    GdkPixbuf *apixbuf, *bpixbuf;
 
     gwy_debug(" ");
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(data_view->base_layer));
 
-    /* base layer is always present
-     * top layer is always vector, if any
-     */
-    if (!data_view->alpha_layer) {
-        /* scale base directly to final pixbuf */
-        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
-        simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->pixbuf);
+    /* Base layer is always present, however pixmap layers may return NULL if
+     * they do not have corresponding data fields */
+    bpixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
+    if (data_view->alpha_layer)
+        apixbuf = gwy_pixmap_layer_paint(data_view->alpha_layer);
+    else
+        apixbuf = NULL;
+
+    if (bpixbuf) {
+        if (apixbuf) {
+            simple_gdk_pixbuf_scale_or_copy(bpixbuf, data_view->base_pixbuf);
+            simple_gdk_pixbuf_composite(apixbuf, data_view->base_pixbuf);
+            simple_gdk_pixbuf_scale_or_copy(data_view->base_pixbuf,
+                                            data_view->pixbuf);
+        }
+        else
+            simple_gdk_pixbuf_scale_or_copy(bpixbuf, data_view->pixbuf);
     }
     else {
-        /* base */
-        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
-        simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->base_pixbuf);
-
-        /* composite with alpha */
-        src_pixbuf = gwy_pixmap_layer_paint(data_view->alpha_layer);
-        simple_gdk_pixbuf_composite(src_pixbuf, data_view->base_pixbuf);
-
-        /* scale both */
-        simple_gdk_pixbuf_scale_or_copy(data_view->base_pixbuf,
-                                        data_view->pixbuf);
+        gdk_pixbuf_fill(data_view->pixbuf, 0x00000000);
+        if (apixbuf)
+            simple_gdk_pixbuf_scale_or_copy(apixbuf, data_view->pixbuf);
     }
 }
 
@@ -1358,9 +1361,11 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
                             gboolean draw_alpha,
                             gboolean draw_top)
 {
-    GdkPixbuf *src_pixbuf, *pixbuf, *aux_pixbuf;
+    GdkPixbuf *bpixbuf, *apixbuf, *pixbuf, *aux_pixbuf;
+    GwySelection *selection;
     GdkDrawable *drawable;
     gint width, height, rowstride, i;
+    const gchar *key;
     guchar *src, *dst;
 
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
@@ -1375,22 +1380,36 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
 
     /* Pixmap layers */
-    if (!draw_alpha || !data_view->alpha_layer) {
-        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
-        simple_gdk_pixbuf_scale_or_copy(src_pixbuf, pixbuf);
+    bpixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
+    if (draw_alpha && data_view->alpha_layer)
+        apixbuf = gwy_pixmap_layer_paint(data_view->alpha_layer);
+    else
+        apixbuf = NULL;
+
+    if (bpixbuf) {
+        if (apixbuf) {
+            aux_pixbuf = gdk_pixbuf_copy(bpixbuf);
+            simple_gdk_pixbuf_composite(apixbuf, aux_pixbuf);
+            simple_gdk_pixbuf_scale_or_copy(bpixbuf, pixbuf);
+            g_object_unref(aux_pixbuf);
+        }
+        else
+            simple_gdk_pixbuf_scale_or_copy(bpixbuf, pixbuf);
     }
     else {
-        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
-        aux_pixbuf = gdk_pixbuf_copy(src_pixbuf);
-
-        src_pixbuf = gwy_pixmap_layer_paint(data_view->alpha_layer);
-        simple_gdk_pixbuf_composite(src_pixbuf, aux_pixbuf);
-
-        simple_gdk_pixbuf_scale_or_copy(aux_pixbuf, pixbuf);
-        g_object_unref(aux_pixbuf);
+        gdk_pixbuf_fill(pixbuf, 0x00000000);
+        if (apixbuf)
+            simple_gdk_pixbuf_scale_or_copy(apixbuf, pixbuf);
     }
 
     if (!draw_top || !data_view->top_layer)
+        return pixbuf;
+
+    /* Avoid complicated hacks when there is no selection to draw */
+    key = gwy_vector_layer_get_selection_key(data_view->top_layer);
+    selection = NULL;
+    gwy_container_gis_object_by_name(data_view->data, key, &selection);
+    if (!selection || !gwy_selection_get_data(selection, NULL))
         return pixbuf;
 
     /* XXX: Now the ugly part begins, use Gdk to draw selection on Xserver

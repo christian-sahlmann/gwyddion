@@ -153,28 +153,34 @@ gwy_pixmap_layer_get_property(GObject*object,
  * to repaint the pixbuf, it simply returns the current one.  To enforce
  * update, emit "data-changed" signal on corresponding data field.
  *
- * Returns: The pixbuf.  It should not be modified or freed.
+ * Returns: The pixbuf.  It should not be modified or freed.  If the data field
+ *          to draw is not present in the container, %NULL is returned.
  **/
 GdkPixbuf*
 gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
 {
     GwyPixmapLayerClass *layer_class = GWY_PIXMAP_LAYER_GET_CLASS(pixmap_layer);
+    GdkPixbuf *pixbuf = NULL;
 
     g_return_val_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer), NULL);
     g_return_val_if_fail(layer_class->paint, NULL);
 
     if (!pixmap_layer->data_field
         || !GWY_IS_DATA_FIELD(pixmap_layer->data_field)) {
-        g_critical("No data field to paint. "
-                   "Set data key with gwy_pixmap_layer_set_data_key().");
-        pixmap_layer->wants_repaint = FALSE;
-        return pixmap_layer->pixbuf;
+        if (!pixmap_layer->data_key)
+            g_warning("No data field to paint. "
+                      "Set data key with gwy_pixmap_layer_set_data_key().");
+        /* If the data key is set but there is no data field, fail silently
+         * and let GwyDataView deal with it. */
     }
-    if (pixmap_layer->wants_repaint)
-        layer_class->paint(pixmap_layer);
+    else {
+        if (pixmap_layer->wants_repaint)
+            layer_class->paint(pixmap_layer);
+        pixbuf = pixmap_layer->pixbuf;
+    }
     pixmap_layer->wants_repaint = FALSE;
 
-    return pixmap_layer->pixbuf;
+    return pixbuf;
 }
 
 /**
