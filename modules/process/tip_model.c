@@ -31,19 +31,22 @@
 #define TIP_MODEL_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
+
+typedef struct {
     gint nsides;
     gdouble angle;
     gdouble radius;
     gdouble theta;
     GwyTipType type;
-    GwyContainer *data;
-    gint id;
+    GwyDataObjectId object;
 } TipModelArgs;
 
 typedef struct {
     TipModelArgs *args;
     GtkWidget *view;
-    GtkWidget *data;
     GtkWidget *type;
     GtkObject *radius;
     GtkWidget *radius_spin;
@@ -64,8 +67,7 @@ typedef struct {
 static gboolean    module_register                 (void);
 static void        tip_model                       (GwyContainer *data,
                                                     GwyRunType run);
-static void        tip_model_dialog                (TipModelArgs *args,
-                                                    GwyContainer *data);
+static void        tip_model_dialog                (TipModelArgs *args);
 static void        tip_model_dialog_update_controls(TipModelControls *controls,
                                                     TipModelArgs *args);
 static void        tip_model_dialog_update_values  (TipModelControls *controls,
@@ -86,8 +88,6 @@ static void        sci_entry_set_value             (GtkAdjustment *adj,
                                                     gdouble val);
 static void        tip_type_cb                     (GtkWidget *combo,
                                                     TipModelControls *controls);
-static void        data_changed_cb                 (GwyDataChooser *chooser,
-                                                    TipModelControls *controls);
 static GtkWidget*  create_preset_menu              (GCallback callback,
                                                     gpointer cbdata,
                                                     gint current);
@@ -99,13 +99,8 @@ static void        tip_model_dialog_abandon        (TipModelControls *controls);
 
 
 static const TipModelArgs tip_model_defaults = {
-    4,
-    54.73561032,
-    200e-9,
-    0,
-    0,
-    NULL,
-    -1,
+    4, 54.73561032, 200e-9, 0, 0,
+    { NULL, -1, },
 };
 
 static GwyModuleInfo module_info = {
@@ -113,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Models SPM tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -143,14 +138,14 @@ tip_model(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & TIP_MODEL_RUN_MODES);
 
     tip_model_load_args(gwy_app_settings_get(), &args);
-    args.data = data;
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.id, 0);
-    tip_model_dialog(&args, data);
+    args.object.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.object.id, 0);
+    tip_model_dialog(&args);
     tip_model_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
-tip_model_dialog(TipModelArgs *args, GwyContainer *data)
+tip_model_dialog(TipModelArgs *args)
 {
     enum {
         RESPONSE_RESET   = 1,
@@ -161,7 +156,8 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GwySIUnit *unit;
-    gint response, row, id;
+    GQuark quark;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Model Tip"), NULL, 0,
                                          _("_Update Preview"), RESPONSE_PREVIEW,
@@ -180,10 +176,9 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     controls.vxres = 200;
     controls.vyres = 200;
 
-    /* set up initial tip field*/
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
+    /* set up initial tip field */
+    quark = gwy_app_get_data_key_for_id(args->object.id);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(args->object.data, quark));
 
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, controls.vxres, controls.vyres,
@@ -192,14 +187,13 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
     /*set up data of rescaled image of the tip*/
     controls.vtip = gwy_container_new();
-    gwy_app_copy_data_items(data, controls.vtip, id, 0,
-                            GWY_DATA_ITEM_PALETTE,
-                            0);
+    gwy_app_copy_data_items(args->object.data, controls.vtip,
+                            args->object.id, 0,
+                            GWY_DATA_ITEM_PALETTE, 0);
 
     dfield = gwy_data_field_new_alike(controls.tip, TRUE);
-    gwy_container_set_object_by_name(controls.vtip,
-                                      "/0/data",
-                                      dfield);
+    gwy_container_set_object_by_name(controls.vtip, "/0/data", dfield);
+    g_object_unref(dfield);
 
     /* set up resampled view */
     controls.view = gwy_data_view_new(controls.vtip);
@@ -211,21 +205,12 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     /* set up tip model controls */
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(7, 4, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
-
-    controls.data = gwy_data_chooser_new_channels();
-    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.data),
-                                args->data, args->id);
-    g_signal_connect(controls.data, "changed",
-                     G_CALLBACK(data_changed_cb), &controls);
-    gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
-                            GTK_OBJECT(controls.data), GWY_HSCALE_WIDGET);
-    row++;
 
     controls.type = create_preset_menu(G_CALLBACK(tip_type_cb),
                                        &controls, args->type);
@@ -290,6 +275,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
             case GTK_RESPONSE_DELETE_EVENT:
             tip_model_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
+            tip_model_dialog_abandon(&controls);
             case GTK_RESPONSE_NONE:
             return;
             break;
@@ -356,14 +342,6 @@ tip_type_cb(GtkWidget *combo, TipModelControls *controls)
 {
     controls->args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     tip_model_dialog_update_controls(controls, controls->args);
-}
-
-static void
-data_changed_cb(GwyDataChooser *chooser,
-                TipModelControls *controls)
-{
-    controls->args->data = gwy_data_chooser_get_active(chooser,
-                                                       &controls->args->id);
 }
 
 static GtkWidget*
@@ -471,12 +449,14 @@ tip_model_do(TipModelArgs *args,
 {
     gint newid;
 
-    newid = gwy_app_data_browser_add_data_field(controls->tip, args->data,
+    newid = gwy_app_data_browser_add_data_field(controls->tip,
+                                                args->object.data,
                                                 TRUE);
     g_object_unref(controls->tip);
-    gwy_app_copy_data_items(args->data, args->data, 0, newid,
+    gwy_app_copy_data_items(args->object.data, args->object.data,
+                            args->object.id, newid,
                             GWY_DATA_ITEM_GRADIENT, 0);
-    gwy_app_set_data_field_title(args->data, newid, _("Modelled tip"));
+    gwy_app_set_data_field_title(args->object.data, newid, _("Modelled tip"));
     controls->tipdone = TRUE;
 }
 
@@ -487,9 +467,10 @@ tip_process(TipModelArgs *args,
     const GwyTipModelPreset *preset;
     GwyDataField *dfield;
     GwyDataField *sfield;
+    GQuark quark;
     gchar label[64];
     gint xres, yres;
-    gdouble xstep, ystep;
+    gdouble xstep, ystep, min, max, zrange;
     gdouble params[2];
 
     preset = gwy_tip_model_get_preset(args->type);
@@ -497,29 +478,26 @@ tip_process(TipModelArgs *args,
 
     tip_model_dialog_update_values(controls, args);
 
-    /*guess x and y size*/
+    /* estimate x and y size */
     dfield = controls->tip;
-    sfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
-                                                             "/0/data"));
+    quark = gwy_app_get_data_key_for_id(args->object.id);
+    sfield = GWY_DATA_FIELD(gwy_container_get_object(args->object.data, quark));
 
     gwy_data_field_set_xreal(dfield,
-                             gwy_data_field_get_xreal(sfield)
-                             /gwy_data_field_get_xres(sfield)
+                             gwy_data_field_get_xmeasure(sfield)
                              *gwy_data_field_get_xres(dfield));
     gwy_data_field_set_yreal(dfield,
-                             gwy_data_field_get_yreal(sfield)
-                             /gwy_data_field_get_yres(sfield)
+                             gwy_data_field_get_ymeasure(sfield)
                              *gwy_data_field_get_yres(dfield));
 
     params[0] = args->nsides;
     params[1] = args->angle*G_PI/180;
-    preset->guess(sfield,
-                  gwy_data_field_get_max(sfield)
-                  - gwy_data_field_get_min(sfield),
-                  args->radius, params, &xres, &yres);
+    gwy_data_field_get_min_max(sfield, &min, &max);
+    zrange = max - min;
+    preset->guess(sfield, zrange, args->radius, params, &xres, &yres);
 
-    /*process tip*/
-    /*FIXME this must be solved within guess functions*/
+    /* process tip */
+    /* FIXME: this must be solved within guess functions */
     xres = CLAMP(xres, 20, 1000);
     yres = CLAMP(yres, 20, 1000);
 
@@ -527,16 +505,13 @@ tip_process(TipModelArgs *args,
                xres, yres);
     gtk_label_set_text(GTK_LABEL(controls->labsize), label);
 
-    xstep = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
-    ystep = gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
+    xstep = gwy_data_field_get_xmeasure(dfield);
+    ystep = gwy_data_field_get_ymeasure(dfield);
     gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_set_xreal(dfield, xstep*xres);
     gwy_data_field_set_yreal(dfield, ystep*yres);
 
-    preset->func(dfield,
-                 gwy_data_field_get_max(sfield)
-                 - gwy_data_field_get_min(sfield),
-                 args->radius, args->theta*G_PI/180, params);
+    preset->func(dfield, zrange, args->radius, args->theta*G_PI/180, params);
     tip_update(controls, args);
 }
 

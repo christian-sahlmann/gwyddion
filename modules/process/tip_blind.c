@@ -75,8 +75,7 @@ typedef struct {
 static gboolean    module_register            (void);
 static void        tip_blind                  (GwyContainer *data,
                                                GwyRunType run);
-static void        tip_blind_dialog           (TipBlindArgs *args,
-                                               GwyContainer *data);
+static void        tip_blind_dialog           (TipBlindArgs *args);
 static void        reset                      (TipBlindControls *controls,
                                                TipBlindArgs *args);
 static void        tip_blind_run              (TipBlindControls *controls,
@@ -157,12 +156,12 @@ tip_blind(GwyContainer *data, GwyRunType run)
     args.orig.data = data;
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.orig.id, 0);
     args.source = args.orig;
-    tip_blind_dialog(&args, data);
+    tip_blind_dialog(&args);
     tip_blind_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
-tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
+tip_blind_dialog(TipBlindArgs *args)
 {
     enum {
         RESPONSE_RESET = 1,
@@ -203,7 +202,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     /* set initial tip properties */
     quark = gwy_app_get_data_key_for_id(args->source.id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(args->source.data, quark));
 
     controls.tip = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_resample(controls.tip, args->xres, args->yres,
@@ -212,7 +211,8 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     /* set up data of rescaled image of the tip */
     controls.vtip = gwy_container_new();
-    gwy_app_copy_data_items(data, controls.vtip, args->source.id, 0,
+    gwy_app_copy_data_items(args->source.data, controls.vtip,
+                            args->source.id, 0,
                             GWY_DATA_ITEM_PALETTE,
                             0);
 
@@ -220,6 +220,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
     gwy_container_set_object_by_name(controls.vtip, "/0/data", dfield);
+    g_object_unref(dfield);
 
     /* set up rescaled image of the tip */
     controls.view = gwy_data_view_new(controls.vtip);
@@ -313,8 +314,6 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
                                                  args->use_boundaries);
     g_signal_connect(controls.boundaries, "toggled",
                      G_CALLBACK(bound_changed_cb), args);
-
-    g_object_unref(dfield);
 
     controls.tipdone = FALSE;
     controls.in_update = FALSE;
