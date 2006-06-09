@@ -223,7 +223,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_description(cmodel,
                                           _("Height histogram"));
-    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+    gwy_graph_curve_model_set_mode(cmodel, GWY_GRAPH_CURVE_LINE);
 
     tool->histogram_model = gwy_graph_model_new();
     gwy_graph_model_add_curve(tool->histogram_model, cmodel);

@@ -652,7 +652,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     if (nsel > 0 && n == 0) {
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
-        gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
+        gwy_graph_curve_model_set_mode(gcmodel, GWY_GRAPH_CURVE_LINE);
         g_object_unref(gcmodel);
     }
     else

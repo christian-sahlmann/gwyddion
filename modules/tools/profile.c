@@ -530,12 +530,12 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     }
     else {
         gcmodel = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
+        gwy_graph_curve_model_set_mode(gcmodel, GWY_GRAPH_CURVE_LINE);
         desc = g_strdup_printf(_("Profile %d"), i+1);
         gwy_graph_curve_model_set_description(gcmodel, desc);
         g_free(desc);
         rgba = gwy_graph_get_preset_color(i);
-        gwy_graph_curve_model_set_curve_color(gcmodel, rgba);
+        gwy_graph_curve_model_set_color(gcmodel, rgba);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
         g_object_unref(gcmodel);
@@ -586,7 +586,7 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
 
         g_snprintf(buf, sizeof(buf), "%d", idx + 1);
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, idx);
-        rgba = gwy_graph_curve_model_get_curve_color(gcmodel);
+        rgba = gwy_graph_curve_model_get_color(gcmodel);
         gwy_rgba_to_gdk_color(rgba, &gdkcolor);
         g_object_set(renderer, "foreground-gdk", &gdkcolor, "text", buf, NULL);
         return;

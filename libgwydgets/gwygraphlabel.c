@@ -314,8 +314,8 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
 
         label->samplepos[i] = ypos;
 
-        if (curvemodel->type == GWY_GRAPH_CURVE_LINE
-            || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS) {
+        if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
+            || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS) {
             if (model->label_reverse)
                 gwy_graph_draw_line(drawable, gc,
                                     winx + winwidth - 20 - frame_off,
@@ -335,8 +335,8 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                                     curvemodel->line_size,
                                     &(curvemodel->color));
         }
-        if (curvemodel->type == GWY_GRAPH_CURVE_POINTS
-            || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS) {
+        if (curvemodel->mode == GWY_GRAPH_CURVE_POINTS
+            || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS) {
             if (model->label_reverse)
                 gwy_graph_draw_point(drawable, gc,
                                      winx + winwidth - 13 - frame_off,
@@ -564,9 +564,9 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
-        pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
-        color = gwy_graph_curve_model_get_curve_color(curvemodel);
+        pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_line_size(curvemodel);
+        color = gwy_graph_curve_model_get_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");

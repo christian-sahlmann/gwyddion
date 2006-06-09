@@ -316,8 +316,7 @@ mifile_load(const gchar *filename,
                 gwy_graph_model_set_title(gmodel, _("Spectroscopy Graph"));
                 //XXXSET UNITS HERE gwy_graph_model_set_si_unit_x
                 gwy_graph_curve_model_set_description(cmodel, "Curve 1");
-                gwy_graph_curve_model_set_curve_type(cmodel,
-                                                     GWY_GRAPH_CURVE_POINTS);
+                gwy_graph_curve_model_set_mode(cmodel, GWY_GRAPH_CURVE_POINTS);
                 gwy_graph_curve_model_set_data(cmodel, xdata, ydata,
                                                mifile_spect->num_points);
                 g_free(ydata);

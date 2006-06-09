@@ -459,7 +459,7 @@ update_graph(FractalArgs *args,
     gwy_graph_model_remove_all_curves(controls->graph_model);
 
     gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_POINTS);
+    gwy_graph_curve_model_set_mode(gcmodel, GWY_GRAPH_CURVE_POINTS);
     gwy_graph_curve_model_set_data(gcmodel,
                                    gwy_data_line_get_data_const(xline),
                                    gwy_data_line_get_data_const(yline),
@@ -485,7 +485,7 @@ update_graph(FractalArgs *args,
                                        gwy_data_line_get_data_const(xfit),
                                        gwy_data_line_get_data_const(yfit),
                                        gwy_data_line_get_res(xfit));
-        gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
+        gwy_graph_curve_model_set_mode(gcmodel, GWY_GRAPH_CURVE_LINE);
         gwy_graph_curve_model_set_description(gcmodel, _("Linear fit"));
         gwy_graph_model_add_curve(controls->graph_model, gcmodel);
         g_object_unref(gcmodel);

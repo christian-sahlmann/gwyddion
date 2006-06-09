@@ -1625,9 +1625,9 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
-        pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
-        color = gwy_graph_curve_model_get_curve_color(curvemodel);
+        pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_line_size(curvemodel);
+        color = gwy_graph_curve_model_get_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
@@ -1637,8 +1637,8 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
                                color->r, color->g, color->b);
 
         for (j = 0; j < curvemodel->n - 1; j++) {
-            if (curvemodel->type == GWY_GRAPH_CURVE_LINE
-                || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
+            if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
+                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
             {
                 if (j==0) g_string_append_printf(out, "%d %d M\n",
                                    (gint)(x + (curvemodel->xdata[j]
@@ -1659,8 +1659,8 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
                                                - gwy_graph_model_get_ymin(model))*ymult));
                 }
             }
-            if (curvemodel->type == GWY_GRAPH_CURVE_POINTS
-                || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
+            if (curvemodel->mode == GWY_GRAPH_CURVE_POINTS
+                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
             {
                 g_string_append_printf(out, "%d %d %s\n",
                           (gint)(x + (curvemodel->xdata[j]

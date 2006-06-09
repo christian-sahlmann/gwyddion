@@ -572,7 +572,7 @@ update_fitted_curve(GwyGraphModel *gmodel,
     cmodel = gwy_graph_model_get_curve_by_description(gmodel, desc);
     if (!cmodel) {
         cmodel = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+        gwy_graph_curve_model_set_mode(cmodel, GWY_GRAPH_CURVE_LINE);
         gwy_graph_curve_model_set_description(cmodel, desc);
         gwy_graph_model_add_curve(gmodel, cmodel);
         g_object_unref(cmodel);
