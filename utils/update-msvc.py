@@ -2,9 +2,16 @@
 # @(#) $Id$
 import re, os, sys, shutil, glob
 
+# The value part of a Makefile assignment with line continuations
 re_listend = re.compile(r'\s*\\\n\s*')
+
+# Parse symbols in nm output
 re_nm = re.compile(r'(?P<addr>[a-z0-9 ]+) (?P<type>[-A-Za-z?]) (?P<symbol>\w+)')
+
+# .Match gwt template <[[:FOO:]]>
 re_template = re.compile(r'<\[\[:(?P<name>\w+):\]\]>')
+
+# CVS id line (to remove them from generated files)
 re_cvsid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
 
 prg_object_rule = """\
@@ -25,20 +32,23 @@ top_dir = os.getcwd()
 
 quiet = len(sys.argv) > 1 and sys.argv[1] == '-q'
 
-def backup(filename):
+def backup(filename, suffix='~'):
+    """Create a copy of file with suffix ('~' by default) appended."""
     try:
-        shutil.copyfile(filename, filename + '~')
+        shutil.copyfile(filename, filename + suffix)
         return True
     except IOError:
         return False
 
 def get_file(filename):
+    """Get the contents of a file as a string."""
     fh = file(filename, 'r')
     text = fh.read()
     fh.close()
     return text
 
 def write_file(filename, text):
+    """Write text, which can be a string or list of lines, to a file."""
     if type(text) == type([]):
         t = '\n'.join(text) + '\n'
     else:
@@ -52,12 +62,13 @@ def print_filename(filename):
     print os.path.join(rcwd, filename)
 
 def backup_write_diff(filename, text):
+    """Write text to a file, creating a backup and printing the diff."""
     rundiff = backup(filename)
     write_file(filename, text)
     if not quiet:
         print_filename(filename)
     if rundiff:
-        fh = os.popen('diff %s~ %s' % (filename, filename), 'r')
+        fh = os.popen('diff "%s~" "%s"' % (filename, filename), 'r')
         diff = fh.readlines()
         fh.close()
         if diff:
@@ -65,8 +76,10 @@ def backup_write_diff(filename, text):
                 print_filename(filename)
             sys.stdout.write(''.join(diff))
 
-def get_list(text, name):
-    r = re.compile(r'^\s*%s\s*=\s*(?P<list>(?:.*\\\n)*.*)' % name, re.M)
+def get_list(text, name, assignment_op='='):
+    """Parse Makefile assignment with line continuation, return lists."""
+    r = re.compile(r'^\s*%s\s*%s\s*(?P<list>(?:.*\\\n)*.*)'
+                   % (name, assignment_op), re.M)
     m = r.search(text)
     if not m:
         return []
@@ -75,6 +88,7 @@ def get_list(text, name):
     return m
 
 def fix_suffixes(lst, suffix, replacewith=''):
+    """Replace (remove) string suffixes in a list, retuning new list."""
     if not suffix:
         return lst
     sl = len(suffix)
@@ -86,6 +100,7 @@ def fix_suffixes(lst, suffix, replacewith=''):
     return newlst
 
 def get_object_symbols(filename, symtype='T'):
+    """Get symbols of specified type (by default 'T') from an object file."""
     fh = os.popen('nm -p -t x %s' % filename, 'r')
     syms = [re_nm.match(x) for x in fh.readlines()]
     fh.close()
@@ -96,6 +111,7 @@ def get_object_symbols(filename, symtype='T'):
     return syms
 
 def make_lib_defs(makefile):
+    """Create a .def file with exported symbols for each libtool library."""
     libraries = fix_suffixes(get_list(makefile, 'lib_LTLIBRARIES'), '.la')
     for l in libraries:
         syms = get_object_symbols('.libs/%s.so' % l)
@@ -103,6 +119,16 @@ def make_lib_defs(makefile):
         backup_write_diff('%s.def' % l, syms)
 
 def expand_template(makefile, name):
+    """Get expansion of specified template, taking information from Makefile.
+
+    DATA: install-data rule, created from foo_DATA
+    LIB_HEADERS: this variable, filled from lib_LTLIBRARIES, fooinclude_HEADERS
+    LIB_OBJECTS: this variable, filled from lib_LTLIBRARIES, foo_SOURCES
+    PRG_OBJECTS: this variable, filled from bin_PROGRAMS, foo_SOURCES
+    PRG_OBJECT_RULES: .c -> .obj rules, filled from bin_PROGRAMS, foo_SOURCES
+    MODULES: this variable, filled from foo_LTLIBRARIES
+    MOD_DLL_RULES: .obj -> .dll rules, filled from foo_LTLIBRARIES
+    MO_INSTALL_RULES: installdirs and install-mo rules, filled from LINGUAS"""
     if name == 'DATA':
         lst = get_list(makefile, '\w+_DATA')
         list_part = name + ' =' + ' \\\n\t'.join([''] + lst)
@@ -171,6 +197,7 @@ def expand_template(makefile, name):
     return ''
 
 def fill_templates(makefile):
+    """Expand .gwt files in current directory, taking information from Makefile."""
     templates = glob.glob('*.gwt')
     templates = fix_suffixes(templates, '.gwt')
     for templ in templates:
