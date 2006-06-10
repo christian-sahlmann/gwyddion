@@ -3,18 +3,18 @@
 # When libTIFF is disabled, put the sources to EXTRA_DIST to include them in
 # make dist.
 if HAVE_TIFF
-tiff_modules = jpkscan.la
-tiff_sources =
+jpkscan_module = jpkscan.la
+jpkscan_sources =
 else
-tiff_modules =
-tiff_sources = jpk.h jpkscan.c
+jpkscan_module =
+jpkscan_sources = jpk.h jpkscan.c
 endif
 
 if HAVE_XML2
-spml_modules = spml.la
+spml_module = spml.la
 spml_sources =
 else
-spml_modules =
+spml_module =
 spml_sources = spml.c
 endif
 
@@ -32,7 +32,7 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	hdf4file.la \
 	hitachi-afm.la \
-	$(tiff_modules) \
+	$(jpkscan_module) \
 	metropro.la \
 	mifile.la \
 	nanoscope.la \
@@ -47,7 +47,7 @@ file_LTLIBRARIES = \
 	sdfile.la \
 	seiko.la \
 	sis.la \
-	$(spml_modules) \
+	$(spml_module) \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
@@ -61,7 +61,7 @@ noinst_HEADERS = \
 	get.h
 
 EXTRA_DIST = \
-	$(tiff_sources) \
+	$(jpkscan_sources) \
 	$(spml_sources) \
 	makefile.msc \
 	makefile.msc.gwt
