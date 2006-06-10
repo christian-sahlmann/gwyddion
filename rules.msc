@@ -3,9 +3,6 @@
 # building
 WIN32LIBS = user32.lib advapi32.lib wsock32.lib
 
-.c.obj:
-	$(CC) $(CFLAGS) -GD -c $(LIB_CFLAGS) $<
-
 $(LIBRARY)-$(LIB_VER).def: $(LIBRARY).def
 	copy $(LIBRARY).def $(LIBRARY)-$(LIB_VER).def
 

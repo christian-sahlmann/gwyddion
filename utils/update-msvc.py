@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # @(#) $Id$
-import re, os, sys, shutil, glob
+import re, os, sys, shutil, glob, time
 
 # The value part of a Makefile assignment with line continuations
 re_listend = re.compile(r'\s*\\\n\s*')
@@ -14,9 +14,9 @@ re_template = re.compile(r'<\[\[:(?P<name>\w+):\]\]>')
 # CVS id line (to remove them from generated files)
 re_cvsid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
 
-prg_object_rule = """\
-%s.obj: %s.c
-\t$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) %s.c
+object_rule = """\
+%s.obj:%s
+\t$(CC) $(CFLAGS) -GD -c $(%s_CFLAGS) %s.c
 """
 
 mod_dll_rule = """\
@@ -28,9 +28,18 @@ mo_inst_rule = """\
 \t$(INSTALL) %s.gmo "$(DEST_DIR)\\locale\\%s\\LC_MESSAGES\\gwyddion.mo"\
 """
 
+me = 'utils/update-msvc.py'
 top_dir = os.getcwd()
 
 quiet = len(sys.argv) > 1 and sys.argv[1] == '-q'
+
+def underscorize(s):
+    """Change all nonaplhanumeric characters to underscores"""
+    return re.sub(r'\W', r'_', s)
+
+def format_list(l, prefix=''):
+    """Format a list with line continuations."""
+    return ' \\\n\t'.join([prefix] + l)
 
 def backup(filename, suffix='~'):
     """Create a copy of file with suffix ('~' by default) appended."""
@@ -110,6 +119,25 @@ def get_object_symbols(filename, symtype='T'):
     syms.sort()
     return syms
 
+def get_file_deps(name, sources=None):
+    """Get the list of object file (basename given) non-sys dependencies."""
+    if sources:
+        sources = name, sources + '-' + name
+    else:
+        sources = (name,)
+
+    for x in sources:
+        for ext in 'o', 'lo':
+            depfile = os.path.join('.deps', x + '.P' + ext)
+            if not os.access(depfile, os.R_OK):
+                continue
+
+            x += '\\.' + ext
+            l = get_list(get_file(depfile), x, ':')
+            return [x for x in l if not x.startswith('/')]
+    print 'WARNING: No deps for %s.c' % name
+    return []
+
 def make_lib_defs(makefile):
     """Create a .def file with exported symbols for each libtool library."""
     libraries = fix_suffixes(get_list(makefile, 'lib_LTLIBRARIES'), '.la')
@@ -124,14 +152,16 @@ def expand_template(makefile, name):
     DATA: install-data rule, created from foo_DATA
     LIB_HEADERS: this variable, filled from lib_LTLIBRARIES, fooinclude_HEADERS
     LIB_OBJECTS: this variable, filled from lib_LTLIBRARIES, foo_SOURCES
+    LIB_OBJ_RULES: .c -> .obj rules, filled from lib_LTLIBRARIES, foo_SOURCES
     PRG_OBJECTS: this variable, filled from bin_PROGRAMS, foo_SOURCES
-    PRG_OBJECT_RULES: .c -> .obj rules, filled from bin_PROGRAMS, foo_SOURCES
+    PRG_OBJ_RULES: .c -> .obj rules, filled from bin_PROGRAMS, foo_SOURCES
     MODULES: this variable, filled from foo_LTLIBRARIES
+    MOD_OBJ_RULES: .c -> .obj rules, filled from foo_LTLIBRARIES, foo_SOURCES
     MOD_DLL_RULES: .obj -> .dll rules, filled from foo_LTLIBRARIES
     MO_INSTALL_RULES: installdirs and install-mo rules, filled from LINGUAS"""
     if name == 'DATA':
         lst = get_list(makefile, '\w+_DATA')
-        list_part = name + ' =' + ' \\\n\t'.join([''] + lst)
+        list_part = name + ' =' + format_list(lst)
         inst_part = [('$(INSTALL) %s "$(DEST_DIR)\$(DATA_TYPE)"' % x)
                      for x in lst]
         inst_part = '\n\t'.join(['install-data: data'] + inst_part)
@@ -140,37 +170,60 @@ def expand_template(makefile, name):
         libraries = fix_suffixes(get_list(makefile, 'lib_LTLIBRARIES'), '.la')
         lst = []
         for l in libraries:
-            l = re.sub(r'[^a-z0-9]', '_', l)
-            lst += get_list(makefile, '%sinclude_HEADERS' % l)
-        return name + ' =' + ' \\\n\t'.join([''] + lst)
+            ul = underscorize(l)
+            lst += get_list(makefile, '%sinclude_HEADERS' % ul)
+        return name + ' =' + format_list(lst)
     elif name == 'LIB_OBJECTS':
         libraries = get_list(makefile, 'lib_LTLIBRARIES')
         lst = []
         for l in libraries:
-            l = re.sub(r'[^a-z0-9]', '_', l)
-            lst += fix_suffixes(get_list(makefile, '%s_SOURCES' % l),
+            ul = underscorize(l)
+            lst += fix_suffixes(get_list(makefile, '%s_SOURCES' % ul),
                                 '.c', '.obj')
-        return name + ' =' + ' \\\n\t'.join([''] + lst)
+        return name + ' =' + format_list(lst)
+    elif name == 'LIB_OBJ_RULES':
+        libraries = get_list(makefile, 'lib_LTLIBRARIES')
+        lst = []
+        for l in libraries:
+            ul = underscorize(l)
+            for x in fix_suffixes(get_list(makefile, '%s_SOURCES' % ul), '.c'):
+                deps = format_list(get_file_deps(x, ul))
+                lst.append(object_rule % (x, deps, 'LIB', x))
+        return  '\n'.join(lst)
     elif name == 'PRG_OBJECTS':
         programs = get_list(makefile, 'bin_PROGRAMS')
         lst = []
         for p in programs:
-            p = re.sub(r'[^a-z0-9]', '_', p)
-            lst += fix_suffixes(get_list(makefile, '%s_SOURCES' % p),
+            up = underscorize(p)
+            lst += fix_suffixes(get_list(makefile, '%s_SOURCES' % up),
                                 '.c', '.obj')
-        return name + ' =' + ' \\\n\t'.join([''] + lst)
-    elif name == 'PRG_OBJECT_RULES':
+        return name + ' =' + format_list(lst)
+    elif name == 'PRG_OBJ_RULES':
         programs = get_list(makefile, 'bin_PROGRAMS')
         lst = []
         for p in programs:
-            p = re.sub(r'[^a-z0-9]', '_', p)
-            for x in fix_suffixes(get_list(makefile, '%s_SOURCES' % p), '.c'):
-                lst.append(prg_object_rule % (x, x, x))
+            up = underscorize(p)
+            for x in fix_suffixes(get_list(makefile, '%s_SOURCES' % up), '.c'):
+                deps = format_list(get_file_deps(x))
+                lst.append(object_rule % (x, deps, 'PRG', x))
         return  '\n'.join(lst)
     elif name == 'MODULES':
         mods = get_list(makefile, r'\w+_LTLIBRARIES')
         mods = fix_suffixes(fix_suffixes(mods, '.la', '.dll'), ')', ').dll')
-        return name + ' =' + ' \\\n\t'.join([''] + mods)
+        return name + ' =' + format_list(mods)
+    elif name == 'MOD_OBJ_RULES':
+        mods = get_list(makefile, r'\w+_LTLIBRARIES')
+        lst = []
+        for m in mods:
+            um = underscorize(m)
+            for x in get_list(makefile, '%s_SOURCES' % um):
+                # Ignore header files in SOURCES
+                if not x.endswith('.c'):
+                    continue
+                x = x[:-2]
+                deps = format_list(get_file_deps(x, um))
+                lst.append(object_rule % (x, deps, 'MOD', x))
+        return  '\n'.join(lst)
     elif name == 'MOD_DLL_RULES':
         mods = fix_suffixes(get_list(makefile, r'\w+_LTLIBRARIES'), '.la')
         lst = []
@@ -181,7 +234,7 @@ def expand_template(makefile, name):
         pos = [l.strip() for l in file('LINGUAS')]
         pos = [l for l in pos if l and not l.strip().startswith('#')]
         assert len(pos) == 1
-        pos = re.split('\s+', pos[0])
+        pos = re.split(r'\s+', pos[0])
         if not pos:
             return
         lst = ['installdirs:', '\t-@mkdir "$(DEST_DIR)\\locale"']
@@ -193,7 +246,7 @@ def expand_template(makefile, name):
         for p in pos:
             lst.append(mo_inst_rule % (p, p))
         return '\n'.join(lst)
-    print '*** Unknown template %s ***' % name
+    print 'WARNING: Unknown template %s' % name
     return ''
 
 def fill_templates(makefile):
@@ -202,7 +255,8 @@ def fill_templates(makefile):
     templates = fix_suffixes(templates, '.gwt')
     for templ in templates:
         text = get_file(templ + '.gwt')
-        text = re_cvsid.sub('# This is a GENERATED file.', text)
+        text = re_cvsid.sub('# This file was GENERATED from %s.gwt by %s.'
+                            % (templ, me), text)
         m = re_template.search(text)
         while m:
             text = text[:m.start()] \

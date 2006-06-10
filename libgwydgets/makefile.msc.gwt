@@ -35,5 +35,7 @@ install: install-lib
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
+<[[:LIB_OBJ_RULES:]]>
+
 # vim: ft=make
 

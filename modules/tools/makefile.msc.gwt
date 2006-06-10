@@ -6,8 +6,7 @@ MOD_TYPE = tool
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
-# NOT MOD_CFLAGS!
-LIB_CFLAGS = \
+MOD_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
 	$(APP_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
@@ -20,6 +19,8 @@ mod: $(MODULES)
 install: install-mod
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
+
+<[[:MOD_OBJ_RULES:]]>
 
 <[[:MOD_DLL_RULES:]]>
 

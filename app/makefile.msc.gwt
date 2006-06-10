@@ -70,9 +70,8 @@ install: install-lib install-prg
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
-# the easiest way how to tell appart the program and library sources seems to
-# be list one explicitely; also: msdn says later specified rules take
-# precedence
-<[[:PRG_OBJECT_RULES:]]>
+<[[:PRG_OBJ_RULES:]]>
+
+<[[:LIB_OBJ_RULES:]]>
 
 # vim: ft=make
