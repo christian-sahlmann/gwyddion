@@ -77,15 +77,12 @@ G_BEGIN_DECLS
 typedef struct _GwyCurve        GwyCurve;
 typedef struct _GwyCurveClass   GwyCurveClass;
 
-typedef struct _GwyPoint        GwyPoint;
-typedef struct _GwyChannelData  GwyChannelData;
+typedef struct {
+    gdouble x;
+    gdouble y;
+} GwyPoint;
 
-struct _GwyPoint {
-    gfloat x;
-    gfloat y;
-};
-
-struct _GwyChannelData {
+typedef struct {
     /* curve points: */
     gint num_points;
     GwyPoint *points;
@@ -95,16 +92,16 @@ struct _GwyChannelData {
     GwyPoint *ctlpoints;
 
     GwyRGBA color;
-};
+} GwyChannelData;
 
 struct _GwyCurve {
     GtkDrawingArea graph;
 
     gint cursor_type;
-    gfloat min_x;
-    gfloat max_x;
-    gfloat min_y;
-    gfloat max_y;
+    gdouble min_x;
+    gdouble max_x;
+    gdouble min_y;
+    gdouble max_y;
     gboolean snap;
     GdkPixmap *pixmap;
     GwyCurveType curve_type;
@@ -123,8 +120,8 @@ struct _GwyCurveClass {
     GtkDrawingAreaClass parent_class;
 
     /* Signals */
-    void (* curve_type_changed) (GwyCurve *curve);
-    void (* curve_edited) (GwyCurve *curve);
+    void (*curve_type_changed)(GwyCurve *curve);
+    void (*curve_edited)(GwyCurve *curve);
 
     /* Padding for future expansion */
     void (*_gwy_reserved1) (void);
@@ -137,8 +134,8 @@ GtkWidget*  gwy_curve_new                   (void);
 GType       gwy_curve_get_type              (void) G_GNUC_CONST;
 void        gwy_curve_reset                 (GwyCurve *curve);
 void        gwy_curve_set_range             (GwyCurve *curve,
-                                             gfloat min_x, gfloat max_x,
-                                             gfloat min_y, gfloat max_y);
+                                             gdouble min_x, gdouble max_x,
+                                             gdouble min_y, gdouble max_y);
 void        gwy_curve_set_curve_type        (GwyCurve *curve,
                                              GwyCurveType type);
 void        gwy_curve_set_channels          (GwyCurve *curve,

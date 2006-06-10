@@ -139,22 +139,29 @@ static gboolean gwy_curve_motion_notify     (GwyCurve *c);
 /* Private Methods */
 static void     gwy_curve_draw                  (GwyCurve *c,
                                                  gint width, gint height);
-void            gwy_curve_get_vector            (GwyCurve *c, gint c_index,
-                                                 gint veclen, gfloat vector[]);
+void            gwy_curve_get_vector            (GwyCurve *c,
+                                                 gint c_index,
+                                                 gint veclen,
+                                                 gdouble vector[]);
 static void     gwy_curve_reset_vector          (GwyCurve *curve);
 static void     gwy_curve_size_graph            (GwyCurve *curve);
 
 /* Helper Functions */
 static void     gwy_curve_interpolate           (GwyCurve *c,
                                                  gint width, gint height);
-static int      project                         (gfloat value, gfloat min,
-                                                 gfloat max, int norm);
-static gfloat   unproject                       (gint value, gfloat min,
-                                                 gfloat max, int norm);
-static void     spline_solve                    (int n, gfloat x[],
-                                                 gfloat y[], gfloat y2[]);
-static gfloat   spline_eval                     (int n, gfloat x[], gfloat y[],
-                                                 gfloat y2[], gfloat val);
+static int      project                         (gdouble value, gdouble min,
+                                                 gdouble max, int norm);
+static gdouble   unproject                       (gint value, gdouble min,
+                                                 gdouble max, int norm);
+static void     spline_solve                    (int n,
+                                                 gdouble x[],
+                                                 gdouble y[],
+                                                 gdouble y2[]);
+static gdouble   spline_eval                     (int n,
+                                                  gdouble x[],
+                                                  gdouble y[],
+                                                  gdouble y2[],
+                                                  gdouble val);
 
 /* Private Class Functions: */
 static void
@@ -636,11 +643,11 @@ gwy_curve_motion_notify(GwyCurve *c)
     GdkCursorType new_type = c->cursor_type;
     gint tx, ty, x, y, cx, width, height;
     gint i, j, leftbound, rightbound;
-    gfloat rx, ry;
-    gfloat snapx;
+    gdouble rx, ry;
+    gdouble snapx;
     GtkWidget *w;
     GwyChannelData *channel, *channel2;
-    gfloat distance, distance2;
+    gdouble distance, distance2;
     gint closest_point = 0;
     gint closest_channel = 0;
 
@@ -834,8 +841,8 @@ gwy_curve_reset(GwyCurve *curve)
 }
 
 void
-gwy_curve_set_range(GwyCurve *curve, gfloat min_x, gfloat max_x,
-                    gfloat min_y, gfloat max_y)
+gwy_curve_set_range(GwyCurve *curve, gdouble min_x, gdouble max_x,
+                    gdouble min_y, gdouble max_y)
 {
     g_object_freeze_notify(G_OBJECT(curve));
     if (curve->min_x != min_x) {
@@ -863,7 +870,7 @@ gwy_curve_set_range(GwyCurve *curve, gfloat min_x, gfloat max_x,
 void
 gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
 {
-    gfloat rx, dx;
+    gdouble rx, dx;
     gint x, i;
     gint width, height;
     gint c_index;
@@ -890,7 +897,7 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
                 channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
 
                 rx = 0.0;
-                dx = (width - 1) / (gfloat)(channel->num_ctlpoints - 1);
+                dx = (width - 1) / (gdouble)(channel->num_ctlpoints - 1);
 
                 for (i = 0; i < channel->num_ctlpoints; ++i, rx += dx) {
                     x = (int)(rx + 0.5);
@@ -975,7 +982,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     gint width, height;
     gint c_index, i, val;
     gint src, dst;
-    gfloat slope1, slope2;
+    gdouble slope1, slope2;
     GwyChannelData *channel;
 
     /* Copy the control point data out of channel_data into our curve */
@@ -1082,7 +1089,7 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     gint c_index, i, j, k;
     gint others[2];
     gint left_point, right_point;
-    gfloat x_val, y_val;
+    gdouble x_val, y_val;
     gboolean point_exists;
     GArray *ctlpoints[3];
     GwyPoint point, point1, point2;
@@ -1263,9 +1270,9 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
 }
 
 void
-gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gfloat vector[])
+gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
 {
-    gfloat rx, ry, dx, dy, delta_x, *mem, *xv, *yv, *y2v, prev;
+    gdouble rx, ry, dx, dy, delta_x, *mem, *xv, *yv, *y2v, prev;
     gint dst, i, x, next, num_active_ctlpoints = 0, first_active = -1;
     GwyChannelData *channel;
 
@@ -1300,7 +1307,7 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gfloat vector[])
 
     switch (c->curve_type) {
         case GWY_CURVE_TYPE_SPLINE:
-            mem = g_new(gfloat, 3 * num_active_ctlpoints);
+            mem = g_new(gdouble, 3 * num_active_ctlpoints);
         xv  = mem;
         yv  = mem + num_active_ctlpoints;
         y2v = mem + 2*num_active_ctlpoints;
@@ -1418,13 +1425,13 @@ static void
 gwy_curve_size_graph(GwyCurve *curve)
 {
     gint width, height;
-    gfloat aspect;
+    gdouble aspect;
     GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(curve));
 
     width  = (curve->max_x - curve->min_x) + 1;
     height = (curve->max_y - curve->min_y) + 1;
 
-    aspect = width / (gfloat) height;
+    aspect = width / (gdouble) height;
     if (width > gdk_screen_get_width(screen) / 4)
         width  = gdk_screen_get_width(screen) / 4;
     if (height > gdk_screen_get_height(screen) / 4)
@@ -1444,11 +1451,11 @@ gwy_curve_size_graph(GwyCurve *curve)
 static void
 gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
 {
-    gfloat *vector;
+    gdouble *vector;
     GwyChannelData *channel;
     int i, c_index;
 
-    vector = g_new(gfloat, width);
+    vector = g_new(gdouble, width);
 
     for (c_index = 0; c_index < c->num_channels; c_index++) {
         channel = &c->channel_data[c_index];
@@ -1473,27 +1480,27 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
 }
 
 static int
-project(gfloat value, gfloat min, gfloat max, int norm)
+project(gdouble value, gdouble min, gdouble max, int norm)
 {
     return (norm - 1) * ((value - min) / (max - min)) + 0.5;
 }
 
-static gfloat
-unproject(gint value, gfloat min, gfloat max, int norm)
+static gdouble
+unproject(gint value, gdouble min, gdouble max, int norm)
 {
-    return value / (gfloat) (norm - 1) * (max - min) + min;
+    return value / (gdouble) (norm - 1) * (max - min) + min;
 }
 
 /* Solve the tridiagonal equation system that determines the second
    derivatives for the interpolation points.  (Based on Numerical
    Recipies 2nd Edition.) */
 static void
-spline_solve(int n, gfloat x[], gfloat y[], gfloat y2[])
+spline_solve(int n, gdouble x[], gdouble y[], gdouble y2[])
 {
-    gfloat p, sig, *u;
+    gdouble p, sig, *u;
     gint i, k;
 
-    u = g_new(gfloat, (n - 1));
+    u = g_new(gdouble, (n - 1));
 
     y2[0] = u[0] = 0.0;   /* set lower boundary condition to "natural" */
 
@@ -1514,11 +1521,11 @@ spline_solve(int n, gfloat x[], gfloat y[], gfloat y2[])
     g_free (u);
 }
 
-static gfloat
-spline_eval(int n, gfloat x[], gfloat y[], gfloat y2[], gfloat val)
+static gdouble
+spline_eval(int n, gdouble x[], gdouble y[], gdouble y2[], gdouble val)
 {
     gint k_lo, k_hi, k;
-    gfloat h, b, a;
+    gdouble h, b, a;
 
     /* do a binary search for the right interval: */
     k_lo = 0; k_hi = n - 1;
@@ -1546,10 +1553,10 @@ spline_eval(int n, gfloat x[], gfloat y[], gfloat y2[], gfloat val)
 
 /*XXX - fixme
 void
-gwy_curve_set_vector (GwyCurve *c, int veclen, gfloat vector[])
+gwy_curve_set_vector (GwyCurve *c, int veclen, gdouble vector[])
 {
   GwyCurveType old_type;
-  gfloat rx, dx, ry;
+  gdouble rx, dx, ry;
   gint i, height;
   GdkScreen *screen = gtk_widget_get_screen (GTK_WIDGET (c));
 
@@ -1592,9 +1599,9 @@ gwy_curve_set_vector (GwyCurve *c, int veclen, gfloat vector[])
 
 /*XXX - fixme
 void
-gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
+gwy_curve_set_gamma (GwyCurve *c, gdouble gamma_val)
 {
-  gfloat x, one_over_gamma, height, one_over_width;
+  gdouble x, one_over_gamma, height, one_over_width;
   GwyCurveType old_type;
   gint i;
 
@@ -1612,7 +1619,7 @@ gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
   height = c->height;
   for (i = 0; i < c->num_points; ++i)
 {
-      x = (gfloat) i / (c->num_points - 1);
+      x = (gdouble) i / (c->num_points - 1);
       c->point[i].x = RADIUS + i;
       c->point[i].y =
     RADIUS + (height * (1.0 - pow (x, one_over_gamma)) + 0.5);
