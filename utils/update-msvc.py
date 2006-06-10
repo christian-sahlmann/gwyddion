@@ -305,7 +305,34 @@ def recurse(each):
         recurse(each)
         os.chdir(cwd)
 
+def check_make_all():
+    """Die noisily if 'make -q all' does not succeed."""
+    status = os.system('make -q -s all >/dev/null')
+    if not status:
+        return True
+    sys.stderr.write('%s: project build did not succeed '
+                     '(or it was not attempted)\n' % me)
+    return False
+
+def check_completness(config):
+    """Check if optional features that can affect completnes are enabled."""
+    must_have = 'HAVE_TIFF', 'HAVE_XML2'
+    text = get_file(config)
+    ok = True
+    for x in must_have:
+        if re.search(r'^#define\s+%s\s+' % x, text, re.M):
+            continue
+        sys.stderr.write('%s: %s is not defined in %s\n' % (me, x, config))
+        ok = False
+    return ok
+
 configure = get_file('configure.ac')
+ok = check_completness('config.h')
+ok *= check_make_all()
+if not ok:
+    sys.stderr.write('%s: generated files would be incomplete, quitting\n' % me)
+    sys.exit(1)
+
 recurse(process_one_dir)
 
 cwd = os.getcwd()
