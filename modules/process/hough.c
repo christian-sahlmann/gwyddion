@@ -101,7 +101,8 @@ hough(GwyContainer *data, GwyRunType run)
 			      NULL,
 			      NULL,
 			      result,
-			      1);
+			      1,
+                  FALSE);
 
     
     /*gwy_data_field_hough_circle(edgefield,

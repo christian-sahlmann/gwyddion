@@ -27,6 +27,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/hough.h>
 #include <libprocess/level.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -49,6 +50,9 @@ static void        nonlinearity_do              (GwyDataField *dfield,
                                                  GwyDataField *show);
 static void        hough_lines_do               (GwyDataField *dfield,
                                                  GwyDataField *show);
+static void        harris_do                    (GwyDataField *dfield,
+                                                 GwyDataField *show);
+
 
 
 /* The module info. */
@@ -117,6 +121,15 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               /* FIXME */
                               N_("Hough lines presentation"));
+    gwy_process_func_register("edge_harris",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Harris Corner"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              /* FIXME */
+                              N_("Harris corner presentation"));
+
 
     return TRUE;
 }
@@ -160,6 +173,8 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         nonlinearity_do(dfield, showfield);
     else if (gwy_strequal(name, "edge_hough_lines"))
         hough_lines_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_harris"))
+        harris_do(dfield, showfield);
     else {
         g_warning("edge does not provide function `%s'", name);
         gwy_data_field_copy(dfield, showfield, FALSE);
@@ -277,6 +292,23 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
 
     gwy_data_field_hough_line_strenghten(show, NULL, NULL,
                                            1, 0.6);
+}
+static void
+harris_do(GwyDataField *dfield, GwyDataField *show)
+{
+    GwyDataField *x_gradient, *y_gradient;
+
+    gwy_data_field_copy(dfield, show, FALSE);
+    x_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
+    y_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
+
+    gwy_data_field_filter_harris(x_gradient, y_gradient, show, 4, 0.1);
+    /*gwy_data_field_clear(show);
+    gwy_data_field_grains_mark_watershed_minima(ble, show, 1, 0, 5, 
+                       0.05*(gwy_data_field_get_max(ble) - gwy_data_field_get_min(ble)));
+*/
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

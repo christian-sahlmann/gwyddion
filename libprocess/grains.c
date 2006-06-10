@@ -1224,6 +1224,33 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field,
     gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);
 }
 
+void gwy_data_field_grains_splash_water(GwyDataField *data_field,
+                                                 GwyDataField *water,
+                                                 gint locate_steps,
+                                                 gdouble locate_dropsize)
+{
+    GwyDataField *min, *mark_dfield;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+
+    min = gwy_data_field_new_alike(data_field, TRUE);
+    mark_dfield = gwy_data_field_duplicate(data_field);
+
+    /* odrop */
+    gwy_data_field_clear(water);
+    for (i = 0; i < locate_steps; i++)
+        drop_step(mark_dfield, water, locate_dropsize);
+    
+    gwy_data_field_invalidate(water);
+    g_object_unref(mark_dfield);
+
+}
+
+
 /****************************************************************************/
 /*private functions*/
 
@@ -1281,7 +1308,6 @@ step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
     return FALSE;
 }
 
-
 static void
 drop_step(GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
 {
@@ -1306,6 +1332,8 @@ drop_step(GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
         data_field->data[col + xres*row] -= dropsize;
 
     }
+    gwy_data_field_invalidate(water_field);
+    gwy_data_field_invalidate(data_field);
 }
 
 static void

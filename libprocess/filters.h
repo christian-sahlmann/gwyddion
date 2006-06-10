@@ -143,6 +143,13 @@ void gwy_data_field_shade                      (GwyDataField *data_field,
                                                 gdouble theta,
                                                 gdouble phi);
 
+void gwy_data_field_filter_harris(GwyDataField *x_gradient,
+                                  GwyDataField *y_gradient,
+                                  GwyDataField *result,
+                                  gint neighbourhood,
+                                  gdouble alpha);
+
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_FILTERS__ */

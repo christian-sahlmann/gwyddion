@@ -1645,6 +1645,40 @@ gwy_data_field_shade(GwyDataField *data_field,
     gwy_data_field_invalidate(target_field);
 }
 
+
+void
+gwy_data_field_filter_harris(GwyDataField *x_gradient, GwyDataField *y_gradient, GwyDataField *result,
+                                   gint neighbourhood, gdouble alpha)
+{
+
+    gdouble pxx, pxy, pyy, xavg, yavg, det, trace, mult;
+    gint height, width, i, j;
+
+
+    height = gwy_data_field_get_xres(x_gradient);
+    width = gwy_data_field_get_yres(x_gradient);
+
+    mult = gwy_data_field_get_max(x_gradient)-gwy_data_field_get_min(x_gradient);
+    mult = 1.0/mult/mult;
+
+    gwy_data_field_clear(result);
+    for (i = neighbourhood; i < (height - neighbourhood); i++) {
+         for (j = neighbourhood; j < (width - neighbourhood); j++) {
+             xavg = gwy_data_field_area_get_avg(x_gradient, NULL, i-neighbourhood, j-neighbourhood,
+                                                2*neighbourhood, 2*neighbourhood);
+             yavg = gwy_data_field_area_get_avg(y_gradient, NULL, i-neighbourhood, j-neighbourhood,
+                                                2*neighbourhood, 2*neighbourhood);
+             pxx = xavg*xavg*mult;
+             pxy = xavg*yavg*mult;
+             pyy = yavg*yavg*mult;
+             det = pxy*pxy - pxx*pyy;
+             trace = pxx + pyy;
+             gwy_data_field_set_val(result, i, j, (det - alpha*trace*trace));
+          }
+    }
+}
+
+
 /************************** Documentation ****************************/
 
 /**

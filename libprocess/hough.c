@@ -75,7 +75,8 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *x_gradient,
                                GwyDataField *y_gradient,
                                GwyDataField *result,
-                               gint hwidth)
+                               gint hwidth,
+                               gboolean overlapping)
 {
     gint k, col, row, xres, yres, rxres, ryres;
     gdouble rho, theta, rhostep, thetastep, *data, gradangle=0, gradangle0=0, gradangle2=0, gradangle3=0, threshold;
@@ -95,7 +96,8 @@ gwy_data_field_hough_line(GwyDataField *dfield,
     }
 
 
-    thetastep = 2*G_PI/(gdouble)ryres;
+    if (overlapping) thetastep = 2*G_PI/(gdouble)ryres;
+    else thetastep = G_PI/(gdouble)ryres;
     rhostep = 2.0*sqrt(xres*xres+yres*yres)/(gdouble)rxres;
 
     gwy_data_field_fill(result, 0);
@@ -117,7 +119,8 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                 for (k = 0; k < result->yres; k++)
                 {
                     theta = (gdouble)k*thetastep;
-
+                    if (!overlapping) theta += G_PI/4;
+                   
                     threshold = 0.1;
                     if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold || fabs(theta-gradangle2)<threshold
                         || fabs(theta-gradangle3)<threshold || fabs(theta-gradangle0)<threshold)) continue;
@@ -157,7 +160,7 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                              360, 0, 10,
                              FALSE);
 
-    gwy_data_field_hough_line(dfield, x_gradient, y_gradient, result, hwidth);
+    gwy_data_field_hough_line(dfield, x_gradient, y_gradient, result, hwidth, TRUE);
 
     gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmin + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
@@ -167,7 +170,7 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
     for (i = 0; i < 20; i++)
     {
-        printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);
+        /*printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);*/
      
        if (zdata[i] > threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
            //printf("point: %d %d (of %d %d), xreal: %g  yreal: %g\n", xdata[i], ydata[i], result->xres, result->yres, result->xreal, result->yreal);     
@@ -288,7 +291,7 @@ gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield,
      y_left = (gint)(rho/sin(theta));
      y_right = (gint)((rho - dfield->xres*cos(theta))/sin(theta));
 
-     printf("%g %g %d %d %d %d\n", rho, theta, x_top, x_bottom, y_left, y_right);
+     /*printf("%g %g %d %d %d %d\n", rho, theta, x_top, x_bottom, y_left, y_right);*/
      if (x_top >= 0 && x_top < dfield->xres)
      {
          *px1 = x_top;
@@ -474,15 +477,15 @@ find_smallest_index(gdouble *data, gint n)
 
 }
 
-gboolean
-find_isthere(gdouble *xdata, gdouble *ydata, gint mcol, gint mrow, gint n)
+gint
+find_isthere(gdouble *xdata, gdouble *ydata, gint mcol, gint mrow, gdouble skip, gint n)
 {
     gint i;
     for (i = 0; i < n; i++)
     {
-        if (fabs(xdata[i]-mcol)<1 && fabs(ydata[i]-mrow)<1) return TRUE;
+        if (sqrt((xdata[i]-mcol)*(xdata[i]-mcol) + (ydata[i]-mrow)*(ydata[i]-mrow)) < skip) return i;
     }
-    return FALSE;
+    return -1;
 }
 
 gdouble
@@ -546,41 +549,30 @@ find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
 
 static void
 get_local_maximum(GwyDataField *dfield, gint mcol, gint mrow,
-                                gdouble *xval, gdouble *yval, gdouble *zval)
+                                gdouble *xval, gdouble *yval)
 {
     
     gdouble zm, zp, z0;
 
     z0 = gwy_data_field_get_val(dfield, mcol, mrow);
-    if (mcol > 0)
+    if (mcol > 0 && mcol < (gwy_data_field_get_xres(dfield)-1))
+    {
         zm = gwy_data_field_get_val(dfield, mcol - 1, mrow);
-    else
-        zm = z0;
-    
-    if (mcol < (gwy_data_field_get_xres(dfield)-1))
         zp = gwy_data_field_get_val(dfield, mcol + 1, mrow);
-    else
-        zp = z0;
- 
-    if (zm == z0 && zp == z0) *xval = (gdouble)mcol;
-    else
-        *xval = (gdouble)mcol + (zm - zp)/(zm + zp - 2*z0)/2;
-
-    if (mrow > 0)
-        zm = gwy_data_field_get_val(dfield, mcol, mrow - 1);
-    else
-        zm = z0;
+        if ((zm + zp - 2*z0) == 0) *xval = (gdouble)mcol;
+        else
+            *xval = (gdouble)mcol + (zm - zp)/(zm + zp - 2*z0)/2.0;
+    }
+    else *xval = (gdouble)mcol;
     
-    if (mrow < (gwy_data_field_get_yres(dfield)-1))
-        zp = gwy_data_field_get_val(dfield, mcol, mrow + 1);
-    else
-        zp = z0;
- 
-    if (zm == z0 && zp == z0) *yval = (gdouble)mcol;
-    else
-        *yval = (gdouble)mrow + (zm - zp)/(zm + zp - 2*z0)/2;
-
-    
+    if (mrow > 0 && mrow < (gwy_data_field_get_yres(dfield)-1))
+    {
+        zm = gwy_data_field_get_val(dfield, mcol, mrow-1);
+        zp = gwy_data_field_get_val(dfield, mcol, mrow+1);
+        if ((zm + zp - 2*z0) == 0) *yval = (gdouble)mrow;
+        else *yval = (gdouble)mrow + (zm - zp)/(zm + zp - 2*z0)/2.0;
+    }
+    else *yval = (gdouble)mrow;
 }
 
 
@@ -595,7 +587,7 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
                                           gboolean subpixel)
 {
     gint col, row, mcol, mrow, i, count;
-    gdouble xval, yval, zval;
+    gdouble xval, yval;
     gdouble value;
 
     for (i = 0; i < ndata; i++)
@@ -606,33 +598,37 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
     }
 
     count = 0;
-    for (col=skip; col<(dfield->xres - skip); col += (1 + skip))
+    for (col=0; col<(dfield->xres); col++)
     {
-        for (row=skip; row<(dfield->yres - skip); row += (1 + skip))
+        for (row=0; row<(dfield->yres); row++)
         {
-            mcol = col;
-            mrow = row;
-            value = find_nmax(dfield, &mcol, &mrow);
+            if ((value = gwy_data_field_get_val(dfield, col, row)) > threshold)
+            {
+                mcol = col;
+                mrow = row;
 
-            if (find_isthere(xdata, ydata, mcol, mrow, ndata) || value<threshold) continue;
-
-            i = find_smallest_index(zdata, ndata);
-            if (zdata[i] < value) {
-                if (subpixel)
-                {
-                    get_local_maximum(dfield, mcol, mrow,
-                                      &xval, &yval, &zval);
-                    zdata[i] = value;
-                    xdata[i] = xval;
-                    ydata[i] = yval;
-                    count++;
-                }
-                else
-                {
-                    zdata[i] = value;
-                    xdata[i] = (gdouble)mcol;
-                    ydata[i] = (gdouble)mrow;
-                    count++;
+                i = find_isthere(xdata, ydata, mcol, mrow, skip, count);
+                if (i == -1)
+                    i = find_smallest_index(zdata, ndata);
+                
+                if (zdata[i] < value)  {
+                    if (subpixel)
+                    {
+                        get_local_maximum(dfield, mcol, mrow,
+                                      &xval, &yval);
+                        zdata[i] = value;
+                        xdata[i] = xval;
+                        ydata[i] = yval;
+                        count = MAX(i + 1, count);
+                    }
+                    else
+                    {
+                        zdata[i] = value;
+                        xdata[i] = (gdouble)mcol;
+                        ydata[i] = (gdouble)mrow;
+                        count = MAX(i + 1, count);
+                    }
+                    continue;
                 }
             }
         }
@@ -659,10 +655,13 @@ gwy_data_field_hough_datafield_line_to_polar(GwyDataField *dfield,
     *rho = q/sqrt(k*k + 1);
     *theta = asin(1/sqrt(k*k + 1));
     
-    printf("line: p1 (%d, %d), p2 (%d, %d), k=%g q=%g rho=%g theta=%g\n",
-           px1, py1, px2, py2, k, q, *rho, *theta);
+    /*printf("line: p1 (%d, %d), p2 (%d, %d), k=%g q=%g rho=%g theta=%g\n",
+           px1, py1, px2, py2, k, q, *rho, *theta);*/
 
 }
+
+
+
 
 
 /************************** Documentation ****************************/

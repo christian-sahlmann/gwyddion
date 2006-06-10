@@ -31,7 +31,8 @@ void gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *x_gradient,
                                GwyDataField *y_gradient,
                                GwyDataField *result,
-                               gint hwidth);
+                               gint hwidth,
+                               gboolean overlapping);
 
 void gwy_data_field_hough_circle(GwyDataField *dfield,
                                  GwyDataField *x_gradient,
@@ -77,7 +78,6 @@ void gwy_data_field_hough_datafield_line_to_polar(GwyDataField *dfield,
                                                   gint py2,
                                                   gdouble *rho,
                                                   gdouble *theta);
-
 
 
 G_END_DECLS

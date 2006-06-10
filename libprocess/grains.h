@@ -118,6 +118,11 @@ void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      gboolean below,
                                      gint nstats);
 
+void gwy_data_field_grains_splash_water(GwyDataField *data_field,
+						 GwyDataField *minima,
+					         gint locate_steps,	 
+						 gdouble locate_dropsize);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_GRAINS__ */
