@@ -108,6 +108,25 @@ def fix_suffixes(lst, suffix, replacewith=''):
         newlst.append(x)
     return newlst
 
+def expand_make_vars(lst, makefile):
+    """Rudimentary Makefile variable expansion."""
+    if not makefile:
+        return lst
+    newlst = []
+    r = re.compile(r'\$\((?P<name>\w+)\)')
+    for x in lst:
+        while True:
+            m = r.search(x)
+            if not m:
+                newlst.append(x)
+                break
+            name = m.group('name')
+            value = get_list(makefile, name)
+            if len(value) > 1:
+                print 'WARNING: Complex expansions not supported (%s)' % name
+            x = ' '.join(value)
+    return newlst
+
 def get_object_symbols(filename, symtype='T'):
     """Get symbols of specified type (by default 'T') from an object file."""
     fh = os.popen('nm -p -t x %s' % filename, 'r')
@@ -146,7 +165,7 @@ def make_lib_defs(makefile):
         syms = ['EXPORTS'] + ['\t' + x for x in syms]
         backup_write_diff('%s.def' % l, syms)
 
-def expand_template(makefile, name):
+def expand_template(makefile, name, supplementary=None):
     """Get expansion of specified template, taking information from Makefile.
 
     DATA: install-data rule, created from foo_DATA
@@ -209,10 +228,12 @@ def expand_template(makefile, name):
         return  '\n'.join(lst)
     elif name == 'MODULES':
         mods = get_list(makefile, r'\w+_LTLIBRARIES')
+        mods = expand_make_vars(mods, supplementary)
         mods = fix_suffixes(fix_suffixes(mods, '.la', '.dll'), ')', ').dll')
         return name + ' =' + format_list(mods)
     elif name == 'MOD_OBJ_RULES':
         mods = get_list(makefile, r'\w+_LTLIBRARIES')
+        mods = expand_make_vars(mods, supplementary)
         lst = []
         for m in mods:
             um = underscorize(m)
@@ -225,7 +246,9 @@ def expand_template(makefile, name):
                 lst.append(object_rule % (x, deps, 'MOD', x))
         return  '\n'.join(lst)
     elif name == 'MOD_DLL_RULES':
-        mods = fix_suffixes(get_list(makefile, r'\w+_LTLIBRARIES'), '.la')
+        mods = get_list(makefile, r'\w+_LTLIBRARIES')
+        mods = expand_make_vars(mods, supplementary)
+        mods = fix_suffixes(mods, '.la')
         lst = []
         for m in mods:
             lst.append(mod_dll_rule % (m, m, m, m, m))
@@ -254,13 +277,13 @@ def fill_templates(makefile):
     templates = glob.glob('*.gwt')
     templates = fix_suffixes(templates, '.gwt')
     for templ in templates:
-        text = get_file(templ + '.gwt')
+        text = orig = get_file(templ + '.gwt')
         text = re_cvsid.sub('# This file was GENERATED from %s.gwt by %s.'
                             % (templ, me), text)
         m = re_template.search(text)
         while m:
             text = text[:m.start()] \
-                   + expand_template(makefile, m.group('name')) \
+                   + expand_template(makefile, m.group('name'), orig) \
                    + text[m.end():]
             m = re_template.search(text)
         backup_write_diff(templ, text)
