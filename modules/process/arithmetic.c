@@ -327,7 +327,7 @@ arithmetic_check(ArithmeticArgs *args)
     GwyContainer *data;
     GQuark quark;
     GwyDataField *dfirst, *dfield;
-    gdouble xreal1, xreal2, yreal1, yreal2;
+    GwyDataCompatibilityFlags diff;
 
     if (args->err & ARITHMETIC_EXPR)
         return NULL;
@@ -356,21 +356,21 @@ arithmetic_check(ArithmeticArgs *args)
         quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
-        if ((gwy_data_field_get_xres(dfirst)
-             != gwy_data_field_get_xres(dfield))
-            || (gwy_data_field_get_yres(dfirst)
-                != gwy_data_field_get_yres(dfield))) {
+        /* FIXME: what about value units? */
+        diff = gwy_data_field_check_compatibility
+                                            (dfirst, dfield,
+                                             GWY_DATA_COMPATIBILITY_RES
+                                             | GWY_DATA_COMPATIBILITY_REAL
+                                             | GWY_DATA_COMPATIBILITY_LATERAL);
+        if (diff) {
             args->err |= ARITHMETIC_DATA;
-            return _("Pixel dimensions differ");
-        }
-        xreal1 = gwy_data_field_get_xreal(dfirst);
-        yreal1 = gwy_data_field_get_yreal(dfirst);
-        xreal2 = gwy_data_field_get_xreal(dfield);
-        yreal2 = gwy_data_field_get_yreal(dfield);
-        if (fabs(log(xreal1/xreal2)) > 0.0001
-            || fabs(log(yreal1/yreal2)) > 0.0001) {
-            args->err |= ARITHMETIC_DATA;
-            return _("Physical dimensions differ");
+            if (diff & GWY_DATA_COMPATIBILITY_RES)
+                return _("Pixel dimensions differ");
+            if (diff & GWY_DATA_COMPATIBILITY_LATERAL)
+                return _("Lateral dimensions are different physical "
+                         "quantities");
+            if (diff & GWY_DATA_COMPATIBILITY_REAL)
+                return _("Physical dimensions differ");
         }
     }
 
