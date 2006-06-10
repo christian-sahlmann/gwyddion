@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3.1",
+    "0.3.2",
     "David Nečas (Yeti), Petr Klapetek, Chris Anderson",
     "2006",
 };
@@ -368,6 +368,9 @@ process_metadata(STPFile *stpfile,
         case 1:
         case 9:
         case 10:
+        siunit = gwy_si_unit_new("m");
+        gwy_data_field_set_si_unit_z(dfield, siunit);
+        g_object_unref(siunit);
         if (stpfile_get_double(stpfile->meta, "z_v_to_angs", &q)
             && stpfile_get_double(data->meta, "servo_range", &r)) {
             gwy_data_field_multiply(dfield, q*r/32768*Angstrom);
