@@ -202,7 +202,7 @@ merge_dialog(MergeArgs *args)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 10, FALSE);
+    table = gtk_table_new(4, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -352,7 +352,7 @@ merge_do(MergeArgs *args)
     yres1 = gwy_data_field_get_yres(dfield1);
     yres2 = gwy_data_field_get_yres(dfield2);
 
-    result = gwy_data_field_duplicate(dfield1);
+    result = gwy_data_field_new_alike(dfield1, FALSE);
 
     /*cut data for correlation*/
     switch (args->direction) {
@@ -402,8 +402,14 @@ merge_do(MergeArgs *args)
     correlation_score = gwy_data_field_new_alike(correlation_data, FALSE);
 
     /* get appropriate correlation score */
-    get_score_iteratively(correlation_data, correlation_kernel,
-                          correlation_score, args);
+    if (!get_score_iteratively(correlation_data, correlation_kernel,
+                               correlation_score, args)) {
+        g_object_unref(correlation_score);
+        g_object_unref(correlation_data);
+        g_object_unref(correlation_kernel);
+        g_object_unref(result);
+        return FALSE;
+    }
     find_score_maximum(correlation_score, &max_col, &max_row);
 
     /* enlarge result field to fit the new data */
@@ -717,7 +723,6 @@ static void
 merge_load_args(GwyContainer *settings,
                    MergeArgs *args)
 {
-
     *args = merge_defaults;
     gwy_container_gis_enum_by_name(settings, direction_key, &args->direction);
     gwy_container_gis_enum_by_name(settings, mode_key, &args->mode);

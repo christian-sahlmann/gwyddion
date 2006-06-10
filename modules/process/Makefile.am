@@ -27,6 +27,7 @@ process_LTLIBRARIES = \
 	grain_rem_threshold.la \
 	grain_wshed.la \
 	hough.la \
+	immerse.la \
 	laplace.la \
 	level.la \
 	linecorrect.la \
@@ -67,12 +68,12 @@ AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
 if MODULE_DEPENDENCIES
 module_libadd = \
-	$(top_builddir)/app/libgwyapp.la		\
-	$(top_builddir)/libdraw/libgwydraw.la		\
-	$(top_builddir)/libgwyddion/libgwyddion.la	\
-	$(top_builddir)/libgwydgets/libgwydgets.la	\
-	$(top_builddir)/libgwymodule/libgwymodule.la	\
-	$(top_builddir)/libprocess/libgwyprocess.la	\
+	$(top_builddir)/app/libgwyapp.la \
+	$(top_builddir)/libdraw/libgwydraw.la \
+	$(top_builddir)/libgwyddion/libgwyddion.la \
+	$(top_builddir)/libgwydgets/libgwydgets.la \
+	$(top_builddir)/libgwymodule/libgwymodule.la \
+	$(top_builddir)/libprocess/libgwyprocess.la \
 	@GTK_LIBS@
 endif
 
@@ -163,8 +164,8 @@ grain_dist_la_LIBADD = $(module_libadd)
 hough_la_SOURCES = hough.c
 hough_la_LIBADD = $(module_libadd)
 
-#immerse_la_SOURCES = immerse.c
-#immerse_la_LIBADD = $(module_libadd)
+immerse_la_SOURCES = immerse.c
+immerse_la_LIBADD = $(module_libadd)
 
 laplace_la_SOURCES = laplace.c
 laplace_la_LIBADD = $(module_libadd)

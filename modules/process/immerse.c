@@ -22,15 +22,14 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/datafield.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define IMMERSE_RUN_MODES \
-    (GWY_RUN_INTERACTIVE)
+#define IMMERSE_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef enum {
     GWY_IMMERSE_LEVELING_LARGE,
@@ -51,52 +50,47 @@ typedef enum {
     GWY_IMMERSE_SAMPLING_LAST
 } GwyImmerseSamplingType;
 
+typedef struct {
+    GwyContainer *data;
+    gint id;
+} GwyDataObjectId;
 
 typedef struct {
-    GwyDataWindow *win1;
-    GwyDataWindow *win2;
     GwyImmerseLevelingType leveling;
     GwyImmerseModeType mode;
     GwyImmerseSamplingType sampling;
+    GwyDataObjectId image;
+    GwyDataObjectId detail;
 } ImmerseArgs;
 
-typedef struct {
-    GtkWidget *leveling;
-    GtkWidget *mode;
-    GtkWidget *sampling;
-} ImmerseControls;
-
-static gboolean   module_register               (void);
-static gboolean   immerse                  (GwyContainer *data,
-                                                 GwyRunType run);
-static GtkWidget* immerse_window_construct (ImmerseArgs *args);
-static void       immerse_data_cb          (GtkWidget *item);
-static gboolean   immerse_check            (ImmerseArgs *args,
-                                                 GtkWidget *immerse_window);
-static gboolean   immerse_do               (ImmerseArgs *args);
-static GtkWidget* immerse_data_option_menu (GwyDataWindow **operand);
-static void       immerse_leveling_cb     (GtkWidget *combo,
-                                          ImmerseArgs *args);
-static void       immerse_mode_cb         (GtkWidget *combo,
-                                          ImmerseArgs *args);
-static void       immerse_sampling_cb        (GtkWidget *combo,
-                                          ImmerseArgs *args);
-
-
-static void       immerse_load_args        (GwyContainer *settings,
-                                          ImmerseArgs *args);
-static void       immerse_save_args        (GwyContainer *settings,
-                                          ImmerseArgs *args);
-static void       immerse_sanitize_args    (ImmerseArgs *args);
-
-static gboolean   get_score_iteratively(GwyDataField *data_field,
-                                        GwyDataField *kernel_field,
-                                        GwyDataField *score,
-                                        ImmerseArgs *args);
-static void       find_score_maximum   (GwyDataField *correlation_score,
-                                        gint *max_col,
-                                        gint *max_row);
-
+static gboolean module_register      (void);
+static void     immerse              (GwyContainer *data,
+                                      GwyRunType run);
+static gboolean immerse_dialog       (ImmerseArgs *args);
+static void     immerse_detail_cb    (GwyDataChooser *chooser,
+                                      GwyDataObjectId *object);
+static gboolean immerse_data_filter  (GwyContainer *data,
+                                      gint id,
+                                      gpointer user_data);
+static gboolean immerse_do           (ImmerseArgs *args);
+static void     immerse_leveling_cb  (GtkWidget *combo,
+                                      ImmerseArgs *args);
+static void     immerse_mode_cb      (GtkWidget *combo,
+                                      ImmerseArgs *args);
+static void     immerse_sampling_cb  (GtkWidget *combo,
+                                      ImmerseArgs *args);
+static void     immerse_load_args    (GwyContainer *settings,
+                                      ImmerseArgs *args);
+static void     immerse_save_args    (GwyContainer *settings,
+                                      ImmerseArgs *args);
+static void     immerse_sanitize_args(ImmerseArgs *args);
+static gboolean get_score_iteratively(GwyDataField *data_field,
+                                      GwyDataField *kernel_field,
+                                      GwyDataField *score,
+                                      ImmerseArgs *args);
+static void     find_score_maximum   (GwyDataField *correlation_score,
+                                      gint *max_col,
+                                      gint *max_row);
 
 static const GwyEnum levelings[] = {
     { N_("Large image"),   GWY_IMMERSE_LEVELING_LARGE },
@@ -114,24 +108,24 @@ static const GwyEnum samplings[] = {
     { N_("Downsample detail"),    GWY_IMMERSE_SAMPLING_DOWN },
 };
 
-
 static const ImmerseArgs immerse_defaults = {
-    NULL, NULL, GWY_IMMERSE_LEVELING_DETAIL, GWY_IMMERSE_MODE_CORRELATE, GWY_IMMERSE_SAMPLING_UP
+    GWY_IMMERSE_LEVELING_DETAIL,
+    GWY_IMMERSE_MODE_CORRELATE,
+    GWY_IMMERSE_SAMPLING_UP,
+    { NULL, -1 },
+    { NULL, -1 },
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
+    "2006",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -139,100 +133,67 @@ module_register(void)
 {
     gwy_process_func_register("immerse",
                               (GwyProcessFunc)&immerse,
-                              N_("/M_ultidata/_Immerse..."),
+                              N_("/M_ultidata/_Immerse Detail..."),
                               NULL,
                               IMMERSE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Immerse detail into image"));
+                              N_("Immerse a detail into image"));
 
     return TRUE;
 }
 
-/* FIXME: we ignore the Container argument and use current data window */
-static gboolean
+static void
 immerse(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *immerse_window;
-    GwyContainer *settings;
     ImmerseArgs args;
-    gboolean ok = FALSE;
+    GwyContainer *settings;
 
-    g_return_val_if_fail(run & IMMERSE_RUN_MODES, FALSE);
+    g_return_if_fail(run & IMMERSE_RUN_MODES);
+
     settings = gwy_app_settings_get();
     immerse_load_args(settings, &args);
 
-    args.win1 = args.win2 = gwy_app_data_window_get_current();
-    g_assert(gwy_data_window_get_data(args.win1) == data);
-    immerse_window = immerse_window_construct(&args);
-    gtk_window_present(GTK_WINDOW(immerse_window));
+    args.image.data = data;
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &args.image.id, 0);
+    args.detail.data = NULL;
 
-    do {
-        switch (gtk_dialog_run(GTK_DIALOG(immerse_window))) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            case GTK_RESPONSE_NONE:
-            gtk_widget_destroy(immerse_window);
-            ok = TRUE;
-            break;
+    if (immerse_dialog(&args))
+        immerse_do(&args);
 
-            case GTK_RESPONSE_OK:
-            ok = immerse_check(&args, immerse_window);
-            if (ok) {
-                gtk_widget_destroy(immerse_window);
-                immerse_do(&args);
-                immerse_save_args(settings, &args);
-            }
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (!ok);
-
-    return FALSE;
+    immerse_save_args(settings, &args);
 }
 
-static GtkWidget*
-immerse_window_construct(ImmerseArgs *args)
+static gboolean
+immerse_dialog(ImmerseArgs *args)
 {
-    GtkWidget *dialog, *table, *omenu, *label, *combo;
-    gint row;
+    GtkWidget *dialog, *table, *chooser, *combo;
+    gint response, row;
+    gboolean ok;
 
-    dialog = gtk_dialog_new_with_buttons(_("Immerse data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Immerse Detail"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 10, FALSE);
+    table = gtk_table_new(4, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
 
-    /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Large image:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    omenu = immerse_data_option_menu(&args->win1);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    row++;
-
-    /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Detail image:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    omenu = immerse_data_option_menu(&args->win2);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
+    /* Detail to immerse */
+    chooser = gwy_data_chooser_new_channels();
+    g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
+                                immerse_data_filter, &args->image, NULL);
+    g_signal_connect(chooser, "changed",
+                     G_CALLBACK(immerse_detail_cb), &args->detail);
+    immerse_detail_cb(GWY_DATA_CHOOSER(chooser), &args->detail);
+    gwy_table_attach_hscale(table, row, _("_Detail image:"), NULL,
+                            GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     row++;
 
     /*Parameters*/
@@ -258,73 +219,76 @@ immerse_window_construct(ImmerseArgs *args)
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
-
     gtk_widget_show_all(dialog);
 
-    return dialog;
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            case GTK_RESPONSE_NONE:
+            gtk_widget_destroy(dialog);
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            ok = TRUE;
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (!ok);
+
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
 }
-
-static GtkWidget*
-immerse_data_option_menu(GwyDataWindow **operand)
-{
-    GtkWidget *omenu, *menu;
-
-    omenu = gwy_option_menu_data_window(G_CALLBACK(immerse_data_cb),
-                                        NULL, NULL, GTK_WIDGET(*operand));
-    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    g_object_set_data(G_OBJECT(menu), "operand", operand);
-
-    return omenu;
-}
-
 
 static void
-immerse_data_cb(GtkWidget *item)
-{
-    GtkWidget *menu;
-    gpointer p, *pp;
-
-    menu = gtk_widget_get_parent(item);
-
-    p = g_object_get_data(G_OBJECT(item), "data-window");
-    pp = (gpointer*)g_object_get_data(G_OBJECT(menu), "operand");
-    g_return_if_fail(pp);
-    *pp = p;
-}
-
-
-static gboolean
-immerse_check(ImmerseArgs *args,
-               GtkWidget *immerse_window)
+immerse_detail_cb(GwyDataChooser *chooser,
+                  GwyDataObjectId *object)
 {
     GtkWidget *dialog;
-    GwyContainer *data;
-    GwyDataField *dfield1, *dfield2;
-    GwyDataWindow *operand1, *operand2;
 
-    operand1 = args->win1;
-    operand2 = args->win2;
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(operand1)
-                         && GWY_IS_DATA_WINDOW(operand2),
-                         FALSE);
+    object->data = gwy_data_chooser_get_active(chooser, &object->id);
+    gwy_debug("data: %p %d", object->data, object->id);
 
-    data = gwy_data_window_get_data(operand1);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    data = gwy_data_window_get_data(operand2);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
+    g_assert(GTK_IS_DIALOG(dialog));
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+                                      object->data != NULL);
+}
 
-    if (dfield1->xreal < dfield2->xreal || dfield1->yreal < dfield2->yreal)
-    {
-        dialog = gtk_message_dialog_new(GTK_WINDOW(immerse_window),
-                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_OK,
-                                    _("Detail image must be smaller (regarding physical size)"
-                                       " than large image"));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
+static gboolean
+immerse_data_filter(GwyContainer *data,
+                    gint id,
+                    gpointer user_data)
+{
+    GwyDataObjectId *object = (GwyDataObjectId*)user_data;
+    GwyDataField *image, *detail;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    detail = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    quark = gwy_app_get_data_key_for_id(object->id);
+    image = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
+
+    /* It does not make sense to immerse itself */
+    if (detail == image)
         return FALSE;
-    }
+
+    if (gwy_data_field_check_compatibility(image, detail,
+                                           GWY_DATA_COMPATIBILITY_LATERAL
+                                           | GWY_DATA_COMPATIBILITY_VALUE))
+        return FALSE;
+
+    if (gwy_data_field_get_xreal(image) < gwy_data_field_get_xreal(detail)
+        || gwy_data_field_get_xreal(image) < gwy_data_field_get_xreal(detail))
+        return FALSE;
+
     return TRUE;
 }
 
@@ -332,77 +296,82 @@ static gboolean
 immerse_do(ImmerseArgs *args)
 {
     GwyContainer *data;
-    GwyDataField *resampled, *score, *dfield1, *dfield2, *result;
-    GwyDataWindow *operand1, *operand2;
+    GwyDataField *resampled, *score, *image, *detail, *result;
     gint max_col = 0, max_row = 0, newid;
+    gint xres1, xres2, yres1, yres2;
+    gint newxres, newyres;
+    gdouble rx, ry;
+    GQuark quark;
 
-    operand1 = args->win1;
-    operand2 = args->win2;
-    g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
+    quark = gwy_app_get_data_key_for_id(args->image.id);
+    image = GWY_DATA_FIELD(gwy_container_get_object(args->image.data, quark));
 
-    data = gwy_data_window_get_data(operand2);
-    dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    data = gwy_data_window_get_data(operand1);
-    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    quark = gwy_app_get_data_key_for_id(args->detail.id);
+    detail = GWY_DATA_FIELD(gwy_container_get_object(args->detail.data, quark));
 
-    result = gwy_data_field_duplicate(dfield1);
+    result = gwy_data_field_new_alike(image, FALSE);
 
-    if (args->sampling == GWY_IMMERSE_SAMPLING_DOWN)
-    {
-        resampled = gwy_data_field_new_alike(dfield2, FALSE);
-        gwy_data_field_resample(result, dfield1->xres, dfield1->yres, GWY_INTERPOLATION_NONE);
+    xres1 = gwy_data_field_get_xres(image);
+    xres2 = gwy_data_field_get_xres(detail);
+    yres1 = gwy_data_field_get_yres(image);
+    yres2 = gwy_data_field_get_yres(detail);
+    rx = gwy_data_field_get_xreal(image)/gwy_data_field_get_xreal(detail);
+    ry = gwy_data_field_get_yreal(image)/gwy_data_field_get_yreal(detail);
 
-        gwy_data_field_copy(dfield1, result, FALSE);
-        gwy_data_field_copy(dfield2, resampled, FALSE);
-        gwy_data_field_resample(resampled,
-                                dfield1->xres*dfield2->xreal/dfield1->xreal,
-                                dfield1->yres*dfield2->xreal/dfield1->xreal,
+    if (args->sampling == GWY_IMMERSE_SAMPLING_DOWN) {
+        resampled = gwy_data_field_new_alike(detail, FALSE);
+        gwy_data_field_resample(result, xres1, yres1, GWY_INTERPOLATION_NONE);
+
+        gwy_data_field_copy(image, result, FALSE);
+        gwy_data_field_copy(detail, resampled, FALSE);
+        newxres = MAX(xres1/rx, 1);
+        newyres = MAX(yres1/ry, 1);
+        gwy_data_field_resample(resampled, newxres, newyres,
                                 GWY_INTERPOLATION_BILINEAR);
 
-        if (args->mode == GWY_IMMERSE_MODE_CORRELATE)
-        {
-            score = gwy_data_field_new_alike(dfield1, FALSE);
-            get_score_iteratively(dfield1, resampled,
-                              score, args);
+        if (args->mode == GWY_IMMERSE_MODE_CORRELATE) {
+            score = gwy_data_field_new_alike(image, FALSE);
+            if (!get_score_iteratively(image, resampled, score, args)) {
+                g_object_unref(score);
+                g_object_unref(result);
+                g_object_unref(resampled);
+                return FALSE;
+            }
             find_score_maximum(score, &max_col, &max_row);
             g_object_unref(score);
         }
 
         gwy_data_field_area_copy(resampled, result,
-                                 0, 0,
-                                 resampled->xres, resampled->yres,
-                                 max_col - resampled->xres/2,
-                                 max_row - resampled->yres/2);
+                                 0, 0, newxres, newyres,
+                                 max_col - newxres/2, max_row - newyres/2);
         g_object_unref(resampled);
     }
-    else
-    {
-        gwy_data_field_resample(result, dfield1->xres, dfield1->yres, FALSE);
-        gwy_data_field_copy(dfield1, result, FALSE);
+    else {
+        gwy_data_field_resample(result, xres1, yres1, GWY_INTERPOLATION_NONE);
+        gwy_data_field_copy(image, result, FALSE);
 
-        gwy_data_field_resample(result,
-                                dfield2->xres*dfield1->xreal/dfield2->xreal,
-                                dfield2->yres*dfield1->xreal/dfield2->xreal,
+        newxres = MAX(xres2*rx, 1);
+        newyres = MAX(yres2*ry, 1);
+        gwy_data_field_resample(result, newxres, newyres,
                                 GWY_INTERPOLATION_BILINEAR);
 
-
-        if (args->mode == GWY_IMMERSE_MODE_CORRELATE)
-        {
+        if (args->mode == GWY_IMMERSE_MODE_CORRELATE) {
             score = gwy_data_field_new_alike(result, FALSE);
-            get_score_iteratively(result, dfield2,
-                                     score, args);
+            if (!get_score_iteratively(result, detail, score, args)) {
+                g_object_unref(score);
+                g_object_unref(result);
+                return FALSE;
+            }
             find_score_maximum(score, &max_col, &max_row);
             g_object_unref(score);
         }
-        gwy_data_field_area_copy(dfield2, result,
-                                 0, 0,
-                                 dfield2->xres, dfield2->yres,
-                                 max_col - dfield2->xres/2,
-                                 max_row - dfield2->yres/2);
+        gwy_data_field_area_copy(detail, result,
+                                 0, 0, xres2, yres2,
+                                 max_col - xres2/2, max_row - yres2/2);
 
     }
 
-    /*set right output */
+    /* set right output */
     if (result) {
         gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
         newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
@@ -410,30 +379,32 @@ immerse_do(ImmerseArgs *args)
         g_object_unref(result);
     }
 
-
     return TRUE;
 }
 
+/* compute crosscorelation */
 static gboolean
 get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
                       GwyDataField *score, ImmerseArgs *args)
 {
-    /*compute crosscorelation */
+    GwyDataWindow *window;
     GwyComputationStateType state;
+    gdouble xres, kxres;
     gint iteration = 0;
 
     state = GWY_COMPUTATION_STATE_INIT;
-    gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
+    xres = gwy_data_field_get_xres(data_field);
+    kxres = gwy_data_field_get_xres(kernel_field);
+
+    /* FIXME */
+    window = gwy_app_data_window_get_for_data(args->image.data);
+    gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
     do {
-        gwy_data_field_correlate_iteration(data_field, kernel_field,
-                                                score,
-                                                &state,
-                                                &iteration);
-        gwy_app_wait_set_message("Correlating...");
-        if (!gwy_app_wait_set_fraction
-                (iteration/(gdouble)(gwy_data_field_get_xres(data_field) -
-                                     (gwy_data_field_get_xres(kernel_field))/2)))
-        {
+        gwy_data_field_correlate_iteration(data_field, kernel_field, score,
+                                           &state, &iteration);
+        gwy_app_wait_set_message(_("Correlating..."));
+        if (!gwy_app_wait_set_fraction(iteration/(xres - kxres/2))) {
+            gwy_app_wait_finish();
             return FALSE;
         }
 
@@ -444,25 +415,28 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
 }
 
 static void
-find_score_maximum(GwyDataField *correlation_score, gint *max_col, gint *max_row)
+find_score_maximum(GwyDataField *correlation_score,
+                   gint *max_col,
+                   gint *max_row)
 {
-    gint i, n, maxi;
+    gint i, n, maxi = 0;
     gdouble max = -G_MAXDOUBLE;
-    gdouble *data;
+    const gdouble *data;
 
-    n = gwy_data_field_get_xres(correlation_score)*gwy_data_field_get_yres(correlation_score);
-    data = gwy_data_field_get_data(correlation_score);
+    n = gwy_data_field_get_xres(correlation_score)
+        *gwy_data_field_get_yres(correlation_score);
+    data = gwy_data_field_get_data_const(correlation_score);
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         if (max < data[i]) {
             max = data[i];
             maxi = i;
         }
+    }
 
     *max_row = (gint)floor(maxi/gwy_data_field_get_xres(correlation_score));
     *max_col = maxi - (*max_row)*gwy_data_field_get_xres(correlation_score);
 }
-
 
 static void
 immerse_leveling_cb(GtkWidget *combo, ImmerseArgs *args)
@@ -482,11 +456,9 @@ immerse_sampling_cb(GtkWidget *combo, ImmerseArgs *args)
     args->sampling = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
-
-static const gchar leveling_key[]      = "/module/immerse/leveling";
-static const gchar mode_key[]          = "/module/immerse/mode";
-static const gchar sampling_key[]      = "/module/immerse/sampling";
-
+static const gchar leveling_key[] = "/module/immerse/leveling";
+static const gchar mode_key[]     = "/module/immerse/mode";
+static const gchar sampling_key[] = "/module/immerse/sampling";
 
 static void
 immerse_sanitize_args(ImmerseArgs *args)
@@ -500,7 +472,6 @@ static void
 immerse_load_args(GwyContainer *settings,
                    ImmerseArgs *args)
 {
-
     *args = immerse_defaults;
     gwy_container_gis_enum_by_name(settings, leveling_key, &args->leveling);
     gwy_container_gis_enum_by_name(settings, mode_key, &args->mode);
@@ -516,8 +487,6 @@ immerse_save_args(GwyContainer *settings,
     gwy_container_set_enum_by_name(settings, mode_key, args->mode);
     gwy_container_set_enum_by_name(settings, sampling_key, args->sampling);
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
