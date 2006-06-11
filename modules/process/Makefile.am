@@ -11,7 +11,6 @@ process_LTLIBRARIES = \
 	cwt.la \
 	dwt.la \
 	dwtanisotropy.la \
-	dwtdenoise.la \
 	edge.la \
 	evaluator_setup.la \
 	facet-level.la \
@@ -109,8 +108,8 @@ dwt_la_LIBADD = $(module_libadd)
 dwtanisotropy_la_SOURCES = dwtanisotropy.c
 dwtanisotropy_la_LIBADD = $(module_libadd)
 
-dwtdenoise_la_SOURCES = dwtdenoise.c
-dwtdenoise_la_LIBADD = $(module_libadd)
+#dwtdenoise_la_SOURCES = dwtdenoise.c
+#dwtdenoise_la_LIBADD = $(module_libadd)
 
 #dwtcorrection_la_SOURCES = dwtcorrection.c
 #dwtcorrection_la_LIBADD = $(module_libadd)

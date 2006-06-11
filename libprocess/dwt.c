@@ -49,6 +49,7 @@ static GwyDataLine* pwt                   (GwyDWTFilter *wt,
 static GwyDWTFilter* wtset_new  (GwyDataLine *wt_coefs);
 static void          wtset_free (GwyDWTFilter *wt);
 
+#if 0
 static gint remove_by_universal_threshold(GwyDataField *dfield,
                                           gint ulcol,
                                           gint ulrow,
@@ -72,6 +73,7 @@ static gint remove_by_threshold(GwyDataField *dfield,
                                 gboolean hard,
                                 gdouble multiple_threshold,
                                 gdouble noise_variance);
+#endif
 
 static gint find_anisotropy(GwyDataField *dfield,
                             GwyDataField *mask,
@@ -374,6 +376,7 @@ gwy_data_field_dwt(GwyDataField *dfield,
     wtset_free(wt);
 }
 
+#if 0
 /**
  * gwy_data_field_dwt_denoise:
  * @dfield: Data field to be denoised (must be square).
@@ -521,6 +524,149 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
   //  printf("coutn: %d\n", count);
 }
 
+/*universal thresholding with supplied threshold value*/
+static gint
+remove_by_universal_threshold(GwyDataField *dfield,
+                              gint ulcol, gint ulrow, gint brcol, gint brrow,
+                              gboolean hard, gdouble threshold)
+{
+    gdouble *datapos;
+    gint i, j, count;
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+        gdouble *drow = datapos + i*dfield->xres;
+
+        for (j = 0; j < (brcol - ulcol); j++) {
+            if (fabs(*drow) < threshold) {
+                if (hard)
+                    *drow = 0;
+                else {
+                    if (*drow < 0)
+                        *drow += threshold;
+                    else
+                        *drow -= threshold;
+                }
+                count++;
+            }
+            drow++;
+        }
+    }
+    return count;
+}
+
+/*area adaptive thresholding*/
+static gint
+remove_by_adaptive_threshold(GwyDataField *dfield,
+                             gint ulcol, gint ulrow, gint brcol, gint brrow,
+                             gboolean hard,
+                             gdouble multiple_threshold,
+                             gdouble noise_variance)
+{
+    gdouble threshold, rms, min, max;
+    gdouble *datapos;
+    gint i, j, count;
+    gint pbrcol, pbrrow, pulcol, pulrow;
+    gint size = 12;
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+        gdouble *drow = datapos + i*dfield->xres;
+
+        for (j = 0; j < (brcol - ulcol); j++) {
+
+            pulcol = MAX(ulcol + j - size/2, ulcol);
+            pulrow = MAX(ulrow + i - size/2, ulrow);
+            pbrcol = MIN(ulcol + j + size/2, brcol);
+            pbrrow = MIN(ulrow + i + size/2, brrow);
+
+            rms = gwy_data_field_area_get_rms(dfield, NULL,
+                                              pulcol, pulrow,
+                                              pbrcol-pulcol, pbrrow-pulrow);
+            if ((rms*rms - noise_variance*noise_variance) > 0) {
+                rms = sqrt(rms*rms - noise_variance*noise_variance);
+                threshold = noise_variance*noise_variance/rms;
+                threshold *= multiple_threshold;
+            }
+            else {
+                gwy_data_field_area_get_min_max(dfield, NULL,
+                                                pulcol, pulrow,
+                                                pbrcol-pulcol, pbrrow-pulrow,
+                                                &min, &max);
+                threshold = MAX(max, -min);
+            }
+
+            if (fabs(*drow) < threshold) {
+                if (hard)
+                    *drow = 0;
+                else {
+                    if (*drow < 0)
+                        *drow += threshold;
+                    else
+                        *drow -= threshold;
+                }
+                count++;
+            }
+            drow++;
+        }
+    }
+    return count;
+}
+
+/*scale adaptive thresholding*/
+static gint
+remove_by_threshold(GwyDataField *dfield,
+                    gint ulcol, gint ulrow, gint brcol, gint brrow,
+                    gboolean hard, gdouble multiple_threshold,
+                    gdouble noise_variance)
+{
+    gdouble rms, threshold, min, max;
+    gdouble *datapos;
+    gint i, j, n, count;
+
+    n = (brrow-ulrow)*(brcol-ulcol);
+
+    rms = gwy_data_field_area_get_rms(dfield, NULL,
+                                      ulcol, ulrow, brcol-ulcol, brrow-ulrow);
+    if ((rms*rms - noise_variance*noise_variance) > 0) {
+        rms = sqrt(rms*rms - noise_variance*noise_variance);
+        threshold = noise_variance*noise_variance/rms;
+        threshold *= multiple_threshold;
+    }
+    else {
+        gwy_data_field_area_get_min_max(dfield, NULL,
+                                        ulcol, ulrow,
+                                        brcol-ulcol, brrow-ulrow,
+                                        &min, &max);
+        threshold = MAX(max, -min);
+    }
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+        gdouble *drow = datapos + i*dfield->xres;
+
+        for (j = 0; j < (brcol - ulcol); j++) {
+            if (fabs(*drow) < threshold)
+            {
+                if (hard)
+                    *drow = 0;
+                else {
+                    if (*drow < 0)
+                        *drow += threshold;
+                    else
+                        *drow -=threshold;
+                }
+                count++;
+            }
+            drow++;
+        }
+    }
+    return count;
+}
+#endif
 
 /**
  * gwy_data_field_mark_anisotropy:
@@ -689,149 +835,6 @@ wtset_free(GwyDWTFilter *wt)
     g_free(wt->cc);
     g_free(wt->cr);
     g_free(wt);
-}
-
-/*universal thresholding with supplied threshold value*/
-static gint
-remove_by_universal_threshold(GwyDataField *dfield,
-                              gint ulcol, gint ulrow, gint brcol, gint brrow,
-                              gboolean hard, gdouble threshold)
-{
-    gdouble *datapos;
-    gint i, j, count;
-
-    count = 0;
-    datapos = dfield->data + ulrow*dfield->xres + ulcol;
-    for (i = 0; i < (brrow - ulrow); i++) {
-        gdouble *drow = datapos + i*dfield->xres;
-
-        for (j = 0; j < (brcol - ulcol); j++) {
-            if (fabs(*drow) < threshold) {
-                if (hard)
-                    *drow = 0;
-                else {
-                    if (*drow < 0)
-                        *drow += threshold;
-                    else
-                        *drow -= threshold;
-                }
-                count++;
-            }
-            drow++;
-        }
-    }
-    return count;
-}
-
-/*area adaptive thresholding*/
-static gint
-remove_by_adaptive_threshold(GwyDataField *dfield,
-                             gint ulcol, gint ulrow, gint brcol, gint brrow,
-                             gboolean hard,
-                             gdouble multiple_threshold,
-                             gdouble noise_variance)
-{
-    gdouble threshold, rms, min, max;
-    gdouble *datapos;
-    gint i, j, count;
-    gint pbrcol, pbrrow, pulcol, pulrow;
-    gint size = 12;
-
-    count = 0;
-    datapos = dfield->data + ulrow*dfield->xres + ulcol;
-    for (i = 0; i < (brrow - ulrow); i++) {
-        gdouble *drow = datapos + i*dfield->xres;
-
-        for (j = 0; j < (brcol - ulcol); j++) {
-
-            pulcol = MAX(ulcol + j - size/2, ulcol);
-            pulrow = MAX(ulrow + i - size/2, ulrow);
-            pbrcol = MIN(ulcol + j + size/2, brcol);
-            pbrrow = MIN(ulrow + i + size/2, brrow);
-
-            rms = gwy_data_field_area_get_rms(dfield, NULL,
-                                              pulcol, pulrow,
-                                              pbrcol-pulcol, pbrrow-pulrow);
-            if ((rms*rms - noise_variance*noise_variance) > 0) {
-                rms = sqrt(rms*rms - noise_variance*noise_variance);
-                threshold = noise_variance*noise_variance/rms;
-                threshold *= multiple_threshold;
-            }
-            else {
-                gwy_data_field_area_get_min_max(dfield, NULL,
-                                                pulcol, pulrow,
-                                                pbrcol-pulcol, pbrrow-pulrow,
-                                                &min, &max);
-                threshold = MAX(max, -min);
-            }
-
-            if (fabs(*drow) < threshold) {
-                if (hard)
-                    *drow = 0;
-                else {
-                    if (*drow < 0)
-                        *drow += threshold;
-                    else
-                        *drow -= threshold;
-                }
-                count++;
-            }
-            drow++;
-        }
-    }
-    return count;
-}
-
-/*scale adaptive thresholding*/
-static gint
-remove_by_threshold(GwyDataField *dfield,
-                    gint ulcol, gint ulrow, gint brcol, gint brrow,
-                    gboolean hard, gdouble multiple_threshold,
-                    gdouble noise_variance)
-{
-    gdouble rms, threshold, min, max;
-    gdouble *datapos;
-    gint i, j, n, count;
-
-    n = (brrow-ulrow)*(brcol-ulcol);
-
-    rms = gwy_data_field_area_get_rms(dfield, NULL,
-                                      ulcol, ulrow, brcol-ulcol, brrow-ulrow);
-    if ((rms*rms - noise_variance*noise_variance) > 0) {
-        rms = sqrt(rms*rms - noise_variance*noise_variance);
-        threshold = noise_variance*noise_variance/rms;
-        threshold *= multiple_threshold;
-    }
-    else {
-        gwy_data_field_area_get_min_max(dfield, NULL,
-                                        ulcol, ulrow,
-                                        brcol-ulcol, brrow-ulrow,
-                                        &min, &max);
-        threshold = MAX(max, -min);
-    }
-
-    count = 0;
-    datapos = dfield->data + ulrow*dfield->xres + ulcol;
-    for (i = 0; i < (brrow - ulrow); i++) {
-        gdouble *drow = datapos + i*dfield->xres;
-
-        for (j = 0; j < (brcol - ulcol); j++) {
-            if (fabs(*drow) < threshold)
-            {
-                if (hard)
-                    *drow = 0;
-                else {
-                    if (*drow < 0)
-                        *drow += threshold;
-                    else
-                        *drow -=threshold;
-                }
-                count++;
-            }
-            drow++;
-        }
-    }
-    return count;
 }
 
 static gint

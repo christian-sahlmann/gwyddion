@@ -48,12 +48,6 @@ void gwy_data_field_dwt(GwyDataField *dfield,
                                  GwyTransformDirection direction,
                                  gint minsize);
 
-void gwy_data_field_dwt_denoise(GwyDataField *dfield,
-                                         GwyDataLine *wt_coefs,
-                                         gboolean hard,
-                                         gdouble multiple_threshold,
-                                         GwyDWTDenoiseType type);
-
 void gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
                                                  GwyDataField *mask,
                                                  GwyDataLine *wt_coefs,
