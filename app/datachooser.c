@@ -579,6 +579,7 @@ gwy_data_chooser_new_channels(void)
  *     <!-- Hello, gtk-doc! -->
  *     quark = gwy_app_get_data_key_for_id(id);
  *     data_field = gwy_container_get_object(data, quark);
+ *     model = GWY_DATA_FIELD(user_data);
  *     return !gwy_data_field_check_compatibility
  *                          (data_field, model,
  *                           GWY_DATA_COMPATIBILITY_RES
