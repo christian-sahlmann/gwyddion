@@ -111,9 +111,6 @@ dwtanisotropy_la_LIBADD = $(module_libadd)
 #dwtdenoise_la_SOURCES = dwtdenoise.c
 #dwtdenoise_la_LIBADD = $(module_libadd)
 
-#dwtcorrection_la_SOURCES = dwtcorrection.c
-#dwtcorrection_la_LIBADD = $(module_libadd)
-
 edge_la_SOURCES = edge.c
 edge_la_LIBADD = $(module_libadd)
 
