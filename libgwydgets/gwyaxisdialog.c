@@ -27,70 +27,35 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwydgets.h"
 
-#include <stdio.h>
-
 #define GWY_AXIS_DIALOG_TYPE_NAME "GwyAxisDialog"
 
 static void     gwy_axis_dialog_class_init       (GwyAxisDialogClass *klass);
 static void     gwy_axis_dialog_init             (GwyAxisDialog *dialog);
 static gboolean gwy_axis_dialog_delete           (GtkWidget *widget,
                                                   GdkEventAny *event);
-static void     major_length_changed_cb          (GObject *adjustment, 
+static void     major_length_changed_cb          (GtkAdjustment *adj,
                                                   GObject *axis);
-static void     major_thickness_changed_cb       (GObject *adjustment, 
+static void     major_thickness_changed_cb       (GtkAdjustment *adj,
                                                   GObject *axis);
-static void     major_maxticks_changed_cb        (GObject *adjustment, 
+static void     major_maxticks_changed_cb        (GtkAdjustment *adj,
                                                   GObject *axis);
-static void     minor_length_changed_cb          (GObject *adjustment, 
+static void     minor_length_changed_cb          (GtkAdjustment *adj,
                                                   GObject *axis);
-static void     minor_thickness_changed_cb       (GObject *adjustment, 
+static void     minor_thickness_changed_cb       (GtkAdjustment *adj,
                                                   GObject *axis);
-static void     minor_division_changed_cb        (GObject *adjustment, 
+static void     minor_division_changed_cb        (GtkAdjustment *adj,
                                                   GObject *axis);
-static void     line_thickness_changed_cb        (GObject *adjustment, 
+static void     line_thickness_changed_cb        (GtkAdjustment *adj,
                                                   GObject *axis);
 static void     autoscale_changed_cb             (GtkToggleButton *button,
                                                   GwyAxisDialog *dialog);
 
-static GtkDialogClass *parent_class = NULL;
-
-GType
-gwy_axis_dialog_get_type(void)
-{
-    static GType gwy_axis_dialog_type = 0;
-
-    if (!gwy_axis_dialog_type) {
-        static const GTypeInfo gwy_axis_dialog_info = {
-            sizeof(GwyAxisDialogClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_axis_dialog_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyAxisDialog),
-            0,
-            (GInstanceInitFunc)gwy_axis_dialog_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_axis_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
-                                                      GWY_AXIS_DIALOG_TYPE_NAME,
-                                                      &gwy_axis_dialog_info,
-                                                      0);
-
-    }
-
-    return gwy_axis_dialog_type;
-}
+G_DEFINE_TYPE(GwyAxisDialog, gwy_axis_dialog, GTK_TYPE_DIALOG)
 
 static void
 gwy_axis_dialog_class_init(GwyAxisDialogClass *klass)
 {
-    GtkWidgetClass *widget_class;
-
-    gwy_debug("");
-    widget_class = (GtkWidgetClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     widget_class->delete_event = gwy_axis_dialog_delete;
 }
@@ -113,27 +78,29 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
 
 /**
  * gwy_axis_dialog_new:
+ * @axis: The axis to create dialog for, or %NULL.
+ *        XXX: What the hell this means?
  *
  * Creates a new axis dialog.
  *
  * Returns: A new axis dialog as a #GtkWidget.
  **/
 GtkWidget*
-gwy_axis_dialog_new(GtkWidget *axis)
+gwy_axis_dialog_new(GwyAxis *axis)
 {
-    GwyAxisDialog *dialog = GWY_AXIS_DIALOG(g_object_new(gwy_axis_dialog_get_type(), NULL));
+    GwyAxisDialog *dialog;
     GtkWidget *entry, *label, *table;
-    gint row = 0;
-    GValue val = {0,};
-    GValue bval = {0,};
-    
+    gint i, row = 0;
+    gboolean is_auto;
+
     gwy_debug("");
+    dialog = GWY_AXIS_DIALOG(g_object_new(gwy_axis_dialog_get_type(), NULL));
     dialog->axis = axis;
 
     if (dialog->axis)
-        gtk_window_set_title(GTK_WINDOW(dialog), "Axis properties");
+        gtk_window_set_title(GTK_WINDOW(dialog), _("Axis Properties"));
     else
-        gtk_window_set_title(GTK_WINDOW(dialog), "Label properties");
+        gtk_window_set_title(GTK_WINDOW(dialog), _("Label Properties"));
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     table = gtk_table_new(4, 4, FALSE);
@@ -141,12 +108,7 @@ gwy_axis_dialog_new(GtkWidget *axis)
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
 
-   
-    if (dialog->axis != NULL)
-    {
-        g_value_init(&val, G_TYPE_INT);
-        g_value_init(&bval, G_TYPE_BOOLEAN);
-        
+    if (dialog->axis) {
         label = gtk_label_new(NULL);
         gtk_label_set_markup(GTK_LABEL(label), _("<b>Axis settings:</b>"));
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -154,66 +116,63 @@ gwy_axis_dialog_new(GtkWidget *axis)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
 
-        g_object_get_property(dialog->axis, "auto", &bval);
-        dialog->is_auto
-                    = gtk_check_button_new_with_mnemonic(_("_Autoscale"));
+        g_object_get(dialog->axis, "auto", &is_auto, NULL);
+        dialog->is_auto = gtk_check_button_new_with_mnemonic(_("_Autoscale"));
         gtk_table_attach(GTK_TABLE(table), dialog->is_auto,
                            0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        
+        g_signal_connect(dialog->is_auto, "toggled",
+                         G_CALLBACK(autoscale_changed_cb), dialog);
         row++;
-        
-        g_object_get_property(dialog->axis, "major-maxticks", &val);
-        dialog->major_division = gtk_adjustment_new(g_value_get_int(&val), 
-                                                    1, 50, 1, 5, 0);
-        dialog->major_division_spin = gwy_table_attach_hscale(table, row, _("Major division:"), NULL,
-                                dialog->major_division, GWY_HSCALE_DEFAULT);
+
+        g_object_get(dialog->axis, "major-maxticks", &i, NULL);
+        dialog->major_division = gtk_adjustment_new(i, 1, 50, 1, 5, 0);
+        dialog->major_division_spin
+            = gwy_table_attach_hscale(table, row, _("Major division:"), NULL,
+                                      dialog->major_division, 0);
         g_signal_connect(dialog->major_division, "value-changed",
-                     G_CALLBACK(major_maxticks_changed_cb), dialog->axis);
+                         G_CALLBACK(major_maxticks_changed_cb), dialog->axis);
         row++;
 
-        g_object_get_property(dialog->axis, "major-thickness", &val);
-        dialog->major_thickness = gtk_adjustment_new(g_value_get_int(&val),
-                                                     1, 10, 1, 5, 0);
+        g_object_get(dialog->axis, "major-thickness", &i, NULL);
+        dialog->major_thickness = gtk_adjustment_new(i, 1, 10, 1, 5, 0);
         gwy_table_attach_spinbutton(table, row, _("Major thickness:"), NULL,
-                                dialog->major_thickness);
+                                    dialog->major_thickness);
         g_signal_connect(dialog->major_thickness, "value-changed",
-                     G_CALLBACK(major_thickness_changed_cb), dialog->axis);
+                         G_CALLBACK(major_thickness_changed_cb), dialog->axis);
         row++;
 
-        g_object_get_property(dialog->axis, "major-length", &val);
-        dialog->major_length = gtk_adjustment_new(g_value_get_int(&val),
-                                                  1, 20, 1, 5, 0);
+        g_object_get(dialog->axis, "major-length", &i, NULL);
+        dialog->major_length = gtk_adjustment_new(i, 1, 20, 1, 5, 0);
         gwy_table_attach_spinbutton(table, row, _("Major length:"), NULL,
-                                dialog->major_length);
+                                    dialog->major_length);
         g_signal_connect(dialog->major_length, "value-changed",
                      G_CALLBACK(major_length_changed_cb), dialog->axis);
         row++;
 
-        g_object_get_property(dialog->axis, "minor-division", &val);
-        dialog->minor_division = gtk_adjustment_new(g_value_get_int(&val),
-                                                    1, 20, 1, 5, 0);
-        dialog->minor_division_spin = gwy_table_attach_spinbutton(table, row, _("Minor division:"), NULL,
-                                dialog->minor_division);
+        g_object_get(dialog->axis, "minor-division", &i, NULL);
+        dialog->minor_division = gtk_adjustment_new(i, 1, 20, 1, 5, 0);
+        dialog->minor_division_spin
+            = gwy_table_attach_spinbutton(table, row, _("Minor division:"),
+                                          NULL,
+                                          dialog->minor_division);
         g_signal_connect(dialog->minor_division, "value-changed",
-                     G_CALLBACK(minor_division_changed_cb), dialog->axis);
+                         G_CALLBACK(minor_division_changed_cb), dialog->axis);
         row++;
 
-        g_object_get_property(dialog->axis, "minor-thickness", &val);
-        dialog->minor_thickness = gtk_adjustment_new(g_value_get_int(&val),
-                                                     1, 10, 1, 5, 0);
+        g_object_get(dialog->axis, "minor-thickness", &i, NULL);
+        dialog->minor_thickness = gtk_adjustment_new(i, 1, 10, 1, 5, 0);
         gwy_table_attach_spinbutton(table, row, _("Minor thickness:"), NULL,
-                                dialog->minor_thickness);
+                                    dialog->minor_thickness);
         g_signal_connect(dialog->minor_thickness, "value-changed",
-                     G_CALLBACK(minor_thickness_changed_cb), dialog->axis);
+                         G_CALLBACK(minor_thickness_changed_cb), dialog->axis);
         row++;
 
-        g_object_get_property(dialog->axis, "minor-length", &val);
-        dialog->minor_length = gtk_adjustment_new(g_value_get_int(&val),
-                                                  1, 20, 1, 5, 0);
+        g_object_get(dialog->axis, "minor-length", &i, NULL);
+        dialog->minor_length = gtk_adjustment_new(i, 1, 20, 1, 5, 0);
         gwy_table_attach_spinbutton(table, row, _("Minor length:"), NULL,
-                                dialog->minor_length);
+                                    dialog->minor_length);
         g_signal_connect(dialog->minor_length, "value-changed",
-                     G_CALLBACK(minor_length_changed_cb), dialog->axis);
+                         G_CALLBACK(minor_length_changed_cb), dialog->axis);
         row++;
 
         /*
@@ -226,20 +185,17 @@ gwy_axis_dialog_new(GtkWidget *axis)
                      G_CALLBACK(line_thickness_changed_cb), dialog->axis);
         row++;
         */
-        g_signal_connect(dialog->is_auto, "toggled",
-                                  G_CALLBACK(autoscale_changed_cb), dialog);
-         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->is_auto),
-                                     g_value_get_boolean(&bval));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->is_auto),
+                                     is_auto);
       }
-    
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Label text:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                                                         table);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
     dialog->sci_text = gwy_sci_text_new();
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
@@ -251,7 +207,7 @@ gwy_axis_dialog_new(GtkWidget *axis)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       dialog->sci_text);
     gtk_widget_show_all(dialog->sci_text);
- 
+
     return GTK_WIDGET(dialog);
 }
 
@@ -262,101 +218,63 @@ gwy_axis_dialog_get_sci_text(GtkWidget* dialog)
 }
 
 static void
-major_length_changed_cb(GObject *adjustment, GObject *axis)
+major_length_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "major-length", &val);
+    g_object_set(axis, "major-length", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
-major_maxticks_changed_cb(GObject *adjustment, GObject *axis)
+major_maxticks_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "major-maxticks", &val);
+    g_object_set(axis, "major-maxticks", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
-major_thickness_changed_cb(GObject *adjustment, GObject *axis)
+major_thickness_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "major-thickness", &val);
+    g_object_set(axis, "major-thickness", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
-minor_length_changed_cb(GObject *adjustment, GObject *axis)
+minor_length_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "minor-length", &val);
+    g_object_set(axis, "minor-length", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
-minor_thickness_changed_cb(GObject *adjustment, GObject *axis)
+minor_thickness_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "minor-thickness", &val);
+    g_object_set(axis, "minor-thickness", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
-minor_division_changed_cb(GObject *adjustment, GObject *axis)
+minor_division_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "minor-division", &val);
+    g_object_set(axis, "minor-division", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
-line_thickness_changed_cb(GObject *adjustment, GObject *axis)
+line_thickness_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
-    GValue val = {0,};
-
-    g_value_init (&val, G_TYPE_INT);
-    g_value_set_int (&val, gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment)));
-    g_object_set_property (G_OBJECT (axis), "line-thickness", &val);
+    g_object_set(axis, "line-thickness", gwy_adjustment_get_int(adj), NULL);
 }
 
-static void    
+static void
 autoscale_changed_cb(GtkToggleButton *button, GwyAxisDialog *dialog)
 {
-    gboolean value;
-    GValue val = {0,};
-    GValue ival = {0,};
+    gboolean is_auto;
 
-    value = gtk_toggle_button_get_active(button);
-    
-    gtk_widget_set_sensitive(GTK_WIDGET(dialog->minor_division_spin), !value);
-    gtk_widget_set_sensitive(GTK_WIDGET(dialog->major_division_spin), !value);
+    is_auto = gtk_toggle_button_get_active(button);
 
-    g_value_init (&val, G_TYPE_BOOLEAN);
-    g_value_set_boolean (&val, value);
-    g_object_set_property (G_OBJECT (dialog->axis), "auto", &val);
+    gtk_widget_set_sensitive(GTK_WIDGET(dialog->minor_division_spin), !is_auto);
+    gtk_widget_set_sensitive(GTK_WIDGET(dialog->major_division_spin), !is_auto);
 
-    g_value_init (&ival, G_TYPE_INT);
-    g_value_set_int (&ival, gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->major_division)));
-    g_object_set_property (G_OBJECT (dialog->axis), "major-maxticks", &ival);
-    g_value_set_int (&ival, gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->minor_division)));
-    g_object_set_property (G_OBJECT (dialog->axis), "minor-division", &ival);
-
-
-    
+    g_object_set(dialog->axis, "auto", is_auto, NULL);
+    g_object_set(dialog->axis, "major-maxticks",
+                 gwy_adjustment_get_int(dialog->major_division), NULL);
+    g_object_set(dialog->axis, "minor-division",
+                 gwy_adjustment_get_int(dialog->minor_division), NULL);
 }
-
 
 /**
  * SECTION:gwyaxisdialog

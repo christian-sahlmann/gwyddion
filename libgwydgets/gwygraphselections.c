@@ -27,8 +27,6 @@
 #include <libdraw/gwyselection.h>
 #include <libgwydgets/gwygraphselections.h>
 
-#include <stdio.h>
-
 enum {
         POINT_OBJECT_SIZE = 2,
         AREA_OBJECT_SIZE = 4,

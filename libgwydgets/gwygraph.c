@@ -27,8 +27,6 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
-#include <stdio.h>
-
 static void gwy_graph_refresh      (GwyGraph *graph);
 static void gwy_graph_size_request (GtkWidget *widget,
                                     GtkRequisition *requisition);

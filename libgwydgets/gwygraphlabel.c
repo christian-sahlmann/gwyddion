@@ -25,8 +25,6 @@
 #include "gwygraph.h"
 #include "gwygraphmodel.h"
 
-#include <stdio.h>
-
 /* Forward declarations - widget related*/
 static void     gwy_graph_label_finalize     (GObject *object);
 static void     gwy_graph_label_realize      (GtkWidget *widget);

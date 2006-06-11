@@ -24,7 +24,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-#include <libgwydgets/gwyaxisdialog.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwyddion/gwysiunit.h>
 

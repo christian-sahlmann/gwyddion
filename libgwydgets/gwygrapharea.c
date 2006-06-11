@@ -32,8 +32,6 @@
 #include "gwydgetutils.h"
 #include "gwygraphselections.h"
 #include <app/gwyapp.h>
-#include <stdio.h>
-
 
 enum {
     COLOR_FG = 0,

@@ -27,11 +27,11 @@
 #include <pango/pango.h>
 #include <pango/pango-context.h>
 #include <gdk/gdkpango.h>
-#include <libgwydgets/gwydgetenums.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwyaxis.h"
-
-#include <stdio.h>
+#include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwyaxisdialog.h>
+#include <libgwydgets/gwyaxis.h>
 
 enum {
     LABEL_UPDATED,

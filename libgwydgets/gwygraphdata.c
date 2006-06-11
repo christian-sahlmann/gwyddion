@@ -229,6 +229,7 @@ gwy_graph_data_pack_renderer(GwyGraphData *graph_data,
     GtkCellRenderer *renderer;
 
     renderer = gtk_cell_renderer_text_new();
+    gtk_cell_renderer_set_fixed_size(renderer, COL_WIDTH, -1);
     gtk_cell_renderer_text_set_fixed_height_from_font
                                         (GTK_CELL_RENDERER_TEXT(renderer), 1);
     g_object_set(renderer, "xalign", 1.0, NULL);

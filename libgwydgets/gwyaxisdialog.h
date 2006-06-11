@@ -21,11 +21,8 @@
 #ifndef __GWY_AXIS_DIALOG_H__
 #define __GWY_AXIS_DIALOG_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
 
-#include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyaxis.h>
 
 G_BEGIN_DECLS
@@ -55,7 +52,7 @@ struct _GwyAxisDialog {
     GtkWidget *minor_division_spin;
     GtkObject *line_thickness;
 
-    GObject *axis;
+    GwyAxis *axis;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -69,7 +66,7 @@ struct _GwyAxisDialogClass {
 };
 
 GType       gwy_axis_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_axis_dialog_new      (GtkWidget *axis);
+GtkWidget*  gwy_axis_dialog_new      (GwyAxis *axis);
 GtkWidget*  gwy_axis_dialog_get_sci_text(GtkWidget* dialog);
 
 G_END_DECLS
