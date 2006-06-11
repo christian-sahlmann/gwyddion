@@ -617,6 +617,8 @@ gwy_app_data_proxy_deserted(GwyAppDataProxy *proxy)
         return FALSE;
 
     /* FIXME: this is crude */
+    /* FIXME: we should really try to unparent proxy immediatelly, and just
+     * destruct it here */
     if (browser->current == proxy)
         gwy_app_data_browser_switch_data(NULL);
 

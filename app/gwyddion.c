@@ -117,7 +117,7 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
     data_browser = gwy_app_data_browser_create();
-    gwy_app_recent_file_list_update(NULL, NULL, NULL);
+    gwy_app_recent_file_list_update(NULL, NULL, NULL, 0);
     gwy_app_splash_close();
 
     open_command_line_files(argv + 1, argc - 1);

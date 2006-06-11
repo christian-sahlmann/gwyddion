@@ -169,7 +169,8 @@ static GwyRecentFile* gwy_app_recent_file_new         (gchar *filename_utf8,
                                                        gchar *filename_sys);
 static gboolean gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf);
 static void     gwy_recent_file_update_thumbnail      (GwyRecentFile *rf,
-                                                       GwyContainer *data);
+                                                       GwyContainer *data,
+                                                       gint hint);
 static void     gwy_app_recent_file_free              (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name          (const gchar *uri);
 static const gchar* gwy_recent_file_thumbnail_dir     (void);
@@ -686,6 +687,8 @@ gwy_app_recent_file_list_free(void)
  *                 document history, in UTF-8.
  * @filename_sys: A recent file to insert or move to the first position in
  *                 document history, in system encoding.
+ * @hint: Preferred channel id to use for thumbnail, pass 0 if no channel
+ *        is specificaly preferred.
  *
  * Moves @filename_utf8 to the first position in document history, eventually
  * adding it if not present yet.
@@ -695,7 +698,8 @@ gwy_app_recent_file_list_free(void)
 void
 gwy_app_recent_file_list_update(GwyContainer *data,
                                 const gchar *filename_utf8,
-                                const gchar *filename_sys)
+                                const gchar *filename_sys,
+                                gint hint)
 {
     g_return_if_fail(!data || GWY_IS_CONTAINER(data));
     g_return_if_fail(gcontrols.store);
@@ -723,7 +727,7 @@ gwy_app_recent_file_list_update(GwyContainer *data,
         }
 
         if (data)
-            gwy_recent_file_update_thumbnail(rf, data);
+            gwy_recent_file_update_thumbnail(rf, data, hint);
     }
 
     gwy_app_recent_file_list_update_menu(&gcontrols);
@@ -979,7 +983,8 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
 
 static void
 gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
-                                 GwyContainer *data)
+                                 GwyContainer *data,
+                                 gint hint)
 {
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
@@ -999,11 +1004,18 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
 
     g_return_if_fail(GWY_CONTAINER(data));
 
-    /* Find channel with the lowest id */
+    /* Find channel with the lowest id not smaller than hint */
     ids = gwy_app_data_browser_get_data_ids(data);
     for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
-        if (ids[i] < id)
+        if (ids[i] >= hint && ids[i] < id)
             id = ids[i];
+    }
+    /* On failure simply find the channel with lowest id */
+    if (id == G_MAXINT) {
+        for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
+            if (ids[i] < id)
+                id = ids[i];
+        }
     }
     g_free(ids);
     if (id == G_MAXINT) {

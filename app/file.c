@@ -175,7 +175,7 @@ gwy_app_file_load(const gchar *filename_utf8,
                                              g_strdup(filename_utf8));
 
         gwy_app_data_browser_add(data);
-        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys);
+        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, 0);
         gwy_app_set_current_directory(filename_sys);
         g_object_unref(data);
     }
@@ -272,10 +272,21 @@ gwy_app_file_write(GwyContainer *data,
                    const gchar *filename_sys,
                    const gchar *name)
 {
+    GwyContainer *container;
     GtkWidget *dialog;
     gboolean free_utf8 = FALSE, free_sys = FALSE;
     GwyFileOperationType saveok;
     GError *err = NULL;
+    gint id;
+
+    /* If the @data is the current container, make thumbnail from the current
+     * channel.
+     * FIXME: Needs new data browser functions to do this less hackishly. */
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &container,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (data != container)
+        id = 0;
 
     g_return_val_if_fail(filename_utf8 || filename_sys, FALSE);
     if (!filename_sys) {
@@ -320,7 +331,7 @@ gwy_app_file_write(GwyContainer *data,
         else
             gwy_container_set_string_by_name(data, "/filename",
                                              g_strdup(filename_utf8));
-        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys);
+        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, id);
 
         case GWY_FILE_OPERATION_EXPORT:
         gwy_app_set_current_directory(filename_sys);
