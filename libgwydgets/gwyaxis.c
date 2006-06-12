@@ -1518,8 +1518,11 @@ gwy_axis_set_label(GwyAxis *axis,
 
     gwy_debug("label_text = <%s>", label);
     g_string_assign(axis->label_text, label);
-    gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
-                          label);
+    if (axis->dialog) {
+        GwyAxisDialog *dialog = GWY_AXIS_DIALOG(axis->dialog);
+
+        gwy_sci_text_set_text(GWY_SCI_TEXT(dialog->sci_text), label);
+    }
     g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
