@@ -39,7 +39,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask of hough."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -56,7 +56,6 @@ module_register(void)
                               HOUGH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Detect lines by Hough transform"));
-
 
     return TRUE;
 }
@@ -77,9 +76,6 @@ hough(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
     if (!result){
         result = gwy_data_field_new_alike(dfield, FALSE);
         siunit = gwy_si_unit_new("");
@@ -98,19 +94,19 @@ hough(GwyContainer *data, GwyRunType run)
     gwy_data_field_filter_sobel(f1, GWY_ORIENTATION_HORIZONTAL);
     gwy_data_field_filter_sobel(f2, GWY_ORIENTATION_VERTICAL);
     gwy_data_field_hough_line(edgefield,
-			      NULL,
-			      NULL,
-			      result,
-			      1,
-                  FALSE);
+                              NULL,
+                              NULL,
+                              result,
+                              1,
+                              FALSE);
 
-    
+
     /*gwy_data_field_hough_circle(edgefield,
-                                f1,
-                                f2,
-                                result,
-                                10);
-    */
+      f1,
+      f2,
+      result,
+      10);
+     */
     g_object_unref(edgefield);
 }
 

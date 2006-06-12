@@ -76,7 +76,7 @@ static gboolean    module_register           (void);
 static void        calibrate                 (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    calibrate_dialog          (CalibrateArgs *args,
-                                              GwyContainer *data);
+                                              GwyDataField *dfield);
 static void        dialog_reset              (CalibrateControls *controls,
                                               CalibrateArgs *args);
 static void        xratio_changed_cb         (GtkAdjustment *adj,
@@ -182,7 +182,7 @@ calibrate(GwyContainer *data, GwyRunType run)
     args.y0 = args.y0orig;
 
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = calibrate_dialog(&args, data);
+        ok = calibrate_dialog(&args, dfields[0]);
         calibrate_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -235,12 +235,12 @@ calibrate(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
+calibrate_dialog(CalibrateArgs *args,
+                 GwyDataField *dfield)
 {
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *spin, *table, *label, *align;
     GwySIUnit *unit;
-    GwyDataField *dfield;
     CalibrateControls controls;
     gint row, response;
 
@@ -254,7 +254,6 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     controls.args = args;
     controls.in_update = TRUE;
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     table = gtk_table_new(12, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);

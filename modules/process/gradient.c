@@ -42,7 +42,7 @@ static GwyModuleInfo module_info = {
     N_("Creates presentations with various gradients "
        "(Sobel, Prewitt)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -96,7 +96,6 @@ gradient(GwyContainer *data,
 
     g_return_if_fail(run & GRADIENT_RUN_MODES);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
