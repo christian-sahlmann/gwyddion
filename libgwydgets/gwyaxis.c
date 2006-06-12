@@ -956,7 +956,7 @@ gwy_axis_button_press(GtkWidget *widget,
     if (axis->enable_label_edit)
     {
         if (!axis->dialog) {
-            axis->dialog = gwy_axis_dialog_new(G_OBJECT(widget));
+            axis->dialog = gwy_axis_dialog_new(axis);
             g_signal_connect(gwy_axis_dialog_get_sci_text(axis->dialog), "edited",
                              G_CALLBACK(gwy_axis_entry), axis);
             g_signal_connect(GWY_AXIS_DIALOG(axis->dialog), "response",
