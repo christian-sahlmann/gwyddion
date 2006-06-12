@@ -2897,7 +2897,9 @@ gwy_3d_view_set_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
  * @title: Gwy3DView
  * @short_description: OpenGL 3D data display
  * @see_also: #Gwy3DWindow -- window combining 3D view with controls,
- *            #GwyGLMaterial -- OpenGL materials
+ *            #GwyGLMaterial -- OpenGL materials,
+ *            #Gwy3DLabel -- Labels on 3D view,
+ *            #Gwy3DSetup -- 3D scene setup
  *
  * #Gwy3DView displays a data field as a threedimensional heightfield using
  * OpenGL. You can create a new 3D view for a data container with

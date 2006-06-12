@@ -8,6 +8,7 @@ libgwydgetsincludedir = $(pkgincludedir)/libgwydgets
 
 libgwydgetsinclude_HEADERS = \
 	gwy3dlabel.h \
+	gwy3dsetup.h \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
@@ -78,6 +79,7 @@ EXTRA_DIST = \
 libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwydgets_la_SOURCES = \
 	gwy3dlabel.c \
+	gwy3dsetup.c \
 	gwy3dview.c \
 	gwy3dwindow.c \
 	gwyaxis.c \

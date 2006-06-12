@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydgettypes.h>
 
 #include <libgwydgets/gwy3dlabel.h>
+#include <libgwydgets/gwy3dsetup.h>
 #include <libgwydgets/gwy3dview.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwyaxis.h>
