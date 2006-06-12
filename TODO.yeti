@@ -1,5 +1,3 @@
-- Check where we lost support for offsets during tool reworking
-- Module loader confsed by duplicte functions, crashes
 - Fix current-data race conditions in modules, must take all current items
   on startup, windows can be switched while module is running
 - Ruler:
