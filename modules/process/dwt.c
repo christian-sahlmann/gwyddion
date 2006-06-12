@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional DWT (Discrete Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -103,7 +103,11 @@ dwt(GwyContainer *data, GwyRunType run)
     gint xsize, ysize, newsize, newid, oldid;
 
     g_return_if_fail(run & DWT_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     0);
+    g_return_if_fail(dfield);
+
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -126,11 +130,6 @@ dwt(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &oldid,
-                                     0);
-    g_return_if_fail(dfield);
-
     newsize = gwy_fft_find_nice_size(xsize);
     dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
                                           GWY_INTERPOLATION_BILINEAR);
@@ -147,10 +146,7 @@ dwt(GwyContainer *data, GwyRunType run)
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("DWT"));
-    gwy_app_copy_data_items(data, data, oldid, newid,
-                            GWY_DATA_ITEM_PALETTE,
-                            0);
-
+    gwy_app_copy_data_items(data, data, oldid, newid, GWY_DATA_ITEM_PALETTE, 0);
 
     g_object_unref(wtcoefs);
 }
