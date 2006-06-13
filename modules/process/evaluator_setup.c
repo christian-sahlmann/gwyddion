@@ -143,11 +143,9 @@ typedef struct {
     GtkWidget *add_expression;
     GtkWidget *detected_edit_button;
     GtkWidget *detected_remove_button;
-    GtkWidget *detected_correlation_button;
     GtkWidget *correlation_edit_button;
     GtkWidget *correlation_remove_button;
     GtkWidget *relative_remove_button;
-    GtkWidget *relative_correlation_button;
     GwyContainer *mydata;
     GwyVectorLayer *vlayer_dpoint;
     GwyVectorLayer *vlayer_dline;
@@ -165,6 +163,7 @@ typedef struct {
     gint detected_edited;
     gint correlation_edited;
     gint fixed_point_max;
+    gint fixed_line_max;
     gint correlation_point_max;
 } EsetupControls;
 
@@ -185,9 +184,7 @@ static void        esetup_sanitize_args         (EsetupArgs *args);
 
 static void        detected_remove_cb          (EsetupControls *controls);
 static void        detected_edit_cb            (EsetupControls *controls);
-static void        detected_correlation_cb     (EsetupControls *controls);
 static void        relative_remove_cb          (EsetupControls *controls);
-static void        relative_correlation_cb            (EsetupControls *controls);
 static void        correlation_remove_cb       (EsetupControls *controls);
 static void        correlation_edit_cb         (EsetupControls *controls);
 static void        task_add_cb                 (EsetupControls *controls);
@@ -310,7 +307,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     controls.args->fixed_point_array = g_array_new (FALSE, FALSE, 
                                                        sizeof (PointSettings));
     controls.args->fixed_line_array = g_array_new (FALSE, FALSE, 
-                                                       sizeof (SearchLineSettings));
+                                                       sizeof (LineSettings));
     controls.args->correlation_point_array = g_array_new (FALSE, FALSE, 
                                                        sizeof (CorrelationPointSettings));
 
@@ -323,6 +320,8 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     controls.detected_edited = -1;
     controls.correlation_edited = -1;
     controls.correlation_point_max = 0;
+    controls.fixed_point_max = 0;
+    controls.fixed_line_max = 0;
     
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
@@ -460,11 +459,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                              G_CALLBACK(detected_edit_cb), &controls);
     gtk_table_attach(GTK_TABLE(page), controls.detected_edit_button, 2, 3, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    controls.detected_correlation_button = gtk_button_new_with_label("Correlation");
-    g_signal_connect_swapped(controls.detected_correlation_button, "clicked", 
-                             G_CALLBACK(detected_correlation_cb), &controls);
-    gtk_table_attach(GTK_TABLE(page), controls.detected_correlation_button, 3, 4, prow, prow+1,
-                                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
      
     prow = 0;
     page = gtk_table_new(2, 4, FALSE);
@@ -496,11 +490,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     g_signal_connect_swapped(controls.relative_remove_button, "clicked", 
                              G_CALLBACK(relative_remove_cb), &controls);
     gtk_table_attach(GTK_TABLE(page), controls.relative_remove_button, 1, 2, prow, prow+1,
-                                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    controls.relative_correlation_button = gtk_button_new_with_label("Correlation");
-    g_signal_connect_swapped(controls.relative_correlation_button, "clicked", 
-                             G_CALLBACK(relative_correlation_cb), &controls);
-    gtk_table_attach(GTK_TABLE(page), controls.relative_correlation_button, 2, 3, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
   
 
@@ -621,10 +610,8 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
  
     gtk_widget_set_sensitive(controls.detected_remove_button, FALSE);
-    gtk_widget_set_sensitive(controls.detected_correlation_button, FALSE);
     gtk_widget_set_sensitive(controls.detected_edit_button, FALSE);
     gtk_widget_set_sensitive(controls.relative_remove_button, FALSE);
-    gtk_widget_set_sensitive(controls.relative_correlation_button, FALSE);
     gtk_widget_set_sensitive(controls.correlation_remove_button, FALSE);
     gtk_widget_set_sensitive(controls.correlation_edit_button, FALSE);
     
@@ -710,7 +697,6 @@ static gint
 get_dline_pos_by_id(GArray *array, gchar *id)
 {
     guint i;
-    printf("dline\n");
     for (i=0; i<array->len; i++)
     {
         if (strstr(id, g_array_index(array, SearchLineSettings, i).id) != NULL)
@@ -783,7 +769,6 @@ detected_remove_cb(EsetupControls *controls)
 
     if (!controls->args->detected_point_array->len && !controls->args->detected_line_array->len) {
         gtk_widget_set_sensitive(controls->detected_remove_button, FALSE);
-        gtk_widget_set_sensitive(controls->detected_correlation_button, FALSE);
         gtk_widget_set_sensitive(controls->detected_edit_button, FALSE);
     }
 }
@@ -805,26 +790,142 @@ detected_correlation_cb(EsetupControls *controls)
 {
 }
 
+static gint
+get_fpoint_pos_by_id(GArray *array, gchar *id)
+{
+    guint i;
+    for (i=0; i<array->len; i++)
+    {
+        if (strstr(id, g_array_index(array, PointSettings, i).id) != NULL)
+            return i;
+    }
+    
+    return -1; 
+}
+
+static gint
+get_fline_pos_by_id(GArray *array, gchar *id)
+{
+    guint i;
+    for (i=0; i<array->len; i++)
+    {
+        if (strstr(id, g_array_index(array, LineSettings, i).id) != NULL)
+            return i;
+    }
+    
+    return -1; 
+}
+
+static gint
+get_fpoint_selection_index_by_position(EsetupControls *controls, gdouble x, gdouble y)
+{
+    gint i;
+    GwySelection *selection;
+    gdouble xdiff, ydiff;
+    gdouble pointdata[2];
+    GwyDataField *dfield;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
+                                     controls->mydata, "/0/data"));
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                    gwy_vector_layer_get_selection_key(controls->vlayer_fpoint));
+    xdiff = gwy_data_field_get_xreal(dfield)/
+                             gwy_data_field_get_xres(dfield);
+    ydiff = gwy_data_field_get_yreal(dfield)/
+                             gwy_data_field_get_yres(dfield);
+
+    for (i=0; i<gwy_selection_get_data(selection, NULL); i++)
+    {
+        gwy_selection_get_object(selection, i, pointdata);
+        if (fabs(x - pointdata[0]) < xdiff &&
+            fabs(y - pointdata[1]) < ydiff) return i;
+    }
+    return -1;
+}
+
+static gint
+get_fline_selection_index_by_position(EsetupControls *controls, gdouble xstart, gdouble ystart,
+                                      gdouble xend, gdouble yend)
+{
+    gint i;
+    GwySelection *selection;
+    gdouble xdiff, ydiff;
+    gdouble linedata[4];
+    GwyDataField *dfield;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
+                                     controls->mydata, "/0/data"));
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                    gwy_vector_layer_get_selection_key(controls->vlayer_fline));
+    xdiff = gwy_data_field_get_xreal(dfield)/
+                             gwy_data_field_get_xres(dfield);
+    ydiff = gwy_data_field_get_yreal(dfield)/
+                             gwy_data_field_get_yres(dfield);
+
+    for (i=0; i<gwy_selection_get_data(selection, NULL); i++)
+    {
+        gwy_selection_get_object(selection, i, linedata);
+        if (fabs(xstart - linedata[0]) < xdiff &&
+            fabs(ystart - linedata[1]) < ydiff &&
+            fabs(xend - linedata[2]) < xdiff &&
+            fabs(yend - linedata[3]) < ydiff) return i;
+    }
+    return -1;
+}
+
+
+
+
 static void        
 relative_remove_cb(EsetupControls *controls)
 {
     GList *list;
-    guint i;
+    gint ipos, selpos;
     gint row;
+    gchar *id;
     GtkTreeIter iter;
-   
-    if (gtk_tree_selection_get_selected(controls->relative_selection,
-                                 &(controls->relative_list), &iter))
-        gtk_list_store_remove(controls->relative_list, &iter);
+    GwySelection *selection;
 
-    if (!controls->args->fixed_point_array->len) {
+    if (gtk_tree_selection_get_selected(controls->relative_selection,
+                                 &(controls->relative_list), &iter)) {
+        gtk_tree_model_get(controls->relative_list, &iter, NO_COLUMN, &id, -1);
+        ipos = get_fpoint_pos_by_id(controls->args->fixed_point_array, id);
+        if (ipos >= 0) {
+            
+            selection = gwy_container_get_object_by_name(controls->mydata,
+                               gwy_vector_layer_get_selection_key(controls->vlayer_fpoint));
+            selpos = get_fpoint_selection_index_by_position(controls,
+                          g_array_index(controls->args->fixed_point_array, 
+                                        PointSettings, ipos).xc,
+                          g_array_index(controls->args->fixed_point_array, 
+                                        PointSettings, ipos).yc);
+            if (ipos >= 0) g_array_remove_index(controls->args->fixed_point_array, ipos);
+            if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
+        } 
+        ipos = get_fline_pos_by_id(controls->args->fixed_line_array, id);
+        if (ipos >= 0) {
+             
+            selection = gwy_container_get_object_by_name(controls->mydata,
+                               gwy_vector_layer_get_selection_key(controls->vlayer_fline));
+            selpos = get_fline_selection_index_by_position(controls,
+                          g_array_index(controls->args->fixed_line_array, 
+                                        LineSettings, ipos).xstart,
+                          g_array_index(controls->args->fixed_line_array, 
+                                        LineSettings, ipos).ystart,
+                          g_array_index(controls->args->fixed_line_array, 
+                                        LineSettings, ipos).xend,
+                          g_array_index(controls->args->fixed_line_array, 
+                                        LineSettings, ipos).yend);
+        
+            if (ipos >= 0) g_array_remove_index(controls->args->fixed_line_array, ipos);
+            if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
+        }
+        gtk_list_store_remove(controls->relative_list, &iter);
+     }
+
+    if (!controls->args->fixed_point_array->len && !controls->args->fixed_line_array->len) {
         gtk_widget_set_sensitive(controls->relative_remove_button, FALSE);
-        gtk_widget_set_sensitive(controls->relative_correlation_button, FALSE);
     }
- }
-static void        
-relative_correlation_cb(EsetupControls *controls)
-{
 }
 
 static gint
@@ -1347,7 +1448,6 @@ dpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                        -1);
 
     gtk_widget_set_sensitive(controls->detected_remove_button, TRUE);
-    gtk_widget_set_sensitive(controls->detected_correlation_button, TRUE);
     gtk_widget_set_sensitive(controls->detected_edit_button, TRUE);
   
     update_selected_points(controls);
@@ -1393,7 +1493,6 @@ dlines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
                        TYPE_COLUMN, "line",
                        -1);
     gtk_widget_set_sensitive(controls->detected_remove_button, TRUE);
-    gtk_widget_set_sensitive(controls->detected_correlation_button, TRUE);
     gtk_widget_set_sensitive(controls->detected_edit_button, TRUE);
 
     update_selected_lines(controls);
@@ -1464,7 +1563,7 @@ fpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
         spset.xc = pointdata[0];
         spset.yc = pointdata[1];
         
-        spset.id = g_strdup_printf("fp%d", controls->args->fixed_point_array->len);     
+        spset.id = g_strdup_printf("fp%d", ++controls->fixed_point_max);     
         g_array_append_val(controls->args->fixed_point_array, spset);
 
         gtk_list_store_insert_with_values(controls->relative_list, &iter, -1,
@@ -1481,7 +1580,6 @@ fpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
     }
 
     gtk_widget_set_sensitive(controls->relative_remove_button, TRUE);
-    gtk_widget_set_sensitive(controls->relative_correlation_button, TRUE);
  
 }
 static gboolean
@@ -1519,19 +1617,13 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
                                      controls->mydata, "/0/data"));
     
     gwy_selection_get_object(selection, i, linedata);
-    //printf("sel: %g %g %g %g\n", linedata[0], linedata[1], linedata[2], linedata[3]);
-    slset.id = g_strdup_printf("fl%d", controls->args->fixed_line_array->len);
-    slset.xstart = linedata[0];
-    slset.ystart = linedata[1];
-    slset.xend = linedata[2];
-    slset.yend = linedata[3];
 
     if (fixed_line_present(dfield, linedata[0], linedata[1], linedata[2], linedata[3], 
                      controls->args->fixed_line_array)) return;
    
     if (i == controls->args->fixed_line_array->len) {
         
-        slset.id = g_strdup_printf("fl%d", controls->args->fixed_line_array->len);
+        slset.id = g_strdup_printf("fl%d", ++controls->fixed_line_max);
         slset.xstart = linedata[0];
         slset.ystart = linedata[1];
         slset.xend = linedata[2];
@@ -1553,7 +1645,6 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
 
     }
     gtk_widget_set_sensitive(controls->relative_remove_button, TRUE);
-    gtk_widget_set_sensitive(controls->relative_correlation_button, TRUE);
  }
 
 
