@@ -138,7 +138,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                              "Rotation X",
                              "Angle of the first rotation around x-axis, "
                              "in radians",
-                             G_PI/4.0, -G_MAXDOUBLE, G_MAXDOUBLE,
+                             -G_MAXDOUBLE, G_MAXDOUBLE, G_PI/4.0,
                              G_PARAM_READWRITE));
 
     g_object_class_install_property
@@ -148,7 +148,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                              "Rotation Y",
                              "Angle of the second rotation around y-axis, "
                              "in radians",
-                             -G_PI/4.0, -G_MAXDOUBLE, G_MAXDOUBLE,
+                             -G_MAXDOUBLE, G_MAXDOUBLE, -G_PI/4.0,
                              G_PARAM_READWRITE));
 
     g_object_class_install_property
@@ -157,7 +157,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
          g_param_spec_double("scale",
                              "Scale",
                              "Overall view scale",
-                             1.0, G_MINDOUBLE, G_MAXDOUBLE,
+                             G_MINDOUBLE, G_MAXDOUBLE, 1.0,
                              G_PARAM_READWRITE));
 
     g_object_class_install_property
@@ -166,7 +166,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
          g_param_spec_double("z-scale",
                              "Z scale",
                              "Extra stretch along z (value) axis",
-                             1.0, G_MINDOUBLE, G_MAXDOUBLE,
+                             G_MINDOUBLE, G_MAXDOUBLE, 1.0,
                              G_PARAM_READWRITE));
 
     g_object_class_install_property
@@ -176,7 +176,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                              "Light phi",
                              "Light source direction azimuth in horizontal "
                              "plane, in radians",
-                             0.0, -G_MAXDOUBLE, G_MAXDOUBLE,
+                             -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
                              G_PARAM_READWRITE));
 
     g_object_class_install_property
@@ -186,7 +186,7 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                              "Light theta",
                              "Light source direction deviation from the "
                              "z axis, in radians",
-                             0.0, -G_MAXDOUBLE, G_MAXDOUBLE,
+                             -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
                              G_PARAM_READWRITE));
 
 }
