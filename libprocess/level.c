@@ -29,17 +29,21 @@
 /**
  * gwy_data_field_fit_plane:
  * @data_field: A data field.
+ * @exclusion_mask: Exclusion mask data field.
  * @pa: Where constant coefficient should be stored (or %NULL).
  * @pbx: Where x plane coefficient should be stored (or %NULL).
  * @pby: Where y plane coefficient should be stored (or %NULL).
  *
- * Fits a plane through a data field.
+ * Fits a plane through a data field. Use @exclusion_mask to exclude certain
+ * pixels from the calculation (or set to NULL to use all pixels). @data_field
+ * and @exclusion_mask must be the same size;
  *
  * The coefficients can be used for plane leveling using relation
  * data[i] := data[i] - (pa + pby*i + pbx*j);
  **/
 void
 gwy_data_field_fit_plane(GwyDataField *data_field,
+                         GwyDataField *exclusion_mask,
                          gdouble *pa, gdouble *pbx, gdouble *pby)
 {
     gdouble sumxi, sumxixi, sumyi, sumyiyi;
@@ -49,12 +53,22 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
     gdouble nx, ny;
     gdouble bx, by;
     gdouble *pdata;
+    gdouble *mdata;
     gint i;
+    gboolean have_mask = FALSE;
+    gboolean skip;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
+    if (GWY_IS_DATA_FIELD(exclusion_mask))
+        have_mask = TRUE;
+
     nx = data_field->xres;
     ny = data_field->yres;
+
+    if (have_mask)
+        g_return_if_fail(nx == exclusion_mask->xres &&
+                         ny == exclusion_mask->yres);
 
     sumxi = (nx-1)/2;
     sumxixi = (2*nx-1)*(nx-1)/6;
@@ -62,11 +76,22 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
     sumyiyi = (2*ny-1)*(ny-1)/6;
 
     pdata = data_field->data;
+    if (have_mask)
+        mdata = exclusion_mask->data;
     for (i = 0; i < data_field->xres*data_field->yres; i++) {
-        sumsi += *pdata;
-        sumsixi += *pdata * (i%data_field->xres);
-        sumsiyi += *pdata * (i/data_field->xres);
+        skip = FALSE;
+        if (have_mask)
+            skip = (*mdata == 1.0) ? TRUE : FALSE;
+
+        if (!skip) {
+            sumsi += *pdata;
+            sumsixi += *pdata * (i%data_field->xres);
+            sumsiyi += *pdata * (i/data_field->xres);
+        }
+
         *pdata++;
+        if (have_mask)
+            *mdata++;
     }
     sumsi /= nx*ny;
     sumsixi /= nx*ny;
