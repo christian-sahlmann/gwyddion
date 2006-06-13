@@ -61,6 +61,7 @@ enum {
     PROP_POINT_SIZE,
     PROP_LINE_STYLE,
     PROP_LINE_SIZE,
+    PROP_COLOR,
     PROP_LAST
 };
 
@@ -111,16 +112,17 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
          PROP_DESCRIPTION,
          g_param_spec_string("description",
                              "Curve description",
-                             "Changed curve description",
+                             "Curve description",
                              "curve",
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 
+    /* XXX: This is called 'mode' elsewhere */
     g_object_class_install_property
         (gobject_class,
          PROP_CURVE_TYPE,
          g_param_spec_enum("curve-type",
                            "Curve type",
-                           "Changed curve type",
+                           "Curve plotting mode (line, points, ...)",
                            GWY_TYPE_GRAPH_CURVE_TYPE,
                            GWY_GRAPH_CURVE_LINE,
                            G_PARAM_READABLE | G_PARAM_WRITABLE));
@@ -129,8 +131,8 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
          (gobject_class,
           PROP_POINT_TYPE,
           g_param_spec_enum("point-type",
+                            "Point type",
                             "Curve point type",
-                            "Changed curve point type",
                             GWY_TYPE_GRAPH_POINT_TYPE,
                             GWY_GRAPH_POINT_SQUARE,
                             G_PARAM_READABLE | G_PARAM_WRITABLE));
@@ -139,8 +141,8 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
          (gobject_class,
           PROP_POINT_SIZE,
           g_param_spec_int("point-size",
+                           "Point size",
                            "Curve point size",
-                           "Changed curve point size",
                            0, 100,
                            5,
                            G_PARAM_READABLE | G_PARAM_WRITABLE));
@@ -149,21 +151,31 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
          (gobject_class,
           PROP_LINE_STYLE,
           g_param_spec_enum("line-style",
+                            "Line style",
                             "Curve line style",
-                            "Changed curve line style",
                             GDK_TYPE_LINE_STYLE,
                             GDK_LINE_SOLID,
                             G_PARAM_READABLE | G_PARAM_WRITABLE));
 
+    /* XXX: This is actually line width */
      g_object_class_install_property
          (gobject_class,
           PROP_LINE_SIZE,
           g_param_spec_int("line-size",
+                           "Line size",
                            "Curve line size",
-                           "Changed curve line size",
                            0, 100,
                            1,
                            G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+     g_object_class_install_property
+         (gobject_class,
+          PROP_LINE_SIZE,
+          g_param_spec_boxed("color",
+                             "Color",
+                             "Curve color",
+                             GWY_TYPE_RGBA,
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -173,31 +185,36 @@ gwy_graph_curve_model_set_property(GObject *object,
                                    GParamSpec *pspec)
 {
     GwyGraphCurveModel *gcmodel = GWY_GRAPH_CURVE_MODEL(object);
+    GwyRGBA *color;
 
     switch (prop_id) {
         case PROP_DESCRIPTION:
-        gwy_graph_curve_model_set_description(gcmodel,
-                                              g_value_get_string(value));
+        g_string_assign(gcmodel->description, g_value_get_string(value));
         break;
 
         case PROP_CURVE_TYPE:
-        gwy_graph_curve_model_set_mode(gcmodel, g_value_get_enum(value));
+        gcmodel->mode = g_value_get_enum(value);
         break;
 
         case PROP_POINT_TYPE:
-        gwy_graph_curve_model_set_point_type(gcmodel, g_value_get_enum(value));
+        gcmodel->point_type = g_value_get_enum(value);
         break;
 
         case PROP_LINE_STYLE:
-        gwy_graph_curve_model_set_line_style(gcmodel, g_value_get_enum(value));
+        gcmodel->line_style = g_value_get_enum(value);
         break;
 
         case PROP_LINE_SIZE:
-        gwy_graph_curve_model_set_line_size(gcmodel, g_value_get_int(value));
+        gcmodel->line_size = g_value_get_int(value);
         break;
 
         case PROP_POINT_SIZE:
-        gwy_graph_curve_model_set_point_size(gcmodel, g_value_get_int(value));
+        gcmodel->point_size = g_value_get_int(value);
+        break;
+
+        case PROP_COLOR:
+        color = g_value_get_boxed(value);
+        gcmodel->color = *color;
         break;
 
         default:
@@ -216,28 +233,31 @@ gwy_graph_curve_model_get_property(GObject*object,
 
     switch (prop_id) {
         case PROP_DESCRIPTION:
-        g_value_set_string(value,
-                           gwy_graph_curve_model_get_description(gcmodel));
+        g_value_set_string(value, gcmodel->description->str);
         break;
 
         case PROP_CURVE_TYPE:
-        g_value_set_enum(value, gwy_graph_curve_model_get_mode(gcmodel));
+        g_value_set_enum(value, gcmodel->mode);
         break;
 
         case PROP_POINT_TYPE:
-        g_value_set_enum(value, gwy_graph_curve_model_get_point_type(gcmodel));
+        g_value_set_enum(value, gcmodel->point_type);
         break;
 
         case PROP_LINE_STYLE:
-        g_value_set_enum(value, gwy_graph_curve_model_get_line_style(gcmodel));
+        g_value_set_enum(value, gcmodel->line_style);
         break;
 
         case PROP_LINE_SIZE:
-        g_value_set_int(value, gwy_graph_curve_model_get_line_size(gcmodel));
+        g_value_set_int(value, gcmodel->line_size);
         break;
 
         case PROP_POINT_SIZE:
-        g_value_set_int(value, gwy_graph_curve_model_get_point_size(gcmodel));
+        g_value_set_int(value, gcmodel->point_size);
+        break;
+
+        case PROP_COLOR:
+        g_value_set_boxed(value, &gcmodel->color);
         break;
 
         default:

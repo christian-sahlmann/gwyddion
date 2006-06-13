@@ -427,7 +427,7 @@ gwy_graph_model_set_property(GObject *object,
 
     switch (prop_id) {
         case PROP_TITLE:
-        gwy_graph_model_set_title(gmodel, g_value_get_string(value));
+        g_string_assign(gmodel->title, g_value_get_string(value));
         break;
 
         default:
