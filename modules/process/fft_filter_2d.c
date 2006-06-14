@@ -84,11 +84,13 @@ typedef struct {
     GwyContainer    *mydata;
     GwyContainer    *data;
 
+    /*
     GwyDataField    *dfield;
     GwyDataField    *mfield;
     GwyDataField    *fft;
     GwyDataField    *filtered;
     GwyDataField    *diff;
+    */
 
     GtkWidget       *view;
 
@@ -142,6 +144,9 @@ static void         build_tooltips      (GHashTable *hash_tips);
 static void         save_settings       (ControlsType *controls);
 static void         load_settings       (ControlsType *controls,
                                          gboolean load_defaults);
+static void        item_changed_cb      (GwyContainer *gwycontainer,
+                                         guint arg1,
+                                         gpointer user_data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -172,7 +177,12 @@ module_register(void)
 static void
 run_main(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield = NULL;
+    GwyDataField    *dfield;
+    GwyDataField    *mfield;
+    GwyDataField    *fft;
+    GwyDataField    *filtered;
+    GwyDataField    *diff;
+
     GwyDataField *out_image = NULL, *out_fft = NULL;
     gint id, newid;
     GwyRGBA rgba;
@@ -197,34 +207,20 @@ run_main(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
     /* Create datafields */
-    controls.dfield = gwy_data_field_duplicate(dfield);
-    controls.mfield = create_mask_field(controls.dfield);
-    controls.fft = gwy_data_field_new_alike(dfield, FALSE);
-    do_fft(controls.dfield, controls.fft);
-    controls.filtered = gwy_data_field_new_alike(dfield, TRUE);
-    controls.diff = gwy_data_field_new_alike(dfield, TRUE);
+    mfield = create_mask_field(dfield);
+    fft = gwy_data_field_new_alike(dfield, FALSE);
+    do_fft(dfield, fft);
+    filtered = gwy_data_field_new_alike(dfield, TRUE);
+    diff = gwy_data_field_new_alike(dfield, TRUE);
 
     /* Setup the mydata container */
     controls.mydata = gwy_container_new();
-    gwy_container_set_object_by_name(controls.mydata, "/0/data", controls.fft);
-    gwy_container_set_string_by_name(controls.mydata,
-                                     "/0/base/palette",
-                                     g_strdup("DFit"));
-    gwy_app_copy_data_items(data, controls.mydata, id, 0,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
-    if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
-    }
-    gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
 
-    gwy_container_set_object_by_name(controls.mydata, "/0/mask",
-                                     controls.mfield);
+    g_signal_connect(controls.mydata, "item-changed",
+                     G_CALLBACK(item_changed_cb), NULL);
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data",
-                                     controls.dfield);
+                                     dfield);
     gwy_app_copy_data_items(data, controls.mydata, id, 1,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -233,7 +229,8 @@ run_main(GwyContainer *data, GwyRunType run)
                             0);
 
     gwy_container_set_object_by_name(controls.mydata, "/2/data",
-                                     controls.filtered);
+                                     filtered);
+    g_object_unref(filtered);
     gwy_app_copy_data_items(data, controls.mydata, id, 2,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -242,13 +239,34 @@ run_main(GwyContainer *data, GwyRunType run)
                             0);
 
     gwy_container_set_object_by_name(controls.mydata, "/3/data",
-                                     controls.diff);
+                                     diff);
+    g_object_unref(diff);
     gwy_app_copy_data_items(data, controls.mydata, id, 3,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_RANGE_TYPE,
                             0);
+
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", fft);
+    g_object_unref(fft);
+    gwy_container_set_string_by_name(controls.mydata,
+                                     "/0/base/palette",
+                                     g_strdup("DFit"));
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+
+    gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
+
+    gwy_container_set_object_by_name(controls.mydata, "/0/mask",
+                                     mfield);
+    g_object_unref(mfield);
+    if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
+    }
 
     /* Run the dialog */
     response = run_dialog(&controls);
@@ -260,7 +278,10 @@ run_main(GwyContainer *data, GwyRunType run)
         if (controls.out_mode & OUTPUT_FFT)
             out_fft = gwy_data_field_new_alike(dfield, FALSE);
 
-        fft_filter_2d(controls.dfield, out_image, out_fft, controls.mfield);
+        mfield =
+            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
+                                                            "/0/mask"));
+        fft_filter_2d(dfield, out_image, out_fft, mfield);
 
         if (out_image) {
             newid = gwy_app_data_browser_add_data_field(out_image, data, TRUE);
@@ -372,6 +393,7 @@ run_dialog(ControlsType *controls)
     GwyPixmapLayer *layer, *mlayer;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
+    GwyDataField *dfield;
     gdouble zoomval;
     gint i, row, response;
 
@@ -401,9 +423,11 @@ run_dialog(ControlsType *controls)
     layer = gwy_layer_basic_new();
     set_layer_channel(layer, 0);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/1/data"));
     zoomval = PREVIEW_SIZE /
-              (gdouble)MAX(gwy_data_field_get_xres(controls->dfield),
-                           gwy_data_field_get_yres(controls->dfield));
+              (gdouble)MAX(gwy_data_field_get_xres(dfield),
+                           gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
     g_debug("   COMPLETE");
@@ -671,12 +695,36 @@ static void
 prev_mode_changed_cb(ControlsType *controls)
 {
     GwyPixmapLayer *layer, *mlayer;
+    GwyDataField *dfield, *mfield, *filtered, *diff;
     PreviewMode new_mode;
 
     new_mode = gwy_radio_buttons_get_current(controls->pmode);
 
     if (new_mode != controls->prev_mode) {
         layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+
+        mfield =
+            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                            "/0/mask"));
+        dfield =
+            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                            "/1/data"));
+        filtered =
+            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                            "/2/data"));
+        diff =
+            GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                            "/3/data"));
+
+        if (!GWY_IS_DATA_FIELD(mfield))
+            g_debug("No mfield.");
+        if (!GWY_IS_DATA_FIELD(dfield))
+            g_debug("No dfield.");
+        if (!GWY_IS_DATA_FIELD(filtered))
+            g_debug("No filtered.");
+        if (!GWY_IS_DATA_FIELD(diff))
+            g_debug("No diff.");
+
 
         switch(new_mode) {
             case PREV_FFT:
@@ -695,17 +743,13 @@ prev_mode_changed_cb(ControlsType *controls)
             break;
 
             case PREV_FILTERED:
-            fft_filter_2d(controls->dfield, controls->filtered, NULL,
-                          controls->mfield);
+            fft_filter_2d(dfield, filtered, NULL, mfield);
             set_layer_channel(layer, 2);
             break;
 
             case PREV_DIFF:
-            fft_filter_2d(controls->dfield, controls->filtered, NULL,
-                          controls->mfield);
-            gwy_data_field_subtract_fields(controls->diff,
-                                           controls->dfield,
-                                           controls->filtered);
+            fft_filter_2d(dfield, filtered, NULL, mfield);
+            gwy_data_field_subtract_fields(diff, dfield, filtered);
             set_layer_channel(layer, 3);
             break;
 
@@ -773,7 +817,7 @@ static void
 selection_finished_cb(GwySelection *selection,
                           ControlsType *controls)
 {
-    GwyDataField *mfield  = NULL;
+    GwyDataField *mfield, *fft;
     FieldFillFunc fill_func;
     gdouble sel[4];
     gint isel[4];
@@ -781,13 +825,16 @@ selection_finished_cb(GwySelection *selection,
     gdouble value;
     gint xwidth;
 
-    /* get the image width */
-    xwidth = gwy_data_field_get_xres(controls->fft);
-    g_debug("X Width: %i", xwidth);
-
-    /* get the mask */
     mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                            "/0/mask"));
+                                                             "/0/mask"));
+    fft = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                          "/0/data"));
+    if (!GWY_IS_DATA_FIELD(mfield)) {
+        g_debug("Mask doesn't exist in container!");
+        return;
+    }
+
+    xwidth = gwy_data_field_get_xres(fft);
 
     /* get the selection coordinates */
     if (!gwy_selection_get_object(selection, 0, sel))
@@ -890,6 +937,16 @@ static void
 zoom_toggled(ControlsType *controls)
 {
 
+}
+
+static void
+item_changed_cb(GwyContainer *gwycontainer,
+                guint arg1,
+                gpointer user_data)
+{
+    const gchar* thing = g_quark_to_string(arg1);
+
+    g_debug("item-changed: %s", thing);
 }
 
 /* set_dfield_modulus is copied from fft.c */
