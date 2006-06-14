@@ -51,6 +51,10 @@ typedef struct {
     guint selected;
     gboolean fixres;
     gint resolution;
+
+    /* To mask impossible quantitities without really resetting the bits */
+    gboolean units_equal;
+    guint bitmask;
 } GrainDistArgs;
 
 typedef struct {
@@ -98,6 +102,8 @@ static const GrainDistArgs grain_dist_defaults = {
     1 << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
     FALSE,
     120,
+    FALSE,
+    0xffffffffU,
 };
 
 static GwyModuleInfo module_info = {
@@ -106,7 +112,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2006",
 };
@@ -138,6 +144,7 @@ module_register(void)
 static void
 grain_dist(GwyContainer *data, GwyRunType run)
 {
+    GwySIUnit *siunitxy, *siunitz;
     GrainDistArgs args;
     GwyDataField *dfield;
     GwyDataField *mfield;
@@ -148,6 +155,13 @@ grain_dist(GwyContainer *data, GwyRunType run)
                                      GWY_APP_MASK_FIELD, &mfield,
                                      0);
     g_return_if_fail(dfield && mfield);
+
+    siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+    siunitz = gwy_data_field_get_si_unit_z(dfield);
+    args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
+    args.bitmask = 0xffffffffU;
+    if (!args.units_equal)
+        args.bitmask ^= 1 << GWY_GRAIN_VALUE_SURFACE_AREA;
 
     if (run == GWY_RUN_IMMEDIATE)
         grain_dist_run(&args, data, dfield, mfield);
@@ -164,7 +178,8 @@ append_checkbox_list(GtkTable *table,
                      GSList *list,
                      guint nchoices,
                      const GwyEnum *choices,
-                     guint state)
+                     guint state,
+                     guint bitmask)
 {
     GtkWidget *label, *check;
     gchar *s;
@@ -184,6 +199,9 @@ append_checkbox_list(GtkTable *table,
 
     for (i = 0; i < nchoices; i++) {
         bit = 1 << choices[i].value;
+        if (!(bit & bitmask))
+            continue;
+
         check = gtk_check_button_new_with_mnemonic(_(choices[i].name));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), state & bit);
         g_object_set_data(G_OBJECT(check), "bit", GUINT_TO_POINTER(bit));
@@ -257,17 +275,20 @@ grain_dist_dialog(GrainDistArgs *args,
                                           NULL,
                                           G_N_ELEMENTS(quantities_value),
                                           quantities_value,
-                                          args->selected);
+                                          args->selected,
+                                          args->bitmask);
     controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Area"),
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_area),
                                           quantities_area,
-                                          args->selected);
+                                          args->selected,
+                                          args->bitmask);
     controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Boundary"),
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_boundary),
                                           quantities_boundary,
-                                          args->selected);
+                                          args->selected,
+                                          args->bitmask);
     for (l = controls.qlist; l; l = g_slist_next(l))
         g_signal_connect_swapped(l->data, "toggled",
                                  G_CALLBACK(selected_changed_cb), &controls);
@@ -392,7 +413,7 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
         break;
     }
 
-    gtk_widget_set_sensitive(controls->ok, args->selected);
+    gtk_widget_set_sensitive(controls->ok, args->selected & args->bitmask);
 }
 
 static void
@@ -503,7 +524,7 @@ grain_dist_run(GrainDistArgs *args,
     switch (args->mode) {
         case MODE_GRAPH:
         res = args->fixres ? args->resolution : 0;
-        bits = args->selected;
+        bits = args->selected & args->bitmask;
         for (i = 0; bits; i++, bits /= 2) {
             if (bits & 1)
                 add_one_distribution(data, dfield, ngrains, grains, i, res);
