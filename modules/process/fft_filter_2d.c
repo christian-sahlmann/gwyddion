@@ -84,14 +84,6 @@ typedef struct {
     GwyContainer    *mydata;
     GwyContainer    *data;
 
-    /*
-    GwyDataField    *dfield;
-    GwyDataField    *mfield;
-    GwyDataField    *fft;
-    GwyDataField    *filtered;
-    GwyDataField    *diff;
-    */
-
     GtkWidget       *view;
 
     MaskEditMode    edit_mode;
@@ -219,6 +211,25 @@ run_main(GwyContainer *data, GwyRunType run)
     g_signal_connect(controls.mydata, "item-changed",
                      G_CALLBACK(item_changed_cb), NULL);
 
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", fft);
+    g_object_unref(fft);
+    gwy_container_set_string_by_name(controls.mydata,
+                                     "/0/base/palette",
+                                     g_strdup("DFit"));
+    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
+
+    gwy_container_set_object_by_name(controls.mydata, "/0/mask",
+                                     mfield);
+    g_object_unref(mfield);
+    if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
+    }
+
     gwy_container_set_object_by_name(controls.mydata, "/1/data",
                                      dfield);
     gwy_app_copy_data_items(data, controls.mydata, id, 1,
@@ -247,26 +258,6 @@ run_main(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_RANGE_TYPE,
                             0);
-
-    gwy_container_set_object_by_name(controls.mydata, "/0/data", fft);
-    g_object_unref(fft);
-    gwy_container_set_string_by_name(controls.mydata,
-                                     "/0/base/palette",
-                                     g_strdup("DFit"));
-    gwy_app_copy_data_items(data, controls.mydata, id, 0,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
-
-    gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-
-    gwy_container_set_object_by_name(controls.mydata, "/0/mask",
-                                     mfield);
-    g_object_unref(mfield);
-    if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
-    }
 
     /* Run the dialog */
     response = run_dialog(&controls);
@@ -629,10 +620,8 @@ run_dialog(ControlsType *controls)
                           | GDK_POINTER_MOTION_HINT_MASK);
     */
 
-    g_debug("Showing dialog...");
     gtk_widget_show_all(dialog);
     load_settings(controls, FALSE);
-    g_debug("   COMPLETE");
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
