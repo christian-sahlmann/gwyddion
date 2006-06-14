@@ -28,14 +28,12 @@ G_BEGIN_DECLS
 
 #define GWY_TYPE_RGBA                         (gwy_rgba_get_type())
 
-typedef struct _GwyRGBA GwyRGBA;
-
-struct _GwyRGBA {
+typedef struct {
     gdouble r;
     gdouble g;
     gdouble b;
     gdouble a;
-};
+} GwyRGBA;
 
 GType         gwy_rgba_get_type                 (void) G_GNUC_CONST;
 GwyRGBA*      gwy_rgba_copy                     (const GwyRGBA *rgba);
@@ -57,6 +55,8 @@ gboolean      gwy_rgba_get_from_container       (GwyRGBA *rgba,
                                                  const gchar *prefix);
 void          gwy_rgba_store_to_container       (const GwyRGBA *rgba,
                                                  GwyContainer *container,
+                                                 const gchar *prefix);
+gboolean      gwy_rgba_remove_from_container    (GwyContainer *container,
                                                  const gchar *prefix);
 void          gwy_rgba_set_gdk_gc_fg            (const GwyRGBA *rgba,
                                                  GdkGC *gc);

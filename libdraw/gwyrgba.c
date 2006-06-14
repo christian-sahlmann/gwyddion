@@ -46,7 +46,7 @@ gwy_rgba_get_type(void)
 
 /**
  * gwy_rgba_copy:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  *
  * Makes a copy of a rgba structure. The result must be freed using
  * gwy_rgba_free().
@@ -64,7 +64,7 @@ gwy_rgba_copy(const GwyRGBA *rgba)
 
 /**
  * gwy_rgba_free:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  *
  * Frees an rgba structure created with gwy_rgba_copy().
  **/
@@ -77,7 +77,7 @@ gwy_rgba_free(GwyRGBA *rgba)
 
 /**
  * gwy_rgba_to_gdk_color:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  * @gdkcolor: A #GdkColor.
  *
  * Converts a rgba to a Gdk color.
@@ -96,7 +96,7 @@ gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
 
 /**
  * gwy_rgba_to_gdk_alpha:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  *
  * Converts a rgba to a Gdk opacity value.
  *
@@ -110,7 +110,7 @@ gwy_rgba_to_gdk_alpha(const GwyRGBA *rgba)
 
 /**
  * gwy_rgba_from_gdk_color:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  * @gdkcolor: A #GdkColor.
  *
  * Converts a Gdk color to a rgba.
@@ -128,7 +128,7 @@ gwy_rgba_from_gdk_color(GwyRGBA *rgba,
 
 /**
  * gwy_rgba_from_gdk_color_and_alpha:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  * @gdkcolor: A #GdkColor.
  * @gdkalpha: Gdk 16bit opacity value.
  *
@@ -198,12 +198,15 @@ gwy_rgba_interpolate(const GwyRGBA *src1,
 
 /**
  * gwy_rgba_get_from_container:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  * @container: A #GwyContainer to get the color components from.
  * @prefix: Prefix in @container, e.g. "/0/mask" (it would try to fetch
  *          "/0/mask/red", "/0/mask/green", etc. then).
  *
  * Gets RGBA color components from a container.
+ *
+ * This is a convenience function to get the components in the common
+ * arrangement.
  *
  * Returns: Whether all @rgba components were successfully found and set.
  **/
@@ -228,12 +231,15 @@ gwy_rgba_get_from_container(GwyRGBA *rgba,
 
 /**
  * gwy_rgba_store_to_container:
- * @rgba: A #GwyRGBA.
+ * @rgba: A RGBA color.
  * @container: A #GwyContainer to store the color components to.
  * @prefix: Prefix in @container, e.g. "/0/mask" (it will store
  *          "/0/mask/red", "/0/mask/green", etc. then).
  *
  * Stores RGBA color components to a container.
+ *
+ * This is a convenience function to store the components in the common
+ * arrangement.
  **/
 void
 gwy_rgba_store_to_container(const GwyRGBA *rgba,
@@ -252,8 +258,36 @@ gwy_rgba_store_to_container(const GwyRGBA *rgba,
 }
 
 /**
+ * gwy_rgba_remove_from_container:
+ * @container: A #GwyContainer to remove the color components from.
+ * @prefix: Prefix in @container, e.g. "/0/mask" (it will remove
+ *          "/0/mask/red", "/0/mask/green", etc. then).
+ *
+ * Removes RGBA color components from a container.
+ *
+ * This is a convenience function to remove the components in the common
+ * arrangement.
+ *
+ * Returns: %TRUE if anything was removed.
+ **/
+gboolean
+gwy_rgba_remove_from_container(GwyContainer *container,
+                               const gchar *prefix)
+{
+    GQuark keys[4];
+
+    g_return_val_if_fail(container && prefix, FALSE);
+
+    gwy_rgba_compute_color_quarks(prefix, keys);
+    return gwy_container_remove(container, keys[0]);
+           + gwy_container_remove(container, keys[1]);
+           + gwy_container_remove(container, keys[2]);
+           + gwy_container_remove(container, keys[3]);
+}
+
+/**
  * gwy_rgba_set_gdk_gc_fg:
- * @rgba: A #GwyRGBA.  Its alpha component is ignored, only RGB is used.
+ * @rgba: A RGBA color.  Its alpha component is ignored, only RGB is used.
  * @gc: A Gdk graphics context to set forgeground color of.
  *
  * Sets foreground color of a Gdk graphics context from a RGBA color.
@@ -275,7 +309,7 @@ gwy_rgba_set_gdk_gc_fg(const GwyRGBA *rgba,
 
 /**
  * gwy_rgba_set_gdk_gc_bg:
- * @rgba: A #GwyRGBA.  Its alpha component is ignored, only RGB is used.
+ * @rgba: A RGBA color.  Its alpha component is ignored, only RGB is used.
  * @gc: A Gdk graphics context to set forgeground color of.
  *
  * Sets foreground color of a Gdk graphics context from a RGBA color.
