@@ -29,7 +29,6 @@
 /**
  * gwy_data_field_fit_plane:
  * @data_field: A data field.
- * @exclusion_mask: Exclusion mask data field.
  * @pa: Where constant coefficient should be stored (or %NULL).
  * @pbx: Where x plane coefficient should be stored (or %NULL).
  * @pby: Where y plane coefficient should be stored (or %NULL).
@@ -43,7 +42,6 @@
  **/
 void
 gwy_data_field_fit_plane(GwyDataField *data_field,
-                         GwyDataField *exclusion_mask,
                          gdouble *pa, gdouble *pbx, gdouble *pby)
 {
     gdouble sumxi, sumxixi, sumyi, sumyiyi;
@@ -53,22 +51,12 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
     gdouble nx, ny;
     gdouble bx, by;
     gdouble *pdata;
-    gdouble *mdata;
     gint i;
-    gboolean have_mask = FALSE;
-    gboolean skip;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    if (GWY_IS_DATA_FIELD(exclusion_mask))
-        have_mask = TRUE;
-
     nx = data_field->xres;
     ny = data_field->yres;
-
-    if (have_mask)
-        g_return_if_fail(nx == exclusion_mask->xres &&
-                         ny == exclusion_mask->yres);
 
     sumxi = (nx-1)/2;
     sumxixi = (2*nx-1)*(nx-1)/6;
@@ -76,22 +64,11 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
     sumyiyi = (2*ny-1)*(ny-1)/6;
 
     pdata = data_field->data;
-    if (have_mask)
-        mdata = exclusion_mask->data;
     for (i = 0; i < data_field->xres*data_field->yres; i++) {
-        skip = FALSE;
-        if (have_mask)
-            skip = (*mdata == 1.0) ? TRUE : FALSE;
-
-        if (!skip) {
-            sumsi += *pdata;
-            sumsixi += *pdata * (i%data_field->xres);
-            sumsiyi += *pdata * (i/data_field->xres);
-        }
-
+        sumsi += *pdata;
+        sumsixi += *pdata * (i%data_field->xres);
+        sumsiyi += *pdata * (i/data_field->xres);
         *pdata++;
-        if (have_mask)
-            *mdata++;
     }
     sumsi /= nx*ny;
     sumsixi /= nx*ny;
@@ -110,6 +87,12 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
 /**
  * gwy_data_field_area_fit_plane:
  * @data_field: A data field
+ * @mask: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -121,11 +104,12 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
  * Fits a plane through a rectangular part of a data field.
  *
  * The coefficients can be used for plane leveling using the same relation
- * as in gwy_data_field_area_fit_plane(), counting indices from area top left
+ * as in gwy_data_field_fit_plane(), counting indices from area top left
  * corner.
  **/
 void
 gwy_data_field_area_fit_plane(GwyDataField *data_field,
+                              GwyDataField *mask,
                               gint col, gint row, gint width, gint height,
                               gdouble *pa, gdouble *pbx, gdouble *pby)
 {
@@ -135,6 +119,7 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
     gdouble sumsiyi = 0.0;
     gdouble a, bx, by;
     gdouble *datapos;
+    gdouble *maskpos;
     gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
@@ -156,14 +141,30 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
         sumxixi = (2.0*width - 1.0)*(width - 1.0)/6;
         sumyiyi = (2.0*height - 1.0)*(height - 1.0)/6;
 
-        datapos = data_field->data + row*data_field->xres + col;
-        for (i = 0; i < height; i++) {
-            gdouble *drow = datapos + i*data_field->xres;
-
-            for (j = 0; j < width; j++) {
-                sumsi += drow[j];
-                sumsixi += drow[j]*j;
-                sumsiyi += drow[j]*i;
+        if (mask) {
+            datapos = data_field->data + row*data_field->xres + col;
+            maskpos = mask->data + row*mask->xres + col;
+            for (i = 0; i < height; i++) {
+                gdouble *drow = datapos + i*data_field->xres;
+                gdouble *mrow = maskpos + i*mask->xres;
+                for (j = 0; j < width; j++) {
+                    if (mrow[j] == 1.0) {
+                        sumsi += drow[j];
+                        sumsixi += drow[j]*j;
+                        sumsiyi += drow[j]*i;
+                    }
+                }
+            }
+        }
+        else {
+            datapos = data_field->data + row*data_field->xres + col;
+            for (i = 0; i < height; i++) {
+                gdouble *drow = datapos + i*data_field->xres;
+                for (j = 0; j < width; j++) {
+                    sumsi += drow[j];
+                    sumsixi += drow[j]*j;
+                    sumsiyi += drow[j]*i;
+                }
             }
         }
         sumsi /= width*height;

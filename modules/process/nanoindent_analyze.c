@@ -646,8 +646,10 @@ static void get_field_slope_from_border (GwyDataField *dfield, gdouble *c, gdoub
       gint size = 20;
       gdouble cc;
 
-      gwy_data_field_area_fit_plane(dfield, 0, 0, dfield->xres-1, size, &cc, bx, NULL);
-      gwy_data_field_area_fit_plane(dfield, 0, 0, size, dfield->yres-1,   c, NULL, by);
+      gwy_data_field_area_fit_plane(dfield, NULL, 0, 0, dfield->xres-1, size,
+                                    &cc, bx, NULL);
+      gwy_data_field_area_fit_plane(dfield, NULL, 0, 0, size, dfield->yres-1,
+                                    c, NULL, by);
       *c = (*c+cc)/2;
 }
 

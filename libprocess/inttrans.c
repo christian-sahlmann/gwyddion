@@ -433,7 +433,7 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     if (level == 2) {
-        gwy_data_field_fit_plane(rbuf, NULL, &a, &bx, &by);
+        gwy_data_field_fit_plane(rbuf, &a, &bx, &by);
         gwy_data_field_plane_level(rbuf, a, bx, by);
     }
     else if (level == 1)
@@ -447,7 +447,7 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
 
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
     if (level == 2) {
-        gwy_data_field_fit_plane(ibuf, NULL, &a, &bx, &by);
+        gwy_data_field_fit_plane(ibuf, &a, &bx, &by);
         gwy_data_field_plane_level(ibuf, a, bx, by);
     }
     else if (level == 1)
@@ -586,7 +586,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     if (level == 2) {
-        gwy_data_field_fit_plane(rbuf, NULL, &a, &bx, &by);
+        gwy_data_field_fit_plane(rbuf, &a, &bx, &by);
         gwy_data_field_plane_level(rbuf, a, bx, by);
     }
     else if (level == 1)

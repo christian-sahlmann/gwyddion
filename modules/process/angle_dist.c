@@ -336,7 +336,7 @@ compute_slopes(GwyDataField *dfield,
     if (kernel_size) {
         for (row = 0; row + kernel_size < yres; row++) {
             for (col = 0; col + kernel_size < xres; col++) {
-                gwy_data_field_area_fit_plane(dfield, col, row,
+                gwy_data_field_area_fit_plane(dfield, NULL, col, row,
                                               kernel_size, kernel_size,
                                               NULL, &dx, &dy);
                 *(xder++) = dx;

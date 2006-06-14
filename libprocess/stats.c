@@ -2793,7 +2793,7 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
     if (kernel_size > 0) {
         for (row = 0; row + kernel_size < yres; row++) {
             for (col = 0; col + kernel_size < xres; col++) {
-                gwy_data_field_area_fit_plane(dfield, col, row,
+                gwy_data_field_area_fit_plane(dfield, NULL, col, row,
                                               kernel_size, kernel_size,
                                               NULL, &bx, &by);
                 phi = atan2(by, bx);
