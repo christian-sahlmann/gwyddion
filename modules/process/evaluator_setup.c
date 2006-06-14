@@ -282,7 +282,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GQuark mquark;
-    gint row, prow, id;
+    gint row, prow, id, column_id;
 
     GwySelection *selection;
     
@@ -471,15 +471,15 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls.relative_list));
     controls.relative_selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree),  -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree),  -1,
                                                          "No.",
                                                       renderer, 
                                                       "text", NO_COLUMN, NULL);
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "Type",
                                                       renderer, 
                                                       "text", TYPE_COLUMN, NULL);
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "Description",
                                                       renderer, 
                                                       "text", DESCRIPTION_COLUMN, NULL);
@@ -504,17 +504,17 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls.correlation_list));
     controls.correlation_selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "No.",
                                                       renderer, 
                                                       "text", NO_COLUMN,
                                                       NULL);
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "Type",
                                                       renderer, 
                                                       "text", TYPE_COLUMN,
                                                       NULL);
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "Description",
                                                       renderer, 
                                                       "text", DESCRIPTION_COLUMN, 
@@ -553,17 +553,17 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls.evaluator_list));
     controls.evaluator_selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "No.",
                                                       renderer, 
                                                       "text", NO_COLUMN,
                                                       NULL);
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "Type",
                                                       renderer, 
                                                       "text", TYPE_COLUMN,
                                                       NULL);
-    column = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
+    column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
                                                          "Description",
                                                       renderer, 
                                                       "text", DESCRIPTION_COLUMN,
