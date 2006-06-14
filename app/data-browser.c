@@ -2574,7 +2574,8 @@ gwy_app_copy_data_items(GwyContainer *source,
                         ...)
 {
     GwyDataItem what;
-    gchar key[40];
+    gchar key_from[40];
+    gchar key_to[40];
     const guchar *name;
     GwyRGBA rgba;
     guint enumval;
@@ -2592,59 +2593,56 @@ gwy_app_copy_data_items(GwyContainer *source,
     while ((what = va_arg(ap, GwyDataItem))) {
         switch (what) {
             case GWY_DATA_ITEM_GRADIENT:
-            g_snprintf(key, sizeof(key), "/%d/base/palette", from_id);
-            if (gwy_container_gis_string_by_name(source, key, &name)) {
-                g_snprintf(key, sizeof(key), "/%d/base/palette", to_id);
-                gwy_container_set_string_by_name(dest, key, g_strdup(name));
-            }
+            g_snprintf(key_from, sizeof(key_from), "/%d/base/palette", from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/base/palette", to_id);
+            if (gwy_container_gis_string_by_name(source, key_from, &name))
+                gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
             else
-                gwy_container_remove_by_name(dest, key);
+                gwy_container_remove_by_name(dest, key_to);
             break;
 
             case GWY_DATA_ITEM_MASK_COLOR:
-            g_snprintf(key, sizeof(key), "/%d/mask", from_id);
-            if (gwy_rgba_get_from_container(&rgba, source, key)) {
-                g_snprintf(key, sizeof(key), "/%d/mask", to_id);
-                gwy_rgba_store_to_container(&rgba, dest, key);
-            }
+            g_snprintf(key_from, sizeof(key_from), "/%d/mask", from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/mask", to_id);
+            if (gwy_rgba_get_from_container(&rgba, source, key_from))
+                gwy_rgba_store_to_container(&rgba, dest, key_to);
             else
-                gwy_container_remove_by_name(dest, key);
+                gwy_rgba_remove_from_container(dest, key_to);
             break;
 
             case GWY_DATA_ITEM_RANGE:
-            g_snprintf(key, sizeof(key), "/%d/base/min", from_id);
-            if (gwy_container_gis_double_by_name(source, key, &dbl)) {
-                g_snprintf(key, sizeof(key), "/%d/base/min", to_id);
-                gwy_container_set_double_by_name(dest, key, dbl);
+            g_snprintf(key_from, sizeof(key_from), "/%d/base/min", from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/base/min", to_id);
+            if (gwy_container_gis_double_by_name(source, key_from, &dbl))
+                gwy_container_set_double_by_name(dest, key_to, dbl);
+            else
+                gwy_container_remove_by_name(dest, key_to);
+            g_snprintf(key_from, sizeof(key_from), "/%d/base/max", from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/base/max", to_id);
+            if (gwy_container_gis_double_by_name(source, key_from, &dbl)) {
+                gwy_container_set_double_by_name(dest, key_to, dbl);
             }
             else
-                gwy_container_remove_by_name(dest, key);
-            g_snprintf(key, sizeof(key), "/%d/base/max", from_id);
-            if (gwy_container_gis_double_by_name(source, key, &dbl)) {
-                g_snprintf(key, sizeof(key), "/%d/base/max", to_id);
-                gwy_container_set_double_by_name(dest, key, dbl);
-            }
-            else
-                gwy_container_remove_by_name(dest, key);
+                gwy_container_remove_by_name(dest, key_to);
             case GWY_DATA_ITEM_RANGE_TYPE:
-            g_snprintf(key, sizeof(key), "/%d/base/range-type", from_id);
-            if (gwy_container_gis_enum_by_name(source, key, &enumval)) {
-                g_snprintf(key, sizeof(key), "/%d/base/range-type", to_id);
-                gwy_container_set_enum_by_name(dest, key, enumval);
-            }
+            g_snprintf(key_from, sizeof(key_from), "/%d/base/range-type",
+                       from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/base/range-type", to_id);
+            if (gwy_container_gis_enum_by_name(source, key_from, &enumval))
+                gwy_container_set_enum_by_name(dest, key_to, enumval);
             else
-                gwy_container_remove_by_name(dest, key);
+                gwy_container_remove_by_name(dest, key_to);
             break;
 
             case GWY_DATA_ITEM_REAL_SQUARE:
-            g_snprintf(key, sizeof(key), "/%d/data/realsquare", from_id);
-            if (gwy_container_gis_boolean_by_name(source, key, &boolval)
-                && boolval) {
-                g_snprintf(key, sizeof(key), "/%d/data/realsquare", to_id);
-                gwy_container_set_boolean_by_name(dest, key, boolval);
-            }
+            g_snprintf(key_from, sizeof(key_from), "/%d/data/realsquare",
+                       from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/data/realsquare", to_id);
+            if (gwy_container_gis_boolean_by_name(source, key_from, &boolval)
+                && boolval)
+                gwy_container_set_boolean_by_name(dest, key_to, boolval);
             else
-                gwy_container_remove_by_name(dest, key);
+                gwy_container_remove_by_name(dest, key_to);
             break;
 
             default:
