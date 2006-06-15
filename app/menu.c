@@ -792,7 +792,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
             child = g_list_next(child);
         }
         else {
-            item = gtk_menu_item_new_with_mnemonic("Thou Canst See This");
+            item = gtk_image_menu_item_new_with_mnemonic("Thou Canst See This");
             gwy_debug("adding hidden item %p [#%d]", item, i);
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
             g_signal_connect(item, "activate",
