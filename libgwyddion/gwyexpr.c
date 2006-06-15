@@ -94,7 +94,7 @@ typedef struct {
 } GwyExprFunction;
 
 /* Transitional tokenizer token:
- * can hold both initial GScanner tokens and final GwyExpr RPM stacks */
+ * can hold both initial GScanner tokens and final GwyExpr RPN stacks */
 typedef struct _GwyExprToken GwyExprToken;
 struct _GwyExprToken {
     /* This is either GTokenType or GwyExprOpCode */
@@ -291,7 +291,7 @@ gwy_expr_stack_interpret(GwyExpr *expr)
 
     expr->sp = expr->stack - 1;
     for (i = 0; i < expr->in; i++) {
-        GwyExprCode *code = expr->input + i;
+        const GwyExprCode *code = expr->input + i;
 
         if (code->type == GWY_EXPR_CODE_CONSTANT)
             *(++expr->sp) = code->value;
@@ -326,7 +326,7 @@ gwy_expr_stack_interpret_vectors(GwyExpr *expr,
     for (j = 0; j < n; j++) {
         expr->sp = expr->stack - 1;
         for (i = 0; i < expr->in; i++) {
-            GwyExprCode *code = expr->input + i;
+            const GwyExprCode *code = expr->input + i;
 
             if (code->type == GWY_EXPR_CODE_CONSTANT)
                 *(++expr->sp) = code->value;
