@@ -28,8 +28,8 @@ G_BEGIN_DECLS
 void gwy_data_field_correct_laplace_iteration (GwyDataField *data_field,
                                                GwyDataField *mask_field,
                                                GwyDataField *buffer_field,
-                                               gdouble *error,
-                                               gdouble *corfactor);
+                                               gdouble corrfactor,
+                                               gdouble *error);
 void gwy_data_field_correct_average           (GwyDataField *data_field,
                                                GwyDataField *mask_field);
 void gwy_data_field_mask_outliers             (GwyDataField *data_field,

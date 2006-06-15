@@ -43,7 +43,7 @@ static void         compute_fourier_coeffs       (gint nder,
  * @mask_field: Mask of places to be corrected.
  * @buffer_field: Initialized to same size as mask and data.
  * @error: Maximum change within last step.
- * @corfactor: Correction factor within step.
+ * @corrfactor: Correction factor within step.
  *
  * Performs one interation of Laplace data correction.
  *
@@ -56,10 +56,13 @@ void
 gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
                                          GwyDataField *mask_field,
                                          GwyDataField *buffer_field,
-                                         gdouble *error, gdouble *corfactor)
+                                         gdouble corrfactor,
+                                         gdouble *error)
 {
     gint xres, yres, i, j;
-    gdouble cor;
+    const gdouble *mask, *data;
+    gdouble *buffer;
+    gdouble cor, cf, err;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(mask_field));
@@ -77,46 +80,47 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
 
     gwy_data_field_copy(data_field, buffer_field, FALSE);
 
+    data = data_field->data;
+    buffer = buffer_field->data;
+    mask = mask_field->data;
+
     /* set boundary condition for masked boundary data */
     for (i = 0; i < xres; i++) {
-        if (mask_field->data[i] != 0)
-            buffer_field->data[i] = buffer_field->data[i + 2*xres];
-        if (mask_field->data[i + xres*(yres - 1)] != 0)
-            buffer_field->data[i + xres*(yres - 1)]
-                = buffer_field->data[i + xres*(yres - 3)];
+        if (mask[i] > 0)
+            buffer[i] = buffer[i + 2*xres];
+        if (mask[i + xres*(yres - 1)] > 0)
+            buffer[i + xres*(yres - 1)] = buffer[i + xres*(yres - 3)];
     }
     for (i = 0; i < yres; i++) {
-        if (mask_field->data[xres*i] != 0)
-            buffer_field->data[xres*i] = buffer_field->data[2 + xres*i];
-        if (mask_field->data[xres - 1 + xres*i] != 0)
-            buffer_field->data[xres - 1 + xres*i]
-                = buffer_field->data[xres - 3 + xres*i];
+        if (mask[xres*i] > 0)
+            buffer[xres*i] = buffer[2 + xres*i];
+        if (mask[xres - 1 + xres*i] > 0)
+            buffer[xres - 1 + xres*i] = buffer[xres - 3 + xres*i];
     }
 
-    *error = 0;
     /* iterate */
-    for (i = 1; i < (xres - 1); i++) {
-        for (j = 1; j < (yres - 1); j++) {
-            if (mask_field->data[i + xres*j] != 0) {
-                cor = (*corfactor)*((data_field->data[i + 1 + xres*j]
-                                     + data_field->data[i - 1 + xres*j]
-                                     - 2*data_field->data[i + xres*j])
-                                    + (data_field->data[i + xres*(j + 1)]
-                                       + data_field->data[i + xres*(j - 1)]
-                                       - 2*data_field->data[i + xres*j]));
+    err = 0.0;
+    cf = corrfactor;
+    for (i = 1; i < yres - 1; i++) {
+        for (j = 1; j < xres - 1; j++) {
+            if (mask[i*xres + j] > 0) {
+                cor = cf*((data[(i - 1)*xres + j] + data[(i + 1)*xres + j]
+                           - 2*data[i*xres + j])
+                          + (data[i*xres + j - 1] + data[i*xres + j + 1]
+                             - 2*data[i*xres + j]));
 
-                buffer_field->data[i + xres*j] += cor;
-                if (fabs(cor) > (*error))
-                    (*error) = fabs(cor);
+                buffer[i*xres + j] += cor;
+                cor = fabs(cor);
+                if (cor > err)
+                    err = cor;
             }
         }
     }
 
-    gwy_data_field_area_copy(buffer_field, data_field,
-                             0, 0,
-                             buffer_field->xres, buffer_field->yres,
-                             0, 0);
+    gwy_data_field_copy(buffer_field, data_field, FALSE);
 
+    if (error)
+        *error = err;
 }
 
 /**

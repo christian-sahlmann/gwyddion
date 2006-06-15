@@ -644,7 +644,7 @@ laplace_average(GwyDataField *dfield,
     maxer = gwy_data_field_get_rms(dfield)/1.0e3;
     do {
         gwy_data_field_correct_laplace_iteration(dfield, mask, buffer,
-                                                 &error, &cor);
+                                                 cor, &error);
         i++;
     } while (error >= maxer && i < 1000);
 

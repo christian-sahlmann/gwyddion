@@ -93,7 +93,7 @@ laplace(GwyContainer *data, GwyRunType run)
     starter = 0.0;
     for (i = 0; i < 5000; i++) {
         gwy_data_field_correct_laplace_iteration(dfield, mfield, buffer,
-                                                 &error, &cor);
+                                                 cor, &error);
         if (error < maxer)
             break;
         if (!i)

@@ -395,7 +395,7 @@ laplace_interpolation(GwyDataField *dfield,
     i = 0;
     do {
         gwy_data_field_correct_laplace_iteration(area, mask, buffer,
-                                                 &error, &cor);
+                                                 cor, &error);
         i++;
     } while (error >= maxer && i < 1000);
     g_object_unref(buffer);
