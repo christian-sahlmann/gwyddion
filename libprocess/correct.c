@@ -61,22 +61,23 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
     gint xres, yres, i, j;
     gdouble cor;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(mask_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(buffer_field));
+    g_return_if_fail(data_field->xres == mask_field->xres
+                     && data_field->yres == mask_field->yres);
+
     xres = data_field->xres;
     yres = data_field->yres;
 
-    /*check buffer field */
-    if (!buffer_field)
-        buffer_field = gwy_data_field_new_alike(data_field, TRUE);
-    else if (buffer_field->xres != xres || buffer_field->yres != yres) {
+    /* check buffer field */
+    if (buffer_field->xres != xres || buffer_field->yres != yres)
         gwy_data_field_resample(buffer_field, xres, yres,
                                 GWY_INTERPOLATION_NONE);
-    }
-    gwy_data_field_area_copy(data_field, buffer_field,
-                             0, 0,
-                             buffer_field->xres, buffer_field->yres,
-                             0, 0);
 
-    /*set boundary condition for masked boundary data */
+    gwy_data_field_copy(data_field, buffer_field, FALSE);
+
+    /* set boundary condition for masked boundary data */
     for (i = 0; i < xres; i++) {
         if (mask_field->data[i] != 0)
             buffer_field->data[i] = buffer_field->data[i + 2*xres];
@@ -93,7 +94,7 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
     }
 
     *error = 0;
-    /*iterate */
+    /* iterate */
     for (i = 1; i < (xres - 1); i++) {
         for (j = 1; j < (yres - 1); j++) {
             if (mask_field->data[i + xres*j] != 0) {
