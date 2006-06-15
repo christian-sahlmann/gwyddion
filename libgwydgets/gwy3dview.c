@@ -352,9 +352,7 @@ gwy_3d_view_destroy(GtkObject *object)
     if (gwy3dview->labels) {
         for (i = 0; i < G_N_ELEMENTS(labels); i++) {
             g_signal_handler_disconnect(gwy3dview->labels[i],
-                                        gwy3dview->label_signal_ids[2*i]);
-            g_signal_handler_disconnect(gwy3dview->labels[i],
-                                        gwy3dview->label_signal_ids[2*i + 1]);
+                                        gwy3dview->label_signal_ids[i]);
             gwy_object_unref(gwy3dview->labels[i]);
         }
         g_free(gwy3dview->labels);
@@ -576,7 +574,7 @@ gwy_3d_view_new(GwyContainer *data)
                                  GDK_GL_RGBA_TYPE);
 
     gwy3dview->labels = g_new0(Gwy3DLabel*, G_N_ELEMENTS(labels));
-    gwy3dview->label_signal_ids = g_new0(gulong, 2*G_N_ELEMENTS(labels));
+    gwy3dview->label_signal_ids = g_new0(gulong, G_N_ELEMENTS(labels));
     for (i = 0; i < G_N_ELEMENTS(labels); i++) {
         if (gwy_container_gis_object_by_name(data, labels[i].key,
                                              &gwy3dview->labels[i]))
@@ -586,12 +584,7 @@ gwy_3d_view_new(GwyContainer *data)
             gwy_container_set_object_by_name(data, labels[i].key,
                                              gwy3dview->labels[i]);
         }
-
-        gwy3dview->label_signal_ids[2*i]
-            = g_signal_connect_swapped(gwy3dview->labels[i], "value-changed",
-                                       G_CALLBACK(gwy_3d_label_changed),
-                                       gwy3dview);
-        gwy3dview->label_signal_ids[2*i + 1]
+        gwy3dview->label_signal_ids[i]
             = g_signal_connect_swapped(gwy3dview->labels[i], "notify",
                                        G_CALLBACK(gwy_3d_label_changed),
                                        gwy3dview);
@@ -2487,16 +2480,13 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
     guint hlp = 0;
     Gwy3DLabel *label;
     gint displacement_x, displacement_y;
-    GtkAdjustment *adj;
     gchar *text;
 
     label = gwy3dview->labels[id];
     text = gwy_3d_label_expand_text(label, gwy3dview->variables);
     size = gwy_3d_label_user_size(label, size);
-    adj = gwy_3d_label_get_delta_x_adjustment(label);
-    displacement_x = gwy_adjustment_get_int(adj);
-    adj = gwy_3d_label_get_delta_y_adjustment(label);
-    displacement_y = gwy_adjustment_get_int(adj);
+    displacement_x = ROUND(label->delta_x);
+    displacement_y = ROUND(label->delta_y);
 
     /* Font */
     /* FIXME: is it possible for pango to write on trasnparent background? */

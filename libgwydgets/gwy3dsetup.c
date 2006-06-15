@@ -428,6 +428,7 @@ static void
 gwy_3d_setup_clone(GObject *source,
                    GObject *copy)
 {
+    g_warning("Implement me!");
     /* TODO */
 }
 

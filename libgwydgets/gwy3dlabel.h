@@ -18,11 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_3D_LABEL__
-#define __GWY_3D_LABEL__
+#ifndef __GWY_3D_LABEL_H__
+#define __GWY_3D_LABEL_H__
 
 #include <glib-object.h>
-#include <gtk/gtkadjustment.h>
 
 G_BEGIN_DECLS
 
@@ -38,20 +37,21 @@ typedef struct _Gwy3DLabelClass           Gwy3DLabelClass;
 
 struct _Gwy3DLabelClass {
     GObjectClass parent_class;
-
-    void (*value_changed)(Gwy3DLabel *label);
 };
 
 struct _Gwy3DLabel {
-    GObject         parent_instance;
+    GObject parent_instance;
 
-    gchar          *default_text;
-    GString        *text;
-    gboolean        fixed_size;
-    GtkAdjustment  *delta_x;
-    GtkAdjustment  *delta_y;
-    GtkAdjustment  *rotation;
-    GtkAdjustment  *size;
+    /* public read-only */
+    gdouble delta_x;
+    gdouble delta_y;
+    gdouble rotation;
+    gdouble size;
+    gboolean fixed_size;
+
+    /* private */
+    gchar *default_text;
+    GString *text;
 };
 
 GType          gwy_3d_label_get_type                (void) G_GNUC_CONST;
@@ -63,18 +63,11 @@ gchar*         gwy_3d_label_expand_text             (Gwy3DLabel *label,
                                                      GHashTable *variables);
 void           gwy_3d_label_reset                   (Gwy3DLabel *label);
 void           gwy_3d_label_reset_text              (Gwy3DLabel *label);
-gboolean       gwy_3d_label_get_fixed_size          (Gwy3DLabel *label);
-void           gwy_3d_label_set_fixed_size          (Gwy3DLabel *label,
-                                                     gboolean fixed_size);
 gdouble        gwy_3d_label_user_size               (Gwy3DLabel *label,
                                                      gdouble user_size);
-GtkAdjustment* gwy_3d_label_get_delta_x_adjustment  (Gwy3DLabel *label);
-GtkAdjustment* gwy_3d_label_get_delta_y_adjustment  (Gwy3DLabel *label);
-GtkAdjustment* gwy_3d_label_get_rotation_adjustment (Gwy3DLabel *label);
-GtkAdjustment* gwy_3d_label_get_size_adjustment     (Gwy3DLabel *label);
 
 G_END_DECLS
 
-#endif  /* __GWY_3D_LABEL__ */
+#endif  /* __GWY_3D_LABEL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

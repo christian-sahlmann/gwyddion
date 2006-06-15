@@ -59,7 +59,7 @@ struct _Gwy3DWindow {
     GtkWidget *labels_delta_y;
     GtkWidget *labels_size;
     GtkWidget *labels_rotation; /* to be implemented */
-    GtkWidget *labels_autosize_check;
+    GtkWidget *labels_autosize;
 
     GtkWidget *notebook;
     GtkWidget *actions;
