@@ -1492,6 +1492,32 @@ mark_grain_boundaries(GwyDataField *grain_field)
     g_object_unref(buffer);
 }
 
+/* Merge grains i and j in map with full resolution */
+static inline void
+resolve_grain_map(gint *m, gint i, gint j)
+{
+    gint ii, jj, k;
+
+    /* Find what i and j fully resolve to */
+    for (ii = i; m[ii] != ii; ii = m[ii])
+        ;
+    for (jj = j; m[jj] != jj; jj = m[jj])
+        ;
+    k = MIN(ii, jj);
+
+    /* Fix partial resultions to full */
+    for (ii = m[i]; m[ii] != ii; ii = m[ii]) {
+        m[i] = k;
+        i = ii;
+    }
+    m[ii] = k;
+    for (jj = m[j]; m[jj] != jj; jj = m[jj]) {
+        m[j] = k;
+        j = jj;
+    }
+    m[jj] = k;
+}
+
 /**
  * gwy_data_field_number_grains:
  * @mask_field: Data field containing positive values in grains, nonpositive
@@ -1509,58 +1535,84 @@ gint
 gwy_data_field_number_grains(GwyDataField *mask_field,
                              gint *grains)
 {
-    gint *data, *listv, *listh;
-    gint xres, yres, n, i, grain_no;
+    const gdouble *data;
+    gint xres, yres, i, j, grain_id, max_id, id;
+    gint *m, *mm;
 
-    xres = mask_field->xres;
-    yres = mask_field->yres;
+    xres = gwy_data_field_get_xres(mask_field);
+    yres = gwy_data_field_get_yres(mask_field);
+    data = gwy_data_field_get_data_const(mask_field);
 
-    n = xres*yres;
-    data = g_new(gint, n);
-    listv = g_new(gint, n/2 + 2);
-    listh = g_new(gint, n/2 + 2);
+    /* The max number of grains, reached with checkerboard pattern */
+    m = g_new0(gint, (xres*yres + 1)/2 + 1);
 
-    for (i = 0; i < n; i++)
-        data[i] = mask_field->data[i] > 0;
-
-    grain_no = 0;
-    for (i = 0; i < n; i++) {
-        if (data[i] && !grains[i]) {
-            grain_no++;
-            gwy_data_field_fill_one_grain(xres, yres, data, i % xres, i/xres,
-                                          grains, grain_no, listv, listh);
+    /* Number grains with simple unidirectional grain number propagation,
+     * updating map m for later full grain join */
+    max_id = 0;
+    /* Special-case first row for which no top row exist to avoid testing
+     * i > 0 below */
+    grain_id = 0;
+    for (j = 0; j < xres; j++) {
+        if (data[j] > 0.0) {
+            if (!grain_id) {
+                grain_id = ++max_id;
+                m[grain_id] = grain_id;
+            }
+            grains[j] = grain_id;
+        }
+        else
+            grain_id = 0;
+    }
+    /* The rest of rows */
+    for (i = 1; i < yres; i++) {
+        grain_id = 0;
+        for (j = 0; j < xres; j++) {
+            if (data[i*xres + j] > 0.0) {
+                /* Grain number is kept from left neighbour unless it does
+                 * not exist (a new number is assigned) or a join with top
+                 * neighbour occurs (m is updated) */
+                if ((id = grains[(i - 1)*xres + j])) {
+                    if (!grain_id)
+                        grain_id = id;
+                    else if (id != grain_id) {
+                        resolve_grain_map(m, id, grain_id);
+                        grain_id = m[id];
+                    }
+                }
+                if (!grain_id) {
+                    grain_id = ++max_id;
+                    m[grain_id] = grain_id;
+                }
+                grains[i*xres + j] = grain_id;
+            }
+            else
+                grain_id = 0;
         }
     }
 
-    g_free(listh);
-    g_free(listv);
-    g_free(data);
+    /* Resolve remianing grain number links in map */
+    for (i = 1; i <= max_id; i++)
+        m[i] = m[m[i]];
 
-    return grain_no;
-}
-
-/* Merge grains i and j in map with full resolution */
-static inline void
-resolve_grain_map(gint *m, gint i, gint j)
-{
-    gint ii, jj, k;
-
-    for (ii = i; m[ii] != ii; ii = m[ii])
-        ;
-    for (jj = j; m[jj] != jj; jj = m[jj])
-        ;
-    k = MIN(ii, jj);
-
-    for (ii = m[i]; m[ii] != ii; ii = m[ii]) {
-        m[i] = k;
-        i = ii;
+    /* Compactify grain numbers */
+    mm = g_new0(gint, max_id + 1);
+    id = 0;
+    for (i = 1; i <= max_id; i++) {
+        if (!mm[m[i]]) {
+            id++;
+            mm[m[i]] = id;
+        }
+        m[i] = mm[m[i]];
     }
-    m[ii] = k;
-    for (jj = m[j]; m[jj] != jj; jj = m[jj]) {
-        m[j] = k;
-        j = jj;
-    }
-    m[jj] = k;
+    g_free(mm);
+
+    /* Renumber grains (we make use of the fact m[0] = 0) */
+    for (i = 0; i < xres*yres; i++)
+        grains[i] = m[grains[i]];
+
+    g_free(m);
+
+    return id;
 }
 
 /**
@@ -1710,7 +1762,7 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
             continue;
         }
 
-        /* Initialize graind number maps for merge scan */
+        /* Initialize grains number maps for merge scan */
         if (grain_no+1 > msize) {
             g_free(m);
             m = g_new(gint, 2*(grain_no+1));
