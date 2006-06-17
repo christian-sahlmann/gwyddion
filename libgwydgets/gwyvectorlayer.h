@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -53,6 +53,8 @@ struct _GwyVectorLayer {
     gint button;    /* XXX: duplicates @selecting? */
     gint selecting;
     gint focus;
+    gint chosen;
+    gint integer1;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -62,6 +64,10 @@ struct _GwyVectorLayerClass {
     GwyDataViewLayerClass parent_class;
 
     GType selection_type;
+
+    /* Signals */
+    gboolean (*object_chosen)(GwyVectorLayer *layer,
+                              gint id);
 
     /* Virtual table */
     void (*draw)(GwyVectorLayer *layer,
@@ -93,6 +99,9 @@ const gchar*  gwy_vector_layer_get_selection_key(GwyVectorLayer *layer);
 gint          gwy_vector_layer_get_focus        (GwyVectorLayer *layer);
 gboolean      gwy_vector_layer_set_focus        (GwyVectorLayer *layer,
                                                  gint focus);
+gboolean      gwy_vector_layer_get_editable     (GwyVectorLayer *layer);
+void          gwy_vector_layer_set_editable     (GwyVectorLayer *layer,
+                                                 gboolean is_editable);
 
 void          gwy_vector_layer_draw             (GwyVectorLayer *layer,
                                                  GdkDrawable *drawable,
@@ -107,6 +116,8 @@ gboolean      gwy_vector_layer_key_press        (GwyVectorLayer *layer,
                                                  GdkEventKey *event);
 gboolean      gwy_vector_layer_key_release      (GwyVectorLayer *layer,
                                                  GdkEventKey *event);
+void          gwy_vector_layer_object_chosen    (GwyVectorLayer *layer,
+                                                 gint id);
 
 G_END_DECLS
 

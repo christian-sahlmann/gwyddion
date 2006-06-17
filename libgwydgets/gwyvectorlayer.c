@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
+/* Note: We do not provide getter for @chosen, because it is not presisent
+ * UI-wise (yet?).  Therefore the API should nout encourage treating it as
+ * persisent. */
 
 #include "config.h"
 #include <string.h>
@@ -35,8 +39,15 @@
                             G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
+    OBJECT_CHOSEN,
+    LAST_SIGNAL
+};
+
+enum {
     PROP_0,
-    PROP_SELECTION_KEY
+    PROP_SELECTION_KEY,
+    PROP_FOCUS,
+    PROP_LAST
 };
 
 static void     gwy_vector_layer_destroy             (GtkObject *object);
@@ -63,6 +74,8 @@ static void     gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
 static void     gwy_vector_layer_selection_changed   (GwyVectorLayer *layer,
                                                       gint hint);
 
+static guint vector_layer_signals[LAST_SIGNAL] = { 0 };
+
 G_DEFINE_ABSTRACT_TYPE(GwyVectorLayer, gwy_vector_layer,
                        GWY_TYPE_DATA_VIEW_LAYER)
 
@@ -86,18 +99,41 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     klass->set_focus = gwy_vector_layer_set_focus_default;
 
     /**
-     * GwyVectorLayer:selection-key:
+     * GwyVectorLayer::object-chosen:
+     * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
      *
-     * The :selection-key property is the container key used to identify
-     * displayed #GwySelection in container.
+     * The ::object-chosen signal is emitted when user starts interacting
+     * with a selection object, even before modifying it, and also when user
+     * cannot modify the object (due to focus).
      **/
+    vector_layer_signals[OBJECT_CHOSEN]
+        = g_signal_new("object-chosen",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyVectorLayerClass, object_chosen),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__INT,
+                       G_TYPE_NONE, 0);
+
     g_object_class_install_property
         (gobject_class,
          PROP_SELECTION_KEY,
          g_param_spec_string("selection-key",
                              "Selection key",
-                             "Key identifying selection object in container",
-                             NULL, G_PARAM_READWRITE));
+                             "The key identifying selection object in "
+                             "data container",
+                             NULL,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_FOCUS,
+         g_param_spec_int("focus",
+                          "Focus",
+                          "The id of focused object, or -1 if all objects "
+                          "are active",
+                          -1, G_MAXINT, -1,
+                          G_PARAM_READWRITE));
 }
 
 static void
@@ -106,6 +142,7 @@ gwy_vector_layer_init(GwyVectorLayer *layer)
     gwy_debug_objects_creation(G_OBJECT(layer));
     layer->selecting = -1;
     layer->focus = -1;
+    layer->chosen = -1;
 }
 
 static void
@@ -134,6 +171,10 @@ gwy_vector_layer_set_property(GObject *object,
                                            g_value_get_string(value));
         break;
 
+        case PROP_FOCUS:
+        gwy_vector_layer_set_focus(vector_layer, g_value_get_int(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -154,6 +195,10 @@ gwy_vector_layer_get_property(GObject *object,
                                   g_quark_to_string(vector_layer->selection_key));
         break;
 
+        case PROP_FOCUS:
+        g_value_set_int(value, vector_layer->focus);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -168,13 +213,19 @@ gwy_vector_layer_set_focus_default(GwyVectorLayer *layer,
 {
     /* Unfocus is always possible */
     if (focus < 0) {
-        layer->focus = -1;
+        if (layer->focus >= 0) {
+            layer->focus = -1;
+            g_object_notify(G_OBJECT(layer), "focus");
+        }
         return TRUE;
     }
     /* Setting focus is possible only when user is selecting nothing or the
      * same object */
     if (layer->selecting < 0 || focus == layer->selecting) {
-        layer->focus = focus;
+        if (focus != layer->focus) {
+            layer->focus = focus;
+            g_object_notify(G_OBJECT(layer), "focus");
+        }
         return TRUE;
     }
     return FALSE;
@@ -189,11 +240,11 @@ gwy_vector_layer_set_focus_default(GwyVectorLayer *layer,
  * Focues on one selection object.
  *
  * When a selection object is focused, it becomes the only one user can
- * interact with, the others are inert.
+ * interact with, the others are inert except for "object-chosen" signal
+ * which is emitted always.
  *
- * Focus is reset whenever selection is globally changed, that is: cleared,
- * set anew with gwy_selection_set_data(), swapped with another selection
- * object, and when the selection key in container changes.
+ * To allow interaction with all objects, set @focus to -1.
+ * To make a vector layer a passive object chooser, set @focus to %G_MAXINT.
  *
  * Returns: %TRUE if the object was focused, %FALSE on failure.  Failure can
  *          be caused by user currently moving another object, wrong object
@@ -473,7 +524,6 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
     if (!layer->selection_key)
         return;
 
-    
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     if (!gwy_container_gis_object(view_layer->data, layer->selection_key,
                                   &layer->selection)) {
@@ -486,7 +536,7 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
     else
         g_object_ref(layer->selection);
 
-    layer->focus = layer->selecting = -1;
+    layer->selecting = -1;
     layer->selection_changed_id
         = g_signal_connect_swapped(layer->selection,
                                    "changed",
@@ -508,7 +558,7 @@ gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer)
 
     gwy_signal_handler_disconnect(layer->selection,
                                   layer->selection_changed_id);
-    layer->focus = layer->selecting = -1;
+    layer->selecting = -1;
     gwy_object_unref(layer->selection);
 }
 
@@ -629,14 +679,31 @@ gwy_vector_layer_item_changed(GwyVectorLayer *vector_layer)
 
 static void
 gwy_vector_layer_selection_changed(GwyVectorLayer *layer,
-                                   gint hint)
+                                   G_GNUC_UNUSED gint hint)
 {
     gwy_debug("selecting: %d", layer->selecting);
     if (layer->selecting >= 0)
         return;
-    if (hint < 0)
-        layer->focus = -1;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+}
+
+/**
+ * gwy_vector_layer_object_chosen:
+ * @layer: A vector data view layer.
+ * @id: Index of the chosen object.
+ *
+ * Emits "object-chosen" signal on a vector layer.
+ *
+ * This function is primarily intended for layer implementations.
+ **/
+void
+gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
+                               gint id)
+{
+    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
+
+    layer->chosen = id;
+    g_signal_emit(layer, vector_layer_signals[OBJECT_CHOSEN], 0, id);
 }
 
 /************************** Documentation ****************************/
