@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -219,7 +219,7 @@ shade_dialog(ShadeArgs *args,
     row++;
 
     controls.theta = gtk_adjustment_new(args->theta*180.0/G_PI,
-                                        0.0, 90.0, 5.0, 15.0, 0.0);
+                                        0.0, 90.0, 1.0, 15.0, 0.0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Theta:"), "deg",
                                        controls.theta);
     g_signal_connect(controls.theta, "value-changed",
@@ -227,7 +227,7 @@ shade_dialog(ShadeArgs *args,
     row++;
 
     controls.phi = gtk_adjustment_new(args->phi*180.0/G_PI,
-                                      0.0, 360.0, 5.0, 30.0, 0.0);
+                                      0.0, 360.0, 1.0, 30.0, 0.0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Phi:"), "deg",
                                        controls.phi);
     g_signal_connect(controls.phi, "value-changed",
