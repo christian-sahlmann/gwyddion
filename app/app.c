@@ -96,8 +96,8 @@ gwy_app_quit(void)
     gtk_widget_destroy(gwy_app_main_window);
     /* FIXME: sometimes fails with
      * Sensitivity group is finialized when it still contains widget lists.
-     * g_object_unref(gwy_app_sensitivity_get_group());
      */
+    g_object_unref(gwy_app_sensitivity_get_group());
 
     gtk_main_quit();
     return TRUE;
