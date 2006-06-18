@@ -112,8 +112,6 @@ struct _GwyGraphArea {
     gint xoff;
     gint yoff;
 
-    GdkColor *colors;
-
     gboolean enable_user_input;
     gint selection_limit;
 

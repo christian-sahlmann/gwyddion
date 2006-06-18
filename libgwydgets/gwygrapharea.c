@@ -223,7 +223,6 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->y_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
 
 
-    area->colors = NULL;
     area->enable_user_input = TRUE;
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
@@ -341,10 +340,8 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 static void
 gwy_graph_area_realize(GtkWidget *widget)
 {
-    GdkColormap *cmap;
     GdkDisplay *display;
     GwyGraphArea *area;
-    gboolean success[COLOR_LAST];
 
     if (GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->realize)
         GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->realize(widget);
@@ -353,35 +350,17 @@ gwy_graph_area_realize(GtkWidget *widget)
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
 
     display = gtk_widget_get_display(widget);
-    /* FIXME: These are not used for anything */
-    area->cross_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
-    area->fleur_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
-    area->harrow_cursor = gdk_cursor_new_for_display(display, GDK_SB_H_DOUBLE_ARROW);
-    area->varrow_cursor = gdk_cursor_new_for_display(display, GDK_SB_V_DOUBLE_ARROW);
+    area->cross_cursor = gdk_cursor_new_for_display(display,
+                                                    GDK_CROSS);
+    area->fleur_cursor = gdk_cursor_new_for_display(display,
+                                                    GDK_FLEUR);
+    area->harrow_cursor = gdk_cursor_new_for_display(display,
+                                                     GDK_SB_H_DOUBLE_ARROW);
+    area->varrow_cursor = gdk_cursor_new_for_display(display,
+                                                     GDK_SB_V_DOUBLE_ARROW);
 
-    cmap = gdk_gc_get_colormap(area->gc);
-    area->colors = g_new(GdkColor, COLOR_LAST);
-
-    /* FIXME: use Gtk+ theme */
-    area->colors[COLOR_FG].red = 0x0000;
-    area->colors[COLOR_FG].green = 0x0000;
-    area->colors[COLOR_FG].blue = 0x0000;
-
-    /* FIXME: use Gtk+ theme */
-    area->colors[COLOR_BG].red = 0xffff;
-    area->colors[COLOR_BG].green = 0xffff;
-    area->colors[COLOR_BG].blue = 0xffff;
-
-    /* FIXME: use Gtk+ theme */
-    area->colors[COLOR_SELECTION].red = 0xaaaa;
-    area->colors[COLOR_SELECTION].green = 0x5555;
-    area->colors[COLOR_SELECTION].blue = 0xffff;
-
-    /* FIXME: we what to do with @success? */
-    gdk_colormap_alloc_colors(cmap, area->colors, COLOR_LAST, FALSE, TRUE,
-                              success);
-    gdk_gc_set_foreground(area->gc, area->colors + COLOR_FG);
-    gdk_gc_set_background(area->gc, area->colors + COLOR_BG);
+    gdk_gc_set_rgb_bg_color(area->gc, &widget->style->white);
+    gdk_gc_set_rgb_fg_color(area->gc, &widget->style->black);
 }
 
 static void
@@ -406,22 +385,20 @@ gwy_graph_area_expose(GtkWidget *widget,
                       GdkEventExpose *event)
 {
     GwyGraphArea *area;
+    GdkDrawable *drawable;
 
     gwy_debug("");
 
-    g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-
     area = GWY_GRAPH_AREA(widget);
+    drawable = GTK_LAYOUT(widget)->bin_window;
 
-    gdk_window_clear_area(GTK_LAYOUT (widget)->bin_window,
-                          0, 0,
-                          widget->allocation.width,
-                          widget->allocation.height);
+    gdk_gc_set_rgb_fg_color(area->gc, &widget->style->white);
+    gdk_draw_rectangle(drawable, area->gc, TRUE,
+                       0, 0,
+                       widget->allocation.width, widget->allocation.height);
+    gdk_gc_set_rgb_fg_color(area->gc, &widget->style->black);
 
-    gwy_graph_area_draw_area_on_drawable(GTK_LAYOUT(widget)->bin_window,
-                                         area->gc,
+    gwy_graph_area_draw_area_on_drawable(drawable, area->gc,
                                          0, 0,
                                          widget->allocation.width,
                                          widget->allocation.height,
@@ -429,13 +406,12 @@ gwy_graph_area_expose(GtkWidget *widget,
 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
         && (area->selecting != 0))
-        gwy_graph_area_draw_zoom(GTK_LAYOUT(widget)->bin_window,
-                                 area->gc, area);
+        gwy_graph_area_draw_zoom(drawable, area->gc, area);
 
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
-
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->expose_event(widget, event);
-    return FALSE;
+
+    return TRUE;
 }
 
 /**
@@ -987,7 +963,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
 
-    window = gtk_widget_get_parent_window(widget);
+    window = widget->window;
 
     switch (area->status) {
         case GWY_GRAPH_STATUS_XSEL:

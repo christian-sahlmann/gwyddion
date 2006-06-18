@@ -84,17 +84,22 @@ GtkWidget*
 gwy_graph_label_new()
 {
     GwyGraphLabel *label;
+    PangoFontDescription *description;
+    PangoContext *context;
+    gint size;
 
     gwy_debug("");
 
-    label = gtk_type_new (gwy_graph_label_get_type ());
+    label = g_object_new(GWY_TYPE_GRAPH_LABEL, NULL);
 
-    label->label_font = pango_font_description_new();
-    pango_font_description_set_family(label->label_font, "Helvetica");
-    pango_font_description_set_style(label->label_font, PANGO_STYLE_NORMAL);
-    pango_font_description_set_variant(label->label_font, PANGO_VARIANT_NORMAL);
-    pango_font_description_set_weight(label->label_font, PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_size(label->label_font, 10*PANGO_SCALE);
+    context = gtk_widget_get_pango_context(GTK_WIDGET(label));
+    description = pango_context_get_font_description(context);
+
+    /* Make major font a bit smaller */
+    label->label_font = pango_font_description_copy(description);
+    size = pango_font_description_get_size(label->label_font);
+    size = MAX(1, size*10/11);
+    pango_font_description_set_size(label->label_font, size);
 
     gtk_widget_set_events(GTK_WIDGET(label), 0);
 
@@ -126,21 +131,16 @@ gwy_graph_label_unrealize(GtkWidget *widget)
         GTK_WIDGET_CLASS(gwy_graph_label_parent_class)->unrealize(widget);
 }
 
-
-
 static void
 gwy_graph_label_realize(GtkWidget *widget)
 {
     GwyGraphLabel *label;
     GdkWindowAttr attributes;
-    gint attributes_mask;
-    GtkStyle *s;
+    gint i, attributes_mask;
+    GtkStyle *style;
 
     gwy_debug("realizing a GwyGraphLabel (%ux%u)",
               widget->allocation.width, widget->allocation.height);
-
-    g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_GRAPH_LABEL(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     label = GWY_GRAPH_LABEL(widget);
@@ -162,21 +162,14 @@ gwy_graph_label_realize(GtkWidget *widget)
     gdk_window_set_user_data(widget->window, widget);
     widget->style = gtk_style_attach(widget->style, widget->window);
 
-    /*set background for white forever*/
-    s = gtk_style_copy(widget->style);
-    s->bg_gc[0] =
-    s->bg_gc[1] =
-    s->bg_gc[2] =
-    s->bg_gc[3] =
-    s->bg_gc[4] = widget->style->white_gc;
-    s->bg[0] =
-    s->bg[1] =
-    s->bg[2] =
-    s->bg[3] =
-    s->bg[4] = widget->style->white;
-
-    gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
-    g_object_unref(s);
+    /* set background to white forever */
+    style = gtk_style_copy(widget->style);
+    for (i = 0; i < 5; i++) {
+        style->bg_gc[i] = widget->style->white_gc;
+        style->bg[i] = widget->style->white;
+    }
+    gtk_style_set_background(style, widget->window, GTK_STATE_NORMAL);
+    g_object_unref(style);
 }
 
 
@@ -209,10 +202,6 @@ gwy_graph_label_size_allocate(GtkWidget *widget,
 
     gwy_debug("");
 
-    g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_GRAPH_LABEL(widget));
-    g_return_if_fail(allocation != NULL);
-
     widget->allocation = *allocation;
     if (GTK_WIDGET_REALIZED(widget)) {
         label = GWY_GRAPH_LABEL(widget);
@@ -220,7 +209,6 @@ gwy_graph_label_size_allocate(GtkWidget *widget,
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-
     }
 }
 
@@ -230,9 +218,6 @@ gwy_graph_label_expose(GtkWidget *widget,
 {
     GwyGraphLabel *label;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_GRAPH_LABEL(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
     gwy_debug("");
 
     if (event->count > 0)
@@ -308,7 +293,10 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                             winy + ypos,
                             layout);
         else
-            gdk_draw_layout(drawable, gc, winx + 25 + frame_off, winy + ypos, layout);
+            gdk_draw_layout(drawable, gc,
+                            winx + 25 + frame_off,
+                            winy + ypos,
+                            layout);
 
         label->samplepos[i] = ypos;
 
@@ -394,13 +382,15 @@ gwy_graph_label_draw_label(GtkWidget *widget)
     mygc = gdk_gc_new(widget->window);
 
     label = GWY_GRAPH_LABEL(widget);
-    layout = gtk_widget_create_pango_layout(widget, "");
+    layout = gtk_widget_create_pango_layout(widget, NULL);
 
-    gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);
-    gwy_graph_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window), mygc, layout,
-                                             0, 0, winwidth, winheight,
-                                             label);
-    g_object_unref((GObject *)mygc);
+    gdk_window_get_geometry(widget->window,
+                            &winx, &winy, &winwidth, &winheight, &windepth);
+    gwy_graph_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window),
+                                           mygc, layout,
+                                           0, 0, winwidth, winheight,
+                                           label);
+    g_object_unref(mygc);
     g_object_unref(layout);
 
 }

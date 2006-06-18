@@ -21,13 +21,11 @@
 #include "config.h"
 #include <math.h>
 #include <string.h>
-#include <gtk/gtk.h>
-#include <glib-object.h>
-#include <gdk/gdk.h>
 #include <pango/pango.h>
-#include <pango/pango-context.h>
-#include <gdk/gdkpango.h>
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyaxisdialog.h>
@@ -266,7 +264,7 @@ gwy_axis_init(GwyAxis *axis)
     axis->is_auto = TRUE;
     axis->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
 
-    
+
     axis->par.major_length = 10;
     axis->par.major_thickness = 1;
     axis->par.major_maxticks = 20;
@@ -300,11 +298,14 @@ gwy_axis_init(GwyAxis *axis)
 GtkWidget*
 gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
 {
+    PangoContext *context;
+    PangoFontDescription *description;
     GwyAxis *axis;
+    gint size;
 
     gwy_debug("");
 
-    axis = GWY_AXIS(g_object_new(GWY_TYPE_AXIS, NULL));
+    axis = (GwyAxis*)g_object_new(GWY_TYPE_AXIS, NULL);
     axis->reqmin = min;
     axis->reqmax = max;
     axis->orientation = orientation;
@@ -316,23 +317,22 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     axis->label_x_pos = 20;
     axis->label_y_pos = 20;
 
-    axis->par.major_font = pango_font_description_new();
-    pango_font_description_set_family(axis->par.major_font, "Helvetica");
-    pango_font_description_set_style(axis->par.major_font, PANGO_STYLE_NORMAL);
-    pango_font_description_set_variant(axis->par.major_font, PANGO_VARIANT_NORMAL);
-    pango_font_description_set_weight(axis->par.major_font, PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_size(axis->par.major_font, 10*PANGO_SCALE);
+    context = gtk_widget_get_pango_context(GTK_WIDGET(axis));
+    description = pango_context_get_font_description(context);
 
-    axis->par.label_font = pango_font_description_new();
-    pango_font_description_set_family(axis->par.label_font, "Helvetica");
-    pango_font_description_set_style(axis->par.label_font, PANGO_STYLE_NORMAL);
-    pango_font_description_set_variant(axis->par.label_font, PANGO_VARIANT_NORMAL);
-    pango_font_description_set_weight(axis->par.label_font, PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
+    /* Make major font a bit smaller */
+    axis->par.major_font = pango_font_description_copy(description);
+    size = pango_font_description_get_size(axis->par.major_font);
+    size = MAX(1, size*10/11);
+    pango_font_description_set_size(axis->par.major_font, size);
 
-    axis->notify_id = g_signal_connect_swapped(axis, "notify", G_CALLBACK(gwy_axis_refresh), axis);
-    g_signal_handler_disconnect(axis, axis->notify_id);
-    axis->notify_id = g_signal_connect_swapped(axis, "notify", G_CALLBACK(gwy_axis_refresh), axis);
+    /* Keep label font to default. */
+    axis->par.label_font = pango_font_description_copy(description);
+
+    axis->notify_id = g_signal_connect_swapped(axis, "notify",
+                                               G_CALLBACK(gwy_axis_refresh),
+                                               axis);
+
     return GTK_WIDGET(axis);
 }
 
@@ -342,7 +342,7 @@ gwy_axis_finalize(GObject *object)
     GwyAxis *axis;
 
     gwy_debug("finalizing a GwyAxis (refcount = %u)", object->ref_count);
-    
+
     g_return_if_fail(GWY_IS_AXIS(object));
 
     axis = GWY_AXIS(object);
@@ -372,7 +372,7 @@ gwy_axis_unrealize(GtkWidget *widget)
 
     axis = GWY_AXIS(widget);
     g_signal_handler_disconnect(axis, axis->notify_id);
- 
+
     if (GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize(widget);
 }
@@ -382,8 +382,8 @@ gwy_axis_realize(GtkWidget *widget)
 {
     GwyAxis *axis;
     GdkWindowAttr attributes;
-    gint attributes_mask;
-    GtkStyle *s;
+    gint i, attributes_mask;
+    GtkStyle *style;
 
     gwy_debug("realizing a GwyAxis (%ux%u)",
               widget->allocation.x, widget->allocation.height);
@@ -416,31 +416,24 @@ gwy_axis_realize(GtkWidget *widget)
 
     widget->style = gtk_style_attach(widget->style, widget->window);
 
-    /*set backgroun for white forever*/
-    s = gtk_style_copy(widget->style);
-    s->bg_gc[0] =
-        s->bg_gc[1] =
-        s->bg_gc[2] =
-        s->bg_gc[3] =
-        s->bg_gc[4] = widget->style->white_gc;
-    s->bg[0] =
-        s->bg[1] =
-        s->bg[2] =
-        s->bg[3] =
-        s->bg[4] = widget->style->white;
-
-    gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
+    /* set background to white forever */
+    style = gtk_style_copy(widget->style);
+    for (i = 0; i < 5; i++) {
+        style->bg_gc[i] = widget->style->white_gc;
+        style->bg[i] = widget->style->white;
+    }
+    gtk_style_set_background(style, widget->window, GTK_STATE_NORMAL);
+    g_object_unref(style);
 
     axis->gc = gdk_gc_new(widget->window);
-    g_object_unref(s);
 
-    /*compute ticks*/
+    /* compute ticks */
     gwy_axis_adjust(axis, widget->allocation.width, widget->allocation.height);
 }
 
 static void
 gwy_axis_size_request(GtkWidget *widget,
-                             GtkRequisition *requisition)
+                      GtkRequisition *requisition)
 {
     GwyAxis *axis;
     gwy_debug("");
@@ -565,7 +558,7 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
     }
 }
 
-static void    
+static void
 gwy_axis_refresh(GwyAxis *axis)
 {
     gwy_axis_adjust(axis, -1, -1);
@@ -606,7 +599,6 @@ gwy_axis_expose(GtkWidget *widget,
                           widget->allocation.width,
                           widget->allocation.height);
 
-
     gwy_axis_draw_on_drawable(widget->window,
                               axis->gc,
                               0, 0,
@@ -640,7 +632,7 @@ gwy_axis_draw_on_drawable(GdkDrawable *drawable,
     specs.ymin = ymin;
     specs.width = width;
     specs.height = height;
-    
+
     if (axis->is_standalone && axis->is_visible)
         gwy_axis_draw_axis(drawable, gc, &specs, axis);
     if (axis->is_visible) {
@@ -857,6 +849,8 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable,
         gdk_draw_layout(drawable, gc, xpos, ypos, layout);
     }
 
+    g_object_unref(layout);
+    g_object_unref(context);
 }
 
 static void
@@ -891,7 +885,6 @@ gwy_axis_draw_label(GdkDrawable *drawable,
 
     pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
     pango_layout_get_pixel_extents(layout, NULL, &rect);
-
 
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
@@ -936,9 +929,9 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     }
 
     g_string_free(plotlabel, TRUE);
+    g_object_unref(layout);
+    g_object_unref(context);
 }
-
-
 
 static gboolean
 gwy_axis_button_press(GtkWidget *widget,
@@ -947,9 +940,6 @@ gwy_axis_button_press(GtkWidget *widget,
     GwyAxis *axis;
 
     gwy_debug("");
-    g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_AXIS(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
 
     axis = GWY_AXIS(widget);
 
@@ -978,9 +968,6 @@ gwy_axis_button_release(GtkWidget *widget,
     GwyAxis *axis;
 
     gwy_debug("");
-    g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_AXIS(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
 
     axis = GWY_AXIS(widget);
 
@@ -1211,10 +1198,10 @@ gwy_axis_scale(GwyAxis *a)
     g_array_set_size(a->miticks, 0);
 
     /*find tick positions*/
-    if (!a->is_logarithmic)
-        gwy_axis_normalscale(a);
-    else
+    if (a->is_logarithmic)
         gwy_axis_logscale(a);
+    else
+        gwy_axis_normalscale(a);
     /*label ticks*/
     ret = gwy_axis_formatticks(a);
     /*precompute screen coordinates of ticks (must be done after each geometry change)*/
@@ -1237,22 +1224,21 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 
     for (i = 0; i < a->mjticks->len; i++) {
         pmjt = &g_array_index (a->mjticks, GwyAxisLabeledTick, i);
-        if (!a->is_logarithmic)
-            pmjt->t.scrpos = (gint)(0.5 + scrmin
-                                    + (pmjt->t.value - a->min)/range*dist);
+        if (a->is_logarithmic)
+            pmjt->t.scrpos = ROUND(scrmin + (pmjt->t.value
+                                             - log10(a->min))/range*dist);
         else
-            pmjt->t.scrpos = (gint)(0.5 + scrmin
-                                    + (pmjt->t.value - log10(a->min))/range*dist);
+            pmjt->t.scrpos = ROUND(scrmin + (pmjt->t.value
+                                             - a->min)/range*dist);
     }
 
     for (i = 0; i < a->miticks->len; i++) {
         pmit = &g_array_index (a->miticks, GwyAxisTick, i);
-        if (!a->is_logarithmic)
-            pmit->scrpos = (gint)(0.5 + scrmin
-                                  + (pmit->value - a->min)/range*dist);
+        if (a->is_logarithmic)
+            pmit->scrpos = ROUND(scrmin + (pmit->value
+                                           - log10(a->min))/range*dist);
         else
-            pmit->scrpos = (gint)(0.5 + scrmin
-                                  + (pmit->value - log10(a->min))/range*dist);
+            pmit->scrpos = ROUND(scrmin + (pmit->value - a->min)/range*dist);
     }
     return 0;
 }
@@ -1277,16 +1263,14 @@ gwy_axis_formatticks(GwyAxis *a)
     }
     mji = g_array_index(a->mjticks, GwyAxisLabeledTick, 0);
     mjx = g_array_index(a->mjticks, GwyAxisLabeledTick, a->mjticks->len - 1);
-    if (!a->is_logarithmic)
-    {
-        average = fabs(mjx.t.value + mji.t.value)/2;
-        range = fabs(mjx.t.value - mji.t.value);
-    }
-    else
-    {
+    if (a->is_logarithmic) {
         average = 0;
         /*range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));*/
         range = 1;
+    }
+    else {
+        average = fabs(mjx.t.value + mji.t.value)/2;
+        range = fabs(mjx.t.value - mji.t.value);
     }
 
     /*move exponents to axis label*/
@@ -1312,15 +1296,14 @@ gwy_axis_formatticks(GwyAxis *a)
     layout = pango_layout_new(context);
     pango_layout_set_font_description(layout, a->par.major_font);
 
-
     for (i = 0; i < a->mjticks->len; i++)
     {
         /*find the value we want to put in string*/
         pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
-        if (!a->is_logarithmic)
-            value = pmjt->t.value;
-        else
+        if (a->is_logarithmic)
             value = pow(10, pmjt->t.value);
+        else
+            value = pmjt->t.value;
 
         if (format)
             value /= format->magnitude;
@@ -1359,6 +1342,8 @@ gwy_axis_formatticks(GwyAxis *a)
         g_free(format);
     }
 
+    g_object_unref(layout);
+    g_object_unref(context);
 
     /*guess whether we dont have too many or not enough ticks*/
     if (a->orientation == GTK_POS_RIGHT
@@ -1377,8 +1362,6 @@ gwy_axis_formatticks(GwyAxis *a)
 
     return 0;
 }
-
-
 
 /**
  * gwy_axis_set_visible:
@@ -1936,7 +1919,7 @@ gwy_axis_set_property(GObject *object,
                              GParamSpec *pspec)
 {
     GwyAxis *axis = GWY_AXIS(object);
-    
+
     switch (prop_id) {
         case PROP_AUTO:
         axis->is_auto = g_value_get_boolean(value);
@@ -2022,7 +2005,7 @@ gwy_axis_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-    
+
 }
 
 
