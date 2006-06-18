@@ -135,9 +135,9 @@ gwy_sensitivity_group_finalize(GObject *object)
         sensgroup->source_id = 0;
     }
     if (sensgroup->lists) {
+        gwy_sensitivity_group_debug(sensgroup);
         g_critical("Sensitivity group is finialized when it still contains "
                    "widget lists.");
-        gwy_sensitivity_group_debug(sensgroup);
     }
 
     G_OBJECT_CLASS(gwy_sensitivity_group_parent_class)->finalize(object);
