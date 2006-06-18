@@ -512,7 +512,8 @@ gwy_layer_point_near_point(GwyVectorLayer *layer,
     gdouble d2min, metric[4];
     gint i, n;
 
-    if (!(n = gwy_selection_get_data(layer->selection, NULL)))
+    if (!(n = gwy_selection_get_data(layer->selection, NULL))
+        || layer->focus >= n)
         return -1;
 
     gwy_data_view_get_metric(GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent),
@@ -520,7 +521,6 @@ gwy_layer_point_near_point(GwyVectorLayer *layer,
     if (layer->focus >= 0) {
         gdouble xy[OBJECT_SIZE];
 
-        g_return_val_if_fail(layer->focus < n, -1);
         gwy_selection_get_object(layer->selection, layer->focus, xy);
         i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 1, xy, metric);
     }

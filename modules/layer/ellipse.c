@@ -749,7 +749,8 @@ gwy_layer_ellipse_near_point(GwyVectorLayer *layer,
     gdouble d2min, xy[OBJECT_SIZE], metric[4];
     gint i, n;
 
-    if (!(n = gwy_selection_get_data(layer->selection, NULL)))
+    if (!(n = gwy_selection_get_data(layer->selection, NULL))
+        || layer->focus >= n)
         return -1;
 
     gwy_data_view_get_metric(GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent),
@@ -757,7 +758,6 @@ gwy_layer_ellipse_near_point(GwyVectorLayer *layer,
     if (layer->focus >= 0) {
         gdouble coords[8];
 
-        g_return_val_if_fail(layer->focus < n, -1);
         gwy_selection_get_object(layer->selection, layer->focus, xy);
         coords[0] = coords[2] = xy[0];
         coords[1] = coords[5] = xy[1];
