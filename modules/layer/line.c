@@ -708,6 +708,7 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
                                GWY_RENDERING_TARGET_SCREEN, layer->selecting);
 
     gdk_window_set_cursor(window, layer_line->move_cursor);
+    gwy_vector_layer_object_chosen(layer, layer->selecting);
 
     return FALSE;
 }

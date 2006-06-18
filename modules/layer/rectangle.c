@@ -498,6 +498,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
                                     layer->selecting);
 
     gdk_window_set_cursor(window, GWY_LAYER_RECTANGLE(layer)->resize_cursor);
+    gwy_vector_layer_object_chosen(layer, layer->selecting);
 
     return FALSE;
 }

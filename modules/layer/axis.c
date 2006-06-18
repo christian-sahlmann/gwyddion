@@ -553,6 +553,7 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
                                GWY_RENDERING_TARGET_SCREEN, layer->selecting);
 
     gdk_window_set_cursor(window, GWY_LAYER_AXIS(layer)->move_cursor);
+    gwy_vector_layer_object_chosen(layer, layer->selecting);
 
     return FALSE;
 }
