@@ -767,8 +767,6 @@ gwy_data_view_update(GwyDataView *data_view)
     gint pxres, pyres;
     gboolean need_resize = FALSE;
 
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-
     if (!data_view->base_layer
         || !(key = gwy_pixmap_layer_get_data_key(data_view->base_layer))
         || !(data_field = gwy_container_get_object_by_name(data_view->data,
@@ -815,7 +813,6 @@ GwyPixmapLayer*
 gwy_data_view_get_base_layer(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
-
     return data_view->base_layer;
 }
 
@@ -832,7 +829,6 @@ GwyPixmapLayer*
 gwy_data_view_get_alpha_layer(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
-
     return data_view->alpha_layer;
 }
 
@@ -849,7 +845,6 @@ GwyVectorLayer*
 gwy_data_view_get_top_layer(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
-
     return data_view->top_layer;
 }
 
@@ -861,9 +856,6 @@ gwy_data_view_set_layer(GwyDataView *data_view,
                         GwyDataViewLayerType type)
 {
     GwyDataViewLayer **which_layer;
-
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    g_return_if_fail(which);
 
     which_layer = (GwyDataViewLayer**)which;
     if (layer == *which_layer)
@@ -915,6 +907,7 @@ void
 gwy_data_view_set_base_layer(GwyDataView *data_view,
                              GwyPixmapLayer *layer)
 {
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     g_return_if_fail(!layer || GWY_IS_PIXMAP_LAYER(layer));
     gwy_data_view_set_layer(data_view,
                             &data_view->base_layer,
@@ -940,6 +933,7 @@ void
 gwy_data_view_set_alpha_layer(GwyDataView *data_view,
                               GwyPixmapLayer *layer)
 {
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     g_return_if_fail(!layer || GWY_IS_PIXMAP_LAYER(layer));
     gwy_data_view_set_layer(data_view,
                             &data_view->alpha_layer,
@@ -964,6 +958,7 @@ void
 gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyVectorLayer *layer)
 {
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     g_return_if_fail(!layer || GWY_IS_VECTOR_LAYER(layer));
     gwy_data_view_set_layer(data_view,
                             &data_view->top_layer,

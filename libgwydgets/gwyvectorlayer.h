@@ -50,9 +50,11 @@ struct _GwyVectorLayer {
     gulong item_changed_id;
     gulong selection_changed_id;
 
+    gboolean editable;
+    gint focus;
+
     gint button;    /* XXX: duplicates @selecting? */
     gint selecting;
-    gint focus;
     gint chosen;
     gint integer1;
 
@@ -101,7 +103,7 @@ gboolean      gwy_vector_layer_set_focus        (GwyVectorLayer *layer,
                                                  gint focus);
 gboolean      gwy_vector_layer_get_editable     (GwyVectorLayer *layer);
 void          gwy_vector_layer_set_editable     (GwyVectorLayer *layer,
-                                                 gboolean is_editable);
+                                                 gboolean editable);
 
 void          gwy_vector_layer_draw             (GwyVectorLayer *layer,
                                                  GdkDrawable *drawable,

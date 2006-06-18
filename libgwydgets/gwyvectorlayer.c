@@ -46,6 +46,7 @@ enum {
 enum {
     PROP_0,
     PROP_SELECTION_KEY,
+    PROP_EDITABLE,
     PROP_FOCUS,
     PROP_LAST
 };
@@ -103,8 +104,9 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
      * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
      *
      * The ::object-chosen signal is emitted when user starts interacting
-     * with a selection object, even before modifying it, and also when user
-     * cannot modify the object (due to focus).
+     * with a selection object, even before modifying it.  It is emitted
+     * even if the layer is not editable, but it is not emitted when focus
+     * is set and the user attempts to choose a different object.
      **/
     vector_layer_signals[OBJECT_CHOSEN]
         = g_signal_new("object-chosen",
@@ -127,6 +129,15 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 
     g_object_class_install_property
         (gobject_class,
+         PROP_EDITABLE,
+         g_param_spec_boolean("editable",
+                              "Editable",
+                              "Whether selection objects are editable",
+                              TRUE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
          PROP_FOCUS,
          g_param_spec_int("focus",
                           "Focus",
@@ -140,6 +151,8 @@ static void
 gwy_vector_layer_init(GwyVectorLayer *layer)
 {
     gwy_debug_objects_creation(G_OBJECT(layer));
+
+    layer->editable = TRUE;
     layer->selecting = -1;
     layer->focus = -1;
     layer->chosen = -1;
@@ -171,6 +184,10 @@ gwy_vector_layer_set_property(GObject *object,
                                            g_value_get_string(value));
         break;
 
+        case PROP_EDITABLE:
+        gwy_vector_layer_set_editable(vector_layer, g_value_get_boolean(value));
+        break;
+
         case PROP_FOCUS:
         gwy_vector_layer_set_focus(vector_layer, g_value_get_int(value));
         break;
@@ -193,6 +210,10 @@ gwy_vector_layer_get_property(GObject *object,
         case PROP_SELECTION_KEY:
         g_value_set_static_string(value,
                                   g_quark_to_string(vector_layer->selection_key));
+        break;
+
+        case PROP_EDITABLE:
+        g_value_set_boolean(value, vector_layer->editable);
         break;
 
         case PROP_FOCUS:
@@ -235,16 +256,14 @@ gwy_vector_layer_set_focus_default(GwyVectorLayer *layer,
  * gwy_vector_layer_set_focus:
  * @layer: A vector data view layer.
  * @focus: Index of object to focus on, use -1 to unfocus (allow interaction
- *          with any object).
+ *         with any object).
  *
  * Focues on one selection object.
  *
  * When a selection object is focused, it becomes the only one user can
- * interact with, the others are inert except for "object-chosen" signal
- * which is emitted always.
- *
- * To allow interaction with all objects, set @focus to -1.
- * To make a vector layer a passive object chooser, set @focus to %G_MAXINT.
+ * interact with.  More precisely, "object-chosen" signal is emitted only
+ * for this object, and if the layer is editable only this object can be
+ * modified by the user.
  *
  * Returns: %TRUE if the object was focused, %FALSE on failure.  Failure can
  *          be caused by user currently moving another object, wrong object
@@ -688,6 +707,52 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer,
 }
 
 /**
+ * gwy_vector_layer_get_editable:
+ * @layer: A vector data view layer.
+ *
+ * Gets editability of a vector layer.
+ *
+ * Returns: %TRUE if layer is edtiable, %FALSE if it is not editable.
+ **/
+gboolean
+gwy_vector_layer_get_editable(GwyVectorLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), FALSE);
+    return layer->editable;
+}
+
+/**
+ * gwy_vector_layer_set_editable:
+ * @layer: A vector data view layer.
+ * @editable: %TRUE to set layer editable, %FALSE to set it noneditable.
+ *
+ * Sets a vector layer editability.
+ *
+ * This method must not be called while the layer is being edited.
+ *
+ * When a layer is set noneditable, the user cannot change the selection.
+ * However, "object-chosen" signal is still emitted.
+ **/
+void
+gwy_vector_layer_set_editable(GwyVectorLayer *layer,
+                              gboolean editable)
+{
+    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
+
+    if (editable == layer->editable)
+        return;
+
+    if (layer->selecting >= 0) {
+        g_warning("Setting layer noneditable when it's being edited does not "
+                  "work");
+        return;
+    }
+
+    layer->editable = editable;
+    g_object_notify(G_OBJECT(layer), "editable");
+}
+
+/**
  * gwy_vector_layer_object_chosen:
  * @layer: A vector data view layer.
  * @id: Index of the chosen object.
@@ -723,7 +788,16 @@ gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
  * The key under which the selection is found must be set with
  * gwy_vector_layer_set_selection_key().
  *
- * The other methods are rarely useful outside #GwyDataView implementation.
+ * #GwyVectorLayer provides two independent means to restrict user interaction
+ * with displayed selection: editability and focus.  When a layer is set
+ * noneditable (see gwy_vector_layer_set_editable()), the user cannot modify
+ * displayed objects, however "object-chosen" is emitted normally.  Focus on
+ * (see gwy_vector_layer_set_focus()) the other hand limits all possible
+ * interactions to a single selection object.  It is possible although not
+ * very useful to combine both restrictions.
+ *
+ * The other methods are rarely useful outside #GwyDataView and/or layer
+ * implementation.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
