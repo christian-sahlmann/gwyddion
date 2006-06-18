@@ -1,5 +1,7 @@
 - Fix current-data race conditions in modules, must take all current items
   on startup, windows can be switched while module is running
+- A sensitivity group seems sometimes finalized when widgets are in it on
+  app exit
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
@@ -32,6 +34,5 @@
   windows are switched
 - GwyShader background is shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
-- Finish Spot remove
 - Add some guessing to Rawfile
 - Use gtk_paint_* to keep style in widgets.
