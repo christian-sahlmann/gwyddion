@@ -1385,7 +1385,7 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
         if (apixbuf) {
             aux_pixbuf = gdk_pixbuf_copy(bpixbuf);
             simple_gdk_pixbuf_composite(apixbuf, aux_pixbuf);
-            simple_gdk_pixbuf_scale_or_copy(bpixbuf, pixbuf);
+            simple_gdk_pixbuf_scale_or_copy(aux_pixbuf, pixbuf);
             g_object_unref(aux_pixbuf);
         }
         else
