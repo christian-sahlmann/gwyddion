@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -442,8 +442,14 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
 
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
 
-    /* handle existing selection */
     i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
+    /* just emit "object-chosen" when selection is not editable */
+    if (!layer->editable) {
+        if (i >= 0)
+            gwy_vector_layer_object_chosen(layer, i/4);
+        return FALSE;
+    }
+    /* handle existing selection */
     if (i >= 0) {
         layer->selecting = i/4;
         gwy_layer_rectangle_undraw_object(layer, window,

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
+/* TODO: Support focus */
 
 #include "config.h"
 #include <string.h>
@@ -130,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of horizontal or vertical lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -197,6 +199,8 @@ gwy_layer_axis_class_init(GwyLayerAxisClass *klass)
     vector_class->motion_notify = gwy_layer_axis_motion_notify;
     vector_class->button_press = gwy_layer_axis_button_pressed;
     vector_class->button_release = gwy_layer_axis_button_released;
+    /* Unimplement focus */
+    vector_class->set_focus = NULL;
 }
 
 static void
@@ -445,6 +449,10 @@ gwy_layer_axis_motion_notify(GwyVectorLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal, rcoord, xy[OBJECT_SIZE];
 
+    /* FIXME: No cursor change hint -- a bit too crude? */
+    if (!layer->editable)
+        return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
@@ -513,8 +521,14 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
     orientation = GWY_SELECTION_AXIS(layer->selection)->orientation;
     xy[0] = (orientation == GWY_ORIENTATION_VERTICAL) ? xreal : yreal;
 
-    /* handle existing selection */
     i = gwy_layer_axis_near_point(layer, xreal, yreal);
+    /* just emit "object-chosen" when selection is not editable */
+    if (!layer->editable) {
+        if (i >= 0)
+            gwy_vector_layer_object_chosen(layer, i);
+        return FALSE;
+    }
+    /* handle existing selection */
     if (i >= 0) {
         layer->selecting = i;
         gwy_layer_axis_undraw_object(layer, window,

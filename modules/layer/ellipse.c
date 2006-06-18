@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of elliptic areas."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -369,6 +369,10 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean circle;
 
+    /* FIXME: No cursor change hint -- a bit too crude? */
+    if (!layer->editable)
+        return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
@@ -458,8 +462,14 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
 
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
 
-    /* handle existing selection */
     i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
+    /* just emit "object-chosen" when selection is not editable */
+    if (!layer->editable) {
+        if (i >= 0)
+            gwy_vector_layer_object_chosen(layer, i/4);
+        return FALSE;
+    }
+    /* handle existing selection */
     if (i >= 0) {
         layer->selecting = i/4;
         gwy_layer_ellipse_undraw_object(layer, window,

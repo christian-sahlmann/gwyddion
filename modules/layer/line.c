@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -503,6 +503,10 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean restricted;
 
+    /* FIXME: No cursor change hint -- a bit too crude? */
+    if (!layer->editable)
+        return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
@@ -643,9 +647,17 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     layer_line = GWY_LAYER_LINE(layer);
 
-    /* handle existing selection */
     j = gwy_layer_line_near_line(layer, xreal, yreal);
     i = gwy_layer_line_near_point(layer, xreal, yreal);
+    /* just emit "object-chosen" when selection is not editable */
+    if (!layer->editable) {
+        if (j >= 0)
+            gwy_vector_layer_object_chosen(layer, j);
+        if (i >= 0)
+            gwy_vector_layer_object_chosen(layer, i/2);
+        return FALSE;
+    }
+    /* handle existing selection */
     if (i == -1 && j >= 0) {
         gwy_selection_get_object(layer->selection, j, xy);
         layer->selecting = j;

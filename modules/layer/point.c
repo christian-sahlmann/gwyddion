@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -118,7 +118,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -310,6 +310,10 @@ gwy_layer_point_motion_notify(GwyVectorLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
 
+    /* FIXME: No cursor change hint -- a bit too crude? */
+    if (!layer->editable)
+        return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
@@ -374,8 +378,14 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
     xy[0] = xreal;
     xy[1] = yreal;
 
-    /* handle existing selection */
     i = gwy_layer_point_near_point(layer, xreal, yreal);
+    /* just emit "object-chosen" when selection is not editable */
+    if (!layer->editable) {
+        if (i >= 0)
+            gwy_vector_layer_object_chosen(layer, i);
+        return FALSE;
+    }
+    /* handle existing selection */
     if (i >= 0) {
         layer->selecting = i;
         gwy_layer_point_undraw_object(layer, window,
@@ -398,6 +408,7 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
     layer->button = event->button;
 
     gdk_window_set_cursor(window, GWY_LAYER_POINT(layer)->move_cursor);
+    gwy_vector_layer_object_chosen(layer, layer->selecting);
 
     return FALSE;
 }
