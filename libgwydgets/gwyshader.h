@@ -42,6 +42,8 @@ typedef struct _GwyShaderClass GwyShaderClass;
 struct _GwyShader {
     GtkWidget widget;
 
+    GdkWindow *event_window;
+
     GwyGradient *gradient;
     GtkUpdateType update_policy;
     guint8 button;
@@ -71,23 +73,23 @@ struct _GwyShaderClass {
     gpointer reserved1;
 };
 
-GType          gwy_shader_get_type             (void) G_GNUC_CONST;
-GtkWidget*     gwy_shader_new                  (const gchar *gradient);
-gdouble        gwy_shader_get_theta            (GwyShader *shader);
-gdouble        gwy_shader_get_phi              (GwyShader *shader);
-void           gwy_shader_set_theta            (GwyShader *shader,
-                                                gdouble theta);
-void           gwy_shader_set_phi              (GwyShader *shader,
-                                                gdouble phi);
-void           gwy_shader_set_angle            (GwyShader *shader,
-                                                gdouble theta,
-                                                gdouble phi);
-const gchar*   gwy_shader_get_gradient         (GwyShader *shader);
-void           gwy_shader_set_gradient         (GwyShader *shader,
-                                                const gchar *gradient);
-GtkUpdateType  gwy_shader_get_update_policy    (GwyShader *shader);
-void           gwy_shader_set_update_policy    (GwyShader *shader,
-                                                GtkUpdateType update_policy);
+GType         gwy_shader_get_type         (void) G_GNUC_CONST;
+GtkWidget*    gwy_shader_new              (const gchar *gradient);
+gdouble       gwy_shader_get_theta        (GwyShader *shader);
+gdouble       gwy_shader_get_phi          (GwyShader *shader);
+void          gwy_shader_set_theta        (GwyShader *shader,
+                                           gdouble theta);
+void          gwy_shader_set_phi          (GwyShader *shader,
+                                           gdouble phi);
+void          gwy_shader_set_angle        (GwyShader *shader,
+                                           gdouble theta,
+                                           gdouble phi);
+const gchar*  gwy_shader_get_gradient     (GwyShader *shader);
+void          gwy_shader_set_gradient     (GwyShader *shader,
+                                           const gchar *gradient);
+GtkUpdateType gwy_shader_get_update_policy(GwyShader *shader);
+void          gwy_shader_set_update_policy(GwyShader *shader,
+                                           GtkUpdateType update_policy);
 
 G_END_DECLS
 

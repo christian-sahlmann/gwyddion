@@ -27,7 +27,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "gwyshader.h"
+#include <libgwydgets/gwyshader.h>
 
 #define GWY_SHADER_DELAY_LENGTH  300
 #define BITS_PER_SAMPLE 8
@@ -45,8 +45,6 @@ enum {
     LAST_SIGNAL
 };
 
-/* Forward declarations */
-
 static void     gwy_shader_finalize          (GObject *object);
 static void     gwy_shader_destroy           (GtkObject *object);
 static void     gwy_shader_set_property      (GObject *object,
@@ -59,6 +57,8 @@ static void     gwy_shader_get_property      (GObject*object,
                                               GParamSpec *pspec);
 static void     gwy_shader_realize           (GtkWidget *widget);
 static void     gwy_shader_unrealize         (GtkWidget *widget);
+static void     gwy_shader_map               (GtkWidget *widget);
+static void     gwy_shader_unmap             (GtkWidget *widget);
 static void     gwy_shader_size_request      (GtkWidget *widget,
                                               GtkRequisition *requisition);
 static void     gwy_shader_size_allocate     (GtkWidget *widget,
@@ -84,8 +84,6 @@ static void     gwy_shader_state_changed     (GtkWidget *widget,
                                               GtkStateType state);
 static void     gwy_shader_update            (GwyShader *shader);
 
-/* Local data */
-
 static guint shader_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE(GwyShader, gwy_shader, GTK_TYPE_WIDGET)
@@ -107,9 +105,11 @@ gwy_shader_class_init(GwyShaderClass *klass)
     object_class->destroy = gwy_shader_destroy;
 
     widget_class->realize = gwy_shader_realize;
+    widget_class->unrealize = gwy_shader_unrealize;
+    widget_class->map = gwy_shader_map;
+    widget_class->unmap = gwy_shader_unmap;
     widget_class->expose_event = gwy_shader_expose;
     widget_class->size_request = gwy_shader_size_request;
-    widget_class->unrealize = gwy_shader_unrealize;
     widget_class->size_allocate = gwy_shader_size_allocate;
     widget_class->button_press_event = gwy_shader_button_press;
     widget_class->button_release_event = gwy_shader_button_release;
@@ -159,7 +159,7 @@ static void
 gwy_shader_init(GwyShader *shader)
 {
     shader->update_policy = GTK_UPDATE_CONTINUOUS;
-    GTK_WIDGET_SET_FLAGS(shader, GTK_CAN_FOCUS);
+    GTK_WIDGET_SET_FLAGS(shader, GTK_CAN_FOCUS | GTK_NO_WINDOW);
 }
 
 /**
@@ -226,10 +226,36 @@ gwy_shader_unrealize(GtkWidget *widget)
         shader->timer_id = 0;
     }
 
-    if (GTK_WIDGET_CLASS(gwy_shader_parent_class)->unrealize)
-        GTK_WIDGET_CLASS(gwy_shader_parent_class)->unrealize(widget);
+    if (shader->event_window) {
+        gdk_window_set_user_data(shader->event_window, NULL);
+        gdk_window_destroy(shader->event_window);
+        shader->event_window = NULL;
+    }
+
+    GTK_WIDGET_CLASS(gwy_shader_parent_class)->unrealize(widget);
 }
 
+static void
+gwy_shader_map(GtkWidget *widget)
+{
+    GwyShader *shader = GWY_SHADER(widget);
+
+    GTK_WIDGET_CLASS(gwy_shader_parent_class)->map(widget);
+
+    if (shader->event_window)
+        gdk_window_show(shader->event_window);
+}
+
+static void
+gwy_shader_unmap(GtkWidget *widget)
+{
+    GwyShader *shader = GWY_SHADER(widget);
+
+    if (shader->event_window)
+        gdk_window_hide(shader->event_window);
+
+    GTK_WIDGET_CLASS(gwy_shader_parent_class)->unmap(widget);
+}
 
 static void
 gwy_shader_set_property(GObject *object,
@@ -494,25 +520,24 @@ gwy_shader_realize(GtkWidget *widget)
     attributes.y = widget->allocation.y;
     attributes.width = widget->allocation.width;
     attributes.height = widget->allocation.height;
-    attributes.wclass = GDK_INPUT_OUTPUT;
+    attributes.wclass = GDK_INPUT_ONLY;
     attributes.window_type = GDK_WINDOW_CHILD;
     attributes.event_mask = gtk_widget_get_events(widget)
-                            | GDK_EXPOSURE_MASK
                             | GDK_BUTTON_PRESS_MASK
                             | GDK_BUTTON_RELEASE_MASK
                             | GDK_KEY_PRESS_MASK
                             | GDK_POINTER_MOTION_MASK
                             | GDK_POINTER_MOTION_HINT_MASK;
-    attributes.visual = gtk_widget_get_visual(widget);
-    attributes.colormap = gtk_widget_get_colormap(widget);
 
-    attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
-    widget->window = gdk_window_new(gtk_widget_get_parent_window(widget),
-                                    &attributes, attributes_mask);
-    gdk_window_set_user_data(widget->window, widget);
+    attributes_mask = GDK_WA_X | GDK_WA_Y;
+    widget->window = gtk_widget_get_parent_window(widget);
+    g_object_ref(widget->window);
+
+    shader->event_window = gdk_window_new(gtk_widget_get_parent_window(widget),
+                                          &attributes, attributes_mask);
+    gdk_window_set_user_data(shader->event_window, shader);
 
     widget->style = gtk_style_attach(widget->style, widget->window);
-    gtk_style_set_background(widget->style, widget->window, GTK_STATE_NORMAL);
 
     gwy_shader_make_pixmap(shader);
 }
@@ -546,7 +571,7 @@ gwy_shader_size_allocate(GtkWidget *widget,
     if (GTK_WIDGET_REALIZED(widget)) {
         shader = GWY_SHADER(widget);
 
-        gdk_window_move_resize(widget->window,
+        gdk_window_move_resize(shader->event_window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
         gwy_shader_make_pixmap(shader);
@@ -656,6 +681,8 @@ gwy_shader_expose(GtkWidget *widget,
     gdk_region_get_clipbox(event->region, &rect);
     gwy_debug("bbox = %dx%d  at (%d,%d)",
               rect.width, rect.height, rect.x, rect.y);
+    rect.x -= widget->allocation.x;
+    rect.y -= widget->allocation.y;
     xc = (widget->allocation.width - 2*shader->radius - 1)/2;
     yc = (widget->allocation.height - 2*shader->radius - 1)/2;
     xs = MAX(rect.x, xc) - xc;
@@ -673,8 +700,8 @@ gwy_shader_expose(GtkWidget *widget,
                              "focus-line-width", &focus_width,
                              "focus-padding", &focus_pad,
                              NULL);
-        x = focus_pad + focus_width;
-        y = focus_pad + focus_width;
+        x = widget->allocation.x + focus_pad + focus_width;
+        y = widget->allocation.y + focus_pad + focus_width;
         width = widget->allocation.width - 2*(focus_pad + focus_width);
         height = widget->allocation.height - 2*(focus_pad + focus_width);
         gtk_paint_focus(widget->style, widget->window, GTK_WIDGET_STATE(widget),
@@ -686,10 +713,14 @@ gwy_shader_expose(GtkWidget *widget,
                     NULL,
                     shader->pixbuf,
                     xs, ys,
-                    xc + xs, yc + ys,
+                    xc + xs + widget->allocation.x,
+                    yc + ys + widget->allocation.y,
                     xe - xs + 1, ye - ys + 1,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
+
+    if (GTK_WIDGET_CLASS(gwy_shader_parent_class)->expose_event)
+        GTK_WIDGET_CLASS(gwy_shader_parent_class)->expose_event(widget, event);
 
     return FALSE;
 }
@@ -768,8 +799,8 @@ gwy_shader_motion_notify(GtkWidget *widget,
     y = event->y;
 
     if (event->is_hint
-        || (event->window != widget->window))
-        gdk_window_get_pointer(widget->window, &x, &y, &mods);
+        || (event->window != shader->event_window))
+        gdk_window_get_pointer(shader->event_window, &x, &y, &mods);
 
     if (mods & GDK_BUTTON1_MASK)
         gwy_shader_update_mouse(shader, x, y);
@@ -848,22 +879,22 @@ gwy_shader_key_press(GtkWidget *widget,
     switch (event->keyval) {
         case GDK_Up:
         case GDK_KP_Up:
-        gwy_shader_set_theta(shader, shader->theta - G_PI/24);
+        gwy_shader_set_theta(shader, shader->theta - G_PI/48);
         break;
 
         case GDK_Down:
         case GDK_KP_Down:
-        gwy_shader_set_theta(shader, shader->theta + G_PI/24);
+        gwy_shader_set_theta(shader, shader->theta + G_PI/48);
         break;
 
         case GDK_Left:
         case GDK_KP_Left:
-        gwy_shader_set_phi(shader, shader->phi + G_PI/24);
+        gwy_shader_set_phi(shader, shader->phi + G_PI/48);
         break;
 
         case GDK_Right:
         case GDK_KP_Right:
-        gwy_shader_set_phi(shader, shader->phi - G_PI/24);
+        gwy_shader_set_phi(shader, shader->phi - G_PI/48);
         break;
 
         default:
@@ -904,7 +935,7 @@ gwy_shader_update(GwyShader *shader)
 
     widget = GTK_WIDGET(shader);
     if (widget->window)
-        gdk_window_invalidate_rect(widget->window, NULL, TRUE);
+        gdk_window_invalidate_rect(widget->window, &widget->allocation, TRUE);
 }
 
 /************************** Documentation ****************************/
