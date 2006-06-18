@@ -749,6 +749,17 @@ gwy_vector_layer_set_editable(GwyVectorLayer *layer,
     }
 
     layer->editable = editable;
+    /* Reset cursor for the case it's currently non-default.
+     * FIXME: How to properly handle the reverse? Although it is less serious
+     * as it gets fixed automatically once user moves the cursor -- unlike
+     * this case. */
+    if (!layer->editable) {
+        GwyDataViewLayer *dlayer;
+
+        dlayer = GWY_DATA_VIEW_LAYER(layer);
+        if (dlayer->parent && GTK_WIDGET_REALIZED(dlayer->parent))
+            gdk_window_set_cursor(dlayer->parent->window, NULL);
+    }
     g_object_notify(G_OBJECT(layer), "editable");
 }
 
