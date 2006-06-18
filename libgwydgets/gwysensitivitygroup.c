@@ -61,6 +61,68 @@ gwy_sensitivity_group_init(GwySensitivityGroup *sensgroup)
     gwy_debug_objects_creation(G_OBJECT(sensgroup));
 }
 
+
+#include <gtk/gtk.h>
+static void
+gwy_sensitivity_group_debug(GwySensitivityGroup *sensgroup)
+{
+    SensList *senslist;
+    GtkWidget *widget, *w;
+    GList *l, *ll;
+    const gchar *s;
+    gint nw = 0;
+
+    g_printerr("SENS GROUP %p\n", sensgroup);
+    for (ll = sensgroup->lists; ll; ll = g_list_next(ll)) {
+        g_printerr("    LIST: ");
+        senslist = (SensList*)ll->data;
+        g_printerr("mask=%04x, dirty=%d, parent=%p\n",
+                   senslist->mask, senslist->dirty, senslist->parent);
+        for (l = senslist->widgets; l; l = g_list_next(l)) {
+            nw++;
+            g_printerr("        WIDGET: ");
+            widget = GTK_WIDGET(l->data);
+            g_printerr("%s ", g_type_name(G_TYPE_FROM_INSTANCE(widget)));
+            if (GTK_IS_BUTTON(widget)) {
+                s = gtk_button_get_label(GTK_BUTTON(widget));
+                if (s)
+                    g_printerr("<%s> ", s);
+                else {
+                    w = gtk_bin_get_child(GTK_BIN(widget));
+                    if (w) {
+                        g_printerr("%s ", g_type_name(G_TYPE_FROM_INSTANCE(w)));
+                        if (GTK_IS_LABEL(w)) {
+                            s = gtk_label_get_text(GTK_LABEL(w));
+                            if (s)
+                                g_printerr("<%s> ", s);
+                        }
+                        else if (GTK_IS_IMAGE(w)) {
+                            s = NULL;
+                            gtk_image_get_stock(GTK_IMAGE(w), &s, NULL);
+                            if (s)
+                                g_printerr("<%s> ", s);
+                        }
+                    }
+                }
+            }
+            else if (GTK_IS_MENU_ITEM(widget)) {
+                w = gtk_bin_get_child(GTK_BIN(widget));
+                if (w) {
+                    g_printerr("%s ", g_type_name(G_TYPE_FROM_INSTANCE(w)));
+                    if (GTK_IS_LABEL(w)) {
+                        s = gtk_label_get_text(GTK_LABEL(w));
+                        if (s)
+                            g_printerr("<%s> ", s);
+                    }
+                }
+            }
+            g_printerr("\n");
+        }
+    }
+    g_printerr("    nwidgets=%d, ref_count=%d\n",
+               nw, G_OBJECT(sensgroup)->ref_count);
+}
+
 static void
 gwy_sensitivity_group_finalize(GObject *object)
 {
@@ -75,6 +137,7 @@ gwy_sensitivity_group_finalize(GObject *object)
     if (sensgroup->lists) {
         g_critical("Sensitivity group is finialized when it still contains "
                    "widget lists.");
+        gwy_sensitivity_group_debug(sensgroup);
     }
 
     G_OBJECT_CLASS(gwy_sensitivity_group_parent_class)->finalize(object);
