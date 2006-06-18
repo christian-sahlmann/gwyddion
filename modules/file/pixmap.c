@@ -297,7 +297,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "5.2.1",
+    "5.2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -764,7 +764,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     g_free(title);
 
     hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
@@ -772,8 +772,11 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     table = gtk_table_new(3, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_add(GTK_CONTAINER(align), table);
     row = 0;
+
     table_attach_heading(table, _("<b>Resolution</b>"), row++);
 
     g_snprintf(buf, sizeof(buf), "%u", xres);
@@ -789,7 +792,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gwy_table_attach_row(table, row++, _("_Vertical size:"), _("px"),
                          label);
 
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     zoom = 120.0/MAX(xres, yres);
@@ -809,9 +812,11 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_container_add(GTK_CONTAINER(align), controls.view);
 
     table = gtk_table_new(6, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 0);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     row = 0;
 
     table_attach_heading(table, _("<b>Physical dimensions</b>"), row++);
@@ -820,13 +825,13 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     controls.xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.xreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.xreal,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("_Width"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     unit = gwy_si_unit_new("m");
@@ -835,20 +840,20 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                                         args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
 
     adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 100);
     controls.yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.yreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.yreal,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("H_eight"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.yreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
@@ -861,13 +866,13 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     controls.zreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.zreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.zreal,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("_Z-scale (per sample unit):"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.zreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     controls.zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
@@ -875,7 +880,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                                        args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     g_object_unref(unit);
     row++;
 
@@ -885,7 +890,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
         gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                         GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                         GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
         row++;
 
         n = G_N_ELEMENTS(value_map_types);
@@ -1697,13 +1702,15 @@ pixmap_save_dialog(GwyContainer *data,
     g_free(title);
 
     hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     table = gtk_table_new(4 + G_N_ELEMENTS(output_formats), 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_add(GTK_CONTAINER(align), table);
     row = 0;
 
@@ -1716,7 +1723,7 @@ pixmap_save_dialog(GwyContainer *data,
     label = gtk_label_new(_("Output:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.group = gwy_radio_buttons_create(output_formats,
@@ -1726,7 +1733,7 @@ pixmap_save_dialog(GwyContainer *data,
                                               args->otype);
     for (l = controls.group; l; l = g_slist_next(l)) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(l->data),
-                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
     }
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -1735,7 +1742,7 @@ pixmap_save_dialog(GwyContainer *data,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  args->draw_mask);
     gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(check, "toggled",
                      G_CALLBACK(draw_mask_changed), &controls);
     controls.draw_mask = check;
@@ -1745,7 +1752,7 @@ pixmap_save_dialog(GwyContainer *data,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  args->draw_selection);
     gtk_table_attach(GTK_TABLE(table), check, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(check, "toggled",
                      G_CALLBACK(draw_selection_changed), &controls);
     controls.draw_selection = check;

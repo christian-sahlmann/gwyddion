@@ -202,14 +202,13 @@ static void          rawfile_save_args             (GwyContainer *settings,
 static guint         rawfile_compute_required_size (RawFileArgs *args);
 static void          rawfile_import_1x_presets     (GwyContainer *settings);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -273,8 +272,6 @@ static const gchar zunit_key[]       = "/module/rawfile/zunit";
 /* for read_ascii_data() error reporting */
 static GQuark error_domain = 0;
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -524,7 +521,9 @@ rawfile_dialog_info_page(RawFileArgs *args,
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
 
     table = gtk_table_new(16, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
@@ -583,13 +582,13 @@ rawfile_dialog_info_page(RawFileArgs *args,
     controls->xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->xreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->xreal,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("_Width:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->xreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     gwy_si_unit_set_from_string(unit, "m");
@@ -598,20 +597,20 @@ rawfile_dialog_info_page(RawFileArgs *args,
                                                          args->p.xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
 
     adj = gtk_adjustment_new(args->p.yreal, 0.01, 10000, 1, 100, 100);
     controls->yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->yreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->yreal,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("H_eight:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->yreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
@@ -624,13 +623,13 @@ rawfile_dialog_info_page(RawFileArgs *args,
     controls->zscale = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->zscale), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->zscale,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("_Z-scale (per sample unit):"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zscale);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     controls->zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
@@ -638,7 +637,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
                                                         args->p.zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     g_object_unref(unit);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
@@ -677,8 +676,9 @@ rawfile_dialog_format_page(RawFileArgs *args,
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
 
     table = gtk_table_new(15, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
     controls->format = gwy_radio_buttons_create(formats, G_N_ELEMENTS(formats),
@@ -708,7 +708,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     controls->delim_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     combo = gwy_enum_combo_box_new(delimiter_menu, G_N_ELEMENTS(delimiter_menu),
                                    G_CALLBACK(delimiter_changed_cb), controls,
@@ -716,20 +716,20 @@ rawfile_dialog_format_page(RawFileArgs *args,
     controls->delimmenu = combo;
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
     gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Other delimiter:"));
     controls->otherdelim_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->delimiter = entry = gtk_entry_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("_Decimal separator "
@@ -754,13 +754,13 @@ rawfile_dialog_format_page(RawFileArgs *args,
     controls->byteswap_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->byteswap = entry = gtk_entry_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     adj = gtk_adjustment_new(args->p.offset, 0, 1 << 30, 16, 1024, 1024);
@@ -933,7 +933,6 @@ rawfile_dialog_preset_page(RawFileArgs *args,
 
     bbox = gtk_hbutton_box_new();
     gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_START);
-    gtk_container_set_border_width(GTK_CONTAINER(bbox), 2);
     gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
 
     button = gtk_button_new_with_mnemonic(_("_Load"));
@@ -961,8 +960,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
                              G_CALLBACK(preset_delete_cb), controls);
 
     table = gtk_table_new(1, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 2);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
     row = 0;
 
     controls->presetname = gtk_entry_new();
