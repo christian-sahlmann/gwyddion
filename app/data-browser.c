@@ -117,6 +117,7 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
+static GQuark page_id_quark   = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
@@ -816,10 +817,17 @@ static void
 gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
                                        GwyAppDataBrowser *browser)
 {
+    gint pageno;
     gboolean any;
 
+    pageno = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(selection),
+                                                page_id_quark));
+    if (pageno != browser->active_page)
+        return;
+
     any = gtk_tree_selection_get_selected(selection, NULL, NULL);
-    gwy_debug("Any: %d", any);
+    gwy_debug("Any: %d (page %d)", any, pageno);
+
     gwy_sensitivity_group_set_state(browser->sensgroup,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
@@ -1186,6 +1194,8 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     gtk_tree_view_set_headers_visible(treeview, FALSE);
 
     selection = gtk_tree_view_get_selection(treeview);
+    g_object_set_qdata(G_OBJECT(selection), page_id_quark,
+                       GINT_TO_POINTER(PAGE_CHANNELS));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -1424,6 +1434,8 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     gtk_tree_view_set_headers_visible(treeview, FALSE);
 
     selection = gtk_tree_view_get_selection(treeview);
+    g_object_set_qdata(G_OBJECT(selection), page_id_quark,
+                       GINT_TO_POINTER(PAGE_GRAPHS));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -1716,8 +1728,9 @@ gwy_app_get_data_browser(void)
         = g_quark_from_static_string("gwy-app-data-browser-own-key");
     container_quark
         = g_quark_from_static_string("gwy-app-data-browser-container");
+    page_id_quark
+        = g_quark_from_static_string("gwy-app-data-browser-page-id");
 
-    /* Window setup */
     browser = g_new0(GwyAppDataBrowser, 1);
     gwy_app_data_browser = browser;
 
