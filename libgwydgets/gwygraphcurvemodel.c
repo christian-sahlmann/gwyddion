@@ -508,7 +508,7 @@ gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
 /**
  * gwy_graph_curve_model_set_mode:
  * @gcmodel: A graph curve model.
- * @type: Curve mode.
+ * @mode: Curve mode.
  *
  * Sets curve type for plotting the curve (e. g. points, lines, points &
  * lines, etc.).
