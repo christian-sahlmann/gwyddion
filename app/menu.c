@@ -706,7 +706,8 @@ gwy_app_menu_recent_files_set_thumbnail(GtkWidget *item,
         wscale = (gdouble)width/w;
     }
 
-    menuicon = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+    menuicon = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
+                              gdk_pixbuf_get_has_alpha(thumbnail), 8,
                               width + 2, height + 2);
     /* FIXME: Getting the right color as RGB is ugly. Do it later...
     gc = item->style->text_gc[GTK_STATE_NORMAL];
