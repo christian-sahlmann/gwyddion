@@ -31,6 +31,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <string.h>
+#include "evaluator.h"
 
 #define ESETUP_RUN_MODES (GWY_RUN_INTERACTIVE)
 
@@ -51,79 +52,17 @@ enum {
 typedef enum {
     SETUP_VIEW_DETECTED_POINTS  = 0,
     SETUP_VIEW_DETECTED_LINES  = 1,
-    SETUP_VIEW_DETECTED_INTERSECTIONS  = 2,
     SETUP_VIEW_SELECTED_POINTS  = 3,
     SETUP_VIEW_SELECTED_LINES  = 4,
-    SETUP_VIEW_SELECTED_INTERSECTIONS  = 5, 
     SETUP_VIEW_FIXED_POINTS  = 6,
     SETUP_VIEW_FIXED_LINES  = 7,
     SETUP_VIEW_CORRELATION_POINTS  = 8
 } GwySetupViewType;
 
-typedef struct {
-    gchar *id;
-    gdouble xc;
-    gdouble yc;
-    gint x;
-    gint y;
-    gint width;
-    gint height;
-} SearchPointSettings;
-
-typedef struct {
-    gchar *id;
-    gdouble xc;
-    gdouble yc;
-} PointSettings;
-
-typedef struct {
-    gchar *id;
-    gdouble xc;
-    gdouble yc;
-} CorrelationPointSettings;
-
-
-typedef struct {
-    gchar *id;
-    gdouble xstart;
-    gdouble ystart;
-    gdouble xend;
-    gdouble yend;
-    gdouble rho_min;
-    gdouble theta_min;
-    gdouble rho_max;
-    gdouble theta_max;
-} SearchLineSettings;
-
-typedef struct {
-    gchar *id;
-    gdouble xstart;
-    gdouble ystart;
-    gdouble xend;
-    gdouble yend;
-} LineSettings;
-
-
-typedef struct {
-    gchar *id;
-    SearchLineSettings line_1;
-    SearchLineSettings line_2;
-} SearchIntersectionSettings;
-
-typedef struct {
-    gchar *id;
-    gchar *expression;
-} ExpressionTask;
-
 
 typedef struct {
     GwySetupViewType what;
-    GArray *detected_point_array;
-    GArray *detected_line_array;
-    GArray *fixed_point_array;
-    GArray *fixed_line_array;
-    GArray *correlation_point_array;
-    GArray *expression_task_array;
+    GwyEvaluator *evaluator;
 } EsetupArgs;
 
 typedef struct {
@@ -149,10 +88,8 @@ typedef struct {
     GwyContainer *mydata;
     GwyVectorLayer *vlayer_dpoint;
     GwyVectorLayer *vlayer_dline;
-    GwyVectorLayer *vlayer_dinter;
     GwyVectorLayer *vlayer_spoint;
     GwyVectorLayer *vlayer_sline;
-    GwyVectorLayer *vlayer_sinter;
     GwyVectorLayer *vlayer_fpoint;
     GwyVectorLayer *vlayer_fline;
     GwyVectorLayer *vlayer_cpoint;
@@ -199,9 +136,6 @@ static void        dpoints_object_chosen_cb(GwyVectorLayer *layer,
 static void        dlines_object_chosen_cb(GwyVectorLayer *layer, 
                                                 gint i,
                                                  EsetupControls *controls);
-static void        dinters_object_chosen_cb(GwyVectorLayer *layer, 
-                                                 gint i,
-                                                 EsetupControls *controls);
 static void        fpoints_selection_changed_cb(GwySelection *selection, 
                                                  gint i,
                                                  EsetupControls *controls);
@@ -215,7 +149,6 @@ static void        cpoints_selection_changed_cb(GwySelection *selection,
 static void        selections_unref            (EsetupControls *controls);      
 static void        detect_points              (EsetupControls *controls);
 static void        detect_lines               (EsetupControls *controls);
-static void        detect_intersections       (EsetupControls *controls);
 static void        preset_relative            (EsetupControls *controls);
 
 static void        update_selected_points     (EsetupControls *controls);
@@ -228,7 +161,7 @@ static GwyVectorLayer *create_layer_with_selection(const gchar* ltype,
 
 
 static const EsetupArgs esetup_defaults = {
-    0, NULL, NULL, NULL, NULL, NULL, NULL
+    0, NULL
 };
 
 static GwyModuleInfo module_info = {
@@ -289,30 +222,17 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     static const GwyEnum whats[] = {
         { N_("Detected points"),          SETUP_VIEW_DETECTED_POINTS,        },
         { N_("Detected lines"),           SETUP_VIEW_DETECTED_LINES,         },
-        { N_("Detected intersections"),   SETUP_VIEW_DETECTED_INTERSECTIONS, },
         { N_("Selected points"),          SETUP_VIEW_SELECTED_POINTS,        },
         { N_("Selected lines"),           SETUP_VIEW_SELECTED_LINES,         },
-        { N_("Selected intersections"),   SETUP_VIEW_SELECTED_INTERSECTIONS, },
         { N_("Relative points"),          SETUP_VIEW_FIXED_POINTS,           },
         { N_("Relative lines"),           SETUP_VIEW_FIXED_LINES,            },
         { N_("Correlation points"),       SETUP_VIEW_CORRELATION_POINTS,     },
     };
 
 
+    
     controls.args = args;
-    controls.args->detected_point_array = g_array_new (FALSE, FALSE, 
-                                                       sizeof (SearchPointSettings));
-    controls.args->detected_line_array = g_array_new (FALSE, FALSE, 
-                                                       sizeof (SearchLineSettings));
-    controls.args->fixed_point_array = g_array_new (FALSE, FALSE, 
-                                                       sizeof (PointSettings));
-    controls.args->fixed_line_array = g_array_new (FALSE, FALSE, 
-                                                       sizeof (LineSettings));
-    controls.args->correlation_point_array = g_array_new (FALSE, FALSE, 
-                                                       sizeof (CorrelationPointSettings));
-
-    controls.args->expression_task_array = g_array_new(FALSE, FALSE,
-                                                            sizeof (ExpressionTask));
+    args->evaluator = gwy_evaluator_new();
 
     controls.detected_point_chosen = g_array_new (FALSE, FALSE, sizeof(gboolean));
     controls.detected_line_chosen = g_array_new (FALSE, FALSE, sizeof(gboolean));
@@ -363,10 +283,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                 "GwySelectionLine", "/0/select/sel_dline",
                                 controls.mydata);
     g_object_set(controls.vlayer_dline, "editable", FALSE, NULL);
-    controls.vlayer_dinter = create_layer_with_selection("GwyLayerPoint",
-                                "GwySelectionPoint", "/0/select/sel_dinter",
-                                controls.mydata);
-    g_object_set(controls.vlayer_dinter, "editable", FALSE, NULL);
     controls.vlayer_spoint = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_spoint",
                                 controls.mydata);
@@ -375,10 +291,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                 "GwySelectionLine", "/0/select/sel_sline",
                                 controls.mydata);
     g_object_set(controls.vlayer_sline, "editable", FALSE, NULL);
-    controls.vlayer_sinter = create_layer_with_selection("GwyLayerPoint",
-                                "GwySelectionPoint", "/0/select/sel_sinter",
-                                controls.mydata);
-    g_object_set(controls.vlayer_sinter, "editable", FALSE, NULL);
     controls.vlayer_fpoint = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_fpoint",
                                 controls.mydata);
@@ -623,7 +535,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     
     detect_points(&controls);
     detect_lines(&controls);
-    detect_intersections(&controls);
     preset_relative(&controls);
     what_changed_cb(controls.what, &controls);
     
@@ -755,16 +666,16 @@ detected_remove_cb(EsetupControls *controls)
     if (gtk_tree_selection_get_selected(controls->detected_selection,
                                  &(controls->detected_list), &iter)) {
         gtk_tree_model_get(controls->detected_list, &iter, NO_COLUMN, &id, -1);
-        ipos = get_dpoint_pos_by_id(controls->args->detected_point_array, id);
+        ipos = get_dpoint_pos_by_id(controls->args->evaluator->detected_point_array, id);
         if (ipos >= 0) {
             selpos = get_dpoint_selection_index_by_id(controls, id);
-            g_array_remove_index(controls->args->detected_point_array, ipos);
+            g_array_remove_index(controls->args->evaluator->detected_point_array, ipos);
             g_array_index(controls->detected_point_chosen, gboolean, selpos) = FALSE;
         } 
-        ipos = get_dline_pos_by_id(controls->args->detected_line_array, id);
+        ipos = get_dline_pos_by_id(controls->args->evaluator->detected_line_array, id);
         if (ipos >= 0) {
             selpos = get_dline_selection_index_by_id(controls, id); 
-            g_array_remove_index(controls->args->detected_line_array, ipos);
+            g_array_remove_index(controls->args->evaluator->detected_line_array, ipos);
             g_array_index(controls->detected_line_chosen, gboolean, selpos) = FALSE;
              
         }
@@ -773,7 +684,7 @@ detected_remove_cb(EsetupControls *controls)
         update_selected_lines(controls);
     }
 
-    if (!controls->args->detected_point_array->len && !controls->args->detected_line_array->len) {
+    if (!controls->args->evaluator->detected_point_array->len && !controls->args->evaluator->detected_line_array->len) {
         gtk_widget_set_sensitive(controls->detected_remove_button, FALSE);
         gtk_widget_set_sensitive(controls->detected_edit_button, FALSE);
     }
@@ -895,41 +806,41 @@ relative_remove_cb(EsetupControls *controls)
     if (gtk_tree_selection_get_selected(controls->relative_selection,
                                  &(controls->relative_list), &iter)) {
         gtk_tree_model_get(controls->relative_list, &iter, NO_COLUMN, &id, -1);
-        ipos = get_fpoint_pos_by_id(controls->args->fixed_point_array, id);
+        ipos = get_fpoint_pos_by_id(controls->args->evaluator->fixed_point_array, id);
         if (ipos >= 0) {
             
             selection = gwy_container_get_object_by_name(controls->mydata,
                                gwy_vector_layer_get_selection_key(controls->vlayer_fpoint));
             selpos = get_fpoint_selection_index_by_position(controls,
-                          g_array_index(controls->args->fixed_point_array, 
+                          g_array_index(controls->args->evaluator->fixed_point_array, 
                                         PointSettings, ipos).xc,
-                          g_array_index(controls->args->fixed_point_array, 
+                          g_array_index(controls->args->evaluator->fixed_point_array, 
                                         PointSettings, ipos).yc);
-            if (ipos >= 0) g_array_remove_index(controls->args->fixed_point_array, ipos);
+            if (ipos >= 0) g_array_remove_index(controls->args->evaluator->fixed_point_array, ipos);
             if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
         } 
-        ipos = get_fline_pos_by_id(controls->args->fixed_line_array, id);
+        ipos = get_fline_pos_by_id(controls->args->evaluator->fixed_line_array, id);
         if (ipos >= 0) {
              
             selection = gwy_container_get_object_by_name(controls->mydata,
                                gwy_vector_layer_get_selection_key(controls->vlayer_fline));
             selpos = get_fline_selection_index_by_position(controls,
-                          g_array_index(controls->args->fixed_line_array, 
+                          g_array_index(controls->args->evaluator->fixed_line_array, 
                                         LineSettings, ipos).xstart,
-                          g_array_index(controls->args->fixed_line_array, 
+                          g_array_index(controls->args->evaluator->fixed_line_array, 
                                         LineSettings, ipos).ystart,
-                          g_array_index(controls->args->fixed_line_array, 
+                          g_array_index(controls->args->evaluator->fixed_line_array, 
                                         LineSettings, ipos).xend,
-                          g_array_index(controls->args->fixed_line_array, 
+                          g_array_index(controls->args->evaluator->fixed_line_array, 
                                         LineSettings, ipos).yend);
         
-            if (ipos >= 0) g_array_remove_index(controls->args->fixed_line_array, ipos);
+            if (ipos >= 0) g_array_remove_index(controls->args->evaluator->fixed_line_array, ipos);
             if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
         }
         gtk_list_store_remove(controls->relative_list, &iter);
      }
 
-    if (!controls->args->fixed_point_array->len && !controls->args->fixed_line_array->len) {
+    if (!controls->args->evaluator->fixed_point_array->len && !controls->args->evaluator->fixed_line_array->len) {
         gtk_widget_set_sensitive(controls->relative_remove_button, FALSE);
     }
 }
@@ -988,18 +899,18 @@ correlation_remove_cb(EsetupControls *controls)
     if (gtk_tree_selection_get_selected(controls->correlation_selection,
                                  &(controls->correlation_list), &iter)) {
         gtk_tree_model_get(controls->correlation_list, &iter, NO_COLUMN, &id, -1);
-        ipos = get_cpoint_pos_by_id(controls->args->correlation_point_array, id);
+        ipos = get_cpoint_pos_by_id(controls->args->evaluator->correlation_point_array, id);
         selpos = get_cpoint_selection_index_by_position(controls,
-                          g_array_index(controls->args->correlation_point_array, 
+                          g_array_index(controls->args->evaluator->correlation_point_array, 
                                         CorrelationPointSettings, ipos).xc,
-                          g_array_index(controls->args->correlation_point_array, 
+                          g_array_index(controls->args->evaluator->correlation_point_array, 
                                         CorrelationPointSettings, ipos).yc);
-        if (ipos >= 0) g_array_remove_index(controls->args->correlation_point_array, ipos);
+        if (ipos >= 0) g_array_remove_index(controls->args->evaluator->correlation_point_array, ipos);
         if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
         gtk_list_store_remove(controls->correlation_list, &iter);
      }
 
-    if (!controls->args->correlation_point_array->len) {
+    if (!controls->args->evaluator->correlation_point_array->len) {
         gtk_widget_set_sensitive(controls->correlation_remove_button, FALSE);
         gtk_widget_set_sensitive(controls->correlation_edit_button, FALSE);
     }
@@ -1048,9 +959,9 @@ task_remove_cb(EsetupControls *controls)
     if (gtk_tree_selection_get_selected(controls->evaluator_selection,
                                  &(controls->evaluator_list), &iter)) {
         gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
-        ipos = get_task_pos_by_id(controls->args->expression_task_array, id);
+        ipos = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
         gtk_list_store_remove(controls->evaluator_list, &iter);
-        g_array_remove_index(controls->args->expression_task_array, ipos);
+        g_array_remove_index(controls->args->evaluator->expression_task_array, ipos);
     }
 
  }
@@ -1065,8 +976,8 @@ task_edit_cb(EsetupControls *controls)
                                         &(controls->evaluator_list), &iter))
     {
         gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
-        controls->task_edited = get_task_pos_by_id(controls->args->expression_task_array, id);
-        task = g_array_index(controls->args->expression_task_array, ExpressionTask, 
+        controls->task_edited = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
+        task = g_array_index(controls->args->evaluator->expression_task_array, ExpressionTask, 
                              controls->task_edited);
         gtk_entry_set_text(GTK_ENTRY(controls->expression), task.expression);
         gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Modify selected expression");
@@ -1086,9 +997,9 @@ expression_add_cb(EsetupControls *controls)
     gint k;
 
     if (controls->task_edited == -1) {
-        task.id = g_strdup_printf("task%d", controls->args->expression_task_array->len);    
+        task.id = g_strdup_printf("task%d", controls->args->evaluator->expression_task_array->len);    
         task.expression = g_strdup(gtk_entry_get_text(GTK_ENTRY(controls->expression)));
-        g_array_append_val(controls->args->expression_task_array, task); 
+        g_array_append_val(controls->args->evaluator->expression_task_array, task); 
         gtk_list_store_insert_with_values(controls->evaluator_list, &iter, controls->task_edited,
                        NO_COLUMN, task.id,
                        TYPE_COLUMN, "expression",
@@ -1096,7 +1007,7 @@ expression_add_cb(EsetupControls *controls)
                        -1);
         
      } else {
-        task = g_array_index(controls->args->expression_task_array, ExpressionTask,
+        task = g_array_index(controls->args->evaluator->expression_task_array, ExpressionTask,
                                          controls->task_edited);
         task.expression = g_strdup(gtk_entry_get_text(GTK_ENTRY(controls->expression)));
     
@@ -1139,12 +1050,6 @@ what_changed_cb(GtkWidget *combo, EsetupControls *controls)
         g_signal_connect(GWY_VECTOR_LAYER(controls->vlayer_dline), "object-chosen",
                          G_CALLBACK(dlines_object_chosen_cb), controls);
     }
-    else if (controls->args->what == SETUP_VIEW_DETECTED_INTERSECTIONS)
-    {
-        gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_dinter);
-        g_signal_connect(GWY_VECTOR_LAYER(controls->vlayer_dinter), "object-chosen",
-                         G_CALLBACK(dinters_object_chosen_cb), controls);
-    }
     else if (controls->args->what == SETUP_VIEW_SELECTED_POINTS)
     {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_spoint);
@@ -1152,10 +1057,6 @@ what_changed_cb(GtkWidget *combo, EsetupControls *controls)
     else if (controls->args->what == SETUP_VIEW_SELECTED_LINES)
     {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_sline);
-    }
-    else if (controls->args->what == SETUP_VIEW_SELECTED_INTERSECTIONS)
-    {
-        gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_sinter);
     }
     else if (controls->args->what == SETUP_VIEW_FIXED_POINTS)
     {
@@ -1315,10 +1216,6 @@ detect_lines(EsetupControls *controls)
 
 
 
-static void        
-detect_intersections(EsetupControls *controls)
-{
-}
 
 static void        
 preset_relative(EsetupControls *controls)
@@ -1337,10 +1234,10 @@ preset_relative(EsetupControls *controls)
                                        gwy_vector_layer_get_selection_key(controls->vlayer_fpoint));
     gwy_selection_set_max_objects(selection, 10);
     
-    spset.id = g_strdup_printf("fp%d", controls->args->fixed_point_array->len);
+    spset.id = g_strdup_printf("fp%d", controls->args->evaluator->fixed_point_array->len);
     spset.xc = 0;
     spset.yc = 0;
-    g_array_append_val(controls->args->fixed_point_array, spset);
+    g_array_append_val(controls->args->evaluator->fixed_point_array, spset);
 
     
     seldata[0] = spset.xc;
@@ -1374,15 +1271,15 @@ update_selected_points(EsetupControls *controls)
    
     selection = gwy_container_get_object_by_name(controls->mydata,
                                        gwy_vector_layer_get_selection_key(controls->vlayer_spoint));
-    gwy_selection_set_max_objects(selection, MAX(1, controls->args->detected_point_array->len));
+    gwy_selection_set_max_objects(selection, MAX(1, controls->args->evaluator->detected_point_array->len));
     gwy_selection_clear(selection);
     
-    for (i=0; i<controls->args->detected_point_array->len; i++)
+    for (i=0; i<controls->args->evaluator->detected_point_array->len; i++)
     {
         if (!gwy_selection_is_full(selection))
         {
         
-            spset = g_array_index(controls->args->detected_point_array, SearchPointSettings, i);
+            spset = g_array_index(controls->args->evaluator->detected_point_array, SearchPointSettings, i);
             seldata[0] = spset.xc;
             seldata[1] = spset.yc;
             gwy_selection_set_object(selection, i, seldata);
@@ -1400,12 +1297,12 @@ update_selected_lines(EsetupControls *controls)
     
     selection = gwy_container_get_object_by_name(controls->mydata,
                                        gwy_vector_layer_get_selection_key(controls->vlayer_sline));
-    gwy_selection_set_max_objects(selection, MAX(1, controls->args->detected_line_array->len));
+    gwy_selection_set_max_objects(selection, MAX(1, controls->args->evaluator->detected_line_array->len));
     gwy_selection_clear(selection);
 
-    for (i=0; i<controls->args->detected_line_array->len; i++)
+    for (i=0; i<controls->args->evaluator->detected_line_array->len; i++)
     {
-        slset = g_array_index(controls->args->detected_line_array, SearchLineSettings, i);
+        slset = g_array_index(controls->args->evaluator->detected_line_array, SearchLineSettings, i);
         seldata[0] = slset.xstart;
         seldata[1] = slset.ystart;
         seldata[2] = slset.xend;
@@ -1441,7 +1338,7 @@ dpoints_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls
     spset.y = gwy_data_field_rtoj(dfield, pointdata[1]) - DEFAULT_POINT_SIZE/2;
     spset.width = spset.x + DEFAULT_POINT_SIZE;
     spset.height = spset.y + DEFAULT_POINT_SIZE;
-    g_array_append_val(controls->args->detected_point_array, spset);
+    g_array_append_val(controls->args->evaluator->detected_point_array, spset);
 
     g_array_index(controls->detected_point_chosen, gboolean, i) = TRUE;
     gtk_list_store_insert_with_values(controls->detected_list, &iter, -1,
@@ -1490,7 +1387,7 @@ dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
     slset.theta_min = theta - DEFAULT_THETA_SIZE/2;
     slset.rho_max = slset.rho_min + DEFAULT_RHO_SIZE;
     slset.theta_max = slset.theta_min + DEFAULT_THETA_SIZE;
-    g_array_append_val(controls->args->detected_line_array, slset);
+    g_array_append_val(controls->args->evaluator->detected_line_array, slset);
     
     g_array_index(controls->detected_line_chosen, gboolean, i) = TRUE;
     gtk_list_store_insert_with_values(controls->detected_list, &iter, -1,
@@ -1504,11 +1401,6 @@ dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
     update_selected_lines(controls);
 }
 
-static void
-dinters_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
-{
-    printf("dinters\n");
-}
 
 static gboolean
 fixed_point_present(GwyDataField *dfield, gdouble x, gdouble y, GArray *array)
@@ -1562,15 +1454,15 @@ fpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                                      controls->mydata, "/0/data"));
 
     gwy_selection_get_object(selection, i, pointdata);
-    if (fixed_point_present(dfield, pointdata[0], pointdata[1], controls->args->fixed_point_array)) return;
+    if (fixed_point_present(dfield, pointdata[0], pointdata[1], controls->args->evaluator->fixed_point_array)) return;
     
-    if (i == controls->args->fixed_point_array->len) {
+    if (i == controls->args->evaluator->fixed_point_array->len) {
         /*new point added*/
         spset.xc = pointdata[0];
         spset.yc = pointdata[1];
         
         spset.id = g_strdup_printf("fp%d", ++controls->fixed_point_max);     
-        g_array_append_val(controls->args->fixed_point_array, spset);
+        g_array_append_val(controls->args->evaluator->fixed_point_array, spset);
 
         gtk_list_store_insert_with_values(controls->relative_list, &iter, -1,
                        NO_COLUMN, spset.id,
@@ -1579,7 +1471,7 @@ fpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                        -1);
     } else {
         /*old point moved*/
-        pspset = &g_array_index(controls->args->fixed_point_array, PointSettings, i);
+        pspset = &g_array_index(controls->args->evaluator->fixed_point_array, PointSettings, i);
         pspset->xc = pointdata[0];
         pspset->yc = pointdata[1];
 
@@ -1625,9 +1517,9 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
     gwy_selection_get_object(selection, i, linedata);
 
     if (fixed_line_present(dfield, linedata[0], linedata[1], linedata[2], linedata[3], 
-                     controls->args->fixed_line_array)) return;
+                     controls->args->evaluator->fixed_line_array)) return;
    
-    if (i == controls->args->fixed_line_array->len) {
+    if (i == controls->args->evaluator->fixed_line_array->len) {
         
         slset.id = g_strdup_printf("fl%d", ++controls->fixed_line_max);
         slset.xstart = linedata[0];
@@ -1635,7 +1527,7 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
         slset.xend = linedata[2];
         slset.yend = linedata[3];
 
-        g_array_append_val(controls->args->fixed_line_array, slset);
+        g_array_append_val(controls->args->evaluator->fixed_line_array, slset);
 
         gtk_list_store_insert_with_values(controls->relative_list, &iter, -1,
                        NO_COLUMN, slset.id,
@@ -1643,7 +1535,7 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
                        TYPE_COLUMN, "line",
                        -1);
     } else {
-        pslset = &g_array_index(controls->args->fixed_line_array, LineSettings, i);
+        pslset = &g_array_index(controls->args->evaluator->fixed_line_array, LineSettings, i);
         pslset->xstart = linedata[0];
         pslset->ystart = linedata[1];
         pslset->xend = linedata[2];
@@ -1667,13 +1559,13 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
 
     gwy_selection_get_object(selection, i, pointdata);
     
-    if (i == controls->args->correlation_point_array->len) {
+    if (i == controls->args->evaluator->correlation_point_array->len) {
         /*new point added*/
         spset.xc = pointdata[0];
         spset.yc = pointdata[1];
         
         spset.id = g_strdup_printf("cp%d", ++controls->correlation_point_max);     
-        g_array_append_val(controls->args->correlation_point_array, spset);
+        g_array_append_val(controls->args->evaluator->correlation_point_array, spset);
 
         gtk_list_store_insert_with_values(controls->correlation_list, &iter, -1,
                        NO_COLUMN, spset.id,
@@ -1682,7 +1574,7 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                        -1);
     } else {
         /*old point moved*/
-        pspset = &g_array_index(controls->args->correlation_point_array, CorrelationPointSettings, i);
+        pspset = &g_array_index(controls->args->evaluator->correlation_point_array, CorrelationPointSettings, i);
         pspset->xc = pointdata[0];
         pspset->yc = pointdata[1];
     }
@@ -1696,10 +1588,8 @@ selections_unref(EsetupControls *controls)
 {
     g_object_unref(controls->vlayer_dpoint);
     g_object_unref(controls->vlayer_dline);
-    g_object_unref(controls->vlayer_dinter);
     g_object_unref(controls->vlayer_spoint);
     g_object_unref(controls->vlayer_sline);
-    g_object_unref(controls->vlayer_sinter);
     g_object_unref(controls->vlayer_fpoint);
     g_object_unref(controls->vlayer_fline);
     g_object_unref(controls->vlayer_cpoint);
