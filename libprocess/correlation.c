@@ -165,13 +165,14 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
             return;
         }
 
-        for (i = (kxres/2); i < (xres - kxres/2); i++) {        /*col */
-            for (j = (kyres/2); j < (yres - kyres/2); j++) {    /*row */
-                score->data[i + xres * j] =
-                    gwy_data_field_get_correlation_score(data_field, kernel_field,
-                                                     i - kxres/2,
-                                                     j - kyres/2, 0, 0, kxres,
-                                                     kyres);
+        for (i = kyres/2; i < yres - kyres/2; i++) {    /*row */
+            for (j = kxres/2; j < xres - kxres/2; j++) {        /*col */
+                score->data[i*xres + j] =
+                    gwy_data_field_get_correlation_score(data_field,
+                                                         kernel_field,
+                                                         j - kxres/2,
+                                                         i - kyres/2,
+                                                         0, 0, kxres, kyres);
             }
         }
         break;
