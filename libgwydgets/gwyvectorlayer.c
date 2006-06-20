@@ -115,7 +115,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
                        G_STRUCT_OFFSET(GwyVectorLayerClass, object_chosen),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__INT,
-                       G_TYPE_NONE, 0);
+                       G_TYPE_NONE, 1, G_TYPE_INT);
 
     g_object_class_install_property
         (gobject_class,
