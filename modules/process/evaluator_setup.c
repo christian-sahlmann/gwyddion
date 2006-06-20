@@ -193,13 +193,13 @@ static void        task_remove_cb              (EsetupControls *controls);
 static void        task_edit_cb                (EsetupControls *controls);
 static void        what_changed_cb             (GtkWidget *combo, 
                                                 EsetupControls *controls);
-static void        dpoints_selection_changed_cb(GwySelection *selection, 
+static void        dpoints_object_chosen_cb(GwyVectorLayer *layer, 
                                                  gint i,
                                                  EsetupControls *controls);
-static void        dlines_selection_changed_cb(GwySelection *selection, 
+static void        dlines_object_chosen_cb(GwyVectorLayer *layer, 
                                                 gint i,
                                                  EsetupControls *controls);
-static void        dinters_selection_changed_cb(GwySelection *selection, 
+static void        dinters_object_chosen_cb(GwyVectorLayer *layer, 
                                                  gint i,
                                                  EsetupControls *controls);
 static void        fpoints_selection_changed_cb(GwySelection *selection, 
@@ -358,21 +358,27 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     controls.vlayer_dpoint = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_dpoint",
                                 controls.mydata);
+    g_object_set(controls.vlayer_dpoint, "editable", FALSE, NULL);
     controls.vlayer_dline = create_layer_with_selection("GwyLayerLine",
                                 "GwySelectionLine", "/0/select/sel_dline",
                                 controls.mydata);
+    g_object_set(controls.vlayer_dline, "editable", FALSE, NULL);
     controls.vlayer_dinter = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_dinter",
                                 controls.mydata);
+    g_object_set(controls.vlayer_dinter, "editable", FALSE, NULL);
     controls.vlayer_spoint = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_spoint",
                                 controls.mydata);
+    g_object_set(controls.vlayer_spoint, "editable", FALSE, NULL);
     controls.vlayer_sline = create_layer_with_selection("GwyLayerLine",
                                 "GwySelectionLine", "/0/select/sel_sline",
                                 controls.mydata);
+    g_object_set(controls.vlayer_sline, "editable", FALSE, NULL);
     controls.vlayer_sinter = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_sinter",
                                 controls.mydata);
+    g_object_set(controls.vlayer_sinter, "editable", FALSE, NULL);
     controls.vlayer_fpoint = create_layer_with_selection("GwyLayerPoint",
                                 "GwySelectionPoint", "/0/select/sel_fpoint",
                                 controls.mydata);
@@ -1124,27 +1130,20 @@ what_changed_cb(GtkWidget *combo, EsetupControls *controls)
     if (controls->args->what == SETUP_VIEW_DETECTED_POINTS)
     {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_dpoint);
-        selection = gwy_container_get_object_by_name(controls->mydata,
-                             gwy_vector_layer_get_selection_key(controls->vlayer_dpoint));
-        g_signal_connect(selection, "changed",
-                         G_CALLBACK(dpoints_selection_changed_cb), controls);
+        g_signal_connect(GWY_VECTOR_LAYER(controls->vlayer_dpoint), "object-chosen",
+                         G_CALLBACK(dpoints_object_chosen_cb), controls);
     }
     else if (controls->args->what == SETUP_VIEW_DETECTED_LINES)
     {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_dline);
-        selection = gwy_container_get_object_by_name(controls->mydata,
-                             gwy_vector_layer_get_selection_key(controls->vlayer_dline));
-         
-        g_signal_connect(selection, "changed",
-                         G_CALLBACK(dlines_selection_changed_cb), controls);
+        g_signal_connect(GWY_VECTOR_LAYER(controls->vlayer_dline), "object-chosen",
+                         G_CALLBACK(dlines_object_chosen_cb), controls);
     }
     else if (controls->args->what == SETUP_VIEW_DETECTED_INTERSECTIONS)
     {
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), controls->vlayer_dinter);
-        selection = gwy_container_get_object_by_name(controls->mydata,
-                             gwy_vector_layer_get_selection_key(controls->vlayer_dinter));
-        g_signal_connect(selection, "changed",
-                         G_CALLBACK(dinters_selection_changed_cb), controls);
+        g_signal_connect(GWY_VECTOR_LAYER(controls->vlayer_dinter), "object-chosen",
+                         G_CALLBACK(dinters_object_chosen_cb), controls);
     }
     else if (controls->args->what == SETUP_VIEW_SELECTED_POINTS)
     {
@@ -1416,18 +1415,22 @@ update_selected_lines(EsetupControls *controls)
 }
 
 static void
-dpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *controls)
+dpoints_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
     SearchPointSettings spset;
     gdouble pointdata[2];
     GwyDataField *dfield;
+    GwySelection *selection;
 
     if (g_array_index(controls->detected_point_chosen, gboolean, i)) return;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
                                      controls->mydata, "/0/data"));
 
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                       gwy_vector_layer_get_selection_key(controls->vlayer_dpoint));
+ 
     gwy_selection_get_object(selection, i, pointdata);
  
     spset.id = g_strdup_printf("sp%d", i + 1);
@@ -1454,19 +1457,22 @@ dpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
 }
 
 static void
-dlines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *controls)
+dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
     SearchLineSettings slset;
     gdouble linedata[4];
     gdouble rho, theta;
     GwyDataField *dfield;
+    GwySelection *selection;
 
     if (g_array_index(controls->detected_line_chosen, gboolean, i)) return;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
                                      controls->mydata, "/0/data"));
     
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                     gwy_vector_layer_get_selection_key(controls->vlayer_dline));
     gwy_selection_get_object(selection, i, linedata);
     gwy_data_field_hough_datafield_line_to_polar(dfield,
                                                  (gint)gwy_data_field_rtoi(dfield, linedata[0]),
@@ -1499,7 +1505,7 @@ dlines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
 }
 
 static void
-dinters_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *controls)
+dinters_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
 {
     printf("dinters\n");
 }
