@@ -115,7 +115,6 @@ level(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      0);
-
     g_return_if_fail(dfield && quark);
 
     if (run != GWY_RUN_IMMEDIATE && mfield) {
@@ -165,7 +164,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && quark);
 
-    if (run == GWY_RUN_INTERACTIVE && mfield) {
+    if (run != GWY_RUN_IMMEDIATE && mfield) {
         level_load_args(gwy_app_settings_get(), &args);
         ok = level_dialog(&args);
         level_save_args(gwy_app_settings_get(), &args);
@@ -175,8 +174,18 @@ level_rotate(GwyContainer *data, GwyRunType run)
     if (!args.exclude)
         mfield = NULL;
 
+    if (mfield) {
+        /* need to invert mask, so it is inclusion mask */
+        mfield = gwy_data_field_duplicate(mfield);
+        gwy_data_field_multiply(mfield, -1.0);
+        gwy_data_field_add(mfield, 1.0);
+    }
+
     gwy_app_undo_qcheckpoint(data, quark, NULL);
-    gwy_data_field_fit_plane(dfield, &a, &bx, &by);
+    gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
+                                  gwy_data_field_get_xres(dfield),
+                                  gwy_data_field_get_yres(dfield),
+                                  &a, &bx, &by);
     bx = gwy_data_field_rtoj(dfield, bx);
     by = gwy_data_field_rtoi(dfield, by);
     gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
@@ -184,6 +193,8 @@ level_rotate(GwyContainer *data, GwyRunType run)
     gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
               bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
     gwy_data_field_data_changed(dfield);
+    if (mfield)
+        g_object_unref(mfield);
 }
 
 static void
