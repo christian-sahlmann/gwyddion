@@ -290,6 +290,7 @@ gwy_sensitivity_group_release_widget(GwySensitivityGroup *sensgroup,
         gtk_widget_set_sensitive(widget, sens);
     }
 
+    g_object_set_qdata(G_OBJECT(widget), sensitivity_group_quark, NULL);
     item = g_list_find(senslist->widgets, widget);
     g_assert(item);
     g_signal_handlers_disconnect_by_func(widget,
