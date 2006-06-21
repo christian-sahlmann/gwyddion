@@ -181,18 +181,24 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
         det = (n*sumxx*sumyy) + (2*sumx*sumxy*sumy) - (sumx*sumx*sumyy)
                 -(sumy*sumy*sumxx) - (n*sumxy*sumxy);
 
-        det = 1.0/det;
+        /* try to return something reasonable in case of singularity */
+        if (det == 0.0)
+            a = b = c = 0.0;
+        else
+        {
+            det = 1.0/det;
 
-        alpha1 = (n*sumyy) - (sumy*sumy);
-        alpha2 = (n*sumxx) - (sumx*sumx);
-        alpha3 = (sumxx*sumyy) - (sumxy*sumxy);
-        beta1 = (sumx*sumy) - (n*sumxy);
-        beta2 = (sumx*sumxy) - (sumxx*sumy);
-        gamma1 = (sumxy*sumy) - (sumx*sumyy);
+            alpha1 = (n*sumyy) - (sumy*sumy);
+            alpha2 = (n*sumxx) - (sumx*sumx);
+            alpha3 = (sumxx*sumyy) - (sumxy*sumxy);
+            beta1 = (sumx*sumy) - (n*sumxy);
+            beta2 = (sumx*sumxy) - (sumxx*sumy);
+            gamma1 = (sumxy*sumy) - (sumx*sumyy);
 
-        a = det*(alpha1*sumxz + beta1*sumyz + gamma1*sumz);
-        b = det*(beta1*sumxz + alpha2*sumyz + beta2*sumz);
-        c = det*(gamma1*sumxz + beta2*sumyz + alpha3*sumz);
+            a = det*(alpha1*sumxz + beta1*sumyz + gamma1*sumz);
+            b = det*(beta1*sumxz + alpha2*sumyz + beta2*sumz);
+            c = det*(gamma1*sumxz + beta2*sumyz + alpha3*sumz);
+        }
     }
 
     if (pbx)
