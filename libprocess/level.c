@@ -33,9 +33,7 @@
  * @pbx: Where x plane coefficient should be stored (or %NULL).
  * @pby: Where y plane coefficient should be stored (or %NULL).
  *
- * Fits a plane through a data field. Use @exclusion_mask to exclude certain
- * pixels from the calculation (or set to NULL to use all pixels). @data_field
- * and @exclusion_mask must be the same size;
+ * Fits a plane through a data field.
  *
  * The coefficients can be used for plane leveling using relation
  * data[i] := data[i] - (pa + pby*i + pbx*j);
@@ -113,83 +111,96 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
                               gint col, gint row, gint width, gint height,
                               gdouble *pa, gdouble *pbx, gdouble *pby)
 {
-    gdouble sumxi, sumxixi, sumyi, sumyiyi;
-    gdouble sumsi = 0.0;
-    gdouble sumsixi = 0.0;
-    gdouble sumsiyi = 0.0;
-    gdouble a, bx, by;
-    gdouble *datapos;
-    gdouble *maskpos;
+    gdouble sumx, sumy, sumz, sumxx, sumyy, sumxy, sumxz, sumyz;
+    gdouble alpha1, alpha2, alpha3, beta1, beta2, gamma1;
+    gdouble det;
+    gdouble a, b, c;
+    gint xres, yres;
+    gdouble x, y, z;
+    gdouble n;
+    gdouble *datapos = NULL, *maskpos = NULL;
+    gdouble *drow = NULL, *mrow = NULL;
     gint i, j;
+    gboolean skip;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 0 && height >= 0
                      && col + width <= data_field->xres
                      && row + height <= data_field->yres);
+    if (mask) {
+        g_return_if_fail(GWY_IS_DATA_FIELD(mask));
+        g_return_if_fail(mask->xres == data_field->xres &&
+                            mask->yres == data_field->yres);
+    }
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    n = 0;
 
     /* try to return something reasonable even in degenerate cases */
     if (!width || !height)
-        a = bx = by = 0.0;
+        a = b = c = 0.0;
     else if (height == 1 && width == 1) {
-        a = data_field->data[row*data_field->xres + col];
-        bx = by = 0.0;
+        c = data_field->data[row*xres + col];
+        a = b = 0.0;
     }
     else {
-        sumxi = (width - 1.0)/2;
-        sumyi = (height - 1.0)/2;
-        sumxixi = (2.0*width - 1.0)*(width - 1.0)/6;
-        sumyiyi = (2.0*height - 1.0)*(height - 1.0)/6;
+        sumx = sumy = sumz = sumxx = sumyy = sumxy = sumxz = sumyz = 0;
+        datapos = data_field->data + row*xres + col;
+        if (mask)
+            maskpos = mask->data + row*xres + col;
+        for (i=0; i < height; i++) {
+            drow = datapos + i*xres;
+            if (mask)
+                mrow = maskpos + i*xres;
+            for (j=0; j < width; j++) {
+                skip = FALSE;
+                if (mask)
+                    if (mrow[j] == 0.0)
+                        skip = TRUE;
 
-        if (mask) {
-            datapos = data_field->data + row*data_field->xres + col;
-            maskpos = mask->data + row*mask->xres + col;
-            for (i = 0; i < height; i++) {
-                gdouble *drow = datapos + i*data_field->xres;
-                gdouble *mrow = maskpos + i*mask->xres;
-                for (j = 0; j < width; j++) {
-                    if (mrow[j] == 1.0) {
-                        sumsi += drow[j];
-                        sumsixi += drow[j]*j;
-                        sumsiyi += drow[j]*i;
-                    }
+                if (!skip) {
+                    x = j;
+                    y = i;
+                    z = drow[j];
+
+                    sumx += x;
+                    sumy += y;
+                    sumz += z;
+                    sumxx += x*x;
+                    sumyy += y*y;
+                    sumxy += x*y;
+                    sumxz += x*z;
+                    sumyz += y*z;
+                    n++;
                 }
             }
         }
-        else {
-            datapos = data_field->data + row*data_field->xres + col;
-            for (i = 0; i < height; i++) {
-                gdouble *drow = datapos + i*data_field->xres;
-                for (j = 0; j < width; j++) {
-                    sumsi += drow[j];
-                    sumsixi += drow[j]*j;
-                    sumsiyi += drow[j]*i;
-                }
-            }
-        }
-        sumsi /= width*height;
-        sumsixi /= width*height;
-        sumsiyi /= width*height;
 
-        if (width == 1)
-            bx = 0.0;
-        else
-            bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+        det = (n*sumxx*sumyy) + (2*sumx*sumxy*sumy) - (sumx*sumx*sumyy)
+                -(sumy*sumy*sumxx) - (n*sumxy*sumxy);
 
-        if (height == 1)
-            by = 0.0;
-        else
-            by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
+        det = 1.0/det;
 
-        a = sumsi - bx*sumxi - by*sumyi;
+        alpha1 = (n*sumyy) - (sumy*sumy);
+        alpha2 = (n*sumxx) - (sumx*sumx);
+        alpha3 = (sumxx*sumyy) - (sumxy*sumxy);
+        beta1 = (sumx*sumy) - (n*sumxy);
+        beta2 = (sumx*sumxy) - (sumxx*sumy);
+        gamma1 = (sumxy*sumy) - (sumx*sumyy);
+
+        a = det*(alpha1*sumxz + beta1*sumyz + gamma1*sumz);
+        b = det*(beta1*sumxz + alpha2*sumyz + beta2*sumz);
+        c = det*(gamma1*sumxz + beta2*sumyz + alpha3*sumz);
     }
 
-    if (pa)
-        *pa = a;
     if (pbx)
-        *pbx = bx;
+        *pbx = a;
     if (pby)
-        *pby = by;
+        *pby = b;
+    if (pa)
+        *pa = c;
 }
 
 /**
