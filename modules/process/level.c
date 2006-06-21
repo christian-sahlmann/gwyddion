@@ -135,10 +135,13 @@ level(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_undo_qcheckpoint(data, quark, NULL);
-    gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
-                                  gwy_data_field_get_xres(dfield),
-                                  gwy_data_field_get_yres(dfield),
-                                  &c, &bx, &by);
+    if (mfield)
+        gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
+                                      gwy_data_field_get_xres(dfield),
+                                      gwy_data_field_get_yres(dfield),
+                                      &c, &bx, &by);
+    else
+        gwy_data_field_fit_plane(dfield, &c, &bx, &by);
     c = -0.5*(bx*gwy_data_field_get_xres(dfield)
               + by*gwy_data_field_get_yres(dfield));
     gwy_data_field_plane_level(dfield, c, bx, by);
@@ -182,10 +185,13 @@ level_rotate(GwyContainer *data, GwyRunType run)
     }
 
     gwy_app_undo_qcheckpoint(data, quark, NULL);
-    gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
-                                  gwy_data_field_get_xres(dfield),
-                                  gwy_data_field_get_yres(dfield),
-                                  &a, &bx, &by);
+    if (mfield)
+        gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
+                                      gwy_data_field_get_xres(dfield),
+                                      gwy_data_field_get_yres(dfield),
+                                      &a, &bx, &by);
+    else
+        gwy_data_field_fit_plane(dfield, &a, &bx, &by);
     bx = gwy_data_field_rtoj(dfield, bx);
     by = gwy_data_field_rtoi(dfield, by);
     gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
