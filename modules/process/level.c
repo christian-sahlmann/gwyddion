@@ -24,31 +24,54 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+enum {
+    LEVEL_EXCLUDE,
+    LEVEL_INCLUDE,
+    LEVEL_NORMAL,
+};
+
+enum {
+    LEVEL_SUBTRACT,
+    LEVEL_ROTATE,
+};
+
 typedef struct {
-    gboolean exclude;
+    guint level_mode;
 } LevelArgs;
 
-static gboolean module_register(void);
+typedef struct {
+    LevelArgs *args;
+    GSList *mode;
+} LevelControls;
+
+static gboolean  module_register     (void);
 static void      level               (GwyContainer *data,
                                       GwyRunType run);
 static void      level_rotate        (GwyContainer *data,
                                       GwyRunType run);
+static void      do_level            (GwyContainer *data,
+                                      GwyRunType run,
+                                      guint level_type);
+
 static void      fix_zero            (GwyContainer *data,
                                       GwyRunType run);
 static void      zero_mean           (GwyContainer *data,
                                       GwyRunType run);
+
 static gboolean  level_dialog        (LevelArgs *args);
-static void      exclude_changed_cb  (GtkWidget *toggle, LevelArgs *args);
+static void      mode_changed_cb     (G_GNUC_UNUSED GObject *unused,
+                                      LevelControls *controls);
 static void      level_load_args     (GwyContainer *container, LevelArgs *args);
 static void      level_save_args     (GwyContainer *container, LevelArgs *args);
 
 static const LevelArgs level_defaults = {
-    TRUE
+    LEVEL_EXCLUDE
 };
 
 static GwyModuleInfo module_info = {
@@ -102,13 +125,24 @@ module_register(void)
 static void
 level(GwyContainer *data, GwyRunType run)
 {
+    do_level(data, run, LEVEL_SUBTRACT);
+}
+
+static void
+level_rotate(GwyContainer *data, GwyRunType run)
+{
+    do_level(data, run, LEVEL_ROTATE);
+}
+
+static void
+do_level(GwyContainer *data, GwyRunType run, guint level_type)
+{
     GwyDataField *dfield;
     GwyDataField *mfield;
     LevelArgs args;
     gboolean ok;
     gdouble c, bx, by;
     GQuark quark;
-
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
@@ -124,12 +158,12 @@ level(GwyContainer *data, GwyRunType run)
         if (!ok)
             return;
     }
-    if (!args.exclude)
-        mfield = NULL;
 
-    if (mfield) {
-        /* need to invert mask, so it is inclusion mask */
+    if (args.level_mode == LEVEL_NORMAL)
+        mfield = NULL;
+    if (mfield)
         mfield = gwy_data_field_duplicate(mfield);
+    if (mfield && args.level_mode == LEVEL_EXCLUDE) {
         gwy_data_field_multiply(mfield, -1.0);
         gwy_data_field_add(mfield, 1.0);
     }
@@ -142,63 +176,30 @@ level(GwyContainer *data, GwyRunType run)
                                       &c, &bx, &by);
     else
         gwy_data_field_fit_plane(dfield, &c, &bx, &by);
-    c = -0.5*(bx*gwy_data_field_get_xres(dfield)
-              + by*gwy_data_field_get_yres(dfield));
-    gwy_data_field_plane_level(dfield, c, bx, by);
-    gwy_data_field_data_changed(dfield);
-    if (mfield)
-        g_object_unref(mfield);
-}
 
-static void
-level_rotate(GwyContainer *data, GwyRunType run)
-{
-    GwyDataField *dfield;
-    GwyDataField *mfield;
-    LevelArgs args;
-    gboolean ok;
-    gdouble a, bx, by;
-    GQuark quark;
+    switch(level_type) {
+        case LEVEL_SUBTRACT:
+        c = -0.5*(bx*gwy_data_field_get_xres(dfield)
+                  + by*gwy_data_field_get_yres(dfield));
+        gwy_data_field_plane_level(dfield, c, bx, by);
+        gwy_data_field_data_changed(dfield);
+        break;
 
-    g_return_if_fail(run & LEVEL_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
-                                     GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD, &mfield,
-                                     0);
-    g_return_if_fail(dfield && quark);
+        case LEVEL_ROTATE:
+        bx = gwy_data_field_rtoj(dfield, bx);
+        by = gwy_data_field_rtoi(dfield, by);
+        gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
+                                    GWY_INTERPOLATION_BILINEAR);
+        gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
+                  bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
+        gwy_data_field_data_changed(dfield);
+        break;
 
-    if (run != GWY_RUN_IMMEDIATE && mfield) {
-        level_load_args(gwy_app_settings_get(), &args);
-        ok = level_dialog(&args);
-        level_save_args(gwy_app_settings_get(), &args);
-        if (!ok)
-            return;
-    }
-    if (!args.exclude)
-        mfield = NULL;
-
-    if (mfield) {
-        /* need to invert mask, so it is inclusion mask */
-        mfield = gwy_data_field_duplicate(mfield);
-        gwy_data_field_multiply(mfield, -1.0);
-        gwy_data_field_add(mfield, 1.0);
+        default:
+        g_assert_not_reached();
+        break;
     }
 
-    gwy_app_undo_qcheckpoint(data, quark, NULL);
-    if (mfield)
-        gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
-                                      gwy_data_field_get_xres(dfield),
-                                      gwy_data_field_get_yres(dfield),
-                                      &a, &bx, &by);
-    else
-        gwy_data_field_fit_plane(dfield, &a, &bx, &by);
-    bx = gwy_data_field_rtoj(dfield, bx);
-    by = gwy_data_field_rtoi(dfield, by);
-    gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
-                                GWY_INTERPOLATION_BILINEAR);
-    gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
-              bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
-    gwy_data_field_data_changed(dfield);
     if (mfield)
         g_object_unref(mfield);
 }
@@ -239,8 +240,18 @@ static gboolean
 level_dialog(LevelArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *label, *table, *button;
+    static const GwyEnum modes[] = {
+        { N_("_Exclude region under mask."),      LEVEL_EXCLUDE, },
+        { N_("Exclude region _outside mask."),    LEVEL_INCLUDE, },
+        { N_("Use entire _image (ignore mask)."), LEVEL_NORMAL,  },
+    };
+
+    GtkWidget *dialog, *label, *table;
     gint row, response;
+    GSList *list;
+    LevelControls controls;
+
+    controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Level"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -258,19 +269,22 @@ level_dialog(LevelArgs *args)
     row = 0;
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Plane Fit Mode</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    button = gtk_check_button_new_with_mnemonic(_("Exclude region under "
-            "mask."));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->exclude);
-    gtk_table_attach(GTK_TABLE(table), button,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(button, "toggled",
-                     G_CALLBACK(exclude_changed_cb), args);
+    controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
+                                             G_CALLBACK(mode_changed_cb),
+                                             &controls, args->level_mode);
+    list = controls.mode;
+    do {
+        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(list->data),
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+        list = g_slist_next(list);
+    } while(list);
 
     gtk_widget_show_all(dialog);
     do {
@@ -278,21 +292,22 @@ level_dialog(LevelArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-                gtk_widget_destroy(dialog);
+            gtk_widget_destroy(dialog);
+
             case GTK_RESPONSE_NONE:
-                return FALSE;
-                break;
+            return FALSE;
+            break;
 
             case GTK_RESPONSE_OK:
-                break;
+            break;
 
             case RESPONSE_RESET:
-                //dialog_reset(&controls, args);
-                break;
+            *args = level_defaults;
+            break;
 
             default:
-                g_assert_not_reached();
-                break;
+            g_assert_not_reached();
+            break;
         }
     } while (response != GTK_RESPONSE_OK);
 
@@ -302,25 +317,27 @@ level_dialog(LevelArgs *args)
 }
 
 static void
-exclude_changed_cb(GtkWidget *toggle, LevelArgs *args)
+mode_changed_cb(G_GNUC_UNUSED GObject *unused, LevelControls *controls)
 {
-    args->exclude = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
+    controls->args->level_mode = gwy_radio_buttons_get_current(controls->mode);
 }
 
-static const gchar exclude_key[] = "/module/level/exclude";
+static const gchar level_mode_key[] = "/module/level/mode";
 
 static void
 level_load_args(GwyContainer *container, LevelArgs *args)
 {
     *args = level_defaults;
 
-    gwy_container_gis_boolean_by_name(container, exclude_key, &args->exclude);
+    gwy_container_gis_int32_by_name(container, level_mode_key,
+                                    &args->level_mode);
 }
 
 static void
 level_save_args(GwyContainer *container, LevelArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, exclude_key, args->exclude);
+    gwy_container_set_int32_by_name(container, level_mode_key,
+                                    args->level_mode);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
