@@ -31,7 +31,10 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <string.h>
+#include <glib/gstdio.h>
 #include "evaluator.h"
+#include "evaluator_task_dialog.h"
+
 
 #define ESETUP_RUN_MODES (GWY_RUN_INTERACTIVE)
 
@@ -102,6 +105,7 @@ typedef struct {
     gint fixed_point_max;
     gint fixed_line_max;
     gint correlation_point_max;
+    GtkDialog *pdialog;
 } EsetupControls;
 
 static gboolean    module_register            (void);
@@ -130,6 +134,9 @@ static void        task_remove_cb              (EsetupControls *controls);
 static void        task_edit_cb                (EsetupControls *controls);
 static void        what_changed_cb             (GtkWidget *combo, 
                                                 EsetupControls *controls);
+static void        evaluator_load_cb           (EsetupControls *controls);
+static void        evaluator_save_cb           (EsetupControls *controls);
+
 static void        dpoints_object_chosen_cb(GwyVectorLayer *layer, 
                                                  gint i,
                                                  EsetupControls *controls);
@@ -158,7 +165,7 @@ static GwyVectorLayer *create_layer_with_selection(const gchar* ltype,
                                                    const gchar* stype,
                                                    const gchar* key, 
                                                    GwyContainer *container);
-
+static void        expression_add(EsetupControls *controls, gchar *expression);
 
 static const EsetupArgs esetup_defaults = {
     0, NULL
@@ -230,6 +237,10 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     };
 
 
+    enum {
+          RESPONSE_SAVE = 1,
+          RESPONSE_OPEN = 2
+    };
     
     controls.args = args;
     args->evaluator = gwy_evaluator_new();
@@ -250,12 +261,15 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     g_return_if_fail(dfield);
 
     dialog = gtk_dialog_new_with_buttons(_("Evaluator setup"), NULL, 0,
+                                         GTK_STOCK_OPEN, RESPONSE_OPEN,
+                                         GTK_STOCK_SAVE, RESPONSE_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
+    controls.pdialog = dialog;
     hbox = gtk_hbox_new(FALSE, 2);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -526,7 +540,8 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                              G_CALLBACK(expression_add_cb), &controls);
     gtk_table_attach(GTK_TABLE(table), controls.add_expression, 0, 3, row, row+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
- 
+    row++;
+    
     gtk_widget_set_sensitive(controls.detected_remove_button, FALSE);
     gtk_widget_set_sensitive(controls.detected_edit_button, FALSE);
     gtk_widget_set_sensitive(controls.relative_remove_button, FALSE);
@@ -552,6 +567,14 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_OPEN:
+            evaluator_load_cb(&controls);
+            break;
+
+            case RESPONSE_SAVE:
+            evaluator_save_cb(&controls);
             break;
 
             default:
@@ -604,7 +627,7 @@ get_dpoint_pos_by_id(GArray *array, gchar *id)
     guint i;
     for (i=0; i<array->len; i++)
     {
-        if (strstr(id, g_array_index(array, SearchPointSettings, i).id) != NULL)
+        if (strstr(id, g_array_index(array, GwySearchPoint, i).id) != NULL)
             return i;
     }
     
@@ -616,7 +639,7 @@ get_dline_pos_by_id(GArray *array, gchar *id)
     guint i;
     for (i=0; i<array->len; i++)
     {
-        if (strstr(id, g_array_index(array, SearchLineSettings, i).id) != NULL)
+        if (strstr(id, g_array_index(array, GwySearchLine, i).id) != NULL)
             return i;
     }
     
@@ -713,7 +736,7 @@ get_fpoint_pos_by_id(GArray *array, gchar *id)
     guint i;
     for (i=0; i<array->len; i++)
     {
-        if (strstr(id, g_array_index(array, PointSettings, i).id) != NULL)
+        if (strstr(id, g_array_index(array, GwyFixedPoint, i).id) != NULL)
             return i;
     }
     
@@ -726,7 +749,7 @@ get_fline_pos_by_id(GArray *array, gchar *id)
     guint i;
     for (i=0; i<array->len; i++)
     {
-        if (strstr(id, g_array_index(array, LineSettings, i).id) != NULL)
+        if (strstr(id, g_array_index(array, GwyFixedLine, i).id) != NULL)
             return i;
     }
     
@@ -813,9 +836,9 @@ relative_remove_cb(EsetupControls *controls)
                                gwy_vector_layer_get_selection_key(controls->vlayer_fpoint));
             selpos = get_fpoint_selection_index_by_position(controls,
                           g_array_index(controls->args->evaluator->fixed_point_array, 
-                                        PointSettings, ipos).xc,
+                                        GwyFixedPoint, ipos).xc,
                           g_array_index(controls->args->evaluator->fixed_point_array, 
-                                        PointSettings, ipos).yc);
+                                        GwyFixedPoint, ipos).yc);
             if (ipos >= 0) g_array_remove_index(controls->args->evaluator->fixed_point_array, ipos);
             if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
         } 
@@ -826,13 +849,13 @@ relative_remove_cb(EsetupControls *controls)
                                gwy_vector_layer_get_selection_key(controls->vlayer_fline));
             selpos = get_fline_selection_index_by_position(controls,
                           g_array_index(controls->args->evaluator->fixed_line_array, 
-                                        LineSettings, ipos).xstart,
+                                        GwyFixedLine, ipos).xstart,
                           g_array_index(controls->args->evaluator->fixed_line_array, 
-                                        LineSettings, ipos).ystart,
+                                        GwyFixedLine, ipos).ystart,
                           g_array_index(controls->args->evaluator->fixed_line_array, 
-                                        LineSettings, ipos).xend,
+                                        GwyFixedLine, ipos).xend,
                           g_array_index(controls->args->evaluator->fixed_line_array, 
-                                        LineSettings, ipos).yend);
+                                        GwyFixedLine, ipos).yend);
         
             if (ipos >= 0) g_array_remove_index(controls->args->evaluator->fixed_line_array, ipos);
             if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
@@ -851,7 +874,7 @@ get_cpoint_pos_by_id(GArray *array, gchar *id)
     guint i;
     for (i=0; i<array->len; i++)
     {
-        if (strstr(id, g_array_index(array, CorrelationPointSettings, i).id) != NULL)
+        if (strstr(id, g_array_index(array, GwyCorrelationPoint, i).id) != NULL)
             return i;
     }
     
@@ -902,9 +925,9 @@ correlation_remove_cb(EsetupControls *controls)
         ipos = get_cpoint_pos_by_id(controls->args->evaluator->correlation_point_array, id);
         selpos = get_cpoint_selection_index_by_position(controls,
                           g_array_index(controls->args->evaluator->correlation_point_array, 
-                                        CorrelationPointSettings, ipos).xc,
+                                        GwyCorrelationPoint, ipos).xc,
                           g_array_index(controls->args->evaluator->correlation_point_array, 
-                                        CorrelationPointSettings, ipos).yc);
+                                        GwyCorrelationPoint, ipos).yc);
         if (ipos >= 0) g_array_remove_index(controls->args->evaluator->correlation_point_array, ipos);
         if (selpos >= 0) gwy_selection_delete_object(selection, selpos);
         gtk_list_store_remove(controls->correlation_list, &iter);
@@ -932,6 +955,23 @@ correlation_edit_cb(EsetupControls *controls)
 static void        
 task_add_cb(EsetupControls *controls)
 {
+    GtkDialog *dialog;
+    gint response;
+
+    dialog = gwy_evaluator_task_dialog_new();
+    response = gtk_dialog_run (GTK_DIALOG (dialog));
+    
+    switch (response)
+    {
+      case GTK_RESPONSE_APPLY:
+         expression_add(controls, gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression)));   
+      break;
+      
+      default:
+         break;
+    }
+    gtk_widget_destroy (dialog);  
+    
 }
 
 static guint
@@ -940,7 +980,7 @@ get_task_pos_by_id(GArray *array, gchar *id)
     guint i;
     for (i=0; i<array->len; i++)
     {
-        if (strstr(id, g_array_index(array, ExpressionTask, i).id) != NULL)
+        if (strstr(id, g_array_index(array, GwyEvaluatorTask, i).id) != NULL)
             return i;
     }
     
@@ -968,7 +1008,7 @@ task_remove_cb(EsetupControls *controls)
 static void        
 task_edit_cb(EsetupControls *controls)
 {
-    ExpressionTask task;
+    GwyEvaluatorTask task;
     GtkTreeIter iter;
     gchar *id;
    
@@ -977,7 +1017,7 @@ task_edit_cb(EsetupControls *controls)
     {
         gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
         controls->task_edited = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
-        task = g_array_index(controls->args->evaluator->expression_task_array, ExpressionTask, 
+        task = g_array_index(controls->args->evaluator->expression_task_array, GwyEvaluatorTask, 
                              controls->task_edited);
         gtk_entry_set_text(GTK_ENTRY(controls->expression), task.expression);
         gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Modify selected expression");
@@ -989,16 +1029,16 @@ esetup_sanitize_args(EsetupArgs *args)
 {
 }
 
-static void        
-expression_add_cb(EsetupControls *controls)
+static void
+expression_add(EsetupControls *controls, gchar *expression)
 {
-    ExpressionTask task;
+    GwyEvaluatorTask task;
     GtkTreeIter iter;
     gint k;
-
+    
     if (controls->task_edited == -1) {
         task.id = g_strdup_printf("task%d", controls->args->evaluator->expression_task_array->len);    
-        task.expression = g_strdup(gtk_entry_get_text(GTK_ENTRY(controls->expression)));
+        task.expression = g_strdup(expression);
         g_array_append_val(controls->args->evaluator->expression_task_array, task); 
         gtk_list_store_insert_with_values(controls->evaluator_list, &iter, controls->task_edited,
                        NO_COLUMN, task.id,
@@ -1007,9 +1047,9 @@ expression_add_cb(EsetupControls *controls)
                        -1);
         
      } else {
-        task = g_array_index(controls->args->evaluator->expression_task_array, ExpressionTask,
+        task = g_array_index(controls->args->evaluator->expression_task_array, GwyEvaluatorTask,
                                          controls->task_edited);
-        task.expression = g_strdup(gtk_entry_get_text(GTK_ENTRY(controls->expression)));
+        task.expression = g_strdup(expression);
     
         gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->evaluator_list), &iter);
         for (k = 0; k<controls->task_edited; k++) 
@@ -1026,6 +1066,21 @@ expression_add_cb(EsetupControls *controls)
      }
     
 
+
+}
+
+static void        
+expression_add_cb(EsetupControls *controls)
+{
+    GwyEvaluatorTask task;
+    GtkTreeIter iter;
+    gint k;
+
+    if (controls->task_edited != -1) 
+        gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Add simple evaluator");
+    
+    expression_add(controls, gtk_entry_get_text(GTK_ENTRY(controls->expression)));
+    
 }
 
 
@@ -1223,7 +1278,7 @@ preset_relative(EsetupControls *controls)
     GtkTreeIter iter;
     GwyDataField *dfield;
     GwySelection *selection;
-    PointSettings spset;
+    GwyFixedPoint spset;
     gint i;
     gdouble seldata[2];
     
@@ -1265,7 +1320,7 @@ static void
 update_selected_points(EsetupControls *controls)
 {
     GwySelection *selection;
-    SearchPointSettings spset;
+    GwySearchPoint spset;
     gint i;
     gdouble seldata[2];
    
@@ -1279,7 +1334,7 @@ update_selected_points(EsetupControls *controls)
         if (!gwy_selection_is_full(selection))
         {
         
-            spset = g_array_index(controls->args->evaluator->detected_point_array, SearchPointSettings, i);
+            spset = g_array_index(controls->args->evaluator->detected_point_array, GwySearchPoint, i);
             seldata[0] = spset.xc;
             seldata[1] = spset.yc;
             gwy_selection_set_object(selection, i, seldata);
@@ -1291,7 +1346,7 @@ static void
 update_selected_lines(EsetupControls *controls)
 {
     GwySelection *selection;
-    SearchLineSettings slset;
+    GwySearchLine slset;
     gint i;
     gdouble seldata[4];
     
@@ -1302,7 +1357,7 @@ update_selected_lines(EsetupControls *controls)
 
     for (i=0; i<controls->args->evaluator->detected_line_array->len; i++)
     {
-        slset = g_array_index(controls->args->evaluator->detected_line_array, SearchLineSettings, i);
+        slset = g_array_index(controls->args->evaluator->detected_line_array, GwySearchLine, i);
         seldata[0] = slset.xstart;
         seldata[1] = slset.ystart;
         seldata[2] = slset.xend;
@@ -1315,7 +1370,7 @@ static void
 dpoints_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
-    SearchPointSettings spset;
+    GwySearchPoint spset;
     gdouble pointdata[2];
     GwyDataField *dfield;
     GwySelection *selection;
@@ -1357,7 +1412,7 @@ static void
 dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
-    SearchLineSettings slset;
+    GwySearchLine slset;
     gdouble linedata[4];
     gdouble rho, theta;
     GwyDataField *dfield;
@@ -1406,7 +1461,7 @@ static gboolean
 fixed_point_present(GwyDataField *dfield, gdouble x, gdouble y, GArray *array)
 {
     int i;
-    PointSettings arset;
+    GwyFixedPoint arset;
     gdouble xdiff = gwy_data_field_get_xreal(dfield)/
                              gwy_data_field_get_xres(dfield);
     gdouble ydiff = gwy_data_field_get_yreal(dfield)/
@@ -1414,7 +1469,7 @@ fixed_point_present(GwyDataField *dfield, gdouble x, gdouble y, GArray *array)
 
     for (i=0; i<array->len; i++)
     {
-        arset = g_array_index(array, PointSettings, i);
+        arset = g_array_index(array, GwyFixedPoint, i);
         if (fabs(x - arset.xc) < xdiff &&
             fabs(y - arset.yc) < ydiff) return 1;
     }
@@ -1426,7 +1481,7 @@ static gboolean
 correlation_point_present(GwyDataField *dfield, gdouble x, gdouble y, GArray *array)
 {
     int i;
-    CorrelationPointSettings arset;
+    GwyCorrelationPoint arset;
     gdouble xdiff = gwy_data_field_get_xreal(dfield)/
                              gwy_data_field_get_xres(dfield);
     gdouble ydiff = gwy_data_field_get_yreal(dfield)/
@@ -1434,7 +1489,7 @@ correlation_point_present(GwyDataField *dfield, gdouble x, gdouble y, GArray *ar
 
     for (i=0; i<array->len; i++)
     {
-        arset = g_array_index(array, CorrelationPointSettings, i);
+        arset = g_array_index(array, GwyCorrelationPoint, i);
         if (fabs(x - arset.xc) < xdiff &&
             fabs(y - arset.yc) < ydiff) return 1;
     }
@@ -1446,7 +1501,7 @@ static void
 fpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
-    PointSettings spset, *pspset;
+    GwyFixedPoint spset, *pspset;
     gdouble pointdata[2];
     GwyDataField *dfield;
 
@@ -1471,7 +1526,7 @@ fpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                        -1);
     } else {
         /*old point moved*/
-        pspset = &g_array_index(controls->args->evaluator->fixed_point_array, PointSettings, i);
+        pspset = &g_array_index(controls->args->evaluator->fixed_point_array, GwyFixedPoint, i);
         pspset->xc = pointdata[0];
         pspset->yc = pointdata[1];
 
@@ -1484,7 +1539,7 @@ static gboolean
 fixed_line_present(GwyDataField *dfield, gdouble xstart, gdouble ystart, gdouble xend, gdouble yend, GArray *array)
 {
     int i;
-    LineSettings arset;
+    GwyFixedLine arset;
     gdouble xdiff = gwy_data_field_get_xreal(dfield)/
                              gwy_data_field_get_xres(dfield);
     gdouble ydiff = gwy_data_field_get_yreal(dfield)/
@@ -1492,7 +1547,7 @@ fixed_line_present(GwyDataField *dfield, gdouble xstart, gdouble ystart, gdouble
 
     for (i=0; i<array->len; i++)
     {
-        arset = g_array_index(array, LineSettings, i);
+        arset = g_array_index(array, GwyFixedLine, i);
         if (fabs(xstart - arset.xstart) < xdiff &&
             fabs(xend - arset.xend) < xdiff &&
             fabs(ystart - arset.ystart) < ydiff &&
@@ -1506,7 +1561,7 @@ static void
 flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
-    LineSettings slset, *pslset;
+    GwyFixedLine slset, *pslset;
     gdouble linedata[4];
     gdouble rho, theta;
     GwyDataField *dfield;
@@ -1535,7 +1590,7 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
                        TYPE_COLUMN, "line",
                        -1);
     } else {
-        pslset = &g_array_index(controls->args->evaluator->fixed_line_array, LineSettings, i);
+        pslset = &g_array_index(controls->args->evaluator->fixed_line_array, GwyFixedLine, i);
         pslset->xstart = linedata[0];
         pslset->ystart = linedata[1];
         pslset->xend = linedata[2];
@@ -1550,7 +1605,7 @@ static void
 cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *controls)
 {
     GtkTreeIter iter;
-    CorrelationPointSettings spset, *pspset;
+    GwyCorrelationPoint spset, *pspset;
     gdouble pointdata[2];
     GwyDataField *dfield;
 
@@ -1574,7 +1629,7 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                        -1);
     } else {
         /*old point moved*/
-        pspset = &g_array_index(controls->args->evaluator->correlation_point_array, CorrelationPointSettings, i);
+        pspset = &g_array_index(controls->args->evaluator->correlation_point_array, GwyCorrelationPoint, i);
         pspset->xc = pointdata[0];
         pspset->yc = pointdata[1];
     }
@@ -1595,6 +1650,66 @@ selections_unref(EsetupControls *controls)
     g_object_unref(controls->vlayer_cpoint);
     //g_object_unref(controls->vlayer_rectangle);
 }
+
+static void        
+evaluator_load_cb(EsetupControls *controls)
+{
+    GtkDialog *filedialog;
+    GwyContainer *settings;
+    GError *err = NULL;
+    gchar *filename;
+    GString *string = g_string_new("");
+    FILE *fr;
+
+    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Load evaluator",
+                                                         GTK_WINDOW(GTK_DIALOG(controls->pdialog)),
+                                                         GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                                         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                                         NULL));
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
+                                         gwy_app_get_current_directory());
+    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+        fr = g_fopen(filename, "r");
+              /*fprintf(fw, "%s", string->str); TODO save serializable*/
+        fclose(fr);
+    }
+    gtk_widget_destroy(GTK_WIDGET(filedialog));
+}
+
+static void        
+evaluator_save_cb(EsetupControls *controls)
+{
+    GtkDialog *filedialog;
+    GwyContainer *settings;
+    GError *err = NULL;
+    gchar *filename;
+    GString *string = g_string_new("");
+    FILE *fw;
+
+    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export evaluator",
+                                                         GTK_WINDOW(GTK_DIALOG(controls->pdialog)),
+                                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                                         GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                                         NULL));
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
+                                         gwy_app_get_current_directory());
+    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+        if (gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
+        {
+              fw = g_fopen(filename, "w");
+              /*fprintf(fw, "%s", string->str); TODO save serializable*/
+              fclose(fw);
+        }
+    }
+    gtk_widget_destroy(GTK_WIDGET(filedialog));
+}
+
 
 static void
 esetup_load_args(GwyContainer *container,
