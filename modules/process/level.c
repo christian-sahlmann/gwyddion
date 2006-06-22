@@ -303,6 +303,7 @@ level_dialog(LevelArgs *args)
 
             case RESPONSE_RESET:
             *args = level_defaults;
+            gwy_radio_buttons_set_current(controls.mode, args->level_mode);
             break;
 
             default:
