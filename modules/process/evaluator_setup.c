@@ -1002,21 +1002,40 @@ task_remove_cb(EsetupControls *controls)
 static void        
 task_edit_cb(EsetupControls *controls)
 {
-    GwyEvaluatorTask task;
+    GwyEvaluatorTask *ptask;
     GtkTreeIter iter;
     gchar *id;
-   
+    GtkDialog *dialog;
+    gint response;
+
+ 
     if (gtk_tree_selection_get_selected(controls->evaluator_selection,
                                         &(controls->evaluator_list), &iter))
     {
-    /*    gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
         controls->task_edited = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
-        task = g_array_index(controls->args->evaluator->expression_task_array, GwyEvaluatorTask, 
+        ptask = &g_array_index(controls->args->evaluator->expression_task_array, GwyEvaluatorTask, 
                              controls->task_edited);
-        gtk_entry_set_text(GTK_ENTRY(controls->expression), task.expression);
-        gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Modify selected expression");
-    */
-     }
+
+        dialog = gwy_evaluator_task_dialog_new();
+        gtk_entry_set_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression), ptask->expression);
+        gtk_entry_set_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->threshold_expression), ptask->threshold);
+    
+        response = gtk_dialog_run (GTK_DIALOG (dialog));
+    
+        switch (response)
+        {
+            case GTK_RESPONSE_APPLY:
+            expression_add(controls, 
+                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression)),
+                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->threshold_expression)));   
+            break;
+      
+            default:
+            break;
+        }
+        gtk_widget_destroy (dialog);  
+    }
 }
 
 static void
