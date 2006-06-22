@@ -45,7 +45,8 @@ enum {
 
 enum {
     PROP_0,
-    PROP_DRAW_MARKER
+    PROP_DRAW_MARKER,
+    PROP_MARKER_RADIUS,
 };
 
 typedef struct _GwyLayerPoint          GwyLayerPoint;
@@ -61,6 +62,7 @@ struct _GwyLayerPoint {
 
     /* Properties */
     gboolean draw_marker;
+    guint marker_radius;
 };
 
 struct _GwyLayerPointClass {
@@ -75,38 +77,40 @@ struct _GwySelectionPointClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                (void);
-static GType    gwy_layer_point_get_type       (void) G_GNUC_CONST;
-static GType    gwy_selection_point_get_type   (void) G_GNUC_CONST;
-static void     gwy_layer_point_class_init     (GwyLayerPointClass *klass);
-static void     gwy_layer_point_set_property   (GObject *object,
-                                                guint prop_id,
-                                                const GValue *value,
-                                                GParamSpec *pspec);
-static void     gwy_layer_point_get_property   (GObject*object,
-                                                guint prop_id,
-                                                GValue *value,
-                                                GParamSpec *pspec);
-static void     gwy_layer_point_draw           (GwyVectorLayer *layer,
-                                                GdkDrawable *drawable,
-                                                GwyRenderingTarget target);
-static void     gwy_layer_point_draw_object    (GwyVectorLayer *layer,
-                                                GdkDrawable *drawable,
-                                                GwyRenderingTarget target,
-                                                gint i);
-static gboolean gwy_layer_point_motion_notify  (GwyVectorLayer *layer,
-                                                GdkEventMotion *event);
-static gboolean gwy_layer_point_button_pressed (GwyVectorLayer *layer,
-                                                GdkEventButton *event);
-static gboolean gwy_layer_point_button_released(GwyVectorLayer *layer,
-                                                GdkEventButton *event);
-static void     gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
-                                                gboolean draw_marker);
-static void     gwy_layer_point_realize        (GwyDataViewLayer *dlayer);
-static void     gwy_layer_point_unrealize      (GwyDataViewLayer *dlayer);
-static gint     gwy_layer_point_near_point     (GwyVectorLayer *layer,
-                                                gdouble xreal,
-                                                gdouble yreal);
+static gboolean module_register                  (void);
+static GType    gwy_layer_point_get_type         (void) G_GNUC_CONST;
+static GType    gwy_selection_point_get_type     (void) G_GNUC_CONST;
+static void     gwy_layer_point_class_init       (GwyLayerPointClass *klass);
+static void     gwy_layer_point_set_property     (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_layer_point_get_property     (GObject*object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_layer_point_draw             (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target);
+static void     gwy_layer_point_draw_object      (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target,
+                                                  gint i);
+static gboolean gwy_layer_point_motion_notify    (GwyVectorLayer *layer,
+                                                  GdkEventMotion *event);
+static gboolean gwy_layer_point_button_pressed   (GwyVectorLayer *layer,
+                                                  GdkEventButton *event);
+static gboolean gwy_layer_point_button_released  (GwyVectorLayer *layer,
+                                                  GdkEventButton *event);
+static void     gwy_layer_point_set_draw_marker  (GwyLayerPoint *layer,
+                                                  gboolean draw_marker);
+static void     gwy_layer_point_set_marker_radius(GwyLayerPoint *layer,
+                                                  guint radius);
+static void     gwy_layer_point_realize          (GwyDataViewLayer *dlayer);
+static void     gwy_layer_point_unrealize        (GwyDataViewLayer *dlayer);
+static gint     gwy_layer_point_near_point       (GwyVectorLayer *layer,
+                                                  gdouble xreal,
+                                                  gdouble yreal);
 
 /* Allow to express intent. */
 #define gwy_layer_point_undraw        gwy_layer_point_draw
@@ -172,6 +176,17 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
                              "Whether to draw point marker(s)",
                              TRUE,
                              G_PARAM_READWRITE));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_MARKER_RADIUS,
+        g_param_spec_uint("marker-radius",
+                          "Marker radius",
+                          "fill me in",
+                          0,
+                          50,
+                          0,
+                          G_PARAM_READWRITE));
 }
 
 static void
@@ -185,6 +200,7 @@ static void
 gwy_layer_point_init(GwyLayerPoint *layer)
 {
     layer->draw_marker = TRUE;
+    layer->marker_radius = 0;
 }
 
 static void
@@ -198,6 +214,10 @@ gwy_layer_point_set_property(GObject *object,
     switch (prop_id) {
         case PROP_DRAW_MARKER:
         gwy_layer_point_set_draw_marker(layer, g_value_get_boolean(value));
+        break;
+
+        case PROP_MARKER_RADIUS:
+        gwy_layer_point_set_marker_radius(layer, g_value_get_uint(value));
         break;
 
         default:
@@ -217,6 +237,10 @@ gwy_layer_point_get_property(GObject*object,
     switch (prop_id) {
         case PROP_DRAW_MARKER:
         g_value_set_boolean(value, layer->draw_marker);
+        break;
+
+        case PROP_MARKER_RADIUS:
+        g_value_set_uint(value, layer->marker_radius);
         break;
 
         default:
@@ -250,7 +274,7 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
                             gint i)
 {
     GwyDataView *data_view;
-    gint xc, yc, xmin, xmax, ymin, ymax, width, height, size;
+    gint xc, yc, xmin, xmax, ymin, ymax, width, height, size, radius;
     gdouble xy[OBJECT_SIZE], xreal, yreal, zoom;
     gboolean has_object;
 
@@ -263,6 +287,8 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
     gwy_debug("%d", i);
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
+
+    radius = GWY_LAYER_POINT(layer)->marker_radius;
 
     switch (target) {
         case GWY_RENDERING_TARGET_SCREEN:
@@ -280,7 +306,7 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
         gdk_drawable_get_size(drawable, &width, &height);
         zoom = sqrt(((gdouble)(width*height))/(xmax*ymax));
         size = ROUND(MAX(zoom*(CROSS_SIZE - 1), 1.0));
-
+        radius = ROUND(MAX(zoom*(radius - 1), 1.0));
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
         xc = floor(xy[0]*width/xreal);
         yc = floor(xy[1]*height/yreal);
@@ -298,6 +324,11 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
 
     gdk_draw_line(drawable, layer->gc, xmin, yc, xmax, yc);
     gdk_draw_line(drawable, layer->gc, xc, ymin, xc, ymax);
+
+    if (radius > 0)
+        gdk_draw_arc(drawable, layer->gc, FALSE,
+                     xc - radius, yc - radius, radius + radius, radius + radius,
+                     0, 64*360);
 }
 
 static gboolean
@@ -474,6 +505,29 @@ gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
         gwy_layer_point_draw(vector_layer, parent->window,
                              GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-marker");
+}
+
+static void
+gwy_layer_point_set_marker_radius(GwyLayerPoint *layer, guint radius)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_POINT(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (radius == layer->marker_radius)
+        return;
+
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_point_undraw(vector_layer, parent->window,
+                               GWY_RENDERING_TARGET_SCREEN);
+    layer->marker_radius = radius;
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_point_draw(vector_layer, parent->window,
+                             GWY_RENDERING_TARGET_SCREEN);
+    g_object_notify(G_OBJECT(layer), "marker-radius");
 }
 
 static void
