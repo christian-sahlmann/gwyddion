@@ -281,8 +281,7 @@ gwy_sensitivity_group_release_widget(GwySensitivityGroup *sensgroup,
     g_return_if_fail(GWY_IS_SENSITIVITY_GROUP(sensgroup));
     g_return_if_fail(GTK_IS_WIDGET(widget));
     senslist = gwy_sensitivity_group_get_senslist(sensgroup, G_OBJECT(widget));
-    if (!senslist)
-        return;
+    g_return_if_fail(senslist);
 
     /* Commit sensitivity changes before removal */
     if (senslist->dirty) {
@@ -349,12 +348,12 @@ gwy_sensitivity_group_set_widget_mask(GwySensitivityGroup *sensgroup,
     g_return_if_fail(GWY_IS_SENSITIVITY_GROUP(sensgroup));
     g_return_if_fail(GTK_IS_WIDGET(widget));
     senslist = gwy_sensitivity_group_get_senslist(sensgroup, G_OBJECT(widget));
-    if (!senslist)
-        return;
+    g_return_if_fail(senslist);
     if (mask == senslist->mask)
         return;
 
-    g_object_set_qdata(G_OBJECT(widget), sensitivity_group_quark, NULL);
+    g_object_ref(sensgroup);
+    gwy_sensitivity_group_release_widget(sensgroup, widget);
     gwy_sensitivity_group_add_widget(sensgroup, widget, mask);
     g_object_unref(sensgroup);
 }
@@ -385,13 +384,14 @@ gwy_sensitivity_group_check_dirty(GwySensitivityGroup *sensgroup)
         dirty |= senslist->dirty;
     }
 
-    if (dirty && !sensgroup->source_id)
+    if (dirty && !sensgroup->source_id) {
         /* Go even before X server events, we want sensitivity to be
          * current when events are received from user. */
         sensgroup->source_id = g_idle_add_full(G_PRIORITY_HIGH,
                                                gwy_sensitivity_group_commit,
                                                sensgroup,
                                                NULL);
+    }
     else if (!dirty && sensgroup->source_id) {
         g_source_remove(sensgroup->source_id);
         sensgroup->source_id = 0;
