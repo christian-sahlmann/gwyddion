@@ -1,9 +1,10 @@
-1.99.7cvs20060605
+1.99.7cvs20060622
 
 1.99.8 (0000-00-00)
 Application:
 - Crash on app exit when Document history is open was fixed.
 - Recent files menu items have thumbnails.
+- Data browser: Miscellaneous bugs were fixed.
 
 Libraries:
 - libgwyddion: Version information is now available.
@@ -14,6 +15,12 @@ Libraries:
 - libgwyapp: Settings file manipulation function report problems via GError.
 - libgwyapp: gwy_app_init_common() for simplier initialization of Gwyddion
   applications.
+- libgwymodule: Crash when a module did not register any function was fixed.
+- libgwyprocess: Functions to check data field and line compatibility.
+- libgwyprocess: Laplace interpolation speed was improved.
+- libgwyprocess: Grain numbering speed was improved.
+- libgwydgets: GwyVectorLayer can disable selection editability.
+- libgwydgets: GwyShader is a no-window widget now.
 - libprocess: Inclusion mask argument added to gwy_data_field_area_fit_plane().
 
 Modules:
@@ -24,6 +31,15 @@ Modules:
   bulky custom marker code, still missing some functionality.
 - Level, Level rotate: Option to exclude/include mask area in calculation
   (only offered if a mask exists).
+- Crop: Create new channel losing original data information was fixed.
+- Correlation and tip modules: Ported to multidata and enabled again;
+  idiosyncratic source data choosers were removed, only suitable data fields
+  are offered as tips/kernels.
+- Layer modules: Updated to support disabling of editability.
+
+Other:
+- MSC nmake compilation rules include proper dependencies
+
 
 1.99.7 (2006-05-28)
 Application:
