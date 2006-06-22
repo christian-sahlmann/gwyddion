@@ -35,7 +35,7 @@ gboolean     gwy_graph_func_register            (const gchar *name,
                                                  const gchar *stock_id,
                                                  guint sens_mask,
                                                  const gchar *tooltip);
-void         gwy_graph_func_run                 (const guchar *name,
+void         gwy_graph_func_run                 (const gchar *name,
                                                  GwyGraph *graph);
 gboolean     gwy_graph_func_exists              (const gchar *name);
 const gchar* gwy_graph_func_get_menu_path       (const gchar *name);

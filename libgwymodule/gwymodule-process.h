@@ -38,7 +38,7 @@ gboolean     gwy_process_func_register            (const gchar *name,
                                                    GwyRunType run,
                                                    guint sens_mask,
                                                    const gchar *tooltip);
-void         gwy_process_func_run                 (const guchar *name,
+void         gwy_process_func_run                 (const gchar *name,
                                                    GwyContainer *data,
                                                    GwyRunType run);
 gboolean     gwy_process_func_exists              (const gchar *name);

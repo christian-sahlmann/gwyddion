@@ -126,7 +126,7 @@ gwy_process_func_register(const gchar *name,
  * Runs a data processing function identified by @name.
  **/
 void
-gwy_process_func_run(const guchar *name,
+gwy_process_func_run(const gchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {

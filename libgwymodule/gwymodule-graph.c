@@ -118,7 +118,7 @@ gwy_graph_func_register(const gchar *name,
  * Runs a graph function identified by @name.
  **/
 void
-gwy_graph_func_run(const guchar *name,
+gwy_graph_func_run(const gchar *name,
                    GwyGraph *graph)
 {
     GwyGraphFuncInfo *func_info;
