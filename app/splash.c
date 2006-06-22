@@ -157,8 +157,8 @@ gwy_app_splash_set_message(const gchar *message)
 static void
 splash_map(void)
 {
-  /* Reenable startup notification after the splash has been shown
-   * so that the next window that is mapped sends the notification. */
+    /* Reenable startup notification after the splash has been shown
+     * so that the next window that is mapped sends the notification. */
     gtk_window_set_auto_startup_notification(TRUE);
 }
 

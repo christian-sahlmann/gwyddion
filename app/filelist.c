@@ -553,7 +553,8 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
  *
  * Cannot be called more than once (at least not without doing
  * gwy_app_recent_file_list_free() first).  Must be called before any other
- * document history function can be used, even if on a nonexistent file.
+ * document history function can be used, even if on a nonexistent file:
+ * use %NULL as @filename in that case.
  *
  * Returns: %TRUE if the file was read successfully, %FALSE otherwise.
  **/
@@ -571,6 +572,9 @@ gwy_app_recent_file_list_load(const gchar *filename)
 
     g_return_val_if_fail(gcontrols.store == NULL, FALSE);
     gcontrols.store = gtk_list_store_new(1, G_TYPE_POINTER);
+
+    if (!filename)
+        return TRUE;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         g_clear_error(&err);

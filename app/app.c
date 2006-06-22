@@ -133,12 +133,15 @@ gwy_app_add_main_accel_group(GtkWindow *window)
 
     g_return_if_fail(GTK_IS_WINDOW(window));
     main_window = gwy_app_main_window_get();
+    if (!main_window)
+        return;
+
     g_return_if_fail(GTK_IS_WINDOW(main_window));
 
     accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
                                                     "accel_group"));
-    g_return_if_fail(GTK_IS_ACCEL_GROUP(accel_group));
-    gtk_window_add_accel_group(window, accel_group);
+    if (accel_group)
+        gtk_window_add_accel_group(window, accel_group);
 }
 
 /**
@@ -151,8 +154,6 @@ gwy_app_add_main_accel_group(GtkWindow *window)
 GtkWidget*
 gwy_app_main_window_get(void)
 {
-    if (!gwy_app_main_window)
-        g_critical("Trying to access app main window before its creation");
     return gwy_app_main_window;
 }
 
@@ -384,30 +385,24 @@ gwy_app_data_window_setup(GwyDataWindow *data_window)
     static GtkWidget *corner_menu = NULL;
 
     GwyDataView *data_view;
-    GtkWidget *corner, *ebox;
+    GtkWidget *corner, *ebox, *main_window;
+    GtkAccelGroup *accel_group;
 
-    if (!popup_menu) {
-        GtkWidget *main_window;
-        GtkAccelGroup *accel_group;
+    if ((!popup_menu || !corner_menu)
+        && (main_window = gwy_app_main_window_get())) {
 
-        main_window = gwy_app_main_window_get();
         g_return_if_fail(GTK_IS_WINDOW(main_window));
         accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
                                                         "accel_group"));
-        popup_menu = gwy_app_menu_data_popup_create(accel_group);
-        gtk_widget_show_all(popup_menu);
-    }
 
-    if (!corner_menu) {
-        GtkWidget *main_window;
-        GtkAccelGroup *accel_group;
-
-        main_window = gwy_app_main_window_get();
-        g_return_if_fail(GTK_IS_WINDOW(main_window));
-        accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
-                                                        "accel_group"));
-        corner_menu = gwy_app_menu_data_corner_create(accel_group);
-        gtk_widget_show_all(corner_menu);
+        if (accel_group && !popup_menu) {
+            popup_menu = gwy_app_menu_data_popup_create(accel_group);
+            gtk_widget_show_all(popup_menu);
+        }
+        if (accel_group && !corner_menu) {
+            corner_menu = gwy_app_menu_data_corner_create(accel_group);
+            gtk_widget_show_all(corner_menu);
+        }
     }
 
     corner = gtk_arrow_new(GTK_ARROW_RIGHT, GTK_SHADOW_ETCHED_OUT);
