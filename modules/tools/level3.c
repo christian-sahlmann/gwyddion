@@ -41,7 +41,7 @@ typedef struct _GwyToolLevel3      GwyToolLevel3;
 typedef struct _GwyToolLevel3Class GwyToolLevel3Class;
 
 typedef struct {
-    gint radius;
+    guint radius;
     gboolean instant_apply;
 } ToolArgs;
 
@@ -268,6 +268,8 @@ gwy_tool_level3_data_switched(GwyTool *gwytool,
 
     if (data_view) {
         g_object_set(plain_tool->layer, "draw-marker", TRUE, NULL);
+        g_object_set(plain_tool->layer, "marker-radius",
+                     GWY_TOOL_LEVEL3(gwytool)->args.radius - 1, NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 3);
     }
 
@@ -324,7 +326,9 @@ gwy_tool_level3_radius_changed(GwyToolLevel3 *tool)
     GwyPlainTool *plain_tool;
 
     tool->args.radius = gwy_adjustment_get_int(tool->radius);
+
     plain_tool = GWY_PLAIN_TOOL(tool);
+    g_object_set(plain_tool->layer, "marker-radius", tool->args.radius-1, NULL);
     if (plain_tool->selection)
         gwy_tool_level3_selection_changed(plain_tool, -1);
 }
