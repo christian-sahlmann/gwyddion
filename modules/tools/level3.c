@@ -42,6 +42,7 @@ typedef struct _GwyToolLevel3Class GwyToolLevel3Class;
 
 typedef struct {
     gint radius;
+    gboolean instant_apply;
 } ToolArgs;
 
 struct _GwyToolLevel3 {
@@ -52,6 +53,7 @@ struct _GwyToolLevel3 {
     GtkTreeView *treeview;
     GtkTreeModel *model;
     GtkObject *radius;
+    GtkWidget *instant_apply;
     GtkWidget *apply;
 
     /* potential class data */
@@ -64,26 +66,29 @@ struct _GwyToolLevel3Class {
 
 static gboolean module_register(void);
 
-static GType  gwy_tool_level3_get_type         (void) G_GNUC_CONST;
-static void   gwy_tool_level3_finalize         (GObject *object);
-static void   gwy_tool_level3_init_dialog      (GwyToolLevel3 *tool);
-static void   gwy_tool_level3_data_switched    (GwyTool *gwytool,
-                                                GwyDataView *data_view);
-static void   gwy_tool_level3_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_level3_response         (GwyTool *tool,
-                                                gint response_id);
-static void   gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
-                                                gint hint);
-static void   gwy_tool_level3_radius_changed   (GwyToolLevel3 *tool);
-static void   gwy_tool_level3_update_headers   (GwyToolLevel3 *tool);
-static void   gwy_tool_level3_render_cell      (GtkCellLayout *layout,
-                                                GtkCellRenderer *renderer,
-                                                GtkTreeModel *model,
-                                                GtkTreeIter *iter,
-                                                gpointer user_data);
-static void   gwy_tool_level3_apply            (GwyToolLevel3 *tool);
+static GType  gwy_tool_level3_get_type             (void) G_GNUC_CONST;
+static void   gwy_tool_level3_finalize             (GObject *object);
+static void   gwy_tool_level3_init_dialog          (GwyToolLevel3 *tool);
+static void   gwy_tool_level3_data_switched        (GwyTool *gwytool,
+                                                    GwyDataView *data_view);
+static void   gwy_tool_level3_data_changed         (GwyPlainTool *plain_tool);
+static void   gwy_tool_level3_response             (GwyTool *tool,
+                                                    gint response_id);
+static void   gwy_tool_level3_selection_changed    (GwyPlainTool *plain_tool,
+                                                    gint hint);
+static void   gwy_tool_level3_radius_changed       (GwyToolLevel3 *tool);
+static void   gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
+                                                    GwyToolLevel3 *tool);
+static void   gwy_tool_level3_update_headers       (GwyToolLevel3 *tool);
+static void   gwy_tool_level3_render_cell          (GtkCellLayout *layout,
+                                                    GtkCellRenderer *renderer,
+                                                    GtkTreeModel *model,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
+static void   gwy_tool_level3_apply                (GwyToolLevel3 *tool);
 
 static const gchar radius_key[] = "/module/level3/radius";
+static const gchar instant_apply_key[] = "/module/level3/instant_apply";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -98,6 +103,7 @@ static GwyModuleInfo module_info = {
 
 static const ToolArgs default_args = {
     1,
+    FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -122,7 +128,7 @@ gwy_tool_level3_class_init(GwyToolLevel3Class *klass)
     gobject_class->finalize = gwy_tool_level3_finalize;
 
     tool_class->stock_id = GWY_STOCK_LEVEL_TRIANGLE;
-    tool_class->title = _("Level3");
+    tool_class->title = _("Three Point Level");
     tool_class->tooltip = _("Level data by fitting a plane through three "
                             "points");
     tool_class->prefix = "/module/level3";
@@ -148,6 +154,8 @@ gwy_tool_level3_finalize(GObject *object)
 
     settings = gwy_app_settings_get();
     gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
+    gwy_container_set_boolean_by_name(settings, instant_apply_key,
+                                      tool->args.instant_apply);
 
     G_OBJECT_CLASS(gwy_tool_level3_parent_class)->finalize(object);
 }
@@ -170,6 +178,8 @@ gwy_tool_level3_init(GwyToolLevel3 *tool)
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_gis_int32_by_name(settings, radius_key, &tool->args.radius);
+    gwy_container_gis_boolean_by_name(settings, instant_apply_key,
+                                      &tool->args.instant_apply);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "point");
@@ -216,10 +226,20 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table, TRUE, TRUE, 0);
 
     tool->radius = gtk_adjustment_new(tool->args.radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, _("_Averaging radius:"), "px",
+    gwy_table_attach_spinbutton(table, 1, _("_Averaging radius:"), "px",
                                 tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",
                              G_CALLBACK(gwy_tool_level3_radius_changed), tool);
+    gtk_table_set_row_spacing(GTK_TABLE(table), 1, 10);
+
+    tool->instant_apply
+            = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
+    gtk_table_attach(GTK_TABLE(table), tool->instant_apply, 0, 3, 2, 3,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->instant_apply),
+                                 tool->args.instant_apply);
+    g_signal_connect(tool->instant_apply, "toggled",
+                     G_CALLBACK(gwy_tool_level3_instant_apply_changed), tool);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
@@ -228,6 +248,8 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
 
     gwy_tool_level3_update_headers(tool);
+
+    gtk_widget_set_sensitive(tool->apply, !tool->args.instant_apply);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -289,7 +311,11 @@ gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
 
     if (plain_tool->selection)
         n = gwy_selection_get_data(plain_tool->selection, NULL);
-    gtk_widget_set_sensitive(tool->apply, n == 3);
+
+    gtk_widget_set_sensitive(tool->apply, n == 3 && !tool->args.instant_apply);
+
+    if (n == 3 && tool->args.instant_apply)
+        gwy_tool_level3_apply(GWY_TOOL_LEVEL3(plain_tool));
 }
 
 static void
@@ -301,6 +327,24 @@ gwy_tool_level3_radius_changed(GwyToolLevel3 *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (plain_tool->selection)
         gwy_tool_level3_selection_changed(plain_tool, -1);
+}
+
+static void
+gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
+                                      GwyToolLevel3 *tool)
+{
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
+    gint n = 0;
+
+    tool->args.instant_apply = gtk_toggle_button_get_active(check);
+
+    if (plain_tool->selection)
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+    gtk_widget_set_sensitive(tool->apply, n == 3 && !tool->args.instant_apply);
+
+
+    if (tool->args.instant_apply)
+        gwy_tool_level3_selection_changed(GWY_PLAIN_TOOL(tool), -1);
 }
 
 static void
