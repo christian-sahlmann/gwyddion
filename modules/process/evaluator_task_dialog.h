@@ -43,7 +43,12 @@ typedef enum {
     GWY_EVALUATOR_TASK_POINT_LINE_DISTANCE = 11,
 } GwyEvaluatorTaskFunction;
 
-
+typedef enum {
+    GWY_EVALUATOR_THRESHOLD_BIGGER = 0,
+    GWY_EVALUATOR_THRESHOLD_SMALLER = 1,
+    GWY_EVALUATOR_THRESHOLD_EQUAL = 2,
+    GWY_EVALUATOR_THRESHOLD_INTERVAL = 3,
+} GwyEvaluatorThresholdFunction; 
 
 #define GWY_TYPE_EVALUATOR_TASK_DIALOG            (gwy_evaluator_task_dialog_get_type())
 #define GWY_EVALUATOR_TASK_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_EVALUATOR_TASK_DIALOG, GwyEvaluatorTaskDialog))
@@ -59,8 +64,11 @@ struct _GwyEvaluatorTaskDialog {
     GtkDialog dialog;
 
     GtkWidget *expression;
+    GtkWidget *threshold_expression;
     GtkWidget *task_combo;
+    GtkWidget *threshold_combo;
     GwyEvaluatorTaskFunction task;
+    GwyEvaluatorThresholdFunction threshold;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -91,6 +99,10 @@ static gboolean gwy_evaluator_task_dialog_delete           (GtkWidget *widget,
 static void        function_changed_cb             (GtkWidget *combo,
                                                 GwyEvaluatorTaskDialog *dialog);
 static void        function_add_cb                 (GwyEvaluatorTaskDialog *dialog);
+static void        threshold_changed_cb             (GtkWidget *combo,
+                                                    GwyEvaluatorTaskDialog *dialog);
+static void        threshold_add_cb                 (GwyEvaluatorTaskDialog *dialog);
+
 
 
 
@@ -170,6 +182,13 @@ gwy_evaluator_task_dialog_init(GwyEvaluatorTaskDialog *dialog)
         { N_("Angle between lines (line ID, line ID)"),      GWY_EVALUATOR_TASK_LINES_ANGLE,             },
         { N_("Point - line distance(line ID, point ID)"),    GWY_EVALUATOR_TASK_POINT_LINE_DISTANCE,     },
     };
+    static const GwyEnum thresholds[] = {
+        { N_("Bigger than"),                 GWY_EVALUATOR_THRESHOLD_BIGGER,               },
+        { N_("Smaller than"),                GWY_EVALUATOR_THRESHOLD_SMALLER,              },
+        { N_("Equal to"),                    GWY_EVALUATOR_THRESHOLD_EQUAL,                },
+        { N_("In interval"),                 GWY_EVALUATOR_THRESHOLD_INTERVAL,             },
+    };
+
 
     table = gtk_table_new(2, 8, FALSE);
 
@@ -179,7 +198,7 @@ gwy_evaluator_task_dialog_init(GwyEvaluatorTaskDialog *dialog)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     dialog->expression = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(dialog->expression), "test");
+    gtk_entry_set_text(GTK_ENTRY(dialog->expression), "");
     gtk_table_attach(GTK_TABLE(table), dialog->expression, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), dialog->expression);
@@ -196,6 +215,28 @@ gwy_evaluator_task_dialog_init(GwyEvaluatorTaskDialog *dialog)
     button = gtk_button_new_with_label("Add function");
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(function_add_cb), dialog);
+    gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1,
+                                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    row++;
+    dialog->threshold_expression = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(dialog->threshold_expression), "");
+    gtk_table_attach(GTK_TABLE(table), dialog->threshold_expression, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), dialog->threshold_expression);
+    row++;
+
+    dialog->threshold_combo
+        = gwy_enum_combo_box_new(thresholds, G_N_ELEMENTS(thresholds),
+                                 G_CALLBACK(threshold_changed_cb),
+                                 dialog, dialog->threshold, TRUE);
+    gwy_table_attach_row(table, row, _("_Operator:"), "",
+                         dialog->threshold_combo);
+    row++;
+
+    button = gtk_button_new_with_label("Add operator");
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(threshold_add_cb), dialog);
     gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
@@ -241,6 +282,63 @@ function_changed_cb(GtkWidget *combo, GwyEvaluatorTaskDialog *dialog)
 static void        
 function_add_cb(GwyEvaluatorTaskDialog *dialog)
 {
+    GtkEditable *editable;
+    gint pos;
+    gchar *p;
+
+    static const GwyEnum tasks[] = {
+        { N_("LineMin()"),      GWY_EVALUATOR_TASK_LINE_MIN,                },
+        { N_("LineMax()"),      GWY_EVALUATOR_TASK_LINE_MAX,                },
+        { N_("LineAvg()"),      GWY_EVALUATOR_TASK_LINE_AVERAGE,            },
+        { N_("LineRMS()"),      GWY_EVALUATOR_TASK_LINE_SIGMA,              },
+        { N_("LineFreq()"),     GWY_EVALUATOR_TASK_LINE_PERIODICITY,        },
+        { N_("PointValue()"),   GWY_EVALUATOR_TASK_POINT_VALUE,             },
+        { N_("PointAvg()"),     GWY_EVALUATOR_TASK_POINT_AVERAGE,           },
+        { N_("PointNeural()"),  GWY_EVALUATOR_TASK_POINT_NEURAL,            },
+        { N_("IntersectX()"),   GWY_EVALUATOR_TASK_LINES_INTERSECTION_X,    },
+        { N_("IntersectY()"),   GWY_EVALUATOR_TASK_LINES_INTERSECTION_Y,    },
+        { N_("Angle()"),        GWY_EVALUATOR_TASK_LINES_ANGLE,             },
+        { N_("PLDistance()"),   GWY_EVALUATOR_TASK_POINT_LINE_DISTANCE,     },
+    };
+
+
+
+    p = gwy_enum_to_string(dialog->task, tasks, G_N_ELEMENTS(tasks));
+    
+    editable = GTK_EDITABLE(dialog->expression);
+    pos = gtk_editable_get_position(editable);
+    gtk_editable_insert_text(editable, p, strlen(p), &pos);
+    gtk_editable_set_position(editable, pos);
+
+}
+
+static void        
+threshold_changed_cb(GtkWidget *combo, GwyEvaluatorTaskDialog *dialog)
+{
+    dialog->threshold = (GwyEvaluatorThresholdFunction)gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
+
+}
+
+static void        
+threshold_add_cb(GwyEvaluatorTaskDialog *dialog)
+{
+    GtkEditable *editable;
+    gint pos;
+    gchar *p;
+
+    static const GwyEnum thresholds[] = {
+        { N_("> "),                GWY_EVALUATOR_THRESHOLD_BIGGER,               },
+        { N_("< "),                GWY_EVALUATOR_THRESHOLD_SMALLER,              },
+        { N_("= "),                GWY_EVALUATOR_THRESHOLD_EQUAL,                },
+        { N_("Interval()"),        GWY_EVALUATOR_THRESHOLD_INTERVAL,             },
+     };
+
+    p = gwy_enum_to_string(dialog->threshold, thresholds, G_N_ELEMENTS(thresholds));
+    
+    editable = GTK_EDITABLE(dialog->threshold_expression);
+    pos = gtk_editable_get_position(editable);
+    gtk_editable_insert_text(editable, p, strlen(p), &pos);
+    gtk_editable_set_position(editable, pos);
 
 }
 

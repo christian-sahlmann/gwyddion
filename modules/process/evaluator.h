@@ -1011,8 +1011,7 @@ struct _GwyEvaluatorTask {
         
     gchar *id;
     gchar *expression;
-    gchar *description;
-    gdouble threshold;
+    gchar *threshold;
 };
 
 struct _GwyEvaluatorTaskClass {
@@ -1105,8 +1104,7 @@ gwy_evaluator_task_serialize(GObject *obj,
         GwySerializeSpec spec[] = {
             { 's', "id", &evaluator_task->id, NULL },
             { 's', "expression", &evaluator_task->expression, NULL },
-            { 's', "description", &evaluator_task->description, NULL },
-            { 'd', "threshold", &evaluator_task->threshold, NULL },
+            { 's', "threshold", &evaluator_task->threshold, NULL },
          };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_EVALUATOR_TASK_TYPE_NAME,
@@ -1127,8 +1125,7 @@ gwy_evaluator_task_get_size(GObject *obj)
         GwySerializeSpec spec[] = {
             { 's', "id", &evaluator_task->id, NULL },
             { 's', "expression", &evaluator_task->expression, NULL },
-            { 's', "description", &evaluator_task->description, NULL },
-            { 'd', "threshold", &evaluator_task->threshold, NULL },
+            { 's', "threshold", &evaluator_task->threshold, NULL },
          };
         return gwy_serialize_get_struct_size(GWY_EVALUATOR_TASK_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
@@ -1149,8 +1146,7 @@ gwy_evaluator_task_deserialize(const guchar *buffer,
         GwySerializeSpec spec[] = {
             { 's', "id", &evaluator_task->id, NULL },
             { 's', "expression", &evaluator_task->expression, NULL },
-            { 's', "description", &evaluator_task->description, NULL },
-            { 'd', "threshold", &evaluator_task->threshold, NULL },
+            { 's', "threshold", &evaluator_task->threshold, NULL },
          };
         gwy_serialize_unpack_object_struct(buffer, size, position,
                                            GWY_EVALUATOR_TASK_TYPE_NAME,
@@ -1173,8 +1169,7 @@ gwy_evaluator_task_duplicate_real(GObject *object)
     
     duplicate->id = g_strdup(evaluator_task->id);
     duplicate->expression = g_strdup(evaluator_task->expression);
-    duplicate->description = g_strdup(evaluator_task->description);
-    duplicate->threshold = evaluator_task->threshold;
+    duplicate->threshold = g_strdup(evaluator_task->threshold);
 
     return (GObject*)duplicate;
 }

@@ -55,11 +55,11 @@ enum {
 typedef enum {
     SETUP_VIEW_DETECTED_POINTS  = 0,
     SETUP_VIEW_DETECTED_LINES  = 1,
-    SETUP_VIEW_SELECTED_POINTS  = 3,
-    SETUP_VIEW_SELECTED_LINES  = 4,
-    SETUP_VIEW_FIXED_POINTS  = 6,
-    SETUP_VIEW_FIXED_LINES  = 7,
-    SETUP_VIEW_CORRELATION_POINTS  = 8
+    SETUP_VIEW_SELECTED_POINTS  = 2,
+    SETUP_VIEW_SELECTED_LINES  = 3,
+    SETUP_VIEW_FIXED_POINTS  = 4,
+    SETUP_VIEW_FIXED_LINES  = 5,
+    SETUP_VIEW_CORRELATION_POINTS  = 6
 } GwySetupViewType;
 
 
@@ -81,8 +81,6 @@ typedef struct {
     GtkTreeSelection *correlation_selection;
     GtkTreeSelection *evaluator_selection;
     GtkWidget *what;
-    GtkWidget *expression;
-    GtkWidget *add_expression;
     GtkWidget *detected_edit_button;
     GtkWidget *detected_remove_button;
     GtkWidget *correlation_edit_button;
@@ -129,7 +127,6 @@ static void        relative_remove_cb          (EsetupControls *controls);
 static void        correlation_remove_cb       (EsetupControls *controls);
 static void        correlation_edit_cb         (EsetupControls *controls);
 static void        task_add_cb                 (EsetupControls *controls);
-static void        expression_add_cb                 (EsetupControls *controls);
 static void        task_remove_cb              (EsetupControls *controls);
 static void        task_edit_cb                (EsetupControls *controls);
 static void        what_changed_cb             (GtkWidget *combo, 
@@ -165,7 +162,9 @@ static GwyVectorLayer *create_layer_with_selection(const gchar* ltype,
                                                    const gchar* stype,
                                                    const gchar* key, 
                                                    GwyContainer *container);
-static void        expression_add(EsetupControls *controls, gchar *expression);
+static void        expression_add(EsetupControls *controls, 
+                                  gchar *expression,
+                                  gchar *threshold);
 
 static const EsetupArgs esetup_defaults = {
     0, NULL
@@ -213,7 +212,7 @@ esetup(GwyContainer *data, GwyRunType run)
 static void
 esetup_dialog(EsetupArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *label, *hbox, *tree, *notebook, *page, *button;
+    GtkWidget *dialog, *table, *label, *hbox, *tree, *notebook, *page, *button, *scroll;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     EsetupControls controls;
@@ -374,7 +373,11 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                 "Type", renderer, 
                                                 "text", TYPE_COLUMN,
                                                 NULL);
-    gtk_table_attach(GTK_TABLE(page), tree, 0, 4, prow, prow+1,
+
+    gtk_widget_set_size_request(tree, 100, 100);
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(scroll, tree);
+    gtk_table_attach(GTK_TABLE(page), scroll, 0, 4, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
  
     gtk_tree_view_set_model(GTK_TREE_VIEW(tree), GTK_TREE_MODEL(controls.detected_list));
@@ -415,7 +418,10 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                          "Description",
                                                       renderer, 
                                                       "text", DESCRIPTION_COLUMN, NULL);
-    gtk_table_attach(GTK_TABLE(page), tree, 0, 4, prow, prow+1,
+    gtk_widget_set_size_request(tree, 100, 100);
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(scroll, tree);
+    gtk_table_attach(GTK_TABLE(page), scroll, 0, 4, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
     prow++;
     controls.relative_remove_button = gtk_button_new_with_label("Remove");
@@ -451,7 +457,10 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                       renderer, 
                                                       "text", DESCRIPTION_COLUMN, 
                                                       NULL);
-    gtk_table_attach(GTK_TABLE(page), tree, 0, 4, prow, prow+1,
+    gtk_widget_set_size_request(tree, 100, 100);
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(scroll, tree);
+    gtk_table_attach(GTK_TABLE(page), scroll, 0, 4, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
     prow++;
     controls.correlation_remove_button = gtk_button_new_with_label("Remove");
@@ -491,16 +500,19 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                       "text", NO_COLUMN,
                                                       NULL);
     column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
-                                                         "Type",
+                                                         "Expression",
                                                       renderer, 
                                                       "text", TYPE_COLUMN,
                                                       NULL);
     column_id = gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(tree), -1,
-                                                         "Description",
+                                                         "Threshold",
                                                       renderer, 
                                                       "text", DESCRIPTION_COLUMN,
                                                       NULL);
-    gtk_table_attach(GTK_TABLE(table), tree, 0, 4, row, row+1,
+    gtk_widget_set_size_request(tree, 100, 100);
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(scroll, tree);
+    gtk_table_attach(GTK_TABLE(table), scroll, 0, 4, row, row+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
     
     row++;
@@ -520,26 +532,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), button, 2, 3, row, row+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
  
-    row++;
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Simple expression evaluator</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    controls.expression = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(controls.expression), "test");
-    gtk_table_attach(GTK_TABLE(table), controls.expression, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.expression);
-    row++;
-
-    controls.add_expression = gtk_button_new_with_label("Add simple evaluator");
-    g_signal_connect_swapped(controls.add_expression, "clicked", 
-                             G_CALLBACK(expression_add_cb), &controls);
-    gtk_table_attach(GTK_TABLE(table), controls.add_expression, 0, 3, row, row+1,
-                                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
     
     gtk_widget_set_sensitive(controls.detected_remove_button, FALSE);
@@ -964,7 +956,9 @@ task_add_cb(EsetupControls *controls)
     switch (response)
     {
       case GTK_RESPONSE_APPLY:
-         expression_add(controls, gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression)));   
+         expression_add(controls, 
+                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression)),
+                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->threshold_expression)));   
       break;
       
       default:
@@ -1015,13 +1009,14 @@ task_edit_cb(EsetupControls *controls)
     if (gtk_tree_selection_get_selected(controls->evaluator_selection,
                                         &(controls->evaluator_list), &iter))
     {
-        gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
+    /*    gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
         controls->task_edited = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
         task = g_array_index(controls->args->evaluator->expression_task_array, GwyEvaluatorTask, 
                              controls->task_edited);
         gtk_entry_set_text(GTK_ENTRY(controls->expression), task.expression);
         gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Modify selected expression");
-    }
+    */
+     }
 }
 
 static void
@@ -1030,7 +1025,7 @@ esetup_sanitize_args(EsetupArgs *args)
 }
 
 static void
-expression_add(EsetupControls *controls, gchar *expression)
+expression_add(EsetupControls *controls, gchar *expression, gchar *threshold)
 {
     GwyEvaluatorTask task;
     GtkTreeIter iter;
@@ -1039,17 +1034,19 @@ expression_add(EsetupControls *controls, gchar *expression)
     if (controls->task_edited == -1) {
         task.id = g_strdup_printf("task%d", controls->args->evaluator->expression_task_array->len);    
         task.expression = g_strdup(expression);
+        task.threshold = g_strdup(threshold);
         g_array_append_val(controls->args->evaluator->expression_task_array, task); 
         gtk_list_store_insert_with_values(controls->evaluator_list, &iter, controls->task_edited,
                        NO_COLUMN, task.id,
-                       TYPE_COLUMN, "expression",
-                       DESCRIPTION_COLUMN, task.expression,
+                       TYPE_COLUMN, task.expression,
+                       DESCRIPTION_COLUMN, task.threshold,
                        -1);
         
      } else {
         task = g_array_index(controls->args->evaluator->expression_task_array, GwyEvaluatorTask,
                                          controls->task_edited);
         task.expression = g_strdup(expression);
+        task.threshold = g_strdup(threshold);
     
         gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->evaluator_list), &iter);
         for (k = 0; k<controls->task_edited; k++) 
@@ -1058,31 +1055,15 @@ expression_add(EsetupControls *controls, gchar *expression)
         gtk_list_store_set(controls->evaluator_list, 
                        &iter,
                            NO_COLUMN, task.id,
-                       TYPE_COLUMN, "expression",
-                       DESCRIPTION_COLUMN, task.expression,
+                       TYPE_COLUMN, task.expression,
+                       DESCRIPTION_COLUMN, task.threshold,
                        -1);
         controls->task_edited = -1;
-        gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Add simple evaluator");
      }
     
 
 
 }
-
-static void        
-expression_add_cb(EsetupControls *controls)
-{
-    GwyEvaluatorTask task;
-    GtkTreeIter iter;
-    gint k;
-
-    if (controls->task_edited != -1) 
-        gtk_button_set_label(GTK_BUTTON(controls->add_expression), "Add simple evaluator");
-    
-    expression_add(controls, gtk_entry_get_text(GTK_ENTRY(controls->expression)));
-    
-}
-
 
 
 static void        
