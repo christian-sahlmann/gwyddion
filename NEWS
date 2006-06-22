@@ -14,12 +14,16 @@ Libraries:
 - libgwyapp: Settings file manipulation function report problems via GError.
 - libgwyapp: gwy_app_init_common() for simplier initialization of Gwyddion
   applications.
+- libprocess: Inclusion mask argument added to gwy_data_field_area_fit_plane().
 
 Modules:
 - PNI file (new): Pacific Nanotechnology PNI file import.
 - Tip dilation, reconstruction and certainty map were merged to one: tipops
   (but it still provides three distinct functions).
-
+- 2D FFT Filter: Ported from 1.x, interface reworked to use masks instead of
+  bulky custom marker code, still missing some functionality.
+- Level, Level rotate: Option to exclude/include mask area in calculation
+  (only offered if a mask exists).
 
 1.99.7 (2006-05-28)
 Application:
