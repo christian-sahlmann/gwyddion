@@ -431,8 +431,9 @@ gwy_resource_use(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     gwy_debug("%s %p<%s> %d",
-              g_type_name(G_TYPE_FROM_INSTANCE(resource)),
-              resource, resource->name->str, resource->use_count);
+              G_OBJECT_TYPE_NAME(resource),
+              resource, resource->name->str,
+              resource->use_count);
 
     g_object_ref(resource);
     if (!resource->use_count++) {
@@ -459,8 +460,9 @@ gwy_resource_release(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     gwy_debug("%s %p<%s> %d",
-              g_type_name(G_TYPE_FROM_INSTANCE(resource)),
-              resource, resource->name->str, resource->use_count);
+              G_OBJECT_TYPE_NAME(resource),
+              resource, resource->name->str,
+              resource->use_count);
     g_return_if_fail(resource->use_count);
 
     if (!--resource->use_count) {
@@ -509,7 +511,7 @@ gwy_resource_dump(GwyResource *resource)
     g_return_val_if_fail(method, NULL);
 
     str = g_string_new(MAGIC_HEADER);
-    g_string_append(str, g_type_name(G_TYPE_FROM_INSTANCE(resource)));
+    g_string_append(str, G_OBJECT_TYPE_NAME(resource));
     g_string_append_c(str, '\n');
     method(resource, str);
 

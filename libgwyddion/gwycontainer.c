@@ -2112,7 +2112,7 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
         case G_TYPE_OBJECT:
         g_warning("Forced to serialize object %s to text",
-                  g_type_name(G_TYPE_FROM_INSTANCE(g_value_get_object(value))));
+                  G_OBJECT_TYPE_NAME(g_value_get_object(value)));
         b = gwy_serializable_serialize(g_value_get_object(value), NULL);
         g_assert(b);
         j = strlen(k);

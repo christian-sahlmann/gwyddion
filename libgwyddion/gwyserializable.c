@@ -116,12 +116,12 @@ gwy_serializable_serialize(GObject *serializable,
     g_return_val_if_fail(serializable, NULL);
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), NULL);
     gwy_debug("serializing a `%s'",
-              g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+              G_OBJECT_TYPE_NAME(serializable));
 
     serialize_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->serialize;
     if (!serialize_method) {
         g_critical("`%s' doesn't implement serialize()",
-                   g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+                   G_OBJECT_TYPE_NAME(serializable));
         return NULL;
     }
 
@@ -158,7 +158,7 @@ gwy_serializable_get_size(GObject *serializable)
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), 0);
 
     get_size_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->get_size;
-    type_name = g_type_name(G_TYPE_FROM_INSTANCE(serializable));
+    type_name = G_OBJECT_TYPE_NAME(serializable);
     if (!get_size_method) {
         g_warning("`%s' doesn't implement get_size(), assuming empty",
                   type_name);
@@ -308,12 +308,12 @@ gwy_serializable_duplicate_hard_way(GObject *object)
 
     g_warning("`%s' doesn't have its own duplicate() method, "
               "forced to duplicate it the hard way.",
-              g_type_name(G_TYPE_FROM_INSTANCE(object)));
+              G_OBJECT_TYPE_NAME(object));
 
     buffer = gwy_serializable_serialize(object, NULL);
     if (!buffer) {
         g_critical("`%s' serialization failed",
-                   g_type_name(G_TYPE_FROM_INSTANCE(object)));
+                   G_OBJECT_TYPE_NAME(object));
         return NULL;
     }
     duplicate = gwy_serializable_deserialize(buffer->data, buffer->len,
@@ -352,7 +352,7 @@ gwy_serializable_clone(GObject *source,
     clone_method = GWY_SERIALIZABLE_GET_IFACE(copy)->clone;
     if (!clone_method) {
         g_critical("`%s' doesn't implement clone()",
-                   g_type_name(G_TYPE_FROM_INSTANCE(copy)));
+                   G_OBJECT_TYPE_NAME(copy));
         return;
     }
     clone_method(source, copy);
@@ -500,12 +500,12 @@ gwy_serializable_do_serialize(GObject *serializable,
     g_return_val_if_fail(serializable, NULL);
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), NULL);
     gwy_debug("serializing a `%s'",
-              g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+              G_OBJECT_TYPE_NAME(serializable));
 
     serialize_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->serialize;
     if (!serialize_method) {
         g_critical("`%s' doesn't implement serialize()",
-                   g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+                   G_OBJECT_TYPE_NAME(serializable));
         return NULL;
     }
     return serialize_method(serializable, buffer);
@@ -558,7 +558,7 @@ gwy_serialize_pack_object_header(GByteArray *buffer,
 /**
  * gwy_serialize_pack_object_struct:
  * @buffer: A buffer to which the serialized components should be appended.
- * @object_name: The g_type_name() of the object.
+ * @object_name: The type name of the object.
  * @nspec: The number of items in @spec.
  * @spec: The components to serialize.
  *
@@ -618,7 +618,7 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
  * gwy_serialize_object_items:
  * @buffer: A buffer to which the serialized components should be appended,
  *          or %NULL.
- * @object_name: The g_type_name() of the object.
+ * @object_name: The type of the object.
  * @nitems: The number of @items items.
  * @items: The components to serialize.
  *
@@ -837,7 +837,7 @@ gwy_serialize_spec(GByteArray *buffer,
 
 /**
  * gwy_serialize_get_struct_size:
- * @object_name: The g_type_name() of the object.
+ * @object_name: The type name of the object.
  * @nspec: The number of items in @spec.
  * @spec: The components to serialize.
  *
@@ -874,7 +874,7 @@ gwy_serialize_get_struct_size(const guchar *object_name,
 
 /**
  * gwy_serialize_get_items_size:
- * @object_name: The g_type_name() of the object.
+ * @object_name: The type name of the object.
  * @nitems: The number of @items items.
  * @items: The components to serialize.
  *
@@ -1291,7 +1291,7 @@ gwy_serialize_unpack_struct(const guchar *buffer,
  * @size: Current size of @buffer, new size is returned here.
  * @position: The position of the object in @buffer, it's updated to point
  *            after it.
- * @object_name: The g_type_name() of the object.
+ * @object_name: The type name of the object.
  * @nspec: The number of items in @spec.
  * @spec: The components to deserialize.
  *
@@ -1364,7 +1364,7 @@ gwy_serialize_unpack_object_struct(const guchar *buffer,
  * @size: The size of @buffer.
  * @position: Current position in buffer, will be updated to point after
  *            object.
- * @object_name: The g_type_name() of the object.
+ * @object_name: The type name of the object.
  * @nitems: Where the number of deserialized components should be stored.
  *
  * Deserializes an object with arbitrary components from gwy-file format.
