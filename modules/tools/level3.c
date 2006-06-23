@@ -230,7 +230,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
                                 tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",
                              G_CALLBACK(gwy_tool_level3_radius_changed), tool);
-    gtk_table_set_row_spacing(GTK_TABLE(table), 1, 10);
+    gtk_table_set_row_spacing(GTK_TABLE(table), 1, 8);
 
     tool->instant_apply
             = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
