@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
+#include <gobject/gvaluecollector.h>
 
 /* To be able to mmap() files.
  * On Linux we have all, on Win32 we have none, on others who knows */
@@ -726,6 +727,119 @@ gwy_str_next_line(gchar **buffer)
         *buffer = NULL;
 
     return q;
+}
+
+/**
+ * gwy_object_set_or_reset:
+ * @object: A #GObject.
+ * @type: The type whose properties are to reset, may be zero for all types.
+ * @first_property_name: Name of the first property to set.  It can be
+ *                       %NULL to only reset properties.
+ * @...: Value for the first property, followed optionally by more name/value
+ *       pairs, terminated by %NULL.
+ *
+ * Sets object properties, resetting other properties to defaults.
+ *
+ * All explicitly specified properties are set.  In addition, all unspecified
+ * properties of type @type (or all unspecified properties if @type is 0)
+ * are reset to defaults.
+ *
+ * Unlike g_object_set(), notifications are not emitted for properties which
+ * did not actually change.
+ **/
+void
+gwy_object_set_or_reset(gpointer object,
+                        GType type,
+                        const gchar *first_property_name,
+                        ...)
+{
+    GValue value, cur_value, new_value;
+    GObjectClass *klass;
+    GParamSpec **pspec;
+    gboolean *ignore;
+    const gchar *name;
+    va_list ap;
+    gint nspec, i;
+
+    klass = G_OBJECT_GET_CLASS(object);
+    g_return_if_fail(G_IS_OBJECT_CLASS(klass));
+    g_return_if_fail(!type || G_TYPE_CHECK_INSTANCE_TYPE(object, type));
+
+    pspec = g_object_class_list_properties(klass, &nspec);
+    ignore = g_newa(gboolean, nspec);
+    memset(ignore, 0, nspec*sizeof(gboolean));
+
+    /* Ignore properties of the wrong type */
+    if (type) {
+        for (i = 0; i < nspec; i++) {
+            if (pspec[i]->owner_type != type)
+                ignore[i] = TRUE;
+        }
+    }
+
+    g_object_freeze_notify(object);
+
+    memset(&cur_value, 0, sizeof(GValue));
+    memset(&new_value, 0, sizeof(GValue));
+
+    va_start(ap, first_property_name);
+    name = first_property_name;
+    for (name = first_property_name; name; name = va_arg(ap, gchar*)) {
+        gchar *error = NULL;
+
+        for (i = 0; i < nspec; i++) {
+            if (gwy_strequal(pspec[i]->name, name))
+                break;
+        }
+
+        /* Do only minimal checking, because we cannot avoid re-checking in
+         * g_object_set_property(), or at least not w/o copying a large
+         * excerpt of GObject here.  Considerable amount of work is still
+         * performed inside GObject again... */
+        if (i == nspec) {
+            g_warning("object class `%s' has no property named `%s'",
+                      G_OBJECT_TYPE_NAME(object), name);
+            continue;
+        }
+
+        g_value_init(&new_value, pspec[i]->value_type);
+        G_VALUE_COLLECT(&new_value, ap, 0, &error);
+        if (error) {
+            g_warning("%s", error);
+            g_free(error);
+            g_value_unset(&new_value);
+            break;
+        }
+
+        g_value_init(&cur_value, pspec[i]->value_type);
+        g_object_get_property(object, name, &cur_value);
+        if (g_param_values_cmp(pspec[i], &new_value, &cur_value) != 0)
+            g_object_set_property(object, name, &new_value);
+
+        g_value_unset(&cur_value);
+        g_value_unset(&new_value);
+        ignore[i] = TRUE;
+    }
+    va_end(ap);
+
+    memset(&value, 0, sizeof(GValue));
+    for (i = 0; i < nspec; i++) {
+        if (ignore[i])
+            continue;
+
+        g_value_init(&value, pspec[i]->value_type);
+        g_object_get_property(object, pspec[i]->name, &value);
+        if (!g_param_value_defaults(pspec[i], &value)) {
+            g_param_value_set_default(pspec[i], &value);
+            g_object_set_property(object, pspec[i]->name, &value);
+        }
+
+        g_value_unset(&value);
+    }
+
+    g_free(pspec);
+
+    g_object_thaw_notify(object);
 }
 
 /************************** Documentation ****************************/

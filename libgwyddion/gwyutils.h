@@ -56,7 +56,10 @@ gchar*       gwy_canonicalize_path     (const gchar *path);
 gboolean     gwy_filename_ignore       (const gchar *filename_sys);
 gchar*       gwy_sgettext              (const gchar *msgid);
 gchar*       gwy_str_next_line         (gchar **buffer);
-
+void         gwy_object_set_or_reset   (gpointer object,
+                                        GType type,
+                                        const gchar *first_property_name,
+                                        ...);
 
 G_END_DECLS
 
