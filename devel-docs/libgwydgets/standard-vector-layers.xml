@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id="standard-vector-layers" revision="@(#) $Id$">
   <refmeta>
@@ -29,7 +29,7 @@
       All layers are subclasses of <link linkend="GwyVectorLayer">GwyVectorLayer</link>
       sharing its basic interface.
       Each layer lets the user draw or select different shapes, therefore each module also
-      defines its own selection object type determining the format of selection data. 
+      defines its own selection object type determining the format of selection data.
       All selections are subclasses of <link linkend="GwySelection">GwySelection</link>.
       By convention, layer type Foo is called GwyLayerFoo and the corresponding selection
       type GwySelectionFoo.
@@ -152,8 +152,9 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionPoint"), NULL);
     </synopsis>
     <para>
-      Layer allows to select a number of points, either displayed as crosses or with no
-      graphical representation (the latter mainly useful with only one selected point).
+      Layer allows to select a number of points, either displayed as crosses,
+      crosses with concentric circles, or with no graphical representation (the
+      latter mainly useful with only one selected point).
     </para>
     <para>
       Selection data consists of coordinate pairs (x, y) representing selected points.
@@ -164,8 +165,17 @@
         <varlistentry><term><anchor id="GwyLayerPoint--draw-marker"/>&quot;<literal>draw-marker</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
             <para>
-              Whether points should be displayed as crosses (otherwise they are invisible).
-              Default is to display points.
+              If set to TRUE, points will be displayed. Otherwise they will be invisible.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term><anchor id="GwyLayerPoint--marker-radius"/>&quot;<literal>marker-radius</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Specifies the radius of the circle to draw around all selected points.
+              If set to zero and/or if &quot;<literal>draw-marker</literal>&quot; is
+              set to FALSE, no circle will be drawn.
+              Default is a radius of zero.
             </para>
           </listitem>
         </varlistentry>
