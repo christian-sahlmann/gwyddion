@@ -61,7 +61,6 @@ static void     fft                (GwyContainer *data,
                                     GwyRunType run);
 static void     fft_create_output  (GwyContainer *data,
                                     GwyDataField *dfield,
-                                    gint oldid,
                                     const gchar *window_name);
 static gboolean fft_dialog         (FFTArgs *args,
                                     gint oldsize,
@@ -128,12 +127,10 @@ fft(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint xsize, ysize, newsize;
     gdouble newreals;
-    gint oldid;
 
     g_return_if_fail(run & FFT_RUN_MODES);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
     g_return_if_fail(dfield);
 
@@ -198,25 +195,25 @@ fft(GwyContainer *data, GwyRunType run)
         || args.out == GWY_FFT_OUTPUT_REAL) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(raout, tmp, 0, 0, xsize, ysize, 0, 0);
-        fft_create_output(data, tmp, oldid, _("FFT Real"));
+        fft_create_output(data, tmp, _("FFT Real"));
     }
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(ipout, tmp, 0, 0, xsize, ysize, 0, 0);
-        fft_create_output(data, tmp, oldid, _("FFT Imag"));
+        fft_create_output(data, tmp, _("FFT Imag"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         set_dfield_modulus(raout, ipout, tmp);
-        fft_create_output(data, tmp, oldid, _("FFT Modulus"));
+        fft_create_output(data, tmp, _("FFT Modulus"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_PHASE) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         set_dfield_phase(raout, ipout, tmp);
-        fft_create_output(data, tmp, oldid, _("FFT Phase"));
+        fft_create_output(data, tmp, _("FFT Phase"));
     }
 
     g_object_unref(dfield);
@@ -227,17 +224,22 @@ fft(GwyContainer *data, GwyRunType run)
 static void
 fft_create_output(GwyContainer *data,
                   GwyDataField *dfield,
-                  gint oldid,
                   const gchar *output_name)
 {
     gint newid;
+    gchar *key;
 
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, output_name);
-    gwy_app_copy_data_items(data, data, oldid, newid,
-                            GWY_DATA_ITEM_PALETTE,
-                            0);
+
+    /* make fft more visible by choosing a good gradient and using auto range */
+    key = g_strdup_printf("/%i/base/palette", newid);
+    gwy_container_set_string_by_name(data, key, g_strdup("DFit"));
+    g_free(key);
+    key = g_strdup_printf("/%i/base/range-type", newid);
+    gwy_container_set_enum_by_name(data, key, GWY_LAYER_BASIC_RANGE_AUTO);
+    g_free(key);
 }
 
 static void
