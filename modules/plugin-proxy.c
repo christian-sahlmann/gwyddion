@@ -146,7 +146,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.6",
+    "3.6.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -392,6 +392,12 @@ find_plugin_executables(const gchar *dir,
             g_free(pluginname);
             continue;
         }
+        if (g_str_has_suffix(filename, ".rgi")
+            || g_str_has_suffix(filename, ".RGI")) {
+            gwy_debug("Ignoring %s, it is a RGI file", filename);
+            g_free(pluginname);
+            continue;
+        }
         if (!g_file_test(pluginname, G_FILE_TEST_IS_EXECUTABLE)) {
             gwy_debug("Ignoring %s, is not executable", filename);
             g_free(pluginname);
@@ -501,7 +507,6 @@ proc_plugin_proxy_run(GwyContainer *data,
                       GwyRunType run,
                       const gchar *name)
 {
-    GtkWidget *data_window;
     ProcPluginInfo *info;
     gchar *filename, *buffer = NULL;
     GError *err = NULL;
