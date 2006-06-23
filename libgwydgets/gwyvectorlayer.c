@@ -728,7 +728,8 @@ gwy_vector_layer_get_editable(GwyVectorLayer *layer)
  *
  * Sets a vector layer editability.
  *
- * This method must not be called while the layer is being edited.
+ * It is an error to attempt to set a layer non-editabile while it is being
+ * edited.
  *
  * When a layer is set noneditable, the user cannot change the selection.
  * However, "object-chosen" signal is still emitted.
@@ -791,19 +792,19 @@ gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
  * @see_also: <link linkend="standard-vector-layers">Standard vector
  *            layers</link>
  *
- * #GwyVectorLayer is a base class for #GwyDataViewLayer's displaying
+ * #GwyVectorLayer is a base class for #GwyDataViewLayer<!-- -->s displaying
  * selections and handling user input.  It is a #GwyDataView component and it
  * is not normally usable outside of it.
  *
- * The layer takes the selection to display from its parent #GwyDataView.
- * The key under which the selection is found must be set with
+ * The layer takes the selection to display from its parent #GwyDataView's
+ * container. The key under which the selection is found must be set with
  * gwy_vector_layer_set_selection_key().
  *
  * #GwyVectorLayer provides two independent means to restrict user interaction
  * with displayed selection: editability and focus.  When a layer is set
  * noneditable (see gwy_vector_layer_set_editable()), the user cannot modify
- * displayed objects, however "object-chosen" is emitted normally.  Focus on
- * (see gwy_vector_layer_set_focus()) the other hand limits all possible
+ * displayed objects, however "object-chosen" is emitted normally.  Focus
+ * (see gwy_vector_layer_set_focus()) on the other hand limits all possible
  * interactions to a single selection object.  It is possible although not
  * very useful to combine both restrictions.
  *
