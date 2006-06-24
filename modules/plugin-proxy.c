@@ -125,6 +125,8 @@ static glong           file_pattern_specificity  (const gchar *pattern);
 
 /* common helpers */
 static FILE*           text_dump_export          (GwyContainer *data,
+                                                  GQuark dquark,
+                                                  GQuark mquark,
                                                   gchar **filename,
                                                   GError **error);
 static void            dump_export_data_field    (GwyDataField *dfield,
@@ -132,8 +134,7 @@ static void            dump_export_data_field    (GwyDataField *dfield,
                                                   FILE *fh);
 static FILE*           open_temporary_file       (gchar **filename,
                                                   GError **error);
-static GwyContainer*   text_dump_import          (GwyContainer *old_data,
-                                                  gchar *buffer,
+static GwyContainer*   text_dump_import          (gchar *buffer,
                                                   gsize size,
                                                   GError **error);
 static gchar*        decode_glib_encoded_filename(const gchar *filename);
@@ -146,7 +147,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.6.1",
+    "3.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -510,17 +511,23 @@ proc_plugin_proxy_run(GwyContainer *data,
     ProcPluginInfo *info;
     gchar *filename, *buffer = NULL;
     GError *err = NULL;
-    gint exit_status;
+    gint exit_status, id;
     gsize size = 0;
     FILE *fh;
     gchar *args[] = { NULL, "run", NULL, NULL, NULL };
+    GQuark dquark, mquark, squark;
     gboolean ok;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
 
     gwy_debug("called as %s with run mode %d", name, run);
     if (!(info = proc_find_plugin(name, run)))
         return;
 
-    fh = text_dump_export(data, &filename, NULL);
+    fh = text_dump_export(data, dquark, mquark, &filename, NULL);
     g_return_if_fail(fh);
     args[0] = info->file;
     args[2] = g_strdup(gwy_enum_to_string(run, run_mode_names, -1));
@@ -534,7 +541,8 @@ proc_plugin_proxy_run(GwyContainer *data,
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
-    if (ok && (data = text_dump_import(data, buffer, size, NULL))) {
+    if (ok && (data = text_dump_import(buffer, size, NULL))) {
+        /* TODO: Merge imported /0/data to current file */
         gwy_app_data_browser_add(data);
         g_object_unref(data);
     }
@@ -730,7 +738,7 @@ file_plugin_proxy_load(const gchar *filename,
         ok = FALSE;
     }
     if (ok) {
-        data = text_dump_import(data, buffer, size, error);
+        data = text_dump_import(buffer, size, error);
         if (!data)
             ok = FALSE;
     }
@@ -775,7 +783,12 @@ file_plugin_proxy_export(GwyContainer *data,
     gint exit_status;
     FILE *fh;
     gchar *args[] = { NULL, NULL, NULL, NULL, NULL };
+    GQuark dquark, mquark;
     gboolean ok;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_MASK_FIELD_KEY, &mquark,
+                                     0);
 
     gwy_debug("called as %s with file `%s'", name, filename);
     if (mode != GWY_RUN_INTERACTIVE) {
@@ -791,7 +804,7 @@ file_plugin_proxy_export(GwyContainer *data,
         return FALSE;
     }
 
-    fh = text_dump_export(data, &tmpname, error);
+    fh = text_dump_export(data, dquark, mquark, &tmpname, error);
     if (!fh)
         return FALSE;
 
@@ -1043,6 +1056,8 @@ file_pattern_specificity(const gchar *pattern)
  **/
 static FILE*
 text_dump_export(GwyContainer *data,
+                 GQuark dquark,
+                 GQuark mquark,
                  gchar **filename,
                  GError **error)
 {
@@ -1051,11 +1066,10 @@ text_dump_export(GwyContainer *data,
 
     if (!(fh = open_temporary_file(filename, error)))
         return NULL;
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, dquark));
     dump_export_data_field(dfield, "/0/data", fh);
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/mask"));
+    if (gwy_container_gis_object(data, mquark, &dfield)) {
         dump_export_data_field(dfield, "/0/mask", fh);
     }
     fflush(fh);
@@ -1192,8 +1206,7 @@ open_temporary_file(gchar **filename,
 }
 
 static GwyContainer*
-text_dump_import(GwyContainer *old_data,
-                 gchar *buffer,
+text_dump_import(gchar *buffer,
                  gsize size,
                  GError **error)
 {
@@ -1207,11 +1220,7 @@ text_dump_import(GwyContainer *old_data,
     gdouble *d;
     gsize n;
 
-    if (old_data) {
-        data = gwy_container_duplicate(old_data);
-    }
-    else
-        data = gwy_container_new();
+    data = gwy_container_new();
 
     pos = buffer;
     while ((line = gwy_str_next_line(&pos)) && *line) {
