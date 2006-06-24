@@ -248,6 +248,8 @@ get_features(ErunArgs *args)
 static void
 get_results(ErunArgs *args)
 {
+    printf("%d %d %d %d\n", args->evaluator->detected_point_array->len, args->evaluator->detected_line_array->len,
+           args->evaluator->fixed_point_array->len, args->evaluator->expression_task_array->len);
     get_features(args);
 
 }
@@ -281,7 +283,23 @@ get_filename()
 static GwyEvaluator* 
 get_evaluator(gchar *filename)
 {
+    guchar *buffer = NULL;
+    GError *err = NULL;
     GwyEvaluator *evaluator;
+    gsize size = 0;
+    gsize pos = 0;
+
+        
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+            printf("get contetns failed\n");
+                    return NULL;
+    }
+
+    evaluator = gwy_serializable_deserialize(buffer, &size, &pos);
+    if (!evaluator) {
+         printf("deserialize failed\n");
+         return NULL;
+    }
 
     return evaluator;
 }

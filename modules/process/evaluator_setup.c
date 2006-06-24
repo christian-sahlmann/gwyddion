@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#include <libgwyddion/gwyddion.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>

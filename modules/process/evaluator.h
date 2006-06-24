@@ -1320,19 +1320,36 @@ gwy_evaluator_serialize(GObject *obj,
                           GByteArray *buffer)
 {
     GwyEvaluator *evaluator;
+    gpointer dp, dl, fp, fl, cp, et;
+    dp = dl = fp = fl = cp = et = NULL;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_EVALUATOR(obj), NULL);
 
     evaluator = GWY_EVALUATOR(obj);
+
+    if (evaluator->detected_point_array->len) 
+        dp = &evaluator->detected_point_array->pdata;
+    if (evaluator->detected_line_array->len)
+        dl = &evaluator->detected_line_array->pdata;
+    if (evaluator->fixed_point_array->len)
+        fp = &evaluator->fixed_point_array->pdata;
+    if (evaluator->fixed_line_array->len)
+        fl = &evaluator->fixed_line_array->pdata;
+    if (evaluator->correlation_point_array->len)
+        cp = &evaluator->correlation_point_array->pdata;
+    if (evaluator->expression_task_array->len)
+        et = &evaluator->expression_task_array->pdata;
+
     {
+        
         GwySerializeSpec spec[] = {
-            { 'O', "detected_points", &evaluator->detected_point_array->pdata, &evaluator->detected_point_array->len },
-            { 'O', "detected_lines", &evaluator->detected_line_array->pdata, &evaluator->detected_line_array->len },
-            { 'O', "fixed_points", &evaluator->fixed_point_array->pdata, &evaluator->fixed_point_array->len },
-            { 'O', "fixed_lines", &evaluator->fixed_line_array->pdata, &evaluator->fixed_line_array->len },
-            { 'O', "correlation_points", &evaluator->correlation_point_array->pdata, &evaluator->correlation_point_array->len },
-            { 'O', "evaluator_tasks", &evaluator->expression_task_array->pdata, &evaluator->expression_task_array->len },
+            { 'O', "detected_points", dp, &evaluator->detected_point_array->len },
+            { 'O', "detected_lines", dl, &evaluator->detected_line_array->len },
+            { 'O', "fixed_points", fp, &evaluator->fixed_point_array->len },
+            { 'O', "fixed_lines", fl, &evaluator->fixed_line_array->len },
+            { 'O', "correlation_points", cp, &evaluator->correlation_point_array->len },
+            { 'O', "evaluator_tasks", et, &evaluator->expression_task_array->len },
          };
         return gwy_serialize_pack_object_struct(buffer, GWY_EVALUATOR_TYPE_NAME,
                                                    G_N_ELEMENTS(spec), spec);
@@ -1344,19 +1361,34 @@ static gsize
 gwy_evaluator_get_size(GObject *obj)
 {
     GwyEvaluator *evaluator;
+    gpointer dp, dl, fp, fl, cp, et;
+    dp = dl = fp = fl = cp = et = NULL;
 
-    gwy_debug("");
-    g_return_val_if_fail(GWY_IS_EVALUATOR(obj), 0);
-
+    g_return_val_if_fail(GWY_IS_EVALUATOR(obj), NULL);
     evaluator = GWY_EVALUATOR(obj);
+    
+    if (evaluator->detected_point_array->len) 
+        dp = &evaluator->detected_point_array->pdata;
+    if (evaluator->detected_line_array->len)
+        dl = &evaluator->detected_line_array->pdata;
+    if (evaluator->fixed_point_array->len)
+        fp = &evaluator->fixed_point_array->pdata;
+    if (evaluator->fixed_line_array->len)
+        fl = &evaluator->fixed_line_array->pdata;
+    if (evaluator->correlation_point_array->len)
+        cp = &evaluator->correlation_point_array->pdata;
+    if (evaluator->expression_task_array->len)
+        et = &evaluator->expression_task_array->pdata;
+
     {
+        
         GwySerializeSpec spec[] = {
-            { 'O', "detected_points", &evaluator->detected_point_array->pdata, &evaluator->detected_point_array->len },
-            { 'O', "detected_lines", &evaluator->detected_line_array->pdata, &evaluator->detected_line_array->len },
-            { 'O', "fixed_points", &evaluator->fixed_point_array->pdata, &evaluator->fixed_point_array->len },
-            { 'O', "fixed_lines", &evaluator->fixed_line_array->pdata, &evaluator->fixed_line_array->len },
-            { 'O', "correlation_points", &evaluator->correlation_point_array->pdata, &evaluator->correlation_point_array->len },
-            { 'O', "evaluator_tasks", &evaluator->expression_task_array->pdata, &evaluator->expression_task_array->len },
+            { 'O', "detected_points", dp, &evaluator->detected_point_array->len },
+            { 'O', "detected_lines", dl, &evaluator->detected_line_array->len },
+            { 'O', "fixed_points", fp, &evaluator->fixed_point_array->len },
+            { 'O', "fixed_lines", fl, &evaluator->fixed_line_array->len },
+            { 'O', "correlation_points", cp, &evaluator->correlation_point_array->len },
+            { 'O', "evaluator_tasks", et, &evaluator->expression_task_array->len },
          };
         return gwy_serialize_get_struct_size(GWY_EVALUATOR_TYPE_NAME,
                                                    G_N_ELEMENTS(spec), spec);
@@ -1370,23 +1402,60 @@ gwy_evaluator_deserialize(const guchar *buffer,
                             gsize *position)
 {
     GwyEvaluator *evaluator;
-
+    GwySearchPoint **dp = NULL;
+    GwySearchLine **dl = NULL;
+    GwyFixedPoint **fp = NULL;
+    GwyFixedLine **fl = NULL;
+    GwyCorrelationPoint **cp = NULL;
+    GwyEvaluatorTask **et = NULL;
+    gint i, ndp, ndl, nfp, nfl, ncp, net;   
+    ndp = ndl = nfp = nfl = ncp = net = 0;
+    
     g_return_val_if_fail(buffer, NULL);
 
     evaluator = gwy_evaluator_new();
+
     {
         GwySerializeSpec spec[] = {
-            { 'O', "detected_points", &evaluator->detected_point_array->pdata, &evaluator->detected_point_array->len },
-            { 'O', "detected_lines", &evaluator->detected_line_array->pdata, &evaluator->detected_line_array->len },
-            { 'O', "fixed_points", &evaluator->fixed_point_array->pdata, &evaluator->fixed_point_array->len },
-            { 'O', "fixed_lines", &evaluator->fixed_line_array->pdata, &evaluator->fixed_line_array->len },
-            { 'O', "correlation_points", &evaluator->correlation_point_array->pdata, &evaluator->correlation_point_array->len },
-            { 'O', "evaluator_tasks", &evaluator->expression_task_array->pdata, &evaluator->expression_task_array->len },
+            { 'O', "detected_points", &dp, &ndp },
+            { 'O', "detected_lines", &dl, &ndl },
+            { 'O', "fixed_points", &fp, &nfp },
+            { 'O', "fixed_lines", &fl, &nfl },
+            { 'O', "correlation_points", &cp, &ncp },
+            { 'O', "evaluator_tasks", &et, &net },
          };
+        printf("%s\n", buffer);
         gwy_serialize_unpack_object_struct(buffer, size, position,
                                            GWY_EVALUATOR_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
-        
+
+        printf("deser: %d %d %d %d %d %d\n", ndp, ndl, nfp, nfl, ncp, net);
+        for (i = 0; i<ndp; i++)
+        {
+            printf("adding %s\n", dp[i]->id);
+            g_ptr_array_add(evaluator->detected_point_array, dp[i]);
+        }
+        for (i = 0; i<ndl; i++)
+        {
+            g_ptr_array_add(evaluator->detected_line_array, dl[i]);
+        }
+        for (i = 0; i<nfp; i++)
+        {
+            g_ptr_array_add(evaluator->fixed_point_array, fp[i]);
+        }
+        for (i = 0; i<nfl; i++)
+        {
+            g_ptr_array_add(evaluator->fixed_line_array, fl[i]);
+        }
+        for (i = 0; i<ncp; i++)
+        {
+            g_ptr_array_add(evaluator->correlation_point_array, cp[i]);
+        }
+        for (i = 0; i<net; i++)
+        {
+            g_ptr_array_add(evaluator->expression_task_array, et[i]);
+        }
+             
      }
 
     return (GObject*)evaluator;
