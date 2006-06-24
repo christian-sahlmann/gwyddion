@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -225,6 +225,7 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
                                   GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
+    GwyToolReadValue *tool;
 
     GWY_TOOL_CLASS(gwy_tool_read_value_parent_class)->data_switched(gwytool,
                                                                     data_view);
@@ -232,11 +233,17 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
+    tool = GWY_TOOL_READ_VALUE(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer, "draw-marker", FALSE, NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_point,
+                                "draw-marker", FALSE,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
-    gwy_tool_read_value_update_headers(GWY_TOOL_READ_VALUE(gwytool));
+    gwy_tool_read_value_update_headers(tool);
 }
 
 static void

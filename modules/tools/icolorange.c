@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -314,10 +314,11 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer,
-                     "draw-reflection", FALSE,
-                     "is-crop", FALSE,
-                     NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_rect,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
 
         g_snprintf(key, sizeof(key), "/%d/base/min", plain_tool->id);

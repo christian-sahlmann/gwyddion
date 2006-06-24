@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -240,6 +240,7 @@ gwy_tool_crop_data_switched(GwyTool *gwytool,
                             GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
+    GwyToolCrop *tool;
 
     GWY_TOOL_CLASS(gwy_tool_crop_parent_class)->data_switched(gwytool,
                                                               data_view);
@@ -247,11 +248,14 @@ gwy_tool_crop_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
+    tool = GWY_TOOL_CROP(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer,
-                     "draw-reflection", FALSE,
-                     "is-crop", TRUE,
-                     NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_rect,
+                                "is-crop", TRUE,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 }

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
@@ -134,7 +134,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -438,10 +438,11 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_SFUNCTIONS(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer,
-                     "draw-reflection", FALSE,
-                     "is-crop", FALSE,
-                     NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_rect,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 

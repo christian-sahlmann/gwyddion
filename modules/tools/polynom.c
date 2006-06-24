@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
     N_("Polynom fit tool, fits polynoms to X or Y profiles and subtracts "
        "them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -297,10 +297,11 @@ gwy_tool_polynom_data_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_POLYNOM(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer,
-                     "draw-reflection", FALSE,
-                     "is-crop", TRUE,
-                     NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_rect,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 

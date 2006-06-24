@@ -96,7 +96,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -256,9 +256,10 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
 
 static void
 gwy_tool_grain_remover_data_switched(GwyTool *gwytool,
-                                  GwyDataView *data_view)
+                                     GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
+    GwyToolGrainRemover *tool;
 
     GWY_TOOL_CLASS(gwy_tool_grain_remover_parent_class)->data_switched(gwytool,
                                                                     data_view);
@@ -266,8 +267,14 @@ gwy_tool_grain_remover_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
+    tool = GWY_TOOL_GRAIN_REMOVER(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer, "draw-marker", FALSE, NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_point,
+                                "draw-marker", FALSE,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 }

@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.0",
+    "2.1",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -211,6 +211,7 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
                                 GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
+    GwyToolDistance *tool;
 
     GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(gwytool,
                                                                   data_view);
@@ -219,11 +220,16 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
+    tool = GWY_TOOL_DISTANCE(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer, "line-numbers", TRUE, NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_line,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, NLINES);
     }
-    gwy_tool_distance_update_headers(GWY_TOOL_DISTANCE(gwytool));
+    gwy_tool_distance_update_headers(tool);
 }
 
 static void

@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -462,6 +462,7 @@ gwy_tool_mask_editor_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolMaskEditor *tool;
+    GType layer_type;
 
     GWY_TOOL_CLASS(gwy_tool_mask_editor_parent_class)->data_switched(gwytool,
                                                                      data_view);
@@ -471,9 +472,15 @@ gwy_tool_mask_editor_data_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_MASK_EDITOR(gwytool);
     if (data_view) {
-        g_object_set(plain_tool->layer, "draw-reflection", FALSE, NULL);
         if (tool->args.shape == MASK_SHAPE_RECTANGLE)
-            g_object_set(plain_tool->layer, "is-crop", FALSE, NULL);
+            layer_type = tool->layer_type_rect;
+        else
+            layer_type = tool->layer_type_ell;
+        gwy_object_set_or_reset(plain_tool->layer,
+                                layer_type,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 

@@ -149,7 +149,7 @@ static GwyModuleInfo module_info = {
     N_("Spot removal tool, interpolates small parts of data (displayed on "
        "a zoomed view) using selected algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -373,7 +373,11 @@ gwy_tool_spot_remover_data_switched(GwyTool *gwytool,
 
     tool->xr.from = tool->yr.from = tool->xr.to = tool->yr.to = -1;
     if (data_view) {
-        g_object_set(plain_tool->layer, "draw-marker", TRUE, NULL);
+        gwy_object_set_or_reset(plain_tool->layer,
+                                tool->layer_type_point,
+                                "editable", TRUE,
+                                "focus", -1,
+                                NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
 
         layer = gwy_data_view_get_base_layer(data_view);
