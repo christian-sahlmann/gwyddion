@@ -23,6 +23,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/correct.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libprocess/filters.h>
+#include <libprocess/hough.h>
+#include <libprocess/grains.h>
+#include <libprocess/stats.h>
 #include <app/gwyapp.h>
 #include <glib/gstdio.h>
 #include "evaluator.h"
@@ -108,9 +112,144 @@ evaluator_run(GwyContainer *data, GwyRunType run)
     
 }
 
+
+static void
+get_detected_points(ErunArgs *args)
+{
+    GwyDataField *dfield;
+    GwyDataField *filtered, *x_gradient, *y_gradient;
+    gint ndata = 50, skip = 10;
+    gint i, j;
+    guint k;
+    gdouble xdata[50], ydata[50];
+    gdouble zdata[50];
+    gdouble threshval, hmin, hmax;
+    GwySearchPoint *pspoint;
+
+    dfield = args->dfield;
+    filtered = gwy_data_field_new_alike(dfield, FALSE);
+
+    x_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
+    y_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
+
+    gwy_data_field_filter_harris(x_gradient, y_gradient, filtered, 4, 0.07);
+    gwy_data_field_invert(filtered, FALSE, FALSE, TRUE);
+
+    hmin = gwy_data_field_get_min(filtered);
+    hmax = gwy_data_field_get_max(filtered);
+    threshval = hmin + (hmax - hmin)*0.8;
+    ndata = gwy_data_field_get_local_maxima_list(filtered,
+                                         xdata,
+                                         ydata,
+                                         zdata,
+                                         ndata,
+                                         skip,
+                                         threshval,
+                                         TRUE);
+
+    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+        pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
+        /*FIXME now choose the closest detected points and put them to xc,yc*/
+        j = 0;
+
+        pspoint->xc = xdata[j];
+        pspoint->yc = ydata[j];
+    }
+
+    gwy_object_unref(filtered);
+    gwy_object_unref(x_gradient);
+    gwy_object_unref(y_gradient);
+}
+
+get_detected_lines(ErunArgs *args)
+{
+    GwyDataField *dfield, *f1, *f2, *edgefield, *filtered, *water;
+    gdouble xdata[10], ydata[10];
+    gdouble zdata[10];
+    GwySearchLine *psline;
+    gint ndata = 10, skip = 10;
+    gint i, j, px1, px2, py1, py2;
+    guint k;
+    gdouble threshval, hmin, hmax;
+
+    dfield = args->dfield;
+    edgefield = gwy_data_field_duplicate(dfield);
+    f1 = gwy_data_field_duplicate(dfield);
+    f2 = gwy_data_field_duplicate(dfield);
+    filtered = gwy_data_field_new(3*(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
+                             +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield))),
+                             360, 0, 0,
+                             FALSE);
+
+
+    gwy_data_field_filter_canny(edgefield, 0.1);
+    gwy_data_field_filter_sobel(f1, GWY_ORIENTATION_HORIZONTAL);
+    gwy_data_field_filter_sobel(f2, GWY_ORIENTATION_VERTICAL);
+    gwy_data_field_hough_line(edgefield,
+                              NULL,
+                              NULL,
+                              filtered,
+                              1,
+                              FALSE);
+
+    water = gwy_data_field_duplicate(filtered);
+    gwy_data_field_grains_splash_water(filtered, water, 2,
+                                 0.005*(gwy_data_field_get_max(filtered) - gwy_data_field_get_min(filtered)));
+
+    hmin = gwy_data_field_get_min(water);
+    hmax = gwy_data_field_get_max(water);
+    threshval = hmin + (hmax - hmin)*0.4;
+    ndata = gwy_data_field_get_local_maxima_list(water,
+                                         xdata,
+                                         ydata,
+                                         zdata,
+                                         ndata,
+                                         skip,
+                                         threshval,
+                                         TRUE);
+
+    for (i=0; i<args->evaluator->detected_line_array->len; i++) {
+        psline = g_ptr_array_index(args->evaluator->detected_line_array, i);
+        /*FIXME now choose the closest detected points and put them to xc,yc*/
+        j = 0;
+        
+        gwy_data_field_hough_polar_line_to_datafield(dfield,
+                    ((gdouble)xdata[j])*
+                        gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered))
+                        - gwy_data_field_get_xreal(filtered)/2.0,
+                    ((gdouble)ydata[j])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4,
+                    &px1, &px2, &py1, &py2);
+        psline->xstart = gwy_data_field_itor(dfield, px1);
+        psline->ystart = gwy_data_field_jtor(dfield, py1);
+        psline->xend = gwy_data_field_itor(dfield, px2);
+        psline->yend = gwy_data_field_jtor(dfield, py2);
+        psline->rho = xdata[j];
+        psline->theta = ydata[j];
+    }
+
+    g_object_unref(filtered);
+    g_object_unref(edgefield);
+    g_object_unref(f1);
+    g_object_unref(f2);
+}
+
+static void
+get_features(ErunArgs *args)
+{
+    GwySearchPoint *pspoint;
+    guint i;
+    
+    get_detected_points(args);
+    get_detected_lines(args);
+}
+
 static void
 get_results(ErunArgs *args)
 {
+    get_features(args);
+
 }
 
 static gchar* 
