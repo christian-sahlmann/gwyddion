@@ -12,6 +12,7 @@ process_LTLIBRARIES = \
 	dwt.la \
 	dwtanisotropy.la \
 	edge.la \
+	evaluator_run.la \
 	evaluator_setup.la \
 	facet-level.la \
 	facet_analysis.la \
@@ -112,6 +113,9 @@ dwtanisotropy_la_LIBADD = $(module_libadd)
 
 edge_la_SOURCES = edge.c
 edge_la_LIBADD = $(module_libadd)
+
+evaluator_run_la_SOURCES = evaluator_run.c
+evaluator_run_la_LIBADD = $(module_libadd)
 
 evaluator_setup_la_SOURCES = evaluator_setup.c
 evaluator_setup_la_LIBADD = $(module_libadd)

@@ -34,7 +34,7 @@
 #include <glib/gstdio.h>
 #include "evaluator.h"
 #include "evaluator_task_dialog.h"
-
+#include "evaluator_feature_dialog.h"
 
 #define ESETUP_RUN_MODES (GWY_RUN_INTERACTIVE)
 
@@ -47,9 +47,9 @@ enum {
 enum {
     TEXT_COLUMN = 1,
     PREVIEW_SIZE = 320,
-    DEFAULT_POINT_SIZE = 10,
-    DEFAULT_RHO_SIZE = 1,
-    DEFAULT_THETA_SIZE = 1
+    DEFAULT_POINT_SIZE = 50,
+    DEFAULT_RHO_SIZE = 10,
+    DEFAULT_THETA_SIZE = 10
 };
 
 typedef enum {
@@ -94,12 +94,9 @@ typedef struct {
     GwyVectorLayer *vlayer_fpoint;
     GwyVectorLayer *vlayer_fline;
     GwyVectorLayer *vlayer_cpoint;
-    GwyVectorLayer *vlayer_rectangle;
     GArray *detected_point_chosen;
     GArray *detected_line_chosen;
     gint task_edited;
-    gint detected_edited;
-    gint correlation_edited;
     gint fixed_point_max;
     gint fixed_line_max;
     gint correlation_point_max;
@@ -247,8 +244,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     controls.detected_point_chosen = g_array_new (FALSE, FALSE, sizeof(gboolean));
     controls.detected_line_chosen = g_array_new (FALSE, FALSE, sizeof(gboolean));
     controls.task_edited = -1;
-    controls.detected_edited = -1;
-    controls.correlation_edited = -1;
     controls.correlation_point_max = 0;
     controls.fixed_point_max = 0;
     controls.fixed_line_max = 0;
@@ -707,14 +702,60 @@ detected_remove_cb(EsetupControls *controls)
 static void        
 detected_edit_cb(EsetupControls *controls)
 {
-    if (controls->detected_edited == -1)
+    GwySearchPoint *ppoint;
+    GwySearchLine *pline;
+    GtkTreeIter iter;
+    gchar *id;
+    GtkDialog *dialog;
+    gint response, edited;
+
+ 
+    if (gtk_tree_selection_get_selected(controls->detected_selection,
+                                        &(controls->detected_list), &iter))
     {
-        controls->detected_edited = 1;
-        gtk_button_set_label(GTK_BUTTON(controls->detected_edit_button), "Done");
-    }
-    else {
-        controls->detected_edited = -1;
-        gtk_button_set_label(GTK_BUTTON(controls->detected_edit_button), "Edit");
+        gtk_tree_model_get(controls->detected_list, &iter, NO_COLUMN, &id, -1);
+        if (strstr(id, "sp") != NULL)
+        {
+            edited = get_dpoint_pos_by_id(controls->args->evaluator->detected_point_array, id);
+            ppoint = &g_array_index(controls->args->evaluator->detected_point_array, GwySearchPoint, 
+                             edited);
+       
+            dialog = gwy_evaluator_point_dialog_new(ppoint->width, ppoint->height);
+            response = gtk_dialog_run (GTK_DIALOG (dialog));
+    
+            switch (response)
+            {
+                case GTK_RESPONSE_APPLY:
+                ppoint->width = gtk_adjustment_get_value(GWY_EVALUATOR_POINT_DIALOG(dialog)->width_adj);
+                ppoint->height = gtk_adjustment_get_value(GWY_EVALUATOR_POINT_DIALOG(dialog)->height_adj);
+                break;
+      
+                default:
+                break;
+            }
+            gtk_widget_destroy (dialog);  
+        }
+        else
+        {
+            edited = get_dline_pos_by_id(controls->args->evaluator->detected_line_array, id);
+            pline = &g_array_index(controls->args->evaluator->detected_line_array, GwySearchLine, 
+                             edited);
+       
+            dialog = gwy_evaluator_line_dialog_new(pline->rho, pline->theta);
+            response = gtk_dialog_run (GTK_DIALOG (dialog));
+    
+            switch (response)
+            {
+                case GTK_RESPONSE_APPLY:
+                pline->rho = gtk_adjustment_get_value(GWY_EVALUATOR_LINE_DIALOG(dialog)->rho_adj);
+                pline->theta = gtk_adjustment_get_value(GWY_EVALUATOR_LINE_DIALOG(dialog)->theta_adj);
+                break;
+      
+                default:
+                break;
+            }
+            gtk_widget_destroy (dialog);  
+         }
     }
 }
 static void        
@@ -934,14 +975,37 @@ correlation_remove_cb(EsetupControls *controls)
 static void        
 correlation_edit_cb(EsetupControls *controls)
 {
-    if (controls->correlation_edited == -1)
+    GwyCorrelationPoint *ppoint;
+    GtkTreeIter iter;
+    gchar *id;
+    GtkDialog *dialog;
+    gint response, edited;
+
+ 
+    if (gtk_tree_selection_get_selected(controls->correlation_selection,
+                                        &(controls->correlation_list), &iter))
     {
-        controls->correlation_edited = 1;
-        gtk_button_set_label(GTK_BUTTON(controls->correlation_edit_button), "Done");
-    }
-    else {
-        controls->correlation_edited = -1;
-        gtk_button_set_label(GTK_BUTTON(controls->correlation_edit_button), "Edit");
+        gtk_tree_model_get(controls->correlation_list, &iter, NO_COLUMN, &id, -1);
+        edited = get_cpoint_pos_by_id(controls->args->evaluator->correlation_point_array, id);
+        ppoint = &g_array_index(controls->args->evaluator->correlation_point_array, GwyCorrelationPoint, 
+                         edited);
+       
+        dialog = gwy_evaluator_correlation_point_dialog_new(ppoint->width, ppoint->height, ppoint->swidth, ppoint->sheight);
+        response = gtk_dialog_run (GTK_DIALOG (dialog));
+    
+        switch (response)
+        {
+            case GTK_RESPONSE_APPLY:
+            ppoint->width = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width_adj);
+            ppoint->height = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height_adj);
+            ppoint->swidth = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->swidth_adj);
+            ppoint->sheight = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->sheight_adj);
+             break;
+      
+            default:
+            break;
+        }
+        gtk_widget_destroy (dialog);  
     }
 }
 static void        
@@ -1391,8 +1455,8 @@ dpoints_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls
     spset.yc = pointdata[1];
     spset.x = gwy_data_field_rtoi(dfield, pointdata[0]) - DEFAULT_POINT_SIZE/2;
     spset.y = gwy_data_field_rtoj(dfield, pointdata[1]) - DEFAULT_POINT_SIZE/2;
-    spset.width = spset.x + DEFAULT_POINT_SIZE;
-    spset.height = spset.y + DEFAULT_POINT_SIZE;
+    spset.width = DEFAULT_POINT_SIZE;
+    spset.height = DEFAULT_POINT_SIZE;
     g_array_append_val(controls->args->evaluator->detected_point_array, spset);
 
     g_array_index(controls->detected_point_chosen, gboolean, i) = TRUE;
@@ -1438,10 +1502,10 @@ dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
     slset.ystart = linedata[1];
     slset.xend = linedata[2];
     slset.yend = linedata[3];
-    slset.rho_min = rho - DEFAULT_RHO_SIZE/2;
-    slset.theta_min = theta - DEFAULT_THETA_SIZE/2;
-    slset.rho_max = slset.rho_min + DEFAULT_RHO_SIZE;
-    slset.theta_max = slset.theta_min + DEFAULT_THETA_SIZE;
+    slset.rhoc = rho;
+    slset.thetac = theta;
+    slset.rho = DEFAULT_RHO_SIZE;
+    slset.theta = DEFAULT_THETA_SIZE;
     g_array_append_val(controls->args->evaluator->detected_line_array, slset);
     
     g_array_index(controls->detected_line_chosen, gboolean, i) = TRUE;
@@ -1618,6 +1682,10 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
         /*new point added*/
         spset.xc = pointdata[0];
         spset.yc = pointdata[1];
+        spset.height = 50;
+        spset.width = 50;
+        spset.sheight = 100;
+        spset.swidth = 100;
         
         spset.id = g_strdup_printf("cp%d", ++controls->correlation_point_max);     
         g_array_append_val(controls->args->evaluator->correlation_point_array, spset);
@@ -1648,14 +1716,12 @@ selections_unref(EsetupControls *controls)
     g_object_unref(controls->vlayer_fpoint);
     g_object_unref(controls->vlayer_fline);
     g_object_unref(controls->vlayer_cpoint);
-    //g_object_unref(controls->vlayer_rectangle);
 }
 
 static void        
 evaluator_load_cb(EsetupControls *controls)
 {
     GtkDialog *filedialog;
-    GwyContainer *settings;
     GError *err = NULL;
     gchar *filename;
     GString *string = g_string_new("");
@@ -1683,7 +1749,6 @@ static void
 evaluator_save_cb(EsetupControls *controls)
 {
     GtkDialog *filedialog;
-    GwyContainer *settings;
     GError *err = NULL;
     gchar *filename;
     GString *string = g_string_new("");

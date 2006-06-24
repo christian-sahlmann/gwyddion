@@ -98,8 +98,8 @@ gwy_search_point_class_init(GwySearchPointClass *klass)
 static void
 gwy_search_point_init(GwySearchPoint *search_point)
 {
-    search_point->xc = 0;
-    search_point->yc = 0;
+    search_point->width = 50;
+    search_point->height = 50;
 }
 
 GwySearchPoint*
@@ -423,10 +423,15 @@ struct _GwyCorrelationPoint {
     gchar *id;
     gdouble xc;
     gdouble yc;
+    gint width;
+    gint height;
+    gint swidth;
+    gint sheight;
 };
 
 struct _GwyCorrelationPointClass {
     GObjectClass parent_class;
+
 
     gpointer reserved1;
     gpointer reserved2;
@@ -477,6 +482,10 @@ gwy_correlation_point_init(GwyCorrelationPoint *correlation_point)
 {
     correlation_point->xc = 0;
     correlation_point->yc = 0;
+    correlation_point->width = 50;
+    correlation_point->height = 50;
+    correlation_point->swidth = 100;
+    correlation_point->sheight = 100;
 }
 
 GwyCorrelationPoint*
@@ -517,6 +526,10 @@ gwy_correlation_point_serialize(GObject *obj,
             { 's', "id", &correlation_point->id, NULL },
             { 'd', "xc", &correlation_point->xc, NULL },
             { 'd', "yc", &correlation_point->yc, NULL },
+            { 'i', "width", &correlation_point->width, NULL },
+            { 'i', "height", &correlation_point->height, NULL },
+            { 'i', "search_width", &correlation_point->swidth, NULL },
+            { 'i', "search_height", &correlation_point->sheight, NULL },
         };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_CORRELATION_POINT_TYPE_NAME,
@@ -538,6 +551,10 @@ gwy_correlation_point_get_size(GObject *obj)
             { 's', "id", &correlation_point->id, NULL },
             { 'd', "xc", &correlation_point->xc, NULL },
             { 'd', "yc", &correlation_point->yc, NULL },
+            { 'i', "width", &correlation_point->width, NULL },
+            { 'i', "height", &correlation_point->height, NULL },
+            { 'i', "search_width", &correlation_point->swidth, NULL },
+            { 'i', "search_height", &correlation_point->sheight, NULL },
         };
         return gwy_serialize_get_struct_size(GWY_CORRELATION_POINT_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
@@ -559,6 +576,10 @@ gwy_correlation_point_deserialize(const guchar *buffer,
             { 's', "id", &correlation_point->id, NULL },
             { 'd', "xc", &correlation_point->xc, NULL },
             { 'd', "yc", &correlation_point->yc, NULL },
+            { 'i', "width", &correlation_point->width, NULL },
+            { 'i', "height", &correlation_point->height, NULL },
+            { 'i', "search_width", &correlation_point->swidth, NULL },
+            { 'i', "search_height", &correlation_point->sheight, NULL },
         };
         gwy_serialize_unpack_object_struct(buffer, size, position,
                                            GWY_CORRELATION_POINT_TYPE_NAME,
@@ -582,6 +603,11 @@ gwy_correlation_point_duplicate_real(GObject *object)
     duplicate->id = g_strdup(correlation_point->id);
     duplicate->xc = correlation_point->xc;
     duplicate->yc = correlation_point->yc;
+    duplicate->width = correlation_point->width;
+    duplicate->height = correlation_point->height;
+    duplicate->swidth = correlation_point->swidth;
+    duplicate->sheight = correlation_point->sheight;
+
 
     return (GObject*)duplicate;
 }
@@ -607,10 +633,10 @@ struct _GwySearchLine {
     gdouble ystart;
     gdouble xend;
     gdouble yend;
-    gdouble rho_min;
-    gdouble theta_min;
-    gdouble rho_max;
-    gdouble theta_max;
+    gdouble rhoc;
+    gdouble thetac;
+    gdouble rho;
+    gdouble theta;
 };
 
 struct _GwySearchLineClass {
@@ -709,10 +735,10 @@ gwy_search_line_serialize(GObject *obj,
             { 'd', "ystart", &search_line->ystart, NULL },
             { 'd', "xend", &search_line->xend, NULL },
             { 'd', "yend", &search_line->yend, NULL },
-            { 'd', "rho_min", &search_line->rho_min, NULL },
-            { 'd', "theta_min", &search_line->theta_min, NULL },
-            { 'd', "rho_max", &search_line->rho_max, NULL },
-            { 'd', "theta_max", &search_line->theta_max, NULL },
+            { 'd', "rho_center", &search_line->rhoc, NULL },
+            { 'd', "theta_center", &search_line->thetac, NULL },
+            { 'd', "rho", &search_line->rho, NULL },
+            { 'd', "theta", &search_line->theta, NULL },
          };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_SEARCH_LINE_TYPE_NAME,
@@ -736,10 +762,10 @@ gwy_search_line_get_size(GObject *obj)
             { 'd', "ystart", &search_line->ystart, NULL },
             { 'd', "xend", &search_line->xend, NULL },
             { 'd', "yend", &search_line->yend, NULL },
-            { 'd', "rho_min", &search_line->rho_min, NULL },
-            { 'd', "theta_min", &search_line->theta_min, NULL },
-            { 'd', "rho_max", &search_line->rho_max, NULL },
-            { 'd', "theta_max", &search_line->theta_max, NULL },
+            { 'd', "rho_center", &search_line->rhoc, NULL },
+            { 'd', "theta_center", &search_line->thetac, NULL },
+            { 'd', "rho", &search_line->rho, NULL },
+            { 'd', "theta", &search_line->theta, NULL },
          };
         return gwy_serialize_get_struct_size(GWY_SEARCH_LINE_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
@@ -763,10 +789,10 @@ gwy_search_line_deserialize(const guchar *buffer,
             { 'd', "ystart", &search_line->ystart, NULL },
             { 'd', "xend", &search_line->xend, NULL },
             { 'd', "yend", &search_line->yend, NULL },
-            { 'd', "rho_min", &search_line->rho_min, NULL },
-            { 'd', "theta_min", &search_line->theta_min, NULL },
-            { 'd', "rho_max", &search_line->rho_max, NULL },
-            { 'd', "theta_max", &search_line->theta_max, NULL },
+            { 'd', "rho_center", &search_line->rhoc, NULL },
+            { 'd', "theta_center", &search_line->thetac, NULL },
+            { 'd', "rho", &search_line->rho, NULL },
+            { 'd', "theta", &search_line->theta, NULL },
          };
         gwy_serialize_unpack_object_struct(buffer, size, position,
                                            GWY_SEARCH_LINE_TYPE_NAME,
@@ -792,10 +818,10 @@ gwy_search_line_duplicate_real(GObject *object)
     duplicate->ystart = search_line->ystart;
     duplicate->xend = search_line->xend;
     duplicate->yend = search_line->yend;
-    duplicate->rho_min = search_line->rho_min;
-    duplicate->theta_min = search_line->theta_min;
-    duplicate->rho_max = search_line->rho_max;
-    duplicate->theta_max = search_line->theta_max;
+    duplicate->rho = search_line->rho;
+    duplicate->theta = search_line->theta;
+    duplicate->rhoc = search_line->rhoc;
+    duplicate->thetac = search_line->thetac;
 
     return (GObject*)duplicate;
 }
