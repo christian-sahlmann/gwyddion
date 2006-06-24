@@ -566,7 +566,7 @@ gwy_serialize_pack_object_header(GByteArray *buffer,
  * components described by @spec to @buffer in gwy-file format.
  *
  * Here's how a serialization method of a simple object whose state is
- * described by a single real number foo< could look (without error checking):
+ * described by a single real number foo could look (without error checking):
  * <informalexample><programlisting>
  * static guchar*
  * my_object_serialize(GObject *obj,

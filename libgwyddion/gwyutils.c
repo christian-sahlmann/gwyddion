@@ -733,30 +733,36 @@ gwy_str_next_line(gchar **buffer)
  * gwy_object_set_or_reset:
  * @object: A #GObject.
  * @type: The type whose properties are to reset, may be zero for all types.
- * @first_property_name: Name of the first property to set.  It can be
- *                       %NULL to only reset properties.
- * @...: Value for the first property, followed optionally by more name/value
- *       pairs, terminated by %NULL.
+ *        The object must be of this type (more precisely @object is-a
+ *        @type must hold).
+ * @...: %NULL-terminated list of name/value pairs of properties to set as
+ *       in g_object_set().  It can be %NULL alone to only reset properties
+ *       to defaults.
  *
  * Sets object properties, resetting other properties to defaults.
  *
  * All explicitly specified properties are set.  In addition, all unspecified
- * properties of type @type (or all unspecified properties if @type is 0)
- * are reset to defaults.
+ * settable properties of type @type (or all unspecified properties if @type is
+ * 0) are reset to defaults.  Settable means the property is writable and not
+ * construction-only.
  *
- * Unlike g_object_set(), notifications are not emitted for properties which
- * did not actually change.
+ * The order in which properties are set is undefined beside keeping the
+ * relative order of explicitly specified properties, therefore this function
+ * is not generally usable for objects with interdependent properties.
+ *
+ * Unlike g_object_set(), it does not set properties that already have the
+ * requested value, as a consequences notifications are emitted only for
+ * properties which actually change.
  **/
 void
 gwy_object_set_or_reset(gpointer object,
                         GType type,
-                        const gchar *first_property_name,
                         ...)
 {
     GValue value, cur_value, new_value;
     GObjectClass *klass;
     GParamSpec **pspec;
-    gboolean *ignore;
+    gboolean *already_set;
     const gchar *name;
     va_list ap;
     gint nspec, i;
@@ -765,26 +771,17 @@ gwy_object_set_or_reset(gpointer object,
     g_return_if_fail(G_IS_OBJECT_CLASS(klass));
     g_return_if_fail(!type || G_TYPE_CHECK_INSTANCE_TYPE(object, type));
 
-    pspec = g_object_class_list_properties(klass, &nspec);
-    ignore = g_newa(gboolean, nspec);
-    memset(ignore, 0, nspec*sizeof(gboolean));
-
-    /* Ignore properties of the wrong type */
-    if (type) {
-        for (i = 0; i < nspec; i++) {
-            if (pspec[i]->owner_type != type)
-                ignore[i] = TRUE;
-        }
-    }
-
     g_object_freeze_notify(object);
+
+    pspec = g_object_class_list_properties(klass, &nspec);
+    already_set = g_newa(gboolean, nspec);
+    memset(already_set, 0, nspec*sizeof(gboolean));
 
     memset(&cur_value, 0, sizeof(GValue));
     memset(&new_value, 0, sizeof(GValue));
 
-    va_start(ap, first_property_name);
-    name = first_property_name;
-    for (name = first_property_name; name; name = va_arg(ap, gchar*)) {
+    va_start(ap, type);
+    for (name = va_arg(ap, gchar*); name; name = va_arg(ap, gchar*)) {
         gchar *error = NULL;
 
         for (i = 0; i < nspec; i++) {
@@ -818,13 +815,16 @@ gwy_object_set_or_reset(gpointer object,
 
         g_value_unset(&cur_value);
         g_value_unset(&new_value);
-        ignore[i] = TRUE;
+        already_set[i] = TRUE;
     }
     va_end(ap);
 
     memset(&value, 0, sizeof(GValue));
     for (i = 0; i < nspec; i++) {
-        if (ignore[i])
+        if (already_set[i]
+            || !(pspec[i]->flags & G_PARAM_WRITABLE)
+            || (pspec[i]->flags & G_PARAM_CONSTRUCT_ONLY)
+            || (type && pspec[i]->owner_type != type))
             continue;
 
         g_value_init(&value, pspec[i]->value_type);
