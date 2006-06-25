@@ -117,7 +117,7 @@ edge_la_LIBADD = $(module_libadd)
 evaluator_run_la_SOURCES = evaluator_run.c
 evaluator_run_la_LIBADD = $(module_libadd)
 
-evaluator_setup_la_SOURCES = evaluator_setup.c
+evaluator_setup_la_SOURCES = evaluator_setup.c evaluator.h evaluator_task_dialog.h evaluator_feature_dialog.h
 evaluator_setup_la_LIBADD = $(module_libadd)
 
 facet_analysis_la_SOURCES = facet_analysis.c

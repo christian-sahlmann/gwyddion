@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyexpr.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/correct.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -34,10 +35,18 @@
 
 #define EVALUATOR_RUN_RUN_MODES GWY_RUN_IMMEDIATE
 
+
+typedef struct {
+    gdouble result; 
+    gchar **variable_ids;
+    gdouble *variables;
+    gint nvariables;
+} EvalData;
+
 typedef struct {
      GwyEvaluator *evaluator;
      GwyDataField *dfield;
-     GPtrArray *evaluated_results;
+     GPtrArray *evaldata;
      GArray *evaluated_statements;
 } ErunArgs;
 
@@ -56,7 +65,7 @@ static void                results_window_response_cb(GtkWidget *window,
 static void                create_results_window(ErunArgs *args);
 static GString*            create_evaluator_report(ErunArgs *args);
 static void                test_stupid_class_init();
-
+static void                evaluate(ErunArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -102,7 +111,7 @@ evaluator_run(GwyContainer *data, GwyRunType run)
     args.evaluator = get_evaluator(filename);
     
     /*run preset*/
-    args.evaluated_results = g_ptr_array_new();
+    args.evaldata = g_ptr_array_new();
     args.evaluated_statements = g_array_new(FALSE, FALSE, sizeof(gboolean));
     get_results(&args);
 
@@ -250,6 +259,7 @@ get_results(ErunArgs *args)
 {
     get_features(args);
 
+    evaluate(args);
 }
 
 static gchar* 
@@ -439,5 +449,28 @@ create_evaluator_report(ErunArgs *args)
 }
 
 
+static void evaluate(ErunArgs *args)
+{
+    GwyExpr *expr;
+    gdouble result;
+    gint i, nv;
+    gchar **names;
+    
+    GError *err;
+   
+    expr = gwy_expr_new();
+    if (!gwy_expr_compile(expr, "A+B - MyFunction(C,D) + E", &err)){
+        g_warning("Error compiling expression: %s\n", err->message);
+        return;
+    }
+
+    nv = gwy_expr_get_variables(expr, &names);
+    for (i = 0; i<nv; i++)
+    {
+        printf("variable: %s\n", names[i]);
+    }
+    
+
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
