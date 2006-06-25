@@ -379,7 +379,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 }
 
 void
-gwy_app_data_window_setup(GwyDataWindow *data_window)
+_gwy_app_data_window_setup(GwyDataWindow *data_window)
 {
     static GtkWidget *popup_menu = NULL;
     static GtkWidget *corner_menu = NULL;

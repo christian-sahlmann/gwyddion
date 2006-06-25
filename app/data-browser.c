@@ -35,6 +35,7 @@
 #include <libgwydgets/gwygraphwindow.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
+#include <app/gwyappinternal.h>
 
 /* The container prefix all graph reside in.  This is a bit silly but it does
  * not worth to break file compatibility with 1.x. */
@@ -1075,7 +1076,7 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
                              data_view);
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
-    gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
+    _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
     gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
     gtk_widget_show_all(data_window);
     /* This primarily adds the window to the list of visible windows */

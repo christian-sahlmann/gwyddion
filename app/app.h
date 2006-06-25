@@ -70,9 +70,6 @@ GtkWidget*     gwy_app_main_window_get             (void);
 
 gboolean       gwy_app_quit                        (void);
 
-/* XXX: hack */
-void            gwy_app_data_window_setup          (GwyDataWindow *data_window);
-
 void            gwy_app_init_widget_styles         (void);
 void            gwy_app_init_i18n                  (void);
 
