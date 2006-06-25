@@ -210,7 +210,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *label, *hbox, *tree, *notebook, *page, *button, *scroll;
     GtkCellRenderer *renderer;
-    GtkTreeViewColumn *column;
     EsetupControls controls;
     gint response;
     gdouble zoomval;
@@ -219,7 +218,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     GQuark mquark;
     gint row, prow, id, column_id;
 
-    GwySelection *selection;
     
     static const GwyEnum whats[] = {
         { N_("Detected points"),          SETUP_VIEW_DETECTED_POINTS,        },
@@ -262,7 +260,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    controls.pdialog = dialog;
+    controls.pdialog = GTK_DIALOG(dialog);
     hbox = gtk_hbox_new(FALSE, 2);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -370,7 +368,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
 
     gtk_widget_set_size_request(tree, 100, 100);
     scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_container_add(scroll, tree);
+    gtk_container_add(GTK_CONTAINER(scroll), tree);
     gtk_table_attach(GTK_TABLE(page), scroll, 0, 4, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
  
@@ -414,7 +412,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                       "text", DESCRIPTION_COLUMN, NULL);
     gtk_widget_set_size_request(tree, 100, 100);
     scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_container_add(scroll, tree);
+    gtk_container_add(GTK_CONTAINER(scroll), tree);
     gtk_table_attach(GTK_TABLE(page), scroll, 0, 4, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
     prow++;
@@ -453,7 +451,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                       NULL);
     gtk_widget_set_size_request(tree, 100, 100);
     scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_container_add(scroll, tree);
+    gtk_container_add(GTK_CONTAINER(scroll), tree);
     gtk_table_attach(GTK_TABLE(page), scroll, 0, 4, prow, prow+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
     prow++;
@@ -505,7 +503,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
                                                       NULL);
     gtk_widget_set_size_request(tree, 100, 100);
     scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_container_add(scroll, tree);
+    gtk_container_add(GTK_CONTAINER(scroll), tree);
     gtk_table_attach(GTK_TABLE(table), scroll, 0, 4, row, row+1,
                                           GTK_EXPAND | GTK_FILL, 0, 2, 2);
     
@@ -681,15 +679,13 @@ get_dline_selection_index_by_id(EsetupControls *controls, gchar *id)
 static void        
 detected_remove_cb(EsetupControls *controls)
 {
-    GList *list;
     gint ipos, selpos;
-    gint row;
     gchar *id;
     GtkTreeIter iter;
    
     if (gtk_tree_selection_get_selected(controls->detected_selection,
                                  &(controls->detected_list), &iter)) {
-        gtk_tree_model_get(controls->detected_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->detected_list), &iter, NO_COLUMN, &id, -1);
         ipos = get_dpoint_pos_by_id(controls->args->evaluator->detected_point_array, id);
         if (ipos >= 0) {
             selpos = get_dpoint_selection_index_by_id(controls, id);
@@ -727,27 +723,29 @@ detected_edit_cb(EsetupControls *controls)
     if (gtk_tree_selection_get_selected(controls->detected_selection,
                                         &(controls->detected_list), &iter))
     {
-        gtk_tree_model_get(controls->detected_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->detected_list), &iter, NO_COLUMN, &id, -1);
         if (strstr(id, "sp") != NULL)
         {
             edited = get_dpoint_pos_by_id(controls->args->evaluator->detected_point_array, id);
             ppoint = g_ptr_array_index(controls->args->evaluator->detected_point_array, 
                              edited);
        
-            dialog = gwy_evaluator_point_dialog_new(ppoint->width, ppoint->height);
-            response = gtk_dialog_run (GTK_DIALOG (dialog));
+            dialog = GTK_DIALOG(gwy_evaluator_point_dialog_new(ppoint->width, ppoint->height));
+            response = gtk_dialog_run(dialog);
     
             switch (response)
             {
                 case GTK_RESPONSE_APPLY:
-                ppoint->width = gtk_adjustment_get_value(GWY_EVALUATOR_POINT_DIALOG(dialog)->width_adj);
-                ppoint->height = gtk_adjustment_get_value(GWY_EVALUATOR_POINT_DIALOG(dialog)->height_adj);
+                ppoint->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(
+                                                  GWY_EVALUATOR_POINT_DIALOG(dialog)->width_adj));
+                ppoint->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(
+                                                  GWY_EVALUATOR_POINT_DIALOG(dialog)->height_adj));
                 break;
       
                 default:
                 break;
             }
-            gtk_widget_destroy (dialog);  
+            gtk_widget_destroy(GTK_WIDGET(dialog));  
         }
         else
         {
@@ -755,20 +753,22 @@ detected_edit_cb(EsetupControls *controls)
             pline = g_ptr_array_index(controls->args->evaluator->detected_line_array, 
                              edited);
        
-            dialog = gwy_evaluator_line_dialog_new(pline->rho, pline->theta);
-            response = gtk_dialog_run (GTK_DIALOG (dialog));
+            dialog = GTK_DIALOG(gwy_evaluator_line_dialog_new(pline->rho, pline->theta));
+            response = gtk_dialog_run(dialog);
     
             switch (response)
             {
                 case GTK_RESPONSE_APPLY:
-                pline->rho = gtk_adjustment_get_value(GWY_EVALUATOR_LINE_DIALOG(dialog)->rho_adj);
-                pline->theta = gtk_adjustment_get_value(GWY_EVALUATOR_LINE_DIALOG(dialog)->theta_adj);
+                pline->rho = gtk_adjustment_get_value(GTK_ADJUSTMENT(
+                                                  GWY_EVALUATOR_LINE_DIALOG(dialog)->rho_adj));
+                pline->theta = gtk_adjustment_get_value(GTK_ADJUSTMENT(
+                                                  GWY_EVALUATOR_LINE_DIALOG(dialog)->theta_adj));
                 break;
       
                 default:
                 break;
             }
-            gtk_widget_destroy (dialog);  
+            gtk_widget_destroy(GTK_WIDGET(dialog));  
          }
     }
 }
@@ -866,16 +866,14 @@ get_fline_selection_index_by_position(EsetupControls *controls, gdouble xstart, 
 static void        
 relative_remove_cb(EsetupControls *controls)
 {
-    GList *list;
     gint ipos, selpos;
-    gint row;
     gchar *id;
     GtkTreeIter iter;
     GwySelection *selection;
 
     if (gtk_tree_selection_get_selected(controls->relative_selection,
                                  &(controls->relative_list), &iter)) {
-        gtk_tree_model_get(controls->relative_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->relative_list), &iter, NO_COLUMN, &id, -1);
         ipos = get_fpoint_pos_by_id(controls->args->evaluator->fixed_point_array, id);
         if (ipos >= 0) {
             
@@ -956,9 +954,7 @@ get_cpoint_selection_index_by_position(EsetupControls *controls, gdouble x, gdou
 static void        
 correlation_remove_cb(EsetupControls *controls)
 {
-    GList *list;
     gint ipos, selpos;
-    gint row;
     gchar *id;
     GtkTreeIter iter;
     GwySelection *selection;
@@ -968,7 +964,7 @@ correlation_remove_cb(EsetupControls *controls)
    
     if (gtk_tree_selection_get_selected(controls->correlation_selection,
                                  &(controls->correlation_list), &iter)) {
-        gtk_tree_model_get(controls->correlation_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->correlation_list), &iter, NO_COLUMN, &id, -1);
         ipos = get_cpoint_pos_by_id(controls->args->evaluator->correlation_point_array, id);
         selpos = get_cpoint_selection_index_by_position(controls,
                           GWY_CORRELATION_POINT(g_ptr_array_index(controls->args->evaluator->correlation_point_array, 
@@ -992,57 +988,58 @@ correlation_edit_cb(EsetupControls *controls)
     GwyCorrelationPoint *ppoint;
     GtkTreeIter iter;
     gchar *id;
-    GtkDialog *dialog;
+    GwyEvaluatorCorrelationPointDialog *dialog;
     gint response, edited;
 
  
     if (gtk_tree_selection_get_selected(controls->correlation_selection,
                                         &(controls->correlation_list), &iter))
     {
-        gtk_tree_model_get(controls->correlation_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->correlation_list), &iter, NO_COLUMN, &id, -1);
         edited = get_cpoint_pos_by_id(controls->args->evaluator->correlation_point_array, id);
         ppoint = g_ptr_array_index(controls->args->evaluator->correlation_point_array,
                          edited);
        
-        dialog = gwy_evaluator_correlation_point_dialog_new(ppoint->width, ppoint->height, ppoint->swidth, ppoint->sheight);
+        dialog = GWY_EVALUATOR_CORRELATION_POINT_DIALOG(gwy_evaluator_correlation_point_dialog_new(
+                                           ppoint->width, ppoint->height, ppoint->swidth, ppoint->sheight));
         response = gtk_dialog_run (GTK_DIALOG (dialog));
     
         switch (response)
         {
             case GTK_RESPONSE_APPLY:
-            ppoint->width = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width_adj);
-            ppoint->height = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height_adj);
-            ppoint->swidth = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->swidth_adj);
-            ppoint->sheight = gtk_adjustment_get_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->sheight_adj);
+            ppoint->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->width_adj));
+            ppoint->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->height_adj));
+            ppoint->swidth = gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->swidth_adj));
+            ppoint->sheight = gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->sheight_adj));
              break;
       
             default:
             break;
         }
-        gtk_widget_destroy (dialog);  
+        gtk_widget_destroy (GTK_WIDGET(dialog));  
     }
 }
 static void        
 task_add_cb(EsetupControls *controls)
 {
-    GtkDialog *dialog;
+    GwyEvaluatorTaskDialog *dialog;
     gint response;
 
-    dialog = gwy_evaluator_task_dialog_new();
-    response = gtk_dialog_run (GTK_DIALOG (dialog));
+    dialog = GWY_EVALUATOR_TASK_DIALOG(gwy_evaluator_task_dialog_new());
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
     
     switch (response)
     {
       case GTK_RESPONSE_APPLY:
          expression_add(controls, 
-                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression)),
-                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->threshold_expression)));   
+                        gtk_entry_get_text(GTK_ENTRY(dialog->expression)),
+                        gtk_entry_get_text(GTK_ENTRY(dialog->threshold_expression)));   
       break;
       
       default:
          break;
     }
-    gtk_widget_destroy (dialog);  
+    gtk_widget_destroy(GTK_WIDGET(dialog));  
     
 }
 
@@ -1062,15 +1059,13 @@ get_task_pos_by_id(GPtrArray *array, gchar *id)
 static void        
 task_remove_cb(EsetupControls *controls)
 {
-    GList *list;
     guint ipos;
-    gint row;
     gchar *id;
     GtkTreeIter iter;
    
     if (gtk_tree_selection_get_selected(controls->evaluator_selection,
                                  &(controls->evaluator_list), &iter)) {
-        gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->evaluator_list), &iter, NO_COLUMN, &id, -1);
         ipos = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
         gtk_list_store_remove(controls->evaluator_list, &iter);
         g_ptr_array_remove_index(controls->args->evaluator->expression_task_array, ipos);
@@ -1083,21 +1078,21 @@ task_edit_cb(EsetupControls *controls)
     GwyEvaluatorTask *ptask;
     GtkTreeIter iter;
     gchar *id;
-    GtkDialog *dialog;
+    GwyEvaluatorTaskDialog *dialog;
     gint response;
 
  
     if (gtk_tree_selection_get_selected(controls->evaluator_selection,
                                         &(controls->evaluator_list), &iter))
     {
-        gtk_tree_model_get(controls->evaluator_list, &iter, NO_COLUMN, &id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->evaluator_list), &iter, NO_COLUMN, &id, -1);
         controls->task_edited = get_task_pos_by_id(controls->args->evaluator->expression_task_array, id);
         ptask = g_ptr_array_index(controls->args->evaluator->expression_task_array,  
                              controls->task_edited);
 
-        dialog = gwy_evaluator_task_dialog_new();
-        gtk_entry_set_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression), ptask->expression);
-        gtk_entry_set_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->threshold_expression), ptask->threshold);
+        dialog = GWY_EVALUATOR_TASK_DIALOG(gwy_evaluator_task_dialog_new());
+        gtk_entry_set_text(GTK_ENTRY(dialog->expression), ptask->expression);
+        gtk_entry_set_text(GTK_ENTRY(dialog->threshold_expression), ptask->threshold);
     
         response = gtk_dialog_run (GTK_DIALOG (dialog));
     
@@ -1105,14 +1100,14 @@ task_edit_cb(EsetupControls *controls)
         {
             case GTK_RESPONSE_APPLY:
             expression_add(controls, 
-                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->expression)),
-                        gtk_entry_get_text(GTK_ENTRY(GWY_EVALUATOR_TASK_DIALOG(dialog)->threshold_expression)));   
+                        gtk_entry_get_text(GTK_ENTRY(dialog->expression)),
+                        gtk_entry_get_text(GTK_ENTRY(dialog->threshold_expression)));   
             break;
       
             default:
             break;
         }
-        gtk_widget_destroy (dialog);  
+        gtk_widget_destroy(GTK_WIDGET(dialog));  
     }
 }
 
@@ -1358,7 +1353,6 @@ preset_relative(EsetupControls *controls)
     GwyDataField *dfield;
     GwySelection *selection;
     GwyFixedPoint *spset;
-    gint i;
     gdouble seldata[2];
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
@@ -1650,7 +1644,6 @@ flines_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *con
     GtkTreeIter iter;
     GwyFixedLine *pslset;
     gdouble linedata[4];
-    gdouble rho, theta;
     GwyDataField *dfield;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
@@ -1904,7 +1897,7 @@ evaluator_load_cb(EsetupControls *controls)
                     return;
         }
 
-        controls->args->evaluator = gwy_serializable_deserialize(buffer, &size, &pos);
+        controls->args->evaluator = GWY_EVALUATOR(gwy_serializable_deserialize(buffer, size, &pos));
         if (!controls->args->evaluator) {
             printf("deserialize failed\n");
             return;
@@ -1944,7 +1937,7 @@ evaluator_save_cb(EsetupControls *controls)
                 printf("open failed\n");
                 return;
             }
-            buffer = gwy_serializable_serialize(controls->args->evaluator, NULL);
+            buffer = gwy_serializable_serialize(G_OBJECT(controls->args->evaluator), NULL);
             if (fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
                 printf("write failed\n");
                 return;

@@ -1364,7 +1364,7 @@ gwy_evaluator_get_size(GObject *obj)
     gpointer dp, dl, fp, fl, cp, et;
     dp = dl = fp = fl = cp = et = NULL;
 
-    g_return_val_if_fail(GWY_IS_EVALUATOR(obj), NULL);
+    g_return_val_if_fail(GWY_IS_EVALUATOR(obj), 0);
     evaluator = GWY_EVALUATOR(obj);
     
     if (evaluator->detected_point_array->len) 
@@ -1424,7 +1424,6 @@ gwy_evaluator_deserialize(const guchar *buffer,
             { 'O', "correlation_points", &cp, &ncp },
             { 'O', "evaluator_tasks", &et, &net },
          };
-        printf("%s\n", buffer);
         gwy_serialize_unpack_object_struct(buffer, size, position,
                                            GWY_EVALUATOR_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);

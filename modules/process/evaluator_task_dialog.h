@@ -284,7 +284,7 @@ function_add_cb(GwyEvaluatorTaskDialog *dialog)
 {
     GtkEditable *editable;
     gint pos;
-    gchar *p;
+    const gchar *p;
 
     static const GwyEnum tasks[] = {
         { N_("LineMin()"),      GWY_EVALUATOR_TASK_LINE_MIN,                },
@@ -324,7 +324,7 @@ threshold_add_cb(GwyEvaluatorTaskDialog *dialog)
 {
     GtkEditable *editable;
     gint pos;
-    gchar *p;
+    const gchar *p;
 
     static const GwyEnum thresholds[] = {
         { N_("> "),                GWY_EVALUATOR_THRESHOLD_BIGGER,               },

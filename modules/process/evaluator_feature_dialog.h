@@ -42,8 +42,8 @@ typedef struct _GwyEvaluatorPointDialogClass GwyEvaluatorPointDialogClass;
 struct _GwyEvaluatorPointDialog {
     GtkDialog dialog;
 
-    GObject *width_adj;
-    GObject *height_adj;
+    GtkObject *width_adj;
+    GtkObject *height_adj;
     gint width;
     gint height;
 
@@ -131,7 +131,7 @@ gwy_evaluator_point_dialog_delete(GtkWidget *widget,
 static void
 gwy_evaluator_point_dialog_init(GwyEvaluatorPointDialog *dialog)
 {
-    GtkWidget *label, *table, *button;
+    GtkWidget *label, *table;
     gint row = 0;
 
 
@@ -177,8 +177,8 @@ gwy_evaluator_point_dialog_new(gint width, gint height)
     GWY_EVALUATOR_POINT_DIALOG(dialog)->width = width;
     GWY_EVALUATOR_POINT_DIALOG(dialog)->height = height;
    
-    gtk_adjustment_set_value(GWY_EVALUATOR_POINT_DIALOG(dialog)->height_adj, height);
-    gtk_adjustment_set_value(GWY_EVALUATOR_POINT_DIALOG(dialog)->width_adj, width);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_POINT_DIALOG(dialog)->height_adj), height);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_POINT_DIALOG(dialog)->width_adj), width);
     return dialog;
 }
 
@@ -211,8 +211,8 @@ typedef struct _GwyEvaluatorLineDialogClass GwyEvaluatorLineDialogClass;
 struct _GwyEvaluatorLineDialog {
     GtkDialog dialog;
 
-    GObject *rho_adj;
-    GObject *theta_adj;
+    GtkObject *rho_adj;
+    GtkObject *theta_adj;
     gint rho;
     gint theta;
 
@@ -300,7 +300,7 @@ gwy_evaluator_line_dialog_delete(GtkWidget *widget,
 static void
 gwy_evaluator_line_dialog_init(GwyEvaluatorLineDialog *dialog)
 {
-    GtkWidget *label, *table, *button;
+    GtkWidget *label, *table;
     gint row = 0;
 
 
@@ -346,8 +346,8 @@ gwy_evaluator_line_dialog_new(gint rho, gint theta)
     GWY_EVALUATOR_LINE_DIALOG(dialog)->rho = rho;
     GWY_EVALUATOR_LINE_DIALOG(dialog)->theta = theta;
    
-    gtk_adjustment_set_value(GWY_EVALUATOR_LINE_DIALOG(dialog)->rho_adj, rho);
-    gtk_adjustment_set_value(GWY_EVALUATOR_LINE_DIALOG(dialog)->theta_adj, theta);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_LINE_DIALOG(dialog)->rho_adj), rho);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_LINE_DIALOG(dialog)->theta_adj), theta);
   
     return dialog;
 }
@@ -376,11 +376,11 @@ typedef struct _GwyEvaluatorCorrelationPointDialogClass GwyEvaluatorCorrelationP
 struct _GwyEvaluatorCorrelationPointDialog {
     GtkDialog dialog;
 
-    GObject *width_adj;
-    GObject *height_adj;
-    GObject *swidth_adj;
-    GObject *sheight_adj;
-     gint width;
+    GtkObject *width_adj;
+    GtkObject *height_adj;
+    GtkObject *swidth_adj;
+    GtkObject *sheight_adj;
+    gint width;
     gint height;
     gint swidth;
     gint sheight;
@@ -471,7 +471,7 @@ gwy_evaluator_correlation_point_dialog_delete(GtkWidget *widget,
 static void
 gwy_evaluator_correlation_point_dialog_init(GwyEvaluatorCorrelationPointDialog *dialog)
 {
-    GtkWidget *label, *table, *button;
+    GtkWidget *label, *table;
     gint row = 0;
 
 
@@ -525,10 +525,10 @@ gwy_evaluator_correlation_point_dialog_new(gint width, gint height,
     GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width = width;
     GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height = height;
    
-    gtk_adjustment_set_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height_adj, height);
-    gtk_adjustment_set_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width_adj, width);
-    gtk_adjustment_set_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->sheight_adj, sheight);
-    gtk_adjustment_set_value(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->swidth_adj, swidth);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height_adj), height);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width_adj), width);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->sheight_adj), sheight);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->swidth_adj), swidth);
      return dialog;
 }
 
