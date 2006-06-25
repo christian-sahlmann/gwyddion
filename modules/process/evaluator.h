@@ -1432,28 +1432,33 @@ gwy_evaluator_deserialize(const guchar *buffer,
         printf("deser: %d %d %d %d %d %d\n", ndp, ndl, nfp, nfl, ncp, net);
         for (i = 0; i<ndp; i++)
         {
-            printf("adding %s\n", dp[i]->id);
             g_ptr_array_add(evaluator->detected_point_array, dp[i]);
+            /*g_free(dp[i]);*/
         }
         for (i = 0; i<ndl; i++)
         {
             g_ptr_array_add(evaluator->detected_line_array, dl[i]);
+            /*g_free(dl[i]);*/
         }
         for (i = 0; i<nfp; i++)
         {
             g_ptr_array_add(evaluator->fixed_point_array, fp[i]);
+            /*g_free(fp[i]);*/
         }
         for (i = 0; i<nfl; i++)
         {
             g_ptr_array_add(evaluator->fixed_line_array, fl[i]);
+            /*g_free(fl[i]);*/
         }
         for (i = 0; i<ncp; i++)
         {
             g_ptr_array_add(evaluator->correlation_point_array, cp[i]);
+            /*g_free(cp[i]);*/
         }
         for (i = 0; i<net; i++)
         {
             g_ptr_array_add(evaluator->expression_task_array, et[i]);
+            /*g_free(et[i]);*/
         }
              
      }

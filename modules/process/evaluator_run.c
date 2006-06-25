@@ -55,7 +55,7 @@ static void                results_window_response_cb(GtkWidget *window,
                                                       GString *report);
 static void                create_results_window(ErunArgs *args);
 static GString*            create_evaluator_report(ErunArgs *args);
-
+static void                test_stupid_class_init();
 
 
 static GwyModuleInfo module_info = {
@@ -280,6 +280,38 @@ get_filename()
 
 }
 
+
+/*FIXME why this stupix piece of code must precede any deserialization
+ in order to prevent all types being unknown?*/
+static void
+test_stupid_class_init()
+{
+    GwyEvaluator *ev;
+    GwySearchPoint *spset;
+    GwySearchLine *slset;
+    GwyFixedPoint *fpset;
+    GwyFixedLine *flset;
+    GwyCorrelationPoint *cpset;
+    GwyEvaluatorTask *etset;
+
+    ev = gwy_evaluator_new();
+    spset = gwy_search_point_new();
+    slset = gwy_search_line_new();
+    fpset = gwy_fixed_point_new();
+    flset = gwy_fixed_line_new();
+    cpset = gwy_correlation_point_new();
+    etset = gwy_evaluator_task_new();
+
+    g_object_unref(ev);
+    g_object_unref(spset);
+    g_object_unref(slset);
+    g_object_unref(fpset);
+    g_object_unref(flset);
+    g_object_unref(cpset);
+    g_object_unref(etset);
+}
+
+
 static GwyEvaluator* 
 get_evaluator(gchar *filename)
 {
@@ -290,6 +322,8 @@ get_evaluator(gchar *filename)
     gsize pos = 0;
 
         
+
+    test_stupid_class_init();    
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
             printf("get contetns failed\n");
                     return NULL;

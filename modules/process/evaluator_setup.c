@@ -109,10 +109,6 @@ static void        esetup                    (GwyContainer *data,
                                                GwyRunType run);
 static void        esetup_dialog                (EsetupArgs *args,
                                                GwyContainer *data);
-static void        esetup_dialog_update_controls(EsetupControls *controls,
-                                               EsetupArgs *args);
-static void        esetup_dialog_update_values  (EsetupControls *controls,
-                                               EsetupArgs *args);
 static void        esetup_load_args             (GwyContainer *container,
                                                EsetupArgs *args);
 static void        esetup_save_args             (GwyContainer *container,
@@ -163,6 +159,8 @@ static GwyVectorLayer *create_layer_with_selection(const gchar* ltype,
 static void        expression_add(EsetupControls *controls, 
                                   gchar *expression,
                                   gchar *threshold);
+static void        test_stupid_class_init();
+static void        update_after_load         (EsetupControls *controls);
 
 static const EsetupArgs esetup_defaults = {
     0, NULL
@@ -536,6 +534,7 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     gtk_widget_set_sensitive(controls.correlation_remove_button, FALSE);
     gtk_widget_set_sensitive(controls.correlation_edit_button, FALSE);
     
+    test_stupid_class_init();
     detect_points(&controls);
     detect_lines(&controls);
     preset_relative(&controls);
@@ -547,7 +546,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            esetup_dialog_update_values(&controls, args);
             selections_unref(&controls);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
@@ -571,7 +569,6 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    esetup_dialog_update_values(&controls, args);
     gwy_app_copy_data_items(controls.mydata, data, 0, id,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
@@ -597,17 +594,33 @@ create_layer_with_selection(const gchar* ltype, const gchar* stype,
     return layer;
 }
 
+/*FIXME why this stupix piece of code must precede any deserialization
+ in order to prevent all types being unknown?*/
 static void
-esetup_dialog_update_controls(EsetupControls *controls,
-                            EsetupArgs *args)
+test_stupid_class_init()
 {
+    GwySearchPoint *spset;
+    GwySearchLine *slset;
+    GwyFixedPoint *fpset;
+    GwyFixedLine *flset;
+    GwyCorrelationPoint *cpset;
+    GwyEvaluatorTask *etset;
+
+    spset = gwy_search_point_new();
+    slset = gwy_search_line_new();
+    fpset = gwy_fixed_point_new();
+    flset = gwy_fixed_line_new();
+    cpset = gwy_correlation_point_new();
+    etset = gwy_evaluator_task_new();
+    
+    g_object_unref(spset);
+    g_object_unref(slset);
+    g_object_unref(fpset);
+    g_object_unref(flset);
+    g_object_unref(cpset);
+    g_object_unref(etset);
 }
 
-static void
-esetup_dialog_update_values(EsetupControls *controls,
-                          EsetupArgs *args)
-{
-}
 
 static gint
 get_dpoint_pos_by_id(GPtrArray *array, gchar *id)
@@ -1452,6 +1465,7 @@ dpoints_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls
  
     gwy_selection_get_object(selection, i, pointdata);
  
+    
     spset = gwy_search_point_new();
     spset->id = g_strdup_printf("sp%d", i + 1);
 
@@ -1461,8 +1475,10 @@ dpoints_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls
     spset->y = gwy_data_field_rtoj(dfield, pointdata[1]) - DEFAULT_POINT_SIZE/2;
     spset->width = DEFAULT_POINT_SIZE;
     spset->height = DEFAULT_POINT_SIZE;
+    
+    
     g_ptr_array_add(controls->args->evaluator->detected_point_array, spset);
-
+    
     g_array_index(controls->detected_point_chosen, gboolean, i) = TRUE;
     gtk_list_store_insert_with_values(controls->detected_list, &iter, -1,
                        NO_COLUMN, spset->id,
@@ -1727,6 +1743,139 @@ selections_unref(EsetupControls *controls)
 }
 
 
+static gint
+get_num_from_id(gchar *id, gchar *initid)
+{
+    return (gint)g_ascii_strtod(id + strlen(initid), NULL);
+}
+
+static void        
+update_after_load(EsetupControls *controls)
+{
+    GwySearchPoint *spset;
+    GwySearchLine *slset;
+    GwyFixedPoint *fpset;
+    GwyFixedLine *flset;
+    GwyCorrelationPoint *cpset;
+    GwyEvaluatorTask *etset;
+    gint i, num; 
+    GtkTreeIter iter;
+    gdouble pointseldata[2], lineseldata[4];
+    GwySelection *selection;
+    
+    update_selected_points(controls);
+    update_selected_lines(controls);
+
+    for (i=0; i<controls->args->evaluator->detected_point_array->len; i++)
+    {
+        spset = g_ptr_array_index(controls->args->evaluator->detected_point_array, i);
+        
+        num = get_num_from_id(spset->id, "sp");
+        g_array_index(controls->detected_point_chosen, gboolean, num) = TRUE;
+        
+        gtk_list_store_insert_with_values(controls->detected_list, &iter, -1,
+                                           NO_COLUMN, spset->id,
+                                           DESCRIPTION_COLUMN, "des",
+                                           TYPE_COLUMN, "point",
+                                           -1);
+    }
+    for (i=0; i<controls->args->evaluator->detected_line_array->len; i++)
+    {
+        slset = g_ptr_array_index(controls->args->evaluator->detected_line_array, i);
+        
+        num = get_num_from_id(spset->id, "sl");
+        g_array_index(controls->detected_line_chosen, gboolean, num) = TRUE;
+        
+        gtk_list_store_insert_with_values(controls->detected_list, &iter, -1,
+                                           NO_COLUMN, slset->id,
+                                           DESCRIPTION_COLUMN, "des",
+                                           TYPE_COLUMN, "line",
+                                           -1);
+    }
+
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                       gwy_vector_layer_get_selection_key(controls->vlayer_fpoint));
+    gwy_selection_set_max_objects(selection, MAX(1, controls->args->evaluator->fixed_point_array->len));
+    gwy_selection_clear(selection);
+    for (i=0; i<controls->args->evaluator->fixed_point_array->len; i++)
+    {
+        fpset = g_ptr_array_index(controls->args->evaluator->fixed_point_array, i);
+        
+        
+        gtk_list_store_insert_with_values(controls->relative_list, &iter, -1,
+                                           NO_COLUMN, fpset->id,
+                                           DESCRIPTION_COLUMN, "des",
+                                           TYPE_COLUMN, "point",
+                                           -1);
+        if (!gwy_selection_is_full(selection))
+        {
+            pointseldata[0] = fpset->xc;
+            pointseldata[1] = fpset->yc;
+            gwy_selection_set_object(selection, i, pointseldata);
+        }
+    }
+
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                       gwy_vector_layer_get_selection_key(controls->vlayer_fline));
+    gwy_selection_set_max_objects(selection, MAX(1, controls->args->evaluator->fixed_line_array->len));
+    gwy_selection_clear(selection);
+    for (i=0; i<controls->args->evaluator->fixed_line_array->len; i++)
+    {
+        flset = g_ptr_array_index(controls->args->evaluator->fixed_line_array, i);
+        
+        
+        gtk_list_store_insert_with_values(controls->relative_list, &iter, -1,
+                                           NO_COLUMN, flset->id,
+                                           DESCRIPTION_COLUMN, "des",
+                                           TYPE_COLUMN, "line",
+                                           -1);
+        if (!gwy_selection_is_full(selection))
+        {
+            lineseldata[0] = flset->xstart;
+            lineseldata[1] = flset->ystart;
+            lineseldata[2] = flset->xend;
+            lineseldata[3] = flset->xend;
+            gwy_selection_set_object(selection, i, lineseldata);
+        }
+    }
+    
+    selection = gwy_container_get_object_by_name(controls->mydata,
+                                       gwy_vector_layer_get_selection_key(controls->vlayer_cpoint));
+    gwy_selection_set_max_objects(selection, MAX(1, controls->args->evaluator->correlation_point_array->len));
+    gwy_selection_clear(selection);
+    for (i=0; i<controls->args->evaluator->correlation_point_array->len; i++)
+    {
+        cpset = g_ptr_array_index(controls->args->evaluator->correlation_point_array, i);
+        
+        
+        gtk_list_store_insert_with_values(controls->correlation_list, &iter, -1,
+                                           NO_COLUMN, cpset->id,
+                                           DESCRIPTION_COLUMN, "des",
+                                           TYPE_COLUMN, "point",
+                                           -1);
+        if (!gwy_selection_is_full(selection))
+        {
+            pointseldata[0] = cpset->xc;
+            pointseldata[1] = cpset->yc;
+            gwy_selection_set_object(selection, i, pointseldata);
+        }
+    }
+
+    for (i=0; i<controls->args->evaluator->expression_task_array->len; i++)
+    {
+        etset = g_ptr_array_index(controls->args->evaluator->expression_task_array, i);
+        
+        gtk_list_store_insert_with_values(controls->evaluator_list, &iter, -1,
+                                           NO_COLUMN, etset->id,
+                                           TYPE_COLUMN, etset->expression,
+                                           DESCRIPTION_COLUMN, etset->threshold,
+                                           -1);
+    }
+
+
+ 
+}
+
 
 static void        
 evaluator_load_cb(EsetupControls *controls)
@@ -1761,6 +1910,7 @@ evaluator_load_cb(EsetupControls *controls)
             return;
         
         }
+        update_after_load(controls);
 
         
     }
