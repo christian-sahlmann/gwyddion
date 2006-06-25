@@ -52,8 +52,8 @@ gwy_app_wait_start(GtkWidget *window,
         g_warning("Widget is not a window");
 
     if (wait_widget || silent_waiting) {
-        g_warning("Already waiting on a widget, switching to the new one");
-        gwy_app_wait_switch_widget(window, message);
+        g_critical("Waiting is modal, cannot wait on more than one thing "
+                   "at once.");
         return;
     }
 
@@ -124,42 +124,6 @@ gwy_app_wait_create_dialog(GtkWidget *window,
     gtk_window_present(GTK_WINDOW(dialog));
     while (gtk_events_pending())
         gtk_main_iteration();
-}
-
-/**
- * gwy_app_wait_switch_widget:
- * @window: A window.
- * @message: A mesage to show now (%NULL for keep the present one).
- *
- * Switches the waiting window.
- *
- * FIXME: This is probably both broken and nonsense.
- *
- * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
- *          meanwhile.
- **/
-gboolean
-gwy_app_wait_switch_widget(GtkWidget *window,
-                           const gchar *message)
-{
-    if (!window || !silent_waiting) {
-        g_warning("Cannot switch between normal and silent waiting.");
-        return TRUE;
-    }
-
-    while (gtk_events_pending())
-        gtk_main_iteration();
-    if (cancelled)
-        return FALSE;
-
-    wait_widget = window;
-    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window));
-    while (gtk_events_pending())
-        gtk_main_iteration();
-
-    if (message)
-        gwy_app_wait_set_message(message);
-    return !cancelled;
 }
 
 /**

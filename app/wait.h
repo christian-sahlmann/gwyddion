@@ -28,8 +28,6 @@ G_BEGIN_DECLS
 void     gwy_app_wait_start              (GtkWidget *window,
                                           const gchar *message);
 void     gwy_app_wait_finish             (void);
-gboolean gwy_app_wait_switch_widget      (GtkWidget *window,
-                                          const gchar *message);
 gboolean gwy_app_wait_set_fraction       (gdouble fraction);
 gboolean gwy_app_wait_set_message        (const gchar *message);
 gboolean gwy_app_wait_set_message_prefix (const gchar *prefix);
