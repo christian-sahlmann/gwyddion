@@ -75,6 +75,10 @@ enum {
 typedef struct _GwyAppDataBrowser GwyAppDataBrowser;
 typedef struct _GwyAppDataProxy   GwyAppDataProxy;
 
+typedef gboolean (*SetVisibleFunc)(GwyAppDataProxy *proxy,
+                                   GtkTreeIter *iter,
+                                   gboolean visible);
+
 /* Channel or graph list */
 typedef struct {
     GtkListStore *store;
@@ -1026,7 +1030,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
  * Returns: The data view (NOT data window).
  **/
 static GtkWidget*
-gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
+gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
                                     GwyAppDataProxy *proxy,
                                     GwyDataField *dfield)
 {
@@ -1086,7 +1090,51 @@ gwy_app_data_browser_create_channel(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     quark = g_quark_from_string(key);
     gwy_app_data_browser_sync_mask(data, quark, GWY_DATA_VIEW(data_view));
 
+    /* FIXME: A silly place for this? */
+    if (browser->sensgroup)
+        gwy_sensitivity_group_set_state(browser->sensgroup,
+                                        SENS_FILE, SENS_FILE);
+
     return data_view;
+}
+
+static gboolean
+gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
+                                       GtkTreeIter *iter,
+                                       gboolean visible)
+{
+    GwyAppDataList *list;
+    GtkTreeModel *model;
+    GtkWidget *widget, *window;
+    GObject *object;
+
+    list = &proxy->lists[PAGE_CHANNELS];
+    model = GTK_TREE_MODEL(list->store);
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_WIDGET, &widget,
+                       MODEL_OBJECT, &object,
+                       -1);
+    if (visible == (widget != 0))
+        return FALSE;
+
+    if (visible) {
+        widget = gwy_app_data_browser_create_channel(proxy->parent, proxy,
+                                                     GWY_DATA_FIELD(object));
+        gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
+    }
+    else {
+        gwy_app_data_proxy_update_visibility(object, FALSE);
+        window = gtk_widget_get_toplevel(widget);
+        gwy_app_data_window_remove(GWY_DATA_WINDOW(window));
+        gtk_widget_destroy(window);
+        gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
+        g_object_unref(widget);
+        gwy_app_data_proxy_unref(proxy);
+    }
+    g_object_unref(object);
+
+    return TRUE;
 }
 
 static void
@@ -1095,46 +1143,23 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
                                      GwyAppDataBrowser *browser)
 {
     GwyAppDataProxy *proxy;
-    GwyAppDataList *list;
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
-    GtkWidget *widget, *window;
-    GObject *object;
-    gboolean active;
+    gboolean active, toggled;
 
-    gwy_debug("Toggled data row %s", path_str);
+    gwy_debug("Toggled channel row %s", path_str);
     proxy = browser->current;
     g_return_if_fail(proxy);
 
-    list = &proxy->lists[PAGE_CHANNELS];
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(list->store);
-
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
-    gtk_tree_model_get(model, &iter,
-                       MODEL_WIDGET, &widget,
-                       MODEL_OBJECT, &object,
-                       -1);
     active = gtk_cell_renderer_toggle_get_active(renderer);
-    g_assert(active == (widget != NULL));
-    if (!active) {
-        widget = gwy_app_data_browser_create_channel(browser, proxy,
-                                                     GWY_DATA_FIELD(object));
-        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
-    }
-    else {
-        gwy_app_data_proxy_update_visibility(object, FALSE);
-        window = gtk_widget_get_toplevel(widget);
-        gwy_app_data_window_remove(GWY_DATA_WINDOW(window));
-        gtk_widget_destroy(window);
-        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, NULL, -1);
-        g_object_unref(widget);
-        gwy_app_data_proxy_unref(proxy);
-    }
-    g_object_unref(object);
+    toggled = gwy_app_data_proxy_channel_set_visible(proxy, &iter, !active);
+    g_assert(toggled);
 }
 
 static GtkWidget*
@@ -1326,7 +1351,51 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     /* This primarily adds the window to the list of visible windows */
     gwy_app_graph_window_set_current(graph_window);
 
+    /* FIXME: A silly place for this? */
+    if (browser->sensgroup)
+        gwy_sensitivity_group_set_state(browser->sensgroup,
+                                        SENS_FILE, SENS_FILE);
+
     return graph;
+}
+
+static gboolean
+gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
+                                     GtkTreeIter *iter,
+                                     gboolean visible)
+{
+    GwyAppDataList *list;
+    GtkTreeModel *model;
+    GtkWidget *widget, *window;
+    GObject *object;
+
+    list = &proxy->lists[PAGE_GRAPHS];
+    model = GTK_TREE_MODEL(list->store);
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_WIDGET, &widget,
+                       MODEL_OBJECT, &object,
+                       -1);
+    if (visible == (widget != 0))
+        return FALSE;
+
+    if (visible) {
+        widget = gwy_app_data_browser_create_graph(proxy->parent, proxy,
+                                                   GWY_GRAPH_MODEL(object));
+        gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
+    }
+    else {
+        gwy_app_data_proxy_update_visibility(object, FALSE);
+        window = gtk_widget_get_toplevel(widget);
+        gwy_app_graph_window_remove(window);
+        gtk_widget_destroy(window);
+        gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
+        g_object_unref(widget);
+        gwy_app_data_proxy_unref(proxy);
+    }
+    g_object_unref(object);
+
+    return TRUE;
 }
 
 static void
@@ -1335,46 +1404,23 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
                                    GwyAppDataBrowser *browser)
 {
     GwyAppDataProxy *proxy;
-    GwyAppDataList *list;
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
-    GtkWidget *widget, *window;
-    GObject *object;
-    gboolean active;
+    gboolean active, toggled;
 
     gwy_debug("Toggled graph row %s", path_str);
     proxy = browser->current;
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    list = &proxy->lists[PAGE_GRAPHS];
-    model = GTK_TREE_MODEL(list->store);
-
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
-    gtk_tree_model_get(model, &iter,
-                       MODEL_WIDGET, &widget,
-                       MODEL_OBJECT, &object,
-                       -1);
     active = gtk_cell_renderer_toggle_get_active(renderer);
-    g_assert(active == (widget != NULL));
-    if (!active) {
-        widget = gwy_app_data_browser_create_graph(browser, proxy,
-                                                   GWY_GRAPH_MODEL(object));
-        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
-    }
-    else {
-        gwy_app_data_proxy_update_visibility(object, FALSE);
-        window = gtk_widget_get_toplevel(widget);
-        gwy_app_graph_window_remove(window);
-        gtk_widget_destroy(window);
-        gtk_list_store_set(list->store, &iter, MODEL_WIDGET, NULL, -1);
-        g_object_unref(widget);
-        gwy_app_data_proxy_unref(proxy);
-    }
-    g_object_unref(object);
+    toggled = gwy_app_data_proxy_graph_set_visible(proxy, &iter, !active);
+    g_assert(toggled);
 }
 
 static GtkWidget*
@@ -1903,62 +1949,56 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
 }
 
 static gboolean
-gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
+gwy_app_data_list_reset_visibility(GwyAppDataProxy *proxy,
+                                   GwyAppDataList *list,
+                                   SetVisibleFunc set_visible,
+                                   gboolean visible)
 {
-    GtkTreeIter iter;
     GtkTreeModel *model;
-    GtkWidget *widget;
-    GwyDataField *dfield;
-    GwyGraphModel *gmodel;
-    const gchar *strkey;
-    GQuark quark;
-    gboolean visible;
-    gchar key[48];
-    gint count = 0;
+    GtkTreeIter iter;
+    gint count;
 
-    /* Data channels */
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
+    count = 0;
+    model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
-            visible = FALSE;
-            gtk_tree_model_get(model, &iter, MODEL_OBJECT, &dfield, -1);
-            quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(dfield),
-                                                        own_key_quark));
-            strkey = g_quark_to_string(quark);
-            g_snprintf(key, sizeof(key), "%s/visible", strkey);
-            gwy_container_gis_boolean_by_name(proxy->container, key, &visible);
-            if (visible) {
-                widget = gwy_app_data_browser_create_channel(proxy->parent,
-                                                             proxy, dfield);
-                gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
-                                   MODEL_WIDGET, widget,
-                                   -1);
-                count++;
-            }
-            g_object_unref(dfield);
+            set_visible(proxy, &iter, visible);
+            count++;
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
-    /* Graphs */
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
+    return count > 0;
+}
+
+static gboolean
+gwy_app_data_list_reconstruct_visibility(GwyAppDataProxy *proxy,
+                                         GwyAppDataList *list,
+                                         SetVisibleFunc set_visible)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GObject *object;
+    GQuark quark;
+    const gchar *strkey;
+    gchar key[48];
+    gint count;
+    gboolean visible;
+
+    count = 0;
+    model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
             visible = FALSE;
-            gtk_tree_model_get(model, &iter, MODEL_OBJECT, &gmodel, -1);
-            quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(gmodel),
-                                                        own_key_quark));
+            gtk_tree_model_get(model, &iter, MODEL_OBJECT, &object, -1);
+            quark = GPOINTER_TO_UINT(g_object_get_qdata(object, own_key_quark));
             strkey = g_quark_to_string(quark);
             g_snprintf(key, sizeof(key), "%s/visible", strkey);
             gwy_container_gis_boolean_by_name(proxy->container, key, &visible);
-            if (visible) {
-                widget = gwy_app_data_browser_create_graph(proxy->parent,
-                                                           proxy, gmodel);
-                gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, &iter,
-                                   MODEL_WIDGET, widget,
-                                   -1);
+            set_visible(proxy, &iter, visible);
+            gwy_container_gis_boolean_by_name(proxy->container, key, &visible);
+            g_object_unref(object);
+            if (visible)
                 count++;
-            }
-            g_object_unref(gmodel);
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
@@ -1966,54 +2006,108 @@ gwy_app_data_browser_reconstruct_visibility(GwyAppDataProxy *proxy)
 }
 
 /**
+ * gwy_app_data_browser_reset_visibility:
+ * @data: A data container.
+ * @reset_type: Type of visibility reset.
+ *
+ * Resets visibility of all data objects in a container.
+ *
+ * Returns: %TRUE if anything is visible after the reset.
+ **/
+gboolean
+gwy_app_data_browser_reset_visibility(GwyContainer *data,
+                                      GwyVisibilityResetType reset_type)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy = NULL;
+    GwyAppDataList *list;
+    GtkTreeIter iter;
+    SetVisibleFunc set_visible;
+    gboolean visible, ok;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+
+    if ((browser = gwy_app_data_browser))
+        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+
+    if (!proxy) {
+        g_critical("Data container is unknown to data browser.");
+        return FALSE;
+    }
+
+    if (reset_type == GWY_VISIBILITY_RESET_RESTORE
+        || reset_type == GWY_VISIBILITY_RESET_DEFAULT) {
+
+        list = &proxy->lists[PAGE_CHANNELS];
+        set_visible = &gwy_app_data_proxy_channel_set_visible;
+        ok = gwy_app_data_list_reconstruct_visibility(proxy, list, set_visible);
+
+        list = &proxy->lists[PAGE_GRAPHS];
+        set_visible = &gwy_app_data_proxy_graph_set_visible;
+        ok = (gwy_app_data_list_reconstruct_visibility(proxy, list, set_visible)
+              || ok);
+
+        if (ok)
+            return TRUE;
+
+        /* For RESTORE, we are content even with nothing being displayed */
+        if (reset_type == GWY_VISIBILITY_RESET_RESTORE)
+            return FALSE;
+
+        /* Attempt to show a data field. FIXME: Crude. */
+        list = &proxy->lists[PAGE_CHANNELS];
+        if (gwy_app_data_proxy_find_object(list->store, 0, &iter)) {
+            gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
+            return TRUE;
+        }
+
+        /* Attempt to show a graph. FIXME: Crude. */
+        list = &proxy->lists[PAGE_GRAPHS];
+        if (gwy_app_data_proxy_find_object(list->store, 0, &iter)) {
+            gwy_app_data_proxy_graph_set_visible(proxy, &iter, TRUE);
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    if (reset_type == GWY_VISIBILITY_RESET_HIDE_ALL)
+        visible = FALSE;
+    else if (reset_type == GWY_VISIBILITY_RESET_SHOW_ALL)
+        visible = TRUE;
+    else {
+        g_critical("Wrong reset_type value");
+        return FALSE;
+    }
+
+    set_visible = &gwy_app_data_proxy_channel_set_visible;
+    ok = gwy_app_data_list_reset_visibility(proxy, &proxy->lists[PAGE_CHANNELS],
+                                            set_visible, visible);
+
+    set_visible = &gwy_app_data_proxy_graph_set_visible;
+    ok = gwy_app_data_list_reset_visibility(proxy, &proxy->lists[PAGE_GRAPHS],
+                                            set_visible, visible) || ok;
+
+    return visible && ok;
+}
+
+/**
  * gwy_app_data_browser_add:
  * @data: A data container.
  *
  * Adds a data container to application data browser.
- *
- * The container is then managed by the data browser until it's destroyed.
- * Since the data browser does not add any reference, the container is normally
- * destroyed when there is no view (any: channel, graph) showing its
- * contents.  Make sure such a view exists before you release your reference
- * to @data.
  **/
 void
 gwy_app_data_browser_add(GwyContainer *data)
 {
-    GwyAppDataBrowser *browser;
-    GwyAppDataList *list;
-    GwyAppDataProxy *proxy;
-    GtkWidget *widget;
-    GtkTreeIter iter;
-    GwyDataField *dfield;
-
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    browser = gwy_app_get_data_browser();
-    proxy = gwy_app_data_browser_get_proxy(browser, data, TRUE);
+    gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data, TRUE);
+}
 
-    /* Show first window
-     * XXX: crude */
-    if (!gwy_app_data_browser_reconstruct_visibility(proxy)) {
-        list = &proxy->lists[PAGE_CHANNELS];
-        if (gwy_app_data_proxy_find_object(list->store, 0, &iter)) {
-            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
-                               MODEL_OBJECT, &dfield,
-                               -1);
-            widget = gwy_app_data_browser_create_channel(browser, proxy,
-                                                         dfield);
-            gtk_list_store_set(list->store, &iter, MODEL_WIDGET, widget, -1);
-            g_object_unref(dfield);
-        }
-        else {
-            g_warning("There are no data channels in container.  "
-                      "It will be likely finalized right away.");
-        }
-    }
-
-    if (browser->sensgroup)
-        gwy_sensitivity_group_set_state(browser->sensgroup,
-                                        SENS_FILE, SENS_FILE);
+void
+gwy_app_data_browser_remove(GwyContainer *data)
+{
 }
 
 /**
@@ -2045,7 +2139,10 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
         proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     else
         proxy = browser->current;
-    g_return_val_if_fail(proxy, -1);
+    if (!proxy) {
+        g_critical("Data container is unknown to data browser.");
+        return -1;
+    }
 
     list = &proxy->lists[PAGE_GRAPHS];
     g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, list->last + 1);
@@ -2094,7 +2191,10 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
         proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     else
         proxy = browser->current;
-    g_return_val_if_fail(proxy, -1);
+    if (!proxy) {
+        g_critical("Data container is unknown to data browser.");
+        return -1;
+    }
 
     list = &proxy->lists[PAGE_CHANNELS];
     g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
@@ -2902,6 +3002,23 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
  * SECTION:data-browser
  * @title: data-browser
  * @short_description: Data browser
+ **/
+
+/**
+ * GwyVisibilityResetType:
+ * @GWY_VISIBILITY_RESET_DEFAULT: Restore visibilities from container and if
+ *                                nothing would be visible, make an arbitrary
+ *                                data object visible.
+ * @GWY_VISIBILITY_RESET_RESTORE: Restore visibilities from container.
+ * @GWY_VISIBILITY_RESET_SHOW_ALL: Show all data objects.
+ * @GWY_VISIBILITY_RESET_HIDE_ALL: Hide all data objects.  This normally
+ *                                 makes the file inaccessible.
+ *
+ * Data object visibility reset type.
+ *
+ * The precise behaviour of @GWY_VISIBILITY_RESET_DEFAULT may be subject of
+ * further changes.  It indicates the wish to restore saved visibilities
+ * and do something reasonable when there are no visibilities to restore.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

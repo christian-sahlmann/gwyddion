@@ -54,10 +54,20 @@ typedef enum {
     /* GWY_DATA_ITEM_SELECTION: Current, all? */
 } GwyDataItem;
 
+typedef enum {
+    GWY_VISIBILITY_RESET_DEFAULT,
+    GWY_VISIBILITY_RESET_RESTORE,
+    GWY_VISIBILITY_RESET_SHOW_ALL,
+    GWY_VISIBILITY_RESET_HIDE_ALL
+} GwyVisibilityResetType;
+
 typedef void (*GwyAppDataForeachFunc)(GwyContainer *data,
                                       gpointer user_data);
 
 void   gwy_app_data_browser_add             (GwyContainer *data);
+void   gwy_app_data_browser_remove          (GwyContainer *data);
+gboolean gwy_app_data_browser_reset_visibility(GwyContainer *data,
+                                               GwyVisibilityResetType reset_type);
 void   gwy_app_data_browser_select_data_view(GwyDataView *data_view);
 void   gwy_app_data_browser_select_graph    (GwyGraph *graph);
 gint   gwy_app_data_browser_add_data_field  (GwyDataField *dfield,
