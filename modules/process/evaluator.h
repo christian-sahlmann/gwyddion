@@ -1429,7 +1429,6 @@ gwy_evaluator_deserialize(const guchar *buffer,
                                            GWY_EVALUATOR_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
 
-        printf("deser: %d %d %d %d %d %d\n", ndp, ndl, nfp, nfl, ncp, net);
         for (i = 0; i<ndp; i++)
         {
             g_ptr_array_add(evaluator->detected_point_array, dp[i]);

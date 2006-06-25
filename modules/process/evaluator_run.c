@@ -248,8 +248,6 @@ get_features(ErunArgs *args)
 static void
 get_results(ErunArgs *args)
 {
-    printf("%d %d %d %d\n", args->evaluator->detected_point_array->len, args->evaluator->detected_line_array->len,
-           args->evaluator->fixed_point_array->len, args->evaluator->expression_task_array->len);
     get_features(args);
 
 }
