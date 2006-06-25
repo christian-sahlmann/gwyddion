@@ -509,9 +509,10 @@ proc_plugin_proxy_run(GwyContainer *data,
                       const gchar *name)
 {
     ProcPluginInfo *info;
+    GwyContainer *newdata;
     gchar *filename, *buffer = NULL;
     GError *err = NULL;
-    gint exit_status, id;
+    gint exit_status, id, newid;
     gsize size = 0;
     FILE *fh;
     gchar *args[] = { NULL, "run", NULL, NULL, NULL };
@@ -541,10 +542,53 @@ proc_plugin_proxy_run(GwyContainer *data,
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
-    if (ok && (data = text_dump_import(buffer, size, NULL))) {
-        /* TODO: Merge imported /0/data to current file */
-        gwy_app_data_browser_add(data);
-        g_object_unref(data);
+    if (ok && (newdata = text_dump_import(buffer, size, NULL))) {
+        GwyDataField *dfield;
+
+        /* Merge data */
+        if (gwy_container_gis_object_by_name(newdata, "/0/data", &dfield))
+            g_object_ref(dfield);
+        else {
+            dfield = gwy_container_get_object(data, dquark);
+            dfield = gwy_data_field_duplicate(dfield);
+        }
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+
+        /* Merge mask */
+        if (gwy_container_gis_object_by_name(newdata, "/0/mask", &dfield))
+            g_object_ref(dfield);
+        else if (gwy_container_gis_object(data, mquark, &dfield))
+            dfield = gwy_data_field_duplicate(dfield);
+        else
+            dfield = NULL;
+
+        if (dfield) {
+            mquark = gwy_app_get_mask_key_for_id(newid);
+            gwy_container_set_object(data, mquark, dfield);
+            g_object_unref(dfield);
+        }
+
+        /* Merge presentation */
+        if (gwy_container_gis_object_by_name(newdata, "/0/show", &dfield)) {
+            squark = gwy_app_get_show_key_for_id(newid);
+            gwy_container_set_object(data, squark, dfield);
+        }
+
+        /* Merge stuff.  XXX: This is brutal and incomplete. */
+        gwy_app_copy_data_items(data, data, id, newid,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                0);
+        if (gwy_container_contains_by_name(newdata, "/0/base/palette"))
+            gwy_app_copy_data_items(newdata, data, 0, newid,
+                                    GWY_DATA_ITEM_GRADIENT, 0);
+        if (gwy_container_contains_by_name(newdata, "/0/base/range-type"))
+            gwy_app_copy_data_items(newdata, data, 0, newid,
+                                    GWY_DATA_ITEM_RANGE_TYPE, 0);
+
+        g_object_unref(newdata);
     }
     else {
         g_warning("Cannot run plug-in %s: %s",
