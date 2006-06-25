@@ -1269,6 +1269,7 @@ detect_lines(EsetupControls *controls)
     GwyDataField *dfield, *f1, *f2, *edgefield, *filtered, *water;
     gdouble xdata[10], ydata[10];
     gdouble zdata[10];
+    gdouble rho, theta;
     gint ndata = 10, skip = 10;
     gint i, px1, px2, py1, py2;
     GwySelection *selection;
@@ -1320,16 +1321,24 @@ detect_lines(EsetupControls *controls)
     {
     
         if (zdata[i] < threshval) continue;
-        gwy_data_field_hough_polar_line_to_datafield(dfield,
-                    ((gdouble)xdata[i])*
-                        gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered)) 
-                        - gwy_data_field_get_xreal(filtered)/2.0,
-                    ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4,
+
+        printf("setup detected: %g %g\n", xdata[i], ydata[i]);
+
+        rho = ((gdouble)xdata[i])*gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered))
+            - gwy_data_field_get_xreal(filtered)/2.0;
+        theta = ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4;
+       
+        
+        gwy_data_field_hough_polar_line_to_datafield(dfield, rho, theta,
                     &px1, &px2, &py1, &py2);
+        
+        printf("setup detected rho/theta: %g %g\n", rho, theta);
+        
         seldata[0] = gwy_data_field_itor(dfield, px1);
         seldata[1] = gwy_data_field_jtor(dfield, py1);
         seldata[2] = gwy_data_field_itor(dfield, px2);
         seldata[3] = gwy_data_field_jtor(dfield, py2);
+        printf("setup selection: %g %g %g %g\n", seldata[0], seldata[1], seldata[2], seldata[3]);
         
         
         gwy_selection_set_object(selection, i, seldata);
@@ -1504,6 +1513,7 @@ dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
     selection = gwy_container_get_object_by_name(controls->mydata,
                                      gwy_vector_layer_get_selection_key(controls->vlayer_dline));
     gwy_selection_get_object(selection, i, linedata);
+
     gwy_data_field_hough_datafield_line_to_polar(dfield,
                                                  (gint)gwy_data_field_rtoi(dfield, linedata[0]),
                                                  (gint)gwy_data_field_rtoi(dfield, linedata[2]),
@@ -1511,7 +1521,7 @@ dlines_object_chosen_cb(GwyVectorLayer *layer, gint i, EsetupControls *controls)
                                                  (gint)gwy_data_field_rtoj(dfield, linedata[3]),
                                                  &rho,
                                                  &theta);
-
+    
     slset = gwy_search_line_new();
     slset->id = g_strdup_printf("sl%d", i + 1);
     slset->xstart = linedata[0];
@@ -1688,6 +1698,7 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
     GwyCorrelationPoint *pspset;
     gdouble pointdata[2];
     GwyDataField *dfield;
+    gint xstart, ystart;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(
                                      controls->mydata, "/0/data"));
@@ -1703,6 +1714,14 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
         pspset->width = 50;
         pspset->sheight = 100;
         pspset->swidth = 100;
+        xstart = gwy_data_field_rtoi(dfield, pspset->xc) - pspset->width/2;
+        ystart = gwy_data_field_rtoj(dfield, pspset->yc) - pspset->height/2;
+
+        xstart = GWY_CLAMP(xstart, 0, gwy_data_field_get_xres(dfield) - pspset->width - 1);
+        ystart = GWY_CLAMP(ystart, 0, gwy_data_field_get_yres(dfield) - pspset->height - 1);
+        
+        pspset->pattern = gwy_data_field_area_extract(dfield, xstart, ystart, 
+                                                      pspset->width, pspset->height);
         
         pspset->id = g_strdup_printf("cp%d", ++controls->correlation_point_max);     
         g_ptr_array_add(controls->args->evaluator->correlation_point_array, pspset);

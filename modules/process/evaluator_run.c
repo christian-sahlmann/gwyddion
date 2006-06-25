@@ -23,6 +23,7 @@
 #include <libgwyddion/gwyexpr.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/correct.h>
+#include <libprocess/correlation.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/filters.h>
 #include <libprocess/hough.h>
@@ -121,6 +122,29 @@ evaluator_run(GwyContainer *data, GwyRunType run)
     
 }
 
+static gint
+get_closest_point(GwyDataField *dfield, gdouble *xdata, gdouble *ydata, gdouble *zdata, gint ndata,
+                  gdouble x, gdouble y, gint width, gint height)
+{
+    gint i, xstart, ystart, mini = -1;
+    gdouble minval, val;
+
+    minval = G_MAXDOUBLE;
+    for (i = 0; i<ndata; i++){
+        if (fabs(x - xdata[i]) < width/2 &&
+            fabs(y - ydata[i]) < height/2)
+        {
+              val = sqrt((x - xdata[i])*(x - xdata[i]) 
+                         + (y - ydata[i])*(y - ydata[i]));
+              if (minval > val) {
+                  minval = val;
+                  mini = i;
+              }
+        }
+    }
+    return mini;
+
+}
 
 static void
 get_detected_points(ErunArgs *args)
@@ -160,11 +184,14 @@ get_detected_points(ErunArgs *args)
 
     for (k=0; k<args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
-        /*FIXME now choose the closest detected points and put them to xc,yc*/
-        j = 0;
+       
+        j = get_closest_point(dfield, xdata, ydata, zdata, ndata,
+                              gwy_data_field_rtoi(dfield, pspoint->xc), 
+                              gwy_data_field_rtoj(dfield, pspoint->yc), 
+                              pspoint->width, pspoint->height);
 
-        pspoint->xc = xdata[j];
-        pspoint->yc = ydata[j];
+        pspoint->xc = gwy_data_field_itor(dfield, xdata[j]);
+        pspoint->yc = gwy_data_field_jtor(dfield, ydata[j]);
     }
 
     gwy_object_unref(filtered);
@@ -181,7 +208,7 @@ get_detected_lines(ErunArgs *args)
     gint ndata = 10, skip = 10;
     gint i, j, px1, px2, py1, py2;
     guint k;
-    gdouble threshval, hmin, hmax;
+    gdouble threshval, hmin, hmax, rho, theta;
 
     dfield = args->dfield;
     edgefield = gwy_data_field_duplicate(dfield);
@@ -219,23 +246,50 @@ get_detected_lines(ErunArgs *args)
                                          threshval,
                                          TRUE);
 
+    for (i=0; i<ndata; i++) {
+        xdata[i] = ((gdouble)xdata[i])*
+                                    gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered))
+                                                            - gwy_data_field_get_xreal(filtered)/2.0;
+        ydata[i] = ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4;
+
+           
+        gwy_data_field_hough_polar_line_to_datafield(dfield,
+                                                     xdata[i], ydata[i],
+                                                     &px1, &px2, &py1, &py2);
+
+        gwy_data_field_hough_datafield_line_to_polar(dfield,
+                                                 px1, px2, py1, py2,
+                                                 &rho,
+                                                 &theta);
+        xdata[i] = rho;
+        ydata[i] = theta;
+    }
+    
     for (i=0; i<args->evaluator->detected_line_array->len; i++) {
         psline = g_ptr_array_index(args->evaluator->detected_line_array, i);
-        /*FIXME now choose the closest detected points and put them to xc,yc*/
-        j = 0;
+       
         
+        j = get_closest_point(dfield, xdata, ydata, zdata, ndata,
+                              psline->rhoc, psline->thetac, psline->rho, psline->theta);
+
+        if (j == -1) continue;
+        printf("j: %d\n", j);
+
         gwy_data_field_hough_polar_line_to_datafield(dfield,
                     ((gdouble)xdata[j])*
                         gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered))
                         - gwy_data_field_get_xreal(filtered)/2.0,
                     ((gdouble)ydata[j])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4,
                     &px1, &px2, &py1, &py2);
+
+                    
         psline->xstart = gwy_data_field_itor(dfield, px1);
         psline->ystart = gwy_data_field_jtor(dfield, py1);
         psline->xend = gwy_data_field_itor(dfield, px2);
         psline->yend = gwy_data_field_jtor(dfield, py2);
-        psline->rho = xdata[j];
-        psline->theta = ydata[j];
+        psline->rhoc = xdata[j];
+        psline->thetac = ydata[j];
+        
     }
 
     g_object_unref(filtered);
@@ -245,13 +299,101 @@ get_detected_lines(ErunArgs *args)
 }
 
 static void
+get_maximum(GwyDataField *score, gint *maxcol, gint *maxrow)
+{
+    gint col, row;
+    gdouble maxval = -G_MAXDOUBLE;
+    
+    for (row = 0; row < gwy_data_field_get_yres(score); row++) {    /*row */
+           for (col = 0; col < gwy_data_field_get_xres(score); col++) {
+    
+               if (gwy_data_field_get_val(score, col, row) > maxval) {
+                   maxval = gwy_data_field_get_val(score, col, row);
+                   *maxcol = col;
+                   *maxrow = row;
+               }
+           }
+    }
+}
+
+static void
+get_correlation_points(ErunArgs *args)
+{
+    GwyDataField *dfield, *part, *score;
+    gint ndata = 50, skip = 10;
+    gint i, j, xstart, ystart, width, height, colmax, rowmax;
+    guint k;
+    GwyCorrelationPoint *pcpoint;
+
+    dfield = args->dfield;
+
+    for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+        pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
+        
+        xstart = gwy_data_field_rtoi(dfield, pcpoint->xc) - pcpoint->swidth/2;
+        ystart = gwy_data_field_rtoj(dfield, pcpoint->yc) - pcpoint->sheight/2;
+        xstart = MAX(0, xstart);
+        ystart = MAX(0, ystart);
+        width = MIN(pcpoint->width, gwy_data_field_get_xres(dfield) - xstart - 1);
+        height = MIN(pcpoint->height, gwy_data_field_get_yres(dfield) - ystart - 1);
+        
+        part = gwy_data_field_area_extract(dfield,
+                                           xstart, ystart,
+                                           width, height);
+        score = gwy_data_field_new_alike(part, FALSE);
+        gwy_data_field_correlate(part, pcpoint->pattern, score, GWY_CORRELATION_NORMAL);
+      
+        get_maximum(score, &colmax, &rowmax);
+
+        pcpoint->xc = gwy_data_field_itor(dfield, colmax);
+        pcpoint->yc = gwy_data_field_jtor(dfield, rowmax);
+        
+        g_object_unref(score);
+        g_object_unref(part);
+    }
+
+}
+static void
 get_features(ErunArgs *args)
 {
     GwySearchPoint *pspoint;
-    guint i;
+    GwySearchLine *psline;
+    GwyCorrelationPoint *pcpoint;
+    guint k;
     
-    get_detected_points(args);
+    printf("Requested:\n");
+/*    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+        pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
+        printf("dpoint: %s: %g %g\n", pspoint->id, pspoint->xc, pspoint->yc);
+    }
+*/    for (k=0; k<args->evaluator->detected_line_array->len; k++) {
+        psline = g_ptr_array_index(args->evaluator->detected_line_array, k);
+        printf("dline: %s: %g %g\n", psline->id, psline->rhoc, psline->thetac);
+     }
+/*    for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+        pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
+        printf("dpoint: %s: %g %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc);
+     }
+*/
+//    get_detected_points(args);
     get_detected_lines(args);
+//    get_correlation_points(args);
+
+    /*print summary for debug*/
+    printf("Detected:\n");
+/*    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+        pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
+        printf("dpoint: %s: %g %g\n", pspoint->id, pspoint->xc, pspoint->yc);
+    }
+*/    for (k=0; k<args->evaluator->detected_line_array->len; k++) {
+        psline = g_ptr_array_index(args->evaluator->detected_line_array, k);
+        printf("dline: %s: %g %g\n", psline->id, psline->rhoc, psline->thetac);
+     }
+/*    for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+        pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
+        printf("dpoint: %s: %g %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc);
+     }
+  */ 
 }
 
 static void

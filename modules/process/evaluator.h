@@ -427,6 +427,7 @@ struct _GwyCorrelationPoint {
     gint height;
     gint swidth;
     gint sheight;
+    GwyDataField *pattern;
 };
 
 struct _GwyCorrelationPointClass {
@@ -486,6 +487,7 @@ gwy_correlation_point_init(GwyCorrelationPoint *correlation_point)
     correlation_point->height = 50;
     correlation_point->swidth = 100;
     correlation_point->sheight = 100;
+    correlation_point->pattern = NULL;
 }
 
 GwyCorrelationPoint*
@@ -530,6 +532,7 @@ gwy_correlation_point_serialize(GObject *obj,
             { 'i', "height", &correlation_point->height, NULL },
             { 'i', "search_width", &correlation_point->swidth, NULL },
             { 'i', "search_height", &correlation_point->sheight, NULL },
+            { 'o', "pattern", &correlation_point->pattern, NULL },
         };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_CORRELATION_POINT_TYPE_NAME,
@@ -555,6 +558,7 @@ gwy_correlation_point_get_size(GObject *obj)
             { 'i', "height", &correlation_point->height, NULL },
             { 'i', "search_width", &correlation_point->swidth, NULL },
             { 'i', "search_height", &correlation_point->sheight, NULL },
+            { 'o', "pattern", &correlation_point->pattern, NULL },
         };
         return gwy_serialize_get_struct_size(GWY_CORRELATION_POINT_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
@@ -580,6 +584,7 @@ gwy_correlation_point_deserialize(const guchar *buffer,
             { 'i', "height", &correlation_point->height, NULL },
             { 'i', "search_width", &correlation_point->swidth, NULL },
             { 'i', "search_height", &correlation_point->sheight, NULL },
+            { 'o', "pattern", &correlation_point->pattern, NULL },
         };
         gwy_serialize_unpack_object_struct(buffer, size, position,
                                            GWY_CORRELATION_POINT_TYPE_NAME,
@@ -607,6 +612,7 @@ gwy_correlation_point_duplicate_real(GObject *object)
     duplicate->height = correlation_point->height;
     duplicate->swidth = correlation_point->swidth;
     duplicate->sheight = correlation_point->sheight;
+    duplicate->pattern = gwy_serializable_duplicate(G_OBJECT(correlation_point->pattern));
 
 
     return (GObject*)duplicate;
