@@ -2116,6 +2116,19 @@ gwy_app_data_browser_remove(GwyContainer *data)
     gwy_app_data_proxy_finalize(proxy);
 }
 
+/**
+ * gwy_app_data_browser_set_keep_invisible:
+ * @data: A data container.
+ * @keep_invisible: %TRUE to retain @data in the browser even when it becomes
+ *                  inaccessible, %FALSE to dispose of it.
+ *
+ * Sets data browser behaviour for inaccessible data.
+ *
+ * Normally, when all visual objects belonging to a file are closed the
+ * container is removed from the data browser and dereferenced, leading to
+ * its finalization.  By setting @keep_invisible to %TRUE the container can be
+ * made to sit in the browser indefinitely.
+ **/
 void
 gwy_app_data_browser_set_keep_invisible(GwyContainer *data,
                                         gboolean keep_invisible)
@@ -2128,6 +2141,14 @@ gwy_app_data_browser_set_keep_invisible(GwyContainer *data,
     proxy->keep_invisible = keep_invisible;
 }
 
+/**
+ * gwy_app_data_browser_get_keep_invisible:
+ * @data: A data container.
+ *
+ * Gets data browser behaviour for inaccessible data.
+ *
+ * Returns: See gwy_app_data_browser_set_keep_invisible().
+ **/
 gboolean
 gwy_app_data_browser_get_keep_invisible(GwyContainer *data)
 {
