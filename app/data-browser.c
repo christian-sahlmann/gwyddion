@@ -103,6 +103,7 @@ struct _GwyAppDataBrowser {
 /* The proxy associated with each Container (this is non-GUI object) */
 struct _GwyAppDataProxy {
     guint finalize_id;
+    gboolean keep_invisible;
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
     GwyAppDataList lists[NPAGES];
@@ -687,6 +688,16 @@ gwy_app_data_proxy_queue_finalize(GwyAppDataProxy *proxy)
 }
 
 static void
+gwy_app_data_proxy_maybe_finalize(GwyAppDataProxy *proxy)
+{
+    gwy_debug("proxy %p", proxy);
+
+    if (gwy_app_data_proxy_visible_count(proxy) == 0
+        && !proxy->keep_invisible)
+        gwy_app_data_proxy_queue_finalize(proxy);
+}
+
+static void
 gwy_app_data_proxy_list_setup(GwyAppDataList *list)
 {
     list->store = gtk_list_store_new(MODEL_N_COLUMNS,
@@ -961,8 +972,7 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
     }
 
     gwy_app_data_proxy_channel_set_visible(proxy, &iter, FALSE);
-    if (!gwy_app_data_proxy_visible_count(proxy))
-        gwy_app_data_proxy_queue_finalize(proxy);
+    gwy_app_data_proxy_maybe_finalize(proxy);
 
     return TRUE;
 }
@@ -1193,8 +1203,7 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
     toggled = gwy_app_data_proxy_channel_set_visible(proxy, &iter, !active);
     g_assert(toggled);
 
-    if (!gwy_app_data_proxy_visible_count(proxy))
-        gwy_app_data_proxy_queue_finalize(proxy);
+    gwy_app_data_proxy_maybe_finalize(proxy);
 }
 
 static GtkWidget*
@@ -1341,8 +1350,7 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
     }
 
     gwy_app_data_proxy_graph_set_visible(proxy, &iter, FALSE);
-    if (!gwy_app_data_proxy_visible_count(proxy))
-        gwy_app_data_proxy_queue_finalize(proxy);
+    gwy_app_data_proxy_maybe_finalize(proxy);
 
     return TRUE;
 }
@@ -1460,8 +1468,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     toggled = gwy_app_data_proxy_graph_set_visible(proxy, &iter, !active);
     g_assert(toggled);
 
-    if (!gwy_app_data_proxy_visible_count(proxy))
-        gwy_app_data_proxy_queue_finalize(proxy);
+    gwy_app_data_proxy_maybe_finalize(proxy);
 }
 
 static GtkWidget*
@@ -1577,10 +1584,7 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
             gwy_app_data_proxy_graph_set_visible(proxy, &iter, FALSE);
             break;
         }
-
-        /* Visible count check is necessary only for visible objects */
-        if (!gwy_app_data_proxy_visible_count(proxy))
-            gwy_app_data_proxy_queue_finalize(proxy);
+        gwy_app_data_proxy_maybe_finalize(proxy);
     }
 
     /* Remove object from container, this causes of removal from tree model
@@ -1624,14 +1628,8 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 static void
 gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
 {
-    GwyAppDataProxy *proxy;
-
-    proxy = browser->current;
-    g_return_if_fail(proxy);
-    gwy_app_data_browser_reset_visibility(proxy->container,
-                                          GWY_VISIBILITY_RESET_HIDE_ALL);
-    g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
-    gwy_app_data_proxy_finalize(proxy);
+    g_return_if_fail(browser->current);
+    gwy_app_data_browser_remove(browser->current->container);
 }
 
 static void
@@ -2088,7 +2086,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
  * gwy_app_data_browser_add:
  * @data: A data container.
  *
- * Adds a data container to application data browser.
+ * Adds a data container to the application data browser.
  **/
 void
 gwy_app_data_browser_add(GwyContainer *data)
@@ -2098,9 +2096,24 @@ gwy_app_data_browser_add(GwyContainer *data)
     gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data, TRUE);
 }
 
+/**
+ * gwy_app_data_browser_remove:
+ * @data: A data container.
+ *
+ * Removed a data container from the application data browser.
+ **/
 void
 gwy_app_data_browser_remove(GwyContainer *data)
 {
+    GwyAppDataProxy *proxy;
+
+    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
+                                           FALSE);
+    g_return_if_fail(proxy);
+    gwy_app_data_browser_reset_visibility(proxy->container,
+                                          GWY_VISIBILITY_RESET_HIDE_ALL);
+    g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
+    gwy_app_data_proxy_finalize(proxy);
 }
 
 /**
@@ -2796,6 +2809,7 @@ gwy_app_data_browser_shut_down(void)
      * Remove in production version. */
     while (browser->proxy_list) {
         browser->current = (GwyAppDataProxy*)browser->proxy_list->data;
+        browser->current->keep_invisible = FALSE;
         gwy_app_data_browser_close_file(browser);
     }
 
