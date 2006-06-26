@@ -1071,7 +1071,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
  **/
 static GtkWidget*
 gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
-                                    GwyAppDataProxy *proxy,
+                                    G_GNUC_UNUSED GwyAppDataProxy *proxy,
                                     GwyDataField *dfield)
 {
     GtkWidget *data_view, *data_window;
@@ -2114,6 +2114,30 @@ gwy_app_data_browser_remove(GwyContainer *data)
                                           GWY_VISIBILITY_RESET_HIDE_ALL);
     g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
     gwy_app_data_proxy_finalize(proxy);
+}
+
+void
+gwy_app_data_browser_set_keep_invisible(GwyContainer *data,
+                                        gboolean keep_invisible)
+{
+    GwyAppDataProxy *proxy;
+
+    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
+                                           FALSE);
+    g_return_if_fail(proxy);
+    proxy->keep_invisible = keep_invisible;
+}
+
+gboolean
+gwy_app_data_browser_get_keep_invisible(GwyContainer *data)
+{
+    GwyAppDataProxy *proxy;
+
+    proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
+                                           FALSE);
+    g_return_val_if_fail(proxy, FALSE);
+
+    return proxy->keep_invisible;
 }
 
 /**
