@@ -27,12 +27,12 @@ G_BEGIN_DECLS
 
 gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
                                              GwyDataField *kernel_field,
-                                             gint ulcol,
-                                             gint ulrow,
-                                             gint kernel_ulcol,
-                                             gint kernel_ulrow,
-                                             gint kernel_brcol,
-                                             gint kernel_brrow);
+                                             gint col,
+                                             gint row,
+                                             gint kernel_col,
+                                             gint kernel_row,
+                                             gint kernel_width,
+                                             gint kernel_height);
 
 void gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                    GwyDataField *data_field2,

@@ -30,91 +30,84 @@
  * gwy_data_field_get_correlation_score:
  * @data_field: A data field.
  * @kernel_field: Kernel to correlate data field with.
- * @ulcol: Upper-left column position in the data field.
- * @ulrow: Upper-left row position in the data field.
- * @kernel_ulcol: Upper-left column position in kernel field.
- * @kernel_ulrow: Upper-left row position in kernel field.
- * @kernel_brcol: Bottom-right column position in kernel field.
- * @kernel_brrow: Bottom-right row position in kernel field.
+ * @col: Upper-left column position in the data field.
+ * @row: Upper-left row position in the data field.
+ * @kernel_col: Upper-left column position in kernel field.
+ * @kernel_row: Upper-left row position in kernel field.
+ * @kernel_width: Width of kernel field area.
+ * @kernel_height: Heigh of kernel field area.
  *
  * Computes single correlation score.
  *
  * Correlation window size is given
- * by @kernel_ulcol, @kernel_ulrow, @kernel_brcol, @kernel_brrow,
+ * by @kernel_col, @kernel_row, @kernel_width, @kernel_height,
  * postion of the correlation window on data is given by
- * @ulcol, @ulrow.
+ * @col, @row.
  *
  * If anything fails (data too close to boundary, etc.),
- * function returns -1 (none correlation).
+ * function returns -1.0 (none correlation)..
  *
- * Returns: Correlation score (between -1 and 1). Number 1 denotes
- *          maximum correlation, -1 none correlation.
+ * Returns: Correlation score (between -1.0 and 1.0). Value 1.0 denotes
+ *          maximum correlation, -1.0 none correlation.
  **/
 gdouble
 gwy_data_field_get_correlation_score(GwyDataField *data_field,
-                                     GwyDataField *kernel_field, gint ulcol,
-                                     gint ulrow, gint kernel_ulcol,
-                                     gint kernel_ulrow, gint kernel_brcol,
-                                     gint kernel_brrow)
+                                     GwyDataField *kernel_field,
+                                     gint col,
+                                     gint row,
+                                     gint kernel_col,
+                                     gint kernel_row,
+                                     gint kernel_width,
+                                     gint kernel_height)
 {
     gint xres, yres, kxres, kyres, i, j;
-    gint kwidth, kheight;
     gdouble rms1, rms2, avg1, avg2, sumpoints, score;
     gdouble *data, *kdata;
 
-    g_return_val_if_fail(data_field != NULL && kernel_field != NULL, -1);
-
-    if (kernel_ulcol > kernel_brcol)
-        GWY_SWAP(gint, kernel_ulcol, kernel_brcol);
-
-    if (kernel_ulrow > kernel_brrow)
-        GWY_SWAP(gint, kernel_ulrow, kernel_brrow);
-
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -1.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), -1.0);
 
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
-    kwidth = kernel_brcol - kernel_ulcol;
-    kheight = kernel_brrow - kernel_ulrow;
+    kernel_width = kernel_width;
+    kernel_height = kernel_height;
 
-    if (kwidth <= 0 || kheight <= 0) {
-        g_warning("Correlation kernel has nonpositive size.");
+    /* correlation request outside kernel */
+    if (kernel_col > kxres || kernel_row > kyres)
         return -1;
-    }
 
-    /*correlation request outside kernel */
-    if (kernel_brcol > kxres || kernel_brrow > kyres)
+    /* correlation request outside data field */
+    if (col < 0 || row < 0
+        || col + kernel_width > xres
+        || row + kernel_height > yres)
         return -1;
-    /*correlation request outside data field */
-    if (ulcol < 0 || ulrow < 0 || (ulcol + kwidth) > xres
-        || (ulrow + kheight) > yres)
-        return -1;
-    if (kernel_ulcol < 0 || kernel_ulrow < 0 || (kernel_ulcol + kwidth) > kxres
-        || (kernel_ulrow + kheight) > kyres)
+    if (kernel_col < 0
+        || kernel_row < 0
+        || kernel_col + kernel_width > kxres
+        || kernel_row + kernel_height > kyres)
         return -1;
 
     avg1 = gwy_data_field_area_get_avg(data_field, NULL,
-                                       ulcol, ulrow, kwidth, kheight);
+                                       col, row, kernel_width, kernel_height);
     avg2 = gwy_data_field_area_get_avg(kernel_field, NULL,
-                                       kernel_ulcol, kernel_ulrow,
-                                       kernel_brcol - kernel_ulcol,
-                                       kernel_brrow - kernel_ulrow);
+                                       kernel_col, kernel_row,
+                                       kernel_width, kernel_height);
     rms1 = gwy_data_field_area_get_rms(data_field, NULL,
-                                       ulcol, ulrow, kwidth, kheight);
+                                       col, row, kernel_width, kernel_height);
     rms2 = gwy_data_field_area_get_rms(kernel_field, NULL,
-                                       kernel_ulcol, kernel_ulrow,
-                                       kernel_brcol - kernel_ulcol,
-                                       kernel_brrow - kernel_ulrow);
+                                       kernel_col, kernel_row,
+                                       kernel_width, kernel_height);
 
     score = 0;
-    sumpoints = kwidth * kheight;
+    sumpoints = kernel_width * kernel_height;
     data = data_field->data;
     kdata = kernel_field->data;
-    for (j = 0; j < kheight; j++) {   /* row */
-        for (i = 0; i < kwidth; i++) {   /* col */
-            score += (data[(i + ulcol) + xres*(j + ulrow)] - avg1)
-                      * (kdata[(i + kernel_ulcol) + kxres*(j + kernel_ulrow)]
+    for (j = 0; j < kernel_height; j++) {   /* row */
+        for (i = 0; i < kernel_width; i++) {   /* col */
+            score += (data[(i + col) + xres*(j + row)] - avg1)
+                      * (kdata[(i + kernel_col) + kxres*(j + kernel_row)]
                          - avg2);
         }
     }
