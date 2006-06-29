@@ -1347,11 +1347,11 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
  * @from: Index the line part starts at.
  * @to: Index the line part ends at + 1.
  *
- * Fits a polynom through a part of a data line.
+ * Fits a polynomial through a part of a data line.
  *
  * Please see gwy_data_line_fit_polynom() for more details.
  *
- * Returns: The coefficients of the polynom (@coeffs when it was not %NULL,
+ * Returns: The coefficients of the polynomial (@coeffs when it was not %NULL,
  *          otherwise a newly allocated array).
  **/
 gdouble*
@@ -1418,15 +1418,15 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
  * @coeffs: An array of size @n+1 to store the coefficients to, or %NULL
  *          (a fresh array is allocated then).
  *
- * Fits a polynom through a data line.
+ * Fits a polynomial through a data line.
  *
- * Note @n is polynom degree, so the size of @coeffs is @n+1.  X-values
+ * Note @n is polynomial degree, so the size of @coeffs is @n+1.  X-values
  * are indices in the data line.
  *
- * For polynoms of degree 0 and 1 it's better to use gwy_data_line_get_avg()
+ * For polynomials of degree 0 and 1 it's better to use gwy_data_line_get_avg()
  * and gwy_data_line_line_coeffs() because they are faster.
  *
- * Returns: The coefficients of the polynom (@coeffs when it was not %NULL,
+ * Returns: The coefficients of the polynomial (@coeffs when it was not %NULL,
  *          otherwise a newly allocated array).
  **/
 gdouble*
@@ -1442,15 +1442,16 @@ gwy_data_line_fit_polynom(GwyDataLine *data_line,
  * gwy_data_line_part_subtract_polynom:
  * @data_line: A data line.
  * @n: Polynom degree.
- * @coeffs: An array of size @n+1 with polynom coefficients to.
+ * @coeffs: An array of size @n+1 with polynomial coefficients to.
  * @from: Index the line part starts at.
  * @to: Index the line part ends at + 1.
  *
- * Subtracts polynom from a part of a data line;
+ * Subtracts a polynomial from a part of a data line.
  **/
 void
 gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
-                                    gint n, gdouble *coeffs,
+                                    gint n,
+                                    const gdouble *coeffs,
                                     gint from, gint to)
 {
     gint i, j;
@@ -1480,13 +1481,14 @@ gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
  * gwy_data_line_subtract_polynom:
  * @data_line: A data line.
  * @n: Polynom degree.
- * @coeffs: An array of size @n+1 with polynom coefficients to.
+ * @coeffs: An array of size @n+1 with polynomial coefficients to.
  *
- * Subtracts polynom from a data line;
+ * Subtracts a polynomial from a data line.
  **/
 void
 gwy_data_line_subtract_polynom(GwyDataLine *data_line,
-                               gint n, gdouble *coeffs)
+                               gint n,
+                               const gdouble *coeffs)
 {
     gwy_data_line_part_subtract_polynom(data_line, n, coeffs,
                                         0, gwy_data_line_get_res(data_line));

@@ -50,6 +50,15 @@ void gwy_data_field_plane_rotate          (GwyDataField *data_field,
                                            gdouble yangle,
                                            GwyInterpolationType interpolation);
 
+void gwy_data_field_fit_lines             (GwyDataField *data_field,
+                                           gint col,
+                                           gint row,
+                                           gint width,
+                                           gint height,
+                                           gint degree,
+                                           gboolean exclude,
+                                           GwyOrientation orientation);
+
 gdouble* gwy_data_field_fit_polynom       (GwyDataField *data_field,
                                            gint col_degree,
                                            gint row_degree,

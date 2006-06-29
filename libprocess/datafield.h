@@ -254,14 +254,6 @@ gdouble  gwy_data_field_get_angder         (GwyDataField *data_field,
                                             gint col,
                                             gint row,
                                             gdouble theta);
-void     gwy_data_field_fit_lines          (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gint width,
-                                            gint height,
-                                            gint degree,
-                                            gboolean exclude,
-                                            GwyOrientation orientation);
 
 G_END_DECLS
 

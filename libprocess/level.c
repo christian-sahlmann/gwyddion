@@ -19,6 +19,7 @@
  */
 
 #define GWY_DATA_FIELD_RAW_ACCESS
+#define GWY_DATA_LINE_RAW_ACCESS
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -66,7 +67,7 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
         sumsi += *pdata;
         sumsixi += *pdata * (i%data_field->xres);
         sumsiyi += *pdata * (i/data_field->xres);
-        *pdata++;
+        pdata++;
     }
     sumsi /= nx*ny;
     sumsixi /= nx*ny;
@@ -283,18 +284,131 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_fit_lines:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @degree: Fitted polynomial degree.
+ * @exclude: If %TRUE, outside of area selected by @ulcol, @ulrow, @brcol,
+ *           @brrow will be used for polynomial coefficients computation,
+ *           instead of inside.
+ * @orientation: Line orientation.
+ *
+ * Independently levels profiles on each row/column in a data field.
+ *
+ * Lines that have no intersection with area selected by @ulcol, @ulrow,
+ * @brcol, @brrow are always leveled as a whole.  Lines that have intersection
+ * with selected area, are leveled using polynomial coefficients computed only
+ * from data inside (or outside for @exclude = %TRUE) the area.
+ **/
+void
+gwy_data_field_fit_lines(GwyDataField *data_field,
+                         gint col, gint row,
+                         gint width, gint height,
+                         gint degree,
+                         gboolean exclude,
+                         GwyOrientation orientation)
+{
+
+    gint i, j, xres, yres, res;
+    gdouble real, coefs[4];
+    GwyDataLine *hlp, *xdata = NULL, *ydata = NULL;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    res = (orientation == GWY_ORIENTATION_HORIZONTAL) ? xres : yres;
+    real = (orientation == GWY_ORIENTATION_HORIZONTAL)
+           ? data_field->xreal : data_field->yreal;
+    hlp = gwy_data_line_new(res, real, FALSE);
+    if (exclude) {
+        xdata = gwy_data_line_new(res, real, FALSE);
+        ydata = gwy_data_line_new(res, real, FALSE);
+    }
+
+    if (orientation == GWY_ORIENTATION_HORIZONTAL) {
+        if (exclude) {
+            for (i = j = 0; i < xres; i++) {
+                if (i < col || i >= col + width)
+                    xdata->data[j++] = i;
+            }
+        }
+
+        for (i = 0; i < yres; i++) {
+            gwy_data_field_get_row(data_field, hlp, i);
+            if (i >= row && i < row + height) {
+                if (exclude) {
+                    memcpy(ydata->data, hlp->data, col*sizeof(gdouble));
+                    memcpy(ydata->data + col, hlp->data + col + width,
+                           (xres - col - width)*sizeof(gdouble));
+                    gwy_math_fit_polynom(xres - width,
+                                         xdata->data, ydata->data, degree,
+                                         coefs);
+                }
+                else
+                    gwy_data_line_part_fit_polynom(hlp, degree, coefs,
+                                                   col, col + width);
+            }
+            else
+                gwy_data_line_fit_polynom(hlp, degree, coefs);
+            gwy_data_line_subtract_polynom(hlp, degree, coefs);
+            gwy_data_field_set_row(data_field, hlp, i);
+        }
+    }
+    else if (orientation == GWY_ORIENTATION_VERTICAL) {
+        if (exclude) {
+            for (i = j = 0; i < yres; i++) {
+                if (i < row || i >= row + height)
+                    xdata->data[j++] = i;
+            }
+        }
+
+        for (i = 0; i < xres; i++) {
+            gwy_data_field_get_column(data_field, hlp, i);
+            if (i >= col && i < col + width) {
+                if (exclude) {
+                    memcpy(ydata->data, hlp->data, row*sizeof(gdouble));
+                    memcpy(ydata->data + row, hlp->data + row + height,
+                           (yres - row - height)*sizeof(gdouble));
+                    gwy_math_fit_polynom(yres - height,
+                                         xdata->data, ydata->data, degree,
+                                         coefs);
+                }
+                else
+                    gwy_data_line_part_fit_polynom(hlp, degree, coefs,
+                                                   row, row + height);
+            }
+            else
+                gwy_data_line_fit_polynom(hlp, degree, coefs);
+            gwy_data_line_subtract_polynom(hlp, degree, coefs);
+            gwy_data_field_set_column(data_field, hlp, i);
+        }
+    }
+    g_object_unref(hlp);
+    gwy_object_unref(xdata);
+    gwy_object_unref(ydata);
+}
+
+/**
  * gwy_data_field_area_fit_polynom:
  * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @col_degree: Degree of polynom to fit column-wise (x-coordinate).
- * @row_degree: Degree of polynom to fit row-wise (y-coordinate).
+ * @col_degree: Degree of polynomial to fit column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to fit row-wise (y-coordinate).
  * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
  *          coefficients to, or %NULL (a fresh array is allocated then).
  *
- * Fits a two-dimensional polynom to a rectangular part of a data field.
+ * Fits a two-dimensional polynomial to a rectangular part of a data field.
  *
  * The coefficients are stored by row into @coeffs, like data in a datafield.
  * Row index is y-degree, column index is x-degree.
@@ -388,13 +502,13 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
 /**
  * gwy_data_field_fit_polynom:
  * @data_field: A data field.
- * @col_degree: Degree of polynom to fit column-wise (x-coordinate).
- * @row_degree: Degree of polynom to fit row-wise (y-coordinate).
+ * @col_degree: Degree of polynomial to fit column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to fit row-wise (y-coordinate).
  * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
  *          coefficients to, or %NULL (a fresh array is allocated then),
  *          see gwy_data_field_area_fit_polynom() for details.
  *
- * Fits a two-dimensional polynom to a data field.
+ * Fits a two-dimensional polynomial to a data field.
  *
  * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
  *          with coefficients.
@@ -417,12 +531,13 @@ gwy_data_field_fit_polynom(GwyDataField *data_field,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @col_degree: Degree of polynom to subtract column-wise (x-coordinate).
- * @row_degree: Degree of polynom to subtract row-wise (y-coordinate).
+ * @col_degree: Degree of polynomial to subtract column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to subtract row-wise (y-coordinate).
  * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients,
  *          see gwy_data_field_area_fit_polynom() for details.
  *
- * Subtracts a two-dimensional polynom from a rectangular part of a data field.
+ * Subtracts a two-dimensional polynomial from a rectangular part of a data
+ * field.
  **/
 void
 gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
@@ -473,12 +588,12 @@ gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
 /**
  * gwy_data_field_subtract_polynom:
  * @data_field: A data field.
- * @col_degree: Degree of polynom to subtract column-wise (x-coordinate).
- * @row_degree: Degree of polynom to subtract row-wise (y-coordinate).
+ * @col_degree: Degree of polynomial to subtract column-wise (x-coordinate).
+ * @row_degree: Degree of polynomial to subtract row-wise (y-coordinate).
  * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients,
  *          see gwy_data_field_area_fit_polynom() for details.
  *
- * Subtracts a two-dimensional polynom from a data field.
+ * Subtracts a two-dimensional polynomial from a data field.
  **/
 void
 gwy_data_field_subtract_polynom(GwyDataField *data_field,

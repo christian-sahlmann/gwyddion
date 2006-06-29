@@ -170,12 +170,12 @@ gdouble*       gwy_data_line_fit_polynom           (GwyDataLine *data_line,
                                                     gdouble *coeffs);
 void           gwy_data_line_part_subtract_polynom (GwyDataLine *data_line,
                                                     gint n,
-                                                    gdouble *coeffs,
+                                                    const gdouble *coeffs,
                                                     gint from,
                                                     gint to);
 void           gwy_data_line_subtract_polynom      (GwyDataLine *data_line,
                                                     gint n,
-                                                    gdouble *coeffs);
+                                                    const gdouble *coeffs);
 void           gwy_data_line_cumulate      (GwyDataLine *data_line);
 
 
