@@ -33,6 +33,8 @@
 #include <glib/gstdio.h>
 #include "evaluator.h"
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define EVALUATOR_RUN_RUN_MODES GWY_RUN_IMMEDIATE
 
@@ -590,6 +592,161 @@ create_evaluator_report(ErunArgs *args)
     return report;
 }
 
+static gdouble 
+myfunction(ErunArgs *args, gdouble a, gdouble b)
+{
+    printf("running myfunction\n");
+    return 0;
+}
+
+/*FIXME we expect that there are no expressions within brackets, only variables*/
+static gint 
+twoexpr_parse(GString *expression, gchar *name, 
+              GString **arg1, GString **arg2, gint *len)
+{
+    char *pos, *opos, *epos, *cpos;
+    
+    pos = strstr(expression->str, name);
+    if (pos == NULL) return -1;
+
+    opos = strstr(pos, "(");
+    if (opos == NULL) return -1;
+
+    cpos = strstr(opos, ",");
+    if (cpos == NULL) return -1;
+
+    epos = strstr(cpos, ")");
+    if (epos == NULL) return -1;
+
+    *len = epos - pos - 1;
+    
+    *arg1 = g_string_new_len(opos + 1, cpos - opos - 1);
+    *arg2 = g_string_new_len(cpos +1, epos - cpos - 1);
+    return pos;
+}
+
+static gdouble
+variable_parse(ErunArgs *args, GString *variable)
+{
+    GwySearchPoint *spset;
+    GwySearchLine *slset;
+    GwyFixedPoint *fpset;
+    GwyFixedLine *flset;
+    GwyCorrelationPoint *cpset;
+                    
+    char *pos;
+    char *numstr;
+    int num;
+    
+    printf("parsing variable: %s\n", variable->str);
+    if ((pos = strstr(variable->str, "dp"))!=NULL) {
+       numstr = g_strndup(pos+2, 2);
+       num = atoi(numstr);
+       spset = g_ptr_array_index(args->evaluator->detected_point_array, num);
+       if (strstr(pos + 6, "x")) return spset->xc;
+       if (strstr(pos + 6, "y")) return spset->yc;
+       return 0;
+    }
+    if ((pos = strstr(variable->str, "fp"))!=NULL) {
+       numstr = g_strndup(pos+2, 2);
+       num = atoi(numstr);
+       fpset = g_ptr_array_index(args->evaluator->fixed_point_array, num);
+       if (strstr(pos + 6, "x")) return fpset->xc;
+       if (strstr(pos + 6, "y")) return fpset->yc;
+       return 0;
+    }
+    if ((pos = strstr(variable->str, "cp"))!=NULL) {
+       numstr = g_strndup(pos+2, 2);
+       num = atoi(numstr);
+       cpset = g_ptr_array_index(args->evaluator->correlation_point_array, num);
+       if (strstr(pos + 6, "x")) return cpset->xc;
+       if (strstr(pos + 6, "y")) return cpset->yc;
+       return 0;
+    }
+    if ((pos = strstr(variable->str, "dl"))!=NULL) {
+       numstr = g_strndup(pos+2, 2);
+       num = atoi(numstr);
+       slset = g_ptr_array_index(args->evaluator->detected_line_array, num);
+       if (strstr(pos + 6, "x1")) return slset->xstart;
+       if (strstr(pos + 6, "y1")) return slset->ystart;
+       if (strstr(pos + 6, "x2")) return slset->xend;
+       if (strstr(pos + 6, "y2")) return slset->yend;
+        return 0;
+    }
+    if ((pos = strstr(variable->str, "dl"))!=NULL) {
+       numstr = g_strndup(pos+2, 2);
+       num = atoi(numstr);
+       flset = g_ptr_array_index(args->evaluator->fixed_line_array, num);
+       if (strstr(pos + 6, "x1")) return flset->xstart;
+       if (strstr(pos + 6, "y1")) return flset->ystart;
+       if (strstr(pos + 6, "x2")) return flset->xend;
+       if (strstr(pos + 6, "y2")) return flset->yend;
+        return 0;
+    }
+        return 2.342;
+}
+
+static gpointer
+object_parse(ErunArgs *args, GString *variable)
+{
+    char * pos;
+    int num;
+    
+    printf("parsing variable: %s\n", variable->str);
+    if ((pos = strstr(variable->str, "dp"))!=NULL) {
+       num = atoi(pos + 4);
+       if (num >= args->evaluator->detected_point_array->len) return NULL;
+       return (gpointer)g_ptr_array_index(args->evaluator->detected_point_array, num);
+    }
+    if ((pos = strstr(variable->str, "fp"))!=NULL) {
+       num = atoi(pos + 4);
+       if (num >= args->evaluator->fixed_point_array->len) return NULL;
+       return (gpointer)g_ptr_array_index(args->evaluator->fixed_point_array, num);
+    }
+    if ((pos = strstr(variable->str, "cp"))!=NULL) {
+       num = atoi(pos + 4);
+       if (num >= args->evaluator->correlation_point_array->len) return NULL;
+       return (gpointer)g_ptr_array_index(args->evaluator->correlation_point_array, num);
+    }
+    if ((pos = strstr(variable->str, "dl"))!=NULL) {
+       num = atoi(pos + 5);
+       if (num >= args->evaluator->detected_line_array->len) return NULL;
+       return (gpointer)g_ptr_array_index(args->evaluator->detected_line_array, num);
+    }
+    if ((pos = strstr(variable->str, "dl"))!=NULL) {
+       num = atoi(pos + 5);
+       if (num >= args->evaluator->fixed_line_array->len) return NULL;
+       return (gpointer)g_ptr_array_index(args->evaluator->fixed_line_array, num);
+    }
+    return NULL;
+}
+
+
+
+
+static GString *
+preparse_expression(ErunArgs *args, GString *expression)
+{
+    GString *arg1, *arg2;
+    gint pos, len;
+    gdouble value;
+    GString *valstr;
+    
+    if (strstr(expression->str, "MyFunction"))
+    {
+        pos = twoexpr_parse(expression, "MyFunction", &arg1, &arg2, &len);
+        printf("%s %s\n", arg1->str, arg2->str);
+        value = myfunction(args, variable_parse(args, arg1), variable_parse(args, arg2));
+        valstr = g_string_new("");
+        g_string_printf(valstr, "%g", value);
+        expression = g_string_erase(expression, pos, len);
+        expression = g_string_insert(expression, pos, valstr->str);
+    }
+    
+
+    return expression;
+}
+
 
 static void evaluate(ErunArgs *args)
 {
@@ -597,11 +754,17 @@ static void evaluate(ErunArgs *args)
     gdouble result;
     gint i, nv;
     gchar **names;
+    GString *expression;
     
     GError *err;
+  
+    expression = g_string_new("A+B - MyFunction( C, DDDxD) + E");
    
+    expression = preparse_expression(args, expression);
+    
+    
     expr = gwy_expr_new();
-    if (!gwy_expr_compile(expr, "A+B - MyFunction(C,D) + E", &err)){
+    if (!gwy_expr_compile(expr, expression->str, &err)){
         g_warning("Error compiling expression: %s\n", err->message);
         return;
     }
