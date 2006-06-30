@@ -612,7 +612,7 @@ gwy_correlation_point_duplicate_real(GObject *object)
     duplicate->height = correlation_point->height;
     duplicate->swidth = correlation_point->swidth;
     duplicate->sheight = correlation_point->sheight;
-    duplicate->pattern = gwy_serializable_duplicate(G_OBJECT(correlation_point->pattern));
+    duplicate->pattern = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(correlation_point->pattern)));
 
 
     return (GObject*)duplicate;
