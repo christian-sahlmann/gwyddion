@@ -35,6 +35,7 @@ file_LTLIBRARIES = \
 	metropro.la \
 	mifile.la \
 	nanoscope.la \
+	nanonis.la \
 	nanotop.la \
 	nt-mdt.la \
 	omicron.la \
@@ -138,6 +139,9 @@ mifile_la_LIBADD = $(module_libadd)
 
 nanoscope_la_SOURCES = nanoscope.c
 nanoscope_la_LIBADD = $(module_libadd)
+
+nanonis_la_SOURCES = nanonis.c
+nanonis_la_LIBADD = $(module_libadd)
 
 nanotop_la_SOURCES = nanotop.c
 nanotop_la_LIBADD = $(module_libadd)
