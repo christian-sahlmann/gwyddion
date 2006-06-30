@@ -1322,8 +1322,6 @@ detect_lines(EsetupControls *controls)
     
         if (zdata[i] < threshval) continue;
 
-        printf("setup detected: %g %g\n", xdata[i], ydata[i]);
-
         rho = ((gdouble)xdata[i])*gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered))
             - gwy_data_field_get_xreal(filtered)/2.0;
         theta = ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4;
@@ -1332,14 +1330,10 @@ detect_lines(EsetupControls *controls)
         gwy_data_field_hough_polar_line_to_datafield(dfield, rho, theta,
                     &px1, &px2, &py1, &py2);
         
-        printf("setup detected rho/theta: %g %g\n", rho, theta);
-        
         seldata[0] = gwy_data_field_itor(dfield, px1);
         seldata[1] = gwy_data_field_jtor(dfield, py1);
         seldata[2] = gwy_data_field_itor(dfield, px2);
         seldata[3] = gwy_data_field_jtor(dfield, py2);
-        printf("setup selection: %g %g %g %g\n", seldata[0], seldata[1], seldata[2], seldata[3]);
-        
         
         gwy_selection_set_object(selection, i, seldata);
         g_array_append_val(controls->detected_line_chosen, notchosen);
@@ -1722,7 +1716,7 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
         
         pspset->pattern = gwy_data_field_area_extract(dfield, xstart, ystart, 
                                                       pspset->width, pspset->height);
-        
+       
         pspset->id = g_strdup_printf("cp%d", ++controls->correlation_point_max);     
         g_ptr_array_add(controls->args->evaluator->correlation_point_array, pspset);
 
@@ -1733,9 +1727,12 @@ cpoints_selection_changed_cb(GwySelection *selection, gint i, EsetupControls *co
                        -1);
     } else {
         /*old point moved*/
-        pspset = g_ptr_array_index(controls->args->evaluator->correlation_point_array, i);
-        pspset->xc = pointdata[0];
-        pspset->yc = pointdata[1];
+        if (i>0 && i<controls->args->evaluator->correlation_point_array->len)
+        {
+            pspset = g_ptr_array_index(controls->args->evaluator->correlation_point_array, i);
+            pspset->xc = pointdata[0];
+            pspset->yc = pointdata[1];
+        }
     }
     gtk_widget_set_sensitive(controls->correlation_remove_button, TRUE);
     gtk_widget_set_sensitive(controls->correlation_edit_button, TRUE);
