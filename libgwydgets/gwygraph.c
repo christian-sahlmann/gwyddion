@@ -27,21 +27,13 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
-static void gwy_graph_refresh      (GwyGraph *graph);
-static void gwy_graph_size_request (GtkWidget *widget,
-                                    GtkRequisition *requisition);
-static void gwy_graph_size_allocate(GtkWidget *widget,
-                                    GtkAllocation *allocation);
-static void rescaled_cb            (GtkWidget *widget,
-                                    GwyGraph *graph);
-static void replot_cb              (GObject *gobject,
-                                    GParamSpec *arg1,
-                                    GwyGraph *graph);
-static void zoomed_cb              (GwyGraph *graph);
-static void label_updated_cb       (GwyAxis *axis,
-                                    GwyGraph *graph);
-static void gwy_graph_finalize          (GObject *object);
-
+static void     gwy_graph_finalize(GObject *object);
+static void     gwy_graph_refresh (GwyGraph *graph);
+static void     rescaled_cb       (GtkWidget *widget,
+                                   GwyGraph *graph);
+static void     zoomed_cb         (GwyGraph *graph);
+static void     label_updated_cb  (GwyAxis *axis,
+                                   GwyGraph *graph);
 
 G_DEFINE_TYPE(GwyGraph, gwy_graph, GTK_TYPE_TABLE)
 
@@ -53,43 +45,14 @@ gwy_graph_class_init(GwyGraphClass *klass)
 
     widget_class = (GtkWidgetClass*)klass;
 
-    widget_class->size_request = gwy_graph_size_request;
-    widget_class->size_allocate = gwy_graph_size_allocate;
     gobject_class->finalize = gwy_graph_finalize;
 
 }
-
-
-static void
-gwy_graph_size_request(GtkWidget *widget, GtkRequisition *requisition)
-{
-    GTK_WIDGET_CLASS(gwy_graph_parent_class)->size_request(widget, requisition);
-    /* Don't do this, GtkTable can calculate its size request from child
-     * requests perfectly.
-     * Request something reasonable in GwyGraphArea which does not have
-     * size_request() method at all(!) and even there it should be an order of
-     * magnitude smaller number.
-    requisition->width = 300;
-    requisition->height = 200;
-    */
-}
-
-static void
-gwy_graph_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
-{
-    GwyGraph *graph;
-    gwy_debug("");
-
-    graph = GWY_GRAPH(widget);
-    GTK_WIDGET_CLASS(gwy_graph_parent_class)->size_allocate(widget, allocation);
-}
-
 
 static void
 gwy_graph_init(G_GNUC_UNUSED GwyGraph *graph)
 {
     gwy_debug("");
-
 }
 
 static void
@@ -101,7 +64,6 @@ gwy_graph_finalize(GObject *object)
     gwy_signal_handler_disconnect(graph->graph_model, graph->layout_updated_id);
     gwy_object_unref(graph->graph_model);
 }
-
 
 /**
  * gwy_graph_new:
@@ -308,16 +270,6 @@ gwy_graph_refresh(GwyGraph *graph)
 
     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
-}
-
-static void
-replot_cb(G_GNUC_UNUSED GObject *gobject,
-          G_GNUC_UNUSED GParamSpec *arg1,
-          GwyGraph *graph)
-{
-    if (graph == NULL || graph->graph_model == NULL)
-        return;
-    gwy_graph_refresh(graph);
 }
 
 /**

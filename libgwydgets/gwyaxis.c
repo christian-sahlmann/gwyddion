@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,8 @@ enum {
 
 enum {
     PROP_0,
+    PROP_OUTER_BORDER_WIDTH,
+    /* XXX: Where this stuff *really* belongs to? To the model? */
     PROP_AUTO,
     PROP_MAJOR_LENGTH,
     PROP_MAJOR_THICKNESS,
@@ -50,24 +52,43 @@ enum {
     PROP_LAST
 };
 
+typedef struct {
+    gint xmin;         /*x offset of the active area with respect to drawable left border*/
+    gint ymin;         /*y offset of the active area with respect to drawable top border*/
+    gint height;       /*active area height*/
+    gint width;        /*active area width*/
+} GwyAxisActiveAreaSpecs;
 
-/* Forward declarations - widget related*/
-static void     gwy_axis_finalize             (GObject *object);
+typedef struct {
+    gdouble value;      /*tick value*/
+    gint scrpos;        /*precomputed tick screen position*/
+} GwyAxisTick;
 
-static void     gwy_axis_realize              (GtkWidget *widget);
-static void     gwy_axis_unrealize            (GtkWidget *widget);
-static void     gwy_axis_size_request         (GtkWidget *widget,
-                                               GtkRequisition *requisition);
-static void     gwy_axis_size_allocate        (GtkWidget *widget,
-                                               GtkAllocation *allocation);
-static gboolean gwy_axis_expose               (GtkWidget *widget,
-                                               GdkEventExpose *event);
-static gboolean gwy_axis_button_press         (GtkWidget *widget,
-                                               GdkEventButton *event);
-static gboolean gwy_axis_button_release       (GtkWidget *widget,
-                                               GdkEventButton *event);
+typedef struct {
+    GwyAxisTick t;
+    GString *ttext;
+} GwyAxisLabeledTick;
 
-/* Forward declarations - axis related*/
+static void     gwy_axis_finalize      (GObject *object);
+static void     gwy_axis_set_property  (GObject *object,
+                                        guint prop_id,
+                                        const GValue *value,
+                                        GParamSpec *pspec);
+static void     gwy_axis_get_property  (GObject*object,
+                                        guint prop_id,
+                                        GValue *value,
+                                        GParamSpec *pspec);
+static void     gwy_axis_realize       (GtkWidget *widget);
+static void     gwy_axis_unrealize     (GtkWidget *widget);
+static void     gwy_axis_size_request  (GtkWidget *widget,
+                                        GtkRequisition *requisition);
+static void     gwy_axis_size_allocate (GtkWidget *widget,
+                                        GtkAllocation *allocation);
+static gboolean gwy_axis_expose        (GtkWidget *widget,
+                                        GdkEventExpose *event);
+static gboolean gwy_axis_button_press  (GtkWidget *widget,
+                                        GdkEventButton *event);
+
 static gdouble gwy_axis_dbl_raise           (gdouble x,
                                              gint y);
 static gdouble gwy_axis_quantize_normal_tics(gdouble arg,
@@ -91,6 +112,8 @@ static void    gwy_axis_draw_tlabels        (GdkDrawable *drawable,
                                              GdkGC *gc,
                                              GwyAxisActiveAreaSpecs *specs,
                                              GwyAxis *axis);
+static void    gwy_axis_format_label        (GwyAxis *axis,
+                                             PangoLayout *layout);
 static void    gwy_axis_draw_label          (GdkDrawable *drawable,
                                              GdkGC *gc,
                                              GwyAxisActiveAreaSpecs *specs,
@@ -103,22 +126,8 @@ static void    gwy_axis_adjust              (GwyAxis *axis,
                                              gint height);
 static void    gwy_axis_entry               (GwySciText *sci_text,
                                              GwyAxis *axis);
-static void    gwy_axis_hide                (GwyAxisDialog *dialog,
-                                             gint arg1,
-                                             gpointer user_data);
 static void    gwy_axis_rescaled            (GwyAxis *axis);
-static void    gwy_axis_set_property(GObject *object,
-                             guint prop_id,
-                             const GValue *value,
-                             GParamSpec *pspec);
-
-static void    gwy_axis_get_property(GObject*object,
-                             guint prop_id,
-                             GValue *value,
-                             GParamSpec *pspec);
 static void    gwy_axis_refresh             (GwyAxis *axis);
-
-/* Local data */
 
 static guint axis_signals[LAST_SIGNAL] = { 0 };
 
@@ -144,7 +153,6 @@ gwy_axis_class_init(GwyAxisClass *klass)
     widget_class->unrealize = gwy_axis_unrealize;
     widget_class->size_allocate = gwy_axis_size_allocate;
     widget_class->button_press_event = gwy_axis_button_press;
-    widget_class->button_release_event = gwy_axis_button_release;
 
     klass->label_updated = NULL;
     klass->rescaled = NULL;
@@ -168,12 +176,23 @@ gwy_axis_class_init(GwyAxisClass *klass)
 
     g_object_class_install_property
         (gobject_class,
+         PROP_OUTER_BORDER_WIDTH,
+         g_param_spec_int("outer-border-width",
+                          "Outer border width",
+                          "The extra amount of space left on the outer side "
+                          "of an axis.  This space is also retained when "
+                          "axis is set non-visible.",
+                          0, G_MAXINT, 5,
+                          G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
          PROP_AUTO,
          g_param_spec_boolean("auto",
-                          "Autoscale",
-                          "Autoscale ticks with changing content",
-                          TRUE,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                              "Autoscale",
+                              "Autoscale ticks with changing content",
+                              TRUE,
+                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 
     g_object_class_install_property
         (gobject_class,
@@ -229,6 +248,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           20,
                           5,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
+
     g_object_class_install_property
         (gobject_class,
          PROP_MINOR_DIVISION,
@@ -240,7 +260,6 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           5,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-
     g_object_class_install_property
         (gobject_class,
          PROP_LINE_THICKNESS,
@@ -251,8 +270,6 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           20,
                           5,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
-
-
 }
 
 static void
@@ -263,7 +280,6 @@ gwy_axis_init(GwyAxis *axis)
     axis->is_visible = TRUE;
     axis->is_auto = TRUE;
     axis->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
-
 
     axis->par.major_length = 10;
     axis->par.major_thickness = 1;
@@ -282,6 +298,8 @@ gwy_axis_init(GwyAxis *axis)
 
     axis->unit = gwy_si_unit_new(NULL);
     axis->magnification = 1;
+
+    axis->outer_border_width = 5;
 }
 
 /**
@@ -313,9 +331,6 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     axis->label_text = g_string_new(label);
     axis->mjticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisLabeledTick));
     axis->miticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisTick));
-
-    axis->label_x_pos = 20;
-    axis->label_y_pos = 20;
 
     context = gtk_widget_get_pango_context(GTK_WIDGET(axis));
     description = pango_context_get_font_description(context);
@@ -363,6 +378,108 @@ gwy_axis_finalize(GObject *object)
         pango_font_description_free(axis->par.label_font);
 
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
+}
+
+static void
+gwy_axis_set_property(GObject *object,
+                      guint prop_id,
+                      const GValue *value,
+                      GParamSpec *pspec)
+{
+    GwyAxis *axis = GWY_AXIS(object);
+
+    switch (prop_id) {
+        case PROP_AUTO:
+        axis->is_auto = g_value_get_boolean(value);
+        break;
+
+        case PROP_OUTER_BORDER_WIDTH:
+        axis->outer_border_width = g_value_get_int(value);
+        break;
+
+        case PROP_MAJOR_LENGTH:
+        axis->par.major_length = g_value_get_int(value);
+        break;
+
+        case PROP_MAJOR_THICKNESS:
+        axis->par.major_thickness = g_value_get_int(value);
+        break;
+
+        case PROP_MAJOR_MAXTICKS:
+        axis->par.major_maxticks = g_value_get_int(value);
+        break;
+
+        case PROP_MINOR_LENGTH:
+        axis->par.minor_length = g_value_get_int(value);
+        break;
+
+        case PROP_MINOR_THICKNESS:
+        axis->par.minor_thickness = g_value_get_int(value);
+        break;
+
+        case PROP_MINOR_DIVISION:
+        axis->par.minor_division = g_value_get_int(value);
+        break;
+
+        case PROP_LINE_THICKNESS:
+        axis->par.line_thickness = g_value_get_int(value);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_axis_get_property(GObject*object,
+                      guint prop_id,
+                      GValue *value,
+                      GParamSpec *pspec)
+{
+    GwyAxis *axis = GWY_AXIS(object);
+
+    switch (prop_id) {
+        case PROP_AUTO:
+        g_value_set_boolean(value, axis->is_auto);
+        break;
+
+        case PROP_OUTER_BORDER_WIDTH:
+        g_value_set_int(value, axis->outer_border_width);
+        break;
+
+        case PROP_MAJOR_LENGTH:
+        g_value_set_int(value, axis->par.major_length);
+        break;
+
+        case PROP_MAJOR_THICKNESS:
+        g_value_set_int(value, axis->par.major_thickness);
+        break;
+
+        case PROP_MAJOR_MAXTICKS:
+        g_value_set_int(value, axis->par.major_maxticks);
+        break;
+
+        case PROP_MINOR_LENGTH:
+        g_value_set_int(value, axis->par.minor_length);
+        break;
+
+        case PROP_MINOR_THICKNESS:
+        g_value_set_int(value, axis->par.minor_thickness);
+        break;
+
+        case PROP_MINOR_DIVISION:
+        g_value_set_int(value, axis->par.minor_division);
+        break;
+
+        case PROP_LINE_THICKNESS:
+        g_value_set_int(value, axis->par.line_thickness);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 static void
@@ -435,27 +552,79 @@ static void
 gwy_axis_size_request(GtkWidget *widget,
                       GtkRequisition *requisition)
 {
+    PangoRectangle rect_label, rect;
+    PangoLayout *layout;
+    const GwyAxisLabeledTick *pmjt;
     GwyAxis *axis;
-    gwy_debug("");
+    guint i;
+    gint sep;
 
     axis = GWY_AXIS(widget);
 
-    if (axis->is_visible) {
-        if (axis->orientation == GTK_POS_RIGHT
-            || axis->orientation == GTK_POS_LEFT) {
-            requisition->width = 80;
-            requisition->height = 100;
-        }
-        else {
-            requisition->width = 100;
-            requisition->height = 80;
-        }
-    }
-    else {
-        requisition->width = 5;
-        requisition->height = 5;
+    requisition->height = requisition->width = 0;
+
+    switch (axis->orientation) {
+        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
+        requisition->width += axis->outer_border_width;
+        break;
+
+        case GTK_POS_BOTTOM:
+        case GTK_POS_TOP:
+        requisition->height += axis->outer_border_width;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
     }
 
+    if (!axis->is_visible)
+        return;
+
+    layout = gtk_widget_create_pango_layout(widget, "");
+    gwy_axis_format_label(axis, layout);
+    pango_layout_get_pixel_extents(layout, NULL, &rect_label);
+
+    sep = 3;
+
+    switch (axis->orientation) {
+        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
+        requisition->height += rect_label.width + 2*sep;
+
+        requisition->width += rect_label.height;
+        requisition->width += axis->par.major_length;
+        requisition->width += 2*sep;
+
+        /* FIXME: This does not work, at this point we do not know the real
+         * tick labels yet */
+        rect_label.width = 0;
+        pango_layout_set_font_description(layout, axis->par.major_font);
+        for (i = 0; i < axis->mjticks->len; i++) {
+            pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
+            pango_layout_set_text(layout, pmjt->ttext->str, pmjt->ttext->len);
+            pango_layout_get_pixel_extents(layout, NULL, &rect);
+            rect_label.width = MAX(rect_label.width, rect.width);
+        }
+        requisition->width += rect_label.width;
+        break;
+
+        case GTK_POS_BOTTOM:
+        case GTK_POS_TOP:
+        requisition->width += rect_label.width + 2*sep;
+
+        requisition->height += rect_label.height;
+        requisition->height += axis->par.major_length;
+        requisition->height += 2*sep;
+
+        pango_layout_set_text(layout, "0.9", -1);
+        pango_layout_get_pixel_extents(layout, NULL, &rect_label);
+        requisition->height += rect_label.height;
+        break;
+    }
+
+    g_object_unref(layout);
 }
 
 static void
@@ -488,31 +657,16 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
     gint scaleres, iterations;
 
-    if (width == -1) width = GTK_WIDGET(axis)->allocation.width;
-    if (height == -1) height = GTK_WIDGET(axis)->allocation.height;
-
-    if (axis->orientation == GTK_POS_TOP
-        || axis->orientation == GTK_POS_BOTTOM) {
-        axis->label_x_pos = width/2;
-        if (axis->orientation == GTK_POS_TOP)
-            axis->label_y_pos = 40;
-        else
-            axis->label_y_pos = height - 50;
-    }
-    if (axis->orientation == GTK_POS_RIGHT
-        || axis->orientation == GTK_POS_LEFT) {
-        axis->label_x_pos = height/2;
-        if (axis->orientation == GTK_POS_RIGHT)
-            axis->label_y_pos = 40;
-        else
-            axis->label_y_pos = width - 40;
-    }
-
+    if (width == -1)
+        width = GTK_WIDGET(axis)->allocation.width;
+    if (height == -1)
+        height = GTK_WIDGET(axis)->allocation.height;
 
     if (axis->is_auto)
         gwy_axis_autoset(axis, width, height);
     iterations = 0;
-    if (axis->is_logarithmic) {gwy_axis_scale(axis);}
+    if (axis->is_logarithmic)
+        gwy_axis_scale(axis);
     else {
         do {
             scaleres = gwy_axis_scale(axis);
@@ -689,8 +843,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable,
 {
     guint i;
     GwyAxisTick *pmit;
-    GwyAxisLabeledTick *pmjt;
-
+    const GwyAxisLabeledTick *pmjt;
 
     gdk_gc_set_line_attributes(gc, axis->par.major_thickness,
                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
@@ -789,16 +942,13 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable,
                       GwyAxisActiveAreaSpecs *specs,
                       GwyAxis *axis)
 {
-    guint i;
-    GwyAxisLabeledTick *pmjt;
+    const GwyAxisLabeledTick *pmjt;
     PangoLayout *layout;
-    PangoContext *context;
     PangoRectangle rect;
     gint sep, xpos = 0, ypos = 0;
+    guint i;
 
-
-    context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
-    layout = pango_layout_new(context);
+    layout = gtk_widget_create_pango_layout(GTK_WIDGET(axis), "");
     pango_layout_set_font_description(layout, axis->par.major_font);
 
     sep = 3;
@@ -850,26 +1000,14 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable,
     }
 
     g_object_unref(layout);
-    g_object_unref(context);
 }
 
 static void
-gwy_axis_draw_label(GdkDrawable *drawable,
-                    GdkGC *gc,
-                    GwyAxisActiveAreaSpecs *specs,
-                    GwyAxis *axis)
+gwy_axis_format_label(GwyAxis *axis,
+                      PangoLayout *layout)
 {
-    PangoLayout *layout;
-    PangoContext *context;
-    PangoRectangle rect;
-    PangoMatrix matrix = PANGO_MATRIX_INIT;
-    gint width, height;
     gchar *units;
     GString *plotlabel;
-
-    context = gtk_widget_create_pango_context (GTK_WIDGET(axis));
-    layout = pango_layout_new(context);
-    pango_layout_set_font_description(layout, axis->par.major_font);
 
     plotlabel = g_string_new(axis->label_text->str);
     units = gwy_si_unit_get_string(axis->unit, GWY_SI_UNIT_FORMAT_MARKUP);
@@ -883,21 +1021,41 @@ gwy_axis_draw_label(GdkDrawable *drawable,
     }
     g_free(units);
 
-    pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
+    pango_layout_set_font_description(layout, axis->par.major_font);
+    pango_layout_set_markup(layout, plotlabel->str, plotlabel->len);
+    g_string_free(plotlabel, TRUE);
+}
+
+static void
+gwy_axis_draw_label(GdkDrawable *drawable,
+                    GdkGC *gc,
+                    GwyAxisActiveAreaSpecs *specs,
+                    GwyAxis *axis)
+{
+    PangoLayout *layout;
+    PangoContext *context;
+    PangoRectangle rect;
+    PangoMatrix matrix = PANGO_MATRIX_INIT;
+    gint width, height;
+
+    context = gtk_widget_create_pango_context(GTK_WIDGET(axis));
+    layout = pango_layout_new(context);
+
+    gwy_axis_format_label(axis, layout);
     pango_layout_get_pixel_extents(layout, NULL, &rect);
 
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
-                        specs->xmin + axis->label_x_pos - rect.width/2,
-                        specs->ymin + axis->label_y_pos,
+                        specs->xmin + specs->width/2 - rect.width/2,
+                        specs->height - axis->outer_border_width - rect.height,
                         layout);
         break;
 
         case GTK_POS_TOP:
         gdk_draw_layout(drawable, gc,
-                        specs->xmin + axis->label_x_pos - rect.width/2,
-                        specs->ymin + axis->label_y_pos,
+                        specs->xmin + specs->width/2 - rect.width/2,
+                        specs->ymin + axis->outer_border_width,
                         layout);
         break;
 
@@ -907,8 +1065,8 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         pango_layout_context_changed(layout);
         pango_layout_get_size(layout, &width, &height);
         gdk_draw_layout(drawable, gc,
-                        specs->ymin + axis->label_y_pos,
-                        specs->xmin + axis->label_x_pos - rect.width/2,
+                        specs->width - axis->outer_border_width - rect.width,
+                        specs->ymin + specs->height/2 - rect.width/2,
                         layout);
         break;
 
@@ -918,8 +1076,8 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         pango_layout_context_changed(layout);
         pango_layout_get_size(layout, &width, &height);
         gdk_draw_layout(drawable, gc,
-                        specs->ymin + axis->label_y_pos - rect.height,
-                        specs->xmin + axis->label_x_pos - rect.width/2,
+                        specs->xmin + axis->outer_border_width,
+                        specs->ymin + specs->height/2 - rect.width/2,
                         layout);
         break;
 
@@ -928,7 +1086,6 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         break;
     }
 
-    g_string_free(plotlabel, TRUE);
     g_object_unref(layout);
     g_object_unref(context);
 }
@@ -943,33 +1100,19 @@ gwy_axis_button_press(GtkWidget *widget,
 
     axis = GWY_AXIS(widget);
 
-    if (axis->enable_label_edit)
-    {
+    if (axis->enable_label_edit) {
         if (!axis->dialog) {
             axis->dialog = gwy_axis_dialog_new(axis);
             g_signal_connect(gwy_axis_dialog_get_sci_text(axis->dialog), "edited",
                              G_CALLBACK(gwy_axis_entry), axis);
-            g_signal_connect(GWY_AXIS_DIALOG(axis->dialog), "response",
-                             G_CALLBACK(gwy_axis_hide), NULL);
+            g_signal_connect(axis->dialog, "response",
+                             G_CALLBACK(gtk_widget_hide), NULL);
             gwy_sci_text_set_text
                         (GWY_SCI_TEXT(gwy_axis_dialog_get_sci_text(axis->dialog)),
                          axis->label_text->str);
         }
         gtk_widget_show_all(axis->dialog);
     }
-
-    return FALSE;
-}
-
-static gboolean
-gwy_axis_button_release(GtkWidget *widget,
-                        GdkEventButton *event)
-{
-    GwyAxis *axis;
-
-    gwy_debug("");
-
-    axis = GWY_AXIS(widget);
 
     return FALSE;
 }
@@ -992,15 +1135,7 @@ gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
     g_free(text);
     g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
-
 }
-
-static void
-gwy_axis_hide(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
-{
-    gtk_widget_hide(GTK_WIDGET(dialog));
-}
-
 
 /**
  * gwy_axis_rescaled:
@@ -1064,12 +1199,14 @@ gwy_axis_normalscale(GwyAxis *a)
     GwyAxisLabeledTick mjt;
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
-    if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
+    if (a->reqmax == a->reqmin) {
+        g_warning("Axis with zero range!");
+        a->reqmax = a->reqmin + 1;
+    }
 
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
-    if (range > 1e40 || range < -1e40)
-    {
+    if (range > 1e40 || range < -1e40) {
         g_warning("Axis with extreme range (>1e40)!");
         return 0;
     }
@@ -1410,7 +1547,8 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
     axis->reqmax = max;
 
     /*prevent axis to allow null range. It has no sense and even gnuplot does the same...*/
-    if (min==max) axis->reqmax += 1.0;
+    if (min == max)
+        axis->reqmax += 1.0;
 
     gwy_axis_adjust(axis, -1, -1);
 }
@@ -1911,103 +2049,6 @@ gwy_axis_get_orientation(GwyAxis *axis)
 
     return axis->orientation;
 }
-
-static void
-gwy_axis_set_property(GObject *object,
-                             guint prop_id,
-                             const GValue *value,
-                             GParamSpec *pspec)
-{
-    GwyAxis *axis = GWY_AXIS(object);
-
-    switch (prop_id) {
-        case PROP_AUTO:
-        axis->is_auto = g_value_get_boolean(value);
-        break;
-
-        case PROP_MAJOR_LENGTH:
-        axis->par.major_length = g_value_get_int(value);
-        break;
-
-        case PROP_MAJOR_THICKNESS:
-        axis->par.major_thickness = g_value_get_int(value);
-        break;
-
-        case PROP_MAJOR_MAXTICKS:
-        axis->par.major_maxticks = g_value_get_int(value);
-        break;
-
-        case PROP_MINOR_LENGTH:
-        axis->par.minor_length = g_value_get_int(value);
-        break;
-
-        case PROP_MINOR_THICKNESS:
-        axis->par.minor_thickness = g_value_get_int(value);
-        break;
-
-        case PROP_MINOR_DIVISION:
-        axis->par.minor_division = g_value_get_int(value);
-        break;
-
-        case PROP_LINE_THICKNESS:
-        axis->par.line_thickness = g_value_get_int(value);
-        break;
-
-
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gwy_axis_get_property(GObject*object,
-                             guint prop_id,
-                             GValue *value,
-                             GParamSpec *pspec)
-{
-    GwyAxis *axis = GWY_AXIS(object);
-
-    switch (prop_id) {
-        case PROP_AUTO:
-        g_value_set_boolean(value, axis->is_auto);
-        break;
-
-        case PROP_MAJOR_LENGTH:
-        g_value_set_int(value, axis->par.major_length);
-        break;
-
-        case PROP_MAJOR_THICKNESS:
-        g_value_set_int(value, axis->par.major_thickness);
-        break;
-
-        case PROP_MAJOR_MAXTICKS:
-        g_value_set_int(value, axis->par.major_maxticks);
-        break;
-
-        case PROP_MINOR_LENGTH:
-        g_value_set_int(value, axis->par.minor_length);
-        break;
-
-        case PROP_MINOR_THICKNESS:
-        g_value_set_int(value, axis->par.minor_thickness);
-        break;
-
-        case PROP_MINOR_DIVISION:
-        g_value_set_int(value, axis->par.minor_division);
-        break;
-
-        case PROP_LINE_THICKNESS:
-        g_value_set_int(value, axis->par.line_thickness);
-        break;
-
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-
-}
-
 
 /************************** Documentation ****************************/
 

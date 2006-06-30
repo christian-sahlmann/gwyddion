@@ -40,24 +40,6 @@ typedef struct _GwyAxis      GwyAxis;
 typedef struct _GwyAxisClass GwyAxisClass;
 
 typedef struct {
-    gint xmin;         /*x offset of the active area with respect to drawable left border*/
-    gint ymin;         /*y offset of the active area with respect to drawable top border*/
-    gint height;       /*active area height*/
-    gint width;        /*active area width*/
-} GwyAxisActiveAreaSpecs;
-
-typedef struct {
-    gdouble value;      /*tick value*/
-    gint scrpos;        /*precomputed tick screen position*/
-} GwyAxisTick;
-
-
-typedef struct {
-    GwyAxisTick t;
-    GString *ttext;
-} GwyAxisLabeledTick;
-
-typedef struct {
     gint major_length;
     gint major_thickness;
     gint major_maxticks;
@@ -83,7 +65,9 @@ struct _GwyAxis {
     gboolean is_logarithmic;
     gboolean is_auto;           /*affects: tick numbers and label positions.*/
     gboolean is_standalone;
-    GtkPositionType orientation;    /*north, south, east, west*/
+    GtkPositionType orientation;
+
+    gint outer_border_width;
 
     gdouble reqmin;
     gdouble reqmax;
@@ -93,8 +77,6 @@ struct _GwyAxis {
     GArray *mjticks;            /*array of GwyLabeledTicks*/
     GArray *miticks;            /*array of GwyTicks*/
 
-    gint label_x_pos;           /*label position*/
-    gint label_y_pos;
     GString *label_text;
 
     GwySIUnit *unit;                /*axis unit (if any)*/
