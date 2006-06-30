@@ -40,10 +40,12 @@
 
 
 typedef struct {
+    gboolean bresult;
     gdouble result; 
     gchar **variable_ids;
     gdouble *variables;
     gint nvariables;
+    gchar *error;
 } EvalData;
 
 typedef struct {
@@ -57,6 +59,8 @@ typedef struct {
 
 static gboolean            module_register(void);
 static void                evaluator_run(GwyContainer *data,
+                                         GwyRunType run);
+static void                evaluator_run_automatically(GwyContainer *data,
                                          GwyRunType run);
 static gchar*              get_filename();
 static GwyEvaluator*       get_evaluator(gchar *filename);
@@ -93,8 +97,18 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Run evaluator from stored preset"));
 
+    gwy_process_func_register("evaluator_run_automatically",
+                              (GwyProcessFunc)&evaluator_run_automatically,
+                              N_("/_Evaluator/Run Automatically"),
+                              NULL,
+                              EVALUATOR_RUN_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Run evaluator from stored preset automatically"));
+
     return TRUE;
 }
+
+
 
 static void
 evaluator_run(GwyContainer *data, GwyRunType run)
@@ -121,6 +135,40 @@ evaluator_run(GwyContainer *data, GwyRunType run)
     /*output result window*/
 
     create_results_window(&args);
+    
+}
+
+static void
+evaluator_run_automatically(GwyContainer *data, GwyRunType run)
+{
+    ErunArgs args;
+    GwyContainer *settings;
+    gchar *filename;
+    GString *report;
+    FILE *fh;
+    
+    g_return_if_fail(run & EVALUATOR_RUN_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &args.dfield,
+                                     0);
+    g_return_if_fail(args.dfield);
+
+    settings = gwy_app_settings_get();
+    args.evaluator = get_evaluator(gwy_container_get_string(settings, "/kdesi/evaluator_filename"));
+    
+    /*run preset*/
+    args.evaldata = g_ptr_array_new();
+    args.evaluated_statements = g_array_new(FALSE, FALSE, sizeof(gboolean));
+    get_results(&args);
+
+    report = create_evaluator_report(&args);
+
+    /*output result window*/
+    fh = g_fopen(gwy_container_get_string(settings, "/kdesi/save_filename"), "a");
+    if (fh) {
+         fputs(report->str, fh);
+         fclose(fh);
+         return;
+    }
     
 }
 
@@ -586,10 +634,66 @@ static GString*
 create_evaluator_report(ErunArgs *args)
 {
     GString *report;
+    GwySearchPoint *pspoint;
+    GwySearchLine *psline;
+    GwyFixedPoint *pfpoint;
+    GwyFixedLine *pfline;
+    GwyCorrelationPoint *pcpoint;
+    GwyEvaluatorTask *petask;
+    EvalData *edata;
+    
+    gint k, i;
 
     report = g_string_new("");
 
-    g_string_append_printf(report, _("\n===== Fit Results =====\n"));
+    g_string_append_printf(report, _("\n===== Evaluator Results =====\n"));
+   
+    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+        pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
+        g_string_append_printf(report, "point %s %d %d\n", pspoint->id, 
+                               (gint)gwy_data_field_rtoi(args->dfield, pspoint->xc), 
+                               (gint)gwy_data_field_rtoj(args->dfield, pspoint->yc));
+    }
+    for (k=0; k<args->evaluator->detected_line_array->len; k++) {
+        psline = g_ptr_array_index(args->evaluator->detected_line_array, k);
+        g_string_append_printf(report, "line %s %d %d %d %d\n", psline->id, 
+                               (gint)gwy_data_field_rtoi(args->dfield, psline->xstart), 
+                               (gint)gwy_data_field_rtoj(args->dfield, psline->ystart),
+                               (gint)gwy_data_field_rtoi(args->dfield, psline->xend), 
+                               (gint)gwy_data_field_rtoj(args->dfield, psline->yend));
+    }
+    for (k=0; k<args->evaluator->fixed_point_array->len; k++) {
+        pfpoint = g_ptr_array_index(args->evaluator->fixed_point_array, k);
+        g_string_append_printf(report, "point %s %d %d\n", pfpoint->id, 
+                               (gint)gwy_data_field_rtoi(args->dfield, pfpoint->xc), 
+                               (gint)gwy_data_field_rtoj(args->dfield, pfpoint->yc));
+    }
+    for (k=0; k<args->evaluator->fixed_line_array->len; k++) {
+        pfline = g_ptr_array_index(args->evaluator->fixed_line_array, k);
+        g_string_append_printf(report, "line %s %d %d %d %d\n", pfline->id, 
+                               (gint)gwy_data_field_rtoi(args->dfield, pfline->xstart), 
+                               (gint)gwy_data_field_rtoj(args->dfield, pfline->ystart),
+                               (gint)gwy_data_field_rtoi(args->dfield, pfline->xend), 
+                               (gint)gwy_data_field_rtoj(args->dfield, pfline->yend));
+    }
+     for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+        pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
+        g_string_append_printf(report, "point %s %d %d\n", pcpoint->id,
+                               (gint)gwy_data_field_rtoi(args->dfield, pspoint->xc), 
+                               (gint)gwy_data_field_rtoj(args->dfield, pspoint->yc));
+    }
+    for (k=0; k<args->evaluator->expression_task_array->len; k++) {
+        petask = g_ptr_array_index(args->evaluator->expression_task_array, k);
+        if (k < args->evaldata->len) edata = g_ptr_array_index(args->evaldata, k);   
+        else break;
+
+        if (edata->bresult) g_string_append_printf(report, "SUCCESS ");
+        else g_string_append_printf(report, "FAILED ");
+        g_string_append_printf(report, "\"%s\" \"%s\" ", petask->expression, petask->threshold);
+        for (i=1; i<edata->nvariables; i++) g_string_append_printf(report, "%s ", edata->variable_ids[i]);
+        g_string_append_printf(report, "\n");
+    }
+    
     return report;
 }
 
@@ -822,49 +926,99 @@ preparse_expression(ErunArgs *args, GString *expression)
     return expression;
 }
 
+static gboolean
+get_bresult(gdouble result, gchar *threshop)
+{
+    gdouble num;
+    gchar *pos;
+    
+    if ((pos = strstr(threshop, "<"))!=NULL) {
+       num = atof(pos + 1);
+       if (result < num) return TRUE;
+       else return FALSE;
+    }
+    if ((pos = strstr(threshop, ">"))!=NULL) {
+       num = atof(pos + 1);
+       if (result > num) return TRUE;
+       else return FALSE;
+    }
+    if ((pos = strstr(threshop, "="))!=NULL) {
+       num = atof(pos + 1);
+       if (result == num) return TRUE;
+       else return FALSE;
+    }
+    if ((pos = strstr(threshop, ">="))!=NULL) {
+       num = atof(pos + 2);
+       if (result >= num) return TRUE;
+       else return FALSE;
+    }
+    if ((pos = strstr(threshop, "<="))!=NULL) {
+       num = atof(pos + 2);
+       if (result <= num) return TRUE;
+       else return FALSE;
+    }
+    if ((pos = strstr(threshop, "!="))!=NULL) {
+       num = atof(pos + 2);
+       if (result != num) return TRUE;
+       else return FALSE;
+    }
+  
+    return TRUE;
+}
+
 
 static void evaluate(ErunArgs *args)
 {
     GwyExpr *expr;
-    gdouble result;
-    gint i, nv;
-    gchar **names;
+    gint k, i;
     GString *expression;
     GwyEvaluatorTask *etset;
+    EvalData *edata;
     GError *err;
     gboolean error;
-    gdouble *vars;
   
-    
-    etset = g_ptr_array_index(args->evaluator->expression_task_array, 0);
-    expression = g_string_new(etset->expression);
-   
-    expression = preparse_expression(args, expression);
-    if (expression == NULL) {
-        printf("preparse failed\n");
-        return;
-    }
-    printf("after preparse: %s\n", expression->str); 
-    
-    expr = gwy_expr_new();
-    if (!gwy_expr_compile(expr, expression->str, &err)){
-        g_warning("Error compiling expression: %s\n", err->message);
-        return;
-    }
-
-    nv = gwy_expr_get_variables(expr, &names);
-    
-    printf("%d variables in expression %s\n", nv, expression->str);
-    vars = g_malloc(nv*sizeof(gdouble));
-    
-    for (i = 1; i<nv; i++)
+    for (k = 0; k<args->evaluator->expression_task_array->len; k++)
     {
-        printf("variable: %s\n", names[i]);
-        vars[i] = variable_parse(args, names[i], &error);
-        if (error) {printf("cannot resolve variable\n");}
+        edata = g_new(EvalData, 1);
+        etset = g_ptr_array_index(args->evaluator->expression_task_array, k);
+        expression = g_string_new(etset->expression);
+   
+        expression = preparse_expression(args, expression);
+        if (expression == NULL) {
+            printf("preparse failed\n");
+            return;
+        }
+        printf("after preparse: %s\n", expression->str); 
+    
+        expr = gwy_expr_new();
+        if (!gwy_expr_compile(expr, expression->str, &err)){
+            g_warning("Error compiling expression: %s\n", err->message);
+            edata->error = g_strdup("error compiling expression");
+            g_ptr_array_add(args->evaldata, edata);
+            return;
+        }
+
+        edata->nvariables = gwy_expr_get_variables(expr, &edata->variable_ids);
+    
+        printf("%d variables in expression %s\n", edata->nvariables, expression->str);
+        edata->variables = g_malloc(edata->nvariables*sizeof(gdouble));
+    
+        for (i = 1; i<edata->nvariables; i++)
+        {
+            printf("variable: %s\n", edata->variable_ids[i]);
+            edata->variables[i] = variable_parse(args, edata->variable_ids[i], &error);
+            if (error) {
+                edata->error = g_strdup("error resolving variable");
+                printf("cannot resolve variable\n");}
+        }
+        edata->result = gwy_expr_execute(expr, edata->variables);
+        printf("Execution result: %g\n", edata->result);
+        edata->error = g_strdup("none");
+
+        edata->bresult = get_bresult(edata->result, etset->threshold);
+        
+        g_ptr_array_add(args->evaldata, edata);
     }
-    result = gwy_expr_execute(expr, vars);
-    printf("Execution result: %g\n", result);
     
 
 }
