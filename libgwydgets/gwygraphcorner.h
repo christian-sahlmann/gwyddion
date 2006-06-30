@@ -21,13 +21,9 @@
 #ifndef __GWY_GRAPH_CORNER_H__
 #define __GWY_GRAPH_CORNER_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
-
 G_BEGIN_DECLS
-
 
 #define GWY_TYPE_GRAPH_CORNER            (gwy_graph_corner_get_type())
 #define GWY_GRAPH_CORNER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_CORNER, GwyGraphCorner))
@@ -49,20 +45,16 @@ struct _GwyGraphCorner {
 struct _GwyGraphCornerClass {
     GtkWidgetClass parent_class;
 
-    void (*selected)(GwyGraphCorner *corner);
-
     gpointer reserved1;
     gpointer reserved2;
 };
 
+GType gwy_graph_corner_get_type(void) G_GNUC_CONST;
 
 GtkWidget* gwy_graph_corner_new();
 
-GType gwy_graph_corner_get_type(void) G_GNUC_CONST;
-
-
 G_END_DECLS
 
-#endif /*__GWY_GRAPH_CORNER_H__*/
+#endif /* __GWY_GRAPH_CORNER_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

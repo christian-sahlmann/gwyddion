@@ -395,6 +395,7 @@ gwy_axis_set_property(GObject *object,
 
         case PROP_OUTER_BORDER_WIDTH:
         axis->outer_border_width = g_value_get_int(value);
+        gtk_widget_queue_resize(GTK_WIDGET(axis));
         break;
 
         case PROP_MAJOR_LENGTH:
@@ -520,7 +521,6 @@ gwy_axis_realize(GtkWidget *widget)
     attributes.event_mask = gtk_widget_get_events(widget)
                             | GDK_EXPOSURE_MASK
                             | GDK_BUTTON_PRESS_MASK
-                            | GDK_BUTTON_RELEASE_MASK
                             | GDK_POINTER_MOTION_MASK
                             | GDK_POINTER_MOTION_HINT_MASK;
     attributes.visual = gtk_widget_get_visual(widget);
@@ -567,11 +567,13 @@ gwy_axis_size_request(GtkWidget *widget,
         case GTK_POS_LEFT:
         case GTK_POS_RIGHT:
         requisition->width += axis->outer_border_width;
+        requisition->width += axis->par.line_thickness;
         break;
 
         case GTK_POS_BOTTOM:
         case GTK_POS_TOP:
         requisition->height += axis->outer_border_width;
+        requisition->height += axis->par.line_thickness;
         break;
 
         default:
@@ -1143,7 +1145,7 @@ gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
  *
  * Signals that the axis has been rescaled
  **/
-void
+static void
 gwy_axis_rescaled(GwyAxis *axis)
 {
     g_signal_emit(axis, axis_signals[RESCALED], 0);
