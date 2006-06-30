@@ -1546,11 +1546,13 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
     axis->reqmin = min;
     axis->reqmax = max;
 
-    /*prevent axis to allow null range. It has no sense and even gnuplot does the same...*/
+    /* Prevent axis to allow null range.
+     * It has no sense and even gnuplot does the same...*/
     if (min == max)
         axis->reqmax += 1.0;
 
     gwy_axis_adjust(axis, -1, -1);
+    gtk_widget_queue_resize(GTK_WIDGET(axis));
 }
 
 /**
@@ -1565,6 +1567,7 @@ gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 {
     axis->par = style;
     gwy_axis_adjust(axis, -1, -1);
+    gtk_widget_queue_resize(GTK_WIDGET(axis));
 }
 
 /**
