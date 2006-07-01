@@ -43,6 +43,7 @@ typedef struct _GwyToolLevel3Class GwyToolLevel3Class;
 typedef struct {
     guint radius;
     gboolean instant_apply;
+    gboolean allow_undo;
 } ToolArgs;
 
 struct _GwyToolLevel3 {
@@ -76,6 +77,7 @@ static void   gwy_tool_level3_response             (GwyTool *tool,
                                                     gint response_id);
 static void   gwy_tool_level3_selection_changed    (GwyPlainTool *plain_tool,
                                                     gint hint);
+static void   gyw_tool_level3_selection_finished   (GwyPlainTool *plain_tool);
 static void   gwy_tool_level3_radius_changed       (GwyToolLevel3 *tool);
 static void   gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
                                                     GwyToolLevel3 *tool);
@@ -104,6 +106,7 @@ static GwyModuleInfo module_info = {
 static const ToolArgs default_args = {
     1,
     FALSE,
+    TRUE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -137,6 +140,7 @@ gwy_tool_level3_class_init(GwyToolLevel3Class *klass)
 
     ptool_class->data_changed = gwy_tool_level3_data_changed;
     ptool_class->selection_changed = gwy_tool_level3_selection_changed;
+    ptool_class->selection_finished = gyw_tool_level3_selection_finished;
 }
 
 static void
@@ -276,6 +280,7 @@ gwy_tool_level3_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 3);
+        tool->args.allow_undo = TRUE;
     }
 
     gwy_tool_level3_update_headers(GWY_TOOL_LEVEL3(gwytool));
@@ -321,8 +326,26 @@ gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
 
     gtk_widget_set_sensitive(tool->apply, n == 3 && !tool->args.instant_apply);
 
-    if (n == 3 && tool->args.instant_apply)
-        gwy_tool_level3_apply(GWY_TOOL_LEVEL3(plain_tool));
+    if (n == 3 && tool->args.instant_apply) {
+        gwy_tool_level3_apply(tool);
+        tool->args.allow_undo = FALSE;
+    }
+    else
+        tool->args.allow_undo = TRUE;
+}
+
+static void
+gyw_tool_level3_selection_finished(GwyPlainTool *plain_tool)
+{
+    GwyToolLevel3 *tool = GWY_TOOL_LEVEL3(plain_tool);
+    gint n = 0;
+
+    if (plain_tool->selection)
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+
+    if (n == 3 && tool->args.instant_apply) {
+        tool->args.allow_undo = TRUE;
+    }
 }
 
 static void
@@ -353,7 +376,7 @@ gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
 
 
     if (tool->args.instant_apply)
-        gwy_tool_level3_selection_changed(GWY_PLAIN_TOOL(tool), -1);
+        gwy_tool_level3_apply(tool);
 }
 
 static void
@@ -500,8 +523,9 @@ gwy_tool_level3_apply(GwyToolLevel3 *tool)
     xres = gwy_data_field_get_xres(plain_tool->data_field);
     yres = gwy_data_field_get_yres(plain_tool->data_field);
     coeffs[2] = -0.5*(coeffs[0]*xres + coeffs[1]*yres);
-    gwy_app_undo_qcheckpoint(plain_tool->container,
-                             gwy_app_get_data_key_for_id(plain_tool->id), 0);
+    if (tool->args.allow_undo)
+        gwy_app_undo_qcheckpoint(plain_tool->container,
+                                 gwy_app_get_data_key_for_id(plain_tool->id), 0);
     gwy_data_field_plane_level(plain_tool->data_field,
                                coeffs[2], coeffs[0], coeffs[1]);
 
