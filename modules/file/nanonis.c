@@ -55,9 +55,14 @@ typedef struct {
     GHashTable *meta;
     gchar **z_controller_headers;
     gchar **z_controller_values;
+    gint ndata;
     SXMDataInfo *data_info;
-    const guchar **data;
-    gboolean header_ok;
+
+    gboolean ok;
+    gint xres;
+    gint yres;
+    gdouble xreal;
+    gdouble yreal;
 } SXMFile;
 
 static gboolean      module_register(void);
@@ -194,7 +199,7 @@ sxm_read_tag(SXMFile *sxmfile,
     gwy_debug("tag: <%s>", tag);
 
     if (gwy_strequal(tag, "SCANIT_END")) {
-        sxmfile->header_ok = TRUE;
+        sxmfile->ok = TRUE;
         return TRUE;
     }
 
@@ -264,7 +269,7 @@ sxm_read_tag(SXMFile *sxmfile,
         while ((line = get_next_line_with_error(p, error)) && *line) {
             g_strstrip(line);
             if (gwy_strequal(line, ":SCANIT_END:")) {
-                sxmfile->header_ok = TRUE;
+                sxmfile->ok = TRUE;
                 return TRUE;
             }
 
@@ -305,6 +310,7 @@ sxm_read_tag(SXMFile *sxmfile,
         }
 
         sxmfile->data_info = (SXMDataInfo*)data_info->data;
+        sxmfile->ndata = data_info->len;
         g_array_free(data_info, FALSE);
         return TRUE;
     }
@@ -318,6 +324,45 @@ sxm_read_tag(SXMFile *sxmfile,
     return TRUE;
 }
 
+static void
+read_data_field(GwyContainer *container,
+                gint *id,
+                const SXMFile *sxmfile,
+                const SXMDataInfo *data_info,
+                const guchar **p)
+{
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    gdouble *data;
+    gint j;
+    gchar key[32];
+
+    dfield = gwy_data_field_new(sxmfile->xres, sxmfile->yres,
+                                sxmfile->xreal, sxmfile->yreal,
+                                FALSE);
+    data = gwy_data_field_get_data(dfield);
+
+    for (j = 0; j < sxmfile->xres*sxmfile->yres; j++)
+        *(data++) = get_FLOAT_BE(p);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new(data_info->unit);
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    g_snprintf(key, sizeof(key), "/%d/data", *id);
+    gwy_container_set_object_by_name(container, key, dfield);
+    g_object_unref(dfield);
+
+    g_strlcat(key, "/title", sizeof(key));
+    gwy_container_set_string_by_name(container, key, g_strdup(data_info->name));
+
+    (*id)++;
+}
+
 static GwyContainer*
 sxm_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
@@ -326,14 +371,12 @@ sxm_load(const gchar *filename,
     SXMFile sxmfile;
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
+    gsize size1 = 0, size = 0;
     GError *err = NULL;
-    GwyDataField *dfield = NULL;
     const guchar *p;
     gchar *header, *hp, *s, *endptr;
-    gint xres, yres;
-    gdouble xreal, yreal;
     gchar **columns;
+    guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -367,6 +410,8 @@ sxm_load(const gchar *filename,
     header = g_memdup(buffer, p - buffer + 1);
     header[p - buffer] = '\0';
     hp = header;
+    /* Move p to actual data start */
+    p += 2;
 
     /* Parse header */
     do {
@@ -377,69 +422,119 @@ sxm_load(const gchar *filename,
             gwy_file_abandon_contents(buffer, size, NULL);
             return NULL;
         }
-    } while (!sxmfile.header_ok);
-
-    g_free(header);
+    } while (!sxmfile.ok);
 
     /* Data info */
-    if (sxmfile.header_ok) {
+    if (sxmfile.ok) {
         if (!sxmfile.data_info) {
-            err_MISSING_FIELD(error, "DATA_INFO");
-            sxmfile.header_ok = FALSE;
+            err_NO_DATA(error);
+            sxmfile.ok = FALSE;
         }
     }
 
     /* Data type */
-    if (sxmfile.header_ok) {
+    if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCANIT_TYPE"))) {
+            gwy_debug("s: <%s>", s);
             columns = split_line_in_place(s, ' ');
-            if (g_strv_length(columns) != 2
-                || !gwy_strequal(columns[0], "FLOAT")
-                || !gwy_strequal(columns[1], "LSBFIRST")) {
+            if (g_strv_length(columns) == 2
+                && gwy_strequal(columns[0], "FLOAT")
+                && gwy_strequal(columns[1], "LSBFIRST"))
+                size1 = sizeof(gfloat);
+            else {
                 err_UNSUPPORTED(error, "SCANIT_TYPE");
-                sxmfile.header_ok = FALSE;
+                sxmfile.ok = FALSE;
             }
             g_free(columns);
         }
         else {
             err_MISSING_FIELD(error, "SCANIT_TYPE");
-            sxmfile.header_ok = FALSE;
+            sxmfile.ok = FALSE;
         }
     }
 
     /* Pixel sizes */
-    if (sxmfile.header_ok) {
+    if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_PIXELS"))) {
-            if (sscanf(s, "%d %d", &xres, &yres) != 2) {
+            if (sscanf(s, "%d %d", &sxmfile.xres, &sxmfile.yres) == 2)
+                size1 *= sxmfile.xres * sxmfile.yres;
+            else {
                 err_INVALID(error, "SCAN_PIXELS");
-                sxmfile.header_ok = FALSE;
+                sxmfile.ok = FALSE;
             }
         }
         else {
             err_MISSING_FIELD(error, "SCAN_PIXELS");
-            sxmfile.header_ok = FALSE;
+            sxmfile.ok = FALSE;
         }
     }
 
     /* Physical dimensions */
-    if (sxmfile.header_ok) {
+    if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_RANGE"))) {
-            xreal = g_ascii_strtod(s, &endptr);
+            sxmfile.xreal = g_ascii_strtod(s, &endptr);
             if (endptr != s) {
                 s = endptr;
-                yreal = g_ascii_strtod(s, &endptr);
+                sxmfile.yreal = g_ascii_strtod(s, &endptr);
             }
             if (s == endptr) {
                 err_INVALID(error, "SCAN_RANGE");
-                sxmfile.header_ok = FALSE;
+                sxmfile.ok = FALSE;
             }
         }
         else {
             err_MISSING_FIELD(error, "SCAN_RANGE");
-            sxmfile.header_ok = FALSE;
+            sxmfile.ok = FALSE;
         }
     }
 
+    /* Check file size */
+    if (sxmfile.ok) {
+        gsize expected_size;
+
+        expected_size = p - buffer;
+        for (i = 0; i < sxmfile.ndata; i++) {
+            guint d = sxmfile.data_info[i].direction;
+
+            if (d == DIR_BOTH)
+                expected_size += 2*size1;
+            else if (d == DIR_FORWARD || d == DIR_BACKWARD)
+                expected_size += size1;
+            else {
+                g_assert_not_reached();
+            }
+        }
+        if (size != expected_size) {
+            err_SIZE_MISMATCH(error, expected_size, size);
+            sxmfile.ok = FALSE;
+        }
+    }
+
+    /* Read data */
+    if (sxmfile.ok) {
+        gint id = 0;
+
+        container = gwy_container_new();
+        for (i = 0; i < sxmfile.ndata; i++) {
+            guint d = sxmfile.data_info[i].direction;
+
+            if (d == DIR_BOTH) {
+                read_data_field(container, &id,
+                                &sxmfile, sxmfile.data_info + i, &p);
+                read_data_field(container, &id,
+                                &sxmfile, sxmfile.data_info + i, &p);
+            }
+            else if (d == DIR_FORWARD || d == DIR_BACKWARD) {
+                read_data_field(container, &id,
+                                &sxmfile, sxmfile.data_info + i, &p);
+            }
+            else {
+                g_assert_not_reached();
+            }
+        }
+    }
+
+    g_free(header);
     gwy_file_abandon_contents(buffer, size, NULL);
     sxm_free_z_controller(&sxmfile);
     g_free(sxmfile.data_info);
