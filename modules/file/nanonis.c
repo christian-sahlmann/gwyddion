@@ -19,6 +19,8 @@
  */
 #define DEBUG 1
 #include "config.h"
+#include <stdlib.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -34,8 +36,26 @@
 
 #define EXTENSION ".sxm"
 
+typedef enum {
+    DIR_FORWARD  = 1 << 0,
+    DIR_BACKWARD = 1 << 1,
+    DIR_BOTH     = (DIR_FORWARD || DIR_BACKWARD)
+} SXMDirection;
+
+typedef struct {
+    gint channel;
+    gchar *name;
+    gchar *unit;
+    SXMDirection direction;
+    gdouble calibration;
+    gdouble offset;
+} SXMDataInfo;
+
 typedef struct {
     GHashTable *meta;
+    gchar **z_controller_headers;
+    gchar **z_controller_values;
+    SXMDataInfo *data_info;
     const guchar **data;
     gboolean header_ok;
 } SXMFile;
@@ -56,6 +76,11 @@ static GwyModuleInfo module_info = {
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
+};
+
+/* FIXME */
+static const GwyEnum directions[] = {
+    { "both", DIR_BOTH, },
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -106,12 +131,53 @@ get_next_line_with_error(gchar **p,
     return line;
 }
 
+static gchar**
+split_line_in_place(gchar *line,
+                    gchar delim)
+{
+    gchar **strs;
+    guint i, n = 0;
+
+    for (i = 0; line[i]; i++) {
+        if ((!i || line[i-1] == delim) && (line[i] && line[i] != delim))
+            n++;
+    }
+
+    strs = g_new(gchar*, n+1);
+    n = 0;
+    for (i = 0; line[i]; i++) {
+        if ((!i || line[i-1] == delim || !line[i-1])
+            && (line[i] && line[i] != delim))
+            strs[n++] = line + i;
+        else if (i && line[i] == delim && line[i-1] != delim)
+            line[i] = '\0';
+    }
+    strs[n] = NULL;
+
+#ifdef DEBUG
+    for (i = 0; strs[i]; i++)
+        gwy_debug("%u: <%s>", i, strs[i]);
+#endif
+
+    return strs;
+}
+
+static void
+sxm_free_z_controller(SXMFile *sxmfile)
+{
+    g_free(sxmfile->z_controller_headers);
+    sxmfile->z_controller_headers = NULL;
+    g_free(sxmfile->z_controller_values);
+    sxmfile->z_controller_values = NULL;
+}
+
 static gboolean
 sxm_read_tag(SXMFile *sxmfile,
              gchar **p,
              GError **error)
 {
     gchar *line, *tag;
+    gchar **columns;
     guint len;
 
     if (!(line = get_next_line_with_error(p, error)))
@@ -133,16 +199,113 @@ sxm_read_tag(SXMFile *sxmfile,
     }
 
     if (gwy_strequal(tag, "Z-CONTROLLER")) {
-        line = get_next_line_with_error(p, error);
-        line = get_next_line_with_error(p, error);
-        /* TODO: Parse Z-CONTROLLER */
+        /* Headers */
+        if (!(line = get_next_line_with_error(p, error)))
+            return FALSE;
+
+        if (sxmfile->z_controller_headers) {
+            g_warning("Multiple Z-CONTROLLERs, keeping only the last");
+            sxm_free_z_controller(sxmfile);
+        }
+
+        /* XXX: Documentation says tabs, but I see spaces in the file. */
+        g_strdelimit(line, " ", '\t');
+        sxmfile->z_controller_headers =  split_line_in_place(line, '\t');
+
+        /* Values */
+        if (!(line = get_next_line_with_error(p, error))) {
+            sxm_free_z_controller(sxmfile);
+            return FALSE;
+        }
+
+        sxmfile->z_controller_values = split_line_in_place(line, '\t');
+        if (g_strv_length(sxmfile->z_controller_headers)
+            != g_strv_length(sxmfile->z_controller_values)) {
+            g_warning("The numbers of Z-CONTROLLER headers and values differ");
+            sxm_free_z_controller(sxmfile);
+        }
         return TRUE;
     }
 
     if (gwy_strequal(tag, "DATA_INFO")) {
-        while ((line = get_next_line_with_error(p, error)) && *line)
-            ;
-        /* TODO: Parse DATA_INFO */
+        SXMDataInfo di;
+        GArray *data_info;
+
+        /* Headers */
+        if (!(line = get_next_line_with_error(p, error)))
+            return FALSE;
+        /* XXX: Documentation says tabs, but I see spaces in the file. */
+        g_strdelimit(line, " ", '\t');
+        columns = split_line_in_place(line, '\t');
+
+        if (g_strv_length(columns) < 6
+            || !gwy_strequal(columns[0], "Channel")
+            || !gwy_strequal(columns[1], "Name")
+            || !gwy_strequal(columns[2], "Unit")
+            || !gwy_strequal(columns[3], "Direction")
+            || !gwy_strequal(columns[4], "Calibration")
+            || !gwy_strequal(columns[5], "Offset")) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("DATA_INFO does not contain the expected "
+                          "columns: %s."),
+                        "Channel Name Unit Direction Calibration Offset");
+            g_free(columns);
+            return FALSE;
+        }
+
+        if (sxmfile->data_info) {
+            g_warning("Multiple DATA_INFOs, keeping only the last");
+            g_free(sxmfile->data_info);
+            sxmfile->data_info = NULL;
+        }
+
+        data_info = g_array_new(FALSE, FALSE, sizeof(SXMDataInfo));
+        while ((line = get_next_line_with_error(p, error)) && *line) {
+            g_strstrip(line);
+            if (gwy_strequal(line, ":SCANIT_END:")) {
+                sxmfile->header_ok = TRUE;
+                return TRUE;
+            }
+
+            columns = split_line_in_place(line, '\t');
+            if (g_strv_length(columns) < 6) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("DATA_INFO line contains less than %d fields."),
+                            6);
+                g_free(columns);
+                g_array_free(data_info, TRUE);
+                return FALSE;
+            }
+
+            di.channel = atoi(columns[0]);
+            di.name = columns[1];
+            di.unit = columns[2];
+            di.direction = gwy_string_to_enum(columns[3],
+                                              directions,
+                                              G_N_ELEMENTS(directions));
+            if (di.direction == (SXMDirection)-1) {
+                err_INVALID(error, "Direction");
+                g_free(columns);
+                g_array_free(data_info, TRUE);
+                return FALSE;
+            }
+            di.calibration = g_ascii_strtod(columns[4], NULL);
+            di.offset = g_ascii_strtod(columns[5], NULL);
+            g_array_append_val(data_info, di);
+
+            g_free(columns);
+            columns = NULL;
+        }
+
+        if (!line) {
+            g_array_free(data_info, TRUE);
+            return FALSE;
+        }
+
+        sxmfile->data_info = (SXMDataInfo*)data_info->data;
+        g_array_free(data_info, FALSE);
         return TRUE;
     }
 
@@ -167,7 +330,10 @@ sxm_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     const guchar *p;
-    gchar *header, *hp;
+    gchar *header, *hp, *s, *endptr;
+    gint xres, yres;
+    gdouble xreal, yreal;
+    gchar **columns;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -186,6 +352,7 @@ sxm_load(const gchar *filename,
         return NULL;
     }
 
+    /* Extract header (we need it writable) */
     p = memchr(buffer, '\x1a', size);
     if (!p || p + 1 == buffer + size || p[1] != '\x04') {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -201,8 +368,11 @@ sxm_load(const gchar *filename,
     header[p - buffer] = '\0';
     hp = header;
 
+    /* Parse header */
     do {
         if (!sxm_read_tag(&sxmfile, &hp, error)) {
+            sxm_free_z_controller(&sxmfile);
+            g_free(sxmfile.data_info);
             g_free(header);
             gwy_file_abandon_contents(buffer, size, NULL);
             return NULL;
@@ -210,7 +380,69 @@ sxm_load(const gchar *filename,
     } while (!sxmfile.header_ok);
 
     g_free(header);
+
+    /* Data info */
+    if (sxmfile.header_ok) {
+        if (!sxmfile.data_info) {
+            err_MISSING_FIELD(error, "DATA_INFO");
+            sxmfile.header_ok = FALSE;
+        }
+    }
+
+    /* Data type */
+    if (sxmfile.header_ok) {
+        if ((s = g_hash_table_lookup(sxmfile.meta, "SCANIT_TYPE"))) {
+            columns = split_line_in_place(s, ' ');
+            if (g_strv_length(columns) != 2
+                || !gwy_strequal(columns[0], "FLOAT")
+                || !gwy_strequal(columns[1], "LSBFIRST")) {
+                err_UNSUPPORTED(error, "SCANIT_TYPE");
+                sxmfile.header_ok = FALSE;
+            }
+            g_free(columns);
+        }
+        else {
+            err_MISSING_FIELD(error, "SCANIT_TYPE");
+            sxmfile.header_ok = FALSE;
+        }
+    }
+
+    /* Pixel sizes */
+    if (sxmfile.header_ok) {
+        if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_PIXELS"))) {
+            if (sscanf(s, "%d %d", &xres, &yres) != 2) {
+                err_INVALID(error, "SCAN_PIXELS");
+                sxmfile.header_ok = FALSE;
+            }
+        }
+        else {
+            err_MISSING_FIELD(error, "SCAN_PIXELS");
+            sxmfile.header_ok = FALSE;
+        }
+    }
+
+    /* Physical dimensions */
+    if (sxmfile.header_ok) {
+        if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_RANGE"))) {
+            xreal = g_ascii_strtod(s, &endptr);
+            if (endptr != s) {
+                s = endptr;
+                yreal = g_ascii_strtod(s, &endptr);
+            }
+            if (s == endptr) {
+                err_INVALID(error, "SCAN_RANGE");
+                sxmfile.header_ok = FALSE;
+            }
+        }
+        else {
+            err_MISSING_FIELD(error, "SCAN_RANGE");
+            sxmfile.header_ok = FALSE;
+        }
+    }
+
     gwy_file_abandon_contents(buffer, size, NULL);
+    sxm_free_z_controller(&sxmfile);
+    g_free(sxmfile.data_info);
     g_hash_table_destroy(sxmfile.meta);
 
     return container;
