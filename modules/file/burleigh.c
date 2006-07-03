@@ -19,9 +19,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* See:
+/*
+ * See:
  * http://www.physik.uni-freiburg.de/~doerr/readimg
+ * for description and the scaling confusion discussion.
+ *
+ * See
  * http://www.weizmann.ac.il/Chemical_Research_Support/surflab/peter/headers/burl.html
+ * for description of an unspecified version which is NOT implemented.
  */
 
 #include "config.h"
@@ -44,6 +49,7 @@
 #define TOTAL_SIZE_V21 (HEADER_SIZE_V21 + FOOTER_SIZE_V21)
 
 #define Angstrom (1e-10)
+#define Picoampere (1e-12)
 
 enum {
     BURLEIGH_CURRENT = 0,
@@ -88,13 +94,14 @@ static const gint16* burleigh_load_v21(IMGFile *imgfile,
                                        const guchar *buffer,
                                        gsize size,
                                        GError **error);
+static gdouble burleigh_get_zoom_v21  (IMGFile *imgfile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Burleigh IMG data files version 2.1."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Hans-Peter Doerr",
     "2006",
 };
@@ -162,7 +169,7 @@ burleigh_load(const gchar *filename,
     GwyDataField *dfield;
     gdouble *data;
     const gint16 *d;
-    gdouble scale;
+    gdouble zoom;
     guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -195,14 +202,14 @@ burleigh_load(const gchar *filename,
         return NULL;
     }
 
+    zoom = burleigh_get_zoom_v21(&imgfile);
     dfield = gwy_data_field_new(imgfile.xres, imgfile.yres,
-                                Angstrom*imgfile.xrange,
-                                Angstrom*imgfile.yrange,
+                                Angstrom*imgfile.xrange/zoom,
+                                Angstrom*imgfile.yrange/zoom,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
-    scale = Angstrom * imgfile.z_gain * imgfile.zrange;
     for (i = 0; i < imgfile.xres*imgfile.yres; i++)
-        data[i] = scale * GINT16_FROM_LE(d[i]);
+        data[i] = GINT16_FROM_LE(d[i])*imgfile.zrange/4095.0;
 
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -216,12 +223,14 @@ burleigh_load(const gchar *filename,
         unit = gwy_si_unit_new("A");
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Current"));
+        gwy_data_field_multiply(dfield, Picoampere);
         break;
 
         case BURLEIGH_TOPOGRAPHY:
         unit = gwy_si_unit_new("m");
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Topography"));
+        gwy_data_field_multiply(dfield, Angstrom);
         break;
 
         default:
@@ -261,15 +270,33 @@ burleigh_load_v21(IMGFile *imgfile,
     imgfile->zrangemax = get_DWORD_LE(&p);
     imgfile->xrange = get_DWORD_LE(&p);
     imgfile->yrange = get_DWORD_LE(&p);
+    gwy_debug("xrange: %u, yrange: %u", imgfile->xrange, imgfile->yrange);
     imgfile->zrange = get_DWORD_LE(&p);
+    gwy_debug("zrange: %u", imgfile->zrange);
     imgfile->scan_speed = get_WORD_LE(&p);
     imgfile->zoom_level = get_WORD_LE(&p);
+    gwy_debug("zoom_level: %u", imgfile->zoom_level);
     imgfile->data_type = get_WORD_LE(&p);
+    gwy_debug("data_type: %u", imgfile->data_type);
     imgfile->z_gain = get_WORD_LE(&p);
     imgfile->bias_volts = get_FLOAT_LE(&p);
     imgfile->tunneling_current = get_FLOAT_LE(&p);
 
     return (const gint16*)(buffer + HEADER_SIZE_V21);
+}
+
+static gdouble
+burleigh_get_zoom_v21(IMGFile *imgfile)
+{
+    static const gdouble zooms[] = { 1.0, 2.0, 10.0, 50.0, 250.0 };
+
+    if (imgfile->zoom_level >= 1
+        && imgfile->zoom_level <= G_N_ELEMENTS(zooms))
+        return zooms[imgfile->zoom_level-1];
+
+    g_warning("Unknown zoom level %d, assuming zoom factor 1.0",
+              imgfile->zoom_level);
+    return 1.0;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
