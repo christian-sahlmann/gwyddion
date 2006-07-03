@@ -71,7 +71,6 @@ static gint          sxm_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* sxm_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
-static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -83,9 +82,11 @@ static GwyModuleInfo module_info = {
     "2006",
 };
 
-/* FIXME */
+/* FIXME: I'm making this up, never seen anything except `both' */
 static const GwyEnum directions[] = {
-    { "both", DIR_BOTH, },
+    { "forward",  DIR_FORWARD,  },
+    { "backward", DIR_BACKWARD, },
+    { "both",     DIR_BOTH,     },
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -329,6 +330,7 @@ read_data_field(GwyContainer *container,
                 gint *id,
                 const SXMFile *sxmfile,
                 const SXMDataInfo *data_info,
+                SXMDirection dir,
                 const guchar **p)
 {
     GwyDataField *dfield;
@@ -336,6 +338,8 @@ read_data_field(GwyContainer *container,
     gdouble *data;
     gint j;
     gchar key[32];
+    gchar *s;
+    gboolean flip_vertically = FALSE, flip_horizontally = FALSE;
 
     dfield = gwy_data_field_new(sxmfile->xres, sxmfile->yres,
                                 sxmfile->xreal, sxmfile->yreal,
@@ -358,7 +362,26 @@ read_data_field(GwyContainer *container,
     g_object_unref(dfield);
 
     g_strlcat(key, "/title", sizeof(key));
-    gwy_container_set_string_by_name(container, key, g_strdup(data_info->name));
+    if (!dir)
+        gwy_container_set_string_by_name(container, key,
+                                         g_strdup(data_info->name));
+    else {
+        gchar *title;
+
+        title = g_strdup_printf("%s (%s)", data_info->name,
+                                dir == DIR_BACKWARD ? "Backward" : "Forward");
+        gwy_container_set_string_by_name(container, key, title);
+        /* Don't free title, container eats it */
+    }
+
+    if (dir == DIR_BACKWARD)
+        flip_horizontally = TRUE;
+
+    if ((s = g_hash_table_lookup(sxmfile->meta, "SCAN_DIR"))
+        && gwy_strequal(s, "up"))
+        flip_vertically = TRUE;
+
+    gwy_data_field_invert(dfield, flip_vertically, flip_horizontally, FALSE);
 
     (*id)++;
 }
@@ -520,13 +543,15 @@ sxm_load(const gchar *filename,
 
             if (d == DIR_BOTH) {
                 read_data_field(container, &id,
-                                &sxmfile, sxmfile.data_info + i, &p);
+                                &sxmfile, sxmfile.data_info + i,
+                                DIR_FORWARD, &p);
                 read_data_field(container, &id,
-                                &sxmfile, sxmfile.data_info + i, &p);
+                                &sxmfile, sxmfile.data_info + i,
+                                DIR_BACKWARD, &p);
             }
             else if (d == DIR_FORWARD || d == DIR_BACKWARD) {
                 read_data_field(container, &id,
-                                &sxmfile, sxmfile.data_info + i, &p);
+                                &sxmfile, sxmfile.data_info + i, d, &p);
             }
             else {
                 g_assert_not_reached();
@@ -541,24 +566,6 @@ sxm_load(const gchar *filename,
     g_hash_table_destroy(sxmfile.meta);
 
     return container;
-}
-
-static gboolean
-data_field_has_highly_nosquare_samples(GwyDataField *dfield)
-{
-    gint xres, yres;
-    gdouble xreal, yreal, q;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-
-    q = (xreal/xres)/(yreal/yres);
-
-    /* The threshold is somewhat arbitrary.  Fortunately, most files encoutered
-     * in practice have either q very close to 1, or 2 or more */
-    return q > G_SQRT2 || q < 1.0/G_SQRT2;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
