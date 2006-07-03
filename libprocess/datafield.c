@@ -1453,63 +1453,76 @@ gwy_data_field_rotate(GwyDataField *a,
 /**
  * gwy_data_field_invert:
  * @data_field: A data field.
- * @x: Whether reflect about X axis.
- * @y: Whether reflect about Y axis.
- * @z: Whether to invert in Z direction (i.e., invert values).
+ * @x: %TRUE to reflect about X axis (i.e., vertically).
+ * @y: %TRUE to reflect about Y axis (i.e., horizontally).
+ * @z: %TRUE to invert in Z direction (i.e., invert values).
  *
  * Reflects amd/or inverts a data field.
  *
- * In the case of value reflection, it's inverted about mean value.
+ * In the case of value reflection, it's inverted about the mean value.
  **/
 void
-gwy_data_field_invert(GwyDataField *a,
+gwy_data_field_invert(GwyDataField *data_field,
                       gboolean x,
                       gboolean y,
                       gboolean z)
 {
-    gint i, j;
+    gint i, j, n;
     gdouble avg;
-    gdouble *line, *ap, *ap2;
-    gsize linelen;
-    gdouble *data;
+    gdouble *data, *flip;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(a));
-    data = a->data;
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    n = data_field->xres*data_field->yres;
 
     if (z) {
-        avg = gwy_data_field_get_avg(a);
-        gwy_data_field_multiply(a, -1.0);
-        gwy_data_field_add(a, 2*avg);
+        avg = gwy_data_field_get_avg(data_field);
+        data = data_field->data;
+        for (i = 0; i < n; i++)
+            data[i] = avg - data[i];
+
+        /* We can transform stats */
+        data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                              | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
+        CVAL(data_field, MIN) = avg - CVAL(data_field, MIN);
+        CVAL(data_field, MAX) = avg - CVAL(data_field, MAX);
+        GWY_SWAP(gdouble, CVAL(data_field, MIN), CVAL(data_field, MAX));
+        CVAL(data_field, SUM) = n*avg - CVAL(data_field, SUM);
+        /* RMS doesn't change */
+        CVAL(data_field, MED) = avg - CVAL(data_field, MED);
+        CVAL(data_field, ARF) = avg - CVAL(data_field, ARF);
+        CVAL(data_field, ART) = avg - CVAL(data_field, ART);
+        GWY_SWAP(gdouble, CVAL(data_field, ARF), CVAL(data_field, ART));
+        /* Area doesn't change */
     }
 
-    if (!x && !y)
+    if (x && y) {
+        data = data_field->data;
+        flip = data + n-1;
+        for (i = 0; i < n/2; i++, data++, flip--)
+            GWY_SWAP(gdouble, *data, *flip);
+    }
+    else if (y) {
+        for (i = 0; i < data_field->yres; i++) {
+            data = data_field->data + i*data_field->xres;
+            flip = data + data_field->xres-1;
+            for (j = 0; j < data_field->xres/2; j++, data++, flip--)
+                GWY_SWAP(gdouble, *data, *flip);
+        }
+    }
+    else if (x) {
+        for (i = 0; i < data_field->yres/2; i++) {
+            data = data_field->data + i*data_field->xres;
+            flip = data_field->data + (data_field->yres-1 - i)*data_field->xres;
+            for (j = 0; j < data_field->xres; j++, data++, flip++)
+                GWY_SWAP(gdouble, *data, *flip);
+        }
+    }
+    else
         return;
 
-    line = g_new(gdouble, a->xres);
-    linelen = a->xres*sizeof(gdouble);
-    if (y) {
-        for (i = 0; i < a->yres; i++) {
-            ap = data + i*a->xres;
-            memcpy(line, ap, linelen);
-            for (j = 0; j < a->xres; j++)
-                ap[j] = line[a->xres-j-1];
-        }
-    }
-    if (x) {
-        /* What is lesser evil?
-         * allocating one extra datafield or doing 50% extra memcpy()s */
-        for (i = 0; i < a->yres/2; i++) {
-            ap = data + i*a->xres;
-            ap2 = data + (a->yres-i-1)*a->xres;
-            memcpy(line, ap, linelen);
-            memcpy(ap, ap2, linelen);
-            memcpy(ap2, line, linelen);
-        }
-    }
-
-    /* FIXME: we can recompute ARF and ART too */
-    a->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS) | CBIT(MED);
-    g_free(line);
+    /* No cached value changes */
+    data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
 }
 
 /**
@@ -1726,7 +1739,7 @@ gwy_data_field_add(GwyDataField *data_field, gdouble value)
 
     /* We can transform stats */
     data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                          | CBIT(MED) | CBIT(ARF) | CBIT(ART);
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
     CVAL(data_field, MIN) += value;
     CVAL(data_field, MAX) += value;
     CVAL(data_field, SUM) += data_field->xres * data_field->yres * value;
@@ -1734,6 +1747,7 @@ gwy_data_field_add(GwyDataField *data_field, gdouble value)
     CVAL(data_field, MED) += value;
     CVAL(data_field, ARF) += value;
     CVAL(data_field, ART) += value;
+    /* Area doesn't change */
 }
 
 /**
