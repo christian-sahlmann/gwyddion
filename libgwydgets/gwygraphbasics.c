@@ -497,7 +497,7 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
 {
     gint i;
     gdouble pos, *pvalue;
-    static const GwyRGBA color = { 0.75, 0.75, 0.75, 1.0 };
+    static const GwyRGBA color = { 0.90, 0.90, 0.90, 1.0 };
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
