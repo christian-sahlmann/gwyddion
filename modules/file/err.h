@@ -51,7 +51,7 @@ static inline void
 err_TOO_SHORT(GError **error)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("File is too short."));
+                _("File is too short to be of the assumed file type."));
 }
 
 static inline void
@@ -67,7 +67,7 @@ err_SIZE_MISMATCH(GError **error, guint expected, guint real)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                 _("Expected data size calculated from file headers "
-                  "is %u bytes, but real size %u bytes."),
+                  "is %u bytes, but the real size %u bytes."),
                 expected, real);
 }
 
@@ -75,7 +75,8 @@ static inline void
 err_BPP(GError **error, gint bpp)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Unsupported or invalid number of bits per sample: %d."),
+                _("The number of bits per sample %d is invalid or "
+                  "unsupported for this file type."),
                 bpp);
 }
 
@@ -83,21 +84,24 @@ static inline void
 err_MISSING_FIELD(GError **error, const gchar *name)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Missing `%s' header field."), name);
+                _("Header field `%s' is missing."),
+                name);
 }
 
 static inline void
 err_UNSUPPORTED(GError **error, const gchar *name)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Unsupported or invalid value of %s."), name);
+                _("The value of parameter `%s' is invalid or unsupported."),
+                name);
 }
 
 static inline void
 err_INVALID(GError **error, const gchar *name)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Missing or invalid %s."), name);
+                _("Parameter `%s' is missing or invalid."),
+                name);
 }
 
 static inline void
