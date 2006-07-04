@@ -17,7 +17,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
+/* TODO: metadata */
+
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -559,11 +561,11 @@ sxm_load(const gchar *filename,
         }
     }
 
-    g_free(header);
-    gwy_file_abandon_contents(buffer, size, NULL);
     sxm_free_z_controller(&sxmfile);
     g_free(sxmfile.data_info);
     g_hash_table_destroy(sxmfile.meta);
+    g_free(header);
+    gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
 }
