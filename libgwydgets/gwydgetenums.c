@@ -118,6 +118,16 @@ gwy_graph_curve_type_get_enum(void)
  **/
 
 /**
+ * GwyUnitsPlacement:
+ * @GWY_UNITS_PLACEMENT_NONE: Units are omitted.
+ * @GWY_UNITS_PLACEMENT_AT_ZERO: Units are placed to major tick at zero, or
+ *                               to the leftmost position of zero is not
+ *                               present.
+ *
+ * Units placement on a #GwyRuler.
+ **/
+
+/**
  * GwyLayerBasicRangeType:
  * @GWY_LAYER_BASIC_RANGE_FULL: Color gradient is uniformly mapped to range
  *                              from data minimum to maximum.
@@ -129,7 +139,7 @@ gwy_graph_curve_type_get_enum(void)
  * @GWY_LAYER_BASIC_RANGE_ADAPT: Color range is mapped nonuniformly,
  *                               see gwy_pixbuf_draw_data_field_adaptive().
  *
- * Types of color gradient mapping.
+ * Types of color gradient mapping in #GwyLayerBasic.
  **/
 
 /**
@@ -138,7 +148,7 @@ gwy_graph_curve_type_get_enum(void)
  * @GWY_CURVE_TYPE_SPLINE: Spline interpolation.
  * @GWY_CURVE_TYPE_FREE: Free form curve.
  *
- * Curve drawing type.
+ * Curve drawing type in #GwyCurve.
  **/
 
 /**
@@ -147,7 +157,16 @@ gwy_graph_curve_type_get_enum(void)
  * @GWY_MARKER_OPERATION_ADD: Marker is being added.
  * @GWY_MARKER_OPERATION_REMOVE: Marker is being removed.
  *
- * Marker box operation type (for validation).
+ * #GwyMarkerBox operation type (for validation).
+ **/
+
+/**
+ * GwyDataViewLayerType:
+ * @GWY_DATA_VIEW_LAYER_BASE: Base (bottom) layer.
+ * @GWY_DATA_VIEW_LAYER_ALPHA: Alpha (mask) layer.
+ * @GWY_DATA_VIEW_LAYER_TOP: Top (vector, interactive) layer.
+ *
+ * #GwyDataView layer identification.
  **/
 
 /**
