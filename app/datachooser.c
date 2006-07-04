@@ -120,6 +120,7 @@ gwy_data_chooser_free_proxies(GtkListStore *store)
         gtk_tree_model_get(model, &iter, MODEL_COLUMN_PROXY, &proxy, -1);
         gwy_object_unref(proxy->thumb);
         g_free(proxy->name);
+        g_free(proxy);
     } while (gtk_tree_model_iter_next(model, &iter));
 }
 
