@@ -428,8 +428,67 @@ static void
 gwy_3d_setup_clone(GObject *source,
                    GObject *copy)
 {
-    g_warning("Implement me!");
-    /* TODO */
+    Gwy3DSetup *setup, *clone;
+
+    g_return_if_fail(GWY_IS_3D_SETUP(source));
+    g_return_if_fail(GWY_IS_3D_SETUP(copy));
+
+    setup = GWY_3D_SETUP(source);
+    clone = GWY_3D_SETUP(copy);
+
+    g_object_freeze_notify(copy);
+
+    if (clone->projection != setup->projection) {
+        clone->projection = setup->projection;
+        g_object_notify(copy, "projection");
+    }
+    if (clone->visualization != setup->visualization) {
+        clone->visualization = setup->visualization;
+        g_object_notify(copy, "visualization");
+    }
+
+    if (clone->axes_visible != setup->axes_visible) {
+        clone->axes_visible = setup->axes_visible;
+        g_object_notify(copy, "axes-visible");
+    }
+    if (clone->labels_visible != setup->labels_visible) {
+        clone->labels_visible = setup->labels_visible;
+        g_object_notify(copy, "labels-visible");
+    }
+
+    if (clone->reduced_size != setup->reduced_size) {
+        clone->reduced_size = setup->reduced_size;
+        g_object_notify(copy, "reduced-size");
+    }
+
+    if (clone->rotation_x != setup->rotation_x) {
+        clone->rotation_x = setup->rotation_x;
+        g_object_notify(copy, "rotation-x");
+    }
+    if (clone->rotation_y != setup->rotation_y) {
+        clone->rotation_y = setup->rotation_y;
+        g_object_notify(copy, "rotation-y");
+    }
+
+    if (clone->scale != setup->scale) {
+        clone->scale = setup->scale;
+        g_object_notify(copy, "scale");
+    }
+    if (clone->z_scale != setup->z_scale) {
+        clone->z_scale = setup->z_scale;
+        g_object_notify(copy, "z-scale");
+    }
+
+    if (clone->light_phi != setup->light_phi) {
+        clone->light_phi = setup->light_phi;
+        g_object_notify(copy, "light-phi");
+    }
+    if (clone->light_theta != setup->light_theta) {
+        clone->light_theta = setup->light_theta;
+        g_object_notify(copy, "light-theta");
+    }
+
+    g_object_thaw_notify(copy);
 }
 
 static GObject*
