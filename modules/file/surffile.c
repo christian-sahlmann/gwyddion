@@ -38,6 +38,8 @@
 
 #define EXTENSION ".sur"
 
+enum { SURF_HEADER_SIZE = 512 };
+
 typedef enum {
     SURF_PC        = 0,
     SURF_MACINTOSH = 257
@@ -65,21 +67,6 @@ typedef enum {
     SURF_ACQ_LIGHT          = 10,
 } SurfAcqusitionType;
 
-static const GwyEnum acq_modes[] = {
-   { "Unknown",                     SURF_ACQ_UNKNOWN },
-   { "Contact stylus",              SURF_ACQ_STYLUS },
-   { "Scanning optical gauge",      SURF_ACQ_OPTICAL },
-   { "Thermocouple",                SURF_ACQ_THERMOCOUPLE },
-   { "Unknown",                     SURF_ACQ_UNKNOWN_TOO },
-   { "Contact stylus with skid",    SURF_ACQ_STYLUS_SKID },
-   { "AFM",                         SURF_ACQ_AFM },
-   { "STM",                         SURF_ACQ_STM },
-   { "Video",                       SURF_ACQ_VIDEO },
-   { "Interferometer",              SURF_ACQ_INTERFEROMETER },
-   { "Structured light projection", SURF_ACQ_LIGHT },
-};
-
-
 typedef enum {
     SURF_RANGE_NORMAL = 0,
     SURF_RANGE_HIGH   = 1,
@@ -104,7 +91,6 @@ typedef enum {
 } SurfLevelingType;
 
 
-
 typedef struct {
     SurfFormatType format;
     gint nobjects;
@@ -120,8 +106,8 @@ typedef struct {
     gint pointsize;
     gint zmin;
     gint zmax;
-    gint xres; /*number of points per line*/
-    gint yres; /*number of lines*/
+    gint xres; /* number of points per line */
+    gint yres; /* number of lines */
     gint nofpoints;
     gdouble dx;
     gdouble dy;
@@ -167,21 +153,36 @@ static gboolean      module_register    (void);
 static gint          surffile_detect    (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
 static GwyContainer* surffile_load      (const gchar *filename,
-                                         G_GNUC_UNUSED GwyRunType mode,
+                                         GwyRunType mode,
                                          GError **error);
-static void          fill_data_fields   (SurfFile *surffile,
-                                         const guchar *buffer);
+static gboolean      fill_data_fields   (SurfFile *surffile,
+                                         const guchar *buffer,
+                                         GError **error);
 static void          store_metadata     (SurfFile *surffile,
                                          GwyContainer *container);
 static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
 
+
+static const GwyEnum acq_modes[] = {
+   { "Unknown",                     SURF_ACQ_UNKNOWN,        },
+   { "Contact stylus",              SURF_ACQ_STYLUS,         },
+   { "Scanning optical gauge",      SURF_ACQ_OPTICAL,        },
+   { "Thermocouple",                SURF_ACQ_THERMOCOUPLE,   },
+   { "Unknown",                     SURF_ACQ_UNKNOWN_TOO,    },
+   { "Contact stylus with skid",    SURF_ACQ_STYLUS_SKID,    },
+   { "AFM",                         SURF_ACQ_AFM,            },
+   { "STM",                         SURF_ACQ_STM,            },
+   { "Video",                       SURF_ACQ_VIDEO,          },
+   { "Interferometer",              SURF_ACQ_INTERFEROMETER, },
+   { "Structured light projection", SURF_ACQ_LIGHT,          },
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Surf data files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -211,7 +212,8 @@ surffile_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
+        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE)
+        && fileinfo->file_size >= SURF_HEADER_SIZE + 2)
         score = 100;
 
     return score;
@@ -226,7 +228,7 @@ surffile_load(const gchar *filename,
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
     const guchar *p;
-    gsize size = 0;
+    gsize expected_size, size = 0;
     GError *err = NULL;
     gchar signature[12];
     gdouble max, min;
@@ -236,6 +238,13 @@ surffile_load(const gchar *filename,
         g_clear_error(&err);
         return NULL;
     }
+
+    if (size < SURF_HEADER_SIZE + 2) {
+        err_TOO_SHORT(error);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
     p = buffer;
 
     get_CHARARRAY(signature, &p);
@@ -339,9 +348,19 @@ surffile_load(const gchar *filename,
               surffile.hours, surffile.minutes, surffile.seconds,
               surffile.day, surffile.month, surffile.year);
 
-    p = buffer + 512;
-    fill_data_fields(&surffile, p);
-    gwy_file_abandon_contents(buffer, size, NULL);
+    expected_size = (SURF_HEADER_SIZE
+                     + surffile.pointsize/8*surffile.xres*surffile.yres);
+    if (expected_size != size) {
+        err_SIZE_MISMATCH(error, expected_size, size);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    p = buffer + SURF_HEADER_SIZE;
+    if (!fill_data_fields(&surffile, p, error)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
 
     if (!surffile.absolute) {
         max = gwy_data_field_get_max(surffile.dfield);
@@ -369,24 +388,24 @@ surffile_load(const gchar *filename,
         break;
     }
 
-    if (surffile.dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", surffile.dfield);
-        store_metadata(&surffile, container);
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", surffile.dfield);
+    store_metadata(&surffile, container);
 
-        /* FIXME: this can be generally useful, move it to gwyddion */
-        if (data_field_has_highly_nosquare_samples(surffile.dfield))
-            gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
-                                              TRUE);
-    }
+    /* FIXME: this can be generally useful, move it to gwyddion */
+    if (data_field_has_highly_nosquare_samples(surffile.dfield))
+        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
+                                          TRUE);
 
     return container;
 }
 
-static void
+static gboolean
 fill_data_fields(SurfFile *surffile,
-                 const guchar *buffer)
+                 const guchar *buffer,
+                 GError **error)
 {
+    GwySIUnit *siunit;
     gdouble *data;
     guint i, j;
 
@@ -423,9 +442,20 @@ fill_data_fields(SurfFile *surffile,
         break;
 
         default:
-        g_warning("Wrong data size: %d", surffile->pointsize);
+        err_BPP(error, surffile->pointsize);
+        return FALSE;
         break;
     }
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(surffile->dfield, siunit);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(surffile->dfield, siunit);
+    g_object_unref(siunit);
+
+    return TRUE;
 }
 
 #define HASH_STORE(key, fmt, field) \
