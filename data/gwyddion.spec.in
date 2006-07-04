@@ -94,8 +94,14 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-find $RPM_BUILD_ROOT%{_libdir} -name \*.la | xargs rm
 %find_lang %{name}
+find $RPM_BUILD_ROOT%{_libdir} -type f -name \*.la -print0 | xargs -0 rm -f
+
+# I cannot express this as %%files in a readable manner, especially not when
+# python byte-compilation kicks in.  Set permissions in the filesystem.
+find $RPM_BUILD_ROOT%{pkglibexecdir} -type f -print0 | xargs -0 chmod 755
+find $RPM_BUILD_ROOT%{pkglibexecdir} -type f -name \*.rgi -print0 | xargs -0 chmod 644
+
 # Upstream provides and installs a .desktop file.
 # Perl, Python, and Ruby modules are private, no special actions are necessary.
 
@@ -192,7 +198,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{pkglibdir}/ruby/gwyddion
 %dir %{pkglibdir}/ruby
 %doc %{_mandir}/man3/*
-%defattr(755,root,root)
+# Use filesystem permissions here.
+%defattr(-,root,root,755)
 %{pkglibexecdir}/plugins/file/*
 %{pkglibexecdir}/plugins/process/*
 %dir %{pkglibexecdir}/plugins/file
