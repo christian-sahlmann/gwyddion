@@ -882,11 +882,12 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * @head: Initial part of file.  Undefined if @only_name.
  * @tail: Final part of file.  Undefined if @only_name.
  *
- * File detection data.
+ * File detection data for #GwyFileDetectFunc.
  *
  * It contains common information file type detection routines need to obtain.
  * It is shared between file detection functions and they must not modify its
- * contents.
+ * contents.  Some fields are set only when detection routines are to
+ * check file contents, these are marked `Undefined if @only_name'.
  *
  * The @head and @tail buffers are always nul-terminated and thus safely usable
  * with string functions.  When file is shorter than
