@@ -3,8 +3,6 @@
 import re, sys, time
 from xml.sax.saxutils import escape
 
-bugzilla_url = 'http://trific.ath.cx/bugzilla/show_bug.cgi?id='
-
 def format_date(d):
     # Don't depend on locale
     months = (None, 'January', 'February', 'March', 'April',
@@ -41,10 +39,6 @@ for line in sys.stdin.readlines():
         in_list = True
         continue
     line = escape(line)
-    # Transform bug #NN references to hyperlinks
-    line = re.sub(r'[bB]ug #(\d+)',
-                  '<a href="' + bugzilla_url + '\\1">\\g<0></a>',
-                  line)
     # End of list
     if re.match(r'^\s*$', line):
         if in_item:
