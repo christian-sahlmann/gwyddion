@@ -1,11 +1,9 @@
-- Fix current-data race conditions in modules, must take all current items
-  on startup, windows can be switched while module is running
-- A sensitivity group seems sometimes finalized when widgets are in it on
-  app exit
+- Fix GwyGraphData headers, at least by reverting the tree view to non-fixed
+  mode
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
-- Surf file: bugs I sent to PK were never addressed
+- Surf file: units and scales are botched
 - 3D View still not MVCized
 - 3D:
   light source grid not visible on some machines?
@@ -15,8 +13,8 @@
 - Fix enum documentation after rename, write missing
   libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType,
               GwyComputationStateType, GwyDWTDenoiseType, GwyTipType
-  libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
-               GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
+  libgwydgets: GwyAxisScaleFormat, GwyGraphStatusType,
+               GwyGraphPointType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
 - Add preview to: artithmetic
 - It should be possible to export measurement from Distance tool
@@ -32,7 +30,6 @@
 - Make Ctrl-S save data associated with current window of whatever type, not
   with current data window -- or maybe better, switch data windows when other
   windows are switched
-- GwyShader background is shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Add some guessing to Rawfile
 - Use gtk_paint_* to keep style in widgets.
