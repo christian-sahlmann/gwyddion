@@ -1,4 +1,4 @@
-1.99.7cvs20060622
+1.99.7cvs20060704
 
 1.99.8 (0000-00-00)
 Application:
@@ -25,17 +25,22 @@ Libraries:
 
 Modules:
 - PNI file (new): Pacific Nanotechnology PNI file import.
+- Nanonis (new): Nanonis SXM file import.
+- Burleigh: Scaling of physical dimensions and values was corrected.
 - Tip dilation, reconstruction and certainty map were merged to one: tipops
   (but it still provides three distinct functions).
 - 2D FFT Filter: Ported from 1.x, interface reworked to use masks instead of
   bulky custom marker code, still missing some functionality.
 - Level, Level rotate: Option to exclude/include mask area in calculation
   (only offered if a mask exists).
+- Level3: Instant apply is possible.
 - Crop: Create new channel losing original data information was fixed.
 - Correlation and tip modules: Ported to multidata and enabled again;
   idiosyncratic source data choosers were removed, only suitable data fields
   are offered as tips/kernels.
 - Layer modules: Updated to support disabling of editability.
+- Plug-in proxy: Ported to multidata (it passes the current data channel to
+  the plug-in).
 
 Other:
 - MSC nmake compilation rules include proper dependencies
