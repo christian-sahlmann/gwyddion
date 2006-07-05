@@ -283,6 +283,7 @@ gwy_layer_ellipse_draw_object(GwyVectorLayer *layer,
     gdouble xy[OBJECT_SIZE];
     gdouble xreal, yreal;
     gboolean has_object;
+    gint xy_pixel[OBJECT_SIZE], j;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
@@ -298,6 +299,22 @@ gwy_layer_ellipse_draw_object(GwyVectorLayer *layer,
         xy[1] = yreal - xy[1];
         xy[2] = xreal - xy[2];
         xy[3] = yreal - xy[3];
+
+        /* XXX - this should be controlled by a property */
+        if (TRUE) {
+			/* shift down/right one pixel */
+			gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1],
+											&xy_pixel[0], &xy_pixel[1]);
+			gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3],
+											&xy_pixel[2], &xy_pixel[3]);
+			for (j=0; j<OBJECT_SIZE; j++)
+				xy_pixel[j]++;
+			gwy_data_view_coords_xy_to_real(data_view, xy_pixel[0], xy_pixel[1],
+											&xy[0], &xy[1]);
+			gwy_data_view_coords_xy_to_real(data_view, xy_pixel[2], xy_pixel[3],
+											&xy[2], &xy[3]);
+        }
+
         gwy_layer_ellipse_draw_ellipse(layer, data_view, drawable, target, xy);
     }
 }
@@ -310,9 +327,7 @@ gwy_layer_ellipse_draw_ellipse(GwyVectorLayer *layer,
                                const gdouble *xy)
 {
     gint xmin, ymin, xmax, ymax, width, height;
-    gint xcenter, ycenter, xradius, yradius;
     gdouble xreal, yreal;
-    GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
     switch (target) {
         case GWY_RENDERING_TARGET_SCREEN:
@@ -334,24 +349,10 @@ gwy_layer_ellipse_draw_ellipse(GwyVectorLayer *layer,
         break;
     }
 
-    /*XXX This is hack-ish */
-    if (layer_ellipse->snap) {
-        xcenter = xmin;
-        ycenter = ymin;
-        xradius = ABS(xmax - xmin);
-        yradius = ABS(ymax - ymin);
-
-        xmin = xcenter - xradius;
-        xmax = xcenter + xradius;
-        ymin = ycenter - yradius;
-        ymax = ycenter + yradius;
-    }
-    else {
-        if (xmax < xmin)
-            GWY_SWAP(gint, xmin, xmax);
-        if (ymax < ymin)
-            GWY_SWAP(gint, ymin, ymax);
-    }
+    if (xmax < xmin)
+        GWY_SWAP(gint, xmin, xmax);
+    if (ymax < ymin)
+        GWY_SWAP(gint, ymin, ymax);
 
     gdk_draw_arc(drawable, layer->gc, FALSE,
                  xmin, ymin, xmax - xmin, ymax - ymin,
@@ -366,8 +367,10 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
     GdkWindow *window;
     GdkCursor *cursor;
     gint x, y, i;
-    gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gdouble xreal, yreal, xsize, ysize, xy[OBJECT_SIZE];
+    gdouble circleW, circleH;
     gboolean circle;
+    GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
     /* FIXME: No cursor change hint -- a bit too crude? */
     if (!layer->editable)
@@ -415,6 +418,32 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
         xy[2] = xreal;
         xy[3] = yreal;
     }
+
+    if (layer_ellipse->snap) {
+        /* shift selection to be centered around origin */
+        gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
+        if (circle) {
+			circleW = xy[2] - xy[0];
+			circleH = xy[3] - xy[1];
+			xy[0] = xsize / 2.0 - circleW / 2.0;
+			xy[1] = ysize / 2.0 - circleH / 2.0;
+			xy[2] = xy[0] + circleW;
+			xy[3] = xy[1] + circleH;
+        }
+        else {
+			xy[0] = -xy[2] + xsize;
+			xy[1] = -xy[3] + ysize;
+        }
+
+		/* XXX - this should be controlled by a property */
+		if (TRUE) {
+			/* shift down/right one pixel */
+			gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
+			x++; y++;
+			gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[0], &xy[1]);
+		}
+    }
+
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_ellipse_draw_object(layer, window,
                                   GWY_RENDERING_TARGET_SCREEN, i);
@@ -450,15 +479,6 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
-
-    /*XXX*/
-    if (layer_ellipse->snap) {
-        gwy_data_view_get_pixel_data_sizes(data_view, &xres, &yres);
-        zoom = gwy_data_view_get_real_zoom(data_view);
-        x = (xres * zoom) / 2.0;
-        y = (yres * zoom) / 2.0;
-        g_debug("xres: %i   yres: %i", xres, yres);
-    }
 
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
 
@@ -535,7 +555,6 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
     GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
-    gboolean snap;
 
     if (!layer->button)
         return FALSE;
@@ -565,24 +584,10 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
             xy[3] = yreal;
         }
 
-        /*XXX*/
-        if (layer_ellipse->snap) {
-            xcenter = xy[0];
-            ycenter = xy[1];
-            xradius = ABS(xy[2] - xy[0]);
-            yradius = ABS(xy[3] - xy[1]);
-            xy[0] = xcenter - xradius;
-            xy[1] = ycenter - yradius;
-            xy[2] = xcenter + xradius;
-            xy[3] = ycenter + yradius;
-            gwy_selection_set_object(layer->selection, i, xy);
-        }
-        else {
-            if (xy[2] < xy[0])
-            GWY_SWAP(gdouble, xy[0], xy[2]);
-            if (xy[3] < xy[1])
-            GWY_SWAP(gdouble, xy[1], xy[3]);
-        }
+        if (xy[2] < xy[0])
+        GWY_SWAP(gdouble, xy[0], xy[2]);
+        if (xy[3] < xy[1])
+        GWY_SWAP(gdouble, xy[1], xy[3]);
 
         gwy_selection_set_object(layer->selection, i, xy);
 

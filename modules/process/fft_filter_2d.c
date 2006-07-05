@@ -141,9 +141,6 @@ static gboolean     run_dialog          (ControlsType *controls);
 static void         build_tooltips      (GHashTable *hash_tips);
 static void         save_settings       (ControlsType *controls);
 static void         load_settings       (ControlsType *controls);
-static void         item_changed_cb     (GwyContainer *gwycontainer,
-                                         guint arg1,
-                                         gpointer user_data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -213,10 +210,6 @@ run_main(GwyContainer *data, GwyRunType run)
 
     /* Setup the mydata container */
     controls.mydata = gwy_container_new();
-
-    g_signal_connect(controls.mydata, "item-changed",
-                     G_CALLBACK(item_changed_cb), NULL);
-
     gwy_container_set_object_by_name(controls.mydata, "/0/data", fft);
     g_object_unref(fft);
     gwy_container_set_string_by_name(controls.mydata,
@@ -233,6 +226,10 @@ run_main(GwyContainer *data, GwyRunType run)
     g_object_unref(mfield);
     if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
         gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        rgba.r = 1.0;
+        rgba.g = 1.0;
+        rgba.b = 1.0;
+        rgba.a = 0.5;
         gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
     }
 
@@ -436,6 +433,10 @@ run_dialog(ControlsType *controls)
     /* setup vector layer */
     g_debug("Setting up vector layer...");
     vlayer = create_vlayer(controls->edit_mode);
+    g_object_set(G_OBJECT(vlayer),
+                 "snap-to-center", controls->snap,
+                 "draw-reflection", !controls->snap,
+                 NULL);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
     selection = gwy_container_get_object_by_name(controls->mydata,
@@ -496,7 +497,8 @@ run_dialog(ControlsType *controls)
     gtk_table_attach(GTK_TABLE(table), hbox2, 1, 2, row, row+2,
                      GTK_EXPAND | GTK_FILL, 0, 5, 0);
 
-    button = gtk_button_new_with_mnemonic(_("Undo"));
+    button = gwy_stock_like_button_new(_("_Undo"), GTK_STOCK_UNDO);
+    //button = gtk_button_new_with_mnemonic(_("Undo"));
     gwy_sensitivity_group_add_widget(controls->sensgroup, button,
                                      SENS_EDIT | SENS_UNDO);
     gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
@@ -505,7 +507,7 @@ run_dialog(ControlsType *controls)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(undo_cb), controls);
 
-    button = gtk_button_new_with_mnemonic(_("Remove"));
+    button = gwy_stock_like_button_new(_("_Remove"), GWY_STOCK_MASK_REMOVE);
     gwy_sensitivity_group_add_widget(controls->sensgroup, button, SENS_EDIT);
     gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
                          g_hash_table_lookup(hash_tips, "remove_all"), "");
@@ -743,7 +745,6 @@ create_vlayer(guint new_mode)
         case FFT_ELLIPSE_ADD:
         case FFT_ELLIPSE_SUB:
         vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
-        //XXX g_object_set(G_OBJECT(vlayer), "draw-reflection", TRUE, NULL);
         break;
 
         default:
@@ -767,8 +768,10 @@ edit_mode_changed_cb(ControlsType *controls)
         if (vlayer) {
             gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
             gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-            g_object_set(G_OBJECT(vlayer), "snap-to-center",
-                         controls->snap, NULL);
+            g_object_set(G_OBJECT(vlayer),
+                         "snap-to-center", controls->snap,
+                         "draw-reflection", !controls->snap,
+                         NULL);
         }
     }
 
@@ -814,8 +817,7 @@ selection_finished_cb(GwySelection *selection,
         isel[1] = 1;
 
     /*XXX: for the mirrored selection to look "correct" as far as the FFT
-    goes, it must be shifted one pixel to the right, and one pixel down. Not
-    sure why this is */
+    goes, it must be shifted one pixel to the right, and one pixel down. */
     mirror[2] = (-isel[0] + xwidth) + 1;
     mirror[3] = (-isel[1] + xwidth) + 1;
     mirror[0] = (-isel[2] + xwidth) + 1;
@@ -859,7 +861,7 @@ selection_finished_cb(GwySelection *selection,
     fill_func(mfield, isel[0], isel[1], isel[2], isel[3], value);
     fill_func(mfield, mirror[0], mirror[1], mirror[2], mirror[3], value);
     gwy_data_field_data_changed(mfield);
-    //gwy_selection_clear(selection);
+    gwy_selection_clear(selection);
 
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_UNDO, SENS_UNDO);
 }
@@ -896,23 +898,16 @@ snap_cb(GtkWidget *check, ControlsType *controls)
         gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
 
     controls->snap = get_toggled(check);
-    g_object_set(G_OBJECT(layer), "snap-to-center", controls->snap, NULL);
+    g_object_set(G_OBJECT(layer),
+                 "snap-to-center", controls->snap,
+                 "draw-reflection", !controls->snap,
+                 NULL);
 }
 
 static void
 zoom_toggled(ControlsType *controls)
 {
 
-}
-
-static void
-item_changed_cb(GwyContainer *gwycontainer,
-                guint arg1,
-                gpointer user_data)
-{
-    const gchar* thing = g_quark_to_string(arg1);
-
-    g_debug("item-changed: %s", thing);
 }
 
 /* set_dfield_modulus is copied from fft.c */
