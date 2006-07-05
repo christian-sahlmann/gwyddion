@@ -224,14 +224,8 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_container_set_object_by_name(controls.mydata, "/0/mask",
                                      mfield);
     g_object_unref(mfield);
-    if (!gwy_rgba_get_from_container(&rgba, controls.mydata, "/0/mask")) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        rgba.r = 1.0;
-        rgba.g = 1.0;
-        rgba.b = 1.0;
-        rgba.a = 0.5;
-        gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
-    }
+    rgba.r = rgba.g = rgba.b = 1.0; rgba.a = 0.5;
+    gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data",
                                      dfield);
@@ -806,8 +800,12 @@ selection_finished_cb(GwySelection *selection,
         return;
     isel[0] = gwy_data_field_rtoj(mfield, sel[0]);
     isel[1] = gwy_data_field_rtoj(mfield, sel[1]);
-    isel[2] = gwy_data_field_rtoj(mfield, sel[2]) + 1;
-    isel[3] = gwy_data_field_rtoj(mfield, sel[3]) + 1;
+    isel[2] = gwy_data_field_rtoj(mfield, sel[2]);
+    isel[3] = gwy_data_field_rtoj(mfield, sel[3]);
+    if (!controls->snap) {
+    	isel[2]++;
+    	isel[3]++;
+    }
 
     /* because of the offset (see below), must make sure selection is not along
     left or top edge */
