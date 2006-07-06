@@ -99,6 +99,8 @@ typedef struct {
     gboolean        snap;
     gboolean        zoom;
     guint           out_mode;
+
+    gboolean        compute;
 } ControlsType;
 
 typedef void (*FieldFillFunc)(GwyDataField*, gint, gint, gint, gint, gdouble);
@@ -119,6 +121,7 @@ static void        snap_cb               (GtkWidget *check,
                                           ControlsType *controls);
 
 /* Helper Functions */
+static gboolean        run_dialog          (ControlsType *controls);
 static GwyDataField*   create_mask_field   (GwyDataField *dfield);
 static GwyVectorLayer* create_vlayer       (guint new_mode);
 static void            set_layer_channel   (GwyPixmapLayer *layer,
@@ -132,15 +135,9 @@ static void            fft_filter_2d       (GwyDataField *input,
                                             GwyDataField *output_image,
                                             GwyDataField *output_fft,
                                             GwyDataField *mask);
-
-//XXX OLD CRUFT:
-static void         zoom_toggled        (ControlsType *controls);
-
-/* Helper Functions */
-static gboolean     run_dialog          (ControlsType *controls);
-static void         build_tooltips      (GHashTable *hash_tips);
-static void         save_settings       (ControlsType *controls);
-static void         load_settings       (ControlsType *controls);
+static void            save_settings       (ControlsType *controls);
+static void            load_settings       (ControlsType *controls);
+static void            build_tooltips      (GHashTable *hash_tips);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -192,6 +189,7 @@ run_main(GwyContainer *data, GwyRunType run)
     controls.snap = FALSE;
     controls.zoom = FALSE;
     controls.data = data;
+    controls.compute = TRUE;
     load_settings(&controls);
 
     /*XXX: should the mask and presentation get carried through? */
@@ -532,12 +530,14 @@ run_dialog(ControlsType *controls)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
+    /*XXX zoom hidden for now
     button = gtk_check_button_new_with_mnemonic(_("_Zoom"));
     g_signal_connect_swapped(button, "toggled",
                              G_CALLBACK(zoom_toggled), controls);
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
                      GTK_FILL, GTK_FILL, 0, 2);
     row++;
+    */
 
     label = gtk_label_new(_("Display mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.05);
@@ -697,13 +697,20 @@ prev_mode_changed_cb(ControlsType *controls)
             break;
 
             case PREV_FILTERED:
-            fft_filter_2d(dfield, filtered, NULL, mfield);
+            if (controls->compute) {
+                fft_filter_2d(dfield, filtered, NULL, mfield);
+                gwy_data_field_subtract_fields(diff, dfield, filtered);
+            }
+            controls->compute = FALSE;
             set_layer_channel(layer, 2);
             break;
 
             case PREV_DIFF:
-            fft_filter_2d(dfield, filtered, NULL, mfield);
-            gwy_data_field_subtract_fields(diff, dfield, filtered);
+            if (controls->compute) {
+                fft_filter_2d(dfield, filtered, NULL, mfield);
+                gwy_data_field_subtract_fields(diff, dfield, filtered);
+            }
+            controls->compute = FALSE;
             set_layer_channel(layer, 3);
             break;
 
@@ -862,6 +869,7 @@ selection_finished_cb(GwySelection *selection,
     //gwy_selection_clear(selection);
 
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_UNDO, SENS_UNDO);
+    controls->compute = TRUE;
 }
 
 static void
@@ -869,7 +877,7 @@ undo_cb(ControlsType *controls)
 {
     if (gwy_undo_container_has_undo(controls->mydata)) {
         gwy_undo_undo_container(controls->mydata);
-
+        controls->compute = TRUE;
         if (!gwy_undo_container_has_undo(controls->mydata))
             gwy_sensitivity_group_set_state(controls->sensgroup, SENS_UNDO, 0);
     }
@@ -887,6 +895,7 @@ remove_all_cb(ControlsType *controls)
     gwy_data_field_clear(mfield);
     gwy_data_field_data_changed(mfield);
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_UNDO, SENS_UNDO);
+    controls->compute = TRUE;
 }
 
 static void
@@ -900,12 +909,6 @@ snap_cb(GtkWidget *check, ControlsType *controls)
                  "snap-to-center", controls->snap,
                  "draw-reflection", !controls->snap,
                  NULL);
-}
-
-static void
-zoom_toggled(ControlsType *controls)
-{
-
 }
 
 /* set_dfield_modulus is copied from fft.c */
