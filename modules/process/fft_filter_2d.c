@@ -36,23 +36,12 @@
 #define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 #define PREVIEW_SIZE 400.0
-#define CR_DEFAULT 5
-#define CR_MAX 200
 
 /* Convenience macros */
 #define get_toggled(obj) \
     gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(obj))
 #define set_toggled(obj, tog) \
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(obj), tog)
-
-#define get_combo_index(obj, key) \
-    gwy_option_menu_get_history(obj, key)
-#define set_combo_index(obj, key, i) \
-    gwy_option_menu_set_history(obj, key, i)
-
-#define radio_new gtk_radio_button_new_with_mnemonic_from_widget
-#define check_new gtk_check_button_new_with_mnemonic
-
 
 enum {
     FFT_ELLIPSE_ADD    = 0,
@@ -168,12 +157,7 @@ module_register(void)
 static void
 run_main(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField    *dfield;
-    GwyDataField    *mfield;
-    GwyDataField    *fft;
-    GwyDataField    *filtered;
-    GwyDataField    *diff;
-
+    GwyDataField *dfield, *mfield, *fft, *filtered, *diff;
     GwyDataField *out_image = NULL, *out_fft = NULL;
     gint id, newid;
     GwyRGBA rgba;
@@ -213,9 +197,6 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_container_set_string_by_name(controls.mydata,
                                      "/0/base/palette",
                                      g_strdup("DFit"));
-    gwy_app_copy_data_items(data, controls.mydata, id, 0,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
     gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
                                    GWY_LAYER_BASIC_RANGE_AUTO);
 
@@ -408,7 +389,6 @@ run_dialog(ControlsType *controls)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 5);
 
     /* Setup the GwyDataView and base layer */
-    g_debug("Setting up base layer and dataview...");
     controls->view = gwy_data_view_new(controls->mydata);
     layer = gwy_layer_basic_new();
     set_layer_channel(layer, 0);
@@ -420,10 +400,8 @@ run_dialog(ControlsType *controls)
                            gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
-    g_debug("   COMPLETE");
 
     /* setup vector layer */
-    g_debug("Setting up vector layer...");
     vlayer = create_vlayer(controls->edit_mode);
     g_object_set(G_OBJECT(vlayer),
                  "snap-to-center", controls->snap,
@@ -435,15 +413,12 @@ run_dialog(ControlsType *controls)
                                                  "/0/select/pointer");
     g_signal_connect(selection, "finished",
                      G_CALLBACK(selection_finished_cb), controls);
-    g_debug("   COMPLETE");
 
     /* setup mask layer */
-    g_debug("Setting up mask layer...");
     mlayer = gwy_layer_mask_new();
     gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(mlayer), "/0/mask");
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
-    g_debug("   COMPLETE");
 
     /* Setup the control panel */
     table = gtk_table_new(20, 2, FALSE);
@@ -490,7 +465,6 @@ run_dialog(ControlsType *controls)
                      GTK_EXPAND | GTK_FILL, 0, 5, 0);
 
     button = gwy_stock_like_button_new(_("_Undo"), GTK_STOCK_UNDO);
-    //button = gtk_button_new_with_mnemonic(_("Undo"));
     gwy_sensitivity_group_add_widget(controls->sensgroup, button,
                                      SENS_EDIT | SENS_UNDO);
     gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
@@ -510,7 +484,7 @@ run_dialog(ControlsType *controls)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
-    button = check_new(_("_Snap to origin"));
+    button = gtk_check_button_new_with_mnemonic(_("_Snap to origin"));
     gwy_sensitivity_group_add_widget(controls->sensgroup, button, SENS_EDIT);
     gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
                          g_hash_table_lookup(hash_tips, "origin"), "");
@@ -721,8 +695,10 @@ prev_mode_changed_cb(ControlsType *controls)
 
         gwy_sensitivity_group_set_state(controls->sensgroup, SENS_EDIT, state);
 
-        if (new_mode == PREV_FFT)
+        if (new_mode == PREV_FFT) {
+            controls->edit_mode = -1;
             edit_mode_changed_cb(controls);
+        }
         else {
             gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), NULL);
             gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), NULL);
@@ -762,21 +738,21 @@ edit_mode_changed_cb(ControlsType *controls)
     guint new_mode;
     GwyVectorLayer *vlayer = NULL;
 
+    if (controls->prev_mode != PREV_FFT)
+        return;
+
     new_mode = gwy_radio_buttons_get_current(controls->mode);
 
-    if (controls->prev_mode == PREV_FFT) {
-        vlayer = create_vlayer(controls->edit_mode);
-        if (vlayer) {
-            gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-            gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-            g_object_set(G_OBJECT(vlayer),
-                         "snap-to-center", controls->snap,
-                         "draw-reflection", !controls->snap,
-                         NULL);
-        }
+    if (controls->edit_mode != new_mode) {
+        vlayer = create_vlayer(new_mode);
+        gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
+        g_object_set(G_OBJECT(vlayer),
+                     "snap-to-center", controls->snap,
+                     "draw-reflection", !controls->snap,
+                     NULL);
+        gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+        controls->edit_mode = new_mode;
     }
-
-    controls->edit_mode = new_mode;
 }
 
 static void
