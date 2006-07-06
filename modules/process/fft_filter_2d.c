@@ -803,8 +803,8 @@ selection_finished_cb(GwySelection *selection,
     isel[2] = gwy_data_field_rtoj(mfield, sel[2]);
     isel[3] = gwy_data_field_rtoj(mfield, sel[3]);
     if (!controls->snap) {
-    	isel[2]++;
-    	isel[3]++;
+        isel[2]++;
+        isel[3]++;
     }
 
     /* because of the offset (see below), must make sure selection is not along
@@ -859,7 +859,7 @@ selection_finished_cb(GwySelection *selection,
     fill_func(mfield, isel[0], isel[1], isel[2], isel[3], value);
     fill_func(mfield, mirror[0], mirror[1], mirror[2], mirror[3], value);
     gwy_data_field_data_changed(mfield);
-    gwy_selection_clear(selection);
+    //gwy_selection_clear(selection);
 
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_UNDO, SENS_UNDO);
 }

@@ -302,17 +302,17 @@ gwy_layer_ellipse_draw_object(GwyVectorLayer *layer,
 
         /* XXX - this should be controlled by a property */
         if (TRUE) {
-			/* shift down/right one pixel */
-			gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1],
-											&xy_pixel[0], &xy_pixel[1]);
-			gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3],
-											&xy_pixel[2], &xy_pixel[3]);
-			for (j=0; j<OBJECT_SIZE; j++)
-				xy_pixel[j]++;
-			gwy_data_view_coords_xy_to_real(data_view, xy_pixel[0], xy_pixel[1],
-											&xy[0], &xy[1]);
-			gwy_data_view_coords_xy_to_real(data_view, xy_pixel[2], xy_pixel[3],
-											&xy[2], &xy[3]);
+            /* shift down/right one pixel */
+            gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1],
+                                            &xy_pixel[0], &xy_pixel[1]);
+            gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3],
+                                            &xy_pixel[2], &xy_pixel[3]);
+            for (j=0; j<OBJECT_SIZE; j++)
+                xy_pixel[j]++;
+            gwy_data_view_coords_xy_to_real(data_view, xy_pixel[0], xy_pixel[1],
+                                            &xy[0], &xy[1]);
+            gwy_data_view_coords_xy_to_real(data_view, xy_pixel[2], xy_pixel[3],
+                                            &xy[2], &xy[3]);
         }
 
         gwy_layer_ellipse_draw_ellipse(layer, data_view, drawable, target, xy);
@@ -423,25 +423,25 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
         /* shift selection to be centered around origin */
         gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
         if (circle) {
-			circleW = xy[2] - xy[0];
-			circleH = xy[3] - xy[1];
-			xy[0] = xsize / 2.0 - circleW / 2.0;
-			xy[1] = ysize / 2.0 - circleH / 2.0;
-			xy[2] = xy[0] + circleW;
-			xy[3] = xy[1] + circleH;
+            circleW = xy[2] - xy[0];
+            circleH = xy[3] - xy[1];
+            xy[0] = xsize / 2.0 - circleW / 2.0;
+            xy[1] = ysize / 2.0 - circleH / 2.0;
+            xy[2] = xy[0] + circleW;
+            xy[3] = xy[1] + circleH;
         }
         else {
-			xy[0] = -xy[2] + xsize;
-			xy[1] = -xy[3] + ysize;
+            xy[0] = -xy[2] + xsize;
+            xy[1] = -xy[3] + ysize;
         }
 
-		/* XXX - this should be controlled by a property */
-		if (TRUE) {
-			/* shift down/right one pixel */
-			gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
-			x++; y++;
-			gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[0], &xy[1]);
-		}
+        /* XXX - this should be controlled by a property */
+        if (TRUE) {
+            /* shift down/right one pixel */
+            gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
+            x++; y++;
+            gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[0], &xy[1]);
+        }
     }
 
     gwy_selection_set_object(layer->selection, i, xy);

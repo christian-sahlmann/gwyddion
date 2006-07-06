@@ -47,7 +47,8 @@ enum {
 enum {
     PROP_0,
     PROP_IS_CROP,
-    PROP_DRAW_REFLECTION
+    PROP_DRAW_REFLECTION,
+    PROP_SNAP_TO_CENTER,
 };
 
 typedef struct _GwyLayerRectangle          GwyLayerRectangle;
@@ -64,6 +65,7 @@ struct _GwyLayerRectangle {
     /* Properties */
     gboolean is_crop;
     gboolean draw_reflection;
+    gboolean snap;
 
     /* Dynamic state */
     gboolean square;
@@ -114,6 +116,8 @@ static void     gwy_layer_rectangle_set_is_crop    (GwyLayerRectangle *layer,
                                                     gboolean is_crop);
 static void     gwy_layer_rectangle_set_reflection (GwyLayerRectangle *layer,
                                                     gboolean draw_reflection);
+static void     gwy_layer_rectangle_set_snap       (GwyLayerRectangle *layer,
+                                                    gboolean snap);
 static void     gwy_layer_rectangle_realize        (GwyDataViewLayer *dlayer);
 static void     gwy_layer_rectangle_unrealize      (GwyDataViewLayer *dlayer);
 static gint     gwy_layer_rectangle_near_point     (GwyVectorLayer *layer,
@@ -200,6 +204,15 @@ gwy_layer_rectangle_class_init(GwyLayerRectangleClass *klass)
                              "be drawn too",
                              FALSE,
                              G_PARAM_READWRITE));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_SNAP_TO_CENTER,
+        g_param_spec_boolean("snap-to-center",
+                             "Snap to Center",
+                             "Whether the selection should snap to the center.",
+                             FALSE,
+                             G_PARAM_READWRITE));
 }
 
 static void
@@ -231,6 +244,10 @@ gwy_layer_rectangle_set_property(GObject *object,
         gwy_layer_rectangle_set_reflection(layer, g_value_get_boolean(value));
         break;
 
+        case PROP_SNAP_TO_CENTER:
+        gwy_layer_rectangle_set_snap(layer, g_value_get_boolean(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -252,6 +269,10 @@ gwy_layer_rectangle_get_property(GObject*object,
 
         case PROP_DRAW_REFLECTION:
         g_value_set_boolean(value, layer->draw_reflection);
+        break;
+
+        case PROP_SNAP_TO_CENTER:
+        g_value_set_boolean(value, layer->snap);
         break;
 
         default:
@@ -285,6 +306,7 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
     gdouble xy[OBJECT_SIZE];
     gdouble xreal, yreal;
     gboolean has_object;
+    gint xy_pixel[OBJECT_SIZE], j;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
@@ -300,6 +322,22 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
         xy[1] = yreal - xy[1];
         xy[2] = xreal - xy[2];
         xy[3] = yreal - xy[3];
+
+        /* XXX - this should be controlled by a property */
+        if (TRUE) {
+            /* shift down/right one pixel */
+            gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1],
+                                            &xy_pixel[0], &xy_pixel[1]);
+            gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3],
+                                            &xy_pixel[2], &xy_pixel[3]);
+            for (j=0; j<OBJECT_SIZE; j++)
+                xy_pixel[j]++;
+            gwy_data_view_coords_xy_to_real(data_view, xy_pixel[0], xy_pixel[1],
+                                            &xy[0], &xy[1]);
+            gwy_data_view_coords_xy_to_real(data_view, xy_pixel[2], xy_pixel[3],
+                                            &xy[2], &xy[3]);
+        }
+
         gwy_layer_rectangle_draw_rectangle(layer, data_view,
                                            drawable, target, xy);
     }
@@ -362,8 +400,10 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
     GdkWindow *window;
     GdkCursor *cursor;
     gint x, y, i;
-    gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gdouble xreal, yreal, xsize, ysize, xy[OBJECT_SIZE];
+    gdouble rectW, rectH;
     gboolean square;
+    GwyLayerRectangle *layer_rect = GWY_LAYER_RECTANGLE(layer);
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
@@ -407,6 +447,32 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
         xy[2] = xreal;
         xy[3] = yreal;
     }
+
+    if (layer_rect->snap) {
+        /* shift selection to be centered around origin */
+        gwy_data_view_get_real_data_sizes(data_view, &xsize, &ysize);
+        if (square) {
+            rectW = xy[2] - xy[0];
+            rectH = xy[3] - xy[1];
+            xy[0] = xsize / 2.0 - rectW / 2.0;
+            xy[1] = ysize / 2.0 - rectH / 2.0;
+            xy[2] = xy[0] + rectW;
+            xy[3] = xy[1] + rectH;
+        }
+        else {
+            xy[0] = -xy[2] + xsize;
+            xy[1] = -xy[3] + ysize;
+        }
+
+        /* XXX - this should be controlled by a property */
+        if (TRUE) {
+            /* shift down/right one pixel */
+            gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
+            x++; y++;
+            gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[0], &xy[1]);
+        }
+    }
+
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_rectangle_draw_object(layer, window,
                                     GWY_RENDERING_TARGET_SCREEN, i);
@@ -602,14 +668,37 @@ gwy_layer_rectangle_set_reflection(GwyLayerRectangle *layer,
     if (draw_reflection == layer->draw_reflection)
         return;
 
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_rectangle_undraw(vector_layer, parent->window,
                                    GWY_RENDERING_TARGET_SCREEN);
     layer->draw_reflection = draw_reflection;
-    if (parent)
+    if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_rectangle_draw(vector_layer, parent->window,
                                  GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-reflection");
+}
+
+static void
+gwy_layer_rectangle_set_snap(GwyLayerRectangle *layer, gboolean snap)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_RECTANGLE(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (snap == layer->snap)
+        return;
+
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_rectangle_undraw(vector_layer, parent->window,
+                                   GWY_RENDERING_TARGET_SCREEN);
+    layer->snap = snap;
+    if (parent && GTK_WIDGET_REALIZED(parent))
+        gwy_layer_rectangle_draw(vector_layer, parent->window,
+                                 GWY_RENDERING_TARGET_SCREEN);
+    g_object_notify(G_OBJECT(layer), "snap-to-center");
 }
 
 static void
