@@ -232,7 +232,7 @@
             </para>
           </listitem>
         </varlistentry>
-        <varlistentry><term><anchor id="GwyLayerEllipse--snap-to-center"/>&quot;<literal>snap-to-center</literal>&quot; (gboolean : Read / Write)</term>
+        <varlistentry><term><anchor id="GwyLayerRectangle--snap-to-center"/>&quot;<literal>snap-to-center</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
             <para>
               Whether the selection should snap to the center. Default is to
