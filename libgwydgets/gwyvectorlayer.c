@@ -527,7 +527,6 @@ gwy_vector_layer_container_connect(GwyVectorLayer *layer,
                                 gwy_vector_layer_item_changed, view_layer);
 }
 
-
 /**
  * gwy_vector_layer_selection_connect:
  * @layer: A vector layer.
@@ -551,6 +550,11 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
         layer->selection = g_object_new(klass->selection_type, NULL);
         gwy_container_set_object(view_layer->data, layer->selection_key,
                                  layer->selection);
+
+        /* Terminate possible recusive invocation caused by container
+         * "item-changed" callback. */
+        if (layer->selection_changed_id)
+            return;
     }
     else
         g_object_ref(layer->selection);
