@@ -297,8 +297,7 @@ gwy_tool_spot_remover_init_dialog(GwyToolSpotRemover *tool)
     vlayer = GWY_VECTOR_LAYER(g_object_new(tool->layer_type_rect, NULL));
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/rect");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(tool->zoomview), vlayer);
-    tool->zselection = gwy_container_get_object_by_name(tool->data,
-                                                        "/0/select/rect");
+    tool->zselection = gwy_vector_layer_ensure_selection(vlayer);
     gwy_selection_set_max_objects(tool->zselection, 1);
     g_signal_connect(tool->zselection, "changed",
                      G_CALLBACK(gwy_tool_spot_remover_zselection_changed),

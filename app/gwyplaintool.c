@@ -721,6 +721,9 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
     gwy_debug("selection key: <%s>", key);
     g_free(key);
 
+    gwy_vector_layer_ensure_selection(plain_tool->layer);
+
+    /* The returned value is a quark and should be safe to use anytime. */
     return gwy_vector_layer_get_selection_key(plain_tool->layer);
 }
 

@@ -544,25 +544,13 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
 
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     if (!gwy_container_gis_object(view_layer->data, layer->selection_key,
-                                  &layer->selection)) {
-        GwyVectorLayerClass *klass = GWY_VECTOR_LAYER_GET_CLASS(layer);
+                                  &layer->selection))
+        return;
 
-        layer->selection = g_object_new(klass->selection_type, NULL);
-        gwy_container_set_object(view_layer->data, layer->selection_key,
-                                 layer->selection);
-
-        /* Terminate possible recusive invocation caused by container
-         * "item-changed" callback. */
-        if (layer->selection_changed_id)
-            return;
-    }
-    else
-        g_object_ref(layer->selection);
-
+    g_object_ref(layer->selection);
     layer->selecting = -1;
     layer->selection_changed_id
-        = g_signal_connect_swapped(layer->selection,
-                                   "changed",
+        = g_signal_connect_swapped(layer->selection, "changed",
                                    G_CALLBACK(gwy_vector_layer_selection_changed),
                                    layer);
 }
@@ -598,6 +586,46 @@ gwy_vector_layer_get_selection_key(GwyVectorLayer *layer)
 {
     g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), NULL);
     return g_quark_to_string(layer->selection_key);
+}
+
+/**
+ * gwy_vector_layer_ensure_selection:
+ * @layer: A vector layer.
+ *
+ * Ensures a vector layer's selection exist in data container.
+ *
+ * This method can be called only when layer is plugged into a data view and it
+ * has a selection key set.  If the data container contains a selection under
+ * the specified key the selection is returned.  If there is none,
+ * a selection of appropriate type is created and put to the container first.
+ *
+ * Provided the above conditions are met this method is suitable for just
+ * obtaining the selection object a vector layer uses too.
+ *
+ * Returns:  The layer's selection (no reference is added).
+ **/
+GwySelection*
+gwy_vector_layer_ensure_selection(GwyVectorLayer *layer)
+{
+    GwyDataViewLayer *view_layer;
+    GwySelection *selection;
+    GwyVectorLayerClass *klass;
+
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), NULL);
+    g_return_val_if_fail(layer->selection_key, NULL);
+    view_layer = GWY_DATA_VIEW_LAYER(layer);
+    g_return_val_if_fail(view_layer->data, NULL);
+
+    if (!layer->selection) {
+        klass = GWY_VECTOR_LAYER_GET_CLASS(layer);
+        selection = g_object_new(klass->selection_type, NULL);
+        gwy_container_set_object(view_layer->data, layer->selection_key,
+                                 selection);
+        g_object_unref(selection);
+        g_assert(layer->selection);
+    }
+
+    return layer->selection;
 }
 
 static void

@@ -98,6 +98,7 @@ GType         gwy_vector_layer_get_type         (void) G_GNUC_CONST;
 void          gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
                                                  const gchar *key);
 const gchar*  gwy_vector_layer_get_selection_key(GwyVectorLayer *layer);
+GwySelection* gwy_vector_layer_ensure_selection (GwyVectorLayer *layer);
 gint          gwy_vector_layer_get_focus        (GwyVectorLayer *layer);
 gboolean      gwy_vector_layer_set_focus        (GwyVectorLayer *layer,
                                                  gint focus);

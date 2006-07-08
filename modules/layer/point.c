@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -256,7 +256,9 @@ gwy_layer_point_draw(GwyVectorLayer *layer,
 {
     gint i, n;
 
-    g_return_if_fail(GWY_IS_LAYER_POINT(layer));
+    if (!layer->selection)
+        return;
+
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
 
     if (!GWY_LAYER_POINT(layer)->draw_marker)
@@ -280,6 +282,7 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_if_fail(data_view);
 
     if (!GWY_LAYER_POINT(layer)->draw_marker)
         return;
@@ -341,11 +344,15 @@ gwy_layer_point_motion_notify(GwyVectorLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
 
+    if (!layer->selection)
+        return FALSE;
+
     /* FIXME: No cursor change hint -- a bit too crude? */
     if (!layer->editable)
         return FALSE;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
     i = layer->selecting;
@@ -390,11 +397,14 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
 
-    gwy_debug("");
+    if (!layer->selection)
+        return FALSE;
+
     if (event->button != 1)
         return FALSE;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
     x = event->x;
@@ -455,9 +465,14 @@ gwy_layer_point_button_released(GwyVectorLayer *layer,
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
 
+    if (!layer->selection)
+        return FALSE;
+
     if (!layer->button)
         return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
     layer->button = 0;

@@ -289,8 +289,7 @@ facets_dialog(FacetsArgs *args,
     vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
-    selection = gwy_container_get_object_by_name(controls.mydata,
-                                                 "/0/select/pointer");
+    selection = gwy_vector_layer_ensure_selection(vlayer);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(preview_selection_updated), &controls);
 
@@ -316,8 +315,7 @@ facets_dialog(FacetsArgs *args,
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.fview),
                                 GWY_VECTOR_LAYER(vlayer));
-    selection = gwy_container_get_object_by_name(controls.fdata,
-                                                 "/0/select/pointer");
+    selection = gwy_vector_layer_ensure_selection(vlayer);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(facet_view_selection_updated), &controls);
 

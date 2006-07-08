@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of elliptic areas."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -265,8 +265,10 @@ gwy_layer_ellipse_draw(GwyVectorLayer *layer,
 {
     gint i, n;
 
-    g_return_if_fail(GWY_IS_LAYER_ELLIPSE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
+
+    if (!layer->selection)
+        return;
 
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
@@ -285,9 +287,7 @@ gwy_layer_ellipse_draw_object(GwyVectorLayer *layer,
     gboolean has_object;
     gint xy_pixel[OBJECT_SIZE], j;
 
-    g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
-    g_return_if_fail(data_view);
 
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
@@ -372,11 +372,15 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
     gboolean circle;
     GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
+    if (!layer->selection)
+        return FALSE;
+
     /* FIXME: No cursor change hint -- a bit too crude? */
     if (!layer->editable)
         return FALSE;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
     i = layer->selecting;
@@ -460,15 +464,16 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean circle;
-    gint xres, yres;
-    gdouble zoom;
     GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
-    gwy_debug("");
+    if (!layer->selection)
+        return FALSE;
+
     if (event->button != 1)
         return FALSE;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
     x = event->x;
@@ -531,13 +536,13 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
-    GWY_LAYER_ELLIPSE(layer)->circle = circle;
+    layer_ellipse->circle = circle;
     layer->button = event->button;
     gwy_layer_ellipse_draw_object(layer, window,
                                   GWY_RENDERING_TARGET_SCREEN,
                                   layer->selecting);
 
-    gdk_window_set_cursor(window, GWY_LAYER_ELLIPSE(layer)->resize_cursor);
+    gdk_window_set_cursor(window, layer_ellipse->resize_cursor);
     gwy_vector_layer_object_chosen(layer, layer->selecting);
 
     return FALSE;
@@ -551,14 +556,18 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     GdkWindow *window;
     GdkCursor *cursor;
     gint x, y, xx, yy, i;
-    gdouble xcenter, ycenter, xradius, yradius;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
     GwyLayerEllipse *layer_ellipse = GWY_LAYER_ELLIPSE(layer);
 
+    if (!layer->selection)
+        return FALSE;
+
     if (!layer->button)
         return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
     layer->button = 0;
@@ -577,7 +586,7 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     if (xx == event->x || yy == event->y)
         gwy_selection_delete_object(layer->selection, i);
     else {
-        if (GWY_LAYER_ELLIPSE(layer)->circle)
+        if (layer_ellipse->circle)
             gwy_layer_ellipse_squarize(data_view, x, y, xy);
         else {
             xy[2] = xreal;
@@ -599,7 +608,7 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
     if (i >= 0) {
         i = i % OBJECT_SIZE;
-        cursor = GWY_LAYER_ELLIPSE(layer)->corner_cursor[i];
+        cursor = layer_ellipse->corner_cursor[i];
     }
     else
         cursor = NULL;

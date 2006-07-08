@@ -409,8 +409,7 @@ run_dialog(ControlsType *controls)
                  NULL);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-    selection = gwy_container_get_object_by_name(controls->mydata,
-                                                 "/0/select/pointer");
+    selection = gwy_vector_layer_ensure_selection(vlayer);
     g_signal_connect(selection, "finished",
                      G_CALLBACK(selection_finished_cb), controls);
 
@@ -751,6 +750,7 @@ edit_mode_changed_cb(ControlsType *controls)
                      "draw-reflection", !controls->snap,
                      NULL);
         gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+        gwy_vector_layer_ensure_selection(vlayer);
         controls->edit_mode = new_mode;
     }
 }
