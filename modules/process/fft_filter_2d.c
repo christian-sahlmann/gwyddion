@@ -77,6 +77,9 @@ typedef struct {
 
     GwySensitivityGroup *sensgroup;
 
+    gulong          rect_signal;
+    gulong            ellipse_signal;
+
     GtkWidget       *view;
 
     guint           edit_mode;
@@ -113,6 +116,8 @@ static void        snap_cb               (GtkWidget *check,
 static gboolean        run_dialog          (ControlsType *controls);
 static GwyDataField*   create_mask_field   (GwyDataField *dfield);
 static GwyVectorLayer* create_vlayer       (guint new_mode);
+static void               switch_layer        (guint new_mode,
+                                            ControlsType *controls);
 static void            set_layer_channel   (GwyPixmapLayer *layer,
                                             gint channel);
 static void            do_fft              (GwyDataField *dataInput,
@@ -164,9 +169,15 @@ run_main(GwyContainer *data, GwyRunType run)
     ControlsType controls;
     gboolean response;
 
+    guint xres, yres, col, row;
+    gdouble factor = 2.0;
+    GwyDataField *temp;
+
+
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
     /* Initialize */
+    controls.rect_signal = controls.ellipse_signal = 0;
     controls.edit_mode = FFT_ELLIPSE_ADD;
     controls.prev_mode = PREV_FFT;
     controls.out_mode = OUTPUT_FFT | OUTPUT_IMAGE;
@@ -184,9 +195,23 @@ run_main(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
     /* Create datafields */
-    mfield = create_mask_field(dfield);
     fft = gwy_data_field_new_alike(dfield, FALSE);
     do_fft(dfield, fft);
+
+    /*XXX hackish zoom method
+    xres = gwy_data_field_get_xres(fft);
+    yres = gwy_data_field_get_yres(fft);
+    col = ((gdouble)xres / 2.0) * (1 - (1.0 / factor));
+    row = ((gdouble)yres / 2.0) * (1 - (1.0 / factor));
+    temp = gwy_data_field_area_extract(fft, col, row,
+                                       (gdouble)xres / factor,
+                                       (gdouble)yres / factor);
+    g_object_unref(fft);
+    fft = gwy_data_field_new_resampled(temp, xres, yres,
+                                       GWY_INTERPOLATION_BSPLINE);
+    */
+
+    mfield = create_mask_field(fft);
     filtered = gwy_data_field_new_alike(dfield, TRUE);
     diff = gwy_data_field_new_alike(dfield, TRUE);
 
@@ -359,8 +384,6 @@ run_dialog(ControlsType *controls)
     GtkTooltips *tips;
     GHashTable *hash_tips;
     GwyPixmapLayer *layer, *mlayer;
-    GwyVectorLayer *vlayer;
-    GwySelection *selection;
     GwyDataField *dfield;
     gdouble zoomval;
     gint i, row, response;
@@ -402,16 +425,7 @@ run_dialog(ControlsType *controls)
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
 
     /* setup vector layer */
-    vlayer = create_vlayer(controls->edit_mode);
-    g_object_set(G_OBJECT(vlayer),
-                 "snap-to-center", controls->snap,
-                 "draw-reflection", !controls->snap,
-                 NULL);
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-    selection = gwy_vector_layer_ensure_selection(vlayer);
-    g_signal_connect(selection, "finished",
-                     G_CALLBACK(selection_finished_cb), controls);
+    switch_layer(controls->edit_mode, controls);
 
     /* setup mask layer */
     mlayer = gwy_layer_mask_new();
@@ -716,11 +730,13 @@ create_vlayer(guint new_mode)
         case FFT_RECT_ADD:
         case FFT_RECT_SUB:
         vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
+        gwy_vector_layer_set_selection_key(vlayer, "/0/select/fft/rect");
         break;
 
         case FFT_ELLIPSE_ADD:
         case FFT_ELLIPSE_SUB:
         vlayer = g_object_new(g_type_from_name("GwyLayerEllipse"), NULL);
+        gwy_vector_layer_set_selection_key(vlayer, "/0/select/fft/ellipse");
         break;
 
         default:
@@ -732,10 +748,45 @@ create_vlayer(guint new_mode)
 }
 
 static void
+switch_layer(guint new_mode, ControlsType *controls)
+{
+    GwyVectorLayer *vlayer = NULL;
+    GwySelection *selection;
+
+    vlayer = create_vlayer(new_mode);
+    g_object_set(G_OBJECT(vlayer),
+                 "snap-to-center", controls->snap,
+                 "draw-reflection", !controls->snap,
+                 NULL);
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+
+    switch(new_mode)
+    {
+        case FFT_RECT_ADD:
+        case FFT_RECT_SUB:
+        if (!controls->rect_signal)
+            controls->rect_signal = g_signal_connect(selection, "finished",
+                                    G_CALLBACK(selection_finished_cb), controls);
+        break;
+
+        case FFT_ELLIPSE_ADD:
+        case FFT_ELLIPSE_SUB:
+        if (!controls->ellipse_signal)
+            controls->ellipse_signal = g_signal_connect(selection, "finished",
+                                    G_CALLBACK(selection_finished_cb), controls);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+}
+
+static void
 edit_mode_changed_cb(ControlsType *controls)
 {
     guint new_mode;
-    GwyVectorLayer *vlayer = NULL;
 
     if (controls->prev_mode != PREV_FFT)
         return;
@@ -743,14 +794,7 @@ edit_mode_changed_cb(ControlsType *controls)
     new_mode = gwy_radio_buttons_get_current(controls->mode);
 
     if (controls->edit_mode != new_mode) {
-        vlayer = create_vlayer(new_mode);
-        gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
-        g_object_set(G_OBJECT(vlayer),
-                     "snap-to-center", controls->snap,
-                     "draw-reflection", !controls->snap,
-                     NULL);
-        gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
-        gwy_vector_layer_ensure_selection(vlayer);
+        switch_layer(new_mode, controls);
         controls->edit_mode = new_mode;
     }
 }
@@ -842,7 +886,8 @@ selection_finished_cb(GwySelection *selection,
     fill_func(mfield, isel[0], isel[1], isel[2], isel[3], value);
     fill_func(mfield, mirror[0], mirror[1], mirror[2], mirror[3], value);
     gwy_data_field_data_changed(mfield);
-    //gwy_selection_clear(selection);
+    /*XXX - uncomment this line when done testing */
+    /* gwy_selection_clear(selection); */
 
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_UNDO, SENS_UNDO);
     controls->compute = TRUE;
