@@ -1484,7 +1484,16 @@ gwy_evaluator_duplicate_real(GObject *object)
     return (GObject*)duplicate;
 }
 
-
+static void
+evaluator_types_init(void)
+{
+    g_type_class_peek(GWY_TYPE_SEARCH_POINT);
+    g_type_class_peek(GWY_TYPE_SEARCH_LINE);
+    g_type_class_peek(GWY_TYPE_FIXED_POINT);
+    g_type_class_peek(GWY_TYPE_FIXED_LINE);
+    g_type_class_peek(GWY_TYPE_CORRELATION_POINT);
+    g_type_class_peek(GWY_TYPE_EVALUATOR_TASK);
+}
 
 G_END_DECLS
 

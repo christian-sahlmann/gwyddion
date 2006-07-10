@@ -42,7 +42,7 @@
 
 typedef struct {
     gboolean bresult;
-    gdouble result; 
+    gdouble result;
     gchar **variable_ids;
     gdouble *variables;
     gint nvariables;
@@ -106,6 +106,8 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Run evaluator from stored preset automatically"));
 
+    evaluator_types_init();
+
     return TRUE;
 }
 
@@ -116,18 +118,18 @@ evaluator_run(GwyContainer *data, GwyRunType run)
 {
     ErunArgs args;
     gchar *filename;
-  
+
     g_return_if_fail(run & EVALUATOR_RUN_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
     g_return_if_fail(args.dfield);
-   
+
     /*get filename of evaluator preset*/
     filename = get_filename();
     if (!filename) return;
-    
+
     args.evaluator = get_evaluator(filename);
-    
+
     /*run preset*/
     args.evaldata = g_ptr_array_new();
     args.evaluated_statements = g_array_new(FALSE, FALSE, sizeof(gboolean));
@@ -136,7 +138,7 @@ evaluator_run(GwyContainer *data, GwyRunType run)
     /*output result window*/
 
     create_results_window(&args);
-    
+
 }
 
 static void
@@ -146,7 +148,7 @@ evaluator_run_automatically(GwyContainer *data, GwyRunType run)
     GwyContainer *settings;
     GString *report;
     FILE *fh;
-    
+
     g_return_if_fail(run & EVALUATOR_RUN_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
@@ -154,7 +156,7 @@ evaluator_run_automatically(GwyContainer *data, GwyRunType run)
 
     settings = gwy_app_settings_get();
     args.evaluator = get_evaluator(gwy_container_get_string(settings, g_quark_from_string("/kdesi/evaluator_filename")));
-    
+
     /*run preset*/
     args.evaldata = g_ptr_array_new();
     args.evaluated_statements = g_array_new(FALSE, FALSE, sizeof(gboolean));
@@ -169,7 +171,7 @@ evaluator_run_automatically(GwyContainer *data, GwyRunType run)
          fclose(fh);
          return;
     }
-    
+
 }
 
 static gint
@@ -184,7 +186,7 @@ get_closest_point(GwyDataField *dfield, gdouble *xdata, gdouble *ydata, gdouble 
         if (fabs(x - xdata[i]) < width/2 &&
             fabs(y - ydata[i]) < height/2)
         {
-              val = sqrt((x - xdata[i])*(x - xdata[i]) 
+              val = sqrt((x - xdata[i])*(x - xdata[i])
                          + (y - ydata[i])*(y - ydata[i]));
               if (minval > val) {
                   minval = val;
@@ -234,10 +236,10 @@ get_detected_points(ErunArgs *args)
 
     for (k=0; k<args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
-       
+
         j = get_closest_point(dfield, xdata, ydata, zdata, ndata,
-                              gwy_data_field_rtoi(dfield, pspoint->xc), 
-                              gwy_data_field_rtoj(dfield, pspoint->yc), 
+                              gwy_data_field_rtoi(dfield, pspoint->xc),
+                              gwy_data_field_rtoj(dfield, pspoint->yc),
                               pspoint->width, pspoint->height);
 
         pspoint->xc = gwy_data_field_itor(dfield, xdata[j]);
@@ -302,7 +304,7 @@ get_detected_lines(ErunArgs *args)
                                                             - gwy_data_field_get_xreal(filtered)/2.0;
         ydata[i] = ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4;
 
-           
+
         gwy_data_field_hough_polar_line_to_datafield(dfield,
                                                      xdata[i], ydata[i],
                                                      &px1, &px2, &py1, &py2);
@@ -314,11 +316,11 @@ get_detected_lines(ErunArgs *args)
         xdata[i] = rho;
         ydata[i] = theta;
     }
-    
+
     for (i=0; i<args->evaluator->detected_line_array->len; i++) {
         psline = g_ptr_array_index(args->evaluator->detected_line_array, i);
-       
-        
+
+
         j = get_closest_point(dfield, xdata, ydata, zdata, ndata,
                               psline->rhoc, psline->thetac, psline->rho, psline->theta);
 
@@ -327,14 +329,14 @@ get_detected_lines(ErunArgs *args)
                                                      xdata[i], ydata[i],
                                                      &px1, &px2, &py1, &py2);
 
-                    
+
         psline->xstart = gwy_data_field_itor(dfield, px1);
         psline->ystart = gwy_data_field_jtor(dfield, py1);
         psline->xend = gwy_data_field_itor(dfield, px2);
         psline->yend = gwy_data_field_jtor(dfield, py2);
         psline->rhoc = xdata[j];
         psline->thetac = ydata[j];
-        
+
     }
 
     g_object_unref(filtered);
@@ -349,7 +351,7 @@ get_maximum(GwyDataField *score, gint *maxcol, gint *maxrow)
     gint col, row;
     gdouble maxval = -G_MAXDOUBLE;
 
-    
+
     for (row = 0; row < gwy_data_field_get_yres(score); row++) {    /*row */
            for (col = 0; col < gwy_data_field_get_xres(score); col++) {
 
@@ -374,26 +376,26 @@ get_correlation_points(ErunArgs *args)
 
     for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
-        
+
         xstart = gwy_data_field_rtoi(dfield, pcpoint->xc) - pcpoint->swidth/2;
         ystart = gwy_data_field_rtoj(dfield, pcpoint->yc) - pcpoint->sheight/2;
         xstart = MAX(0, xstart);
         ystart = MAX(0, ystart);
         width = MIN(pcpoint->swidth, gwy_data_field_get_xres(dfield) - xstart - 1);
         height = MIN(pcpoint->sheight, gwy_data_field_get_yres(dfield) - ystart - 1);
-        
+
         part = gwy_data_field_area_extract(dfield,
                                            xstart, ystart,
                                            width, height);
         score = gwy_data_field_new_alike(part, FALSE);
-        
+
         gwy_data_field_correlate(part, pcpoint->pattern, score, GWY_CORRELATION_NORMAL);
 
         get_maximum(score, &colmax, &rowmax);
 
         pcpoint->xc = gwy_data_field_itor(dfield, colmax + xstart);
         pcpoint->yc = gwy_data_field_jtor(dfield, rowmax + ystart);
-        
+
         g_object_unref(score);
         g_object_unref(part);
     }
@@ -442,7 +444,7 @@ get_features(ErunArgs *args)
         printf("cpoint: %s: %g %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc);
      }
      */
-   
+
 }
 
 static void
@@ -453,7 +455,7 @@ get_results(ErunArgs *args)
     evaluate(args);
 }
 
-static gchar* 
+static gchar*
 get_filename()
 {
     GtkDialog *filedialog;
@@ -473,7 +475,7 @@ get_filename()
     }
     else filename = NULL;
     gtk_widget_destroy(GTK_WIDGET(filedialog));
-    
+
     return filename;
 
 }
@@ -510,7 +512,7 @@ test_stupid_class_init()
 }
 
 
-static GwyEvaluator* 
+static GwyEvaluator*
 get_evaluator(gchar *filename)
 {
     guchar *buffer = NULL;
@@ -519,9 +521,9 @@ get_evaluator(gchar *filename)
     gsize size = 0;
     gsize pos = 0;
 
-        
 
-    test_stupid_class_init();    
+
+    test_stupid_class_init();
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
             printf("get contetns failed\n");
                     return NULL;
@@ -638,50 +640,50 @@ create_evaluator_report(ErunArgs *args)
     GwyCorrelationPoint *pcpoint;
     GwyEvaluatorTask *petask;
     EvalData *edata;
-    
+
     gint k, i;
 
     report = g_string_new("");
 
     g_string_append_printf(report, _("\n===== Evaluator Results =====\n"));
-   
+
     for (k=0; k<args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
-        g_string_append_printf(report, "point %s %d %d\n", pspoint->id, 
-                               (gint)gwy_data_field_rtoi(args->dfield, pspoint->xc), 
+        g_string_append_printf(report, "point %s %d %d\n", pspoint->id,
+                               (gint)gwy_data_field_rtoi(args->dfield, pspoint->xc),
                                (gint)gwy_data_field_rtoj(args->dfield, pspoint->yc));
     }
     for (k=0; k<args->evaluator->detected_line_array->len; k++) {
         psline = g_ptr_array_index(args->evaluator->detected_line_array, k);
-        g_string_append_printf(report, "line %s %d %d %d %d\n", psline->id, 
-                               (gint)gwy_data_field_rtoi(args->dfield, psline->xstart), 
+        g_string_append_printf(report, "line %s %d %d %d %d\n", psline->id,
+                               (gint)gwy_data_field_rtoi(args->dfield, psline->xstart),
                                (gint)gwy_data_field_rtoj(args->dfield, psline->ystart),
-                               (gint)gwy_data_field_rtoi(args->dfield, psline->xend), 
+                               (gint)gwy_data_field_rtoi(args->dfield, psline->xend),
                                (gint)gwy_data_field_rtoj(args->dfield, psline->yend));
     }
     for (k=0; k<args->evaluator->fixed_point_array->len; k++) {
         pfpoint = g_ptr_array_index(args->evaluator->fixed_point_array, k);
-        g_string_append_printf(report, "point %s %d %d\n", pfpoint->id, 
-                               (gint)gwy_data_field_rtoi(args->dfield, pfpoint->xc), 
+        g_string_append_printf(report, "point %s %d %d\n", pfpoint->id,
+                               (gint)gwy_data_field_rtoi(args->dfield, pfpoint->xc),
                                (gint)gwy_data_field_rtoj(args->dfield, pfpoint->yc));
     }
     for (k=0; k<args->evaluator->fixed_line_array->len; k++) {
         pfline = g_ptr_array_index(args->evaluator->fixed_line_array, k);
-        g_string_append_printf(report, "line %s %d %d %d %d\n", pfline->id, 
-                               (gint)gwy_data_field_rtoi(args->dfield, pfline->xstart), 
+        g_string_append_printf(report, "line %s %d %d %d %d\n", pfline->id,
+                               (gint)gwy_data_field_rtoi(args->dfield, pfline->xstart),
                                (gint)gwy_data_field_rtoj(args->dfield, pfline->ystart),
-                               (gint)gwy_data_field_rtoi(args->dfield, pfline->xend), 
+                               (gint)gwy_data_field_rtoi(args->dfield, pfline->xend),
                                (gint)gwy_data_field_rtoj(args->dfield, pfline->yend));
     }
      for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
         g_string_append_printf(report, "point %s %d %d\n", pcpoint->id,
-                               (gint)gwy_data_field_rtoi(args->dfield, pspoint->xc), 
+                               (gint)gwy_data_field_rtoi(args->dfield, pspoint->xc),
                                (gint)gwy_data_field_rtoj(args->dfield, pspoint->yc));
     }
     for (k=0; k<args->evaluator->expression_task_array->len; k++) {
         petask = g_ptr_array_index(args->evaluator->expression_task_array, k);
-        if (k < args->evaldata->len) edata = g_ptr_array_index(args->evaldata, k);   
+        if (k < args->evaldata->len) edata = g_ptr_array_index(args->evaldata, k);
         else break;
 
         if (edata->bresult) g_string_append_printf(report, "SUCCESS ");
@@ -690,12 +692,12 @@ create_evaluator_report(ErunArgs *args)
         for (i=1; i<edata->nvariables; i++) g_string_append_printf(report, "%s ", edata->variable_ids[i]);
         g_string_append_printf(report, "\n");
     }
-    
+
     return report;
 }
 
 
-static gdouble 
+static gdouble
 eval_line_min(ErunArgs *args, gpointer a)
 {
     GwySearchLine *sline;
@@ -704,7 +706,7 @@ eval_line_min(ErunArgs *args, gpointer a)
     gint res, px1, py1, px2, py2;
 
     sline = GWY_SEARCH_LINE(a);
-   
+
     px1 = gwy_data_field_rtoi(args->dfield, sline->xstart);
     px2 = gwy_data_field_rtoi(args->dfield, sline->xend);
     py1 = gwy_data_field_rtoj(args->dfield, sline->ystart);
@@ -714,12 +716,12 @@ eval_line_min(ErunArgs *args, gpointer a)
     dline = gwy_data_field_get_profile(args->dfield, NULL,
                                        px1, py1, px2, py2, res, 1,
                                        GWY_INTERPOLATION_BILINEAR);
-                                       
-    val = gwy_data_line_get_min(dline);                                 
+
+    val = gwy_data_line_get_min(dline);
     g_object_unref(dline);
     return val;
 }
-static gdouble 
+static gdouble
 eval_line_max(ErunArgs *args, gpointer a)
 {
     GwySearchLine *sline;
@@ -728,7 +730,7 @@ eval_line_max(ErunArgs *args, gpointer a)
     gint res, px1, py1, px2, py2;
 
     sline = GWY_SEARCH_LINE(a);
-   
+
     px1 = gwy_data_field_rtoi(args->dfield, sline->xstart);
     px2 = gwy_data_field_rtoi(args->dfield, sline->xend);
     py1 = gwy_data_field_rtoj(args->dfield, sline->ystart);
@@ -738,12 +740,12 @@ eval_line_max(ErunArgs *args, gpointer a)
     dline = gwy_data_field_get_profile(args->dfield, NULL,
                                        px1, py1, px2, py2, res, 1,
                                        GWY_INTERPOLATION_BILINEAR);
-                                       
-    val = gwy_data_line_get_max(dline);                                 
+
+    val = gwy_data_line_get_max(dline);
     g_object_unref(dline);
     return val;
 }
-static gdouble 
+static gdouble
 eval_line_avg(ErunArgs *args, gpointer a)
 {
     GwySearchLine *sline;
@@ -752,7 +754,7 @@ eval_line_avg(ErunArgs *args, gpointer a)
     gint res, px1, py1, px2, py2;
 
     sline = GWY_SEARCH_LINE(a);
-   
+
     px1 = gwy_data_field_rtoi(args->dfield, sline->xstart);
     px2 = gwy_data_field_rtoi(args->dfield, sline->xend);
     py1 = gwy_data_field_rtoj(args->dfield, sline->ystart);
@@ -762,12 +764,12 @@ eval_line_avg(ErunArgs *args, gpointer a)
     dline = gwy_data_field_get_profile(args->dfield, NULL,
                                        px1, py1, px2, py2, res, 1,
                                        GWY_INTERPOLATION_BILINEAR);
-                                       
-    val = gwy_data_line_get_avg(dline);                                 
+
+    val = gwy_data_line_get_avg(dline);
     g_object_unref(dline);
     return val;
 }
-static gdouble 
+static gdouble
 eval_line_rms(ErunArgs *args, gpointer a)
 {
     GwySearchLine *sline;
@@ -776,7 +778,7 @@ eval_line_rms(ErunArgs *args, gpointer a)
     gint res, px1, py1, px2, py2;
 
     sline = GWY_SEARCH_LINE(a);
-   
+
     px1 = gwy_data_field_rtoi(args->dfield, sline->xstart);
     px2 = gwy_data_field_rtoi(args->dfield, sline->xend);
     py1 = gwy_data_field_rtoj(args->dfield, sline->ystart);
@@ -786,23 +788,23 @@ eval_line_rms(ErunArgs *args, gpointer a)
     dline = gwy_data_field_get_profile(args->dfield, NULL,
                                        px1, py1, px2, py2, res, 1,
                                        GWY_INTERPOLATION_BILINEAR);
-                                       
-    val = gwy_data_line_get_rms(dline);                                 
+
+    val = gwy_data_line_get_rms(dline);
     g_object_unref(dline);
     return val;
 }
 
-static gdouble 
+static gdouble
 eval_point_value(ErunArgs *args, gpointer a)
 {
     GwySearchPoint *spoint;
 
     spoint = GWY_SEARCH_POINT(a);
     return gwy_data_field_get_dval_real(args->dfield, spoint->xc, spoint->yc,
-                                        GWY_INTERPOLATION_BILINEAR);                                 
+                                        GWY_INTERPOLATION_BILINEAR);
 }
 
-static gdouble 
+static gdouble
 eval_point_avg(ErunArgs *args, gpointer a, gint size)
 {
     GwySearchPoint *spoint;
@@ -815,7 +817,7 @@ eval_point_avg(ErunArgs *args, gpointer a, gint size)
                                        size, size);
 }
 
-static gdouble 
+static gdouble
 eval_point_neural(ErunArgs *args, gpointer a)
 {
     GwySearchPoint *spoint;
@@ -823,44 +825,44 @@ eval_point_neural(ErunArgs *args, gpointer a)
     spoint = GWY_SEARCH_POINT(a);
     return 0.5;
 }
-static gdouble 
+static gdouble
 eval_intersection_x(ErunArgs *args, gpointer a, gpointer b)
 {
     GwySearchLine *sline1, *sline2;
 
     sline1 = GWY_SEARCH_LINE(a);
     sline2 = GWY_SEARCH_LINE(b);
-   
+
     return 0;
 }
-static gdouble 
+static gdouble
 eval_intersection_y(ErunArgs *args, gpointer a, gpointer b)
 {
     GwySearchLine *sline1, *sline2;
 
     sline1 = GWY_SEARCH_LINE(a);
     sline2 = GWY_SEARCH_LINE(b);
-   
+
     return 0;
 }
-static gdouble 
+static gdouble
 eval_angle(ErunArgs *args, gpointer a, gpointer b)
 {
     GwySearchLine *sline1, *sline2;
 
     sline1 = GWY_SEARCH_LINE(a);
     sline2 = GWY_SEARCH_LINE(b);
-   
+
     return 0;
 }
 
 /*FIXME we expect that there are no expressions within brackets, only variables*/
-static gint 
-twoexpr_parse(GString *expression, gchar *name, 
+static gint
+twoexpr_parse(GString *expression, gchar *name,
               GString **arg1, GString **arg2, gint *len)
 {
     char *pos, *opos, *epos, *cpos;
-    
+
     pos = strstr(expression->str, name);
     if (pos == NULL) return -1;
 
@@ -874,18 +876,18 @@ twoexpr_parse(GString *expression, gchar *name,
     if (epos == NULL) return -1;
 
     *len = epos - pos - 1;
-    
+
     *arg1 = g_string_new_len(opos + 1, cpos - opos - 1);
     *arg2 = g_string_new_len(cpos +1, epos - cpos - 1);
     return (gint)(pos - expression->str);
 }
 
-static gint 
-oneexpr_parse(GString *expression, gchar *name, 
+static gint
+oneexpr_parse(GString *expression, gchar *name,
               GString **arg1, gint *len)
 {
     char *pos, *opos, *epos;
-    
+
     pos = strstr(expression->str, name);
     if (pos == NULL) return -1;
 
@@ -896,7 +898,7 @@ oneexpr_parse(GString *expression, gchar *name,
     if (epos == NULL) return -1;
 
     *len = epos - pos - 1;
-    
+
     *arg1 = g_string_new_len(opos + 1, epos - opos - 1);
     return (gint)(pos - expression->str);
 }
@@ -909,11 +911,11 @@ variable_parse(ErunArgs *args, gchar *variable, gboolean *err)
     GwyFixedPoint *fpset;
     GwyFixedLine *flset;
     GwyCorrelationPoint *cpset;
-                    
+
     char *pos;
     char *numstr;
     int num;
-    
+
     *err = FALSE;
     printf("parsing variable: %s\n", variable);
     if ((pos = strstr(variable, "dp"))!=NULL) {
@@ -989,7 +991,7 @@ object_parse(ErunArgs *args, gchar *variable)
 {
     char * pos;
     int num;
-    
+
     printf("parsing variable: %s\n", variable);
     if ((pos = strstr(variable, "dp"))!=NULL) {
        num = atoi(pos + 4);
@@ -1042,12 +1044,12 @@ preparse_expression(ErunArgs *args, GString *expression)
     gdouble value;
     gpointer object1, object2;
     gdouble var1, var2;
-    
+
     if (strstr(expression->str, "PointAvg"))
     {
         pos = twoexpr_parse(expression, "PointAvg", &arg1, &arg2, &len);
         printf("function arguments: %s %s\n", arg1->str, arg2->str);
-        
+
         object1 = object_parse(args, arg1->str);
         var1 = variable_parse(args, arg2->str, &err2);
         if (err1 || !object1) return NULL;
@@ -1058,7 +1060,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "IntersectX", &arg1, &arg2, &len);
         printf("function arguments: %s %s\n", arg1->str, arg2->str);
-        
+
         object1 = object_parse(args, arg1->str);
         object2 = object_parse(args, arg2->str);
         if (!object1 || !object2) return NULL;
@@ -1069,7 +1071,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "IntersectY", &arg1, &arg2, &len);
         printf("function arguments: %s %s\n", arg1->str, arg2->str);
-        
+
         object1 = object_parse(args, arg1->str);
         object2 = object_parse(args, arg2->str);
         if (!object1 || !object2) return NULL;
@@ -1080,7 +1082,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "Angle", &arg1, &arg2, &len);
         printf("function arguments: %s %s\n", arg1->str, arg2->str);
-        
+
         object1 = object_parse(args, arg1->str);
         object2 = object_parse(args, arg2->str);
         if (!object1 || !object2) return NULL;
@@ -1091,7 +1093,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineMin", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
-        
+
         object1 = object_parse(args, arg1->str);
         if (err1) return NULL;
         value = eval_line_min(args, object1);
@@ -1101,7 +1103,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineMax", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
-        
+
         object1 = object_parse(args, arg1->str);
         if (err1) return NULL;
         value = eval_line_max(args, object1);
@@ -1111,7 +1113,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineAvg", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
-        
+
         object1 = object_parse(args, arg1->str);
         if (err1) return NULL;
         value = eval_line_avg(args, object1);
@@ -1121,7 +1123,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineRMS", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
-        
+
         object1 = object_parse(args, arg1->str);
         if (err1) return NULL;
         value = eval_line_rms(args, object1);
@@ -1131,7 +1133,7 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "PointValue", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
-        
+
         object1 = object_parse(args, arg1->str);
         if (err1) return NULL;
         value = eval_point_value(args, object1);
@@ -1141,13 +1143,13 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "PointNeural", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
-        
+
         object1 = object_parse(args, arg1->str);
         if (err1) return NULL;
         value = eval_point_neural(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-            
+
 
     return expression;
 }
@@ -1157,7 +1159,7 @@ get_bresult(gdouble result, gchar *threshop)
 {
     gdouble num;
     gchar *pos;
-    
+
     if ((pos = strstr(threshop, "<"))!=NULL) {
        num = atof(pos + 1);
        if (result < num) return TRUE;
@@ -1188,7 +1190,7 @@ get_bresult(gdouble result, gchar *threshop)
        if (result != num) return TRUE;
        else return FALSE;
     }
-  
+
     return TRUE;
 }
 
@@ -1202,20 +1204,20 @@ static void evaluate(ErunArgs *args)
     EvalData *edata;
     GError *err;
     gboolean error;
-  
+
     for (k = 0; k<args->evaluator->expression_task_array->len; k++)
     {
         edata = g_new(EvalData, 1);
         etset = g_ptr_array_index(args->evaluator->expression_task_array, k);
         expression = g_string_new(etset->expression);
-   
+
         expression = preparse_expression(args, expression);
         if (expression == NULL) {
             printf("preparse failed\n");
             return;
         }
-        printf("after preparse: %s\n", expression->str); 
-    
+        printf("after preparse: %s\n", expression->str);
+
         expr = gwy_expr_new();
         if (!gwy_expr_compile(expr, expression->str, &err)){
             g_warning("Error compiling expression: %s\n", err->message);
@@ -1225,10 +1227,10 @@ static void evaluate(ErunArgs *args)
         }
 
         edata->nvariables = gwy_expr_get_variables(expr, &edata->variable_ids);
-    
+
         printf("%d variables in expression %s\n", edata->nvariables, expression->str);
         edata->variables = g_malloc(edata->nvariables*sizeof(gdouble));
-    
+
         for (i = 1; i<edata->nvariables; i++)
         {
             printf("variable: %s\n", edata->variable_ids[i]);
@@ -1242,10 +1244,10 @@ static void evaluate(ErunArgs *args)
         edata->error = g_strdup("none");
 
         edata->bresult = get_bresult(edata->result, etset->threshold);
-        
+
         g_ptr_array_add(args->evaldata, edata);
     }
-    
+
 
 }
 
