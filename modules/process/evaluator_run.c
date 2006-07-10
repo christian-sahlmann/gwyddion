@@ -19,6 +19,10 @@
  */
 
 #include "config.h"
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyexpr.h>
 #include <libgwyddion/gwymath.h>
@@ -31,11 +35,7 @@
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <app/gwyapp.h>
-#include <glib/gstdio.h>
 #include "evaluator.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define EVALUATOR_RUN_RUN_MODES GWY_RUN_IMMEDIATE
 
@@ -64,7 +64,7 @@ static void                evaluator_run(GwyContainer *data,
 static void                evaluator_run_automatically(GwyContainer *data,
                                          GwyRunType run);
 static gchar*              get_filename();
-static GwyEvaluator*       get_evaluator(gchar *filename);
+static GwyEvaluator*       get_evaluator(const gchar *filename);
 static void                get_results(ErunArgs *args);
 static void                save_report_cb(GtkWidget *button, GString *report);
 static void                results_window_response_cb(GtkWidget *window,
@@ -144,9 +144,12 @@ evaluator_run(GwyContainer *data, GwyRunType run)
 static void
 evaluator_run_automatically(GwyContainer *data, GwyRunType run)
 {
+    static const gchar setup_key[]  = "/module/evaluator_run/setup/filename";
+    static const gchar output_key[] = "/module/evaluator_run/output/filename";
     ErunArgs args;
     GwyContainer *settings;
     GString *report;
+    const gchar *setup_filename, *output_filename;
     FILE *fh;
 
     g_return_if_fail(run & EVALUATOR_RUN_RUN_MODES);
@@ -155,23 +158,32 @@ evaluator_run_automatically(GwyContainer *data, GwyRunType run)
     g_return_if_fail(args.dfield);
 
     settings = gwy_app_settings_get();
-    args.evaluator = get_evaluator(gwy_container_get_string(settings, g_quark_from_string("/kdesi/evaluator_filename")));
+    setup_filename = gwy_container_get_string_by_name(settings, setup_key);
+    output_filename = gwy_container_get_string_by_name(settings, output_key);
+    g_return_if_fail(setup_filename && output_filename);
+    args.evaluator = get_evaluator(setup_filename);
+    g_return_if_fail(args.evaluator);
 
-    /*run preset*/
+    /* run preset */
     args.evaldata = g_ptr_array_new();
     args.evaluated_statements = g_array_new(FALSE, FALSE, sizeof(gboolean));
     get_results(&args);
 
     report = create_evaluator_report(&args);
 
-    /*output result window*/
-    fh = g_fopen(gwy_container_get_string(settings, g_quark_from_string("/kdesi/save_filename")), "a");
+    fh = g_fopen(output_filename, "w");
     if (fh) {
          fputs(report->str, fh);
          fclose(fh);
-         return;
     }
+    else
+        g_warning("Cannot write results to %s: %s",
+                  output_filename, g_strerror(errno));
 
+    g_string_free(report, TRUE);
+    g_object_unref(args.evaluator);
+    g_array_free(args.evaluated_statements, TRUE);
+    g_ptr_array_free(args.evaldata, TRUE);
 }
 
 static gint
@@ -513,7 +525,7 @@ test_stupid_class_init()
 
 
 static GwyEvaluator*
-get_evaluator(gchar *filename)
+get_evaluator(const gchar *filename)
 {
     guchar *buffer = NULL;
     GError *err = NULL;
