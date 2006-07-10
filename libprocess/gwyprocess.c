@@ -23,8 +23,6 @@
 #include "gwyprocess.h"
 #include "gwyprocessinternal.h"
 
-static guint types_initialized = 0;
-
 /**
  * gwy_process_type_init:
  *
@@ -39,15 +37,17 @@ static guint types_initialized = 0;
 void
 gwy_process_type_init(void)
 {
+    static gboolean types_initialized = FALSE;
+
     if (types_initialized)
         return;
 
     gwy_type_init();
 
-    types_initialized += gwy_data_field_get_type();
-    types_initialized += gwy_data_line_get_type();
-    types_initialized += gwy_cdline_get_type();
-    types_initialized |= 1;
+    g_type_class_peek(GWY_TYPE_DATA_LINE);
+    g_type_class_peek(GWY_TYPE_DATA_FIELD);
+    g_type_class_peek(GWY_TYPE_CDLINE);
+    types_initialized = TRUE;
 
     _gwy_cdline_class_setup_presets();
 }

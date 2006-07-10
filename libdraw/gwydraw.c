@@ -23,8 +23,6 @@
 #include <libdraw/gwydraw.h>
 #include "gwydrawinternal.h"
 
-static guint types_initialized = 0;
-
 /**
  * gwy_draw_type_init:
  *
@@ -40,15 +38,17 @@ static guint types_initialized = 0;
 void
 gwy_draw_type_init(void)
 {
+    static gboolean types_initialized = FALSE;
+
     if (types_initialized)
         return;
 
     gwy_process_type_init();
 
-    types_initialized += gwy_rgba_get_type();
-    types_initialized += gwy_gradient_get_type();
-    types_initialized += gwy_selection_get_type();
-    types_initialized |= 1;
+    g_type_class_peek(GWY_TYPE_GRADIENT);
+    g_type_class_peek(GWY_TYPE_GL_MATERIAL);
+    g_type_class_peek(GWY_TYPE_SELECTION);
+    types_initialized = gwy_rgba_get_type();
 
     _gwy_gradient_class_setup_presets();
     _gwy_gl_material_class_setup_presets();

@@ -22,8 +22,6 @@
 #include <libgwyddion/gwyddion.h>
 #include "gwyddioninternal.h"
 
-static guint types_initialized = 0;
-
 /**
  * gwy_type_init:
  *
@@ -38,18 +36,19 @@ static guint types_initialized = 0;
 void
 gwy_type_init(void)
 {
+    static gboolean types_initialized = FALSE;
+
     if (types_initialized)
         return;
 
     g_type_init();
 
-    types_initialized += gwy_si_unit_get_type();
-    types_initialized += gwy_container_get_type();
-    types_initialized += gwy_enum_get_type();
-    types_initialized += gwy_inventory_get_type();
-    types_initialized += gwy_resource_get_type();
-    types_initialized += gwy_nlfit_preset_get_type();
-    types_initialized |= 1;
+    g_type_class_peek(GWY_TYPE_SI_UNIT);
+    g_type_class_peek(GWY_TYPE_CONTAINER);
+    g_type_class_peek(GWY_TYPE_INVENTORY);
+    g_type_class_peek(GWY_TYPE_RESOURCE);
+    g_type_class_peek(GWY_TYPE_NLFIT_PRESET);
+    types_initialized = gwy_enum_get_type();
 
     _gwy_nlfit_preset_class_setup_presets();
 }

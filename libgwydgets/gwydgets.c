@@ -23,7 +23,6 @@
 #include <libgwydgets/gwydgets.h>
 
 static GdkGLConfig *glconfig = NULL;
-static guint types_initialized = 0;
 
 /************************** Initialization ****************************/
 
@@ -41,15 +40,18 @@ static guint types_initialized = 0;
 void
 gwy_widgets_type_init(void)
 {
+    static guint types_initialized = FALSE;
+
     if (types_initialized)
         return;
 
     gwy_draw_type_init();
 
-    types_initialized += gwy_graph_curve_model_get_type();
-    types_initialized += gwy_graph_model_get_type();
-    types_initialized += gwy_3d_label_get_type();
-    types_initialized |= 1;
+    g_type_class_peek(GWY_TYPE_GRAPH_CURVE_MODEL);
+    g_type_class_peek(GWY_TYPE_GRAPH_MODEL);
+    g_type_class_peek(GWY_TYPE_3D_LABEL);
+    g_type_class_peek(GWY_TYPE_3D_SETUP);
+    types_initialized = 1;
 
     gtk_rc_parse_string(/* graph window statusbar */
                         "style \"flatstatusbar\" {\n"
