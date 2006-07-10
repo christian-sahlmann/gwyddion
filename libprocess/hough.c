@@ -79,7 +79,7 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                                gboolean overlapping)
 {
     gint k, col, row, xres, yres, rxres, ryres;
-    gdouble rho, theta, rhostep, thetastep, *data, gradangle=0, gradangle0=0, gradangle2=0, gradangle3=0, threshold;
+    gdouble rho, theta, rhostep, thetastep, *data, gradangle=0, threshold;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -110,11 +110,9 @@ gwy_data_field_hough_line(GwyDataField *dfield,
             {
                 if (x_gradient && y_gradient)
                 {
-                    /*TODO fix this maximally stupid angle wrapping*/
-                    gradangle = G_PI/2.0 + atan2(y_gradient->data[col + row*xres], x_gradient->data[col + row*xres]);
-                    gradangle2 = gradangle + G_PI;
-                    gradangle0 = gradangle - G_PI;
-                    gradangle3 = gradangle + 2*G_PI;
+                    gradangle = atan2(y_gradient->data[col + row*xres], x_gradient->data[col + row*xres]);
+                    if ((gradangle > G_PI) || (gradangle < -G_PI)) gradangle = fmod(gradangle, G_PI);
+                    gradangle += G_PI;
                 }
                 for (k = 0; k < result->yres; k++)
                 {
@@ -122,8 +120,7 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                     if (!overlapping) theta += G_PI/4;
                    
                     threshold = 0.1;
-                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold || fabs(theta-gradangle2)<threshold
-                        || fabs(theta-gradangle3)<threshold || fabs(theta-gradangle0)<threshold)) continue;
+                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold)) continue;
 
 
                     rho = ((gdouble)col)*cos(theta) + ((gdouble)row)*sin(theta);
@@ -164,13 +161,12 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
     gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmin + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
-    //threshval = hmax - (hmax - hmin)/2.5;
     
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 20, 2, threshval, TRUE);
 
     for (i = 0; i < 20; i++)
     {
-        /*printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);*/
+        printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);
      
        if (zdata[i] > threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
            //printf("point: %d %d (of %d %d), xreal: %g  yreal: %g\n", xdata[i], ydata[i], result->xres, result->yres, result->xreal, result->yreal);     
@@ -291,7 +287,6 @@ gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield,
      y_left = (gint)(rho/sin(theta));
      y_right = (gint)((rho - dfield->xres*cos(theta))/sin(theta));
 
-     /*printf("%g %g %d %d %d %d\n", rho, theta, x_top, x_bottom, y_left, y_right);*/
      if (x_top >= 0 && x_top < dfield->xres)
      {
          *px1 = x_top;

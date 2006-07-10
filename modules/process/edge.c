@@ -290,8 +290,8 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
 
     xres = gwy_data_field_get_xres(show);
 
-    gwy_data_field_hough_line_strenghten(show, NULL, NULL,
-                                           1, 0.6);
+    gwy_data_field_hough_line_strenghten(show, x_gradient, y_gradient,
+                                           3, 0.8);
 }
 static void
 harris_do(GwyDataField *dfield, GwyDataField *show)
@@ -304,7 +304,7 @@ harris_do(GwyDataField *dfield, GwyDataField *show)
     y_gradient = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
 
-    gwy_data_field_filter_harris(x_gradient, y_gradient, show, 4, 0.1);
+    gwy_data_field_filter_harris(x_gradient, y_gradient, show, 20, 0.1);
     /*gwy_data_field_clear(show);
     gwy_data_field_grains_mark_watershed_minima(ble, show, 1, 0, 5, 
                        0.05*(gwy_data_field_get_max(ble) - gwy_data_field_get_min(ble)));
