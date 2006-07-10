@@ -555,6 +555,7 @@ gwy_vector_layer_container_connect(GwyVectorLayer *layer,
 static void
 gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
 {
+    GwyVectorLayerClass *klass = GWY_VECTOR_LAYER_GET_CLASS(layer);
     GwyDataViewLayer *view_layer;
 
     g_return_if_fail(!layer->selection);
@@ -565,6 +566,13 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
     if (!gwy_container_gis_object(view_layer->data, layer->selection_key,
                                   &layer->selection))
         return;
+
+    if (G_OBJECT_TYPE(layer->selection) != klass->selection_type) {
+        g_warning("Wrong selection type %s",
+                  G_OBJECT_TYPE_NAME(layer->selection));
+        layer->selection = NULL;
+        return;
+    }
 
     g_object_ref(layer->selection);
     layer->selecting = -1;
@@ -626,14 +634,21 @@ gwy_vector_layer_get_selection_key(GwyVectorLayer *layer)
 GwySelection*
 gwy_vector_layer_ensure_selection(GwyVectorLayer *layer)
 {
+    GwyVectorLayerClass *klass = GWY_VECTOR_LAYER_GET_CLASS(layer);
     GwyDataViewLayer *view_layer;
     GwySelection *selection;
-    GwyVectorLayerClass *klass;
 
     g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), NULL);
     g_return_val_if_fail(layer->selection_key, NULL);
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     g_return_val_if_fail(view_layer->data, NULL);
+
+    if (layer->selection
+        && G_OBJECT_TYPE(layer->selection) != klass->selection_type) {
+        g_warning("Wrong selection type %s",
+                  G_OBJECT_TYPE_NAME(layer->selection));
+        gwy_object_unref(layer->selection);
+    }
 
     if (!layer->selection) {
         klass = GWY_VECTOR_LAYER_GET_CLASS(layer);
