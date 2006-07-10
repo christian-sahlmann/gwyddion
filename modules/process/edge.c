@@ -288,10 +288,8 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
     y_gradient = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
 
-    xres = gwy_data_field_get_xres(show);
-
     gwy_data_field_hough_line_strenghten(show, x_gradient, y_gradient,
-                                           3, 0.8);
+                                           1, 0.2);
 }
 static void
 harris_do(GwyDataField *dfield, GwyDataField *show)

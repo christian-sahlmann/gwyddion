@@ -1213,7 +1213,7 @@ detect_points(EsetupControls *controls)
     
     hmin = gwy_data_field_get_min(filtered);
     hmax = gwy_data_field_get_max(filtered);
-    threshval = hmin + (hmax - hmin)*0.8;
+    threshval = hmin + (hmax - hmin)*0.6;
     ndata = gwy_data_field_get_local_maxima_list(filtered,
                                          xdata,
                                          ydata,
@@ -1254,11 +1254,12 @@ detect_lines(EsetupControls *controls)
     edgefield = gwy_data_field_duplicate(dfield);
     f1 = gwy_data_field_duplicate(dfield);
     f2 = gwy_data_field_duplicate(dfield);
-    filtered = gwy_data_field_new(3*(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
+    filtered = gwy_data_field_new(3.0*(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
                              +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield))),
                              360, 0, 0,
                              FALSE);
 
+    
 
     gwy_data_field_filter_canny(edgefield, 0.1);
     gwy_data_field_filter_sobel(f1, GWY_ORIENTATION_HORIZONTAL);
@@ -1274,9 +1275,8 @@ detect_lines(EsetupControls *controls)
     gwy_data_field_grains_splash_water(filtered, water, 2,
                                  0.005*(gwy_data_field_get_max(filtered) - gwy_data_field_get_min(filtered)));
 
-    hmin = gwy_data_field_get_min(water);
-    hmax = gwy_data_field_get_max(water);
-    threshval = hmin + (hmax - hmin)*0.4;
+    gwy_data_field_get_min_max(water, &hmin, &hmax);
+    threshval = hmin + (hmax - hmin)*0.2;
     ndata = gwy_data_field_get_local_maxima_list(water,
                                          xdata,
                                          ydata,
@@ -1299,10 +1299,12 @@ detect_lines(EsetupControls *controls)
             - gwy_data_field_get_xreal(filtered)/2.0;
         theta = ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(filtered)) + G_PI/4;
 
+        /*printf("xyz: %g %g %g\n", xdata[i], ydata[i], zdata[i]);*/
 
         gwy_data_field_hough_polar_line_to_datafield(dfield, rho, theta,
                     &px1, &px2, &py1, &py2);
 
+        /*printf("sel: %d %d %d %d\n", px1, py1, px2, py2);*/
         seldata[0] = gwy_data_field_itor(dfield, px1);
         seldata[1] = gwy_data_field_jtor(dfield, py1);
         seldata[2] = gwy_data_field_itor(dfield, px2);

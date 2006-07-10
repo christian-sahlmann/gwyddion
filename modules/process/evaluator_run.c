@@ -288,8 +288,8 @@ get_detected_lines(ErunArgs *args)
     gwy_data_field_filter_sobel(f1, GWY_ORIENTATION_HORIZONTAL);
     gwy_data_field_filter_sobel(f2, GWY_ORIENTATION_VERTICAL);
     gwy_data_field_hough_line(edgefield,
-                              NULL,
-                              NULL,
+                              f1,
+                              f2,
                               filtered,
                               1,
                               FALSE);

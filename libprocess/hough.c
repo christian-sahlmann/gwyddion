@@ -25,6 +25,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libprocess/hough.h>
+#include <libprocess/grains.h>
 #include <libprocess/arithmetic.h>
 
 static void bresenhams_line           (GwyDataField *dfield,
@@ -69,7 +70,7 @@ add_point(GwyDataField *result,
     }
 }
 
-
+#include <stdio.h>
 void
 gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *x_gradient,
@@ -98,7 +99,7 @@ gwy_data_field_hough_line(GwyDataField *dfield,
 
     if (overlapping) thetastep = 2*G_PI/(gdouble)ryres;
     else thetastep = G_PI/(gdouble)ryres;
-    rhostep = 2.0*sqrt(xres*xres+yres*yres)/(gdouble)rxres;
+    rhostep = 2*sqrt(xres*xres+yres*yres)/(gdouble)rxres;
 
     gwy_data_field_fill(result, 0);
     data = gwy_data_field_get_data(dfield);
@@ -111,17 +112,20 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                 if (x_gradient && y_gradient)
                 {
                     gradangle = atan2(y_gradient->data[col + row*xres], x_gradient->data[col + row*xres]);
-                    if ((gradangle > G_PI) || (gradangle < -G_PI)) gradangle = fmod(gradangle, G_PI);
-                    gradangle += G_PI;
+                    if (gradangle < 0) gradangle += G_PI;
+                    if (!overlapping) gradangle += G_PI/4;
                 }
                 for (k = 0; k < result->yres; k++)
                 {
                     theta = (gdouble)k*thetastep;
-                    if (!overlapping) theta += G_PI/4;
+                    if (!overlapping) 
+                        theta += G_PI/4;
                    
-                    threshold = 0.1;
-                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold)) continue;
-
+                    threshold = 1.0;
+                   
+                    /*if (data[col + row*xres]) printf("%g %g\n", theta, gradangle);
+                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold)) continue;*/
+                    
 
                     rho = ((gdouble)col)*cos(theta) + ((gdouble)row)*sin(theta);
 
@@ -136,7 +140,8 @@ gwy_data_field_hough_line(GwyDataField *dfield,
         }
     }
     gwy_data_field_set_xreal(result, 2*sqrt(xres*xres+yres*yres));
-    gwy_data_field_set_yreal(result, 2*G_PI);
+    if (!overlapping) gwy_data_field_set_yreal(result, 2*G_PI);
+    else gwy_data_field_set_yreal(result, G_PI);
 
 }
 #include <stdio.h>
@@ -147,35 +152,43 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                                           gint hwidth,
                                           gdouble threshold)
 {
-    GwyDataField *result;
+    GwyDataField *result, *water;
     gdouble hmax, hmin, threshval, zdata[20];
     gint i;
     gdouble xdata[20], ydata[20];
 
-    result = gwy_data_field_new(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
+    result = gwy_data_field_new(3*sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
                              +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield)),
                              360, 0, 10,
                              FALSE);
 
-    gwy_data_field_hough_line(dfield, x_gradient, y_gradient, result, hwidth, TRUE);
+    gwy_data_field_hough_line(dfield, x_gradient, y_gradient, result, hwidth, FALSE);
 
-    gwy_data_field_get_min_max(result, &hmin, &hmax);
-    threshval = hmin + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
+    water = gwy_data_field_duplicate(result);
+    gwy_data_field_grains_splash_water(result, water, 2,
+                                        0.005*(gwy_data_field_get_max(result) - gwy_data_field_get_min(result)));
+        
+   printf("%d %d, %g, %g\n", gwy_data_field_get_xres(result), gwy_data_field_get_yres(result),
+                    gwy_data_field_get_min(result), gwy_data_field_get_max(result));
+   
+    gwy_data_field_get_min_max(water, &hmin, &hmax);
     
-    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 20, 2, threshval, TRUE);
+    threshval = hmin + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
+    gwy_data_field_get_local_maxima_list(water, xdata, ydata, zdata, 20, 10, threshval, TRUE);
 
     for (i = 0; i < 20; i++)
     {
-        printf("zdata: %g %g %g\n", xdata[i], ydata[i], zdata[i]);
      
-       if (zdata[i] > threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
-           //printf("point: %d %d (of %d %d), xreal: %g  yreal: %g\n", xdata[i], ydata[i], result->xres, result->yres, result->xreal, result->yreal);     
+       if (zdata[i] > threshval) {
+           printf("point: %g %g (of %d %d), xreal: %g  yreal: %g\n", xdata[i], ydata[i], result->xres, result->yres, result->xreal, result->yreal);     
            bresenhams_line_polar(dfield,
-                                      ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres) - result->xreal/2,
-                                      ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
+                                      ((gdouble)xdata[i])*gwy_data_field_get_xreal(result)/((gdouble)gwy_data_field_get_xres(result))
+                                                  - gwy_data_field_get_xreal(result)/2.0,
+                                      ((gdouble)ydata[i])*G_PI/((gdouble)gwy_data_field_get_yres(result)) + G_PI/4,
                                       1);
         }
     }
+    g_object_unref(water);
 }
 
 void
@@ -237,6 +250,9 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
     gwy_data_field_hough_circle(dfield, x_gradient, y_gradient, result, radius);
 
+    
+    
+    
     gwy_data_field_get_min_max(result, &hmin, &hmax);
     threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2, threshval, TRUE);
@@ -334,7 +350,8 @@ bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta, gdouble 
      gint px1, px2, py1, py2;
 
      gwy_data_field_hough_polar_line_to_datafield(dfield, rho, theta, &px1, &px2, &py1, &py2);
-     
+    
+     //printf("sel: %d %d %d %d\n", px1, py1, px2, py2);
      bresenhams_line(dfield, px1, px2, py1, py2, value);
 }
 
