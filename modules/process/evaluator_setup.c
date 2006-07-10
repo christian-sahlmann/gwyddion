@@ -1209,10 +1209,8 @@ detect_points(EsetupControls *controls)
     gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
     y_gradient = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
-
-    gwy_data_field_filter_harris(x_gradient, y_gradient, filtered, 4, 0.07);
-    gwy_data_field_invert(filtered, FALSE, FALSE, TRUE);
-
+    gwy_data_field_filter_harris(x_gradient, y_gradient, filtered, 10, 0.1);
+    
     hmin = gwy_data_field_get_min(filtered);
     hmax = gwy_data_field_get_max(filtered);
     threshval = hmin + (hmax - hmin)*0.8;
