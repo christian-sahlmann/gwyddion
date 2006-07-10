@@ -1213,7 +1213,7 @@ detect_points(EsetupControls *controls)
     
     hmin = gwy_data_field_get_min(filtered);
     hmax = gwy_data_field_get_max(filtered);
-    threshval = hmin + (hmax - hmin)*0.6;
+    threshval = hmin + (hmax - hmin)*0.7;
     ndata = gwy_data_field_get_local_maxima_list(filtered,
                                          xdata,
                                          ydata,
@@ -1276,7 +1276,7 @@ detect_lines(EsetupControls *controls)
                                  0.005*(gwy_data_field_get_max(filtered) - gwy_data_field_get_min(filtered)));
 
     gwy_data_field_get_min_max(water, &hmin, &hmax);
-    threshval = hmin + (hmax - hmin)*0.2;
+    threshval = hmin + (hmax - hmin)*0.3;
     ndata = gwy_data_field_get_local_maxima_list(water,
                                          xdata,
                                          ydata,

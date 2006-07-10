@@ -428,6 +428,7 @@ struct _GwyCorrelationPoint {
     gint swidth;
     gint sheight;
     GwyDataField *pattern;
+    gdouble score;
 };
 
 struct _GwyCorrelationPointClass {
@@ -488,6 +489,7 @@ gwy_correlation_point_init(GwyCorrelationPoint *correlation_point)
     correlation_point->swidth = 100;
     correlation_point->sheight = 100;
     correlation_point->pattern = NULL;
+    correlation_point->score = -1;
 }
 
 GwyCorrelationPoint*

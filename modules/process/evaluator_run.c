@@ -236,7 +236,7 @@ get_detected_points(ErunArgs *args)
 
     hmin = gwy_data_field_get_min(filtered);
     hmax = gwy_data_field_get_max(filtered);
-    threshval = hmin + (hmax - hmin)*0.8;
+    threshval = hmin + (hmax - hmin)*0.6;
     ndata = gwy_data_field_get_local_maxima_list(filtered,
                                          xdata,
                                          ydata,
@@ -300,7 +300,7 @@ get_detected_lines(ErunArgs *args)
 
     hmin = gwy_data_field_get_min(water);
     hmax = gwy_data_field_get_max(water);
-    threshval = hmin + (hmax - hmin)*0.4;
+    threshval = hmin + (hmax - hmin)*0.2;
     ndata = gwy_data_field_get_local_maxima_list(water,
                                          xdata,
                                          ydata,
@@ -407,6 +407,7 @@ get_correlation_points(ErunArgs *args)
 
         pcpoint->xc = gwy_data_field_itor(dfield, colmax + xstart);
         pcpoint->yc = gwy_data_field_jtor(dfield, rowmax + ystart);
+        pcpoint->score = gwy_data_field_get_val(score, colmax, rowmax);
 
         g_object_unref(score);
         g_object_unref(part);
@@ -416,11 +417,12 @@ get_correlation_points(ErunArgs *args)
 static void
 get_features(ErunArgs *args)
 {
-    /*GwySearchPoint *pspoint;
+    GwySearchPoint *pspoint;
     GwySearchLine *psline;
     GwyCorrelationPoint *pcpoint;
-    */
-    /*
+    gint k;
+    
+    
     printf("Requested:\n");
     for (k=0; k<args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
@@ -434,14 +436,14 @@ get_features(ErunArgs *args)
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
         printf("cpoint: %s: %g %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc);
     }
-    */
+    
 
     get_detected_points(args);
     get_detected_lines(args);
     get_correlation_points(args);
 
     /*print summary for debug*/
-    /*
+    
     printf("Detected:\n");
     for (k=0; k<args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
@@ -453,9 +455,9 @@ get_features(ErunArgs *args)
      }
     for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
-        printf("cpoint: %s: %g %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc);
+        printf("cpoint: %s: %g %g score: %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc, pcpoint->score);
      }
-     */
+     
 
 }
 
@@ -817,6 +819,17 @@ eval_point_value(ErunArgs *args, gpointer a)
 }
 
 static gdouble
+eval_correlation_score(ErunArgs *args, gpointer a)
+{
+    GwyCorrelationPoint *spoint;
+
+    printf("sdfsdf\n");
+    spoint = GWY_CORRELATION_POINT(a);
+    printf("sdfsdf\n");
+    return spoint->score;
+}
+
+static gdouble
 eval_point_avg(ErunArgs *args, gpointer a, gint size)
 {
     GwySearchPoint *spoint;
@@ -1006,27 +1019,27 @@ object_parse(ErunArgs *args, gchar *variable)
 
     printf("parsing variable: %s\n", variable);
     if ((pos = strstr(variable, "dp"))!=NULL) {
-       num = atoi(pos + 4);
+       num = atoi(pos + 2);
        if (num >= args->evaluator->detected_point_array->len) return NULL;
        return (gpointer)g_ptr_array_index(args->evaluator->detected_point_array, num);
     }
     if ((pos = strstr(variable, "fp"))!=NULL) {
-       num = atoi(pos + 4);
+       num = atoi(pos + 2);
        if (num >= args->evaluator->fixed_point_array->len) return NULL;
        return (gpointer)g_ptr_array_index(args->evaluator->fixed_point_array, num);
     }
     if ((pos = strstr(variable, "cp"))!=NULL) {
-       num = atoi(pos + 4);
+       num = atoi(pos + 2);
        if (num >= args->evaluator->correlation_point_array->len) return NULL;
        return (gpointer)g_ptr_array_index(args->evaluator->correlation_point_array, num);
     }
     if ((pos = strstr(variable, "dl"))!=NULL) {
-       num = atoi(pos + 5);
+       num = atoi(pos + 2);
        if (num >= args->evaluator->detected_line_array->len) return NULL;
        return (gpointer)g_ptr_array_index(args->evaluator->detected_line_array, num);
     }
     if ((pos = strstr(variable, "fl"))!=NULL) {
-       num = atoi(pos + 5);
+       num = atoi(pos + 2);
        if (num >= args->evaluator->fixed_line_array->len) return NULL;
        return (gpointer)g_ptr_array_index(args->evaluator->fixed_line_array, num);
     }
@@ -1041,7 +1054,9 @@ replace_function(GString *expression, gint pos, gint len, gdouble value)
     valstr = g_string_new("");
     g_string_printf(valstr, "%g", value);
 
+    printf("erasing %s from %d, %d characters\n", expression->str, pos, len);
     expression = g_string_erase(expression, pos, len);
+    printf("inserting value %s at position %d (from total length %d)\n", valstr->str, pos, expression->len);
     expression = g_string_insert(expression, pos, valstr->str);
     g_free(valstr);
     return expression;
@@ -1107,7 +1122,7 @@ preparse_expression(ErunArgs *args, GString *expression)
         printf("function argument: %s\n", arg1->str);
 
         object1 = object_parse(args, arg1->str);
-        if (err1) return NULL;
+        if (!object1) return NULL;
         value = eval_line_min(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
@@ -1117,7 +1132,7 @@ preparse_expression(ErunArgs *args, GString *expression)
         printf("function argument: %s\n", arg1->str);
 
         object1 = object_parse(args, arg1->str);
-        if (err1) return NULL;
+        if (!object1) return NULL;
         value = eval_line_max(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
@@ -1127,7 +1142,7 @@ preparse_expression(ErunArgs *args, GString *expression)
         printf("function argument: %s\n", arg1->str);
 
         object1 = object_parse(args, arg1->str);
-        if (err1) return NULL;
+        if (!object1) return NULL;
         value = eval_line_avg(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
@@ -1137,7 +1152,7 @@ preparse_expression(ErunArgs *args, GString *expression)
         printf("function argument: %s\n", arg1->str);
 
         object1 = object_parse(args, arg1->str);
-        if (err1) return NULL;
+        if (!object1) return NULL;
         value = eval_line_rms(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
@@ -1147,17 +1162,28 @@ preparse_expression(ErunArgs *args, GString *expression)
         printf("function argument: %s\n", arg1->str);
 
         object1 = object_parse(args, arg1->str);
-        if (err1) return NULL;
+        if (!object1) return NULL;
         value = eval_point_value(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "PointNeural"))
+    if (strstr(expression->str, "CorrelationScore"))
+    {
+        pos = oneexpr_parse(expression, "CorrelationScore", &arg1, &len);
+        printf("function argument: %s\n", arg1->str);
+
+        object1 = object_parse(args, arg1->str);
+        if (!object1) return NULL;
+        value = eval_correlation_score(args, object1);
+        printf("sc: %g\nex: %s\npos: %d\nlen: %d\n", value, expression->str, pos, len);
+        expression = replace_function(expression, pos, len, value);
+    }
+     if (strstr(expression->str, "PointNeural"))
     {
         pos = oneexpr_parse(expression, "PointNeural", &arg1, &len);
         printf("function argument: %s\n", arg1->str);
 
         object1 = object_parse(args, arg1->str);
-        if (err1) return NULL;
+        if (!object1) return NULL;
         value = eval_point_neural(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
