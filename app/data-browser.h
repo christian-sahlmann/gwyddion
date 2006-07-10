@@ -105,6 +105,10 @@ GdkPixbuf* gwy_app_get_channel_thumbnail    (GwyContainer *data,
                                              gint id,
                                              gint max_width,
                                              gint max_height);
+void gwy_app_data_browser_select_data_field (GwyContainer *data,
+                                             gint id);
+void gwy_app_data_browser_select_graph_model(GwyContainer *data,
+                                             gint id);
 
 G_END_DECLS
 

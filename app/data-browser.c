@@ -260,8 +260,8 @@ gwy_app_data_proxy_connect_object(GwyAppDataList *list,
 }
 
 static void
-gwy_app_data_proxy_channel_changed(GwyDataField *channel,
-                                   GwyAppDataProxy *proxy)
+gwy_app_data_proxy_channel_changed(G_GNUC_UNUSED GwyDataField *channel,
+                                   G_GNUC_UNUSED GwyAppDataProxy *proxy)
 {
     gwy_debug("proxy=%p channel=%p", proxy, channel);
 }
@@ -327,8 +327,8 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
 }
 
 static void
-gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
-                                 GwyAppDataProxy *proxy)
+gwy_app_data_proxy_graph_changed(G_GNUC_UNUSED GwyGraphModel *graph,
+                                 G_GNUC_UNUSED GwyAppDataProxy *proxy)
 {
     gwy_debug("proxy=%p, graph=%p", proxy, graph);
 }
@@ -1958,6 +1958,76 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     graph_window = gtk_widget_get_toplevel(GTK_WIDGET(graph));
     if (graph_window != gwy_app_graph_window_get_current())
         gwy_app_graph_window_set_current(graph_window);
+}
+
+static GwyAppDataProxy*
+gwy_app_data_browser_select(GwyContainer *data,
+                            gint id,
+                            gint pageno,
+                            GtkTreeIter *iter)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+
+    gwy_app_data_browser_switch_data(data);
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    if (!gwy_app_data_proxy_find_object(proxy->lists[pageno].store, id,
+                                        iter)) {
+        g_warning("Cannot find object to select");
+        return NULL;
+    }
+
+    proxy->lists[pageno].active = id;
+    gwy_app_data_browser_select_object(browser, proxy, pageno);
+
+    return proxy;
+
+}
+
+void
+gwy_app_data_browser_select_data_field(GwyContainer *data,
+                                       gint id)
+{
+    GwyAppDataProxy *proxy;
+    GtkWidget *widget;
+    GtkTreeIter iter;
+
+    proxy = gwy_app_data_browser_select(data, id, PAGE_CHANNELS, &iter);
+
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), &iter,
+                       MODEL_WIDGET, &widget,
+                       -1);
+    if (widget) {
+        /* FIXME: This updated the other notion of current data */
+        g_object_unref(widget);
+        widget = gtk_widget_get_toplevel(widget);
+        if (widget != gwy_app_graph_window_get_current())
+            gwy_app_graph_window_set_current(widget);
+    }
+}
+
+void
+gwy_app_data_browser_select_graph_model(GwyContainer *data,
+                                        gint id)
+{
+    GwyAppDataProxy *proxy;
+    GtkWidget *widget;
+    GtkTreeIter iter;
+
+    proxy = gwy_app_data_browser_select(data, id, PAGE_GRAPHS, &iter);
+
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), &iter,
+                       MODEL_WIDGET, &widget,
+                       -1);
+    if (widget) {
+        /* FIXME: This updated the other notion of current data */
+        g_object_unref(widget);
+        widget = gtk_widget_get_toplevel(widget);
+        if (widget != (GtkWidget*)gwy_app_data_window_get_current())
+            gwy_app_data_window_set_current(GWY_DATA_WINDOW(widget));
+    }
 }
 
 static void
