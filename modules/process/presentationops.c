@@ -54,7 +54,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -188,6 +188,8 @@ presentation_logscale(GwyContainer *data, GwyRunType run)
         for (i = 0; i < xres*yres; i++)
             d[i] = d[i] ? log(d[i]) : m0;
     }
+
+    gwy_data_field_data_changed(sfield);
 }
 
 static void
