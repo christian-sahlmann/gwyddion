@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
