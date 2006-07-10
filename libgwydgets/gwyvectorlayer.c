@@ -253,6 +253,25 @@ gwy_vector_layer_set_focus_default(GwyVectorLayer *layer,
 }
 
 /**
+ * gwy_vector_layer_class_get_selection_type:
+ * @klass: A vector layer class.
+ *
+ * Returns the selection type of a vector layer class.
+ *
+ * Note this is a class method, to get the type from an instance one can use
+ * gwy_vector_layer_class_selection_type().  To get the type from layer's
+ * #GType one has to use g_type_class_peek().
+ *
+ * Returns: The type of selection used by layers of class @klass.
+ **/
+GType
+gwy_vector_layer_class_get_selection_type(GwyVectorLayerClass *klass)
+{
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER_CLASS(klass), 0);
+    return klass->selection_type;
+}
+
+/**
  * gwy_vector_layer_set_focus:
  * @layer: A vector data view layer.
  * @focus: Index of object to focus on, use -1 to unfocus (allow interaction
@@ -829,8 +848,12 @@ gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
  * is not normally usable outside of it.
  *
  * The layer takes the selection to display from its parent #GwyDataView's
- * container. The key under which the selection is found must be set with
- * gwy_vector_layer_set_selection_key().
+ * container. The key under which the selection is found is set with
+ * gwy_vector_layer_set_selection_key().  The selection either can be put
+ * there beforehand (the corresponding selection type can be obtained with
+ * gwy_vector_layer_class_get_selection_type()) or
+ * gwy_vector_layer_ensure_selection() can be used to create it if it doesn't
+ * exist.
  *
  * #GwyVectorLayer provides two independent means to restrict user interaction
  * with displayed selection: editability and focus.  When a layer is set
@@ -842,6 +865,16 @@ gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
  *
  * The other methods are rarely useful outside #GwyDataView and/or layer
  * implementation.
+ **/
+
+/**
+ * gwy_vector_layer_get_selection_type:
+ * @layer: A vector layer.
+ *
+ * Returns the selection type of a vector layer.
+ *
+ * This is a convenience wrapper around
+ * gwy_vector_layer_class_get_selection_type().
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

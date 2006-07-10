@@ -95,6 +95,11 @@ struct _GwyVectorLayerClass {
 };
 
 GType         gwy_vector_layer_get_type         (void) G_GNUC_CONST;
+GType  gwy_vector_layer_class_get_selection_type(GwyVectorLayerClass *klass);
+
+#define gwy_vector_layer_get_selection_type(layer) \
+    gwy_vector_layer_class_get_selection_type(GWY_VECTOR_LAYER_GET_CLASS(layer))
+
 void          gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
                                                  const gchar *key);
 const gchar*  gwy_vector_layer_get_selection_key(GwyVectorLayer *layer);
