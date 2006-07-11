@@ -886,7 +886,7 @@ gwy_vector_layer_object_chosen(GwyVectorLayer *layer,
  * gwy_vector_layer_get_selection_type:
  * @layer: A vector layer.
  *
- * Returns the selection type of a vector layer.
+ * Gets the selection type of a vector layer.
  *
  * This is a convenience wrapper around
  * gwy_vector_layer_class_get_selection_type().
