@@ -1111,7 +1111,7 @@ replace_function(GString *expression, gint pos, gint len, gdouble value)
 }
 
 static GString *
-preparse_expression(ErunArgs *args, GString *expression)
+preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_variables)
 {
     GString *arg1, *arg2;
     gint pos, len;
@@ -1124,6 +1124,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "PointAvg", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
+        g_ptr_array_add(object_variables, arg1);
+        g_ptr_array_add(object_variables, arg2);
 
         object1 = object_parse(args, arg1->str);
         var1 = variable_parse(args, arg2->str, &err2);
@@ -1135,6 +1137,9 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "IntersectX", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
+        g_ptr_array_add(object_variables, arg1);
+        g_ptr_array_add(object_variables, arg2);
+
 
         object1 = object_parse(args, arg1->str);
         object2 = object_parse(args, arg2->str);
@@ -1146,6 +1151,9 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "IntersectY", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
+        g_ptr_array_add(object_variables, arg1);
+        g_ptr_array_add(object_variables, arg2);
+
 
         object1 = object_parse(args, arg1->str);
         object2 = object_parse(args, arg2->str);
@@ -1157,6 +1165,9 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = twoexpr_parse(expression, "Angle", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
+        g_ptr_array_add(object_variables, arg1);
+        g_ptr_array_add(object_variables, arg2);
+
 
         object1 = object_parse(args, arg1->str);
         object2 = object_parse(args, arg2->str);
@@ -1168,6 +1179,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineMin", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1178,6 +1191,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineMax", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1188,6 +1203,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineAvg", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1198,6 +1215,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "LineRMS", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1208,6 +1227,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "PointValue", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1218,6 +1239,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "CorrelationScore", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1228,6 +1251,8 @@ preparse_expression(ErunArgs *args, GString *expression)
     {
         pos = oneexpr_parse(expression, "PointNeural", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
+        g_ptr_array_add(object_variables, arg1);
+
 
         object1 = object_parse(args, arg1->str);
         if (!object1) return NULL;
@@ -1289,14 +1314,19 @@ static void evaluate(ErunArgs *args)
     EvalData *edata;
     GError *err;
     gboolean error;
+    GPtrArray *objvar;
+    gint nobjects;
+    gchar **variable_ids;
+    GString *object_id;
 
     for (k = 0; k<args->evaluator->expression_task_array->len; k++)
     {
         edata = g_new(EvalData, 1);
         etset = g_ptr_array_index(args->evaluator->expression_task_array, k);
         expression = g_string_new(etset->expression);
-
-        expression = preparse_expression(args, expression);
+        objvar = g_ptr_array_new();
+        
+        expression = preparse_expression(args, expression, objvar);
         if (expression == NULL) {
             gwy_debug("preparse failed\n");
             return;
@@ -1312,7 +1342,6 @@ static void evaluate(ErunArgs *args)
         }
 
         edata->nvariables = gwy_expr_get_variables(expr, &edata->variable_ids);
-
         gwy_debug("%d variables in expression %s\n", edata->nvariables, expression->str);
         edata->variables = g_malloc(edata->nvariables*sizeof(gdouble));
 
@@ -1329,8 +1358,28 @@ static void evaluate(ErunArgs *args)
         edata->error = g_strdup("none");
 
         edata->bresult = get_bresult(edata->result, etset->threshold);
-
+       
+        /*add object variables to the fields*/
+        nobjects = objvar->len;
+        
+        variable_ids = g_new(gchar *, edata->nvariables + nobjects);
+        for (i = 1; i<edata->nvariables; i++)
+        {
+            variable_ids[i] = g_strdup(edata->variable_ids[i]);
+            g_free(edata->variable_ids[i]);
+        }
+        for (i = edata->nvariables; i<(edata->nvariables + nobjects); i++)
+        {
+            object_id = (GString *)(g_ptr_array_index(objvar, i - edata->nvariables));
+            variable_ids[i] = g_strdup(object_id->str);
+        }
+         
+        edata->nvariables += nobjects;
+        g_free(edata->variable_ids);
+        edata->variable_ids = variable_ids;
+        
         g_ptr_array_add(args->evaldata, edata);
+        g_ptr_array_free(objvar, TRUE);
     }
 
 
