@@ -483,19 +483,19 @@ gwy_evaluator_correlation_point_dialog_init(GwyEvaluatorCorrelationPointDialog *
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     row++;
-    dialog->width_adj = gtk_adjustment_new(dialog->width, 0.0, 100.0, 1, 10, 0);
+    dialog->width_adj = gtk_adjustment_new(dialog->width, 0.0, 200.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Width:"), _("pixels"),
                                                  dialog->width_adj);
     
-    dialog->height_adj = gtk_adjustment_new(dialog->height, 0.0, 100.0, 1, 10, 0);
+    dialog->height_adj = gtk_adjustment_new(dialog->height, 0.0, 200.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Height:"), _("pixels"),
                                                  dialog->height_adj);
          
-    dialog->swidth_adj = gtk_adjustment_new(dialog->swidth, 0.0, 100.0, 1, 10, 0);
+    dialog->swidth_adj = gtk_adjustment_new(dialog->swidth, 0.0, 300.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("Se_arch width:"), _("pixels"),
                                                  dialog->swidth_adj);
     
-    dialog->sheight_adj = gtk_adjustment_new(dialog->sheight, 0.0, 100.0, 1, 10, 0);
+    dialog->sheight_adj = gtk_adjustment_new(dialog->sheight, 0.0, 300.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("Sea_rch height:"), _("pixels"),
                                                  dialog->sheight_adj);
  

@@ -40,6 +40,7 @@ typedef enum {
     GWY_EVALUATOR_TASK_LINES_INTERSECTION_X = 8,
     GWY_EVALUATOR_TASK_LINES_INTERSECTION_Y = 9,
     GWY_EVALUATOR_TASK_POINT_LINE_DISTANCE = 10,
+    GWY_EVALUATOR_TASK_POINT_SCORE = 11,
 } GwyEvaluatorTaskFunction;
 
 typedef enum {
@@ -179,6 +180,7 @@ gwy_evaluator_task_dialog_init(GwyEvaluatorTaskDialog *dialog)
         { N_("Y intersection of lines (line ID, line ID)"),  GWY_EVALUATOR_TASK_LINES_INTERSECTION_Y,    },
         { N_("Angle between lines (line ID, line ID)"),      GWY_EVALUATOR_TASK_LINES_ANGLE,             },
         { N_("Point - line distance(line ID, point ID)"),    GWY_EVALUATOR_TASK_POINT_LINE_DISTANCE,     },
+        { N_("Correlation score"),                           GWY_EVALUATOR_TASK_POINT_SCORE,             },
     };
     static const GwyEnum thresholds[] = {
         { N_("Bigger than"),                 GWY_EVALUATOR_THRESHOLD_BIGGER,               },
@@ -296,6 +298,7 @@ function_add_cb(GwyEvaluatorTaskDialog *dialog)
         { N_("IntersectY()"),   GWY_EVALUATOR_TASK_LINES_INTERSECTION_Y,    },
         { N_("Angle()"),        GWY_EVALUATOR_TASK_LINES_ANGLE,             },
         { N_("PLDistance()"),   GWY_EVALUATOR_TASK_POINT_LINE_DISTANCE,     },
+        { N_("CorrelationScore()"),   GWY_EVALUATOR_TASK_POINT_SCORE,     },
     };
 
 
