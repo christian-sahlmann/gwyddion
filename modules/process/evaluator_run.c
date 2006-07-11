@@ -1111,7 +1111,7 @@ replace_function(GString *expression, gint pos, gint len, gdouble value)
 }
 
 static GString *
-preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_variables)
+preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_variables, gboolean *done)
 {
     GString *arg1, *arg2;
     gint pos, len;
@@ -1133,7 +1133,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_point_avg(args, object1, var1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "IntersectX"))
+    else if (strstr(expression->str, "IntersectX"))
     {
         pos = twoexpr_parse(expression, "IntersectX", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
@@ -1147,7 +1147,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_intersection_x(args, object1, object2);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "IntersectY"))
+    else if (strstr(expression->str, "IntersectY"))
     {
         pos = twoexpr_parse(expression, "IntersectY", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
@@ -1161,7 +1161,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_intersection_y(args, object1, object2);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "Angle"))
+    else if (strstr(expression->str, "Angle"))
     {
         pos = twoexpr_parse(expression, "Angle", &arg1, &arg2, &len);
         gwy_debug("function arguments: %s %s\n", arg1->str, arg2->str);
@@ -1175,7 +1175,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_angle(args, object1, object2);
         expression = replace_function(expression, pos, len, value);
     }
-       if (strstr(expression->str, "LineMin"))
+    else if (strstr(expression->str, "LineMin"))
     {
         pos = oneexpr_parse(expression, "LineMin", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1187,7 +1187,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_line_min(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "LineMax"))
+    else if (strstr(expression->str, "LineMax"))
     {
         pos = oneexpr_parse(expression, "LineMax", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1199,7 +1199,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_line_max(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "LineAvg"))
+    else if (strstr(expression->str, "LineAvg"))
     {
         pos = oneexpr_parse(expression, "LineAvg", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1211,7 +1211,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_line_avg(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "LineRMS"))
+    else if (strstr(expression->str, "LineRMS"))
     {
         pos = oneexpr_parse(expression, "LineRMS", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1223,7 +1223,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_line_rms(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "PointValue"))
+    else if (strstr(expression->str, "PointValue"))
     {
         pos = oneexpr_parse(expression, "PointValue", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1235,7 +1235,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_point_value(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-    if (strstr(expression->str, "CorrelationScore"))
+    else if (strstr(expression->str, "CorrelationScore"))
     {
         pos = oneexpr_parse(expression, "CorrelationScore", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1247,7 +1247,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_correlation_score(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
-     if (strstr(expression->str, "PointNeural"))
+    else if (strstr(expression->str, "PointNeural"))
     {
         pos = oneexpr_parse(expression, "PointNeural", &arg1, &len);
         gwy_debug("function argument: %s\n", arg1->str);
@@ -1259,6 +1259,7 @@ preparse_expression(ErunArgs *args, GString *expression, GPtrArray *object_varia
         value = eval_point_neural(args, object1);
         expression = replace_function(expression, pos, len, value);
     }
+    else *done = TRUE;
 
 
     return expression;
@@ -1317,6 +1318,7 @@ static void evaluate(ErunArgs *args)
     GPtrArray *objvar;
     gint nobjects;
     gchar **variable_ids;
+    gboolean done;
     GString *object_id;
 
     for (k = 0; k<args->evaluator->expression_task_array->len; k++)
@@ -1326,7 +1328,11 @@ static void evaluate(ErunArgs *args)
         expression = g_string_new(etset->expression);
         objvar = g_ptr_array_new();
         
-        expression = preparse_expression(args, expression, objvar);
+        done = FALSE;
+        do
+            expression = preparse_expression(args, expression, objvar, &done);
+        while (!done);
+
         if (expression == NULL) {
             gwy_debug("preparse failed\n");
             return;
