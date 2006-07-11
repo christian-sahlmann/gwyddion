@@ -618,9 +618,12 @@ static void
 create_results_window(ErunArgs *args)
 {
     enum { RESPONSE_SAVE = 1 };
-    GtkWidget *window, *table;
+    GtkWidget *window, *table, *label;
     GString *str;
-    gint row;
+    gint k;
+    GwyEvaluatorTask *petask;
+    EvalData *edata;
+        
 
     window = gtk_dialog_new_with_buttons(_("Evaluator results"), NULL, 0,
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
@@ -628,14 +631,63 @@ create_results_window(ErunArgs *args)
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
 
-    table = gtk_table_new(9, 2, FALSE);
+    table = gtk_table_new(args->evaluator->expression_task_array->len, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
                        FALSE, FALSE, 0);
-    row = 0;
 
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Statement </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
+                                       GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Expression </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
+                                       GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Threshold </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
+                                       GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Result </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
+                                       GTK_EXPAND | GTK_FILL, 0, 2, 2);
+       
+    for (k=0; k<args->evaluator->expression_task_array->len; k++) {
+        petask = g_ptr_array_index(args->evaluator->expression_task_array, k);
+        edata = g_ptr_array_index(args->evaldata, k);
+
+        label = gtk_label_new("");
+        if (edata->bresult) gtk_label_set_text(GTK_LABEL(label), "Success ");
+        else gtk_label_set_text(GTK_LABEL(label), "Failed ");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, k+1, k+2,
+                                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
+         
+        label = gtk_label_new(petask->expression);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 1, 2, k+1, k+2,
+                                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        
+        label = gtk_label_new(petask->threshold);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 2, 3, k+1, k+2,
+                                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
+  
+        
+        label = gtk_label_new(g_strdup_printf("%g", edata->result));
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 3, 4, k+1, k+2,
+                                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
+       
+    }
 
     str = create_evaluator_report(args);
+    
 
     g_signal_connect(window, "response",
                      G_CALLBACK(results_window_response_cb), str);
@@ -658,8 +710,6 @@ create_evaluator_report(ErunArgs *args)
     gint k, i;
 
     report = g_string_new("");
-
-    /*g_string_append_printf(report, _("\n===== Evaluator Results =====\n"));*/
 
     for (k=0; k<args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
