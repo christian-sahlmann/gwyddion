@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *  Copyright (C) 2004 Martin Siler.
  *  E-mail: silerm@physics.muni.cz.
@@ -33,6 +33,7 @@
 
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwy3dlabel.h>
+#include <libgwydgets/gwy3dsetup.h>
 
 G_BEGIN_DECLS
 
@@ -58,11 +59,23 @@ struct _Gwy3DView {
 
     GwyContainer *data;           /* Container with data */
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
+    GwyDataField *downsampled2;
+
+    Gwy3DSetup *setup;
+    GQuark setup_key;
+    gulong setup_id;
+    gulong setup_item_id;
 
     GwyDataField *data_field;
     GQuark data_key;
     gulong data_id;
     gulong data_item_id;
+
+    /* Unused, intended for future color !~ height visualization */
+    GwyDataField *data2_field;
+    GQuark data2_key;
+    gulong data2_id;
+    gulong data2_item_id;
 
     GwyGradient *gradient;
     GQuark gradient_key;
@@ -74,35 +87,26 @@ struct _Gwy3DView {
     gulong material_id;
     gulong material_item_id;
 
+    Gwy3DLabel **labels;          /* labels text, displacement etc */
+    gulong     *label_signal_ids;
+    GHashTable *variables;        /* Label substitution variables */
+
     gint changed;                 /* What has changed, XXX: not used */
 
     gint shape_list_base;         /* Base index of scene display lists */
     guint shape_current;          /* Actually shown shape in the scene
                                      (full or reduced data) */
 
-    GtkAdjustment *rot_x;         /* First angle of ratation of the scene */
-    GtkAdjustment *rot_y;         /* Second angle of ratation of the scene */
-    GtkAdjustment *view_scale;    /* Actual zoom*/
-    GtkAdjustment *deformation_z; /* Deformation of the z axis within the
-                                     scene */
-    GtkAdjustment *light_z;       /* First angle describing position of light */
-    GtkAdjustment *light_y;       /* Second angle describing position of
-                                     light */
     gdouble view_scale_max;       /* Maximum zoom of the scene */
     gdouble view_scale_min;       /* Minimum zoom of the scene */
 
     gdouble mouse_begin_x;        /* Start x-coordinate of mouse */
     gdouble mouse_begin_y;        /* Start y-coordinate of mouse */
 
-    gboolean timeout;             /* Is running timeout for redrawing in full
-                                     scale */
-    guint timeout_id;             /* Timeout id */
+    guint timeout_id;             /* Full size redraw timeout id */
 
     PangoContext *ft2_context;    /* For text rendering */
     PangoFontMap *ft2_font_map;   /* Font map for text rendering */
-    Gwy3DLabel **labels;          /* labels text, displacement etc */
-    gulong      *label_signal_ids;
-    GHashTable *variables;        /* Label substitution variables */
 
     gboolean b_reserved1;
     gboolean b_reserved2;
@@ -126,11 +130,16 @@ struct _Gwy3DViewClass {
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
+    gpointer reserved5;
+    gpointer reserved6;
 };
 
 GtkWidget*        gwy_3d_view_new               (GwyContainer *data);
 GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
+const gchar*      gwy_3d_view_get_setup_key     (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_setup_key     (Gwy3DView *gwy3dview,
+                                                 const gchar *key);
 const gchar*      gwy_3d_view_get_data_key      (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_data_key      (Gwy3DView *gwy3dview,
                                                  const gchar *key);
@@ -167,21 +176,13 @@ GdkPixbuf*        gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
 Gwy3DLabel*       gwy_3d_view_get_label         (Gwy3DView *gwy3dview,
                                                  Gwy3DViewLabel label);
 GwyContainer*     gwy_3d_view_get_data          (Gwy3DView *gwy3dview);
-void              gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
-GtkAdjustment* gwy_3d_view_get_rot_x_adjustment         (Gwy3DView *gwy3dview);
-GtkAdjustment* gwy_3d_view_get_rot_y_adjustment         (Gwy3DView *gwy3dview);
-GtkAdjustment* gwy_3d_view_get_view_scale_adjustment    (Gwy3DView *gwy3dview);
-GtkAdjustment* gwy_3d_view_get_z_deformation_adjustment (Gwy3DView *gwy3dview);
-GtkAdjustment* gwy_3d_view_get_light_z_adjustment       (Gwy3DView *gwy3dview);
-GtkAdjustment* gwy_3d_view_get_light_y_adjustment       (Gwy3DView *gwy3dview);
-
-gdouble           gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview);
-gdouble           gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
-                                                 gdouble new_max_scale);
-void              gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
-                                                 gdouble new_min_scale);
+void              gwy_3d_view_get_scale_range   (Gwy3DView *gwy3dview,
+                                                 gdouble *min_scale,
+                                                 gdouble *max_scale);
+void              gwy_3d_view_set_scale_range   (Gwy3DView *gwy3dview,
+                                                 gdouble min_scale,
+                                                 gdouble max_scale);
 
 G_END_DECLS
 

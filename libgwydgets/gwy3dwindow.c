@@ -604,15 +604,60 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     return GTK_WIDGET(gwy3dwindow);
 }
 
+static void
+gwy_3d_window_setup_adj_changed(GtkAdjustment *adj,
+                                Gwy3DSetup *setup)
+{
+    const gchar *property;
+
+    property = g_object_get_data(G_OBJECT(adj), "gwy-3d-window-setup-property");
+    g_object_set(setup, property, adj->value, NULL);
+}
+
+static GtkObject*
+gwy_3d_window_make_setup_adj(Gwy3DSetup *setup,
+                             const gchar *property,
+                             gdouble min,
+                             gdouble max,
+                             gdouble step,
+                             gdouble page)
+{
+    GtkObject *adj;
+    gdouble value;
+
+    g_object_get(setup, property, &value, NULL);
+    adj = gtk_adjustment_new(value, min, max, step, page, 0.0);
+    g_object_set_data(G_OBJECT(adj), "gwy-3d-window-setup-property",
+                      (gpointer)property);
+    g_signal_connect(adj, "value-changed",
+                     G_CALLBACK(gwy_3d_window_setup_adj_changed), setup);
+
+    return adj;
+}
+
+static Gwy3DSetup*
+gwy_3d_window_get_view_setup(Gwy3DWindow *gwy3dwindow)
+{
+    /* XXX XXX XXX */
+    static Gwy3DSetup *setup = NULL;
+
+    if (!setup)
+        setup = gwy_3d_setup_new();
+
+    return setup;
+}
 
 static GtkWidget*
 gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 {
     Gwy3DView *view;
+    Gwy3DSetup *setup;
     GtkWidget *vbox, *spin, *table, *check;
+    GtkObject *adj;
     gint row;
 
     view = GWY_3D_VIEW(window->gwy3dview);
+    setup = gwy_3d_window_get_view_setup(window);
 
     vbox = gtk_vbox_new(FALSE, 0);
 
@@ -623,20 +668,21 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    spin = gwy_table_attach_spinbutton
-               (table, row++, _("_Phi:"), _("deg"),
-                (GtkObject*)gwy_3d_view_get_rot_x_adjustment(view));
-    spin = gwy_table_attach_spinbutton
-               (table, row++, _("_Theta:"), _("deg"),
-                (GtkObject*)gwy_3d_view_get_rot_y_adjustment(view));
-    spin = gwy_table_attach_spinbutton
-               (table, row++, _("_Scale:"), NULL,
-                (GtkObject*)gwy_3d_view_get_view_scale_adjustment(view));
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    spin = gwy_table_attach_spinbutton
-               (table, row++, _("_Value scale:"), NULL,
-                (GtkObject*)gwy_3d_view_get_z_deformation_adjustment(view));
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    adj = gwy_3d_window_make_setup_adj(setup, "rotation-x",
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+    spin = gwy_table_attach_spinbutton(table, row++, _("_Phi:"), _("deg"), adj);
+
+    adj = gwy_3d_window_make_setup_adj(setup, "rotation-y",
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+    spin = gwy_table_attach_spinbutton(table, row++,
+                                       _("_Theta:"), _("deg"), adj);
+
+    adj = gwy_3d_window_make_setup_adj(setup, "scale", 0.05, 10.0, 0.01, 0.1);
+    spin = gwy_table_attach_spinbutton(table, row++, _("_Scale:"), NULL, adj);
+
+    adj = gwy_3d_window_make_setup_adj(setup, "z-scale", 0.05, 10.0, 0.01, 0.1);
+    spin = gwy_table_attach_spinbutton(table, row++,
+                                       _("_Value scale:"), NULL, adj);
 
     check = gtk_check_button_new_with_mnemonic(_("Show _axes"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
@@ -677,11 +723,14 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     };
 
     Gwy3DView *view;
+    Gwy3DSetup *setup;
     GtkWidget *vbox, *spin, *table, *menu, *label;
     Gwy3DVisualization visual;
+    GtkObject *adj;
     gint row;
 
     view = GWY_3D_VIEW(window->gwy3dview);
+    setup = gwy_3d_window_get_view_setup(window);
 
     vbox = gtk_vbox_new(FALSE, 0);
 
@@ -720,15 +769,17 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    spin = gwy_table_attach_spinbutton
-                         (table, row++, _("Light _phi:"), _("deg"),
-                          (GtkObject*)gwy_3d_view_get_light_z_adjustment(view));
+    adj = gwy_3d_window_make_setup_adj(setup, "light-phi",
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+    spin = gwy_table_attach_spinbutton(table, row++,
+                                       _("Light _phi:"), _("deg"), adj);
     window->lights_spin1 = spin;
     gtk_widget_set_sensitive(spin, visual);
 
-    spin = gwy_table_attach_spinbutton
-                         (table, row++, _("Light _theta:"), _("deg"),
-                          (GtkObject*)gwy_3d_view_get_light_y_adjustment(view));
+    adj = gwy_3d_window_make_setup_adj(setup, "light-theta",
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+    spin = gwy_table_attach_spinbutton(table, row++,
+                                       _("Light _theta:"), _("deg"), adj);
     window->lights_spin2 = spin;
     gtk_widget_set_sensitive(spin, visual);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *  Copyright (C) 2004 Martin Siler.
  *  E-mail: silerm@physics.muni.cz.
@@ -118,13 +118,6 @@ static void     gwy_3d_view_get_property         (GObject*object,
                                                   GParamSpec *pspec);
 static void     gwy_3d_view_realize              (GtkWidget *widget);
 static void     gwy_3d_view_unrealize            (GtkWidget *widget);
-static GtkAdjustment* gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
-                                                    const gchar *key,
-                                                    gdouble value,
-                                                    gdouble lower,
-                                                    gdouble upper,
-                                                    gdouble step,
-                                                    gdouble page);
 static void     gwy_3d_view_container_connect    (Gwy3DView *gwy3dview,
                                                   const gchar *data_key_string,
                                                   gulong *id,
@@ -154,8 +147,6 @@ static gboolean gwy_3d_view_configure            (GtkWidget *widget,
                                                   GdkEventConfigure *event);
 static void     gwy_3d_view_send_configure       (Gwy3DView *gwy3dview);
 static gboolean gwy_3d_view_button_press         (GtkWidget *widget,
-                                                  GdkEventButton *event);
-static gboolean gwy_3d_view_button_release       (GtkWidget *widget,
                                                   GdkEventButton *event);
 static Gwy3DVector* gwy_3d_make_normals          (GwyDataField *dfield,
                                                   Gwy3DVector *normals);
@@ -231,7 +222,6 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     widget_class->size_request = gwy_3d_view_size_request;
     widget_class->size_allocate = gwy_3d_view_size_allocate;
     widget_class->button_press_event = gwy_3d_view_button_press;
-    widget_class->button_release_event = gwy_3d_view_button_release;
     widget_class->motion_notify_event = gwy_3d_view_motion_notify;
 
     klass->list_pool = g_new0(Gwy3DListPool, 1);
@@ -363,12 +353,6 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_object_unref(gwy3dview->data_field);
     gwy_object_unref(gwy3dview->downsampled);
     gwy_object_unref(gwy3dview->data);
-    gwy_object_unref(gwy3dview->rot_x);
-    gwy_object_unref(gwy3dview->rot_y);
-    gwy_object_unref(gwy3dview->view_scale);
-    gwy_object_unref(gwy3dview->deformation_z);
-    gwy_object_unref(gwy3dview->light_z);
-    gwy_object_unref(gwy3dview->light_y);
 
     GTK_OBJECT_CLASS(gwy_3d_view_parent_class)->destroy(object);
 }
@@ -507,31 +491,6 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy3dview->data = data;
 
-    gwy3dview->rot_x
-        = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/rot_x",
-                                        45.0, -G_MAXDOUBLE, G_MAXDOUBLE,
-                                         5.0, 30.0);
-    gwy3dview->rot_y
-        = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/rot_y",
-                                        -45.0, -270.0, 180.0,
-                                        5.0, 15.0);
-    gwy3dview->view_scale
-        = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/view_scale",
-                                        1.0, 0.0, G_MAXDOUBLE,
-                                        0.05, 0.5);
-    gwy3dview->deformation_z
-        = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/deformation_z",
-                                        1.0, 0.0, G_MAXDOUBLE,
-                                        0.05, 0.5);
-    gwy3dview->light_z
-        = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/light_z",
-                                        0.0, -G_MAXDOUBLE, G_MAXDOUBLE,
-                                        1.0, 15.0);
-    gwy3dview->light_y
-        = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/light_y",
-                                        0.0, -G_MAXDOUBLE, G_MAXDOUBLE,
-                                        1.0, 15.0);
-
     gwy_3d_view_container_connect
                             (gwy3dview,
                              g_quark_to_string(gwy3dview->data_key),
@@ -644,34 +603,6 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
         g_hash_table_insert(gwy3dview->variables, "min", g_strdup(buffer));
 
     gwy_si_unit_value_format_free(format);
-}
-
-static GtkAdjustment*
-gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
-                              const gchar *key,
-                              gdouble value,
-                              gdouble lower,
-                              gdouble upper,
-                              gdouble step,
-                              gdouble page)
-{
-    GtkObject *adj;
-    GQuark quark;
-
-    if (!container_key_quark)
-        container_key_quark = g_quark_from_string("gwy3dview-container-key");
-
-    quark = g_quark_from_string(key);
-    gwy_container_gis_double(gwy3dview->data, quark, &value);
-    adj = gtk_adjustment_new(value, lower, upper, step, page, 0.0);
-    g_object_ref(adj);
-    gtk_object_sink(adj);
-    g_object_set_qdata(G_OBJECT(adj), container_key_quark,
-                       GUINT_TO_POINTER(quark));
-    g_signal_connect(adj, "value-changed",
-                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
-
-    return (GtkAdjustment*)adj;
 }
 
 static void
@@ -1294,202 +1225,61 @@ gwy_3d_view_get_data(Gwy3DView *gwy3dview)
 }
 
 /**
- * gwy_3d_view_reset_view:
+ * gwy_3d_view_get_scale_range:
  * @gwy3dview: A 3D data view widget.
+ * @min_scale: Location to put minimum scale, or %NULL.
+ * @max_scale: Location to put maximum scale, or %NULL.
  *
- * Resets angle of the view, scale, deformation ant the position
- * of the light to the "default" values. Invalidates the widget.
+ * Obtains the minimum and maximum zoom of a 3D data view
  **/
 void
-gwy_3d_view_reset_view(Gwy3DView *gwy3dview)
-{
-   g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-   gtk_adjustment_set_value(gwy3dview->rot_x, 45.0);
-   gtk_adjustment_set_value(gwy3dview->rot_y, -45.0);
-   gtk_adjustment_set_value(gwy3dview->view_scale, 1.0);
-   gtk_adjustment_set_value(gwy3dview->deformation_z, 1.0);
-   gtk_adjustment_set_value(gwy3dview->light_z, 0.0);
-   gtk_adjustment_set_value(gwy3dview->light_y, 0.0f);
-
-   gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-}
-
-/**
- * gwy_3d_view_get_rot_x_adjustment:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a GtkAdjustment with settings of the Phi angle of rotation.
- *
- * Returns: a GtkAdjustment with settings of the Phi angle of rotation
- **/
-GtkAdjustment*
-gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->rot_x;
-}
-
-/**
- * gwy_3d_view_get_rot_y_adjustment:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a GtkAdjustment with settings of the Theta angle of rotation
- *
- * Returns: a GtkAdjustment with settings of the Theta angle of rotation
- **/
-GtkAdjustment*
-gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->rot_y;
-}
-
-/**
- * gwy_3d_view_get_view_scale_adjustment:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a GtkAdjustment with settings of the view zoom
- *
- * Returns: a GtkAdjustment with settings of the view zoom
- **/
-GtkAdjustment*
-gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->view_scale;
-}
-
-/**
- * gwy_3d_view_get_z_deformation_adjustment:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a GtkAdjustment with settings of the zoom of the z-axis
- *
- * Returns: a GtkAdjustment with settings of the zoom of the z-axis
- **/
-GtkAdjustment*
-gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->deformation_z;
-}
-
-/**
- * gwy_3d_view_get_light_z_adjustment:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a GtkAdjustment with settings of the Phi angle of light position.
- *
- * Returns: a GtkAdjustment with settings of the Phi angle of light position
- **/
-GtkAdjustment*
-gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->light_z;
-}
-
-/**
- * gwy_3d_view_get_light_y_adjustment:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a GtkAdjustment with settings of the Theta angle of light position.
- *
- * Returns: a GtkAdjustment with settings of the Theta angle of light position
- **/
-GtkAdjustment*
-gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->light_y;
-}
-
-/**
- * gwy_3d_view_get_max_view_scale:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns the maximal zoom of the 3D data view
- *
- * Returns: the maximal zoom of the 3D data view
- **/
-gdouble
-gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
-    return gwy3dview->view_scale_max;
-}
-
-/**
- * gwy_3d_view_get_min_view_scale:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns the minimal zoom of the 3D data view
- *
- * Returns: the minimal zoom of the 3D data view
- **/
-gdouble
-gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
-    return gwy3dview->view_scale_min;
-}
-
-/**
- * gwy_3d_view_set_max_view_scale:
- * @gwy3dview: A 3D data view widget.
- * @new_max_scale: maximal zoom of the 3D data view
- *
- * Sets the new maximal zoom of 3D data view. Recommended values are 0.5 - 5.0.
- **/
-void
-gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
-                               gdouble new_max_scale)
+gwy_3d_view_get_scale_range(Gwy3DView *gwy3dview,
+                            gdouble *min_scale,
+                            gdouble *max_scale)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    new_max_scale = fabs(new_max_scale);
-    if (new_max_scale != gwy3dview->view_scale_max) {
-        gwy3dview->view_scale_max = new_max_scale;
-        if (gwy3dview->view_scale_max < gwy3dview->view_scale_min)
-            GWY_SWAP(gdouble,
-                     gwy3dview->view_scale_max,
-                     gwy3dview->view_scale_min);
-        if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
-           gtk_adjustment_set_value(gwy3dview->view_scale,
-                                    gwy3dview->view_scale_max);
-        if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
-           gtk_adjustment_set_value(gwy3dview->view_scale,
-                                    gwy3dview->view_scale_min);
-    }
+    if (min_scale)
+        *min_scale = gwy3dview->view_scale_min;
+    if (max_scale)
+        *max_scale = gwy3dview->view_scale_max;
 }
 
 /**
- * gwy_3d_view_set_min_view_scale:
+ * gwy_3d_view_set_scale_range:
  * @gwy3dview: A 3D data view widget.
- * @new_min_scale: minimal zoom of the 3D data view
+ * @min_scale: Minimum zoom of the 3D data view, pass 0.0 to keep the current
+ *             value.
+ * @max_scale: Maximum zoom of the 3D data view, pass 0.0 to keep the current
+ *             value.
  *
- * Sets the new manimal zoom of 3D data view. Recommended values are 0.5 - 5.0.
+ * Sets the minimum and maximum zoom of a 3D data view.
+ *
+ * Recommended zoom values are 0.5 - 5.0.
  **/
 void
-gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
-                               gdouble new_min_scale)
+gwy_3d_view_set_scale_range(Gwy3DView *gwy3dview,
+                            gdouble min_scale,
+                            gdouble max_scale)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    g_return_if_fail(min_scale >= 0.0 && max_scale >= 0.0);
 
-    new_min_scale = fabs(new_min_scale);
-    if (new_min_scale != gwy3dview->view_scale_min) {
-        gwy3dview->view_scale_min = new_min_scale;
-        if (gwy3dview->view_scale_max < gwy3dview->view_scale_min)
-            GWY_SWAP(gdouble,
-                     gwy3dview->view_scale_max,
-                     gwy3dview->view_scale_min);
-        if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
-           gtk_adjustment_set_value(gwy3dview->view_scale,
-                                    gwy3dview->view_scale_min);
-        if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
-           gtk_adjustment_set_value(gwy3dview->view_scale,
-                                    gwy3dview->view_scale_max);
+    if (!min_scale)
+        min_scale = gwy3dview->view_scale_min;
+    if (!max_scale)
+        max_scale = gwy3dview->view_scale_max;
+
+    g_return_if_fail(min_scale <= max_scale);
+
+    gwy3dview->view_scale_min = min_scale;
+    gwy3dview->view_scale_max = max_scale;
+    if (gwy3dview->setup) {
+        gdouble val;
+
+        val = CLAMP(gwy3dview->setup->scale, min_scale, max_scale);
+        if (val != gwy3dview->setup->scale)
+            g_object_set(gwy3dview->setup, "scale", val, NULL);
     }
 }
 
@@ -1501,8 +1291,10 @@ gwy_3d_timeout_start(Gwy3DView *gwy3dview,
 {
     gwy_debug(" ");
 
-    if (gwy3dview->timeout)
+    if (gwy3dview->timeout_id) {
          g_source_remove(gwy3dview->timeout_id);
+         gwy3dview->timeout_id = 0;
+    }
 
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
@@ -1519,25 +1311,22 @@ gwy_3d_timeout_start(Gwy3DView *gwy3dview,
     if (invalidate_now || immediate)
         gtk_widget_queue_draw(GTK_WIDGET(gwy3dview));
 
-    if (!immediate) {
+    if (!immediate)
         gwy3dview->timeout_id = g_timeout_add(GWY_3D_TIMEOUT_DELAY,
-                                              (GSourceFunc)gwy_3d_timeout_func,
-                                              (gpointer)gwy3dview);
-        gwy3dview->timeout = TRUE;
-    }
+                                              gwy_3d_timeout_func,
+                                              gwy3dview);
 }
 
 static gboolean
 gwy_3d_timeout_func(gpointer user_data)
 {
-    Gwy3DView * gwy3dview;
+    Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
 
     gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(user_data), FALSE);
 
-    gwy3dview = (Gwy3DView *) user_data;
     gwy3dview->shape_current = GWY_3D_SHAPE_AFM;
-    gwy3dview->timeout = FALSE;
+    gwy3dview->timeout_id = 0;
     if (GTK_WIDGET_REALIZED(gwy3dview))
         gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
                                    &GTK_WIDGET(gwy3dview)->allocation, TRUE);
@@ -1735,13 +1524,13 @@ gwy_3d_view_expose(GtkWidget *widget,
     /* View transformation. */
     gwy_3d_set_projection(gwy3dview);
     glTranslatef(0.0, 0.0, -10.0);
-    glScalef(gwy3dview->view_scale->value,
-             gwy3dview->view_scale->value,
-             gwy3dview->view_scale->value);
+    glScalef(gwy3dview->setup->scale,
+             gwy3dview->setup->scale,
+             gwy3dview->setup->scale);
 
-    glRotatef(gwy3dview->rot_y->value, 1.0, 0.0, 0.0);
-    glRotatef(gwy3dview->rot_x->value, 0.0,  0.0, 1.0);
-    glScalef(1.0f, 1.0f, gwy3dview->deformation_z->value);
+    glRotatef(gwy3dview->setup->rotation_y, 1.0, 0.0, 0.0);
+    glRotatef(gwy3dview->setup->rotation_x, 0.0,  0.0, 1.0);
+    glScalef(1.0f, 1.0f, gwy3dview->setup->z_scale);
 
     /* Render shape */
     if (gwy3dview->visual == GWY_3D_VISUALIZATION_LIGHTING) {
@@ -1757,8 +1546,8 @@ gwy_3d_view_expose(GtkWidget *widget,
         glMaterialf(GL_FRONT, GL_SHININESS,
                     (GLfloat)gwy_gl_material_get_shininess(material)*128.0f);
         glPushMatrix();
-        glRotatef(gwy3dview->light_z->value, 0.0f, 0.0f, 1.0f);
-        glRotatef(gwy3dview->light_y->value, 0.0f, 1.0f, 0.0f);
+        glRotatef(gwy3dview->setup->light_theta, 0.0f, 0.0f, 1.0f);
+        glRotatef(gwy3dview->setup->light_phi, 0.0f, 1.0f, 0.0f);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glPopMatrix();
     }
@@ -1795,9 +1584,6 @@ gwy_3d_view_button_press(GtkWidget *widget,
 
     gwy_debug(" ");
 
-    g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-
     gwy3dview = GWY_3D_VIEW(widget);
 
     gwy3dview->mouse_begin_x = event->x;
@@ -1807,96 +1593,58 @@ gwy_3d_view_button_press(GtkWidget *widget,
 }
 
 static gboolean
-gwy_3d_view_button_release(GtkWidget *widget,
-                           GdkEventButton *event)
-{
-    Gwy3DView *gwy3dview;
-
-    gwy_debug(" ");
-
-    g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-
-    gwy3dview = GWY_3D_VIEW(widget);
-
-    return FALSE;
-}
-
-static gboolean
 gwy_3d_view_motion_notify(GtkWidget *widget,
                           GdkEventMotion *event)
 {
     Gwy3DView *gwy3dview;
-    float h = widget->allocation.height;
-    float x = event->x;
-    float y = event->y;
+    gdouble h, dx, dy, val;
 
-    g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
-    g_return_val_if_fail(event, FALSE);
-
+    h = widget->allocation.height;
     gwy3dview = GWY_3D_VIEW(widget);
-    gwy_debug("motion event: (%f, %f), shape=%d",
+    dx = event->x - gwy3dview->mouse_begin_x;
+    dy = event->y - gwy3dview->mouse_begin_y;
+    gwy3dview->mouse_begin_x = event->x;
+    gwy3dview->mouse_begin_y = event->y;
+
+    gwy_debug("motion event: (%lf, %lf), shape=%d",
               event->x, event->y, gwy3dview->shape_current);
 
-    /* Rotation. */
-    if (event->state & GDK_BUTTON1_MASK)
+    if (event->state & GDK_BUTTON1_MASK) {
         switch (gwy3dview->movement) {
             case GWY_3D_MOVEMENT_NONE:
             break;
 
             case GWY_3D_MOVEMENT_ROTATION:
-                gtk_adjustment_set_value(gwy3dview->rot_x,
-                                         gwy3dview->rot_x->value
-                                         + x - gwy3dview->mouse_begin_x);
-                gtk_adjustment_set_value(gwy3dview->rot_y,
-                                         gwy3dview->rot_y->value
-                                         + y - gwy3dview->mouse_begin_y);
-                break;
+            g_object_set(gwy3dview->setup, "rotation-x",
+                         gwy3dview->setup->rotation_x + dx, NULL);
+            g_object_set(gwy3dview->setup, "rotation-y",
+                         gwy3dview->setup->rotation_y + dy, NULL);
+            break;
 
             case GWY_3D_MOVEMENT_SCALE:
-                gtk_adjustment_set_value(gwy3dview->view_scale,
-                                         gwy3dview->view_scale->value
-                                         *(1.0
-                                           + (y - gwy3dview->mouse_begin_y)/h));
-                if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
-                    gtk_adjustment_set_value(gwy3dview->view_scale,
-                                             gwy3dview->view_scale_max);
-                else if (gwy3dview->view_scale->value
-                         < gwy3dview->view_scale_min)
-                    gtk_adjustment_set_value(gwy3dview->view_scale,
-                                             gwy3dview->view_scale_min);
-                break;
+            val = gwy3dview->setup->scale*(1.0 + dy/h);
+            val = CLAMP(val,
+                        gwy3dview->view_scale_min, gwy3dview->view_scale_max);
+            g_object_set(gwy3dview->setup, "scale", val, NULL);
+            break;
 
             case GWY_3D_MOVEMENT_DEFORMATION:
-            {
-                int i;
-                double dz = gwy3dview->deformation_z->value;
+            val = gwy3dview->setup->z_scale;
+            val *= exp(-GWY_3D_Z_DEFORMATION*dy);
+            g_object_set(gwy3dview->setup, "z-scale", val);
+            break;
 
-                if (y - gwy3dview->mouse_begin_y > 0)
-                    for (i = 0; i < y - gwy3dview->mouse_begin_y; i++)
-                        dz /= GWY_3D_Z_DEFORMATION;
-                else
-                    for (i = 0; i < gwy3dview->mouse_begin_y - y; i++)
-                        dz *= GWY_3D_Z_DEFORMATION;
-                gtk_adjustment_set_value(gwy3dview->deformation_z, dz);
-                break;
-            }
             case GWY_3D_MOVEMENT_LIGHT:
-                gtk_adjustment_set_value(gwy3dview->light_z,
-                                         gwy3dview->light_z->value
-                                         + x - gwy3dview->mouse_begin_x);
-                gtk_adjustment_set_value(gwy3dview->light_y,
-                                         gwy3dview->light_y->value
-                                         + y - gwy3dview->mouse_begin_y);
-                break;
+            g_object_set(gwy3dview->setup, "light-theta",
+                         gwy3dview->setup->light_theta + dx, NULL);
+            g_object_set(gwy3dview->setup, "light-phi",
+                         gwy3dview->setup->light_phi + dx, NULL);
+            break;
         }
+    }
 
-    gwy3dview->mouse_begin_x = x;
-    gwy3dview->mouse_begin_y = y;
     return FALSE;
 }
-
-
 
 static Gwy3DVector*
 gwy_3d_make_normals(GwyDataField *dfield,
@@ -2108,8 +1856,8 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
     yfirst = TRUE;
-    rx = widget->rot_x->value
-                 - ((int)(widget->rot_x->value/360.0)) * 360.0;
+    rx = widget->setup->rotation_x
+                 - ((int)(widget->setup->rotation_x/360.0)) * 360.0;
     if (rx < 0.0)
         rx += 360.0;
 
@@ -2248,8 +1996,8 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
               + GWY_3D_Z_DISPLACEMENT;
 
     glTranslatef(0.0f, 0.0f, plane_z);
-    glRotatef(widget->light_z->value, 0.0f, 0.0f, 1.0f);
-    glRotatef(-widget->light_y->value, 0.0f, 1.0f, 0.0f);
+    glRotatef(widget->setup->light_theta, 0.0f, 0.0f, 1.0f);
+    glRotatef(-widget->setup->light_phi, 0.0f, 1.0f, 0.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
         for (i = -180; i <= 180; i += 5) {
@@ -2803,77 +2551,17 @@ gwy_3d_view_get_data(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 }
 
 void
-gwy_3d_view_reset_view(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-}
-
-GtkAdjustment*
-gwy_3d_view_get_rot_x_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-GtkAdjustment*
-gwy_3d_view_get_rot_y_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-GtkAdjustment*
-gwy_3d_view_get_view_scale_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-GtkAdjustment*
-gwy_3d_view_get_z_deformation_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-GtkAdjustment*
-gwy_3d_view_get_light_z_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-GtkAdjustment*
-gwy_3d_view_get_light_y_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-gdouble
-gwy_3d_view_get_max_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return 0.0;
-}
-
-gdouble
-gwy_3d_view_get_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return 0.0;
-}
-
-void
-gwy_3d_view_set_max_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                               G_GNUC_UNUSED gdouble new_max_scale)
+gwy_3d_view_get_scale_range(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                            G_GNUC_UNUSED gdouble *min_scale,
+                            G_GNUC_UNUSED gdouble *max_scale)
 {
     g_critical("OpenGL support was not compiled in.");
 }
 
 void
-gwy_3d_view_set_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                               G_GNUC_UNUSED gdouble new_min_scale)
+gwy_3d_view_set_scale_range(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                            G_GNUC_UNUSED gdouble min_scale,
+                            G_GNUC_UNUSED gdouble max_scale)
 {
     g_critical("OpenGL support was not compiled in.");
 }
@@ -2900,9 +2588,7 @@ gwy_3d_view_set_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
  * or move lights, depending on its <link linkend="Gwy3DMovement">movement
  * state</link>. There are no controls provided for mode change, you have to
  * provide some yourself and set the movement mode with
- * gwy_3d_view_set_movement_type(). There are #GtkAdjustment's for each view
- * parameter, you can fetch them with gwy_3d_view_get_rot_x_adjustment(),
- * gwy_3d_view_get_rot_y_adjustment(), etc.
+ * gwy_3d_view_set_movement_type().
  *
  * You have initialize GtkGLExt with gtk_gl_init_check() and then Gwyddion's
  * OpenGL with gwy_widgets_gl_init() before you can use #Gwy3DView.  These

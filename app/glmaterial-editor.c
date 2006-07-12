@@ -233,8 +233,10 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
                  "show-axes", FALSE,
                  "show-labels", FALSE,
                  NULL);
+    /* XXX XXX XXX
     adj = gwy_3d_view_get_view_scale_adjustment(GWY_3D_VIEW(view));
     gtk_adjustment_set_value(adj, 1.4*gtk_adjustment_get_value(adj));
+    */
     g_signal_connect_swapped(view, "destroy",
                              G_CALLBACK(gwy_gl_material_editor_save_view),
                              editor->container);
