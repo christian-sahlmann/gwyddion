@@ -53,12 +53,13 @@ gwy_widgets_type_init(void)
     g_type_class_peek(GWY_TYPE_3D_SETUP);
     types_initialized = 1;
 
-    gtk_rc_parse_string(/* graph window statusbar */
-                        "style \"flatstatusbar\" {\n"
-                        "GtkStatusbar::shadow_type = 0\n"
-                        "}\n"
-                        "widget \"*.flatstatusbar\" style \"flatstatusbar\"\n"
-                        "\n");
+    gtk_rc_parse_string
+        (/* graph window statusbar */
+         "style \"gwyflatstatusbar\" {\n"
+         "  GtkStatusbar::shadow_type = 0\n"
+         "}\n"
+         "widget \"*.gwyflatstatusbar\" style \"gwyflatstatusbar\"\n"
+         "\n");
 }
 
 /**

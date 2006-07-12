@@ -225,7 +225,7 @@ gwy_graph_window_new(GwyGraph *graph)
 
 
     graphwindow->statusbar = gwy_statusbar_new();
-    gtk_widget_set_name(graphwindow->statusbar, "flatstatusbar");
+    gtk_widget_set_name(graphwindow->statusbar, "gwyflatstatusbar");
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->statusbar, TRUE, TRUE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
