@@ -28,7 +28,8 @@
 #include <libgwyddion/gwynlfit.h>
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 

@@ -22,11 +22,6 @@
 #ifndef __GWY_EVALUATOR_POINT_DIALOG_H__
 #define __GWY_EVALUATOR_POINT_DIALOG_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
-#include <gtk/gtk.h>
-
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_EVALUATOR_POINT_DIALOG            (gwy_evaluator_point_dialog_get_type())
@@ -146,11 +141,11 @@ gwy_evaluator_point_dialog_init(GwyEvaluatorPointDialog *dialog)
     dialog->width_adj = gtk_adjustment_new(dialog->width, 0.0, 100.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Width:"), _("pixels"),
                                                  dialog->width_adj);
-    
+
     dialog->height_adj = gtk_adjustment_new(dialog->height, 0.0, 100.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Height:"), _("pixels"),
                                                  dialog->height_adj);
-         
+
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
@@ -173,10 +168,10 @@ gwy_evaluator_point_dialog_new(gint width, gint height)
     GtkWidget *dialog;
 
     dialog = GTK_WIDGET(g_object_new (gwy_evaluator_point_dialog_get_type (), NULL));
-    
+
     GWY_EVALUATOR_POINT_DIALOG(dialog)->width = width;
     GWY_EVALUATOR_POINT_DIALOG(dialog)->height = height;
-   
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_POINT_DIALOG(dialog)->height_adj), height);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_POINT_DIALOG(dialog)->width_adj), width);
     return dialog;
@@ -315,11 +310,11 @@ gwy_evaluator_line_dialog_init(GwyEvaluatorLineDialog *dialog)
     dialog->rho_adj = gtk_adjustment_new(dialog->rho, 0.0, 100.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Rho:"), _("pixels"),
                                                  dialog->rho_adj);
-    
+
     dialog->theta_adj = gtk_adjustment_new(dialog->theta, 0.0, 100.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Theta:"), _("pixels"),
                                                  dialog->theta_adj);
-         
+
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
@@ -342,13 +337,13 @@ gwy_evaluator_line_dialog_new(gint rho, gint theta)
     GtkWidget *dialog;
 
     dialog = GTK_WIDGET(g_object_new (gwy_evaluator_line_dialog_get_type (), NULL));
-    
+
     GWY_EVALUATOR_LINE_DIALOG(dialog)->rho = rho;
     GWY_EVALUATOR_LINE_DIALOG(dialog)->theta = theta;
-   
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_LINE_DIALOG(dialog)->rho_adj), rho);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_LINE_DIALOG(dialog)->theta_adj), theta);
-  
+
     return dialog;
 }
 
@@ -486,19 +481,19 @@ gwy_evaluator_correlation_point_dialog_init(GwyEvaluatorCorrelationPointDialog *
     dialog->width_adj = gtk_adjustment_new(dialog->width, 0.0, 200.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Width:"), _("pixels"),
                                                  dialog->width_adj);
-    
+
     dialog->height_adj = gtk_adjustment_new(dialog->height, 0.0, 200.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("_Height:"), _("pixels"),
                                                  dialog->height_adj);
-         
+
     dialog->swidth_adj = gtk_adjustment_new(dialog->swidth, 0.0, 300.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("Se_arch width:"), _("pixels"),
                                                  dialog->swidth_adj);
-    
+
     dialog->sheight_adj = gtk_adjustment_new(dialog->sheight, 0.0, 300.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, row++, _("Sea_rch height:"), _("pixels"),
                                                  dialog->sheight_adj);
- 
+
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
@@ -521,10 +516,10 @@ gwy_evaluator_correlation_point_dialog_new(gint width, gint height,
     GtkWidget *dialog;
 
     dialog = GTK_WIDGET(g_object_new (gwy_evaluator_correlation_point_dialog_get_type (), NULL));
-    
+
     GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width = width;
     GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height = height;
-   
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->height_adj), height);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->width_adj), width);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(GWY_EVALUATOR_CORRELATION_POINT_DIALOG(dialog)->sheight_adj), sheight);

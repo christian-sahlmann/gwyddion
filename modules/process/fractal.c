@@ -18,15 +18,17 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include "config.h"
+#include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/fractals.h>
 #include <libprocess/stats.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 

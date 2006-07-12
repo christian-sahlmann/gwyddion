@@ -25,13 +25,19 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <libgwydgets/gwydgets.h>
-#include <app/gwyapp.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwymodule/gwymodule-process.h>
+#include <app/gwyapp.h>
 
 #define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 

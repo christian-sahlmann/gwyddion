@@ -21,8 +21,6 @@
 #ifndef __GWY_EVALUATOR_H__
 #define __GWY_EVALUATOR_H__
 
-#include <gtk/gtk.h>
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_SEARCH_POINT                  (gwy_search_point_get_type())
@@ -38,7 +36,7 @@ typedef struct _GwySearchPointClass GwySearchPointClass;
 
 struct _GwySearchPoint {
     GObject parent_instance;
-        
+
     gchar *id;
     gdouble xc;
     gdouble yc;
@@ -199,7 +197,7 @@ gwy_search_point_deserialize(const guchar *buffer,
                                            GWY_SEARCH_POINT_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
     }
-    
+
     return (GObject*)search_point;
 }
 
@@ -213,7 +211,7 @@ gwy_search_point_duplicate_real(GObject *object)
 
     search_point = GWY_SEARCH_POINT(object);
     duplicate = gwy_search_point_new();
-    
+
     duplicate->id = g_strdup(search_point->id);
     duplicate->xc = search_point->xc;
     duplicate->yc = search_point->yc;
@@ -239,7 +237,7 @@ typedef struct _GwyFixedPointClass GwyFixedPointClass;
 
 struct _GwyFixedPoint {
     GObject parent_instance;
-        
+
     gchar *id;
     gdouble xc;
     gdouble yc;
@@ -384,7 +382,7 @@ gwy_fixed_point_deserialize(const guchar *buffer,
                                            GWY_FIXED_POINT_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
     }
-    
+
     return (GObject*)fixed_point;
 }
 
@@ -398,7 +396,7 @@ gwy_fixed_point_duplicate_real(GObject *object)
 
     fixed_point = GWY_FIXED_POINT(object);
     duplicate = gwy_fixed_point_new();
-    
+
     duplicate->id = g_strdup(fixed_point->id);
     duplicate->xc = fixed_point->xc;
     duplicate->yc = fixed_point->yc;
@@ -419,7 +417,7 @@ typedef struct _GwyCorrelationPointClass GwyCorrelationPointClass;
 
 struct _GwyCorrelationPoint {
     GObject parent_instance;
-        
+
     gchar *id;
     gdouble xc;
     gdouble yc;
@@ -592,7 +590,7 @@ gwy_correlation_point_deserialize(const guchar *buffer,
                                            GWY_CORRELATION_POINT_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
     }
-    
+
     return (GObject*)correlation_point;
 }
 
@@ -606,7 +604,7 @@ gwy_correlation_point_duplicate_real(GObject *object)
 
     correlation_point = GWY_CORRELATION_POINT(object);
     duplicate = gwy_correlation_point_new();
-    
+
     duplicate->id = g_strdup(correlation_point->id);
     duplicate->xc = correlation_point->xc;
     duplicate->yc = correlation_point->yc;
@@ -635,7 +633,7 @@ typedef struct _GwySearchLineClass GwySearchLineClass;
 
 struct _GwySearchLine {
     GObject parent_instance;
-        
+
     gchar *id;
     gdouble xstart;
     gdouble ystart;
@@ -806,7 +804,7 @@ gwy_search_line_deserialize(const guchar *buffer,
                                            GWY_SEARCH_LINE_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
     }
-    
+
     return (GObject*)search_line;
 }
 
@@ -820,7 +818,7 @@ gwy_search_line_duplicate_real(GObject *object)
 
     search_line = GWY_SEARCH_LINE(object);
     duplicate = gwy_search_line_new();
-    
+
     duplicate->id = g_strdup(search_line->id);
     duplicate->xstart = search_line->xstart;
     duplicate->ystart = search_line->ystart;
@@ -848,7 +846,7 @@ typedef struct _GwyFixedLineClass GwyFixedLineClass;
 
 struct _GwyFixedLine {
     GObject parent_instance;
-        
+
     gchar *id;
     gdouble xstart;
     gdouble ystart;
@@ -1003,7 +1001,7 @@ gwy_fixed_line_deserialize(const guchar *buffer,
                                            GWY_FIXED_LINE_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
     }
-    
+
     return (GObject*)fixed_line;
 }
 
@@ -1017,7 +1015,7 @@ gwy_fixed_line_duplicate_real(GObject *object)
 
     fixed_line = GWY_FIXED_LINE(object);
     duplicate = gwy_fixed_line_new();
-    
+
     duplicate->id = g_strdup(fixed_line->id);
     duplicate->xstart = fixed_line->xstart;
     duplicate->ystart = fixed_line->ystart;
@@ -1042,7 +1040,7 @@ typedef struct _GwyEvaluatorTaskClass GwyEvaluatorTaskClass;
 
 struct _GwyEvaluatorTask {
     GObject parent_instance;
-        
+
     gchar *id;
     gchar *expression;
     gchar *threshold;
@@ -1186,7 +1184,7 @@ gwy_evaluator_task_deserialize(const guchar *buffer,
                                            GWY_EVALUATOR_TASK_TYPE_NAME,
                                            G_N_ELEMENTS(spec), spec);
     }
-    
+
     return (GObject*)evaluator_task;
 }
 
@@ -1200,7 +1198,7 @@ gwy_evaluator_task_duplicate_real(GObject *object)
 
     evaluator_task = GWY_EVALUATOR_TASK(object);
     duplicate = gwy_evaluator_task_new();
-    
+
     duplicate->id = g_strdup(evaluator_task->id);
     duplicate->expression = g_strdup(evaluator_task->expression);
     duplicate->threshold = g_strdup(evaluator_task->threshold);
@@ -1233,7 +1231,7 @@ struct _GwyEvaluator {
     GPtrArray *fixed_line_array;
     GPtrArray *correlation_point_array;
     GPtrArray *expression_task_array;
-    
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -1336,7 +1334,7 @@ gwy_evaluator_serialize(GObject *obj,
 
     evaluator = GWY_EVALUATOR(obj);
 
-    if (evaluator->detected_point_array->len) 
+    if (evaluator->detected_point_array->len)
         dp = &evaluator->detected_point_array->pdata;
     if (evaluator->detected_line_array->len)
         dl = &evaluator->detected_line_array->pdata;
@@ -1350,7 +1348,7 @@ gwy_evaluator_serialize(GObject *obj,
         et = &evaluator->expression_task_array->pdata;
 
     {
-        
+
         GwySerializeSpec spec[] = {
             { 'O', "detected_points", dp, &evaluator->detected_point_array->len },
             { 'O', "detected_lines", dl, &evaluator->detected_line_array->len },
@@ -1361,7 +1359,7 @@ gwy_evaluator_serialize(GObject *obj,
          };
         return gwy_serialize_pack_object_struct(buffer, GWY_EVALUATOR_TYPE_NAME,
                                                    G_N_ELEMENTS(spec), spec);
-        
+
      }
 }
 
@@ -1374,8 +1372,8 @@ gwy_evaluator_get_size(GObject *obj)
 
     g_return_val_if_fail(GWY_IS_EVALUATOR(obj), 0);
     evaluator = GWY_EVALUATOR(obj);
-    
-    if (evaluator->detected_point_array->len) 
+
+    if (evaluator->detected_point_array->len)
         dp = &evaluator->detected_point_array->pdata;
     if (evaluator->detected_line_array->len)
         dl = &evaluator->detected_line_array->pdata;
@@ -1389,7 +1387,7 @@ gwy_evaluator_get_size(GObject *obj)
         et = &evaluator->expression_task_array->pdata;
 
     {
-        
+
         GwySerializeSpec spec[] = {
             { 'O', "detected_points", dp, &evaluator->detected_point_array->len },
             { 'O', "detected_lines", dl, &evaluator->detected_line_array->len },
@@ -1400,7 +1398,7 @@ gwy_evaluator_get_size(GObject *obj)
          };
         return gwy_serialize_get_struct_size(GWY_EVALUATOR_TYPE_NAME,
                                                    G_N_ELEMENTS(spec), spec);
-        
+
      }
 }
 
@@ -1416,9 +1414,9 @@ gwy_evaluator_deserialize(const guchar *buffer,
     GwyFixedLine **fl = NULL;
     GwyCorrelationPoint **cp = NULL;
     GwyEvaluatorTask **et = NULL;
-    gint i, ndp, ndl, nfp, nfl, ncp, net;   
+    gint i, ndp, ndl, nfp, nfl, ncp, net;
     ndp = ndl = nfp = nfl = ncp = net = 0;
-    
+
     g_return_val_if_fail(buffer, NULL);
 
     evaluator = gwy_evaluator_new();
@@ -1466,7 +1464,7 @@ gwy_evaluator_deserialize(const guchar *buffer,
             g_ptr_array_add(evaluator->expression_task_array, et[i]);
             /*g_free(et[i]);*/
         }
-             
+
      }
 
     return (GObject*)evaluator;

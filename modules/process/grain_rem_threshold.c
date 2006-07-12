@@ -23,7 +23,12 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/grains.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 

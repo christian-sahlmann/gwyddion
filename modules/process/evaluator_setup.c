@@ -19,20 +19,22 @@
  */
 
 #include "config.h"
+#include <string.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
 #include <libprocess/hough.h>
 #include <libprocess/grains.h>
 #include <libprocess/stats.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
-#include <string.h>
-#include <glib/gstdio.h>
 #include "evaluator.h"
 #include "evaluator_task_dialog.h"
 #include "evaluator_feature_dialog.h"
@@ -183,7 +185,7 @@ module_register(void)
     gwy_process_func_register("esetup",
                               (GwyProcessFunc)&esetup,
                               N_("/_Evaluator/_Setup..."),
-                              GWY_STOCK_GRAINS,
+                              NULL,
                               ESETUP_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Setup automatic evaluator"));

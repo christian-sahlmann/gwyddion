@@ -22,11 +22,6 @@
 #ifndef __GWY_EVALUATOR_TASK_DIALOG_H__
 #define __GWY_EVALUATOR_TASK_DIALOG_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
-#include <gtk/gtk.h>
-
-
 G_BEGIN_DECLS
 typedef enum {
     GWY_EVALUATOR_TASK_LINE_MIN = 0,

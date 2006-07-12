@@ -22,7 +22,9 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/correct.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <app/gwyapp.h>
 
 #define DRIFT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -216,7 +218,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     };
     gint response;
     gdouble zoomval;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     gint xres, yres,row;
 
@@ -237,12 +239,12 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     controls.viewdata = create_preview_data(data);
     controls.view = gwy_data_view_new(controls.viewdata);
     g_object_unref(controls.viewdata);
-    layer = GTK_OBJECT(gwy_layer_basic_new());
+    layer = gwy_layer_basic_new();
 
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+                                 layer);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                         0);
@@ -265,8 +267,6 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                                 GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
-
 
     controls.method = gwy_enum_combo_box_new(methods, G_N_ELEMENTS(methods),
                                                  G_CALLBACK(gwy_enum_combo_box_update_int),
