@@ -635,18 +635,6 @@ gwy_3d_window_make_setup_adj(Gwy3DSetup *setup,
     return adj;
 }
 
-static Gwy3DSetup*
-gwy_3d_window_get_view_setup(Gwy3DWindow *gwy3dwindow)
-{
-    /* XXX XXX XXX */
-    static Gwy3DSetup *setup = NULL;
-
-    if (!setup)
-        setup = gwy_3d_setup_new();
-
-    return setup;
-}
-
 static GtkWidget*
 gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 {
@@ -657,7 +645,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     gint row;
 
     view = GWY_3D_VIEW(window->gwy3dview);
-    setup = gwy_3d_window_get_view_setup(window);
+    setup = gwy_3d_view_get_setup(view);
 
     vbox = gtk_vbox_new(FALSE, 0);
 
@@ -686,7 +674,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 
     check = gtk_check_button_new_with_mnemonic(_("Show _axes"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
-                                 gwy_3d_view_get_show_axes(view));
+                                 setup->axes_visible);
     gtk_table_attach(GTK_TABLE(table), check,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect(check, "toggled",
@@ -695,7 +683,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 
     check = gtk_check_button_new_with_mnemonic(_("Show _labels"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
-                                 gwy_3d_view_get_show_labels(view));
+                                 setup->labels_visible);
     gtk_table_attach(GTK_TABLE(table), check,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect(check, "toggled",
@@ -704,7 +692,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 
     check = gtk_check_button_new_with_mnemonic(_("_Ortographic projection"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
-                                 !gwy_3d_view_get_projection(view));
+                                 !setup->projection);
     gtk_table_attach(GTK_TABLE(table), check,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect(check, "toggled",
@@ -724,13 +712,17 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
 
     Gwy3DView *view;
     Gwy3DSetup *setup;
+    gboolean is_material = FALSE, is_gradient = FALSE;
     GtkWidget *vbox, *spin, *table, *menu, *label;
-    Gwy3DVisualization visual;
     GtkObject *adj;
     gint row;
 
     view = GWY_3D_VIEW(window->gwy3dview);
-    setup = gwy_3d_window_get_view_setup(window);
+    setup = gwy_3d_view_get_setup(view);
+    if (setup->visualization == GWY_3D_VISUALIZATION_GRADIENT)
+        is_gradient = TRUE;
+    else
+        is_material = TRUE;
 
     vbox = gtk_vbox_new(FALSE, 0);
 
@@ -741,12 +733,11 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    visual = gwy_3d_view_get_visualization(view);
     window->visual_mode_group
         = gwy_radio_buttons_create(display_modes, G_N_ELEMENTS(display_modes),
                                    G_CALLBACK(gwy_3d_window_display_mode_changed),
                                    window,
-                                   visual);
+                                   setup->visualization);
     gtk_table_attach(GTK_TABLE(table),
                      GTK_WIDGET(window->visual_mode_group->data),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
@@ -755,7 +746,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     label = gtk_label_new_with_mnemonic(_("_Material:"));
     window->material_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-    gtk_widget_set_sensitive(label, visual);
+    gtk_widget_set_sensitive(label, is_material);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -764,7 +755,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     menu = gwy_gl_material_selection_new(G_CALLBACK(gwy_3d_window_set_material),
                                          window, NULL);
     window->material_menu = menu;
-    gtk_widget_set_sensitive(menu, visual == GWY_3D_VISUALIZATION_LIGHTING);
+    gtk_widget_set_sensitive(menu, is_material);
     gtk_table_attach(GTK_TABLE(table), menu,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -774,20 +765,19 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("Light _phi:"), _("deg"), adj);
     window->lights_spin1 = spin;
-    gtk_widget_set_sensitive(spin, visual);
+    gtk_widget_set_sensitive(spin, is_material);
 
     adj = gwy_3d_window_make_setup_adj(setup, "light-theta",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("Light _theta:"), _("deg"), adj);
     window->lights_spin2 = spin;
-    gtk_widget_set_sensitive(spin, visual);
+    gtk_widget_set_sensitive(spin, is_material);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);
     gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT],
-                             visual);
-    gtk_widget_set_sensitive(window->buttons[N_BUTTONS
-                             + GWY_3D_MOVEMENT_LIGHT],
-                             visual);
+                             is_material);
+    gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
+                             is_material);
     row++;
 
     gtk_table_attach(GTK_TABLE(table),
@@ -798,7 +788,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     /* TODO: get selected from 3D view */
     menu = gwy_gradient_selection_new(G_CALLBACK(gwy_3d_window_set_gradient),
                                       window, NULL);
-    gtk_widget_set_sensitive(menu, visual == GWY_3D_VISUALIZATION_GRADIENT);
+    gtk_widget_set_sensitive(menu, is_gradient);
     window->gradient_menu = menu;
     gtk_table_attach(GTK_TABLE(table), menu,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
@@ -1169,48 +1159,65 @@ static void
 gwy_3d_window_projection_changed(GtkToggleButton *check,
                                  Gwy3DWindow *window)
 {
-    gwy_3d_view_set_projection(GWY_3D_VIEW(window->gwy3dview),
-                               gtk_toggle_button_get_active(check)
-                               ? GWY_3D_PROJECTION_ORTHOGRAPHIC
-                               : GWY_3D_PROJECTION_PERSPECTIVE);
+    Gwy3DProjection projection;
+    Gwy3DSetup *setup;
+
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
+    if (gtk_toggle_button_get_active(check))
+        projection = GWY_3D_PROJECTION_ORTHOGRAPHIC;
+    else
+        projection = GWY_3D_PROJECTION_PERSPECTIVE;
+
+    if (projection != setup->projection)
+        g_object_set(setup, "projection", projection, NULL);
 }
 
 static void
 gwy_3d_window_show_axes_changed(GtkToggleButton *check,
                                 Gwy3DWindow *window)
 {
-    gwy_3d_view_set_show_axes(GWY_3D_VIEW(window->gwy3dview),
-                              gtk_toggle_button_get_active(check));
+    Gwy3DSetup *setup;
+
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
+    g_object_set(setup, "axes-visible", gtk_toggle_button_get_active(check),
+                 NULL);
 }
 
 static void
 gwy_3d_window_show_labels_changed(GtkToggleButton *check,
                                   Gwy3DWindow *window)
 {
-    gwy_3d_view_set_show_labels(GWY_3D_VIEW(window->gwy3dview),
-                                gtk_toggle_button_get_active(check));
+    Gwy3DSetup *setup;
+
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
+    g_object_set(setup, "labels-visible", gtk_toggle_button_get_active(check),
+                 NULL);
 }
 
 static void
 gwy_3d_window_display_mode_changed(GtkWidget *item,
                                    Gwy3DWindow *window)
 {
-    Gwy3DVisualization visual;
+    Gwy3DVisualization visualization;
+    Gwy3DSetup *setup;
     GSList *list;
 
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(item)))
         return;
 
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
     list = gtk_radio_button_get_group(GTK_RADIO_BUTTON(item));
-    visual = gwy_radio_buttons_get_current(list);
-    gwy_3d_window_set_visualization(window, visual);
+    visualization = gwy_radio_buttons_get_current(list);
+
+    if (visualization != setup->visualization)
+        g_object_set(setup, "visualization", visualization, NULL);
 }
 
+/* XXX: This must be connected to Gwy3DSetup::notify */
 static void
 gwy_3d_window_set_visualization(Gwy3DWindow *window,
                                 Gwy3DVisualization visual)
 {
-    gwy_3d_view_set_visualization(GWY_3D_VIEW(window->gwy3dview), visual);
     gtk_widget_set_sensitive(window->material_menu, visual);
     gtk_widget_set_sensitive(window->material_label, visual);
     gtk_widget_set_sensitive(window->gradient_menu, !visual);
@@ -1284,12 +1291,14 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
                            GtkWidget *gwy3dview)
 {
     Gwy3DVisualization visual;
+    Gwy3DSetup *setup;
     GtkWidget *menu, *item;
 
     if (event->button != 3)
         return FALSE;
 
-    switch (gwy_3d_view_get_visualization(GWY_3D_VIEW(gwy3dview))) {
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(gwy3dview));
+    switch (setup->visualization) {
         case GWY_3D_VISUALIZATION_GRADIENT:
         menu = gwy_menu_gradient(G_CALLBACK(gwy_3d_window_gradient_selected),
                                  gwy3dwindow);

@@ -51,11 +51,6 @@ struct _Gwy3DView {
     GtkWidget parent_instance;
 
     Gwy3DMovement movement;
-    Gwy3DProjection projection;
-    Gwy3DVisualization visual;
-    gboolean show_axes;
-    gboolean show_labels;
-    guint reduced_size;
 
     GwyContainer *data;           /* Container with data */
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
@@ -88,7 +83,8 @@ struct _Gwy3DView {
     gulong material_item_id;
 
     Gwy3DLabel **labels;          /* labels text, displacement etc */
-    gulong     *label_signal_ids;
+    gulong *label_ids;
+    gulong *label_item_ids;
     GHashTable *variables;        /* Label substitution variables */
 
     gint changed;                 /* What has changed, XXX: not used */
@@ -154,27 +150,10 @@ Gwy3DMovement     gwy_3d_view_get_movement_type (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_movement_type (Gwy3DView *gwy3dview,
                                                  Gwy3DMovement movement);
 
-Gwy3DProjection   gwy_3d_view_get_projection    (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_projection    (Gwy3DView *gwy3dview,
-                                                 Gwy3DProjection projection);
-gboolean          gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
-                                                 gboolean show_axes);
-gboolean          gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
-                                                 gboolean show_labels);
-
-Gwy3DVisualization gwy_3d_view_get_visualization(Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_visualization (Gwy3DView *gwy3dview,
-                                                 Gwy3DVisualization visual);
-
-guint             gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
-                                                 guint reduced_size);
-
 GdkPixbuf*        gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
 Gwy3DLabel*       gwy_3d_view_get_label         (Gwy3DView *gwy3dview,
                                                  Gwy3DViewLabel label);
+Gwy3DSetup*       gwy_3d_view_get_setup         (Gwy3DView *gwy3dview);
 GwyContainer*     gwy_3d_view_get_data          (Gwy3DView *gwy3dview);
 
 void              gwy_3d_view_get_scale_range   (Gwy3DView *gwy3dview,

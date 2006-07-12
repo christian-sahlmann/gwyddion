@@ -29,7 +29,7 @@
 
 #define connect_swapped_after(obj, signal, cb, data) \
     g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
-                            G_CONNECT_SWAPPED | G_CONNECT_AFTER);
+                            G_CONNECT_SWAPPED | G_CONNECT_AFTER)
 
 enum {
     PROP_0,
