@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <string.h>
-#include <gdk/gdkkeysyms.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule.h>

@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/filters.h>

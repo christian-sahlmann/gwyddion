@@ -21,7 +21,6 @@
 #ifndef __GWY_SCI_TEXT_H__
 #define __GWY_SCI_TEXT_H__
 
-#include <gtk/gtkwidget.h>
 #include <gtk/gtkvbox.h>
 
 G_BEGIN_DECLS

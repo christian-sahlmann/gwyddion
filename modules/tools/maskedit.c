@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/elliptic.h>

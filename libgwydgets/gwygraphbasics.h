@@ -22,11 +22,8 @@
 #define __GWY_GRAPH_BASIC_H__
 
 #include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
-#include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libdraw/gwyrgba.h>
-#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphselections.h>
 
 G_BEGIN_DECLS

@@ -38,8 +38,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <glib/gstdio.h>
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -57,10 +55,13 @@
 #include <sys/types.h>
 #endif
 
+#include <glib/gstdio.h>
+#include <gtk/gtk.h>
+
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
-#include "gwyapp.h"
+#include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
 /* PNG (additional in TMS) */

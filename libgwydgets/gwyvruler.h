@@ -52,7 +52,6 @@
 #ifndef __GWY_VRULER_H__
 #define __GWY_VRULER_H__
 
-#include <gdk/gdk.h>
 #include <libgwydgets/gwyruler.h>
 
 G_BEGIN_DECLS

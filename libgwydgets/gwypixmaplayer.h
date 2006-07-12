@@ -21,8 +21,7 @@
 #ifndef __GWY_PIXMAP_LAYER_H__
 #define __GWY_PIXMAP_LAYER_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <libgwydgets/gwydataviewlayer.h>
 

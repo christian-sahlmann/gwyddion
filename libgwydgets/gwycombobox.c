@@ -20,9 +20,8 @@
 
 #include "config.h"
 #include <string.h>
-#include <gtk/gtk.h>
-#include <glib-object.h>
-
+#include <gtk/gtkcelllayout.h>
+#include <gtk/gtkcellrenderertext.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwycombobox.h>

@@ -21,11 +21,7 @@
 #ifndef __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__
 #define __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
-#include <gtk/gtk.h>
-
-#include <libgwydgets/gwygraphbasics.h>
+#include <gtk/gtkdialog.h>
 
 #define GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR 1
 

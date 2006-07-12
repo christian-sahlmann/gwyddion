@@ -34,7 +34,7 @@
 #include <libgwydgets/gwygraphwindow.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
-#include <app/gwyappinternal.h>
+#include "app/gwyappinternal.h"
 
 /* The container prefix all graph reside in.  This is a bit silly but it does
  * not worth to break file compatibility with 1.x. */

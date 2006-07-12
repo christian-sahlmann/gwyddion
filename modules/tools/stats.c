@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <glib/gstdio.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/datafield.h>

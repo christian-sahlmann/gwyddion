@@ -21,9 +21,6 @@
 #ifndef __GWY_LAYER_BASIC_H__
 #define __GWY_LAYER_BASIC_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
-
 #include <libgwydgets/gwypixmaplayer.h>
 #include <libdraw/gwygradient.h>
 

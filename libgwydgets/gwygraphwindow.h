@@ -21,8 +21,6 @@
 #ifndef __GWY_GRAPH_WINDOW_H__
 #define __GWY_GRAPH_WINDOW_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
 #include <gtk/gtkwindow.h>
 #include <gtk/gtktooltips.h>
 

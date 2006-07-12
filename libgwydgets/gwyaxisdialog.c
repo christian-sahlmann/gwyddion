@@ -19,13 +19,12 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <glib-object.h>
 #include <gtk/gtk.h>
-
-#include "gwyaxisdialog.h"
 #include <libgwyddion/gwymacros.h>
-#include "gwydgets.h"
+#include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwyaxisdialog.h>
 
 #define GWY_AXIS_DIALOG_TYPE_NAME "GwyAxisDialog"
 

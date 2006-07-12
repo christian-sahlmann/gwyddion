@@ -52,7 +52,6 @@
 #ifndef __GWY_HRULER_H__
 #define __GWY_HRULER_H__
 
-#include <gdk/gdk.h>
 #include <libgwydgets/gwyruler.h>
 
 G_BEGIN_DECLS

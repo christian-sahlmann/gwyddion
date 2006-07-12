@@ -21,10 +21,8 @@
 #ifndef __GWY_GWYDGET_UTILS_H__
 #define __GWY_GWYDGET_UTILS_H__
 
-#include <gtk/gtkwidget.h>
 #include <gtk/gtkliststore.h>
 #include <libgwydgets/gwydgetenums.h>
-#include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwycolorbutton.h>
 
 G_BEGIN_DECLS

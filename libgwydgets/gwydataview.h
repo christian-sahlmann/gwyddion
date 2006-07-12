@@ -21,8 +21,7 @@
 #ifndef __GWY_DATA_VIEW_H__
 #define __GWY_DATA_VIEW_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkwidget.h>
 
 #include <libgwyddion/gwycontainer.h>

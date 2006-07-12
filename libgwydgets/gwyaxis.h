@@ -21,8 +21,7 @@
 #ifndef __GWY_AXIS_H__
 #define __GWY_AXIS_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
+#include <gdk/gdkdrawable.h>
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwyddion/gwysiunit.h>

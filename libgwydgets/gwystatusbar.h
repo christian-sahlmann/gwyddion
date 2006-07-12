@@ -21,8 +21,7 @@
 #ifndef __GWY_STATUSBAR_H__
 #define __GWY_STATUSBAR_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
+#include <gtk/gtkstatusbar.h>
 
 G_BEGIN_DECLS
 

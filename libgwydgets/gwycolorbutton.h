@@ -42,6 +42,7 @@
 #ifndef __GWY_COLOR_BUTTON_H__
 #define __GWY_COLOR_BUTTON_H__
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkbutton.h>
 #include <libdraw/gwyrgba.h>
 

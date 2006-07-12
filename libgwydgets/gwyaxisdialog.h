@@ -21,8 +21,7 @@
 #ifndef __GWY_AXIS_DIALOG_H__
 #define __GWY_AXIS_DIALOG_H__
 
-#include <gtk/gtk.h>
-
+#include <gtk/gtkdialog.h>
 #include <libgwydgets/gwyaxis.h>
 
 G_BEGIN_DECLS
@@ -65,8 +64,8 @@ struct _GwyAxisDialogClass {
     gpointer reserved2;
 };
 
-GType       gwy_axis_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_axis_dialog_new      (GwyAxis *axis);
+GType       gwy_axis_dialog_get_type    (void) G_GNUC_CONST;
+GtkWidget*  gwy_axis_dialog_new         (GwyAxis *axis);
 GtkWidget*  gwy_axis_dialog_get_sci_text(GtkWidget* dialog);
 
 G_END_DECLS

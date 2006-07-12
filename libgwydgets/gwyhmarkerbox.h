@@ -21,7 +21,6 @@
 #ifndef __GWY_HMARKER_BOX_H__
 #define __GWY_HMARKER_BOX_H__
 
-#include <gtk/gtkwidget.h>
 #include <libgwydgets/gwymarkerbox.h>
 
 G_BEGIN_DECLS

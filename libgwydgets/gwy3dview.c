@@ -25,10 +25,9 @@
 #include <stdlib.h>
 
 #include <gdk/gdkkeysyms.h>
+#include <gdk/gdkevents.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
-#include <gdk/gdkevents.h>
-#include <glib-object.h>
 
 #ifdef HAVE_GTKGLEXT
 #include <gtk/gtkgl.h>

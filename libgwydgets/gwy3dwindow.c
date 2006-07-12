@@ -21,8 +21,19 @@
 #include "config.h"
 #include <string.h>
 
-#include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
+#include <gtk/gtkclipboard.h>
+#include <gtk/gtkentry.h>
+#include <gtk/gtkhbox.h>
+#include <gtk/gtklabel.h>
+#include <gtk/gtkmenuitem.h>
+#include <gtk/gtknotebook.h>
+#include <gtk/gtkradiobutton.h>
+#include <gtk/gtkspinbutton.h>
+#include <gtk/gtktable.h>
+#include <gtk/gtktogglebutton.h>
+#include <gtk/gtktreeselection.h>
+#include <gtk/gtkvbox.h>
 
 #include <libprocess/datafield.h>
 #include <libgwyddion/gwymacros.h>

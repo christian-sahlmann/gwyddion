@@ -24,13 +24,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib/gstdio.h>
+#include <gtk/gtk.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libdraw/gwydraw.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
-#include <app/gwyappinternal.h>
+#include "gwyappinternal.h"
 #include "gwyddion.h"
 
 #ifdef G_OS_WIN32

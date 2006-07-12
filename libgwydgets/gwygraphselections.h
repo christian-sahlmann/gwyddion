@@ -21,12 +21,7 @@
 #ifndef __GWY_GRAPHSEL_H__
 #define __GWY_GRAPHSEL_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
-#include <gtk/gtktable.h>
-
 #include <libdraw/gwyselection.h>
-
 
 G_BEGIN_DECLS
 
@@ -41,11 +36,11 @@ typedef struct _GwySelectionGraphPoint      GwySelectionGraphPoint;
 typedef struct _GwySelectionGraphPointClass GwySelectionGraphPointClass;
 
 struct _GwySelectionGraphPoint {
-        GwySelection parent_instance;
+    GwySelection parent_instance;
 };
 
 struct _GwySelectionGraphPointClass {
-        GwySelectionClass parent_class;
+    GwySelectionClass parent_class;
 };
 
 
@@ -65,11 +60,11 @@ typedef struct _GwySelectionGraphAreaClass GwySelectionGraphAreaClass;
 
 
 struct _GwySelectionGraphArea {
-        GwySelection parent_instance;
+    GwySelection parent_instance;
 };
 
 struct _GwySelectionGraphAreaClass {
-        GwySelectionClass parent_class;
+    GwySelectionClass parent_class;
 };
 
 
@@ -89,11 +84,11 @@ typedef struct _GwySelectionGraphLineClass GwySelectionGraphLineClass;
 
 
 struct _GwySelectionGraphLine {
-        GwySelection parent_instance;
+    GwySelection parent_instance;
 };
 
 struct _GwySelectionGraphLineClass {
-        GwySelectionClass parent_class;
+    GwySelectionClass parent_class;
 };
 
 
@@ -112,11 +107,11 @@ typedef struct _GwySelectionGraphZoomClass GwySelectionGraphZoomClass;
 
 
 struct _GwySelectionGraphZoom {
-        GwySelection parent_instance;
+    GwySelection parent_instance;
 };
 
 struct _GwySelectionGraphZoomClass {
-        GwySelectionClass parent_class;
+    GwySelectionClass parent_class;
 };
 
 
@@ -134,16 +129,15 @@ typedef struct _GwySelectionGraph1DAreaClass GwySelectionGraph1DAreaClass;
 
 
 struct _GwySelectionGraph1DArea {
-        GwySelection parent_instance;
+    GwySelection parent_instance;
 };
 
 struct _GwySelectionGraph1DAreaClass {
-        GwySelectionClass parent_class;
+    GwySelectionClass parent_class;
 };
 
 
 GType    gwy_selection_graph_1darea_get_type       (void) G_GNUC_CONST;
-
 
 
 G_END_DECLS

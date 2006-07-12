@@ -22,7 +22,6 @@
 #include <math.h>
 #include <string.h>
 #include <pango/pango.h>
-#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

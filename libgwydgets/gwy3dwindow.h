@@ -21,12 +21,10 @@
 #ifndef __GWY_3D_WINDOW_H__
 #define __GWY_3D_WINDOW_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
+#include <gdk/gdkwindow.h>
 #include <gtk/gtkwindow.h>
 #include <gtk/gtktooltips.h>
 
-#include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dview.h>
 
 G_BEGIN_DECLS

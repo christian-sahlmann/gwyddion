@@ -21,7 +21,9 @@
 #ifndef __GWY_GRAPH_MODEL_H__
 #define __GWY_GRAPH_MODEL_H__
 
-#include <gtk/gtk.h>
+#include <glib-object.h>
+#include <gtk/gtkenums.h>
+
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwyddion/gwysiunit.h>
 

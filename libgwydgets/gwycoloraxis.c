@@ -19,14 +19,9 @@
  */
 
 #include "config.h"
-#include <gtk/gtk.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
-
-#include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwydgets/gwycoloraxis.h>
 
 enum { MIN_TICK_DISTANCE = 30 };

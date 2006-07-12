@@ -22,7 +22,6 @@
 #define __GWY_GRAPH_LABEL_H__
 
 #include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
 G_BEGIN_DECLS

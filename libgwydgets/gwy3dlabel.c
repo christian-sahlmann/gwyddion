@@ -23,7 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "gwy3dlabel.h"
+#include <libgwydgets/gwy3dlabel.h>
 
 #define GWY_3D_LABEL_TYPE_NAME "Gwy3DLabel"
 

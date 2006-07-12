@@ -49,7 +49,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
-#include "gwycolorbutton.h"
+#include <libgwydgets/gwycolorbutton.h>
 
 /* Size of checks and gray levels for alpha compositing checkerboard */
 #define CHECK_SIZE  4
@@ -317,6 +317,7 @@ gwy_color_button_init(GwyColorButton *color_button)
 
     layout = gtk_widget_create_pango_layout(GTK_WIDGET(color_button), "Black");
     pango_layout_get_pixel_extents(layout, NULL, &rect);
+    g_object_unref(layout);
     gtk_widget_set_size_request(color_button->drawing_area,
                                 rect.width - 2, rect.height - 2);
     g_signal_connect(color_button->drawing_area, "expose-event",

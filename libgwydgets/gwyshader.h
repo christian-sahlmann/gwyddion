@@ -23,7 +23,6 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkenums.h>
-#include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 #include <libdraw/gwygradient.h>
 

@@ -22,7 +22,6 @@
 #define __GWY_VECTOR_LAYER_H__
 
 #include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
 #include <libdraw/gwydrawenums.h>
 #include <libdraw/gwyselection.h>
 #include <libgwydgets/gwydataviewlayer.h>

@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <gdk/gdkkeysyms.h>
+#include <gtk/gtk.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>

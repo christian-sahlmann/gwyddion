@@ -21,7 +21,7 @@
 #ifndef __GWY_COLOR_AXIS_H__
 #define __GWY_COLOR_AXIS_H__
 
-#include <gdk/gdk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwysiunit.h>
 #include <libdraw/gwygradient.h>

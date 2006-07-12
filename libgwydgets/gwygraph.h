@@ -21,11 +21,8 @@
 #ifndef __GWY_GRAPH_H__
 #define __GWY_GRAPH_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtktable.h>
-
-#include <libprocess/dataline.h>
 
 #include <libgwydgets/gwyaxis.h>
 #include <libgwydgets/gwygraphmodel.h>

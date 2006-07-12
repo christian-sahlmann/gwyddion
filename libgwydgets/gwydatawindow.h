@@ -21,14 +21,11 @@
 #ifndef __GWY_DATA_WINDOW_H__
 #define __GWY_DATA_WINDOW_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkwidget.h>
 #include <gtk/gtkwindow.h>
 #include <gtk/gtktooltips.h>
 
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwysiunit.h>
-#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwydataview.h>
 
 G_BEGIN_DECLS

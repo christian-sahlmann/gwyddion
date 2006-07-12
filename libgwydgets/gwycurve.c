@@ -65,15 +65,14 @@
 #include <config.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-
-#include "gwycurve.h"
-#include <gtk/gtkdrawingarea.h>
 #include <gtk/gtkmain.h>
+#include <gtk/gtkdrawingarea.h>
 #include <gtk/gtkradiobutton.h>
 #include <gtk/gtktable.h>
-#include "gwydgettypes.h"
-//#include <libdraw/gwyrgba.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwydgettypes.h>
+#include <libgwydgets/gwycurve.h>
 
 #define RADIUS          3   /* radius of the control points */
 #define MIN_DISTANCE    5   /* min distance between control points */
