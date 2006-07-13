@@ -31,7 +31,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/level.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
