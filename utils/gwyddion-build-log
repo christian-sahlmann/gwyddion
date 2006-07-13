@@ -15,6 +15,12 @@ cat >autostuff.ignore <<':'
 ':'
 :
 
+cat >build_project.ignore <<':'
+^TRANSLATION [a-z]
+^[0-9]\+ translated messages
+':'
+:
+
 cat >build_documentation.ignore <<':'
 ^Writing .* for [^ ]\+(.*)
 ^lib.*-scan\.c: In function
@@ -93,6 +99,12 @@ function extract_build_documentation() {
   done
 }
 
+function extract_translation_stats() {
+   echo "=====[ translation_stats ]====="
+   logfile=build_project.err
+   sed 's/^TRANSLATION //;t;d' $logfile
+}
+
 function coding_style_report() {
   n=20
   base=coding-style-byfile
@@ -111,6 +123,7 @@ function coding_style_report() {
 printerr update_version
 printerr autostuff
 printerr build_project
+extract_translation_stats
 printerr build_documentation
 extract_build_documentation
 printerr check_coding_style

@@ -68,6 +68,13 @@ function build_project() {
   # Use ctags to build tags
   # Prevent automake from exporting CTAGS some garbage in CTAGS
   make -k tags ETAGS=ctags CTAGS="$CTAGS"
+  pushd po
+  make -k update-gmo
+  for x in $(sed '/^POFILES/s/\(.*=\|\.po\)//g;t;d' Makefile); do
+    echo -n "TRANSLATION $x: " 1>&2
+    msgfmt --statistics $x.po
+  done
+  popd
   ./utils/update-msvc.py
 }
 
