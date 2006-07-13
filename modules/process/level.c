@@ -242,9 +242,9 @@ level_dialog(LevelArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum modes[] = {
-        { N_("_Exclude region under mask."),      LEVEL_EXCLUDE, },
-        { N_("Exclude region _outside mask."),    LEVEL_INCLUDE, },
-        { N_("Use entire _image (ignore mask)."), LEVEL_NORMAL,  },
+        { N_("_Exclude region under mask"),      LEVEL_EXCLUDE, },
+        { N_("Exclude region _outside mask"),    LEVEL_INCLUDE, },
+        { N_("Use entire _image (ignore mask)"), LEVEL_NORMAL,  },
     };
 
     GtkWidget *dialog, *label, *table;
