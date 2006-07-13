@@ -54,7 +54,8 @@ typedef enum { /*< lowercase_name=gwy_3d_view_label >*/
     GWY_3D_VIEW_LABEL_X = 0,
     GWY_3D_VIEW_LABEL_Y,
     GWY_3D_VIEW_LABEL_MIN,
-    GWY_3D_VIEW_LABEL_MAX
+    GWY_3D_VIEW_LABEL_MAX,
+    GWY_3D_VIEW_NLABELS
 } Gwy3DViewLabel;
 
 typedef enum {

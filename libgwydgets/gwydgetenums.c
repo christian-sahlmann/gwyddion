@@ -95,6 +95,7 @@ gwy_graph_curve_type_get_enum(void)
  * @GWY_3D_VIEW_LABEL_Y: Y-axis label.
  * @GWY_3D_VIEW_LABEL_MIN: Z-axis bottom label.
  * @GWY_3D_VIEW_LABEL_MAX: Z-axis top label.
+ * @GWY_3D_VIEW_NLABELS: The number of labels.
  *
  * 3D View label type.
  **/

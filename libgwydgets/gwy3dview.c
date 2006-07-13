@@ -50,8 +50,8 @@
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 
-#define DEG_2_RAD (G_PI / 180.0)
-#define RAD_2_DEG (180.0 / G_PI)
+#define DEG_2_RAD (G_PI/180.0)
+#define RAD_2_DEG (180.0/G_PI)
 
 #define BITS_PER_SAMPLE 8
 
@@ -135,6 +135,7 @@ static void     gwy_3d_view_data_field_connect   (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_data_field_disconnect(Gwy3DView *gwy3dview);
 static void     gwy_3d_view_data_field_changed   (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_setup_item_changed   (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_ensure_setup         (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_setup_connect        (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_setup_disconnect     (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_setup_changed        (Gwy3DView *gwy3dview,
@@ -174,11 +175,11 @@ static void     gwy_3d_set_projection            (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_update_labels        (Gwy3DView *gwy3dview);
 static void     gwy_3d_adjustment_value_changed  (GtkAdjustment *adjustment,
                                                   Gwy3DView *gwy3dview);
-static void     gwy_3d_label_changed             (Gwy3DView *gwy3dview);
-static void     gwy_3d_timeout_start             (Gwy3DView *gwy3dview,
+static void     gwy_3d_view_label_changed        (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_timeout_start        (Gwy3DView *gwy3dview,
                                                   gboolean immediate,
                                                   gboolean invalidate_now);
-static gboolean gwy_3d_timeout_func              (gpointer user_data);
+static gboolean gwy_3d_view_timeout_func         (gpointer user_data);
 static void     gwy_3d_pango_ft2_render_layout   (PangoLayout *layout);
 static void     gwy_3d_print_text                (Gwy3DView *gwy3dview,
                                                   Gwy3DViewLabel id,
@@ -199,11 +200,11 @@ static const struct {
     const gchar *key;
     const gchar *default_text;
 }
-labels[] = {
-    { "/0/3d/label/x",    "x: $x" },
-    { "/0/3d/label/y",    "y: $y" },
-    { "/0/3d/label/min",  "$min"  },
-    { "/0/3d/label/max",  "$max"  },
+labels[GWY_3D_VIEW_NLABELS] = {
+    { "x",   "x: $x", },
+    { "y",   "y: $y", },
+    { "min", "$min",  },
+    { "max", "$max",  },
 };
 #endif /* HAVE_GTKGLEXT */
 
@@ -291,19 +292,21 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 static void
 gwy_3d_view_init(Gwy3DView *gwy3dview)
 {
-    gwy3dview->view_scale_max        = 3.0;
-    gwy3dview->view_scale_min        = 0.5;
-    gwy3dview->movement              = GWY_3D_MOVEMENT_NONE;
+    gwy3dview->view_scale_max = 3.0;
+    gwy3dview->view_scale_min = 0.5;
+    gwy3dview->movement       = GWY_3D_MOVEMENT_NONE;
 
-    gwy3dview->variables
-        = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+    gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                 NULL, g_free);
+
+    gwy3dview->labels = g_new0(Gwy3DLabel*, GWY_3D_VIEW_NLABELS);
+    gwy3dview->label_ids = g_new0(gulong, GWY_3D_VIEW_NLABELS);
 }
 
 static void
 gwy_3d_view_destroy(GtkObject *object)
 {
     Gwy3DView *gwy3dview;
-    guint i;
 
     gwy3dview = GWY_3D_VIEW(object);
 
@@ -311,24 +314,13 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->gradient_item_id);
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->material_item_id);
 
+    gwy_3d_view_setup_disconnect(gwy3dview);
     gwy_3d_view_data_field_disconnect(gwy3dview);
     gwy_3d_view_gradient_disconnect(gwy3dview);
     gwy_3d_view_material_disconnect(gwy3dview);
 
     if (gwy3dview->shape_list_base > 0)
         gwy_3d_view_release_lists(gwy3dview);
-
-    if (gwy3dview->labels) {
-        for (i = 0; i < G_N_ELEMENTS(labels); i++) {
-            g_signal_handler_disconnect(gwy3dview->labels[i],
-                                        gwy3dview->label_ids[i]);
-            gwy_object_unref(gwy3dview->labels[i]);
-        }
-        g_free(gwy3dview->labels);
-        g_free(gwy3dview->label_ids);
-        gwy3dview->labels = NULL;
-        gwy3dview->label_ids = NULL;
-    }
 
     gwy_object_unref(gwy3dview->data_field);
     gwy_object_unref(gwy3dview->downsampled);
@@ -343,6 +335,9 @@ gwy_3d_view_finalize(GObject *object)
     Gwy3DView *gwy3dview;
 
     gwy3dview = GWY_3D_VIEW(object);
+
+    g_free(gwy3dview->labels);
+    g_free(gwy3dview->label_ids);
 
     g_hash_table_destroy(gwy3dview->variables);
 
@@ -450,7 +445,6 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    guint i;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     glconfig = gwy_widgets_get_gl_config();
@@ -463,58 +457,51 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy3dview->data = data;
 
-    gwy_3d_view_container_connect
-                            (gwy3dview,
-                             g_quark_to_string(gwy3dview->data_key),
-                             &gwy3dview->data_item_id,
-                             G_CALLBACK(gwy_3d_view_data_item_changed));
-    gwy_3d_view_data_field_connect(gwy3dview);
-    gwy_3d_view_container_connect
-                            (gwy3dview,
-                             g_quark_to_string(gwy3dview->gradient_key),
-                             &gwy3dview->gradient_item_id,
-                             G_CALLBACK(gwy_3d_view_gradient_item_changed));
-    gwy_3d_view_gradient_connect(gwy3dview);
-    gwy_3d_view_container_connect
-                            (gwy3dview,
-                             g_quark_to_string(gwy3dview->material_key),
-                             &gwy3dview->material_item_id,
-                             G_CALLBACK(gwy_3d_view_material_item_changed));
-    gwy_3d_view_material_connect(gwy3dview);
-
-    gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
-                                 glconfig,
-                                 NULL,
-                                 TRUE,
-                                 GDK_GL_RGBA_TYPE);
-
-    gwy3dview->labels = g_new0(Gwy3DLabel*, G_N_ELEMENTS(labels));
-    gwy3dview->label_ids = g_new0(gulong, G_N_ELEMENTS(labels));
-    for (i = 0; i < G_N_ELEMENTS(labels); i++) {
-        if (gwy_container_gis_object_by_name(data, labels[i].key,
-                                             &gwy3dview->labels[i]))
-            g_object_ref(gwy3dview->labels[i]);
-        else {
-            gwy3dview->labels[i] = gwy_3d_label_new(labels[i].default_text);
-            gwy_container_set_object_by_name(data, labels[i].key,
-                                             gwy3dview->labels[i]);
-        }
-        gwy3dview->label_ids[i]
-            = g_signal_connect_swapped(gwy3dview->labels[i], "notify",
-                                       G_CALLBACK(gwy_3d_label_changed),
-                                       gwy3dview);
-    }
+    if (!gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
+                                      glconfig,
+                                      NULL,
+                                      TRUE,
+                                      GDK_GL_RGBA_TYPE))
+        g_critical("Cannot set GL capability on widget");
 
     return widget;
+}
+
+static GwySIValueFormat*
+gwy_3d_view_update_label(Gwy3DView *gwy3dview,
+                         const gchar *key,
+                         gdouble value,
+                         gdouble maximum,
+                         gdouble step,
+                         gboolean is_z,
+                         GwySIValueFormat *vf)
+{
+    GwySIUnit *unit;
+    gchar buffer[80], *s;
+
+    if (is_z)
+        unit = gwy_data_field_get_si_unit_z(gwy3dview->data_field);
+    else
+        unit = gwy_data_field_get_si_unit_xy(gwy3dview->data_field);
+
+    vf = gwy_si_unit_get_format_with_resolution(unit,
+                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                maximum, step, vf);
+    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
+               vf->precision, value/vf->magnitude, vf->units);
+    s = g_hash_table_lookup(gwy3dview->variables, key);
+    if (!s || !gwy_strequal(s, buffer))
+        g_hash_table_insert(gwy3dview->variables, (gpointer)key,
+                            g_strdup(buffer));
+
+    return vf;
 }
 
 static void
 gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
 {
     GwySIValueFormat *format;
-    GwySIUnit *unit;
     gdouble xreal, yreal, data_min, data_max, range, maximum;
-    gchar buffer[32], *s;
 
     xreal = gwy_data_field_get_xreal(gwy3dview->data_field);
     yreal = gwy_data_field_get_yreal(gwy3dview->data_field);
@@ -522,43 +509,19 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
     range = fabs(data_max - data_min);
     maximum = MAX(fabs(data_min), fabs(data_max));
 
-    /* $x */
-    unit = gwy_data_field_get_si_unit_xy(gwy3dview->data_field);
-    format = gwy_si_unit_get_format_with_resolution(unit,
-                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                    xreal, xreal/12, NULL);
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               format->precision, xreal/format->magnitude, format->units);
-    s = g_hash_table_lookup(gwy3dview->variables, "x");
-    if (!s || strcmp(s, buffer))
-        g_hash_table_insert(gwy3dview->variables, "x", g_strdup(buffer));
-
-    /* $y */
-    gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                           yreal, yreal/12, format);
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               format->precision, yreal/format->magnitude, format->units);
-    s = g_hash_table_lookup(gwy3dview->variables, "y");
-    if (!s || strcmp(s, buffer))
-        g_hash_table_insert(gwy3dview->variables, "y", g_strdup(buffer));
-
-    /* $max */
-    unit = gwy_data_field_get_si_unit_z(gwy3dview->data_field);
-    gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                           maximum, range/12, format);
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               format->precision, data_max/format->magnitude, format->units);
-    s = g_hash_table_lookup(gwy3dview->variables, "max");
-    if (!s || strcmp(s, buffer))
-        g_hash_table_insert(gwy3dview->variables, "max", g_strdup(buffer));
-
-    /* $min */
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               format->precision, data_min/format->magnitude, format->units);
-    s = g_hash_table_lookup(gwy3dview->variables, "min");
-    if (!s || strcmp(s, buffer))
-        g_hash_table_insert(gwy3dview->variables, "min", g_strdup(buffer));
-
+    format = NULL;
+    format = gwy_3d_view_update_label(gwy3dview, "x",
+                                      xreal, xreal, xreal/12.0,
+                                      FALSE, format);
+    format = gwy_3d_view_update_label(gwy3dview, "y",
+                                      yreal, yreal, yreal/12.0,
+                                      FALSE, format);
+    format = gwy_3d_view_update_label(gwy3dview, "max",
+                                      data_max, maximum, range/12.0,
+                                      FALSE, format);
+    format = gwy_3d_view_update_label(gwy3dview, "min",
+                                      data_min, maximum, range/12.0,
+                                      FALSE, format);
     gwy_si_unit_value_format_free(format);
 }
 
@@ -600,7 +563,7 @@ gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
     gwy_3d_view_container_connect(gwy3dview, key,
                                   &gwy3dview->data_item_id,
                                   G_CALLBACK(gwy_3d_view_data_item_changed));
-    /*g_object_notify(G_OBJECT(gwy3dview), "data-key");*/
+    g_object_notify(G_OBJECT(gwy3dview), "data-key");
     gwy_3d_view_data_field_changed(gwy3dview);
 }
 
@@ -675,14 +638,49 @@ gwy_3d_view_set_setup_key(Gwy3DView *gwy3dview,
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->setup_item_id);
     gwy_3d_view_setup_disconnect(gwy3dview);
     gwy3dview->setup_key = quark;
+    gwy_3d_view_ensure_setup(gwy3dview);
     gwy_3d_view_setup_connect(gwy3dview);
     gwy_3d_view_container_connect(gwy3dview, key,
                                   &gwy3dview->setup_item_id,
                                   G_CALLBACK(gwy_3d_view_setup_item_changed));
-    /* TODO: labels must be reconnected too */
+
     g_object_notify(G_OBJECT(gwy3dview), "setup-key");
     /* TODO: must not call with NULL or handle it as `all' */
     gwy_3d_view_setup_changed(gwy3dview, NULL);
+}
+
+static void
+gwy_3d_view_ensure_setup(Gwy3DView *gwy3dview)
+{
+    guint i, len;
+    GString *key;
+    Gwy3DSetup *setup;
+    Gwy3DLabel *label;
+
+    if (!gwy3dview->setup_key)
+        return;
+
+    if (!gwy_container_gis_object(gwy3dview->data, gwy3dview->setup_key,
+                                  &setup)) {
+        setup = gwy_3d_setup_new();
+        gwy_container_set_object(gwy3dview->data, gwy3dview->setup_key, setup);
+        g_object_unref(setup);
+    }
+
+    key = g_string_new(g_quark_to_string(gwy3dview->setup_key));
+    g_string_append_c(key, GWY_CONTAINER_PATHSEP);
+    len = key->len;
+    for (i = 0; i < GWY_3D_VIEW_NLABELS; i++) {
+        g_string_truncate(key, len);
+        g_string_append(key, labels[i].key);
+        if (gwy_container_gis_object_by_name(gwy3dview->data, key->str, &label))
+            continue;
+
+        label = gwy_3d_label_new(label[i].default_text);
+        gwy_container_set_object_by_name(gwy3dview->data, key->str, label);
+        g_object_unref(label);
+    }
+    g_string_free(key, TRUE);
 }
 
 static void
@@ -693,27 +691,62 @@ gwy_3d_view_setup_item_changed(Gwy3DView *gwy3dview)
     gwy_3d_view_setup_changed(gwy3dview, NULL);
 }
 
+/* Here we assert setup and labels exist as they were instantiated by
+ * gwy_3d_view_ensure_setup() (if not present). */
 static void
 gwy_3d_view_setup_connect(Gwy3DView *gwy3dview)
 {
+    guint i, len;
+    GString *key;
+
     g_return_if_fail(!gwy3dview->setup);
-    if (gwy3dview->setup_key)
-        gwy_container_gis_object(gwy3dview->data, gwy3dview->setup_key,
-                                 &gwy3dview->setup);
+    if (!gwy3dview->setup_key)
+        return;
+
+    gwy_container_gis_object(gwy3dview->data, gwy3dview->setup_key,
+                             &gwy3dview->setup);
+    g_assert(gwy3dview->setup);
+    g_object_ref(gwy3dview->setup);
     gwy3dview->setup_id
         = g_signal_connect_swapped(gwy3dview->setup, "notify",
                                    G_CALLBACK(gwy_3d_view_setup_changed),
                                    gwy3dview);
+
+    key = g_string_new(g_quark_to_string(gwy3dview->setup_key));
+    g_string_append_c(key, GWY_CONTAINER_PATHSEP);
+    len = key->len;
+    for (i = 0; i < GWY_3D_VIEW_NLABELS; i++) {
+        if (gwy3dview->labels[i]) {
+            g_critical("Label %u already set!", i);
+            continue;
+        }
+        g_string_truncate(key, len);
+        g_string_append(key, labels[i].key);
+        gwy_container_gis_object_by_name(gwy3dview->data, key->str,
+                                         &gwy3dview->labels[i]);
+        g_assert(gwy3dview->labels[i]);
+        g_object_ref(gwy3dview->labels[i]);
+        gwy3dview->label_ids[i]
+            = g_signal_connect_swapped(gwy3dview->labels[i], "notify",
+                                       G_CALLBACK(gwy_3d_view_label_changed),
+                                       gwy3dview);
+    }
+    g_string_free(key, TRUE);
 }
 
 static void
 gwy_3d_view_setup_disconnect(Gwy3DView *gwy3dview)
 {
-    if (!gwy3dview->setup)
-        return;
+    guint i;
 
     gwy_signal_handler_disconnect(gwy3dview->setup, gwy3dview->setup_id);
-    gwy3dview->setup = NULL;
+    gwy_object_unref(gwy3dview->setup);
+
+    for (i = 0; i < GWY_3D_VIEW_NLABELS; i++) {
+        gwy_signal_handler_disconnect(gwy3dview->labels[i],
+                                      gwy3dview->label_ids[i]);
+        gwy_object_unref(gwy3dview->labels[i]);
+    }
 }
 
 static void
@@ -915,7 +948,7 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 
     gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
     gwy_3d_make_list(gwy3dview, gwy3dview->data_field, GWY_3D_SHAPE_AFM);
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -988,7 +1021,7 @@ gwy_3d_view_set_projection(Gwy3DView *gwy3dview,
     gwy_container_set_enum_by_name(gwy3dview->data, "/0/3d/projection",
                                    projection);
 
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -1026,7 +1059,7 @@ gwy_3d_view_set_axes_visible(Gwy3DView *gwy3dview,
                                       "/0/3d/axes_visible",
                                       axes_visible);
 
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -1066,7 +1099,7 @@ gwy_3d_view_set_labels_visible(Gwy3DView *gwy3dview,
      gwy_container_set_boolean_by_name(gwy3dview->data, "/0/3d/labels_visible",
                                        labels_visible);
 
-     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+     gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -1104,7 +1137,7 @@ gwy_3d_view_set_visualization(Gwy3DView *gwy3dview,
     gwy_container_set_enum_by_name(gwy3dview->data, "/0/3d/visualization",
                                    visual);
 
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -1151,7 +1184,7 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
     if (GTK_WIDGET_REALIZED(gwy3dview)) {
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
                          GWY_3D_SHAPE_REDUCED);
-        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+        gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
     }
     g_object_notify(G_OBJECT(gwy3dview), "reduced-size");
 }
@@ -1190,7 +1223,7 @@ gwy_3d_view_get_label(Gwy3DView *gwy3dview,
                       Gwy3DViewLabel label)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    g_return_val_if_fail(label < G_N_ELEMENTS(labels), NULL);
+    g_return_val_if_fail(label < GWY_3D_VIEW_NLABELS, NULL);
 
     return gwy3dview->labels[label];
 }
@@ -1325,9 +1358,9 @@ gwy_3d_view_set_scale_range(Gwy3DView *gwy3dview,
 
 /******************************************************************************/
 static void
-gwy_3d_timeout_start(Gwy3DView *gwy3dview,
-                     gboolean immediate,
-                     gboolean invalidate_now)
+gwy_3d_view_timeout_start(Gwy3DView *gwy3dview,
+                          gboolean immediate,
+                          gboolean invalidate_now)
 {
     guint rs;
     gwy_debug(" ");
@@ -1355,12 +1388,12 @@ gwy_3d_timeout_start(Gwy3DView *gwy3dview,
 
     if (!immediate)
         gwy3dview->timeout_id = g_timeout_add(GWY_3D_TIMEOUT_DELAY,
-                                              gwy_3d_timeout_func,
+                                              gwy_3d_view_timeout_func,
                                               gwy3dview);
 }
 
 static gboolean
-gwy_3d_timeout_func(gpointer user_data)
+gwy_3d_view_timeout_func(gpointer user_data)
 {
     Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
 
@@ -1386,13 +1419,13 @@ gwy_3d_adjustment_value_changed(GtkAdjustment *adjustment,
                                                      container_key_quark))))
         gwy_container_set_double(gwy3dview->data, quark,
                                  gtk_adjustment_get_value(adjustment));
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 static void
-gwy_3d_label_changed(Gwy3DView *gwy3dview)
+gwy_3d_view_label_changed(Gwy3DView *gwy3dview)
 {
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    gwy_3d_view_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 static void
