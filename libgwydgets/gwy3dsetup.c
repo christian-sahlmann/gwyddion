@@ -32,7 +32,6 @@ enum {
     PROP_VISUALIZATION,
     PROP_AXES_VISIBLE,
     PROP_LABELS_VISIBLE,
-    PROP_REDUCED_SIZE,
     PROP_ROTATION_X,
     PROP_ROTATION_Y,
     PROP_SCALE,
@@ -124,15 +123,6 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
 
     g_object_class_install_property
         (gobject_class,
-         PROP_REDUCED_SIZE,
-         g_param_spec_uint("reduced-size",
-                           "Reduced size",
-                           "The size of downsampled data in quick view",
-                           2, G_MAXINT, 100,
-                           G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (gobject_class,
          PROP_ROTATION_X,
          g_param_spec_double("rotation-x",
                              "Rotation X",
@@ -200,8 +190,6 @@ gwy_3d_setup_init(Gwy3DSetup *setup)
     setup->axes_visible = TRUE;
     setup->labels_visible = TRUE;
 
-    setup->reduced_size = 100;
-
     setup->rotation_x = G_PI/4.0;
     setup->rotation_y = -G_PI/4.0;
     setup->scale = 1.0;
@@ -233,10 +221,6 @@ gwy_3d_setup_set_property(GObject *object,
 
         case PROP_LABELS_VISIBLE:
         setup->labels_visible = g_value_get_boolean(value);
-        break;
-
-        case PROP_REDUCED_SIZE:
-        setup->reduced_size = g_value_get_uint(value);
         break;
 
         case PROP_ROTATION_X:
@@ -294,10 +278,6 @@ gwy_3d_setup_get_property(GObject *object,
         g_value_set_boolean(value, setup->labels_visible);
         break;
 
-        case PROP_REDUCED_SIZE:
-        g_value_set_uint(value, setup->reduced_size);
-        break;
-
         case PROP_ROTATION_X:
         g_value_set_double(value, setup->rotation_x);
         break;
@@ -344,7 +324,6 @@ gwy_3d_setup_serialize(GObject *serializable,
             { 'i', "visualization", &setup->visualization, NULL, },
             { 'b', "axes-visible", &setup->axes_visible, NULL, },
             { 'b', "labels-visible", &setup->labels_visible, NULL, },
-            { 'i', "reduced-size", &setup->reduced_size, NULL, },
             { 'd', "rotation-x", &setup->rotation_x, NULL, },
             { 'd', "rotation-y", &setup->rotation_y, NULL, },
             { 'd', "scale", &setup->scale, NULL, },
@@ -374,7 +353,6 @@ gwy_3d_setup_get_size(GObject *object)
             { 'i', "visualization", &setup->visualization, NULL, },
             { 'b', "axes-visible", &setup->axes_visible, NULL, },
             { 'b', "labels-visible", &setup->labels_visible, NULL, },
-            { 'i', "reduced-size", &setup->reduced_size, NULL, },
             { 'd', "rotation-x", &setup->rotation_x, NULL, },
             { 'd', "rotation-y", &setup->rotation_y, NULL, },
             { 'd', "scale", &setup->scale, NULL, },
@@ -405,7 +383,6 @@ gwy_3d_setup_deserialize(const guchar *buffer,
             { 'i', "visualization", &setup->visualization, NULL, },
             { 'b', "axes-visible", &setup->axes_visible, NULL, },
             { 'b', "labels-visible", &setup->labels_visible, NULL, },
-            { 'i', "reduced-size", &setup->reduced_size, NULL, },
             { 'd', "rotation-x", &setup->rotation_x, NULL, },
             { 'd', "rotation-y", &setup->rotation_y, NULL, },
             { 'd', "scale", &setup->scale, NULL, },
@@ -456,11 +433,6 @@ gwy_3d_setup_clone(GObject *source,
         g_object_notify(copy, "labels-visible");
     }
 
-    if (clone->reduced_size != setup->reduced_size) {
-        clone->reduced_size = setup->reduced_size;
-        g_object_notify(copy, "reduced-size");
-    }
-
     if (clone->rotation_x != setup->rotation_x) {
         clone->rotation_x = setup->rotation_x;
         g_object_notify(copy, "rotation-x");
@@ -504,8 +476,6 @@ gwy_3d_setup_duplicate_real(GObject *object)
 
     duplicate->axes_visible = setup->axes_visible;
     duplicate->labels_visible = setup->labels_visible;
-
-    duplicate->reduced_size = setup->reduced_size;
 
     duplicate->rotation_x = setup->rotation_x;
     duplicate->rotation_y = setup->rotation_y;

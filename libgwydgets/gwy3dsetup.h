@@ -51,7 +51,6 @@ struct _Gwy3DSetup {
     gboolean b_reserved3;
     gboolean b_reserved4;
 
-    guint reduced_size;
     guint i_reserved1;
     guint i_reserved2;
 

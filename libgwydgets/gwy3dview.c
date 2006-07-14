@@ -89,6 +89,7 @@ enum {
 enum {
     PROP_0,
     PROP_MOVEMENT,
+    PROP_REDUCED_SIZE,
     PROP_DATA_KEY,
     PROP_SETUP_KEY,
     PROP_GRADIENT_KEY,
@@ -257,6 +258,15 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 
     g_object_class_install_property
         (gobject_class,
+         PROP_REDUCED_SIZE,
+         g_param_spec_uint("reduced-size",
+                           "Reduced size",
+                           "The size of downsampled data in quick view",
+                           2, G_MAXINT, 96,
+                           G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
          PROP_DATA_KEY,
          g_param_spec_string("data-key",
                              "Data key",
@@ -295,6 +305,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->view_scale_max = 3.0;
     gwy3dview->view_scale_min = 0.5;
     gwy3dview->movement       = GWY_3D_MOVEMENT_NONE;
+    gwy3dview->reduced_size   = 96;
 
     gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                  NULL, g_free);
@@ -357,6 +368,10 @@ gwy_3d_view_set_property(GObject *object,
         gwy_3d_view_set_movement_type(view, g_value_get_enum(value));
         break;
 
+        case PROP_REDUCED_SIZE:
+        gwy_3d_view_set_reduced_size(view, g_value_get_uint(value));
+        break;
+
         case PROP_DATA_KEY:
         gwy_3d_view_set_data_key(view, g_value_get_string(value));
         break;
@@ -390,6 +405,10 @@ gwy_3d_view_get_property(GObject*object,
     switch (prop_id) {
         case PROP_MOVEMENT:
         g_value_set_enum(value, view->movement);
+        break;
+
+        case PROP_REDUCED_SIZE:
+        g_value_set_uint(value, view->reduced_size);
         break;
 
         case PROP_DATA_KEY:
@@ -970,7 +989,7 @@ gwy_3d_view_get_movement_type(Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_movement_type:
  * @gwy3dview: A 3D data view widget.
- * @movement: A new type of response on the mouse motion event.
+ * @reduced_size: A new type of response on the mouse motion event.
  *
  * Sets the type of widget response on the mouse motion event.
  **/
@@ -982,6 +1001,50 @@ gwy_3d_view_set_movement_type(Gwy3DView *gwy3dview,
     g_return_if_fail(movement <= GWY_3D_MOVEMENT_LIGHT);
 
     gwy3dview->movement = movement;
+}
+
+/**
+ * gwy_3d_view_set_reduced_size:
+ * @gwy3dview: A 3D data view widget.
+ * @reduced_size: New reduced data size.
+ *
+ * Sets the reduced data size of a 3D view.
+ *
+ * Data larger than reduced size are show downsampled during transforms and
+ * other changes to speed up the rendering.  Final, full-size rendering is
+ * then performed after a timeout.
+ *
+ * Changes in reduced size do not cause immediate redraw when an operation
+ * is pending and the view is shown in reduced size.  It only affects future
+ * downsampling.
+ **/
+void
+gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
+                             guint reduced_size)
+{
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    g_return_if_fail(reduced_size >= 2);
+
+    gwy3dview->reduced_size = reduced_size;
+    g_object_notify(G_OBJECT(gwy3dview), "reduced-size");
+    /* FIXME: should we do anything else? */
+}
+
+/**
+ * gwy_3d_view_get_reduced_size:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns the reduced data size of a 3D view.
+ *
+ * See gwy_3d_view_set_reduced_size() for details.
+ *
+ * Returns: The reduced data size.
+ **/
+guint
+gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
+{
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), 0);
+    return gwy3dview->reduced_size;
 }
 
 #if 0
@@ -1205,7 +1268,7 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
 
     rx = gwy_data_field_get_xres(gwy3dview->downsampled);
     ry = gwy_data_field_get_yres(gwy3dview->downsampled);
-    rs = gwy3dview->setup->reduced_size;
+    rs = gwy3dview->reduced_size;
     if (rx > ry) {
         ry = (guint)(rs*ry/rx);
         rx = rs;
@@ -1373,7 +1436,7 @@ gwy_3d_view_timeout_start(Gwy3DView *gwy3dview,
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
 
-    rs = gwy3dview->setup->reduced_size;
+    rs = gwy3dview->reduced_size;
     if (gwy_data_field_get_xres(gwy3dview->data_field) <= rs
         && gwy_data_field_get_yres(gwy3dview->data_field) <= rs)
         immediate = TRUE;

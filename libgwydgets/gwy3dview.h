@@ -53,6 +53,7 @@ struct _Gwy3DView {
     Gwy3DMovement movement;
 
     GwyContainer *data;           /* Container with data */
+    guint reduced_size;
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
     GwyDataField *downsampled2;
 
@@ -146,6 +147,9 @@ const gchar*      gwy_3d_view_get_material_key  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_material_key  (Gwy3DView *gwy3dview,
                                                  const gchar *key);
 
+guint             gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
+                                                 guint reduced_size);
 Gwy3DMovement     gwy_3d_view_get_movement_type (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_movement_type (Gwy3DView *gwy3dview,
                                                  Gwy3DMovement movement);
