@@ -24,7 +24,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/hough.h>
 #include <libprocess/filters.h>
-#include <libgwydgets/gwydgets.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -78,7 +77,7 @@ hough(GwyContainer *data, GwyRunType run)
 
     if (!result){
         result = gwy_data_field_new_alike(dfield, FALSE);
-        siunit = gwy_si_unit_new("");
+        siunit = gwy_si_unit_new(NULL);
         gwy_data_field_set_si_unit_z(result, siunit);
         g_object_unref(siunit);
         gwy_container_set_object(data, squark, result);
