@@ -162,6 +162,12 @@ typedef enum {
     GWY_DATA_VIEW_LAYER_TOP
 } GwyDataViewLayerType;
 
+typedef enum {
+    GWY_TICKS_STYLE_NONE,
+    GWY_TICKS_STYLE_CENTER,
+    GWY_TICKS_STYLE_AUTO
+} GwyTicksStyle;
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDGET_ENUMS_H__ */

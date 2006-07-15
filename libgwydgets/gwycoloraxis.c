@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,35 +23,60 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwydgets/gwycoloraxis.h>
+#include <libgwydgets/gwydgettypes.h>
+
+enum {
+    PROP_0,
+    PROP_ORIENTATION,
+    PROP_TICKS_STYLE,
+    PROP_SI_UNIT,
+    PROP_GRADIENT,
+    PROP_LABELS_VISIBLE,
+    PROP_LAST
+};
 
 enum { MIN_TICK_DISTANCE = 30 };
 
-static void     gwy_color_axis_destroy            (GtkObject *object);
-static void     gwy_color_axis_realize            (GtkWidget *widget);
-static void     gwy_color_axis_unrealize          (GtkWidget *widget);
-static void     gwy_color_axis_size_request       (GtkWidget *widget,
-                                                   GtkRequisition *requisition);
-static void     gwy_color_axis_size_allocate      (GtkWidget *widget,
-                                                   GtkAllocation *allocation);
-static gboolean gwy_color_axis_expose             (GtkWidget *widget,
-                                                   GdkEventExpose *event);
-static void     gwy_color_axis_adjust             (GwyColorAxis *axis,
-                                                   gint width,
-                                                   gint height);
-static void     gwy_color_axis_draw_label         (GtkWidget *widget);
-static void     gwy_color_axis_draw_ticks         (GwyColorAxis *axis);
-static void     gwy_color_axis_update             (GwyColorAxis *axis);
+static void     gwy_color_axis_set_property (GObject *object,
+                                             guint prop_id,
+                                             const GValue *value,
+                                             GParamSpec *pspec);
+static void     gwy_color_axis_get_property (GObject *object,
+                                             guint prop_id,
+                                             GValue *value,
+                                             GParamSpec *pspec);
+static void     gwy_color_axis_destroy      (GtkObject *object);
+static void     gwy_color_axis_realize      (GtkWidget *widget);
+static void     gwy_color_axis_unrealize    (GtkWidget *widget);
+static void     gwy_color_axis_size_request (GtkWidget *widget,
+                                             GtkRequisition *requisition);
+static void     gwy_color_axis_size_allocate(GtkWidget *widget,
+                                             GtkAllocation *allocation);
+static gboolean gwy_color_axis_expose       (GtkWidget *widget,
+                                             GdkEventExpose *event);
+static void     gwy_color_axis_adjust       (GwyColorAxis *axis,
+                                             gint width,
+                                             gint height);
+static void     gwy_color_axis_draw_label   (GtkWidget *widget);
+static void     gwy_color_axis_draw_ticks   (GwyColorAxis *axis);
+static void     gwy_color_axis_update       (GwyColorAxis *axis);
+static void     gwy_color_axis_changed      (GwyColorAxis *axis);
 
 G_DEFINE_TYPE(GwyColorAxis, gwy_color_axis, GTK_TYPE_WIDGET)
 
 static void
 gwy_color_axis_class_init(GwyColorAxisClass *klass)
 {
+    GObjectClass *gobject_class;
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
+    gobject_class = G_OBJECT_CLASS(klass);
     object_class = GTK_OBJECT_CLASS(klass);
     widget_class = GTK_WIDGET_CLASS(klass);
+
+    gobject_class->get_property = gwy_color_axis_get_property;
+    gobject_class->set_property = gwy_color_axis_set_property;
 
     object_class->destroy = gwy_color_axis_destroy;
 
@@ -60,6 +85,53 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
     widget_class->size_request = gwy_color_axis_size_request;
     widget_class->unrealize = gwy_color_axis_unrealize;
     widget_class->size_allocate = gwy_color_axis_size_allocate;
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_ORIENTATION,
+         g_param_spec_enum("orientation",
+                           "Orientation",
+                           "Axis orientation",
+                           GTK_TYPE_ORIENTATION,
+                           GTK_ORIENTATION_VERTICAL,
+                           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_TICKS_STYLE,
+         g_param_spec_enum("ticks-style",
+                           "Ticks style",
+                           "The style of axis ticks",
+                           GWY_TYPE_TICKS_STYLE,
+                           GWY_TICKS_STYLE_AUTO,
+                           G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SI_UNIT,
+         g_param_spec_object("si-unit",
+                             "SI unit",
+                             "SI unit to display in labels",
+                             GWY_TYPE_SI_UNIT,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_GRADIENT,
+         g_param_spec_string("gradient",
+                             "Gradient",
+                             "Name of gradient the sphere is colored with",
+                             NULL,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABELS_VISIBLE,
+         g_param_spec_boolean("labels-visible",
+                              "Labels visible",
+                              "Whether minimum and maximum labels are visible",
+                              TRUE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -68,7 +140,90 @@ gwy_color_axis_init(GwyColorAxis *axis)
     axis->orientation = GTK_ORIENTATION_VERTICAL;
     axis->tick_length = 6;
     axis->stripe_width = 10;
-    axis->has_labels = TRUE;
+    axis->labels_visible = TRUE;
+    axis->ticks_style = GWY_TICKS_STYLE_AUTO;
+
+    axis->min = 0.0;
+    axis->max = 1.0;
+
+    axis->siunit = gwy_si_unit_new(NULL);
+
+    axis->gradient = gwy_gradients_get_gradient(NULL);
+    axis->gradient_id
+        = g_signal_connect_swapped(axis->gradient, "data-changed",
+                                   G_CALLBACK(gwy_color_axis_update), axis);
+    gwy_resource_use(GWY_RESOURCE(axis->gradient));
+}
+
+static void
+gwy_color_axis_set_property(GObject *object,
+                            guint prop_id,
+                            const GValue *value,
+                            GParamSpec *pspec)
+{
+    GwyColorAxis *axis = GWY_COLOR_AXIS(object);
+
+    switch (prop_id) {
+        case PROP_ORIENTATION:
+        /* Constr-only */
+        axis->orientation = g_value_get_enum(value);
+        break;
+
+        case PROP_TICKS_STYLE:
+        gwy_color_axis_set_ticks_style(axis, g_value_get_enum(value));
+        break;
+
+        case PROP_SI_UNIT:
+        gwy_color_axis_set_si_unit(axis, g_value_get_object(value));
+        break;
+
+        case PROP_GRADIENT:
+        gwy_color_axis_set_gradient(axis, g_value_get_string(value));
+        break;
+
+        case PROP_LABELS_VISIBLE:
+        gwy_color_axis_set_labels_visible(axis, g_value_get_boolean(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_color_axis_get_property(GObject *object,
+                            guint prop_id,
+                            GValue *value,
+                            GParamSpec *pspec)
+{
+    GwyColorAxis *axis = GWY_COLOR_AXIS(object);
+
+    switch (prop_id) {
+        case PROP_ORIENTATION:
+        g_value_set_enum(value, axis->orientation);
+        break;
+
+        case PROP_TICKS_STYLE:
+        g_value_set_enum(value, axis->ticks_style);
+        break;
+
+        case PROP_SI_UNIT:
+        g_value_set_object(value, axis->siunit);
+        break;
+
+        case PROP_GRADIENT:
+        g_value_set_string(value, gwy_color_axis_get_gradient(axis));
+        break;
+
+        case PROP_LABELS_VISIBLE:
+        g_value_set_boolean(value, axis->labels_visible);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -87,21 +242,14 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
                               gdouble max)
 {
     GwyColorAxis *axis;
+    GtkWidget *widget;
 
-    axis = g_object_new(GWY_TYPE_COLOR_AXIS, NULL);
-    axis->orientation = orientation;
+    widget = gwy_color_axis_new(orientation);
+    axis = GWY_COLOR_AXIS(widget);
     axis->min = MIN(min, max);
     axis->max = MAX(min, max);
 
-    axis->gradient = gwy_gradients_get_gradient(NULL);
-    axis->gradient_id
-        = g_signal_connect_swapped(axis->gradient, "data-changed",
-                                   G_CALLBACK(gwy_color_axis_update), axis);
-    gwy_resource_use(GWY_RESOURCE(axis->gradient));
-
-    axis->siunit = gwy_si_unit_new("");
-
-    return GTK_WIDGET(axis);
+    return widget;
 }
 
 /**
@@ -115,7 +263,7 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
 GtkWidget*
 gwy_color_axis_new(GtkOrientation orientation)
 {
-    return gwy_color_axis_new_with_range(orientation, 0.0, 1.0);
+    return g_object_new(GWY_TYPE_COLOR_AXIS, "orientation", orientation, NULL);
 }
 
 static void
@@ -329,6 +477,12 @@ gwy_color_axis_draw_label(GtkWidget *widget)
     gdouble max;
 
     axis = GWY_COLOR_AXIS(widget);
+    if (!axis->labels_visible) {
+        axis->labelb_size = 1;
+        axis->labele_size = 1;
+        return;
+    }
+
     xthickness = widget->style->xthickness;
     ythickness = widget->style->ythickness;
     width = widget->allocation.width;
@@ -430,52 +584,74 @@ gwy_color_axis_draw_ticks(GwyColorAxis *axis)
     if (axis->min == axis->max)
         return;
 
-    /* Draw `minor' ticks */
-    scale = size/(axis->max - axis->min);
-    x = MIN_TICK_DISTANCE/scale;
-    m = pow10(floor(log10(x)));
-    x /= m;
-    gwy_debug("scale: %g x: %g m: %g", scale, x, m);
-    if (x == 1.0)
-        x = 1.0;
-    else if (x <= 2.0)
-        x = 2.0;
-    else if (x <= 5.0)
-        x = 5.0;
-    else
-        x = 10.0;
+    switch (axis->ticks_style) {
+        case GWY_TICKS_STYLE_NONE:
+        break;
 
-    tickdist = x*m;
-    x = floor(axis->min/tickdist)*tickdist;
-    max = ceil(axis->max/tickdist)*tickdist;
-    gwy_debug("tickdist: %g x: %g max: %g", tickdist, x, max);
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-        while (x <= max) {
-            pos = size-1 - ROUND((x - axis->min)*scale);
-            if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
-                gdk_draw_line(widget->window, gc,
-                              swidth, pos, swidth + tlength/2, pos);
-            x += tickdist;
+        case GWY_TICKS_STYLE_CENTER:
+        if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
+            gdk_draw_line(widget->window, gc,
+                          swidth, height/2, swidth + tlength/2, height/2);
         }
-    }
-    else {
-        while (x <= max) {
-            pos = ROUND((x - axis->min)*scale);
-            if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
-                gdk_draw_line(widget->window, gc,
-                              pos, swidth, pos, swidth + tlength/2);
-            x += tickdist;
+        else {
+            gdk_draw_line(widget->window, gc,
+                          width/2, swidth, width/2, swidth + tlength/2);
         }
+        break;
+
+        case GWY_TICKS_STYLE_AUTO:
+        /* Draw `minor' ticks */
+        scale = size/(axis->max - axis->min);
+        x = MIN_TICK_DISTANCE/scale;
+        m = pow10(floor(log10(x)));
+        x /= m;
+        gwy_debug("scale: %g x: %g m: %g", scale, x, m);
+        if (x == 1.0)
+            x = 1.0;
+        else if (x <= 2.0)
+            x = 2.0;
+        else if (x <= 5.0)
+            x = 5.0;
+        else
+            x = 10.0;
+
+        tickdist = x*m;
+        x = floor(axis->min/tickdist)*tickdist;
+        max = ceil(axis->max/tickdist)*tickdist;
+        gwy_debug("tickdist: %g x: %g max: %g", tickdist, x, max);
+        if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
+            while (x <= max) {
+                pos = size-1 - ROUND((x - axis->min)*scale);
+                if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
+                    gdk_draw_line(widget->window, gc,
+                                  swidth, pos, swidth + tlength/2, pos);
+                x += tickdist;
+            }
+        }
+        else {
+            while (x <= max) {
+                pos = ROUND((x - axis->min)*scale);
+                if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
+                    gdk_draw_line(widget->window, gc,
+                                  pos, swidth, pos, swidth + tlength/2);
+                x += tickdist;
+            }
+        }
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
     }
 }
 
 /**
  * gwy_color_axis_get_range:
  * @axis: A color axis.
- * @min: Where the range maximum should be stored (or %NULL).
- * @max: Where the range minimum should be stored (or %NULL).
+ * @min: Location to store the range maximum (or %NULL).
+ * @max: Location to store the range minimum (or %NULL).
  *
- * Gets the range of color axis @axis.
+ * Gets the range of a color axis.
  **/
 void
 gwy_color_axis_get_range(GwyColorAxis *axis,
@@ -492,10 +668,10 @@ gwy_color_axis_get_range(GwyColorAxis *axis,
 /**
  * gwy_color_axis_set_range:
  * @axis: A color axis.
- * @min: The minimum.
- * @max: The maximum.
+ * @min: The range minimum.
+ * @max: The range maximum.
  *
- * Sets the range for color axis @axis to [@min, @max].
+ * Sets the range of a color axis.
  **/
 void
 gwy_color_axis_set_range(GwyColorAxis *axis,
@@ -509,7 +685,24 @@ gwy_color_axis_set_range(GwyColorAxis *axis,
 
     axis->min = MIN(min, max);
     axis->max = MAX(min, max);
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
+
+    gwy_color_axis_changed(axis);
+}
+
+/**
+ * gwy_color_axis_get_gradient:
+ * @axis: A color axis.
+ *
+ * Gets the color gradient a color axis uses.
+ *
+ * Returns: The color gradient.
+ **/
+const gchar*
+gwy_color_axis_get_gradient(GwyColorAxis *axis)
+{
+    g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), NULL);
+
+    return gwy_resource_get_name(GWY_RESOURCE(axis->gradient));
 }
 
 /**
@@ -543,35 +736,10 @@ gwy_color_axis_set_gradient(GwyColorAxis *axis,
 }
 
 /**
- * gwy_color_axis_get_gradient:
- * @axis: A color axis.
- *
- * Returns the color gradient a color axis uses.
- *
- * Returns: The color gradient.
- **/
-const gchar*
-gwy_color_axis_get_gradient(GwyColorAxis *axis)
-{
-    g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), NULL);
-
-    return gwy_resource_get_name(GWY_RESOURCE(axis->gradient));
-}
-
-static void
-gwy_color_axis_update(GwyColorAxis *axis)
-{
-    gwy_color_axis_adjust(axis,
-                          GTK_WIDGET(axis)->allocation.width,
-                          GTK_WIDGET(axis)->allocation.height);
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
-}
-
-/**
  * gwy_color_axis_get_si_unit:
  * @axis: A color axis.
  *
- * Returns the SI unit a color axis displays.
+ * Gets the SI unit a color axis displays.
  *
  * Returns: The SI unit.
  **/
@@ -594,6 +762,7 @@ void
 gwy_color_axis_set_si_unit(GwyColorAxis *axis,
                            GwySIUnit *unit)
 {
+    gboolean not_equal;
     GwySIUnit *old;
 
     g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
@@ -602,10 +771,106 @@ gwy_color_axis_set_si_unit(GwyColorAxis *axis,
     if (axis->siunit == unit)
         return;
 
+    not_equal = !gwy_si_unit_equal(unit, axis->siunit);
+
     old = axis->siunit;
     g_object_ref(unit);
     axis->siunit = unit;
     gwy_object_unref(old);
+
+    if (not_equal)
+        gwy_color_axis_changed(axis);
+}
+
+/**
+ * gwy_color_axis_get_ticks_style:
+ * @axis: A color axis.
+ *
+ * Gets ticks style of a color axis.
+ *
+ * Returns: The ticks style.
+ **/
+GwyTicksStyle
+gwy_color_axis_get_ticks_style(GwyColorAxis *axis)
+{
+    g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), GWY_TICKS_STYLE_NONE);
+
+    return axis->ticks_style;
+}
+
+/**
+ * gwy_color_axis_set_ticks_style:
+ * @axis: A color axis.
+ * @ticks_style: The ticks style to use.
+ *
+ * Sets the ticks style of a color axis.
+ **/
+void
+gwy_color_axis_set_ticks_style(GwyColorAxis *axis,
+                               GwyTicksStyle ticks_style)
+{
+    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
+    g_return_if_fail(ticks_style <= GWY_TICKS_STYLE_AUTO);
+
+    if (axis->ticks_style == ticks_style)
+        return;
+
+    axis->ticks_style = ticks_style;
+    gwy_color_axis_changed(axis);
+}
+
+/**
+ * gwy_color_axis_get_labels_visible:
+ * @axis: A color axis.
+ *
+ * Gets the visibility of labels of a color axis.
+ *
+ * Returns: %TRUE if labels are displayed, %FALSE if they are omitted.
+ **/
+gboolean
+gwy_color_axis_get_labels_visible(GwyColorAxis *axis)
+{
+    g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), FALSE);
+
+    return axis->labels_visible;
+}
+
+/**
+ * gwy_color_axis_set_labels_visible:
+ * @axis: A color axis.
+ * @labels_visible: %TRUE to display labels with minimum and maximum values,
+ *                  %FALSE to display no labels.
+ *
+ * Sets the visibility of labels of a color axis.
+ **/
+void
+gwy_color_axis_set_labels_visible(GwyColorAxis *axis,
+                                  gboolean labels_visible)
+{
+    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
+    labels_visible = !!labels_visible;
+
+    if (axis->labels_visible == labels_visible)
+        return;
+
+    axis->labels_visible = labels_visible;
+    gwy_color_axis_changed(axis);
+}
+
+static void
+gwy_color_axis_update(GwyColorAxis *axis)
+{
+    gwy_color_axis_adjust(axis,
+                          GTK_WIDGET(axis)->allocation.width,
+                          GTK_WIDGET(axis)->allocation.height);
+    gwy_color_axis_changed(axis);
+}
+
+static void
+gwy_color_axis_changed(GwyColorAxis *axis)
+{
+    if (GTK_WIDGET_DRAWABLE(axis))
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /************************** Documentation ****************************/
