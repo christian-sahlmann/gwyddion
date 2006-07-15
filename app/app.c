@@ -635,7 +635,9 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     GtkWidget *gwy3dview, *gwy3dwindow, *button;
     GwyDataView *view;
     GwyContainer *data;
-    gchar *name, *title;
+    gchar *name, *title, key[40];
+    guint len;
+    gint id;
 
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
     view = gwy_data_window_get_data_view(data_window);
@@ -643,9 +645,25 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     gwy3dview = gwy_3d_view_new(data);
-    gwy_3d_view_set_data_key(GWY_3D_VIEW(gwy3dview), "/0/data");
-    gwy_3d_view_set_gradient_key(GWY_3D_VIEW(gwy3dview), "/0/3d/palette");
-    gwy_3d_view_set_material_key(GWY_3D_VIEW(gwy3dview), "/0/3d/material");
+    id = 0;
+    g_snprintf(key, sizeof(key), "/%d/", id);
+    len = strlen(key);
+
+    g_strlcat(key, "3d", sizeof(key));
+    gwy_3d_view_set_setup_key(GWY_3D_VIEW(gwy3dview), key);
+
+    key[len] = '\0';
+    g_strlcat(key, "data", sizeof(key));
+    gwy_3d_view_set_data_key(GWY_3D_VIEW(gwy3dview), key);
+
+    key[len] = '\0';
+    g_strlcat(key, "3d/palette", sizeof(key));
+    gwy_3d_view_set_gradient_key(GWY_3D_VIEW(gwy3dview), key);
+
+    key[len] = '\0';
+    g_strlcat(key, "3d/material", sizeof(key));
+    gwy_3d_view_set_material_key(GWY_3D_VIEW(gwy3dview), key);
+
     gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
     gwy_app_add_main_accel_group(GTK_WINDOW(gwy3dwindow));
 
