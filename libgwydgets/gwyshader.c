@@ -124,7 +124,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
         gobject_class,
         PROP_GRADIENT,
         g_param_spec_string("gradient",
-                            "Gradient name",
+                            "Gradient",
                             "Name of gradient the sphere is colored with",
                             NULL,
                             G_PARAM_READWRITE));
