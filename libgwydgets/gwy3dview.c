@@ -781,10 +781,16 @@ gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
 {
     gwy_debug("%p <%s>", gwy3dview, pspec ? pspec->name : "NULL");
     /* TODO: must decide what needs redraw, if anything */
-    /*
-    gwy_3d_view_update_labels(gwy3dview);
-    gwy_3d_view_update_lists(gwy3dview);
-    */
+    if (pspec) {
+        if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_GRADIENT
+            && (gwy_strequal(pspec->name, "light-theta")
+                || gwy_strequal(pspec->name, "light-phi")))
+            return;
+        if (!gwy3dview->setup->axes_visible
+            && gwy_strequal(pspec->name, "labels-visible"))
+            return;
+    }
+
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
 }
 
@@ -1066,163 +1072,6 @@ gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), 0);
     return gwy3dview->reduced_size;
 }
-
-#if 0
-/**
- * gwy_3d_view_get_projection:
- * @gwy3dview: A 3D data view widget.
- *
- * Gets projection a 3D data view uses.
- *
- * Returns: Projection type used by @gwy3dview.
- **/
-Gwy3DProjection
-gwy_3d_view_get_projection(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-    return gwy3dview->projection;
-}
-
-/**
- * gwy_3d_view_set_projection:
- * @gwy3dview: A 3D data view widget.
- * @projection: Proejction type to use.
- *
- * Sets the type of projection of a 3D data to the screen.
- **/
-void
-gwy_3d_view_set_projection(Gwy3DView *gwy3dview,
-                           Gwy3DProjection projection)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    g_return_if_fail((gint)projection >= GWY_3D_PROJECTION_ORTHOGRAPHIC
-                     && (gint)projection <= GWY_3D_PROJECTION_PERSPECTIVE);
-
-    if (projection == gwy3dview->projection)
-        return;
-    gwy3dview->projection = projection;
-    gwy_container_set_enum_by_name(gwy3dview->data, "/0/3d/projection",
-                                   projection);
-
-    gwy_3d_view_timeout_start(gwy3dview, TRUE);
-}
-
-/**
- * gwy_3d_view_get_axes_visible:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns whether the axes are shown within the widget.
- *
- * Returns: visibility of the axes
- **/
-gboolean
-gwy_3d_view_get_axes_visible(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-    return gwy3dview->axes_visible;
-}
-
-/**
- * gwy_3d_view_set_axes_visible:
- * @gwy3dview: A 3D data view widget.
- * @axes_visible: Show/hide axes
- *
- * Show/hide axes within @gwy3dview.
- **/
-void
-gwy_3d_view_set_axes_visible(Gwy3DView *gwy3dview,
-                          gboolean axes_visible)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-    if (axes_visible == gwy3dview->axes_visible)
-        return;
-    gwy3dview->axes_visible = axes_visible;
-    gwy_container_set_boolean_by_name(gwy3dview->data,
-                                      "/0/3d/axes_visible",
-                                      axes_visible);
-
-    gwy_3d_view_timeout_start(gwy3dview, TRUE);
-}
-
-/**
- * gwy_3d_view_get_labels_visible:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns whether the axes labels are shown within the @gwy3dview.
- * The labels are visible only if #axes_visible is TRUE.
- *
- * Returns: Whwteher the axes labels are visible.
- **/
-gboolean
-gwy_3d_view_get_labels_visible(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-    return gwy3dview->labels_visible;
-}
-
-/**
- * gwy_3d_view_set_labels_visible:
- * @gwy3dview: A 3D data view widget.
- * @labels_visible: Show/hide axes labels
- *
- * Show/hide labels of the axes within @gwy3dview.
- * Widget is invalidated if necessary.
- * The labels of the axes are visible only if #axes_visible is TRUE.
- **/
-void
-gwy_3d_view_set_labels_visible(Gwy3DView *gwy3dview,
-                            gboolean labels_visible)
-{
-     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-     if (labels_visible == gwy3dview->labels_visible)
-         return;
-     gwy3dview->labels_visible = labels_visible;
-     gwy_container_set_boolean_by_name(gwy3dview->data, "/0/3d/labels_visible",
-                                       labels_visible);
-
-     gwy_3d_view_timeout_start(gwy3dview, TRUE);
-}
-
-/**
- * gwy_3d_view_get_visualization:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns visualization method a 3D view uses.
- *
- * Returns: The visualization type.
- **/
-Gwy3DVisualization
-gwy_3d_view_get_visualization(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-
-    return gwy3dview->visual;
-}
-
-/**
- * gwy_3d_view_set_visualization:
- * @gwy3dview: A 3D data view widget.
- * @visual: Visualization method to use.
- *
- * Sets the visualization type a 3D view should use.
- **/
-void
-gwy_3d_view_set_visualization(Gwy3DView *gwy3dview,
-                              Gwy3DVisualization visual)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-    if (visual == gwy3dview->visual)
-        return;
-    gwy3dview->visual = visual;
-    gwy_container_set_enum_by_name(gwy3dview->data, "/0/3d/visualization",
-                                   visual);
-
-    gwy_3d_view_timeout_start(gwy3dview, TRUE);
-}
-#endif
 
 /**
  * gwy_3d_view_downsample_data:
@@ -1640,8 +1489,8 @@ gwy_3d_view_expose(GtkWidget *widget,
              gwy3dview->setup->scale,
              gwy3dview->setup->scale);
 
-    glRotatef(gwy3dview->setup->rotation_y, 1.0, 0.0, 0.0);
-    glRotatef(gwy3dview->setup->rotation_x, 0.0,  0.0, 1.0);
+    glRotatef(gwy3dview->setup->rotation_y*RAD_2_DEG, 1.0, 0.0, 0.0);
+    glRotatef(gwy3dview->setup->rotation_x*RAD_2_DEG, 0.0,  0.0, 1.0);
     glScalef(1.0f, 1.0f, gwy3dview->setup->z_scale);
 
     /* Render shape */
@@ -1658,8 +1507,8 @@ gwy_3d_view_expose(GtkWidget *widget,
         glMaterialf(GL_FRONT, GL_SHININESS,
                     (GLfloat)gwy_gl_material_get_shininess(material)*128.0f);
         glPushMatrix();
-        glRotatef(gwy3dview->setup->light_theta, 0.0f, 0.0f, 1.0f);
-        glRotatef(gwy3dview->setup->light_phi, 0.0f, 1.0f, 0.0f);
+        glRotatef(gwy3dview->setup->light_theta * RAD_2_DEG, 0.0f, 0.0f, 1.0f);
+        glRotatef(gwy3dview->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glPopMatrix();
     }
@@ -1727,10 +1576,12 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
             break;
 
             case GWY_3D_MOVEMENT_ROTATION:
-            g_object_set(gwy3dview->setup, "rotation-x",
-                         gwy3dview->setup->rotation_x + dx, NULL);
-            g_object_set(gwy3dview->setup, "rotation-y",
-                         gwy3dview->setup->rotation_y + dy, NULL);
+            g_object_set(gwy3dview->setup,
+                         "rotation-x",
+                         gwy3dview->setup->rotation_x + dx*DEG_2_RAD,
+                         "rotation-y",
+                         gwy3dview->setup->rotation_y + dy*DEG_2_RAD,
+                         NULL);
             break;
 
             case GWY_3D_MOVEMENT_SCALE:
@@ -1747,10 +1598,12 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
             break;
 
             case GWY_3D_MOVEMENT_LIGHT:
-            g_object_set(gwy3dview->setup, "light-theta",
-                         gwy3dview->setup->light_theta + dx, NULL);
-            g_object_set(gwy3dview->setup, "light-phi",
-                         gwy3dview->setup->light_phi + dx, NULL);
+            g_object_set(gwy3dview->setup,
+                         "light-theta",
+                         gwy3dview->setup->light_theta + dx*DEG_2_RAD,
+                         "light-phi",
+                         gwy3dview->setup->light_phi + dx*DEG_2_RAD,
+                         NULL);
             break;
         }
     }
@@ -1975,8 +1828,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
     yfirst = TRUE;
-    rx = widget->setup->rotation_x
-                 - ((int)(widget->setup->rotation_x/360.0)) * 360.0;
+    rx = fmod(widget->setup->rotation_x*RAD_2_DEG, 360.0);
     if (rx < 0.0)
         rx += 360.0;
 
@@ -2115,8 +1967,8 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
               + GWY_3D_Z_DISPLACEMENT;
 
     glTranslatef(0.0f, 0.0f, plane_z);
-    glRotatef(widget->setup->light_theta, 0.0f, 0.0f, 1.0f);
-    glRotatef(-widget->setup->light_phi, 0.0f, 1.0f, 0.0f);
+    glRotatef(widget->setup->light_theta * RAD_2_DEG, 0.0f, 0.0f, 1.0f);
+    glRotatef(-widget->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
         for (i = -180; i <= 180; i += 5) {

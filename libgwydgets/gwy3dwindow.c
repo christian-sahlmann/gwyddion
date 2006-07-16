@@ -76,6 +76,11 @@ static gboolean gwy_3d_window_expose               (GtkWidget *widget,
 static void     gwy_3d_window_pack_buttons         (Gwy3DWindow *gwy3dwindow,
                                                     guint offset,
                                                     GtkBox *box);
+static void     gwy_3d_window_setup_adj_changed    (GtkAdjustment *adj,
+                                                    Gwy3DSetup *setup);
+static void     gwy_3d_window_adj_setup_changed    (Gwy3DSetup *setup,
+                                                    GParamSpec *pspec,
+                                                    GtkAdjustment *adj);
 static GtkWidget* gwy_3d_window_build_basic_tab    (Gwy3DWindow *window);
 static GtkWidget* gwy_3d_window_build_visual_tab   (Gwy3DWindow *window);
 static GtkWidget* gwy_3d_window_build_label_tab    (Gwy3DWindow *window);
@@ -609,9 +614,38 @@ gwy_3d_window_setup_adj_changed(GtkAdjustment *adj,
                                 Gwy3DSetup *setup)
 {
     const gchar *property;
+    gboolean rad2deg;
+    gulong id;
 
     property = g_object_get_data(G_OBJECT(adj), "gwy-3d-window-setup-property");
-    g_object_set(setup, property, adj->value, NULL);
+    rad2deg = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(adj),
+                                                "gwy-3d-window-setup-rad2deg"));
+    id = g_signal_handler_find(setup, G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, 0, gwy_3d_window_adj_setup_changed, adj);
+    g_signal_handler_block(setup, id);
+    g_object_set(setup,
+                 property, rad2deg ? G_PI/180.0*adj->value : adj->value,
+                 NULL);
+    g_signal_handler_unblock(setup, id);
+}
+
+static void
+gwy_3d_window_adj_setup_changed(Gwy3DSetup *setup,
+                                GParamSpec *pspec,
+                                GtkAdjustment *adj)
+{
+    gboolean rad2deg;
+    gdouble value;
+    gulong id;
+
+    rad2deg = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(adj),
+                                                "gwy-3d-window-setup-rad2deg"));
+    g_object_get(setup, pspec->name, &value, NULL);
+    id = g_signal_handler_find(adj, G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, 0, gwy_3d_window_setup_adj_changed, setup);
+    g_signal_handler_block(adj, id);
+    gtk_adjustment_set_value(adj, rad2deg ? 180.0/G_PI*value : value);
+    g_signal_handler_unblock(adj, id);
 }
 
 static GtkObject*
@@ -620,17 +654,29 @@ gwy_3d_window_make_setup_adj(Gwy3DSetup *setup,
                              gdouble min,
                              gdouble max,
                              gdouble step,
-                             gdouble page)
+                             gdouble page,
+                             gboolean rad2deg)
 {
     GtkObject *adj;
     gdouble value;
+    gchar *detail;
 
     g_object_get(setup, property, &value, NULL);
+    if (rad2deg)
+        value *= 180.0/G_PI;
     adj = gtk_adjustment_new(value, min, max, step, page, 0.0);
     g_object_set_data(G_OBJECT(adj), "gwy-3d-window-setup-property",
                       (gpointer)property);
+    g_object_set_data(G_OBJECT(adj), "gwy-3d-window-setup-rad2deg",
+                      GINT_TO_POINTER(rad2deg));
     g_signal_connect(adj, "value-changed",
                      G_CALLBACK(gwy_3d_window_setup_adj_changed), setup);
+
+    detail = g_newa(gchar, strlen(property) + sizeof("notify::"));
+    strcpy(detail, "notify::");
+    strcat(detail, property);
+    g_signal_connect(setup, detail,
+                     G_CALLBACK(gwy_3d_window_adj_setup_changed), adj);
 
     return adj;
 }
@@ -657,18 +703,22 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     row = 0;
 
     adj = gwy_3d_window_make_setup_adj(setup, "rotation-x",
-                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
+                                       TRUE);
     spin = gwy_table_attach_spinbutton(table, row++, _("_Phi:"), _("deg"), adj);
 
     adj = gwy_3d_window_make_setup_adj(setup, "rotation-y",
-                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
+                                       TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Theta:"), _("deg"), adj);
 
-    adj = gwy_3d_window_make_setup_adj(setup, "scale", 0.05, 10.0, 0.01, 0.1);
+    adj = gwy_3d_window_make_setup_adj(setup, "scale", 0.05, 10.0, 0.01, 0.1,
+                                       FALSE);
     spin = gwy_table_attach_spinbutton(table, row++, _("_Scale:"), NULL, adj);
 
-    adj = gwy_3d_window_make_setup_adj(setup, "z-scale", 0.05, 10.0, 0.01, 0.1);
+    adj = gwy_3d_window_make_setup_adj(setup, "z-scale", 0.05, 10.0, 0.01, 0.1,
+                                       FALSE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
 
@@ -761,14 +811,16 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     row++;
 
     adj = gwy_3d_window_make_setup_adj(setup, "light-phi",
-                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
+                                       TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("Light _phi:"), _("deg"), adj);
     window->lights_spin1 = spin;
     gtk_widget_set_sensitive(spin, is_material);
 
     adj = gwy_3d_window_make_setup_adj(setup, "light-theta",
-                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0);
+                                       -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
+                                       TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("Light _theta:"), _("deg"), adj);
     window->lights_spin2 = spin;
