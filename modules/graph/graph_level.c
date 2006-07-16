@@ -19,11 +19,10 @@
  */
 
 #include "config.h"
-#include <string.h>
-#include <gtk/gtk.h>
-#include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
 
 static gboolean module_register(void);

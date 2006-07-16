@@ -19,14 +19,14 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <stdio.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
-#include <glib/gstdio.h>
 
 typedef struct {
     GtkWidget *preference;

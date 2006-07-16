@@ -24,9 +24,14 @@
 #include <stdlib.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
-#include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwynlfitpreset.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwyinventorystore.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
 
 enum { MAX_PARAMS = 4 };

@@ -19,13 +19,12 @@
  */
 
 #include "config.h"
-#include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwynlfitpreset.h>
-#include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
 
 enum { MAX_PARAMS = 4 };
