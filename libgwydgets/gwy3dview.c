@@ -91,7 +91,7 @@ enum {
     PROP_MOVEMENT,
     PROP_REDUCED_SIZE,
     PROP_DATA_KEY,
-    PROP_SETUP_KEY,
+    PROP_SETUP_PREFIX,
     PROP_GRADIENT_KEY,
     PROP_MATERIAL_KEY,
     PROP_LAST
@@ -270,9 +270,9 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 
     g_object_class_install_property
         (gobject_class,
-         PROP_SETUP_KEY,
-         g_param_spec_string("setup-key",
-                             "Setup key",
+         PROP_SETUP_PREFIX,
+         g_param_spec_string("setup-prefix",
+                             "Setup prefix",
                              "Key prefix identifying view settings and labels "
                              "in container",
                              NULL, G_PARAM_READWRITE));
@@ -371,8 +371,8 @@ gwy_3d_view_set_property(GObject *object,
         gwy_3d_view_set_data_key(view, g_value_get_string(value));
         break;
 
-        case PROP_SETUP_KEY:
-        gwy_3d_view_set_setup_key(view, g_value_get_string(value));
+        case PROP_SETUP_PREFIX:
+        gwy_3d_view_set_setup_prefix(view, g_value_get_string(value));
         break;
 
         case PROP_GRADIENT_KEY:
@@ -410,7 +410,7 @@ gwy_3d_view_get_property(GObject*object,
         g_value_set_static_string(value, g_quark_to_string(view->data_key));
         break;
 
-        case PROP_SETUP_KEY:
+        case PROP_SETUP_PREFIX:
         g_value_set_static_string(value, g_quark_to_string(view->setup_key));
         break;
 
@@ -638,15 +638,15 @@ gwy_3d_view_data_field_changed(Gwy3DView *gwy3dview)
 }
 
 const gchar*
-gwy_3d_view_get_setup_key(Gwy3DView *gwy3dview)
+gwy_3d_view_get_setup_prefix(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return g_quark_to_string(gwy3dview->gradient_key);
 }
 
 void
-gwy_3d_view_set_setup_key(Gwy3DView *gwy3dview,
-                          const gchar *key)
+gwy_3d_view_set_setup_prefix(Gwy3DView *gwy3dview,
+                             const gchar *key)
 {
     GQuark quark;
 
@@ -666,7 +666,7 @@ gwy_3d_view_set_setup_key(Gwy3DView *gwy3dview,
                                   &gwy3dview->setup_item_id,
                                   G_CALLBACK(gwy_3d_view_setup_item_changed));
 
-    g_object_notify(G_OBJECT(gwy3dview), "setup-key");
+    g_object_notify(G_OBJECT(gwy3dview), "setup-prefix");
     /* TODO: must not call with NULL or handle it as `all' */
     gwy_3d_view_setup_changed(gwy3dview, NULL);
 }
@@ -2525,15 +2525,15 @@ gwy_3d_view_set_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
 }
 
 const gchar*
-gwy_3d_view_get_setup_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+gwy_3d_view_get_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
     g_critical("OpenGL support was not compiled in.");
     return NULL;
 }
 
 void
-gwy_3d_view_set_setup_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                          G_GNUC_UNUSED const gchar *key)
+gwy_3d_view_set_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                             G_GNUC_UNUSED const gchar *key)
 {
     g_critical("OpenGL support was not compiled in.");
 }

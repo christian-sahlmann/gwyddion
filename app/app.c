@@ -650,7 +650,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     len = strlen(key);
 
     g_strlcat(key, "3d", sizeof(key));
-    gwy_3d_view_set_setup_key(GWY_3D_VIEW(gwy3dview), key);
+    gwy_3d_view_set_setup_prefix(GWY_3D_VIEW(gwy3dview), key);
 
     key[len] = '\0';
     g_strlcat(key, "data", sizeof(key));

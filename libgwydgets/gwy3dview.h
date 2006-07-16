@@ -134,8 +134,8 @@ struct _Gwy3DViewClass {
 GtkWidget*        gwy_3d_view_new               (GwyContainer *data);
 GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
-const gchar*      gwy_3d_view_get_setup_key     (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_setup_key     (Gwy3DView *gwy3dview,
+const gchar*      gwy_3d_view_get_setup_prefix  (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_setup_prefix  (Gwy3DView *gwy3dview,
                                                  const gchar *key);
 const gchar*      gwy_3d_view_get_data_key      (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_data_key      (Gwy3DView *gwy3dview,

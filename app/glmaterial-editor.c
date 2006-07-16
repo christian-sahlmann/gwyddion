@@ -223,6 +223,7 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     gwy_gl_material_editor_set_view(editor->container, FALSE);
 
     view = gwy_3d_view_new(editor->container);
+    gwy_3d_view_set_setup_prefix(GWY_3D_VIEW(view), "/0/3d");
     gwy_3d_view_set_data_key(GWY_3D_VIEW(view), "/0/data");
     gwy_3d_view_set_material_key(GWY_3D_VIEW(view), "/0/3d/material");
     g_object_unref(editor->container);
