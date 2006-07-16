@@ -300,7 +300,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->view_scale_max = 3.0;
     gwy3dview->view_scale_min = 0.5;
     gwy3dview->movement       = GWY_3D_MOVEMENT_NONE;
-    gwy3dview->reduced_size   = 16;
+    gwy3dview->reduced_size   = 96;
 
     gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                  NULL, g_free);
@@ -1912,6 +1912,8 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     data = gwy_data_field_get_data_const(dfield);
     res  = xres > yres ? xres : yres;
     grad = gwy3dview->gradient;
+    if (!grad)
+        grad = gwy_gradients_get_gradient(NULL);
 
     glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
     glPushMatrix();
@@ -1922,9 +1924,11 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     zdifr = 1.0/(data_max - data_min);
     normals = g_new(Gwy3DVector, xres * yres);
     if (!gwy_3d_make_normals(dfield, normals)) {
-        /*TODO solve not enough momory problem*/
+        /*TODO solve not enough memory problem*/
     }
 
+    /* FIXME: This should be avoided in lighting visualization mode, create
+     * it only upon a switch to gradient mode. */
     for (j = 0; j < yres-1; j++) {
         glBegin(GL_TRIANGLE_STRIP);
         for (i = 0; i < xres-1; i++) {

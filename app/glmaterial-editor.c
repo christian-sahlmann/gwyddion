@@ -69,8 +69,8 @@ static void  gwy_gl_material_editor_construct   (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_apply       (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_switch      (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
-static void  gwy_gl_material_editor_save_view   (GwyContainer *container);
-static void  gwy_gl_material_editor_set_view    (GwyContainer *container,
+static void  gwy_gl_material_editor_save_view   (Gwy3DSetup *setup);
+static void  gwy_gl_material_editor_set_view    (Gwy3DSetup *setup,
                                                  gboolean save);
 static void  gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
 static void  gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
@@ -207,7 +207,7 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     enum { N = 96 };
     GtkWidget *view;
     GwyDataField *dfield;
-    GtkAdjustment *adj;
+    Gwy3DSetup *setup;
 
     if (!gwy_app_gl_is_ok()) {
         editor->preview = NULL;
@@ -220,48 +220,46 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     editor->container = gwy_container_new();
     gwy_container_set_object_by_name(editor->container, "/0/data", dfield);
     g_object_unref(dfield);
-    gwy_gl_material_editor_set_view(editor->container, FALSE);
 
     view = gwy_3d_view_new(editor->container);
     gwy_3d_view_set_setup_prefix(GWY_3D_VIEW(view), "/0/3d");
     gwy_3d_view_set_data_key(GWY_3D_VIEW(view), "/0/data");
     gwy_3d_view_set_material_key(GWY_3D_VIEW(view), "/0/3d/material");
-    g_object_unref(editor->container);
-    g_object_set(view,
-                 "movement-type", GWY_3D_MOVEMENT_ROTATION,
+    gwy_3d_view_set_movement_type(GWY_3D_VIEW(view), GWY_3D_MOVEMENT_ROTATION);
+    gwy_3d_view_set_reduced_size(GWY_3D_VIEW(view), N);
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(view));
+    g_object_ref(setup);
+    g_object_set(setup,
                  "visualization", GWY_3D_VISUALIZATION_LIGHTING,
-                 "reduced-size", N,
-                 "show-axes", FALSE,
-                 "show-labels", FALSE,
+                 "axes-visible", FALSE,
+                 "labels-visible", FALSE,
+                 "scale", 1.4,
                  NULL);
-    /* XXX XXX XXX
-    adj = gwy_3d_view_get_view_scale_adjustment(GWY_3D_VIEW(view));
-    gtk_adjustment_set_value(adj, 1.4*gtk_adjustment_get_value(adj));
-    */
+    gwy_gl_material_editor_set_view(setup, FALSE);
+    g_object_unref(editor->container);
     g_signal_connect_swapped(view, "destroy",
                              G_CALLBACK(gwy_gl_material_editor_save_view),
-                             editor->container);
+                             setup);
 
     editor->preview = view;
 }
 
 static void
-gwy_gl_material_editor_save_view(GwyContainer *container)
+gwy_gl_material_editor_save_view(Gwy3DSetup *setup)
 {
-    gwy_gl_material_editor_set_view(container, TRUE);
+    gwy_gl_material_editor_set_view(setup, TRUE);
 }
 
 static void
-gwy_gl_material_editor_set_view(GwyContainer *container,
+gwy_gl_material_editor_set_view(Gwy3DSetup *setup,
                                 gboolean save)
 {
-    static const gchar *keys[] = { "rot_x", "rot_y" };
-    static const gchar *ctemplate = "/0/3d/%s";
-    static const gchar *stemplate = "/app/%s/editor/3d/%s";
-    GwyContainer *from, *to;
+    static const gchar *keys[] = { "rotation-x", "rotation-y" };
+    static const gchar *ktemplate = "/app/%s/editor/3d/%s";
+    GwyContainer *settings;
     GwyResourceClass *klass;
     const gchar *name;
-    GString *src, *dest;
+    GString *key;
     gdouble val;
     guint i;
 
@@ -269,24 +267,21 @@ gwy_gl_material_editor_set_view(GwyContainer *container,
     name = gwy_resource_class_get_name(klass);
     g_type_class_unref(klass);
 
-    from = gwy_app_settings_get();
-    to = container;
-    if (save)
-        GWY_SWAP(GwyContainer*, from, to);
+    settings = gwy_app_settings_get();
 
-    src = g_string_new("");
-    dest = g_string_new("");
+    key = g_string_new("");
     for (i = 0; i < G_N_ELEMENTS(keys); i++) {
-        g_string_printf(src, stemplate, name, keys[i]);
-        g_string_printf(dest, ctemplate, keys[i]);
-        if (save)
-            GWY_SWAP(GString*, src, dest);
-        if (gwy_container_gis_double_by_name(from, src->str, &val))
-            gwy_container_set_double_by_name(to, dest->str, val);
+        g_string_printf(key, ktemplate, name, keys[i]);
+        if (save) {
+            g_object_get(setup, keys[i], &val, NULL);
+            gwy_container_set_double_by_name(settings, key->str, val);
+        }
+        else {
+            if (gwy_container_gis_double_by_name(settings, key->str, &val))
+                g_object_set(setup, keys[i], val, NULL);
+        }
     }
-
-    g_string_free(src, TRUE);
-    g_string_free(dest, TRUE);
+    g_string_free(key, TRUE);
 }
 
 static void
@@ -382,7 +377,7 @@ gwy_gl_material_editor_make_data(GwyDataField *dfield1)
     gwy_data_field_sum_fields(dfield1, dfield1, dfield2);
 
     gwy_data_field_clear(dfield2);
-    gwy_data_field_area_fill(dfield2, 2*n/3, 0, 3*n/4 - 2*n/2, n, 0.15);
+    gwy_data_field_area_fill(dfield2, 2*n/3, 0, n - 3*n/4, n, 0.15);
     gwy_data_field_area_fill(dfield2, 3*n/4, 0, 5*n/6 - 3*n/4, n, 0.1);
     gwy_data_field_area_fill(dfield2, 5*n/6, 0, 7*n/8 - 5*n/6, n, 0.07);
     gwy_data_field_filter_mean(dfield2, 3);
