@@ -70,12 +70,7 @@ static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
 static gboolean   gwy_app_set_current_window       (GtkWidget *window);
 static void       gwy_app_unset_current_window     (GtkWidget *window);
-static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
-                                                    GtkWidget *gwy3dwindow);
-static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
-                                                    GtkWidget *view);
-static void       gwy_app_3d_window_title_changed  (GtkWidget *data_window,
-                                                    GtkWidget *gwy3dwindow);
+static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 
 /*****************************************************************************
@@ -609,14 +604,23 @@ gwy_app_graph_window_remove(GtkWidget *window)
  *                                                                           *
  *****************************************************************************/
 
+static GtkWidget* gwy_app_3d_window_create     (GwyContainer *data,
+                                                gint id);
+static GtkWidget* gwy_app_3d_window_get_current(void);
+static gboolean   gwy_app_3d_window_set_current(GtkWidget *window);
+static void       gwy_app_3d_window_remove     (GtkWidget *window);
+
 void
 gwy_app_3d_view_cb(void)
 {
-    GwyDataWindow *data_window;
+    GwyContainer *data;
+    gint id;
 
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(data_window);
-    gwy_app_3d_window_create(data_window);
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    g_return_if_fail(data);
+    gwy_app_3d_window_create(data, id);
 }
 
 /**
@@ -629,23 +633,15 @@ gwy_app_3d_view_cb(void)
  *
  * Returns: The newly created 3D view window.
  **/
-GtkWidget*
-gwy_app_3d_window_create(GwyDataWindow *data_window)
+static GtkWidget*
+gwy_app_3d_window_create(GwyContainer *data,
+                         gint id)
 {
     GtkWidget *gwy3dview, *gwy3dwindow, *button;
-    GwyDataView *view;
-    GwyContainer *data;
     gchar *name, *title, key[40];
     guint len;
-    gint id;
-
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
-    view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(view);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     gwy3dview = gwy_3d_view_new(data);
-    id = 0;
     g_snprintf(key, sizeof(key), "/%d/", id);
     len = strlen(key);
 
@@ -667,7 +663,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
     gwy_app_add_main_accel_group(GTK_WINDOW(gwy3dwindow));
 
-    name = gwy_data_window_get_base_name(data_window);
+    name = gwy_app_get_data_field_title(data, id);
     title = g_strconcat("3D ", name, NULL);
     gtk_window_set_title(GTK_WINDOW(gwy3dwindow), title);
     g_free(title);
@@ -694,14 +690,16 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
      * 3dwindow  "focun-in-event"  set_current()     NULL      --
      * button    "clicked"         export()          3dwindow  --
      */
+    /*
     g_signal_connect(data_window, "title-changed",
                      G_CALLBACK(gwy_app_3d_window_title_changed), gwy3dwindow);
     g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_3d_window_orphaned), gwy3dwindow);
+                     */
     g_signal_connect(gwy3dwindow, "focus-in-event",
                      G_CALLBACK(gwy_app_3d_window_set_current), NULL);
     g_signal_connect(gwy3dwindow, "destroy",
-                     G_CALLBACK(gwy_app_3d_window_destroyed), data_window);
+                     G_CALLBACK(gwy_app_3d_window_destroyed), NULL);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), gwy3dwindow);
 
@@ -719,7 +717,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
  * Returns: The active 3D view window as a #GtkWidget.
  *          May return %NULL if none is currently active.
  **/
-GtkWidget*
+static GtkWidget*
 gwy_app_3d_window_get_current(void)
 {
     return current_3d ? current_3d->data : NULL;
@@ -736,14 +734,9 @@ gwy_app_3d_window_get_current(void)
  *
  * Returns: Always FALSE, no matter what (to be usable as an event handler).
  **/
-gboolean
+static gboolean
 gwy_app_3d_window_set_current(GtkWidget *window)
 {
-    /*
-    static const GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_3D, GWY_MENU_FLAG_3D
-    };
-    */
     GList *item;
 
     gwy_debug("%p", window);
@@ -754,6 +747,7 @@ gwy_app_3d_window_set_current(GtkWidget *window)
     g_return_val_if_fail(item, FALSE);
     current_3d = g_list_remove_link(current_3d, item);
     current_3d = g_list_concat(item, current_3d);
+    /* TODO: set sensitivity (XXX: used to hang) */
 
     return FALSE;
 }
@@ -767,7 +761,7 @@ gwy_app_3d_window_set_current(GtkWidget *window)
  * All associated structures are freed, but the widget itself is NOT destroyed
  * by this function.  It just makes the application `forget' about the window.
  **/
-void
+static void
 gwy_app_3d_window_remove(GtkWidget *window)
 {
     /*
@@ -798,18 +792,7 @@ gwy_app_3d_window_remove(GtkWidget *window)
     }
 }
 
-static void
-gwy_app_3d_window_orphaned(GtkWidget *data_window,
-                           GtkWidget *gwy3dwindow)
-{
-    g_signal_handlers_disconnect_matched(gwy3dwindow,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         gwy_app_3d_window_destroyed,
-                                         data_window);
-}
-
+/* XXX
 static void
 gwy_app_3d_window_title_changed(GtkWidget *data_window,
                                 GtkWidget *gwy3dwindow)
@@ -822,23 +805,11 @@ gwy_app_3d_window_title_changed(GtkWidget *data_window,
     g_free(title);
     g_free(name);
 }
+*/
 
 static void
-gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
-                            GtkWidget *data_window)
+gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow)
 {
-    g_signal_handlers_disconnect_matched(data_window,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         gwy_app_3d_window_title_changed,
-                                         gwy3dwindow);
-    g_signal_handlers_disconnect_matched(data_window,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         gwy_app_3d_window_orphaned,
-                                         gwy3dwindow);
     gwy_app_3d_window_remove(gwy3dwindow);
 }
 
