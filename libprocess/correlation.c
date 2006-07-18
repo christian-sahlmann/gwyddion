@@ -37,7 +37,7 @@
  * @kernel_width: Width of kernel field area.
  * @kernel_height: Heigh of kernel field area.
  *
- * Computes single correlation score.
+ * Calculates a correlation score in one point.
  *
  * Correlation window size is given
  * by @kernel_col, @kernel_row, @kernel_width, @kernel_height,
@@ -117,6 +117,163 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
 }
 
 /**
+ * calculate_normalization:
+ * @data_field: A data field.
+ * @kernel_width: Width of kernel field.
+ * @kernel_height: Heigh of kernel field.
+ *
+ * Precalculate data field area normalizations.
+ *
+ * The returned array has dimensions
+ * (width - kernel_width + 1)x(height - kernel_height + 1)
+ * and it is stored by rows as
+ * avg, rms, avg, rms, ...
+ *
+ * Returns: A newly allocated array.
+ **/
+#include <libgwyddion/gwycontainer.h>
+static gdouble*
+calculate_normalization(GwyDataField *data_field,
+                        gint kernel_width, gint kernel_height)
+{
+    gdouble *sum_sum2, *avg_rms, *row;
+    const gdouble *drow;
+    gint i, j, w, h, p;
+
+    w = data_field->xres - kernel_width + 1;
+    h = data_field->yres - kernel_height + 1;
+    g_return_val_if_fail(w > 0 && h > 0, NULL);
+
+    /* Row-wise averages */
+    sum_sum2 = g_new(gdouble, 2*w*data_field->yres);
+    for (i = 0; i < data_field->yres; i++) {
+        row = sum_sum2 + 2*i*w;
+        drow = data_field->data + i*data_field->xres;
+        row[0] = row[1] = 0.0;
+        for (j = 0; j < kernel_width; j++) {
+            row[0] += drow[j];
+            row[1] += drow[j]*drow[j];
+        }
+        for (j = kernel_width; j < data_field->xres; j++) {
+            p = j - kernel_width;
+            row[2*(p + 1) + 0] = row[2*p + 0] + drow[j] - drow[p];
+            row[2*(p + 1) + 1] = row[2*p + 1] + (drow[j]*drow[j]
+                                                 - drow[p]*drow[p]);
+        }
+    }
+
+    /* Column-wise averages */
+    avg_rms = g_new(gdouble, 2*w*h);
+    row = avg_rms;
+    for (j = 0; j < 2*w; j++)
+        row[j] = 0.0;
+    for (i = 0; i < kernel_height; i++) {
+        drow = sum_sum2 + 2*i*w;
+        for (j = 0; j < 2*w; j++)
+            row[j] += drow[j];
+    }
+    for (i = kernel_height; i < data_field->yres; i++) {
+        p = i - kernel_height;
+        row = avg_rms + 2*p*w;
+        drow = sum_sum2 + 2*p*w;
+        for (j = 0; j < 2*w; j++)
+            row[2*w + j] = row[j] + drow[2*w*kernel_height + j] - drow[j];
+    }
+
+    g_free(sum_sum2);
+
+    for (i = 0; i < w*h; i++) {
+        avg_rms[2*i] /= kernel_width*kernel_height;
+        avg_rms[2*i + 1] = (avg_rms[2*i + 1]/kernel_width/kernel_height
+                            - avg_rms[2*i]*avg_rms[2*i]);
+        avg_rms[2*i + 1] = sqrt(MAX(avg_rms[2*i + 1], 0.0));
+    }
+
+    return avg_rms;
+}
+
+/**
+ * gwy_data_field_get_raw_correlation_score:
+ * @data_field: A data field.
+ * @kernel_field: Kernel to correlate data field with.
+ * @col: Upper-left column position in the data field.
+ * @row: Upper-left row position in the data field.
+ * @kernel_col: Upper-left column position in kernel field.
+ * @kernel_row: Upper-left row position in kernel field.
+ * @kernel_width: Width of kernel field area.
+ * @kernel_height: Heigh of kernel field area.
+ * @data_avg: Mean value of the effective data field area.
+ * @data_rms: Mean value of the effective kernel field area.
+ *
+ * Calculates a raw correlation score in one point.
+ *
+ * See gwy_data_field_get_correlation_score() for description.  This function
+ * is useful if you know the mean values and rms.
+ *
+ * To obtain the score, divide the returned value with the product of rms of
+ * data field area and rms of the kernel.
+ *
+ * Returns: Correlation score (normalized to multiple of kernel and data
+ *          area rms).
+ **/
+static gdouble
+gwy_data_field_get_raw_correlation_score(GwyDataField *data_field,
+                                         GwyDataField *kernel_field,
+                                         gint col,
+                                         gint row,
+                                         gint kernel_col,
+                                         gint kernel_row,
+                                         gint kernel_width,
+                                         gint kernel_height,
+                                         gdouble data_avg,
+                                         gdouble kernel_avg)
+{
+    gint xres, yres, kxres, kyres, i, j;
+    gdouble sumpoints, score;
+    gdouble *data, *kdata;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -1.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), -1.0);
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    kxres = kernel_field->xres;
+    kyres = kernel_field->yres;
+    kernel_width = kernel_width;
+    kernel_height = kernel_height;
+
+    /* correlation request outside kernel */
+    if (kernel_col > kxres || kernel_row > kyres)
+        return -1;
+
+    /* correlation request outside data field */
+    if (col < 0 || row < 0
+        || col + kernel_width > xres
+        || row + kernel_height > yres)
+        return -1;
+    if (kernel_col < 0
+        || kernel_row < 0
+        || kernel_col + kernel_width > kxres
+        || kernel_row + kernel_height > kyres)
+        return -1;
+
+    score = 0;
+    sumpoints = kernel_width * kernel_height;
+    data = data_field->data;
+    kdata = kernel_field->data;
+    for (j = 0; j < kernel_height; j++) {   /* row */
+        for (i = 0; i < kernel_width; i++) {   /* col */
+            score += (data[(i + col) + xres*(j + row)] - data_avg)
+                      * (kdata[(i + kernel_col) + kxres*(j + kernel_row)]
+                         - kernel_avg);
+        }
+    }
+    score /= sumpoints;
+
+    return score;
+}
+
+/**
  * gwy_data_field_correlate:
  * @data_field: A data field.
  * @kernel_field: Correlation kernel.
@@ -158,15 +315,32 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
             return;
         }
 
-        for (i = kyres/2; i < yres - kyres/2; i++) {    /*row */
-            for (j = kxres/2; j < xres - kxres/2; j++) {        /*col */
-                score->data[i*xres + j] =
-                    gwy_data_field_get_correlation_score(data_field,
-                                                         kernel_field,
-                                                         j - kxres/2,
-                                                         i - kyres/2,
-                                                         0, 0, kxres, kyres);
+        {
+            gdouble *avg_rms;
+            gdouble s, davg, drms, kavg, krms;
+            gint w, h, p;
+
+            kavg = gwy_data_field_get_avg(kernel_field);
+            krms = gwy_data_field_get_rms(kernel_field);
+            avg_rms = calculate_normalization(data_field, kxres, kyres);
+            w = xres - kxres + 1;
+            h = yres - kyres + 1;
+            for (i = kyres/2; i < yres - (kyres - kyres/2); i++) {
+                for (j = kxres/2; j < xres - (kxres - kxres/2); j++) {
+                    p = (i - kyres/2)*w + (j - kxres/2);
+                    davg = avg_rms[2*p + 0];
+                    drms = avg_rms[2*p + 1];
+                    s = gwy_data_field_get_raw_correlation_score(data_field,
+                                                                 kernel_field,
+                                                                 j - kxres/2,
+                                                                 i - kyres/2,
+                                                                 0, 0,
+                                                                 kxres, kyres,
+                                                                 davg, kavg);
+                    score->data[i*xres + j] = s/(drms*krms);
+                }
             }
+            g_free(avg_rms);
         }
         break;
 
