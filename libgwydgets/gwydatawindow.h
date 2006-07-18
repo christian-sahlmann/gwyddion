@@ -56,6 +56,11 @@ struct _GwyDataWindow {
     GwySIValueFormat *value_format;
 
     GtkWidget *ul_corner;
+
+    gulong id1;
+    gulong id2;
+
+    gpointer reserved1;
     gpointer reserved2;
 };
 

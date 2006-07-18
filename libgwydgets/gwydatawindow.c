@@ -142,13 +142,13 @@ gwy_data_window_destroy(GtkObject *object)
     GwyContainer *data;
 
     data_window = GWY_DATA_WINDOW(object);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
+    g_signal_handlers_disconnect_by_func(data, gwy_data_window_update_title,
+                                         data_window);
+
     if (data_window->grad_selector) {
         gtk_widget_destroy(gtk_widget_get_toplevel(data_window->grad_selector));
         data_window->grad_selector = NULL;
-
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
-        g_signal_handlers_disconnect_by_func(data, gwy_data_window_update_title,
-                                             data_window);
     }
 
     GTK_OBJECT_CLASS(gwy_data_window_parent_class)->destroy(object);
