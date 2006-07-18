@@ -142,13 +142,16 @@ gwy_data_window_destroy(GtkObject *object)
     GwyContainer *data;
 
     data_window = GWY_DATA_WINDOW(object);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
-    g_signal_handlers_disconnect_by_func(data, gwy_data_window_update_title,
-                                         data_window);
-
     if (data_window->grad_selector) {
         gtk_widget_destroy(gtk_widget_get_toplevel(data_window->grad_selector));
         data_window->grad_selector = NULL;
+    }
+
+    if (data_window->data_view) {
+        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
+        g_signal_handlers_disconnect_by_func(data, gwy_data_window_update_title,
+                                             data_window);
+        data_window->data_view = NULL;
     }
 
     GTK_OBJECT_CLASS(gwy_data_window_parent_class)->destroy(object);
@@ -199,6 +202,7 @@ gwy_data_window_new(GwyDataView *data_view)
     gwy_data_window_fit_to_screen(data_window, data_view);
     data = gwy_data_view_get_data(data_view);
 
+    /* FIXME: Ignores channel titles */
     g_signal_connect_swapped(data, "item-changed::/filename",
                              G_CALLBACK(gwy_data_window_update_title),
                              data_window);

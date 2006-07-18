@@ -59,6 +59,7 @@ struct _GwyDataWindow {
 
     gulong id1;
     gulong id2;
+    gulong id3;
 
     gpointer reserved1;
     gpointer reserved2;
