@@ -249,7 +249,8 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_grains_watershed_iteration:
+ * gwy_data_field_grains_watershed_init:
+ * @state: Uninitialized watershed state.
  * @data_field: Data to be used for marking.
  * @grain_field: Result of marking (mask).
  * @status : current status of the algorithm.
@@ -261,83 +262,139 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
  * @prefilter: Use prefiltering.
  * @below: If %TRUE, valleys are marked, otherwise mountains are marked.
  *
- * Performs one iteration of the watershed algorithm.
+ * Initializes the watershed algorithm.
  **/
 void
-gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
-                                          GwyDataField *grain_field,
-                                          GwyWatershedStatus *status,
-                                          gint locate_steps, gint locate_thresh,
-                                          gdouble locate_dropsize,
-                                          gint wshed_steps,
-                                          gdouble wshed_dropsize,
-                                          gboolean prefilter,
-                                          gboolean below)
+gwy_data_field_grains_watershed_init(GwyWatershedState *state,
+                                     GwyDataField *data_field,
+                                     GwyDataField *grain_field,
+                                     gint locate_steps,
+                                     gint locate_thresh,
+                                     gdouble locate_dropsize,
+                                     gint wshed_steps,
+                                     gdouble wshed_dropsize,
+                                     gboolean prefilter,
+                                     gboolean below)
 {
-    if (status->state == GWY_WATERSHED_STATE_INIT) {
-        status->min = gwy_data_field_new_alike(data_field, TRUE);
-        status->water = gwy_data_field_new_alike(data_field, TRUE);
-        status->mark_dfield = gwy_data_field_duplicate(data_field);
-        if (below)
-            gwy_data_field_multiply(status->mark_dfield, -1.0);
-        if (prefilter)
-            gwy_data_field_filter_median(status->mark_dfield, 6);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
-        gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
+    state->state = GWY_WATERSHED_STATE_INIT;
+    state->fraction = 0.0;
+    state->data_field = g_object_ref(data_field);
+    state->grain_field = g_object_ref(grain_field);
+    state->locate_steps = locate_steps;
+    state->locate_thresh = locate_thresh;
+    state->locate_dropsize = locate_dropsize;
+    state->wshed_steps = wshed_steps;
+    state->wshed_dropsize = wshed_dropsize;
+    state->prefilter = prefilter;
+    state->below = below;
+    state->internal_i = 0;
+    state->min = NULL;
+    state->water = NULL;
+    state->mark_dfield = NULL;
+}
+
+/**
+ * gwy_data_field_grains_watershed_iteration:
+ * @state: Watershed state.
+ *
+ * Performs one iteration of the watershed algorithm.
+ *
+ * Fields @state and progress @fraction of watershed state are updated
+ * (fraction is calculated for each phase individually).  Once @state
+ * becomes %GWY_WATERSHED_STATE_FINISHED, the calculation is finised.
+ *
+ * Before the processing starts, @state must be initialized with
+ * gwy_data_field_grains_watershed_init().  When iteration ends, either
+ * by finishing or being aborted, gwy_data_field_grains_watershed_finalize()
+ * must be called to release allocated resources.
+ **/
+void
+gwy_data_field_grains_watershed_iteration(GwyWatershedState *state)
+{
+    if (state->state == GWY_WATERSHED_STATE_INIT) {
+        state->min = gwy_data_field_new_alike(state->data_field, TRUE);
+        state->water = gwy_data_field_new_alike(state->data_field, TRUE);
+        state->mark_dfield = gwy_data_field_duplicate(state->data_field);
+        if (state->below)
+            gwy_data_field_multiply(state->mark_dfield, -1.0);
+        if (state->prefilter)
+            gwy_data_field_filter_median(state->mark_dfield, 6);
+
+        gwy_data_field_resample(state->grain_field,
+                                state->data_field->xres,
+                                state->data_field->yres,
                                 GWY_INTERPOLATION_NONE);
-        gwy_data_field_clear(grain_field);
+        gwy_data_field_clear(state->grain_field);
 
-
-        status->state = GWY_WATERSHED_STATE_LOCATE;
-        status->internal_i = 0;
+        state->state = GWY_WATERSHED_STATE_LOCATE;
+        state->internal_i = 0;
+        state->fraction = 0.0;
     }
-
-    /* odrop */
-    if (status->state == GWY_WATERSHED_STATE_LOCATE) {
-        if (status->internal_i < locate_steps) {
-            drop_step(status->mark_dfield, status->water, locate_dropsize);
-            status->internal_i += 1;
+    else if (state->state == GWY_WATERSHED_STATE_LOCATE) {
+        if (state->internal_i < state->locate_steps) {
+            drop_step(state->mark_dfield, state->water, state->locate_dropsize);
+            state->internal_i += 1;
+            state->fraction = (gdouble)state->internal_i/state->locate_steps;
         }
         else {
-            status->state = GWY_WATERSHED_STATE_MIN;
-            status->internal_i = 0;
+            state->state = GWY_WATERSHED_STATE_MIN;
+            state->internal_i = 0;
+            state->fraction = 0.0;
         }
     }
-
-    if (status->state == GWY_WATERSHED_STATE_MIN) {
-        drop_minima(status->water, status->min, locate_thresh);
-        status->state = GWY_WATERSHED_STATE_WATERSHED;
-        status->internal_i = 0;
+    else if (state->state == GWY_WATERSHED_STATE_MIN) {
+        drop_minima(state->water, state->min, state->locate_thresh);
+        state->state = GWY_WATERSHED_STATE_WATERSHED;
+        state->internal_i = 0;
+        state->fraction = 0.0;
     }
-
-
-    if (status->state == GWY_WATERSHED_STATE_WATERSHED) {
-        if (status->internal_i == 0) {
-            gwy_data_field_copy(data_field, status->mark_dfield, FALSE);
-            if (below)
-                gwy_data_field_multiply(status->mark_dfield, -1.0);
+    else if (state->state == GWY_WATERSHED_STATE_WATERSHED) {
+        if (state->internal_i == 0) {
+            gwy_data_field_copy(state->data_field, state->mark_dfield, FALSE);
+            if (state->below)
+                gwy_data_field_multiply(state->mark_dfield, -1.0);
         }
-        if (status->internal_i < wshed_steps) {
-            wdrop_step(status->mark_dfield, status->min, status->water,
-                       grain_field, wshed_dropsize);
-            status->internal_i += 1;
+        if (state->internal_i < state->wshed_steps) {
+            wdrop_step(state->mark_dfield, state->min, state->water,
+                       state->grain_field, state->wshed_dropsize);
+            state->internal_i += 1;
+            state->fraction = (gdouble)state->internal_i/state->wshed_steps;
         }
         else {
-            status->state = GWY_WATERSHED_STATE_MARK;
-            status->internal_i = 0;
+            state->state = GWY_WATERSHED_STATE_MARK;
+            state->internal_i = 0;
+            state->fraction = 0.0;
         }
     }
-
-    if (status->state == GWY_WATERSHED_STATE_MARK) {
-        mark_grain_boundaries(grain_field);
-
-        g_object_unref(status->min);
-        g_object_unref(status->water);
-        g_object_unref(status->mark_dfield);
-
-        status->state = GWY_WATERSHED_STATE_FINISHED;
+    else if (state->state == GWY_WATERSHED_STATE_MARK) {
+        mark_grain_boundaries(state->grain_field);
+        state->state = GWY_WATERSHED_STATE_FINISHED;
+        state->fraction = 1.0;
     }
-    gwy_data_field_invalidate(grain_field);
+    else if (state->state == GWY_WATERSHED_STATE_FINISHED)
+        return;
+    gwy_data_field_invalidate(state->grain_field);
+}
+
+/**
+ * gwy_data_field_grains_watershed_finalize:
+ * @state: Watershed state.
+ *
+ * Frees all resources allocated by the watershed algorithm.
+ **/
+void
+gwy_data_field_grains_watershed_finalize(GwyWatershedState *state)
+{
+    state->state = GWY_WATERSHED_STATE_FINISHED;
+    state->fraction = 0.0;
+    gwy_object_unref(state->min);
+    gwy_object_unref(state->water);
+    gwy_object_unref(state->mark_dfield);
+    gwy_object_unref(state->data_field);
+    gwy_object_unref(state->grain_field);
 }
 
 /**
@@ -1224,10 +1281,11 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field,
     gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);
 }
 
-void gwy_data_field_grains_splash_water(GwyDataField *data_field,
-                                                 GwyDataField *water,
-                                                 gint locate_steps,
-                                                 gdouble locate_dropsize)
+void
+gwy_data_field_grains_splash_water(GwyDataField *data_field,
+                                   GwyDataField *water,
+                                   gint locate_steps,
+                                   gdouble locate_dropsize)
 {
     GwyDataField *min, *mark_dfield;
     gint xres, yres, i;
@@ -1244,10 +1302,9 @@ void gwy_data_field_grains_splash_water(GwyDataField *data_field,
     gwy_data_field_clear(water);
     for (i = 0; i < locate_steps; i++)
         drop_step(mark_dfield, water, locate_dropsize);
-    
+
     gwy_data_field_invalidate(water);
     g_object_unref(mark_dfield);
-
 }
 
 

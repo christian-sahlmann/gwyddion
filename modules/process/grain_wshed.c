@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.10",
+    "1.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -479,62 +479,45 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
              GtkWidget *wait_window)
 {
     gdouble max, min;
-    GwyWatershedStatus status;
+    GwyWatershedState state;
     GwyWatershedStateType oldstate = -1;
+    gboolean ok;
 
     max = gwy_data_field_get_max(dfield);
     min = gwy_data_field_get_min(dfield);
 
-    /*
-    gwy_data_field_grains_mark_watershed(dfield, maskfield,
-                                         args->locate_steps,
-                                         args->locate_thresh,
-                                         args->locate_dropsize*(max-min)/5000.0,
-                                         args->wshed_steps,
-                                         args->wshed_dropsize*(max-min)/5000.0,
-                                         FALSE, 0);
-    */
-    status.state = GWY_WATERSHED_STATE_INIT;
-    gwy_app_wait_start(wait_window, _("Initializing"));
-    do {
-        gwy_data_field_grains_watershed_iteration(dfield, maskfield,
-                                         &status,
+    gwy_data_field_grains_watershed_init(&state,
+                                         dfield, maskfield,
                                          args->locate_steps,
                                          args->locate_thresh,
                                          args->locate_dropsize*(max-min)/5000.0,
                                          args->wshed_steps,
                                          args->wshed_dropsize*(max-min)/5000.0,
                                          FALSE, args->inverted);
+    gwy_app_wait_start(wait_window, _("Initializing"));
 
-        if (status.state == GWY_WATERSHED_STATE_MIN) {
-            gwy_app_wait_set_message(_("Finding minima"));
-            if (!gwy_app_wait_set_fraction(0.0))
-                  break;
-        }
-        else if (status.state == GWY_WATERSHED_STATE_LOCATE) {
-            if (status.state != oldstate)
+    do {
+        gwy_data_field_grains_watershed_iteration(&state);
+        if (oldstate != state.state) {
+            if (state.state == GWY_WATERSHED_STATE_MIN)
+                gwy_app_wait_set_message(_("Finding minima"));
+            else if (state.state == GWY_WATERSHED_STATE_LOCATE)
                 gwy_app_wait_set_message(_("Locating"));
-            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i
-                                           /(gdouble)args->locate_steps))
-                break;
-        }
-        else if (status.state == GWY_WATERSHED_STATE_WATERSHED) {
-            if (status.state != oldstate)
+            else if (state.state == GWY_WATERSHED_STATE_WATERSHED)
                 gwy_app_wait_set_message(_("Watershed"));
-            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i
-                                           /(gdouble)args->wshed_steps))
-                break;
+            else if (state.state == GWY_WATERSHED_STATE_MARK)
+                gwy_app_wait_set_message(_("Marking boundaries"));
+            oldstate = state.state;
         }
-        else if (status.state == GWY_WATERSHED_STATE_MARK) {
-            gwy_app_wait_set_message(_("Marking boundaries"));
-            if (!gwy_app_wait_set_fraction(0.0))
-                break;
-        }
-        oldstate = status.state;
-    } while (status.state != GWY_WATERSHED_STATE_FINISHED);
+        if (!gwy_app_wait_set_fraction(state.fraction))
+            break;
+    } while (state.state != GWY_WATERSHED_STATE_FINISHED);
+    ok = (state.state == GWY_WATERSHED_STATE_FINISHED);
 
     gwy_app_wait_finish();
-    return status.state == GWY_WATERSHED_STATE_FINISHED;
+    gwy_data_field_grains_watershed_finalize(&state);
+
+    return ok;
 }
 
 static const gchar inverted_key[]        = "/module/grain_wshed/inverted";

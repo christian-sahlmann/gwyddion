@@ -27,13 +27,21 @@ G_BEGIN_DECLS
 
 typedef struct {
     GwyWatershedStateType state;
+    gdouble fraction;
+    GwyDataField *data_field;
+    GwyDataField *grain_field;
+    gint locate_steps;
+    gint locate_thresh;
+    gdouble locate_dropsize;
+    gint wshed_steps;
+    gdouble wshed_dropsize;
+    gboolean prefilter;
+    gboolean below;
     gint internal_i;
     GwyDataField *min;
     GwyDataField *water;
     GwyDataField *mark_dfield;
-    gint fraction;
-    GString *description;
-} GwyWatershedStatus;
+} GwyWatershedState;
 
 void gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
                                           GwyDataField *grain_field,
@@ -65,16 +73,18 @@ void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                             gdouble threshval,
                                             gboolean below);
 
-void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
-                                               GwyDataField *grain_field,
-                                               GwyWatershedStatus *status,
-                                               gint locate_steps,
-                                               gint locate_thresh,
-                                               gdouble locate_dropsize,
-                                               gint wshed_steps,
-                                               gdouble wshed_dropsize,
-                                               gboolean prefilter,
-                                               gboolean below);
+void gwy_data_field_grains_watershed_init(GwyWatershedState *state,
+                                          GwyDataField *data_field,
+                                          GwyDataField *grain_field,
+                                          gint locate_steps,
+                                          gint locate_thresh,
+                                          gdouble locate_dropsize,
+                                          gint wshed_steps,
+                                          gdouble wshed_dropsize,
+                                          gboolean prefilter,
+                                          gboolean below);
+void gwy_data_field_grains_watershed_iteration(GwyWatershedState *state);
+void gwy_data_field_grains_watershed_finalize(GwyWatershedState *state);
 
 void gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                        GwyDataField *grain_field,
@@ -119,9 +129,9 @@ void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      gint nstats);
 
 void gwy_data_field_grains_splash_water(GwyDataField *data_field,
-						 GwyDataField *minima,
-					         gint locate_steps,	 
-						 gdouble locate_dropsize);
+                                        GwyDataField *minima,
+                                        gint locate_steps,
+                                        gdouble locate_dropsize);
 
 G_END_DECLS
 
