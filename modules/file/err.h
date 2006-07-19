@@ -67,7 +67,7 @@ err_SIZE_MISMATCH(GError **error, guint expected, guint real)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                 _("Expected data size calculated from file headers "
-                  "is %u bytes, but the real size %u bytes."),
+                  "is %u bytes, but the real size is %u bytes."),
                 expected, real);
 }
 
