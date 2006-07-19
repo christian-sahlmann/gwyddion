@@ -22,9 +22,9 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/datafield.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
+#include <libprocess/correlation.h>
 
 /**
  * gwy_data_field_get_correlation_score:
@@ -408,63 +408,115 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 }
 
 /**
- * gwy_data_field_correlate_iteration:
+ * gwy_data_field_correlate_init:
+ * @state: Uninitialized correlation state.
  * @data_field: A data field.
  * @kernel_field: Kernel to correlate data field with.
  * @score: Data field to store correlation scores to.
- * @state: State of iteration.  It is updated to new state.
- * @iteration: Actual iteration row coordinate.
  *
- * Performs one iteration of correlation.
+ * Initializes a correlation iterator.
  **/
 void
-gwy_data_field_correlate_iteration(GwyDataField *data_field,
-                                   GwyDataField *kernel_field,
-                                   GwyDataField *score,
-                                   GwyComputationStateType *state,
-                                   gint *iteration)
+gwy_data_field_correlate_init(GwyCorrelationState *state,
+                              GwyDataField *data_field,
+                              GwyDataField *kernel_field,
+                              GwyDataField *score)
 {
-    gint xres, yres, kxres, kyres, i, j;
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(kernel_field));
+    g_return_if_fail(kernel_field->xres <= data_field->xres
+                     && kernel_field->yres <= data_field->yres);
+    g_return_if_fail(GWY_IS_DATA_FIELD(score));
 
-    g_return_if_fail(data_field != NULL && kernel_field != NULL);
+    state->state = GWY_COMPUTATION_STATE_INIT;
+    state->fraction = 0.0;
+    state->data_field = g_object_ref(data_field);
+    state->kernel_field = g_object_ref(kernel_field);
+    state->score = g_object_ref(score);
+    state->avg_rms = NULL;
+}
 
-    xres = data_field->xres;
-    yres = data_field->yres;
-    kxres = kernel_field->xres;
-    kyres = kernel_field->yres;
+/**
+ * gwy_data_field_correlate_iteration:
+ * @state: Correlation state.
+ *
+ * Performs one iteration of correlation.
+ *
+ * Fields @state and progress @fraction of correlation state are updated.
+ * Once @state becomes %GWY_COMPUTATION_STATE_FINISHED, the calculation is
+ * finised.
+ *
+ * Before the processing starts, @state must be initialized with
+ * gwy_data_field_correlate_init().  When iteration ends, either
+ * by finishing or being aborted, gwy_data_field_correlate_finalize()
+ * must be called to release allocated resources.
+ **/
+void
+gwy_data_field_correlate_iteration(GwyCorrelationState *state)
+{
+    gint xres, yres, kxres, kyres, w, h, p;
+    gdouble s, davg, drms;
 
-    if (kxres <= 0 || kyres <= 0) {
-        g_warning("Correlation kernel has nonpositive size.");
-        return;
+    xres = state->data_field->xres;
+    yres = state->data_field->yres;
+    kxres = state->kernel_field->xres;
+    kyres = state->kernel_field->yres;
+
+    if (state->state == GWY_COMPUTATION_STATE_INIT) {
+        gwy_data_field_fill(state->score, -1);
+        state->kavg = gwy_data_field_get_avg(state->kernel_field);
+        state->krms = gwy_data_field_get_rms(state->kernel_field);
+        state->avg_rms = calculate_normalization(state->data_field,
+                                                 kxres, kyres);
+        state->state = GWY_COMPUTATION_STATE_ITERATE;
+        state->fraction = 0.0;
+        state->i = kyres/2;
+        state->j = kxres/2;
     }
-    /* correlation request outside kernel */
-    if (kxres > xres || kyres > yres) {
-        return;
-    }
+    else if (state->state == GWY_COMPUTATION_STATE_ITERATE) {
+        w = xres - kxres + 1;
+        h = yres - kyres + 1;
+        p = (state->i - kyres/2)*w + (state->j - kxres/2);
 
-    if (*state == GWY_COMPUTATION_STATE_INIT) {
-        gwy_data_field_fill(score, -1);
-        *state = GWY_COMPUTATION_STATE_ITERATE;
-        *iteration = 0;
-    }
-    else if (*state == GWY_COMPUTATION_STATE_ITERATE) {
-        if (iteration == 0)
-            i = (kxres/2);
-        else
-            i = *iteration;
-        for (j = (kyres/2); j < (yres - kyres/2); j++) {    /*row */
-            score->data[i + xres * j] =
-                gwy_data_field_get_correlation_score(data_field, kernel_field,
-                                                     i - kxres/2,
-                                                     j - kyres/2,
-                                                     0, 0, kxres, kyres);
+        davg = state->avg_rms[2*p + 0];
+        drms = state->avg_rms[2*p + 1];
+        s = gwy_data_field_get_raw_correlation_score(state->data_field,
+                                                     state->kernel_field,
+                                                     state->j - kxres/2,
+                                                     state->i - kyres/2,
+                                                     0, 0,
+                                                     kxres, kyres,
+                                                     davg, state->kavg);
+        state->score->data[state->i*xres + state->j] = s/(drms*state->krms);
+
+        state->j++;
+        if (state->j == xres - (kxres - kxres/2)) {
+            state->j = kxres/2;
+            state->i++;
+            if (state->i == yres - (kyres - kyres/2))
+                state->state = GWY_COMPUTATION_STATE_FINISHED;
         }
-        *iteration = i + 1;
-        if (*iteration == (xres - kxres/2 - 1))
-            *state = GWY_COMPUTATION_STATE_FINISHED;
+        state->fraction += 1.0/(w*h);
     }
+    gwy_data_field_invalidate(state->score);
+}
 
-    gwy_data_field_invalidate(score);
+/**
+ * gwy_data_field_correlate_finalize:
+ * @state: Correlation state.
+ *
+ * Frees all resources allocated by a correlation iterator.
+ **/
+void
+gwy_data_field_correlate_finalize(GwyCorrelationState *state)
+{
+    state->state = GWY_COMPUTATION_STATE_FINISHED;
+    state->fraction = 1.0;
+    gwy_object_unref(state->data_field);
+    gwy_object_unref(state->kernel_field);
+    gwy_object_unref(state->score);
+    g_free(state->avg_rms);
+    state->avg_rms = NULL;
 }
 
 /**

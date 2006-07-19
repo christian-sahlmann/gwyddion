@@ -308,12 +308,12 @@ plot_correlated(GwyDataField *retfield, gint xsize, gint ysize,
 static void
 maskcor_do(MaskcorArgs *args)
 {
+    enum { WORK_PER_UPDATE = 50000000 };
     GwyDataField *dfield, *kernel, *retfield, *score;
     GwyDataWindow *window;
-    GwyComputationStateType state;
+    GwyCorrelationState state;
     GQuark quark;
-    gint iteration, newid;
-    gdouble max;
+    gint newid, work, wpi;
 
     quark = gwy_app_get_data_key_for_id(args->kernel.id);
     kernel = GWY_DATA_FIELD(gwy_container_get_object(args->kernel.data, quark));
@@ -327,23 +327,27 @@ maskcor_do(MaskcorArgs *args)
     window = gwy_app_data_window_get_for_data(args->data.data);
 
     if (args->method == GWY_CORRELATION_NORMAL) {
-        state = GWY_COMPUTATION_STATE_INIT;
         gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
-        max = (gwy_data_field_get_xres(dfield)
-               - gwy_data_field_get_xres(kernel)/2);
-        iteration = 0;
+        gwy_data_field_correlate_init(&state, dfield, kernel, retfield);
+        gwy_app_wait_set_message(_("Correlating..."));
+        work = 0;
+        wpi = gwy_data_field_get_xres(kernel)*gwy_data_field_get_yres(kernel);
+        wpi = MIN(wpi, WORK_PER_UPDATE);
         do {
-            gwy_data_field_correlate_iteration(dfield, kernel, retfield,
-                                               &state, &iteration);
-            gwy_app_wait_set_message(_("Correlating..."));
-            if (!gwy_app_wait_set_fraction(iteration/max)) {
-                gwy_app_wait_finish();
-                g_object_unref(retfield);
-                return;
+            gwy_data_field_correlate_iteration(&state);
+            work += wpi;
+            if (work > WORK_PER_UPDATE) {
+                work -= WORK_PER_UPDATE;
+                if (!gwy_app_wait_set_fraction(state.fraction)) {
+                    gwy_app_wait_finish();
+                    gwy_data_field_correlate_finalize(&state);
+                    g_object_unref(retfield);
+                    return;
+                }
             }
-
-        } while (state != GWY_COMPUTATION_STATE_FINISHED);
+        } while (state.state != GWY_COMPUTATION_STATE_FINISHED);
         gwy_app_wait_finish();
+        gwy_data_field_correlate_finalize(&state);
     }
     else
         gwy_data_field_correlate(dfield, kernel, retfield, args->method);

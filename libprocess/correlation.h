@@ -25,6 +25,19 @@
 
 G_BEGIN_DECLS
 
+typedef struct {
+    GwyComputationStateType state;
+    gdouble fraction;
+    GwyDataField *data_field;
+    GwyDataField *kernel_field;
+    GwyDataField *score;
+    gdouble *avg_rms;
+    gdouble kavg;
+    gdouble krms;
+    gint i;
+    gint j;
+} GwyCorrelationState;
+
 gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
                                              GwyDataField *kernel_field,
                                              gint col,
@@ -61,11 +74,12 @@ void gwy_data_field_correlate(GwyDataField *data_field,
                               GwyDataField *score,
                               GwyCorrelationType method);
 
-void gwy_data_field_correlate_iteration(GwyDataField *data_field,
-                                        GwyDataField *kernel_field,
-                                        GwyDataField *score,
-                                        GwyComputationStateType *state,
-                                        gint *iteration);
+void gwy_data_field_correlate_init(GwyCorrelationState *state,
+                                   GwyDataField *data_field,
+                                   GwyDataField *kernel_field,
+                                   GwyDataField *score);
+void gwy_data_field_correlate_iteration(GwyCorrelationState *state);
+void gwy_data_field_correlate_finalize(GwyCorrelationState *state);
 
 
 G_END_DECLS
