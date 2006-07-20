@@ -131,7 +131,6 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
  *
  * Returns: A newly allocated array.
  **/
-#include <libgwyddion/gwycontainer.h>
 static gdouble*
 calculate_normalization(GwyDataField *data_field,
                         gint kernel_width, gint kernel_height)
