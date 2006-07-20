@@ -153,17 +153,6 @@ function gnains_index() {
 }
 
 
-function webify_api() {
-  ./utils/gendoc2.pl CVS $docdir
-  for x in devel-docs/libgwy*; do
-    if test -d $x; then
-      cp $x/html/*.png $docdir/$(basename $x)
-    fi
-  done
-  rm $docdir/*/{left,right,home,up}.png
-}
-
-
 function help() {
   sed <$0 -e '1,/^  # LIST-BEGIN/d' \
           -e '/^  # LIST-END/,$d' \
@@ -195,6 +184,5 @@ else
   call install_to_tmp
   call make_dists
   call gnains_index
-  call webify_api
   # LIST-END
 fi

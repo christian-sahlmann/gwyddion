@@ -155,6 +155,5 @@ coding_style_report
 printerr install_to_tmp grep -vFf build_project.err
 printerr make_dists grep -vFf build_project.err
 printerr gnains_index
-printerr webify_api
 
 rm *.ignore $tmplog
