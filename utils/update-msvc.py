@@ -12,7 +12,7 @@ re_nm = re.compile(r'(?P<addr>[a-z0-9 ]+) (?P<type>[-A-Za-z?]) (?P<symbol>\w+)')
 re_template = re.compile(r'<\[\[:(?P<name>\w+):\]\]>')
 
 # RCS id line (to remove them from generated files)
-re_rscid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
+re_rcsid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
 
 object_rule = """\
 %s.obj:%s
