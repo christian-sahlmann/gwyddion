@@ -19,11 +19,11 @@ text = []
 for line in sys.stdin.readlines():
     line = line.rstrip()
     # Version
-    m = re.match(r'^(?P<version>\d[0-9a-z.]*)\s+'
+    m = re.match(r'^(?P<version>\d[0-9.]*)\s+'
                  + r'\((?P<date>\d+-\d+-\d+)\)$', line)
     if m:
         ver = m.group('version')
-        if ver.find('cvs') > -1:
+        if re.search(r'\.[0-9]{8}$', ver):
             continue
         text.append('\n<h2 id="v%s">Version %s</h2>' % (ver, ver))
         text.append('<p>Released: %s.</p>' % format_date(m.group('date')))

@@ -11,8 +11,8 @@ re_nm = re.compile(r'(?P<addr>[a-z0-9 ]+) (?P<type>[-A-Za-z?]) (?P<symbol>\w+)')
 # .Match gwt template <[[:FOO:]]>
 re_template = re.compile(r'<\[\[:(?P<name>\w+):\]\]>')
 
-# CVS id line (to remove them from generated files)
-re_cvsid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
+# RCS id line (to remove them from generated files)
+re_rscid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
 
 object_rule = """\
 %s.obj:%s
@@ -278,7 +278,7 @@ def fill_templates(makefile):
     templates = fix_suffixes(templates, '.gwt')
     for templ in templates:
         text = orig = get_file(templ + '.gwt')
-        text = re_cvsid.sub('# This file was GENERATED from %s.gwt by %s.'
+        text = re_rcsid.sub('# This file was GENERATED from %s.gwt by %s.'
                             % (templ, me), text)
         m = re_template.search(text)
         while m:

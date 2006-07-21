@@ -1,19 +1,19 @@
 rem vim: set ff=dos :
-deltree /y gwyddion-cvs
-wget -t 1 http://gwyddion.net/download/test/gwyddion-cvs.tar.gz
-"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-cvs.tar.gz"
-"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-cvs.tar"
-rename "gwyddion-@VERSION@" gwyddion-cvs
-copy upload.bat "gwyddion-cvs\upload.bat"
-cd gwyddion-cvs
+deltree /y gwyddion-head
+wget -t 1 http://gwyddion.net/download/test/gwyddion-head.tar.gz
+"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-head.tar.gz"
+"c:\Program Files\7-Zip\7z.exe" x -y "gwyddion-head.tar"
+rename "gwyddion-@VERSION@" gwyddion-head
+copy upload.bat "gwyddion-head\upload.bat"
+cd gwyddion-head
 PATH="c:\program files\microsoft visual studio\common\msdev98\bin;c:\program files\microsoft visual studio\vc98\bin;c:\windows;c:\windows\command"
 nmake -f makefile.msc -x make_log > make_log2
 nmake -f makefile.msc install -x install_log > install_log2
 cd inst
 "c:\Program Files\Inno Setup 4\iscc.exe" gwyddion.iss
-rename "Gwyddion-@VERSION@.exe" Gwyddion-cvs.exe
+rename "Gwyddion-@VERSION@.exe" Gwyddion-head.exe
 cd ..
-call upload.bat /public_html/download/test inst\Gwyddion-cvs.exe
+call upload.bat /public_html/download/test inst\Gwyddion-head.exe
 call upload.bat /public_html/logs make_log
 call upload.bat /public_html/logs install_log
 call upload.bat /public_html/logs make_log2
