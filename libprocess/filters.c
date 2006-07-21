@@ -1646,74 +1646,85 @@ gwy_data_field_shade(GwyDataField *data_field,
 }
 
 void
-gwy_data_field_filter_harris(GwyDataField *x_gradient, GwyDataField *y_gradient, GwyDataField *result,
-                                   gint neighbourhood, gdouble alpha)
+gwy_data_field_filter_harris(GwyDataField *x_gradient,
+                             GwyDataField *y_gradient,
+                             GwyDataField *result,
+                             gint neighbourhood,
+                             gdouble alpha)
 {
 
     gdouble pxx, pxy, pyy, det, trace, mult;
     gint height, width, i, j, ndata, k;
     GwyDataField *xkernel, *ykernel, *xx, *xy, *yy;
-    gdouble *xdata, *ydata, sigma;
+    gdouble *xdata, *ydata;
+    gdouble sigma, vx, vy, u;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(x_gradient));
+    g_return_if_fail(GWY_IS_DATA_FIELD(y_gradient));
+    g_return_if_fail(GWY_IS_DATA_FIELD(result));
+
+    gwy_data_field_clear(result);
+    g_return_if_fail(neighbourhood > 0);
 
     height = gwy_data_field_get_xres(x_gradient);
     width = gwy_data_field_get_yres(x_gradient);
 
-    sigma = neighbourhood/5;
+    sigma = neighbourhood/5.0;
     ndata = neighbourhood*2;
     xkernel = gwy_data_field_new(ndata, 1, ndata, 1, FALSE);
     ykernel = gwy_data_field_new(1, ndata, 1, ndata, FALSE);
     xdata = gwy_data_field_get_data(xkernel);
     ydata = gwy_data_field_get_data(ykernel);
 
-    mult = fabs(gwy_data_field_get_max(x_gradient)-gwy_data_field_get_min(x_gradient));
-    mult += fabs(gwy_data_field_get_max(y_gradient)-gwy_data_field_get_min(y_gradient));
-    mult = 1.0/mult/mult;
+    mult = fabs(gwy_data_field_get_max(x_gradient)
+                - gwy_data_field_get_min(x_gradient));
+    mult += fabs(gwy_data_field_get_max(y_gradient)
+                 - gwy_data_field_get_min(y_gradient));
+    mult = 1.0/(mult*mult);
 
     xx = gwy_data_field_new_alike(result, TRUE);
     xy = gwy_data_field_new_alike(result, TRUE);
     yy = gwy_data_field_new_alike(result, TRUE);
-    
-    gwy_data_field_clear(result);
-    for (i = neighbourhood; i < (height - neighbourhood); i++) {
-         for (j = neighbourhood; j < (width - neighbourhood); j++) {
-              
-             gwy_data_field_set_val(xx, i, j, gwy_data_field_get_val(x_gradient, i, j)*
-                                    gwy_data_field_get_val(x_gradient, i, j)*mult);
-             gwy_data_field_set_val(xy, i, j, gwy_data_field_get_val(x_gradient, i, j)*
-                                    gwy_data_field_get_val(y_gradient, i, j)*mult);
-             gwy_data_field_set_val(yy, i, j, gwy_data_field_get_val(y_gradient, i, j)*
-                                    gwy_data_field_get_val(y_gradient, i, j)*mult);
+
+    for (i = neighbourhood; i < height - neighbourhood; i++) {
+         for (j = neighbourhood; j < width - neighbourhood; j++) {
+             k = i*width + j;
+             vx = x_gradient->data[k];
+             vy = y_gradient->data[k];
+             xx->data[k] = vx*vx*mult;
+             xy->data[k] = vx*vy*mult;
+             yy->data[k] = vy*vy*mult;
          }
     }
-    
-    for (k=0; k<ndata; k++)
-    {
-        xdata[k] = ydata[k] = 0.5/G_PI/sigma/sigma*exp(-(k-((gdouble)ndata)/2)*(k-((gdouble)ndata)/2)/2/sigma/sigma);
+
+    for (k = 0; k < ndata; k++) {
+        u = (k - ndata/2.0)/sigma;
+        xdata[k] = ydata[k] = 0.5/G_PI/sigma/sigma*exp(-u*u/2.0);
     }
     gwy_data_field_convolve(xx, xkernel);
-    gwy_data_field_convolve(xy, xkernel);
-    gwy_data_field_convolve(yy, xkernel);
     gwy_data_field_convolve(xx, ykernel);
+    gwy_data_field_convolve(xy, xkernel);
     gwy_data_field_convolve(xy, ykernel);
+    gwy_data_field_convolve(yy, xkernel);
     gwy_data_field_convolve(yy, ykernel);
-               
-    for (i = neighbourhood; i < (height - neighbourhood); i++) {
-         for (j = neighbourhood; j < (width - neighbourhood); j++) {
-             pxx = gwy_data_field_get_val(xx, i, j);
-             pxy = gwy_data_field_get_val(xy, i, j);
-             pyy = gwy_data_field_get_val(yy, i, j);
+
+    for (i = neighbourhood; i < height - neighbourhood; i++) {
+         for (j = neighbourhood; j < width - neighbourhood; j++) {
+             k = i*width + j;
+             pxx = xx->data[k];
+             pxy = xy->data[k];
+             pyy = yy->data[k];
              det = pxx*pyy - pxy*pxy;
              trace = pxx + pyy;
-             gwy_data_field_set_val(result, i, j, (det - alpha*trace*trace));
+             result->data[k] = det - alpha*trace*trace;
           }
     }
+    gwy_data_field_invalidate(result);
     g_object_unref(xkernel);
     g_object_unref(ykernel);
     g_object_unref(xx);
     g_object_unref(xy);
     g_object_unref(yy);
-    
-    
 }
 
 
