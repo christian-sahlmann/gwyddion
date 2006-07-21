@@ -417,8 +417,8 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
     ok = TRUE;
 
 get_score_fail:
-    gwy_app_wait_finish();
     gwy_data_field_correlate_finalize(&state);
+    gwy_app_wait_finish();
 
     return ok;
 }

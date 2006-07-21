@@ -278,7 +278,6 @@ static void
 hough_lines_do(GwyDataField *dfield, GwyDataField *show)
 {
     GwyDataField *x_gradient, *y_gradient;
-    gint xres, yres;
 
     gwy_data_field_copy(dfield, show, FALSE);
     gwy_data_field_filter_canny(show, 0.1);

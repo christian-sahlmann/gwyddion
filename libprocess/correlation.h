@@ -38,6 +38,22 @@ typedef struct {
     gint j;
 } GwyCorrelationState;
 
+typedef struct {
+    GwyComputationStateType state;
+    gdouble fraction;
+    GwyDataField *data_field1;
+    GwyDataField *data_field2;
+    GwyDataField *x_dist;
+    GwyDataField *y_dist;
+    GwyDataField *score;
+    gint search_width;
+    gint search_height;
+    gint window_width;
+    gint window_height;
+    gint i;
+    gint j;
+} GwyCrossCorrelationState;
+
 gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
                                              GwyDataField *kernel_field,
                                              gint col,
@@ -57,17 +73,18 @@ void gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                    gint window_width,
                                    gint window_height);
 
-void gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
-                                             GwyDataField *data_field2,
-                                             GwyDataField *x_dist,
-                                             GwyDataField *y_dist,
-                                             GwyDataField *score,
-                                             gint search_width,
-                                             gint search_height,
-                                             gint window_width,
-                                             gint window_height,
-                                             GwyComputationStateType *state,
-                                             gint *iteration);
+void gwy_data_field_crosscorrelate_init(GwyCrossCorrelationState *state,
+                                        GwyDataField *data_field1,
+                                        GwyDataField *data_field2,
+                                        GwyDataField *x_dist,
+                                        GwyDataField *y_dist,
+                                        GwyDataField *score,
+                                        gint search_width,
+                                        gint search_height,
+                                        gint window_width,
+                                        gint window_height);
+void gwy_data_field_crosscorrelate_iteration(GwyCrossCorrelationState *state);
+void gwy_data_field_crosscorrelate_finalize(GwyCrossCorrelationState *state);
 
 void gwy_data_field_correlate(GwyDataField *data_field,
                               GwyDataField *kernel_field,

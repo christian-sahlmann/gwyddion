@@ -606,111 +606,186 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
     gwy_data_field_invalidate(y_dist);
 }
 
+
 /**
- * gwy_data_field_crosscorrelate_iteration:
+ * gwy_data_field_crosscorrelate_init:
+ * @state: Uninitialized cross-correlation state.
  * @data_field1: A data field.
  * @data_field2: A data field.
- * @x_dist: A data field to store x-distances to.
- * @y_dist: A data field to store y-distances to.
- * @score: Data field to store correlation scores to.
+ * @x_dist: A data field to store x-distances to, or %NULL.
+ * @y_dist: A data field to store y-distances to, or %NULL.
+ * @score: Data field to store correlation scores to, or %NULL.
  * @search_width: Search area width.
  * @search_height: Search area height.
  * @window_width: Correlation window width.
  * @window_height: Correlation window height.
- * @state: State of iteration.  It is updated to new state.
- * @iteration: Iteration of computation loop (within
- *             %GWY_COMPUTATION_STATE_ITERATE state).
  *
- * Matches two different images of the same object under changes.
+ * Initializes a cross-correlation iterator.
+ **/
+void
+gwy_data_field_crosscorrelate_init(GwyCrossCorrelationState *state,
+                                   GwyDataField *data_field1,
+                                   GwyDataField *data_field2,
+                                   GwyDataField *x_dist,
+                                   GwyDataField *y_dist,
+                                   GwyDataField *score,
+                                   gint search_width,
+                                   gint search_height,
+                                   gint window_width,
+                                   gint window_height)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field2));
+    g_return_if_fail(data_field1->xres == data_field2->xres
+                     && data_field1->yres == data_field2->yres);
+    g_return_if_fail(!x_dist || GWY_IS_DATA_FIELD(x_dist));
+    g_return_if_fail(!y_dist || GWY_IS_DATA_FIELD(y_dist));
+    g_return_if_fail(!score || GWY_IS_DATA_FIELD(score));
+
+    state->state = GWY_COMPUTATION_STATE_INIT;
+    state->fraction = 0.0;
+    state->data_field1 = g_object_ref(data_field1);
+    state->data_field2 = g_object_ref(data_field2);
+
+    if (x_dist)
+        state->x_dist = g_object_ref(x_dist);
+    if (y_dist)
+        state->y_dist = g_object_ref(y_dist);
+    if (score)
+        state->score = g_object_ref(score);
+
+    state->search_width = search_width;
+    state->search_height = search_height;
+    state->window_width = window_width;
+    state->window_height = window_height;
+}
+
+/**
+ * gwy_data_field_crosscorrelate_iteration:
+ * @state: Cross-correlation state.
+ *
+ * Performs one iteration of cross-correlation.
+ *
+ * Cross-correlation matches two different images of the same object under
+ * changes.
  *
  * It does not use any special features
  * for matching. It simply searches for all points (with their neighbourhood)
  * of @data_field1 within @data_field2. Parameters @search_width and
- * @search_height
- * determine maimum area where to search for points. The area is cenetered
- * in the @data_field2 at former position of points at @data_field1.
+ * @search_height determine maimum area where to search for points.
+ * The area is cenetered in the @data_field2 at former position of points at
+ * @data_field1.
+ *
+ * Fields @state and progress @fraction of correlation state are updated.
+ * Once @state becomes %GWY_COMPUTATION_STATE_FINISHED, the calculation is
+ * finised.
+ *
+ * Before the processing starts, @state must be initialized with
+ * gwy_data_field_crosscorrelate_init().  When iteration ends, either
+ * by finishing or being aborted, gwy_data_field_crosscorrelate_finalize()
+ * must be called to release allocated resources.
  **/
 void
-gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
-                                        GwyDataField *data_field2,
-                                        GwyDataField *x_dist,
-                                        GwyDataField *y_dist,
-                                        GwyDataField *score,
-                                        gint search_width, gint search_height,
-                                        gint window_width,
-                                        gint window_height,
-                                        GwyComputationStateType * state,
-                                        gint *iteration)
+gwy_data_field_crosscorrelate_iteration(GwyCrossCorrelationState *state)
 {
-    gint xres, yres, i, j, m, n;
-    gint imax, jmax;
+    gint xres, yres, i, j, m, n, imax, jmax;
     gdouble cormax, lscore;
 
-    g_return_if_fail(data_field1 != NULL && data_field2 != NULL);
+    xres = state->data_field1->xres;
+    yres = state->data_field1->yres;
 
-    xres = data_field1->xres;
-    yres = data_field1->yres;
-
-    g_return_if_fail(xres == data_field2->xres && yres == data_field2->yres);
-
-    if (*state == GWY_COMPUTATION_STATE_INIT) {
-        gwy_data_field_clear(x_dist);
-        gwy_data_field_clear(y_dist);
-        gwy_data_field_clear(score);
-        *state = GWY_COMPUTATION_STATE_ITERATE;
-        *iteration = 0;
+    if (state->state == GWY_COMPUTATION_STATE_INIT) {
+        if (state->x_dist)
+            gwy_data_field_clear(state->x_dist);
+        if (state->y_dist)
+            gwy_data_field_clear(state->y_dist);
+        if (state->score)
+            gwy_data_field_clear(state->score);
+        state->state = GWY_COMPUTATION_STATE_ITERATE;
+        state->fraction = 0.0;
+        state->i = state->search_height/2;
+        state->j = state->search_width/2;
     }
-    else if (*state == GWY_COMPUTATION_STATE_ITERATE) {
-        if (iteration == 0)
-            i = (search_width/2);
-        else
-            i = *iteration;
+    else if (state->state == GWY_COMPUTATION_STATE_ITERATE) {
+        /*iterate over search area in the second datafield */
+        i = imax = state->i;
+        j = jmax = state->j;
+        cormax = -1.0;
+        for (m = i - state->search_height; m < i; m++) {
+            for (n = j - state->search_width; n < j; n++) {
+                lscore = gwy_data_field_get_correlation_score
+                                                (state->data_field1,
+                                                 state->data_field2,
+                                                 j - state->search_width/2,
+                                                 i - state->search_height/2,
+                                                 n, m,
+                                                 state->search_width,
+                                                 state->search_height);
 
-        for (j = (search_height/2); j < (yres - search_height/2); j++) {
-            /*iterate over search area in the second datafield */
-            imax = i;
-            jmax = j;
-            cormax = -1;
-            for (m = (i - search_width); m < i; m++) {
-                for (n = (j - search_height); n < j; n++) {
-                    lscore =
-                        gwy_data_field_get_correlation_score(data_field1,
-                                                             data_field2,
-                                                             i-search_width/2,
-                                                             j-search_height/2,
-                                                             m, n,
-                                                             m + search_width,
-                                                             n + search_height);
+                /* add a little to score at exactly same point
+                 * - to prevent problems on flat data */
+                if (m == i - state->search_width/2
+                    && n == j - state->search_height/2)
+                    lscore *= 1.01;
 
-                    /* add a little to score at exactly same point
-                     * - to prevent problems on flat data */
-                    if (m == (i - search_width/2)
-                        && n == (j - search_height/2))
-                        lscore *= 1.01;
-
-                    if (cormax < lscore) {
-                        cormax = lscore;
-                        imax = m + search_width/2;
-                        jmax = n + search_height/2;
-                    }
-
+                if (lscore > cormax) {
+                    cormax = lscore;
+                    imax = m + state->search_width/2;
+                    jmax = n + state->search_height/2;
                 }
+
             }
-            score->data[i + xres * j] = cormax;
-            x_dist->data[i + xres * j]
-                = (gdouble)(imax - i)*data_field1->xreal/data_field1->xres;
-            y_dist->data[i + xres * j]
-                = (gdouble)(jmax - j)*data_field1->yreal/data_field1->yres;
-
         }
-        *iteration = i + 1;
-        if (*iteration == (xres - search_height/2))
-            *state = GWY_COMPUTATION_STATE_FINISHED;
-    }
 
-    gwy_data_field_invalidate(score);
-    gwy_data_field_invalidate(x_dist);
-    gwy_data_field_invalidate(y_dist);
+        if (state->score)
+            state->score->data[i + xres * j] = cormax;
+        if (state->x_dist) {
+            state->x_dist->data[i + xres * j]
+                = (imax - i)*state->data_field1->xreal/state->data_field1->xres;
+        }
+        if (state->y_dist) {
+            state->y_dist->data[i + xres * j]
+                = (jmax - j)*state->data_field1->yreal/state->data_field1->yres;
+        }
+
+        state->j++;
+        if (state->j == xres - (state->search_width - state->search_width/2)) {
+            state->j = state->search_width/2;
+            state->i++;
+            if (state->i == yres - (state->search_height - state->search_height/2)) {
+                state->state = GWY_COMPUTATION_STATE_FINISHED;
+            }
+        }
+        state->fraction
+            += 1.0/(xres - state->search_width + 1)/(yres - state->search_height + 1);
+    }
+    else if (state->state == GWY_COMPUTATION_STATE_FINISHED)
+        return;
+
+    if (state->score)
+        gwy_data_field_invalidate(state->score);
+    if (state->x_dist)
+        gwy_data_field_invalidate(state->x_dist);
+    if (state->y_dist)
+        gwy_data_field_invalidate(state->y_dist);
+}
+
+/**
+ * gwy_data_field_crosscorrelate_finalize:
+ * @state: Cross-correlation state.
+ *
+ * Frees all resources allocated by a cross-correlation iterator.
+ **/
+void
+gwy_data_field_crosscorrelate_finalize(GwyCrossCorrelationState *state)
+{
+    state->state = GWY_COMPUTATION_STATE_FINISHED;
+    state->fraction = 1.0;
+    gwy_object_unref(state->data_field1);
+    gwy_object_unref(state->data_field2);
+    gwy_object_unref(state->x_dist);
+    gwy_object_unref(state->y_dist);
+    gwy_object_unref(state->score);
 }
 
 /************************** Documentation ****************************/

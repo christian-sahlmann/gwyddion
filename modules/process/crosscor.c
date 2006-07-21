@@ -392,11 +392,10 @@ crosscor_do(CrosscorArgs *args)
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
     GwyDataWindow *window;
-    gint iteration = 0, newid;
-    GwyComputationStateType state;
+    gint newid;
+    GwyCrossCorrelationState state;
     GwySIUnit *siunit;
     GQuark quark;
-    gdouble xres;
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
@@ -408,31 +407,29 @@ crosscor_do(CrosscorArgs *args)
     dfieldx = gwy_data_field_new_alike(dfield1, FALSE);
     dfieldy = gwy_data_field_new_alike(dfield1, FALSE);
     score = gwy_data_field_new_alike(dfield1, FALSE);
-    xres = gwy_data_field_get_xres(dfield1);
 
     /* FIXME */
     window = gwy_app_data_window_get_for_data(args->op1.data);
     gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
 
     /* compute crosscorelation */
-    iteration = 0;
-    state = GWY_COMPUTATION_STATE_INIT;
+    gwy_data_field_crosscorrelate_init(&state, dfield1, dfield2,
+                                       dfieldx, dfieldy, score,
+                                       args->search_x, args->search_y,
+                                       args->window_x, args->window_y);
+    gwy_app_wait_set_message(_("Correlating..."));
     do {
-        gwy_data_field_crosscorrelate_iteration(dfield1, dfield2, dfieldx,
-                                                dfieldy, score, args->search_x,
-                                                args->search_y, args->window_x,
-                                                args->window_y, &state,
-                                                &iteration);
-        gwy_app_wait_set_message(_("Correlating..."));
-        if (!gwy_app_wait_set_fraction(iteration/(xres - args->search_x/2.0))) {
+        gwy_data_field_crosscorrelate_iteration(&state);
+        if (!gwy_app_wait_set_fraction(state.fraction)) {
+            gwy_data_field_crosscorrelate_finalize(&state);
             gwy_app_wait_finish();
             g_object_unref(dfieldx);
             g_object_unref(dfieldy);
             g_object_unref(score);
             return FALSE;
         }
-
-    } while (state != GWY_COMPUTATION_STATE_FINISHED);
+    } while (state.state != GWY_COMPUTATION_STATE_FINISHED);
+    gwy_data_field_crosscorrelate_finalize(&state);
     gwy_app_wait_finish();
 
     switch (args->result) {

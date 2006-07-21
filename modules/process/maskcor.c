@@ -339,15 +339,15 @@ maskcor_do(MaskcorArgs *args)
             if (work > WORK_PER_UPDATE) {
                 work -= WORK_PER_UPDATE;
                 if (!gwy_app_wait_set_fraction(state.fraction)) {
-                    gwy_app_wait_finish();
                     gwy_data_field_correlate_finalize(&state);
+                    gwy_app_wait_finish();
                     g_object_unref(retfield);
                     return;
                 }
             }
         } while (state.state != GWY_COMPUTATION_STATE_FINISHED);
-        gwy_app_wait_finish();
         gwy_data_field_correlate_finalize(&state);
+        gwy_app_wait_finish();
     }
     else
         gwy_data_field_correlate(dfield, kernel, retfield, args->method);
