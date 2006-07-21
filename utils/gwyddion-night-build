@@ -46,12 +46,12 @@ function getlist() {
 function update_version() {
   version=$basever
   test -n "$dont_update_version" && return
-  xver=cvs$(date +%Y%m%d)
+  xver=.$(date +%Y%m%d)
   version=$version$xver
   cp -fv NEWS NEWS~
   cp -fv configure.ac configure.ac~
   sed -ri -e "1s/^[^ ]*/$version/" NEWS
-  sed -ri -e "/m4_define\\(\[gwy_version_string/s/(minor\\.[0-9]+)[0-9a-z]*/\\1$xver/" configure.ac
+  sed -ri -e "/m4_define\\(\[gwy_version_string/s/(minor\\.[0-9]+)\\.?[0-9]*/\\1$xver/" configure.ac
 }
 
 
@@ -139,8 +139,8 @@ function make_dists() {
   make dist
   if test -s $pkgname-$version.tar.bz2; then
     rpmbuild -ta --clean $pkgname-$version.tar.bz2 && touch .releaseme
-    mv $pkgname-$version.tar.bz2 $pkgname-cvs.tar.bz2
-    mv $pkgname-$version.tar.gz $pkgname-cvs.tar.gz
+    mv $pkgname-$version.tar.bz2 $pkgname-head.tar.bz2
+    mv $pkgname-$version.tar.gz $pkgname-head.tar.gz
   fi
 }
 
