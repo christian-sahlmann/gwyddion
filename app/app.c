@@ -1510,7 +1510,10 @@ gwy_app_init_i18n(void)
 /**
  * gwy_app_init_common:
  * @error: Error location for settings loading error.
- * @...: List of module types to load.
+ * @...: List of module types to load, terminated with %NULL.  Possible types
+ *       are "file", "graph", "layer", "process", "tool" plus two special
+ *       values "" and "all" for untyped modules (like plug-in proxy) and
+ *       all modules, respectively.
  *
  * Performs common initialization.
  *
@@ -1550,7 +1553,7 @@ gwy_app_init_common(GError **error,
     va_start(ap, error);
     dir = va_arg(ap, const gchar*);
     va_end(ap);
-    if (gwy_strequal(dir, "all")) {
+    if (dir && gwy_strequal(dir, "all")) {
         gchar **module_dirs;
 
         module_dirs = gwy_app_settings_get_module_dirs();
