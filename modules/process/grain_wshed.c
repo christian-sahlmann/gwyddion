@@ -478,44 +478,44 @@ static gboolean
 mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
              GtkWidget *wait_window)
 {
-    gdouble max, min;
-    GwyWatershedState state;
+    gdouble max, min, q;
+    GwyComputationState *state;
     GwyWatershedStateType oldstate = -1;
     gboolean ok;
 
     max = gwy_data_field_get_max(dfield);
     min = gwy_data_field_get_min(dfield);
+    q = (max - min)/5000.0;
 
-    gwy_data_field_grains_watershed_init(&state,
-                                         dfield, maskfield,
-                                         args->locate_steps,
-                                         args->locate_thresh,
-                                         args->locate_dropsize*(max-min)/5000.0,
-                                         args->wshed_steps,
-                                         args->wshed_dropsize*(max-min)/5000.0,
-                                         FALSE, args->inverted);
+    state = gwy_data_field_grains_watershed_init(dfield, maskfield,
+                                                 args->locate_steps,
+                                                 args->locate_thresh,
+                                                 args->locate_dropsize*q,
+                                                 args->wshed_steps,
+                                                 args->wshed_dropsize*q,
+                                                 FALSE, args->inverted);
     gwy_app_wait_start(wait_window, _("Initializing"));
 
     do {
-        gwy_data_field_grains_watershed_iteration(&state);
-        if (oldstate != state.state) {
-            if (state.state == GWY_WATERSHED_STATE_MIN)
+        gwy_data_field_grains_watershed_iteration(state);
+        if (oldstate != state->state) {
+            if (state->state == GWY_WATERSHED_STATE_MIN)
                 gwy_app_wait_set_message(_("Finding minima"));
-            else if (state.state == GWY_WATERSHED_STATE_LOCATE)
+            else if (state->state == GWY_WATERSHED_STATE_LOCATE)
                 gwy_app_wait_set_message(_("Locating"));
-            else if (state.state == GWY_WATERSHED_STATE_WATERSHED)
+            else if (state->state == GWY_WATERSHED_STATE_WATERSHED)
                 gwy_app_wait_set_message(_("Watershed"));
-            else if (state.state == GWY_WATERSHED_STATE_MARK)
+            else if (state->state == GWY_WATERSHED_STATE_MARK)
                 gwy_app_wait_set_message(_("Marking boundaries"));
-            oldstate = state.state;
+            oldstate = state->state;
         }
-        if (!gwy_app_wait_set_fraction(state.fraction))
+        if (!gwy_app_wait_set_fraction(state->fraction))
             break;
-    } while (state.state != GWY_WATERSHED_STATE_FINISHED);
-    ok = (state.state == GWY_WATERSHED_STATE_FINISHED);
+    } while (state->state != GWY_WATERSHED_STATE_FINISHED);
+    ok = (state->state == GWY_WATERSHED_STATE_FINISHED);
 
     gwy_app_wait_finish();
-    gwy_data_field_grains_watershed_finalize(&state);
+    gwy_data_field_grains_watershed_finalize(state);
 
     return ok;
 }

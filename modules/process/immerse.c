@@ -388,7 +388,7 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
                       GwyDataField *score, ImmerseArgs *args)
 {
     enum { WORK_PER_UPDATE = 50000000 };
-    GwyCorrelationState state;
+    GwyComputationState *state;
     GwyDataWindow *window;
     gboolean ok = FALSE;
     int work, wpi;
@@ -397,27 +397,27 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
     wpi = gwy_data_field_get_xres(kernel_field)
           *gwy_data_field_get_yres(kernel_field);
     wpi = MIN(wpi, WORK_PER_UPDATE);
-    gwy_data_field_correlate_init(&state, data_field, kernel_field, score);
+    state = gwy_data_field_correlate_init(data_field, kernel_field, score);
 
     /* FIXME */
     window = gwy_app_data_window_get_for_data(args->image.data);
     gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
-    gwy_data_field_correlate_iteration(&state);
+    gwy_data_field_correlate_iteration(state);
     if (!gwy_app_wait_set_message(_("Correlating...")))
         goto get_score_fail;
     do {
-        gwy_data_field_correlate_iteration(&state);
+        gwy_data_field_correlate_iteration(state);
         work += wpi;
         if (work > WORK_PER_UPDATE) {
             work -= WORK_PER_UPDATE;
-            if (!gwy_app_wait_set_fraction(state.fraction))
+            if (!gwy_app_wait_set_fraction(state->fraction))
                 goto get_score_fail;
         }
-    } while (state.state != GWY_COMPUTATION_STATE_FINISHED);
+    } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
     ok = TRUE;
 
 get_score_fail:
-    gwy_data_field_correlate_finalize(&state);
+    gwy_data_field_correlate_finalize(state);
     gwy_app_wait_finish();
 
     return ok;

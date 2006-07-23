@@ -393,7 +393,7 @@ crosscor_do(CrosscorArgs *args)
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
     GwyDataWindow *window;
     gint newid;
-    GwyCrossCorrelationState state;
+    GwyComputationState *state;
     GwySIUnit *siunit;
     GQuark quark;
 
@@ -413,23 +413,23 @@ crosscor_do(CrosscorArgs *args)
     gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
 
     /* compute crosscorelation */
-    gwy_data_field_crosscorrelate_init(&state, dfield1, dfield2,
-                                       dfieldx, dfieldy, score,
-                                       args->search_x, args->search_y,
-                                       args->window_x, args->window_y);
+    state = gwy_data_field_crosscorrelate_init(dfield1, dfield2,
+                                               dfieldx, dfieldy, score,
+                                               args->search_x, args->search_y,
+                                               args->window_x, args->window_y);
     gwy_app_wait_set_message(_("Correlating..."));
     do {
-        gwy_data_field_crosscorrelate_iteration(&state);
-        if (!gwy_app_wait_set_fraction(state.fraction)) {
-            gwy_data_field_crosscorrelate_finalize(&state);
+        gwy_data_field_crosscorrelate_iteration(state);
+        if (!gwy_app_wait_set_fraction(state->fraction)) {
+            gwy_data_field_crosscorrelate_finalize(state);
             gwy_app_wait_finish();
             g_object_unref(dfieldx);
             g_object_unref(dfieldy);
             g_object_unref(score);
             return FALSE;
         }
-    } while (state.state != GWY_COMPUTATION_STATE_FINISHED);
-    gwy_data_field_crosscorrelate_finalize(&state);
+    } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+    gwy_data_field_crosscorrelate_finalize(state);
     gwy_app_wait_finish();
 
     switch (args->result) {

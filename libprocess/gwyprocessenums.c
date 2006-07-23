@@ -353,4 +353,49 @@ gwy_correlation_type_get_enum(void)
  * methods.
  **/
 
+/**
+ * GwyComputationStateType:
+ * @GWY_COMPUTATION_STATE_INIT: Iterator was set up, the next step will
+ *                              actually create temporary data structures
+ *                              and precalculate values.
+ * @GWY_COMPUTATION_STATE_ITERATE: Iteration is in progress, the @fraction
+ *                                 field of state struct holds the fraction
+ *                                 completed.
+ * @GWY_COMPUTATION_STATE_FINISHED: Calculation has been finished, further
+ *                                  calls to the iterator will be no-op.
+ *
+ * Common iterative computation iterator state.
+ **/
+
+/**
+ * GwyComputationState:
+ * @state: Current computation state, usually of #GwyComputationStateType, but
+ *         particular iterators can define their own types.
+ * @fraction: Fraction of computation completed.  For staged algorithms,
+ *            the fraction refer to the current stage only.
+ *
+ * State of iterative computation.
+ *
+ * Iterators usually append their own private state data, therefore it must
+ * not be assumed the public fields @state and @fraction are the only fields.
+ *
+ * A typical iteration, assuming an iterative computation `foo' with the
+ * default #GwyComputationStateType state could be:
+ * <informalexample><programlisting>
+ * GwyComputationStateType *state;
+ * state = gwy_data_field_foo_init(GwyDataField *data_field, ...);
+ * do {
+ *     gwy_data_field_foo_iteration(state);
+ *     /<!-- -->* Update progress using state->fraction,
+ *         let Gtk+ main loop run, check for abort, ... *<!-- -->/
+ *     if (aborted) {
+ *         gwy_data_field_foo_finalize(state);
+ *         return FALSE;
+ *     }
+ * } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+ * gwy_data_field_foo_finalize(state);
+ * return TRUE;
+ * </programlisting></informalexample>
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

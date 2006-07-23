@@ -26,6 +26,35 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/correlation.h>
 
+/* Correlation iterator */
+typedef struct {
+    GwyComputationState cs;
+    GwyDataField *data_field;
+    GwyDataField *kernel_field;
+    GwyDataField *score;
+    gdouble *avg_rms;
+    gdouble kavg;
+    gdouble krms;
+    gint i;
+    gint j;
+} GwyCorrelationState;
+
+/* Cross-correlation iterator */
+typedef struct {
+    GwyComputationState cs;
+    GwyDataField *data_field1;
+    GwyDataField *data_field2;
+    GwyDataField *x_dist;
+    GwyDataField *y_dist;
+    GwyDataField *score;
+    gint search_width;
+    gint search_height;
+    gint window_width;
+    gint window_height;
+    gint i;
+    gint j;
+} GwyCrossCorrelationState;
+
 /**
  * gwy_data_field_get_correlation_score:
  * @data_field: A data field.
@@ -408,51 +437,54 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 
 /**
  * gwy_data_field_correlate_init:
- * @state: Uninitialized correlation state.
  * @data_field: A data field.
  * @kernel_field: Kernel to correlate data field with.
  * @score: Data field to store correlation scores to.
  *
- * Initializes a correlation iterator.
+ * Creates a new correlation iterator.
+ *
+ * This iterator reports its state as #GwyComputationStateType.
+ *
+ * Returns: A new correlation iterator.
  **/
-void
-gwy_data_field_correlate_init(GwyCorrelationState *state,
-                              GwyDataField *data_field,
+GwyComputationState*
+gwy_data_field_correlate_init(GwyDataField *data_field,
                               GwyDataField *kernel_field,
                               GwyDataField *score)
 {
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(GWY_IS_DATA_FIELD(kernel_field));
-    g_return_if_fail(kernel_field->xres <= data_field->xres
-                     && kernel_field->yres <= data_field->yres);
-    g_return_if_fail(GWY_IS_DATA_FIELD(score));
+    GwyCorrelationState *state;
 
-    state->state = GWY_COMPUTATION_STATE_INIT;
-    state->fraction = 0.0;
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), NULL);
+    g_return_val_if_fail(kernel_field->xres <= data_field->xres
+                         && kernel_field->yres <= data_field->yres, NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(score), NULL);
+
+    state = g_new0(GwyCorrelationState, 1);
+    state->cs.state = GWY_COMPUTATION_STATE_INIT;
+    state->cs.fraction = 0.0;
     state->data_field = g_object_ref(data_field);
     state->kernel_field = g_object_ref(kernel_field);
     state->score = g_object_ref(score);
-    state->avg_rms = NULL;
+
+    return (GwyComputationState*)state;
 }
 
 /**
  * gwy_data_field_correlate_iteration:
- * @state: Correlation state.
+ * @state: Correlation iterator.
  *
  * Performs one iteration of correlation.
  *
- * Fields @state and progress @fraction of correlation state are updated.
- * Once @state becomes %GWY_COMPUTATION_STATE_FINISHED, the calculation is
- * finised.
- *
- * Before the processing starts, @state must be initialized with
- * gwy_data_field_correlate_init().  When iteration ends, either
- * by finishing or being aborted, gwy_data_field_correlate_finalize()
- * must be called to release allocated resources.
+ * An iterator can be created with gwy_data_field_correlate_init().
+ * When iteration ends, either by finishing or being aborted,
+ * gwy_data_field_correlate_finalize() must be called to release allocated
+ * resources.
  **/
 void
-gwy_data_field_correlate_iteration(GwyCorrelationState *state)
+gwy_data_field_correlate_iteration(GwyComputationState *cstate)
 {
+    GwyCorrelationState *state = (GwyCorrelationState*)cstate;
     gint xres, yres, kxres, kyres, w, h, p;
     gdouble s, davg, drms;
 
@@ -461,18 +493,18 @@ gwy_data_field_correlate_iteration(GwyCorrelationState *state)
     kxres = state->kernel_field->xres;
     kyres = state->kernel_field->yres;
 
-    if (state->state == GWY_COMPUTATION_STATE_INIT) {
+    if (state->cs.state == GWY_COMPUTATION_STATE_INIT) {
         gwy_data_field_fill(state->score, -1);
         state->kavg = gwy_data_field_get_avg(state->kernel_field);
         state->krms = gwy_data_field_get_rms(state->kernel_field);
         state->avg_rms = calculate_normalization(state->data_field,
                                                  kxres, kyres);
-        state->state = GWY_COMPUTATION_STATE_ITERATE;
-        state->fraction = 0.0;
+        state->cs.state = GWY_COMPUTATION_STATE_ITERATE;
+        state->cs.fraction = 0.0;
         state->i = kyres/2;
         state->j = kxres/2;
     }
-    else if (state->state == GWY_COMPUTATION_STATE_ITERATE) {
+    else if (state->cs.state == GWY_COMPUTATION_STATE_ITERATE) {
         w = xres - kxres + 1;
         h = yres - kyres + 1;
         p = (state->i - kyres/2)*w + (state->j - kxres/2);
@@ -493,29 +525,32 @@ gwy_data_field_correlate_iteration(GwyCorrelationState *state)
             state->j = kxres/2;
             state->i++;
             if (state->i == yres - (kyres - kyres/2))
-                state->state = GWY_COMPUTATION_STATE_FINISHED;
+                state->cs.state = GWY_COMPUTATION_STATE_FINISHED;
         }
-        state->fraction += 1.0/(w*h);
+        state->cs.fraction += 1.0/(w*h);
     }
+    else if (state->cs.state == GWY_COMPUTATION_STATE_FINISHED)
+        return;
+
     gwy_data_field_invalidate(state->score);
 }
 
 /**
  * gwy_data_field_correlate_finalize:
- * @state: Correlation state.
+ * @state: Correlation iterator.
  *
- * Frees all resources allocated by a correlation iterator.
+ * Destroys a correlation iterator, freeing all resources.
  **/
 void
-gwy_data_field_correlate_finalize(GwyCorrelationState *state)
+gwy_data_field_correlate_finalize(GwyComputationState *cstate)
 {
-    state->state = GWY_COMPUTATION_STATE_FINISHED;
-    state->fraction = 1.0;
+    GwyCorrelationState *state = (GwyCorrelationState*)cstate;
+
     gwy_object_unref(state->data_field);
     gwy_object_unref(state->kernel_field);
     gwy_object_unref(state->score);
     g_free(state->avg_rms);
-    state->avg_rms = NULL;
+    g_free(state);
 }
 
 /**
@@ -609,7 +644,6 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
 
 /**
  * gwy_data_field_crosscorrelate_init:
- * @state: Uninitialized cross-correlation state.
  * @data_field1: A data field.
  * @data_field2: A data field.
  * @x_dist: A data field to store x-distances to, or %NULL.
@@ -621,10 +655,13 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
  * @window_height: Correlation window height.
  *
  * Initializes a cross-correlation iterator.
+ *
+ * This iterator reports its state as #GwyComputationStateType.
+ *
+ * Returns: A new cross-correlation iterator.
  **/
-void
-gwy_data_field_crosscorrelate_init(GwyCrossCorrelationState *state,
-                                   GwyDataField *data_field1,
+GwyComputationState*
+gwy_data_field_crosscorrelate_init(GwyDataField *data_field1,
                                    GwyDataField *data_field2,
                                    GwyDataField *x_dist,
                                    GwyDataField *y_dist,
@@ -634,16 +671,20 @@ gwy_data_field_crosscorrelate_init(GwyCrossCorrelationState *state,
                                    gint window_width,
                                    gint window_height)
 {
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field2));
-    g_return_if_fail(data_field1->xres == data_field2->xres
-                     && data_field1->yres == data_field2->yres);
-    g_return_if_fail(!x_dist || GWY_IS_DATA_FIELD(x_dist));
-    g_return_if_fail(!y_dist || GWY_IS_DATA_FIELD(y_dist));
-    g_return_if_fail(!score || GWY_IS_DATA_FIELD(score));
+    GwyCrossCorrelationState *state;
 
-    state->state = GWY_COMPUTATION_STATE_INIT;
-    state->fraction = 0.0;
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field1), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field2), NULL);
+    g_return_val_if_fail(data_field1->xres == data_field2->xres
+                     && data_field1->yres == data_field2->yres, NULL);
+    g_return_val_if_fail(!x_dist || GWY_IS_DATA_FIELD(x_dist), NULL);
+    g_return_val_if_fail(!y_dist || GWY_IS_DATA_FIELD(y_dist), NULL);
+    g_return_val_if_fail(!score || GWY_IS_DATA_FIELD(score), NULL);
+
+    state = g_new0(GwyCrossCorrelationState, 1);
+
+    state->cs.state = GWY_COMPUTATION_STATE_INIT;
+    state->cs.fraction = 0.0;
     state->data_field1 = g_object_ref(data_field1);
     state->data_field2 = g_object_ref(data_field2);
 
@@ -658,11 +699,13 @@ gwy_data_field_crosscorrelate_init(GwyCrossCorrelationState *state,
     state->search_height = search_height;
     state->window_width = window_width;
     state->window_height = window_height;
+
+    return (GwyComputationState*)state;
 }
 
 /**
  * gwy_data_field_crosscorrelate_iteration:
- * @state: Cross-correlation state.
+ * @state: Cross-correlation iterator.
  *
  * Performs one iteration of cross-correlation.
  *
@@ -676,37 +719,34 @@ gwy_data_field_crosscorrelate_init(GwyCrossCorrelationState *state,
  * The area is cenetered in the @data_field2 at former position of points at
  * @data_field1.
  *
- * Fields @state and progress @fraction of correlation state are updated.
- * Once @state becomes %GWY_COMPUTATION_STATE_FINISHED, the calculation is
- * finised.
- *
- * Before the processing starts, @state must be initialized with
+ * A cross-correlation iterator can be created with
  * gwy_data_field_crosscorrelate_init().  When iteration ends, either
  * by finishing or being aborted, gwy_data_field_crosscorrelate_finalize()
  * must be called to release allocated resources.
  **/
 void
-gwy_data_field_crosscorrelate_iteration(GwyCrossCorrelationState *state)
+gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
 {
+    GwyCrossCorrelationState *state = (GwyCrossCorrelationState*)cstate;
     gint xres, yres, i, j, m, n, imax, jmax;
     gdouble cormax, lscore;
 
     xres = state->data_field1->xres;
     yres = state->data_field1->yres;
 
-    if (state->state == GWY_COMPUTATION_STATE_INIT) {
+    if (state->cs.state == GWY_COMPUTATION_STATE_INIT) {
         if (state->x_dist)
             gwy_data_field_clear(state->x_dist);
         if (state->y_dist)
             gwy_data_field_clear(state->y_dist);
         if (state->score)
             gwy_data_field_clear(state->score);
-        state->state = GWY_COMPUTATION_STATE_ITERATE;
-        state->fraction = 0.0;
+        state->cs.state = GWY_COMPUTATION_STATE_ITERATE;
+        state->cs.fraction = 0.0;
         state->i = state->search_height/2;
         state->j = state->search_width/2;
     }
-    else if (state->state == GWY_COMPUTATION_STATE_ITERATE) {
+    else if (state->cs.state == GWY_COMPUTATION_STATE_ITERATE) {
         /*iterate over search area in the second datafield */
         i = imax = state->i;
         j = jmax = state->j;
@@ -749,17 +789,20 @@ gwy_data_field_crosscorrelate_iteration(GwyCrossCorrelationState *state)
         }
 
         state->j++;
-        if (state->j == xres - (state->search_width - state->search_width/2)) {
+        if (state->j == xres - (state->search_width
+                                - state->search_width/2)) {
             state->j = state->search_width/2;
             state->i++;
-            if (state->i == yres - (state->search_height - state->search_height/2)) {
-                state->state = GWY_COMPUTATION_STATE_FINISHED;
+            if (state->i == yres - (state->search_height
+                                    - state->search_height/2)) {
+                state->cs.state = GWY_COMPUTATION_STATE_FINISHED;
             }
         }
-        state->fraction
-            += 1.0/(xres - state->search_width + 1)/(yres - state->search_height + 1);
+        state->cs.fraction
+            += 1.0/(xres - state->search_width + 1)
+                  /(yres - state->search_height + 1);
     }
-    else if (state->state == GWY_COMPUTATION_STATE_FINISHED)
+    else if (state->cs.state == GWY_COMPUTATION_STATE_FINISHED)
         return;
 
     if (state->score)
@@ -772,20 +815,21 @@ gwy_data_field_crosscorrelate_iteration(GwyCrossCorrelationState *state)
 
 /**
  * gwy_data_field_crosscorrelate_finalize:
- * @state: Cross-correlation state.
+ * @state: Cross-correlation iterator.
  *
- * Frees all resources allocated by a cross-correlation iterator.
+ * Destroys a cross-correlation iterator, freeing all resources.
  **/
 void
-gwy_data_field_crosscorrelate_finalize(GwyCrossCorrelationState *state)
+gwy_data_field_crosscorrelate_finalize(GwyComputationState *cstate)
 {
-    state->state = GWY_COMPUTATION_STATE_FINISHED;
-    state->fraction = 1.0;
+    GwyCrossCorrelationState *state = (GwyCrossCorrelationState*)cstate;
+
     gwy_object_unref(state->data_field1);
     gwy_object_unref(state->data_field2);
     gwy_object_unref(state->x_dist);
     gwy_object_unref(state->y_dist);
     gwy_object_unref(state->score);
+    g_free(state);
 }
 
 /************************** Documentation ****************************/
