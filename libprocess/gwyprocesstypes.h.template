@@ -6,11 +6,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct {
-    guint state;
-    gdouble fraction;
-} GwyComputationState;
-
 /*** END file-header ***/
 
 /*** BEGIN value-header ***/
