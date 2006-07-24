@@ -51,6 +51,16 @@ gint     gwy_data_field_area_clamp         (GwyDataField *data_field,
                                             gint height,
                                             gdouble bottom,
                                             gdouble top);
+void     gwy_data_field_area_gather        (GwyDataField *data_field,
+                                            GwyDataField *result,
+                                            GwyDataField *buffer,
+                                            gint hsize,
+                                            gint vsize,
+                                            gboolean average,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height);
 void gwy_data_field_convolve                   (GwyDataField *data_field,
                                                 GwyDataField *kernel_field);
 void gwy_data_field_area_convolve              (GwyDataField *data_field,

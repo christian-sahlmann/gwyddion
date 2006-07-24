@@ -331,7 +331,8 @@ gwy_data_field_clamp(GwyDataField *data_field,
  **/
 gint
 gwy_data_field_area_clamp(GwyDataField *data_field,
-                          gint col, gint row, gint width, gint height,
+                          gint col, gint row,
+                          gint width, gint height,
                           gdouble bottom, gdouble top)
 {
     gint i, j, tot = 0;
@@ -365,6 +366,224 @@ gwy_data_field_area_clamp(GwyDataField *data_field,
     return tot;
 }
 
+/**
+ * gwy_data_field_area_gather:
+ * @data_field: A data field.
+ * @result: A data field to put the result to, it may be @data_field itself.
+ * @buffer: A data field to use as a scratch area, its size must be at least
+ *          @width*@height.  May be %NULL to allocate a private temporary
+ *          buffer.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @hsize: Horizontal size of gathered area.  The area is centered around
+ *         each sample if @hsize is odd, it extends one pixel more to the
+ *         right if @hsize is even.
+ * @vsize: Vertical size of gathered area.  The area is centered around
+ *         each sample if @vsize is odd, it extends one pixel more down
+ *         if @vsize is even.
+ * @average: %TRUE to divide resulting sums by the number of involved samples
+ *           to get averages instead of sums.
+ *
+ * Sum or average values in reactangular areas around each sample in a data
+ * field.
+ *
+ * When the gathered area extends out of calculation area, only samples from
+ * their intersection are taken into the local sum (or average).
+ *
+ * There are no restrictions on values of @hsize and @vsize with regard to
+ * @width and @height, but they have to be positive.
+ *
+ * The result is calculated by the means of two-dimensional rolling sums.
+ * One one hand it means the calculation time depends linearly on
+ * (@width + @hsize)*(@height + @vsize) instead of
+ * @width*@hsize*@height*@vsize.  On the other hand it means absolute rounding
+ * errors of all output values are given by the largest input values, that is
+ * relative precision of results small in absolute value may be poor.
+ **/
+void
+gwy_data_field_area_gather(GwyDataField *data_field,
+                           GwyDataField *result,
+                           GwyDataField *buffer,
+                           gint hsize,
+                           gint vsize,
+                           gboolean average,
+                           gint col, gint row,
+                           gint width, gint height)
+{
+    const gdouble *srow, *trow;
+    gdouble *drow;
+    gint xres, yres, i, j, m;
+    gint hs2p, hs2m, vs2p, vs2m;
+    gdouble v;
+
+    g_return_if_fail(hsize > 0 && vsize > 0);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= xres
+                     && row + height <= yres);
+    g_return_if_fail(GWY_IS_DATA_FIELD(result));
+    g_return_if_fail(result->xres == xres && result->yres == yres);
+    if (buffer) {
+        g_return_if_fail(GWY_IS_DATA_FIELD(buffer));
+        g_return_if_fail(buffer->xres*buffer->yres >= width*height);
+        g_object_ref(buffer);
+    }
+    else
+        buffer = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+
+    /* Extension to the left and to the right (for asymmetric sizes extend
+     * to the right more) */
+    hs2m = (hsize - 1)/2;
+    hs2p = hsize/2;
+    vs2m = (vsize - 1)/2;
+    vs2p = vsize/2;
+
+    /* Row-wise sums */
+    /* FIXME: This is inefficient, split the inner loops to explicitly
+     * according to the conditions inside */
+    for (i = 0; i < height; i++) {
+        srow = data_field->data + (i + row)*xres + col;
+        drow = buffer->data + i*width;
+
+        /* Left half */
+        drow[0] = 0.0;
+        m = MIN(hs2p, width-1);
+        for (j = 0; j <= m; j++)
+            drow[0] += srow[j];
+        for (j = 1; j < width/2; j++) {
+            v = ((j + hs2p < width ? srow[j + hs2p] : 0.0)
+                 - (j-1 - hs2m >= 0 ? srow[j-1 - hs2m] : 0.0));
+            drow[j] = drow[j-1] + v;
+        }
+
+        /* Right half */
+        drow[width-1] = 0.0;
+        m = width-1 - MIN(hs2m, width-1);
+        for (j = width-1; j >= m; j--)
+            drow[width-1] += srow[j];
+        for (j = width-2; j >= width/2; j--) {
+            v = ((j - hs2m >= 0 ? srow[j - hs2m] : 0.0)
+                 - (j+1 + hs2p < width ? srow[j+1 + hs2p] : 0.0));
+            drow[j] = drow[j+1] + v;
+        }
+    }
+
+    /* Column-wise sums (but iterate row-wise to access memory linearly) */
+    /* Top half */
+    drow = result->data + row*xres + col;
+    for (j = 0; j < width; j++)
+        drow[j] = 0.0;
+    m = MIN(vs2p, height-1);
+    for (i = 0; i <= m; i++) {
+        srow = buffer->data + i*width;
+        for (j = 0; j < width; j++)
+            drow[j] += srow[j];
+    }
+    for (i = 1; i < height/2; i++) {
+        drow = result->data + (i + row)*xres + col;
+        if (i + vs2p < height) {
+            srow = buffer->data + (i + vs2p)*width;
+            if (i-1 - vs2m >= 0) {
+                trow = buffer->data + (i-1 - vs2m)*width;
+                for (j = 0; j < width; j++)
+                    drow[j] = *(drow + j - xres) + (srow[j] - trow[j]);
+            }
+            else {
+                for (j = 0; j < width; j++)
+                    drow[j] = *(drow + j - xres) + srow[j];
+            }
+        }
+        else {
+            if (G_UNLIKELY(i-1 - vs2m >= 0)) {
+                g_warning("Me thinks pure subtraction cannot occur.");
+                trow = buffer->data + (i-1 - vs2m)*width;
+                for (j = 0; j < width; j++)
+                    drow[j] = *(drow + j - xres) - trow[j];
+            }
+            else {
+                for (j = 0; j < width; j++)
+                    drow[j] = *(drow + j - xres);
+            }
+        }
+    }
+
+    /* Bottom half */
+    drow = result->data + (height-1 + row)*xres + col;
+    for (j = 0; j < width; j++)
+        drow[j] = 0.0;
+    m = height-1 - MIN(vs2m, height-1);
+    for (i = height-1; i >= m; i--) {
+        srow = buffer->data + i*width;
+        for (j = 0; j < width; j++)
+            drow[j] += srow[j];
+    }
+    for (i = height-2; i >= height/2; i--) {
+        drow = result->data + (i + row)*xres + col;
+        if (i+1 + vs2p < height) {
+            srow = buffer->data + (i+1 + vs2p)*width;
+            if (G_LIKELY(i - vs2m >= 0)) {
+                trow = buffer->data + (i - vs2m)*width;
+                for (j = 0; j < width; j++)
+                    drow[j] = drow[j + xres] + (trow[j] - srow[j]);
+            }
+            else {
+                g_warning("Me thinks pure subtraction cannot occur.");
+                for (j = 0; j < width; j++)
+                    drow[j] = drow[j + xres] - srow[j];
+            }
+        }
+        else {
+            if (i - vs2m >= 0) {
+                trow = buffer->data + (i - vs2m)*width;
+                for (j = 0; j < width; j++)
+                    drow[j] = drow[j + xres] + trow[j];
+            }
+            else {
+                for (j = 0; j < width; j++)
+                    drow[j] = drow[j + xres];
+            }
+        }
+    }
+
+    gwy_data_field_invalidate(result);
+    gwy_data_field_invalidate(buffer);
+    g_object_unref(buffer);
+
+    if (!average)
+        return;
+
+    /* Divide sums by the numbers of pixels that entered them */
+    for (i = 0; i < height; i++) {
+        gint iw;
+
+        if (i <= vs2m)
+            iw = vs2p + 1 + i;
+        else if (i >= height-1 - vs2p)
+            iw = vs2m + height - i;
+        else
+            iw = vsize;
+        iw = MIN(iw, height);
+
+        for (j = 0; j < width; j++) {
+            gint jw;
+
+            if (j <= hs2m)
+                jw = hs2p + 1 + j;
+            else if (j >= width-1 - hs2p)
+                jw = hs2m + width - j;
+            else
+                jw = hsize;
+            jw = MIN(jw, width);
+
+            result->data[(i + row)*xres + j + col] /= iw*jw;
+        }
+    }
+}
 
 /**
  * gwy_data_field_area_convolve:
@@ -458,6 +677,8 @@ gwy_data_field_convolve(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with mean filter of size @size.
+ *
+ * This method is a simple gwy_data_field_area_gather() wrapper.
  **/
 void
 gwy_data_field_area_filter_mean(GwyDataField *data_field,
@@ -465,54 +686,18 @@ gwy_data_field_area_filter_mean(GwyDataField *data_field,
                                 gint col, gint row,
                                 gint width, gint height)
 {
-    gint rowstride;
-    gint i, j, k;
-    gint from, to;
-    gdouble *buffer, *data, *p;
-    gdouble s;
-
-    gwy_debug("");
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(size > 0);
-    g_return_if_fail(col >= 0 && row >= 0
-                     && width > 0 && height > 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
-
-    buffer = g_new(gdouble, width*height);
-    rowstride = data_field->xres;
-    data = data_field->data + rowstride*row + col;
-
-    /* vertical pass */
-    for (j = 0; j < width; j++) {
-        for (i = 0; i < height; i++) {
-            s = 0.0;
-            p = data + j;
-            from = MAX(0, i - (size-1)/2);
-            to = MIN(height-1, i + size/2);
-            for (k = from; k <= to; k++)
-                s += p[k*rowstride];
-            buffer[i*width + j] = s/(to - from + 1);
-        }
-    }
-
-    /* horizontal pass */
-    for (i = 0; i < height; i++) {
-        for (j = 0; j < width; j++) {
-            s = 0.0;
-            p = buffer + i*width;
-            from = MAX(0, j - (size-1)/2);
-            to = MIN(width-1, j + size/2);
-            for (k = from; k <= to; k++)
-                s += p[k];
-            data[i*rowstride + j] = s/(to - from + 1);
-        }
-    }
-
-    g_free(buffer);
-    gwy_data_field_invalidate(data_field);
+    gwy_data_field_area_gather(data_field, data_field, NULL,
+                               size, size, TRUE,
+                               col, row, width, height);
 }
 
+/**
+ * gwy_data_field_filter_mean:
+ * @data_field: A data field to apply mean filter to.
+ * @size: Averaged area size.
+ *
+ * Filters a data field with mean filter of size @size.
+ **/
 void
 gwy_data_field_filter_mean(GwyDataField *data_field,
                            gint size)
