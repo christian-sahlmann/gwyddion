@@ -726,13 +726,11 @@ gwy_data_field_area_filter_rms(GwyDataField *data_field,
                                gint col, gint row,
                                gint width, gint height)
 {
-    gint rowstride;
-    gint i, j, k;
-    gint from, to;
-    gdouble *buffer, *data, *p;
-    gdouble s, s2;
+    GwyDataField *avg2, *buffer;
+    gint i, j;
+    const gdouble *arow;
+    gdouble *drow;
 
-    gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(size > 0);
     g_return_if_fail(col >= 0 && row >= 0
@@ -745,44 +743,29 @@ gwy_data_field_area_filter_rms(GwyDataField *data_field,
         return;
     }
 
-    buffer = g_new(gdouble, 2*width*height);
-    rowstride = data_field->xres;
-    data = data_field->data + rowstride*row + col;
+    avg2 = gwy_data_field_area_extract(data_field, col, row, width, height);
+    for (i = 0; i < width*height; i++)
+        avg2->data[i] *= avg2->data[i];
 
-    /* vertical pass */
-    for (j = 0; j < width; j++) {
-        for (i = 0; i < height; i++) {
-            s = s2 = 0.0;
-            p = data + j;
-            from = MAX(0, i - (size-1)/2);
-            to = MIN(height-1, i + size/2);
-            for (k = from; k <= to; k++) {
-                s += p[k*rowstride];
-                s2 += p[k*rowstride]*p[k*rowstride];
-            }
-            buffer[i*width + j] = s/(to - from + 1);
-            buffer[i*width + j + width*height] = s2/(to - from + 1);
-        }
-    }
+    buffer = gwy_data_field_new_alike(avg2, FALSE);
+    gwy_data_field_area_gather(avg2, avg2, buffer,
+                               size, size, TRUE,
+                               0, 0, width, height);
+    gwy_data_field_area_gather(data_field, data_field, buffer,
+                               size, size, TRUE,
+                               col, row, width, height);
+    g_object_unref(buffer);
 
-    /* horizontal pass */
     for (i = 0; i < height; i++) {
+        arow = avg2->data + i*width;
+        drow = data_field->data + (i + row)*data_field->xres + col;
         for (j = 0; j < width; j++) {
-            s = s2 = 0.0;
-            p = buffer + i*width;
-            from = MAX(0, j - (size-1)/2);
-            to = MIN(width-1, j + size/2);
-            for (k = from; k <= to; k++) {
-                s += p[k];
-                s2 += p[width*height + k];
-            }
-            s /= to - from + 1;
-            s2 /= to - from + 1;
-            data[i*rowstride + j] = sqrt(s2 - s*s);
+            drow[j] = arow[j] - drow[j]*drow[j];
+            drow[j] = sqrt(MAX(drow[j], 0.0));
         }
     }
+    g_object_unref(avg2);
 
-    g_free(buffer);
     gwy_data_field_invalidate(data_field);
 }
 
