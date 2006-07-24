@@ -177,6 +177,12 @@ const GwyEnum* gwy_interpolation_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_windowing_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_correlation_type_get_enum(void) G_GNUC_CONST;
 
+/* Well, this is not exactly an enum... */
+typedef struct {
+    guint state;
+    gdouble fraction;
+} GwyComputationState;
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_ENUMS_H__ */
