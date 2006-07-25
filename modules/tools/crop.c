@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -424,8 +424,8 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
             gwy_data_field_data_changed(plain_tool->data_field);
         }
 
-        g_snprintf(key, sizeof(key), "/%d/select", plain_tool->id);
-        gwy_container_remove_by_prefix(container, key);
+        /* XXX: This is not undoable */
+        gwy_app_data_clear_selections(container, plain_tool->id);
     }
 }
 

@@ -83,6 +83,8 @@ void   gwy_app_data_browser_get_current     (GwyAppWhat what,
                                              ...);
 gint*  gwy_app_data_browser_get_data_ids    (GwyContainer *data);
 gint*  gwy_app_data_browser_get_graph_ids   (GwyContainer *data);
+void   gwy_app_data_clear_selections        (GwyContainer *data,
+                                             gint id);
 void   gwy_app_data_browser_foreach         (GwyAppDataForeachFunc function,
                                              gpointer user_data);
 void   gwy_app_copy_data_items              (GwyContainer *source,

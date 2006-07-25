@@ -2765,6 +2765,54 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
     return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS);
 }
 
+static void
+gwy_app_data_selection_gather(G_GNUC_UNUSED gpointer key,
+                              gpointer value,
+                              gpointer user_data)
+{
+    GObject *selection;
+    GSList **l = (GSList**)user_data;
+
+    if (!G_VALUE_HOLDS_OBJECT(value))
+        return;
+
+    selection = g_value_get_object(value);
+    if (GWY_IS_SELECTION(selection)) {
+        g_object_ref(selection);
+        *l = g_slist_prepend(*l, selection);
+    }
+}
+
+/**
+ * gwy_app_data_clear_selections:
+ * @data: A data container.
+ * @id: Data channel id.
+ *
+ * Clears all selections associated with a data channel.
+ *
+ * This is the preferred selection handling after changes in data geometry
+ * as they have generally unpredictable effects on selections.  Selection
+ * should not be removed because this is likely to make the current tool stop
+ * working.
+ **/
+void
+gwy_app_data_clear_selections(GwyContainer *data,
+                              gint id)
+{
+    gchar buf[28];
+    GSList *list = NULL, *l;
+
+    g_snprintf(buf, sizeof(buf), "/%d/select", id);
+    /* Afraid of chain reactions when selections are changed inside
+     * gwy_container_foreach(), gather them first, then clear */
+    gwy_container_foreach(data, buf, &gwy_app_data_selection_gather, &list);
+    for (l = list; l; l = g_slist_next(l)) {
+        gwy_selection_clear(GWY_SELECTION(l->data));
+        gwy_object_unref(l->data);
+    }
+    g_slist_free(list);
+}
+
 /**
  * gwy_app_data_browser_foreach:
  * @function: Function to run on each data container.

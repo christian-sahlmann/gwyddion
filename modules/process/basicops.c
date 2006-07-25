@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -208,7 +208,6 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[3], *newfield;
     GQuark quarks[3];
-    gchar *prefix;
     gint i, id;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
@@ -230,10 +229,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
             g_object_unref(newfield);
         }
     }
-
-    prefix = g_strdup_printf("/%d/select", id);
-    gwy_container_remove_by_prefix(data, prefix);
-    g_free(prefix);
+    gwy_app_data_clear_selections(data, id);
 }
 
 static void
@@ -241,7 +237,6 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[3], *newfield;
     GQuark quarks[3];
-    gchar *prefix;
     gint i, id;
 
     g_return_if_fail(run & BASICOPS_RUN_MODES);
@@ -263,10 +258,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
             g_object_unref(newfield);
         }
     }
-
-    prefix = g_strdup_printf("/%d/select", id);
-    gwy_container_remove_by_prefix(data, prefix);
-    g_free(prefix);
+    gwy_app_data_clear_selections(data, id);
 }
 
 static void
