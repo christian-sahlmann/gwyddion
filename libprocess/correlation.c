@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
+#include <libprocess/filters.h>
 #include <libprocess/correlation.h>
 
 /* Correlation iterator */
@@ -32,7 +33,8 @@ typedef struct {
     GwyDataField *data_field;
     GwyDataField *kernel_field;
     GwyDataField *score;
-    gdouble *avg_rms;
+    GwyDataField *avg;
+    GwyDataField *rms;
     gdouble kavg;
     gdouble krms;
     gint i;
@@ -145,79 +147,37 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
     return score;
 }
 
-/**
- * calculate_normalization:
- * @data_field: A data field.
- * @kernel_width: Width of kernel field.
- * @kernel_height: Heigh of kernel field.
- *
- * Precalculate data field area normalizations.
- *
- * The returned array has dimensions
- * (width - kernel_width + 1)x(height - kernel_height + 1)
- * and it is stored by rows as
- * avg, rms, avg, rms, ...
- *
- * Returns: A newly allocated array.
- **/
-static gdouble*
-calculate_normalization(GwyDataField *data_field,
-                        gint kernel_width, gint kernel_height)
+/* Note: rms and avg must be identical and contain a copy of the original data
+ * field */
+static void
+calculate_normalization(GwyDataField *avg,
+                        GwyDataField *rms,
+                        gint kernel_width,
+                        gint kernel_height)
 {
-    gdouble *sum_sum2, *avg_rms, *row;
-    const gdouble *drow;
-    gint i, j, w, h, p;
+    GwyDataField *buffer;
+    gint xres, yres, i;
 
-    w = data_field->xres - kernel_width + 1;
-    h = data_field->yres - kernel_height + 1;
-    g_return_val_if_fail(w > 0 && h > 0, NULL);
+    g_return_if_fail(rms->xres == avg->xres && rms->yres == avg->yres);
+    xres = avg->xres;
+    yres = avg->yres;
 
-    /* Row-wise averages */
-    sum_sum2 = g_new(gdouble, 2*w*data_field->yres);
-    for (i = 0; i < data_field->yres; i++) {
-        row = sum_sum2 + 2*i*w;
-        drow = data_field->data + i*data_field->xres;
-        row[0] = row[1] = 0.0;
-        for (j = 0; j < kernel_width; j++) {
-            row[0] += drow[j];
-            row[1] += drow[j]*drow[j];
-        }
-        for (j = kernel_width; j < data_field->xres; j++) {
-            p = j - kernel_width;
-            row[2*(p + 1) + 0] = row[2*p + 0] + drow[j] - drow[p];
-            row[2*(p + 1) + 1] = row[2*p + 1] + (drow[j]*drow[j]
-                                                 - drow[p]*drow[p]);
-        }
+    for (i = 0; i < xres*yres; i++)
+        rms->data[i] *= rms->data[i];
+
+    buffer = gwy_data_field_new_alike(avg, FALSE);
+    gwy_data_field_area_gather(rms, rms, buffer,
+                               kernel_width, kernel_height, TRUE,
+                               0, 0, xres, yres);
+    gwy_data_field_area_gather(avg, avg, buffer,
+                               kernel_width, kernel_height, TRUE,
+                               0, 0, xres, yres);
+    g_object_unref(buffer);
+
+    for (i = 0; i < xres*yres; i++) {
+        rms->data[i] -= avg->data[i]*avg->data[i];
+        rms->data[i] = sqrt(MAX(rms->data[i], 0.0));
     }
-
-    /* Column-wise averages */
-    avg_rms = g_new(gdouble, 2*w*h);
-    row = avg_rms;
-    for (j = 0; j < 2*w; j++)
-        row[j] = 0.0;
-    for (i = 0; i < kernel_height; i++) {
-        drow = sum_sum2 + 2*i*w;
-        for (j = 0; j < 2*w; j++)
-            row[j] += drow[j];
-    }
-    for (i = kernel_height; i < data_field->yres; i++) {
-        p = i - kernel_height;
-        row = avg_rms + 2*p*w;
-        drow = sum_sum2 + 2*p*w;
-        for (j = 0; j < 2*w; j++)
-            row[2*w + j] = row[j] + drow[2*w*kernel_height + j] - drow[j];
-    }
-
-    g_free(sum_sum2);
-
-    for (i = 0; i < w*h; i++) {
-        avg_rms[2*i] /= kernel_width*kernel_height;
-        avg_rms[2*i + 1] = (avg_rms[2*i + 1]/kernel_width/kernel_height
-                            - avg_rms[2*i]*avg_rms[2*i]);
-        avg_rms[2*i + 1] = sqrt(MAX(avg_rms[2*i + 1], 0.0));
-    }
-
-    return avg_rms;
 }
 
 /**
@@ -344,31 +304,35 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
         }
 
         {
-            gdouble *avg_rms;
+            GwyDataField *avg, *rms;
             gdouble s, davg, drms, kavg, krms;
-            gint w, h, p;
+            gint xoff, yoff;
 
+            /* The number of pixels the correlation kernel extends to the
+             * negative direction */
+            xoff = (kxres - 1)/2;
+            yoff = (kyres - 1)/2;
             kavg = gwy_data_field_get_avg(kernel_field);
             krms = gwy_data_field_get_rms(kernel_field);
-            avg_rms = calculate_normalization(data_field, kxres, kyres);
-            w = xres - kxres + 1;
-            h = yres - kyres + 1;
-            for (i = kyres/2; i < yres - (kyres - kyres/2); i++) {
-                for (j = kxres/2; j < xres - (kxres - kxres/2); j++) {
-                    p = (i - kyres/2)*w + (j - kxres/2);
-                    davg = avg_rms[2*p + 0];
-                    drms = avg_rms[2*p + 1];
+            avg = gwy_data_field_duplicate(data_field);
+            rms = gwy_data_field_duplicate(data_field);
+            calculate_normalization(avg, rms, kxres, kyres);
+            for (i = yoff; i + kyres - yoff <= yres; i++) {
+                for (j = xoff; j + kxres - xoff <= xres; j++) {
+                    davg = avg->data[i*xres + j];
+                    drms = rms->data[i*xres + j];
                     s = gwy_data_field_get_raw_correlation_score(data_field,
                                                                  kernel_field,
-                                                                 j - kxres/2,
-                                                                 i - kyres/2,
+                                                                 j - xoff,
+                                                                 i - yoff,
                                                                  0, 0,
                                                                  kxres, kyres,
                                                                  davg, kavg);
                     score->data[i*xres + j] = s/(drms*krms);
                 }
             }
-            g_free(avg_rms);
+            g_object_unref(avg);
+            g_object_unref(rms);
         }
         break;
 
@@ -485,49 +449,49 @@ void
 gwy_data_field_correlate_iteration(GwyComputationState *cstate)
 {
     GwyCorrelationState *state = (GwyCorrelationState*)cstate;
-    gint xres, yres, kxres, kyres, w, h, p;
+    gint xres, yres, kxres, kyres, k, xoff, yoff;
     gdouble s, davg, drms;
 
     xres = state->data_field->xres;
     yres = state->data_field->yres;
     kxres = state->kernel_field->xres;
     kyres = state->kernel_field->yres;
+    xoff = (kxres - 1)/2;
+    yoff = (kyres - 1)/2;
 
     if (state->cs.state == GWY_COMPUTATION_STATE_INIT) {
         gwy_data_field_fill(state->score, -1);
         state->kavg = gwy_data_field_get_avg(state->kernel_field);
         state->krms = gwy_data_field_get_rms(state->kernel_field);
-        state->avg_rms = calculate_normalization(state->data_field,
-                                                 kxres, kyres);
+        state->avg = gwy_data_field_duplicate(state->data_field);
+        state->rms = gwy_data_field_duplicate(state->data_field);
+        calculate_normalization(state->avg, state->rms, kxres, kyres);
         state->cs.state = GWY_COMPUTATION_STATE_ITERATE;
         state->cs.fraction = 0.0;
-        state->i = kyres/2;
-        state->j = kxres/2;
+        state->i = yoff;
+        state->j = xoff;
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_ITERATE) {
-        w = xres - kxres + 1;
-        h = yres - kyres + 1;
-        p = (state->i - kyres/2)*w + (state->j - kxres/2);
-
-        davg = state->avg_rms[2*p + 0];
-        drms = state->avg_rms[2*p + 1];
+        k = state->i*xres + state->j;
+        davg = state->avg->data[k];
+        drms = state->rms->data[k];
         s = gwy_data_field_get_raw_correlation_score(state->data_field,
                                                      state->kernel_field,
-                                                     state->j - kxres/2,
-                                                     state->i - kyres/2,
+                                                     state->j - xoff,
+                                                     state->i - yoff,
                                                      0, 0,
                                                      kxres, kyres,
                                                      davg, state->kavg);
-        state->score->data[state->i*xres + state->j] = s/(drms*state->krms);
+        state->score->data[k] = s/(drms*state->krms);
 
         state->j++;
-        if (state->j == xres - (kxres - kxres/2)) {
-            state->j = kxres/2;
+        if (state->j + kxres - xoff > xres) {
+            state->j = xoff;
             state->i++;
-            if (state->i == yres - (kyres - kyres/2))
+            if (state->i + kyres - yoff > yres)
                 state->cs.state = GWY_COMPUTATION_STATE_FINISHED;
         }
-        state->cs.fraction += 1.0/(w*h);
+        state->cs.fraction += 1.0/((xres - kxres + 1)*(yres - kyres + 1));
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_FINISHED)
         return;
@@ -549,7 +513,8 @@ gwy_data_field_correlate_finalize(GwyComputationState *cstate)
     gwy_object_unref(state->data_field);
     gwy_object_unref(state->kernel_field);
     gwy_object_unref(state->score);
-    g_free(state->avg_rms);
+    gwy_object_unref(state->avg);
+    gwy_object_unref(state->rms);
     g_free(state);
 }
 
