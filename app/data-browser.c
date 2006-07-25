@@ -1078,7 +1078,9 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     GwyPixmapLayer *layer;
     GwyLayerBasic *layer_basic;
     GwyAppKeyType type;
-    const gchar *strkey;
+    const gchar *strkey, *ctitle;
+    const guchar *filename;
+    gchar *title;
     GQuark quark;
     gchar key[40];
     guint len;
@@ -1111,6 +1113,18 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
+    ctitle = gwy_app_data_browser_figure_out_channel_title(data, i);
+    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+        gchar *bname;
+
+        bname = g_path_get_basename(filename);
+        title = g_strdup_printf("%s [%s]", bname, ctitle);
+        g_free(bname);
+    }
+    else
+        title = g_strdup_printf("%s [%s]", _("Untitled"), ctitle);
+    gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
+    g_free(title);
 
     gwy_app_data_proxy_update_visibility(G_OBJECT(dfield), TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
@@ -1123,6 +1137,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     gtk_widget_show_all(data_window);
     /* This primarily adds the window to the list of visible windows */
     gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
+
 
     g_snprintf(key, sizeof(key), "/%d/mask", i);
     quark = g_quark_from_string(key);
@@ -2448,7 +2463,7 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel)
 {
     const guchar *title = NULL;
-    static gchar buf[80];
+    static gchar buf[128];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(channel >= 0, NULL);

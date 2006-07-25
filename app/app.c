@@ -208,11 +208,10 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
     text = NULL;
     while (unsaved) {
         GwyDataWindow *data_window = GWY_DATA_WINDOW(unsaved->data);
-        gchar *filename = gwy_data_window_get_base_name(data_window);
+        const gchar *filename = gwy_data_window_get_data_name(data_window);
 
         text = g_strconcat(filename, "\n", text, NULL);
         unsaved = g_slist_next(unsaved);
-        g_free(filename);
     }
     dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window_get()),
                                     GTK_DIALOG_MODAL,

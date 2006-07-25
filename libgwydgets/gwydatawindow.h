@@ -56,32 +56,35 @@ struct _GwyDataWindow {
     GwySIValueFormat *value_format;
 
     GtkWidget *ul_corner;
+    GString *data_name;
 
     gulong id1;
     gulong id2;
-    gulong id3;
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 struct _GwyDataWindowClass {
     GtkWindowClass parent_class;
 
-    void (*title_changed)(GwyDataWindow *data_window);
-
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
 };
 
-GtkWidget*    gwy_data_window_new                  (GwyDataView *data_view);
 GType         gwy_data_window_get_type             (void) G_GNUC_CONST;
+GtkWidget*    gwy_data_window_new                  (GwyDataView *data_view);
 GwyDataView*  gwy_data_window_get_data_view        (GwyDataWindow *data_window);
 GtkWidget*    gwy_data_window_get_color_axis       (GwyDataWindow *data_window);
 GwyContainer* gwy_data_window_get_data             (GwyDataWindow *data_window);
 void          gwy_data_window_set_zoom             (GwyDataWindow *data_window,
                                                     gint izoom);
-gchar*        gwy_data_window_get_base_name        (GwyDataWindow *data_window);
+const gchar*  gwy_data_window_get_data_name        (GwyDataWindow *data_window);
+void          gwy_data_window_set_data_name        (GwyDataWindow *data_window,
+                                                    const gchar *data_name);
 GtkWidget*    gwy_data_window_get_ul_corner_widget (GwyDataWindow *data_window);
 void          gwy_data_window_set_ul_corner_widget (GwyDataWindow *data_window,
                                                     GtkWidget *corner);

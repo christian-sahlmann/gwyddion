@@ -37,11 +37,24 @@
 #include <libgwydgets/gwyinventorystore.h>
 
 enum {
-    TITLE_CHANGED,
-    LAST_SIGNAL
+    PROP_0,
+    PROP_DATA_NAME,
+    PROP_UL_CORNER,
+    PROP_DATA_VIEW,
+    PROP_COLOR_AXIS,
+    PROP_LAST
 };
 
+
 static void     gwy_data_window_finalize          (GObject *object);
+static void     gwy_data_window_set_property      (GObject *object,
+                                                   guint prop_id,
+                                                   const GValue *value,
+                                                   GParamSpec *pspec);
+static void     gwy_data_window_get_property      (GObject*object,
+                                                   guint prop_id,
+                                                   GValue *value,
+                                                   GParamSpec *pspec);
 static void     gwy_data_window_destroy           (GtkObject *object);
 static void     gwy_data_window_size_allocate     (GtkWidget *widget,
                                                    GtkAllocation *alc);
@@ -74,8 +87,6 @@ static void     gwy_data_window_set_tooltip       (GtkWidget *widget,
 static GtkTooltips *tooltips = NULL;
 static gboolean tooltips_set = FALSE;
 
-static guint data_window_signals[LAST_SIGNAL] = { 0 };
-
 G_DEFINE_TYPE(GwyDataWindow, gwy_data_window, GTK_TYPE_WINDOW)
 
 static void
@@ -86,39 +97,57 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     gobject_class->finalize = gwy_data_window_finalize;
+    gobject_class->set_property = gwy_data_window_set_property;
+    gobject_class->get_property = gwy_data_window_get_property;
 
     object_class->destroy = gwy_data_window_destroy;
 
     widget_class->size_allocate = gwy_data_window_size_allocate;
     widget_class->key_press_event = gwy_data_window_key_pressed;
 
-    klass->title_changed = NULL;
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DATA_NAME,
+         g_param_spec_string("data-name",
+                             "Data name",
+                             "Data name used in window title",
+                             "", G_PARAM_READWRITE));
 
-    /**
-     * GwyDataWindow::title-changed:
-     * @gwydatawindow: The #GwyDataWindow which received the signal.
-     *
-     * The ::title-changed signal is emitted when the title of #GwyDataWindow
-     * changes.
-     **/
-    data_window_signals[TITLE_CHANGED] =
-        g_signal_new("title-changed",
-                     G_OBJECT_CLASS_TYPE(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(GwyDataWindowClass, title_changed),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE, 0);
+    g_object_class_install_property
+        (gobject_class,
+         PROP_UL_CORNER,
+         g_param_spec_object("ul-corner",
+                             "UL corner",
+                             "The widget in the upper left corner",
+                             GTK_TYPE_WIDGET, G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DATA_VIEW,
+         g_param_spec_object("data-view",
+                             "Data view",
+                             "The data view widget displayed in the window",
+                             GWY_TYPE_DATA_VIEW, G_PARAM_READABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_COLOR_AXIS,
+         g_param_spec_object("color-axis",
+                             "Color axis",
+                             "The color axis widget displayed in the window",
+                             GWY_TYPE_COLOR_AXIS, G_PARAM_READABLE));
 }
 
 static void
-gwy_data_window_init(G_GNUC_UNUSED GwyDataWindow *data_window)
+gwy_data_window_init(GwyDataWindow *data_window)
 {
     if (!tooltips_set && !tooltips) {
         tooltips = gtk_tooltips_new();
         g_object_ref(tooltips);
         gtk_object_sink(GTK_OBJECT(tooltips));
     }
+
+    data_window->data_name = g_string_new("");
 }
 
 static void
@@ -127,12 +156,68 @@ gwy_data_window_finalize(GObject *object)
     GwyDataWindow *data_window;
 
     data_window = GWY_DATA_WINDOW(object);
+    g_string_free(data_window->data_name, TRUE);
     if (data_window->coord_format)
         gwy_si_unit_value_format_free(data_window->coord_format);
     if (data_window->value_format)
         gwy_si_unit_value_format_free(data_window->value_format);
 
     G_OBJECT_CLASS(gwy_data_window_parent_class)->finalize(object);
+}
+
+static void
+gwy_data_window_set_property(GObject *object,
+                             guint prop_id,
+                             const GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyDataWindow *window = GWY_DATA_WINDOW(object);
+
+    switch (prop_id) {
+        case PROP_DATA_NAME:
+        gwy_data_window_set_data_name(window, g_value_get_string(value));
+        break;
+
+        case PROP_UL_CORNER:
+        gwy_data_window_set_ul_corner_widget
+                               (window, GTK_WIDGET(g_value_get_object(value)));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_data_window_get_property(GObject*object,
+                             guint prop_id,
+                             GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyDataWindow *window = GWY_DATA_WINDOW(object);
+
+    switch (prop_id) {
+        case PROP_DATA_NAME:
+        g_value_set_string(value, window->data_name->str);
+        break;
+
+        case PROP_UL_CORNER:
+        g_value_set_object(value, window->ul_corner);
+        break;
+
+        case PROP_DATA_VIEW:
+        g_value_set_object(value, window->data_view);
+        break;
+
+        case PROP_COLOR_AXIS:
+        g_value_set_object(value, window->coloraxis);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 static void
@@ -576,7 +661,7 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
 static void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
-    gchar *window_title, *filename;
+    gchar *window_title;
     gchar zoomstr[8];
     GwyDataView *data_view;
     GwyContainer *data;
@@ -588,8 +673,6 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     data = gwy_data_view_get_data(data_view);
 
-    filename = gwy_data_window_get_base_name(data_window);
-
     zoom = gwy_data_view_get_real_zoom(data_view);
     gwy_debug("%g", zoom);
     prec = (zoom == floor(zoom)) ? 0 : 1;
@@ -597,71 +680,42 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
                prec, zoom > 1.0 ? zoom : 1.0/zoom);
 
     window_title = g_strdup_printf("%s %s:%s (%s)",
-                                   filename,
+                                   data_window->data_name->str,
                                    zoom > 1.0 ? zoomstr : "1",
                                    zoom > 1.0 ? "1" : zoomstr,
                                    g_get_application_name());
     gtk_window_set_title(GTK_WINDOW(data_window), window_title);
     g_free(window_title);
-    g_free(filename);
-
-    g_signal_emit(data_window, data_window_signals[TITLE_CHANGED], 0);
 }
 
 /**
- * gwy_data_window_get_base_name:
+ * gwy_data_window_get_data_name:
  * @data_window: A data window.
  *
- * Creates a string usable as a @data_window window name/title.
+ * Gets the data name part of a data window's title.
  *
- * This is the prefered data window representation in option menus,
- * infoboxes, etc.
- *
- * Returns: The window name as a newly allocated string.  It should be
- *          freed when no longer needed.
+ * Returns: The data name as a string owned by the window.
  **/
-gchar*
-gwy_data_window_get_base_name(GwyDataWindow *data_window)
+const gchar*
+gwy_data_window_get_data_name(GwyDataWindow *data_window)
 {
-    GwyContainer *data;
-    GwyDataView *view;
-    const guchar *data_title = NULL;
-    const guchar *fnm = "Untitled";
-    const guchar *channel_key = NULL;
-    gchar *title_key = NULL;
-    gchar *s1, *s2;
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+    return data_window->data_name->str;
+}
 
-    data = gwy_data_window_get_data(data_window);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+void
+gwy_data_window_set_data_name(GwyDataWindow *data_window,
+                              const gchar *data_name)
+{
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
 
-    view = gwy_data_window_get_data_view(data_window);
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(view), NULL);
+    if (!data_name)
+        data_name = "";
 
-    /* Get the channel title */
-    channel_key = gwy_data_view_get_data_prefix(view);
-    title_key = g_strdup_printf("%s/title", channel_key);
-    gwy_container_gis_string_by_name(data, title_key, &data_title);
-    g_free(title_key);
-    /* If no title is found, this might be a gwyddion 1.x file, so look for a
-       title in under the "old" title key */
-    if (data_title == NULL)
-        gwy_container_gis_string_by_name(data, "/filename/title", &data_title);
-
-    /* Get the filename and concatenate channel title */
-    if (gwy_container_gis_string_by_name(data, "/filename", &fnm)) {
-        if (!data_title)
-            return g_path_get_basename(fnm);
-        s1 = g_path_get_basename(fnm);
-        s2 = g_strconcat(s1, " [", data_title, "]", NULL);
-        g_free(s1);
-        return s2;
-    }
-    else {
-        gwy_container_gis_string_by_name(data, "/filename/untitled", &fnm);
-        if (!data_title)
-            return g_strdup(fnm);
-        else
-            return g_strconcat(fnm, " [", data_title, "]", NULL);
+    if (!gwy_strequal(data_name, data_window->data_name->str)) {
+        g_string_assign(data_window->data_name, data_name);
+        gwy_data_window_update_title(data_window);
+        g_object_notify(G_OBJECT(data_window), "data-name");
     }
 }
 
@@ -696,6 +750,9 @@ gwy_data_window_set_ul_corner_widget(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     g_return_if_fail(!corner || GTK_IS_WIDGET(corner));
 
+    if (corner == data_window->ul_corner)
+        return;
+
     if (data_window->ul_corner)
         gtk_widget_unparent(data_window->ul_corner);
 
@@ -703,6 +760,7 @@ gwy_data_window_set_ul_corner_widget(GwyDataWindow *data_window,
         gtk_table_attach(GTK_TABLE(data_window->table), corner,
                          0, 1, 0, 1,
                          GTK_FILL, GTK_FILL, 0, 0);
+    g_object_notify(G_OBJECT(data_window), "ul-corner");
 }
 
 /**

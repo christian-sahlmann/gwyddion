@@ -89,7 +89,8 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     GtkWidget *scroll, *vbox, *hbox;
     GtkRequisition request;
     GwyContainer *data;
-    gchar *filename, *title;
+    const gchar *dataname;
+    gchar *title;
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -97,17 +98,16 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
         gtk_window_present(GTK_WINDOW(browser->window));
         return;
     }
-    filename = gwy_data_window_get_base_name(data_window);
+    dataname = gwy_data_window_get_data_name(data_window);
 
     browser = g_new0(MetadataBrowser, 1);
     browser->container = data;
     browser->treeview = gwy_meta_browser_construct(browser);
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     title = g_strdup_printf(_("Metadata of %s (%s)"),
-                            filename, g_get_application_name());
+                            dataname, g_get_application_name());
     gtk_window_set_title(GTK_WINDOW(browser->window), title);
     g_free(title);
-    g_free(filename);
 
     gtk_widget_size_request(browser->treeview, &request);
     request.width = MAX(request.width, 120);
