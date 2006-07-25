@@ -173,6 +173,8 @@ gwy_3d_window_finalize(GObject *object)
 
     gwy3dwindow = GWY_3D_WINDOW(object);
 
+    g_free(gwy3dwindow->buttons);
+
     G_OBJECT_CLASS(gwy_3d_window_parent_class)->finalize(object);
 }
 
@@ -180,10 +182,18 @@ static void
 gwy_3d_window_destroy(GtkObject *object)
 {
     Gwy3DWindow *gwy3dwindow;
+    Gwy3DSetup *setup;
 
     gwy3dwindow = GWY_3D_WINDOW(object);
-    g_free(gwy3dwindow->buttons);
-    gwy3dwindow->buttons = NULL;
+
+    if (gwy3dwindow->gwy3dview) {
+        setup = gwy_3d_view_get_setup(GWY_3D_VIEW(gwy3dwindow->gwy3dview));
+        g_signal_handlers_disconnect_matched(setup, G_SIGNAL_MATCH_FUNC,
+                                             0, 0, NULL,
+                                             gwy_3d_window_adj_setup_changed,
+                                             NULL);
+        gwy3dwindow->gwy3dview = NULL;
+    }
 
     GTK_OBJECT_CLASS(gwy_3d_window_parent_class)->destroy(object);
 }
