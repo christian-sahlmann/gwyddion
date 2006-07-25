@@ -270,7 +270,6 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
  * gwy_data_field_grains_watershed_init:
  * @data_field: Data to be used for marking.
  * @grain_field: Result of marking (mask).
- * @status : current status of the algorithm.
  * @locate_steps: Locating algorithm steps.
  * @locate_thresh: Locating algorithm threshold.
  * @locate_dropsize: Locating drop size.
