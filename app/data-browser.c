@@ -40,13 +40,17 @@
  * not worth to break file compatibility with 1.x. */
 #define GRAPH_PREFIX "/0/graph/graph"
 
-/* Data type keys interesting can correspond to */
+/* Data types interesting keys can correspond to */
 typedef enum {
     KEY_IS_NONE = 0,
     KEY_IS_DATA,
     KEY_IS_MASK,
     KEY_IS_SHOW,
-    KEY_IS_GRAPH
+    KEY_IS_GRAPH,
+    KEY_IS_META,
+    KEY_IS_TITLE,
+    KEY_IS_SELECT,
+    KEY_IS_FILENAME
 } GwyAppKeyType;
 
 /* Notebook pages */
@@ -119,6 +123,10 @@ static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
 static void gwy_app_data_browser_sync_show  (GwyContainer *data,
                                              GQuark quark,
                                              GwyDataView *data_view);
+static void gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy);
+static void gwy_app_update_data_window_title(GwyDataWindow *data_window,
+                                             GwyContainer *data,
+                                             gint id);
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
@@ -178,16 +186,18 @@ emit_row_changed(GtkListStore *store,
  * gwy_app_data_proxy_analyse_key:
  * @strkey: String container key.
  * @type: Location to store data type to.
- * @len: Location to store the length of prefix up to the last digit of data
- *       number to, or %NULL.
+ * @len: Location to store the length of common prefix or %NULL.
+ *       Usually this is up to the last digit of data number,
+ *       however selections have also "/select" skipped
+ *       and titles have "/data" skipped.
  *
  * Infers expected data type from container key.
  *
- * When key is not recognized, @type is set to KEY_IS_NONE and value of @len
+ * When key is not recognized, @type is set to %KEY_IS_NONE and value of @len
  * is unchanged.
  *
  * Returns: Data number (id), -1 when key does not correspond to any data
- *          object.
+ *          object.  Note -1 is also returned for %KEY_IS_FILENAME type.
  **/
 static gint
 gwy_app_data_proxy_analyse_key(const gchar *strkey,
@@ -201,6 +211,13 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
 
     if (strkey[0] != GWY_CONTAINER_PATHSEP)
         return -1;
+
+    if (gwy_strequal(strkey, "/filename")) {
+        if (len)
+            *len = 0;
+        *type = KEY_IS_FILENAME;
+        return -1;
+    }
 
     /* Graph */
     if (g_str_has_prefix(strkey, GRAPH_PREFIX GWY_CONTAINER_PATHSEP_STR)) {
@@ -225,15 +242,26 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
     if (!i || s[i] != GWY_CONTAINER_PATHSEP)
         return -1;
 
-    n = i + 2;
+    n = i + 1;
     i = atoi(s);
-    s = strkey + n;
+    s = strkey + n + 1;
     if (gwy_strequal(s, "data"))
         *type = KEY_IS_DATA;
     else if (gwy_strequal(s, "mask"))
         *type = KEY_IS_MASK;
     else if (gwy_strequal(s, "show"))
         *type = KEY_IS_SHOW;
+    else if (gwy_strequal(s, "meta"))
+        *type = KEY_IS_META;
+    else if (gwy_strequal(s, "data" GWY_CONTAINER_PATHSEP_STR "title")
+             || gwy_strequal(s, "data" GWY_CONTAINER_PATHSEP_STR "untitled")) {
+        *type = KEY_IS_TITLE;
+        n += strlen(GWY_CONTAINER_PATHSEP_STR "data");
+    }
+    else if (g_str_has_prefix(s, "select" GWY_CONTAINER_PATHSEP_STR)) {
+        *type = KEY_IS_SELECT;
+        n += strlen(GWY_CONTAINER_PATHSEP_STR "select");
+    }
     else
         i = -1;
 
@@ -419,35 +447,49 @@ gwy_app_data_proxy_scan_data(gpointer key,
 
     strkey = g_quark_to_string(quark);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
-    if (i == -1)
+    if (i < 0)
         return;
-
-    g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
-    object = g_value_get_object(gvalue);
 
     switch (type) {
         case KEY_IS_DATA:
         gwy_debug("Found data %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
         gwy_app_data_proxy_connect_channel(proxy, i, object);
         break;
 
         case KEY_IS_GRAPH:
         gwy_debug("Found graph %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_GRAPH_MODEL(object));
         gwy_app_data_proxy_connect_graph(proxy, i, object);
         break;
 
         case KEY_IS_MASK:
         /* FIXME */
         gwy_debug("Found mask %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
         break;
 
         case KEY_IS_SHOW:
         /* FIXME */
         gwy_debug("Found presentation %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
+        break;
+
+        case KEY_IS_SELECT:
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_SELECTION(object));
         break;
 
         default:
-        g_assert_not_reached();
         break;
     }
 }
@@ -557,8 +599,11 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
 
     strkey = g_quark_to_string(quark);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
-    if (i < 0)
+    if (i < 0) {
+        if (type == KEY_IS_FILENAME)
+            gwy_app_data_proxy_update_window_titles(proxy);
         return;
+    }
 
     gwy_container_gis_object(data, quark, &object);
     switch (type) {
@@ -620,8 +665,28 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         break;
 
+        case KEY_IS_TITLE:
+        list = &proxy->lists[PAGE_CHANNELS];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        if (found) {
+            GtkWidget *window, *view;
+
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                               MODEL_WIDGET, &view,
+                               -1);
+            /* XXX: This is not a good place to do that, DataProxy should be
+             * non-GUI */
+            if (view) {
+                if ((window = gtk_widget_get_ancestor(view,
+                                                      GWY_TYPE_DATA_WINDOW)))
+                    gwy_app_update_data_window_title(GWY_DATA_WINDOW(window),
+                                                     data, i);
+                g_object_unref(view);
+            }
+        }
+        break;
+
         default:
-        g_assert_not_reached();
         break;
     }
 }
@@ -1078,9 +1143,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     GwyPixmapLayer *layer;
     GwyLayerBasic *layer_basic;
     GwyAppKeyType type;
-    const gchar *strkey, *ctitle;
-    const guchar *filename;
-    gchar *title;
+    const gchar *strkey;
     GQuark quark;
     gchar key[40];
     guint len;
@@ -1113,18 +1176,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    ctitle = gwy_app_data_browser_figure_out_channel_title(data, i);
-    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
-        gchar *bname;
-
-        bname = g_path_get_basename(filename);
-        title = g_strdup_printf("%s [%s]", bname, ctitle);
-        g_free(bname);
-    }
-    else
-        title = g_strdup_printf("%s [%s]", _("Untitled"), ctitle);
-    gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
-    g_free(title);
+    gwy_app_update_data_window_title(GWY_DATA_WINDOW(data_window), data, i);
 
     gwy_app_data_proxy_update_visibility(G_OBJECT(dfield), TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
@@ -1138,7 +1190,6 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     /* This primarily adds the window to the list of visible windows */
     gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
 
-
     g_snprintf(key, sizeof(key), "/%d/mask", i);
     quark = g_quark_from_string(key);
     gwy_app_data_browser_sync_mask(data, quark, GWY_DATA_VIEW(data_view));
@@ -1149,6 +1200,55 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
                                         SENS_FILE, SENS_FILE);
 
     return data_view;
+}
+
+static void
+gwy_app_update_data_window_title(GwyDataWindow *data_window,
+                                 GwyContainer *data,
+                                 gint id)
+{
+    const gchar *ctitle;
+    const guchar *filename;
+    gchar *title, *bname;
+
+    ctitle = gwy_app_data_browser_figure_out_channel_title(data, id);
+    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+        bname = g_path_get_basename(filename);
+        title = g_strdup_printf("%s [%s]", bname, ctitle);
+        g_free(bname);
+    }
+    else
+        title = g_strdup_printf("%s [%s]", _("Untitled"), ctitle);
+    gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
+    g_free(title);
+}
+
+static void
+gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
+{
+    GtkWidget *window, *view;
+    GwyAppDataList *list;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gint id;
+
+    list = &proxy->lists[PAGE_CHANNELS];
+    model = GTK_TREE_MODEL(list->store);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter,
+                               MODEL_ID, &id,
+                               MODEL_WIDGET, &view,
+                               -1);
+            if (!view)
+                continue;
+
+            if ((window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW)))
+                gwy_app_update_data_window_title(GWY_DATA_WINDOW(window),
+                                                 proxy->container, id);
+            g_object_unref(view);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
 }
 
 static gboolean
