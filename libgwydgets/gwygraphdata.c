@@ -229,7 +229,6 @@ gwy_graph_data_pack_renderer(GwyGraphData *graph_data,
     GtkCellRenderer *renderer;
 
     renderer = gtk_cell_renderer_text_new();
-    gtk_cell_renderer_set_fixed_size(renderer, COL_WIDTH, -1);
     gtk_cell_renderer_text_set_fixed_height_from_font
                                         (GTK_CELL_RENDERER_TEXT(renderer), 1);
     g_object_set(renderer, "xalign", 1.0, NULL);
@@ -239,6 +238,17 @@ gwy_graph_data_pack_renderer(GwyGraphData *graph_data,
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_data, graph_data, NULL);
+}
+
+/* XXX: Enforce Gtk+'s header alignment */
+static void
+fix_xscale(GtkWidget *align)
+{
+    gfloat xscale;
+
+    g_object_get(align, "xscale", &xscale, NULL);
+    if (xscale != 1.0)
+        g_object_set(align, "xscale", 1.0f, NULL);
 }
 
 static void
@@ -291,6 +301,7 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
 
     while (ncolumns < ncurves) {
         GtkRequisition req;
+        GtkWidget *align;
 
         gwy_debug("adding column %d", ncolumns);
         column = gtk_tree_view_column_new();
@@ -319,6 +330,15 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
                      "fixed-width", req.width,
                      NULL);
         gtk_tree_view_append_column(treeview, column);
+
+        align = gtk_widget_get_parent(table);
+        /* XXX: The alignment is Gtk+'s private widget. */
+        if (align && GTK_IS_ALIGNMENT(align)) {
+            g_signal_connect(align, "notify::xscale",
+                             G_CALLBACK(fix_xscale), NULL);
+            fix_xscale(align);
+        }
+
         ncolumns++;
     }
 
