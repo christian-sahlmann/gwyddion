@@ -171,6 +171,16 @@ gwy_graph_curve_type_get_enum(void)
  **/
 
 /**
+ * GwyTicksStyle:
+ * @GWY_TICKS_STYLE_NONE: Ticks are not drawn.
+ * @GWY_TICKS_STYLE_CENTER: One tick is drawn at center.
+ * @GWY_TICKS_STYLE_AUTO: A number of automatically chosen ticks are drawn at
+ *                        `round' values.
+ *
+ * Axis ticks style (used in #GwyColorAxis).
+ **/
+
+/**
  * SECTION:gwydgetenums
  * @title: gwydgetenums
  * @short_description: Common enumerations
