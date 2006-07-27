@@ -57,7 +57,7 @@ static gboolean gwy_color_axis_expose       (GtkWidget *widget,
 static void     gwy_color_axis_adjust       (GwyColorAxis *axis,
                                              gint width,
                                              gint height);
-static void     gwy_color_axis_draw_label   (GtkWidget *widget);
+static void     gwy_color_axis_draw_labels  (GwyColorAxis *axis);
 static void     gwy_color_axis_draw_ticks   (GwyColorAxis *axis);
 static void     gwy_color_axis_update       (GwyColorAxis *axis);
 static void     gwy_color_axis_changed      (GwyColorAxis *axis);
@@ -458,16 +458,16 @@ gwy_color_axis_expose(GtkWidget *widget,
                         gdk_pixbuf_get_height(axis->stripe),
                         GDK_RGB_DITHER_NONE, 0, 0);
 
-    gwy_color_axis_draw_label(widget);
+    gwy_color_axis_draw_labels(axis);
     gwy_color_axis_draw_ticks(axis);
 
     return FALSE;
 }
 
 static void
-gwy_color_axis_draw_label(GtkWidget *widget)
+gwy_color_axis_draw_labels(GwyColorAxis *axis)
 {
-    GwyColorAxis *axis;
+    GtkWidget *widget;
     PangoLayout *layout;
     GwySIValueFormat *format = NULL;
     GString *strmin, *strmax;
@@ -476,7 +476,9 @@ gwy_color_axis_draw_label(GtkWidget *widget)
     gint xthickness, ythickness, width, height, swidth, off;
     gdouble max;
 
-    axis = GWY_COLOR_AXIS(widget);
+    gwy_debug("labels_visible: %d", axis->labels_visible);
+    widget = GTK_WIDGET(axis);
+
     if (!axis->labels_visible) {
         axis->labelb_size = 1;
         axis->labele_size = 1;
@@ -555,6 +557,7 @@ gwy_color_axis_draw_ticks(GwyColorAxis *axis)
     gdouble scale, x, m, tickdist, max;
     GdkGC *gc;
 
+    gwy_debug("ticks_style: %d", axis->ticks_style);
     widget = GTK_WIDGET(axis);
 
     tlength = axis->tick_length;
