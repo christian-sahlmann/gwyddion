@@ -29,6 +29,7 @@
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwycoloraxis.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwygraphwindow.h>
@@ -50,6 +51,7 @@ typedef enum {
     KEY_IS_META,
     KEY_IS_TITLE,
     KEY_IS_SELECT,
+    KEY_IS_RANGE_TYPE,
     KEY_IS_FILENAME
 } GwyAppKeyType;
 
@@ -124,9 +126,10 @@ static void gwy_app_data_browser_sync_show  (GwyContainer *data,
                                              GQuark quark,
                                              GwyDataView *data_view);
 static void gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy);
-static void gwy_app_update_data_window_title(GwyDataWindow *data_window,
-                                             GwyContainer *data,
+static void gwy_app_update_data_window_title(GwyDataView *data_view,
                                              gint id);
+static void gwy_app_update_data_range_type(GwyDataView *data_view,
+                                           gint id);
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
@@ -188,8 +191,8 @@ emit_row_changed(GtkListStore *store,
  * @type: Location to store data type to.
  * @len: Location to store the length of common prefix or %NULL.
  *       Usually this is up to the last digit of data number,
- *       however selections have also "/select" skipped
- *       and titles have "/data" skipped.
+ *       however selections have also "/select" skipped,
+ *       titles have "/data" skipped.
  *
  * Infers expected data type from container key.
  *
@@ -253,14 +256,16 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
         *type = KEY_IS_SHOW;
     else if (gwy_strequal(s, "meta"))
         *type = KEY_IS_META;
-    else if (gwy_strequal(s, "data" GWY_CONTAINER_PATHSEP_STR "title")
-             || gwy_strequal(s, "data" GWY_CONTAINER_PATHSEP_STR "untitled")) {
+    else if (gwy_strequal(s, "base/range-type"))
+        *type = KEY_IS_RANGE_TYPE;
+    else if (gwy_strequal(s, "data/title")
+             || gwy_strequal(s, "data/untitled")) {
         *type = KEY_IS_TITLE;
-        n += strlen(GWY_CONTAINER_PATHSEP_STR "data");
+        n += strlen("data/");
     }
-    else if (g_str_has_prefix(s, "select" GWY_CONTAINER_PATHSEP_STR)) {
+    else if (g_str_has_prefix(s, "select/")) {
         *type = KEY_IS_SELECT;
-        n += strlen(GWY_CONTAINER_PATHSEP_STR "select");
+        n += strlen("select/");
     }
     else
         i = -1;
@@ -593,7 +598,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     const gchar *strkey;
     GwyAppKeyType type;
     GtkTreeIter iter;
-    GwyDataView *data_view;
+    GwyDataView *data_view = NULL;
     gboolean found;
     gint i;
 
@@ -605,9 +610,9 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         return;
     }
 
-    gwy_container_gis_object(data, quark, &object);
     switch (type) {
         case KEY_IS_DATA:
+        gwy_container_gis_object(data, quark, &object);
         list = &proxy->lists[PAGE_CHANNELS];
         found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         gwy_debug("Channel <%s>: %s in container, %s in list store",
@@ -626,6 +631,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_GRAPH:
+        gwy_container_gis_object(data, quark, &object);
         list = &proxy->lists[PAGE_GRAPHS];
         found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         gwy_debug("Graph <%s>: %s in container, %s in list store",
@@ -644,8 +650,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_MASK:
-        case KEY_IS_SHOW:
-        /* FIXME */
+        gwy_container_gis_object(data, quark, &object);
         list = &proxy->lists[PAGE_CHANNELS];
         found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         if (found) {
@@ -653,36 +658,61 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
-            /* XXX: This is not a good place to do that, DataProxy should be
-             * non-GUI */
-            if (data_view) {
-                if (type == KEY_IS_MASK)
-                    gwy_app_data_browser_sync_mask(data, quark, data_view);
-                else
-                    gwy_app_data_browser_sync_show(data, quark, data_view);
-                g_object_unref(data_view);
-            }
+        }
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
+        if (data_view) {
+            gwy_app_data_browser_sync_mask(data, quark, data_view);
+            g_object_unref(data_view);
+        }
+        break;
+
+        case KEY_IS_SHOW:
+        gwy_container_gis_object(data, quark, &object);
+        list = &proxy->lists[PAGE_CHANNELS];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        if (found) {
+            emit_row_changed(proxy->lists[PAGE_CHANNELS].store, &iter);
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+        }
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
+        if (data_view) {
+            gwy_app_data_browser_sync_show(data, quark, data_view);
+            gwy_app_update_data_range_type(data_view, i);
+            g_object_unref(data_view);
         }
         break;
 
         case KEY_IS_TITLE:
         list = &proxy->lists[PAGE_CHANNELS];
         found = gwy_app_data_proxy_find_object(list->store, i, &iter);
-        if (found) {
-            GtkWidget *window, *view;
-
+        if (found)
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
-                               MODEL_WIDGET, &view,
+                               MODEL_WIDGET, &data_view,
                                -1);
-            /* XXX: This is not a good place to do that, DataProxy should be
-             * non-GUI */
-            if (view) {
-                if ((window = gtk_widget_get_ancestor(view,
-                                                      GWY_TYPE_DATA_WINDOW)))
-                    gwy_app_update_data_window_title(GWY_DATA_WINDOW(window),
-                                                     data, i);
-                g_object_unref(view);
-            }
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
+        if (data_view) {
+            gwy_app_update_data_window_title(data_view, i);
+            g_object_unref(data_view);
+        }
+        break;
+
+        case KEY_IS_RANGE_TYPE:
+        list = &proxy->lists[PAGE_CHANNELS];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        if (found)
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+        /* XXX: This is not a good place to do that, DataProxy should be
+         * non-GUI */
+        if (data_view) {
+            gwy_app_update_data_range_type(data_view, i);
+            g_object_unref(data_view);
         }
         break;
 
@@ -1176,7 +1206,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    gwy_app_update_data_window_title(GWY_DATA_WINDOW(data_window), data, i);
+    gwy_app_update_data_window_title(GWY_DATA_VIEW(data_view), i);
 
     gwy_app_data_proxy_update_visibility(G_OBJECT(dfield), TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
@@ -1203,14 +1233,80 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
 }
 
 static void
-gwy_app_update_data_window_title(GwyDataWindow *data_window,
-                                 GwyContainer *data,
+gwy_app_update_data_range_type(GwyDataView *data_view,
+                               gint id)
+{
+    GtkWidget *data_window, *widget;
+    GwyColorAxis *color_axis;
+    GwyContainer *data;
+    GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    GwyTicksStyle ticks_style;
+    gboolean show_labels;
+    gchar key[40];
+
+    data_window = gtk_widget_get_ancestor(GTK_WIDGET(data_view),
+                                          GWY_TYPE_DATA_WINDOW);
+    if (!data_window) {
+        g_warning("GwyDataView has no GwyDataWindow ancestor");
+        return;
+    }
+
+    widget = gwy_data_window_get_color_axis(GWY_DATA_WINDOW(data_window));
+    color_axis = GWY_COLOR_AXIS(widget);
+    data = gwy_data_view_get_data(data_view);
+
+    g_snprintf(key, sizeof(key), "/%d/show", id);
+
+    if (gwy_container_contains_by_name(data, key)) {
+        ticks_style = GWY_TICKS_STYLE_CENTER;
+        show_labels = FALSE;
+    }
+    else {
+        g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
+        gwy_container_gis_enum_by_name(data, key, &range_type);
+        switch (range_type) {
+            case GWY_LAYER_BASIC_RANGE_FULL:
+            case GWY_LAYER_BASIC_RANGE_FIXED:
+            case GWY_LAYER_BASIC_RANGE_AUTO:
+            ticks_style = GWY_TICKS_STYLE_AUTO;
+            show_labels = TRUE;
+            break;
+
+            case GWY_LAYER_BASIC_RANGE_ADAPT:
+            ticks_style = GWY_TICKS_STYLE_NONE;
+            show_labels = TRUE;
+            break;
+
+            default:
+            g_warning("Bad range type: %d", range_type);
+            ticks_style = GWY_TICKS_STYLE_NONE;
+            show_labels = FALSE;
+            break;
+        }
+    }
+
+    gwy_color_axis_set_ticks_style(color_axis, ticks_style);
+    gwy_color_axis_set_labels_visible(color_axis, show_labels);
+}
+
+static void
+gwy_app_update_data_window_title(GwyDataView *data_view,
                                  gint id)
 {
+    GtkWidget *data_window;
+    GwyContainer *data;
     const gchar *ctitle;
     const guchar *filename;
     gchar *title, *bname;
 
+    data_window = gtk_widget_get_ancestor(GTK_WIDGET(data_view),
+                                          GWY_TYPE_DATA_WINDOW);
+    if (!data_window) {
+        g_warning("GwyDataView has no GwyDataWindow ancestor");
+        return;
+    }
+
+    data = gwy_data_view_get_data(data_view);
     ctitle = gwy_app_data_browser_figure_out_channel_title(data, id);
     if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
         bname = g_path_get_basename(filename);
@@ -1226,7 +1322,7 @@ gwy_app_update_data_window_title(GwyDataWindow *data_window,
 static void
 gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
 {
-    GtkWidget *window, *view;
+    GwyDataView *data_view;
     GwyAppDataList *list;
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -1238,15 +1334,12 @@ gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
         do {
             gtk_tree_model_get(model, &iter,
                                MODEL_ID, &id,
-                               MODEL_WIDGET, &view,
+                               MODEL_WIDGET, &data_view,
                                -1);
-            if (!view)
-                continue;
-
-            if ((window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW)))
-                gwy_app_update_data_window_title(GWY_DATA_WINDOW(window),
-                                                 proxy->container, id);
-            g_object_unref(view);
+            if (data_view) {
+                gwy_app_update_data_window_title(data_view, id);
+                g_object_unref(data_view);
+            }
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 }
