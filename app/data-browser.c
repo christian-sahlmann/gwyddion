@@ -1413,6 +1413,41 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
     gwy_app_data_proxy_maybe_finalize(proxy);
 }
 
+static void
+gwy_app_data_browser_channel_name_edited(G_GNUC_UNUSED GtkCellRendererText *renderer,
+                                         const gchar *strpath,
+                                         const gchar *text,
+                                         GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gchar *title;
+    gint id;
+
+    g_return_if_fail(browser->current);
+    proxy = browser->current;
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
+
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
+    title = g_strstrip(g_strdup(text));
+    if (!*title) {
+        g_free(title);
+        gwy_app_set_data_field_title(proxy->container, id, NULL);
+    }
+    else {
+        gchar key[32];
+
+        g_snprintf(key, sizeof(key), "/%d/data/title", id);
+        gwy_container_set_string_by_name(proxy->container, key, title);
+    }
+}
+
 static GtkWidget*
 gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 {
@@ -1449,7 +1484,12 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     g_object_set(G_OBJECT(renderer),
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
+                 "editable", TRUE,
+                 "editable-set", TRUE,
                  NULL);
+    g_signal_connect(renderer, "edited",
+                     G_CALLBACK(gwy_app_data_browser_channel_name_edited),
+                     browser);
     column = gtk_tree_view_column_new_with_attributes("Title", renderer,
                                                       NULL);
     gtk_tree_view_column_set_expand(column, TRUE);
@@ -1678,6 +1718,39 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     gwy_app_data_proxy_maybe_finalize(proxy);
 }
 
+static void
+gwy_app_data_browser_graph_name_edited(G_GNUC_UNUSED GtkCellRendererText *renderer,
+                                       const gchar *strpath,
+                                       const gchar *text,
+                                       GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GwyGraphModel *gmodel;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gchar *title;
+    gint id;
+
+    g_return_if_fail(browser->current);
+    proxy = browser->current;
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
+
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter, MODEL_ID, &id, MODEL_OBJECT, &gmodel, -1);
+    title = g_strstrip(g_strdup(text));
+    if (!*title) {
+        g_free(title);
+        title = g_strdup_printf("%s %d", _("Untitled"), id);
+    }
+    gwy_graph_model_set_title(gmodel, title);
+    g_free(title);
+    g_object_unref(gmodel);
+}
+
 static GtkWidget*
 gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 {
@@ -1714,7 +1787,12 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     g_object_set(G_OBJECT(renderer),
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
+                 "editable", TRUE,
+                 "editable-set", TRUE,
                  NULL);
+    g_signal_connect(renderer, "edited",
+                     G_CALLBACK(gwy_app_data_browser_graph_name_edited),
+                     browser);
     column = gtk_tree_view_column_new_with_attributes("Title", renderer,
                                                       NULL);
     gtk_tree_view_column_set_expand(column, TRUE);
