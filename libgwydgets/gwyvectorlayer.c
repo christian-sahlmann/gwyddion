@@ -102,6 +102,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     /**
      * GwyVectorLayer::object-chosen:
      * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
+     * @arg1: The number (index) of the chosen selection object.
      *
      * The ::object-chosen signal is emitted when user starts interacting
      * with a selection object, even before modifying it.  It is emitted
