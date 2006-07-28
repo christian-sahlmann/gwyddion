@@ -1667,7 +1667,8 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
  * @area: graph area
  *
  * Returns: the #GwyGraphLabel within @area (do not free).
-*/
+ **/
+/* XXX: Malformed documentation. */
 GtkWidget*
 gwy_graph_area_get_label(GwyGraphArea *area)
 {
@@ -1723,6 +1724,7 @@ gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
  * Returns: the grid data on the x-axis of the graph area
  * as a #GArray (do not free).
  **/
+/* XXX: Malformed documentation. */
 const GArray*
 gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
 {
@@ -1736,6 +1738,7 @@ gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
  * Returns: the grid data on the y-axis of the graph area
  * as a #GArray (do not free).
  **/
+/* XXX: Malformed documentation. */
 const GArray*
 gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
 {

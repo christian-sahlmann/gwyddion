@@ -143,7 +143,6 @@ gboolean       gwy_graph_model_get_label_visible        (GwyGraphModel *model);
 GwySIUnit*     gwy_graph_model_get_si_unit_x            (GwyGraphModel *model);
 GwySIUnit*     gwy_graph_model_get_si_unit_y            (GwyGraphModel *model);
 GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
-                                                         const gchar *filename,
                                                          gboolean export_units,
                                                          gboolean export_labels,
                                                          gboolean export_metadata,

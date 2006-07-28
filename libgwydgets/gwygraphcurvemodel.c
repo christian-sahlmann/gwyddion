@@ -469,6 +469,7 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
  * Sets curve model data. Curve model will make a copy of the data, so you
  * are responsible for freeing the original arrays.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                const gdouble *xdata,
@@ -497,6 +498,7 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
  * Sets curve model description. The description should appear on graph label,
  * for example. @description is duplicated.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                       const gchar *description)
@@ -529,6 +531,7 @@ gwy_graph_curve_model_set_mode(GwyGraphCurveModel *gcmodel,
  * Sets curve point type for plotting the curve. Curve type that is chosen must include
  * some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_point_type(GwyGraphCurveModel *gcmodel,
                                      GwyGraphPointType point_type)
@@ -545,6 +548,7 @@ gwy_graph_curve_model_set_point_type(GwyGraphCurveModel *gcmodel,
  * Sets curve point size for plotting the curve. Curve type that is chosen must include
  * some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_point_size(GwyGraphCurveModel *gcmodel,
                                      gint point_size)
@@ -561,6 +565,7 @@ gwy_graph_curve_model_set_point_size(GwyGraphCurveModel *gcmodel,
  * Sets curve line style for plotting the curve. Curve type that is chosen must include
  * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_line_style(GwyGraphCurveModel *gcmodel,
                                      GdkLineStyle line_style)
@@ -577,6 +582,7 @@ gwy_graph_curve_model_set_line_style(GwyGraphCurveModel *gcmodel,
  * Sets curve line size (thickness). Curve type that is chosen must include
  * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_line_size(GwyGraphCurveModel *gcmodel,
                                     gint line_size)
@@ -589,7 +595,9 @@ gwy_graph_curve_model_set_line_size(GwyGraphCurveModel *gcmodel,
  * gwy_graph_curve_model_get_xdata:
  * @gcmodel: A graph curve model.
  *
- * Gets pointer to x data points. Data are used within the graph and cannot be freed.
+ * Gets pointer to x data points.
+ *
+ * Data are used within the graph and cannot be freed.
  *
  * Returns: x data points
  **/
@@ -603,7 +611,9 @@ gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
  * gwy_graph_curve_model_get_ydata:
  * @gcmodel: A graph curve model.
  *
- * Gets pointer to y data points. Data are used within the graph and cannot be freed.
+ * Gets pointer to y data points.
+ *
+ * Data are used within the graph and cannot be freed.
  *
  * Returns: y data points
  **/
@@ -619,6 +629,7 @@ gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
  *
  * Returns: number of data points within the curve data
  **/
+/* XXX: Malformed documentation. */
 gint
 gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 {
@@ -632,6 +643,7 @@ gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
  * Returns: Curve data description (what appears as curve label on graph) as
  *          a string owned by curve (do not free).
  **/
+/* XXX: Malformed documentation. */
 const gchar*
 gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
 {
@@ -659,6 +671,7 @@ gwy_graph_curve_model_get_mode(GwyGraphCurveModel *gcmodel)
  *
  * Returns: curve plot point type (square, circle, etc.)
  **/
+/* XXX: Malformed documentation. */
 GwyGraphPointType
 gwy_graph_curve_model_get_point_type(GwyGraphCurveModel *gcmodel)
 {
@@ -671,6 +684,7 @@ gwy_graph_curve_model_get_point_type(GwyGraphCurveModel *gcmodel)
  *
  * Returns: curve plot point size (in pixels)
  **/
+/* XXX: Malformed documentation. */
 gint
 gwy_graph_curve_model_get_point_size(GwyGraphCurveModel *gcmodel)
 {
@@ -683,6 +697,7 @@ gwy_graph_curve_model_get_point_size(GwyGraphCurveModel *gcmodel)
  *
  * Returns: curve plot line style
  **/
+/* XXX: Malformed documentation. */
 GdkLineStyle
 gwy_graph_curve_model_get_line_style(GwyGraphCurveModel *gcmodel)
 {
@@ -695,6 +710,7 @@ gwy_graph_curve_model_get_line_style(GwyGraphCurveModel *gcmodel)
  *
  * Returns: curve plot line size (in pixels)
  **/
+/* XXX: Malformed documentation. */
 gint
 gwy_graph_curve_model_get_line_size(GwyGraphCurveModel *gcmodel)
 {
@@ -713,6 +729,7 @@ gwy_graph_curve_model_get_line_size(GwyGraphCurveModel *gcmodel)
  * interpreted directly as data indices within the #GwyDataLine.
  * In the case that @from_index == @to_index, the full #GwyDataLine is used.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                              GwyDataLine *dline,
@@ -762,7 +779,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
  * @gcmodel: A graph curve model.
  * @color: Color to use for this curve (both line and symbols).
  *
- * Sets the curve color.
+ * Sets the color of a graph curve.
  **/
 void
 gwy_graph_curve_model_set_color(GwyGraphCurveModel *gcmodel,

@@ -653,6 +653,7 @@ gwy_graph_model_remove_curve(GwyGraphModel *gmodel,
  * Returns: The first curve that has description (label) given by @description
  *          (no reference is added).
  **/
+/* XXX: Malformed documentation. */
 GwyGraphCurveModel*
 gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
                                          const gchar *description)
@@ -736,13 +737,16 @@ gwy_graph_model_layout_changed(GwyGraphModel *model)
  * @model: A graph model.
  * @title: A new graphmodel title.
  *
- * Sets new title for the graph model. @title is duplicated.
+ * Sets the title of a graph model.
  **/
-
 void
 gwy_graph_model_set_title(GwyGraphModel *model,
                           const gchar *title)
 {
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (gwy_strequal(model->title->str, title))
+        return;
+
     g_string_assign(model->title, title);
     g_object_notify(G_OBJECT(model), "title");
 }
@@ -752,12 +756,16 @@ gwy_graph_model_set_title(GwyGraphModel *model,
  * @model: A graph model.
  * @position: A new graphmodel label position.
  *
- * Sets label (curve desriptions) postion on graph widget.
+ * Sets the label (curve desriptions) postion on graph widget.
  **/
 void
 gwy_graph_model_set_label_position(GwyGraphModel *model,
                                    GwyGraphLabelPosition position)
 {
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (model->label_position == position)
+        return;
+
     model->label_position = position;
     gwy_graph_model_layout_changed(model);
 }
@@ -771,10 +779,15 @@ gwy_graph_model_set_label_position(GwyGraphModel *model,
  * label must be visible (see #gwy_graph_model_set_label_visible())
  * to see label.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
                                     gboolean label_has_frame)
 {
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (model->label_has_frame == label_has_frame)
+        return;
+
     model->label_has_frame = label_has_frame;
     gwy_graph_model_layout_changed(model);
 }
@@ -788,9 +801,14 @@ gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
  * be visible (see #gwy_graph_model_set_label_visible()) to see label and label
  * frame.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
 {
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (model->label_frame_thickness == thickness)
+        return;
+
     model->label_frame_thickness = thickness;
     gwy_graph_model_layout_changed(model);
 }
@@ -804,9 +822,14 @@ gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
  * By setting the @reverse = TRUE you get alignment ("text", "sample"),
  * otherwise you get alignment ("sample", "text").
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
 {
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (model->label_reverse == reverse)
+        return;
+
     model->label_reverse = reverse;
     gwy_graph_model_layout_changed(model);
 }
@@ -821,6 +844,7 @@ gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
 void
 gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
 {
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
     model->label_visible = visible;
     gwy_graph_model_layout_changed(model);
 }
@@ -831,6 +855,7 @@ gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
  *
  * Returns: graph title.
  **/
+/* XXX: Malformed documentation. */
 const gchar*
 gwy_graph_model_get_title(GwyGraphModel *model)
 {
@@ -843,6 +868,7 @@ gwy_graph_model_get_title(GwyGraphModel *model)
  *
  * Returns: graph widget label position.
  **/
+/* XXX: Malformed documentation. */
 GwyGraphLabelPosition
 gwy_graph_model_get_label_position(GwyGraphModel *model)
 {
@@ -855,6 +881,7 @@ gwy_graph_model_get_label_position(GwyGraphModel *model)
  *
  * Returns: graph widget label frame visibility.
  **/
+/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_get_label_has_frame(GwyGraphModel *model)
 {
@@ -867,6 +894,7 @@ gwy_graph_model_get_label_has_frame(GwyGraphModel *model)
  *
  * Returns: graph widget label frame thickness.
  **/
+/* XXX: Malformed documentation. */
 gint
 gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model)
 {
@@ -879,6 +907,7 @@ gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model)
  *
  * Returns: graph widget label alignment mode.
  **/
+/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_get_label_reverse(GwyGraphModel *model)
 {
@@ -891,6 +920,7 @@ gwy_graph_model_get_label_reverse(GwyGraphModel *model)
  *
  * Returns: graph widget label visibility.
  **/
+/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_get_label_visible(GwyGraphModel *model)
 {
@@ -905,11 +935,19 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
  * Sets the physical unit for graph x axis. The unit is duplicated, so you are
  * responsible for freeing @siunit.
  **/
+/* XXX: Therefore graphs showing this model redraw even if the units
+ * do not actually change. This is bloody not how it should work.  */
 void
 gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
 {
-    gwy_object_unref(model->x_unit);
+    GwySIUnit *oldunit;
+
+    if (model->x_unit == siunit)
+        return;
+
+    oldunit = model->x_unit;
     model->x_unit = gwy_si_unit_duplicate(siunit);
+    gwy_object_unref(oldunit);
     gwy_graph_model_layout_changed(model);
 }
 
@@ -921,10 +959,17 @@ gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
  * Sets the physical unit for graph y axis. The unit is duplicated, so you are
  * responsible for freeing @siunit.
  **/
+/* XXX: Therefore graphs showing this model redraw even if the units
+ * do not actually change. This is bloody not how it should work.  */
 void
 gwy_graph_model_set_si_unit_y(GwyGraphModel *model, GwySIUnit *siunit)
 {
-    gwy_object_unref(model->y_unit);
+    GwySIUnit *oldunit;
+
+    if (model->y_unit == siunit)
+        return;
+
+    oldunit = model->y_unit;
     model->y_unit = gwy_si_unit_duplicate(siunit);
     gwy_graph_model_layout_changed(model);
 }
@@ -953,6 +998,8 @@ gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
  * Returns: A #GwySIUnit containing the physical unit of the x-axis of @model.
  *          (Do not free).
  **/
+/* XXX: This is a dirty lie. */
+/* XXX: Malformed documentation. */
 GwySIUnit*
 gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
 {
@@ -966,6 +1013,8 @@ gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
  * Returns: A #GwySIUnit containing the physical unit of the y-axis of @model.
  *          (Do not free).
  **/
+/* XXX: This is a dirty lie. */
+/* XXX: Malformed documentation. */
 GwySIUnit*
 gwy_graph_model_get_si_unit_y(GwyGraphModel *model)
 {
@@ -986,10 +1035,20 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
                                           GtkOrientation direction,
                                           gboolean is_logarithmic)
 {
-    if (direction == GTK_ORIENTATION_VERTICAL)
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+
+    if (direction == GTK_ORIENTATION_VERTICAL) {
+        if (model->y_is_logarithmic == is_logarithmic)
+            return;
+
         model->y_is_logarithmic = is_logarithmic;
-    else
+    }
+    else {
+        if (model->x_is_logarithmic == is_logarithmic)
+            return;
+
         model->x_is_logarithmic = is_logarithmic;
+    }
 
     gwy_graph_model_layout_changed(model);
 }
@@ -1002,6 +1061,7 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
  * Returns: TRUE if the axis specified by @direction is currently set to display
  * logarithmically. FALSE if it is set to display normally.
  **/
+/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
                                           GtkOrientation direction)
@@ -1019,6 +1079,7 @@ gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
  * Returns: TRUE if all x-values are greater than zero (thus logarithmic
  * display of x-data is safe).
  **/
+/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
 {
@@ -1045,6 +1106,7 @@ gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
  * Returns: TRUE if all y-values are greater than zero (thus logarithmic
  * display of y-data is safe).
  **/
+/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
 {
@@ -1277,20 +1339,22 @@ gwy_graph_model_set_axis_label(GwyGraphModel *model,
 /**
  * gwy_graph_model_export_ascii:
  * @model: A graph model.
- * @filename: name of file to be created
  * @export_units: export units in the column header
  * @export_labels: export labels in the column header
  * @export_metadata: export all graph metadata within file header
  * @export_style: specifies the file format to export to (e. g. plain, csv,
  * gnuplot, etc.)
  *
- * Exports graph model into a file. The export format is specified by
- * parameter @export_style.
+ * Exports a graph model data to a file.
+ *
+ * The export format is specified by parameter @export_style.
  **/
 GString*
-gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
-                             gboolean export_units, gboolean export_labels,
-                             gboolean export_metadata, GwyGraphModelExportStyle export_style,
+gwy_graph_model_export_ascii(GwyGraphModel *model,
+                             gboolean export_units,
+                             gboolean export_labels,
+                             gboolean export_metadata,
+                             GwyGraphModelExportStyle export_style,
                              GString* string)
 {
     GwyGraphCurveModel *cmodel;

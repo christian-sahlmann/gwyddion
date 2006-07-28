@@ -217,7 +217,7 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
             filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
             if (gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
             {
-                string = gwy_graph_model_export_ascii(graph->graph_model, filename,
+                string = gwy_graph_model_export_ascii(graph->graph_model,
                                          controls.units, controls.labels, controls.metadata,
                                          controls.style, string);
 

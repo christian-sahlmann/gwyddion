@@ -339,6 +339,7 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
  *
  * Returns: Graph model associated with this graph widget (do not free).
  **/
+/* XXX: Malformed documentation. */
 GwyGraphModel*
 gwy_graph_get_model(GwyGraph *graph)
 {
@@ -352,6 +353,7 @@ gwy_graph_get_model(GwyGraph *graph)
  *
  * Returns: the #GwyAxis (of given orientation) within @graph (do not free).
  **/
+/* XXX: Malformed documentation. */
 GwyAxis*
 gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
 {
@@ -415,6 +417,7 @@ gwy_graph_set_axis_visible(GwyGraph *graph,
  *
  * Returns: the #GwyGraphArea within @graph (do not free).
  **/
+/* XXX: Malformed documentation. */
 GtkWidget*
 gwy_graph_get_area(GwyGraph *graph)
 {
@@ -430,6 +433,7 @@ gwy_graph_get_area(GwyGraph *graph)
  * reacts on mouse events. This includes point or area selection and zooming.
  *
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
 {
@@ -462,6 +466,7 @@ gwy_graph_get_status(GwyGraph *graph)
  * the result might not exactly match the requested values.
  * Use gwy_graph_get_x_range() if you want to know the result.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_request_x_range(GwyGraph *graph,
                           gdouble x_min_req,
@@ -494,6 +499,7 @@ gwy_graph_request_x_range(GwyGraph *graph,
  * the result might not exactly match the requested values.
  * Use gwy_graph_get_y_range() if you want to know the result.
  **/
+/* XXX: Malformed documentation. */
  void
 gwy_graph_request_y_range(GwyGraph *graph,
                           gdouble y_min_req,
@@ -521,7 +527,7 @@ gwy_graph_request_y_range(GwyGraph *graph,
  * @x_min: x minimum
  * @x_max: x maximum
  *
- * Get the actual boudaries of graph area and axis in the x direction.
+ * Gets the actual boudaries of graph area and axis in the x direction.
  **/
 void
 gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max)
@@ -536,9 +542,10 @@ gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max)
  * @y_min: y minimum
  * @y_max: y maximum
  *
- * Get the actual boundaries of graph area and axis in the y direction
+ * Gets the actual boundaries of graph area and axis in the y direction
  * and store them in y_min and y_max.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max)
 {
@@ -642,7 +649,7 @@ label_updated_cb(GwyAxis *axis, GwyGraph *graph)
  * @graph: A graph widget.
  * @grid_type: The type of grid the graph should be set to
  *
- * Set the graph to a particular grid type.
+ * Sets the graph to a particular grid type.
  **/
 void
 gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
@@ -657,6 +664,7 @@ gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
  *
  * Return: The grid type of the graph.
  **/
+/* XXX: Malformed documentation. */
 GwyGraphGridType
 gwy_graph_get_grid_type(GwyGraph *graph)
 {
@@ -668,9 +676,10 @@ gwy_graph_get_grid_type(GwyGraph *graph)
  * @graph: A graph widget.
  * @grid_data: An array of grid data
  *
- * Set the grid data for the x-axis of the graph area. @grid_data
+ * Sets the grid data for the x-axis of the graph area. @grid_data
  * is duplicated.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
 {
@@ -682,9 +691,10 @@ gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
  * @graph: A graph widget.
  * @grid_data: An array of grid data
  *
- * Set the grid data for the y-axis of the graph area. @grid_data
+ * Sets the grid data for the y-axis of the graph area. @grid_data
  * is duplicated.
  **/
+/* XXX: Malformed documentation. */
 void
 gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
 {
@@ -697,6 +707,7 @@ gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
  *
  * Return: Array of grid data for the x-axis of the graph area (do not free).
  **/
+/* XXX: Malformed documentation. */
 const GArray*
 gwy_graph_get_x_grid_data(GwyGraph *graph)
 {
@@ -709,6 +720,7 @@ gwy_graph_get_x_grid_data(GwyGraph *graph)
  *
  * Return: Array of grid data for the y-axis of the graph area (do not free).
  **/
+/* XXX: Malformed documentation. */
 const GArray*
 gwy_graph_get_y_grid_data(GwyGraph *graph)
 {
