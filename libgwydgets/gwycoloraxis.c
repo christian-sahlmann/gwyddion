@@ -120,7 +120,7 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
          PROP_GRADIENT,
          g_param_spec_string("gradient",
                              "Gradient",
-                             "Name of gradient the sphere is colored with",
+                             "Name of color gradient the axis displays",
                              NULL,
                              G_PARAM_READWRITE));
 
