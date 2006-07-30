@@ -125,11 +125,16 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
     avg2 = gwy_data_field_area_get_avg(kernel_field, NULL,
                                        kernel_col, kernel_row,
                                        kernel_width, kernel_height);
+
     rms1 = gwy_data_field_area_get_rms(data_field, NULL,
                                        col, row, kernel_width, kernel_height);
+    if (rms1 == 0.0)
+        return 0.0;
     rms2 = gwy_data_field_area_get_rms(kernel_field, NULL,
                                        kernel_col, kernel_row,
                                        kernel_width, kernel_height);
+    if (rms2 == 0.0)
+        return 0.0;
 
     score = 0;
     sumpoints = kernel_width * kernel_height;
@@ -277,7 +282,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                          GwyDataField *score, GwyCorrelationType method)
 {
 
-    gint xres, yres, kxres, kyres, i, j, fftxres, fftyres;
+    gint xres, yres, kxres, kyres, i, j, k, fftxres, fftyres;
     GwyDataField *data_in_re, *data_out_re, *data_out_im;
     GwyDataField *kernel_in_re, *kernel_out_re, *kernel_out_im;
     gdouble norm;
@@ -319,8 +324,13 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
             calculate_normalization(avg, rms, kxres, kyres);
             for (i = yoff; i + kyres - yoff <= yres; i++) {
                 for (j = xoff; j + kxres - xoff <= xres; j++) {
-                    davg = avg->data[i*xres + j];
-                    drms = rms->data[i*xres + j];
+                    k = i*xres + j;
+                    davg = avg->data[k];
+                    drms = rms->data[k];
+                    if (!krms || !drms) {
+                        score->data[k] = 0.0;
+                        continue;
+                    }
                     s = gwy_data_field_get_raw_correlation_score(data_field,
                                                                  kernel_field,
                                                                  j - xoff,
@@ -328,7 +338,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                                                                  0, 0,
                                                                  kxres, kyres,
                                                                  davg, kavg);
-                    score->data[i*xres + j] = s/(drms*krms);
+                    score->data[k] = s/(drms*krms);
                 }
             }
             g_object_unref(avg);
@@ -475,14 +485,18 @@ gwy_data_field_correlate_iteration(GwyComputationState *cstate)
         k = state->i*xres + state->j;
         davg = state->avg->data[k];
         drms = state->rms->data[k];
-        s = gwy_data_field_get_raw_correlation_score(state->data_field,
-                                                     state->kernel_field,
-                                                     state->j - xoff,
-                                                     state->i - yoff,
-                                                     0, 0,
-                                                     kxres, kyres,
-                                                     davg, state->kavg);
-        state->score->data[k] = s/(drms*state->krms);
+        if (drms && state->krms) {
+            s = gwy_data_field_get_raw_correlation_score(state->data_field,
+                                                         state->kernel_field,
+                                                         state->j - xoff,
+                                                         state->i - yoff,
+                                                         0, 0,
+                                                         kxres, kyres,
+                                                         davg, state->kavg);
+            state->score->data[k] = s/(drms*state->krms);
+        }
+        else
+            state->score->data[k] = 0.0;
 
         state->j++;
         if (state->j + kxres - xoff > xres) {
