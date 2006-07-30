@@ -299,6 +299,9 @@ gwy_enum_get_trait_value(gpointer item,
  *
  * Convenience function to create a constant inventory from a #GwyEnum.
  *
+ * The enum table is directly used and therefore must exist during the
+ * lifetime of the inventory.
+ *
  * Returns: The newly created constant inventory.
  **/
 GwyInventory*
