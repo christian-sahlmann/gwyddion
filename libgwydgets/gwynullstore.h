@@ -38,12 +38,19 @@ typedef struct _GwyNullStoreClass  GwyNullStoreClass;
 struct _GwyNullStore {
     GObject parent_instance;
 
+    gpointer model;
+    GDestroyNotify model_destroy;
+
     guint n;
     gint stamp;
+
+    gpointer reserved1;
 };
 
 struct _GwyNullStoreClass {
     GObjectClass parent_class;
+
+    gpointer reserved1;
 };
 
 
@@ -52,6 +59,10 @@ GwyNullStore* gwy_null_store_new          (guint n);
 guint         gwy_null_store_get_n_rows   (GwyNullStore *store);
 void          gwy_null_store_set_n_rows   (GwyNullStore *store,
                                            guint n);
+gpointer      gwy_null_store_get_model    (GwyNullStore *store);
+void          gwy_null_store_set_model    (GwyNullStore *store,
+                                           gpointer model,
+                                           GDestroyNotify destroy);
 void          gwy_null_store_row_changed  (GwyNullStore *store,
                                            guint i);
 gboolean      gwy_null_store_iter_is_valid(GwyNullStore *store,

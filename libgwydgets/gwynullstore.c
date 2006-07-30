@@ -34,6 +34,7 @@
                                     &gwy_tree_model_iface_info); \
     }
 
+static void              gwy_null_store_finalize       (GObject *object);
 static void            gwy_null_store_tree_model_init(GtkTreeModelIface *iface);
 static GtkTreeModelFlags gwy_null_store_get_flags      (GtkTreeModel *model);
 static gint              gwy_null_store_get_n_columns  (GtkTreeModel *model);
@@ -70,8 +71,11 @@ G_DEFINE_TYPE_EXTENDED
      GWY_IMPLEMENT_TREE_MODEL(gwy_null_store_tree_model_init))
 
 static void
-gwy_null_store_class_init(G_GNUC_UNUSED GwyNullStoreClass *klass)
+gwy_null_store_class_init(GwyNullStoreClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    gobject_class->finalize = gwy_null_store_finalize;
 }
 
 static void
@@ -96,6 +100,20 @@ gwy_null_store_init(GwyNullStore *store)
 {
     gwy_debug_objects_creation(G_OBJECT(store));
     store->stamp = g_random_int();
+}
+
+static void
+gwy_null_store_finalize(GObject *object)
+{
+    GwyNullStore *store;
+    GDestroyNotify d;
+
+    store = GWY_NULL_STORE(object);
+
+    d = store->model_destroy;
+    store->model_destroy = NULL;
+    if (d)
+        d(store->model);
 }
 
 static GtkTreeModelFlags
@@ -349,6 +367,61 @@ gwy_null_store_set_n_rows(GwyNullStore *store,
 }
 
 /**
+ * gwy_null_store_get_model:
+ * @store: A null store.
+ *
+ * Gets the model pointer of a null store.
+ *
+ * Returns: The pointer set with gwy_null_store_set_model().
+ **/
+gpointer
+gwy_null_store_get_model(GwyNullStore *store)
+{
+    g_return_val_if_fail(GWY_IS_NULL_STORE(store), NULL);
+    return store->model;
+}
+
+/**
+ * gwy_null_store_set_model:
+ * @store: A null store.
+ * @model: Model pointer.
+ * @destroy: Function to call on @model when it is replaced or the store is
+ *           destroyed.
+ *
+ * Sets the model pointer of a null store.
+ *
+ * While the virtual integers in #GwyNullStore can be used directly, a null
+ * store typically serves as an adaptor for array-like structures and its rows
+ * are used as indices to these structures.  This helper method provides means
+ * to attach such a structure to a null store in the common case.
+ *
+ * The store itself does not interpret nor access the attached data by any
+ * means.  No signals are emitted in response to the model pointer change
+ * either, particularly because it is expected to be set only once upon
+ * creation (null stores are cheap).
+ *
+ * You are free to keep the model pointer at %NULL if these functions do not
+ * suit your needs.
+ **/
+void
+gwy_null_store_set_model(GwyNullStore *store,
+                         gpointer model,
+                         GDestroyNotify destroy)
+{
+    GDestroyNotify d;
+
+    g_return_if_fail(GWY_IS_NULL_STORE(store));
+
+    d = store->model_destroy;
+    store->model_destroy = NULL;
+    if (d)
+        d(store->model);
+
+    store->model = model;
+    store->model_destroy = destroy;
+}
+
+/**
  * gwy_null_store_row_changed:
  * @store: A null store.
  * @i: A row to emit "row-changed" on.
@@ -421,6 +494,10 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  * convenience, a method to emit "row-changed" signal on a row by its index is
  * provided: gwy_null_store_row_changed().
  *
+ * Since null stores often serve as wrappers around other data structures,
+ * convenience methods to attach and obtain such a data are provided:
+ * gwy_null_store_set_model(), gwy_null_store_get_model().
+ *
  * A simple example to create a multiplication table with null storage:
  * <informalexample><programlisting>
  *  GtkWidget *treeview;
@@ -450,10 +527,10 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  * <informalexample><programlisting>
  * static void
  * multiply(GtkTreeViewColumn *column,
- *         GtkCellRenderer *renderer,
- *         GtkTreeModel *model,
- *         GtkTreeIter *iter,
- *         gpointer data)
+ *          GtkCellRenderer *renderer,
+ *          GtkTreeModel *model,
+ *          GtkTreeIter *iter,
+ *          gpointer data)
  * {
  *     gchar buf[20];
  *     gint i;
@@ -462,6 +539,11 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  *     g_snprintf(buf, sizeof(buf), "%d", (i + 1)*GPOINTER_TO_INT(data));
  *     g_object_set(renderer, "text", buf, NULL);
  * }
+ * </programlisting></informalexample>
+ *
+ * To extend the multiplication table to 20 rows, one only needs
+ * <informalexample><programlisting>
+ * gwy_null_store_set_n_rows(store, 20);
  * </programlisting></informalexample>
  **/
 
