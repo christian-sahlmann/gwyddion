@@ -321,7 +321,7 @@ gwy_combo_box_metric_unit_new(GCallback callback,
  * For example, a combo box with possible interpolation types can be
  * constructed:
  * <informalexample><programlisting>
- * combo = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+ * combo = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum<!-- -->(), -1,
  *                                G_CALLBACK(menu_callback), NULL,
  *                                GWY_INTERPOLATION_BILINEAR, TRUE);
  * </programlisting></informalexample>
