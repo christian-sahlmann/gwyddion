@@ -53,6 +53,9 @@ static gboolean gwy_enum_combo_box_find_value    (gpointer key,
  *
  * Creates a combo box with choices from a enum.
  *
+ * The array @entries must exist during the whole lifetime of the combo box
+ * because it is used directly as the model.
+ *
  * Returns: A newly created combo box as #GtkWidget.
  **/
 GtkWidget*
