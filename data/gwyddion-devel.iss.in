@@ -4,7 +4,6 @@
 AppName=@PACKAGE_NAME@ Development
 AppVersion=@PACKAGE_VERSION@
 AppVerName=@PACKAGE_NAME@ Development @PACKAGE_VERSION@
-AppPublisher=Trific soft.
 AppPublisherURL=@PACKAGE_URL@
 AppCopyright=Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek
 DefaultDirName=C:\Dev-C++

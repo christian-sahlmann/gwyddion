@@ -4,7 +4,6 @@
 AppName=@PACKAGE_NAME@
 AppVersion=@PACKAGE_VERSION@
 AppVerName=@PACKAGE_STRING@
-AppPublisher=Trific soft.
 AppPublisherURL=@PACKAGE_URL@
 AppCopyright=Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek
 DefaultDirName={pf}\@PACKAGE_NAME@
@@ -35,6 +34,8 @@ Source: "modules\process\*.*"; DestDir: "{app}\modules\process"
 Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
 Source: "plugins\file\*.*"; DestDir: "{app}\plugins\file"
 Source: "locale\cs\LC_MESSAGES\*.*"; DestDir: "{app}\locale\cs\LC_MESSAGES"
+Source: "locale\de\LC_MESSAGES\*.*"; DestDir: "{app}\locale\de\LC_MESSAGES"
+Source: "locale\it\LC_MESSAGES\*.*"; DestDir: "{app}\locale\it\LC_MESSAGES"
 
 [Icons]
 Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
