@@ -41,9 +41,6 @@ gboolean       gwy_app_data_window_set_current     (GwyDataWindow *window);
 void           gwy_app_data_window_remove          (GwyDataWindow *window);
 void           gwy_app_data_window_foreach         (GFunc func,
                                                     gpointer user_data);
-gulong         gwy_app_data_window_list_add_hook   (gpointer func,
-                                                    gpointer data);
-gboolean       gwy_app_data_window_list_remove_hook(gulong hook_id);
 GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 
 void           gwy_app_graph_window_remove         (GtkWidget *window);

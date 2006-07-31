@@ -93,6 +93,12 @@ typedef struct {
     gint visible_count;
 } GwyAppDataList;
 
+/* FIXME: Crude.  3D is not a first class citizen. */
+typedef struct {
+    GtkWidget *window;
+    gint id;
+} GwyApp3DAssociation;
+
 /* The data browser */
 struct _GwyAppDataBrowser {
     GList *proxy_list;
@@ -112,6 +118,7 @@ struct _GwyAppDataProxy {
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
     GwyAppDataList lists[NPAGES];
+    GList *assoc3d;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -1154,7 +1161,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
 /**
  * gwy_app_data_browser_create_channel:
  * @browser: A data browser.
- * @dfield: The data field to create data window for.
+ * @id: The channel id.
  *
  * Creates a data window for a data field when its visibility is switched on.
  *
@@ -1165,34 +1172,27 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
  **/
 static GtkWidget*
 gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
-                                    G_GNUC_UNUSED GwyAppDataProxy *proxy,
-                                    GwyDataField *dfield)
+                                    GwyAppDataProxy *proxy,
+                                    gint id)
 {
     GtkWidget *data_view, *data_window;
-    GwyContainer *data;
+    GObject *dfield = NULL;
     GwyPixmapLayer *layer;
     GwyLayerBasic *layer_basic;
-    GwyAppKeyType type;
-    const gchar *strkey;
     GQuark quark;
     gchar key[40];
     guint len;
-    gint i;
 
-    data = GWY_CONTAINER(g_object_get_qdata(G_OBJECT(dfield), container_quark));
-    quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(dfield),
-                                                own_key_quark));
-    strkey = g_quark_to_string(quark);
-    gwy_debug("Making <%s> visible", strkey);
-    i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
-    g_return_val_if_fail(i >= 0 && type == KEY_IS_DATA, NULL);
+    g_snprintf(key, sizeof(key), "/%d/data", id);
+    gwy_container_gis_object_by_name(proxy->container, key, &dfield);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
 
     layer = gwy_layer_basic_new();
     layer_basic = GWY_LAYER_BASIC(layer);
-    gwy_pixmap_layer_set_data_key(layer, strkey);
-    g_snprintf(key, sizeof(key), "/%d/show", i);
+    gwy_pixmap_layer_set_data_key(layer, key);
+    g_snprintf(key, sizeof(key), "/%d/show", id);
     gwy_layer_basic_set_presentation_key(layer_basic, key);
-    g_snprintf(key, sizeof(key), "/%d/base", i);
+    g_snprintf(key, sizeof(key), "/%d/base", id);
     gwy_layer_basic_set_min_max_key(layer_basic, key);
     len = strlen(key);
     g_strlcat(key, "/range-type", sizeof(key));
@@ -1201,14 +1201,15 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     g_strlcat(key, "/palette", sizeof(key));
     gwy_layer_basic_set_gradient_key(layer_basic, key);
 
-    data_view = gwy_data_view_new(data);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(data_view), strkey);
+    data_view = gwy_data_view_new(proxy->container);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(data_view),
+                                  gwy_pixmap_layer_get_data_key(layer));
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    gwy_app_update_data_window_title(GWY_DATA_VIEW(data_view), i);
+    gwy_app_update_data_window_title(GWY_DATA_VIEW(data_view), id);
 
-    gwy_app_data_proxy_update_visibility(G_OBJECT(dfield), TRUE);
+    gwy_app_data_proxy_update_visibility(dfield, TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_data_view),
                              data_view);
@@ -1220,9 +1221,10 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     /* This primarily adds the window to the list of visible windows */
     gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
 
-    g_snprintf(key, sizeof(key), "/%d/mask", i);
+    g_snprintf(key, sizeof(key), "/%d/mask", id);
     quark = g_quark_from_string(key);
-    gwy_app_data_browser_sync_mask(data, quark, GWY_DATA_VIEW(data_view));
+    gwy_app_data_browser_sync_mask(proxy->container, quark,
+                                   GWY_DATA_VIEW(data_view));
 
     /* FIXME: A silly place for this? */
     if (browser->sensgroup)
@@ -1353,6 +1355,7 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     GtkTreeModel *model;
     GtkWidget *widget, *window;
     GObject *object;
+    gint id;
 
     list = &proxy->lists[PAGE_CHANNELS];
     model = GTK_TREE_MODEL(list->store);
@@ -1360,13 +1363,13 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     gtk_tree_model_get(model, iter,
                        MODEL_WIDGET, &widget,
                        MODEL_OBJECT, &object,
+                       MODEL_ID, &id,
                        -1);
     if (visible == (widget != 0))
         return FALSE;
 
     if (visible) {
-        widget = gwy_app_data_browser_create_channel(proxy->parent, proxy,
-                                                     GWY_DATA_FIELD(object));
+        widget = gwy_app_data_browser_create_channel(proxy->parent, proxy, id);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
         list->visible_count++;
     }
@@ -1605,7 +1608,7 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
 /**
  * gwy_app_data_browser_create_graph:
  * @browser: A data browser.
- * @gmodel: The graph model to create graph window for.
+ * @id: The graph id.
  *
  * Creates a graph window for a graph model when its visibility is switched on.
  *
@@ -1617,11 +1620,17 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
 static GtkWidget*
 gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                                   GwyAppDataProxy *proxy,
-                                  GwyGraphModel *gmodel)
+                                  gint id)
 {
     GtkWidget *graph, *graph_window;
+    gchar key[40];
+    GObject *gmodel;
 
-    graph = gwy_graph_new(gmodel);
+    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, id);
+    gwy_container_gis_object_by_name(proxy->container, key, &gmodel);
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), NULL);
+
+    graph = gwy_graph_new(GWY_GRAPH_MODEL(gmodel));
     graph_window = gwy_graph_window_new(GWY_GRAPH(graph));
 
     /* Graphs do not reference Container, fake it */
@@ -1629,7 +1638,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     g_object_weak_ref(G_OBJECT(graph_window),
                       (GWeakNotify)g_object_unref, proxy->container);
 
-    gwy_app_data_proxy_update_visibility(G_OBJECT(gmodel), TRUE);
+    gwy_app_data_proxy_update_visibility(gmodel, TRUE);
     g_signal_connect_swapped(graph_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_graph),
                              graph);
@@ -1658,6 +1667,7 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
     GtkTreeModel *model;
     GtkWidget *widget, *window;
     GObject *object;
+    gint id;
 
     list = &proxy->lists[PAGE_GRAPHS];
     model = GTK_TREE_MODEL(list->store);
@@ -1665,13 +1675,13 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
     gtk_tree_model_get(model, iter,
                        MODEL_WIDGET, &widget,
                        MODEL_OBJECT, &object,
+                       MODEL_ID, &id,
                        -1);
     if (visible == (widget != 0))
         return FALSE;
 
     if (visible) {
-        widget = gwy_app_data_browser_create_graph(proxy->parent, proxy,
-                                                   GWY_GRAPH_MODEL(object));
+        widget = gwy_app_data_browser_create_graph(proxy->parent, proxy, id);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
         list->visible_count++;
     }
