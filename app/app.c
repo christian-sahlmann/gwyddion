@@ -656,6 +656,25 @@ gwy_app_3d_window_create(GwyContainer *data,
     return gwy3dwindow;
 }
 
+void
+_gwy_app_3d_window_setup(Gwy3DWindow *window3d)
+{
+    GtkWidget *button;
+
+    button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
+    gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
+    gwy_3d_window_add_small_toolbar_button(GWY_3D_WINDOW(window3d),
+                                           GTK_STOCK_SAVE,
+                                           _("Export 3D view to PNG image"),
+                                           G_CALLBACK(gwy_app_3d_window_export),
+                                           window3d);
+
+    g_signal_connect(window3d, "focus-in-event",
+                     G_CALLBACK(gwy_app_3d_window_set_current), NULL);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_3d_window_export), window3d);
+}
+
 /**
  * gwy_app_3d_window_set_current:
  * @window: A 3D view window.

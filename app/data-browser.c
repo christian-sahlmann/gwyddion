@@ -95,7 +95,7 @@ typedef struct {
 
 /* FIXME: Crude.  3D is not a first class citizen. */
 typedef struct {
-    GtkWidget *window;
+    Gwy3DWindow *window;
     gint id;
 } GwyApp3DAssociation;
 
@@ -118,7 +118,7 @@ struct _GwyAppDataProxy {
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
     GwyAppDataList lists[NPAGES];
-    GList *assoc3d;
+    GList *associated3d;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -1449,6 +1449,103 @@ gwy_app_data_browser_channel_name_edited(G_GNUC_UNUSED GtkCellRendererText *rend
         g_snprintf(key, sizeof(key), "/%d/data/title", id);
         gwy_container_set_string_by_name(proxy->container, key, title);
     }
+}
+
+static GList*
+gwy_app_data_browser_3d_find(GwyAppDataProxy *proxy,
+                             Gwy3DWindow *window3d)
+{
+    GList *l;
+
+    for (l = proxy->associated3d; l; l = g_list_next(l)) {
+        GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)l->data;
+
+        if (assoc->window == window3d)
+            return l;
+    }
+
+    return NULL;
+}
+
+static gboolean
+gwy_app_data_browser_select_3d(Gwy3DWindow *window3d)
+{
+    return FALSE;
+}
+
+static void
+gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
+                                  GwyAppDataProxy *proxy)
+{
+    GwyApp3DAssociation *assoc;
+    GList *item;
+
+    item = gwy_app_data_browser_3d_find(proxy, window3d);
+    g_return_if_fail(item);
+
+    assoc = (GwyApp3DAssociation*)item->data;
+    g_free(assoc);
+    proxy->associated3d = g_list_delete_link(proxy->associated3d, item);
+}
+
+static GtkWidget*
+gwy_app_data_browser_create_3d(GwyAppDataBrowser *browser,
+                               GwyAppDataProxy *proxy,
+                               gint id)
+{
+    GtkWidget *view3d, *window3d;
+    GObject *dfield = NULL;
+    GwyApp3DAssociation *assoc;
+    gchar *name, *title;
+    gchar key[40];
+    guint len;
+
+    g_snprintf(key, sizeof(key), "/%d/data", id);
+    gwy_container_gis_object_by_name(proxy->container, key, &dfield);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+
+    view3d = gwy_3d_view_new(proxy->container);
+
+    g_snprintf(key, sizeof(key), "/%d/", id);
+    len = strlen(key);
+
+    g_strlcat(key, "3d", sizeof(key));
+    gwy_3d_view_set_setup_prefix(GWY_3D_VIEW(view3d), key);
+
+    key[len] = '\0';
+    g_strlcat(key, "data", sizeof(key));
+    gwy_3d_view_set_data_key(GWY_3D_VIEW(view3d), key);
+
+    key[len] = '\0';
+    g_strlcat(key, "3d/palette", sizeof(key));
+    gwy_3d_view_set_gradient_key(GWY_3D_VIEW(view3d), key);
+
+    key[len] = '\0';
+    g_strlcat(key, "3d/material", sizeof(key));
+    gwy_3d_view_set_material_key(GWY_3D_VIEW(view3d), key);
+
+    window3d = gwy_3d_window_new(GWY_3D_VIEW(view3d));
+    gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
+
+    name = gwy_app_get_data_field_title(proxy->container, id);
+    title = g_strconcat("3D ", name, NULL);
+    gtk_window_set_title(GTK_WINDOW(window3d), title);
+    g_free(title);
+    g_free(name);
+
+    g_signal_connect(window3d, "focus-in-event",
+                     G_CALLBACK(gwy_app_data_browser_select_3d), NULL);
+    g_signal_connect(window3d, "destroy",
+                     G_CALLBACK(gwy_app_data_browser_3d_destroyed), proxy);
+
+    assoc = g_new(GwyApp3DAssociation, 1);
+    assoc->window = GWY_3D_WINDOW(window3d);
+    assoc->id = id;
+    proxy->associated3d = g_list_prepend(proxy->associated3d, assoc);
+
+    _gwy_app_3d_window_setup(assoc->window);
+
+    return window3d;
 }
 
 static GtkWidget*
