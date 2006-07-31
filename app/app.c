@@ -50,8 +50,6 @@ static GtkWidget *current_any = NULL;
 static GwyTool* current_tool = NULL;
 static GQuark corner_item_quark = 0;
 
-static GHookList window_list_hook_list;
-
 static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
@@ -424,55 +422,6 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
 }
 
 /**
- * gwy_app_data_window_list_add_hook:
- * @func: Function to be called (with @data as its only argument).
- * @data: Data passed to @func.
- *
- * Adds a hook function called just after a data window is created or
- * destroyed.
- *
- * Returns: Hook id to be used in gwy_app_data_window_list_remove_hook().
- **/
-gulong
-gwy_app_data_window_list_add_hook(gpointer func,
-                                  gpointer data)
-{
-    GHook *hook;
-
-    gwy_debug("");
-    if (!window_list_hook_list.is_setup) {
-        gwy_debug("initializing window_list_hook_list");
-        g_hook_list_init(&window_list_hook_list, sizeof(GHook));
-    }
-
-    hook = g_hook_alloc(&window_list_hook_list);
-    hook->func = func;
-    hook->data = data;
-    g_hook_append(&window_list_hook_list, hook);
-    gwy_debug("id = %lu", hook->hook_id);
-
-    return hook->hook_id ;
-}
-
-/**
- * gwy_app_data_window_list_remove_hook:
- * @hook_id: Hook id, as returned by gwy_app_data_window_list_add_hook().
- *
- * Removes a data window list hook function added by
- * gwy_app_data_window_list_add_hook().
- *
- * Returns: Whether such a hook was found and removed.
- **/
-gboolean
-gwy_app_data_window_list_remove_hook(gulong hook_id)
-{
-    gwy_debug("");
-    g_return_val_if_fail(window_list_hook_list.is_setup, FALSE);
-
-    return g_hook_destroy(&window_list_hook_list, hook_id);
-}
-
-/**
  * gwy_app_data_window_foreach:
  * @func: A function to call on each data window.
  * @user_data: Data to pass to @func.
@@ -605,7 +554,6 @@ gwy_app_graph_window_remove(GtkWidget *window)
 
 static GtkWidget* gwy_app_3d_window_create     (GwyContainer *data,
                                                 gint id);
-static GtkWidget* gwy_app_3d_window_get_current(void);
 static gboolean   gwy_app_3d_window_set_current(GtkWidget *window);
 static void       gwy_app_3d_window_remove     (GtkWidget *window);
 
@@ -706,20 +654,6 @@ gwy_app_3d_window_create(GwyContainer *data,
     gtk_window_present(GTK_WINDOW(gwy3dwindow));
 
     return gwy3dwindow;
-}
-
-/**
- * gwy_app_3d_window_get_current:
- *
- * Returns the currently active 3D view window.
- *
- * Returns: The active 3D view window as a #GtkWidget.
- *          May return %NULL if none is currently active.
- **/
-static GtkWidget*
-gwy_app_3d_window_get_current(void)
-{
-    return current_3d ? current_3d->data : NULL;
 }
 
 /**
