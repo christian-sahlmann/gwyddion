@@ -22,6 +22,7 @@ gradientdata_DATA = \
 	Green-Stripes-4 \
 	Green-Violet \
 	Green-Yellow \
+	Gwyddion-Web \
 	Halcyon \
 	Lines \
 	Maple \
