@@ -74,6 +74,8 @@ function build_project() {
     echo -n "TRANSLATION $x: " 1>&2
     msgfmt --statistics $x.po
   done
+  echo -n "TRANSLATION total: " 1>&2
+  grep -c ^msgstr $pkgname.pot 1>&2
   popd
   ./utils/update-msvc.py
 }
