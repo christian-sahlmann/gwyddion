@@ -23,6 +23,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <app/gwyapp.h>
 
@@ -68,6 +69,8 @@ static void       gwy_app_redo_cb              (void);
 static void       gwy_app_close_cb             (void);
 static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
+static void       gwy_app_change_mask_color_cb (void);
+static void gwy_app_change_default_mask_color_cb(void);
 static void       gwy_app_duplicate_cb         (void);
 static void       gwy_app_gl_view_maybe_cb     (void);
 
@@ -907,6 +910,23 @@ gwy_app_tool_use_cb(const gchar *toolname,
     }
     else
         gwy_app_switch_tool(toolname);
+}
+
+static void
+gwy_app_change_mask_color_cb(void)
+{
+    GwyDataView *data_view;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
+    g_return_if_fail(data_view);
+    gwy_app_data_view_change_mask_color(data_view);
+}
+
+static void
+gwy_app_change_default_mask_color_cb(void)
+{
+    gwy_color_selector_for_mask(_("Change Default Mask Color"),
+                                NULL, gwy_app_settings_get(), "/mask");
 }
 
 static void

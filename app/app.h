@@ -59,6 +59,7 @@ void           gwy_app_restore_window_position     (GtkWindow *window,
                                                     const gchar *prefix,
                                                     gboolean grow_only);
 GtkWidget*     gwy_app_main_window_get             (void);
+void           gwy_app_data_view_change_mask_color (GwyDataView *data_view);
 
 gboolean       gwy_app_quit                        (void);
 

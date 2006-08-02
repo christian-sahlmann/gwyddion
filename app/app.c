@@ -70,6 +70,7 @@ static gboolean   gwy_app_set_current_window       (GtkWidget *window);
 static void       gwy_app_unset_current_window     (GtkWidget *window);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 static void       gwy_app_data_window_reset_zoom   (void);
+static void       gwy_app_change_mask_color_cb     (void);
 
 /*****************************************************************************
  *                                                                           *
@@ -1059,21 +1060,37 @@ gwy_app_data_window_reset_zoom(void)
     gwy_data_window_set_zoom(data_window, 10000);
 }
 
-void
+static void
 gwy_app_change_mask_color_cb(void)
 {
-    GwyDataWindow *data_window;
     GwyDataView *data_view;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
+    g_return_if_fail(data_view);
+    gwy_app_data_view_change_mask_color(data_view);
+}
+
+/**
+ * gwy_app_data_view_change_mask_color:
+ * @data_view: A data view (of application's data window).  It must have a
+ *             mask.
+ *
+ * Runs mask color selector on a data view.
+ *
+ * The is a convenience function to run gwy_app_data_view_change_mask_color(),
+ * possibly taking the initial color from settings.
+ **/
+void
+gwy_app_data_view_change_mask_color(GwyDataView *data_view)
+{
     GwyPixmapLayer *layer;
     GwyContainer *data, *settings;
     const gchar *key;
     GwyRGBA rgba;
 
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(data_window);
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     data = gwy_data_view_get_data(data_view);
-    g_assert(data);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
     layer = gwy_data_view_get_alpha_layer(data_view);
     g_return_if_fail(GWY_IS_LAYER_MASK(layer));
     key = gwy_layer_mask_get_color_key(GWY_LAYER_MASK(layer));
@@ -1087,13 +1104,6 @@ gwy_app_change_mask_color_cb(void)
         gwy_rgba_store_to_container(&rgba, data, key);
     }
     gwy_color_selector_for_mask(NULL, NULL, data, key);
-}
-
-void
-gwy_app_change_default_mask_color_cb(void)
-{
-    gwy_color_selector_for_mask(_("Change Default Mask Color"),
-                                NULL, gwy_app_settings_get(), "/mask");
 }
 
 /**
