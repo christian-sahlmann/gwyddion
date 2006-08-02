@@ -126,12 +126,13 @@ fft(GwyContainer *data, GwyRunType run)
     GwySIUnit *xyunit;
     FFTArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize;
+    gint xsize, ysize, newsize, id;
     gdouble newreals;
 
     g_return_if_fail(run & FFT_RUN_MODES);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
@@ -139,7 +140,7 @@ fft(GwyContainer *data, GwyRunType run)
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
         dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
+            (GTK_WINDOW(gwy_app_find_window_for_channel(data, id)),
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,

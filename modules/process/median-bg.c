@@ -139,7 +139,7 @@ median(GwyContainer *data, GwyRunType run)
     if (!ok)
         return;
 
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Median-leveling"));
     background = median_background(ROUND(args.size), dfield);
     gwy_app_wait_finish();

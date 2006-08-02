@@ -391,7 +391,6 @@ crosscor_do(CrosscorArgs *args)
 {
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
-    GwyDataWindow *window;
     gint newid;
     GwyComputationState *state;
     GwySIUnit *siunit;
@@ -409,8 +408,9 @@ crosscor_do(CrosscorArgs *args)
     score = gwy_data_field_new_alike(dfield1, FALSE);
 
     /* FIXME */
-    window = gwy_app_data_window_get_for_data(args->op1.data);
-    gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
+    gwy_app_wait_start(gwy_app_find_window_for_channel(args->op1.data,
+                                                       args->op1.id),
+                       _("Initializing..."));
 
     /* compute crosscorelation */
     state = gwy_data_field_crosscorrelate_init(dfield1, dfield2,

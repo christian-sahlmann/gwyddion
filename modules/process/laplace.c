@@ -68,18 +68,19 @@ laplace(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *mfield, *buffer, *old;
     GQuark dquark;
     gdouble error, cor, maxer, lastfrac, frac, starter;
-    gint i;
+    gint i, id;
     gboolean cancelled = FALSE;
 
     g_return_if_fail(run & LAPLACE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark && mfield);
 
     maxer = gwy_data_field_get_rms(dfield)/1.0e4;
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                        _("Laplace correction"));
 
     old = dfield;

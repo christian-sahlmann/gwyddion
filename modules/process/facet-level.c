@@ -68,12 +68,13 @@ facet_level(GwyContainer *data, GwyRunType run)
     GQuark quark;
     gdouble c, bx, by, b2;
     gdouble p, progress, maxb2 = 666, eps = 1e-8;
-    gint i;
+    gint i, id;
     gboolean cancelled = FALSE;
 
     g_return_if_fail(run & LEVEL_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
                                      GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && quark);
     old = dfield;
@@ -83,7 +84,7 @@ facet_level(GwyContainer *data, GwyRunType run)
      * FIXME: this can take a long time */
     i = 0;
     progress = 0.0;
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                        _("Facet-leveling"));
     while (i < 100) {
         facet_level_coeffs(dfield, &bx, &by);

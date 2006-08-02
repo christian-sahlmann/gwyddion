@@ -67,7 +67,8 @@ static void        grain_wshed                  (GwyContainer *data,
 static void        run_noninteractive           (WshedArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
-                                                 GQuark mquark);
+                                                 GQuark mquark,
+                                                 gint id);
 static void        wshed_dialog                 (WshedArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
@@ -146,7 +147,7 @@ grain_wshed(GwyContainer *data, GwyRunType run)
     g_return_if_fail(dfield && mquark);
 
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data, dfield, mquark);
+        run_noninteractive(&args, data, dfield, mquark, id);
     else {
         wshed_dialog(&args, data, dfield, id, mquark);
         wshed_save_args(gwy_app_settings_get(), &args);
@@ -346,7 +347,7 @@ wshed_dialog(WshedArgs *args,
     }
     else {
         g_object_unref(controls.mydata);
-        run_noninteractive(args, data, dfield, mquark);
+        run_noninteractive(args, data, dfield, mquark, id);
     }
 }
 
@@ -461,13 +462,14 @@ static void
 run_noninteractive(WshedArgs *args,
                    GwyContainer *data,
                    GwyDataField *dfield,
-                   GQuark mquark)
+                   GQuark mquark,
+                   gint id)
 {
     GwyDataField *mfield;
 
     mfield = create_mask_field(dfield);
     if (mask_process(dfield, mfield, args,
-                     GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
+                     gwy_app_find_window_for_channel(data, id))) {
         gwy_app_undo_qcheckpointv(data, 1, &mquark);
         gwy_container_set_object(data, mquark, mfield);
     }

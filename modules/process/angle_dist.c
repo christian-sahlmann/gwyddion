@@ -144,7 +144,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Computing angle distribution"));
     dfield = angle_do(dfield, &args);
     gwy_app_wait_finish();

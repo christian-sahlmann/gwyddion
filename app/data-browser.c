@@ -3184,6 +3184,64 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
     return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS);
 }
 
+/**
+ * gwy_app_find_window_for_channel:
+ * @data: A data container to find window for.
+ * @id: Data channel id.  It can be -1 to find any data window displaying
+ *      a channel from @data.
+ *
+ * Finds the window displaying a data channel.
+ *
+ * Returns: The window if found, %NULL if no data window displays the
+ *          requested channel.
+ **/
+GtkWidget*
+gwy_app_find_window_for_channel(GwyContainer *data,
+                                gint id)
+{
+    GtkWidget *data_view = NULL, *data_window;
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    browser = gwy_app_data_browser;
+    if (!browser)
+        return NULL;
+
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    if (!proxy)
+        return NULL;
+
+    list = &proxy->lists[PAGE_CHANNELS];
+    model = GTK_TREE_MODEL(list->store);
+    if (id >= 0) {
+        if (!gwy_app_data_proxy_find_object(list->store, id, &iter))
+            return NULL;
+
+        gtk_tree_model_get(model, &iter, MODEL_WIDGET, &data_view, -1);
+    }
+    else {
+        if (!gtk_tree_model_get_iter_first(model, &iter))
+            return NULL;
+
+        do {
+            gtk_tree_model_get(model, &iter, MODEL_WIDGET, &data_view, -1);
+            if (data_view)
+                break;
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    if (!data_view)
+        return NULL;
+
+    data_window = gtk_widget_get_ancestor(data_view, GWY_TYPE_DATA_WINDOW);
+    g_object_unref(data_view);
+
+    return data_window ? data_window : NULL;
+}
+
 static void
 gwy_app_data_selection_gather(G_GNUC_UNUSED gpointer key,
                               gpointer value,

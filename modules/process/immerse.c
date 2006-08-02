@@ -389,7 +389,6 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyComputationState *state;
-    GwyDataWindow *window;
     gboolean ok = FALSE;
     int work, wpi;
 
@@ -400,8 +399,9 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
     state = gwy_data_field_correlate_init(data_field, kernel_field, score);
 
     /* FIXME */
-    window = gwy_app_data_window_get_for_data(args->image.data);
-    gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
+    gwy_app_wait_start(gwy_app_find_window_for_channel(args->image.data,
+                                                       args->image.id),
+                       _("Initializing..."));
     gwy_data_field_correlate_iteration(state);
     if (!gwy_app_wait_set_message(_("Correlating...")))
         goto get_score_fail;

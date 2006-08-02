@@ -310,7 +310,6 @@ maskcor_do(MaskcorArgs *args)
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyDataField *dfield, *kernel, *retfield, *score;
-    GwyDataWindow *window;
     GwyComputationState *state;
     GQuark quark;
     gint newid, work, wpi;
@@ -324,10 +323,10 @@ maskcor_do(MaskcorArgs *args)
     retfield = gwy_data_field_new_alike(dfield, FALSE);
 
     /* FIXME */
-    window = gwy_app_data_window_get_for_data(args->data.data);
-
     if (args->method == GWY_CORRELATION_NORMAL) {
-        gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
+        gwy_app_wait_start(gwy_app_find_window_for_channel(args->data.data,
+                                                           args->data.id),
+                           _("Initializing..."));
         state = gwy_data_field_correlate_init(dfield, kernel, retfield);
         gwy_app_wait_set_message(_("Correlating..."));
         work = 0;

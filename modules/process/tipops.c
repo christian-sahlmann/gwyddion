@@ -248,7 +248,6 @@ tipops_do(TipOpsArgs *args,
         N_("Surface reconstruction"),
     };
     GwyDataField *dfield, *tip, *target;
-    GwyDataWindow *window;
     GQuark quark;
     gboolean ok;
     gint newid;
@@ -263,8 +262,9 @@ tipops_do(TipOpsArgs *args,
     dfield = gwy_data_field_new_alike(target, FALSE);
 
     /* FIXME */
-    window = gwy_app_data_window_get_for_data(args->target.data);
-    gwy_app_wait_start(GTK_WIDGET(window), _("Initializing..."));
+    gwy_app_wait_start(gwy_app_find_window_for_channel(args->target.data,
+                                                       args->target.id),
+                       _("Initializing..."));
 
     if (op == DILATION || op == EROSION) {
         if (op == DILATION)
