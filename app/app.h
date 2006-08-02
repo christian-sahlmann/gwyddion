@@ -21,51 +21,27 @@
 #ifndef __GWY_APP_APP_H__
 #define __GWY_APP_APP_H__
 
-#include <libgwyddion/gwycontainer.h>
-#include <libgwydgets/gwydatawindow.h>
-#include <libgwydgets/gwygraph.h>
+#include <gtk/gtkwindow.h>
+#include <libgwydgets/gwydataview.h>
 
 G_BEGIN_DECLS
 
-typedef enum {
-    GWY_APP_WINDOW_TYPE_DATA  = 1 << 0,
-    GWY_APP_WINDOW_TYPE_GRAPH = 1 << 1,
-    GWY_APP_WINDOW_TYPE_3D    = 1 << 2,
-    GWY_APP_WINDOW_TYPE_ANY   = 0x7
-} GwyAppWindowType;
-
-#ifndef GWY_DISABLE_DEPRECATED
-GwyContainer*  gwy_app_get_current_data            (void);
-GwyDataWindow* gwy_app_data_window_get_current     (void);
-gboolean       gwy_app_data_window_set_current     (GwyDataWindow *window);
-void           gwy_app_data_window_remove          (GwyDataWindow *window);
-void           gwy_app_data_window_foreach         (GFunc func,
-                                                    gpointer user_data);
-void           gwy_app_graph_window_remove         (GtkWidget *window);
-GtkWidget*     gwy_app_graph_window_get_current    (void);
-gboolean       gwy_app_graph_window_set_current    (GtkWidget *window);
-
-GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
-#endif
-void           gwy_app_switch_tool                 (const gchar *toolname);
-void           gwy_app_add_main_accel_group        (GtkWindow *window);
-void           gwy_app_save_window_position        (GtkWindow *window,
-                                                    const gchar *prefix,
-                                                    gboolean position,
-                                                    gboolean size);
-void           gwy_app_restore_window_position     (GtkWindow *window,
-                                                    const gchar *prefix,
-                                                    gboolean grow_only);
-GtkWidget*     gwy_app_main_window_get             (void);
-void           gwy_app_data_view_change_mask_color (GwyDataView *data_view);
-
-gboolean       gwy_app_quit                        (void);
-
-void            gwy_app_init_widget_styles         (void);
-void            gwy_app_init_i18n                  (void);
-
-gboolean        gwy_app_init_common                (GError **error,
-                                                    ...);
+void       gwy_app_switch_tool                (const gchar *toolname);
+void       gwy_app_add_main_accel_group       (GtkWindow *window);
+void       gwy_app_save_window_position       (GtkWindow *window,
+                                               const gchar *prefix,
+                                               gboolean position,
+                                               gboolean size);
+void       gwy_app_restore_window_position    (GtkWindow *window,
+                                               const gchar *prefix,
+                                               gboolean grow_only);
+GtkWidget* gwy_app_main_window_get            (void);
+void       gwy_app_data_view_change_mask_color(GwyDataView *data_view);
+gboolean   gwy_app_quit                       (void);
+void       gwy_app_init_widget_styles         (void);
+void       gwy_app_init_i18n                  (void);
+gboolean   gwy_app_init_common                (GError **error,
+                                               ...);
 
 G_END_DECLS
 

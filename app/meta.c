@@ -27,6 +27,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/data-browser.h>
 
 enum {
     META_KEY,
@@ -83,22 +84,20 @@ static gboolean   gwy_meta_find_key             (MetadataBrowser *browser,
  * Shows a simple metadata browser.
  **/
 void
-gwy_app_metadata_browser(GwyDataWindow *data_window)
+gwy_app_metadata_browser(GwyContainer *data,
+                         gint id)
 {
     MetadataBrowser *browser;
     GtkWidget *scroll, *vbox, *hbox;
     GtkRequisition request;
-    GwyContainer *data;
-    const gchar *dataname;
-    gchar *title;
+    gchar *title, *dataname;
 
-    data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
     if ((browser = g_object_get_data(G_OBJECT(data), "metadata-browser"))) {
         gtk_window_present(GTK_WINDOW(browser->window));
         return;
     }
-    dataname = gwy_data_window_get_data_name(data_window);
+    dataname = gwy_app_get_data_field_title(data, id);
 
     browser = g_new0(MetadataBrowser, 1);
     browser->container = data;
@@ -108,6 +107,7 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
                             dataname, g_get_application_name());
     gtk_window_set_title(GTK_WINDOW(browser->window), title);
     g_free(title);
+    g_free(dataname);
 
     gtk_widget_size_request(browser->treeview, &request);
     request.width = MAX(request.width, 120);

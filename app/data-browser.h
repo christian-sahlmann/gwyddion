@@ -114,7 +114,7 @@ void gwy_app_data_browser_select_graph_model(GwyContainer *data,
 /* XXX */
 void     gwy_app_data_browser_show_3d       (GwyContainer *data,
                                              gint id);
-GtkWidget* gwy_app_find_window_for_channel  (GwyContainer *data,
+GtkWindow* gwy_app_find_window_for_channel  (GwyContainer *data,
                                              gint id);
 
 G_END_DECLS

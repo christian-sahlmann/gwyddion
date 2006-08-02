@@ -113,7 +113,7 @@ dwt(GwyContainer *data, GwyRunType run)
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
         dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_find_window_for_channel(data, oldid)),
+            (gwy_app_find_window_for_channel(data, oldid),
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,

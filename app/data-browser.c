@@ -18,6 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* XXX: The purpose of this file is to contain all ugliness from the rest of
+ * source files.  And indeed it has managed to gather lots of it. */
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -190,6 +193,50 @@ emit_row_changed(GtkListStore *store,
     path = gtk_tree_model_get_path(model, iter);
     gtk_tree_model_row_changed(model, path, iter);
     gtk_tree_path_free(path);
+}
+
+/**
+ * gwy_app_widget_queue_manage:
+ * @widget: Widget to add or remove.
+ * @remv: %TRUE to remove, %FALSE to add.
+ *
+ * Adds or removes widget to queue.
+ *
+ * If a new widget is added, it becomes the new head.  If the added widget
+ * is already present, it is just moved to the head.
+ *
+ * Returns: The first widget in the queue of the same type as @widget.  The
+ *          returned value is interesting only when @remove is %TRUE, for
+ *          adding the returned value is always equal to @widget.
+ **/
+static GtkWidget*
+gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
+{
+    static GList *list = NULL;
+
+    GList *item;
+    GType type;
+
+    type = G_TYPE_FROM_INSTANCE(widget);
+
+    if (remv) {
+        list = g_list_remove(list, widget);
+        for (item = list; item; item = g_list_next(item)) {
+            if (G_TYPE_FROM_INSTANCE(item->data) == type)
+                return GTK_WIDGET(item->data);
+        }
+        return NULL;
+    }
+
+    item = g_list_find(list, widget);
+    if (item) {
+        list = g_list_remove_link(list, item);
+        list = g_list_concat(item, list);
+    }
+    else
+        list = g_list_prepend(list, widget);
+
+    return widget;
 }
 
 /**
@@ -1111,9 +1158,11 @@ gwy_app_data_browser_sync_show(GwyContainer *data,
                                GQuark quark,
                                G_GNUC_UNUSED GwyDataView *data_view)
 {
+    GwyContainer *current_data;
     gboolean has_show;
 
-    if (data != gwy_app_get_current_data())
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &current_data, 0);
+    if (data != current_data)
         return;
 
     has_show = gwy_container_contains(data, quark);
@@ -1127,6 +1176,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
                                GQuark quark,
                                GwyDataView *data_view)
 {
+    GwyContainer *current_data;
     gboolean has_dfield, has_layer;
     const gchar *strkey;
     GwyPixmapLayer *layer;
@@ -1150,8 +1200,9 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
     else if (!has_dfield && has_layer)
         gwy_data_view_set_alpha_layer(data_view, NULL);
 
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &current_data, 0);
     if (has_dfield != has_layer
-        && data == gwy_app_get_current_data()) {
+        && data == current_data) {
         gwy_debug("Syncing mask sens flags");
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_DATA_MASK,
                                       has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0);
@@ -1216,10 +1267,8 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
     _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
-    gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
     gtk_widget_show_all(data_window);
-    /* This primarily adds the window to the list of visible windows */
-    gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
+    _gwy_app_data_view_set_current(GWY_DATA_VIEW(data_view));
 
     g_snprintf(key, sizeof(key), "/%d/mask", id);
     quark = g_quark_from_string(key);
@@ -1353,7 +1402,7 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
 {
     GwyAppDataList *list;
     GtkTreeModel *model;
-    GtkWidget *widget, *window;
+    GtkWidget *widget, *window, *succ;
     GObject *object;
     gint id;
 
@@ -1375,12 +1424,18 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     }
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
-        window = gtk_widget_get_toplevel(widget);
-        gwy_app_data_window_remove(GWY_DATA_WINDOW(window));
+        window = gtk_widget_get_ancestor(widget, GWY_TYPE_DATA_WINDOW);
+        succ = gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         list->visible_count--;
+
+        /* FIXME */
+        if (succ)
+            gwy_app_data_browser_select_data_view(GWY_DATA_VIEW(succ));
+        else
+            _gwy_app_data_view_set_current(NULL);
     }
     g_object_unref(object);
 
@@ -1486,6 +1541,8 @@ gwy_app_data_browser_get_3d(GwyAppDataProxy *proxy,
 static gboolean
 gwy_app_data_browser_select_3d(Gwy3DWindow *window3d)
 {
+    gwy_app_widget_queue_manage(GTK_WIDGET(window3d), FALSE);
+
     return FALSE;
 }
 
@@ -1495,6 +1552,9 @@ gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
 {
     GwyApp3DAssociation *assoc;
     GList *item;
+
+    /* XXX: The return value is not useful for anything -- yet? */
+    gwy_app_widget_queue_manage(GTK_WIDGET(window3d), TRUE);
 
     item = gwy_app_data_browser_find_3d(proxy, window3d);
     g_return_if_fail(item);
@@ -1541,7 +1601,6 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     gwy_3d_view_set_material_key(GWY_3D_VIEW(view3d), key);
 
     window3d = gwy_3d_window_new(GWY_3D_VIEW(view3d));
-    gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
 
     name = gwy_app_get_data_field_title(proxy->container, id);
     title = g_strconcat("3D ", name, NULL);
@@ -1559,7 +1618,9 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     assoc->id = id;
     proxy->associated3d = g_list_prepend(proxy->associated3d, assoc);
 
-    _gwy_app_3d_window_setup(assoc->window);
+    _gwy_app_3d_window_setup(GWY_3D_WINDOW(window3d));
+    gwy_app_data_browser_select_3d(GWY_3D_WINDOW(window3d));
+    gtk_widget_show_all(window3d);
 
     return window3d;
 }
@@ -1578,14 +1639,10 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     g_return_if_fail(proxy);
 
     item = gwy_app_data_browser_get_3d(proxy, id);
-    if (item) {
-        GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)item->data;
-
-        gtk_window_present(GTK_WINDOW(assoc->window));
-        return;
-    }
-
-    window3d = gwy_app_data_browser_create_3d(browser, proxy, id);
+    if (item)
+        window3d = GTK_WIDGET(((GwyApp3DAssociation*)item->data)->window);
+    else
+        window3d = gwy_app_data_browser_create_3d(browser, proxy, id);
     gtk_window_present(GTK_WINDOW(window3d));
 }
 
@@ -1782,11 +1839,12 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                              graph);
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
+    _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window));
     gwy_app_add_main_accel_group(GTK_WINDOW(graph_window));
     gtk_window_set_default_size(GTK_WINDOW(graph_window), 480, 360);
     gtk_widget_show_all(graph_window);
     /* This primarily adds the window to the list of visible windows */
-    gwy_app_graph_window_set_current(graph_window);
+    _gwy_app_graph_set_current(GWY_GRAPH(graph));
 
     /* FIXME: A silly place for this? */
     if (browser->sensgroup)
@@ -1803,7 +1861,7 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
 {
     GwyAppDataList *list;
     GtkTreeModel *model;
-    GtkWidget *widget, *window;
+    GtkWidget *widget, *window, *succ;
     GObject *object;
     gint id;
 
@@ -1826,11 +1884,17 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
     else {
         gwy_app_data_proxy_update_visibility(object, FALSE);
         window = gtk_widget_get_toplevel(widget);
-        gwy_app_graph_window_remove(window);
+        succ = gwy_app_widget_queue_manage(widget, TRUE);
         gtk_widget_destroy(window);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, NULL, -1);
         g_object_unref(widget);
         list->visible_count--;
+
+        /* FIXME */
+        if (succ)
+            gwy_app_data_browser_select_graph(GWY_GRAPH(succ));
+        else
+            _gwy_app_data_view_set_current(NULL);
     }
     g_object_unref(object);
 
@@ -2322,7 +2386,6 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
-    GtkWidget *data_window;
     GwyPixmapLayer *layer;
     GwyContainer *data;
     const gchar *strkey;
@@ -2343,11 +2406,8 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     proxy->lists[PAGE_CHANNELS].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_CHANNELS);
-
-    /* FIXME: This updated the other notion of current data */
-    data_window = gtk_widget_get_toplevel(GTK_WIDGET(data_view));
-    if (data_window != (GtkWidget*)gwy_app_data_window_get_current())
-        gwy_app_data_window_set_current(GWY_DATA_WINDOW(data_window));
+    gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
+    _gwy_app_data_view_set_current(data_view);
 }
 
 /**
@@ -2363,7 +2423,6 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyGraphModel *gmodel;
-    GtkWidget *graph_window;
     GwyContainer *data;
     const gchar *strkey;
     GwyAppKeyType type;
@@ -2387,11 +2446,8 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     proxy->lists[PAGE_GRAPHS].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_GRAPHS);
-
-    /* FIXME: This updated the other notion of current graph */
-    graph_window = gtk_widget_get_toplevel(GTK_WIDGET(graph));
-    if (graph_window != gwy_app_graph_window_get_current())
-        gwy_app_graph_window_set_current(graph_window);
+    gwy_app_widget_queue_manage(GTK_WIDGET(graph), FALSE);
+    _gwy_app_graph_set_current(graph);
 }
 
 static GwyAppDataProxy*
@@ -2425,20 +2481,17 @@ gwy_app_data_browser_select_data_field(GwyContainer *data,
                                        gint id)
 {
     GwyAppDataProxy *proxy;
-    GtkWidget *widget;
+    GwyDataView *data_view;
     GtkTreeIter iter;
 
     proxy = gwy_app_data_browser_select(data, id, PAGE_CHANNELS, &iter);
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), &iter,
-                       MODEL_WIDGET, &widget,
+                       MODEL_WIDGET, &data_view,
                        -1);
-    if (widget) {
-        /* FIXME: This updated the other notion of current data */
-        g_object_unref(widget);
-        widget = gtk_widget_get_toplevel(widget);
-        if (widget != gwy_app_graph_window_get_current())
-            gwy_app_graph_window_set_current(widget);
+    if (data_view) {
+        _gwy_app_data_view_set_current(data_view);
+        g_object_unref(data_view);
     }
 }
 
@@ -2447,20 +2500,17 @@ gwy_app_data_browser_select_graph_model(GwyContainer *data,
                                         gint id)
 {
     GwyAppDataProxy *proxy;
-    GtkWidget *widget;
+    GwyGraph *graph;
     GtkTreeIter iter;
 
     proxy = gwy_app_data_browser_select(data, id, PAGE_GRAPHS, &iter);
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), &iter,
-                       MODEL_WIDGET, &widget,
+                       MODEL_WIDGET, &graph,
                        -1);
-    if (widget) {
-        /* FIXME: This updated the other notion of current data */
-        g_object_unref(widget);
-        widget = gtk_widget_get_toplevel(widget);
-        if (widget != (GtkWidget*)gwy_app_data_window_get_current())
-            gwy_app_data_window_set_current(GWY_DATA_WINDOW(widget));
+    if (graph) {
+        _gwy_app_graph_set_current(graph);
+        g_object_unref(graph);
     }
 }
 
@@ -2957,8 +3007,6 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
     GtkTreeIter iter;
     GObject *object, **otarget;
     GObject *dfield = NULL, *gmodel = NULL;  /* Cache current */
-    GwyDataWindow *dw;
-    GwyGraphWindow *gw;
     GQuark quark, *qtarget;
     gint *itarget;
     va_list ap;
@@ -2970,8 +3018,10 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
     browser = gwy_app_data_browser;
     if (browser) {
         current = browser->current;
-        channels = &current->lists[PAGE_CHANNELS];
-        graphs = &current->lists[PAGE_GRAPHS];
+        if (current) {
+            channels = &current->lists[PAGE_CHANNELS];
+            graphs = &current->lists[PAGE_GRAPHS];
+        }
     }
 
     do {
@@ -2983,16 +3033,30 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
             case GWY_APP_DATA_VIEW:
             otarget = va_arg(ap, GObject**);
-            /* XXX: This can be a data view NOT showing current container */
-            dw = gwy_app_data_window_get_current();
-            *otarget = dw ? G_OBJECT(gwy_data_window_get_data_view(dw)) : NULL;
+            *otarget = NULL;
+            if (channels
+                && gwy_app_data_proxy_find_object(channels->store,
+                                                  channels->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(channels->store), &iter,
+                                   MODEL_WIDGET, otarget,
+                                   -1);
+                if (*otarget)
+                    g_object_unref(*otarget);
+            }
             break;
 
             case GWY_APP_GRAPH:
             otarget = va_arg(ap, GObject**);
-            /* XXX: This can be a graph NOT showing current container */
-            gw = GWY_GRAPH_WINDOW(gwy_app_graph_window_get_current());
-            *otarget = gw ? G_OBJECT(gwy_graph_window_get_graph(gw)) : NULL;
+            *otarget = NULL;
+            if (graphs
+                && gwy_app_data_proxy_find_object(graphs->store,
+                                                  graphs->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(graphs->store), &iter,
+                                   MODEL_WIDGET, otarget,
+                                   -1);
+                if (*otarget)
+                    g_object_unref(*otarget);
+            }
             break;
 
             case GWY_APP_DATA_FIELD:
@@ -3195,7 +3259,7 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
  * Returns: The window if found, %NULL if no data window displays the
  *          requested channel.
  **/
-GtkWidget*
+GtkWindow*
 gwy_app_find_window_for_channel(GwyContainer *data,
                                 gint id)
 {
@@ -3239,7 +3303,7 @@ gwy_app_find_window_for_channel(GwyContainer *data,
     data_window = gtk_widget_get_ancestor(data_view, GWY_TYPE_DATA_WINDOW);
     g_object_unref(data_view);
 
-    return data_window ? data_window : NULL;
+    return data_window ? GTK_WINDOW(data_window) : NULL;
 }
 
 static void

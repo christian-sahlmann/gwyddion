@@ -326,9 +326,9 @@ maskcor_do(MaskcorArgs *args)
     if (args->method == GWY_CORRELATION_NORMAL) {
         gwy_app_wait_start(gwy_app_find_window_for_channel(args->data.data,
                                                            args->data.id),
-                           _("Initializing..."));
+                           _("Initializing"));
         state = gwy_data_field_correlate_init(dfield, kernel, retfield);
-        gwy_app_wait_set_message(_("Correlating..."));
+        gwy_app_wait_set_message(_("Correlating"));
         work = 0;
         wpi = gwy_data_field_get_xres(kernel)*gwy_data_field_get_yres(kernel);
         wpi = MIN(wpi, WORK_PER_UPDATE);

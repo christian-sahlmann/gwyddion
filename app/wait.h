@@ -21,11 +21,11 @@
 #ifndef __GWY_APP_WAIT_H__
 #define __GWY_APP_WAIT_H__
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtkwindow.h>
 
 G_BEGIN_DECLS
 
-void     gwy_app_wait_start              (GtkWidget *window,
+void     gwy_app_wait_start              (GtkWindow *window,
                                           const gchar *message);
 void     gwy_app_wait_finish             (void);
 gboolean gwy_app_wait_set_fraction       (gdouble fraction);

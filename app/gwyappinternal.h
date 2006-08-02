@@ -21,9 +21,9 @@
 #ifndef __GWY_APP_INTERNAL_H__
 #define __GWY_APP_INTERNAL_H__
 
-#include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dwindow.h>
+#include <libgwydgets/gwygraphwindow.h>
 
 G_BEGIN_DECLS
 
@@ -32,10 +32,15 @@ gint     _gwy_app_get_n_recent_files          (void);
 
 G_GNUC_INTERNAL
 void     _gwy_app_data_window_setup           (GwyDataWindow *data_window);
-
 G_GNUC_INTERNAL
 void     _gwy_app_3d_window_setup             (Gwy3DWindow *window3d);
+G_GNUC_INTERNAL
+void     _gwy_app_graph_window_setup          (GwyGraphWindow *graph_window);
 
+G_GNUC_INTERNAL
+void     _gwy_app_data_view_set_current       (GwyDataView *data_view);
+G_GNUC_INTERNAL
+void     _gwy_app_graph_set_current           (GwyGraph *graph);
 
 void     gwy_app_main_window_set              (GtkWidget *window);
 gboolean gwy_app_main_window_save_position    (void);

@@ -22,14 +22,15 @@
 #define __GWYDDION_GWYDDION_H__
 
 #include <gtk/gtkwidget.h>
-#include <libgwydgets/gwydatawindow.h>
+#include <libgwyddion/gwycontainer.h>
 
 G_BEGIN_DECLS
 
 GtkWidget* gwy_app_toolbox_create            (void);
 GtkWidget* gwy_app_data_browser_create       (void);
 void       gwy_app_about                     (void);
-void       gwy_app_metadata_browser          (GwyDataWindow *data_window);
+void       gwy_app_metadata_browser          (GwyContainer *data,
+                                              gint id);
 
 void       gwy_app_splash_create             (void);
 void       gwy_app_splash_close              (void);

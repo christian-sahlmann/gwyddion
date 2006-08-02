@@ -401,9 +401,9 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
     /* FIXME */
     gwy_app_wait_start(gwy_app_find_window_for_channel(args->image.data,
                                                        args->image.id),
-                       _("Initializing..."));
+                       _("Initializing"));
     gwy_data_field_correlate_iteration(state);
-    if (!gwy_app_wait_set_message(_("Correlating...")))
+    if (!gwy_app_wait_set_message(_("Correlating")))
         goto get_score_fail;
     do {
         gwy_data_field_correlate_iteration(state);

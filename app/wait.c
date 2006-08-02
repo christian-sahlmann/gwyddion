@@ -23,7 +23,7 @@
 #include <gtk/gtk.h>
 #include "wait.h"
 
-static void gwy_app_wait_create_dialog (GtkWidget *window,
+static void gwy_app_wait_create_dialog (GtkWindow *window,
                                         const gchar *message);
 static void gwy_app_wait_cancelled      (void);
 
@@ -45,7 +45,7 @@ static gboolean silent_waiting = FALSE;
  * Waiting is global, there can be only one at a time.
  **/
 void
-gwy_app_wait_start(GtkWidget *window,
+gwy_app_wait_start(GtkWindow *window,
                    const gchar *message)
 {
     if (window && !GTK_IS_WINDOW(window))
@@ -62,7 +62,7 @@ gwy_app_wait_start(GtkWidget *window,
         silent_waiting = TRUE;
     else
         gwy_app_wait_create_dialog(window, message);
-    wait_widget = window;
+    wait_widget = GTK_WIDGET(window);
 }
 
 /**
@@ -96,11 +96,11 @@ gwy_app_wait_finish(void)
 }
 
 static void
-gwy_app_wait_create_dialog(GtkWidget *window,
+gwy_app_wait_create_dialog(GtkWindow *window,
                            const gchar *message)
 {
     dialog = gtk_dialog_new_with_buttons(_("Please wait"),
-                                         GTK_WINDOW(window),
+                                         window,
                                          GTK_DIALOG_DESTROY_WITH_PARENT
                                          | GTK_DIALOG_NO_SEPARATOR
                                          | GTK_DIALOG_MODAL,

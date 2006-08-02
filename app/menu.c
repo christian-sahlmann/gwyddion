@@ -596,7 +596,7 @@ gwy_app_run_process_func_in_mode(const gchar *name,
     if (!(run & gwy_process_func_get_run_types(name)))
         return;
 
-    data = gwy_app_get_current_data();
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     g_return_if_fail(data);
     gwy_process_func_run(name, data, run);
     gwy_app_update_last_process_func(name);
@@ -653,13 +653,12 @@ gwy_app_update_last_process_func(const gchar *name)
 void
 gwy_app_run_graph_func(const gchar *name)
 {
-    GtkWidget *graph_window;
+    GwyGraph *graph;
 
     gwy_debug("`%s'", name);
-    graph_window = gwy_app_graph_window_get_current();
-    g_return_if_fail(GWY_IS_GRAPH_WINDOW(graph_window));
-    g_return_if_fail(GWY_IS_GRAPH(GWY_GRAPH_WINDOW(graph_window)->graph));
-    gwy_graph_func_run(name, GWY_GRAPH(GWY_GRAPH_WINDOW(graph_window)->graph));
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &graph, 0);
+    g_return_if_fail(graph);
+    gwy_graph_func_run(name, graph);
 }
 
 static void

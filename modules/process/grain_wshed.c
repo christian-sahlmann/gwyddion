@@ -88,7 +88,7 @@ static void        preview                      (WshedControls *controls,
 static gboolean    mask_process                 (GwyDataField *dfield,
                                                  GwyDataField *maskfield,
                                                  WshedArgs *args,
-                                                 GtkWidget *wait_window);
+                                                 GtkWindow *wait_window);
 static void        wshed_load_args              (GwyContainer *container,
                                                  WshedArgs *args);
 static void        wshed_save_args              (GwyContainer *container,
@@ -453,7 +453,8 @@ preview(WshedControls *controls,
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
 
-    controls->computed = mask_process(dfield, mfield, args, controls->dialog);
+    controls->computed = mask_process(dfield, mfield, args,
+                                      GTK_WINDOW(controls->dialog));
     if (controls->computed)
         gwy_data_field_data_changed(mfield);
 }
@@ -478,7 +479,7 @@ run_noninteractive(WshedArgs *args,
 
 static gboolean
 mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
-             GtkWidget *wait_window)
+             GtkWindow *wait_window)
 {
     gdouble max, min, q;
     GwyComputationState *state;

@@ -39,14 +39,6 @@ enum {
 
 static GtkWidget *gwy_app_main_window = NULL;
 
-/* list of existing windows of different kinds. FIXME: maybe some common
- * management functions could be factored out? Unfortunately the data window
- * managements logic differs slightly from the other two. */
-static GList *current_data = NULL;
-static GList *current_graph = NULL;
-static GList *current_3d = NULL;
-static GtkWidget *current_any = NULL;
-
 static GwyTool* current_tool = NULL;
 static GQuark corner_item_quark = 0;
 
@@ -60,14 +52,12 @@ static void       gwy_app_data_window_change_square(GtkWidget *item,
                                                     gpointer user_data);
 static gboolean   gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
                                                        GdkEventButton *event,
-                                                       GtkWidget *view);
+                                                       GtkWidget *ebox);
 static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                                       GdkEventButton *event,
-                                                      GtkWidget *view);
+                                                      GwyDataView *data_view);
 static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
-static gboolean   gwy_app_set_current_window       (GtkWidget *window);
-static void       gwy_app_unset_current_window     (GtkWidget *window);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 static void       gwy_app_data_window_reset_zoom   (void);
 static void       gwy_app_change_mask_color_cb     (void);
@@ -178,15 +168,16 @@ gwy_app_confirm_quit(void)
     GSList *unsaved = NULL;
     gboolean ok;
 
-    gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved);
+    /* gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved); */
     if (!unsaved)
         return TRUE;
     ok = gwy_app_confirm_quit_dialog(unsaved);
     g_slist_free(unsaved);
 
-    return ok;
+    return TRUE;
 }
 
+/* TODO: We must gather containers (== files), not windows (== channels) */
 static void
 gather_unsaved_cb(GwyDataWindow *data_window,
                   GSList **unsaved)
@@ -207,6 +198,7 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
     text = NULL;
     while (unsaved) {
         GwyDataWindow *data_window = GWY_DATA_WINDOW(unsaved->data);
+        /* TODO: must use filename, not channel name, undo is per-file */
         const gchar *filename = gwy_data_window_get_data_name(data_window);
 
         text = g_strconcat(filename, "\n", text, NULL);
@@ -237,50 +229,13 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
  *****************************************************************************/
 
 /**
- * gwy_app_data_window_get_current:
+ * _gwy_app_data_view_set_current:
+ * @data_view: Data view, can be %NULL.
  *
- * Returns the currently active data window, may be %NULL if none is active.
- *
- * Returns: The active data window as a #GwyDataWindow.
+ * Updates application state upon switch to new data.
  **/
-GwyDataWindow*
-gwy_app_data_window_get_current(void)
-{
-    return current_data ? (GwyDataWindow*)current_data->data : NULL;
-}
-
-/**
- * gwy_app_get_current_data:
- *
- * Returns the data of currently active data window.
- *
- * Returns: The current data as a #GwyContainer.
- *          May return %NULL if none is currently active.
- **/
-GwyContainer*
-gwy_app_get_current_data(void)
-{
-    GwyDataWindow *data_window;
-
-    data_window = gwy_app_data_window_get_current();
-    if (!data_window)
-        return NULL;
-
-    return gwy_data_window_get_data(data_window);
-}
-
-/**
- * gwy_app_data_window_set_current:
- * @window: A data window.
- *
- * Makes a data window current, including tool switch, etc.
- *
- * The window must be present in the list.
- *
- * Returns: Always FALSE, no matter what (to be usable as an event handler).
- **/
-gboolean
-gwy_app_data_window_set_current(GwyDataWindow *window)
+void
+_gwy_app_data_view_set_current(GwyDataView *data_view)
 {
     GwyMenuSensFlags mask = (GWY_MENU_FLAG_DATA
                              | GWY_MENU_FLAG_UNDO
@@ -288,29 +243,20 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
                              | GWY_MENU_FLAG_DATA_MASK
                              | GWY_MENU_FLAG_DATA_SHOW);
     GwyMenuSensFlags state = GWY_MENU_FLAG_DATA;
-    GwyDataView *data_view;
     GwyPixmapLayer *layer;
-    GList *item;
     GwyContainer *data;
 
-    gwy_debug("win = %p, tool = %p", window, current_tool);
-    if (gwy_app_set_current_window(GTK_WIDGET(window)))
-        return FALSE;
-
-    data_view = gwy_data_window_get_data_view(window);
-    gwy_app_data_browser_select_data_view(data_view);
-
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(window), FALSE);
-    item = g_list_find(current_data, window);
-    if (item) {
-        current_data = g_list_remove_link(current_data, item);
-        current_data = g_list_concat(item, current_data);
-    }
-    else
-        current_data = g_list_prepend(current_data, window);
+    gwy_debug("%p", data_view);
 
     if (current_tool)
         gwy_tool_data_switched(current_tool, data_view);
+
+    if (!data_view) {
+        gwy_app_sensitivity_set_state(mask, 0);
+        return;
+    }
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
     data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
@@ -325,51 +271,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         state |= GWY_MENU_FLAG_DATA_MASK;
 
     gwy_app_sensitivity_set_state(mask, state);
-
-    return FALSE;
-}
-
-/**
- * gwy_app_data_window_remove:
- * @window: A data window.
- *
- * Removes the data window @window from the list of data windows.
- *
- * All associated structures are freed, active tool gets switched to %NULL
- * window.  But the widget itself is NOT destroyed by this function.
- * It just makes the application `forget' about the window.
- **/
-void
-gwy_app_data_window_remove(GwyDataWindow *window)
-{
-    GwyMenuSensFlags mask = (GWY_MENU_FLAG_DATA
-                             | GWY_MENU_FLAG_UNDO
-                             | GWY_MENU_FLAG_REDO
-                             | GWY_MENU_FLAG_DATA_MASK
-                             | GWY_MENU_FLAG_DATA_SHOW);
-    GList *item;
-
-    gwy_debug("");
-    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
-
-    item = g_list_find(current_data, window);
-    if (!item) {
-        g_critical("Trying to remove GwyDataWindow %p not present in the list",
-                   window);
-        return;
-    }
-    current_data = g_list_delete_link(current_data, item);
-    gwy_debug("Removed window, %p is new head",
-              current_data ? current_data->data : NULL);
-    if (current_data) {
-        gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
-        return;
-    }
-    gwy_app_unset_current_window(GTK_WIDGET(window));
-
-    if (current_tool)
-        gwy_tool_data_switched(current_tool, NULL);
-    gwy_app_sensitivity_set_state(mask, 0);
 }
 
 void
@@ -399,6 +300,8 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
         }
     }
 
+    gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
+
     corner = gtk_arrow_new(GTK_ARROW_RIGHT, GTK_SHADOW_ETCHED_OUT);
     gtk_misc_set_alignment(GTK_MISC(corner), 0.5, 0.5);
     gtk_misc_set_padding(GTK_MISC(corner), 2, 0);
@@ -422,129 +325,37 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
                              corner_menu);
 }
 
-/**
- * gwy_app_data_window_foreach:
- * @func: A function to call on each data window.
- * @user_data: Data to pass to @func.
- *
- * Calls @func on each data window, in no particular order.
- *
- * The function should not create or remove data windows.
- **/
-void
-gwy_app_data_window_foreach(GFunc func,
-                            gpointer user_data)
-{
-    GList *l;
-
-    for (l = current_data; l; l = g_list_next(l))
-        func(l->data, user_data);
-}
-
-/**
- * gwy_app_data_window_get_for_data:
- * @data: A data container.
- *
- * Finds a data window displaying given data.
- *
- * Returns: Data window displaying given data, or %NULL if there is no such
- *          data window.
- **/
-GwyDataWindow*
-gwy_app_data_window_get_for_data(GwyContainer *data)
-{
-    GList *l;
-
-    for (l = current_data; l; l = g_list_next(l)) {
-        if (gwy_data_window_get_data((GwyDataWindow*)l->data) == data)
-            return (GwyDataWindow*)l->data;
-    }
-    return NULL;
-}
-
 /*****************************************************************************
  *                                                                           *
  *     Graph window list management                                          *
  *                                                                           *
  *****************************************************************************/
 
-/**
- * gwy_app_graph_window_get_current:
- *
- * Returns the currently active graph window.
- *
- * Returns: The active graph window as a #GtkWidget.
- *          May return %NULL if none is currently active.
- **/
-GtkWidget*
-gwy_app_graph_window_get_current(void)
+void
+_gwy_app_graph_window_setup(GwyGraphWindow *graph_window)
 {
-    return current_graph ? current_graph->data : NULL;
+    gwy_app_add_main_accel_group(GTK_WINDOW(graph_window));
 }
 
 /**
- * gwy_app_graph_window_set_current:
- * @window: A graph window.
+ * _gwy_app_graph_set_current:
+ * @window: Graph, can be %NULL.
  *
- * Makes a graph window current.
- *
- * Eventually adds @window it to the graph window list if it isn't present
- * there.
- *
- * Returns: Always FALSE, no matter what (to be usable as an event handler).
- **/
-gboolean
-gwy_app_graph_window_set_current(GtkWidget *window)
-{
-    GtkWidget *graph;
-    GList *item;
-
-    gwy_debug("%p", window);
-    if (gwy_app_set_current_window(window))
-        return FALSE;
-
-    item = g_list_find(current_graph, window);
-    if (item) {
-        current_graph = g_list_remove_link(current_graph, item);
-        current_graph = g_list_concat(item, current_graph);
-    }
-    else
-        current_graph = g_list_prepend(current_graph, window);
-
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
-    graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(window));
-    gwy_app_data_browser_select_graph(GWY_GRAPH(graph));
-
-    return FALSE;
-}
-
-/**
- * gwy_app_graph_window_remove:
- * @window: A graph window.
- *
- * Removes the graph window @window from the list of graph windows.
- *
- * All associated structures are freed, but the widget itself is NOT destroyed
- * by this function.  It just makes the application `forget' about the window.
+ * Updates application state upon switch to new graph.
  **/
 void
-gwy_app_graph_window_remove(GtkWidget *window)
+_gwy_app_graph_set_current(GwyGraph *graph)
 {
-    GList *item;
+    gwy_debug("%p", graph);
 
-    item = g_list_find(current_graph, window);
-    if (!item) {
-        g_critical("Trying to remove GwyGraph %p not present in the list",
-                   window);
+    if (!graph) {
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, 0);
         return;
     }
-    current_graph = g_list_delete_link(current_graph, item);
-    if (current_graph)
-        gwy_app_graph_window_set_current(current_graph->data);
-    else {
-        gwy_app_unset_current_window(window);
-        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, 0);
-    }
+
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH);
 }
 
 /*****************************************************************************
@@ -553,12 +364,12 @@ gwy_app_graph_window_remove(GtkWidget *window)
  *                                                                           *
  *****************************************************************************/
 
-static gboolean gwy_app_3d_window_set_current(GtkWidget *window);
-
 void
 _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
 {
     GtkWidget *button;
+
+    gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
 
     button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
@@ -568,88 +379,8 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
                                            G_CALLBACK(gwy_app_3d_window_export),
                                            window3d);
 
-    g_signal_connect(window3d, "focus-in-event",
-                     G_CALLBACK(gwy_app_3d_window_set_current), NULL);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), window3d);
-}
-
-/**
- * gwy_app_3d_window_set_current:
- * @window: A 3D view window.
- *
- * Makes a 3D view window current.
- *
- * Returns: Always FALSE, no matter what (to be usable as an event handler).
- **/
-static gboolean
-gwy_app_3d_window_set_current(GtkWidget *window)
-{
-    gwy_debug("%p", window);
-    gwy_app_set_current_window(window);
-
-    return FALSE;
-}
-
-/*****************************************************************************
- *                                                                           *
- *     Any window list management                                            *
- *                                                                           *
- *****************************************************************************/
-
-static void
-gwy_app_unset_current_window(GtkWidget *window)
-{
-    if (current_any == window)
-        current_any = NULL;
-}
-
-static gboolean
-gwy_app_set_current_window(GtkWidget *window)
-{
-    g_return_val_if_fail(GTK_IS_WINDOW(window), FALSE);
-
-    gwy_debug("current_any: %p, window: %p", current_any, window);
-    if (current_any == window)
-        return TRUE;
-
-    current_any = window;
-    return FALSE;
-}
-
-/**
- * gwy_app_get_current_window:
- * @type: Type of window to return.
- *
- * Returns the currently active window of a given type.
- *
- * Returns: The window, or %NULL if there is no such window.
- **/
-GtkWidget*
-gwy_app_get_current_window(GwyAppWindowType type)
-{
-    switch (type) {
-        case GWY_APP_WINDOW_TYPE_ANY:
-        return current_any;
-        break;
-
-        case GWY_APP_WINDOW_TYPE_DATA:
-        return current_data ? (GtkWidget*)current_data->data : NULL;
-        break;
-
-        case GWY_APP_WINDOW_TYPE_GRAPH:
-        return current_graph ? (GtkWidget*)current_graph->data : NULL;
-        break;
-
-        case GWY_APP_WINDOW_TYPE_3D:
-        return current_3d ? (GtkWidget*)current_3d->data : NULL;
-        break;
-
-        default:
-        g_assert_not_reached();
-        return NULL;
-        break;
-    }
 }
 
 /*****************************************************************************
@@ -742,17 +473,12 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 static gboolean
 gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
                                     GdkEventButton *event,
-                                    GtkWidget *view)
+                                    GwyDataView *data_view)
 {
-    GtkWidget *window;
-
     if (event->button != 3)
         return FALSE;
 
-    window = gtk_widget_get_toplevel(view);
-    g_return_val_if_fail(window, FALSE);
-    gwy_app_data_window_set_current(GWY_DATA_WINDOW(window));
-
+    gwy_app_data_browser_select_data_view(data_view);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
 
@@ -786,16 +512,15 @@ gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
 /**
  * gwy_app_data_corner_menu_update:
  * @menu: Data window corner menu.
- * @window: The corresponding data window.
+ * @data_view: The corresponding data view.
  *
  * Updates corner menu to reflect data window's state before we show it.
  **/
 static void
 gwy_app_data_corner_menu_update(GtkWidget *menu,
-                                GtkWidget *window)
+                                GwyDataView *data_view)
 {
     gboolean realsquare = FALSE;
-    GwyDataView *data_view;
     GwyContainer *data;
     const gchar *key;
     gchar *s;
@@ -805,7 +530,6 @@ gwy_app_data_corner_menu_update(GtkWidget *menu,
     guint i;
 
     /* Square mode */
-    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
     data = gwy_data_view_get_data(data_view);
     key = gwy_data_view_get_data_prefix(data_view);
     s = g_strconcat(key, "/realsquare", NULL);
@@ -856,19 +580,20 @@ gwy_app_data_corner_menu_update(GtkWidget *menu,
 static gboolean
 gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
                                      GdkEventButton *event,
-                                     GtkWidget *view)
+                                     GtkWidget *ebox)
 {
     GtkWidget *window;
+    GwyDataView *data_view;
 
     if (event->button != 1)
         return FALSE;
 
-    window = gtk_widget_get_toplevel(view);
+    window = gtk_widget_get_ancestor(ebox, GWY_TYPE_DATA_WINDOW);
     g_return_val_if_fail(window, FALSE);
-    gwy_app_data_window_set_current(GWY_DATA_WINDOW(window));
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
 
-    gwy_app_data_corner_menu_update(menu, window);
-
+    gwy_app_data_browser_select_data_view(data_view);
+    gwy_app_data_corner_menu_update(menu, data_view);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
 
@@ -915,7 +640,6 @@ gwy_app_data_window_change_square(GtkWidget *item,
                                   gpointer user_data)
 {
     gboolean realsquare = GPOINTER_TO_INT(user_data);
-    GwyDataWindow *data_window;
     GwyDataView *data_view;
     GwyContainer *data;
     const gchar *key;
@@ -927,8 +651,9 @@ gwy_app_data_window_change_square(GtkWidget *item,
     }
 
     gwy_debug("new square mode: %s", realsquare ? "Physical" : "Pixelwise");
-    data_window = gwy_app_data_window_get_current();
-    data_view = gwy_data_window_get_data_view(data_window);
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_DATA_VIEW, &data_view,
+                                     0);
     data = gwy_data_view_get_data(data_view);
     key = gwy_data_view_get_data_prefix(data_view);
     g_return_if_fail(key);
@@ -1053,11 +778,12 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
 static void
 gwy_app_data_window_reset_zoom(void)
 {
-    GwyDataWindow *data_window;
+    GtkWidget *window, *view;
 
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(data_window);
-    gwy_data_window_set_zoom(data_window, 10000);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view, 0);
+    window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW);
+    g_return_if_fail(window);
+    gwy_data_window_set_zoom(GWY_DATA_WINDOW(window), 10000);
 }
 
 static void

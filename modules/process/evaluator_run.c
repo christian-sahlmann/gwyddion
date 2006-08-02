@@ -476,12 +476,12 @@ get_filename()
     GtkDialog *filedialog;
     gchar *filename;
 
-    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Choose evaluator",
-                                                         GTK_WINDOW(gwy_app_get_current_window(GWY_APP_WINDOW_TYPE_DATA)),
-                                                         GTK_FILE_CHOOSER_ACTION_OPEN,
-                                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                                         NULL));
+    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new("Choose evaluator",
+                                                        NULL,
+                                                        GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                                        GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                                        NULL));
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
                                          gwy_app_get_current_directory());
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)

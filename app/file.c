@@ -380,7 +380,7 @@ gwy_app_file_save(void)
     const gchar *name, *filename_sys;
     GwyContainer *data;
 
-    data = gwy_app_get_current_data();
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     g_return_if_fail(data);
     gwy_file_get_data_info(data, &name, &filename_sys);
     if (!name || !filename_sys) {
@@ -409,7 +409,7 @@ gwy_app_file_save_as(void)
     gint response;
     GwyContainer *data;
 
-    data = gwy_app_get_current_data();
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     g_return_if_fail(data);
     gwy_file_get_data_info(data, NULL, (const gchar**)&filename_sys);
 

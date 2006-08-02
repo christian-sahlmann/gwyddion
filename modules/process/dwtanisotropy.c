@@ -107,12 +107,13 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     GwyDataLine *wtcoefs;
     DWTAnisotropyArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize, limit;
+    gint xsize, ysize, newsize, limit, id;
 
     g_return_if_fail(run & DWT_ANISOTROPY_RUN_MODES);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      GWY_APP_MASK_FIELD, &mask,
                                      0);
@@ -122,7 +123,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
         dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_current()),
+            (gwy_app_find_window_for_channel(data, id),
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,

@@ -63,10 +63,9 @@ static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 gpointer user_data);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
-static void       gwy_app_zoom_set_cb          (gpointer data);
+static void       gwy_app_zoom_set_cb          (gpointer user_data);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
-static void       gwy_app_close_cb             (void);
 static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
 static void       gwy_app_change_mask_color_cb (void);
@@ -575,14 +574,6 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_SAVE_AS
         },
         {
-            N_("/Close _Window"),
-            "<control>W",
-            gwy_app_close_cb,
-            0,
-            "<StockItem>",
-            GTK_STOCK_CLOSE
-        },
-        {
             "/---",
             NULL,
             NULL,
@@ -846,7 +837,13 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
 static void
 gwy_app_meta_browser(void)
 {
-    gwy_app_metadata_browser(gwy_app_data_window_get_current());
+    GwyContainer *data;
+    gint id;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    gwy_app_metadata_browser(data, id);
 }
 
 static void
@@ -861,13 +858,15 @@ delete_app_window(void)
 /* FIXME: we should zoom whatever is currently active: datawindow, 3dwindow,
  * graph */
 static void
-gwy_app_zoom_set_cb(gpointer data)
+gwy_app_zoom_set_cb(gpointer user_data)
 {
-    GwyDataWindow *data_window;
+    GtkWidget *window, *view;
 
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(data_window);
-    gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view, 0);
+    window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW);
+    g_return_if_fail(window);
+    gwy_data_window_set_zoom(GWY_DATA_WINDOW(window),
+                             GPOINTER_TO_INT(user_data));
 }
 
 static void
@@ -888,16 +887,6 @@ gwy_app_redo_cb(void)
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     if (data)
         gwy_app_undo_redo_container(data);
-}
-
-static void
-gwy_app_close_cb(void)
-{
-    GtkWidget *window;
-    gboolean boo;
-
-    if ((window = gwy_app_get_current_window(GWY_APP_WINDOW_TYPE_ANY)))
-        g_signal_emit_by_name(window, "delete-event", NULL, &boo);
 }
 
 static void
