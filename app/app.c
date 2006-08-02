@@ -69,6 +69,7 @@ static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
 static gboolean   gwy_app_set_current_window       (GtkWidget *window);
 static void       gwy_app_unset_current_window     (GtkWidget *window);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
+static void       gwy_app_data_window_reset_zoom   (void);
 
 /*****************************************************************************
  *                                                                           *
@@ -688,8 +689,8 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
             "level", GDK_L, GDK_CONTROL_MASK
         },
         {
-            N_("Zoom _1:1"), gwy_app_zoom_set_cb,
-            GINT_TO_POINTER(10000), 0, 0
+            N_("Zoom _1:1"), gwy_app_data_window_reset_zoom,
+            NULL, 0, 0
         },
     };
     GwySensitivityGroup *sensgroup;
@@ -969,18 +970,6 @@ gwy_app_switch_tool(const gchar *toolname)
     }
 }
 
-/* FIXME: we should zoom whatever is currently active: datawindow, 3dwindow,
- * graph */
-void
-gwy_app_zoom_set_cb(gpointer data)
-{
-    GwyDataWindow *data_window;
-
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(data_window);
-    gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
-}
-
 static void
 gwy_app_save_3d_export(GtkWidget *button, Gwy3DWindow *gwy3dwindow)
 {
@@ -1058,6 +1047,16 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(gwy3dwindow));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_widget_show_all(dialog);
+}
+
+static void
+gwy_app_data_window_reset_zoom(void)
+{
+    GwyDataWindow *data_window;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(data_window);
+    gwy_data_window_set_zoom(data_window, 10000);
 }
 
 void

@@ -40,7 +40,6 @@ void     _gwy_app_3d_window_setup             (Gwy3DWindow *window3d);
 void     gwy_app_main_window_set              (GtkWidget *window);
 gboolean gwy_app_main_window_save_position    (void);
 void     gwy_app_main_window_restore_position (void);
-void     gwy_app_zoom_set_cb                  (gpointer data);
 void     gwy_app_change_mask_color_cb         (void);
 void     gwy_app_change_default_mask_color_cb (void);
 void     gwy_app_menu_set_recent_files_menu   (GtkWidget *menu);

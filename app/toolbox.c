@@ -62,6 +62,7 @@ static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 gpointer user_data);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
+static void       gwy_app_zoom_set_cb          (gpointer data);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
 static void       gwy_app_close_cb             (void);
@@ -854,12 +855,25 @@ delete_app_window(void)
                           NULL, &boo);
 }
 
+/* FIXME: we should zoom whatever is currently active: datawindow, 3dwindow,
+ * graph */
+static void
+gwy_app_zoom_set_cb(gpointer data)
+{
+    GwyDataWindow *data_window;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(data_window);
+    gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
+}
+
 static void
 gwy_app_undo_cb(void)
 {
     GwyContainer *data;
 
-    if ((data = gwy_data_window_get_data(gwy_app_data_window_get_current())))
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    if (data)
         gwy_app_undo_undo_container(data);
 }
 
@@ -868,7 +882,8 @@ gwy_app_redo_cb(void)
 {
     GwyContainer *data;
 
-    if ((data = gwy_data_window_get_data(gwy_app_data_window_get_current())))
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    if (data)
         gwy_app_undo_redo_container(data);
 }
 
@@ -894,7 +909,7 @@ gwy_app_tool_use_cb(const gchar *toolname,
         gwy_app_switch_tool(toolname);
 }
 
-void
+static void
 gwy_app_duplicate_cb(void)
 {
     GwyContainer *container;
