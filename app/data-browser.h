@@ -111,6 +111,9 @@ void gwy_app_data_browser_select_data_field (GwyContainer *data,
                                              gint id);
 void gwy_app_data_browser_select_graph_model(GwyContainer *data,
                                              gint id);
+/* XXX */
+void     gwy_app_data_browser_show_3d       (GwyContainer *data,
+                                             gint id);
 
 G_END_DECLS
 

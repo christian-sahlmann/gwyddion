@@ -1452,7 +1452,7 @@ gwy_app_data_browser_channel_name_edited(G_GNUC_UNUSED GtkCellRendererText *rend
 }
 
 static GList*
-gwy_app_data_browser_3d_find(GwyAppDataProxy *proxy,
+gwy_app_data_browser_find_3d(GwyAppDataProxy *proxy,
                              Gwy3DWindow *window3d)
 {
     GList *l;
@@ -1461,6 +1461,22 @@ gwy_app_data_browser_3d_find(GwyAppDataProxy *proxy,
         GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)l->data;
 
         if (assoc->window == window3d)
+            return l;
+    }
+
+    return NULL;
+}
+
+static GList*
+gwy_app_data_browser_get_3d(GwyAppDataProxy *proxy,
+                            gint id)
+{
+    GList *l;
+
+    for (l = proxy->associated3d; l; l = g_list_next(l)) {
+        GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)l->data;
+
+        if (assoc->id == id)
             return l;
     }
 
@@ -1480,7 +1496,7 @@ gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
     GwyApp3DAssociation *assoc;
     GList *item;
 
-    item = gwy_app_data_browser_3d_find(proxy, window3d);
+    item = gwy_app_data_browser_find_3d(proxy, window3d);
     g_return_if_fail(item);
 
     assoc = (GwyApp3DAssociation*)item->data;
@@ -1489,7 +1505,7 @@ gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
 }
 
 static GtkWidget*
-gwy_app_data_browser_create_3d(GwyAppDataBrowser *browser,
+gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
                                GwyAppDataProxy *proxy,
                                gint id)
 {
@@ -1546,6 +1562,31 @@ gwy_app_data_browser_create_3d(GwyAppDataBrowser *browser,
     _gwy_app_3d_window_setup(assoc->window);
 
     return window3d;
+}
+
+void
+gwy_app_data_browser_show_3d(GwyContainer *data,
+                             gint id)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GtkWidget *window3d;
+    GList *item;
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    g_return_if_fail(proxy);
+
+    item = gwy_app_data_browser_get_3d(proxy, id);
+    if (item) {
+        GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)item->data;
+
+        gtk_window_present(GTK_WINDOW(assoc->window));
+        return;
+    }
+
+    window3d = gwy_app_data_browser_create_3d(browser, proxy, id);
+    gtk_window_present(GTK_WINDOW(window3d));
 }
 
 static GtkWidget*

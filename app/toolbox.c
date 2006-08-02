@@ -944,7 +944,14 @@ gwy_app_gl_view_maybe_cb(void)
     static GtkWidget *dialog = NULL;
 
     if (gwy_app_gl_is_ok()) {
-        gwy_app_3d_view_cb();
+        GwyContainer *data;
+        gint id;
+
+        gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                         GWY_APP_DATA_FIELD_ID, &id,
+                                         0);
+        g_return_if_fail(data);
+        gwy_app_data_browser_show_3d(data, id);
         return;
     }
 

@@ -68,7 +68,6 @@ static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
 static gboolean   gwy_app_set_current_window       (GtkWidget *window);
 static void       gwy_app_unset_current_window     (GtkWidget *window);
-static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 
 /*****************************************************************************
@@ -548,113 +547,11 @@ gwy_app_graph_window_remove(GtkWidget *window)
 
 /*****************************************************************************
  *                                                                           *
- *     3D window list management                                             *
+ *     3D window                                                             *
  *                                                                           *
  *****************************************************************************/
 
-static GtkWidget* gwy_app_3d_window_create     (GwyContainer *data,
-                                                gint id);
-static gboolean   gwy_app_3d_window_set_current(GtkWidget *window);
-static void       gwy_app_3d_window_remove     (GtkWidget *window);
-
-void
-gwy_app_3d_view_cb(void)
-{
-    GwyContainer *data;
-    gint id;
-
-    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
-    g_return_if_fail(data);
-    gwy_app_3d_window_create(data, id);
-}
-
-/**
- * gwy_app_3d_window_create:
- * @data_window: A data window to create associated 3D view for.
- *
- * Creates a new 3D view window showing the same data as @data_window.
- *
- * Also does some housekeeping and calls gtk_window_present() on it.
- *
- * Returns: The newly created 3D view window.
- **/
-static GtkWidget*
-gwy_app_3d_window_create(GwyContainer *data,
-                         gint id)
-{
-    GtkWidget *gwy3dview, *gwy3dwindow, *button;
-    gchar *name, *title, key[40];
-    guint len;
-
-    gwy3dview = gwy_3d_view_new(data);
-    g_snprintf(key, sizeof(key), "/%d/", id);
-    len = strlen(key);
-
-    g_strlcat(key, "3d", sizeof(key));
-    gwy_3d_view_set_setup_prefix(GWY_3D_VIEW(gwy3dview), key);
-
-    key[len] = '\0';
-    g_strlcat(key, "data", sizeof(key));
-    gwy_3d_view_set_data_key(GWY_3D_VIEW(gwy3dview), key);
-
-    key[len] = '\0';
-    g_strlcat(key, "3d/palette", sizeof(key));
-    gwy_3d_view_set_gradient_key(GWY_3D_VIEW(gwy3dview), key);
-
-    key[len] = '\0';
-    g_strlcat(key, "3d/material", sizeof(key));
-    gwy_3d_view_set_material_key(GWY_3D_VIEW(gwy3dview), key);
-
-    gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
-    gwy_app_add_main_accel_group(GTK_WINDOW(gwy3dwindow));
-
-    name = gwy_app_get_data_field_title(data, id);
-    title = g_strconcat("3D ", name, NULL);
-    gtk_window_set_title(GTK_WINDOW(gwy3dwindow), title);
-    g_free(title);
-    g_free(name);
-
-    button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
-    gwy_3d_window_add_action_widget(GWY_3D_WINDOW(gwy3dwindow), button);
-    gwy_3d_window_add_small_toolbar_button(GWY_3D_WINDOW(gwy3dwindow),
-                                           GTK_STOCK_SAVE,
-                                           _("Export 3D view to PNG image"),
-                                           G_CALLBACK(gwy_app_3d_window_export),
-                                           gwy3dwindow);
-
-    current_3d = g_list_append(current_3d, gwy3dwindow);
-    /*
-     * There are some signal cross-connections.
-     *
-     * object    signal            handler           data      destroy in
-     *
-     * window    "title-changed"   title_changed()   3dwindow  destroyed()
-     * window    "destroyed"       orphaned()        3dwindow  destroyed()
-     * view      "updated"         3d_view_update()  3dview    destroyed()
-     * 3dwindow  "destroy"         destroyed()       window    orphaned()
-     * 3dwindow  "focun-in-event"  set_current()     NULL      --
-     * button    "clicked"         export()          3dwindow  --
-     */
-    /*
-    g_signal_connect(data_window, "title-changed",
-                     G_CALLBACK(gwy_app_3d_window_title_changed), gwy3dwindow);
-    g_signal_connect(data_window, "destroy",
-                     G_CALLBACK(gwy_app_3d_window_orphaned), gwy3dwindow);
-                     */
-    g_signal_connect(gwy3dwindow, "focus-in-event",
-                     G_CALLBACK(gwy_app_3d_window_set_current), NULL);
-    g_signal_connect(gwy3dwindow, "destroy",
-                     G_CALLBACK(gwy_app_3d_window_destroyed), NULL);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_3d_window_export), gwy3dwindow);
-
-    gtk_widget_show_all(gwy3dwindow);
-    gtk_window_present(GTK_WINDOW(gwy3dwindow));
-
-    return gwy3dwindow;
-}
+static gboolean gwy_app_3d_window_set_current(GtkWidget *window);
 
 void
 _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
@@ -681,90 +578,16 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
  *
  * Makes a 3D view window current.
  *
- * Eventually adds @window it to the 3D view window list if it isn't present
- * there.
- *
  * Returns: Always FALSE, no matter what (to be usable as an event handler).
  **/
 static gboolean
 gwy_app_3d_window_set_current(GtkWidget *window)
 {
-    GList *item;
-
     gwy_debug("%p", window);
-    if (gwy_app_set_current_window(window))
-        return FALSE;
-
-    item = g_list_find(current_3d, window);
-    g_return_val_if_fail(item, FALSE);
-    current_3d = g_list_remove_link(current_3d, item);
-    current_3d = g_list_concat(item, current_3d);
-    /* TODO: set sensitivity (XXX: used to hang) */
+    gwy_app_set_current_window(window);
 
     return FALSE;
 }
-
-/**
- * gwy_app_3d_window_remove:
- * @window: A 3D view window.
- *
- * Removes the 3D view window @window from the list of 3D view windows.
- *
- * All associated structures are freed, but the widget itself is NOT destroyed
- * by this function.  It just makes the application `forget' about the window.
- **/
-static void
-gwy_app_3d_window_remove(GtkWidget *window)
-{
-    /*
-    static const GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_3D, 0
-    };
-    */
-    GList *item;
-
-    g_return_if_fail(GWY_IS_3D_WINDOW(window));
-
-    item = g_list_find(current_3d, window);
-    if (!item) {
-        g_critical("Trying to remove 3D window %p not present in the list",
-                   window);
-        return;
-    }
-    g_free(g_object_get_data(G_OBJECT(item->data), "gwy-app-export-filename"));
-    current_3d = g_list_delete_link(current_3d, item);
-    if (current_3d)
-        gwy_app_3d_window_set_current(current_3d->data);
-    else {
-        gwy_app_unset_current_window(window);
-    /* FIXME: hangs.
-    else
-        gwy_app_toolbox_update_state(&sens_data);
-        */
-    }
-}
-
-/* XXX
-static void
-gwy_app_3d_window_title_changed(GtkWidget *data_window,
-                                GtkWidget *gwy3dwindow)
-{
-    gchar *name, *title;
-
-    name = gwy_data_window_get_base_name(GWY_DATA_WINDOW(data_window));
-    title = g_strconcat("3D ", name, NULL);
-    gtk_window_set_title(GTK_WINDOW(gwy3dwindow), title);
-    g_free(title);
-    g_free(name);
-}
-*/
-
-static void
-gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow)
-{
-    gwy_app_3d_window_remove(gwy3dwindow);
-}
-
 
 /*****************************************************************************
  *                                                                           *
