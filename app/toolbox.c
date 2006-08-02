@@ -78,7 +78,7 @@ static GtkTargetEntry dnd_target_table[] = {
 /* Toolbox contents.  To certain degree ready to externalize */
 static const gchar *proc_functions[] = {
     "fix_zero", "scale", "rotate", "unrotate",
-    "level", "facet-level", "fft", "cwt",
+    "level", "facet-level", "line_correct_median", "laplace",
     "grain_mark", "grain_wshed", "grain_rem_threshold", "grain_dist",
     "mask_remove", "shade", "polylevel", "scars_remove",
 };
@@ -147,12 +147,14 @@ add_button(GtkWidget *toolbar,
            GtkTooltips *tips)
 {
     GtkWidget *button;
+    const gchar *stock_id;
 
     button = gtk_button_new();
     gtk_table_attach_defaults(GTK_TABLE(toolbar), button,
                               i%4, i%4 + 1, i/4, i/4 + 1);
+    stock_id = action->stock_id ? action->stock_id : GTK_STOCK_MISSING_IMAGE;
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(action->stock_id,
+                      gtk_image_new_from_stock(stock_id,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     g_signal_connect_swapped(button, "clicked",
                              action->callback, (gpointer)action->cbdata);
@@ -169,13 +171,15 @@ add_rbutton(GtkWidget *toolbar,
             GtkTooltips *tips)
 {
     GtkWidget *button;
+    const gchar *stock_id;
 
     button = gtk_radio_button_new_from_widget(group);
     gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
     gtk_table_attach_defaults(GTK_TABLE(toolbar), button,
                               i%4, i%4 + 1, i/4, i/4 + 1);
+    stock_id = action->stock_id ? action->stock_id : GTK_STOCK_MISSING_IMAGE;
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(action->stock_id,
+                      gtk_image_new_from_stock(stock_id,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     g_signal_connect_swapped(button, "clicked",
                              action->callback, (gpointer)action->cbdata);
@@ -314,8 +318,7 @@ gwy_app_toolbox_process_new(void)
 
     funcs = g_ptr_array_new();
     for (i = 0; i < G_N_ELEMENTS(proc_functions); i++) {
-        if (!gwy_process_func_exists(proc_functions[i])
-            || !gwy_process_func_get_stock_id(proc_functions[i]))
+        if (!gwy_process_func_exists(proc_functions[i]))
             continue;
         g_ptr_array_add(funcs, (gpointer)proc_functions[i]);
     }
@@ -351,8 +354,7 @@ gwy_app_toolbox_graph_new(void)
 
     funcs = g_ptr_array_new();
     for (i = 0; i < G_N_ELEMENTS(graph_functions); i++) {
-        if (!gwy_graph_func_exists(graph_functions[i])
-            || !gwy_graph_func_get_stock_id(graph_functions[i]))
+        if (!gwy_graph_func_exists(graph_functions[i]))
             continue;
         g_ptr_array_add(funcs, (gpointer)graph_functions[i]);
     }
