@@ -192,9 +192,6 @@ merge_la_LIBADD = $(module_libadd)
 #nanoindent_adjust_la_SOURCES = nanoindent_adjust.c
 #nanoindent_adjust_la_LIBADD = $(module_libadd)
 
-#nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
-#nanoindent_analyze_la_LIBADD = $(module_libadd)
-
 outliers_la_SOURCES = outliers.c
 outliers_la_LIBADD = $(module_libadd)
 
