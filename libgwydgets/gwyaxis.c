@@ -126,7 +126,8 @@ static void    gwy_axis_adjust              (GwyAxis *axis,
 static void    gwy_axis_entry               (GwySciText *sci_text,
                                              GwyAxis *axis);
 static void    gwy_axis_rescaled            (GwyAxis *axis);
-static void    gwy_axis_refresh             (GwyAxis *axis);
+static void    gwy_axis_notify              (GwyAxis *axis,
+                                             GParamSpec *pspec);
 
 static guint axis_signals[LAST_SIGNAL] = { 0 };
 
@@ -344,7 +345,7 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     axis->par.label_font = pango_font_description_copy(description);
 
     axis->notify_id = g_signal_connect_swapped(axis, "notify",
-                                               G_CALLBACK(gwy_axis_refresh),
+                                               G_CALLBACK(gwy_axis_notify),
                                                axis);
 
     return GTK_WIDGET(axis);
@@ -714,8 +715,12 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 }
 
 static void
-gwy_axis_refresh(GwyAxis *axis)
+gwy_axis_notify(GwyAxis *axis,
+                GParamSpec *pspec)
 {
+    if (!g_type_is_a(pspec->owner_type, GWY_TYPE_AXIS))
+        return;
+
     gwy_axis_adjust(axis, -1, -1);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
