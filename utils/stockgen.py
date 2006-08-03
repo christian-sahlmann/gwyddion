@@ -82,8 +82,7 @@ def update_documentation(images):
                 '\n')
     docs = []
     for k, v in images.items():
-        k = re.sub(r'_1_1', '_1:1', k)
-        words = k.split('_')
+        words = re.sub(r'_1_1', '_1:1', k).split('_')
         for i in range(len(words)):
             # Heuristics: words without wovels are abbreviations
             if not re.search(r'[aeiouy]', words[i]):

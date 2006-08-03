@@ -838,10 +838,10 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_STOCK_ZOOM_1:1
+ * GWY_STOCK_ZOOM_1_1
  *
  * The "Zoom-1:1" stock icon.
- * <inlinegraphic fileref="../gwy_zoom_1:1-24.png" format="PNG"/>
+ * <inlinegraphic fileref="../gwy_zoom_1_1-24.png" format="PNG"/>
  **/
 
 /**
