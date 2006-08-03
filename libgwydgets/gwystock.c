@@ -565,6 +565,13 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_LINE_LEVEL
+ *
+ * The "Line-Level" stock icon.
+ * <inlinegraphic fileref="../gwy_line_level-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_LOGSCALE_HORIZONTAL
  *
  * The "Logscale-Horizontal" stock icon.

@@ -65,6 +65,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_LEVEL                 "gwy_level"
 #define GWY_STOCK_LEVEL_TRIANGLE        "gwy_level_triangle"
 #define GWY_STOCK_LIGHT_ROTATE          "gwy_light_rotate"
+#define GWY_STOCK_LINE_LEVEL            "gwy_line_level"
 #define GWY_STOCK_LOGSCALE_HORIZONTAL   "gwy_logscale_horizontal"
 #define GWY_STOCK_LOGSCALE_VERTICAL     "gwy_logscale_vertical"
 #define GWY_STOCK_MASK                  "gwy_mask"

@@ -9,7 +9,6 @@ icondatadir = $(datadir)/pixmaps
 #   graph_export_bitmap
 #   graph_export_vector
 #   graph_gauss
-#   line_correction
 #   measure_scale
 #   none
 #   pointer
@@ -69,6 +68,7 @@ pixmapdata_DATA = \
 	gwy_level-24.png \
 	gwy_level_triangle-24.png \
 	gwy_light_rotate-24.png \
+	gwy_line_level-24.png \
 	gwy_logscale_horizontal-24.png \
 	gwy_logscale_vertical-24.png \
 	gwy_mask-24.png \
