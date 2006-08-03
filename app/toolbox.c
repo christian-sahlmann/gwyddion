@@ -81,9 +81,9 @@ static GtkTargetEntry dnd_target_table[] = {
 /* Toolbox contents.  To certain degree ready to externalize */
 static const gchar *proc_functions[] = {
     "fix_zero", "scale", "rotate", "unrotate",
-    "level", "facet-level", "line_correct_median", "laplace",
+    "level", "facet-level", "line_correct_median", "scars_remove",
     "grain_mark", "grain_wshed", "grain_rem_threshold", "grain_dist",
-    "mask_remove", "shade", "polylevel", "scars_remove",
+    "mask_remove", "shade", "polylevel", "laplace",
 };
 
 static const gchar *graph_functions[] = {
