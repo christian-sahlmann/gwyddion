@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it1.99.4\n"
 "Report-Msgid-Bugs-To: klapetek@gwyddion.net\n"
-"POT-Creation-Date: 2006-07-29 04:18+0200\n"
+"POT-Creation-Date: 2006-08-03 04:18+0200\n"
 "PO-Revision-Date: 2005-12-01 12:31+0100\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -23,8 +23,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.9\n"
 
-#: libgwyddion/gwyinventory.c:1311 app/data-browser.c:1317
-#: app/data-browser.c:1747 app/data-browser.c:2717 app/resource-editor.c:363
+#: libgwyddion/gwyinventory.c:1311 app/data-browser.c:1368
+#: app/data-browser.c:1959 app/data-browser.c:2915 app/resource-editor.c:363
 msgid "Untitled"
 msgstr "Senza titolo"
 
@@ -377,11 +377,11 @@ msgstr "pixel"
 #: modules/file/pixmap.c:1697 modules/file/rawfile.c:372
 #: modules/process/angle_dist.c:172 modules/process/calibrate.c:248
 #: modules/process/cwt.c:168 modules/process/drift.c:227
-#: modules/process/dwt.c:165 modules/process/dwtanisotropy.c:180
+#: modules/process/dwt.c:165 modules/process/dwtanisotropy.c:181
 #: modules/process/dwtdenoise.c:176 modules/process/facet_analysis.c:262
-#: modules/process/fft.c:303 modules/process/fft_filter_2d.c:399
+#: modules/process/fft.c:304 modules/process/fft_filter_2d.c:399
 #: modules/process/fractal.c:206 modules/process/grain_mark.c:238
-#: modules/process/grain_rem_threshold.c:198 modules/process/grain_wshed.c:178
+#: modules/process/grain_rem_threshold.c:198 modules/process/grain_wshed.c:179
 #: modules/process/level.c:258 modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176 modules/process/polylevel.c:305
 #: modules/process/rotate.c:252 modules/process/scale.c:176
@@ -671,7 +671,7 @@ msgstr ""
 msgid "Module Browser"
 msgstr "Navigatore dei moduli"
 
-#: libgwymodule/gwymodulebrowser.c:107 modules/process/fft.c:294
+#: libgwymodule/gwymodulebrowser.c:107 modules/process/fft.c:295
 msgid "Module"
 msgstr "Modulo"
 
@@ -761,7 +761,7 @@ msgstr ""
 "versione 2 o (a scelta) ogni versione successiva. Per il testo completo "
 "della licenza vedi il COPYING incluso nel pacchetto sorgente</small>"
 
-#: app/app.c:220
+#: app/app.c:211
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -772,60 +772,56 @@ msgstr ""
 "%s\n"
 "Uscire ugualmente?"
 
-#: app/app.c:671
+#: app/app.c:374
 msgid "Export"
 msgstr "Esporta"
 
-#: app/app.c:675
+#: app/app.c:378
 msgid "Export 3D view to PNG image"
 msgstr "Esporta veduta 3D come immagine PNG"
 
-#: app/app.c:899
+#: app/app.c:408
 msgid "Mask _Color..."
 msgstr ""
 
-#: app/app.c:915
+#: app/app.c:424
 msgid "Zoom _1:1"
 msgstr ""
 
-#: app/app.c:1113
+#: app/app.c:616
 msgid "Pi_xelwise Square"
 msgstr ""
 
-#: app/app.c:1123
+#: app/app.c:626
 msgid "_Physically Square"
 msgstr ""
 
-#: app/app.c:1273
+#: app/app.c:764
 msgid "Export 3D View"
 msgstr "Esporta vista 3D"
 
-#: app/app.c:1320
-msgid "Change Default Mask Color"
-msgstr "Cambia Colore Predefinito Maschera"
-
-#: app/data-browser.c:1980
+#: app/data-browser.c:2192
 msgid "Data Browser"
 msgstr ""
 
-#: app/data-browser.c:1998
+#: app/data-browser.c:2210
 msgid "Channels"
 msgstr ""
 
-#: app/data-browser.c:2012
+#: app/data-browser.c:2224
 msgid "Graphs"
 msgstr ""
 
-#: app/data-browser.c:2028 app/meta.c:144 app/resource-editor.c:151
+#: app/data-browser.c:2240 app/meta.c:144 app/resource-editor.c:151
 #: modules/file/rawfile.c:956
 msgid "_Delete"
 msgstr "_Elimina"
 
-#: app/data-browser.c:2035
+#: app/data-browser.c:2247
 msgid "_Close File"
 msgstr ""
 
-#: app/data-browser.c:2755
+#: app/data-browser.c:2953
 #, c-format
 msgid "Unknown channel %d"
 msgstr ""
@@ -1021,11 +1017,11 @@ msgstr "Larghezza"
 msgid "Hide"
 msgstr ""
 
-#: app/menu.c:448 app/toolbox.c:247
+#: app/menu.c:448 app/toolbox.c:254
 msgid "_Data Process"
 msgstr "_Elaborazione Dati"
 
-#: app/menu.c:477 app/toolbox.c:251
+#: app/menu.c:477 app/toolbox.c:258
 msgid "_Graph"
 msgstr "_Grafico"
 
@@ -1045,11 +1041,11 @@ msgstr "Ripeti"
 msgid "Re-show"
 msgstr "Mostra di nuovo"
 
-#: app/menu.c:819
+#: app/menu.c:818
 msgid "_Document history"
 msgstr "Cronologia"
 
-#: app/meta.c:107
+#: app/meta.c:106
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Metadata di %s (%s)"
@@ -1153,127 +1149,127 @@ msgstr "Inizio"
 msgid " is free software released under GNU GPL."
 msgstr " è un software libero rilasciato sotto GNU GPL."
 
-#: app/toolbox.c:193
+#: app/toolbox.c:200
 msgid "Zoom in"
 msgstr "Ingrandisci"
 
-#: app/toolbox.c:199
+#: app/toolbox.c:206
 msgid "Zoom 1:1"
 msgstr "Zoom 1:1"
 
-#: app/toolbox.c:205
+#: app/toolbox.c:212
 msgid "Zoom out"
 msgstr "Rimpicciolisci"
 
-#: app/toolbox.c:211
+#: app/toolbox.c:218
 msgid "Display a 3D view of data"
 msgstr "Vista 3D "
 
-#: app/toolbox.c:240
+#: app/toolbox.c:247
 msgid "_File"
 msgstr "_File"
 
-#: app/toolbox.c:242
+#: app/toolbox.c:249
 msgid "_Edit"
 msgstr "_Modifica"
 
-#: app/toolbox.c:254
+#: app/toolbox.c:261
 msgid "_Meta"
 msgstr "_Meta"
 
-#: app/toolbox.c:262
+#: app/toolbox.c:269
 msgid "View"
 msgstr "Vista"
 
-#: app/toolbox.c:266
+#: app/toolbox.c:273
 msgid "Data Process"
 msgstr "Elaborazione Dati"
 
-#: app/toolbox.c:270
+#: app/toolbox.c:277
 msgid "Graph"
 msgstr "Grafico"
 
-#: app/toolbox.c:274
+#: app/toolbox.c:281
 msgid "Tools"
 msgstr "Strumenti"
 
-#: app/toolbox.c:470
+#: app/toolbox.c:475
 msgid "/Module _Browser"
 msgstr "/Navigatore Moduli"
 
-#: app/toolbox.c:478
+#: app/toolbox.c:483
 msgid "/_Metadata Browser"
 msgstr "/Navigatore _Metadata"
 
-#: app/toolbox.c:493
+#: app/toolbox.c:498
 msgid "/_About Gwyddion"
 msgstr "/Informazioni su Gwyddion"
 
-#: app/toolbox.c:532
+#: app/toolbox.c:537
 msgid "/_Open"
 msgstr "/Apri"
 
-#: app/toolbox.c:540
+#: app/toolbox.c:545
 msgid "/Open _Recent"
 msgstr "/Apri _Recenti"
 
-#: app/toolbox.c:548
+#: app/toolbox.c:553
 msgid "/Open Recent/---"
 msgstr "/Apri Recenti/---"
 
-#: app/toolbox.c:556
+#: app/toolbox.c:561
 msgid "/_Save"
 msgstr "/_Salva"
 
-#: app/toolbox.c:564
+#: app/toolbox.c:569
 msgid "/Save _As"
 msgstr "/Salva con nome"
 
-#: app/toolbox.c:572
-msgid "/Close _Window"
-msgstr ""
-
-#: app/toolbox.c:588
+#: app/toolbox.c:585
 msgid "/_Quit"
 msgstr "/Esci"
 
-#: app/toolbox.c:632
+#: app/toolbox.c:629
 msgid "/_Undo"
 msgstr "/Annulla"
 
-#: app/toolbox.c:640
+#: app/toolbox.c:637
 msgid "/_Redo"
 msgstr "/_Rifai"
 
-#: app/toolbox.c:648
+#: app/toolbox.c:645
 msgid "/_Duplicate"
 msgstr "/_Duplica"
 
-#: app/toolbox.c:664
+#: app/toolbox.c:661
 msgid "/Mask _Color..."
 msgstr "/Colore _Maschera"
 
-#: app/toolbox.c:672
+#: app/toolbox.c:669
 msgid "/Default Mask _Color..."
 msgstr "/Maschera Colore _Predefinita"
 
-#: app/toolbox.c:680
+#: app/toolbox.c:677
 msgid "/Color _Gradients..."
 msgstr "/Gradient_Colore..."
 
-#: app/toolbox.c:688
+#: app/toolbox.c:685
 msgid "/G_L Materials..."
 msgstr "/Materiali G_L..."
 
-#: app/toolbox.c:920
+#: app/toolbox.c:917
+msgid "Change Default Mask Color"
+msgstr "Cambia Colore Predefinito Maschera"
+
+#: app/toolbox.c:946
 msgid "noun|Copy"
 msgstr ""
 
-#: app/toolbox.c:956
+#: app/toolbox.c:989
 msgid "OpenGL 3D graphics not available"
 msgstr "Grafica 3D OpenGL non disponibile"
 
-#: app/toolbox.c:963
+#: app/toolbox.c:996
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
@@ -1282,7 +1278,7 @@ msgstr ""
 "eventuali messaggi di avviso/errore stampati sulla console all'avvio di "
 "Gwyddion"
 
-#: app/toolbox.c:967
+#: app/toolbox.c:1000
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Questa versione di Gwyddion non ha il supporto OpenGL"
 
@@ -1958,7 +1954,7 @@ msgstr "Altezza:"
 
 #: modules/file/rawfile.c:645 modules/process/grain_dist.c:303
 #: modules/process/grain_mark.c:296 modules/process/grain_rem_threshold.c:274
-#: modules/process/grain_wshed.c:275 modules/tools/profile.c:320
+#: modules/process/grain_wshed.c:276 modules/tools/profile.c:320
 #: modules/tools/sfunctions.c:331 modules/tools/spotremove.c:320
 #: modules/tools/stats.c:301
 msgid "<b>Options</b>"
@@ -2960,7 +2956,7 @@ msgstr "Distribuzione Angolo"
 msgid "Output _size:"
 msgstr "Dimensione output"
 
-#: modules/process/angle_dist.c:193 modules/process/grain_wshed.c:225
+#: modules/process/angle_dist.c:193 modules/process/grain_wshed.c:226
 msgid "_Number of steps:"
 msgstr "_Numero step:"
 
@@ -3212,18 +3208,15 @@ msgid "Add _low score results mask"
 msgstr "Aggiungi maschera risultati a bassa incidenza"
 
 #: modules/process/crosscor.c:256 modules/process/dwtdenoise.c:218
-#: modules/process/grain_wshed.c:242 modules/process/maskcor.c:189
+#: modules/process/grain_wshed.c:243 modules/process/maskcor.c:189
 msgid "T_hreshold:"
 msgstr ""
 
-#: modules/process/crosscor.c:413 modules/process/immerse.c:404
-#: modules/process/maskcor.c:330 modules/process/merge.c:621
-#: modules/process/tipops.c:267
+#: modules/process/crosscor.c:413
 msgid "Initializing..."
 msgstr ""
 
-#: modules/process/crosscor.c:420 modules/process/immerse.c:406
-#: modules/process/maskcor.c:332 modules/process/merge.c:623
+#: modules/process/crosscor.c:420
 msgid "Correlating..."
 msgstr ""
 
@@ -3256,8 +3249,8 @@ msgid "Compute continuous wavelet transform"
 msgstr ""
 
 #: modules/process/cwt.c:120 modules/process/dwt.c:120
-#: modules/process/dwtanisotropy.c:129 modules/process/dwtdenoise.c:127
-#: modules/process/fft.c:146
+#: modules/process/dwtanisotropy.c:130 modules/process/dwtdenoise.c:127
+#: modules/process/fft.c:147
 #, c-format
 msgid "%s: Data must be square."
 msgstr "%s: I Dati devono essere quadrati"
@@ -3276,8 +3269,8 @@ msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 
 #: modules/process/cwt.c:201 modules/process/dwt.c:192
-#: modules/process/dwtanisotropy.c:198 modules/process/dwtdenoise.c:204
-#: modules/process/fft.c:322 modules/process/fft_filter_1d.c:353
+#: modules/process/dwtanisotropy.c:199 modules/process/dwtdenoise.c:204
+#: modules/process/fft.c:323 modules/process/fft_filter_1d.c:353
 #: modules/process/fractal.c:229 modules/process/nanoindent_adjust.c:228
 #: modules/process/rotate.c:281 modules/process/scale.c:221
 #: modules/process/unrotate.c:283 modules/tools/profile.c:375
@@ -3286,7 +3279,7 @@ msgid "_Interpolation type:"
 msgstr "Tipo di interpolazione:"
 
 #: modules/process/cwt.c:207 modules/process/dwt.c:199
-#: modules/process/dwtanisotropy.c:205 modules/process/dwtdenoise.c:211
+#: modules/process/dwtanisotropy.c:206 modules/process/dwtdenoise.c:211
 msgid "_Wavelet type:"
 msgstr "Tipo _Wavelet:"
 
@@ -3328,7 +3321,7 @@ msgstr ""
 
 #: modules/process/drift.c:326 modules/process/facet_analysis.c:382
 #: modules/process/grain_mark.c:324 modules/process/grain_rem_threshold.c:302
-#: modules/process/grain_wshed.c:295 modules/process/nanoindent_analyze.c:458
+#: modules/process/grain_wshed.c:296 modules/process/nanoindent_analyze.c:458
 #: modules/process/scars.c:551
 msgid "_Mask color:"
 msgstr "Colore _Maschera:"
@@ -3390,19 +3383,19 @@ msgstr "/Trasformate _Integrali/DWT _Anisotropa..."
 msgid "DWT anisotropy detection"
 msgstr ""
 
-#: modules/process/dwtanisotropy.c:129
+#: modules/process/dwtanisotropy.c:130
 msgid "DWT Anisotropy"
 msgstr "DWT Anisotropa"
 
-#: modules/process/dwtanisotropy.c:179
+#: modules/process/dwtanisotropy.c:180
 msgid "2D DWT Anisotropy"
 msgstr "2D DWT Anisotropa"
 
-#: modules/process/dwtanisotropy.c:210
+#: modules/process/dwtanisotropy.c:211
 msgid "X/Y ratio threshold:"
 msgstr "X/Y rapporto soglia:"
 
-#: modules/process/dwtanisotropy.c:218
+#: modules/process/dwtanisotropy.c:219
 msgid "Low level exclude limit:"
 msgstr "Limite di esclusione inferiore:"
 
@@ -3646,7 +3639,7 @@ msgid "Point - line distance(line ID, point ID)"
 msgstr ""
 
 #: modules/process/evaluator_task_dialog.h:178 modules/process/maskcor.c:137
-#: modules/process/maskcor.c:364
+#: modules/process/maskcor.c:363
 msgid "Correlation score"
 msgstr "Percentuale di Correlazione "
 
@@ -3754,7 +3747,7 @@ msgstr "/_Livella/_Facet Level"
 msgid "Level data to make facets point upward"
 msgstr ""
 
-#: modules/process/facet-level.c:87
+#: modules/process/facet-level.c:88
 msgid "Facet-leveling"
 msgstr ""
 
@@ -3823,60 +3816,60 @@ msgstr "/Trasformate _Integrali/_2D FFT..."
 msgid "Compute Fast Fourier Transform"
 msgstr ""
 
-#: modules/process/fft.c:199
+#: modules/process/fft.c:200
 msgid "FFT Real"
 msgstr "FFT Reale"
 
-#: modules/process/fft.c:205
+#: modules/process/fft.c:206
 msgid "FFT Imag"
 msgstr "FFT Imag"
 
-#: modules/process/fft.c:211
+#: modules/process/fft.c:212
 msgid "FFT Modulus"
 msgstr "FFT Modulo"
 
-#: modules/process/fft.c:217
+#: modules/process/fft.c:218
 msgid "FFT Phase"
 msgstr "FFT Fase"
 
-#: modules/process/fft.c:290
+#: modules/process/fft.c:291
 msgid "Real + Imaginary"
 msgstr "Reale + Immaginario"
 
-#: modules/process/fft.c:291
+#: modules/process/fft.c:292
 msgid "Module + Phase"
 msgstr "Modulo + Fase"
 
-#: modules/process/fft.c:292
+#: modules/process/fft.c:293
 msgid "Real"
 msgstr "Reale"
 
-#: modules/process/fft.c:293
+#: modules/process/fft.c:294
 msgid "Imaginary"
 msgstr "Immaginario"
 
-#: modules/process/fft.c:295
+#: modules/process/fft.c:296
 msgid "Phase"
 msgstr "Fase"
 
-#: modules/process/fft.c:302
+#: modules/process/fft.c:303
 msgid "2D FFT"
 msgstr "2D FFT"
 
-#: modules/process/fft.c:330
+#: modules/process/fft.c:331
 msgid "_Windowing type:"
 msgstr "Tipo finestra:"
 
-#: modules/process/fft.c:338 modules/process/fractal.c:245
+#: modules/process/fft.c:339 modules/process/fractal.c:245
 msgid "_Output type:"
 msgstr "Tipo output:"
 
-#: modules/process/fft.c:342
+#: modules/process/fft.c:343
 #, c-format
 msgid "_Preserve size (don't resize to %d × %d)"
 msgstr ""
 
-#: modules/process/fft.c:358
+#: modules/process/fft.c:359
 msgid "Subtract mean _value beforehand"
 msgstr ""
 
@@ -4088,8 +4081,10 @@ msgstr "Indovina"
 msgid "Function type:"
 msgstr "Tipo funzione:"
 
-#: modules/process/fit_2d.c:598 modules/process/grain_wshed.c:497
-#: modules/process/tip_blind.c:558
+#: modules/process/fit_2d.c:598 modules/process/grain_wshed.c:500
+#: modules/process/immerse.c:404 modules/process/maskcor.c:329
+#: modules/process/merge.c:621 modules/process/tip_blind.c:558
+#: modules/process/tipops.c:267
 msgid "Initializing"
 msgstr "Inizializzazione"
 
@@ -4481,7 +4476,7 @@ msgid "Mark Grains by Threshold"
 msgstr "Segna grana per soglia"
 
 #: modules/process/grain_mark.c:237 modules/process/grain_rem_threshold.c:197
-#: modules/process/grain_wshed.c:177 modules/process/tip_model.c:166
+#: modules/process/grain_wshed.c:178 modules/process/tip_model.c:166
 msgid "_Update Preview"
 msgstr "Aggiorna Anteprima"
 
@@ -4498,7 +4493,7 @@ msgid "_Curvature:"
 msgstr "_Curvatura:"
 
 #: modules/process/grain_mark.c:302 modules/process/grain_rem_threshold.c:280
-#: modules/process/grain_wshed.c:281
+#: modules/process/grain_wshed.c:282
 msgid "_Invert height"
 msgstr "_Inverti altezza"
 
@@ -4530,55 +4525,55 @@ msgstr "_Area:"
 msgid "_Selection mode:"
 msgstr "_Seleziona modo:"
 
-#: modules/process/grain_wshed.c:109
+#: modules/process/grain_wshed.c:110
 msgid "Marks grains by watershed algorithm."
 msgstr "Segna grana usando un algoritmo watershed"
 
-#: modules/process/grain_wshed.c:123
+#: modules/process/grain_wshed.c:124
 msgid "/_Grains/Mark by _Watershed..."
 msgstr "/_Grana/Segna per _Watershed..."
 
-#: modules/process/grain_wshed.c:127
+#: modules/process/grain_wshed.c:128
 msgid "Mark grains by watershed"
 msgstr "Segna grana per watershed"
 
-#: modules/process/grain_wshed.c:175
+#: modules/process/grain_wshed.c:176
 msgid "Mark Grains by Watershed"
 msgstr "Segna grana per Watershed"
 
-#: modules/process/grain_wshed.c:217
+#: modules/process/grain_wshed.c:218
 msgid "<b>Grain Location</b>"
 msgstr "<b>Locazione Grana</b>"
 
-#: modules/process/grain_wshed.c:233
+#: modules/process/grain_wshed.c:234
 msgid "_Drop size:"
 msgstr "_Dimensioni Goccia:"
 
-#: modules/process/grain_wshed.c:250
+#: modules/process/grain_wshed.c:251
 msgid "<b>Segmentation</b>"
 msgstr "<b>Segmentazione</b>"
 
-#: modules/process/grain_wshed.c:258
+#: modules/process/grain_wshed.c:259
 msgid "Num_ber of steps:"
 msgstr "Numero di step:"
 
-#: modules/process/grain_wshed.c:266
+#: modules/process/grain_wshed.c:267
 msgid "Dr_op size:"
 msgstr "Dimensioni Goccia:"
 
-#: modules/process/grain_wshed.c:503
+#: modules/process/grain_wshed.c:506
 msgid "Finding minima"
 msgstr "Ricerca minimi"
 
-#: modules/process/grain_wshed.c:505
+#: modules/process/grain_wshed.c:508
 msgid "Locating"
 msgstr "Localizzando"
 
-#: modules/process/grain_wshed.c:507
+#: modules/process/grain_wshed.c:510
 msgid "Watershed"
 msgstr "Watershed"
 
-#: modules/process/grain_wshed.c:509
+#: modules/process/grain_wshed.c:512
 msgid "Marking boundaries"
 msgstr "Marcatura confini"
 
@@ -4648,6 +4643,11 @@ msgstr ""
 msgid "Immersed detail data"
 msgstr ""
 
+#: modules/process/immerse.c:406 modules/process/maskcor.c:331
+#: modules/process/merge.c:623
+msgid "Correlating"
+msgstr ""
+
 #: modules/process/laplace.c:39
 msgid ""
 "Removes data under mask, interpolating them with Laplace equation solution."
@@ -4663,7 +4663,7 @@ msgstr "/_Correzione Dati/_Rimozione dati sotto la maschera"
 msgid "Interpolate data under mask by solution of Laplace equation"
 msgstr ""
 
-#: modules/process/laplace.c:83
+#: modules/process/laplace.c:84
 msgid "Laplace correction"
 msgstr "Correzione di Laplace"
 
