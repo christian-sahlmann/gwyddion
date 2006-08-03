@@ -1085,19 +1085,19 @@ static void
 build_tooltips(GHashTable *hash_tips)
 {
     g_hash_table_insert(hash_tips, "circle_inclusive",
-                        _("Draw a new inclusive circle marker."));
+                        _("Draw a new inclusive circle marker"));
     g_hash_table_insert(hash_tips, "rectangle_inclusive",
-                        _("Draw a new inclusive rectangle marker."));
+                        _("Draw a new inclusive rectangle marker"));
     g_hash_table_insert(hash_tips, "circle_exclusive",
-                        _("Draw a new exclusive circle marker."));
+                        _("Draw a new exclusive circle marker"));
     g_hash_table_insert(hash_tips, "rectangle_exclusive",
-                        _("Draw a new exclusive rectangle marker."));
+                        _("Draw a new exclusive rectangle marker"));
     g_hash_table_insert(hash_tips, "undo",
-                        _("Undo the last change to the filter mask."));
+                        _("Undo the last change to the filter mask"));
     g_hash_table_insert(hash_tips, "remove_all",
-                        _("Removes the entire filter mask."));
+                        _("Removes the entire filter mask"));
     g_hash_table_insert(hash_tips, "origin",
-                        _("Forces new markers to center around the origin."));
+                        _("Forces new markers to center around the origin"));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
