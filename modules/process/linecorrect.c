@@ -26,6 +26,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/linestats.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define LINECORR_RUN_MODES GWY_RUN_IMMEDIATE
@@ -61,7 +62,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -74,28 +75,28 @@ module_register(void)
     gwy_process_func_register("line_correct_modus",
                               (GwyProcessFunc)&line_correct_modus,
                               N_("/_Correct Data/M_odus Line Correction"),
-                              NULL,
+                              GWY_STOCK_LINE_LEVEL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching height modus"));
     gwy_process_func_register("line_correct_median",
                               (GwyProcessFunc)&line_correct_median,
                               N_("/_Correct Data/M_edian Line Correction"),
-                              NULL,
+                              GWY_STOCK_LINE_LEVEL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching height median"));
     gwy_process_func_register("line_correct_match",
                               (GwyProcessFunc)&line_correct_match,
                               N_("/_Correct Data/Ma_tch Line Correction"),
-                              NULL,
+                              GWY_STOCK_LINE_LEVEL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching flat segments"));
     gwy_process_func_register("line_correct_step",
                               (GwyProcessFunc)&line_correct_step,
                               N_("/_Correct Data/Ste_p Line Correction"),
-                              NULL,
+                              GWY_STOCK_LINE_LEVEL,
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct steps in lines"));
