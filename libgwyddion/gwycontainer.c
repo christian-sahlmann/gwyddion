@@ -230,6 +230,21 @@ value_destroy_func(gpointer data)
 }
 
 /**
+ * gwy_container_get_n_items:
+ * @container: A container.
+ *
+ * Gets the number of items in a container.
+ *
+ * Returns: The number of items.
+ **/
+guint
+gwy_container_get_n_items(GwyContainer *container)
+{
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
+    return g_hash_table_size(container->values);
+}
+
+/**
  * gwy_container_value_type_by_name:
  * @c: A container.
  * @n: A nul-terminated name (id).

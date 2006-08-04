@@ -57,6 +57,7 @@ struct _GwyContainerClass {
 
 GType         gwy_container_get_type              (void) G_GNUC_CONST;
 GwyContainer* gwy_container_new                   (void);
+guint         gwy_container_get_n_items           (GwyContainer *container);
 GType         gwy_container_value_type            (GwyContainer *container,
                                                    GQuark key);
 gboolean      gwy_container_contains              (GwyContainer *container,
