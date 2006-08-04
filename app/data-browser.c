@@ -1507,8 +1507,8 @@ gwy_app_data_browser_channel_name_edited(G_GNUC_UNUSED GtkCellRendererText *rend
 }
 
 static GList*
-gwy_app_data_browser_find_3d(GwyAppDataProxy *proxy,
-                             Gwy3DWindow *window3d)
+gwy_app_data_proxy_find_3d(GwyAppDataProxy *proxy,
+                           Gwy3DWindow *window3d)
 {
     GList *l;
 
@@ -1523,8 +1523,8 @@ gwy_app_data_browser_find_3d(GwyAppDataProxy *proxy,
 }
 
 static GList*
-gwy_app_data_browser_get_3d(GwyAppDataProxy *proxy,
-                            gint id)
+gwy_app_data_proxy_get_3d(GwyAppDataProxy *proxy,
+                          gint id)
 {
     GList *l;
 
@@ -1556,7 +1556,7 @@ gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
     /* XXX: The return value is not useful for anything -- yet? */
     gwy_app_widget_queue_manage(GTK_WIDGET(window3d), TRUE);
 
-    item = gwy_app_data_browser_find_3d(proxy, window3d);
+    item = gwy_app_data_proxy_find_3d(proxy, window3d);
     g_return_if_fail(item);
 
     assoc = (GwyApp3DAssociation*)item->data;
@@ -1638,7 +1638,7 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
 
-    item = gwy_app_data_browser_get_3d(proxy, id);
+    item = gwy_app_data_proxy_get_3d(proxy, id);
     if (item)
         window3d = GTK_WIDGET(((GwyApp3DAssociation*)item->data)->window);
     else
@@ -2041,12 +2041,12 @@ gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
     GwyApp3DAssociation *assoc;
     GList *l;
 
-    l = gwy_app_data_browser_get_3d(proxy, id);
+    l = gwy_app_data_proxy_get_3d(proxy, id);
     if (!l)
         return;
 
     assoc = (GwyApp3DAssociation*)l->data;
-    gtk_widget_destroy(assoc->window);
+    gtk_widget_destroy(GTK_WIDGET(assoc->window));
 }
 
 /* GUI only */
@@ -2683,6 +2683,15 @@ gwy_app_data_browser_remove(GwyContainer *data)
     proxy = gwy_app_data_browser_get_proxy(gwy_app_get_data_browser(), data,
                                            FALSE);
     g_return_if_fail(proxy);
+
+    /* FIXME: Ugly special case */
+    while (proxy->associated3d) {
+        GwyApp3DAssociation *assoc;
+
+        assoc = (GwyApp3DAssociation*)proxy->associated3d->data;
+        gwy_app_data_proxy_channel_destroy_3d(proxy, assoc->id);
+    }
+
     gwy_app_data_browser_reset_visibility(proxy->container,
                                           GWY_VISIBILITY_RESET_HIDE_ALL);
     g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
