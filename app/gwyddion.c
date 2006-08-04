@@ -40,6 +40,11 @@
 #undef LOG_TO_FILE
 #endif
 
+typedef struct {
+    gboolean objects;
+    gboolean startup;
+} GwyAppDebugOptions;
+
 #ifdef LOG_TO_FILE
 static void setup_logging(void);
 static void logger       (const gchar *log_domain,
@@ -52,7 +57,10 @@ static void open_command_line_files  (gchar **args,
                                       gint n);
 static void print_help               (void);
 static void process_preinit_options  (int *argc,
-                                      char ***argv);
+                                      char ***argv,
+                                      GwyAppDebugOptions *options);
+static void debug_time               (GTimer *timer,
+                                      const gchar *task);
 static void warn_broken_settings_file(GtkWidget *parent,
                                       const gchar *settings_file,
                                       const gchar *reason);
@@ -60,7 +68,9 @@ static void gwy_app_init             (int *argc,
                                       char ***argv);
 static void gwy_app_set_window_icon  (void);
 
-static gboolean enable_object_debugging = FALSE;
+static GwyAppDebugOptions debug_options = {
+    FALSE, FALSE
+};
 
 int
 main(int argc, char *argv[])
@@ -70,9 +80,11 @@ main(int argc, char *argv[])
     gchar *settings_file, *recent_file_file;
     gboolean has_settings, settings_ok = FALSE;
     GError *settings_err = NULL;
+    GTimer *timer;
 
-    process_preinit_options(&argc, &argv);
-    gwy_debug_objects_enable(enable_object_debugging);
+    timer = g_timer_new();
+    process_preinit_options(&argc, &argv, &debug_options);
+    gwy_debug_objects_enable(debug_options.objects);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
     /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
@@ -80,9 +92,12 @@ main(int argc, char *argv[])
 #ifdef LOG_TO_FILE
     setup_logging();
 #endif  /* LOG_TO_FILE */
+    debug_time(timer, "init");
 
     gtk_init(&argc, &argv);
+    debug_time(timer, "gtk_init()");
     gwy_app_init(&argc, &argv);
+    debug_time(timer, "gwy_app_init()");
 
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
@@ -90,36 +105,46 @@ main(int argc, char *argv[])
               settings_file, has_settings ? "TRUE" : "FALSE");
 
     gwy_app_splash_create();
+    debug_time(timer, "create splash");
 
     gwy_app_splash_set_message(_("Loading document history"));
     recent_file_file = gwy_app_settings_get_recent_file_list_filename();
     gwy_app_recent_file_list_load(recent_file_file);
+    debug_time(timer, "load document history");
 
     gwy_app_splash_set_message_prefix(_("Registering "));
     gwy_app_splash_set_message(_("stock items"));
     gwy_stock_register_stock_items();
+    debug_time(timer, "register stock items");
 
     gwy_app_splash_set_message(_("color gradients"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
     gwy_app_splash_set_message(_("GL materials"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
     gwy_app_splash_set_message_prefix(NULL);
+    debug_time(timer, "load resources");
 
     gwy_app_splash_set_message(_("Loading settings"));
     if (has_settings)
         settings_ok = gwy_app_settings_load(settings_file, &settings_err);
     gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
     gwy_app_settings_get();
+    debug_time(timer, "load settings");
 
     gwy_app_splash_set_message(_("Registering modules"));
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
+    debug_time(timer, "register modules");
 
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
+    debug_time(timer, "create toolbox");
     data_browser = gwy_app_data_browser_create();
+    debug_time(timer, "init data-browser");
     gwy_app_recent_file_list_update(NULL, NULL, NULL, 0);
+    debug_time(timer, "create recent files menu");
     gwy_app_splash_close();
+    debug_time(timer, "destroy splash");
 
     open_command_line_files(argv + 1, argc - 1);
     if (has_settings && !settings_ok) {
@@ -127,20 +152,29 @@ main(int argc, char *argv[])
                                   settings_file, settings_err->message);
         g_clear_error(&settings_err);
     }
+    debug_time(timer, "open commandline files");
 
     /* Move focus to toolbox */
     gtk_window_present(GTK_WINDOW(toolbox));
+    debug_time(timer, "show toolbox");
+    g_timer_destroy(timer);
+    debug_time(NULL, "STARTUP");
 
     gtk_main();
 
+    timer = g_timer_new();
     /* TODO: handle failure */
     if (settings_ok || !has_settings)
         gwy_app_settings_save(settings_file, NULL);
+    debug_time(timer, "save settings");
     gwy_app_recent_file_list_save(recent_file_file);
+    debug_time(timer, "save document history");
     gwy_process_func_save_use();
+    debug_time(timer, "save funcuse");
     gwy_app_settings_free();
     gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
+    debug_time(timer, "dump debug-objects");
     gwy_app_recent_file_list_free();
     /* XXX: EXIT-CLEAN-UP */
     /* Finalize all gradients.  Useless, but makes --debug-objects happy.
@@ -150,13 +184,17 @@ main(int argc, char *argv[])
     g_free(recent_file_file);
     g_free(settings_file);
     g_strfreev(module_dirs);
+    debug_time(timer, "destroy resources");
+    g_timer_destroy(timer);
+    debug_time(NULL, "SHUTDOWN");
 
     return 0;
 }
 
 static void
 process_preinit_options(int *argc,
-                        char ***argv)
+                        char ***argv,
+                        GwyAppDebugOptions *options)
 {
     int i, j;
     gboolean ignore = FALSE;
@@ -185,9 +223,12 @@ process_preinit_options(int *argc,
                 gwy_app_splash_enable(FALSE);
                 continue;
             }
-
             if (gwy_strequal((*argv)[i], "--debug-objects")) {
-                enable_object_debugging = TRUE;
+                options->objects = TRUE;
+                continue;
+            }
+            if (gwy_strequal((*argv)[i], "--startup-time")) {
+                options->startup = TRUE;
                 continue;
             }
         }
@@ -211,6 +252,7 @@ print_help(void)
 " -v, --version              Print version info and terminate.\n"
 "     --no-splash            Don't show splash screen.\n"
 "     --debug-objects        Catch leaking objects (devel only).\n"
+"     --startup-time         Measure time of startup tasks.\n"
         );
     puts(
 "Gtk+ and Gdk options:\n"
@@ -224,6 +266,28 @@ print_help(void)
 "how it was compiled, and on loaded modules.  Please see Gtk+ documentation.\n"
         );
     puts("Please report bugs to <" PACKAGE_BUGREPORT ">.");
+}
+
+static void
+debug_time(GTimer *timer,
+           const gchar *task)
+{
+    static gdouble total = 0.0;
+
+    gdouble t;
+
+    if (!debug_options.startup)
+        return;
+
+    if (timer) {
+        total += t = g_timer_elapsed(timer, NULL);
+        printf("%24s: %5.1f ms\n", task, 1000.0*t);
+        g_timer_start(timer);
+    }
+    else {
+        printf("%24s: %5.1f ms\n", task, 1000.0*total);
+        total = 0.0;
+    }
 }
 
 static void
