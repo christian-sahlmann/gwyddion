@@ -2034,6 +2034,21 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     return retval;
 }
 
+static void
+gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
+                                      gint id)
+{
+    GwyApp3DAssociation *assoc;
+    GList *l;
+
+    l = gwy_app_data_browser_get_3d(proxy, id);
+    if (!l)
+        return;
+
+    assoc = (GwyApp3DAssociation*)l->data;
+    gtk_widget_destroy(assoc->window);
+}
+
 /* GUI only */
 static void
 gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
@@ -2074,6 +2089,7 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
         switch (page) {
             case PAGE_CHANNELS:
             gwy_app_data_proxy_channel_set_visible(proxy, &iter, FALSE);
+            gwy_app_data_proxy_channel_destroy_3d(proxy, i);
             break;
 
             case PAGE_GRAPHS:
@@ -2091,6 +2107,7 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
          * GRAPH_PREFIX == "/0/graph/graph" */
         /* XXX: This is too crude and makes 3D views crash. Must integrate
          * them somehow. */
+        /* TODO: should be done in one pass through the container */
         g_snprintf(key, sizeof(key), "/%d/data", i);
         gwy_container_remove_by_prefix(data, key);
         g_snprintf(key, sizeof(key), "/%d/base", i);
@@ -2100,6 +2117,10 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
         g_snprintf(key, sizeof(key), "/%d/show", i);
         gwy_container_remove_by_prefix(data, key);
         g_snprintf(key, sizeof(key), "/%d/select", i);
+        gwy_container_remove_by_prefix(data, key);
+        g_snprintf(key, sizeof(key), "/%d/meta", i);
+        gwy_container_remove_by_prefix(data, key);
+        g_snprintf(key, sizeof(key), "/%d/3d", i);
         gwy_container_remove_by_prefix(data, key);
         break;
 
