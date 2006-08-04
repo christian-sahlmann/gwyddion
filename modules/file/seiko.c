@@ -57,7 +57,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQD files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -209,6 +209,8 @@ seiko_process_meta(GwyContainer *container,
                    const guchar *buffer,
                    G_GNUC_UNUSED guint size)
 {
+    GwyContainer *meta;
+
     enum {
         COMMENT_OFFSET  = 0x28,
         COMMENT_SIZE  = 0x70,
@@ -219,9 +221,14 @@ seiko_process_meta(GwyContainer *container,
     p = buffer + COMMENT_OFFSET;
     get_CHARARRAY0(comment, &p);
 
+    meta = gwy_container_new();
+
     if (comment[0])
-        gwy_container_set_string_by_name(container, "/0/data/meta/Comment",
-                                         g_strdup(comment));
+        gwy_container_set_string_by_name(meta, "/Comment", g_strdup(comment));
+
+    if (gwy_container_get_n_items(meta))
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports ECS IMG files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -111,7 +111,7 @@ ecs_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -207,6 +207,8 @@ ecs_load(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title", s);
     s = NULL;
 
+    meta = gwy_container_new();
+
     /* Date & time */
     p = buffer + ECS_DATE;
     s = get_PASCAL_STRING(&p, HEADER_SIZE - ECS_DATE);
@@ -214,7 +216,7 @@ ecs_load(const gchar *filename,
         p = buffer + ECS_TIME;
         s2 = get_PASCAL_STRING(&p, HEADER_SIZE - ECS_TIME);
         if (s2) {
-            gwy_container_set_string_by_name(container, "/0/data/meta/Date",
+            gwy_container_set_string_by_name(meta, "/Date",
                                              g_strconcat(s, " ", s2, NULL));
             g_free(s2);
             s2 = NULL;
@@ -227,9 +229,13 @@ ecs_load(const gchar *filename,
     p = buffer + ECS_CHANNEL;
     s = get_PASCAL_STRING(&p, HEADER_SIZE - ECS_CHANNEL);
     if (s && *s) {
-        gwy_container_set_string_by_name(container, "/0/data/meta/Comment", s);
+        gwy_container_set_string_by_name(meta, "/Comment", s);
         s = NULL;
     }
+
+    if (gwy_container_get_n_items(meta))
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 
 fail:
     g_free(s);
