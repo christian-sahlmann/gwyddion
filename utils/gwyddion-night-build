@@ -7,9 +7,9 @@ dont_update_version=
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs
-installroot=$HOME/opt/gwyddion
+installprefix=$HOME/opt/gwyddion
 gtkdocdir="/share/gtk-doc/html/*"
-gtkdocdirs=(/usr /usr/local /opt/gnome $installroot/usr)
+gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix)
 gnainsindex=$HOME/lib/gtk.gnains
 host=$($HOME/bin/Ftpcp)
 
@@ -57,7 +57,11 @@ function update_version() {
 
 function autostuff() {
   make -k maintainer-clean
-  ./autogen.sh --config-cache --disable-desktop-file-update --enable-gtk-doc --prefix=$installroot/usr
+  ./autogen.sh \
+    --config-cache \
+    --disable-desktop-file-update \
+    --enable-gtk-doc \
+    --prefix=$installprefix
   make -C po gwyddion.pot
 }
 
