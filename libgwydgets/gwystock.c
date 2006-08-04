@@ -58,7 +58,10 @@ gwy_stock_register_stock_items(void)
     g_return_if_fail(!the_icon_factory);
     gtk_icon_size_register(GWY_ICON_SIZE_ABOUT, 60, 60);
     pixmap_path = guess_pixmap_path();
-    g_return_if_fail(pixmap_path);
+    if (!pixmap_path) {
+        g_warning("Cannot find directory with stock icons.");
+        return;
+    }
     the_icon_factory = gtk_icon_factory_new();
     register_toolbox_icons(pixmap_path, the_icon_factory);
     gtk_icon_factory_add_default(the_icon_factory);
