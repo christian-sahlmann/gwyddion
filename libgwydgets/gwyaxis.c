@@ -688,7 +688,8 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
     else
         gwy_axis_precompute(axis, 0, height);
 
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
+    if (GTK_WIDGET_DRAWABLE(axis))
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 static void
@@ -722,7 +723,8 @@ gwy_axis_notify(GwyAxis *axis,
         return;
 
     gwy_axis_adjust(axis, -1, -1);
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
+    if (GTK_WIDGET_DRAWABLE(axis))
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
@@ -1140,7 +1142,8 @@ gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
     g_string_assign(axis->label_text, text);
     g_free(text);
     g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
+    if (GTK_WIDGET_DRAWABLE(axis))
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
@@ -1654,7 +1657,8 @@ gwy_axis_set_label(GwyAxis *axis,
         gwy_sci_text_set_text(GWY_SCI_TEXT(dialog->sci_text), label);
     }
     g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
+    if (GTK_WIDGET_DRAWABLE(axis))
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
@@ -1686,7 +1690,8 @@ gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 
     gwy_object_unref(axis->unit);
     axis->unit = gwy_si_unit_duplicate(unit);
-    gtk_widget_queue_draw(GTK_WIDGET(axis));
+    if (GTK_WIDGET_DRAWABLE(axis))
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 
