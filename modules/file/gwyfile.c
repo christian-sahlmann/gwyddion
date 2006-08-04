@@ -69,6 +69,8 @@ static gboolean      gwyfile_save            (GwyContainer *data,
                                               GwyRunType mode,
                                               GError **error);
 static GwyContainer* gwyfile_compress_ids    (GwyContainer *data);
+static void          gwyfile_pack_metadata   (GwyContainer *data);
+static void          gwyfile_remove_old_data (GObject *object);
 static GObject*      gwy_container_deserialize_old (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position);
@@ -80,13 +82,11 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -143,9 +143,11 @@ gwyfile_load(const gchar *filename,
         return NULL;
     }
 
-    if (!memcmp(buffer, MAGIC, MAGIC_SIZE))
+    if (!memcmp(buffer, MAGIC, MAGIC_SIZE)) {
         object = gwy_container_deserialize_old(buffer + MAGIC_SIZE,
                                                size - MAGIC_SIZE, &pos);
+        gwyfile_remove_old_data(object);
+    }
     else
         object = gwy_serializable_deserialize(buffer + MAGIC_SIZE,
                                               size - MAGIC_SIZE, &pos);
@@ -166,6 +168,7 @@ gwyfile_load(const gchar *filename,
     }
     data = gwyfile_compress_ids(GWY_CONTAINER(object));
     g_object_unref(object);
+    gwyfile_pack_metadata(data);
 
     return data;
 }
@@ -201,12 +204,7 @@ gwyfile_save(GwyContainer *data,
     return ok;
 }
 
-/*****************************************************************************
- *
- * Data key compression
- *
- *****************************************************************************/
-
+/** Data id compression {{{ **/
 /**
  * key_get_int_prefix:
  * @strkey: String container key.
@@ -568,8 +566,99 @@ gwyfile_compress_ids(GwyContainer *data)
 
     return result;
 }
+/* }}} */
 
-/* Low-level deserialization functions for 1.x file import {{{ */
+/** Convert and/or remove various old-style data structures {{{ **/
+static void
+gwyfile_gather_one_meta(GQuark quark,
+                        GValue *value,
+                        GwyContainer *meta,
+                        const gchar *prefix,
+                        guint prefix_len)
+{
+    const gchar *strkey;
+
+    strkey = g_quark_to_string(quark);
+    g_return_if_fail(g_str_has_prefix(strkey, prefix));
+    strkey += prefix_len;
+
+    if (strkey[0] != '/' || !strkey[1] || !G_VALUE_HOLDS_STRING(value))
+        return;
+
+    gwy_container_set_string_by_name(meta, strkey, g_value_dup_string(value));
+}
+
+static void
+gwyfile_gather_meta(gpointer key, gpointer value, gpointer user_data)
+{
+    gwyfile_gather_one_meta(GPOINTER_TO_UINT(key),
+                            (GValue*)value,
+                            (GwyContainer*)user_data,
+                            "/meta", sizeof("/meta")-1);
+}
+
+static void
+gwyfile_gather_0_data_meta(gpointer key, gpointer value, gpointer user_data)
+{
+    gwyfile_gather_one_meta(GPOINTER_TO_UINT(key),
+                            (GValue*)value,
+                            (GwyContainer*)user_data,
+                            "/0/data/meta", sizeof("/0/data/meta")-1);
+}
+
+/**
+ * gwyfile_pack_metadata:
+ * @data: A data container.
+ *
+ * Pack scattered metadata under "/meta" to a container at "/0/meta" and
+ * metadata scattered under "/0/data/meta" to a container at "/0/meta".
+ **/
+static void
+gwyfile_pack_metadata(GwyContainer *data)
+{
+    GwyContainer *meta;
+
+    meta = gwy_container_new();
+
+    /* Mindlessly run one packing after another.  Losing some metadata is not
+     * a tragedy and the file has to be borken in the first place to have
+     * metadata conflicts. */
+    gwy_container_foreach(data, "/meta", &gwyfile_gather_meta, meta);
+    gwy_container_foreach(data, "/0/data/meta", &gwyfile_gather_0_data_meta,
+                          meta);
+    if (gwy_container_get_n_items(meta)) {
+        gwy_container_remove_by_prefix(data, "/meta");
+        gwy_container_remove_by_prefix(data, "/0/data/meta");
+        gwy_container_set_object_by_name(data, "/0/meta", meta);
+    }
+
+    g_object_unref(meta);
+}
+
+static void
+gwyfile_remove_old_data(GObject *object)
+{
+    GwyContainer *data;
+
+    if (!object || !GWY_IS_CONTAINER(object))
+        return;
+
+    data = GWY_CONTAINER(object);
+
+    /* Selections */
+    gwy_container_remove_by_prefix(data, "/0/select");
+    /* 3D */
+    gwy_container_remove_by_prefix(data, "/0/3d/labels");
+    gwy_container_remove_by_name(data, "/0/3d/rot_x");
+    gwy_container_remove_by_name(data, "/0/3d/rot_y");
+    gwy_container_remove_by_name(data, "/0/3d/view_scale");
+    gwy_container_remove_by_name(data, "/0/3d/deformation_z");
+    gwy_container_remove_by_name(data, "/0/3d/light_z");
+    gwy_container_remove_by_name(data, "/0/3d/light_y");
+}
+/* }}} */
+
+/** Low-level deserialization functions for 1.x file import {{{ **/
 static inline void
 gwy_byteswapped_copy(const guint8 *source,
                      guint8 *dest,
