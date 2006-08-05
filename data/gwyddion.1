@@ -1,4 +1,4 @@
-.TH "gwyddion" "1" "Jan 2005" " " " "
+.TH "gwyddion" "1" "Aug 2006" " " " "
 .\" @(#) $Id$
 .SH NAME
 .PP
@@ -35,8 +35,13 @@ Disables splash screen on program startup.
 .TP
 \fB--debug-objects\fR
 Prints list of objects created during run time, with creation and
-desctruction times or reference counts on program exit.  If you don't
-know what it's good for, you don't need it.
+desctruction times or reference counts on program exit.  Useful only for
+developers.
+.TP
+\fB--startup-time\fR
+Prints wall-clock time taken by various startup (and shutdown) tasks.
+Useful only for developers and people going to complain about too slow
+startup.
 .
 .SH ENVIRONMENT
 .TP
