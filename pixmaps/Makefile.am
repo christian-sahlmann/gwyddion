@@ -15,11 +15,6 @@ icondatadir = $(datadir)/pixmaps
 #   polynom_remove (but see polynom)
 #   slope_mask
 #   window_measure
-#
-# Kept old:
-#   3d_base
-#   scars
-#   unrotate
 
 # If you add new stock icons here, run ./utils/stockgen.py from the top-level
 # directory to update source code declarations.
@@ -92,6 +87,7 @@ pixmapdata_DATA = \
 	gwy_pointer_measure-24.png \
 	gwy_polynom-24.png \
 	gwy_profile-24.png \
+	gwy_remove_under_mask-24.png \
 	gwy_rotate-24.png \
 	gwy_rotate_180-24.png \
 	gwy_rotate_90_ccw-24.png \
