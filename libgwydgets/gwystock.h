@@ -89,6 +89,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_POINTER_MEASURE       "gwy_pointer_measure"
 #define GWY_STOCK_POLYNOM               "gwy_polynom"
 #define GWY_STOCK_PROFILE               "gwy_profile"
+#define GWY_STOCK_REMOVE_UNDER_MASK     "gwy_remove_under_mask"
 #define GWY_STOCK_ROTATE                "gwy_rotate"
 #define GWY_STOCK_ROTATE_180            "gwy_rotate_180"
 #define GWY_STOCK_ROTATE_90_CCW         "gwy_rotate_90_ccw"

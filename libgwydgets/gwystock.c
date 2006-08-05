@@ -736,6 +736,13 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_REMOVE_UNDER_MASK
+ *
+ * The "Remove-Under-Mask" stock icon.
+ * <inlinegraphic fileref="../gwy_remove_under_mask-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_ROTATE
  *
  * The "Rotate" stock icon.
