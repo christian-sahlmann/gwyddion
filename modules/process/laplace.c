@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -52,7 +53,7 @@ module_register(void)
     gwy_process_func_register("laplace",
                               (GwyProcessFunc)&laplace,
                               N_("/_Correct Data/_Remove Data Under Mask"),
-                              NULL,
+                              GWY_STOCK_REMOVE_UNDER_MASK,
                               LAPLACE_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Interpolate data under mask by solution of "
