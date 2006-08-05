@@ -2105,23 +2105,27 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
         case PAGE_CHANNELS:
         /* XXX: Cannot just remove /0, because all graphs are under
          * GRAPH_PREFIX == "/0/graph/graph" */
-        /* XXX: This is too crude and makes 3D views crash. Must integrate
-         * them somehow. */
-        /* TODO: should be done in one pass through the container */
-        g_snprintf(key, sizeof(key), "/%d/data", i);
-        gwy_container_remove_by_prefix(data, key);
-        g_snprintf(key, sizeof(key), "/%d/base", i);
-        gwy_container_remove_by_prefix(data, key);
-        g_snprintf(key, sizeof(key), "/%d/mask", i);
-        gwy_container_remove_by_prefix(data, key);
-        g_snprintf(key, sizeof(key), "/%d/show", i);
-        gwy_container_remove_by_prefix(data, key);
-        g_snprintf(key, sizeof(key), "/%d/select", i);
-        gwy_container_remove_by_prefix(data, key);
-        g_snprintf(key, sizeof(key), "/%d/meta", i);
-        gwy_container_remove_by_prefix(data, key);
-        g_snprintf(key, sizeof(key), "/%d/3d", i);
-        gwy_container_remove_by_prefix(data, key);
+        if (i) {
+            g_snprintf(key, sizeof(key), "/%d", i);
+            gwy_container_remove_by_prefix(data, key);
+        }
+        else {
+            /* TODO: should be done in one pass through the container */
+            g_snprintf(key, sizeof(key), "/%d/data", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/base", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/mask", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/show", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/select", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/meta", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/3d", i);
+            gwy_container_remove_by_prefix(data, key);
+        }
         break;
 
         case PAGE_GRAPHS:
@@ -3582,8 +3586,8 @@ make_thumbnail_field(GwyDataField *dfield,
     yres = gwy_data_field_get_yres(dfield);
     scale = MAX(xres/(gdouble)*width, yres/(gdouble)*height);
     if (scale > 1.0) {
-        xres = scale*xres;
-        yres = scale*yres;
+        xres = xres/scale;
+        yres = yres/scale;
         xres = CLAMP(xres, 2, *width);
         yres = CLAMP(yres, 2, *height);
         dfield = gwy_data_field_new_resampled(dfield, xres, yres,
