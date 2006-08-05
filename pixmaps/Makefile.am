@@ -113,8 +113,52 @@ pixmapdata_DATA = \
 icondata_DATA = \
 	gwyddion.png
 
+xcf_sources = \
+	cd_line.xcf \
+	cd_rline.xcf \
+	cd_rstep.xcf \
+	cd_step.xcf \
+	gwy_3d_base-24.xcf \
+	gwy_cantilever-24.xcf \
+	gwy_crop-24.xcf \
+	gwy_direction-24.xcf \
+	gwy_edge-24.xcf \
+	gwy_fft-24.xcf \
+	gwy_filter-24.xcf \
+	gwy_flip_horizontally-24.xcf \
+	gwy_flip_vertically-24.xcf \
+	gwy_gradient-24.xcf \
+	gwy_grains-24.xcf \
+	gwy_graph-24.xcf \
+	gwy_graph_zoom-24.xcf \
+	gwy_less-24.xcf \
+	gwy_level-24.xcf \
+	gwy_light_rotate-24.xcf \
+	gwy_markup-20.xcf \
+	gwy_mask-24.xcf \
+	gwy_measure-24.xcf \
+	gwy_more-24.xcf \
+	gwy_palette-24.xcf \
+	gwy_polynom-24.xcf \
+	gwy_profile-24.xcf \
+	gwy_remove_under_mask-24.xcf \
+	gwy_rotate-24.xcf \
+	gwy_rotate_180-24.xcf \
+	gwy_rotate_90_ccw-24.xcf \
+	gwy_rotate_90_cw-24.xcf \
+	gwy_scale-24.xcf \
+	gwy_scale_horizontally-24.xcf \
+	gwy_scale_vertically-24.xcf \
+	gwy_shader-24.xcf \
+	gwy_spot_remove-24.xcf \
+	gwy_stat_quantities-24.xcf \
+	gwy_unrotate-24.xcf \
+	gwy_value_invert-24.xcf \
+	gwy_zoom-24.xcf
+
 EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt \
 	$(icondata_DATA) \
-	$(pixmapdata_DATA)
+	$(pixmapdata_DATA) \
+	$(xcf_sources)
