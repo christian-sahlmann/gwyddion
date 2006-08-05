@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -401,6 +401,7 @@ sxm_load(const gchar *filename,
     const guchar *p;
     gchar *header, *hp, *s, *endptr;
     gchar **columns;
+    gboolean rotated = FALSE;
     guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -478,12 +479,22 @@ sxm_load(const gchar *filename,
         }
     }
 
+    /* Check for rotated data */
+    if (sxmfile.ok) {
+        if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_ANGLE"))) {
+            if (g_ascii_strtod(s, NULL) == 90.0) {
+                gwy_debug("data is rotated");
+                rotated = TRUE;
+            }
+        }
+    }
+
     /* Pixel sizes */
     if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_PIXELS"))) {
-            /* XXX: The documentation sounds like xres should come first,
-             * but file samples vote for the opposite. */
-            if (sscanf(s, "%d %d", &sxmfile.yres, &sxmfile.xres) == 2) {
+            if (sscanf(s, "%d %d", &sxmfile.xres, &sxmfile.yres) == 2) {
+                if (rotated)
+                    GWY_SWAP(gint, sxmfile.xres, sxmfile.yres);
                 size1 *= sxmfile.xres * sxmfile.yres;
                 gwy_debug("xres: %d, yres: %d", sxmfile.xres, sxmfile.yres);
                 gwy_debug("size1: %u", (guint)size1);
