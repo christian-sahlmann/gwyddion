@@ -585,7 +585,7 @@ gwyfile_gather_one_meta(GQuark quark,
     if (strkey[0] != '/' || !strkey[1] || !G_VALUE_HOLDS_STRING(value))
         return;
 
-    gwy_container_set_string_by_name(meta, strkey, g_value_dup_string(value));
+    gwy_container_set_string_by_name(meta, strkey+1, g_value_dup_string(value));
 }
 
 static void

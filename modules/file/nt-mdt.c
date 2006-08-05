@@ -406,7 +406,7 @@ add_metadata(MDTFile *mdtfile,
     g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
                     frame->year, frame->month, frame->day,
                     frame->hour, frame->min, frame->sec);
-    gwy_container_set_string_by_name(data, "/meta/Date & time",
+    gwy_container_set_string_by_name(data, "/meta/Date",
                                      g_strdup(s->str));
 
     g_string_printf(s, "%d.%d",

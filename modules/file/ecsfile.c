@@ -216,7 +216,7 @@ ecs_load(const gchar *filename,
         p = buffer + ECS_TIME;
         s2 = get_PASCAL_STRING(&p, HEADER_SIZE - ECS_TIME);
         if (s2) {
-            gwy_container_set_string_by_name(meta, "/Date",
+            gwy_container_set_string_by_name(meta, "Date",
                                              g_strconcat(s, " ", s2, NULL));
             g_free(s2);
             s2 = NULL;
@@ -229,7 +229,7 @@ ecs_load(const gchar *filename,
     p = buffer + ECS_CHANNEL;
     s = get_PASCAL_STRING(&p, HEADER_SIZE - ECS_CHANNEL);
     if (s && *s) {
-        gwy_container_set_string_by_name(meta, "/Comment", s);
+        gwy_container_set_string_by_name(meta, "Comment", s);
         s = NULL;
     }
 

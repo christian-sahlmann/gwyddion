@@ -224,7 +224,7 @@ seiko_process_meta(GwyContainer *container,
     meta = gwy_container_new();
 
     if (comment[0])
-        gwy_container_set_string_by_name(meta, "/Comment", g_strdup(comment));
+        gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
 
     if (gwy_container_get_n_items(meta))
         gwy_container_set_object_by_name(container, "/0/meta", meta);
