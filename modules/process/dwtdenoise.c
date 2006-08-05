@@ -127,6 +127,7 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), _("DWT Denoise"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
+        return;
     }
 
     dwt_denoise_load_args(gwy_app_settings_get(), &args);

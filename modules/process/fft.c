@@ -147,6 +147,7 @@ fft(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), "FFT");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
+        return;
     }
 
     fft_load_args(gwy_app_settings_get(), &args);
