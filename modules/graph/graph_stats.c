@@ -128,9 +128,6 @@ stats(GwyGraph *graph)
     data->last_status = gwy_graph_get_status(graph);
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_XSEL);
 
-    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
-    gwy_graph_area_set_selection_limit(area, 1);
-
     if (!data->dialog)
         stats_dialog(data);
 }
@@ -238,7 +235,7 @@ stats_dialog(StatsControls *data)
         break;
     }
 
-    gwy_table_attach_row(table, 0, _("Select Curve"), NULL, label);
+    //gwy_table_attach_row(table, 0, _("Select Curve"), NULL, label);
 
     label = gtk_label_new("from");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
@@ -290,11 +287,8 @@ stats_dialog(StatsControls *data)
     data->area_under_curve_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(data->area_under_curve_label), buffer);
 
-    button = gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
+    button = gtk_button_new_with_label("Fit"); //gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
     gtk_box_pack_end(GTK_BOX(dialog->action_area), button, FALSE, FALSE, 0);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(fit_graph_cb),
-                             data);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(stat_updated_cb),
                              data);
@@ -348,7 +342,7 @@ calc_integral_stats_whole_curve(StatsControls *data)
 
     graph = GWY_GRAPH(data->graph);
     gmodel = gwy_graph_get_model(graph);
-    gcmodel = gwy_graph_model_get_curve_by_index(gmodel, 0);
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
     xs = gwy_graph_curve_model_get_xdata(gcmodel);
     ys = gwy_graph_curve_model_get_ydata(gcmodel);
     ns = gwy_graph_curve_model_get_ndata(gcmodel);
@@ -392,162 +386,6 @@ calc_stats(gdouble *y_actual, gdouble *y_fitted, gint ndata)
     return stat;
 }
 
-/* code for fitting the graphs */
-static void
-fit_graph_cb(StatsControls *data)
-{
-    GwyGraph *graph;
-    GwyGraphArea *area;
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *current_cmodel, *new_cmodel;
-    const gdouble *xs, *ys, *xvals;
-    GwyDataLine *xdata, *ydata, *y_actual;
-    GwyNLFitPreset *fitfunc;
-    gint i, j, ns;
-    gboolean ok;
-    gdouble from, to;
-    gdouble selection[2];
-    gint count, ndata;
-    gint selection_start_index, selection_end_index;
-    gint ncurves;
-
-    /* NOTE: these will change depending on the deg of poly */
-    const gchar *fit_func_name = "Polynom (order 1)";
-    gint deg_of_poly = 1;
-    gdouble coeffs[2];
-    gint fit_func_index;
-
-    graph = GWY_GRAPH(data->graph);
-    gmodel = gwy_graph_get_model(graph);
-
-    xdata = gwy_data_line_new(10, 10, FALSE);
-    ydata = gwy_data_line_new(10, 10, FALSE);
-    y_actual = gwy_data_line_new(10, 10, FALSE);
-
-    /* normalize data */
-    /* FIXME: may put this piece of code in a seperate function */
-    current_cmodel = gwy_graph_model_get_curve_by_index(gmodel,
-                                                        data->curve_index);
-    xvals = gwy_graph_curve_model_get_xdata(current_cmodel);
-
-    /* remove the old fit */
-    ncurves = gwy_graph_model_get_n_curves(gmodel);
-    if (ncurves > data->ncurves)
-    {
-        for (i = ncurves-1; i > data->ncurves-1; i--)
-            gwy_graph_model_remove_curve_by_index(gmodel, i);
-    }
-
-    /* get selection values */
-    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
-    if (gwy_graph_area_get_selection_number(area))
-    {
-        gwy_graph_area_get_selection(area, selection);
-        from = selection[0];
-        to = selection[1];
-        if (from > to)
-            GWY_SWAP(gdouble, from, to);
-        ndata = gwy_graph_curve_model_get_ndata(current_cmodel);
-        if ((from > xvals[ndata - 1]) && (to > xvals[ndata - 1]))
-        {
-            from = xvals[0];
-            to = xvals[ndata - 1];
-        }
-    }
-    else
-    {
-        from = xvals[0];
-        to = xvals[gwy_graph_curve_model_get_ndata(current_cmodel) - 1];
-    }
-
-    xs = gwy_graph_curve_model_get_xdata(current_cmodel);
-    ys = gwy_graph_curve_model_get_ydata(current_cmodel);
-    ns = gwy_graph_curve_model_get_ndata(current_cmodel);
-
-    gwy_data_line_resample(xdata, ns, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(ydata, ns, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(y_actual, ns, GWY_INTERPOLATION_NONE);
-
-    selection_start_index = 0;
-    selection_end_index = ns-1;
-
-    /* modify 'ns' according to selection */
-    if ((from > xs[0]) || (to < xs[ns-1]))
-    {
-        for (i = 0; i < ns; i++)
-        {
-            /* check if 'from' and xs[i] are approx. equal */
-            if (from <= xs[i])
-            {
-                selection_start_index = i;
-                break;
-            }
-        }
-        for (i = 0; i < ns; i++)
-        {
-            /* check if 'to' and 'xs[i]' are approx. equal */
-            if (to <= xs[i])
-            {
-                selection_end_index = i-1;
-                break;
-            }
-        }
-
-        count = 0;
-        for (i = selection_start_index; i <= selection_end_index; i++)
-            count = count + 1;
-        ns = count;
-    }
-
-    j = 0;
-    for (i = 0; i < xdata->res; i++)
-    {
-        if ((xs[i] >= from && xs[i] <= to) || (from == to))
-        {
-            if (i == 0)
-                continue;
-
-            xdata->data[j] = xs[i];
-            ydata->data[j] = ys[i];
-            y_actual->data[j] = ys[i]; /* will be passed to calc_stats func */
-            j++;
-        }
-    }
-
-    if (j < ns) {
-        gwy_data_line_resize(xdata, 0, j);
-        gwy_data_line_resize(ydata, 0, j);
-    }
-    /* end normalize */
-
-    fit_func_index = gwy_inventory_get_item_position(gwy_nlfit_presets(),
-                                                     fit_func_name);
-    fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(), fit_func_index);
-    gwy_math_fit_polynom(ns, xdata->data, ydata->data, deg_of_poly, coeffs);
-
-    data->area_under_curve = calc_integral_stats(xdata->data, ydata->data, ns);
-
-    for (i = 0; i < ns; i++)
-        ydata->data[i] = gwy_nlfit_preset_get_value(fitfunc,
-                                                    xdata->data[i],
-                                                    coeffs,
-                                                    &ok);
-    new_cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_curve_type(new_cmodel, GWY_GRAPH_CURVE_LINE);
-    gwy_graph_curve_model_set_data(new_cmodel,
-                                   xdata->data,
-                                   ydata->data,
-                                   ns);
-    gwy_graph_curve_model_set_description(new_cmodel, "fit");
-    gwy_graph_model_add_curve(gmodel, new_cmodel);
-
-    data->stat = calc_stats(y_actual->data, ydata->data, ns);
-
-    g_object_unref(new_cmodel);
-    g_object_unref(xdata);
-    g_object_unref(ydata);
-    g_object_unref(y_actual);
-}
 
 static void
 stat_updated_cb(StatsControls *data)
@@ -600,6 +438,7 @@ selection_updated_cb(StatsControls *data)
     g_return_if_fail(GWY_IS_GRAPH(graph));
     area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
 
+    /*
     if (gwy_graph_area_get_selection_number(area))
     {
         gwy_graph_area_get_selection(area, selection);
@@ -611,6 +450,7 @@ selection_updated_cb(StatsControls *data)
         from = gwy_graph_get_model(graph)->x_min;
         to = gwy_graph_get_model(graph)->x_max;
     }
+    */
 
     format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->x_unit,
                                     GWY_SI_UNIT_FORMAT_VFMARKUP,

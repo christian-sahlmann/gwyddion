@@ -27,6 +27,8 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
+#include <stdio.h>
+
 static void     gwy_graph_finalize(GObject *object);
 static void     gwy_graph_refresh (GwyGraph *graph);
 static void     rescaled_cb       (GtkWidget *widget,
@@ -188,6 +190,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     return GTK_WIDGET(graph);
 }
 
+
 static void
 gwy_graph_refresh(GwyGraph *graph)
 {
@@ -202,6 +205,7 @@ gwy_graph_refresh(GwyGraph *graph)
     if (graph->graph_model == NULL)
         return;
 
+    
     model = GWY_GRAPH_MODEL(graph->graph_model);
 
     logarithmic = gwy_graph_model_get_direction_logarithmic

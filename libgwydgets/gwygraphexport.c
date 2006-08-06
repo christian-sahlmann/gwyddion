@@ -49,8 +49,8 @@ GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
 
     topheight = (GTK_WIDGET(graph->axis_top))->allocation.height;
     bottomheight = (GTK_WIDGET(graph->axis_bottom))->allocation.height;
-    rightwidth = (GTK_WIDGET(graph->axis_right))->allocation.width;
-    leftwidth = (GTK_WIDGET(graph->axis_left))->allocation.width;
+    rightwidth = (GTK_WIDGET(graph->axis_left))->allocation.width;
+    leftwidth = (GTK_WIDGET(graph->axis_right))->allocation.width;
 
     labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + rightwidth;
     labely = (GTK_WIDGET(graph->area->lab))->allocation.y + topheight;
@@ -83,11 +83,11 @@ GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
     gwy_axis_draw_on_drawable(pixmap, gc,
                               0, topheight,
                               rightwidth, height - topheight - bottomheight,
-                              graph->axis_right);
+                              graph->axis_left);
     gwy_axis_draw_on_drawable(pixmap, gc,
                               width - leftwidth, topheight,
                               leftwidth, height - topheight - bottomheight,
-                              graph->axis_left);
+                              graph->axis_right);
 
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     pango_context_set_font_description(context, graph->area->lab->label_font);
@@ -114,7 +114,7 @@ gwy_graph_export_postscript(GwyGraph *graph,
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
     GwyGraphModel *gmodel = graph->graph_model;
-    gint fontsize = 20;
+    gint fontsize = 12;
     gint borderskip = 30;
 
     width = (GTK_WIDGET(graph))->allocation.width;
@@ -211,15 +211,15 @@ gwy_graph_export_postscript(GwyGraph *graph,
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }
-    if (gwy_axis_is_visible(graph->axis_right))
+    if (gwy_axis_is_visible(graph->axis_left))
     {
-        psaxis = gwy_axis_export_vector(graph->axis_right, 0, areay, areax, areah, fontsize);
+        psaxis = gwy_axis_export_vector(graph->axis_left, 0, areay, areax, areah, fontsize);
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }
-    if (gwy_axis_is_visible(graph->axis_left))
+    if (gwy_axis_is_visible(graph->axis_right))
     {
-        psaxis = gwy_axis_export_vector(graph->axis_left, areax + areaw, areay, areax, areah, fontsize);
+        psaxis = gwy_axis_export_vector(graph->axis_right, areax + areaw, areay, areax, areah, fontsize);
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }

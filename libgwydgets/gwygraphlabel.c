@@ -468,12 +468,22 @@ gwy_graph_label_refresh(GwyGraphLabel *label)
 void
 gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
 {
+    gint i;
+
     if (gmodel != NULL) {
         label->graph_model = GWY_GRAPH_MODEL(gmodel);
 
         g_signal_connect_swapped(GWY_GRAPH_MODEL(gmodel), "notify",
                      G_CALLBACK(gwy_graph_label_refresh), label);
-    }
+    
+        for (i = 0; i < gwy_graph_model_get_n_curves(GWY_GRAPH_MODEL(gmodel)); i++)
+        {
+            g_signal_connect_swapped(
+                             gwy_graph_model_get_curve(GWY_GRAPH_MODEL(gmodel), i),
+                             "notify",
+                             G_CALLBACK(gwy_graph_label_refresh), label);
+        }
+   }
 
 }
 

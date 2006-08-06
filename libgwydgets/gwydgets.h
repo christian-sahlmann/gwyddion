@@ -31,7 +31,6 @@
 #include <libgwydgets/gwy3dview.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwyaxis.h>
-#include <libgwydgets/gwyaxisdialog.h>
 #include <libgwydgets/gwycoloraxis.h>
 #include <libgwydgets/gwycolorbutton.h>
 #include <libgwydgets/gwycombobox.h>
@@ -51,7 +50,6 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwygraphwindow.h>
-#include <libgwydgets/gwygraphwindowmeasuredialog.h>
 #include <libgwydgets/gwyhmarkerbox.h>
 #include <libgwydgets/gwyhruler.h>
 #include <libgwydgets/gwyinventorystore.h>

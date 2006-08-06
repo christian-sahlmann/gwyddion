@@ -44,9 +44,10 @@ struct _GwyGraphAreaDialog {
     GtkWidget *color_button;
     GtkWidget *pointtype_menu;
     GtkWidget *linetype_menu;
-    GtkWidget *curve_label;
     GtkObject *pointsize;
     GtkObject *linesize;
+
+    GtkWidget *sci_text;
 
     GtkWidget *color_dialog;
     GwyRGBA old_color;

@@ -49,6 +49,8 @@ static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
                                                  gint response);
 static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
                                                  const gchar *tip_text);
+static void graph_title_changed                 (GwyGraphWindow *graphwindow);
+    
 
 /* Local data */
 
@@ -129,15 +131,9 @@ gwy_graph_window_new(GwyGraph *graph)
 
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
-
     
-    if (gwy_graph_model_get_title(graph->graph_model) != NULL){
-        gtk_window_set_title(GTK_WINDOW(graphwindow), 
-                             gwy_graph_model_get_title(graph->graph_model));
-    }
-    else
-        gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
-
+    graph_title_changed(graphwindow); 
+    
     label = gtk_label_new("Graph");
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(graph),
@@ -242,12 +238,16 @@ gwy_graph_window_new(GwyGraph *graph)
                              graphwindow);
 
     g_signal_connect_swapped(gwy_graph_area_get_selection(
-                                       GWY_GRAPH_AREA(gwy_graph_get_area(graphwindow->graph)),
+                                       GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
                                        GWY_GRAPH_STATUS_ZOOM), "finished",
                              G_CALLBACK(gwy_graph_window_zoom_finished_cb),
                              graphwindow);
 
 
+    /*TODO do it only for real title change*/
+    if (gwy_graph_get_model(GWY_GRAPH(graphwindow->graph)))
+        g_signal_connect_swapped(gwy_graph_get_model(GWY_GRAPH(graphwindow->graph)), "notify",
+                                 G_CALLBACK(graph_title_changed), graphwindow);
 
     return GTK_WIDGET(graphwindow);
 }
@@ -484,6 +484,21 @@ gwy_graph_window_set_tooltip(GtkWidget *widget,
     if (tooltips)
         gtk_tooltips_set_tip(tooltips, widget, tip_text, NULL);
 }
+
+static void
+graph_title_changed(GwyGraphWindow *graphwindow)
+{
+    GwyGraphModel *gmodel;
+    gmodel = gwy_graph_get_model(GWY_GRAPH(gwy_graph_window_get_graph(graphwindow)));
+    
+    if (gwy_graph_model_get_title(gmodel) != NULL){
+        gtk_window_set_title(GTK_WINDOW(graphwindow), 
+                             gwy_graph_model_get_title(gmodel));
+    }
+    else
+        gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
+}
+
 
 /************************** Documentation ****************************/
 

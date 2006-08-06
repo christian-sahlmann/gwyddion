@@ -99,7 +99,8 @@ struct _GwyGraphArea {
 
     gint old_width;
     gint old_height;
-    gboolean newline;
+    gint label_old_width;
+    gint label_old_height;
 
     /*linestyle dialog*/
     GwyGraphAreaDialog *area_dialog;
@@ -111,6 +112,10 @@ struct _GwyGraphArea {
     gint y0;
     gint xoff;
     gint yoff;
+    gdouble rx0;
+    gdouble ry0;
+    gint rxoff;
+    gint ryoff;
 
     gboolean enable_user_input;
     gint selection_limit;

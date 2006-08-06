@@ -201,7 +201,7 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
 
 static void
 selection_updated_cb(GwySelection *selection,
-                     gint k,
+                     G_GNUC_UNUSED gint k,
                      GwyGraphWindowMeasureDialog *dialog)
 {
     GtkWidget *label;
@@ -494,8 +494,7 @@ status_cb(GwyGraphArea *area, gint status, GwyGraphWindowMeasureDialog *dialog)
     {
 
             selection_id = g_signal_connect(gwy_graph_area_get_selection(
-                                    GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
-                                        GWY_GRAPH_STATUS_PLAIN),
+                                    area, GWY_GRAPH_STATUS_PLAIN),
                                     "changed",
                                     G_CALLBACK(selection_updated_cb),
                                     dialog);
