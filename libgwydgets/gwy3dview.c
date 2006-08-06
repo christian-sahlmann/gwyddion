@@ -2367,20 +2367,6 @@ gwy_3d_view_new(G_GNUC_UNUSED GwyContainer *data)
 }
 
 const gchar*
-gwy_3d_view_get_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-void
-gwy_3d_view_set_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                         G_GNUC_UNUSED const gchar *key)
-{
-    g_critical("OpenGL support was not compiled in.");
-}
-
-const gchar*
 gwy_3d_view_get_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
     g_critical("OpenGL support was not compiled in.");
@@ -2390,6 +2376,20 @@ gwy_3d_view_get_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 void
 gwy_3d_view_set_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview,
                              G_GNUC_UNUSED const gchar *key)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+const gchar*
+gwy_3d_view_get_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_set_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                         G_GNUC_UNUSED const gchar *key)
 {
     g_critical("OpenGL support was not compiled in.");
 }
@@ -2418,6 +2418,20 @@ gwy_3d_view_get_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 void
 gwy_3d_view_set_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
                              G_GNUC_UNUSED const gchar *key)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+guint
+gwy_3d_view_get_reduced_size(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0;
+}
+
+void
+gwy_3d_view_set_reduced_size(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                             G_GNUC_UNUSED guint reduced_size)
 {
     g_critical("OpenGL support was not compiled in.");
 }
