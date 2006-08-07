@@ -24,8 +24,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtklayout.h>
-#include <libgwydgets/gwygraphareadialog.h>
-#include <libgwydgets/gwygraphlabeldialog.h>
 #include <libgwydgets/gwygraphselections.h>
 
 G_BEGIN_DECLS
@@ -103,8 +101,8 @@ struct _GwyGraphArea {
     gint label_old_height;
 
     /*linestyle dialog*/
-    GwyGraphAreaDialog *area_dialog;
-    GwyGraphLabelDialog *label_dialog;
+    GtkWidget *area_dialog;
+    GtkWidget *label_dialog;
 
     /*label movement*/
     GtkWidget *active;

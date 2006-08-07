@@ -98,7 +98,8 @@ gwy_sensitivity_group_debug(GwySensitivityGroup *sensgroup)
                         }
                         else if (GTK_IS_IMAGE(w)) {
                             s = NULL;
-                            gtk_image_get_stock(GTK_IMAGE(w), &s, NULL);
+                            gtk_image_get_stock(GTK_IMAGE(w), (gchar**)&s,
+                                                NULL);
                             if (s)
                                 g_printerr("<%s> ", s);
                         }

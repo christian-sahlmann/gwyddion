@@ -25,13 +25,14 @@
 #include <gdk/gdk.h>
 #include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwyvectorlayer.h"
-#include "gwygraph.h"
-#include "gwygraphmodel.h"
-#include "gwygraphcurvemodel.h"
-#include "gwydgetutils.h"
-#include "gwygraphselections.h"
-#include <app/gwyapp.h>
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwygraphselections.h>
+#include "gwygraphareadialog.h"
+#include "gwygraphlabeldialog.h"
 
 
 enum {
@@ -268,16 +269,16 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
                           | GDK_POINTER_MOTION_MASK
                           | GDK_LEAVE_NOTIFY_MASK);
 
-    area->area_dialog = GWY_GRAPH_AREA_DIALOG(gwy_graph_area_dialog_new());
+    area->area_dialog = gwy_graph_area_dialog_new();
     g_signal_connect(area->area_dialog, "response",
                      G_CALLBACK(gwy_graph_area_entry_cb), area);
 
-    area->label_dialog = GWY_GRAPH_LABEL_DIALOG(gwy_graph_label_dialog_new());
+    area->label_dialog = gwy_graph_label_dialog_new();
     g_signal_connect(area->label_dialog, "response",
                      G_CALLBACK(gwy_graph_label_entry_cb), area);
 
 
-     return GTK_WIDGET(area);
+    return GTK_WIDGET(area);
 }
 
 static void
@@ -1560,11 +1561,10 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     GString *out;
-    gdouble xmult, ymult, *pvalue;
+    gdouble xmult, ymult;
     const GwyRGBA *color;
     gint pointsize;
     gint linesize;
-    gint pos;
 
     out = g_string_new("%%Area\n");
 

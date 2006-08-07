@@ -12,7 +12,6 @@ libgwydgetsinclude_HEADERS = \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
-	gwyaxisdialog.h \
 	gwycoloraxis.h \
 	gwycolorbutton.h \
 	gwycombobox.h \
@@ -27,13 +26,10 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphdata.h \
 	gwygraphmodel.h \
 	gwygraphwindow.h \
-	gwygraphwindowmeasuredialog.h \
-	gwygraphareadialog.h \
 	gwygrapharea.h \
 	gwygraphbasics.h \
 	gwygraphcorner.h \
 	gwygraph.h \
-	gwygraphlabeldialog.h \
 	gwygraphlabel.h \
 	gwygraphselections.h \
 	gwyhmarkerbox.h \
@@ -63,6 +59,10 @@ built_sources = \
 	gwydgettypes.c
 
 EXTRA_DIST = \
+	gwyaxisdialog.h \
+	gwygraphwindowmeasuredialog.h \
+	gwygraphareadialog.h \
+	gwygraphlabeldialog.h \
 	$(built_sources) \
 	gwydgettypes.c.template \
 	gwydgettypes.h.template \

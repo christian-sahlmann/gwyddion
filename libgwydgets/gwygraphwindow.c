@@ -26,9 +26,11 @@
 #include <libprocess/datafield.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "gwydgets.h"
-#include "gwygraphwindow.h"
-#include "gwygraphdata.h"
+#include <libgwydgets/gwygraphwindow.h>
+#include <libgwydgets/gwygraphdata.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwystatusbar.h>
+#include "gwygraphwindowmeasuredialog.h"
 
 #define DEFAULT_SIZE 360
 
@@ -50,7 +52,7 @@ static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
 static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
                                                  const gchar *tip_text);
 static void graph_title_changed                 (GwyGraphWindow *graphwindow);
-    
+
 
 /* Local data */
 
@@ -131,9 +133,9 @@ gwy_graph_window_new(GwyGraph *graph)
 
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
-    
-    graph_title_changed(graphwindow); 
-    
+
+    graph_title_changed(graphwindow);
+
     label = gtk_label_new("Graph");
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(graph),
@@ -204,7 +206,7 @@ gwy_graph_window_new(GwyGraph *graph)
                            graphwindow);
 
     gtk_widget_set_sensitive(graphwindow->button_x_log,
-                gwy_graph_model_x_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
+                gwy_graph_model_x_data_can_be_logarithmed(graph->graph_model));
 
     graphwindow->button_y_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
@@ -217,7 +219,7 @@ gwy_graph_window_new(GwyGraph *graph)
                            graphwindow);
 
     gtk_widget_set_sensitive(graphwindow->button_y_log,
-                gwy_graph_model_y_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
+                gwy_graph_model_y_data_can_be_logarithmed(graph->graph_model));
 
 
     graphwindow->statusbar = gwy_statusbar_new();
@@ -226,27 +228,26 @@ gwy_graph_window_new(GwyGraph *graph)
 
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG
-           (gwy_graph_window_measure_dialog_new(GWY_GRAPH(graphwindow->graph)));
+    graphwindow->measure_dialog =
+           gwy_graph_window_measure_dialog_new(graph);
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
                            G_CALLBACK(gwy_graph_window_measure_finished_cb),
                            graphwindow);
 
-    g_signal_connect_swapped(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)),
+    g_signal_connect_swapped(gwy_graph_get_area(graph),
                              "motion-notify-event",
                              G_CALLBACK(gwy_graph_cursor_motion_cb),
                              graphwindow);
 
     g_signal_connect_swapped(gwy_graph_area_get_selection(
-                                       GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
+                                       GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                                        GWY_GRAPH_STATUS_ZOOM), "finished",
                              G_CALLBACK(gwy_graph_window_zoom_finished_cb),
                              graphwindow);
 
 
-    /*TODO do it only for real title change*/
     if (gwy_graph_get_model(GWY_GRAPH(graphwindow->graph)))
-        g_signal_connect_swapped(gwy_graph_get_model(GWY_GRAPH(graphwindow->graph)), "notify",
+        g_signal_connect_swapped(gwy_graph_get_model(graph), "notify::title",
                                  G_CALLBACK(graph_title_changed), graphwindow);
 
     return GTK_WIDGET(graphwindow);
@@ -410,12 +411,12 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
 
     gwy_selection_clear(gwy_graph_area_get_selection
-                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))), 
+                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
                          GWY_GRAPH_STATUS_POINTS));
     gwy_selection_clear(gwy_graph_area_get_selection
                         (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
                          GWY_GRAPH_STATUS_XLINES));
-      
+
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
         return;
 
@@ -490,9 +491,9 @@ graph_title_changed(GwyGraphWindow *graphwindow)
 {
     GwyGraphModel *gmodel;
     gmodel = gwy_graph_get_model(GWY_GRAPH(gwy_graph_window_get_graph(graphwindow)));
-    
+
     if (gwy_graph_model_get_title(gmodel) != NULL){
-        gtk_window_set_title(GTK_WINDOW(graphwindow), 
+        gtk_window_set_title(GTK_WINDOW(graphwindow),
                              gwy_graph_model_get_title(gmodel));
     }
     else
