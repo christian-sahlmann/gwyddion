@@ -41,7 +41,6 @@
     <xi:include href="xml/gwygraphcurvemodel.xml"/>
     <xi:include href="xml/gwygrapharea.xml"/>
     <xi:include href="xml/gwyaxis.xml"/>
-    <xi:include href="xml/gwyaxisdialog.xml"/>
     <xi:include href="xml/gwygraphlabel.xml"/>
     <xi:include href="xml/gwygraphdata.xml"/>
     <xi:include href="xml/gwygraphbasics.xml"/>
