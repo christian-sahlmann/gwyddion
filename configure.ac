@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[1])
 m4_define([gwy_version_minor],[99])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.7.20060721])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.7.20060807])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -55,7 +55,7 @@ AC_CONFIG_FILES(\
 )
 AC_CONFIG_HEADER(config.h)
 
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
 dnl strictness level.
 AM_INIT_AUTOMAKE([1.7 foreign check-news dist-bzip2])
@@ -86,24 +86,15 @@ AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 GTK_DOC_CHECK(1.4)
 
 #############################################################################
-# Target sytstem.
-AC_MSG_CHECKING([for target architecture])
-case x"$target" in
-  xNONE | x)
-    target_or_host="$host" ;;
-  *)
-    target_or_host="$target" ;;
-esac
-AC_MSG_RESULT([$target_or_host])
-
+# Host sytstem.
 AC_MSG_CHECKING([for 32bit])
-case "$target_or_host" in
+case "$host_cpu" in
   # Highly incomplete
-  i@<:@3456@:>@86-*)
+  i@<:@3456@:>@86)
     arch_32bit=yes
     ;;
   *)
-    # The trouble is, we cannot reliably detect things like CFLAGS=-m32
+    # We cannot reliably detect things like CFLAGS=-m32
     arch_32bit="maybe-not"
     ;;
 esac
@@ -112,11 +103,11 @@ AC_MSG_RESULT([$arch_32bit])
 #############################################################################
 # Win32.
 AC_MSG_CHECKING([for native Win32])
-case "$target_or_host" in
-  *-*-mingw*)
+case "$host_os" in
+  mingw*)
     os_win32=yes
-    TARGET_CFLAGS="-mms-bitfields"
-    TARGET_LDFLAGS="-mwindows"
+    HOST_CFLAGS="-mms-bitfields"
+    HOST_LDFLAGS="-mwindows"
     ;;
   *)
     os_win32=no
@@ -384,8 +375,8 @@ LIBS="$ORIG_LIBS"
 AC_SUBST(BASIC_LIBS)
 BASIC_CFLAGS="$GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $CFLAGS"
 
-CFLAGS="$TARGET_CFLAGS $WARNING_CFLAGS $MATH_CFLAGS $BASIC_CFLAGS"
-LDFLAGS="$TARGET_LDFLAGS"
+CFLAGS="$HOST_CFLAGS $WARNING_CFLAGS $MATH_CFLAGS $BASIC_CFLAGS"
+LDFLAGS="$HOST_LDFLAGS"
 
 #############################################################################
 # Plugin-proxy
