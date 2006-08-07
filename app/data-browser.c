@@ -135,6 +135,7 @@ static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
 static void gwy_app_data_browser_sync_show  (GwyContainer *data,
                                              GQuark quark,
                                              GwyDataView *data_view);
+static void gwy_app_data_proxy_destroy_all_3d(GwyAppDataProxy *proxy);
 static void gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy);
 static void gwy_app_update_data_window_title(GwyDataView *data_view,
                                              gint id);
@@ -563,7 +564,7 @@ gwy_app_data_proxy_visible_count(GwyAppDataProxy *proxy)
     }
 
     g_assert(n >= 0);
-    gwy_debug("total visible_count: %d", n);
+    gwy_debug("%p total visible_count: %d", proxy, n);
 
     return n;
 }
@@ -841,8 +842,10 @@ gwy_app_data_proxy_maybe_finalize(GwyAppDataProxy *proxy)
     gwy_debug("proxy %p", proxy);
 
     if (gwy_app_data_proxy_visible_count(proxy) == 0
-        && !proxy->keep_invisible)
+        && !proxy->keep_invisible) {
+        gwy_app_data_proxy_destroy_all_3d(proxy);
         gwy_app_data_proxy_queue_finalize(proxy);
+    }
 }
 
 static void
@@ -1539,7 +1542,7 @@ gwy_app_data_proxy_get_3d(GwyAppDataProxy *proxy,
 }
 
 static gboolean
-gwy_app_data_browser_select_3d(Gwy3DWindow *window3d)
+gwy_app_data_proxy_select_3d(Gwy3DWindow *window3d)
 {
     gwy_app_widget_queue_manage(GTK_WIDGET(window3d), FALSE);
 
@@ -1547,8 +1550,8 @@ gwy_app_data_browser_select_3d(Gwy3DWindow *window3d)
 }
 
 static void
-gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
-                                  GwyAppDataProxy *proxy)
+gwy_app_data_proxy_3d_destroyed(Gwy3DWindow *window3d,
+                                GwyAppDataProxy *proxy)
 {
     GwyApp3DAssociation *assoc;
     GList *item;
@@ -1562,6 +1565,39 @@ gwy_app_data_browser_3d_destroyed(Gwy3DWindow *window3d,
     assoc = (GwyApp3DAssociation*)item->data;
     g_free(assoc);
     proxy->associated3d = g_list_delete_link(proxy->associated3d, item);
+}
+
+static void
+gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
+                                      gint id)
+{
+    GwyApp3DAssociation *assoc;
+    GList *l;
+
+    l = gwy_app_data_proxy_get_3d(proxy, id);
+    if (!l)
+        return;
+
+    proxy->associated3d = g_list_remove_link(proxy->associated3d, l);
+    assoc = (GwyApp3DAssociation*)l->data;
+    gwy_app_widget_queue_manage(GTK_WIDGET(assoc->window), TRUE);
+    g_signal_handlers_disconnect_by_func(assoc->window,
+                                         gwy_app_data_proxy_3d_destroyed,
+                                         proxy);
+    gtk_widget_destroy(GTK_WIDGET(assoc->window));
+    g_free(assoc);
+    g_list_free_1(l);
+}
+
+static void
+gwy_app_data_proxy_destroy_all_3d(GwyAppDataProxy *proxy)
+{
+    while (proxy->associated3d) {
+        GwyApp3DAssociation *assoc;
+
+        assoc = (GwyApp3DAssociation*)proxy->associated3d->data;
+        gwy_app_data_proxy_channel_destroy_3d(proxy, assoc->id);
+    }
 }
 
 static GtkWidget*
@@ -1609,9 +1645,9 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     g_free(name);
 
     g_signal_connect(window3d, "focus-in-event",
-                     G_CALLBACK(gwy_app_data_browser_select_3d), NULL);
+                     G_CALLBACK(gwy_app_data_proxy_select_3d), NULL);
     g_signal_connect(window3d, "destroy",
-                     G_CALLBACK(gwy_app_data_browser_3d_destroyed), proxy);
+                     G_CALLBACK(gwy_app_data_proxy_3d_destroyed), proxy);
 
     assoc = g_new(GwyApp3DAssociation, 1);
     assoc->window = GWY_3D_WINDOW(window3d);
@@ -1619,7 +1655,7 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     proxy->associated3d = g_list_prepend(proxy->associated3d, assoc);
 
     _gwy_app_3d_window_setup(GWY_3D_WINDOW(window3d));
-    gwy_app_data_browser_select_3d(GWY_3D_WINDOW(window3d));
+    gwy_app_data_proxy_select_3d(GWY_3D_WINDOW(window3d));
     gtk_widget_show_all(window3d);
 
     return window3d;
@@ -2034,21 +2070,6 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     return retval;
 }
 
-static void
-gwy_app_data_proxy_channel_destroy_3d(GwyAppDataProxy *proxy,
-                                      gint id)
-{
-    GwyApp3DAssociation *assoc;
-    GList *l;
-
-    l = gwy_app_data_proxy_get_3d(proxy, id);
-    if (!l)
-        return;
-
-    assoc = (GwyApp3DAssociation*)l->data;
-    gtk_widget_destroy(GTK_WIDGET(assoc->window));
-}
-
 /* GUI only */
 static void
 gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
@@ -2084,12 +2105,14 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 
     /* Get rid of widget displaying this object.  This may invoke complete
      * destruction later in idle handler. */
+    if (page == PAGE_CHANNELS)
+        gwy_app_data_proxy_channel_destroy_3d(proxy, i);
+
     if (widget) {
         g_object_unref(widget);
         switch (page) {
             case PAGE_CHANNELS:
             gwy_app_data_proxy_channel_set_visible(proxy, &iter, FALSE);
-            gwy_app_data_proxy_channel_destroy_3d(proxy, i);
             break;
 
             case PAGE_GRAPHS:
@@ -2688,14 +2711,7 @@ gwy_app_data_browser_remove(GwyContainer *data)
                                            FALSE);
     g_return_if_fail(proxy);
 
-    /* FIXME: Ugly special case */
-    while (proxy->associated3d) {
-        GwyApp3DAssociation *assoc;
-
-        assoc = (GwyApp3DAssociation*)proxy->associated3d->data;
-        gwy_app_data_proxy_channel_destroy_3d(proxy, assoc->id);
-    }
-
+    gwy_app_data_proxy_destroy_all_3d(proxy);
     gwy_app_data_browser_reset_visibility(proxy->container,
                                           GWY_VISIBILITY_RESET_HIDE_ALL);
     g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
