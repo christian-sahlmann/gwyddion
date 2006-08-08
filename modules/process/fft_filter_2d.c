@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*TODO: Only allow square images */
-
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -175,9 +173,10 @@ run_main(GwyContainer *data, GwyRunType run)
     ControlsType controls;
     gboolean response;
 
+    /*XXX vars for hackish zoom method
     guint xres, yres, col, row;
     gdouble factor = 2.0;
-    GwyDataField *temp;
+    GwyDataField *temp;*/
 
 
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
@@ -815,7 +814,7 @@ selection_finished_cb(GwySelection *selection,
     gint isel[4];
     gint mirror[4];
     gdouble value;
-    gint xwidth;
+    gint width, height;
 
     mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/mask"));
@@ -826,15 +825,16 @@ selection_finished_cb(GwySelection *selection,
         return;
     }
 
-    xwidth = gwy_data_field_get_xres(fft);
+    width = gwy_data_field_get_xres(fft);
+    height = gwy_data_field_get_yres(fft);
 
     /* get the selection coordinates */
     if (!gwy_selection_get_object(selection, 0, sel))
         return;
     isel[0] = gwy_data_field_rtoj(mfield, sel[0]);
-    isel[1] = gwy_data_field_rtoj(mfield, sel[1]);
+    isel[1] = gwy_data_field_rtoi(mfield, sel[1]);
     isel[2] = gwy_data_field_rtoj(mfield, sel[2]);
-    isel[3] = gwy_data_field_rtoj(mfield, sel[3]);
+    isel[3] = gwy_data_field_rtoi(mfield, sel[3]);
     if (!controls->snap) {
         isel[2]++;
         isel[3]++;
@@ -849,10 +849,10 @@ selection_finished_cb(GwySelection *selection,
 
     /*XXX: for the mirrored selection to look "correct" as far as the FFT
     goes, it must be shifted one pixel to the right, and one pixel down. */
-    mirror[2] = (-isel[0] + xwidth) + 1;
-    mirror[3] = (-isel[1] + xwidth) + 1;
-    mirror[0] = (-isel[2] + xwidth) + 1;
-    mirror[1] = (-isel[3] + xwidth) + 1;
+    mirror[2] = (-isel[0] + width) + 1;
+    mirror[3] = (-isel[1] + height) + 1;
+    mirror[0] = (-isel[2] + width) + 1;
+    mirror[1] = (-isel[3] + height) + 1;
 
     /* change coordinates to widths */
     isel[2] -= isel[0];
