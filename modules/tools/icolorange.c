@@ -400,6 +400,8 @@ gwy_tool_color_range_xsel_changed(GwySelection *selection,
                                   gint hint,
                                   GwyToolColorRange *tool)
 {
+    GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
+
     g_return_if_fail(hint <= 0);
 
     if (tool->programmatic_update)
@@ -408,6 +410,12 @@ gwy_tool_color_range_xsel_changed(GwySelection *selection,
     if (gwy_selection_get_data(selection, NULL)) {
         tool->range_source = USE_HISTOGRAM;
         gwy_tool_color_range_set_min_max(tool);
+
+        /* when user begins a selection on the histogram, the selection on the
+        image is now invalid, and should be removed. */
+        tool->programmatic_update = TRUE;
+        gwy_selection_clear(plain_tool->selection);
+        tool->programmatic_update = FALSE;
     }
     else {
         tool->range_source = USE_SELECTION;
