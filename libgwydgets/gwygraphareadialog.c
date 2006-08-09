@@ -238,8 +238,6 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
-
     dialog->sci_text = gwy_sci_text_new();
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
     g_signal_connect(dialog->sci_text, "edited",
