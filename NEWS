@@ -1,6 +1,5 @@
-1.99.7.20060809
 
-1.99.8 (0000-00-00)
+1.99.8 (2006-08-10)
 Application:
 - Crash on app exit when Document history is open was fixed.
 - Recent files menu items have thumbnails.
