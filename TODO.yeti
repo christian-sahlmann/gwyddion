@@ -1,13 +1,9 @@
-- Fix GwyGraphData headers, at least by reverting the tree view to non-fixed
-  mode
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
 - Surf file: units and scales are botched
-- 3D View still not MVCized
 - 3D:
   light source grid not visible on some machines?
-- GwyColorAxis needs overhaul
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
   complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
