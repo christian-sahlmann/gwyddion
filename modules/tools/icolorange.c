@@ -231,6 +231,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     tool->histogram = GWY_GRAPH(gwy_graph_new(tool->histogram_model));
     gwy_graph_set_status(tool->histogram, GWY_GRAPH_STATUS_XSEL);
     garea = GWY_GRAPH_AREA(gwy_graph_get_area(tool->histogram));
+    gtk_widget_set_size_request(GTK_WIDGET(garea), -1, 48);
     tool->graph_selection = gwy_graph_area_get_selection(garea,
                                                          GWY_GRAPH_STATUS_XSEL);
     g_return_if_fail(GWY_IS_SELECTION_GRAPH_1DAREA(tool->graph_selection));
