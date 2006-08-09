@@ -656,8 +656,9 @@ gwy_app_run_graph_func(const gchar *name)
     GwyGraph *graph;
 
     gwy_debug("`%s'", name);
-    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &graph, 0);
+    gwy_app_data_browser_get_current(GWY_APP_GRAPH, &graph, 0);
     g_return_if_fail(graph);
+    g_return_if_fail(GWY_IS_GRAPH(graph));
     gwy_graph_func_run(name, graph);
 }
 
