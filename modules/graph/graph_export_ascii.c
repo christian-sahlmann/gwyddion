@@ -196,7 +196,6 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
 {
     GtkDialog *filedialog;
     GwyContainer *settings;
-    GError *err = NULL;
     gchar *filename;
     GString *string = g_string_new("");
     FILE *fw;

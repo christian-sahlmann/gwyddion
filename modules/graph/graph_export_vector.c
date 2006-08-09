@@ -59,7 +59,6 @@ export(GwyGraph *graph)
 {
     GtkDialog *filedialog;
     gchar *filename;
-    GError *err = NULL;
     GString *str = g_string_new("");
     FILE *fw;
 

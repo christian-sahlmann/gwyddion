@@ -817,7 +817,7 @@ graph_selected(GwySelection* selection, gint i, FitControls *controls)
 
     nselections = gwy_selection_get_data(selection, NULL);
     gwy_selection_get_object(selection,
-                             0,
+                             i,
                              area_selection);
 
     if (nselections <= 0 || area_selection[0] == area_selection[1]) {

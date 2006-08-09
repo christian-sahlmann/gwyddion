@@ -58,8 +58,7 @@ export(GwyGraph *graph)
 {
     GtkDialog *filedialog;
     gchar *filename;
-    GError *err = NULL;
-    GdkPixbuf *pixbuf;
+    GdkPixbuf *pixbuf = NULL;
 
     filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to bitmap",
                                                           NULL,
