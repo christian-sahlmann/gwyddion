@@ -19,6 +19,7 @@ process_LTLIBRARIES = \
 	fft.la \
 	fft_filter_2d.la \
 	fraccor.la \
+	fractal.la \
 	gradient.la \
 	grain_dist.la \
 	grain_mark.la \
@@ -138,8 +139,8 @@ fft_la_LIBADD = $(module_libadd)
 #fit_2d_la_SOURCES = fit_2d.c
 #fit_2d_la_LIBADD = $(module_libadd)
 
-#fractal_la_SOURCES = fractal.c
-#fractal_la_LIBADD = $(module_libadd)
+fractal_la_SOURCES = fractal.c
+fractal_la_LIBADD = $(module_libadd)
 
 fraccor_la_SOURCES = fraccor.c
 fraccor_la_LIBADD = $(module_libadd)

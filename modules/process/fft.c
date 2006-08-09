@@ -337,7 +337,7 @@ fft_dialog(FFTArgs *args,
         = gwy_enum_combo_box_new(fft_outputs, G_N_ELEMENTS(fft_outputs),
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->out, args->out, TRUE);
-    gwy_table_attach_row(table, row, _("_Output type:"), NULL,
+    gwy_table_attach_row(table, row, _("Output _type:"), NULL,
                          controls.out);
     row++;
 
