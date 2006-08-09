@@ -35,8 +35,12 @@
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
+/* Don't use stock icons, many don't look good and/or need disambiguation */
+#define USE_STOCK_ICONS 0
+
 typedef struct {
     const gchar *name;
+    const gchar *stock_id;
     gchar *path;
     gchar *path_translated;
     gchar *item_canonical;
@@ -105,7 +109,8 @@ gwy_app_menu_canonicalize_label(gchar *label)
 static void
 gwy_app_menu_add_node(GNode *root,
                       const gchar *name,
-                      const gchar *path)
+                      const gchar *path,
+                      const gchar *stock_id)
 {
     MenuNodeData *data = NULL;
     GNode *node, *child;
@@ -174,6 +179,7 @@ gwy_app_menu_add_node(GNode *root,
     }
     /* The leaf node is the real item */
     data->name = name;
+    data->stock_id = stock_id;
     s = gettext(path);
     if (!gwy_strequal(s, path)) {
         data->path_translated = g_strdup(s);
@@ -307,7 +313,7 @@ gwy_app_menu_sort_submenus(GNode *node,
  * This is stage 4, menu items are created from leaves and branches, submenus
  * are attached to branches (with tearoffs, titles, and everything).  Each node
  * data gets its @widget field filled with corresponding menu item, except
- * root node that gets it @with field filled with the top-level menu.
+ * root node that gets it @widget field filled with the top-level menu.
  *
  * Returns: Always %FALSE.
  **/
@@ -317,10 +323,20 @@ gwy_app_menu_create_widgets(GNode *node,
 {
     MenuNodeData *cdata, *data = (MenuNodeData*)node->data;
     GNode *child;
-    GtkWidget *menu, *item;
+    GtkWidget *menu, *item, *image;
 
-    if (!G_NODE_IS_ROOT(node))
-        data->widget = gtk_menu_item_new_with_mnemonic(data->item_translated);
+    if (!G_NODE_IS_ROOT(node)) {
+        if (USE_STOCK_ICONS && data->stock_id) {
+            item = gtk_image_menu_item_new_with_mnemonic(data->item_translated);
+            image = gtk_image_new_from_stock(data->stock_id,
+                                             GTK_ICON_SIZE_MENU);
+            gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+        }
+        else
+            item = gtk_menu_item_new_with_mnemonic(data->item_translated);
+
+        data->widget = item;
+    }
     if (G_NODE_IS_LEAF(node)) {
         g_signal_connect_swapped(data->widget, "activate",
                                  G_CALLBACK(callback), (gpointer)data->name);
@@ -433,7 +449,9 @@ static void
 gwy_app_menu_add_proc_func(const gchar *name,
                            GNode *root)
 {
-    gwy_app_menu_add_node(root, name, gwy_process_func_get_menu_path(name));
+    gwy_app_menu_add_node(root, name,
+                          gwy_process_func_get_menu_path(name),
+                          gwy_process_func_get_stock_id(name));
 }
 
 GtkWidget*
@@ -462,7 +480,9 @@ static void
 gwy_app_menu_add_graph_func(const gchar *name,
                             GNode *root)
 {
-    gwy_app_menu_add_node(root, name, gwy_graph_func_get_menu_path(name));
+    gwy_app_menu_add_node(root, name,
+                          gwy_graph_func_get_menu_path(name),
+                          gwy_graph_func_get_stock_id(name));
 }
 
 GtkWidget*
