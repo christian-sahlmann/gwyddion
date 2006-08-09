@@ -34,16 +34,21 @@ noinst_HEADERS = \
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp.la
 
-EXTRA_DIST = \
+MKENUM_NAME = gwyapptypes
+MKENUM_HFILES = data-browser.h menu.h
+include $(top_srcdir)/utils/mkenum.mk
+
+EXTRA_DIST += \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyapp.def \
 	README.objdata
 
-BUILT_SOURCES = \
+BUILT_SOURCES += \
 	authors.h
 
-MAINTAINERCLEANFILES = authors.h
+MAINTAINERCLEANFILES += \
+	authors.h
 
 # In following order do:
 # Any code change     C:   R++: A

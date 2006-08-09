@@ -26,24 +26,21 @@ libgwyddioninclude_HEADERS = \
 	gwyutils.h \
 	gwyversion.h
 
-built_sources = \
-	gwyddiontypes.h \
-	gwyddiontypes.c
+noinst_HEADERS = \
+	gwyddioninternal.h \
+	gwytestser.h
 
 lib_LTLIBRARIES = libgwyddion.la
 
-EXTRA_DIST = \
-	$(built_sources) \
-	gwyddiontypes.c.template \
-	gwyddiontypes.h.template \
+MKENUM_NAME = gwyddiontypes
+MKENUM_HFILES = gwyddionenums.h
+include $(top_srcdir)/utils/mkenum.mk
+
+EXTRA_DIST += \
 	gwyversion.h.in \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyddion.def
-
-noinst_HEADERS = \
-	gwyddioninternal.h \
-	gwytestser.h
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -76,35 +73,7 @@ INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_LIBDIR=\"$(libdir)\" -DGWY_DATADIR=\"$(datadir)\" -DGWY_LIBEXECDIR=\"$(libexecdir)\" -DGWY_LOCALEDIR=\"$(localedir)\"
 
 clean-local:
-	rm -f core.* *~ testser.object *.xgen
-
-if MAINTAINER_MODE
-enum_headers = gwyddionenums.h
-stamp_files = stamp-gwyddiontypes.h
-
-MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
-
-BUILT_SOURCES = $(built_sources)
-
-gwyddiontypes.h: stamp-gwyddiontypes.h
-	@true
-
-stamp-gwyddiontypes.h: $(enum_headers) gwyddiontypes.h.template
-	( cd $(srcdir) \
-	  && glib-mkenums --template gwyddiontypes.h.template $(enum_headers) ) \
-	  >gwyddiontypes.h.xgen \
-	&& (cmp -s gwyddiontypes.h.xgen gwyddiontypes.h \
-		|| cp gwyddiontypes.h.xgen gwyddiontypes.h ) \
-	&& rm -f gwyddiontypes.h.xgen \
-	&& echo timestamp >stamp-gwyddiontypes.h
-
-gwyddiontypes.c: $(enum_headers) gwyddiontypes.c.template
-	( cd $(srcdir) \
-	  && glib-mkenums --template gwyddiontypes.c.template $(enum_headers) ) \
-	>gwyddiontypes.c.xgen \
-	&& cp gwyddiontypes.c.xgen gwyddiontypes.c  \
-	&& rm -f gwyddiontypes.c.xgen
-endif
+	rm -f core.* *~ testser.object
 
 #noinst_PROGRAMS = main
 #main_SOURCES = \

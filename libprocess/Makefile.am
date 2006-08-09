@@ -34,16 +34,13 @@ noinst_HEADERS = \
 	morph_lib.h \
 	gwyprocessinternal.h
 
-built_sources = \
-	gwyprocesstypes.h \
-	gwyprocesstypes.c
-
 lib_LTLIBRARIES = libgwyprocess.la
 
-EXTRA_DIST = \
-	$(built_sources) \
-	gwyprocesstypes.c.template \
-	gwyprocesstypes.h.template \
+MKENUM_NAME = gwyprocesstypes
+MKENUM_HFILES = gwyprocessenums.h
+include $(top_srcdir)/utils/mkenum.mk
+
+EXTRA_DIST += \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyprocess.def
@@ -85,33 +82,5 @@ INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyProcess\"
 
 clean-local:
-	rm -f core.* *~ *.xgen
-
-if MAINTAINER_MODE
-enum_headers = gwyprocessenums.h
-stamp_files = stamp-gwyprocesstypes.h
-
-MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
-
-BUILT_SOURCES = $(built_sources)
-
-gwyprocesstypes.h: stamp-gwyprocesstypes.h
-	@true
-
-stamp-gwyprocesstypes.h: $(enum_headers) gwyprocesstypes.h.template
-	( cd $(srcdir) \
-	  && glib-mkenums --template gwyprocesstypes.h.template $(enum_headers) ) \
-	| sed -e 's/_2_D/_2D/g' >gwyprocesstypes.h.xgen \
-	&& (cmp -s gwyprocesstypes.h.xgen gwyprocesstypes.h \
-		|| cp gwyprocesstypes.h.xgen gwyprocesstypes.h ) \
-	&& rm -f gwyprocesstypes.h.xgen \
-	&& echo timestamp >stamp-gwyprocesstypes.h
-
-gwyprocesstypes.c: $(enum_headers) gwyprocesstypes.c.template
-	( cd $(srcdir) \
-	  && glib-mkenums --template gwyprocesstypes.c.template $(enum_headers) ) \
-	>gwyprocesstypes.c.xgen \
-	&& cp gwyprocesstypes.c.xgen gwyprocesstypes.c  \
-	&& rm -f gwyprocesstypes.c.xgen
-endif
+	rm -f core.* *~
 

@@ -21,6 +21,8 @@
 #ifndef __GWY_APP_GWYAPP_H__
 #define __GWY_APP_GWYAPP_H__
 
+#include <app/gwyapptypes.h>
+
 #include <app/app.h>
 #include <app/data-browser.h>
 #include <app/datachooser.h>

@@ -52,20 +52,19 @@ libgwydgetsinclude_HEADERS = \
 	gwyvruler.h \
 	gwycurve.h
 
-lib_LTLIBRARIES = libgwydgets.la
-
-built_sources = \
-	gwydgettypes.h \
-	gwydgettypes.c
-
-EXTRA_DIST = \
+noinst_HEADERS = \
 	gwyaxisdialog.h \
 	gwygraphwindowmeasuredialog.h \
 	gwygraphareadialog.h \
-	gwygraphlabeldialog.h \
-	$(built_sources) \
-	gwydgettypes.c.template \
-	gwydgettypes.h.template \
+	gwygraphlabeldialog.h
+
+lib_LTLIBRARIES = libgwydgets.la
+
+MKENUM_NAME = gwydgettypes
+MKENUM_HFILES = gwydgetenums.h
+include $(top_srcdir)/utils/mkenum.mk
+
+EXTRA_DIST += \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwydgets.def
@@ -132,35 +131,7 @@ INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwydgets\"
 
 clean-local:
-	rm -f core.* *~ *.xgen
-
-if MAINTAINER_MODE
-enum_headers = gwydgetenums.h
-stamp_files = stamp-gwydgettypes.h
-
-MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
-
-BUILT_SOURCES = $(built_sources)
-
-gwydgettypes.h: stamp-gwydgettypes.h
-	@true
-
-stamp-gwydgettypes.h: $(enum_headers) gwydgettypes.h.template
-	( cd $(srcdir) \
-	  && glib-mkenums --template gwydgettypes.h.template $(enum_headers) ) \
-	| sed -e 's/_3_D/_3D_/g' >gwydgettypes.h.xgen \
-	&& (cmp -s gwydgettypes.h.xgen gwydgettypes.h \
-		|| cp gwydgettypes.h.xgen gwydgettypes.h ) \
-	&& rm -f gwydgettypes.h.xgen \
-	&& echo timestamp >stamp-gwydgettypes.h
-
-gwydgettypes.c: $(enum_headers) gwydgettypes.c.template
-	( cd $(srcdir) \
-	  && glib-mkenums --template gwydgettypes.c.template $(enum_headers) ) \
-	>gwydgettypes.c.xgen \
-	&& cp gwydgettypes.c.xgen gwydgettypes.c  \
-	&& rm -f gwydgettypes.c.xgen
-endif
+	rm -f core.* *~
 
 # Note these are test programs not to be included in the distro
 #noinst_PROGRAMS = test

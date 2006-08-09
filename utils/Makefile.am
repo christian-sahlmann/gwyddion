@@ -12,6 +12,7 @@ GUIDE_MAP = user-guide-modules
 
 EXTRA_DIST = \
 	gwywin32.bat.in \
+	mkenum.mk \
 	modules-web.xsl \
 	update-msvc.py \
 	update-potfiles.sh \
