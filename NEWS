@@ -44,7 +44,9 @@ Modules:
 - Tip dilation, reconstruction and certainty map were merged to one: tipops
   (but it still provides three distinct functions).
 - 2D FFT Filter: Ported from 1.x, interface reworked to use masks instead of
-  bulky custom marker code, still missing some functionality.
+  bulky custom marker code, and non-square data is now supported.
+- 2D FFT: fft output now defaults to DFit gradient and "Auto" color range for
+  improved visibility.
 - Level, Level rotate: Option to exclude/include mask area in calculation
   (only offered if a mask exists).
 - Level3: Instant apply is possible.
