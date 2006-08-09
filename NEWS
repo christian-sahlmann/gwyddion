@@ -1,10 +1,15 @@
-1.99.7cvs20060704
+1.99.7.20060809
 
 1.99.8 (0000-00-00)
 Application:
 - Crash on app exit when Document history is open was fixed.
 - Recent files menu items have thumbnails.
 - Data browser: Miscellaneous bugs were fixed.
+- Data browser: Channel and graph titles are editable.
+- Color axis does not display ticks/values when they are not applicable.
+- Translations updated: Czech.  New translations started: German.
+- Problem with installation of translations affecting for instance FreeBSD
+  was fixed.
 
 Libraries:
 - libgwyddion: Version information is now available.
@@ -15,13 +20,22 @@ Libraries:
 - libgwyapp: Settings file manipulation function report problems via GError.
 - libgwyapp: gwy_app_init_common() for simplier initialization of Gwyddion
   applications.
+- libgwyapp: Miscellaneous deprecated functions were removed, some were
+  replaced with similar data-browser based functions.
+- libgwyapp: 3D view was integrated to data-browser, it can display any
+  channel and crashes were fixed.
+- libgwyapp: Enum types are registered to the GObject type system.
 - libgwymodule: Crash when a module did not register any function was fixed.
 - libgwyprocess: Functions to check data field and line compatibility.
 - libgwyprocess: Laplace interpolation speed was improved.
 - libgwyprocess: Grain numbering speed was improved.
+- libgwyprocess: Non-FFT correlation speed was improved.
+- libgwyprocess: Watershed and correlation iterative interfaces were improved.
 - libgwydgets: GwyVectorLayer can disable selection editability.
 - libgwydgets: GwyShader is a no-window widget now.
 - libprocess: Inclusion mask argument added to gwy_data_field_area_fit_plane().
+- libgwydgets: GwyVectorLayer no longer automatically instantiates selections.
+- libgwydgets: GwyColorAxis ticks and label style is more controllable.
 
 Modules:
 - PNI file (new): Pacific Nanotechnology PNI file import.
@@ -43,7 +57,9 @@ Modules:
   the plug-in).
 
 Other:
-- MSC nmake compilation rules include proper dependencies
+- MSC nmake compilation rules include proper dependencies.
+- Confusion of host and target systems in configure, breaking for example
+  FreeBSD ports build, was fixed.
 
 
 1.99.7 (2006-05-28)
