@@ -387,12 +387,9 @@ AM_CONDITIONAL([ENABLE_PLUGIN_PROXY],[test "$enable_plugin_proxy" != no])
 
 #############################################################################
 # RPM
-RPM_VERSION=`echo AC_PACKAGE_VERSION`
-
-AC_SUBST(RPM_VERSION)
-AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
                    [Define to package home page, as a string.])
+AC_SUBST(PACKAGE_URL)
 
 #############################################################################
 # Generate gwyconfig

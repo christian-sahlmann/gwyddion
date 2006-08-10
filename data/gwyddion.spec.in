@@ -6,7 +6,7 @@
 %{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
 Name:          @PACKAGE_TARNAME@
-Version:       @RPM_VERSION@
+Version:       @PACKAGE_VERSION@
 Release:       1
 Summary:       An SPM data visualization and analysis tool
 
