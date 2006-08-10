@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
@@ -35,12 +36,13 @@
 #define SHADE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 120
+    PREVIEW_SIZE = 180
 };
 
 typedef struct {
     gdouble theta;
     gdouble phi;
+    gdouble mix;
 } ShadeArgs;
 
 typedef struct {
@@ -48,6 +50,7 @@ typedef struct {
     GtkWidget *shader;
     GtkObject *theta;
     GtkObject *phi;
+    GtkObject *mix;
     GtkWidget *data_view;
     GwyContainer *data;
     gboolean in_update;
@@ -66,8 +69,13 @@ static void        theta_changed_cb             (GtkObject *adj,
                                                  ShadeControls *controls);
 static void        phi_changed_cb               (GtkObject *adj,
                                                  ShadeControls *controls);
+static void        mix_changed_cb               (GtkObject *adj,
+                                                 ShadeControls *controls);
 static void        shade_dialog_update          (ShadeControls *controls,
                                                  ShadeArgs *args);
+static void        shade_mix_with_plane         (GwyDataField *shaded,
+                                                 GwyDataField *plane,
+                                                 gdouble mixpercent);
 static void        load_args                    (GwyContainer *container,
                                                  ShadeArgs *args);
 static void        save_args                    (GwyContainer *container,
@@ -76,6 +84,7 @@ static void        sanitize_args                (ShadeArgs *args);
 
 
 static const ShadeArgs shade_defaults = {
+    0,
     0,
     0,
 };
@@ -144,6 +153,9 @@ shade(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
+    if (args.mix != 0.0) {
+        shade_mix_with_plane(shadefield, dfield, args.mix);
+    }
     gwy_data_field_normalize(shadefield);
     gwy_data_field_data_changed(shadefield);
 }
@@ -238,6 +250,15 @@ shade_dialog(ShadeArgs *args,
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 
+    controls.mix = gtk_adjustment_new(args->mix, 0.0, 100.0, 1,5,0);
+
+    spin = gwy_table_attach_spinbutton(table, row, _("_Mix:"), "%",
+                                       controls.mix);
+    g_signal_connect(controls.mix, "value-changed",
+                     G_CALLBACK(mix_changed_cb), &controls);
+
+    row++;
+
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();
@@ -265,6 +286,7 @@ shade_dialog(ShadeArgs *args,
 
             case RESPONSE_RESET:
             *args = shade_defaults;
+            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.mix), args->mix);
             gwy_shader_set_angle(GWY_SHADER(controls.shader),
                                  args->theta, args->phi);
             break;
@@ -336,6 +358,23 @@ phi_changed_cb(GtkObject *adj,
 }
 
 static void
+mix_changed_cb(GtkObject *adj,
+               ShadeControls *controls)
+{
+    ShadeArgs *args;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    args = controls->args;
+    args->mix = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    shade_dialog_update(controls, args);
+    controls->in_update = FALSE;
+}
+
+
+static void
 shade_dialog_update(ShadeControls *controls,
                     ShadeArgs *args)
 {
@@ -346,17 +385,49 @@ shade_dialog_update(ShadeControls *controls,
     shader = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
                                                              "/0/show"));
     gwy_data_field_shade(dfield, shader, args->theta, args->phi);
+    if (args->mix != 0.0) {
+        shade_mix_with_plane(shader, dfield, args->mix);
+    }
+
     gwy_data_field_data_changed(shader);
+}
+
+static void
+shade_mix_with_plane(GwyDataField *shaded,
+                     GwyDataField *plane,
+                     gdouble mixpercent)
+{
+    GwyDataField *mix;
+    gdouble plane_min, plane_max, shade_min, shade_max;
+    gdouble plane_range, shade_range;
+
+    mixpercent /= 100;
+
+    gwy_data_field_get_min_max(plane, &plane_min, &plane_max);
+    gwy_data_field_get_min_max(shaded, &shade_min, &shade_max);
+    plane_range = plane_max - plane_min;
+    shade_range = shade_max - shade_min;
+
+    gwy_data_field_multiply(shaded, (1 - mixpercent)*(plane_range/shade_range));
+
+    mix = gwy_data_field_duplicate(plane);
+    gwy_data_field_multiply(mix, mixpercent);
+    gwy_data_field_sum_fields(shaded, shaded, mix);
+
+    g_object_unref(mix);
+
 }
 
 static const gchar theta_key[] = "/module/shade/theta";
 static const gchar phi_key[]   = "/module/shade/phi";
+static const gchar mix_key[]   = "/module/shade/mix";
 
 static void
 sanitize_args(ShadeArgs *args)
 {
     args->theta = CLAMP(args->theta, 0.0, G_PI/2.0);
     args->phi = CLAMP(args->phi, 0.0, 2.0*G_PI);
+    args->mix = CLAMP(args->mix, 0.0, 100.0);
 }
 
 static void
@@ -367,6 +438,7 @@ load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, theta_key, &args->theta);
     gwy_container_gis_double_by_name(container, phi_key, &args->phi);
+    gwy_container_gis_double_by_name(container, mix_key, &args->mix);
     sanitize_args(args);
 }
 
@@ -376,6 +448,7 @@ save_args(GwyContainer *container,
 {
     gwy_container_set_double_by_name(container, theta_key, args->theta);
     gwy_container_set_double_by_name(container, phi_key, args->phi);
+    gwy_container_set_double_by_name(container, mix_key, args->mix);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
