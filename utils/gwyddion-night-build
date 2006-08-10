@@ -3,7 +3,7 @@
 disabled=
 pkgname=gwyddion
 basever=1.99.8
-dont_update_version=dont_update_no_stinking_version
+dont_update_version=
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs
