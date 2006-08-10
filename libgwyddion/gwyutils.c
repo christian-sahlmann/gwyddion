@@ -413,14 +413,18 @@ gwy_sgettext(const gchar *msgid)
  *           <literal>"locale"</literal>, or
  *           <literal>"data"</literal>.
  *
- * Finds some system gwyddion directory.
+ * Finds a system Gwyddion directory.
  *
- * On Unix, it return compiled-in path, unless it's overriden with environment
- * variables (see gwyddion manual page).
+ * On Unix, a compiled-in path is returned, unless it's overriden with
+ * environment variables (see gwyddion manual page).
  *
- * On Win32, it returns directory where libgwyddion DLL resides.
+ * On Win32, the directory where the libgwyddion DLL from which this function
+ * was called resides is taken as the base and the location of other Gwyddion
+ * directories is calculated from it.
  *
  * The returned value is not actually tested for existence, it's up to caller.
+ *
+ * To obtain the Gwyddion user directory see gwy_get_user_dir().
  *
  * Returns: The path as a newly allocated string.
  **/
@@ -499,12 +503,16 @@ gwy_find_self_dir(const gchar *dirname)
 /**
  * gwy_get_user_dir:
  *
- * Return directory where Gwyddion user settings and data should be stored.
+ * Returns the directory where Gwyddion user settings and data should be stored.
  *
- * On Unix this is normally in home directory.  On silly platforms or silly
- * occasions, silly locations can be returned as fallback.
+ * On Unix this is usually a dot-directory in user's home directory.  On modern
+ * Win32 the returned directory resides in user's Documents and Settings.
+ * On silly platforms or silly occasions, silly locations (namely a temporary
+ * directory) can be returned as fallback.
  *
- * Returns: The directory as a string that should not be freed.
+ * To obtain a Gwyddion system directory see gwy_find_self_dir().
+ *
+ * Returns: The directory as a constant string that should not be freed.
  **/
 const gchar*
 gwy_get_user_dir(void)
