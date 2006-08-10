@@ -439,8 +439,8 @@ get_features(ErunArgs *args)
     }
     
 
-    get_detected_points(args);
-    get_detected_lines(args);
+    /*get_detected_points(args);
+    get_detected_lines(args);*/
     get_correlation_points(args);
 
     /*print summary for debug*/
@@ -1314,7 +1314,7 @@ static void evaluate(ErunArgs *args)
     GString *expression;
     GwyEvaluatorTask *etset;
     EvalData *edata;
-    GError *err;
+    GError *err = NULL;
     gboolean error;
     GPtrArray *objvar;
     gint nobjects;
