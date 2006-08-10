@@ -87,8 +87,6 @@ static void        to_changed_cb             (GtkWidget *entry,
                                               FitControls *controls);
 static void        dialog_update             (FitControls *controls,
                                               FitArgs *args);
-static void        graph_update              (FitControls *controls,
-                                              FitArgs *args);
 static void        graph_selected            (GwySelection *selection,
                                               gint i, 
                                               FitControls *controls);
@@ -220,6 +218,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *vbox;
     FitControls controls;
     gint response, i;
+    GwyGraphModel *gmodel;
     char *p, *filename;
 
     enum {
@@ -372,8 +371,8 @@ fit_dialog(FitArgs *args)
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
-
-    args->graph_model = gwy_graph_model_new();
+    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
+    args->graph_model = gwy_graph_model_duplicate(gmodel);
     controls.graph = gwy_graph_new(args->graph_model);
     g_object_unref(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
@@ -399,10 +398,6 @@ fit_dialog(FitArgs *args)
 
     reset(args, &controls);
     dialog_update(&controls, args);
-
-    /*XXX Shouldn't need this, however, needs. */
-    graph_update(&controls, args);
-
 
     gtk_widget_show_all(dialog);
 
@@ -449,14 +444,11 @@ destroy(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 }
 
 static void
-clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
+clear(FitArgs *args, FitControls *controls)
 {
     gint i;
 
-    /*XXX Shouldn't need this, however somehow it doesn't work without now */
-    graph_update(controls, args);
-
-
+    gwy_graph_model_remove_curve_by_description(args->graph_model, "fit");
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
@@ -661,29 +653,6 @@ dialog_update(FitControls *controls, FitArgs *args)
         }
     }
 
-}
-
-/*
- * XXX XXX XXX: Get rid of this brain damage XXX XXX XXX
- * No one any longer needs to update graphs this way.
- */
-static void
-graph_update(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
-{
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *gcmodel;
-    gint i, n;
-
-    /*clear graph*/
-    gwy_graph_model_remove_all_curves(args->graph_model);
-
-    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
-    n = gwy_graph_model_get_n_curves(gmodel);
-    for (i = 0; i < n; i++) {
-        gcmodel = gwy_graph_model_get_curve(gmodel, i);
-        gwy_graph_model_add_curve(args->graph_model, gcmodel);
-    }
-    args->is_fitted = FALSE;
 }
 
 
