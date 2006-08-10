@@ -21,6 +21,7 @@
 #ifndef __GWY_DATA_BROWSER_H__
 #define __GWY_DATA_BROWSER_H__
 
+#include <gtk/gtkwindow.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraph.h>
