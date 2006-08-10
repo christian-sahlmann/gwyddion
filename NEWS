@@ -6,9 +6,9 @@ Application:
 - Data browser: Miscellaneous bugs were fixed.
 - Data browser: Channel and graph titles are editable.
 - Color axis does not display ticks/values when they are not applicable.
+- Metadata more or less work again (although most modules have their creation
+  still disabled).
 - Translations updated: Czech.  New translations started: German.
-- Problem with installation of translations affecting for instance FreeBSD
-  was fixed.
 
 Libraries:
 - libgwyddion: Version information is now available.
@@ -30,15 +30,22 @@ Libraries:
 - libgwyprocess: Grain numbering speed was improved.
 - libgwyprocess: Non-FFT correlation speed was improved.
 - libgwyprocess: Watershed and correlation iterative interfaces were improved.
+- libgwydgets: Gwy3DSetup is a new object which holds 3D scene settings, 3D
+  widgets were updated to use it.
 - libgwydgets: GwyVectorLayer can disable selection editability.
 - libgwydgets: GwyShader is a no-window widget now.
 - libprocess: Inclusion mask argument added to gwy_data_field_area_fit_plane().
 - libgwydgets: GwyVectorLayer no longer automatically instantiates selections.
 - libgwydgets: GwyColorAxis ticks and label style is more controllable.
+- libgwydgets: Many more GwyAxis properties are user-controllable.
+- libgwydgets: Graph and axis size requests and allocations work much more
+  like normal widgets.
+- libgwydgets: Miscellaneous graph fixes and rectifications.
 
 Modules:
 - PNI file (new): Pacific Nanotechnology PNI file import.
 - Nanonis (new): Nanonis SXM file import.
+- Shade: Can mix shaded and original data.
 - Burleigh: Scaling of physical dimensions and values was corrected.
 - Tip dilation, reconstruction and certainty map were merged to one: tipops
   (but it still provides three distinct functions).
@@ -61,6 +68,8 @@ Other:
 - MSC nmake compilation rules include proper dependencies.
 - Confusion of host and target systems in configure, breaking for example
   FreeBSD ports build, was fixed.
+- Problem with installation of translations affecting for instance FreeBSD
+  was fixed.
 
 
 1.99.7 (2006-05-28)
