@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <glib/gstdio.h>
@@ -209,6 +208,12 @@ normalize_data(FitArgs *args,
 static void
 fit_dialog(FitArgs *args)
 {
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_FIT = 2,
+        RESPONSE_PLOT = 3
+    };
+
     GtkWidget *label;
     GtkWidget *table;
     GtkWidget *dialog;
@@ -219,16 +224,13 @@ fit_dialog(FitArgs *args)
     FitControls controls;
     gint response, i;
     GwyGraphModel *gmodel;
+    GwyGraphArea *area;
+    GwySelection *selection;
     char *p, *filename;
 
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_FIT = 2,
-        RESPONSE_PLOT = 3
-    };
-
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Critical Dimension"),
+                                         NULL, 0, NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Fit"),
@@ -306,8 +308,7 @@ fit_dialog(FitArgs *args)
 
 
     controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_res[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_res[i],
                          1, 2, i+1, i+2,
@@ -316,8 +317,7 @@ fit_dialog(FitArgs *args)
     }
 
     controls.param_err = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_err[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_err[i],
                          2, 3, i+1, i+2,
@@ -336,10 +336,10 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
     table2 = gtk_table_new(2, 2, FALSE);
-    controls.data
-        = gtk_adjustment_new(args->curve, 1,
-                             gwy_graph_model_get_n_curves(GWY_GRAPH(args->parent_graph)->graph_model),
-                             1, 5, 0);
+    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
+    controls.data = gtk_adjustment_new(args->curve, 1,
+                                       gwy_graph_model_get_n_curves(gmodel),
+                                       1, 5, 0);
     gwy_table_attach_spinbutton(table2, 1, _("Graph data curve"), "",
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
@@ -371,30 +371,24 @@ fit_dialog(FitArgs *args)
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
-    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
     args->graph_model = gwy_graph_model_duplicate(gmodel);
     controls.graph = gwy_graph_new(args->graph_model);
     g_object_unref(args->graph_model);
-    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-    
-    gwy_selection_set_max_objects(
-               gwy_graph_area_get_selection(
-                               GWY_GRAPH_AREA(
-                                  gwy_graph_get_area(GWY_GRAPH(controls.graph))), 
-                                GWY_GRAPH_STATUS_XSEL), 1);
-    
-    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gtk_widget_set_size_request(controls.graph, 400, 300);
+
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-    g_signal_connect(gwy_graph_area_get_selection(
-                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph))),
-                         GWY_GRAPH_STATUS_XSEL),
-                     "changed",
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
+    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
+
+    gwy_selection_set_max_objects(selection, 1);
+    g_signal_connect(selection, "changed",
                      G_CALLBACK(graph_selected), &controls);
-   
 
     args->fitfunc = gwy_inventory_get_nth_item(gwy_cdlines(),
-                                            args->function_type);
+                                               args->function_type);
 
     reset(args, &controls);
     dialog_update(&controls, args);
@@ -610,9 +604,6 @@ type_changed_cb(GtkWidget *combo, FitControls *controls)
     p = gwy_find_self_dir("pixmaps");
     filename = g_build_filename(p, gwy_cdline_get_definition(controls->args->fitfunc),
                                 NULL);
-
-    printf("filename: %s (%s) (%d)\n", filename, gwy_cdline_get_definition(controls->args->fitfunc),
-           controls->args->function_type);
     g_free(p);
 
     gtk_image_set_from_file(GTK_IMAGE(controls->image), filename);
