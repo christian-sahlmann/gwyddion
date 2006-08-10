@@ -68,7 +68,7 @@ libgwyapp_la_SOURCES = \
 	funcuse.c \
 	glmaterial-editor.c \
 	gradient-editor.c \
-	gwyapptypes.h \
+	gwyapptypes.c \
 	gwyplaintool.c \
 	gwytool.c \
 	menu.c \
