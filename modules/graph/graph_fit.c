@@ -238,8 +238,11 @@ fit_dialog(FitArgs *args)
         RESPONSE_FIT = 2,
         RESPONSE_PLOT = 3
     };
+
     GtkWidget *label, *table, *dialog, *hbox, *hbox2, *table2, *vbox;
     GwyGraphModel *gmodel;
+    GwyGraphArea *area;
+    GwySelection *selection;
     FitControls controls;
     gint response, i, j;
 
@@ -459,20 +462,17 @@ fit_dialog(FitArgs *args)
     args->graph_model = gwy_graph_model_duplicate(gmodel);
     controls.graph = gwy_graph_new(args->graph_model);
     g_object_unref(args->graph_model);
-    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-
-    gwy_selection_set_max_objects(
-               gwy_graph_area_get_selection(
-                               GWY_GRAPH_AREA(
-                                  gwy_graph_get_area(GWY_GRAPH(controls.graph))),
-                               GWY_GRAPH_STATUS_XSEL), 1);
-    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gtk_widget_set_size_request(controls.graph, 400, 300);
+
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-    g_signal_connect(gwy_graph_area_get_selection(
-                         GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph))),
-                         GWY_GRAPH_STATUS_XSEL),
-                     "changed",
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
+    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
+
+    gwy_selection_set_max_objects(selection, 1);
+    g_signal_connect(selection, "changed",
                      G_CALLBACK(graph_selected), &controls);
 
     args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
@@ -814,11 +814,8 @@ graph_selected(GwySelection* selection, gint i, FitControls *controls)
     gint nselections;
     const gdouble *data;
 
-
     nselections = gwy_selection_get_data(selection, NULL);
-    gwy_selection_get_object(selection,
-                             i,
-                             area_selection);
+    gwy_selection_get_object(selection, i, area_selection);
 
     if (nselections <= 0 || area_selection[0] == area_selection[1]) {
         gmodel = gwy_graph_get_model(graph);
