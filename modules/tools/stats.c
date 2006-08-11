@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -366,6 +366,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
+    gtk_widget_set_sensitive(tool->save, FALSE);
 
     gtk_widget_show_all(dialog->vbox);
 }
