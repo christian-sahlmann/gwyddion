@@ -1,9 +1,10 @@
-1.99.8.20060811
+1.99.8.20060819
 
 1.99.9 (0000-00-00)
 Modules:
 - Statistical quantities: Initial sensitivity of Save was fixed preventing
-  attempts to save nonexistent statistics that led to crashe.
+  attempts to save nonexistent statistics that led to crashes.
+- SPML import: Miscellaneous small fixes and improvements.
 
 
 1.99.8 (2006-08-10)

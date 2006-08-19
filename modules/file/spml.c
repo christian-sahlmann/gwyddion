@@ -19,7 +19,22 @@
  */
 /* TODO: check/write allocation/deallocation
  *       change GArray to GPtrArray where possible */
-/* #define DEBUG */
+
+/* CHANGELOG:
+ * 2006/08/09
+ * * atof() replaced by g_ascii_strtod() and set_locale() removed
+ * 2006/06/07 - version 0.1.4
+ * * corrected problem with non-square datachannel rotation
+ * 2006/05/18 - version 0.1.3
+ * * Corrected width and length of datafiels (rounding problem)
+ * * TODO: what happend when axis or dimensions are nonequal?
+ * 2006/05/07 - version 0.1.2
+ * * Fixed offset of datafield (datafield is starting on location of axes start)
+ * * Rotation of datafield (consult the meaning of axis)
+ * * FIXME: Correct width and length of datafiels (rounding problem)
+ *  
+ */
+/*#define DEBUG*/
 
 #include "config.h"
 #include <stdio.h>
@@ -59,10 +74,10 @@ static GwyContainer *spml_load(const gchar *filename);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Loads and saves SPML (Scanning Probe Microscopy Markup Language) "
+    N_("Loads SPML (Scanning Probe Microscopy Markup Language) "
        "data files."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.1.1",
+    "0.1.4",
     "Jan Hořák",
     "2006",
 };
@@ -239,7 +254,7 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
                     p++;
                     continue;
                 }
-                num = strtod(p, &end_ptr);
+                num = g_ascii_strtod(p, &end_ptr);
                 if (num == 0 && end_ptr == p) {
                     g_warning
                         ("SPML: decode_data(): No conversion performed from ASCII string.");
@@ -255,7 +270,7 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
         case HEX:
         case BINARY:
             g_warning
-                ("SPML: decode_data(): Data coding 'HEX' and 'BINARY' supported.");
+                ("SPML: decode_data(): Data coding 'HEX' and 'BINARY' not supported.");
             break;
         case UNKNOWN_CODING:
             break;
@@ -445,6 +460,7 @@ get_data(gboolean read_data_only, char *filename, char *datachannel_name,
                                     ("SPML: get_data(): Input data are in %d dimension(s).",
                                      data_dimension);
                             }
+                            /* one dimension array */
                             if (data_dimension > 0) {
                                 *dimensions =
                                     g_malloc(sizeof(int) * data_dimension);
@@ -607,7 +623,7 @@ get_axis_datapoints(char *filename, xmlNodePtr axis_node)
     GArray *axes_values;
     xmlChar *ch;
     int num_of_dimensions;
-    float step, start, size;
+    double step, start, size;
     double *data, value;
     int *dimensions;
     char *unit;
@@ -635,25 +651,26 @@ get_axis_datapoints(char *filename, xmlNodePtr axis_node)
         /* points will be computed from start step and size attribute */
         ch = xmlGetProp(axis_node, "start");
         if (ch) {
-            start = atof(ch);
+            start = g_ascii_strtod(ch, NULL);
             g_free(ch);
         }
         else
             return NULL;
         ch = xmlGetProp(axis_node, "step");
         if (ch) {
-            step = atof(ch);
+            step = g_ascii_strtod(ch, NULL);
             g_free(ch);
         }
         else
             return NULL;
         ch = xmlGetProp(axis_node, "size");
         if (ch) {
-            size = atof(ch);
+            size = g_ascii_strtod(ch, NULL);
             g_free(ch);
         }
         else
             return NULL;
+        gwy_debug("step: %e, start:%e", step, start);
         axes_values = g_array_new(TRUE, FALSE, sizeof(double));
         for (j = 0; j < size; j++) {
             value = j * step + start;
@@ -819,7 +836,7 @@ get_axis(char *filename, char *datachannel_name, GArray ** axes,
                         else {
                             g_warning
                                 ("SPML: get_axis(): Cannot compute or read axis data.");
-                            // g_array_free(*axes, TRUE);
+                            /* g_array_free(*axes, TRUE); */
                             if (*units)
                                 g_array_free(*units, TRUE);
                             if (*names)
@@ -852,8 +869,8 @@ static GArray *
 get_dimensions(GArray * axes)
 {
     unsigned int i;
-    double start, end, width;
-    GArray *axis, *out_array;
+    double width;
+    GArray *axis, *out_array = NULL;
 
     gwy_debug("start");
     if (axes == NULL)
@@ -862,12 +879,29 @@ get_dimensions(GArray * axes)
     out_array = g_array_new(FALSE, FALSE, sizeof(double));
     for (i = 0; i < axes->len; i++) {
         axis = g_array_index(axes, GArray *, i);
+        if (axis->len > 1) {
+            width = (g_array_index(axis, double, 1) - g_array_index(axis, double, 0)) 
+                * axis->len;
+            out_array = g_array_append_val(out_array, width);            
+            gwy_debug("Start: %e, step: %e, count: %d, width: %e",
+                      g_array_index(axis, double, 0),
+                      g_array_index(axis, double, 1) - g_array_index(axis, double, 0),
+                      axis->len,
+                      width
+                     );
+        } else {
+            g_array_free(out_array, TRUE);
+            gwy_debug("Axis values count lesser than 2");
+            return NULL;
+        }
+        /*
         start = g_array_index(axis, double, 0);
         end = g_array_index(axis, double, axis->len - 1);
 
         width = end - start;
         out_array = g_array_append_val(out_array, width);
         gwy_debug("Start: %e End: %e Width: %e\n", start, end, width);
+        */
     }
     return out_array;
 
@@ -879,15 +913,16 @@ spml_load(const gchar *filename)
     GwyContainer *object = NULL;
     gdouble *gwy_data;
     GwySIUnit *siunit;
-    int i, *dimensions, scattered, channel_number = 0;
+    int i, j, *dimensions, scattered, channel_number = 0;
     GwyDataField *dfield = NULL;
     char *channel_name, *channel_key, *unit;
-    GArray *axes, *units, *names, *real_width_height;
+    GArray *axes, *axes_units, *names, *real_width_height;
     double x_dimen, y_dimen, *data = NULL;
     gint z_power10, x_power10, y_power10;
     GList *list_of_datagroups, *l, *sub_l, *list_of_channels;
     dataChannelGroup *dc_group;
     gchar *gwy_channel_location;
+    int rotate = 90;
 
     gwy_debug("file = %s", filename);
 
@@ -904,68 +939,100 @@ spml_load(const gchar *filename)
             channel_name = unit = NULL;
             data = NULL;
             dimensions = NULL;
-            axes = units = names = real_width_height = NULL;
+            axes = axes_units = names = real_width_height = NULL;
 
             channel_name = sub_l->data;
             gwy_debug("Channelgroup: %s, channelname: %s", dc_group->name,
                       channel_name);
             if (channel_name
-                // get data and check it is 2 or more dimensional array
+                /* get data and check it is 2 or more dimensional array */
                 && get_data(FALSE, (char *)filename, channel_name, &data,
                             &dimensions, &unit, &scattered) >= 2 && data
-                // get axes and check we get 2 or more axes
-                && get_axis((char *)filename, channel_name, &axes, &units,
+                /* get axes and check we get 2 or more axes */
+                && get_axis((char *)filename, channel_name, &axes, &axes_units,
                             &names) >= 2 && axes
-                // get width and height of 2D acording to axes
+                /* get width and height of 2D acording to axes */
                 && (real_width_height = get_dimensions(axes)) != NULL
                 && real_width_height->len >= 2) {
 
                 x_dimen = g_array_index(real_width_height, double, 0);
                 y_dimen = g_array_index(real_width_height, double, 1);
 
-                // parse unit and return power of 10 according to unit
+                /* parse unit and return power of 10 according to unit */
                 siunit =
-                    gwy_si_unit_new_parse(g_array_index(units, xmlChar *, 0),
+                    gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar *, 0),
                                           &x_power10);
                 g_object_unref(siunit);
 
                 siunit =
-                    gwy_si_unit_new_parse(g_array_index(units, xmlChar *, 1),
+                    gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar *, 1),
                                           &y_power10);
-                // create and allocate datafield of given dimensions and given physical
-                // dimensions
+                /* create and allocate datafield of given dimensions and given physical
+                   dimensions */
+                if (rotate == 90) {
+                    dfield =
+                    GWY_DATA_FIELD(gwy_data_field_new
+                                   (dimensions[1], dimensions[0],
+                                    y_dimen * pow10(y_power10),
+                                    x_dimen * pow10(x_power10), FALSE));
+                } else {
                 dfield =
                     GWY_DATA_FIELD(gwy_data_field_new
                                    (dimensions[0], dimensions[1],
                                     x_dimen * pow10(x_power10),
                                     y_dimen * pow10(y_power10), FALSE));
+                }
+                gwy_debug("X real width: %f", x_dimen * pow10(x_power10));
+                gwy_debug("X real_width_height: %f", x_dimen);
                 gwy_data = gwy_data_field_get_data(dfield);
-                // copy raw array of doubles extracted from spml file to Gwyddion's
-                // datafield
+                /* copy raw array of doubles extracted from spml file to Gwyddion's
+                   datafield 
+                   rotate -90 degrees: */
+                if (rotate == 90) {
+                    for (i = 0; i < dimensions[0]; i++) {
+                        for (j = 0; j < dimensions[1]; j++) {
+                            gwy_data[j+i*dimensions[1]] = data[i+j*dimensions[0]];
+                        }
+                    }
+                } else {
                 memcpy(gwy_data, data,
                        dimensions[0] * dimensions[1] * sizeof(double));
-
+                }
+                gwy_debug("Dimensions: %dx%d", dimensions[0], dimensions[1]);
                 gwy_data_field_set_si_unit_xy(dfield, siunit);
                 g_object_unref(siunit); /* unref siunit created before dfield */
 
-                // set unit for Z axis
+                /* set unit for Z axis */
                 siunit = gwy_si_unit_new_parse(unit, &z_power10);
                 gwy_data_field_set_si_unit_z(dfield, siunit);
                 g_object_unref(siunit);
 
                 gwy_data_field_multiply(dfield, pow10(z_power10));
 
+                /* set offset to match axes */                
+                siunit = gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar*, 0), &z_power10);
+                gwy_data_field_set_si_unit_z(dfield, siunit);
+                g_object_unref(siunit);
+                gwy_data_field_set_xoffset(dfield, 
+                    pow10(z_power10)*g_array_index(g_array_index(axes, GArray *, 0), double, 0) );
+
+                siunit = gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar*, 1), &z_power10);
+                gwy_data_field_set_si_unit_z(dfield, siunit);
+                g_object_unref(siunit);
+                gwy_data_field_set_yoffset(dfield, 
+                    pow10(z_power10)*g_array_index(g_array_index(axes, GArray *, 1), double, 0) );
+
                 if (object == NULL) {
-                    // create gwyddion container
+                    /* create gwyddion container */
                     object = GWY_CONTAINER(gwy_container_new());
                 }
-                // put datachannel into container
+                /* put datachannel into container */
                 gwy_channel_location =
                     g_strdup_printf("/%i/data", channel_number++);
                 gwy_container_set_object_by_name(object, gwy_channel_location,
                                                  (GObject *)dfield);
 
-                // set name of datachannel to store in container
+                /* set name of datachannel to store in container */
                 channel_key = g_strdup_printf("%s/title", gwy_channel_location);
                 gwy_container_set_string_by_name(object, channel_key,
                                                  g_strdup(channel_name));
@@ -974,7 +1041,7 @@ spml_load(const gchar *filename)
                 g_object_unref(dfield);
 
             }
-            // Free possibly allocated memory
+            /* Free possibly allocated memory */
             if (data)
                 g_free(data);
             if (dimensions)
@@ -985,10 +1052,10 @@ spml_load(const gchar *filename)
                 for (i = 0; i < axes->len; i++) {
                     g_array_free(g_array_index(axes, GArray *, i), TRUE);
                 }
-                g_array_free(axes, TRUE);       //TODO: free subGarrays too!!!
+                g_array_free(axes, TRUE);
             }
-            if (units)
-                g_array_free(units, TRUE);
+            if (axes_units)
+                g_array_free(axes_units, TRUE);
             if (names)
                 g_array_free(names, TRUE);
             if (real_width_height)
