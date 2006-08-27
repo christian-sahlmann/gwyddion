@@ -52,6 +52,7 @@
     <title>3D Widgets</title>
     <xi:include href="xml/gwy3dview.xml"/>
     <xi:include href="xml/gwy3dwindow.xml"/>
+    <xi:include href="xml/gwy3dsetup.xml"/>
     <xi:include href="xml/gwy3dlabel.xml"/>
   </chapter>
 
