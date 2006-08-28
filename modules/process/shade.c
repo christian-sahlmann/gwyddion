@@ -43,6 +43,7 @@ typedef struct {
     gdouble theta;
     gdouble phi;
     gdouble mix;
+    gboolean do_mix;
 } ShadeArgs;
 
 typedef struct {
@@ -51,6 +52,7 @@ typedef struct {
     GtkObject *theta;
     GtkObject *phi;
     GtkObject *mix;
+    GtkWidget *do_mix;
     GtkWidget *data_view;
     GwyContainer *data;
     gboolean in_update;
@@ -87,6 +89,7 @@ static const ShadeArgs shade_defaults = {
     0,
     0,
     0,
+    FALSE,
 };
 
 static GwyModuleInfo module_info = {
@@ -94,7 +97,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -153,7 +156,7 @@ shade(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
-    if (args.mix != 0.0) {
+    if (args.do_mix) {
         shade_mix_with_plane(shadefield, dfield, args.mix);
     }
     gwy_data_field_normalize(shadefield);
@@ -236,29 +239,38 @@ shade_dialog(ShadeArgs *args,
 
     controls.theta = gtk_adjustment_new(args->theta*180.0/G_PI,
                                         0.0, 90.0, 1.0, 15.0, 0.0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Theta:"), "deg",
-                                       controls.theta);
+    spin = gwy_table_attach_hscale(table, row, _("_Theta:"), "deg",
+                                   controls.theta, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.theta, "value-changed",
                      G_CALLBACK(theta_changed_cb), &controls);
     row++;
 
     controls.phi = gtk_adjustment_new(args->phi*180.0/G_PI,
                                       0.0, 360.0, 1.0, 30.0, 0.0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Phi:"), "deg",
-                                       controls.phi);
+    spin = gwy_table_attach_hscale(table, row, _("_Phi:"), "deg",
+                                   controls.phi, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.phi, "value-changed",
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 
     controls.mix = gtk_adjustment_new(args->mix, 0.0, 100.0, 1,5,0);
 
-    spin = gwy_table_attach_spinbutton(table, row, _("_Mix:"), "%",
-                                       controls.mix);
+    spin = gwy_table_attach_hscale(table, row, _("_Mix:"), "%",
+                                   controls.mix, GWY_HSCALE_CHECK);
+
+    controls.do_mix = g_object_get_data(G_OBJECT(controls.mix), "check");
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
+                                 ! args->do_mix);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
+                                 args->do_mix);
     g_signal_connect(controls.mix, "value-changed",
                      G_CALLBACK(mix_changed_cb), &controls);
 
-    row++;
+    g_signal_connect(controls.do_mix, "toggled",
+                     G_CALLBACK(mix_changed_cb), &controls);
 
+    row++;
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();
@@ -287,6 +299,10 @@ shade_dialog(ShadeArgs *args,
             case RESPONSE_RESET:
             *args = shade_defaults;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.mix), args->mix);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
+                                     ! args->do_mix);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
+                                     args->do_mix);
             gwy_shader_set_angle(GWY_SHADER(controls.shader),
                                  args->theta, args->phi);
             break;
@@ -368,7 +384,9 @@ mix_changed_cb(GtkObject *adj,
 
     controls->in_update = TRUE;
     args = controls->args;
-    args->mix = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    args->mix = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->mix));
+    args->do_mix = gtk_toggle_button_get_active(
+                                         GTK_TOGGLE_BUTTON(controls->do_mix));
     shade_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -385,7 +403,8 @@ shade_dialog_update(ShadeControls *controls,
     shader = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
                                                              "/0/show"));
     gwy_data_field_shade(dfield, shader, args->theta, args->phi);
-    if (args->mix != 0.0) {
+
+    if (args->do_mix) {
         shade_mix_with_plane(shader, dfield, args->mix);
     }
 
@@ -418,9 +437,10 @@ shade_mix_with_plane(GwyDataField *shaded,
 
 }
 
-static const gchar theta_key[] = "/module/shade/theta";
-static const gchar phi_key[]   = "/module/shade/phi";
-static const gchar mix_key[]   = "/module/shade/mix";
+static const gchar theta_key[]  = "/module/shade/theta";
+static const gchar phi_key[]    = "/module/shade/phi";
+static const gchar mix_key[]    = "/module/shade/mix";
+static const gchar do_mix_key[] = "/module/shade/do_mix";
 
 static void
 sanitize_args(ShadeArgs *args)
@@ -439,6 +459,7 @@ load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, theta_key, &args->theta);
     gwy_container_gis_double_by_name(container, phi_key, &args->phi);
     gwy_container_gis_double_by_name(container, mix_key, &args->mix);
+    gwy_container_gis_boolean_by_name(container, do_mix_key, &args->do_mix);
     sanitize_args(args);
 }
 
@@ -449,6 +470,7 @@ save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, theta_key, args->theta);
     gwy_container_set_double_by_name(container, phi_key, args->phi);
     gwy_container_set_double_by_name(container, mix_key, args->mix);
+    gwy_container_set_boolean_by_name(container, do_mix_key, args->do_mix);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
