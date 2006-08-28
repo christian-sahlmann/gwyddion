@@ -192,6 +192,13 @@ gwy_3d_window_destroy(GtkObject *object)
         GtkAdjustment *adj;
 
         setup = gwy_3d_view_get_setup(GWY_3D_VIEW(gwy3dwindow->gwy3dview));
+        g_signal_handlers_disconnect_matched(setup,
+                                             G_SIGNAL_MATCH_FUNC
+                                             | G_SIGNAL_MATCH_DATA,
+                                             0, 0, NULL,
+                                             gwy_3d_window_visualization_changed,
+                                             gwy3dwindow);
+
         while (gwy3dwindow->setup_adjustments) {
             adj = GTK_ADJUSTMENT(gwy3dwindow->setup_adjustments->data);
             g_signal_handlers_disconnect_matched(setup,
