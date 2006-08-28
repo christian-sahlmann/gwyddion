@@ -106,6 +106,9 @@ static void     gwy_3d_window_display_mode_changed (GtkWidget *item,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_set_visualization    (Gwy3DWindow *window,
                                                     Gwy3DVisualization visual);
+static void     gwy_3d_window_visualization_changed(Gwy3DSetup *setup,
+                                                    GParamSpec *pspec,
+                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_auto_scale_changed   (GtkToggleButton *check,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
@@ -182,16 +185,24 @@ static void
 gwy_3d_window_destroy(GtkObject *object)
 {
     Gwy3DWindow *gwy3dwindow;
-    Gwy3DSetup *setup;
-
     gwy3dwindow = GWY_3D_WINDOW(object);
 
     if (gwy3dwindow->gwy3dview) {
+        Gwy3DSetup *setup;
+        GtkAdjustment *adj;
+
         setup = gwy_3d_view_get_setup(GWY_3D_VIEW(gwy3dwindow->gwy3dview));
-        g_signal_handlers_disconnect_matched(setup, G_SIGNAL_MATCH_FUNC,
-                                             0, 0, NULL,
-                                             gwy_3d_window_adj_setup_changed,
-                                             NULL);
+        while (gwy3dwindow->setup_adjustments) {
+            adj = GTK_ADJUSTMENT(gwy3dwindow->setup_adjustments->data);
+            g_signal_handlers_disconnect_matched(setup,
+                                                 G_SIGNAL_MATCH_FUNC
+                                                 | G_SIGNAL_MATCH_DATA,
+                                                 0, 0, NULL,
+                                                 gwy_3d_window_adj_setup_changed,
+                                                 adj);
+            gwy3dwindow->setup_adjustments
+                = g_slist_remove(gwy3dwindow->setup_adjustments, adj);
+        }
         gwy3dwindow->gwy3dview = NULL;
     }
 
@@ -659,7 +670,8 @@ gwy_3d_window_adj_setup_changed(Gwy3DSetup *setup,
 }
 
 static GtkObject*
-gwy_3d_window_make_setup_adj(Gwy3DSetup *setup,
+gwy_3d_window_make_setup_adj(Gwy3DWindow *window,
+                             Gwy3DSetup *setup,
                              const gchar *property,
                              gdouble min,
                              gdouble max,
@@ -688,6 +700,8 @@ gwy_3d_window_make_setup_adj(Gwy3DSetup *setup,
     g_signal_connect(setup, detail,
                      G_CALLBACK(gwy_3d_window_adj_setup_changed), adj);
 
+    window->setup_adjustments = g_slist_prepend(window->setup_adjustments, adj);
+
     return adj;
 }
 
@@ -712,22 +726,24 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    adj = gwy_3d_window_make_setup_adj(setup, "rotation-x",
+    adj = gwy_3d_window_make_setup_adj(window, setup, "rotation-x",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++, _("_Phi:"), _("deg"), adj);
 
-    adj = gwy_3d_window_make_setup_adj(setup, "rotation-y",
+    adj = gwy_3d_window_make_setup_adj(window, setup, "rotation-y",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Theta:"), _("deg"), adj);
 
-    adj = gwy_3d_window_make_setup_adj(setup, "scale", 0.05, 10.0, 0.01, 0.1,
+    adj = gwy_3d_window_make_setup_adj(window, setup, "scale",
+                                       0.05, 10.0, 0.01, 0.1,
                                        FALSE);
     spin = gwy_table_attach_spinbutton(table, row++, _("_Scale:"), NULL, adj);
 
-    adj = gwy_3d_window_make_setup_adj(setup, "z-scale", 0.05, 10.0, 0.01, 0.1,
+    adj = gwy_3d_window_make_setup_adj(window, setup, "z-scale",
+                                       0.05, 10.0, 0.01, 0.1,
                                        FALSE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
@@ -820,7 +836,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    adj = gwy_3d_window_make_setup_adj(setup, "light-phi",
+    adj = gwy_3d_window_make_setup_adj(window, setup, "light-phi",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
@@ -828,7 +844,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     window->lights_spin1 = spin;
     gtk_widget_set_sensitive(spin, is_material);
 
-    adj = gwy_3d_window_make_setup_adj(setup, "light-theta",
+    adj = gwy_3d_window_make_setup_adj(window, setup, "light-theta",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
@@ -856,6 +872,9 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
+
+    g_signal_connect(setup, "notify::visualization",
+                     G_CALLBACK(gwy_3d_window_visualization_changed), window);
 
     return vbox;
 }
@@ -1260,7 +1279,7 @@ static void
 gwy_3d_window_display_mode_changed(GtkWidget *item,
                                    Gwy3DWindow *window)
 {
-    Gwy3DVisualization visualization;
+    Gwy3DVisualization visual;
     Gwy3DSetup *setup;
     GSList *list;
 
@@ -1269,13 +1288,12 @@ gwy_3d_window_display_mode_changed(GtkWidget *item,
 
     setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
     list = gtk_radio_button_get_group(GTK_RADIO_BUTTON(item));
-    visualization = gwy_radio_buttons_get_current(list);
+    visual = gwy_radio_buttons_get_current(list);
 
-    if (visualization != setup->visualization)
-        g_object_set(setup, "visualization", visualization, NULL);
+    if (visual != setup->visualization)
+        g_object_set(setup, "visualization", visual, NULL);
 }
 
-/* XXX: This must be connected to Gwy3DSetup::notify */
 static void
 gwy_3d_window_set_visualization(Gwy3DWindow *window,
                                 Gwy3DVisualization visual)
@@ -1293,6 +1311,14 @@ gwy_3d_window_set_visualization(Gwy3DWindow *window,
             == GWY_3D_MOVEMENT_LIGHT)
         g_signal_emit_by_name(window->buttons[GWY_3D_MOVEMENT_ROTATION],
                               "clicked");
+}
+
+static void
+gwy_3d_window_visualization_changed(Gwy3DSetup *setup,
+                                    G_GNUC_UNUSED GParamSpec *pspec,
+                                    Gwy3DWindow *window)
+{
+    gwy_3d_window_set_visualization(window, setup->visualization);
 }
 
 static void
