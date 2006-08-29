@@ -63,20 +63,19 @@ static gboolean      read_binary_data     (gint n,
                                            GError **error);
 static void          store_metadata       (GwyContainer *data,
                                            GHashTable *hash);
+static void          guess_channel_type   (GwyContainer *data,
+                                           const gchar *key);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.5",
+    "0.6",
     "Rok Zitko",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -139,9 +138,10 @@ createc_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         g_object_unref(dfield);
 
+        guess_channel_type(container, "/0/data");
         store_metadata(container, hash);
-
     }
+
     g_hash_table_destroy(hash);
     g_free(buffer);
 
@@ -341,6 +341,60 @@ store_metadata(GwyContainer *data, GHashTable *hash)
         ctr++;
     }
     g_string_free(metakey, TRUE);
+}
+
+/**
+ * guess_channel_type:
+ * @data: A data container.
+ * @key: Data channel key.
+ *
+ * Adds a channel title based on data field units.
+ *
+ * The guess is very simple, but probably better than `Unknown channel' in
+ * most cases.  If there already is a title it is left intact, making use of
+ * this function as a fallback easier.
+ **/
+static void
+guess_channel_type(GwyContainer *data,
+                   const gchar *key)
+{
+    GwySIUnit *siunit, *test;
+    GwyDataField *dfield;
+    const gchar *title;
+    GQuark quark;
+    gchar *s;
+
+    s = g_strconcat(key, "/title", NULL);
+    quark = g_quark_from_string(s);
+    g_free(s);
+    if (gwy_container_contains(data, quark))
+        return;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    siunit = gwy_data_field_get_si_unit_z(dfield);
+    test = gwy_si_unit_new(NULL);
+    title = NULL;
+
+    if (!title) {
+        gwy_si_unit_set_from_string(test, "m");
+        if (gwy_si_unit_equal(siunit, test))
+            title = "Topography";
+    }
+    if (!title) {
+        gwy_si_unit_set_from_string(test, "A");
+        if (gwy_si_unit_equal(siunit, test))
+            title = "Current";
+    }
+    if (!title) {
+        gwy_si_unit_set_from_string(test, "deg");
+        if (gwy_si_unit_equal(siunit, test))
+            title = "Phase";
+    }
+
+    g_object_unref(test);
+    if (title)
+        gwy_container_set_string(data, quark, g_strdup(title));
 }
 
 static gboolean

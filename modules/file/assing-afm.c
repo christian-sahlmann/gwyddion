@@ -68,7 +68,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -159,12 +159,14 @@ aafm_load(const gchar *filename,
     gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);
 
-    unit = gwy_si_unit_duplicate(unit);
+    unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
+    gwy_container_set_object_by_name(container, "/0/data/title",
+                                     g_strdup("Topography"));
     g_object_unref(dfield);
 
     gwy_file_abandon_contents(buffer, size, NULL);

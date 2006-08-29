@@ -19,6 +19,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* Note read_data_field() and read_data_field_old() read two completely
+ * different file formats, even if they were probably both invented at
+ * Hitachi. */
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -78,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2005",
 };
@@ -215,6 +219,8 @@ hitachi_load(const gchar *filename,
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup("Topography"));
 
     /* FIXME: this can be generally useful, move it to gwyddion */
     if (data_field_has_highly_nosquare_samples(dfield))
