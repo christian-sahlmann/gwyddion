@@ -794,13 +794,16 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     };
 
     Gwy3DView *view;
+    GwyContainer *data;
     Gwy3DSetup *setup;
     gboolean is_material = FALSE, is_gradient = FALSE;
     GtkWidget *vbox, *spin, *table, *menu, *label;
     GtkObject *adj;
+    const guchar *name;
     gint row;
 
     view = GWY_3D_VIEW(window->gwy3dview);
+    data = gwy_3d_view_get_data(view);
     setup = gwy_3d_view_get_setup(view);
     if (setup->visualization == GWY_3D_VISUALIZATION_GRADIENT)
         is_gradient = TRUE;
@@ -834,9 +837,11 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    /* TODO: get selected from 3D view */
+    name = NULL;
+    gwy_container_gis_string_by_name(data, gwy_3d_view_get_material_key(view),
+                                     &name);
     menu = gwy_gl_material_selection_new(G_CALLBACK(gwy_3d_window_set_material),
-                                         window, NULL);
+                                         window, name);
     window->material_menu = menu;
     gtk_widget_set_sensitive(menu, is_material);
     gtk_table_attach(GTK_TABLE(table), menu,
@@ -870,9 +875,11 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    /* TODO: get selected from 3D view */
+    name = NULL;
+    gwy_container_gis_string_by_name(data, gwy_3d_view_get_gradient_key(view),
+                                     &name);
     menu = gwy_gradient_selection_new(G_CALLBACK(gwy_3d_window_set_gradient),
-                                      window, NULL);
+                                      window, name);
     gtk_widget_set_sensitive(menu, is_gradient);
     window->gradient_menu = menu;
     gtk_table_attach(GTK_TABLE(table), menu,
