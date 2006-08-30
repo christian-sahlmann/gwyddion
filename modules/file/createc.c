@@ -27,7 +27,7 @@
  * - saving
  *
  * (Yeti):
- * FIXME: I do not have specs.
+ * FIXME: I do not have the specs.
 */
 
 #include "config.h"

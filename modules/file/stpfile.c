@@ -100,19 +100,16 @@ static const GwyEnum channels[] = {
     { N_("External"),                             99 },
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3.2",
+    "0.4",
     "David Nečas (Yeti), Petr Klapetek, Chris Anderson",
     "2006",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -348,12 +345,6 @@ process_metadata(STPFile *stpfile,
             gwy_container_set_string_by_name(container, channel_key,
                                              g_strdup(title));
             g_free(channel_key);
-
-            /* If this is the first channel, store the title under
-               /filename/title as well for compatability with 1.x. */
-            if (id == 0)
-                gwy_container_set_string_by_name(container, "/filename/title",
-                                                 g_strdup(title));
         }
     }
     else

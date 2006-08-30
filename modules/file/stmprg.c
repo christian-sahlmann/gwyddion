@@ -24,10 +24,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TO DO
+/* TODO
  * - store both directions
  * - other channels
  * - height vs. current, sol_z vs. sol_h etc.
+ *
+ * (Yeti):
+ * FIXME: I do not have the specs.
  */
 
 #include "config.h"
@@ -41,6 +44,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "get.h"
 #include "err.h"
 #include "stmprg.h"
 
@@ -57,26 +61,24 @@ static gboolean      read_binary_ubedata (gint n,
                                           gdouble *data,
                                           guchar *buffer,
                                           gint bpp);
-
+static void          guess_channel_type  (GwyContainer *data,
+                                          const gchar *key);
 
 /* Parameters are stored in global variables */
 struct STMPRG_MAINFIELD mainfield;
 struct STMPRG_CONTROL control;
 struct STMPRG_OTHER_CTRL other_ctrl;
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.4",
+    "0.5",
     "Rok Zitko",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -202,38 +204,13 @@ read_datafield(gchar *buffer, guint size, GError **error)
     return dfield;
 }
 
-/* WARNING: tp/ta format is big-endian. We need to convert the parameters
- * to little-endian numbers on little-endian machines, such as x86.
- * We try to do that in a portable way!
- */
-
-#define ByteSwap(x) BYTESWAP((unsigned char *) &x, sizeof(x))
-
-static void
-BYTESWAP(unsigned char *b, int n)
-{
-    int i = 0;
-    int j = n - 1;
-    char t;
-
-    while (i < j) {
-        t = b[i];
-        b[i] = b[j];
-        b[j] = t;
-        i++, j--;
-    }
-}
-
 static float
-ByteSwapFloat(float x)
+FLOAT_FROM_BE(float f)
 {
-    ByteSwap(x);
-    return x;
-}
+    const guchar *p = (const guchar*)&f;
 
-#define FLOAT_FROM_BE(val) \
-    (G_BYTE_ORDER == G_LITTLE_ENDIAN ? ByteSwapFloat(val) : (val))
-/* Other order conversion macros are defined in glib! */
+    return get_FLOAT_BE(&p);
+}
 
 static void
 byteswap_and_dump_parameters()
@@ -495,6 +472,8 @@ stmprg_load(const gchar *filename,
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+    /* FIXME: with documentation, we could perhaps do better */
+    guess_channel_type(container, "/0/data");
 
     store_metadata(container);
 
@@ -544,6 +523,60 @@ read_binary_ubedata(gint n, gdouble *data, guchar *buffer, gint bpp)
     }
 
     return TRUE;
+}
+
+/**
+ * guess_channel_type:
+ * @data: A data container.
+ * @key: Data channel key.
+ *
+ * Adds a channel title based on data field units.
+ *
+ * The guess is very simple, but probably better than `Unknown channel' in
+ * most cases.  If there already is a title it is left intact, making use of
+ * this function as a fallback easier.
+ **/
+static void
+guess_channel_type(GwyContainer *data,
+                   const gchar *key)
+{
+    GwySIUnit *siunit, *test;
+    GwyDataField *dfield;
+    const gchar *title;
+    GQuark quark;
+    gchar *s;
+
+    s = g_strconcat(key, "/title", NULL);
+    quark = g_quark_from_string(s);
+    g_free(s);
+    if (gwy_container_contains(data, quark))
+        return;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    siunit = gwy_data_field_get_si_unit_z(dfield);
+    test = gwy_si_unit_new(NULL);
+    title = NULL;
+
+    if (!title) {
+        gwy_si_unit_set_from_string(test, "m");
+        if (gwy_si_unit_equal(siunit, test))
+            title = "Topography";
+    }
+    if (!title) {
+        gwy_si_unit_set_from_string(test, "A");
+        if (gwy_si_unit_equal(siunit, test))
+            title = "Current";
+    }
+    if (!title) {
+        gwy_si_unit_set_from_string(test, "deg");
+        if (gwy_si_unit_equal(siunit, test))
+            title = "Phase";
+    }
+
+    g_object_unref(test);
+    if (title)
+        gwy_container_set_string(data, quark, g_strdup(title));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
