@@ -156,6 +156,7 @@ install-data-local:
 
 uninstall-local:
 	rm -f $(DESTDIR)$(TARGET_DIR)/*
+	rmdir $(DESTDIR)$(TARGET_DIR)
 
 #
 # Require gtk-doc when making dist
