@@ -1,14 +1,19 @@
-1.99.8.20060828
+1.99.8.20060830
 
 1.99.9 (0000-00-00)
 Libraries:
 - libgwydgets: Always insensitive 3D window light position controls were
   fixed.
+- libgwydgets: 3D window controls not always reflecting 3D view's state were
+  fixed.
 
 Modules:
+- File modules: Many `Unknown channel's were replaced with meaningful channel
+  names, disabled metadata import was restored for most file types.
 - Statistical quantities: Initial sensitivity of Save was fixed, preventing
   attempts to save nonexistent statistics that led to crashes.
 - SPML import: Miscellaneous small fixes and improvements.
+- ASCII export: Exports the current channel instead of always the first one.
 - Shade: Mixing GUI was improved.
 
 
