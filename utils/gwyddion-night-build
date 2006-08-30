@@ -76,7 +76,7 @@ function build_project() {
   make -k update-gmo
   for x in $(sed '/^POFILES/s/\(.*=\|\.po\)//g;t;d' Makefile); do
     echo -n "TRANSLATION $x: " 1>&2
-    msgfmt --statistics $x.po
+    msgfmt --statistics $x.po -o /dev/null
   done
   echo -n "TRANSLATION total: " 1>&2
   grep -c ^msgstr $pkgname.pot 1>&2
