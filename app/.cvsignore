@@ -10,3 +10,6 @@ core.*
 *.def
 makefile.msc
 authors.h
+gwyapptypes.c
+gwyapptypes.h
+stamp-gwyapptypes.h
