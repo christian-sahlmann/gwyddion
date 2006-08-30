@@ -338,6 +338,7 @@ static GwyDataField*  extract_data        (SISFile *sisfile,
                                            guint im,
                                            GError **error);
 static void           add_metadata        (SISFile *sisfile,
+                                           gint id,
                                            guint ch,
                                            guint im,
                                            GwyContainer *data);
@@ -346,19 +347,16 @@ static gboolean       sis_real_load       (const guchar *buffer,
                                            SISFile *sisfile,
                                            GError **error);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports SIS (Surface Imaging Systems) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -438,8 +436,7 @@ sis_load(const gchar *filename,
                         s = "Unknown";
                     gwy_container_set_string_by_name(data, key->str,
                                                      g_strdup(s));
-                    /* FIXME: not yet
-                    add_metadata(&sisfile, i, j, data); */
+                    add_metadata(&sisfile, n, i, j, data);
                     n++;
                 }
             }
@@ -550,6 +547,7 @@ extract_data(SISFile *sisfile,
 
 static void
 add_metadata(SISFile *sisfile,
+             gint id,
              guint ch,
              guint im,
              GwyContainer *data)
@@ -557,12 +555,14 @@ add_metadata(SISFile *sisfile,
     static const guint good_metadata[] = {
         0, 1, 9, 10, 12, 13, 14, 15, 16, 18, 20, 21, 22, 23, 24, 25, 26, 27,
     };
+    GwyContainer *meta;
     SISChannel *channel;
     SISImage *image;
     guint i, j;
-    guchar *key, *value;
+    guchar *value, *key;
     gpointer *p;
 
+    meta = gwy_container_new();
     channel = sisfile->channels + ch;
     image = channel->images + im;
     for (i = 0; i < G_N_ELEMENTS(good_metadata); i++) {
@@ -575,7 +575,6 @@ add_metadata(SISFile *sisfile,
         if (!p)
             continue;
 
-        key = g_strdup_printf("/meta/%s", sis_parameters[j].meta);
         switch (sis_parameters[j].type) {
             case G_TYPE_STRING:
             value = g_strdup((gchar*)p);
@@ -602,8 +601,7 @@ add_metadata(SISFile *sisfile,
             value = NULL;
             break;
         }
-        gwy_container_set_string_by_name(data, key, value);
-        g_free(key);
+        gwy_container_set_string_by_name(meta, sis_parameters[j].meta, value);
     }
 
     /* Special metadata */
@@ -611,20 +609,27 @@ add_metadata(SISFile *sisfile,
         value = g_strdup(gwy_enum_to_string(*(guint*)p,
                                             sis_palettes,
                                             G_N_ELEMENTS(sis_palettes)));
-        gwy_container_set_string_by_name(data, "/0/base/palette", value);
+        key = g_strdup_printf("/%d/base/palette", id);
+        gwy_container_set_string_by_name(data, key, value);
+        g_free(key);
     }
 
     if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(6)))) {
         value = g_strdup(gwy_enum_to_string(*(guint*)p,
                                             sis_aquisitions,
                                             G_N_ELEMENTS(sis_aquisitions)));
-        gwy_container_set_string_by_name(data, "/meta/Aqusition type", value);
+        gwy_container_set_string_by_name(meta, "Aqusition type", value);
     }
 
     value = g_strdup(gwy_enum_to_string(channel->signal_source,
                                         sis_signal_sources,
                                         G_N_ELEMENTS(sis_signal_sources)));
-    gwy_container_set_string_by_name(data, "/meta/Signal source", value);
+    gwy_container_set_string_by_name(meta, "Signal source", value);
+
+    key = g_strdup_printf("/%d/meta", id);
+    gwy_container_set_object_by_name(data, key, meta);
+    g_free(key);
+    g_object_unref(meta);
 }
 
 /* FIXME: what a mess. And in reality, the files look different than the
