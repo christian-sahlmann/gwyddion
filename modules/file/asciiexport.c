@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <glib/gstdio.h>
@@ -27,6 +26,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <app/gwyapp.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -44,19 +44,16 @@ static gboolean      asciiexport_export  (GwyContainer *data,
                                           GwyRunType mode,
                                           GError **error);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -80,7 +77,7 @@ asciiexport_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static gboolean
-asciiexport_export(GwyContainer *data,
+asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
                    const gchar *filename,
                    G_GNUC_UNUSED GwyRunType mode,
                    GError **error)
@@ -95,7 +92,7 @@ asciiexport_export(GwyContainer *data,
         return FALSE;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
