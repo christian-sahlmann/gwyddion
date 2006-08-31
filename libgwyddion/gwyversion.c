@@ -27,7 +27,7 @@
  *
  * Gets the major version of Gwyddion.
  *
- * If the version is 1.99.7cvs20060604, this function returns 1.
+ * If the version is 1.99.7.20060604, this function returns 1.
  *
  * Returns: The major version.
  **/
@@ -42,7 +42,7 @@ gwy_version_major(void)
  *
  * Gets the minor version of Gwyddion.
  *
- * If the version is 1.99.7cvs20060604, this function returns 99.
+ * If the version is 1.99.7.20060604, this function returns 99.
  *
  * Returns: The minor version.
  **/
@@ -57,8 +57,8 @@ gwy_version_minor(void)
  *
  * Gets the full Gwyddion version as a string.
  *
- * If the version is 1.99.7cvs20060604, this function returns
- * <literal>"1.99.7cvs20060604"</literal>.
+ * If the version is 1.99.7.20060604, this function returns
+ * <literal>"1.99.7.20060604"</literal>.
  *
  * This is the only method to get finer version information than major.minor.
  * However, only development versions use finer versioning than major.minor
@@ -92,17 +92,17 @@ gwy_version_string(void)
 /**
  * GWY_VERSION_MAJOR:
  *
- * Expands to the major version of Gwyddion.
+ * Expands to the major version of Gwyddion as a number.
  *
- * If the version is 1.99.7cvs20060604, this macro is defined as 1.
+ * If the version is 1.99.7.20060604, this macro is defined as 1.
  **/
 
 /**
  * GWY_VERSION_MINOR:
  *
- * Expands to the minor version of Gwyddion.
+ * Expands to the minor version of Gwyddion as a number.
  *
- * If the version is 1.99.7cvs20060604, this macro is defined as 7.
+ * If the version is 1.99.7.20060604, this macro is defined as 7.
  **/
 
 /**
@@ -110,8 +110,8 @@ gwy_version_string(void)
  *
  * Expands to the full Gwyddion version as a string.
  *
- * If the version is 1.99.7cvs20060604, this macro is defined as
- * <literal>"1.99.7cvs20060604"</literal>.
+ * If the version is 1.99.7.20060604, this macro is defined as
+ * <literal>"1.99.7.20060604"</literal>.
  *
  * See gwy_version_string() for caveats.
  **/
