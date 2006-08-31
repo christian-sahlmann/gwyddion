@@ -349,7 +349,6 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
     GwyDataField *dfield, *mfield, *sfield;
     GQuark quarks[3];
     gdouble sel[4];
-    gchar key[24];
     gint isel[4];
     gint oldid, id;
 
