@@ -1108,18 +1108,23 @@ gwy_axis_button_press(GtkWidget *widget,
 
     axis = GWY_AXIS(widget);
 
+    if (event->button != 1)
+        return FALSE;
+
     if (axis->enable_label_edit) {
         if (!axis->dialog) {
             axis->dialog = gwy_axis_dialog_new(axis);
-            g_signal_connect(gwy_axis_dialog_get_sci_text(axis->dialog), "edited",
+            g_signal_connect(gwy_axis_dialog_get_sci_text(axis->dialog),
+                             "edited",
                              G_CALLBACK(gwy_axis_entry), axis);
             g_signal_connect(axis->dialog, "response",
                              G_CALLBACK(gtk_widget_hide), NULL);
             gwy_sci_text_set_text
-                        (GWY_SCI_TEXT(gwy_axis_dialog_get_sci_text(axis->dialog)),
-                         axis->label_text->str);
+                      (GWY_SCI_TEXT(gwy_axis_dialog_get_sci_text(axis->dialog)),
+                       axis->label_text->str);
         }
         gtk_widget_show_all(axis->dialog);
+        gtk_window_present(GTK_WINDOW(axis->dialog));
     }
 
     return FALSE;
