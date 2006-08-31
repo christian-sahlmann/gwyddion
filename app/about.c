@@ -21,6 +21,7 @@
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyversion.h>
 #include <libgwydgets/gwystock.h>
 #include "app.h"
 #include "authors.h"
@@ -76,8 +77,7 @@ gwy_app_about(void)
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
     s2 = g_strdup_printf("<big><b>%s</b> %s</big>\n",
-                         g_get_application_name(),
-                         PACKAGE_VERSION);
+                         g_get_application_name(), GWY_VERSION_STRING);
     s = g_strconcat(s2, _("An SPM data analysis framework."), NULL);
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);

@@ -113,6 +113,8 @@ pixmapdata_DATA = \
 icondata_DATA = \
 	gwyddion.png
 
+# Note: splash screen source is too big to distribute in every tarball,
+# check it out from CVS
 xcf_sources = \
 	cd_line.xcf \
 	cd_rline.xcf \
