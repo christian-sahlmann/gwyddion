@@ -102,7 +102,7 @@ gwy_version_string(void)
  *
  * Expands to the minor version of Gwyddion as a number.
  *
- * If the version is 1.99.7.20060604, this macro is defined as 7.
+ * If the version is 1.99.7.20060604, this macro is defined as 99.
  **/
 
 /**
