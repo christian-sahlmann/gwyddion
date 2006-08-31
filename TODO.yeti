@@ -1,5 +1,11 @@
+- 3D window-view param sync not complete (or is it yet?)
+- 3D window title is not updated on data title update
+- Common functions in file modules, try to reduce duplication:
+  highly-nonsquare test
+  channel title guess from units
 - Ruler:
   - When range is all negative, units are not placed anywhere
+- Remember to make data field and line internals visible again
 - Why DWT methods have return values?
 - Surf file: units and scales are botched
 - 3D:
