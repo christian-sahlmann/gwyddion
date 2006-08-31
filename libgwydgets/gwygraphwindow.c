@@ -228,8 +228,8 @@ gwy_graph_window_new(GwyGraph *graph)
 
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    graphwindow->measure_dialog =
-           gwy_graph_window_measure_dialog_new(graph);
+    graphwindow->measure_dialog
+        = _gwy_graph_window_measure_dialog_new(graph);
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
                            G_CALLBACK(gwy_graph_window_measure_finished_cb),
                            graphwindow);

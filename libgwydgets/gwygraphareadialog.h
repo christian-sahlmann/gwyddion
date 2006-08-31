@@ -65,10 +65,16 @@ struct _GwyGraphAreaDialogClass {
     gpointer reserved2;
 };
 
+/* Cannot make internal with G_DEFINE_TYPE() which always creates a public
+ * get-type function */
 GType       gwy_graph_area_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_graph_area_dialog_new      (void);
 
-void        gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel);
+G_GNUC_INTERNAL
+GtkWidget*  _gwy_graph_area_dialog_new     (void);
+
+G_GNUC_INTERNAL
+void        _gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog,
+                                                  GObject *cmodel);
 
 G_END_DECLS
 

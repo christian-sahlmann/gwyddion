@@ -269,11 +269,11 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
                           | GDK_POINTER_MOTION_MASK
                           | GDK_LEAVE_NOTIFY_MASK);
 
-    area->area_dialog = gwy_graph_area_dialog_new();
+    area->area_dialog = _gwy_graph_area_dialog_new();
     g_signal_connect(area->area_dialog, "response",
                      G_CALLBACK(gwy_graph_area_entry_cb), area);
 
-    area->label_dialog = gwy_graph_label_dialog_new();
+    area->label_dialog = _gwy_graph_label_dialog_new();
     g_signal_connect(area->label_dialog, "response",
                      G_CALLBACK(gwy_graph_label_entry_cb), area);
 
@@ -590,9 +590,8 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     if (child) {
         if (event->type == GDK_2BUTTON_PRESS
             && area->enable_user_input == TRUE) {
-            gwy_graph_label_dialog_set_graph_data(
-                               GTK_WIDGET(area->label_dialog),
-                               G_OBJECT(gmodel));
+            _gwy_graph_label_dialog_set_graph_data(area->label_dialog,
+                                                   G_OBJECT(gmodel));
             gtk_widget_show_all(GTK_WIDGET(area->label_dialog));
         }
         else {
@@ -614,8 +613,8 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         curve = gwy_graph_area_find_curve(area, dx, dy);
         if (curve >= 0) {
             cmodel = gwy_graph_model_get_curve(gmodel, curve);
-            gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
-                                                 G_OBJECT(cmodel));
+            _gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
+                                                  G_OBJECT(cmodel));
             gtk_widget_show_all(GTK_WIDGET(area->area_dialog));
             gtk_window_present(GTK_WINDOW(area->area_dialog));
         }

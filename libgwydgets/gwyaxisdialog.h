@@ -64,9 +64,15 @@ struct _GwyAxisDialogClass {
     gpointer reserved2;
 };
 
-GType       gwy_axis_dialog_get_type    (void) G_GNUC_CONST;
-GtkWidget*  gwy_axis_dialog_new         (GwyAxis *axis);
-GtkWidget*  gwy_axis_dialog_get_sci_text(GtkWidget* dialog);
+/* Cannot make internal with G_DEFINE_TYPE() which always creates a public
+ * get-type function */
+GType        gwy_axis_dialog_get_type    (void) G_GNUC_CONST;
+
+G_GNUC_INTERNAL
+GtkWidget*  _gwy_axis_dialog_new         (GwyAxis *axis);
+
+G_GNUC_INTERNAL
+GtkWidget*  _gwy_axis_dialog_get_sci_text(GtkWidget* dialog);
 
 G_END_DECLS
 

@@ -19,19 +19,18 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <glib-object.h>
 #include <gtk/gtk.h>
-
-#include "gwydgets.h"
-#include "gwyoptionmenus.h"
-#include "gwygraph.h"
-#include "gwygraphareadialog.h"
-#include "gwygraphmodel.h"
-#include "gwygraphcurvemodel.h"
 #include <libgwyddion/gwymacros.h>
-
-#define GWY_GRAPH_AREA_DIALOG_TYPE_NAME "GwyGraphAreaDialog"
+#include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwyoptionmenus.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycolorbutton.h>
+#include <libgwydgets/gwygraphareadialog.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 
 enum {
     COLUMN_VALUE,
@@ -39,8 +38,6 @@ enum {
     COLUMN_PIXBUF
 };
 
-static void       gwy_graph_area_dialog_class_init (GwyGraphAreaDialogClass *klass);
-static void       gwy_graph_area_dialog_init       (GwyGraphAreaDialog *dialog);
 static void       gwy_graph_area_dialog_destroy    (GtkObject *object);
 static gboolean   gwy_graph_area_dialog_delete     (GtkWidget *widget,
                                                     GdkEventAny *event);
@@ -73,42 +70,12 @@ static void       label_change_cb                  (GwySciText *sci_text,
 static void       refresh                          (GwyGraphAreaDialog *dialog);
 static void       curvetype_changed_cb             (GtkWidget *combo,
                                                     GwyGraphAreaDialog *dialog);
-static void       linesize_changed_cb              (GtkObject *adj,
+static void       linesize_changed_cb              (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
-static void       pointsize_changed_cb             (GtkObject *adj,
+static void       pointsize_changed_cb             (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
 
-
-static GtkDialogClass *parent_class = NULL;
-
-GType
-gwy_graph_area_dialog_get_type(void)
-{
-    static GType gwy_graph_area_dialog_type = 0;
-
-    if (!gwy_graph_area_dialog_type) {
-        static const GTypeInfo gwy_graph_area_dialog_info = {
-            sizeof(GwyGraphAreaDialogClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_graph_area_dialog_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGraphAreaDialog),
-            0,
-            (GInstanceInitFunc)gwy_graph_area_dialog_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_graph_area_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
-                                                      GWY_GRAPH_AREA_DIALOG_TYPE_NAME,
-                                                      &gwy_graph_area_dialog_info,
-                                                      0);
-
-    }
-
-    return gwy_graph_area_dialog_type;
-}
+G_DEFINE_TYPE(GwyGraphAreaDialog, gwy_graph_area_dialog, GTK_TYPE_DIALOG)
 
 static void
 gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
@@ -116,9 +83,6 @@ gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
     GtkDialogClass *dialog_class = GTK_DIALOG_CLASS(klass);
-
-    gwy_debug("");
-    parent_class = g_type_class_peek_parent(klass);
 
     object_class->destroy = gwy_graph_area_dialog_destroy;
     widget_class->delete_event = gwy_graph_area_dialog_delete;
@@ -247,10 +211,8 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                       dialog->sci_text);
     gtk_widget_show_all(dialog->sci_text);
 
-   
-    refresh(dialog); 
-    
-    
+    refresh(dialog);
+
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
@@ -297,10 +259,10 @@ linetype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 }
 
 GtkWidget*
-gwy_graph_area_dialog_new()
+_gwy_graph_area_dialog_new()
 {
     gwy_debug("");
-    return GTK_WIDGET(g_object_new(gwy_graph_area_dialog_get_type(), NULL));
+    return GTK_WIDGET(g_object_new(GWY_TYPE_GRAPH_AREA_DIALOG, NULL));
 }
 
 static void
@@ -316,7 +278,7 @@ gwy_graph_area_dialog_destroy(GtkObject *object)
         dialog->color_dialog = NULL;
     }
 
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_graph_area_dialog_parent_class)->destroy(object);
 }
 
 static GtkWidget*
@@ -565,12 +527,12 @@ label_change_cb(GwySciText *sci_text, GwyGraphAreaDialog *dialog)
 }
 
 void
-gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel)
+_gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel)
 {
     GwyGraphAreaDialog *gadialog = GWY_GRAPH_AREA_DIALOG(dialog);
 
     gadialog->curve_model = cmodel;
-    refresh(GWY_GRAPH_AREA_DIALOG(dialog));
+    refresh(gadialog);
 }
 
 static void
@@ -588,7 +550,7 @@ curvetype_changed_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 }
 
 static void
-linesize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
+linesize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 
@@ -596,11 +558,11 @@ linesize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_line_size(cmodel, gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)));
+    gwy_graph_curve_model_set_line_size(cmodel, gtk_adjustment_get_value(adj));
 }
 
 static void
-pointsize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
+pointsize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 
@@ -608,7 +570,7 @@ pointsize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_point_size(cmodel, gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)));
+    gwy_graph_curve_model_set_point_size(cmodel, gtk_adjustment_get_value(adj));
 }
 
 

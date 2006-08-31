@@ -83,7 +83,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
     gwy_debug("");
 
-    graph = GWY_GRAPH(g_object_new(gwy_graph_get_type(), NULL));
+    graph = GWY_GRAPH(g_object_new(GWY_TYPE_GRAPH, NULL));
 
     graph->area = GWY_GRAPH_AREA(gwy_graph_area_new(NULL, NULL));
     graph->area->status = GWY_GRAPH_STATUS_PLAIN;

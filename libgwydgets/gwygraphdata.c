@@ -112,7 +112,7 @@ gwy_graph_data_new(GwyGraphModel *gmodel)
 {
     GwyGraphData *graph_data;
 
-    graph_data = g_object_new(gwy_graph_data_get_type(), NULL);
+    graph_data = g_object_new(GWY_TYPE_GRAPH_DATA, NULL);
     g_return_val_if_fail(!gmodel || GWY_IS_GRAPH_MODEL(gmodel),
                          (GtkWidget*)graph_data);
 

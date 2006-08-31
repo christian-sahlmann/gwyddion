@@ -19,85 +19,45 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <glib-object.h>
 #include <gtk/gtk.h>
-
-#include "gwydgets.h"
-#include "gwyoptionmenus.h"
-#include "gwygraph.h"
-#include "gwygraphwindowmeasuredialog.h"
-#include "gwygraphmodel.h"
-#include "gwygraphcurvemodel.h"
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwyoptionmenus.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphwindowmeasuredialog.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
 
+enum { NMAX = 10 };
 
-#define GWY_GRAPH_MEASURE_DIALOG_TYPE_NAME "GwyGraphWindowMeasureDialog"
+static void     gwy_graph_window_measure_dialog_finalize(GObject *object);
+static gboolean gwy_graph_window_measure_dialog_delete  (GtkWidget *widget,
+                                                         GdkEventAny *event);
+static void     selection_updated_cb                    (GwySelection *selection,
+                                                         gint k,
+                                                         GwyGraphWindowMeasureDialog *dialog);
+static void     index_changed_cb                        (GwyGraphWindowMeasureDialog *dialog);
+static void     method_cb                               (GtkWidget *combo,
+                                                         GwyGraphWindowMeasureDialog *dialog);
+static void     status_cb                               (GwyGraphArea *area,
+                                                         gint status,
+                                                         GwyGraphWindowMeasureDialog *dialog);
 
-
-static void     gwy_graph_window_measure_dialog_class_init       (GwyGraphWindowMeasureDialogClass *klass);
-static void     gwy_graph_window_measure_dialog_init             (GwyGraphWindowMeasureDialog *dialog);
-static void     gwy_graph_window_measure_dialog_finalize         (GObject *object);
-static gboolean gwy_graph_window_measure_dialog_delete           (GtkWidget *widget,
-                                                                    GdkEventAny *event);
-
-static void     selection_updated_cb                               (GwySelection *selection, gint k,
-                                                                    GwyGraphWindowMeasureDialog *dialog);
-static void     index_changed_cb                                 (GwyGraphWindowMeasureDialog *dialog);
-static void     method_cb                                        (GtkWidget *combo,
-                                                                  GwyGraphWindowMeasureDialog *dialog);
-static void     status_cb                                        (GwyGraphArea *area,
-                                                                  gint status,
-                                                                  GwyGraphWindowMeasureDialog *dialog);
 GwyEnum method_type[] = {
-    {N_("Intersections"),         METHOD_INTERSECTIONS  },
-    {N_("Points anywhere"),       METHOD_CROSSES },
+    { N_("Intersections"),   METHOD_INTERSECTIONS, },
+    { N_("Points anywhere"), METHOD_CROSSES,       },
 };
 
-
-static gint NMAX = 10;
-static gulong selection_id = 0;
-static GtkDialogClass *parent_class = NULL;
-
-
-GType
-gwy_graph_window_measure_dialog_get_type(void)
-{
-    static GType gwy_graph_window_measure_dialog_type = 0;
-
-    if (!gwy_graph_window_measure_dialog_type) {
-        static const GTypeInfo gwy_graph_window_measure_dialog_info = {
-            sizeof(GwyGraphWindowMeasureDialogClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_graph_window_measure_dialog_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGraphWindowMeasureDialog),
-            0,
-            (GInstanceInitFunc)gwy_graph_window_measure_dialog_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_graph_window_measure_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
-                                                      GWY_GRAPH_MEASURE_DIALOG_TYPE_NAME,
-                                                      &gwy_graph_window_measure_dialog_info,
-                                                      0);
-
-    }
-
-    return gwy_graph_window_measure_dialog_type;
-}
+G_DEFINE_TYPE(GwyGraphWindowMeasureDialog, gwy_graph_window_measure_dialog,
+              GTK_TYPE_DIALOG)
 
 static void
 gwy_graph_window_measure_dialog_class_init(GwyGraphWindowMeasureDialogClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GtkWidgetClass *widget_class;
-
-    gwy_debug("");
-    widget_class = (GtkWidgetClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     gobject_class->finalize = gwy_graph_window_measure_dialog_finalize;
     widget_class->delete_event = gwy_graph_window_measure_dialog_delete;
@@ -105,9 +65,8 @@ gwy_graph_window_measure_dialog_class_init(GwyGraphWindowMeasureDialogClass *kla
 
 static gboolean
 gwy_graph_window_measure_dialog_delete(GtkWidget *widget,
-                       G_GNUC_UNUSED GdkEventAny *event)
+                                       G_GNUC_UNUSED GdkEventAny *event)
 {
-    gwy_debug("");
     gtk_widget_hide(widget);
 
     return TRUE;
@@ -156,12 +115,9 @@ header_label_update(GtkLabel *label,
     gtk_label_set_markup(label, str->str);
 }
 
-
 static void
 gwy_graph_window_measure_dialog_init(G_GNUC_UNUSED GwyGraphWindowMeasureDialog *dialog)
 {
-   gwy_debug("");
-
 }
 
 static gdouble
@@ -318,7 +274,7 @@ selection_updated_cb(GwySelection *selection,
 
 
 GtkWidget*
-gwy_graph_window_measure_dialog_new(GwyGraph *graph)
+_gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 {
     GtkWidget *label, *table;
     GwyGraphWindowMeasureDialog *dialog;
@@ -368,9 +324,10 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
     dialog->mmethod = 0;
-    dialog->method = gwy_enum_combo_box_new(method_type, G_N_ELEMENTS(method_type),
-                                              G_CALLBACK(method_cb), dialog,
-                                              dialog->mmethod, TRUE);
+    dialog->method = gwy_enum_combo_box_new(method_type,
+                                            G_N_ELEMENTS(method_type),
+                                            G_CALLBACK(method_cb), dialog,
+                                            dialog->mmethod, TRUE);
     gtk_table_attach(GTK_TABLE(table), dialog->method, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
@@ -449,58 +406,56 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 static void
 gwy_graph_window_measure_dialog_finalize(GObject *object)
 {
-    gwy_debug("");
-
-    g_return_if_fail(GWY_IS_GRAPH_MEASURE_DIALOG(object));
-
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_graph_window_measure_dialog_parent_class)->finalize(object);
 }
 
 static void
 index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
 {
-   dialog->curve_index =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->index));
-   selection_updated_cb(gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(
-                                             GWY_GRAPH(dialog->graph))), GWY_GRAPH_STATUS_PLAIN), 0,  dialog);
+    GwyGraphArea *area;
+    GwySelection *selection;
+
+    dialog->curve_index = gwy_adjustment_get_int(dialog->index);
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)));
+    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_PLAIN);
+    selection_updated_cb(selection, 0,  dialog);
 }
 
 static void
 method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
-    if (gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo)))
-    {
+    GwyGraphArea *area;
+    GwySelection *selection;
+
+    if (gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo))) {
+        area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)));
         dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
-        gwy_selection_clear(gwy_graph_area_get_selection
-                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
-                  GWY_GRAPH_STATUS_POINTS));
-        gwy_selection_clear(gwy_graph_area_get_selection
-                 (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))),
-                  GWY_GRAPH_STATUS_XLINES));
-
+        selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_POINTS);
+        gwy_selection_clear(selection);
+        selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XLINES);
+        gwy_selection_clear(selection);
 
         if (dialog->mmethod == METHOD_INTERSECTIONS)
-            gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
+            gwy_graph_set_status(GWY_GRAPH(dialog->graph),
+                                 GWY_GRAPH_STATUS_XLINES);
         else
-            gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_POINTS);
+            gwy_graph_set_status(GWY_GRAPH(dialog->graph),
+                                 GWY_GRAPH_STATUS_POINTS);
     }
 }
 
 static void
 status_cb(GwyGraphArea *area, gint status, GwyGraphWindowMeasureDialog *dialog)
 {
-    if (status == GWY_GRAPH_STATUS_XLINES || status == GWY_GRAPH_STATUS_POINTS)
-    {
+    GwySelection *selection;
 
-            selection_id = g_signal_connect(gwy_graph_area_get_selection(
-                                    area, GWY_GRAPH_STATUS_PLAIN),
-                                    "changed",
-                                    G_CALLBACK(selection_updated_cb),
-                                    dialog);
+    if (status == GWY_GRAPH_STATUS_XLINES
+        || status == GWY_GRAPH_STATUS_POINTS) {
+        selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_PLAIN);
+        g_signal_connect(selection, "changed",
+                         G_CALLBACK(selection_updated_cb), dialog);
     }
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

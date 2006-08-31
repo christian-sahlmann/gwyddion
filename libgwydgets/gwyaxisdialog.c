@@ -26,8 +26,6 @@
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyaxisdialog.h>
 
-#define GWY_AXIS_DIALOG_TYPE_NAME "GwyAxisDialog"
-
 static void     gwy_axis_dialog_class_init       (GwyAxisDialogClass *klass);
 static void     gwy_axis_dialog_init             (GwyAxisDialog *dialog);
 static gboolean gwy_axis_dialog_delete           (GtkWidget *widget,
@@ -74,15 +72,15 @@ gwy_axis_dialog_init(G_GNUC_UNUSED GwyAxisDialog *dialog)
 }
 
 /**
- * gwy_axis_dialog_new:
- * @axis: The axis to create dialog for, 
+ * _gwy_axis_dialog_new:
+ * @axis: The axis to create dialog for,
  *
  * Creates a new axis dialog.
  *
  * Returns: A new axis dialog as a #GtkWidget.
  **/
 GtkWidget*
-gwy_axis_dialog_new(GwyAxis *axis)
+_gwy_axis_dialog_new(GwyAxis *axis)
 {
     GwyAxisDialog *dialog;
     GtkWidget *label, *table;
@@ -90,7 +88,7 @@ gwy_axis_dialog_new(GwyAxis *axis)
     gboolean is_auto;
 
     gwy_debug("");
-    dialog = GWY_AXIS_DIALOG(g_object_new(gwy_axis_dialog_get_type(), NULL));
+    dialog = GWY_AXIS_DIALOG(g_object_new(GWY_TYPE_AXIS_DIALOG, NULL));
     dialog->axis = axis;
 
     if (dialog->axis)
@@ -104,7 +102,7 @@ gwy_axis_dialog_new(GwyAxis *axis)
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
 
-   
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Axis settings:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -187,7 +185,7 @@ gwy_axis_dialog_new(GwyAxis *axis)
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
-    
+
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       dialog->sci_text);
     gtk_widget_show_all(dialog->sci_text);
@@ -196,7 +194,7 @@ gwy_axis_dialog_new(GwyAxis *axis)
 }
 
 GtkWidget*
-gwy_axis_dialog_get_sci_text(GtkWidget* dialog)
+_gwy_axis_dialog_get_sci_text(GtkWidget* dialog)
 {
     return GWY_AXIS_DIALOG(dialog)->sci_text;
 }

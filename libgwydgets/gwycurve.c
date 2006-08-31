@@ -138,7 +138,7 @@ static gboolean gwy_curve_motion_notify     (GwyCurve *c);
 /* Private Methods */
 static void     gwy_curve_draw                  (GwyCurve *c,
                                                  gint width, gint height);
-void            gwy_curve_get_vector            (GwyCurve *c,
+static void     gwy_curve_get_vector            (GwyCurve *c,
                                                  gint c_index,
                                                  gint veclen,
                                                  gdouble vector[]);
@@ -1064,7 +1064,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     }
 }
 
-gint
+static gint
 ctlpoint_compare_func(gconstpointer a, gconstpointer b)
 {
     GwyPoint point1, point2;
@@ -1268,7 +1268,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     g_object_unref(gc);
 }
 
-void
+static void
 gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
 {
     gdouble rx, ry, dx, dy, delta_x, *mem, *xv, *yv, *y2v, prev;

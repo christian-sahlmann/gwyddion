@@ -22,7 +22,6 @@
 #define __GWY_GRAPH_LABEL_DIALOG_H__
 
 #include <gtk/gtkdialog.h>
-
 #include <libgwydgets/gwygraphbasics.h>
 
 G_BEGIN_DECLS
@@ -56,10 +55,16 @@ struct _GwyGraphLabelDialogClass {
     gpointer reserved2;
 };
 
+/* Cannot make internal with G_DEFINE_TYPE() which always creates a public
+ * get-type function */
 GType       gwy_graph_label_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_graph_label_dialog_new      (void);
 
-void        gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model);
+G_GNUC_INTERNAL
+GtkWidget*  _gwy_graph_label_dialog_new      (void);
+
+G_GNUC_INTERNAL
+void        _gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog,
+                                                   GObject *model);
 
 G_END_DECLS
 
