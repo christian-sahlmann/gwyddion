@@ -31,8 +31,8 @@
 static void bresenhams_line           (GwyDataField *dfield,
                                        gint x1,
                                        gint x2,
-                                       gint y1,
-                                       gint y2,
+                                       gint y1_,
+                                       gint y2_,
                                        gdouble value);
 static void bresenhams_line_polar     (GwyDataField *dfield,
                                        gdouble rho,
@@ -276,19 +276,17 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
 }
 
-static gint
+static inline gint
 signum(gint x)
 {
-    if (x<0) {
+    if (x < 0) {
         return -1;
     }
-    else if (x==0) {
-        return 0;
+    if (x > 0) {
+        return 1;
     }
-    return 1;
+    return 0;
 }
-
-#include <stdio.h>
 
 void
 gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield,
@@ -345,7 +343,8 @@ gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield,
 }
 
 static void
-bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta, gdouble value)
+bresenhams_line_polar(GwyDataField *dfield,
+                      gdouble rho, gdouble theta, gdouble value)
 {
      gint px1, px2, py1, py2;
 
@@ -356,13 +355,16 @@ bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta, gdouble 
 }
 
 static void
-bresenhams_line(GwyDataField *dfield, gint x1, gint x2, gint y1, gint y2, gdouble value)
+bresenhams_line(GwyDataField *dfield,
+                gint x1, gint x2,
+                gint y1_, gint y2_,
+                gdouble value)
 {
      gint i, dx, dy, sdx, sdy, dxabs, dyabs;
      gint x, y, px, py;
 
      dx = x2 - x1;
-     dy = y2 - y1;
+     dy = y2_ - y1_;
      dxabs = (gint)fabs(dx);
      dyabs = (gint)fabs(dy);
      sdx = signum(dx);
@@ -370,17 +372,14 @@ bresenhams_line(GwyDataField *dfield, gint x1, gint x2, gint y1, gint y2, gdoubl
      x = dyabs>>1;
      y = dxabs>>1;
      px = x1;
-     py = y1;
+     py = y1_;
 
      dfield->data[px + py*dfield->xres] = value;
 
-     if (dxabs >= dyabs)
-     {
-         for (i = 0; i < dxabs; i++)
-         {
+     if (dxabs >= dyabs) {
+         for (i = 0; i < dxabs; i++) {
              y += dyabs;
-             if (y >= dxabs)
-             {
+             if (y >= dxabs) {
                  y -= dxabs;
                  py += sdy;
              }
@@ -388,13 +387,10 @@ bresenhams_line(GwyDataField *dfield, gint x1, gint x2, gint y1, gint y2, gdoubl
              dfield->data[px + py*dfield->xres] = value;
          }
      }
-     else
-     {
-         for (i = 0; i < dyabs; i++)
-         {
+     else {
+         for (i = 0; i < dyabs; i++) {
              x += dxabs;
-             if (x >= dyabs)
-             {
+             if (x >= dyabs) {
                  x -= dyabs;
                  px += sdx;
              }
@@ -404,21 +400,25 @@ bresenhams_line(GwyDataField *dfield, gint x1, gint x2, gint y1, gint y2, gdoubl
      }
 }
 
-static void
+static inline void
 plot_pixel_safe(GwyDataField *dfield, gint idx, gdouble value)
 {
-    if (idx > 0 && idx < dfield->xres*dfield->yres) dfield->data[idx] += value;
+    if (idx > 0 && idx < dfield->xres*dfield->yres)
+        dfield->data[idx] += value;
 }
 
 static void
-bresenhams_circle(GwyDataField *dfield, gdouble r, gint col, gint row, gdouble value)
+bresenhams_circle(GwyDataField *dfield,
+                  gdouble r,
+                  gint col, gint row,
+                  gdouble value)
 {
     gdouble n=0,invradius=1/(gdouble)r;
     gint dx = 0, dy = r-1;
     gint dxoffset, dyoffset;
     gint offset = col + row*dfield->xres;
-    while (dx<=dy)
-    {
+
+    while (dx <= dy) {
          dxoffset = dfield->xres*dx;
          dyoffset = dfield->xres*dy;
          plot_pixel_safe(dfield, offset + dy - dxoffset, value);
@@ -437,7 +437,7 @@ bresenhams_circle(GwyDataField *dfield, gdouble r, gint col, gint row, gdouble v
 
 static void
 bresenhams_circle_gradient(GwyDataField *dfield, gdouble r, gint col, gint row,
-                                gdouble value, gdouble gradient)
+                           gdouble value, gdouble gradient)
 {
     gdouble n=0,invradius=1/(gdouble)r;
     gint dx = 0, dy = r-1;
@@ -472,7 +472,7 @@ bresenhams_circle_gradient(GwyDataField *dfield, gdouble r, gint col, gint row,
 }
 
 
-gint
+static gint
 find_smallest_index(gdouble *data, gint n)
 {
     gint i, imin = 0;
@@ -489,18 +489,21 @@ find_smallest_index(gdouble *data, gint n)
 
 }
 
-gint
-find_isthere(gdouble *xdata, gdouble *ydata, gint mcol, gint mrow, gdouble skip, gint n)
+static gint
+find_isthere(gdouble *xdata, gdouble *ydata,
+             gint mcol, gint mrow, gdouble skip, gint n)
 {
     gint i;
-    for (i = 0; i < n; i++)
-    {
-        if (sqrt((xdata[i]-mcol)*(xdata[i]-mcol) + (ydata[i]-mrow)*(ydata[i]-mrow)) < skip) return i;
+
+    for (i = 0; i < n; i++) {
+        if (sqrt((xdata[i]-mcol)*(xdata[i]-mcol)
+                 + (ydata[i]-mrow)*(ydata[i]-mrow)) < skip)
+            return i;
     }
     return -1;
 }
 
-gdouble
+static gdouble
 find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
 {
 
@@ -560,62 +563,68 @@ find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
 }
 
 static void
-get_local_maximum(GwyDataField *dfield, gint mcol, gint mrow,
-                                gdouble *xval, gdouble *yval)
+get_local_maximum(GwyDataField *dfield,
+                  gint mcol, gint mrow,
+                  gdouble *xval, gdouble *yval)
 {
-
+    gint xres, yres;
     gdouble zm, zp, z0;
+    const gdouble *data;
 
-    z0 = gwy_data_field_get_val(dfield, mcol, mrow);
-    if (mcol > 0 && mcol < (gwy_data_field_get_xres(dfield)-1))
-    {
-        zm = gwy_data_field_get_val(dfield, mcol - 1, mrow);
-        zp = gwy_data_field_get_val(dfield, mcol + 1, mrow);
-        if ((zm + zp - 2*z0) == 0) *xval = (gdouble)mcol;
+    xres = dfield->xres;
+    yres = dfield->yres;
+    data = dfield->data;
+    z0 = dfield->data[xres*mrow + mcol];
+    if (mcol > 0 && mcol < xres-1) {
+        zm = data[mrow*xres + mcol-1];
+        zp = data[mrow*xres + mcol+1];
+        if ((zm + zp - 2*z0) == 0)
+            *xval = (gdouble)mcol;
         else
             *xval = (gdouble)mcol + (zm - zp)/(zm + zp - 2*z0)/2.0;
     }
-    else *xval = (gdouble)mcol;
+    else
+        *xval = (gdouble)mcol;
 
-    if (mrow > 0 && mrow < (gwy_data_field_get_yres(dfield)-1))
-    {
-        zm = gwy_data_field_get_val(dfield, mcol, mrow-1);
-        zp = gwy_data_field_get_val(dfield, mcol, mrow+1);
-        if ((zm + zp - 2*z0) == 0) *yval = (gdouble)mrow;
-        else *yval = (gdouble)mrow + (zm - zp)/(zm + zp - 2*z0)/2.0;
+    if (mrow > 0 && mrow < yres-1) {
+        zm = data[(mrow - 1)*xres + mcol];
+        zp = data[(mrow + 1)*xres + mcol];
+        if ((zm + zp - 2*z0) == 0)
+            *yval = (gdouble)mrow;
+        else
+            *yval = (gdouble)mrow + (zm - zp)/(zm + zp - 2*z0)/2.0;
     }
-    else *yval = (gdouble)mrow;
+    else
+        *yval = (gdouble)mrow;
 }
 
 
 gint
 gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
-                                          gdouble *xdata,
-                                          gdouble *ydata,
-                                          gdouble *zdata,
-                                          gint ndata,
-                                          gint skip,
-                                          gdouble threshold,
-                                          gboolean subpixel)
+                                     gdouble *xdata,
+                                     gdouble *ydata,
+                                     gdouble *zdata,
+                                     gint ndata,
+                                     gint skip,
+                                     gdouble threshold,
+                                     gboolean subpixel)
 {
-    gint col, row, mcol, mrow, i, count;
+    gint col, row, mcol, mrow, i, count, xres, yres;
     gdouble xval, yval;
     gdouble value;
 
-    for (i = 0; i < ndata; i++)
-    {
+    for (i = 0; i < ndata; i++) {
         xdata[i] = 0;
         ydata[i] = 0;
         zdata[i] = -G_MAXDOUBLE;
     }
 
     count = 0;
-    for (col=0; col<(dfield->xres); col++)
-    {
-        for (row=0; row<(dfield->yres); row++)
-        {
-            if ((value = gwy_data_field_get_val(dfield, col, row)) > threshold)
-            {
+    xres = dfield->xres;
+    yres = dfield->yres;
+    for (row = 0; row < yres; row++) {
+        for (col = 0; col < xres; col++) {
+            if ((value = dfield->data[row*xres + col]) > threshold) {
                 mcol = col;
                 mrow = row;
 
@@ -624,17 +633,15 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
                     i = find_smallest_index(zdata, ndata);
 
                 if (zdata[i] < value)  {
-                    if (subpixel)
-                    {
+                    if (subpixel) {
                         get_local_maximum(dfield, mcol, mrow,
-                                      &xval, &yval);
+                                          &xval, &yval);
                         zdata[i] = value;
                         xdata[i] = xval;
                         ydata[i] = yval;
                         count = MAX(i + 1, count);
                     }
-                    else
-                    {
+                    else {
                         zdata[i] = value;
                         xdata[i] = (gdouble)mcol;
                         ydata[i] = (gdouble)mrow;
@@ -651,12 +658,12 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
 
 void
 gwy_data_field_hough_datafield_line_to_polar(GwyDataField *dfield,
-                                                  gint px1,
-                                                  gint px2,
-                                                  gint py1,
-                                                  gint py2,
-                                                  gdouble *rho,
-                                                  gdouble *theta)
+                                             gint px1,
+                                             gint px2,
+                                             gint py1,
+                                             gint py2,
+                                             gdouble *rho,
+                                             gdouble *theta)
 {
     gdouble k, q;
 
@@ -671,9 +678,6 @@ gwy_data_field_hough_datafield_line_to_polar(GwyDataField *dfield,
            px1, py1, px2, py2, k, q, *rho, *theta);*/
 
 }
-
-
-
 
 
 /************************** Documentation ****************************/
