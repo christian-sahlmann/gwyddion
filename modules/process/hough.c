@@ -34,7 +34,7 @@
 
 typedef enum {
     GWY_HOUGH_OUTPUT_LINE   = 0,
-    GWY_HOUGH_OUTPUT_CIRCLE  = 1
+    GWY_HOUGH_OUTPUT_CIRCLE = 1
 } GwyHoughOutputType;
 
 
@@ -59,7 +59,7 @@ static void        hough_save_args            (GwyContainer *container,
                                                HoughArgs *args);
 static void        hough_dialog_update        (HoughControls *controls,
                                                HoughArgs *args);
-static void        type_changed_cb            (GtkComboBox *combo, 
+static void        type_changed_cb            (GtkComboBox *combo,
                                                HoughControls *controls);
 
 static const HoughArgs hough_defaults = {
@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2006",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -97,7 +97,6 @@ static void
 hough(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *edgefield, *result, *f1, *f2;
-    GQuark squark;
     GwySIUnit *siunit;
     gboolean ok;
     HoughArgs args;
@@ -116,11 +115,11 @@ hough(GwyContainer *data, GwyRunType run)
         if (!ok)
             return;
     }
-   
+
     result = gwy_data_field_new_alike(dfield, FALSE);
     siunit = gwy_si_unit_new(NULL);
     gwy_data_field_set_si_unit_z(result, siunit);
-    g_object_unref(siunit);    
+    g_object_unref(siunit);
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     g_object_unref(result);
 
@@ -142,14 +141,15 @@ hough(GwyContainer *data, GwyRunType run)
                               FALSE);
     }
     else  {
-        g_snprintf(title, sizeof(title), "Hough circle r=%d px", args.circle_size);
+        g_snprintf(title, sizeof(title), "Hough circle r=%d px",
+                   args.circle_size);
         gwy_data_field_hough_circle(edgefield,
                                     f1,
                                     f2,
                                     result,
                                     args.circle_size);
     }
-    
+
     gwy_app_set_data_field_title(data, newid, title);
     gwy_data_field_data_changed(result);
     g_object_unref(edgefield);
@@ -161,16 +161,15 @@ hough(GwyContainer *data, GwyRunType run)
 static gboolean
 hough_dialog(HoughArgs *args)
 {
-    GtkWidget *dialog, *table;
-    HoughControls controls;
     enum { RESPONSE_RESET = 1 };
-    gint response, row;
     static const GwyEnum hough_outputs[] = {
         { N_("Line"),      GWY_HOUGH_OUTPUT_LINE,  },
         { N_("Circle"),    GWY_HOUGH_OUTPUT_CIRCLE,},
     };
 
-
+    GtkWidget *dialog, *table;
+    HoughControls controls;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Hough transform"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -188,7 +187,7 @@ hough_dialog(HoughArgs *args)
                        FALSE, FALSE, 4);
 
     row = 0;
-    
+
     controls.output
         = gwy_enum_combo_box_new(hough_outputs, G_N_ELEMENTS(hough_outputs),
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
@@ -198,14 +197,16 @@ hough_dialog(HoughArgs *args)
     gwy_table_attach_row(table, row, _("_Transform type:"), NULL,
                          controls.output);
 
-    
-    
+
+
     row++;
 
 
-    controls.circle_size = gtk_adjustment_new(args->circle_size, 1.0, 1000.0, 1, 10, 0);
-    controls.circle_spin = gwy_table_attach_spinbutton(table, 1, _("_Circle size:"), _("pixels"),
-                                controls.circle_size);
+    controls.circle_size
+        = gtk_adjustment_new(args->circle_size, 1.0, 1000.0, 1, 10, 0);
+    controls.circle_spin
+        = gwy_table_attach_spinbutton(table, 1, _("_Circle size:"), _("pixels"),
+                                      controls.circle_size);
 
     hough_dialog_update(&controls, args);
 
@@ -242,14 +243,14 @@ hough_dialog(HoughArgs *args)
     return TRUE;
 }
 
-static void   
+static void
 type_changed_cb(GtkComboBox *combo, HoughControls *controls)
 {
     if (gwy_enum_combo_box_get_active(combo) == GWY_HOUGH_OUTPUT_CIRCLE)
         gtk_widget_set_sensitive(controls->circle_spin, TRUE);
     else
         gtk_widget_set_sensitive(controls->circle_spin, FALSE);
-}   
+}
 
 static void
 hough_dialog_update(HoughControls *controls,
@@ -263,14 +264,13 @@ hough_dialog_update(HoughControls *controls,
         gtk_widget_set_sensitive(controls->circle_spin, FALSE);
 }
 
-static const gchar output_key[] = "/module/hough/output";
-static const gchar circle_size_key[]   = "/module/hough/circle_size";
+static const gchar output_key[]      = "/module/hough/output";
+static const gchar circle_size_key[] = "/module/hough/circle_size";
 
 static void
 hough_sanitize_args(HoughArgs *args)
 {
-    args->output = CLAMP(args->output,
-                         GWY_HOUGH_OUTPUT_LINE, GWY_HOUGH_OUTPUT_CIRCLE);
+    args->output = MIN(args->output, GWY_HOUGH_OUTPUT_CIRCLE);
     args->circle_size = CLAMP(args->circle_size, 1.0, 1000.0);
 }
 

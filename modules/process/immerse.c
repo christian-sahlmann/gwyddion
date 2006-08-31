@@ -73,8 +73,10 @@ static gboolean immerse_data_filter  (GwyContainer *data,
                                       gint id,
                                       gpointer user_data);
 static gboolean immerse_do           (ImmerseArgs *args);
+/*
 static void     immerse_leveling_cb  (GtkWidget *combo,
                                       ImmerseArgs *args);
+                                      */
 static void     immerse_mode_cb      (GtkWidget *combo,
                                       ImmerseArgs *args);
 static void     immerse_sampling_cb  (GtkWidget *combo,
@@ -204,7 +206,7 @@ immerse_dialog(ImmerseArgs *args)
     gwy_table_attach_hscale(table, row, _("_Leveling:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
-*/
+    */
     combo = gwy_enum_combo_box_new(modes, G_N_ELEMENTS(modes),
                                    G_CALLBACK(immerse_mode_cb), args,
                                    args->mode, TRUE);
@@ -447,11 +449,13 @@ find_score_maximum(GwyDataField *correlation_score,
     *max_col = maxi - (*max_row)*gwy_data_field_get_xres(correlation_score);
 }
 
+/*
 static void
 immerse_leveling_cb(GtkWidget *combo, ImmerseArgs *args)
 {
     args->leveling = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
+*/
 
 static void
 immerse_mode_cb(GtkWidget *combo, ImmerseArgs *args)

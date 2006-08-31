@@ -71,7 +71,7 @@ static void        theta_changed_cb             (GtkObject *adj,
                                                  ShadeControls *controls);
 static void        phi_changed_cb               (GtkObject *adj,
                                                  ShadeControls *controls);
-static void        mix_changed_cb               (GtkObject *adj,
+static void        mix_changed_cb               (GtkAdjustment *adj,
                                                  ShadeControls *controls);
 static void        shade_dialog_update          (ShadeControls *controls,
                                                  ShadeArgs *args);
@@ -374,7 +374,7 @@ phi_changed_cb(GtkObject *adj,
 }
 
 static void
-mix_changed_cb(GtkObject *adj,
+mix_changed_cb(GtkAdjustment *adj,
                ShadeControls *controls)
 {
     ShadeArgs *args;
@@ -384,7 +384,7 @@ mix_changed_cb(GtkObject *adj,
 
     controls->in_update = TRUE;
     args = controls->args;
-    args->mix = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->mix));
+    args->mix = gtk_adjustment_get_value(adj);
     args->do_mix = gtk_toggle_button_get_active(
                                          GTK_TOGGLE_BUTTON(controls->do_mix));
     shade_dialog_update(controls, args);
