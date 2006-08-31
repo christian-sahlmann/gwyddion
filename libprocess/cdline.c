@@ -28,7 +28,7 @@
 
 typedef gdouble (*GwyCDLineFitFunc)(gdouble x,
                                     gint n_param,
-                                    gdouble *param,
+                                    const gdouble *param,
                                     gpointer user_data,
                                     gboolean *fres);
 
@@ -181,7 +181,7 @@ cd_ledgeheight(const gdouble *x,
 static gdouble
 func_edgeheight(gdouble x,
                 G_GNUC_UNUSED gint n_param,
-                gdouble *param,
+                const gdouble *param,
                 G_GNUC_UNUSED gpointer user_data,
                 G_GNUC_UNUSED gboolean *fres)
 {
@@ -333,7 +333,7 @@ cd_stepheight(const gdouble *x,
 static gdouble
 func_stepheight(gdouble x,
                 G_GNUC_UNUSED gint n_param,
-                gdouble *param,
+                const gdouble *param,
                 G_GNUC_UNUSED gpointer user_data,
                 G_GNUC_UNUSED gboolean *fres)
 {
@@ -465,7 +465,7 @@ gwy_cdline_get_param_name(GwyCDLine* cdline,
  **/
 gdouble
 gwy_cdline_get_param_default(GwyCDLine* cdline,
-                                        gint param)
+                             gint param)
 {
     const GwyCDLineParam *par;
 
@@ -592,10 +592,10 @@ gwy_cdlines(void)
 
 
 gdouble
-gwy_cdline_get_value(GwyCDLine *preset, gdouble x,
+gwy_cdline_get_value(GwyCDLine *cdline, gdouble x,
                      const gdouble *params, gboolean *fres)
 {
-    return preset->builtin->function(x, preset->builtin->nparams, params,
+    return cdline->builtin->function(x, cdline->builtin->nparams, params,
                                      NULL, fres);
 }
 

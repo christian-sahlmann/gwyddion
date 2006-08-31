@@ -58,36 +58,33 @@ struct _GwyCDLineClass {
 };
 
 
-const
-gchar*          gwy_cdline_get_name   (GwyCDLine* preset);
-const
-gchar*          gwy_cdline_get_definition(GwyCDLine* preset);
-const
-gchar*          gwy_cdline_get_param_name(GwyCDLine* preset,
-                                                     gint param);
-gdouble         gwy_cdline_get_param_default(GwyCDLine* preset,
-                                                    gint param);
-gint            gwy_cdline_get_nparams(GwyCDLine* preset);
-void            gwy_cdline_fit        (GwyCDLine* preset,
-                                              gint n_dat,
-                                              const gdouble *x,
-                                              const gdouble *y,
-                                              gint n_param,
-                                              gdouble *param,
-                                              gdouble *err,
-                                              const gboolean *fixed_param,
-                                              gpointer user_data);
-gdouble         gwy_cdline_get_value         (GwyCDLine *preset,
-                                              gdouble x,
-                                              const gdouble *params,
-                                              gboolean *fres);
-
 GwyInventory*   gwy_cdlines              (void);
 
 GType           gwy_cdline_get_type      (void) G_GNUC_CONST;
 
+const gchar* gwy_cdline_get_name         (GwyCDLine* cdline);
+const gchar* gwy_cdline_get_definition   (GwyCDLine* cdline);
+const gchar* gwy_cdline_get_param_name   (GwyCDLine* cdline,
+                                          gint param);
+gdouble      gwy_cdline_get_param_default(GwyCDLine* cdline,
+                                          gint param);
+gint         gwy_cdline_get_nparams      (GwyCDLine* cdline);
+void         gwy_cdline_fit              (GwyCDLine* cdline,
+                                          gint n_dat,
+                                          const gdouble *x,
+                                          const gdouble *y,
+                                          gint n_param,
+                                          gdouble *param,
+                                          gdouble *err,
+                                          const gboolean *fixed_param,
+                                          gpointer user_data);
+gdouble      gwy_cdline_get_value        (GwyCDLine *cdline,
+                                          gdouble x,
+                                          const gdouble *params,
+                                          gboolean *fres);
+
 G_END_DECLS
 
-#endif /* __GWY_PROCESS_FRACTALS__ */
+#endif /* __GWY_PROCESS_CDLINE_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
