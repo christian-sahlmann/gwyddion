@@ -24,8 +24,14 @@
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-#include "stats.h"
+#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
+
+static void gwy_data_field_fractal_fit(GwyDataLine *xresult,
+                                       GwyDataLine *yresult,
+                                       gdouble *a,
+                                       gdouble *b);
+
 /*
  * @data_field: A data field.
  * @xresult: X-values for log-log plot.
@@ -288,39 +294,6 @@ gwy_data_field_fractal_psdf(GwyDataField *data_field,
 
 
 /**
- * gwy_data_field_fractal_fit:
- * @xresult: Log-log fractal data (x values).
- * @yresult: Log-log fractal data (y values).
- * @a: Resulting shift.
- * @b: Resulting direction.
- *
- * Fits fractal dimension from paritioning data.
- *
- * Currently simply fits results from the
- * gwy_data_field_fractal_partitioning and smilar functions
- * by straight line.
- **/
-void
-gwy_data_field_fractal_fit(GwyDataLine *xresult, GwyDataLine *yresult,
-                           gdouble *a, gdouble *b)
-{
-    gdouble sx = 0, sxy = 0, sx2 = 0, sy = 0;
-    gint i, size;
-
-    size = gwy_data_line_get_res(xresult);
-    for (i = 0; i < size; i++) {
-        sx += xresult->data[i];
-        sx2 += xresult->data[i] * xresult->data[i];
-        sy += yresult->data[i];
-        sxy += xresult->data[i] * yresult->data[i];
-    }
-    *a = (sxy - sx * sy/size)/(sx2 - sx * sx/size);
-    *b = (sx2 * sy - sx * sxy)/(sx2 * size - sx * sx);
-}
-
-
-
-/**
  * gwy_data_field_fractal_cubecounting_dim:
  * @xresult: Log-log fractal data (x values).
  * @yresult: Log-log fractal data (y values).
@@ -407,6 +380,36 @@ gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult,
     return 3.5 + (*a)/2;
 }
 
+/**
+ * gwy_data_field_fractal_fit:
+ * @xresult: Log-log fractal data (x values).
+ * @yresult: Log-log fractal data (y values).
+ * @a: Resulting shift.
+ * @b: Resulting direction.
+ *
+ * Fits fractal dimension from paritioning data.
+ *
+ * Currently simply fits results from the
+ * gwy_data_field_fractal_partitioning and smilar functions
+ * by straight line.
+ **/
+static void
+gwy_data_field_fractal_fit(GwyDataLine *xresult, GwyDataLine *yresult,
+                           gdouble *a, gdouble *b)
+{
+    gdouble sx = 0, sxy = 0, sx2 = 0, sy = 0;
+    gint i, size;
+
+    size = gwy_data_line_get_res(xresult);
+    for (i = 0; i < size; i++) {
+        sx += xresult->data[i];
+        sx2 += xresult->data[i] * xresult->data[i];
+        sy += yresult->data[i];
+        sxy += xresult->data[i] * yresult->data[i];
+    }
+    *a = (sxy - sx * sy/size)/(sx2 - sx * sx/size);
+    *b = (sx2 * sy - sx * sxy)/(sx2 * size - sx * sx);
+}
 
 /**
  * gaussian_random_number:
@@ -432,7 +435,7 @@ gaussian_random_number(GRand *rng)
 
     w = sqrt(-2.0*log(w)/w);
 
-    return (x + 1.0/4294967295.0*y)*w;
+    return (x + y/4294967295.0)*w;
 }
 
 /*
