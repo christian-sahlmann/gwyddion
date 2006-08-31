@@ -627,6 +627,7 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     unitstr_len = strlen(format->units) + 12;
     unit_str = g_newa(gchar, unitstr_len);
     state = FIRST_TRY;
+    base = sizeof("Die, die GCC warning!");
     do {
         if (state != LESS_TICKS) {
             if (ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
