@@ -895,9 +895,9 @@ find_anisotropy(GwyDataField *dfield,
                                          1.0);
             }
 
-            *brdrow++;
-            *bldrow++;
-            *trdrow++;
+            brdrow++;
+            bldrow++;
+            trdrow++;
         }
     }
     return count;

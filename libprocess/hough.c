@@ -657,8 +657,7 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
 }
 
 void
-gwy_data_field_hough_datafield_line_to_polar(GwyDataField *dfield,
-                                             gint px1,
+gwy_data_field_hough_datafield_line_to_polar(gint px1,
                                              gint px2,
                                              gint py1,
                                              gint py2,
