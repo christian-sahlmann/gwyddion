@@ -58,18 +58,15 @@
 
 #define EXTENSION ".xml"
 
-static gboolean module_register(void);
-static gint spml_detect(const GwyFileDetectInfo * fileinfo, gboolean only_name);
-
-
-static GwyContainer *spml_load(const gchar *filename);
-
-/*static gboolean      spml_save               (GwyContainer *data,
-                                                 const gchar *filename);*/
-/*static GObject*      gwy_container_deserialize2 (const guchar *buffer,
-                                                 gsize size,
-                                                 gsize *position);
-*/
+static gboolean      module_register(void);
+static gint          spml_detect    (const GwyFileDetectInfo * fileinfo,
+                                     gboolean only_name);
+static GwyContainer* spml_load      (const gchar *filename);
+static int           get_axis       (char *filename,
+                                     char *datachannel_name,
+                                     GArray **axes,
+                                     GArray **units,
+                                     GArray **names);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -82,31 +79,29 @@ static GwyModuleInfo module_info = {
     "2006",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
-/* module_register for recent Gwyddion version */
-     static gboolean
-       module_register(void)
+static gboolean
+module_register(void)
 {
     gwy_file_func_register("spml",
-                           N_
-                           ("SPML files (.xml)"),
-                           (GwyFileDetectFunc) & spml_detect,
-                           (GwyFileLoadFunc) & spml_load, NULL, NULL);
+                           N_("SPML files (.xml)"),
+                           (GwyFileDetectFunc) &spml_detect,
+                           (GwyFileLoadFunc) &spml_load,
+                           NULL,
+                           NULL);
     return TRUE;
 }
 
 typedef enum {
     SKIP_STATE, IN_DATACHANNELS, IN_DATACHANNELGROUP, READ_COMPLETE
-} datachannel_list_parser_states;
+} DatachannelListParserStates;
 
 static GList *
 get_list_of_datachannels(const gchar *filename)
 {
     const xmlChar *name;        /*, *value; */
-    datachannel_list_parser_states state = SKIP_STATE;
+    DatachannelListParserStates state = SKIP_STATE;
     int ret;
     GList *l = NULL;
     dataChannelGroup *data_channel_group = NULL;
@@ -390,11 +385,9 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
 }
 
 static int
-  get_axis();
-
-static int
 get_data(gboolean read_data_only, char *filename, char *datachannel_name,
-         double *data[], int *dimensions[], char **unit, gboolean *scattered)
+         double *data[], int *dimensions[], char **unit,
+         G_GNUC_UNUSED gboolean *scattered)
 {
     dataFormat format = UNKNOWN_DATAFORMAT;
     codingTypes coding = UNKNOWN_CODING;
