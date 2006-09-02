@@ -75,10 +75,10 @@ static void       linesize_changed_cb              (GtkAdjustment *adj,
 static void       pointsize_changed_cb             (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
 
-G_DEFINE_TYPE(GwyGraphAreaDialog, gwy_graph_area_dialog, GTK_TYPE_DIALOG)
+G_DEFINE_TYPE(GwyGraphAreaDialog, _gwy_graph_area_dialog, GTK_TYPE_DIALOG)
 
 static void
-gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
+_gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
 {
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
@@ -89,34 +89,8 @@ gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
     dialog_class->response = gwy_graph_area_dialog_response;
 }
 
-static gboolean
-gwy_graph_area_dialog_delete(GtkWidget *widget,
-                             G_GNUC_UNUSED GdkEventAny *event)
-{
-    GwyGraphAreaDialog *dialog;
-
-    gwy_debug("");
-
-    dialog = GWY_GRAPH_AREA_DIALOG(widget);
-    if (dialog->color_dialog)
-        gtk_widget_hide(dialog->color_dialog);
-    gtk_widget_hide(widget);
-
-    return TRUE;
-}
-
 static void
-gwy_graph_area_dialog_response(GtkDialog *gtkdialog,
-                               G_GNUC_UNUSED gint response_id)
-{
-    GwyGraphAreaDialog *dialog = GWY_GRAPH_AREA_DIALOG(gtkdialog);
-
-    if (dialog->color_dialog)
-        gtk_widget_hide(dialog->color_dialog);
-}
-
-static void
-gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
+_gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 {
     static const gchar *point_types[] = {
         N_("Square"), N_("Cross"), N_("Circle"), N_("Star"),
@@ -220,6 +194,32 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
 }
 
+static gboolean
+gwy_graph_area_dialog_delete(GtkWidget *widget,
+                             G_GNUC_UNUSED GdkEventAny *event)
+{
+    GwyGraphAreaDialog *dialog;
+
+    gwy_debug("");
+
+    dialog = GWY_GRAPH_AREA_DIALOG(widget);
+    if (dialog->color_dialog)
+        gtk_widget_hide(dialog->color_dialog);
+    gtk_widget_hide(widget);
+
+    return TRUE;
+}
+
+static void
+gwy_graph_area_dialog_response(GtkDialog *gtkdialog,
+                               G_GNUC_UNUSED gint response_id)
+{
+    GwyGraphAreaDialog *dialog = GWY_GRAPH_AREA_DIALOG(gtkdialog);
+
+    if (dialog->color_dialog)
+        gtk_widget_hide(dialog->color_dialog);
+}
+
 static void
 pointtype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 {
@@ -278,7 +278,7 @@ gwy_graph_area_dialog_destroy(GtkObject *object)
         dialog->color_dialog = NULL;
     }
 
-    GTK_OBJECT_CLASS(gwy_graph_area_dialog_parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(_gwy_graph_area_dialog_parent_class)->destroy(object);
 }
 
 static GtkWidget*

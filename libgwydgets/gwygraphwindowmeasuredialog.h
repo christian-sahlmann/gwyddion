@@ -27,18 +27,17 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPH_MEASURE_DIALOG            (gwy_graph_window_measure_dialog_get_type())
-#define GWY_GRAPH_WINDOW_MEASURE_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialog))
-#define GWY_GRAPH_WINDOW_MEASURE_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
-#define GWY_IS_GRAPH_MEASURE_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG))
-#define GWY_IS_GRAPH_MEASURE_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_MEASURE_DIALOG))
-#define GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
+#define GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG            (_gwy_graph_window_measure_dialog_get_type())
+#define GWY_GRAPH_WINDOW_MEASURE_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, GwyGraphWindowMeasureDialog))
+#define GWY_GRAPH_WINDOW_MEASURE_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
+#define GWY_IS_GRAPH_WINDOW_MEASURE_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG))
+#define GWY_IS_GRAPH_WINDOW_MEASURE_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG))
+#define GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
 
 typedef enum {
     METHOD_INTERSECTIONS = 0,
     METHOD_CROSSES       = 1
 } GwyMeasureMethodType;
-
 
 typedef struct _GwyGraphWindowMeasureDialog      GwyGraphWindowMeasureDialog;
 typedef struct _GwyGraphWindowMeasureDialogClass GwyGraphWindowMeasureDialogClass;
@@ -70,7 +69,6 @@ struct _GwyGraphWindowMeasureDialog {
     gdouble x_mag;
     gdouble y_mag;
 
-
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -82,9 +80,8 @@ struct _GwyGraphWindowMeasureDialogClass {
     gpointer reserved2;
 };
 
-/* Cannot make internal with G_DEFINE_TYPE() which always creates a public
- * get-type function */
-GType       gwy_graph_window_measure_dialog_get_type  (void) G_GNUC_CONST;
+G_GNUC_INTERNAL
+GType       _gwy_graph_window_measure_dialog_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GtkWidget*  _gwy_graph_window_measure_dialog_new      (GwyGraph *graph);

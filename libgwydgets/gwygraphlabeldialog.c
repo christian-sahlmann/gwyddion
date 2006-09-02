@@ -37,10 +37,10 @@ static void     refresh                        (GwyGraphLabelDialog *dialog);
 static void     reverse_changed_cb             (GtkToggleButton *button,
                                                 GwyGraphLabelDialog *dialog);
 
-G_DEFINE_TYPE(GwyGraphLabelDialog, gwy_graph_label_dialog, GTK_TYPE_DIALOG)
+G_DEFINE_TYPE(GwyGraphLabelDialog, _gwy_graph_label_dialog, GTK_TYPE_DIALOG)
 
 static void
-gwy_graph_label_dialog_class_init(GwyGraphLabelDialogClass *klass)
+_gwy_graph_label_dialog_class_init(GwyGraphLabelDialogClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
@@ -52,18 +52,8 @@ gwy_graph_label_dialog_class_init(GwyGraphLabelDialogClass *klass)
     widget_class->delete_event = gwy_graph_label_dialog_delete;
 }
 
-static gboolean
-gwy_graph_label_dialog_delete(GtkWidget *widget,
-                       G_GNUC_UNUSED GdkEventAny *event)
-{
-    gwy_debug("");
-    gtk_widget_hide(widget);
-
-    return TRUE;
-}
-
 static void
-gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
+_gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
 {
     GtkWidget *label, *table;
     gint row = 0;
@@ -99,6 +89,16 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
     dialog->graph_model = NULL;
 }
 
+static gboolean
+gwy_graph_label_dialog_delete(GtkWidget *widget,
+                       G_GNUC_UNUSED GdkEventAny *event)
+{
+    gwy_debug("");
+    gtk_widget_hide(widget);
+
+    return TRUE;
+}
+
 GtkWidget*
 _gwy_graph_label_dialog_new()
 {
@@ -110,7 +110,7 @@ static void
 gwy_graph_label_dialog_finalize(GObject *object)
 {
     gwy_debug("");
-    G_OBJECT_CLASS(gwy_graph_label_dialog_parent_class)->finalize(object);
+    G_OBJECT_CLASS(_gwy_graph_label_dialog_parent_class)->finalize(object);
 }
 
 static void

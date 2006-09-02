@@ -50,17 +50,22 @@ GwyEnum method_type[] = {
     { N_("Points anywhere"), METHOD_CROSSES,       },
 };
 
-G_DEFINE_TYPE(GwyGraphWindowMeasureDialog, gwy_graph_window_measure_dialog,
+G_DEFINE_TYPE(GwyGraphWindowMeasureDialog, _gwy_graph_window_measure_dialog,
               GTK_TYPE_DIALOG)
 
 static void
-gwy_graph_window_measure_dialog_class_init(GwyGraphWindowMeasureDialogClass *klass)
+_gwy_graph_window_measure_dialog_class_init(GwyGraphWindowMeasureDialogClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     gobject_class->finalize = gwy_graph_window_measure_dialog_finalize;
     widget_class->delete_event = gwy_graph_window_measure_dialog_delete;
+}
+
+static void
+_gwy_graph_window_measure_dialog_init(G_GNUC_UNUSED GwyGraphWindowMeasureDialog *dialog)
+{
 }
 
 static gboolean
@@ -113,11 +118,6 @@ header_label_update(GtkLabel *label,
     else
         g_string_printf(str, "<b>%s</b>", header);
     gtk_label_set_markup(label, str->str);
-}
-
-static void
-gwy_graph_window_measure_dialog_init(G_GNUC_UNUSED GwyGraphWindowMeasureDialog *dialog)
-{
 }
 
 static gdouble
@@ -283,7 +283,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     GString *str;
 
     gwy_debug("");
-    dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(g_object_new(GWY_TYPE_GRAPH_MEASURE_DIALOG, NULL));
+    dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(g_object_new(GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, NULL));
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     dialog->graph = GTK_WIDGET(graph);
@@ -406,7 +406,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 static void
 gwy_graph_window_measure_dialog_finalize(GObject *object)
 {
-    G_OBJECT_CLASS(gwy_graph_window_measure_dialog_parent_class)->finalize(object);
+    G_OBJECT_CLASS(_gwy_graph_window_measure_dialog_parent_class)->finalize(object);
 }
 
 static void

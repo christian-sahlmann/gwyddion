@@ -22,12 +22,11 @@
 #define __GWY_GRAPH_AREA_DIALOG_H__
 
 #include <gtk/gtkdialog.h>
-
 #include <libgwydgets/gwygraphbasics.h>
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPH_AREA_DIALOG            (gwy_graph_area_dialog_get_type())
+#define GWY_TYPE_GRAPH_AREA_DIALOG            (_gwy_graph_area_dialog_get_type())
 #define GWY_GRAPH_AREA_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_AREA_DIALOG, GwyGraphAreaDialog))
 #define GWY_GRAPH_AREA_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_AREA_DIALOG, GwyGraphAreaDialogClass))
 #define GWY_IS_GRAPH_AREA_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_AREA_DIALOG))
@@ -65,9 +64,8 @@ struct _GwyGraphAreaDialogClass {
     gpointer reserved2;
 };
 
-/* Cannot make internal with G_DEFINE_TYPE() which always creates a public
- * get-type function */
-GType       gwy_graph_area_dialog_get_type (void) G_GNUC_CONST;
+G_GNUC_INTERNAL
+GType      _gwy_graph_area_dialog_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GtkWidget*  _gwy_graph_area_dialog_new     (void);

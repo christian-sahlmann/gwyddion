@@ -26,33 +26,37 @@
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyaxisdialog.h>
 
-static void     gwy_axis_dialog_class_init       (GwyAxisDialogClass *klass);
-static void     gwy_axis_dialog_init             (GwyAxisDialog *dialog);
-static gboolean gwy_axis_dialog_delete           (GtkWidget *widget,
-                                                  GdkEventAny *event);
-static void     major_length_changed_cb          (GtkAdjustment *adj,
-                                                  GObject *axis);
-static void     major_thickness_changed_cb       (GtkAdjustment *adj,
-                                                  GObject *axis);
-static void     major_maxticks_changed_cb        (GtkAdjustment *adj,
-                                                  GObject *axis);
-static void     minor_length_changed_cb          (GtkAdjustment *adj,
-                                                  GObject *axis);
-static void     minor_thickness_changed_cb       (GtkAdjustment *adj,
-                                                  GObject *axis);
-static void     minor_division_changed_cb        (GtkAdjustment *adj,
-                                                  GObject *axis);
-static void     autoscale_changed_cb             (GtkToggleButton *button,
-                                                  GwyAxisDialog *dialog);
+static gboolean gwy_axis_dialog_delete    (GtkWidget *widget,
+                                           GdkEventAny *event);
+static void     major_length_changed_cb   (GtkAdjustment *adj,
+                                           GObject *axis);
+static void     major_thickness_changed_cb(GtkAdjustment *adj,
+                                           GObject *axis);
+static void     major_maxticks_changed_cb (GtkAdjustment *adj,
+                                           GObject *axis);
+static void     minor_length_changed_cb   (GtkAdjustment *adj,
+                                           GObject *axis);
+static void     minor_thickness_changed_cb(GtkAdjustment *adj,
+                                           GObject *axis);
+static void     minor_division_changed_cb (GtkAdjustment *adj,
+                                           GObject *axis);
+static void     autoscale_changed_cb      (GtkToggleButton *button,
+                                           GwyAxisDialog *dialog);
 
-G_DEFINE_TYPE(GwyAxisDialog, gwy_axis_dialog, GTK_TYPE_DIALOG)
+G_DEFINE_TYPE(GwyAxisDialog, _gwy_axis_dialog, GTK_TYPE_DIALOG)
 
 static void
-gwy_axis_dialog_class_init(GwyAxisDialogClass *klass)
+_gwy_axis_dialog_class_init(GwyAxisDialogClass *klass)
 {
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     widget_class->delete_event = gwy_axis_dialog_delete;
+}
+
+static void
+_gwy_axis_dialog_init(G_GNUC_UNUSED GwyAxisDialog *dialog)
+{
+    gwy_debug("");
 }
 
 static gboolean
@@ -63,12 +67,6 @@ gwy_axis_dialog_delete(GtkWidget *widget,
     gtk_widget_hide(widget);
 
     return TRUE;
-}
-
-static void
-gwy_axis_dialog_init(G_GNUC_UNUSED GwyAxisDialog *dialog)
-{
-    gwy_debug("");
 }
 
 /**
