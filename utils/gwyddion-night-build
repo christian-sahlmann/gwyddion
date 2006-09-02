@@ -91,8 +91,16 @@ function build_documentation() {
   make -k clean >/dev/null
   # This is removed by maintainer-clean, but that would require to rerun all
   # the autostuff
-  rm -fv */*-sections.txt */*-decl-list.txt
-  make -k docs
+  rm -fv libgwy*/*-sections.txt libgwy*/*-decl-list.txt libgwy*/template/*
+  # Work around gtk-doc initial build bug: build templates first, then build
+  # the rest.  mktmpl used to leave various crap in the templates, so it's
+  # safer to start always afresh when we have no human-entered info there.
+  for x in libgwy*; do
+    if test -d "$x"; then
+      make -k -C "$x" tmpl.stamp >/dev/null
+      make -k -C "$x" docs
+    fi
+  done
 }
 
 
