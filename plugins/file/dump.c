@@ -23,6 +23,12 @@
 enum { false = 0, true = 1 };
 #endif
 
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED /* */
+#endif
+
 typedef struct {
     const char *name;              /* action name: register, load, run, ... */
     int arg_num;                   /* number of arguments NOT including
@@ -63,7 +69,7 @@ main(int argc, char *argv[])
 
 /* "register" action: print registration information to standard output */
 static bool
-action_register(char *args[])
+action_register(UNUSED char *args[])
 {
     puts("dump\n"
          "Plug-in proxy dump (.dump)\n"
