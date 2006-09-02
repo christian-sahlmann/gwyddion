@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@
 
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
+#include <libdraw/gwyselection.h>
 #include <libgwymodule/gwymodule-file.h>
 
 #ifdef HAVE_UNISTD_H
@@ -76,13 +77,12 @@ static GObject*      gwy_container_deserialize_old (const guchar *buffer,
                                                     gsize *position);
 
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -635,10 +635,120 @@ gwyfile_pack_metadata(GwyContainer *data)
     g_object_unref(meta);
 }
 
+static GwySelection*
+gwyfile_gather_old_rect_selection(GwyContainer *data)
+{
+    GwySelection *sel;
+    GType type;
+    gboolean selected;
+    gdouble xy[4];
+
+    type = g_type_from_name("GwySelectionRectangle");
+    if (!type
+        || !gwy_container_gis_boolean_by_name(data, "/0/select/rect/selected",
+                                              &selected)
+        || !selected)
+        return NULL;
+
+    if (!gwy_container_gis_double_by_name(data, "/0/select/rect/x0", &xy[0])
+        || !gwy_container_gis_double_by_name(data, "/0/select/rect/y0", &xy[1])
+        || !gwy_container_gis_double_by_name(data, "/0/select/rect/x1", &xy[2])
+        || !gwy_container_gis_double_by_name(data, "/0/select/rect/y1", &xy[3]))
+        return NULL;
+
+    sel = GWY_SELECTION(g_object_new(type, "max-objects", 1, NULL));
+    gwy_selection_set_object(sel, 0, xy);
+
+    return sel;
+}
+
+static GwySelection*
+gwyfile_gather_old_point_selection(GwyContainer *data)
+{
+    GwySelection *sel;
+    GType type;
+    gint i, nselected;
+    gdouble xy[2];
+    gchar key[40];
+
+    type = g_type_from_name("GwySelectionPoint");
+    if (!type
+        || !gwy_container_gis_int32_by_name(data,
+                                            "/0/select/points/nselected",
+                                            &nselected))
+        return NULL;
+
+    nselected = CLAMP(nselected, 0, 16);
+    if (!nselected)
+        return NULL;
+
+    sel = GWY_SELECTION(g_object_new(type, "max-objects", nselected, NULL));
+    for (i = 0; i < nselected; i++) {
+        g_snprintf(key, sizeof(key), "/0/select/points/%d/x", i);
+        if (!gwy_container_gis_double_by_name(data, key, &xy[0]))
+            break;
+        g_snprintf(key, sizeof(key), "/0/select/points/%d/y", i);
+        if (!gwy_container_gis_double_by_name(data, key, &xy[1]))
+            break;
+
+        gwy_selection_set_object(sel, i, xy);
+    }
+
+    if (!i)
+        gwy_object_unref(sel);
+
+    return sel;
+}
+
+static GwySelection*
+gwyfile_gather_old_line_selection(GwyContainer *data)
+{
+    GwySelection *sel;
+    GType type;
+    gint i, nselected;
+    gdouble xy[4];
+    gchar key[40];
+
+    type = g_type_from_name("GwySelectionLine");
+    if (!type
+        || !gwy_container_gis_int32_by_name(data,
+                                            "/0/select/lines/nselected",
+                                            &nselected))
+        return NULL;
+
+    nselected = CLAMP(nselected, 0, 16);
+    if (!nselected)
+        return NULL;
+
+    sel = GWY_SELECTION(g_object_new(type, "max-objects", nselected, NULL));
+    for (i = 0; i < nselected; i++) {
+        g_snprintf(key, sizeof(key), "/0/select/lines/%d/x0", i);
+        if (!gwy_container_gis_double_by_name(data, key, &xy[0]))
+            break;
+        g_snprintf(key, sizeof(key), "/0/select/lines/%d/y0", i);
+        if (!gwy_container_gis_double_by_name(data, key, &xy[1]))
+            break;
+        g_snprintf(key, sizeof(key), "/0/select/lines/%d/x1", i);
+        if (!gwy_container_gis_double_by_name(data, key, &xy[2]))
+            break;
+        g_snprintf(key, sizeof(key), "/0/select/lines/%d/y1", i);
+        if (!gwy_container_gis_double_by_name(data, key, &xy[3]))
+            break;
+
+        gwy_selection_set_object(sel, i, xy);
+    }
+
+    if (!i)
+        gwy_object_unref(sel);
+
+    return sel;
+}
+
 static void
 gwyfile_remove_old_data(GObject *object)
 {
     GwyContainer *data;
+    GwySelection *rect, *point, *line;
 
     if (!object || !GWY_IS_CONTAINER(object))
         return;
@@ -646,7 +756,23 @@ gwyfile_remove_old_data(GObject *object)
     data = GWY_CONTAINER(object);
 
     /* Selections */
+    rect = gwyfile_gather_old_rect_selection(data);
+    point = gwyfile_gather_old_point_selection(data);
+    line = gwyfile_gather_old_line_selection(data);
     gwy_container_remove_by_prefix(data, "/0/select");
+    if (rect) {
+        gwy_container_set_object_by_name(data, "/0/select/rectangle", rect);
+        g_object_unref(rect);
+    }
+    if (point) {
+        gwy_container_set_object_by_name(data, "/0/select/point", point);
+        g_object_unref(point);
+    }
+    if (line) {
+        gwy_container_set_object_by_name(data, "/0/select/line", line);
+        g_object_unref(line);
+    }
+
     /* 3D */
     gwy_container_remove_by_prefix(data, "/0/3d/labels");
     gwy_container_remove_by_name(data, "/0/3d/rot_x");

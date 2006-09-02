@@ -1,4 +1,4 @@
-1.99.8.20060830
+1.99.8.20060902
 
 1.99.9 (0000-00-00)
 Libraries:
@@ -13,6 +13,7 @@ Modules:
 - Statistical quantities: Initial sensitivity of Save was fixed, preventing
   attempts to save nonexistent statistics that led to crashes.
 - SPML import: Miscellaneous small fixes and improvements.
+- Gwyfile: Rectangle, point and line selections are imported from 1.x files.
 - ASCII export: Exports the current channel instead of always the first one.
 - Shade: Mixing GUI was improved.
 
