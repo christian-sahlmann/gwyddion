@@ -318,7 +318,8 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
         *type = KEY_IS_TITLE;
         n += strlen("data/");
     }
-    else if (g_str_has_prefix(s, "select/")) {
+    else if (g_str_has_prefix(s, "select/")
+             && !strchr(s + sizeof("select/")-1, '/')) {
         *type = KEY_IS_SELECT;
         n += strlen("select/");
     }
