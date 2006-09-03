@@ -48,7 +48,7 @@ FIXXREF_OPTIONS = \
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
-IGNORE_HFILES = gwyappinternal.h gwyddion.h authors.h
+IGNORE_HFILES = gwyappinternal.h gwyddion.h authors.h stamp-gwyapptypes.h
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png
