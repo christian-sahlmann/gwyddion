@@ -1,0 +1,51 @@
+# FIXME: This is generic, how to generate it automatically?
+
+<STRUCT>
+<NAME>GwySelectionClass</NAME>
+struct GwySelectionClass {
+    guint object_size;
+
+    /* Virtual table */
+    void (*clear)(GwySelection *selection);
+    gboolean(*get_object)(GwySelection *selection,
+                          gint i,
+                          gdouble *data);
+    gint (*set_object)(GwySelection *selection,
+                       gint i,
+                       const gdouble *data);
+    void (*delete_object)(GwySelection *selection,
+                          gint i);
+    gint (*get_data)(GwySelection *selection,
+                     gdouble *data);
+    void (*set_data)(GwySelection *selection,
+                     gint nselected,
+                     const gdouble *data);
+    void (*set_max_objects)(GwySelection *selection,
+                            guint max_objects);
+
+    /* Signals */
+    void (*changed)(GwySelection *selection,
+                    gint i);
+    void (*finished)(GwySelection *selection);
+};
+</STRUCT>
+
+<STRUCT>
+<NAME>GwySelection</NAME>
+struct GwySelection {
+    GArray *objects;
+    guint n;
+};
+</STRUCT>
+
+<STRUCT>
+<NAME>GwyGLMaterialClass</NAME>
+struct GwyGLMaterialClass {
+};
+</STRUCT>
+
+<STRUCT>
+<NAME>GwyGradientClass</NAME>
+struct GwyGradientClass {
+};
+</STRUCT>

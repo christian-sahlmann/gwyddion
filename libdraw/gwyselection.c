@@ -758,4 +758,32 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
  * class implementation.
  **/
 
+/**
+ * GwySelectionClass:
+ * @object_size: The number of coordinates that form one selection object.
+ * @clear: The gwy_selection_clear() virtual method.
+ * @get_object: The gwy_selection_get_object() virtual method.
+ * @set_object: The gwy_selection_set_object() virtual method.
+ * @delete_object: The gwy_selection_delete_object() virtual method.
+ * @get_data: The gwy_selection_get_data() virtual method.
+ * @set_data: The gwy_selection_set_data() virtual method.
+ * @set_max_objects: The gwy_selection_set_max_objects() virtual method.
+ * @changed: The "changed" signal virtual method.
+ * @finished: The "finished" signal virtual method.
+ *
+ * The virtual methods and data memebers of #GwySelection<!-- -->s.
+ *
+ * Typically, the only field subclasses set in their class init method is
+ * @object_size.  The methods are implemented generically in #GwySelection
+ * and need not be overriden.
+ **/
+
+/**
+ * gwy_selection_duplicate:
+ * @selection: An selection to duplicate.
+ *
+ * Convenience macro doing gwy_serializable_duplicate() with all the necessary
+ * typecasting.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
