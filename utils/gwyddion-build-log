@@ -84,20 +84,23 @@ function printerr() {
 }
 
 function extract_build_documentation() {
-  test -s $tmplog || echo "=====[ build_documentation ]====="
   logfile=build_documentation.log
-  e='Entering directory'
-  l='Leaving directory'
-  grep -P "^(WARNING|ERROR)\\b.*(\\n\\s+.*)*|$e|$l|^\\d+%" \
+  h=
+  if test -s $tmplog; then
+      h=1
+  fi
+  grep -P "^(WARNING|ERROR)\\b.*(\\n\\s+.*)*" \
     $logfile | grep -v -f build_documentation.ignore >$tmplog
-  libs=$(grep "$e" $logfile | sed -e 's#.*/##' -e 's/.$//')
-  for x in $libs; do
-    echo -n "$x: "
-    sed -n -e "/$e .*\\/$x'/,/$l .*\\/$x'/p" $tmplog \
-      | sed -n -e '/ symbol /{s/ symbols*//g;p}'
-    sed -n -e "/$e .*\\/$x'/,/$l .*\\/$x'/p" $tmplog \
-      | sed -e '1d;$d;/ symbol /d'
-  done
+  if test -s $tmplog -a -z "$h"; then
+    echo "=====[ build_documentation ]====="
+  fi
+  cat $tmplog
+}
+
+function extract_documentation_stats() {
+   logfile=build_documentation.log
+   htmlfile=documentation_stats.html
+   $projectdir/utils/documentation-stats.py <$logfile >$htmlfile
 }
 
 function extract_translation_stats() {
@@ -127,6 +130,7 @@ printerr build_project
 extract_translation_stats
 printerr build_documentation
 extract_build_documentation
+extract_documentation_stats
 printerr check_coding_style
 coding_style_report
 printerr install_to_tmp grep -vFf build_project.err

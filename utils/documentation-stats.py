@@ -2,38 +2,35 @@
 import re, sys
 
 stat_types = {
-    'translated': 'good',
-    'fuzzy': 'fuzzy',
-    'untranslated': 'bad'
+    'documented': 'good',
+    'incomplete': 'fuzzy',
+    'not documented': 'bad'
 }
 total_width = 200
 
 def parse(fh):
     stats = []
+    group = None
     for line in fh:
-        m = re.match(r'TRANSLATION\s+(?P<content>.*)\n', line)
+        m = re.match(r'make: Entering directory `.*/(?P<group>.*)\'\n', line)
+        if m:
+            group = m.group('group')
+            continue
+
+        m = re.match(r'\d+% symbol docs coverage \((?P<stats>.*)\)\n', line)
         if not m:
             continue
 
-        line = m.group('content')
-        m = re.match(r'(?P<group>[a-zA-Z_@.]+):', line)
-        if not m:
-            sys.stderr.write('Malformed TRANSLATION line: %s\n' % line)
-            continue
+        assert group
+        stat = {'group': group}
 
-        stat = {'group': m.group('group')}
-
-        if stat['group'] == 'total':
-            continue
-        else:
-            sum = 0
-            for x in stat_types:
-                m = re.search(r'\b(?P<count>\d+) %s (message|translation)' % x,
-                              line)
-                if m:
-                    stat[x] = int(m.group('count'))
-                    sum += stat[x]
-            stat['total'] = sum
+        sum = 0
+        for x in stat_types:
+            m = re.search(r'\b(?P<count>\d+)( symbols?)? %s' % x, line)
+            if m:
+                stat[x] = int(m.group('count'))
+                sum += stat[x]
+        stat['total'] = sum
         stats.append(stat)
 
     return stats
@@ -89,13 +86,13 @@ def format_row(stat):
 
 stats = parse(sys.stdin)
 
-print """<table summary="Translation statistics" class="stats">
+print """<table summary="Documentation statistics" class="stats">
 <thead>
 <tr>
-  <th class="odd">Language</th>
-  <th>Translated</th><th class="odd">%</th>
-  <th>Fuzzy</th><th class="odd">%</th>
-  <th>Untranslated</th><th class="odd">%</th>
+  <th class="odd">Library</th>
+  <th>Fully</th><th class="odd">%</th>
+  <th>Partially</th><th class="odd">%</th>
+  <th>Missing</th><th class="odd">%</th>
   <th>Total</th>
   <th>Graph</th>
 </tr>
