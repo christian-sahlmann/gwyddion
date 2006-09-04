@@ -1865,10 +1865,6 @@ gwy_container_duplicate_real(GObject *object)
 {
     GwyContainer *duplicate;
 
-    gwy_debug("");
-    g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
-    g_error("Thou shalt not duplicate GwyContainers.");
-
     duplicate = gwy_container_new();
     /* don't emit signals when no one can be connected */
     duplicate->in_construction = TRUE;
@@ -1956,11 +1952,7 @@ gwy_container_duplicate_by_prefix(GwyContainer *container,
     GwyContainer *duplicate;
     va_list ap;
 
-    gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
-    g_critical("gwy_container_duplicate_by_prefix() called.\n"
-               "Most cases of its use in Gwyddion are bugs.  "
-               "Do not duplicate data you intend to access read-only.");
 
     va_start(ap, container);
     duplicate = gwy_container_duplicate_by_prefix_valist(container, ap);
@@ -1977,8 +1969,6 @@ gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
     PrefixListData pfxlist;
     const gchar *prefix;
     gsize n;
-
-    gwy_debug("");
 
     n = 16;
     pfxlist.prefixes = g_new(const gchar*, n);
