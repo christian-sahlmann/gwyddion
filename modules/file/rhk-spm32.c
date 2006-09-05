@@ -133,8 +133,7 @@ static gboolean      rhkspm32_read_range     (const gchar *buffer,
                                               const gchar *name,
                                               RHKRange *range);
 static void          rhkspm32_free           (RHKPage *rhkpage);
-static void          rhkspm32_store_metadata (RHKPage *rhkpage,
-                                              GwyContainer *container);
+static GwyContainer* rhkspm32_get_metadata   (RHKPage *rhkpage);
 static GwyDataField* rhkspm32_read_data      (RHKPage *rhkpage);
 
 static GwyModuleInfo module_info = {
@@ -142,7 +141,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -192,7 +191,7 @@ rhkspm32_load(const gchar *filename,
 {
     GArray *rhkfile;
     RHKPage *rhkpage;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -266,8 +265,11 @@ rhkspm32_load(const gchar *filename,
         else
             s = g_strdup(rhkpage->label);
         gwy_container_set_string_by_name(container, key->str, s);
-        /* FIXME: not yet
-        rhkspm32_store_metadata(rhkpage, container); */
+
+        meta = rhkspm32_get_metadata(rhkpage);
+        g_string_printf(key, "/%d/meta", i);
+        gwy_container_set_object_by_name(container, key->str, meta);
+        g_object_unref(meta);
     }
     g_string_free(key, TRUE);
 
@@ -422,36 +424,38 @@ rhkspm32_free(RHKPage *rhkpage)
     g_free(rhkpage->comment);
 }
 
-static void
-rhkspm32_store_metadata(RHKPage *rhkpage,
-                        GwyContainer *container)
+static GwyContainer*
+rhkspm32_get_metadata(RHKPage *rhkpage)
 {
+    GwyContainer *meta;
     const gchar *s;
 
-    gwy_container_set_string_by_name(container, "/meta/Tunneling voltage",
+    meta = gwy_container_new();
+
+    gwy_container_set_string_by_name(meta, "Tunneling voltage",
                                      g_strdup_printf("%g mV",
                                                      1e3*rhkpage->iv.offset));
-    gwy_container_set_string_by_name(container, "/meta/Current",
+    gwy_container_set_string_by_name(meta, "Current",
                                      g_strdup_printf("%g nA",
                                                      1e9*rhkpage->iv.scale));
-    gwy_container_set_string_by_name(container, "/meta/Id",
+    gwy_container_set_string_by_name(meta, "Id",
                                      g_strdup_printf("%u", rhkpage->id));
     if (rhkpage->date && *rhkpage->date)
-        gwy_container_set_string_by_name(container, "/meta/Date",
-                                         g_strdup(rhkpage->date));
+        gwy_container_set_string_by_name(meta, "Date", g_strdup(rhkpage->date));
     if (rhkpage->comment && *rhkpage->comment)
-        gwy_container_set_string_by_name(container, "/meta/Comment",
+        gwy_container_set_string_by_name(meta, "Comment",
                                          g_strdup(rhkpage->comment));
     if (rhkpage->label && *rhkpage->label) {
-        gwy_container_set_string_by_name(container, "/meta/Label",
+        gwy_container_set_string_by_name(meta, "Label",
                                          g_strdup(rhkpage->label));
     }
 
     s = gwy_enum_to_string(rhkpage->page_type,
                            scan_directions, G_N_ELEMENTS(scan_directions));
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Image type",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Image type", g_strdup(s));
+
+    return meta;
 }
 
 static GwyDataField*

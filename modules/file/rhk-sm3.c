@@ -199,8 +199,7 @@ static gint          rhk_sm3_detect        (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* rhk_sm3_load          (const gchar *filename,
                                             GwyRunType mode,
                                             GError **error);
-static void          rhk_sm3_store_metadata(RHKPage *rhkpage,
-                                            GwyContainer *container);
+static GwyContainer* rhk_sm3_get_metadata  (RHKPage *rhkpage);
 static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
 
 static GwyModuleInfo module_info = {
@@ -208,7 +207,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -524,7 +523,7 @@ rhk_sm3_load(const gchar *filename,
 {
     GPtrArray *rhkfile;
     RHKPage *rhkpage;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -596,8 +595,12 @@ rhk_sm3_load(const gchar *filename,
                 s = g_strdup(p);
             gwy_container_set_string_by_name(container, key->str, s);
         }
-        /* FIXME: not yet
-        rhk_sm3_store_metadata(rhkpage, container); */
+
+        meta = rhk_sm3_get_metadata(rhkpage);
+        g_string_printf(key, "/%d/meta", i);
+        gwy_container_set_object_by_name(container, key->str, meta);
+        g_object_unref(meta);
+
         if (data_field_has_highly_nosquare_samples(dfield)) {
             g_string_printf(key, "/%d/data/realsquare", i);
             gwy_container_set_boolean_by_name(container, key->str, TRUE);
@@ -613,68 +616,64 @@ rhk_sm3_load(const gchar *filename,
     return container;
 }
 
-static void
-rhk_sm3_store_metadata(RHKPage *rhkpage,
-                       GwyContainer *container)
+static GwyContainer*
+rhk_sm3_get_metadata(RHKPage *rhkpage)
 {
+    GwyContainer *meta;
     const gchar *s;
     gchar *str;
     guint i;
 
+    meta = gwy_container_new();
+
     s = gwy_enum_to_string(rhkpage->page_type,
                            page_types, G_N_ELEMENTS(page_types));
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Type",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Type", g_strdup(s));
 
     s = gwy_enum_to_string(rhkpage->scan_dir,
                            scan_directions, G_N_ELEMENTS(scan_directions));
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Scan Direction",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Scan Direction", g_strdup(s));
 
     s = gwy_enum_to_string(rhkpage->source_type,
                            page_sources, G_N_ELEMENTS(page_sources));
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Source",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Source", g_strdup(s));
 
-    gwy_container_set_string_by_name(container, "/meta/Bias",
+    gwy_container_set_string_by_name(meta, "Bias",
                                      g_strdup_printf("%g V", rhkpage->bias));
-    gwy_container_set_string_by_name(container, "/meta/Rotation angle",
+    gwy_container_set_string_by_name(meta, "Rotation angle",
                                      g_strdup_printf("%f", rhkpage->angle));
-    gwy_container_set_string_by_name(container, "/meta/Period",
+    gwy_container_set_string_by_name(meta, "Period",
                                      g_strdup_printf("%f s", rhkpage->period));
 
     s = rhkpage->strings[RHK_STRING_DATE];
     if (s && *s) {
         str = g_strconcat(s, " ", rhkpage->strings[RHK_STRING_TIME], NULL);
-        gwy_container_set_string_by_name(container, "/meta/Date", str);
+        gwy_container_set_string_by_name(meta, "Date", str);
     }
 
     s = rhkpage->strings[RHK_STRING_LABEL];
     if (s && *s) {
-        gwy_container_set_string_by_name(container, "/meta/Label", g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Label", g_strdup(s));
     }
 
     s = rhkpage->strings[RHK_STRING_PATH];
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Path", g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Path", g_strdup(s));
 
     s = rhkpage->strings[RHK_STRING_SYSTEM_TEXT];
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/System comment",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "System comment", g_strdup(s));
 
     s = rhkpage->strings[RHK_STRING_SESSION_TEXT];
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Session comment",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "Session comment", g_strdup(s));
 
     s = rhkpage->strings[RHK_STRING_USER_TEXT];
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/User comment",
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, "User comment", g_strdup(s));
 
     str = g_new(gchar, 33);
     for (i = 0; i < 16; i++) {
@@ -684,7 +683,9 @@ rhk_sm3_store_metadata(RHKPage *rhkpage,
         str[2*i + 1] = hex[rhkpage->page_id[i] % 16];
     }
     str[32] = '\0';
-    gwy_container_set_string_by_name(container, "/meta/Page ID", str);
+    gwy_container_set_string_by_name(meta, "Page ID", str);
+
+    return meta;
 }
 
 static gboolean
