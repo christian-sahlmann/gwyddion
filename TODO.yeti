@@ -1,10 +1,12 @@
 - 2.0: Make data field and line internals visible again
 - 2.0: Fix library versioning
 - 2.0: Update module -> user guide mapping
+- Fix facet level to do nothing instead of dumping NaNs on bad data.
 - Deleted channels can leave bogus undo levels behind
 - 3D window-view param sync not complete (or is it yet?)
 - 3D window title is not updated on data title update
 - Fix import of old selections, check whether 1.x still can read new files
+- Make saved gwy files contain the new file name, not previous file name
 - Common functions in file modules, try to reduce duplication:
   highly-nonsquare test
   channel title guess from units
