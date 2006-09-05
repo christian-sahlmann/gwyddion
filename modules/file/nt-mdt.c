@@ -215,9 +215,8 @@ static gint           mdt_detect          (const GwyFileDetectInfo *fileinfo,
 static GwyContainer*  mdt_load            (const gchar *filename,
                                            GwyRunType mode,
                                            GError **error);
-static void           add_metadata        (MDTFile *mdtfile,
-                                           guint i,
-                                           GwyContainer *data);
+static GwyContainer*  mdt_get_metadata    (MDTFile *mdtfile,
+                                           guint i);
 static gboolean       mdt_real_load       (const guchar *buffer,
                                            guint size,
                                            MDTFile *mdtfile,
@@ -293,7 +292,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -338,7 +337,7 @@ mdt_load(const gchar *filename,
     gsize size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    GwyContainer *data = NULL;
+    GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
     guint n, i;
@@ -367,6 +366,12 @@ mdt_load(const gchar *filename,
             gwy_container_set_object_by_name(data, key->str, dfield);
             g_object_unref(dfield);
             guess_channel_type(data, key->str);
+
+            meta = mdt_get_metadata(&mdtfile, n);
+            g_string_printf(key, "/%d/meta", n);
+            gwy_container_set_object_by_name(data, key->str, meta);
+            g_object_unref(meta);
+
             n++;
         }
     }
@@ -377,50 +382,46 @@ mdt_load(const gchar *filename,
         err_NO_DATA(error);
         return NULL;
     }
-    /* FIXME: not yet
-       add_metadata(&mdtfile, i, data); */
-
 
     return data;
 }
 
 #define HASH_SET_META(fmt, val, key) \
     g_string_printf(s, fmt, val); \
-    gwy_container_set_string_by_name(data, "/meta/" key, g_strdup(s->str))
+    gwy_container_set_string_by_name(meta, key, g_strdup(s->str))
 
-static void
-add_metadata(MDTFile *mdtfile,
-             guint i,
-             GwyContainer *data)
+static GwyContainer*
+mdt_get_metadata(MDTFile *mdtfile,
+                 guint i)
 {
+    GwyContainer *meta;
     MDTFrame *frame;
     MDTScannedDataFrame *sdframe;
     GString *s;
 
-    g_return_if_fail(i <= mdtfile->last_frame);
+    meta = gwy_container_new();
+
+    g_return_val_if_fail(i <= mdtfile->last_frame, meta);
     frame = mdtfile->frames + i;
-    g_return_if_fail(frame->type == MDT_FRAME_SCANNED);
+    g_return_val_if_fail(frame->type == MDT_FRAME_SCANNED, meta);
     sdframe = (MDTScannedDataFrame*)frame->frame_data;
 
     s = g_string_new("");
     g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
                     frame->year, frame->month, frame->day,
                     frame->hour, frame->min, frame->sec);
-    gwy_container_set_string_by_name(data, "/meta/Date",
-                                     g_strdup(s->str));
+    gwy_container_set_string_by_name(meta, "Date", g_strdup(s->str));
 
     g_string_printf(s, "%d.%d",
                     frame->version/0x100, frame->version % 0x100);
-    gwy_container_set_string_by_name(data, "/meta/Version",
-                                     g_strdup(s->str));
+    gwy_container_set_string_by_name(meta, "Version", g_strdup(s->str));
 
     g_string_printf(s, "%c%c%c%s",
                     (sdframe->scan_dir & 0x02) ? '-' : '+',
                     (sdframe->scan_dir & 0x01) ? 'X' : 'Y',
                     (sdframe->scan_dir & 0x04) ? '-' : '+',
                     (sdframe->scan_dir & 0x80) ? " (double pass)" : "");
-    gwy_container_set_string_by_name(data, "/meta/Scan direction",
-                                     g_strdup(s->str));
+    gwy_container_set_string_by_name(meta, "Scan direction", g_strdup(s->str));
 
     HASH_SET_META("%d", sdframe->channel_index, "Channel index");
     HASH_SET_META("%d", sdframe->mode, "Mode");
@@ -431,6 +432,8 @@ add_metadata(MDTFile *mdtfile,
     HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
 
     g_string_free(s, TRUE);
+
+    return meta;
 }
 
 static void
