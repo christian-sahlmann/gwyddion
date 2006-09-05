@@ -312,7 +312,7 @@ tiff_load_channel(TIFF *tif,
 
     gwy_debug("num_slots: %d", num_slots);
 
-    /*  locate the default slot  */
+    /* Locate the default slot */
 
     tiff_get_custom_string(tif, JPK_TIFFTAG_DefaultSlot, &slot);
     g_return_if_fail(slot != NULL);
@@ -339,7 +339,7 @@ tiff_load_channel(TIFF *tif,
         }
     }
 
-    /*  create a new data field  */
+    /* Create a new data field */
 
     dfield = gwy_data_field_new(ilen, jlen, ulen, vlen, FALSE);
 
@@ -353,7 +353,7 @@ tiff_load_channel(TIFF *tif,
         g_object_unref(siunit);
     }
 
-    /*  read the scan data  */
+    /* Read the scan data */
 
     data = gwy_data_field_get_data(dfield);
 
@@ -382,7 +382,7 @@ tiff_load_channel(TIFF *tif,
             data -= ilen;
     }
 
-    /*  add the GwyDataField to the container  */
+    /* Add the GwyDataField to the container */
 
     key = g_string_new("");
     g_string_printf(key, "/%d/data", idx);
@@ -393,11 +393,14 @@ tiff_load_channel(TIFF *tif,
     gwy_container_set_string_by_name(container, key->str, channel);
 
     if (gwy_container_get_n_items(meta)) {
+        GwyContainer *tmp;
+
+        tmp = gwy_container_duplicate(meta);
         g_string_printf(key, "/%d/meta", idx);
-        gwy_container_set_object_by_name(container, key->str,
-                                         gwy_container_duplicate(meta));
+        gwy_container_set_object_by_name(container, key->str, tmp);
+        g_object_unref(tmp);
     }
-    
+
     g_string_free(key, TRUE);
 }
 
