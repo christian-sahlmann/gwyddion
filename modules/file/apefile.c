@@ -88,17 +88,16 @@ typedef struct {
     GwyDataField **data;
 } APEFile;
 
-static gboolean      module_register    (void);
-static gint          apefile_detect     (const GwyFileDetectInfo *fileinfo,
-                                         gboolean only_name);
-static GwyContainer* apefile_load       (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static void          fill_data_fields   (APEFile *apefile,
-                                         const guchar *buffer);
-static void          store_metadata     (APEFile *apefile,
-                                         GwyContainer *container);
-static gchar*        format_vt_date     (gdouble vt_date);
+static gboolean      module_register     (void);
+static gint          apefile_detect      (const GwyFileDetectInfo *fileinfo,
+                                          gboolean only_name);
+static GwyContainer* apefile_load        (const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
+static void          fill_data_fields    (APEFile *apefile,
+                                          const guchar *buffer);
+static GwyContainer* apefile_get_metadata(APEFile *apefile);
+static gchar*        format_vt_date      (gdouble vt_date);
 
 static const GwyEnum spm_modes[] = {
     { "SNOM",                  SPM_MODE_SNOM },
@@ -113,7 +112,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -169,7 +168,7 @@ apefile_load(const gchar *filename,
              GError **error)
 {
     APEFile apefile;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     const guchar *p;
     gsize size = 0;
@@ -275,17 +274,24 @@ apefile_load(const gchar *filename,
     gwy_file_abandon_contents(buffer, size, NULL);
 
     container = gwy_container_new();
+    /* All metadata seems to be per-file (global) */
+    meta = apefile_get_metadata(&apefile);
     for (n = 0; n < apefile.ndata; n++) {
+        GwyContainer *tmp;
         gchar key[24];
 
         g_snprintf(key, sizeof(key), "/%d/data", n);
         dfield = apefile.data[n];
         gwy_container_set_object_by_name(container, key, dfield);
         g_object_unref(apefile.data[n]);
-    }
-    /* All metadata seems to be per-file (global) */
-    store_metadata(&apefile, container);
 
+        tmp = gwy_container_duplicate(meta);
+        g_snprintf(key, sizeof(key), "/%d/meta", n);
+        gwy_container_set_object_by_name(container, key, tmp);
+        g_object_unref(tmp);
+    }
+
+    g_object_unref(meta);
     g_free(apefile.remark);
 
     return container;
@@ -323,14 +329,16 @@ fill_data_fields(APEFile *apefile,
 }
 
 #define HASH_STORE(key, fmt, field) \
-    gwy_container_set_string_by_name(container, "/meta/" key, \
+    gwy_container_set_string_by_name(meta, key, \
                                      g_strdup_printf(fmt, apefile->field))
 
-static void
-store_metadata(APEFile *apefile,
-               GwyContainer *container)
+static GwyContainer*
+apefile_get_metadata(APEFile *apefile)
 {
+    GwyContainer *meta;
     gchar *p;
+
+    meta = gwy_container_new();
 
     HASH_STORE("Version", "%u", version);
     HASH_STORE("Tip oscilation frequency", "%g Hz", freq_osc_tip);
@@ -341,14 +349,16 @@ store_metadata(APEFile *apefile,
     if (apefile->remark && *apefile->remark
         && (p = g_convert(apefile->remark, strlen(apefile->remark),
                           "UTF-8", "ISO-8859-1", NULL, NULL, NULL)))
-        gwy_container_set_string_by_name(container, "/meta/Comment", p);
+        gwy_container_set_string_by_name(meta, "Comment", p);
     gwy_container_set_string_by_name
-        (container, "/meta/SPM mode",
-         g_strdup(gwy_enum_to_string(apefile->spm_mode, spm_modes,
-                                     G_N_ELEMENTS(spm_modes))));
+                    (meta, "SPM mode",
+                     g_strdup(gwy_enum_to_string(apefile->spm_mode, spm_modes,
+                                                 G_N_ELEMENTS(spm_modes))));
     p = format_vt_date(apefile->scan_date);
     if (p)
-        gwy_container_set_string_by_name(container, "/meta/Date", p);
+        gwy_container_set_string_by_name(meta, "Date", p);
+
+    return meta;
 }
 
 /******************** Wine date conversion code *****************************/

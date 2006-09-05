@@ -170,8 +170,8 @@ static gboolean      witec_read_file          (const guchar *buffer,
                                                gsize len,
                                                WITecFile *witfile,
                                                GError **error);
-static void          witec_store_metadata     (WITecFile *witfile,
-                                               GwyContainer *container);
+static GwyContainer* witec_get_metadata       (WITecFile *witfile,
+                                               gint i);
 static GwyDataField* witec_image_to_data_field(WITecFile *witfile,
                                                guint i);
 static gboolean      witec_read_scale         (const guchar **p,
@@ -190,19 +190,16 @@ static gboolean      witec_read_image_options (const guchar **p,
                                                gsize *len,
                                                WITecImageOptions *options);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports WITec WIT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -257,7 +254,7 @@ witec_load(const gchar *filename,
            GError **error)
 {
     WITecFile witfile;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -287,9 +284,13 @@ witec_load(const gchar *filename,
         g_string_append(key, "/title");
         s = g_strndup(witfile.scales[i].name, sizeof(witfile.scales[i].name));
         gwy_container_set_string_by_name(container, key->str, s);
+
+        meta = witec_get_metadata(&witfile, i);
+        g_string_printf(key, "/%d/meta", i);
+        gwy_container_set_object_by_name(container, key->str, meta);
+        g_object_unref(meta);
     }
     g_string_free(key, TRUE);
-    witec_store_metadata(&witfile, container);
 
     gwy_file_abandon_contents(buffer, size, NULL);
     g_free(witfile.images);
@@ -403,19 +404,23 @@ witec_image_to_data_field(WITecFile *witfile,
     return dfield;
 }
 
-static void
-witec_store_metadata(WITecFile *witfile,
-                     GwyContainer *container)
+/* FIXME: There seems to be no local metadata */
+static GwyContainer*
+witec_get_metadata(WITecFile *witfile,
+                   G_GNUC_UNUSED gint i)
 {
+    GwyContainer *meta;
     gdouble v;
 
+    meta = gwy_container_new();
+
     if (witfile->footer.title[0])
-        gwy_container_set_string_by_name(container, "/meta/Title",
+        gwy_container_set_string_by_name(meta, "Title",
                                          g_strdup(witfile->footer.title));
     if (witfile->footer.comments[0])
-        gwy_container_set_string_by_name(container, "/meta/Comments",
+        gwy_container_set_string_by_name(meta, "Comments",
                                          g_strdup(witfile->footer.comments));
-    gwy_container_set_string_by_name(container, "/meta/Date",
+    gwy_container_set_string_by_name(meta, "Date",
                                      g_strdup_printf("%d-%02d-%02d "
                                                      "%02d:%02d:%02d",
                                                      witfile->footer.year,
@@ -425,14 +430,16 @@ witec_store_metadata(WITecFile *witfile,
                                                      witfile->footer.minute,
                                                      witfile->footer.second));
     if ((v = witfile->range_options.overscan_range))
-        gwy_container_set_string_by_name(container, "/meta/Overscan range",
+        gwy_container_set_string_by_name(meta, "Overscan range",
                                          g_strdup_printf("%g", v));
     if ((v = witfile->image_options.scan_time[WITEC_FORWARD]))
-        gwy_container_set_string_by_name(container, "/meta/Scan time forward",
+        gwy_container_set_string_by_name(meta, "Scan time forward",
                                          g_strdup_printf("%g s", v));
     if ((v = witfile->image_options.scan_time[WITEC_BACKWARD]))
-        gwy_container_set_string_by_name(container, "/meta/Scan time backward",
+        gwy_container_set_string_by_name(meta, "Scan time backward",
                                          g_strdup_printf("%g s", v));
+
+    return meta;
 }
 
 static gboolean

@@ -110,8 +110,7 @@ static GwyDataField* unisoku_read_data_field(const guchar *buffer,
                                              gsize size,
                                              UnisokuFile *ufile,
                                              GError **error);
-static void          unisoku_store_metadata (UnisokuFile *ufile,
-                                             GwyContainer *container);
+static GwyContainer* unisoku_get_metadata   (UnisokuFile *ufile);
 static gchar*        unisoku_find_data_name (const gchar *header_name);
 static void          unisoku_file_free      (UnisokuFile *ufile);
 static void          guess_channel_type     (GwyContainer *data,
@@ -122,7 +121,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Unisoku data files (two-part .hdr + .dat)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -174,7 +173,7 @@ unisoku_load(const gchar *filename,
              GError **error)
 {
     UnisokuFile ufile;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gchar *text = NULL;
     gsize size = 0;
@@ -228,7 +227,11 @@ unisoku_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
     guess_channel_type(container, "/0/data");
-    unisoku_store_metadata(&ufile, container);
+
+    meta = unisoku_get_metadata(&ufile);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
+
     unisoku_file_free(&ufile);
 
     return container;
@@ -490,22 +493,27 @@ unisoku_read_data_field(const guchar *buffer,
     return dfield;
 }
 
-static void
-unisoku_store_metadata(UnisokuFile *ufile,
-                       GwyContainer *container)
+static GwyContainer*
+unisoku_get_metadata(UnisokuFile *ufile)
 {
-    gwy_container_set_string_by_name(container, "/meta/Date",
+    GwyContainer *meta;
+
+    meta = gwy_container_new();
+
+    gwy_container_set_string_by_name(meta, "Date",
                                      g_strconcat(ufile->date, " ",
                                                  ufile->time, NULL));
     if (*ufile->remark)
-        gwy_container_set_string_by_name(container, "/meta/Remark",
+        gwy_container_set_string_by_name(meta, "Remark",
                                          g_strdup(ufile->remark));
     if (*ufile->sample_name)
-        gwy_container_set_string_by_name(container, "/meta/Sample name",
+        gwy_container_set_string_by_name(meta, "Sample name",
                                          g_strdup(ufile->sample_name));
     if (*ufile->ad_name)
-        gwy_container_set_string_by_name(container, "/meta/AD name",
+        gwy_container_set_string_by_name(meta, "AD name",
                                          g_strdup(ufile->ad_name));
+
+    return meta;
 }
 
 static gchar*
