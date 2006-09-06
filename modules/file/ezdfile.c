@@ -72,11 +72,6 @@ typedef struct {
     const gchar *data;
 } EZDSection;
 
-typedef struct {
-    GString *str;
-    GwyContainer *container;
-} StoreMetaData;
-
 static gboolean      module_register       (void);
 static gint          ezdfile_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
@@ -95,9 +90,10 @@ static guint         find_data_offsets     (const gchar *buffer,
                                             gsize size,
                                             GPtrArray *ezdfile,
                                             GError **error);
-static void          process_metadata      (GPtrArray *ezdfile,
-                                            GwyContainer *container);
+static GwyContainer* ezdfile_get_metadata  (GPtrArray *ezdfile,
+                                            gint idx);
 static void          fix_scales            (EZDSection *section,
+                                            gint idx,
                                             GwyContainer *container);
 
 static GwyModuleInfo module_info = {
@@ -105,7 +101,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf EZD and NID data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -148,7 +144,7 @@ ezdfile_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -201,9 +197,15 @@ ezdfile_load(const gchar *filename,
         g_snprintf(key, sizeof(key), "/%d/data", i);
         gwy_container_set_object_by_name(container, key, dfield);
         g_object_unref(dfield);
-        fix_scales(section, container);
-        /* FIXME: not yet:
-         * process_metadata(ezdfile, container); */
+        fix_scales(section, i, container);
+
+        meta = ezdfile_get_metadata(ezdfile, n);
+        if (meta) {
+            g_snprintf(key, sizeof(key), "/%d/meta", i);
+            gwy_container_set_object_by_name(container, key, meta);
+            g_object_unref(meta);
+        }
+
         i++;
     }
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -447,15 +449,17 @@ find_data_offsets(const gchar *buffer,
 
 static void
 fix_scales(EZDSection *section,
+           gint idx,
            GwyContainer *container)
 {
     GwyDataField *dfield;
     GwySIUnit *siunit;
+    gchar key[40];
     gint power10;
     gdouble r;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
-                                                             "/0/data"));
+    g_snprintf(key, sizeof(key), "/%d/data", idx);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container, key));
 
     /* Fix value scale */
     siunit = gwy_si_unit_new_parse(section->zrange.unit, &power10);
@@ -479,8 +483,6 @@ fix_scales(EZDSection *section,
     if (section->zrange.name) {
         const gchar *s;
 
-        gwy_container_set_string_by_name(container, "/meta/Channel name",
-                                         g_strdup(section->zrange.name));
         switch (section->direction) {
             case SCAN_FORWARD:
             s = " forward";
@@ -494,7 +496,8 @@ fix_scales(EZDSection *section,
             s = "";
             break;
         }
-        gwy_container_set_string_by_name(container, "/0/data/title",
+        g_snprintf(key, sizeof(key), "/%d/data/title", idx);
+        gwy_container_set_string_by_name(container, key,
                                          g_strdup_printf("%s%s",
                                                          section->zrange.name,
                                                          s));
@@ -506,33 +509,37 @@ store_meta(gpointer key,
            gpointer value,
            gpointer user_data)
 {
-    StoreMetaData *smd = (StoreMetaData*)user_data;
+    GwyContainer *meta = (GwyContainer*)user_data;
     gchar *cval;
 
     if (!(cval = g_convert(value, strlen(value), "UTF-8", "ISO-8859-1",
                            NULL, NULL, NULL)))
         return;
-    g_string_truncate(smd->str, sizeof("/meta/") - 1);
-    g_string_append(smd->str, key);
-    gwy_container_set_string_by_name(smd->container, smd->str->str, cval);
+    gwy_container_set_string_by_name(meta, key, cval);
 }
 
-static void
-process_metadata(GPtrArray *ezdfile,
-                 GwyContainer *container)
+static GwyContainer*
+ezdfile_get_metadata(GPtrArray *ezdfile,
+                     G_GNUC_UNUSED gint idx)
 {
-    StoreMetaData smd;
     EZDSection *section;
+    GwyContainer *meta;
     guint i;
 
-    smd.container = container;
-    smd.str = g_string_new("/meta/");
+    meta = gwy_container_new();
+
     for (i = 0; i < ezdfile->len; i++) {
         section = (EZDSection*)g_ptr_array_index(ezdfile, i);
         if (gwy_strequal(section->name, "DataSet-Info"))
-            g_hash_table_foreach(section->meta, store_meta, &smd);
+            g_hash_table_foreach(section->meta, store_meta, meta);
     }
-    g_string_free(smd.str, TRUE);
+
+    if (!gwy_container_get_n_items(meta)) {
+        g_object_unref(meta);
+        meta = NULL;
+    }
+
+    return meta;
 }
 
 static void
