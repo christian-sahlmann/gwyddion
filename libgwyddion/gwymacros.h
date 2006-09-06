@@ -48,10 +48,6 @@
     y = __unsafe_swap; \
     } while (0)
 
-#define GWY_FIND_PSPEC(type, id, spectype) \
-    G_PARAM_SPEC_##spectype(g_object_class_find_property \
-                                (G_OBJECT_CLASS(g_type_class_peek(type)), id))
-
 #define gwy_strequal(a, b) \
     (!strcmp((a), (b)))
 
@@ -71,6 +67,10 @@
             g_signal_handler_disconnect(obj, hid); \
         (hid) = 0; \
     } while (0)
+
+#define GWY_FIND_PSPEC(type, id, spectype) \
+    G_PARAM_SPEC_##spectype(g_object_class_find_property \
+                                (G_OBJECT_CLASS(g_type_class_peek(type)), id))
 
 G_BEGIN_DECLS
 
