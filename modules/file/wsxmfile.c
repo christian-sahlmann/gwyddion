@@ -40,11 +40,6 @@ typedef enum {
     WSXM_DATA_DOUBLE
 } WSxMDataType;
 
-typedef struct {
-    GString *str;
-    GwyContainer *container;
-} StoreMetaData;
-
 static gboolean      module_register   (void);
 static gint          wsxmfile_detect   (const GwyFileDetectInfo *fileinfo,
                                         gboolean only_name);
@@ -58,7 +53,7 @@ static GwyDataField* read_data_field   (const guchar *buffer,
 static gboolean      file_read_meta    (GHashTable *meta,
                                         gchar *buffer,
                                         GError **error);
-static void          process_metadata  (GHashTable *meta,
+static void          process_metadata  (GHashTable *wsxmmeta,
                                         GwyContainer *container);
 static void          guess_channel_type(GwyContainer *data,
                                         const gchar *key);
@@ -68,7 +63,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -245,16 +240,13 @@ store_meta(gpointer key,
            gpointer value,
            gpointer user_data)
 {
-    StoreMetaData *smd = (StoreMetaData*)user_data;
+    GwyContainer *meta = (GwyContainer*)user_data;
 
-    g_string_truncate(smd->str, sizeof("/meta/") - 1);
-    g_string_append(smd->str, key);
-    gwy_container_set_string_by_name(smd->container, smd->str->str,
-                                     g_strdup(value));
+    gwy_container_set_string_by_name(meta, key, g_strdup(value));
 }
 
 static void
-process_metadata(GHashTable *meta,
+process_metadata(GHashTable *wsxmmeta,
                  GwyContainer *container)
 {
     const gchar *nometa[] = {
@@ -262,9 +254,9 @@ process_metadata(GHashTable *meta,
         "Control::X Amplitude", "Control::Y Amplitude",
         "General Info::Number of rows", "General Info::Number of columns",
     };
-    StoreMetaData smd;
     GwyDataField *dfield;
     GwySIUnit *siunit;
+    GwyContainer *meta;
     gdouble r;
     gchar *p, *end;
     gint power10;
@@ -275,7 +267,7 @@ process_metadata(GHashTable *meta,
                                                              "/0/data"));
 
     /* Fix value scale */
-    if (!(p = g_hash_table_lookup(meta, "General Info::Z Amplitude"))
+    if (!(p = g_hash_table_lookup(wsxmmeta, "General Info::Z Amplitude"))
         || (r = g_ascii_strtod(p, &end)) <= 0
         || end == p) {
         g_warning("Missing or invalid Z Amplitude");
@@ -301,7 +293,7 @@ process_metadata(GHashTable *meta,
     }
 
     /* Fix lateral scale */
-    if (!(p = g_hash_table_lookup(meta, "Control::X Amplitude"))
+    if (!(p = g_hash_table_lookup(wsxmmeta, "Control::X Amplitude"))
         || (r = g_ascii_strtod(p, &end)) <= 0
         || end == p) {
         g_warning("Missing or invalid X Amplitude");
@@ -314,7 +306,7 @@ process_metadata(GHashTable *meta,
         gwy_data_field_set_xreal(dfield, r*pow10(power10));
     }
 
-    if (!(p = g_hash_table_lookup(meta, "Control::Y Amplitude"))
+    if (!(p = g_hash_table_lookup(wsxmmeta, "Control::Y Amplitude"))
         || (r = g_ascii_strtod(p, &end)) <= 0
         || end == p) {
         g_warning("Missing or invalid Y Amplitude");
@@ -328,12 +320,13 @@ process_metadata(GHashTable *meta,
 
     /* And store everything else as metadata */
     for (i = 0; i < G_N_ELEMENTS(nometa); i++)
-        g_hash_table_remove(meta, nometa[i]);
+        g_hash_table_remove(wsxmmeta, nometa[i]);
 
-    smd.str = g_string_new("/meta/");
-    smd.container = container;
-    g_hash_table_foreach(meta, store_meta, &smd);
-    g_string_free(smd.str, TRUE);
+    meta = gwy_container_new();
+    g_hash_table_foreach(wsxmmeta, store_meta, meta);
+    if (gwy_container_get_n_items(meta))
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 }
 
 static GwyDataField*
