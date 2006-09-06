@@ -202,20 +202,20 @@ mifile_load(const gchar *filename,
     else
         ok = FALSE;
 
-    g_debug("*************************************");
-    g_debug("*************************************");
-    g_debug("*************************************");
-    g_debug("isimage: %i    ok: %i", isimage, ok);
+    gwy_debug("*************************************");
+    gwy_debug("*************************************");
+    gwy_debug("*************************************");
+    gwy_debug("isimage: %i    ok: %i", isimage, ok);
 
     /* Find out the length of the file header (and binary/ascii mode) */
     header_size = find_data_start(buffer, size, &isbinary);
     if (!header_size)
          ok = FALSE;
 
-    g_debug("header_size: %i", header_size);
-    g_debug("*************************************");
-    g_debug("*************************************");
-    g_debug("*************************************");
+    gwy_debug("header_size: %i", header_size);
+    gwy_debug("*************************************");
+    gwy_debug("*************************************");
+    gwy_debug("*************************************");
 
     /* Report error if file is invalid */
     if (!ok) {
@@ -289,7 +289,7 @@ mifile_load(const gchar *filename,
             xdata = g_new0(gdouble, mifile_spect->num_points);
             for (i = 0; i < mifile_spect->num_points; i++) {
                 xdata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
-                g_debug("i: %i   xdata: %f", i, xdata[i]);
+                gwy_debug("i: %i   xdata: %f", i, xdata[i]);
             }
 
             /* The first buffer always represents the x axis. All
@@ -301,7 +301,7 @@ mifile_load(const gchar *filename,
                 ydata = g_new0(gdouble, mifile_spect->num_points);
                 for (i = 0; i < mifile_spect->num_points; i++) {
                     ydata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
-                    g_debug("i: %i   ydata: %f", i, ydata[i]);
+                    gwy_debug("i: %i   ydata: %f", i, ydata[i]);
                 }
 
                 /* create graph model and curve model */
@@ -670,30 +670,26 @@ process_metadata(MIFile *mifile,
     /*
     if ((p = g_hash_table_lookup(data->meta, "Date"))
         && (s = g_hash_table_lookup(data->meta, "time")))
-        gwy_container_set_string_by_name(container, "/meta/Date",
+        gwy_container_set_string_by_name(meta, "Date",
                                          g_strconcat(p, " ", s, NULL));
     */
 
     if ((p = g_hash_table_lookup(mifile->meta, "scanUp"))) {
         if (g_str_equal(p, "FALSE"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Scanning direction",
+            gwy_container_set_string_by_name(meta, "Scanning direction",
                                              g_strdup("Top to bottom"));
         else if (g_str_equal(p, "TRUE"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Scanning direction",
+            gwy_container_set_string_by_name(meta, "Scanning direction",
                                              g_strdup("Bottom to top"));
     }
 
     /*
     if ((p = g_hash_table_lookup(data->meta, "collect_mode"))) {
         if (!strcmp(p, "1"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Line direction",
+            gwy_container_set_string_by_name(meta, "Line direction",
                                              g_strdup("Left to right"));
         else if (!strcmp(p, "2"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Line direction",
+            gwy_container_set_string_by_name(meta, "Line direction",
                                              g_strdup("Right to left"));
     }
     */
