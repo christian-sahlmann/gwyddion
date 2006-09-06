@@ -2,8 +2,8 @@
 # @(#) $Id$
 disabled=
 pkgname=gwyddion
-basever=1.99.8
-dont_update_version=
+basever=1.99.9
+dont_update_version=dont_even_think_about_that
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs

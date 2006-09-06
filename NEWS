@@ -1,6 +1,5 @@
-1.99.8.20060902
 
-1.99.9 (0000-00-00)
+1.99.9 (2006-09-07)
 Libraries:
 - libgwydgets: Always insensitive 3D window light position controls were
   fixed.
