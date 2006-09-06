@@ -462,7 +462,7 @@ process_metadata(STPFile *stpfile,
             gwy_container_set_string_by_name(meta, "Line direction",
                                              g_strdup("Left to right"));
         else if (gwy_strequal(p, "2"))
-            gwy_container_set_string_by_name(meta, "/meta/Line direction",
+            gwy_container_set_string_by_name(meta, "Line direction",
                                              g_strdup("Right to left"));
     }
 

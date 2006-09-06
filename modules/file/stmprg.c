@@ -65,6 +65,7 @@ static void          guess_channel_type  (GwyContainer *data,
                                           const gchar *key);
 
 /* Parameters are stored in global variables */
+/* FIXME: Eliminate this */
 struct STMPRG_MAINFIELD mainfield;
 struct STMPRG_CONTROL control;
 struct STMPRG_OTHER_CTRL other_ctrl;
@@ -74,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.5",
+    "0.6",
     "Rok Zitko",
     "2004",
 };
@@ -392,22 +393,22 @@ byteswap_and_dump_parameters()
 /* Macros for storing meta data */
 
 #define HASH_STORE(format, keystr, val) \
-    g_string_printf(key, "/meta/%s", keystr); \
     value = g_strdup_printf(format, val); \
-    gwy_debug("key = %s, val = %s\n", key->str, value); \
-    gwy_container_set_string_by_name(data, key->str, value);
+    gwy_debug("key = %s, val = %s\n", keystr, value); \
+    gwy_container_set_string_by_name(data, keystr, value);
 
 #define HASH_STORE_F(keystr, valf) HASH_STORE("%f", keystr, valf)
 #define HASH_STORE_S(keystr, vals) HASH_STORE("%s", keystr, vals)
 #define HASH_STORE_I(keystr, vali) HASH_STORE("%i", keystr, vali)
 
-static void
-store_metadata(GwyContainer *data)
+static GwyContainer*
+stmprg_get_metadata(GwyContainer *data)
 {
+    GwyContainer *meta;
     gchar *value;
-    GString *key;
 
-    key = g_string_new("");
+    meta = gwy_container_new();
+
     HASH_STORE_F("inc_x", mainfield.inc_x);
     HASH_STORE_F("inc_y", mainfield.inc_y);
     HASH_STORE_F("angle", mainfield.angle);
@@ -418,7 +419,8 @@ store_metadata(GwyContainer *data)
     HASH_STORE_S("date", other_ctrl.date);
     HASH_STORE_S("comment", other_ctrl.comment);
     HASH_STORE_S("username", other_ctrl.username);
-    g_string_free(key, TRUE);
+
+    return meta;
 }
 
 static GwyContainer*
@@ -426,7 +428,7 @@ stmprg_load(const gchar *filename,
             G_GNUC_UNUSED GwyRunType mode,
             GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     gchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -475,7 +477,9 @@ stmprg_load(const gchar *filename,
     /* FIXME: with documentation, we could perhaps do better */
     guess_channel_type(container, "/0/data");
 
-    store_metadata(container);
+    meta = stmprg_get_metadata(container);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 
     g_free(filename_ta);
     g_free(buffer);

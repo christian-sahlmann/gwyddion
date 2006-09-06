@@ -70,8 +70,7 @@ static GwyDataField* read_data_field_with_voids(const guchar *buffer,
                                                 GwyDataField **voidmask);
 static void          load_metadata             (gchar *buffer,
                                                 GHashTable *meta);
-static void          store_metadata            (GHashTable *meta,
-                                                GwyContainer *container);
+static GwyContainer* bcrfile_get_metadata      (GHashTable *bcrmeta);
 static void          guess_channel_type        (GwyContainer *data,
                                                 const gchar *key);
 
@@ -80,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -124,12 +123,12 @@ bcrfile_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL, *voidmask = NULL;
-    GHashTable *meta = NULL;
+    GHashTable *bcrmeta = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -141,8 +140,8 @@ bcrfile_load(const gchar *filename,
         return NULL;
     }
 
-    meta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    dfield = file_load_real(buffer, size, meta, &voidmask, error);
+    bcrmeta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    dfield = file_load_real(buffer, size, bcrmeta, &voidmask, error);
     gwy_file_abandon_contents(buffer, size, NULL);
     if (dfield) {
         container = gwy_container_new();
@@ -153,9 +152,13 @@ bcrfile_load(const gchar *filename,
             gwy_container_set_object_by_name(container, "/0/mask", voidmask);
             g_object_unref(voidmask);
         }
-        store_metadata(meta, container);
+
+        meta = bcrfile_get_metadata(bcrmeta);
+        if (meta)
+            gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
     }
-    g_hash_table_destroy(meta);
+    g_hash_table_destroy(bcrmeta);
 
     return container;
 }
@@ -287,9 +290,8 @@ file_load_real(const guchar *buffer,
     return dfield;
 }
 
-static void
-store_metadata(GHashTable *meta,
-               GwyContainer *container)
+static GwyContainer*
+bcrfile_get_metadata(GHashTable *bcrmeta)
 {
     const struct {
         const gchar *id;
@@ -305,26 +307,32 @@ store_metadata(GHashTable *meta,
         { "starttime",   NULL,      "Scan time"         },
         /* FIXME: I've seen other stuff, but don't know interpretation */
     };
+    GwyContainer *meta;
     gchar *value;
-    GString *key;
     guint i;
 
-    key = g_string_new("");
+    meta = gwy_container_new();
+
     for (i = 0; i < G_N_ELEMENTS(metakeys); i++) {
-        if (!(value = g_hash_table_lookup(meta, metakeys[i].id)))
+        if (!(value = g_hash_table_lookup(bcrmeta, metakeys[i].id)))
             continue;
 
-        g_string_printf(key, "/meta/%s", metakeys[i].key);
         if (metakeys[i].unit)
-            gwy_container_set_string_by_name(container, key->str,
+            gwy_container_set_string_by_name(meta, metakeys[i].key,
                                              g_strdup_printf("%s %s",
                                                              value,
                                                              metakeys[i].unit));
         else
-            gwy_container_set_string_by_name(container, key->str,
+            gwy_container_set_string_by_name(meta, metakeys[i].key,
                                              g_strdup(value));
     }
-    g_string_free(key, TRUE);
+
+    if (!gwy_container_get_n_items(meta)) {
+        g_object_unref(meta);
+        meta = NULL;
+    }
+
+    return meta;
 }
 
 /**

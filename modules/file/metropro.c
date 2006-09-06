@@ -151,27 +151,26 @@ typedef struct {
     GtkWidget *data_view;
 } MProControls;
 
-static gboolean      module_register     (void);
-static gint          mprofile_detect     (const GwyFileDetectInfo *fileinfo,
-                                          gboolean only_name);
-static GwyContainer* mprofile_load       (const gchar *filename,
-                                          GwyRunType mode,
-                                          GError **error);
-static gboolean      mprofile_read_header(const guchar *buffer,
-                                          gsize size,
-                                          MProFile *mprofile,
-                                          GError **error);
-static gint          fill_data_fields    (MProFile *mprofile,
-                                          const guchar *buffer);
-static void          store_metadata      (MProFile *mprofile,
-                                          GwyContainer *container);
+static gboolean      module_register      (void);
+static gint          mprofile_detect      (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer* mprofile_load        (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static gboolean      mprofile_read_header (const guchar *buffer,
+                                           gsize size,
+                                           MProFile *mprofile,
+                                           GError **error);
+static gint          fill_data_fields     (MProFile *mprofile,
+                                           const guchar *buffer);
+static GwyContainer* mprofile_get_metadata(MProFile *mprofile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports binary MetroPro (Zygo) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -215,7 +214,7 @@ mprofile_load(const gchar *filename,
               GError **error)
 {
     MProFile mprofile;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     GwyDataField *dfield = NULL, *vpmask = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
@@ -270,9 +269,14 @@ mprofile_load(const gchar *filename,
             g_string_printf(key, "/%d/mask", i);
             gwy_container_set_object_by_name(container, key->str, vpmask);
         }
+
+        meta = mprofile_get_metadata(&mprofile);
+        g_string_printf(key, "/%d/meta", i);
+        gwy_container_set_object_by_name(container, key->str, meta);
+        g_object_unref(meta);
+
     }
     g_string_free(key, TRUE);
-    store_metadata(&mprofile, container);
 
     for (n = 0; n < mprofile.nbuckets; n++) {
         gwy_object_unref(mprofile.intensity_data[n]);
@@ -651,14 +655,13 @@ fill_data_fields(MProFile *mprofile,
 }
 
 #define HASH_STORE(key, fmt, field) \
-    gwy_container_set_string_by_name(container, "/meta/" key, \
+    gwy_container_set_string_by_name(meta, key, \
                                      g_strdup_printf(fmt, mprofile->field))
 
 #define HASH_STORE_ENUM(key, field, e) \
     s = gwy_enum_to_string(mprofile->field, e, G_N_ELEMENTS(e)); \
     if (s && *s) \
-        gwy_container_set_string_by_name(container, "/meta/" key, \
-                                         g_strdup(s));
+        gwy_container_set_string_by_name(meta, key, g_strdup(s));
 
 static void
 store_meta_string(GwyContainer *container,
@@ -674,9 +677,8 @@ store_meta_string(GwyContainer *container,
 }
 
 /* Quite incomplete... */
-static void
-store_metadata(MProFile *mprofile,
-               GwyContainer *container)
+static GwyContainer*
+mprofile_get_metadata(MProFile *mprofile)
 {
     static const GwyEnum yesno[] = { { "No", 0, }, { "Yes", 1, } };
     static const GwyEnum software_types[] = {
@@ -700,43 +702,46 @@ store_metadata(MProFile *mprofile,
         { "NewView/GP",              7, },
         { "Mark to GPI conversion",  8, },
     };
+    GwyContainer *meta;
     time_t tp;
     struct tm *tm;
     const gchar *s;
     gchar buffer[24];
     gchar *p;
 
+    meta = gwy_container_new();
+
     /* Version */
     p = g_strdup_printf("%d.%d.%d",
                         mprofile->version_major,
                         mprofile->version_minor,
                         mprofile->version_micro);
-    gwy_container_set_string_by_name(container, "/meta/Version", p);
+    gwy_container_set_string_by_name(meta, "Version", p);
 
     /* Timestamp */
     tp = mprofile->timestamp;
     tm = localtime(&tp);
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm);
-    gwy_container_set_string_by_name(container, "/meta/Date", g_strdup(buffer));
+    gwy_container_set_string_by_name(meta, "Date", g_strdup(buffer));
 
     /* Comments */
-    store_meta_string(container, "/meta/Software date",
+    store_meta_string(meta, "Software date",
                       mprofile->software_date);
-    store_meta_string(container, "/meta/Comment",
+    store_meta_string(meta, "Comment",
                       mprofile->comment);
-    store_meta_string(container, "/meta/Objective name",
+    store_meta_string(meta, "Objective name",
                       mprofile->objective_name);
-    store_meta_string(container, "/meta/Part measured",
+    store_meta_string(meta, "Part measured",
                       mprofile->part_num);
-    store_meta_string(container, "/meta/Part serial number",
+    store_meta_string(meta, "Part serial number",
                       mprofile->part_ser_num);
-    store_meta_string(container, "/meta/Description",
+    store_meta_string(meta, "Description",
                       mprofile->scan_description);
-    store_meta_string(container, "/meta/System error file",
+    store_meta_string(meta, "System error file",
                       mprofile->sys_err_file);
-    store_meta_string(container, "/meta/Zoom description",
+    store_meta_string(meta, "Zoom description",
                       mprofile->zoom_desc);
-    store_meta_string(container, "/meta/Wavelength select",
+    store_meta_string(meta, "Wavelength select",
                       mprofile->wavelength_select);
 
     /* Misc */
@@ -758,7 +763,9 @@ store_metadata(MProFile *mprofile,
     HASH_STORE_ENUM("Wavelength folding", wavelength_fold, yesno);
 
     p = g_strdup_printf("%.2g", mprofile->min_mod/10.23);
-    gwy_container_set_string_by_name(container, "/meta/Minimum modulation", p);
+    gwy_container_set_string_by_name(meta, "Minimum modulation", p);
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

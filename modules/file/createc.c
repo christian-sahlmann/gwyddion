@@ -61,8 +61,7 @@ static gboolean      read_binary_data     (gint n,
                                            gchar *buffer,
                                            gint bpp,
                                            GError **error);
-static void          store_metadata       (GwyContainer *data,
-                                           GHashTable *hash);
+static GwyContainer* createc_get_metadata (GHashTable *hash);
 static void          guess_channel_type   (GwyContainer *data,
                                            const gchar *key);
 
@@ -71,7 +70,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.6",
+    "0.7",
     "Rok Zitko",
     "2004",
 };
@@ -112,7 +111,7 @@ createc_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     gchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -139,7 +138,11 @@ createc_load(const gchar *filename,
         g_object_unref(dfield);
 
         guess_channel_type(container, "/0/data");
-        store_metadata(container, hash);
+
+        meta = createc_get_metadata(hash);
+        if (meta)
+            gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
     }
 
     g_hash_table_destroy(hash);
@@ -281,17 +284,14 @@ hash_to_data_field(GHashTable *hash,
 
 #define HASH_STORE(key) \
     if ((val = g_hash_table_lookup(hash, key))) { \
-        g_string_printf(metakey, "/meta/%s", key); \
         gwy_debug("key = %s, val = %s\n", key, val); \
-        gwy_container_set_string_by_name(data, metakey->str, g_strdup(val)); \
+        gwy_container_set_string_by_name(meta, key, g_strdup(val)); \
     }
 
-static void
-store_metadata(GwyContainer *data, GHashTable *hash)
+static GwyContainer*
+createc_get_metadata(GHashTable *hash)
 {
-    gchar *val;
-    GString *metakey; /* for HASH_STORE macro */
-    gchar *tobestored[] = {
+    static const gchar *tobestored[] = {
         "Titel", "Titel / Titel",
         "Length x[A]",
         "Length y[A]",
@@ -333,14 +333,23 @@ store_metadata(GwyContainer *data, GHashTable *hash)
         "T_ADC3[K]",
         NULL
     };
+    GwyContainer *meta;
     gint ctr = 0;
+    gchar *val;
 
-    metakey = g_string_new("");
+    meta = gwy_container_new();
+
     while (tobestored[ctr]) {
         HASH_STORE(tobestored[ctr]);
         ctr++;
     }
-    g_string_free(metakey, TRUE);
+
+    if (!gwy_container_get_n_items(meta)) {
+        g_object_unref(meta);
+        meta = NULL;
+    }
+
+    return meta;
 }
 
 /**

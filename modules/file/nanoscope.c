@@ -78,60 +78,58 @@ typedef struct {
     GwyDataField *data_field;
 } NanoscopeData;
 
-static gboolean        module_register     (void);
-static gint            nanoscope_detect    (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer*   nanoscope_load      (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static GwyDataField*   hash_to_data_field  (GHashTable *hash,
-                                            GHashTable *scannerlist,
-                                            GHashTable *scanlist,
-                                            NanoscopeFileType file_type,
-                                            gboolean has_version,
-                                            guint bufsize,
-                                            gchar *buffer,
-                                            gint gxres,
-                                            gint gyres,
-                                            gchar **p,
-                                            GError **error);
-static gboolean        read_ascii_data     (gint n,
-                                            gdouble *data,
-                                            gchar **buffer,
-                                            gint bpp,
-                                            GError **error);
-static gboolean        read_binary_data    (gint n,
-                                            gdouble *data,
-                                            gchar *buffer,
-                                            gint bpp,
-                                            GError **error);
-static GHashTable*     read_hash           (gchar **buffer,
-                                            GError **error);
-
-static void            get_scan_list_res   (GHashTable *hash,
-                                            gint *xres,
-                                            gint *yres);
-static GwySIUnit*      get_physical_scale  (GHashTable *hash,
-                                            GHashTable *scannerlist,
-                                            GHashTable *scanlist,
-                                            gboolean has_version,
-                                            gdouble *scale,
-                                            GError **error);
-static void            fill_metadata       (GwyContainer *data,
-                                            GHashTable *hash,
-                                            GList *list);
-static NanoscopeValue* parse_value         (const gchar *key,
-                                            gchar *line);
-static gboolean        require_keys        (GHashTable *hash,
-                                            GError **error,
-                                            ...);
+static gboolean        module_register       (void);
+static gint            nanoscope_detect      (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer*   nanoscope_load        (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
+static GwyDataField*   hash_to_data_field    (GHashTable *hash,
+                                              GHashTable *scannerlist,
+                                              GHashTable *scanlist,
+                                              NanoscopeFileType file_type,
+                                              gboolean has_version,
+                                              guint bufsize,
+                                              gchar *buffer,
+                                              gint gxres,
+                                              gint gyres,
+                                              gchar **p,
+                                              GError **error);
+static gboolean        read_ascii_data       (gint n,
+                                              gdouble *data,
+                                              gchar **buffer,
+                                              gint bpp,
+                                              GError **error);
+static gboolean        read_binary_data      (gint n,
+                                              gdouble *data,
+                                              gchar *buffer,
+                                              gint bpp,
+                                              GError **error);
+static GHashTable*     read_hash             (gchar **buffer,
+                                              GError **error);
+static void            get_scan_list_res     (GHashTable *hash,
+                                              gint *xres,
+                                              gint *yres);
+static GwySIUnit*      get_physical_scale    (GHashTable *hash,
+                                              GHashTable *scannerlist,
+                                              GHashTable *scanlist,
+                                              gboolean has_version,
+                                              gdouble *scale,
+                                              GError **error);
+static GwyContainer*   nanoscope_get_metadata(GHashTable *hash,
+                                              GList *list);
+static NanoscopeValue* parse_value           (const gchar *key,
+                                              gchar *line);
+static gboolean        require_keys          (GHashTable *hash,
+                                              GError **error,
+                                              ...);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Veeco (Digital Instruments) Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -173,7 +171,7 @@ nanoscope_load(const gchar *filename,
                G_GNUC_UNUSED GwyRunType mode,
                GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
@@ -274,11 +272,15 @@ nanoscope_load(const gchar *filename,
                     gwy_container_set_string_by_name(container, key,
                                                      g_strdup(val->soft_scale));
                 }
+
+                meta = nanoscope_get_metadata(ndata->hash, list);
+                g_snprintf(key, sizeof(key), "/%d/meta", i);
+                gwy_container_set_object_by_name(container, key, meta);
+                g_object_unref(meta);
+
                 i++;
             }
         }
-        /* FIXME: which metadata to put where? */
-        /* fill_metadata(container, ndata->hash, list); */
         if (!i)
             gwy_object_unref(container);
     }
@@ -320,10 +322,9 @@ add_metadata(gpointer hkey,
              gpointer hvalue,
              gpointer user_data)
 {
-    static gchar buffer[256];
     gchar *key = (gchar*)hkey;
     NanoscopeValue *val = (NanoscopeValue*)hvalue;
-    gchar *s, *v, *w;
+    gchar *v, *w;
 
     if (gwy_strequal(key, "#self")
         || !val->hard_value_str
@@ -332,9 +333,6 @@ add_metadata(gpointer hkey,
 
     if (key[0] == '@')
         key++;
-    /* FIXME: naughty /-avoiding trick */
-    s = gwy_strreplace(key, "/", "∕", (guint)-1);
-    g_snprintf(buffer, sizeof(buffer), "/meta/%s", s);
     v = g_strdup(val->hard_value_str);
     if (strchr(v, '\272')) {
         w = gwy_strreplace(v, "\272", "deg", -1);
@@ -346,31 +344,35 @@ add_metadata(gpointer hkey,
         g_free(v);
         v = w;
     }
-    gwy_container_set_string_by_name(GWY_CONTAINER(user_data), buffer, v);
-    g_free(s);
+    gwy_container_set_string_by_name(GWY_CONTAINER(user_data), key, v);
 }
 
-static void
-fill_metadata(GwyContainer *data,
-              GHashTable *hash,
-              GList *list)
+/* FIXME: This is a bit simplistic */
+static GwyContainer*
+nanoscope_get_metadata(GHashTable *hash,
+                       GList *list)
 {
     static const gchar *hashes[] = {
         "File list", "Scanner list", "Equipment list", "Ciao scan list",
     };
+    GwyContainer *meta;
     GList *l;
     guint i;
+
+    meta = gwy_container_new();
 
     for (l = list; l; l = g_list_next(l)) {
         GHashTable *h = ((NanoscopeData*)l->data)->hash;
         for (i = 0; i < G_N_ELEMENTS(hashes); i++) {
             if (gwy_strequal(g_hash_table_lookup(h, "#self"), hashes[i])) {
-                g_hash_table_foreach(h, add_metadata, data);
+                g_hash_table_foreach(h, add_metadata, meta);
                 break;
             }
         }
     }
-    g_hash_table_foreach(hash, add_metadata, data);
+    g_hash_table_foreach(hash, add_metadata, meta);
+
+    return meta;
 }
 
 static GwyDataField*
