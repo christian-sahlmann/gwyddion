@@ -105,7 +105,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti), Petr Klapetek, Chris Anderson",
     "2006",
 };
@@ -324,12 +324,13 @@ process_metadata(STPFile *stpfile,
         { "line_freq", "Line frequency (requested)", "%s Hz" },
     };
     STPData *data;
+    GwyContainer *meta;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble q, r;
     gchar *p, *s;
     const gchar *title;
-    GString *key, *value;
+    GString *str;
     gint power10;
     guint mode, i;
     gchar *channel_key = NULL;
@@ -420,19 +421,17 @@ process_metadata(STPFile *stpfile,
     gwy_data_field_set_yreal(dfield, r*Angstrom);
 
     /* Metadata */
-    key = g_string_new("/meta/");
-    value = g_string_new("");
+    meta = gwy_container_new();
+    str = g_string_new("");
 
     /* Global */
     for (i = 0; i < G_N_ELEMENTS(global_metadata); i++) {
         if (!(p = g_hash_table_lookup(stpfile->meta, global_metadata[i].key)))
             continue;
 
-        g_string_truncate(key, sizeof("/meta"));
-        g_string_append(key, global_metadata[i].meta);
-        g_string_printf(value, global_metadata[i].format, p);
-        gwy_container_set_string_by_name(container, key->str,
-                                         g_strdup(value->str));
+        g_string_printf(str, global_metadata[i].format, p);
+        gwy_container_set_string_by_name(meta, global_metadata[i].meta,
+                                         g_strdup(str->str));
     }
 
     /* Local */
@@ -440,41 +439,40 @@ process_metadata(STPFile *stpfile,
         if (!(p = g_hash_table_lookup(data->meta, local_metadata[i].key)))
             continue;
 
-        g_string_truncate(key, sizeof("/meta"));
-        g_string_append(key, local_metadata[i].meta);
-        g_string_printf(value, local_metadata[i].format, p);
-        gwy_container_set_string_by_name(container, key->str,
-                                         g_strdup(value->str));
+        g_string_printf(str, local_metadata[i].format, p);
+        gwy_container_set_string_by_name(meta, local_metadata[i].meta,
+                                         g_strdup(str->str));
     }
-
-    g_string_free(key, TRUE);
-    g_string_free(value, TRUE);
 
     /* Special */
     if ((p = g_hash_table_lookup(data->meta, "Date"))
         && (s = g_hash_table_lookup(data->meta, "time")))
-        gwy_container_set_string_by_name(container, "/meta/Date",
+        gwy_container_set_string_by_name(meta, "Date",
                                          g_strconcat(p, " ", s, NULL));
     if ((p = g_hash_table_lookup(data->meta, "scan_dir"))) {
         if (gwy_strequal(p, "0"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Scanning direction",
+            gwy_container_set_string_by_name(meta, "Scanning direction",
                                              g_strdup("Top to bottom"));
         else if (gwy_strequal(p, "1"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Scanning direction",
+            gwy_container_set_string_by_name(meta, "Scanning direction",
                                              g_strdup("Bottom to top"));
     }
     if ((p = g_hash_table_lookup(data->meta, "collect_mode"))) {
         if (gwy_strequal(p, "1"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Line direction",
+            gwy_container_set_string_by_name(meta, "Line direction",
                                              g_strdup("Left to right"));
         else if (gwy_strequal(p, "2"))
-            gwy_container_set_string_by_name(container,
-                                             "/meta/Line direction",
+            gwy_container_set_string_by_name(meta, "/meta/Line direction",
                                              g_strdup("Right to left"));
     }
+
+    if (gwy_container_get_n_items(meta)) {
+        g_string_printf(str, "/%d/meta", id);
+        gwy_container_set_object_by_name(container, str->str, meta);
+    }
+    g_object_unref(meta);
+
+    g_string_free(str, TRUE);
 }
 
 static void

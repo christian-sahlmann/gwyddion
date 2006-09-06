@@ -149,17 +149,16 @@ typedef struct {
     GtkWidget *data_view;
 } SurfControls;
 
-static gboolean      module_register    (void);
-static gint          surffile_detect    (const GwyFileDetectInfo *fileinfo,
-                                         gboolean only_name);
-static GwyContainer* surffile_load      (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static gboolean      fill_data_fields   (SurfFile *surffile,
-                                         const guchar *buffer,
-                                         GError **error);
-static void          store_metadata     (SurfFile *surffile,
-                                         GwyContainer *container);
+static gboolean      module_register      (void);
+static gint          surffile_detect      (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer* surffile_load        (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static gboolean      fill_data_fields     (SurfFile *surffile,
+                                           const guchar *buffer,
+                                           GError **error);
+static GwyContainer* surffile_get_metadata(SurfFile *surffile);
 static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
 
 
@@ -182,7 +181,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surf data files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -225,7 +224,7 @@ surffile_load(const gchar *filename,
              GError **error)
 {
     SurfFile surffile;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     const guchar *p;
     gsize expected_size, size = 0;
@@ -390,7 +389,10 @@ surffile_load(const gchar *filename,
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", surffile.dfield);
-    store_metadata(&surffile, container);
+
+    meta = surffile_get_metadata(&surffile);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 
     /* FIXME: this can be generally useful, move it to gwyddion */
     if (data_field_has_highly_nosquare_samples(surffile.dfield))
@@ -459,14 +461,16 @@ fill_data_fields(SurfFile *surffile,
 }
 
 #define HASH_STORE(key, fmt, field) \
-    gwy_container_set_string_by_name(container, "/meta/" key, \
+    gwy_container_set_string_by_name(meta, key, \
                                      g_strdup_printf(fmt, surffile->field))
 
-static void
-store_metadata(SurfFile *surffile,
-               GwyContainer *container)
+static GwyContainer*
+surffile_get_metadata(SurfFile *surffile)
 {
-    char date[20];
+    GwyContainer *meta;
+    char date[40];
+
+    meta = gwy_container_new();
 
     g_snprintf(date, sizeof(date), "%d. %d. %d",
                surffile->day, surffile->month, surffile->year);
@@ -474,11 +478,13 @@ store_metadata(SurfFile *surffile,
     HASH_STORE("Version", "%u", version);
     HASH_STORE("Operator name", "%s", operator_name);
     HASH_STORE("Object name", "%s", object_name);
-    gwy_container_set_string_by_name(container, "/meta/Date", g_strdup(date));
+    gwy_container_set_string_by_name(meta, "Date", g_strdup(date));
     gwy_container_set_string_by_name
-                (container, "/meta/Acquisition type",
+                (meta, "Acquisition type",
                   g_strdup(gwy_enum_to_string(surffile->acquisition, acq_modes,
                                               G_N_ELEMENTS(acq_modes))));
+
+    return meta;
 }
 
 static gboolean

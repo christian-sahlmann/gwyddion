@@ -120,19 +120,16 @@ static void         process_metadata        (MIFile *mifile,
                                              GwyContainer *container,
                                              const gchar *container_key);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.9.0",
+    "0.9.1",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -571,13 +568,14 @@ process_metadata(MIFile *mifile,
     };
 
     MIData *data;
+    GwyContainer *meta;
     GwyDataField *dfield;
     const gchar *mode;
     gchar *bufferUnit;
     GwySIUnit *siunit;
     gint power10;
     gdouble bufferRange, conversion;
-    GString *key, *value;
+    GString *str;
     gchar *p;
     guint i;
     gdouble xLength, yLength;
@@ -643,19 +641,17 @@ process_metadata(MIFile *mifile,
     gwy_data_field_set_yreal(dfield, yLength);
 
     /* Store Metadata */
-    key = g_string_new("/meta/");
-    value = g_string_new("");
+    meta = gwy_container_new();
+    str = g_string_new("");
 
     /* Global */
     for (i = 0; i < G_N_ELEMENTS(global_metadata); i++) {
         if (!(p = g_hash_table_lookup(mifile->meta, global_metadata[i].key)))
             continue;
 
-        g_string_truncate(key, sizeof("/meta"));
-        g_string_append(key, global_metadata[i].meta);
-        g_string_printf(value, global_metadata[i].format, p);
-        gwy_container_set_string_by_name(container, key->str,
-                                         g_strdup(value->str));
+        g_string_printf(str, global_metadata[i].format, p);
+        gwy_container_set_string_by_name(meta, global_metadata[i].meta,
+                                         g_strdup(str->str));
     }
 
     /* Local */
@@ -663,14 +659,11 @@ process_metadata(MIFile *mifile,
         if (!(p = g_hash_table_lookup(data->meta, local_metadata[i].key)))
             continue;
 
-        g_string_truncate(key, sizeof("/meta"));
-        g_string_append(key, local_metadata[i].meta);
-        g_string_printf(value, local_metadata[i].format, p);
-        gwy_container_set_string_by_name(container, key->str,
-                                         g_strdup(value->str));
+        g_string_printf(str, local_metadata[i].format, p);
+        gwy_container_set_string_by_name(meta, local_metadata[i].meta,
+                                         g_strdup(str->str));
     }
-    g_string_free(key, TRUE);
-    g_string_free(value, TRUE);
+
 
     /* Store "Special" metadata */
 
@@ -704,6 +697,14 @@ process_metadata(MIFile *mifile,
                                              g_strdup("Right to left"));
     }
     */
+
+    if (gwy_container_get_n_items(meta)) {
+        g_string_printf(str, "/%d/meta", id);
+        gwy_container_set_object_by_name(container, str->str, meta);
+    }
+    g_object_unref(meta);
+
+    g_string_free(str, TRUE);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
