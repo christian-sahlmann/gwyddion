@@ -9,7 +9,7 @@ def format_date(d):
               'May', 'June', 'July', 'August',
               'September', 'October', 'November', 'December')
     d = time.strptime(d, '%Y-%m-%d')
-    return '%s %d, %d' % (months[d.tm_mon], d.tm_mday, d.tm_year)
+    return '%d %s %d' % (d.tm_mday, months[d.tm_mon], d.tm_year)
 
 in_list = False
 in_item = False
