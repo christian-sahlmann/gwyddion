@@ -1,4 +1,10 @@
 
+
+2.0 (0000-00-00)
+Modules:
+- Shade: Crash on Mix checkbutton click was fixed.
+
+
 1.99.9 (2006-09-07)
 Libraries:
 - libgwydgets: Always insensitive 3D window light position controls were

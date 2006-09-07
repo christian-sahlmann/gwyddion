@@ -71,8 +71,7 @@ static void        theta_changed_cb             (GtkObject *adj,
                                                  ShadeControls *controls);
 static void        phi_changed_cb               (GtkObject *adj,
                                                  ShadeControls *controls);
-static void        mix_changed_cb               (GtkAdjustment *adj,
-                                                 ShadeControls *controls);
+static void        mix_changed_cb               (ShadeControls *controls);
 static void        shade_dialog_update          (ShadeControls *controls,
                                                  ShadeArgs *args);
 static void        shade_mix_with_plane         (GwyDataField *shaded,
@@ -97,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -264,11 +263,11 @@ shade_dialog(ShadeArgs *args,
                                  ! args->do_mix);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
                                  args->do_mix);
-    g_signal_connect(controls.mix, "value-changed",
-                     G_CALLBACK(mix_changed_cb), &controls);
+    g_signal_connect_swapped(controls.mix, "value-changed",
+                             G_CALLBACK(mix_changed_cb), &controls);
 
-    g_signal_connect(controls.do_mix, "toggled",
-                     G_CALLBACK(mix_changed_cb), &controls);
+    g_signal_connect_swapped(controls.do_mix, "toggled",
+                             G_CALLBACK(mix_changed_cb), &controls);
 
     row++;
     controls.data_view = gwy_data_view_new(controls.data);
@@ -374,8 +373,7 @@ phi_changed_cb(GtkObject *adj,
 }
 
 static void
-mix_changed_cb(GtkAdjustment *adj,
-               ShadeControls *controls)
+mix_changed_cb(ShadeControls *controls)
 {
     ShadeArgs *args;
 
@@ -384,7 +382,7 @@ mix_changed_cb(GtkAdjustment *adj,
 
     controls->in_update = TRUE;
     args = controls->args;
-    args->mix = gtk_adjustment_get_value(adj);
+    args->mix = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->mix));
     args->do_mix = gtk_toggle_button_get_active(
                                          GTK_TOGGLE_BUTTON(controls->do_mix));
     shade_dialog_update(controls, args);
