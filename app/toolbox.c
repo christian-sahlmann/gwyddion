@@ -115,8 +115,10 @@ set_sensitivity(GtkItemFactory *item_factory, ...)
     while ((path = va_arg(ap, const gchar*))) {
         mask = va_arg(ap, guint);
         widget = gtk_item_factory_get_widget(item_factory, path);
-        if (!widget)
-            break;
+        if (!widget) {
+            g_warning("Cannot find menu item %s", path);
+            continue;
+        }
         gwy_sensitivity_group_add_widget(sensgroup, widget, mask);
     }
     va_end(ap);
@@ -604,7 +606,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     set_sensitivity(item_factory,
                     "<file>/Save",         GWY_MENU_FLAG_DATA,
                     "<file>/Save As",      GWY_MENU_FLAG_DATA,
-                    "<file>/Close Window", GWY_MENU_FLAG_DATA,
+                 /* "<file>/Close Window", GWY_MENU_FLAG_DATA, */
                     NULL);
 
     gwy_app_menu_set_recent_files_menu
@@ -705,8 +707,6 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                     "<edit>/Duplicate", GWY_MENU_FLAG_DATA,
                     "<edit>/Undo", GWY_MENU_FLAG_UNDO,
                     "<edit>/Redo", GWY_MENU_FLAG_REDO,
-                    "<edit>/Remove Mask", GWY_MENU_FLAG_DATA_MASK,
-                    "<edit>/Remove Presentation", GWY_MENU_FLAG_DATA_SHOW,
                     "<edit>/Mask Color...", GWY_MENU_FLAG_DATA_MASK,
                     NULL);
 

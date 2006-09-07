@@ -2,8 +2,9 @@
 
 2.0 (0000-00-00)
 Application:
-- Change mask color right-click menu item is sensitive only when a mask is
-  present (fixing crashes when it was activated without a mask).
+- Edit/Mask color menu item and similar right-click menu item are sensitive
+  only when a mask is present (fixing crashes when they were activated without
+  a mask).
 
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
