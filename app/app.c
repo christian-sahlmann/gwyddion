@@ -454,8 +454,13 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
             mask = gwy_process_func_get_sensitivity_mask(menu_items[i].cbdata);
             gwy_sensitivity_group_add_widget(sensgroup, item, mask);
         }
-        else
+        else {
             item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
+
+            if (menu_items[i].callback == gwy_app_change_mask_color_cb)
+                gwy_sensitivity_group_add_widget(sensgroup, item,
+                                                 GWY_MENU_FLAG_DATA_MASK);
+        }
 
         if (menu_items[i].key)
             gtk_widget_add_accelerator(item, "activate", accel_group,
@@ -803,7 +808,7 @@ gwy_app_change_mask_color_cb(void)
  *
  * Runs mask color selector on a data view.
  *
- * The is a convenience function to run gwy_app_data_view_change_mask_color(),
+ * This is a convenience function to run gwy_color_selector_for_mask(),
  * possibly taking the initial color from settings.
  **/
 void
