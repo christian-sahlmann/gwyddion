@@ -584,7 +584,11 @@ gwy_color_axis_draw_ticks(GwyColorAxis *axis)
         size = width;
     }
 
-    if (axis->min == axis->max)
+    /* Don't attempt to draw anything if rounding errors are too large or
+     * scale calculation can overflow */
+    x = axis->max - axis->min;
+    max = MAX(fabs(axis->min), fabs(axis->max));
+    if (x < 1e-15*max || x <= 1e4*G_MINDOUBLE || max >= 1e-4*G_MAXDOUBLE)
         return;
 
     switch (axis->ticks_style) {
