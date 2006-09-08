@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -362,8 +362,14 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
 
     isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
     isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
-    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
+    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+    if (isel[2] < isel[0])
+        GWY_SWAP(gdouble, isel[0], isel[2]);
+    if (isel[3] < isel[1])
+        GWY_SWAP(gdouble, isel[1], isel[3]);
+    isel[2]++;
+    isel[3]++;
 
     container = plain_tool->container;
     oldid = plain_tool->id;

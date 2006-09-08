@@ -135,7 +135,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -543,11 +543,11 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         else {
             isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
             isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-            isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
-            isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+            isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
+            isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
 
-            w = ABS(isel[2] - isel[0]);
-            h = ABS(isel[3] - isel[1]);
+            w = ABS(isel[2] - isel[0]) + 1;
+            h = ABS(isel[3] - isel[1]) + 1;
             isel[0] = MIN(isel[0], isel[2]);
             isel[1] = MIN(isel[1], isel[3]);
             if (w >= 4 && h >= 4)

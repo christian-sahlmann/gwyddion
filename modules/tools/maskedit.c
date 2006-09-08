@@ -113,7 +113,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -782,11 +782,15 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
 
     isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
     isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
-    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
+    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+    if (isel[2] < isel[0])
+        GWY_SWAP(gdouble, isel[0], isel[2]);
+    if (isel[3] < isel[1])
+        GWY_SWAP(gdouble, isel[1], isel[3]);
     gwy_debug("(%d,%d) (%d,%d)", isel[0], isel[1], isel[2], isel[3]);
-    isel[2] -= isel[0];
-    isel[3] -= isel[1];
+    isel[2] -= isel[0] - 1;
+    isel[3] -= isel[1] - 1;
 
     switch (tool->args.shape) {
         case MASK_SHAPE_RECTANGLE:

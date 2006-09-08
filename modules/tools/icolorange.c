@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -544,14 +544,14 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
         }
         isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
         isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-        isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
-        isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+        isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
+        isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
 
         gwy_data_field_area_get_min_max(plain_tool->data_field, NULL,
                                         MIN(isel[0], isel[2]),
                                         MIN(isel[1], isel[3]),
-                                        ABS(isel[2] - isel[0]),
-                                        ABS(isel[3] - isel[1]),
+                                        ABS(isel[2] - isel[0]) + 1,
+                                        ABS(isel[3] - isel[1]) + 1,
                                         &sel[0], &sel[1]);
         break;
 
@@ -565,6 +565,7 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
         g_return_if_reached();
         break;
     }
+    gwy_debug("[%g, %g]", sel[0], sel[1]);
 
     if (clear) {
         gwy_container_remove(plain_tool->container, tool->key_min);

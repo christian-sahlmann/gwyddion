@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -560,8 +560,8 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     if (!gwy_selection_get_object(plain_tool->selection, 0, sel)
         || sel[0] == sel[2] || sel[1] == sel[3]) {
         isel[0] = isel[1] = 0;
-        isel[2] = gwy_data_field_get_xres(plain_tool->data_field);
-        isel[3] = gwy_data_field_get_yres(plain_tool->data_field);
+        isel[2] = w = gwy_data_field_get_xres(plain_tool->data_field);
+        isel[3] = h = gwy_data_field_get_yres(plain_tool->data_field);
         sel[0] = sel[1] = 0.0;
         sel[2] = gwy_data_field_get_xreal(plain_tool->data_field);
         sel[3] = gwy_data_field_get_yreal(plain_tool->data_field);
@@ -569,13 +569,13 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     else {
         isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
         isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-        isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]) + 1;
-        isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]) + 1;
+        isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
+        isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+        w = ABS(isel[2] - isel[0]) + 1;
+        h = ABS(isel[3] - isel[1]) + 1;
+        isel[0] = MIN(isel[0], isel[2]);
+        isel[1] = MIN(isel[1], isel[3]);
     }
-    w = ABS(isel[2] - isel[0]);
-    h = ABS(isel[3] - isel[1]);
-    isel[0] = MIN(isel[0], isel[2]);
-    isel[1] = MIN(isel[1], isel[3]);
 
     if (!w || !h)
         return FALSE;
