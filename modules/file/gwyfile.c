@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -181,8 +181,9 @@ gwyfile_save(GwyContainer *data,
 {
     GwyContainer *compressed;
     GByteArray *buffer;
+    gchar *filename_orig_utf8, *filename_utf8;
     FILE *fh;
-    gboolean ok = TRUE;
+    gboolean restore_filename = FALSE, ok = TRUE;
 
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
@@ -190,6 +191,30 @@ gwyfile_save(GwyContainer *data,
     }
 
     compressed = gwyfile_compress_ids(data);
+
+    /* Assure the saved file contains its own name under "/filename" */
+    filename_orig_utf8 = NULL;
+    if (compressed == data) {
+        gwy_container_gis_string_by_name(data, "/filename",
+                                         (const guchar**)&filename_orig_utf8);
+        filename_orig_utf8 = g_strdup(filename_orig_utf8);
+        restore_filename = TRUE;
+    }
+
+    filename_utf8 = g_filename_to_utf8(filename, -1, NULL, NULL, NULL);
+    if (!filename_utf8)
+        gwy_container_remove_by_name(compressed, "/filename");
+    else if (filename_orig_utf8
+             && gwy_strequal(filename_orig_utf8, filename_utf8)) {
+        restore_filename = FALSE;
+    }
+    else {
+        gwy_container_set_string_by_name(compressed, "/filename",
+                                         filename_utf8);
+        filename_utf8 = NULL;
+    }
+
+    /* Serialize */
     buffer = gwy_serializable_serialize(G_OBJECT(compressed), NULL);
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
@@ -200,6 +225,18 @@ gwyfile_save(GwyContainer *data,
     fclose(fh);
     g_byte_array_free(buffer, TRUE);
     g_object_unref(compressed);
+
+    /* Restore filename if save failed */
+    if (!ok && restore_filename) {
+        if (filename_orig_utf8)
+            gwy_container_set_string_by_name(data, "/filename",
+                                             filename_orig_utf8);
+        else
+            gwy_container_remove_by_name(data, "/filename");
+        filename_orig_utf8 = NULL;
+    }
+    g_free(filename_orig_utf8);
+    g_free(filename_utf8);
 
     return ok;
 }
