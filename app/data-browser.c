@@ -36,6 +36,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwygraphwindow.h>
+#include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 #include "app/gwyappinternal.h"
@@ -139,6 +140,8 @@ static void gwy_app_data_proxy_destroy_all_3d(GwyAppDataProxy *proxy);
 static void gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy);
 static void gwy_app_update_data_window_title(GwyDataView *data_view,
                                              gint id);
+static void gwy_app_update_3d_window_title  (Gwy3DWindow *window3d,
+                                             gint id);
 static void gwy_app_update_data_range_type(GwyDataView *data_view,
                                            gint id);
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
@@ -147,6 +150,10 @@ static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
 static gboolean gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
                                                      GtkTreeIter *iter,
                                                      gboolean visible);
+static GList*   gwy_app_data_proxy_find_3d  (GwyAppDataProxy *proxy,
+                                             Gwy3DWindow *window3d);
+static GList*   gwy_app_data_proxy_get_3d   (GwyAppDataProxy *proxy,
+                                             gint id);
 static const gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
@@ -656,6 +663,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     GtkTreeIter iter;
     GwyDataView *data_view = NULL;
     gboolean found;
+    GList *item;
     gint i;
 
     strkey = g_quark_to_string(quark);
@@ -754,6 +762,11 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         if (data_view) {
             gwy_app_update_data_window_title(data_view, i);
             g_object_unref(data_view);
+        }
+        if ((item = gwy_app_data_proxy_get_3d(proxy, i))) {
+            GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)item->data;
+
+            gwy_app_update_3d_window_title(assoc->window, i);
         }
         break;
 
@@ -1375,12 +1388,30 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
 }
 
 static void
+gwy_app_update_3d_window_title(Gwy3DWindow *window3d,
+                               gint id)
+{
+    GtkWidget *view3d;
+    GwyContainer *data;
+    const gchar *ctitle;
+    gchar *title;
+
+    view3d = gwy_3d_window_get_3d_view(window3d);
+    data = gwy_3d_view_get_data(GWY_3D_VIEW(view3d));
+    ctitle = gwy_app_data_browser_figure_out_channel_title(data, id);
+    title = g_strconcat("3D ", ctitle, NULL);
+    gtk_window_set_title(GTK_WINDOW(window3d), title);
+    g_free(title);
+}
+
+static void
 gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
 {
     GwyDataView *data_view;
     GwyAppDataList *list;
     GtkTreeModel *model;
     GtkTreeIter iter;
+    GList *item;
     gint id;
 
     list = &proxy->lists[PAGE_CHANNELS];
@@ -1394,6 +1425,11 @@ gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
             if (data_view) {
                 gwy_app_update_data_window_title(data_view, id);
                 g_object_unref(data_view);
+            }
+            if ((item = gwy_app_data_proxy_get_3d(proxy, id))) {
+                GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)item->data;
+
+                gwy_app_update_3d_window_title(assoc->window, id);
             }
         } while (gtk_tree_model_iter_next(model, &iter));
     }
@@ -1609,7 +1645,6 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     GtkWidget *view3d, *window3d;
     GObject *dfield = NULL;
     GwyApp3DAssociation *assoc;
-    gchar *name, *title;
     gchar key[40];
     guint len;
 
@@ -1639,11 +1674,7 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
 
     window3d = gwy_3d_window_new(GWY_3D_VIEW(view3d));
 
-    name = gwy_app_get_data_field_title(proxy->container, id);
-    title = g_strconcat("3D ", name, NULL);
-    gtk_window_set_title(GTK_WINDOW(window3d), title);
-    g_free(title);
-    g_free(name);
+    gwy_app_update_3d_window_title(GWY_3D_WINDOW(window3d), id);
 
     g_signal_connect(window3d, "focus-in-event",
                      G_CALLBACK(gwy_app_data_proxy_select_3d), NULL);
