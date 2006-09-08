@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -83,6 +84,8 @@ static GType  gwy_tool_color_range_get_type         (void) G_GNUC_CONST;
 static void   gwy_tool_color_range_finalize         (GObject *object);
 static void   gwy_tool_color_range_init_dialog      (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_data_switched    (GwyTool *gwytool,
+                                                     GwyDataView *data_view);
+static void   gwy_tool_color_range_make_keys        (GwyToolColorRange *tool,
                                                      GwyDataView *data_view);
 static void   gwy_tool_color_range_data_changed     (GwyPlainTool *plain_tool);
 static void   gwy_tool_color_range_selection_changed(GwyPlainTool *plain_tool,
@@ -306,7 +309,9 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
     GwyToolColorRange *tool;
     GwyLayerBasicRangeType range_type;
-    gchar key[32];
+
+    tool = GWY_TOOL_COLOR_RANGE(gwytool);
+    gwy_tool_color_range_make_keys(tool, data_view);
 
     GWY_TOOL_CLASS(gwy_tool_color_range_parent_class)->data_switched(gwytool,
                                                                      data_view);
@@ -314,7 +319,6 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
-    tool = GWY_TOOL_COLOR_RANGE(gwytool);
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_rect,
@@ -322,15 +326,9 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
-
-        g_snprintf(key, sizeof(key), "/%d/base/min", plain_tool->id);
-        tool->key_min = g_quark_from_string(key);
-        g_snprintf(key, sizeof(key), "/%d/base/max", plain_tool->id);
-        tool->key_max = g_quark_from_string(key);
     }
     else {
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), FALSE);
-        tool->key_min = tool->key_max = 0;
     }
 
     /* TODO: make sure we do update when switching to a FIXED data (even from
@@ -341,6 +339,32 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     gwy_tool_color_range_update_histogram(tool);
     gwy_tool_color_range_update_fullrange(tool);
     gwy_tool_color_range_set_min_max(tool);
+}
+
+static void
+gwy_tool_color_range_make_keys(GwyToolColorRange *tool,
+                               GwyDataView *data_view)
+{
+    GwyPixmapLayer *layer;
+    const gchar *dkey;
+    gchar key[32];
+    gint id;
+
+    if (!data_view) {
+        tool->key_min = tool->key_max = 0;
+        return;
+    }
+
+    layer = gwy_data_view_get_base_layer(data_view);
+    g_return_if_fail(GWY_IS_PIXMAP_LAYER(layer));
+    dkey = gwy_pixmap_layer_get_data_key(layer);
+    g_return_if_fail(dkey && dkey[0] == '/' && g_ascii_isdigit(dkey[1]));
+    id = atoi(dkey + 1);
+
+    g_snprintf(key, sizeof(key), "/%d/base/min", id);
+    tool->key_min = g_quark_from_string(key);
+    g_snprintf(key, sizeof(key), "/%d/base/max", id);
+    tool->key_max = g_quark_from_string(key);
 }
 
 static void
