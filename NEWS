@@ -1,4 +1,4 @@
-
+1.99.9.20060908
 
 2.0 (0000-00-00)
 Application:
@@ -6,8 +6,16 @@ Application:
   only when a mask is present (fixing crashes when they were activated without
   a mask).
 
+Libraries:
+- libgwydgets: GwyColorAxis behaviour for bad ranges was improved.
+
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
+- Color range: Crash upon tool switch when there was already a selection
+  was fixed.
+- Crop, Color range, Filters, Mask editor, Statistical function, Statistical
+  quantities: Wrong selection boundaries when it was drawn `backwards' were
+  fixed.
 
 
 1.99.9 (2006-09-07)
