@@ -614,7 +614,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         if (curve >= 0) {
             cmodel = gwy_graph_model_get_curve(gmodel, curve);
             _gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
-                                                  G_OBJECT(cmodel));
+                                                  cmodel);
             gtk_widget_show_all(GTK_WIDGET(area->area_dialog));
             gtk_window_present(GTK_WINDOW(area->area_dialog));
         }

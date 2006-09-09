@@ -527,11 +527,24 @@ label_change_cb(GwySciText *sci_text, GwyGraphAreaDialog *dialog)
 }
 
 void
-_gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel)
+_gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog,
+                                      GwyGraphCurveModel *cmodel)
 {
     GwyGraphAreaDialog *gadialog = GWY_GRAPH_AREA_DIALOG(dialog);
 
     gadialog->curve_model = cmodel;
+    if (gadialog->color_dialog) {
+        GtkWidget *colorsel;
+        GdkColor gcl;
+
+        gadialog->old_color = cmodel->color;
+        colorsel = GTK_COLOR_SELECTION_DIALOG(gadialog->color_dialog)->colorsel;
+        gwy_rgba_to_gdk_color(&cmodel->color, &gcl);
+        gtk_color_selection_set_previous_color(GTK_COLOR_SELECTION(colorsel),
+                                               &gcl);
+        gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(colorsel),
+                                              &gcl);
+    }
     refresh(gadialog);
 }
 

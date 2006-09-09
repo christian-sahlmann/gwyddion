@@ -23,6 +23,7 @@
 
 #include <gtk/gtkdialog.h>
 #include <libgwydgets/gwygraphbasics.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +52,7 @@ struct _GwyGraphAreaDialog {
     GtkWidget *color_dialog;
     GwyRGBA old_color;
 
-    GObject *curve_model;
+    GwyGraphCurveModel *curve_model;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -72,7 +73,7 @@ GtkWidget*  _gwy_graph_area_dialog_new     (void);
 
 G_GNUC_INTERNAL
 void        _gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog,
-                                                  GObject *cmodel);
+                                                  GwyGraphCurveModel *cmodel);
 
 G_END_DECLS
 
