@@ -1,0 +1,87 @@
+check-coding-style.py SOURCE-FILE.c
+
+    Checks whether coding style conforms to Gwyddion conventions.
+
+    Not everything is checked (e.g. indentation or naming), and occassionally
+    spurious errors are reported, but it gives an idea.
+
+
+documentation-stats.py <LOG-FILE
+translation-stats.py <LOG-FILE
+
+    Generate API documentation symbol coverage statistics and translation
+    statistics for http://gwyddion.net/resources.php from build logs
+    (more precisely from gtk-doc and gettext messages).
+
+
+dump-modules user-guide-modules >modules.xml
+
+    Dumps information about all installed Gwyddion modules in XML format.
+
+    user-guide-modules maps module names to particula user guide documents.
+
+
+gen-news.py <NEWS >NEWS.html
+
+    Generates http://gwyddion.net/news.php from NEWS file.
+
+
+gwyddion-night-build
+gwyddion-build-log
+
+    Performs nightly rebuild, extracts information from its logs.
+
+
+gwywin32.bat.in
+
+    Win32 nightly rebuild script template.
+
+
+indent.pro
+
+    An approximation of Gwyddion coding style as an indent settings file.
+    Note it is just an approximation, for example switch/case indentation
+    or operator placement is wrong because no indent option can do it right.
+
+
+mkenum.mk
+
+    An include file with common glib-mkenum make rules.  It is included in
+    libraries' makefiles.
+
+
+modules-web.xsl
+modules-web-nocss.xsl
+
+    Generate http://gwyddion.net/module-list.php and its plain expanded
+    version from modules.xml.
+
+
+stockgen.py
+
+    Updates libgwydgets/gwystock.h and libgwydgets/gwystock.c to match
+    pixmaps/Makefile.am.  Must be run from the top-level source directory.
+
+
+update-msvc.py
+
+    Updates makefile.msc in every source directory to match Makefile.am
+    and dependencies in .deps.  Must be run from the top-level source
+    directory after a successful project build as it relies on inspection
+    of outputs of compilation.
+
+
+update-potfiles.sh
+
+    Updates po/POTFILES.in to contain all source files (.c and .h) with
+    translatable strings.  Must be run from the top-level source directory.
+
+
+vim-syn-gen.py
+
+    A general script for creation of Vim C syntax file extensions from
+    gtk-doc documentation.  Used with conjuction of data/gwyddion-cfg.py
+    which contains configuration for Gwyddion.  See
+
+    http://trific.ath.cx/resources/vim/scripts/#vim-syn-gen
+
