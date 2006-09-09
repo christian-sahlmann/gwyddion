@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *

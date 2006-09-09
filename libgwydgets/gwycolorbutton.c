@@ -1,4 +1,6 @@
 /*
+ * @(#) $Id$
+ *
  * GTK - The GIMP Toolkit
  * Copyright (C) 1998, 1999 Red Hat, Inc.
  * All rights reserved.
