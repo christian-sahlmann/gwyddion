@@ -574,8 +574,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     if (child) {
         if (event->type == GDK_2BUTTON_PRESS
             && area->enable_user_input == TRUE) {
-            _gwy_graph_label_dialog_set_graph_data(area->label_dialog,
-                                                   G_OBJECT(gmodel));
+            _gwy_graph_label_dialog_set_graph_data(area->label_dialog, gmodel);
             gtk_widget_show_all(GTK_WIDGET(area->label_dialog));
         }
         else {

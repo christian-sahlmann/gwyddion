@@ -116,20 +116,18 @@ gwy_graph_label_dialog_finalize(GObject *object)
 static void
 refresh(GwyGraphLabelDialog *dialog)
 {
-    GwyGraphModel *model;
-
-    if (dialog->graph_model == NULL)
+    if (!dialog->graph_model)
         return;
 
-    model = GWY_GRAPH_MODEL(dialog->graph_model);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize),
-                             model->label_frame_thickness);
+                             dialog->graph_model->label_frame_thickness);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->reversed),
-                                 model->label_reverse);
+                                 dialog->graph_model->label_reverse);
 }
 
 void
-_gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
+_gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog,
+                                       GwyGraphModel *model)
 {
     GwyGraphLabelDialog *gadialog = GWY_GRAPH_LABEL_DIALOG(dialog);
 
@@ -140,26 +138,20 @@ _gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
 static void
 linesize_changed_cb(GtkObject *adj, GwyGraphLabelDialog *dialog)
 {
-    GwyGraphModel *model;
-
-    if (dialog->graph_model == NULL)
+    if (!dialog->graph_model)
         return;
 
-    model = GWY_GRAPH_MODEL(dialog->graph_model);
-    gwy_graph_model_set_label_frame_thickness(model,
+    gwy_graph_model_set_label_frame_thickness(dialog->graph_model,
                                               gwy_adjustment_get_int(adj));
 }
 
 static void
 reverse_changed_cb(GtkToggleButton *button, GwyGraphLabelDialog *dialog)
 {
-    GwyGraphModel *model;
-
-    if (dialog->graph_model == NULL)
+    if (!dialog->graph_model)
         return;
 
-    model = GWY_GRAPH_MODEL(dialog->graph_model);
-    gwy_graph_model_set_label_reverse(model,
+    gwy_graph_model_set_label_reverse(dialog->graph_model,
                                       gtk_toggle_button_get_active(button));
 }
 

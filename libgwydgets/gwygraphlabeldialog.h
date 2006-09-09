@@ -23,6 +23,7 @@
 
 #include <gtk/gtkdialog.h>
 #include <libgwydgets/gwygraphbasics.h>
+#include <libgwydgets/gwygraphmodel.h>
 
 G_BEGIN_DECLS
 
@@ -42,7 +43,7 @@ struct _GwyGraphLabelDialog {
     GtkObject *linesize;
     GtkWidget *reversed;
 
-    GObject *graph_model;
+    GwyGraphModel *graph_model;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -63,7 +64,7 @@ GtkWidget*  _gwy_graph_label_dialog_new      (void);
 
 G_GNUC_INTERNAL
 void        _gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog,
-                                                   GObject *model);
+                                                   GwyGraphModel *model);
 
 G_END_DECLS
 
