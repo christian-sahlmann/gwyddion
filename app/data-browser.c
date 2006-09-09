@@ -2163,17 +2163,21 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
         if (i) {
             g_snprintf(key, sizeof(key), "/%d", i);
             gwy_container_remove_by_prefix(data, key);
+            gwy_undo_container_remove(data, key);
         }
         else {
             /* TODO: should be done in one pass through the container */
             g_snprintf(key, sizeof(key), "/%d/data", i);
             gwy_container_remove_by_prefix(data, key);
+            gwy_undo_container_remove(data, key);
             g_snprintf(key, sizeof(key), "/%d/base", i);
             gwy_container_remove_by_prefix(data, key);
             g_snprintf(key, sizeof(key), "/%d/mask", i);
             gwy_container_remove_by_prefix(data, key);
+            gwy_undo_container_remove(data, key);
             g_snprintf(key, sizeof(key), "/%d/show", i);
             gwy_container_remove_by_prefix(data, key);
+            gwy_undo_container_remove(data, key);
             g_snprintf(key, sizeof(key), "/%d/select", i);
             gwy_container_remove_by_prefix(data, key);
             g_snprintf(key, sizeof(key), "/%d/meta", i);

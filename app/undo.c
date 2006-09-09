@@ -783,6 +783,8 @@ gwy_app_undo_list_free(GList *list)
             }
             /* FIXME: gwy_object_unref(level->items[i].object); */
         }
+        g_free(level->items);
+        g_free(level);
     }
     g_list_free(list);
 }
@@ -826,6 +828,77 @@ gwy_undo_get_for_data(GwyContainer *data,
     }
 
     return (GwyAppUndo*)l->data;
+}
+
+static GList*
+gwy_undo_container_remove_from_list(GList *list,
+                                    const gchar *prefix)
+{
+    guint i, j, len;
+    const gchar *key;
+    GList *l;
+
+    len = strlen(prefix);
+
+    for (l = list; l; l = g_list_next(l)) {
+        GwyAppUndoLevel *level = (GwyAppUndoLevel*)l->data;
+
+        for (i = j = 0; i < level->nitems; i++) {
+            key = g_quark_to_string(level->items[i].key);
+            if (g_str_has_prefix(key, prefix)
+                && (key[len] == '\0'
+                    || key[len] == '/')) {
+                g_value_unset(&level->items[i].value);
+            }
+            else {
+                if (j != i)
+                    level->items[j] = level->items[i];
+                j++;
+            }
+        }
+        /* Update nitems but don't realloc items, typically it's a waste of
+         * CPU */
+        level->nitems = j;
+
+        if (!level->nitems) {
+            g_free(level->items);
+            g_free(level);
+            l->data = NULL;
+        }
+    }
+
+    return g_list_remove_all(list, NULL);
+}
+
+/**
+ * gwy_undo_container_remove:
+ * @data: A data container.
+ * @prefix: Prefix to remove undo/redo information under.  Pass %NULL to remove
+ *          undo/redo information altogether.
+ *
+ * Removes undo/redo information for a data container.
+ **/
+void
+gwy_undo_container_remove(GwyContainer *data,
+                          const gchar *prefix)
+{
+    GwyAppUndo *appundo;
+
+    appundo = gwy_undo_get_for_data(data, FALSE);
+    if (!appundo)
+        return;
+
+    if (!prefix || !*prefix) {
+        /* Remove head item placed there by gwy_undo_get_for_data() */
+        container_list = g_list_delete_link(container_list, container_list);
+        gwy_app_undo_list_free(appundo->redo);
+        gwy_app_undo_list_free(appundo->undo);
+        g_free(appundo);
+        return;
+    }
+
+    appundo->undo = gwy_undo_container_remove_from_list(appundo->undo, prefix);
+    appundo->redo = gwy_undo_container_remove_from_list(appundo->redo, prefix);
 }
 
 /************************** Documentation ****************************/
