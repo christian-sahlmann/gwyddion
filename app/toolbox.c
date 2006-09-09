@@ -474,9 +474,9 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
             NULL
         },
         {
-            N_("/Module _Browser"),
+            N_("/Show _Data Browser"),
             NULL,
-            gwy_module_browser,
+            G_CALLBACK(gwy_app_show_data_browser),
             0,
             "<Item>",
             NULL
@@ -485,6 +485,14 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
             N_("/_Metadata Browser"),
             NULL,
             gwy_app_meta_browser,
+            0,
+            "<Item>",
+            NULL
+        },
+        {
+            N_("/Module _Browser"),
+            NULL,
+            gwy_module_browser,
             0,
             "<Item>",
             NULL
@@ -1006,7 +1014,7 @@ gwy_app_gl_view_maybe_cb(void)
 }
 
 GtkWidget*
-gwy_app_data_browser_create(void)
+gwy_app_show_data_browser(void)
 {
     GtkWindow *browser;
     GtkWidget *widget;

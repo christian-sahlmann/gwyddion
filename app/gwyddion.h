@@ -26,17 +26,16 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_app_toolbox_create            (void);
-GtkWidget* gwy_app_data_browser_create       (void);
-void       gwy_app_about                     (void);
-void       gwy_app_metadata_browser          (GwyContainer *data,
-                                              gint id);
-
-void       gwy_app_splash_create             (void);
-void       gwy_app_splash_close              (void);
-void       gwy_app_splash_set_message        (const gchar *message);
-void       gwy_app_splash_set_message_prefix (const gchar *prefix);
-void       gwy_app_splash_enable             (gboolean enable);
+GtkWidget* gwy_app_toolbox_create           (void);
+GtkWidget* gwy_app_show_data_browser        (void);
+void       gwy_app_about                    (void);
+void       gwy_app_metadata_browser         (GwyContainer *data,
+                                             gint id);
+void       gwy_app_splash_create            (void);
+void       gwy_app_splash_close             (void);
+void       gwy_app_splash_set_message       (const gchar *message);
+void       gwy_app_splash_set_message_prefix(const gchar *prefix);
+void       gwy_app_splash_enable            (gboolean enable);
 
 G_END_DECLS
 

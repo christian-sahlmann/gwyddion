@@ -2230,18 +2230,7 @@ gwy_app_data_browser_page_changed(GwyAppDataBrowser *browser,
 static gboolean
 gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
 {
-    GtkWidget *dialog;
-
-    dialog = gtk_message_dialog_new(GTK_WINDOW(browser->window),
-                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_WARNING,
-                                    GTK_BUTTONS_OK,
-                                    "FIXME: There is no way to get the "
-                                    "Data Browser window back once it is "
-                                    "closed.");
-    gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
-    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
-    gtk_widget_show_all(dialog);
+    gtk_widget_hide(browser->window);
 
     return TRUE;
 }

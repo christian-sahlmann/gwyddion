@@ -139,7 +139,7 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
     debug_time(timer, "create toolbox");
-    data_browser = gwy_app_data_browser_create();
+    data_browser = gwy_app_show_data_browser();
     debug_time(timer, "init data-browser");
     gwy_app_recent_file_list_update(NULL, NULL, NULL, 0);
     debug_time(timer, "create recent files menu");
