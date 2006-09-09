@@ -184,6 +184,13 @@ gwy_sci_text_get_property(GObject *object,
     }
 }
 
+/**
+ * gwy_sci_text_new:
+ *
+ * Creates a new scientific text entry.
+ *
+ * Returns: A newly created scientific text entry.
+ **/
 GtkWidget*
 gwy_sci_text_new(void)
 {
@@ -369,9 +376,9 @@ gwy_sci_text_button_some_pressed(GwySciText *sci_text,
 
 /**
  * gwy_sci_text_get_text:
- * @sci_text: A science text widget.
+ * @sci_text: A scientific text widget.
  *
- * Returns the text.
+ * Gets the text in a scientific text entry.
  *
  * The text is already in UTF-8 with all entities converted.
  *
@@ -392,13 +399,14 @@ gwy_sci_text_get_text(GwySciText *sci_text)
 
 /**
  * gwy_sci_text_set_text:
- * @sci_text: A science text widget.
+ * @sci_text: A scientific text widget.
  * @new_text: The text to display.
  *
- * Sets the text a science text widget displays.
+ * Sets the text a scientific text widget displays.
  *
- * It can contain both UTF-8 and entities, but attempt to convert UTF-8
- * `back' to entities is made.
+ * It can contain both UTF-8 and entities.  UTF-8 characters corresponding to
+ * known entities are converted to entities, other characters are left as they
+ * are.
  **/
 void
 gwy_sci_text_set_text(GwySciText *sci_text, const gchar *new_text)
@@ -408,6 +416,14 @@ gwy_sci_text_set_text(GwySciText *sci_text, const gchar *new_text)
 
 }
 
+/**
+ * gwy_sci_text_get_entry:
+ * @sci_text: A scientific text widget.
+ *
+ * Gets the entry widget of a scientific text entry.
+ *
+ * Returns: The entry widget, no reference is added.
+ **/
 GtkWidget*
 gwy_sci_text_get_entry(GwySciText *sci_text)
 {
@@ -415,6 +431,14 @@ gwy_sci_text_get_entry(GwySciText *sci_text)
     return sci_text->entry;
 }
 
+/**
+ * gwy_sci_text_get_has_preview:
+ * @sci_text: A scientific text widget.
+ *
+ * Tests the display of a preview in a scientific text entry.
+ *
+ * Returns: %TRUE if there is a preview, %FALSE if preview is not shown.
+ **/
 gboolean
 gwy_sci_text_get_has_preview(GwySciText *sci_text)
 {
@@ -422,6 +446,13 @@ gwy_sci_text_get_has_preview(GwySciText *sci_text)
     return sci_text->has_preview;
 }
 
+/**
+ * gwy_sci_text_set_has_preview:
+ * @sci_text: A scientific text widget.
+ * @has_preview: %TRUE to display a preview, %FALSE to disable it.
+ *
+ * Sets the display of a preview in a scientific text entry.
+ **/
 void
 gwy_sci_text_set_has_preview(GwySciText *sci_text,
                              gboolean has_preview)

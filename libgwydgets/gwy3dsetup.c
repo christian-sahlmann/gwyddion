@@ -487,6 +487,13 @@ gwy_3d_setup_duplicate_real(GObject *object)
     return (GObject*)duplicate;
 }
 
+/**
+ * gwy_3d_setup_new:
+ *
+ * Creates a new 3D view setup with default values.
+ *
+ * Returns: A newly created 3D view setup.
+ **/
 Gwy3DSetup*
 gwy_3d_setup_new(void)
 {

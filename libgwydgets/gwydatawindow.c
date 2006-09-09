@@ -684,6 +684,15 @@ gwy_data_window_get_data_name(GwyDataWindow *data_window)
     return data_window->data_name->str;
 }
 
+/**
+ * gwy_data_window_set_data_name:
+ * @data_window: A data window.
+ * @data_name: New data name.
+ *
+ * Sets the data name of a data window.
+ *
+ * The data name is used in the window's title.
+ **/
 void
 gwy_data_window_set_data_name(GwyDataWindow *data_window,
                               const gchar *data_name)

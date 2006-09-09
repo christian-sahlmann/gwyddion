@@ -703,6 +703,15 @@ gwy_layer_basic_get_presentation_key(GwyLayerBasic *basic_layer)
     return g_quark_to_string(basic_layer->show_key);
 }
 
+/**
+ * gwy_layer_basic_get_has_presentation:
+ * @basic_layer: A basic data view layer.
+ *
+ * Tests whether a basic layer displays a presentation instead of the data.
+ *
+ * Returns: %TRUE if the layer has a presentation, %FALSE it it displays the
+ *          data.
+ **/
 gboolean
 gwy_layer_basic_get_has_presentation(GwyLayerBasic *basic_layer)
 {

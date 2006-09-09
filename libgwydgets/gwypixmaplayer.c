@@ -184,7 +184,7 @@ gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
 }
 
 /**
- * gwy_data_view_layer_wants_repaint:
+ * gwy_pixmap_layer_wants_repaint:
  * @pixmap_layer: A pixmap data view layer.
  *
  * Checks whether a pixmap layer wants repaint.
