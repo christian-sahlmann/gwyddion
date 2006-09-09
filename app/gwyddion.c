@@ -75,7 +75,7 @@ static GwyAppDebugOptions debug_options = {
 int
 main(int argc, char *argv[])
 {
-    GtkWidget *toolbox, *data_browser;
+    GtkWidget *toolbox;
     gchar **module_dirs;
     gchar *settings_file, *recent_file_file;
     gboolean has_settings, settings_ok = FALSE;
@@ -139,7 +139,7 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
     debug_time(timer, "create toolbox");
-    data_browser = gwy_app_show_data_browser();
+    gwy_app_data_browser_restore();
     debug_time(timer, "init data-browser");
     gwy_app_recent_file_list_update(NULL, NULL, NULL, 0);
     debug_time(timer, "create recent files menu");

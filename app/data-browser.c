@@ -157,6 +157,8 @@ static GList*   gwy_app_data_proxy_get_3d   (GwyAppDataProxy *proxy,
 static const gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
+static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
+static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
@@ -2230,7 +2232,7 @@ gwy_app_data_browser_page_changed(GwyAppDataBrowser *browser,
 static gboolean
 gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
 {
-    gtk_widget_hide(browser->window);
+    gwy_app_data_browser_hide_real(browser);
 
     return TRUE;
 }
@@ -3562,25 +3564,84 @@ gwy_app_copy_data_items(GwyContainer *source,
 /**
  * gwy_app_data_browser_get_window:
  *
- * Gets the data browser window.
+ * Shows the data browser window.
  *
- * If the window does not exist, it is created (though not shown) as a side
- * effect.
- *
- * Returns: The data browser window.
+ * If the window does not exist, it is created.
  **/
-GtkWidget*
-gwy_app_data_browser_get_window(void)
+void
+gwy_app_data_browser_show(void)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, "/app/data-browser/visible",
+                                      TRUE);
+    gwy_app_data_browser_restore();
+}
+
+/**
+ * gwy_app_data_browser_restore:
+ *
+ * Restores the data browser window.
+ *
+ * The data browser window is always created (if it does not exist).
+ * If it should be visible according to settings, is shown at the saved
+ * position.  Otherwise it is kept hidden until gwy_app_data_browser_show().
+ **/
+void
+gwy_app_data_browser_restore(void)
 {
     GwyAppDataBrowser *browser;
+    GwyContainer *settings;
+    gboolean visible = TRUE;
 
     browser = gwy_app_get_data_browser();
     if (!browser->window)
         gwy_app_data_browser_construct_window(browser);
 
-    return browser->window;
+    settings = gwy_app_settings_get();
+    gwy_container_gis_boolean_by_name(settings, "/app/data-browser/visible",
+                                      &visible);
+
+    if (visible)
+        gwy_app_data_browser_show_real(browser);
 }
 
+static void
+gwy_app_data_browser_show_real(GwyAppDataBrowser *browser)
+{
+    GtkWindow *window;
+
+    window = GTK_WINDOW(browser->window);
+
+    gwy_app_restore_window_position(window, "/app/data-browser", FALSE);
+    gtk_widget_show_all(browser->window);
+    gtk_window_present(window);
+    gwy_app_restore_window_position(window, "/app/data-browser", FALSE);
+}
+
+static void
+gwy_app_data_browser_hide_real(GwyAppDataBrowser *browser)
+{
+    GwyContainer *settings;
+
+    if (!browser || !browser->window || !GTK_WIDGET_VISIBLE(browser->window))
+        return;
+
+    gwy_app_save_window_position(GTK_WINDOW(browser->window),
+                                 "/app/data-browser", TRUE, TRUE);
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, "/app/data-browser/visible",
+                                      FALSE);
+    gtk_widget_hide(browser->window);
+}
+
+/**
+ * gwy_app_data_browser_shut_down:
+ *
+ * Releases data browser resources and saves its state.
+ **/
 void
 gwy_app_data_browser_shut_down(void)
 {
@@ -3592,7 +3653,7 @@ gwy_app_data_browser_shut_down(void)
         return;
 
     /* FIXME: Not very logical when loading occurs in main app. */
-    if (browser->window)
+    if (browser->window && GTK_WIDGET_VISIBLE(browser->window))
         gwy_app_save_window_position(GTK_WINDOW(browser->window),
                                      "/app/data-browser", TRUE, TRUE);
 
