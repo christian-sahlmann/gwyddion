@@ -56,83 +56,66 @@ enum {
 
 static guint area_signals[LAST_SIGNAL] = { 0 };
 
-/* Forward declarations - widget related*/
-static void     gwy_graph_area_finalize             (GObject *object);
+/* Forward declarations - widget related */
+static void     gwy_graph_area_finalize      (GObject *object);
+static void     gwy_graph_area_realize       (GtkWidget *widget);
+static void     gwy_graph_area_unrealize     (GtkWidget *widget);
+static void     gwy_graph_area_size_allocate (GtkWidget *widget,
+                                              GtkAllocation *allocation);
+static gboolean gwy_graph_area_expose        (GtkWidget *widget,
+                                              GdkEventExpose *event);
+static gboolean gwy_graph_area_button_press  (GtkWidget *widget,
+                                              GdkEventButton *event);
+static gboolean gwy_graph_area_button_release(GtkWidget *widget,
+                                              GdkEventButton *event);
+static gboolean gwy_graph_area_leave_notify  (GtkWidget *widget,
+                                              GdkEventCrossing *event);
+static gint     gwy_graph_area_find_curve    (GwyGraphArea *area,
+                                              gdouble x,
+                                              gdouble y);
+static gint     gwy_graph_area_find_selection(GwyGraphArea *area,
+                                              gdouble x,
+                                              gdouble y,
+                                              int *btype);
+static gint     gwy_graph_area_find_point    (GwyGraphArea *area,
+                                              gdouble x,
+                                              gdouble y);
+static gint     gwy_graph_area_find_line     (GwyGraphArea *area,
+                                              gdouble position);
+static void     gwy_graph_area_draw_zoom     (GdkDrawable *drawable,
+                                              GdkGC *gc,
+                                              GwyGraphArea *area);
+static void     selection_changed_cb         (GwyGraphArea *area);
 
-static void     gwy_graph_area_realize              (GtkWidget *widget);
-static void     gwy_graph_area_unrealize            (GtkWidget *widget);
-static void     gwy_graph_area_size_allocate        (GtkWidget *widget,
-                                                     GtkAllocation *allocation);
-
-static gboolean gwy_graph_area_expose               (GtkWidget *widget,
-                                                      GdkEventExpose *event);
-static gboolean gwy_graph_area_button_press         (GtkWidget *widget,
-                                                      GdkEventButton *event);
-static gboolean gwy_graph_area_button_release       (GtkWidget *widget,
-                                                      GdkEventButton *event);
-static gboolean gwy_graph_area_leave_notify         (GtkWidget *widget,
-                                                      GdkEventCrossing *event);
-
-static gint     gwy_graph_area_find_curve           (GwyGraphArea *area,
-                                                      gdouble x, gdouble y);
-static gint     gwy_graph_area_find_selection       (GwyGraphArea *area,
-                                                      gdouble x, gdouble y,
-                                                      int *btype);
-static gint     gwy_graph_area_find_point           (GwyGraphArea *area,
-                                                      gdouble x, gdouble y);
-static gint     gwy_graph_area_find_line            (GwyGraphArea *area,
-                                                      gdouble position);
-
-static void     gwy_graph_area_draw_zoom            (GdkDrawable *drawable,
-                                                       GdkGC *gc,
-                                                       GwyGraphArea *area);
-static void     selection_changed_cb                (GwyGraphArea *area);
-
-/* Forward declarations - area related*/
-static gdouble  scr_to_data_x                       (GtkWidget *widget,
-                                                     gint scr);
-static gdouble  scr_to_data_y                       (GtkWidget *widget,
-                                                     gint scr);
-static gint     data_to_scr_x                       (GtkWidget *widget,
-                                                     gdouble data);
-static gint     data_to_scr_y                       (GtkWidget *widget,
-                                                     gdouble data);
-static void     gwy_graph_area_entry_cb           (GwyGraphAreaDialog *dialog,
-                                                     gint arg1,
-                                                     gpointer user_data);
-static void     gwy_graph_label_entry_cb          (GwyGraphLabelDialog *dialog,
-                                                     gint arg1,
-                                                     gpointer user_data);
-
-static void    label_geometry_changed_cb            (GtkWidget *area,
-                                                     GtkAllocation *label_allocation);
-
-static void    gwy_graph_area_repos_label           (GwyGraphArea *area, 
-                                                     GtkAllocation *area_allocation,
-                                                     GtkAllocation *label_allocation);
-
-
-typedef struct _GtkLayoutChild   GtkLayoutChild;
-
-struct _GtkLayoutChild {
-    GtkWidget *widget;
-    gint x;
-    gint y;
-};
-
-static const gint N_MAX_POINTS = 10;
-
-static gboolean        gwy_graph_area_motion_notify     (GtkWidget *widget,
-                                                        GdkEventMotion *event);
-static GtkLayoutChild* gwy_graph_area_find_child        (GwyGraphArea *area,
-                                                        gint x,
-                                                        gint y);
-static void            gwy_graph_area_draw_child_rectangle  (GwyGraphArea *area);
-static void            gwy_graph_area_clamp_coords_for_child(GwyGraphArea *area,
-                                                        gint *x,
-                                                        gint *y);
-
-/* Local data */
+/* Forward declarations - area related */
+static gdouble    scr_to_data_x               (GtkWidget *widget,
+                                               gint scr);
+static gdouble    scr_to_data_y               (GtkWidget *widget,
+                                               gint scr);
+static gint       data_to_scr_x               (GtkWidget *widget,
+                                               gdouble data);
+static gint       data_to_scr_y               (GtkWidget *widget,
+                                               gdouble data);
+static void       gwy_graph_area_entry_cb     (GwyGraphAreaDialog *dialog,
+                                               gint arg1,
+                                               gpointer user_data);
+static void       gwy_graph_label_entry_cb    (GwyGraphLabelDialog *dialog,
+                                               gint arg1,
+                                               gpointer user_data);
+static void       label_geometry_changed_cb   (GtkWidget *area,
+                                               GtkAllocation *label_allocation);
+static void       gwy_graph_area_repos_label  (GwyGraphArea *area,
+                                               GtkAllocation *area_allocation,
+                                               GtkAllocation *label_allocation);
+static gboolean   gwy_graph_area_motion_notify(GtkWidget *widget,
+                                               GdkEventMotion *event);
+static GtkWidget* gwy_graph_area_find_child   (GwyGraphArea *area,
+                                               gint x,
+                                               gint y);
+static void gwy_graph_area_draw_child_rectangle(GwyGraphArea *area);
+static void gwy_graph_area_clamp_coords_for_child(GwyGraphArea *area,
+                                                  gint *x,
+                                                  gint *y);
 
 G_DEFINE_TYPE(GwyGraphArea, gwy_graph_area, GTK_TYPE_LAYOUT)
 
@@ -570,7 +553,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *cmodel;
     GtkAllocation *allocation;
-    GtkLayoutChild *child;
+    GtkWidget *child;
     gint x, y, curve, selection, nc;
     gdouble dx, dy, selection_pointdata[2], selection_areadata[2];
     gdouble selection_zoomdata[4];
@@ -596,7 +579,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             gtk_widget_show_all(GTK_WIDGET(area->label_dialog));
         }
         else {
-            area->active = child->widget;
+            area->active = child;
             area->x0 = x;
             area->y0 = y;
             area->xoff = 0;
@@ -1260,23 +1243,25 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     return -1;
 }
 
-
-static GtkLayoutChild*
+static GtkWidget*
 gwy_graph_area_find_child(GwyGraphArea *area, gint x, gint y)
 {
-    GList *chpl;
-    for (chpl = GTK_LAYOUT(area)->children; chpl; chpl = g_list_next(chpl)) {
-        GtkLayoutChild *child;
-        GtkAllocation *allocation;
+    GList *children, *l;
 
-        child = (GtkLayoutChild*)chpl->data;
-        allocation = &child->widget->allocation;
-        if (x >= allocation->x
-            && x < allocation->x + allocation->width
-            && y >= allocation->y
-            && y < allocation->y + allocation->height)
+    children = gtk_container_get_children(GTK_CONTAINER(area));
+    for (l = children; l; l = g_list_next(l)) {
+        GtkWidget *child;
+        GtkAllocation *alloc;
+
+        child = GTK_WIDGET(l->data);
+        alloc = &child->allocation;
+        if (x >= alloc->x && x < alloc->x + alloc->width
+            && y >= alloc->y && y < alloc->y + alloc->height) {
+            g_list_free(children);
             return child;
+        }
     }
+    g_list_free(children);
     return NULL;
 }
 
