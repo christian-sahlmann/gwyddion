@@ -1,16 +1,16 @@
-- 2.0: Make data field and line internals visible again
 - 2.0: Fix library versioning
 - 2.0: Update module -> user guide mapping
 - 2.0: Remove Old metadata warning
-- Deleted channels can leave bogus undo levels behind
-- 3D window-view param sync not complete (or is it yet?)
-- 3D window title is not updated on data title update
+- 2.0: Disable module naming warning
 - Fix facet level to do nothing instead of dumping NaNs on bad data.
-- Check whether 1.x still can read new files
-- Make saved gwy files contain the new file name, not previous file name
+- Graph axes don't initially request correct sizes for labels
+- Graph minor and major ticks are misaligned
+- Graph legend seems to be present even if it's set invisible -- it cannot be
+  seen but it can be moved, try Profiles
 - Common functions in file modules, try to reduce duplication:
   highly-nonsquare test
   channel title guess from units
+- Add more supported files to MIME types (gwyddion.xml)
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
@@ -20,8 +20,8 @@
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
   complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
-  libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType,
-              GwyComputationStateType, GwyDWTDenoiseType, GwyTipType
+  libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType, GwyDWTDenoiseType,
+              GwyTipType
   libgwydgets: GwyAxisScaleFormat, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
