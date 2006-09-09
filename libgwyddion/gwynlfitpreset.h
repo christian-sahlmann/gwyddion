@@ -76,7 +76,7 @@ GwyNLFitter*  gwy_nlfit_preset_fit           (GwyNLFitPreset *preset,
                                               gint n_dat,
                                               const gdouble *x,
                                               const gdouble *y,
-                                              gdouble *param,
+                                              gdouble *params,
                                               gdouble *err,
                                               const gboolean *fixed_param);
 GwyInventory* gwy_nlfit_presets              (void);

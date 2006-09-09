@@ -1361,6 +1361,23 @@ gwy_nlfit_preset_get_nparams(GwyNLFitPreset* preset)
     return preset->builtin->nparams;
 }
 
+/**
+ * gwy_nlfit_preset_guess:
+ * @preset: A NL fitter function preset.
+ * @n_dat: The number of data points (number of items in @x and @y).
+ * @x: Abscissa points.
+ * @y: Ordinate points.
+ * @params: The array to fill with estimated parameter values.  It has to be
+ *          at least gwy_nlfit_preset_get_nparams() long.
+ * @fres: Set to %TRUE if succeeds, %FALSE on failure.
+ *
+ * Performs initial parameter estimate for a NL fitter.
+ *
+ * The initial estimate method depends on the function used.  There is no
+ * absolute guarantee of quality, however if the data point approximately match
+ * the fitted function the fit would typically converge from the returned
+ * estimate.
+ **/
 void
 gwy_nlfit_preset_guess(GwyNLFitPreset *preset,
                        gint n_dat,
@@ -1373,6 +1390,28 @@ gwy_nlfit_preset_guess(GwyNLFitPreset *preset,
     preset->builtin->guess(n_dat, x, y, params, fres);
 }
 
+/**
+ * gwy_nlfit_preset_fit:
+ * @preset: A NL fitter function preset.
+ * @fitter: A Marquardt-Levenberg nonlinear fitter already initialized for
+ *          @preset's function, or %NULL.
+ * @n_dat: The number of data points (number of items in @x and @y).
+ * @x: Abscissa points.
+ * @y: Ordinate points.
+ * @params: Initial parameter estimate (the number of parameters depends on
+ *          the fitted preset and it can be obtained with
+ *          gwy_nlfit_preset_get_nparams()).
+ * @err: Array to store parameter errros, may be %NULL.
+ * @fixed_param: Which parameters should be treated as fixed (set
+ *               corresponding element to %TRUE for them).  May be %NULL if
+ *               all parameters are variable.
+ *
+ * Performs a nonlinear fit with a preset.
+ *
+ * See gwy_math_nlfit_fit_full() for details.
+ *
+ * Returns: Either @fitter itself, or a newly created fitter if it was %NULL.
+ **/
 GwyNLFitter*
 gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
                      GwyNLFitter *fitter,
