@@ -37,7 +37,7 @@
 #define GWY_TOOL_PROFILE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_PROFILE, GwyToolProfileClass))
 
 enum {
-    NLINES = 12,
+    NLINES = 18,
     MAX_THICKNESS = 128,
     MIN_RESOLUTION = 4,
     MAX_RESOLUTION = 1024
@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
