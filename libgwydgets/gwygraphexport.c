@@ -73,7 +73,7 @@ gwy_graph_export_pixmap(GwyGraph *graph,
                                         height - topheight - bottomheight,
                                         graph->area);
 
-    /*plot axis*/
+    /* Draw axes */
     gwy_axis_draw_on_drawable(graph->axis_top, pixmap, gc,
                               rightwidth, 0,
                               width - rightwidth - leftwidth, topheight);
@@ -94,11 +94,13 @@ gwy_graph_export_pixmap(GwyGraph *graph,
                                            labelx, labely, labelw, labelh,
                                            graph->area->lab);
 
-    pixbuf = gdk_pixbuf_get_from_drawable(NULL,
-                                          pixmap,
-                                          cmap,
+    pixbuf = gdk_pixbuf_get_from_drawable(NULL, pixmap, cmap,
                                           0, 0, 0, 0,
                                           -1, -1);
+
+    g_object_unref(layout);
+    g_object_unref(context);
+
     return pixbuf;
 
 }
