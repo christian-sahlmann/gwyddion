@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ..
+<[[:SELF:]]>
 <[[:MODULES:]]>
 SUBDIRS = file graph layer process tools
 

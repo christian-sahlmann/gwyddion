@@ -3,7 +3,7 @@
 jpkscan_module = jpkscan.la
 spml_module = spml.la
 
-TOP_SRCDIR = ..\..
+<[[:SELF:]]>
 MOD_TYPE = file
 <[[:MODULES:]]>
 

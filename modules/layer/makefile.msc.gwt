@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ../..
+<[[:SELF:]]>
 MOD_TYPE = layer
 <[[:MODULES:]]>
 

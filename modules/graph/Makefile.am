@@ -28,12 +28,12 @@ AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
 if MODULE_DEPENDENCIES
 module_libadd = \
-	$(top_builddir)/app/libgwyapp.la		\
-	$(top_builddir)/libdraw/libgwydraw.la		\
-	$(top_builddir)/libgwyddion/libgwyddion.la	\
-	$(top_builddir)/libgwydgets/libgwydgets.la	\
-	$(top_builddir)/libgwymodule/libgwymodule.la	\
-	$(top_builddir)/libprocess/libgwyprocess.la	\
+	$(top_builddir)/app/libgwyapp2.la \
+	$(top_builddir)/libdraw/libgwydraw2.la \
+	$(top_builddir)/libgwyddion/libgwyddion2.la \
+	$(top_builddir)/libgwydgets/libgwydgets2.la \
+	$(top_builddir)/libgwymodule/libgwymodule2.la \
+	$(top_builddir)/libprocess/libgwyprocess2.la \
 	@GTK_LIBS@
 endif
 
