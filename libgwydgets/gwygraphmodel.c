@@ -1339,15 +1339,20 @@ gwy_graph_model_set_axis_label(GwyGraphModel *model,
 /**
  * gwy_graph_model_export_ascii:
  * @model: A graph model.
- * @export_units: export units in the column header
- * @export_labels: export labels in the column header
- * @export_metadata: export all graph metadata within file header
- * @export_style: specifies the file format to export to (e. g. plain, csv,
- * gnuplot, etc.)
+ * @export_units: %TRUE to export units in the column header.
+ * @export_labels: %TRUE to export labels in the column header.
+ * @export_metadata: %TRUE to export all graph metadata within file header.
+ * @export_style: File format subtype to export to (e. g. plain, csv, gnuplot,
+ *                etc.).
+ * @string: A string to append the text dump to, or %NULL to allocate a new
+ *          string.
  *
  * Exports a graph model data to a file.
  *
  * The export format is specified by parameter @export_style.
+ *
+ * Returns: Either @string itself if it was not %NULL, or a newly allocated
+ *          #GString.
  **/
 GString*
 gwy_graph_model_export_ascii(GwyGraphModel *model,
@@ -1364,17 +1369,22 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
     GString *labels, *descriptions, *units;
     gint i, j, max, ndata;
 
+    if (!string)
+        string = g_string_new(NULL);
+
     if (export_units) {
         xaverage = (model->x_max + model->x_min)/2;
         xrange = model->x_max - model->x_min;
-        xformat = gwy_si_unit_get_format(model->x_unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                        MAX(xaverage, xrange), xformat);
+        xformat = gwy_si_unit_get_format(model->x_unit,
+                                         GWY_SI_UNIT_FORMAT_MARKUP,
+                                         MAX(xaverage, xrange), xformat);
         xmult = xformat->magnitude;
 
         yaverage = (model->y_max + model->y_min)/2;
         yrange = model->y_max - model->y_min;
-        yformat = gwy_si_unit_get_format(model->y_unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                        MAX(yaverage, yrange), yformat);
+        yformat = gwy_si_unit_get_format(model->y_unit,
+                                         GWY_SI_UNIT_FORMAT_MARKUP,
+                                         MAX(yaverage, yrange), yformat);
         ymult = yformat->magnitude;
     }
     else {
@@ -1401,9 +1411,12 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                 g_string_append_printf(units, "[%s]     [%s]         ",
                                        xformat->units, yformat->units);
         }
-        if (export_metadata) g_string_append_printf(string, "%s\n", descriptions->str);
-        if (export_labels) g_string_append_printf(string, "%s\n", labels->str);
-        if (export_units) g_string_append_printf(string, "%s\n", units->str);
+        if (export_metadata)
+            g_string_append_printf(string, "%s\n", descriptions->str);
+        if (export_labels)
+            g_string_append_printf(string, "%s\n", labels->str);
+        if (export_units)
+            g_string_append_printf(string, "%s\n", units->str);
         g_string_free(descriptions, TRUE);
         g_string_free(labels, TRUE);
         g_string_free(units, TRUE);
@@ -1420,9 +1433,11 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                 cmodel = g_ptr_array_index(model->curves, i);
                 if (gwy_graph_curve_model_get_ndata(cmodel) > j)
                     g_string_append_printf(string, "%g  %g            ",
-                            cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
+                                           cmodel->xdata[j]/xmult,
+                                           cmodel->ydata[j]/ymult);
                 else
-                    g_string_append_printf(string, "-          -              ");
+                    g_string_append_printf(string,
+                                           "-          -              ");
             }
             g_string_append_printf(string, "\n");
         }
@@ -1432,16 +1447,19 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         for (i = 0; i < model->curves->len; i++) {
             cmodel = g_ptr_array_index(model->curves, i);
             if (export_metadata)
-                g_string_append_printf(string, "# %s\n", cmodel->description->str);
+                g_string_append_printf(string, "# %s\n",
+                                       cmodel->description->str);
             if (export_labels)
                 g_string_append_printf(string, "# %s      %s\n",
-                        model->bottom_label->str, model->left_label->str);
+                                       model->bottom_label->str,
+                                       model->left_label->str);
             if (export_units)
                 g_string_append_printf(string, "# [%s]    [%s]\n",
-                        xformat->units, yformat->units);
+                                       xformat->units, yformat->units);
             for (j = 0; j < cmodel->n; j++)
                 g_string_append_printf(string, "%g   %g\n",
-                        cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
+                                       cmodel->xdata[j]/xmult,
+                                       cmodel->ydata[j]/ymult);
             g_string_append_printf(string, "\n\n");
         }
 
@@ -1486,7 +1504,8 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                 cmodel = g_ptr_array_index(model->curves, i);
                 if (gwy_graph_curve_model_get_ndata(cmodel) > j)
                     g_string_append_printf(string, "%g;%g;",
-                            cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
+                                           cmodel->xdata[j]/xmult,
+                                           cmodel->ydata[j]/ymult);
                 else
                     g_string_append_printf(string, ";;");
             }
@@ -1495,6 +1514,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         break;
 
         default:
+        g_return_val_if_reached(string);
         break;
     }
 
