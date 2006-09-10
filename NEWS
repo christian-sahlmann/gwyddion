@@ -1,13 +1,27 @@
-1.99.9.20060908
+1.99.9.20060910
 
 2.0 (0000-00-00)
 Application:
 - Edit/Mask color menu item and similar right-click menu item are sensitive
   only when a mask is present (fixing crashes when they were activated without
   a mask).
+- Data browser window can be closed, Meta/Show Data Browser displays it again
+  and/or raises and deminimizes it
+- 3D window reflects channel title changes.
 
 Libraries:
+- Unix shared library versioning was switched back to normal, with libgwyfoo2
+  as the base name (that is soname versions start from 0 again).
 - libgwydgets: GwyColorAxis behaviour for bad ranges was improved.
+- libgwydgets: Set Curve Color dialog is updated properly upon switch to
+  another curve.
+- libgwydgets: Text graph export functions accept NULL initial string, bogus
+  pixbuf argument was removed from pixmap export.
+- libgwydgets: foo_draw_on_drawable() graph component methods have the object
+  as their first argument, as is usual; duplicite nouns were removed from
+  their names.
+- libgwydgets: Wrong position of the bottom axis label on exported pixmaps was
+  fixed.
 
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
@@ -15,6 +29,8 @@ Modules:
   was fixed.
 - Crop, Color range, Filters, Mask editor, Statistical function, Statistical
   quantities: Wrong selection boundaries when it was drawn `backwards' were
+  fixed.
+- Graph exports: User interface was made more consistent, memory leaks were
   fixed.
 
 
