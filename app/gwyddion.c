@@ -67,6 +67,7 @@ static void warn_broken_settings_file(GtkWidget *parent,
 static void gwy_app_init             (int *argc,
                                       char ***argv);
 static void gwy_app_set_window_icon  (void);
+static void gwy_app_check_version    (void);
 
 static GwyAppDebugOptions debug_options = {
     FALSE, FALSE
@@ -83,6 +84,7 @@ main(int argc, char *argv[])
     GTimer *timer;
 
     timer = g_timer_new();
+    gwy_app_check_version();
     process_preinit_options(&argc, &argv, &debug_options);
     gwy_debug_objects_enable(debug_options.objects);
     /* TODO: handle failure */
@@ -451,6 +453,15 @@ gwy_app_set_window_icon(void)
     }
     g_free(filename);
     g_free(p);
+}
+
+static void
+gwy_app_check_version(void)
+{
+    if (!gwy_strequal(GWY_VERSION_STRING, gwy_version_string())) {
+        g_warning("Application and library versions do not match: %s vs. %s",
+                  GWY_VERSION_STRING, gwy_version_string());
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
