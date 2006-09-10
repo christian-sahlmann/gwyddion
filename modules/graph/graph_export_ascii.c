@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,58 +29,40 @@
 #include <app/gwyapp.h>
 
 typedef struct {
-    GtkWidget *preference;
-    GtkWidget *check_labels;
-    GtkWidget *check_units;
-    GtkWidget *check_metadata;
-
     gboolean units;
     gboolean labels;
     gboolean metadata;
     GwyGraphModelExportStyle style;
-
-    GwyGraphModel *model;
-} ExportControls;
-
+} ExportParameters;
 
 static gboolean module_register          (void);
 static void     export                   (GwyGraph *graph);
-static gboolean export_dialog            (GwyGraph *graph);
-static void     export_dialog_closed_cb  (GwyGraph *graph);
-static void     export_dialog_response_cb(GtkDialog *pdialog,
-                                          gint response,
-                                          GwyGraph *graph);
-static void     units_changed_cb         (ExportControls *pcontrols);
-static void     labels_changed_cb        (ExportControls *pcontrols);
-static void     metadata_changed_cb      (ExportControls *pcontrols);
-static void     style_cb                 (GtkWidget *combo);
-static void     load_args                (GwyContainer *container,
-                                          ExportControls *pcontrols);
-static void     save_args                (GwyContainer *container,
-                                          ExportControls *pcontrols);
+static void     export_dialog            (GwyGraph *graph,
+                                          ExportParameters *params);
+static void     export_dialog_choose_file(GwyGraph *graph,
+                                          ExportParameters *params);
+static void     boolean_changed_cb       (GtkToggleButton *check,
+                                          gboolean *value);
+static void     load_args                (GwyContainer *settings,
+                                          ExportParameters *params);
+static void     save_args                (GwyContainer *settings,
+                                          ExportParameters *params);
 
-
-GwyEnum style_type[] = {
+static const GwyEnum style_type[] = {
    { N_("Plain text"),             GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN,   },
    { N_("Gnuplot friendly"),       GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT, },
    { N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV,     },
    { N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN,  },
 };
 
-/* XXX XXX XXX XXX XXX This is absolute bogus. The dialog should be modal.
- * If not, it should be possible to have it open for arbitrary number of
- * graphs at once. */
-static GtkWidget *dialog = NULL;
-static ExportControls controls;
-
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Graph ASCII export."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2005",
+    "2006",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -101,27 +83,21 @@ module_register(void)
 static void
 export(GwyGraph *graph)
 {
+    ExportParameters params;
     GwyContainer *settings;
 
-    if (!graph) {
-        if (dialog)
-            gtk_widget_destroy(dialog);
-        dialog = NULL;
-        return;
-    }
     settings = gwy_app_settings_get();
-    load_args(settings, &controls);
-
-
-    if (!dialog)
-        export_dialog(graph);
+    load_args(settings, &params);
+    export_dialog(graph, &params);
+    save_args(settings, &params);
 }
 
-/* FIXME: the return value is useless */
-static gboolean
-export_dialog(GwyGraph *graph)
+static void
+export_dialog(GwyGraph *graph,
+              ExportParameters *params)
 {
-    controls.model = graph->graph_model;
+    GtkWidget *dialog, *check, *combo;
+    GtkBox *vbox;
 
     dialog = gtk_dialog_new_with_buttons(_("Export ASCII"),
                                          NULL,
@@ -132,132 +108,111 @@ export_dialog(GwyGraph *graph)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    g_signal_connect_swapped(dialog, "delete_event",
-                             G_CALLBACK(export_dialog_closed_cb), graph);
-    g_signal_connect(dialog, "response",
-                           G_CALLBACK(export_dialog_response_cb),
-                           graph);
+    vbox = GTK_BOX(GTK_DIALOG(dialog)->vbox);
 
-    g_signal_connect_swapped(graph, "destroy",
-                             G_CALLBACK(export_dialog_closed_cb), graph);
+    combo = gwy_enum_combo_box_new(style_type, G_N_ELEMENTS(style_type),
+                                   G_CALLBACK(gwy_enum_combo_box_update_int),
+                                   &params->style, params->style, TRUE);
+    gtk_box_pack_start(vbox, combo, FALSE, FALSE, 0);
 
+    check = gtk_check_button_new_with_mnemonic(_("Export _labels"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->labels);
+    gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(boolean_changed_cb), &params->labels);
 
-    controls.preference = gwy_enum_combo_box_new(style_type, G_N_ELEMENTS(style_type),
-                                                       G_CALLBACK(style_cb), dialog,
-                                                       controls.style, TRUE);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                                                       controls.preference);
+    check = gtk_check_button_new_with_mnemonic(_("Export _units"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->units);
+    gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(boolean_changed_cb), &params->units);
 
-
-    controls.check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_labels), controls.labels);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                                             controls.check_labels);
-    g_signal_connect_swapped(controls.check_labels, "clicked",
-                                             G_CALLBACK(labels_changed_cb), &controls);
-    controls.check_units = gtk_check_button_new_with_mnemonic(_("Export _units"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_units), controls.units);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                                                controls.check_units);
-    g_signal_connect_swapped(controls.check_units, "clicked",
-                                                G_CALLBACK(units_changed_cb), &controls);
-    controls.check_metadata = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_metadata), controls.metadata);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                                                controls.check_metadata);
-    g_signal_connect_swapped(controls.check_metadata, "clicked",
-                                                G_CALLBACK(metadata_changed_cb), &controls);
-
-
-    gtk_widget_show_all(controls.preference);
-    gtk_widget_show(controls.check_units);
-    gtk_widget_show(controls.check_labels);
-    gtk_widget_show(controls.check_metadata);
+    check = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->metadata);
+    gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(boolean_changed_cb), &params->metadata);
 
     gtk_widget_show_all(dialog);
-
-    return TRUE;
-}
-
-
-static void
-export_dialog_closed_cb(G_GNUC_UNUSED GwyGraph *graph)
-{
-
-    if (dialog) {
+    switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
+        case GTK_RESPONSE_CANCEL:
+        case GTK_RESPONSE_DELETE_EVENT:
         gtk_widget_destroy(dialog);
-        dialog = NULL;
+        case GTK_RESPONSE_NONE:
+        return;
+        break;
+
+        case GTK_RESPONSE_OK:
+        gtk_widget_destroy(dialog);
+        export_dialog_choose_file(graph, params);
+        break;
+
+        default:
+        g_warning("Unhandled dialog response");
+        return;
+        break;
     }
 }
 
-
 static void
-export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
+export_dialog_choose_file(GwyGraph *graph,
+                          ExportParameters *params)
 {
-    GtkDialog *filedialog;
-    GwyContainer *settings;
+    GtkWidget *dialog;
     gchar *filename;
-    GString *string = g_string_new("");
+    GString *str;
     FILE *fw;
 
+    dialog = gtk_file_chooser_dialog_new("Export to ASCII File", NULL,
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
 
-    if (response == GTK_RESPONSE_OK)
-    {
-        filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to ASCII File",
-                                                             GTK_WINDOW(pdialog),
-                                                             GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                            GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                                            NULL));
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
-                                             gwy_app_get_current_directory());
-        if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
-        {
-            filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-            if (gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
-            {
-                string = gwy_graph_model_export_ascii(graph->graph_model,
-                                         controls.units, controls.labels, controls.metadata,
-                                         controls.style, string);
+    switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
+        case GTK_RESPONSE_CANCEL:
+        case GTK_RESPONSE_DELETE_EVENT:
+        gtk_widget_destroy(dialog);
+        case GTK_RESPONSE_NONE:
+        return;
+        break;
 
-                fw = g_fopen(filename, "w");
-                fprintf(fw, "%s", string->str);
-                fclose(fw);
-            }
-        }
-        gtk_widget_destroy(GTK_WIDGET(filedialog));
-        settings = gwy_app_settings_get();
-        save_args(settings, &controls);
+        case GTK_RESPONSE_OK:
+        /* pass */
+        break;
+
+        default:
+        g_warning("Unhandled dialog response");
+        return;
+        break;
     }
 
-    export_dialog_closed_cb(graph);
+    filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if (gwy_app_file_confirm_overwrite(dialog)) {
+        str = gwy_graph_model_export_ascii(graph->graph_model,
+                                              params->units,
+                                              params->labels,
+                                              params->metadata,
+                                              params->style,
+                                              NULL);
+
+        /* FIXME: Must check success */
+        fw = g_fopen(filename, "w");
+        fwrite(str->str, 1, str->len, fw);
+        fclose(fw);
+        g_string_free(str, TRUE);
+    }
+    gtk_widget_destroy(dialog);
 }
 
 static void
-units_changed_cb(ExportControls *pcontrols)
+boolean_changed_cb(GtkToggleButton *check, gboolean *value)
 {
-    pcontrols->units = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pcontrols->check_units));
+    *value = gtk_toggle_button_get_active(check);
 }
-
-static void
-labels_changed_cb(ExportControls *pcontrols)
-{
-    pcontrols->labels = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pcontrols->check_labels));
-}
-
-static void
-metadata_changed_cb(ExportControls *pcontrols)
-{
-    pcontrols->metadata = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pcontrols->check_metadata));
-}
-
-static void
-style_cb(GtkWidget *combo)
-{
-    controls.style = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-
 
 static const gchar style_key[]    = "/module/graph_export_ascii/style";
 static const gchar labels_key[]   = "/module/graph_export_ascii/labels";
@@ -265,24 +220,24 @@ static const gchar units_key[]    = "/module/graph_export_ascii/units";
 static const gchar metadata_key[] = "/module/graph_export_ascii/metadata";
 
 static void
-load_args(GwyContainer *container,
-          ExportControls *pcontrols)
+load_args(GwyContainer *settings,
+          ExportParameters *params)
 {
-    gwy_container_gis_boolean_by_name(container, labels_key, &pcontrols->labels);
-    gwy_container_gis_boolean_by_name(container, units_key, &pcontrols->units);
-    gwy_container_gis_boolean_by_name(container, metadata_key, &pcontrols->metadata);
-    gwy_container_gis_enum_by_name(container, style_key, &pcontrols->style);
+    gwy_container_gis_boolean_by_name(settings, labels_key, &params->labels);
+    gwy_container_gis_boolean_by_name(settings, units_key, &params->units);
+    gwy_container_gis_boolean_by_name(settings, metadata_key, &params->metadata);
+    gwy_container_gis_enum_by_name(settings, style_key, &params->style);
 
 }
 
 static void
-save_args(GwyContainer *container,
-          ExportControls *pcontrols)
+save_args(GwyContainer *settings,
+          ExportParameters *params)
 {
-    gwy_container_set_boolean_by_name(container, labels_key, pcontrols->labels);
-    gwy_container_set_boolean_by_name(container, units_key, pcontrols->units);
-    gwy_container_set_boolean_by_name(container, metadata_key, pcontrols->metadata);
-    gwy_container_set_enum_by_name(container, style_key, pcontrols->style);
+    gwy_container_set_boolean_by_name(settings, labels_key, params->labels);
+    gwy_container_set_boolean_by_name(settings, units_key, params->units);
+    gwy_container_set_boolean_by_name(settings, metadata_key, params->metadata);
+    gwy_container_set_enum_by_name(settings, style_key, params->style);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
