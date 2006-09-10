@@ -1,10 +1,10 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
 
-libgwymoduleincludedir = $(pkgincludedir)/libgwymodule
+libgwymodule2includedir = $(pkgincludedir)/libgwymodule
 
-libgwymoduleinclude_HEADERS = \
+libgwymodule2include_HEADERS = \
 	gwymodule.h \
 	gwymodule-file.h \
 	gwymodule-graph.h \
@@ -15,12 +15,12 @@ libgwymoduleinclude_HEADERS = \
 	gwymoduleenums.h \
 	gwymoduleloader.h
 
-lib_LTLIBRARIES = libgwymodule.la
+lib_LTLIBRARIES = libgwymodule2.la
 
 EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt \
-	libgwymodule.def
+	libgwymodule2.def
 
 noinst_HEADERS = \
 	gwymoduleinternal.h
@@ -30,9 +30,9 @@ noinst_HEADERS = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -version-info 5:0:2
-libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
-libgwymodule_la_SOURCES = \
+libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -version-info 0:0:0
+#libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwymodule2_la_SOURCES = \
 	gwymodule-file.c \
 	gwymodule-graph.c \
 	gwymodule-layer.c \

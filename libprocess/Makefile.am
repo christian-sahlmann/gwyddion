@@ -1,11 +1,10 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
 
-libgwyprocessincludedir = $(pkgincludedir)/libprocess
+libgwyprocess2includedir = $(pkgincludedir)/libprocess
 
-libgwyprocessinclude_HEADERS = \
+libgwyprocess2include_HEADERS = \
 	arithmetic.h \
 	cdline.h \
 	correct.h \
@@ -34,7 +33,7 @@ noinst_HEADERS = \
 	morph_lib.h \
 	gwyprocessinternal.h
 
-lib_LTLIBRARIES = libgwyprocess.la
+lib_LTLIBRARIES = libgwyprocess2.la
 
 MKENUM_NAME = gwyprocesstypes
 MKENUM_HFILES = gwyprocessenums.h
@@ -43,16 +42,16 @@ include $(top_srcdir)/utils/mkenum.mk
 EXTRA_DIST += \
 	makefile.msc \
 	makefile.msc.gwt \
-	libgwyprocess.def
+	libgwyprocess2.def
 
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwyprocess_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -version-info 8:0:5
-libgwyprocess_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -release @LIBRARY_RELEASE@
-libgwyprocess_la_SOURCES = \
+libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -version-info 0:0:0
+#libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -release @LIBRARY_RELEASE@
+libgwyprocess2_la_SOURCES = \
 	arithmetic.c \
 	cdline.c \
 	correct.c \

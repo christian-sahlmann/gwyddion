@@ -168,6 +168,7 @@ def make_lib_defs(makefile):
 def expand_template(makefile, name, supplementary=None):
     """Get expansion of specified template, taking information from Makefile.
 
+    SELF: defines TOP_SRCDIR, LIBRARY, LIBDIR
     DATA: install-data rule, created from foo_DATA
     LIB_HEADERS: this variable, filled from lib_LTLIBRARIES, fooinclude_HEADERS
     LIB_OBJECTS: this variable, filled from lib_LTLIBRARIES, foo_SOURCES
@@ -178,7 +179,22 @@ def expand_template(makefile, name, supplementary=None):
     MOD_OBJ_RULES: .c -> .obj rules, filled from foo_LTLIBRARIES, foo_SOURCES
     MOD_DLL_RULES: .obj -> .dll rules, filled from foo_LTLIBRARIES
     MO_INSTALL_RULES: installdirs and install-mo rules, filled from LINGUAS"""
-    if name == 'DATA':
+
+    if name == 'SELF':
+        if srcpath:
+            srcdir = '\\'.join(['..'] * len(srcpath))
+            s = ['TOP_SRCDIR = ' + srcdir]
+        else:
+            s = ['TOP_SRCDIR = .']
+
+        libraries = fix_suffixes(get_list(makefile, 'lib_LTLIBRARIES'), '.la')
+        if libraries:
+            assert len(libraries) == 1
+            s.append('LIBDIR = ' + srcpath[-1])
+            l = libraries[0]
+            s.append('LIBRARY = ' + l)
+        return '\n'.join(s)
+    elif name == 'DATA':
         lst = get_list(makefile, '\w+_DATA')
         list_part = name + ' =' + format_list(lst)
         inst_part = [('$(INSTALL) %s "$(DEST_DIR)\$(DATA_TYPE)"' % x)
@@ -302,7 +318,9 @@ def recurse(each):
     subdirs = get_list(makefile, 'SUBDIRS')
     for s in subdirs:
         os.chdir(s)
+        srcpath.append(s)
         recurse(each)
+        srcpath.pop()
         os.chdir(cwd)
 
 def check_make_all():
@@ -333,10 +351,13 @@ if not ok:
     sys.stderr.write('%s: generated files would be incomplete, quitting\n' % me)
     sys.exit(1)
 
+srcpath = []
 recurse(process_one_dir)
 
 cwd = os.getcwd()
 os.chdir('po')
+srcpath.append('po')
 fill_templates(configure)
+srcpath.pop()
 os.chdir(cwd)
 

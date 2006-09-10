@@ -1,9 +1,7 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ..
-LIBRARY = libgwyprocess
-# @#$%! the directory has different name than the library
-XLIBRARY = libprocess
+<[[:SELF:]]>
+
 LIB_VER = $(LIBGWYPROCESS_VER)
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
@@ -19,7 +17,7 @@ LIB_LINK = \
 	$(GTK_LIBS) \
 	$(INTL_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
-	libgwyddion-$(LIBGWYDDION_VER).lib
+	libgwyddion2-$(LIBGWYDDION_VER).lib
 
 <[[:LIB_OBJECTS:]]>
 

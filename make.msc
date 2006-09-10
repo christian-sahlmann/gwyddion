@@ -198,11 +198,11 @@ MOD_LINK = \
 	/libpath:$(TOP_SRCDIR)\libgwydgets \
 	/libpath:$(TOP_SRCDIR)\libgwymodule \
 	/libpath:$(TOP_SRCDIR)\app \
-	libgwyapp-$(LIBGWYAPP_VER).lib \
-	libgwymodule-$(LIBGWYMODULE_VER).lib \
-	libgwydgets-$(LIBGWYDGETS_VER).lib \
-	libgwydraw-$(LIBGWYDRAW_VER).lib \
-	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
-	libgwyddion-$(LIBGWYDDION_VER).lib
+	libgwyapp2-$(LIBGWYAPP_VER).lib \
+	libgwymodule2-$(LIBGWYMODULE_VER).lib \
+	libgwydgets2-$(LIBGWYDGETS_VER).lib \
+	libgwydraw2-$(LIBGWYDRAW_VER).lib \
+	libgwyprocess2-$(LIBGWYPROCESS_VER).lib \
+	libgwyddion2-$(LIBGWYDDION_VER).lib
 
 # vim: ft=make

@@ -116,6 +116,7 @@ function check_coding_style() {
     d=${lib##./}
     d=${d%%/*}
     l=$(basename $lib .so)
+    l=${l%2}
     nm $lib \
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
       | grep -v '^_' \

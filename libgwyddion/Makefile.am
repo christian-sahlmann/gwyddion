@@ -1,10 +1,10 @@
 # @(#) $Id$
 
-libgwyddionincludedir = $(pkgincludedir)/libgwyddion
+libgwyddion2includedir = $(pkgincludedir)/libgwyddion
 
 localedir = $(datadir)/locale
 
-libgwyddioninclude_HEADERS = \
+libgwyddion2include_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
 	gwyddionenums.h \
@@ -30,7 +30,7 @@ noinst_HEADERS = \
 	gwyddioninternal.h \
 	gwytestser.h
 
-lib_LTLIBRARIES = libgwyddion.la
+lib_LTLIBRARIES = libgwyddion2.la
 
 MKENUM_NAME = gwyddiontypes
 MKENUM_HFILES = gwyddionenums.h
@@ -40,16 +40,16 @@ EXTRA_DIST += \
 	gwyversion.h.in \
 	makefile.msc \
 	makefile.msc.gwt \
-	libgwyddion.def
+	libgwyddion2.def
 
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwyddion_la_LDFLAGS = @BASIC_LIBS@ -version-info 8:0:5
-libgwyddion_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
-libgwyddion_la_SOURCES = \
+libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -version-info 0:0:0
+#libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwyddion2_la_SOURCES = \
 	gwycontainer.c \
 	gwyddion.c \
 	gwyddiontypes.c \
@@ -80,4 +80,4 @@ clean-local:
 #	main.c \
 #	gwytestser.c
 #
-#main_LDADD = libgwyddion.la
+#main_LDADD = libgwyddion2.la

@@ -2,11 +2,11 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[1])
 m4_define([gwy_version_minor],[99])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.9])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.9.20060910])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
-LIBRARY_RELEASE=1.99.9
+#LIBRARY_RELEASE=1.99.9
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.59)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -56,9 +56,7 @@ AC_CONFIG_FILES(\
 AC_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
-dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
-dnl strictness level.
-AM_INIT_AUTOMAKE([1.7 foreign check-news dist-bzip2])
+AM_INIT_AUTOMAKE([1.7 gnu check-news dist-bzip2])
 AM_MAINTAINER_MODE
 
 GWY_VERSION_MAJOR=gwy_version_major

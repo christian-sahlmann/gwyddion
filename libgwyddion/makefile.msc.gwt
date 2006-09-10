@@ -1,8 +1,7 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ..
-LIBRARY = libgwyddion
-XLIBRARY = $(LIBRARY)
+<[[:SELF:]]>
+
 LIB_VER = $(LIBGWYDDION_VER)
 
 !INCLUDE $(TOP_SRCDIR)\make.msc

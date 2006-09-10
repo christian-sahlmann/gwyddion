@@ -1,8 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-# We require automake 1.6 at least.
-AUTOMAKE_OPTIONS = 1.6
-
 # This is a blank Makefile.am for using gtk-doc.
 # Copy this to your project's API docs directory and modify the variables to
 # suit your project. See the GTK+ Makefiles in gtk+/docs/reference for examples
@@ -73,12 +70,12 @@ expand_content_files=
 # e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
 INCLUDES = -I${top_srcdir} @CFLAGS@
 GTKDOC_LIBS = \
-	${top_srcdir}/$(DOC_DIRNAME)/$(DOC_MODULE).la \
-	${top_srcdir}/libgwymodule/libgwymodule.la \
-	${top_srcdir}/libgwydgets/libgwydgets.la \
-	${top_srcdir}/libdraw/libgwydraw.la \
-	${top_srcdir}/libprocess/libgwyprocess.la \
-	${top_srcdir}/libgwyddion/libgwyddion.la \
+	${top_srcdir}/$(DOC_DIRNAME)/$(DOC_MODULE)2.la \
+	${top_srcdir}/libgwymodule/libgwymodule2.la \
+	${top_srcdir}/libgwydgets/libgwydgets2.la \
+	${top_srcdir}/libdraw/libgwydraw2.la \
+	${top_srcdir}/libprocess/libgwyprocess2.la \
+	${top_srcdir}/libgwyddion/libgwyddion2.la \
 	@LDFLAGS@ @GTK_LIBS@
 
 # This includes the standard gtk-doc make rules.

@@ -11,5 +11,5 @@ Name: Gwyddion
 Description: Gwyddion library
 Version: @VERSION@
 Requires: glib-2.0 >= 2.6.0 gtk+-2.0 >= 2.6.0 pangoft2 @GTKGLEXT_DEPENDENCY@ @FFTW3_DEPENDENCY@
-Libs: -L${libdir} -lgwyapp-@LIBRARY_RELEASE@ -lgwymodule-@LIBRARY_RELEASE@ -lgwydgets-@LIBRARY_RELEASE@ -lgwydraw-@LIBRARY_RELEASE@ -lgwyprocess-@LIBRARY_RELEASE@ -lgwyddion-@LIBRARY_RELEASE@
+Libs: -L${libdir} -lgwyapp2 -lgwymodule2 -lgwydgets2 -lgwydraw2 -lgwyprocess2 -lgwyddion2
 Cflags: -I${includedir}/gwyddion -I${libdir}/gwyddion/include

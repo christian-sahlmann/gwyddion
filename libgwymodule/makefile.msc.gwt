@@ -1,8 +1,7 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ..
-LIBRARY = libgwymodule
-XLIBRARY = $(LIBRARY)
+<[[:SELF:]]>
+
 LIB_VER = $(LIBGWYMODULE_VER)
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
@@ -19,10 +18,10 @@ LIB_LINK = \
 	/libpath:$(TOP_SRCDIR)\libprocess \
 	/libpath:$(TOP_SRCDIR)\libdraw \
 	/libpath:$(TOP_SRCDIR)\libgwydgets \
-	libgwydgets-$(LIBGWYDGETS_VER).lib \
-	libgwydraw-$(LIBGWYDRAW_VER).lib \
-	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
-	libgwyddion-$(LIBGWYDDION_VER).lib
+	libgwydgets2-$(LIBGWYDGETS_VER).lib \
+	libgwydraw2-$(LIBGWYDRAW_VER).lib \
+	libgwyprocess2-$(LIBGWYPROCESS_VER).lib \
+	libgwyddion2-$(LIBGWYDDION_VER).lib
 
 <[[:LIB_OBJECTS:]]>
 

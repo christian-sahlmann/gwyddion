@@ -1,5 +1,5 @@
 
-TOP_SRCDIR = ..\..
+<[[:SELF:]]>
 DATA_TYPE = gradients
 
 !INCLUDE $(TOP_SRCDIR)\make.msc

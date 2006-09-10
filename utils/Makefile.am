@@ -1,11 +1,11 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
-libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
-libgwyapp = $(top_builddir)/app/libgwyapp.la
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+libgwymodule = $(top_builddir)/libgwymodule/libgwymodule2.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
+libgwyapp = $(top_builddir)/app/libgwyapp2.la
 moduledir = $(top_srcdir)/modules
 
 GUIDE_MAP = user-guide-modules

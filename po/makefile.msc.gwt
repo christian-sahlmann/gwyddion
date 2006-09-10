@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ..
+<[[:SELF:]]>
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 

@@ -20,7 +20,7 @@ install-lib: lib
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).dll "$(DEST_DIR)"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).lib "$(DEST_DIR)\lib"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
-	$(INSTALL) *.h "$(DEST_DIR)\include\$(XLIBRARY)"
+	$(INSTALL) *.h "$(DEST_DIR)\include\$(LIBDIR)"
 
 !IFDEF MOD_TYPE
 MOD_DIR = \$(MOD_TYPE)

@@ -1,14 +1,14 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
-libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+libgwymodule = $(top_builddir)/libgwymodule/libgwymodule2.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
 
-libgwyappincludedir = $(pkgincludedir)/app
+libgwyapp2includedir = $(pkgincludedir)/app
 
-libgwyappinclude_HEADERS = \
+libgwyapp2include_HEADERS = \
 	app.h \
 	data-browser.h \
 	datachooser.h \
@@ -33,7 +33,7 @@ noinst_HEADERS = \
 	gwyddion.h
 
 bin_PROGRAMS = gwyddion
-lib_LTLIBRARIES = libgwyapp.la
+lib_LTLIBRARIES = libgwyapp2.la
 
 MKENUM_NAME = gwyapptypes
 MKENUM_HFILES = data-browser.h menu.h
@@ -42,7 +42,7 @@ include $(top_srcdir)/utils/mkenum.mk
 EXTRA_DIST += \
 	makefile.msc \
 	makefile.msc.gwt \
-	libgwyapp.def \
+	libgwyapp2.def \
 	README.objdata
 
 BUILT_SOURCES += \
@@ -56,10 +56,10 @@ MAINTAINERCLEANFILES += \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 6:2:3
-libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
-libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
-libgwyapp_la_SOURCES = \
+libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 0:0:0
+#libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwyapp2_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
+libgwyapp2_la_SOURCES = \
 	app.c \
 	data-browser.c \
 	datachooser.c \
@@ -85,7 +85,7 @@ gwyddion_SOURCES = \
 	toolbox.c
 
 gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
-	libgwyapp.la \
+	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \
 	$(libgwydraw) \

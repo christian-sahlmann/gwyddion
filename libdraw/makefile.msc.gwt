@@ -1,9 +1,7 @@
 # @(#) $Id$
 
-TOP_SRCDIR = ..
-LIBRARY = libgwydraw
-# @#$%! the directory has different name than the library
-XLIBRARY = libdraw
+<[[:SELF:]]>
+
 LIB_VER = $(LIBGWYDRAW_VER)
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
@@ -22,8 +20,8 @@ LIB_LINK = \
 	$(GDK_PIXBUF_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
 	/libpath:$(TOP_SRCDIR)\libprocess \
-	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
-	libgwyddion-$(LIBGWYDDION_VER).lib
+	libgwyprocess2-$(LIBGWYPROCESS_VER).lib \
+	libgwyddion2-$(LIBGWYDDION_VER).lib
 
 <[[:LIB_OBJECTS:]]>
 

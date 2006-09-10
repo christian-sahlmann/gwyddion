@@ -144,8 +144,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{pkglibdir}/modules/tool
 %dir %{pkglibdir}/modules
 %dir %{pkglibdir}
-#%{_libdir}/*.so.*
-%{_libdir}/*-1.99.*.so
+%{_libdir}/*.so.*
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
 
@@ -167,7 +166,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{pkgincludedir}/libgwymodule
 %dir %{pkgincludedir}
 %{_libdir}/*.so
-%exclude %{_libdir}/*-1.99.*.so
 %{_libdir}/pkgconfig/gwyddion.pc
 %dir %{_libdir}/pkgconfig
 # Documentation

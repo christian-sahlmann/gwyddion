@@ -1,12 +1,12 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
 
-libgwydgetsincludedir = $(pkgincludedir)/libgwydgets
+libgwydgets2includedir = $(pkgincludedir)/libgwydgets
 
-libgwydgetsinclude_HEADERS = \
+libgwydgets2include_HEADERS = \
 	gwy3dlabel.h \
 	gwy3dsetup.h \
 	gwy3dview.h \
@@ -58,7 +58,7 @@ noinst_HEADERS = \
 	gwygraphareadialog.h \
 	gwygraphlabeldialog.h
 
-lib_LTLIBRARIES = libgwydgets.la
+lib_LTLIBRARIES = libgwydgets2.la
 
 MKENUM_NAME = gwydgettypes
 MKENUM_HFILES = gwydgetenums.h
@@ -67,16 +67,16 @@ include $(top_srcdir)/utils/mkenum.mk
 EXTRA_DIST += \
 	makefile.msc \
 	makefile.msc.gwt \
-	libgwydgets.def
+	libgwydgets2.def
 
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 9:0:6
-libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
-libgwydgets_la_SOURCES = \
+libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 0:0:0
+#libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwydgets2_la_SOURCES = \
 	gwy3dlabel.c \
 	gwy3dsetup.c \
 	gwy3dview.c \
