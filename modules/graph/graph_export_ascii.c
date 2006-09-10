@@ -190,20 +190,21 @@ export_dialog_choose_file(GwyGraph *graph,
         break;
     }
 
-    filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
     if (gwy_app_file_confirm_overwrite(dialog)) {
+        filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         str = gwy_graph_model_export_ascii(graph->graph_model,
-                                              params->units,
-                                              params->labels,
-                                              params->metadata,
-                                              params->style,
-                                              NULL);
+                                           params->units,
+                                           params->labels,
+                                           params->metadata,
+                                           params->style,
+                                           NULL);
 
         /* FIXME: Must check success */
         fw = g_fopen(filename, "w");
-        fwrite(str->str, 1, str->len, fw);
+        fwrite(str->str, str->len, 1, fw);
         fclose(fw);
         g_string_free(str, TRUE);
+        g_free(filename);
     }
     gtk_widget_destroy(dialog);
 }

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,9 +34,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Export graph in postscript"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2005",
+    "2006",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -57,32 +57,34 @@ module_register(void)
 static void
 export(GwyGraph *graph)
 {
-    GtkDialog *filedialog;
+    GtkWidget *dialog;
     gchar *filename;
-    GString *str = g_string_new("");
+    GString *str;
     FILE *fw;
 
-    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to postscript",
-                                                          NULL,
-                                                          GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                          GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                                          NULL));
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
-                                           gwy_app_get_current_directory());
-    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
-    {
-        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-        if (gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
-        {
-            str = gwy_graph_export_postscript(graph,
-                                         TRUE, TRUE, TRUE, str);
+    dialog = gtk_file_chooser_dialog_new ("Export to postscript",
+                                          NULL,
+                                          GTK_FILE_CHOOSER_ACTION_SAVE,
+                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                          GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
+        if (gwy_app_file_confirm_overwrite(GTK_WIDGET(dialog))) {
+            filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+            str = gwy_graph_export_postscript(graph, TRUE, TRUE, TRUE, NULL);
+
+            /* FIXME: Must check success */
             fw = g_fopen(filename, "w");
-            fprintf(fw, "%s", str->str);
+            fwrite(str->str, str->len, 1, fw);
             fclose(fw);
+            g_string_free(str, TRUE);
+            g_free(filename);
         }
     }
-    gtk_widget_destroy(GTK_WIDGET(filedialog));
+    gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

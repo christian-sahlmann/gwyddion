@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Export graph into bitmap"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2005",
+    "2006",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -45,7 +45,7 @@ module_register(void)
 {
     gwy_graph_func_register("graph_export_bitmap",
                             (GwyGraphFunc)&export,
-                            N_("/Export _bitmap"),
+                            N_("/Export _Bitmap"),
                             NULL,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Export graph to a raster image"));
@@ -56,30 +56,31 @@ module_register(void)
 static void
 export(GwyGraph *graph)
 {
-    GtkDialog *filedialog;
+    GtkWidget *dialog;
+    GdkPixbuf *pixbuf;
     gchar *filename;
-    GdkPixbuf *pixbuf = NULL;
 
-    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to bitmap",
-                                                          NULL,
-                                                          GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                          GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                                          NULL));
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filedialog),
-                                             gwy_app_get_current_directory());
+    dialog = gtk_file_chooser_dialog_new("Export to Bitmap",
+                                         NULL,
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
 
-    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
-    {
-        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-        if (gwy_app_file_confirm_overwrite(GTK_WIDGET(filedialog)))
-        {
-            pixbuf = gwy_graph_export_pixmap(graph,
-                                         TRUE, TRUE, TRUE, pixbuf);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
+        if (gwy_app_file_confirm_overwrite(dialog)) {
+            filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+            pixbuf = gwy_graph_export_pixmap(graph, TRUE, TRUE, TRUE);
+
             gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
+            g_object_unref(pixbuf);
+            g_free(filename);
         }
     }
-    gtk_widget_destroy(GTK_WIDGET(filedialog));
+    gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 
 
