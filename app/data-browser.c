@@ -3652,7 +3652,6 @@ gwy_app_data_browser_shut_down(void)
     if (!browser)
         return;
 
-    /* FIXME: Not very logical when loading occurs in main app. */
     if (browser->window && GTK_WIDGET_VISIBLE(browser->window))
         gwy_app_save_window_position(GTK_WINDOW(browser->window),
                                      "/app/data-browser", TRUE, TRUE);
