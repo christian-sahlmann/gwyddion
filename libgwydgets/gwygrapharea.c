@@ -382,11 +382,10 @@ gwy_graph_area_expose(GtkWidget *widget,
                        widget->allocation.width, widget->allocation.height);
     gdk_gc_set_rgb_fg_color(area->gc, &widget->style->black);
 
-    gwy_graph_area_draw_area_on_drawable(drawable, area->gc,
-                                         0, 0,
-                                         widget->allocation.width,
-                                         widget->allocation.height,
-                                         area);
+    gwy_graph_area_draw_on_drawable(area, drawable, area->gc,
+                                    0, 0,
+                                    widget->allocation.width,
+                                    widget->allocation.height);
 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
         && (area->selecting != 0))
@@ -399,21 +398,22 @@ gwy_graph_area_expose(GtkWidget *widget,
 }
 
 /**
- * gwy_graph_area_draw_area_on_drawable:
+ * gwy_graph_area_draw_on_drawable:
+ * @area: the graph area to draw
  * @drawable: a #GdkDrawable (destination for graphics operations)
  * @gc: a #GdkGC graphics context
  * @x: X position in @drawable where the graph area should be drawn
  * @y: Y position in @drawable where the graph area should be drawn
  * @width: width of the graph area on the drawable
  * @height: height of the graph area on the drawable
- * @area: the graph area to draw
  *
  * Draws the graph area to a #GdkDrawable.
  **/
 void
-gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
-                                     gint x, gint y, gint width, gint height,
-                                     GwyGraphArea *area)
+gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
+                                GdkDrawable *drawable, GdkGC *gc,
+                                gint x, gint y,
+                                gint width, gint height)
 {
     gint nc, i;
     GwyGraphActiveAreaSpecs specs;
@@ -421,7 +421,7 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     GwyGraphModel *model;
     GdkColor fg;
 
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
     specs.xmin = x;
     specs.ymin = y;
     specs.height = height;
@@ -568,7 +568,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
-    gmodel = GWY_GRAPH_MODEL(area->graph_model);
+    gmodel = area->graph_model;
     nc = gwy_graph_model_get_n_curves(gmodel);
     child = gwy_graph_area_find_child(area, x, y);
     if (child) {
@@ -801,7 +801,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
-    gmodel = GWY_GRAPH_MODEL(area->graph_model);
+    gmodel = area->graph_model;
 
     switch (area->status) {
         case GWY_GRAPH_STATUS_XSEL:
@@ -945,7 +945,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
-    gmodel = GWY_GRAPH_MODEL(area->graph_model);
+    gmodel = area->graph_model;
 
     area->mouse_present = TRUE;
     area->actual_cursor_data->data_point.x = dx;
@@ -1094,7 +1094,7 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
     GwyGraphModel *model;
 
     closestdistance = G_MAXDOUBLE;
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
@@ -1129,7 +1129,7 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *bty
     gdouble selection_areadata[2];
     gdouble min, max, xoff, yoff;
 
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
     xoff = (gwy_graph_model_get_xmax(model)
             - gwy_graph_model_get_xmin(model))/50;
     yoff = (gwy_graph_model_get_ymax(model)
@@ -1179,7 +1179,7 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
     GwyGraphModel *model;
     gdouble xmin, ymin, xmax, ymax, xoff, yoff, selection_data[2];
 
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
     xoff = (gwy_graph_model_get_xmax(model)
             - gwy_graph_model_get_xmin(model))/50;
     yoff = (gwy_graph_model_get_ymax(model)
@@ -1206,7 +1206,7 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     GwyGraphModel *model;
     gdouble min = 0, max = 0, xoff, yoff, selection_data;
 
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
 
     if (area->status == GWY_GRAPH_STATUS_XLINES) {
 
@@ -1311,7 +1311,7 @@ scr_to_data_x(GtkWidget *widget, gint scr)
     GwyGraphModel *model;
 
     area = GWY_GRAPH_AREA(widget);
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
     if (!gwy_graph_model_get_direction_logarithmic(model,
@@ -1334,7 +1334,7 @@ data_to_scr_x(GtkWidget *widget, gdouble data)
     GwyGraphModel *model;
 
     area = GWY_GRAPH_AREA(widget);
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
 
     if (!gwy_graph_model_get_direction_logarithmic(model,
                                                    GTK_ORIENTATION_HORIZONTAL))
@@ -1354,7 +1354,7 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     GwyGraphModel *model;
 
     area = GWY_GRAPH_AREA(widget);
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
     if (!gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
@@ -1376,7 +1376,7 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
     GwyGraphModel *model;
 
     area = GWY_GRAPH_AREA(widget);
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
     if (!gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
         return widget->allocation.height
            - (data - gwy_graph_model_get_ymin(model))
@@ -1400,8 +1400,7 @@ void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
     /*refresh label*/
-    if (gwy_graph_model_get_label_visible(GWY_GRAPH_MODEL(area->graph_model)))
-    {
+    if (gwy_graph_model_get_label_visible(area->graph_model)) {
         gtk_widget_show(GTK_WIDGET(area->lab));
         gwy_graph_label_refresh(area->lab);
     }
@@ -1422,31 +1421,29 @@ label_geometry_changed_cb(GtkWidget *area,
 
 /**
  * gwy_graph_area_set_model:
- * @area: graph area
- * @gmodel: new graph model
+ * @area: A graph area.
+ * @gmodel: New graph model.
  *
- * Changes the graph model. Calls refresh afterwards. @gmodel
- * is duplicated.
+ * Changes the graph model.
+ *
+ * Calls refresh afterwards.
  **/
 void
-gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
+gwy_graph_area_set_model(GwyGraphArea *area,
+                         GwyGraphModel *gmodel)
 {
-    gint i;
+    gint n, i;
 
     area->graph_model = gmodel;
     gwy_graph_label_set_model(area->lab, gmodel);
 
-    g_signal_connect_swapped(GWY_GRAPH_MODEL(gmodel), "notify",
-    G_CALLBACK(gwy_graph_area_refresh), area);
-
-    for (i = 0; i < gwy_graph_model_get_n_curves(GWY_GRAPH_MODEL(gmodel)); i++)
-    {
-            g_signal_connect_swapped(
-                             gwy_graph_model_get_curve(GWY_GRAPH_MODEL(gmodel), i),
-                             "notify",
+    g_signal_connect_swapped(gmodel, "notify",
                              G_CALLBACK(gwy_graph_area_refresh), area);
-    }
- 
+
+    n = gwy_graph_model_get_n_curves(gmodel);
+    for (i = 0; i < n; i++)
+        g_signal_connect_swapped(gwy_graph_model_get_curve(gmodel, i), "notify",
+                                 G_CALLBACK(gwy_graph_area_refresh), area);
 
     gwy_graph_area_refresh(area);
 }
@@ -1552,7 +1549,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
 
     out = g_string_new("%%Area\n");
 
-    model = GWY_GRAPH_MODEL(area->graph_model);
+    model = area->graph_model;
     if ((gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))==0
         || (gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))==0)
     {

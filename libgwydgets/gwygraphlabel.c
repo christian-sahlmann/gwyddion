@@ -235,7 +235,8 @@ gwy_graph_label_expose(GtkWidget *widget,
 }
 
 /**
- * gwy_graph_label_draw_label_on_drawable:
+ * gwy_graph_label_draw_on_drawable:
+ * @label: graph label
  * @drawable: the #GdkDrawable
  * @gc: a #GdkGC graphics context.
  * @layout: pango layout
@@ -243,17 +244,16 @@ gwy_graph_label_expose(GtkWidget *widget,
  * @y: y position where label is to be drawn
  * @width: width of the label
  * @height: hieght of the label
- * @label: graph label
  *
  * draws a graph label on a drawable
  **/
 void
-gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
-                                       GdkGC *gc,
-                                       PangoLayout *layout,
-                                       gint x, gint y,
-                                       gint width, gint height,
-                                       GwyGraphLabel *label)
+gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
+                                 GdkDrawable *drawable,
+                                 GdkGC *gc,
+                                 PangoLayout *layout,
+                                 gint x, gint y,
+                                 gint width, gint height)
 {
     gint ypos, winheight, winwidth, winx, winy, frame_off;
     gint i, nc;
@@ -386,10 +386,9 @@ gwy_graph_label_draw_label(GtkWidget *widget)
 
     gdk_window_get_geometry(widget->window,
                             &winx, &winy, &winwidth, &winheight, &windepth);
-    gwy_graph_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window),
-                                           mygc, layout,
-                                           0, 0, winwidth, winheight,
-                                           label);
+    gwy_graph_label_draw_on_drawable(label, GDK_DRAWABLE(widget->window),
+                                     mygc, layout,
+                                     0, 0, winwidth, winheight);
     g_object_unref(mygc);
     g_object_unref(layout);
 
@@ -460,31 +459,30 @@ gwy_graph_label_refresh(GwyGraphLabel *label)
 
 /**
  * gwy_graph_label_set_model:
- * @label: graph label
- * @gmodel: pointer to the graph model
+ * @label: A graph label.
+ * @gmodel: New graph model.
  *
- * set model of the graph label. @gmodel is duplicated.
+ * Sets new model of a graph label.
  **/
 void
-gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
+gwy_graph_label_set_model(GwyGraphLabel *label,
+                          GwyGraphModel *gmodel)
 {
-    gint i;
+    gint i, n;
 
     if (gmodel != NULL) {
-        label->graph_model = GWY_GRAPH_MODEL(gmodel);
+        label->graph_model = gmodel;
 
-        g_signal_connect_swapped(GWY_GRAPH_MODEL(gmodel), "notify",
-                     G_CALLBACK(gwy_graph_label_refresh), label);
-    
-        for (i = 0; i < gwy_graph_model_get_n_curves(GWY_GRAPH_MODEL(gmodel)); i++)
-        {
-            g_signal_connect_swapped(
-                             gwy_graph_model_get_curve(GWY_GRAPH_MODEL(gmodel), i),
-                             "notify",
-                             G_CALLBACK(gwy_graph_label_refresh), label);
-        }
+        g_signal_connect_swapped(gmodel, "notify",
+                                 G_CALLBACK(gwy_graph_label_refresh), label);
+
+        n = gwy_graph_model_get_n_curves(gmodel);
+        for (i = 0; i < n; i++)
+            g_signal_connect_swapped(gwy_graph_model_get_curve(gmodel, i),
+                                     "notify",
+                                     G_CALLBACK(gwy_graph_label_refresh),
+                                     label);
    }
-
 }
 
 /**

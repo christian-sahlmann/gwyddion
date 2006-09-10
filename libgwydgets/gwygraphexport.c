@@ -67,11 +67,10 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     gdk_gc_set_rgb_fg_color(gc, &color);
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
 
-    gwy_graph_area_draw_area_on_drawable(pixmap, gc,
-                                         rightwidth, topheight,
-                                         width - rightwidth - leftwidth,
-                                         height - topheight - bottomheight,
-                                         graph->area);
+    gwy_graph_area_draw_on_drawable(graph->area, pixmap, gc,
+                                    rightwidth, topheight,
+                                    width - rightwidth - leftwidth,
+                                    height - topheight - bottomheight);
 
     /* Draw axes */
     gwy_axis_draw_on_drawable(graph->axis_top, pixmap, gc,
@@ -90,9 +89,8 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     pango_context_set_font_description(context, graph->area->lab->label_font);
     layout = pango_layout_new(context);
-    gwy_graph_label_draw_label_on_drawable(pixmap, gc, layout,
-                                           labelx, labely, labelw, labelh,
-                                           graph->area->lab);
+    gwy_graph_label_draw_on_drawable(graph->area->lab, pixmap, gc, layout,
+                                     labelx, labely, labelw, labelh);
 
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, pixmap, cmap,
                                           0, 0, 0, 0,

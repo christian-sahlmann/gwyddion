@@ -51,7 +51,7 @@ struct _GwyGraphCornerClass {
 
 GType gwy_graph_corner_get_type(void) G_GNUC_CONST;
 
-GtkWidget* gwy_graph_corner_new();
+GtkWidget* gwy_graph_corner_new(void);
 
 G_END_DECLS
 
