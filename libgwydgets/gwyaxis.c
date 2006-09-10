@@ -1055,7 +1055,8 @@ gwy_axis_draw_label(GdkDrawable *drawable,
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
                         specs->xmin + specs->width/2 - rect.width/2,
-                        specs->height - axis->outer_border_width - rect.height,
+                        specs->ymin + specs->height - axis->outer_border_width
+                        - rect.height,
                         layout);
         break;
 

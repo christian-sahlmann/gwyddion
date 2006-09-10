@@ -68,10 +68,10 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
 
     gwy_graph_area_draw_area_on_drawable(pixmap, gc,
-                                        rightwidth, topheight,
-                                        width - rightwidth - leftwidth,
-                                        height - topheight - bottomheight,
-                                        graph->area);
+                                         rightwidth, topheight,
+                                         width - rightwidth - leftwidth,
+                                         height - topheight - bottomheight,
+                                         graph->area);
 
     /* Draw axes */
     gwy_axis_draw_on_drawable(graph->axis_top, pixmap, gc,
@@ -100,6 +100,8 @@ gwy_graph_export_pixmap(GwyGraph *graph,
 
     g_object_unref(layout);
     g_object_unref(context);
+    g_object_unref(gc);
+    g_object_unref(cmap);
 
     return pixbuf;
 
