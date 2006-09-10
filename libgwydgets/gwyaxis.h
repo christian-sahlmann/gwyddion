@@ -135,13 +135,13 @@ void       gwy_axis_set_unit                (GwyAxis *axis,
                                              GwySIUnit *unit);
 void       gwy_axis_enable_label_edit       (GwyAxis *axis,
                                              gboolean enable);
-void       gwy_axis_draw_on_drawable        (GdkDrawable *drawable,
+void       gwy_axis_draw_on_drawable        (GwyAxis *axis,
+                                             GdkDrawable *drawable,
                                              GdkGC *gc,
                                              gint xmin,
                                              gint ymin,
                                              gint width,
-                                             gint height,
-                                             GwyAxis *axis);
+                                             gint height);
 GString*   gwy_axis_export_vector           (GwyAxis *axis,
                                              gint xmin,
                                              gint ymin,

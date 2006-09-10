@@ -74,22 +74,18 @@ gwy_graph_export_pixmap(GwyGraph *graph,
                                         graph->area);
 
     /*plot axis*/
-    gwy_axis_draw_on_drawable(pixmap, gc,
+    gwy_axis_draw_on_drawable(graph->axis_top, pixmap, gc,
                               rightwidth, 0,
-                              width - rightwidth - leftwidth, topheight,
-                              graph->axis_top);
-    gwy_axis_draw_on_drawable(pixmap, gc,
+                              width - rightwidth - leftwidth, topheight);
+    gwy_axis_draw_on_drawable(graph->axis_bottom, pixmap, gc,
                               rightwidth, height - bottomheight,
-                              width - rightwidth - leftwidth, bottomheight,
-                              graph->axis_bottom);
-    gwy_axis_draw_on_drawable(pixmap, gc,
+                              width - rightwidth - leftwidth, bottomheight);
+    gwy_axis_draw_on_drawable(graph->axis_left, pixmap, gc,
                               0, topheight,
-                              rightwidth, height - topheight - bottomheight,
-                              graph->axis_left);
-    gwy_axis_draw_on_drawable(pixmap, gc,
+                              rightwidth, height - topheight - bottomheight);
+    gwy_axis_draw_on_drawable(graph->axis_right, pixmap, gc,
                               width - leftwidth, topheight,
-                              leftwidth, height - topheight - bottomheight,
-                              graph->axis_right);
+                              leftwidth, height - topheight - bottomheight);
 
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     pango_context_set_font_description(context, graph->area->lab->label_font);

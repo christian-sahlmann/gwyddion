@@ -761,33 +761,32 @@ gwy_axis_expose(GtkWidget *widget,
                           widget->allocation.width,
                           widget->allocation.height);
 
-    gwy_axis_draw_on_drawable(widget->window,
-                              axis->gc,
+    gwy_axis_draw_on_drawable(axis, widget->window, axis->gc,
                               0, 0,
                               widget->allocation.width,
-                              widget->allocation.height,
-                              GWY_AXIS(widget));
+                              widget->allocation.height);
+
     return FALSE;
 }
 
 /**
  * gwy_axis_draw_on_drawable:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
+ * @axis: An axis.
+ * @drawable: Drawable to draw on.
+ * @gc: A #GdkGC graphics context.
  * @xmin: The minimum x-axis value.
  * @ymin: The minimum y-axis value.
  * @width: The width of the x-axis.
  * @height: The height of the y-axis.
- * @axis: An axis.
  *
  * Draws the x and y-axis on a drawable
  **/
 void
-gwy_axis_draw_on_drawable(GdkDrawable *drawable,
+gwy_axis_draw_on_drawable(GwyAxis *axis,
+                          GdkDrawable *drawable,
                           GdkGC *gc,
                           gint xmin, gint ymin,
-                          gint width, gint height,
-                          GwyAxis *axis)
+                          gint width, gint height)
 {
     GwyAxisActiveAreaSpecs specs;
     specs.xmin = xmin;
