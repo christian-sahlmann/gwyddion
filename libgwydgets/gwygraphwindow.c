@@ -325,7 +325,7 @@ gwy_graph_window_copy_to_clipboard(GwyGraphWindow *graph_window)
     atom = gdk_atom_intern("CLIPBOARD", FALSE);
     clipboard = gtk_clipboard_get_for_display(display, atom);
     pixbuf = gwy_graph_export_pixmap(GWY_GRAPH(graph_window->graph),
-                                     FALSE, TRUE, TRUE, NULL);
+                                     FALSE, TRUE, TRUE);
     gtk_clipboard_set_image(clipboard, pixbuf);
     g_object_unref(pixbuf);
 }

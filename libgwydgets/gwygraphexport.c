@@ -29,12 +29,14 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
-GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
-                                     G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
-                                     G_GNUC_UNUSED gboolean export_labels,
-                                     GdkPixbuf *pixbuf)
+GdkPixbuf*
+gwy_graph_export_pixmap(GwyGraph *graph,
+                        G_GNUC_UNUSED gboolean export_title,
+                        G_GNUC_UNUSED gboolean export_axis,
+                        G_GNUC_UNUSED gboolean export_labels)
 {
     GdkColor color = { 0, 65535, 65535, 65535 };
+    GdkPixbuf *pixbuf;
     GdkColormap *cmap;
     GdkGC *gc;
     GdkVisual *visual;
@@ -105,17 +107,22 @@ GdkPixbuf*    gwy_graph_export_pixmap(GwyGraph *graph,
 
 }
 
-GString *
+GString*
 gwy_graph_export_postscript(GwyGraph *graph,
-                                         G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
-                                         G_GNUC_UNUSED gboolean export_labels,
-                                         GString* string)
+                            G_GNUC_UNUSED gboolean export_title,
+                            G_GNUC_UNUSED gboolean export_axis,
+                            G_GNUC_UNUSED gboolean export_labels,
+                            GString* string)
 {
-    gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
+    gint width, height, hpt, vpt, areax, areay, areaw, areah;
+    gint labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
     GwyGraphModel *gmodel = graph->graph_model;
     gint fontsize = 12;
     gint borderskip = 30;
+
+    if (!string)
+        string = g_string_new(NULL);
 
     width = (GTK_WIDGET(graph))->allocation.width;
     height = (GTK_WIDGET(graph))->allocation.height;

@@ -107,12 +107,15 @@ void       gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max
 void       gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable);
 
 
-GdkPixbuf* gwy_graph_export_pixmap(GwyGraph *graph,
-                                     gboolean export_title, gboolean export_axis,
-                                     gboolean export_labels, GdkPixbuf *pixbuf);
+GdkPixbuf* gwy_graph_export_pixmap    (GwyGraph *graph,
+                                       gboolean export_title,
+                                       gboolean export_axis,
+                                       gboolean export_labels);
 GString*   gwy_graph_export_postscript(GwyGraph *graph,
-                                         gboolean export_title, gboolean export_axis,
-                                         gboolean export_labels, GString *str);
+                                       gboolean export_title,
+                                       gboolean export_axis,
+                                       gboolean export_labels,
+                                       GString *str);
 
 void       gwy_graph_zoom_in(GwyGraph *graph);
 void       gwy_graph_zoom_out(GwyGraph *graph);
