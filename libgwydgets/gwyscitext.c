@@ -212,8 +212,9 @@ gwy_sci_text_new(void)
     sci_text->entry = gtk_entry_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), sci_text->entry);
     gtk_box_pack_start(GTK_BOX(sci_text), sci_text->entry, FALSE, FALSE, 0);
-    g_signal_connect_swapped(sci_text->entry, "changed",
-                             G_CALLBACK(gwy_sci_text_edited), sci_text);
+    sci_text->changed_id
+        = g_signal_connect_swapped(sci_text->entry, "changed",
+                                   G_CALLBACK(gwy_sci_text_edited), sci_text);
     gtk_widget_show(sci_text->entry);
 
     /* Symbols */
@@ -295,9 +296,8 @@ gwy_sci_text_edited(GwySciText *sci_text)
     const gchar *input;
     gboolean emit_edited = FALSE;
 
-    gwy_debug(" ");
-
     input = gtk_entry_get_text(GTK_ENTRY(sci_text->entry));
+    gwy_debug("<%s>", input);
     utf8 = gwy_entities_text_to_utf8(input);
     if (pango_parse_markup(utf8, -1, 0, &attr_list, &text, NULL, &err)) {
         if (sci_text->has_preview)
@@ -412,8 +412,15 @@ void
 gwy_sci_text_set_text(GwySciText *sci_text, const gchar *new_text)
 {
     g_return_if_fail(GWY_IS_SCI_TEXT(sci_text));
-    gtk_entry_set_text(GTK_ENTRY(sci_text->entry), new_text);
 
+    gwy_debug("<%s>", new_text);
+    /* The entry seems to emit two "changed" on set_text(), first to "", the
+     * second to the real text.  But the first makes the area thingy to
+     * immediately set the label to "" and thus to lose the real label. */
+    g_signal_handler_block(sci_text->entry, sci_text->changed_id);
+    gtk_entry_set_text(GTK_ENTRY(sci_text->entry), new_text);
+    g_signal_handler_unblock(sci_text->entry, sci_text->changed_id);
+    gwy_sci_text_edited(sci_text);
 }
 
 /**
@@ -461,6 +468,10 @@ gwy_sci_text_set_has_preview(GwySciText *sci_text,
 
     g_return_if_fail(GWY_IS_SCI_TEXT(sci_text));
 
+    if (sci_text->has_preview == has_preview)
+        return;
+
+    /* FIXME: WTF? */
     if (!sci_text->frame) {
         sci_text->has_preview = has_preview;
         return;

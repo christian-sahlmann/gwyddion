@@ -439,7 +439,7 @@ refresh(GwyGraphAreaDialog *dialog)
                              cmodel->line_size);
 
     gwy_sci_text_set_text(GWY_SCI_TEXT((dialog->sci_text)),
-                             cmodel->description->str);
+                          cmodel->description->str);
 }
 
 static void

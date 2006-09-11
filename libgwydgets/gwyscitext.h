@@ -45,6 +45,8 @@ struct _GwySciText {
     GtkWidget *preview;
     GtkWidget *symbols;
 
+    gulong changed_id;
+
     gpointer reserved1;
     gpointer reserved2;
 };
