@@ -31,28 +31,28 @@ GwyDataLine*  gwy_dwt_set_coefficients(GwyDataLine *dline,
                                        GwyDWTType type);
 
 void gwy_data_line_dwt(GwyDataLine *dline,
-                                GwyDataLine *wt_coefs,
-                                GwyTransformDirection direction,
-                                gint minsize);
+                       GwyDataLine *wt_coefs,
+                       GwyTransformDirection direction,
+                       gint minsize);
 
 void gwy_data_field_xdwt(GwyDataField *dfield,
-                                  GwyDataLine *wt_coefs,
-                                  GwyTransformDirection direction,
-                                  gint minsize);
+                         GwyDataLine *wt_coefs,
+                         GwyTransformDirection direction,
+                         gint minsize);
 void gwy_data_field_ydwt(GwyDataField *dfield,
-                                  GwyDataLine *wt_coefs,
-                                  GwyTransformDirection direction,
-                                  gint minsize);
+                         GwyDataLine *wt_coefs,
+                         GwyTransformDirection direction,
+                         gint minsize);
 void gwy_data_field_dwt(GwyDataField *dfield,
-                                 GwyDataLine *wt_coefs,
-                                 GwyTransformDirection direction,
-                                 gint minsize);
+                        GwyDataLine *wt_coefs,
+                        GwyTransformDirection direction,
+                        gint minsize);
 
 void gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
-                                                 GwyDataField *mask,
-                                                 GwyDataLine *wt_coefs,
-                                                 gdouble ratio,
-                                                 gint lowlimit);
+                                        GwyDataField *mask,
+                                        GwyDataLine *wt_coefs,
+                                        gdouble ratio,
+                                        gint lowlimit);
 
 G_END_DECLS
 
