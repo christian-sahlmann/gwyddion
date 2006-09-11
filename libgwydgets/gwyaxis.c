@@ -1336,7 +1336,7 @@ gwy_axis_scale(GwyAxis *a)
     GwyAxisLabeledTick *mjt;
 
     /*never use logarithmic mode for negative numbers*/
-    if (a->reqmin < 0 && a->is_logarithmic == TRUE)
+    if (a->reqmin < 0 && a->is_logarithmic)
         return 1; /*this is an error*/
 
     /*remove old ticks*/

@@ -215,11 +215,10 @@ gwy_graph_area_init(GwyGraphArea *area)
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     g_signal_connect_swapped(GTK_WIDGET(area->lab), "size-allocate",
-                     G_CALLBACK(label_geometry_changed_cb), area);
+                             G_CALLBACK(label_geometry_changed_cb), area);
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                    GTK_WIDGET(area)->allocation.width
-                            - GTK_WIDGET(area->lab)->allocation.width - 5,
-                   5);
+                            - GTK_WIDGET(area->lab)->allocation.width - 5, 5);
 }
 
 /**
@@ -300,24 +299,23 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 }
 
 static void
-gwy_graph_area_repos_label(GwyGraphArea *area, 
+gwy_graph_area_repos_label(GwyGraphArea *area,
                            GtkAllocation *area_allocation,
                            GtkAllocation *label_allocation)
 {
-    
+
     gint posx, posy;
-    posx = (gint)(area->rx0*area_allocation->width);                            
+    posx = (gint)(area->rx0*area_allocation->width);
     posy = (gint)(area->ry0*area_allocation->height);
     posx = CLAMP(posx, 5, area_allocation->width - label_allocation->width - 5);
-    posy = CLAMP(posy, 5, area_allocation->height - label_allocation->height - 5); 
-    
+    posy = CLAMP(posy, 5, area_allocation->height - label_allocation->height - 5);
+
     if (((area->old_width != area_allocation->width
           || area->old_height != area_allocation->height)
          || (area->label_old_width != label_allocation->width
           || area->label_old_height != label_allocation->height))) {
         gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), posx, posy);
     }
-    
 }
 
 
@@ -391,7 +389,9 @@ gwy_graph_area_expose(GtkWidget *widget,
         && (area->selecting != 0))
         gwy_graph_area_draw_zoom(drawable, area->gc, area);
 
-    gtk_widget_queue_draw(GTK_WIDGET(area->lab));
+
+    if (gwy_graph_model_get_label_visible(area->graph_model))
+        gtk_widget_queue_draw(GTK_WIDGET(area->lab));
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->expose_event(widget, event);
 
     return TRUE;
@@ -572,8 +572,13 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     nc = gwy_graph_model_get_n_curves(gmodel);
     child = gwy_graph_area_find_child(area, x, y);
     if (child) {
+        if (!gwy_graph_model_get_label_visible(gmodel))
+            return FALSE;
+
+        /* FIXME: The conditions below are strange.  Or I don't understand
+         * them. */
         if (event->type == GDK_2BUTTON_PRESS
-            && area->enable_user_input == TRUE) {
+            && area->enable_user_input) {
             _gwy_graph_label_dialog_set_graph_data(area->label_dialog, gmodel);
             gtk_widget_show_all(GTK_WIDGET(area->label_dialog));
         }
@@ -592,7 +597,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     }
 
     if (area->status == GWY_GRAPH_STATUS_PLAIN && nc > 0
-        && area->enable_user_input == TRUE) {
+        && area->enable_user_input) {
         curve = gwy_graph_area_find_curve(area, dx, dy);
         if (curve >= 0) {
             cmodel = gwy_graph_model_get_curve(gmodel, curve);
@@ -913,7 +918,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         }
         area->rx0 = ((gdouble)event->x - area->rxoff)/(gdouble)area->old_width;
         area->ry0 = ((gdouble)event->y - area->ryoff)/(gdouble)area->old_height;
-        
+
         area->active = NULL;
     }
     return FALSE;
@@ -1072,7 +1077,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         gwy_graph_area_draw_child_rectangle(area);
         area->xoff = x - area->x0;
         area->yoff = y - area->y0;
-       
+
 
         area->rx0 = ((gdouble)event->x - area->rxoff)/(gdouble)area->old_width;
         area->ry0 = ((gdouble)event->y - area->ryoff)/(gdouble)area->old_height;
@@ -1411,7 +1416,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
-static void    
+static void
 label_geometry_changed_cb(GtkWidget *area,
                           GtkAllocation *label_allocation)
 {
