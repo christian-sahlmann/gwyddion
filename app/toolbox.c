@@ -930,44 +930,14 @@ static void
 gwy_app_duplicate_cb(void)
 {
     GwyContainer *container;
-    GwyDataField *dfield, *mfield, *sfield;
-    gint oldid, id;
+    gint id;
 
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &container,
-                                     GWY_APP_DATA_FIELD_ID, &oldid,
-                                     GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_MASK_FIELD, &mfield,
-                                     GWY_APP_SHOW_FIELD, &sfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
-    g_return_if_fail(container && dfield);
+    g_return_if_fail(container && id >= 0);
 
-    dfield = gwy_data_field_duplicate(dfield);
-    id = gwy_app_data_browser_add_data_field(dfield, container, TRUE);
-    g_object_unref(dfield);
-    gwy_app_copy_data_items(container, container, oldid, id,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_RANGE_TYPE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            0);
-    gwy_app_set_data_field_title(container, id, gwy_sgettext("noun|Copy"));
-    if (mfield) {
-        mfield = gwy_data_field_duplicate(mfield);
-        gwy_container_set_object(container,
-                                 gwy_app_get_mask_key_for_id(id),
-                                 mfield);
-        g_object_unref(mfield);
-    }
-    if (sfield) {
-        sfield = gwy_data_field_duplicate(sfield);
-        gwy_container_set_object(container,
-                                 gwy_app_get_show_key_for_id(id),
-                                 sfield);
-        g_object_unref(sfield);
-    }
-    /* FIXME: It would be nice to copy selection too, maybe copy everything by
-     * prefix instead? */
+    gwy_app_data_browser_copy_channel(container, id, container);
 }
 
 static void

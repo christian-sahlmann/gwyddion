@@ -26,6 +26,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -184,6 +185,34 @@ gwy_app_data_proxy_compare_data(gconstpointer a,
     GwyAppDataProxy *ua = (GwyAppDataProxy*)a;
 
     return (guchar*)ua->container - (guchar*)b;
+}
+
+/**
+ * gwy_app_data_proxy_compare:
+ * @a: Pointer to a #GwyAppDataProxy.
+ * @b: Pointer to a #GwyAppDataProxy.
+ *
+ * Compares two data proxies using file name ordering.
+ *
+ * Returns: -1, 1 or 0 according to alphabetical order.
+ **/
+static gint
+gwy_app_data_proxy_compare(gconstpointer a,
+                           gconstpointer b)
+{
+    GwyContainer *ua = ((GwyAppDataProxy*)a)->container;
+    GwyContainer *ub = ((GwyAppDataProxy*)b)->container;
+    const guchar *fa = NULL, *fb = NULL;
+
+    gwy_container_gis_string_by_name(ua, "/filename", &fa);
+    gwy_container_gis_string_by_name(ub, "/filename", &fb);
+    if (!fa && !fb)
+        return (guchar*)ua - (guchar*)ub;
+    if (!fa)
+        return -1;
+    if (!fb)
+        return 1;
+    return g_utf8_collate(fa, fb);
 }
 
 /**
@@ -1716,6 +1745,132 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     gtk_window_present(GTK_WINDOW(window3d));
 }
 
+static void
+gwy_app_data_browser_popup_activate_copy(GtkWidget *item,
+                                         GwyAppDataProxy *destproxy)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *srcproxy;
+    GwyContainer *container;
+    GtkWidget *menu;
+    gint id, pageno;
+
+    browser = gwy_app_get_data_browser();
+    srcproxy = browser->current;
+    pageno = browser->active_page;
+    menu = gtk_widget_get_parent(item);
+    g_return_if_fail(GTK_IS_MENU(menu));
+
+    id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(menu), "id"));
+    if (!destproxy) {
+        gwy_debug("Create a new file");
+        container = gwy_container_new();
+        gwy_app_data_browser_add(container);
+    }
+    else {
+        gwy_debug("Create a new object in file %s",
+                  gtk_label_get_text(GTK_LABEL(GTK_BIN(item)->child)));
+        container = destproxy->container;
+    }
+
+    if (pageno == PAGE_CHANNELS)
+        gwy_app_data_browser_copy_channel(srcproxy->container, id, container);
+    else {
+        GwyAppDataList *list;
+        GwyGraphModel *gmodel, *gmodel2;
+        GtkTreeIter iter;
+
+        list = &srcproxy->lists[PAGE_GRAPHS];
+        gwy_app_data_proxy_find_object(list->store, id, &iter);
+        gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                           MODEL_OBJECT, &gmodel,
+                           -1);
+        gmodel2 = gwy_graph_model_duplicate(gmodel);
+        gwy_app_data_browser_add_graph_model(gmodel2, container, TRUE);
+        g_object_unref(gmodel);
+    }
+
+    if (!destproxy)
+        g_object_unref(container);
+}
+
+static gboolean
+gwy_app_data_browser_popup_menu_mouse(GtkTreeView *treeview,
+                                      GdkEventButton *event,
+                                      GwyAppDataBrowser *browser)
+{
+    GtkWidget *menu, *item;
+    GtkTreeModel *model;
+    GtkTreePath *path = NULL;
+    GtkTreeViewColumn *column = NULL;
+    GtkTreeIter iter;
+    GList *list, *l;
+    gint id;
+
+    if (event->button != 3
+        || event->window != gtk_tree_view_get_bin_window(treeview))
+        return FALSE;
+
+    model = gtk_tree_view_get_model(treeview);
+    if (!model)
+        return FALSE;
+
+    if (!gtk_tree_view_get_path_at_pos(treeview,
+                                       ROUND(event->x), ROUND(event->y),
+                                       &path, &column, NULL, NULL))
+        return FALSE;
+
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
+    gwy_debug("Page: %d, Id: %d", browser->active_page, id);
+
+    menu = gtk_menu_new();
+    g_object_set_data(G_OBJECT(menu), "id", GINT_TO_POINTER(id));
+
+    item = gtk_menu_item_new_with_label(_("New File"));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_app_data_browser_popup_activate_copy),
+                     NULL);
+
+    list = g_list_copy(browser->proxy_list);
+    list = g_list_sort(list, gwy_app_data_proxy_compare);
+    for (l = list; l; l = g_list_next(l)) {
+        GwyAppDataProxy *proxy = (GwyAppDataProxy*)l->data;
+        const guchar *filename;
+        gchar *bname;
+
+        /* Exclude the file the object already is in */
+        if (proxy == browser->current)
+            continue;
+
+        if (gwy_container_gis_string_by_name(proxy->container, "/filename",
+                                              &filename)) {
+            bname = g_path_get_basename(filename);
+            item = gtk_menu_item_new_with_label(bname);
+            g_free(bname);
+        }
+        else
+            item = gtk_menu_item_new_with_label(_("Untitled"));    /* FIXME */
+
+        g_object_set_data(G_OBJECT(item), "proxy", proxy);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_signal_connect(item, "activate",
+                         G_CALLBACK(gwy_app_data_browser_popup_activate_copy),
+                         proxy);
+    }
+
+    g_signal_connect(menu, "selection-done",
+                     G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_widget_show_all(menu);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return TRUE;
+}
+
 static GtkWidget*
 gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 {
@@ -1778,11 +1933,17 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     gtk_tree_view_set_headers_visible(treeview, FALSE);
 
+    /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
                        GINT_TO_POINTER(PAGE_CHANNELS));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
+                     browser);
+
+    /* Pop-up menu */
+    g_signal_connect(treeview, "button-press-event",
+                     G_CALLBACK(gwy_app_data_browser_popup_menu_mouse),
                      browser);
 
     return retval;
@@ -2094,11 +2255,17 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     gtk_tree_view_set_headers_visible(treeview, FALSE);
 
+    /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
                        GINT_TO_POINTER(PAGE_GRAPHS));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
+                     browser);
+
+    /* Pop-up menu */
+    g_signal_connect(treeview, "button-press-event",
+                     G_CALLBACK(gwy_app_data_browser_popup_menu_mouse),
                      browser);
 
     return retval;
@@ -2423,6 +2590,8 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
             gtk_label_set_text(GTK_LABEL(browser->filename), s);
             g_free(s);
         }
+        else
+            gtk_label_set_text(GTK_LABEL(browser->filename), NULL);
         gwy_sensitivity_group_set_state(browser->sensgroup,
                                         SENS_FILE, SENS_FILE);
     }
@@ -3481,6 +3650,11 @@ gwy_app_copy_data_items(GwyContainer *source,
                         gint to_id,
                         ...)
 {
+    /* FIXME: copy ALL selections */
+    static const gchar *sel_keys[] = {
+        "point", "pointer", "line", "rectangle", "ellipse",
+    };
+
     GwyDataItem what;
     gchar key_from[40];
     gchar key_to[40];
@@ -3488,8 +3662,10 @@ gwy_app_copy_data_items(GwyContainer *source,
     GwyRGBA rgba;
     guint enumval;
     gboolean boolval;
+    GObject *obj;
     gdouble dbl;
     va_list ap;
+    guint i;
 
     g_return_if_fail(GWY_IS_CONTAINER(source));
     g_return_if_fail(GWY_IS_CONTAINER(dest));
@@ -3516,6 +3692,15 @@ gwy_app_copy_data_items(GwyContainer *source,
                 gwy_rgba_store_to_container(&rgba, dest, key_to);
             else
                 gwy_rgba_remove_from_container(dest, key_to);
+            break;
+
+            case GWY_DATA_ITEM_TITLE:
+            g_snprintf(key_from, sizeof(key_from), "/%d/data/title", from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/data/title", to_id);
+            if (gwy_container_gis_string_by_name(source, key_from, &name))
+                gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
+            else
+                gwy_container_remove_by_name(dest, key_to);
             break;
 
             case GWY_DATA_ITEM_RANGE:
@@ -3553,12 +3738,99 @@ gwy_app_copy_data_items(GwyContainer *source,
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
+            case GWY_DATA_ITEM_META:
+            g_snprintf(key_from, sizeof(key_from), "/%d/meta", from_id);
+            g_snprintf(key_to, sizeof(key_to), "/%d/meta", to_id);
+            if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                obj = gwy_serializable_duplicate(obj);
+                gwy_container_set_object_by_name(dest, key_to, obj);
+                g_object_unref(obj);
+            }
+            else
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_DATA_ITEM_SELECTIONS:
+            for (i = 0; i < G_N_ELEMENTS(sel_keys); i++) {
+                g_snprintf(key_from, sizeof(key_from), "/%d/select/%s",
+                           from_id, sel_keys[i]);
+                g_snprintf(key_to, sizeof(key_to), "/%d/select/%s",
+                           to_id, sel_keys[i]);
+                if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                    obj = gwy_serializable_duplicate(obj);
+                    gwy_container_set_object_by_name(dest, key_to, obj);
+                    g_object_unref(obj);
+                }
+                else
+                    gwy_container_remove_by_name(dest, key_to);
+            }
+            break;
+
             default:
             g_assert_not_reached();
             break;
         }
     }
     va_end(ap);
+}
+
+/**
+ * gwy_app_data_browser_copy_channel:
+ * @source: Source container.
+ * @id: Data channel id.
+ * @dest: Target container (may be identical to source).
+ *
+ * Copies a channel including all auxiliary data.
+ *
+ * Returns: The id of the copy.
+ **/
+gint
+gwy_app_data_browser_copy_channel(GwyContainer *source,
+                                  gint id,
+                                  GwyContainer *dest)
+{
+    GwyDataField *dfield;
+    GQuark key;
+    gint newid;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(source), -1);
+    g_return_val_if_fail(GWY_IS_CONTAINER(dest), -1);
+    key = gwy_app_get_data_key_for_id(id);
+    dfield = gwy_container_get_object(source, key);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), -1);
+
+    dfield = gwy_data_field_duplicate(dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, dest, TRUE);
+    g_object_unref(dfield);
+
+    key = gwy_app_get_mask_key_for_id(id);
+    if (gwy_container_gis_object(source, key, &dfield)) {
+        dfield = gwy_data_field_duplicate(dfield);
+        key = gwy_app_get_mask_key_for_id(newid);
+        gwy_container_set_object(dest, key, dfield);
+        g_object_unref(dfield);
+    }
+
+    key = gwy_app_get_show_key_for_id(id);
+    if (gwy_container_gis_object(source, key, &dfield)) {
+        dfield = gwy_data_field_duplicate(dfield);
+        key = gwy_app_get_show_key_for_id(newid);
+        gwy_container_set_object(dest, key, dfield);
+        g_object_unref(dfield);
+    }
+
+    gwy_app_copy_data_items(source, dest, id, newid,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            GWY_DATA_ITEM_META,
+                            GWY_DATA_ITEM_TITLE,
+                            GWY_DATA_ITEM_SELECTIONS,
+                            0);
+
+    return newid;
 }
 
 /**

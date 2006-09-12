@@ -48,11 +48,13 @@ typedef enum {
 typedef enum {
     GWY_DATA_ITEM_GRADIENT = 1,
     GWY_DATA_ITEM_PALETTE = GWY_DATA_ITEM_GRADIENT,
+    GWY_DATA_ITEM_MASK_COLOR,
+    GWY_DATA_ITEM_TITLE,
     GWY_DATA_ITEM_RANGE,
     GWY_DATA_ITEM_RANGE_TYPE,
-    GWY_DATA_ITEM_MASK_COLOR,
     GWY_DATA_ITEM_REAL_SQUARE,
-    /* GWY_DATA_ITEM_SELECTION: Current, all? */
+    GWY_DATA_ITEM_SELECTIONS,
+    GWY_DATA_ITEM_META
 } GwyDataItem;
 
 typedef enum {
@@ -93,6 +95,9 @@ void   gwy_app_copy_data_items              (GwyContainer *source,
                                              gint from_id,
                                              gint to_id,
                                              ...);
+gint   gwy_app_data_browser_copy_channel    (GwyContainer *source,
+                                             gint id,
+                                             GwyContainer *dest);
 GQuark gwy_app_get_data_key_for_id          (gint id);
 GQuark gwy_app_get_mask_key_for_id          (gint id);
 GQuark gwy_app_get_show_key_for_id          (gint id);
