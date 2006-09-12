@@ -1,4 +1,4 @@
-1.99.9.20060910
+1.99.9.20060912
 
 2.0 (0000-00-00)
 Application:
@@ -15,6 +15,8 @@ Libraries:
 - libgwydgets: GwyColorAxis behaviour for bad ranges was improved.
 - libgwydgets: Set Curve Color dialog is updated properly upon switch to
   another curve.
+- libgwydgets: Curve titles are no longer reset to empty upon switch to
+  another curve.
 - libgwydgets: Text graph export functions accept NULL initial string, bogus
   pixbuf argument was removed from pixmap export.
 - libgwydgets: foo_draw_on_drawable() graph component methods have the object
@@ -22,6 +24,7 @@ Libraries:
   their names.
 - libgwydgets: Wrong position of the bottom axis label on exported pixmaps was
   fixed.
+- libgwydgets: Posibility to move inivisible graph legend was fixed.
 
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
