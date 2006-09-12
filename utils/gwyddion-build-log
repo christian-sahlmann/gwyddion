@@ -45,6 +45,7 @@ cat >make_dists.ignore <<':'
 ^/usr/bin/ld: skipping incompatible /usr/lib/lib.* when searching for -l.*
 \.\{6,\}
 ^[0-9]\+ blocks
+^[0-9]\+ translated message
 ':'
 :
 
