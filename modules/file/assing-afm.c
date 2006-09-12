@@ -62,19 +62,16 @@ static gboolean      aafm_export           (GwyContainer *data,
                                             GwyRunType mode,
                                             GError **error);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -165,7 +162,7 @@ aafm_load(const gchar *filename,
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
-    gwy_container_set_object_by_name(container, "/0/data/title",
+    gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
     g_object_unref(dfield);
 

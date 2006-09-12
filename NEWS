@@ -27,6 +27,7 @@ Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
 - Color range: Crash upon tool switch when there was already a selection
   was fixed.
+- Assing AFM: Crash on import introduced in 1.99.9 was fixed.
 - Crop, Color range, Filters, Mask editor, Statistical function, Statistical
   quantities: Wrong selection boundaries when it was drawn `backwards' were
   fixed.
