@@ -38,6 +38,7 @@ include $(top_srcdir)/utils/mkenum.mk
 
 EXTRA_DIST += \
 	gwyversion.h.in \
+	gwypathconf.h.in \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyddion2.def
@@ -70,7 +71,7 @@ libgwyddion2_la_SOURCES = \
 	gwyversion.c
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_LIBDIR=\"$(libdir)\" -DGWY_DATADIR=\"$(datadir)\" -DGWY_LIBEXECDIR=\"$(libexecdir)\" -DGWY_LOCALEDIR=\"$(localedir)\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\"
 
 clean-local:
 	rm -f core.* *~ testser.object

@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include "gwypathconf.h"
 #include <libgwyddion/gwymacros.h>
 #include <gobject/gvaluecollector.h>
 

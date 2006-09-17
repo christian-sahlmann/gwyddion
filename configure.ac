@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[1])
 m4_define([gwy_version_minor],[99])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.9.20060910])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.9.20060917])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -18,6 +18,7 @@ AC_CONFIG_FILES(\
   libdraw/Makefile \
   libgwyddion/Makefile \
   libgwyddion/gwyversion.h \
+  libgwyddion/gwypathconf.h \
   libgwydgets/Makefile \
   libgwymodule/Makefile \
   libprocess/Makefile \
