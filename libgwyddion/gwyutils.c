@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include "gwypathconf.h"
 #include <libgwyddion/gwymacros.h>
 #include <gobject/gvaluecollector.h>
 
@@ -41,6 +40,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgwyddion/gwyutils.h>
+
+#ifdef G_OS_UNIX
+#include "gwypathconf.h"
+#endif
 
 #ifdef G_OS_WIN32
 #include <windows.h>
