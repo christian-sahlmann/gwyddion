@@ -1746,132 +1746,6 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     gtk_window_present(GTK_WINDOW(window3d));
 }
 
-static void
-gwy_app_data_browser_popup_activate_copy(GtkWidget *item,
-                                         GwyAppDataProxy *destproxy)
-{
-    GwyAppDataBrowser *browser;
-    GwyAppDataProxy *srcproxy;
-    GwyContainer *container;
-    GtkWidget *menu;
-    gint id, pageno;
-
-    browser = gwy_app_get_data_browser();
-    srcproxy = browser->current;
-    pageno = browser->active_page;
-    menu = gtk_widget_get_parent(item);
-    g_return_if_fail(GTK_IS_MENU(menu));
-
-    id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(menu), "id"));
-    if (!destproxy) {
-        gwy_debug("Create a new file");
-        container = gwy_container_new();
-        gwy_app_data_browser_add(container);
-    }
-    else {
-        gwy_debug("Create a new object in file %s",
-                  gtk_label_get_text(GTK_LABEL(GTK_BIN(item)->child)));
-        container = destproxy->container;
-    }
-
-    if (pageno == PAGE_CHANNELS)
-        gwy_app_data_browser_copy_channel(srcproxy->container, id, container);
-    else {
-        GwyAppDataList *list;
-        GwyGraphModel *gmodel, *gmodel2;
-        GtkTreeIter iter;
-
-        list = &srcproxy->lists[PAGE_GRAPHS];
-        gwy_app_data_proxy_find_object(list->store, id, &iter);
-        gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
-                           MODEL_OBJECT, &gmodel,
-                           -1);
-        gmodel2 = gwy_graph_model_duplicate(gmodel);
-        gwy_app_data_browser_add_graph_model(gmodel2, container, TRUE);
-        g_object_unref(gmodel);
-    }
-
-    if (!destproxy)
-        g_object_unref(container);
-}
-
-static gboolean
-gwy_app_data_browser_popup_menu_mouse(GtkTreeView *treeview,
-                                      GdkEventButton *event,
-                                      GwyAppDataBrowser *browser)
-{
-    GtkWidget *menu, *item;
-    GtkTreeModel *model;
-    GtkTreePath *path = NULL;
-    GtkTreeViewColumn *column = NULL;
-    GtkTreeIter iter;
-    GList *list, *l;
-    gint id;
-
-    if (event->button != 3
-        || event->window != gtk_tree_view_get_bin_window(treeview))
-        return FALSE;
-
-    model = gtk_tree_view_get_model(treeview);
-    if (!model)
-        return FALSE;
-
-    if (!gtk_tree_view_get_path_at_pos(treeview,
-                                       ROUND(event->x), ROUND(event->y),
-                                       &path, &column, NULL, NULL))
-        return FALSE;
-
-    gtk_tree_model_get_iter(model, &iter, path);
-    gtk_tree_path_free(path);
-
-    gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
-    gwy_debug("Page: %d, Id: %d", browser->active_page, id);
-
-    menu = gtk_menu_new();
-    g_object_set_data(G_OBJECT(menu), "id", GINT_TO_POINTER(id));
-
-    item = gtk_menu_item_new_with_label(_("New File"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_app_data_browser_popup_activate_copy),
-                     NULL);
-
-    list = g_list_copy(browser->proxy_list);
-    list = g_list_sort(list, gwy_app_data_proxy_compare);
-    for (l = list; l; l = g_list_next(l)) {
-        GwyAppDataProxy *proxy = (GwyAppDataProxy*)l->data;
-        const guchar *filename;
-        gchar *bname;
-
-        /* Exclude the file the object already is in */
-        if (proxy == browser->current)
-            continue;
-
-        if (gwy_container_gis_string(proxy->container,
-                                     filename_quark, &filename)) {
-            bname = g_path_get_basename(filename);
-            item = gtk_menu_item_new_with_label(bname);
-            g_free(bname);
-        }
-        else
-            item = gtk_menu_item_new_with_label(_("Untitled"));    /* FIXME */
-
-        g_object_set_data(G_OBJECT(item), "proxy", proxy);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_signal_connect(item, "activate",
-                         G_CALLBACK(gwy_app_data_browser_popup_activate_copy),
-                         proxy);
-    }
-
-    g_signal_connect(menu, "selection-done",
-                     G_CALLBACK(gtk_widget_destroy), NULL);
-    gtk_widget_show_all(menu);
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
-                   event->button, event->time);
-
-    return TRUE;
-}
-
 static GtkWidget*
 gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 {
@@ -1940,11 +1814,6 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
                        GINT_TO_POINTER(PAGE_CHANNELS));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
-                     browser);
-
-    /* Pop-up menu */
-    g_signal_connect(treeview, "button-press-event",
-                     G_CALLBACK(gwy_app_data_browser_popup_menu_mouse),
                      browser);
 
     return retval;
@@ -2264,42 +2133,24 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
 
-    /* Pop-up menu */
-    g_signal_connect(treeview, "button-press-event",
-                     G_CALLBACK(gwy_app_data_browser_popup_menu_mouse),
-                     browser);
-
     return retval;
 }
 
 /* GUI only */
 static void
-gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
+gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
+                                   guint pageno,
+                                   GtkTreeModel *model,
+                                   GtkTreeIter *iter)
 {
-    GwyAppDataProxy *proxy;
-    GtkTreeSelection *selection;
-    GtkTreeView *treeview;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
     GObject *object;
     GtkWidget *widget;
     GwyContainer *data;
     gchar key[32];
-    gint i, page;
-
-    g_return_if_fail(browser->current);
-    proxy = browser->current;
-    page = browser->active_page;
-
-    treeview = GTK_TREE_VIEW(browser->lists[page]);
-    selection = gtk_tree_view_get_selection(treeview);
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        g_warning("Nothing is selected");
-        return;
-    }
+    gint i;
 
     data = proxy->container;
-    gtk_tree_model_get(model, &iter,
+    gtk_tree_model_get(model, iter,
                        MODEL_ID, &i,
                        MODEL_OBJECT, &object,
                        MODEL_WIDGET, &widget,
@@ -2307,18 +2158,18 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 
     /* Get rid of widget displaying this object.  This may invoke complete
      * destruction later in idle handler. */
-    if (page == PAGE_CHANNELS)
+    if (pageno == PAGE_CHANNELS)
         gwy_app_data_proxy_channel_destroy_3d(proxy, i);
 
     if (widget) {
         g_object_unref(widget);
-        switch (page) {
+        switch (pageno) {
             case PAGE_CHANNELS:
-            gwy_app_data_proxy_channel_set_visible(proxy, &iter, FALSE);
+            gwy_app_data_proxy_channel_set_visible(proxy, iter, FALSE);
             break;
 
             case PAGE_GRAPHS:
-            gwy_app_data_proxy_graph_set_visible(proxy, &iter, FALSE);
+            gwy_app_data_proxy_graph_set_visible(proxy, iter, FALSE);
             break;
         }
         gwy_app_data_proxy_maybe_finalize(proxy);
@@ -2326,7 +2177,7 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
 
     /* Remove object from container, this causes of removal from tree model
      * too */
-    switch (page) {
+    switch (pageno) {
         case PAGE_CHANNELS:
         /* XXX: Cannot just remove /0, because all graphs are under
          * GRAPH_PREFIX == "/0/graph/graph" */
@@ -2364,15 +2215,55 @@ gwy_app_data_browser_delete_object(GwyAppDataBrowser *browser)
     }
     g_object_unref(object);
 
-    switch (page) {
+    switch (pageno) {
         case PAGE_CHANNELS:
-        gwy_app_data_list_update_last(&proxy->lists[PAGE_CHANNELS], -1);
+        gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
         break;
 
         case PAGE_GRAPHS:
-        gwy_app_data_list_update_last(&proxy->lists[PAGE_GRAPHS], 0);
+        gwy_app_data_list_update_last(&proxy->lists[pageno], 0);
         break;
     }
+}
+
+static void
+gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
+                                 guint pageno,
+                                 GtkTreeModel *model,
+                                 GtkTreeIter *iter,
+                                 GwyAppDataProxy *destproxy)
+{
+    GwyAppDataBrowser *browser;
+    GwyContainer *container;
+    gint id;
+
+    browser = srcproxy->parent;
+    gtk_tree_model_get(model, iter, MODEL_ID, &id, -1);
+
+    if (!destproxy) {
+        gwy_debug("Create a new file");
+        container = gwy_container_new();
+        gwy_app_data_browser_add(container);
+    }
+    else {
+        gwy_debug("Create a new object in file %s",
+                  gtk_label_get_text(GTK_LABEL(GTK_BIN(item)->child)));
+        container = destproxy->container;
+    }
+
+    if (pageno == PAGE_CHANNELS)
+        gwy_app_data_browser_copy_channel(srcproxy->container, id, container);
+    else {
+        GwyGraphModel *gmodel, *gmodel2;
+
+        gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
+        gmodel2 = gwy_graph_model_duplicate(gmodel);
+        gwy_app_data_browser_add_graph_model(gmodel2, container, TRUE);
+        g_object_unref(gmodel);
+    }
+
+    if (!destproxy)
+        g_object_unref(container);
 }
 
 static void
@@ -2417,6 +2308,83 @@ gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
     browser->notebook = NULL;
     for (i = 0; i < NPAGES; i++)
         browser->lists[i] = NULL;
+}
+
+static void
+gwy_app_data_browser_shoot_object(GObject *button,
+                                  GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    guint pageno;
+    const gchar *action;
+
+    g_return_if_fail(browser->current);
+
+    action = g_object_get_data(button, "action");
+    gwy_debug("action: %s", action);
+
+    proxy = browser->current;
+    pageno = browser->active_page;
+
+    treeview = GTK_TREE_VIEW(browser->lists[pageno]);
+    selection = gtk_tree_view_get_selection(treeview);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        g_warning("Nothing is selected");
+        return;
+    }
+
+    if (gwy_strequal(action, "delete"))
+        gwy_app_data_browser_delete_object(proxy, pageno, model, &iter);
+    else if (gwy_strequal(action, "duplicate"))
+        gwy_app_data_browser_copy_object(proxy, pageno, model, &iter, proxy);
+    else if (gwy_strequal(action, "extract"))
+        gwy_app_data_browser_copy_object(proxy, pageno, model, &iter, NULL);
+    else
+        g_warning("Unknown action <%s>", action);
+}
+
+static GtkWidget*
+gwy_app_data_browser_construct_buttons(GwyAppDataBrowser *browser)
+{
+    static const struct {
+        const gchar *stock_id;
+        const gchar *tooltip;
+        const gchar *action;
+    }
+    actions[] = {
+        { GTK_STOCK_DELETE, N_("Delete"),                "delete",    },
+        { GTK_STOCK_COPY,   N_("Duplicate"),             "duplicate", },
+        { GTK_STOCK_NEW,    N_("Extract to a new file"), "extract",   },
+    };
+
+    GtkWidget *hbox, *button, *image;
+    GtkTooltips *tips;
+    guint i;
+
+    tips = gwy_app_get_tooltips();
+    hbox = gtk_hbox_new(TRUE, 0);
+
+    for (i = 0; i < G_N_ELEMENTS(actions); i++) {
+        image = gtk_image_new_from_stock(actions[i].stock_id,
+                                         GTK_ICON_SIZE_LARGE_TOOLBAR);
+        button = gtk_button_new();
+        g_object_set_data(G_OBJECT(button), "action",
+                          (gpointer)actions[i].action);
+        gtk_tooltips_set_tip(tips, button, _(actions[i].tooltip), NULL);
+        gtk_container_add(GTK_CONTAINER(button), image);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gwy_sensitivity_group_add_widget(browser->sensgroup, button,
+                                         SENS_OBJECT);
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(gwy_app_data_browser_shoot_object),
+                         browser);
+    }
+
+    return hbox;
 }
 
 static void
@@ -2498,26 +2466,11 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
         = gwy_app_data_browser_construct_graphs(browser);
     gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_GRAPHS]);
 
-    /* Bottom toolbar */
-    hbox = gtk_hbox_new(TRUE, 0);
+    /* Buttons */
+    hbox = gwy_app_data_browser_construct_buttons(browser);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    button = gwy_tool_like_button_new(_("_Delete"), GTK_STOCK_DELETE);
-    gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
-    gwy_sensitivity_group_add_widget(browser->sensgroup, button, SENS_OBJECT);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_data_browser_delete_object),
-                             browser);
-
-    /*
-    button = gwy_tool_like_button_new(_("_Close File"), GTK_STOCK_CLOSE);
-    gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
-    gwy_sensitivity_group_add_widget(browser->sensgroup, button, SENS_FILE);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_data_browser_close_file),
-                             browser);
-                             */
-
+    /* Finish */
     g_signal_connect_swapped(browser->notebook, "switch-page",
                              G_CALLBACK(gwy_app_data_browser_page_changed),
                              browser);

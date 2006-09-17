@@ -68,9 +68,7 @@ static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
 static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
-static void       gwy_app_change_mask_color_cb (void);
 static void gwy_app_change_default_mask_color_cb(void);
-static void       gwy_app_duplicate_cb         (void);
 static void       gwy_app_gl_view_maybe_cb     (void);
 
 static GtkTargetEntry dnd_target_table[] = {
@@ -652,27 +650,11 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_REDO
         },
         {
-            N_("/_Duplicate"),
-            "<control>D",
-            gwy_app_duplicate_cb,
-            0,
-            "<StockItem>",
-            GTK_STOCK_COPY
-        },
-        {
             "/---",
             NULL,
             NULL,
             0,
             "<Separator>",
-            NULL
-        },
-        {
-            N_("/Mask _Color..."),
-            NULL,
-            gwy_app_change_mask_color_cb,
-            0,
-            NULL,
             NULL
         },
         {
@@ -712,10 +694,8 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
 
     set_sensitivity(item_factory,
-                    "<edit>/Duplicate", GWY_MENU_FLAG_DATA,
                     "<edit>/Undo", GWY_MENU_FLAG_UNDO,
                     "<edit>/Redo", GWY_MENU_FLAG_REDO,
-                    "<edit>/Mask Color...", GWY_MENU_FLAG_DATA_MASK,
                     NULL);
 
     return gtk_item_factory_get_widget(item_factory, "<edit>");
@@ -910,34 +890,10 @@ gwy_app_tool_use_cb(const gchar *toolname,
 }
 
 static void
-gwy_app_change_mask_color_cb(void)
-{
-    GwyDataView *data_view;
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &data_view, 0);
-    g_return_if_fail(data_view);
-    gwy_app_data_view_change_mask_color(data_view);
-}
-
-static void
 gwy_app_change_default_mask_color_cb(void)
 {
     gwy_color_selector_for_mask(_("Change Default Mask Color"),
                                 NULL, gwy_app_settings_get(), "/mask");
-}
-
-static void
-gwy_app_duplicate_cb(void)
-{
-    GwyContainer *container;
-    gint id;
-
-    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &container,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
-    g_return_if_fail(container && id >= 0);
-
-    gwy_app_data_browser_copy_channel(container, id, container);
 }
 
 static void

@@ -122,7 +122,6 @@ void
 gwy_resource_editor_setup(GwyResourceEditor *editor)
 {
     static const struct {
-        const gchar *label;
         const gchar *stock_id;
         const gchar *tooltip;
         GCallback callback;
@@ -130,31 +129,31 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     }
     toolbar_buttons[] = {
         {
-            N_("verb|_Edit"), GTK_STOCK_EDIT,
+            GTK_STOCK_EDIT,
             N_("Edit selected item"),
             G_CALLBACK(gwy_resource_editor_edit),
             SELECTED_EDITABLE,
         },
         {
-            N_("_New"), GTK_STOCK_NEW,
+            GTK_STOCK_NEW,
             N_("Create a new item"),
             G_CALLBACK(gwy_resource_editor_new),
             0,
         },
         {
-            N_("_Copy"), GTK_STOCK_COPY,
+            GTK_STOCK_COPY,
             N_("Create a new item based on selected one"),
             G_CALLBACK(gwy_resource_editor_duplicate),
             SELECTED_ANY,
         },
         {
-            N_("_Delete"), GTK_STOCK_DELETE,
+            GTK_STOCK_DELETE,
             N_("Delete selected item"),
             G_CALLBACK(gwy_resource_editor_delete),
             SELECTED_EDITABLE,
         },
         {
-            N_("De_fault"), "gwy_favourite",
+            "gwy_favourite",
             N_("Set selected item as default"),
             G_CALLBACK(gwy_resource_editor_set_default),
             SELECTED_ANY,
@@ -167,7 +166,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     GwyInventory *inventory;
     GtkTreeModel *model;
     GwyContainer *settings;
-    GtkWidget *hbox, *button;
+    GtkWidget *hbox, *button, *image;
     GtkTooltips *tooltips;
     GtkWidget *scwin;
     const guchar *name;
@@ -234,8 +233,10 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     hbox = gtk_hbox_new(TRUE, 0);
     gtk_box_pack_start(GTK_BOX(editor->vbox), hbox, FALSE, FALSE, 0);
     for (i = 0; i < G_N_ELEMENTS(toolbar_buttons); i++) {
-        button = gwy_tool_like_button_new(gwy_sgettext(toolbar_buttons[i].label),
-                                          toolbar_buttons[i].stock_id);
+        image = gtk_image_new_from_stock(toolbar_buttons[i].stock_id,
+                                         GTK_ICON_SIZE_LARGE_TOOLBAR);
+        button = gtk_button_new();
+        gtk_container_add(GTK_CONTAINER(button), image);
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gtk_tooltips_set_tip(tooltips, button,
                              toolbar_buttons[i].tooltip, NULL);
