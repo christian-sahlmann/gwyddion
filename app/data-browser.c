@@ -161,9 +161,11 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 
-static GQuark container_quark = 0;
-static GQuark own_key_quark   = 0;
-static GQuark page_id_quark   = 0;
+static GQuark container_quark    = 0;
+static GQuark own_key_quark      = 0;
+static GQuark page_id_quark      = 0;
+static GQuark programmatic_quark = 0;
+static GQuark filename_quark     = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
@@ -204,8 +206,8 @@ gwy_app_data_proxy_compare(gconstpointer a,
     GwyContainer *ub = ((GwyAppDataProxy*)b)->container;
     const guchar *fa = NULL, *fb = NULL;
 
-    gwy_container_gis_string_by_name(ua, "/filename", &fa);
-    gwy_container_gis_string_by_name(ub, "/filename", &fb);
+    gwy_container_gis_string(ua, filename_quark, &fa);
+    gwy_container_gis_string(ub, filename_quark, &fb);
     if (!fa && !fb)
         return (guchar*)ua - (guchar*)ub;
     if (!fa)
@@ -1072,6 +1074,16 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
 
+static gboolean
+gwy_app_data_browser_prevent_select(GtkTreeSelection *selection,
+                                    G_GNUC_UNUSED GtkTreeModel *model,
+                                    G_GNUC_UNUSED GtkTreePath *path,
+                                    G_GNUC_UNUSED gboolean is_selected,
+                                    G_GNUC_UNUSED gpointer data)
+{
+    return !!g_object_get_qdata(G_OBJECT(selection), programmatic_quark);
+}
+
 static void
 gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                           GtkCellRenderer *renderer,
@@ -1407,7 +1419,7 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
 
     data = gwy_data_view_get_data(data_view);
     ctitle = gwy_app_data_browser_figure_out_channel_title(data, id);
-    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+    if (gwy_container_gis_string(data, filename_quark, &filename)) {
         bname = g_path_get_basename(filename);
         title = g_strdup_printf("%s [%s]", bname, ctitle);
         g_free(bname);
@@ -1846,8 +1858,8 @@ gwy_app_data_browser_popup_menu_mouse(GtkTreeView *treeview,
         if (proxy == browser->current)
             continue;
 
-        if (gwy_container_gis_string_by_name(proxy->container, "/filename",
-                                              &filename)) {
+        if (gwy_container_gis_string(proxy->container,
+                                     filename_quark, &filename)) {
             bname = g_path_get_basename(filename);
             item = gtk_menu_item_new_with_label(bname);
             g_free(bname);
@@ -1935,6 +1947,9 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_select_function(selection,
+                                           gwy_app_data_browser_prevent_select,
+                                           NULL, NULL);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
                        GINT_TO_POINTER(PAGE_CHANNELS));
     g_signal_connect(selection, "changed",
@@ -2257,6 +2272,9 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_select_function(selection,
+                                           gwy_app_data_browser_prevent_select,
+                                           NULL, NULL);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
                        GINT_TO_POINTER(PAGE_GRAPHS));
     g_signal_connect(selection, "changed",
@@ -2550,6 +2568,10 @@ gwy_app_get_data_browser(void)
         = g_quark_from_static_string("gwy-app-data-browser-container");
     page_id_quark
         = g_quark_from_static_string("gwy-app-data-browser-page-id");
+    programmatic_quark
+        = g_quark_from_static_string("gwy-app-data-browser-programmatic");
+    filename_quark
+        = g_quark_from_static_string("/filename");
 
     browser = g_new0(GwyAppDataBrowser, 1);
     gwy_app_data_browser = browser;
@@ -2558,18 +2580,28 @@ gwy_app_get_data_browser(void)
 }
 
 static void
+gwy_app_data_browser_select_iter(GtkTreeView *treeview,
+                                 GtkTreeIter *iter)
+{
+    GtkTreeSelection *selection;
+
+    selection = gtk_tree_view_get_selection(treeview);
+    g_object_set_qdata(G_OBJECT(selection),
+                       programmatic_quark, GINT_TO_POINTER(TRUE));
+    gtk_tree_selection_select_iter(selection, iter);
+    g_object_set_qdata(G_OBJECT(selection),
+                       programmatic_quark, GINT_TO_POINTER(FALSE));
+}
+
+static void
 gwy_app_data_browser_restore_active(GtkTreeView *treeview,
                                     GwyAppDataList *list)
 {
-    GtkTreeSelection *selection;
     GtkTreeIter iter;
 
     gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(list->store));
-    if (!gwy_app_data_proxy_find_object(list->store, list->active, &iter))
-        return;
-
-    selection = gtk_tree_view_get_selection(treeview);
-    gtk_tree_selection_select_iter(selection, &iter);
+    if (gwy_app_data_proxy_find_object(list->store, list->active, &iter))
+        gwy_app_data_browser_select_iter(treeview, &iter);
 }
 
 static void
@@ -2608,7 +2640,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
             gwy_app_data_browser_restore_active
                           (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
 
-        if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+        if (gwy_container_gis_string(data, filename_quark, &filename)) {
             gchar *s;
 
             s = g_path_get_basename(filename);
@@ -2628,7 +2660,6 @@ gwy_app_data_browser_select_object(GwyAppDataBrowser *browser,
                                    guint pageno)
 {
     GtkTreeView *treeview;
-    GtkTreeSelection *selection;
     GtkTreeIter iter;
 
     if (!browser->window)
@@ -2637,8 +2668,7 @@ gwy_app_data_browser_select_object(GwyAppDataBrowser *browser,
     treeview = GTK_TREE_VIEW(browser->lists[pageno]);
     gwy_app_data_proxy_find_object(proxy->lists[pageno].store,
                                    proxy->lists[pageno].active, &iter);
-    selection = gtk_tree_view_get_selection(treeview);
-    gtk_tree_selection_select_iter(selection, &iter);
+    gwy_app_data_browser_select_iter(treeview, &iter);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(browser->notebook), pageno);
 }
 
