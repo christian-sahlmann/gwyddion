@@ -24,10 +24,10 @@
 /* FIXME: This breaks when the paths contain silly characters.
  * The paths have a file on their own because the only file that needs to be
  * rebuilt after ./configure path changes is gwyutils.c */
-#define GWY_LIBDIR "@libdir"
-#define GWY_DATADIR "@datadir"
-#define GWY_LIBEXECDIR "@libexecdir"
-#define GWY_LOCALEDIR "@localedir"
+#define GWY_LIBDIR "@libdir@"
+#define GWY_DATADIR "@datadir@"
+#define GWY_LIBEXECDIR "@libexecdir@"
+#define GWY_LOCALEDIR "@localedir@"
 
 #endif /* __GWY_PATHS_H__ */
 
