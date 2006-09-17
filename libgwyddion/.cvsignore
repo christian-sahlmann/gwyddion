@@ -13,3 +13,4 @@ gwyddiontypes.c
 gwyddiontypes.h
 stamp-gwyddiontypes.h
 gwyversion.h
+gwypathconf.h
