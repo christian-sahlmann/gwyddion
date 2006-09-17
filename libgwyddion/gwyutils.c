@@ -41,9 +41,10 @@
 #include <string.h>
 #include <libgwyddion/gwyutils.h>
 
-#ifdef G_OS_UNIX
-#include "gwypathconf.h"
-#endif
+/* FIXME: We do not need anything from this file, but ./configure touches it
+ * and we need to recompile after ./configure to get installation paths right.
+ */
+#include <libgwyddion/gwyversion.h>
 
 #ifdef G_OS_WIN32
 #include <windows.h>

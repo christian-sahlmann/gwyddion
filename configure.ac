@@ -18,7 +18,6 @@ AC_CONFIG_FILES(\
   libdraw/Makefile \
   libgwyddion/Makefile \
   libgwyddion/gwyversion.h \
-  libgwyddion/gwypathconf.h \
   libgwydgets/Makefile \
   libgwymodule/Makefile \
   libprocess/Makefile \
