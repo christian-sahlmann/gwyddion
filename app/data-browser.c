@@ -164,7 +164,6 @@ static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 static GQuark container_quark    = 0;
 static GQuark own_key_quark      = 0;
 static GQuark page_id_quark      = 0;
-static GQuark programmatic_quark = 0;
 static GQuark filename_quark     = 0;
 
 /* The data browser */
@@ -1074,16 +1073,6 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
 
-static gboolean
-gwy_app_data_browser_prevent_select(GtkTreeSelection *selection,
-                                    G_GNUC_UNUSED GtkTreeModel *model,
-                                    G_GNUC_UNUSED GtkTreePath *path,
-                                    G_GNUC_UNUSED gboolean is_selected,
-                                    G_GNUC_UNUSED gpointer data)
-{
-    return !!g_object_get_qdata(G_OBJECT(selection), programmatic_quark);
-}
-
 static void
 gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                           GtkCellRenderer *renderer,
@@ -1947,9 +1936,6 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
-    gtk_tree_selection_set_select_function(selection,
-                                           gwy_app_data_browser_prevent_select,
-                                           NULL, NULL);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
                        GINT_TO_POINTER(PAGE_CHANNELS));
     g_signal_connect(selection, "changed",
@@ -2272,9 +2258,6 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
-    gtk_tree_selection_set_select_function(selection,
-                                           gwy_app_data_browser_prevent_select,
-                                           NULL, NULL);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
                        GINT_TO_POINTER(PAGE_GRAPHS));
     g_signal_connect(selection, "changed",
@@ -2568,8 +2551,6 @@ gwy_app_get_data_browser(void)
         = g_quark_from_static_string("gwy-app-data-browser-container");
     page_id_quark
         = g_quark_from_static_string("gwy-app-data-browser-page-id");
-    programmatic_quark
-        = g_quark_from_static_string("gwy-app-data-browser-programmatic");
     filename_quark
         = g_quark_from_static_string("/filename");
 
@@ -2586,11 +2567,7 @@ gwy_app_data_browser_select_iter(GtkTreeView *treeview,
     GtkTreeSelection *selection;
 
     selection = gtk_tree_view_get_selection(treeview);
-    g_object_set_qdata(G_OBJECT(selection),
-                       programmatic_quark, GINT_TO_POINTER(TRUE));
     gtk_tree_selection_select_iter(selection, iter);
-    g_object_set_qdata(G_OBJECT(selection),
-                       programmatic_quark, GINT_TO_POINTER(FALSE));
 }
 
 static void
