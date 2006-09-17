@@ -22,7 +22,8 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libdraw/gwyrgba.h>
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/dataline.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwydgettypes.h>

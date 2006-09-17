@@ -52,9 +52,10 @@
 
 #include "config.h"
 #include <string.h>
-#include <libgwyddion/gwyddion.h>
-#include "gwyruler.h"
-#include "gwydgettypes.h"
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwydgets/gwyruler.h>
+#include <libgwydgets/gwydgettypes.h>
 
 enum { MINIMUM_INCR = 5 };
 

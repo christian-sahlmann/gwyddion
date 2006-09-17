@@ -20,7 +20,8 @@
 
 #include "config.h"
 #include <string.h>
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraph.h>
