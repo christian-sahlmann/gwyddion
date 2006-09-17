@@ -32,7 +32,6 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -58,9 +57,12 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
+#include <libgwyddion/gwymd5.h>
 #include <libgwymodule/gwymodule-file.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
 

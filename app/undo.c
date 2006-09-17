@@ -24,7 +24,7 @@
 #include "config.h"
 #include <stdarg.h>
 #include <string.h>
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <app/menu.h>
 #include <app/undo.h>

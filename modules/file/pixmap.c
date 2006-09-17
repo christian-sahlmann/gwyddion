@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <errno.h>
 #include <math.h>
@@ -37,7 +36,9 @@
 #  include <tiffio.h>
 #endif
 
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>

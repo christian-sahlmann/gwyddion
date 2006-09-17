@@ -24,7 +24,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>

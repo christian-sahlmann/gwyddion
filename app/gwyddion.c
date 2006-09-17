@@ -26,9 +26,10 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
-#include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule.h>
-#include <libdraw/gwydraw.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyversion.h>
+#include <libgwyddion/gwydebugobjects.h>
+#include <libgwymodule/gwymoduleloader.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
