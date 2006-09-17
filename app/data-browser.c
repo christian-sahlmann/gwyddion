@@ -2421,7 +2421,10 @@ gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
 static void
 gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
 {
-    GtkWidget *label, *box_page, *scwin, *vbox, *hbox, *button;
+    GtkWidget *label, *box_page, *scwin, *vbox, *hbox, *button, *image, *frame;
+    GtkTooltips *tips;
+
+    tips = gwy_app_get_tooltips();
 
     browser->sensgroup = gwy_sensitivity_group_new();
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -2436,17 +2439,37 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(browser->window), vbox);
 
+    /* Filename row */
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+    /* Filename */
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
+    gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 0);
+
     browser->filename = gtk_label_new(NULL);
     gtk_label_set_ellipsize(GTK_LABEL(browser->filename), PANGO_ELLIPSIZE_END);
     gtk_misc_set_alignment(GTK_MISC(browser->filename), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(browser->filename), 4, 2);
-    gtk_box_pack_start(GTK_BOX(vbox), browser->filename, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(frame), browser->filename);
 
-    /* Create the notebook */
+    /* Close button */
+    button = gtk_button_new();
+    image = gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_BUTTON);
+    gtk_container_add(GTK_CONTAINER(button), image);
+    gtk_tooltips_set_tip(tips, button, _("Close file"), NULL);
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    gwy_sensitivity_group_add_widget(browser->sensgroup, button, SENS_FILE);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_data_browser_close_file),
+                             browser);
+
+    /* Notebook */
     browser->notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(vbox), browser->notebook, TRUE, TRUE, 0);
 
-    /* Create Channels tab */
+    /* Channels tab */
     box_page = gtk_vbox_new(FALSE, 0);
     label = gtk_label_new(_("Channels"));
     gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
@@ -2460,7 +2483,7 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
         = gwy_app_data_browser_construct_channels(browser);
     gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_CHANNELS]);
 
-    /* Create Graphs tab */
+    /* Graphs tab */
     box_page = gtk_vbox_new(FALSE, 0);
     label = gtk_label_new(_("Graphs"));
     gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
@@ -2474,7 +2497,7 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
         = gwy_app_data_browser_construct_graphs(browser);
     gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_GRAPHS]);
 
-    /* Create the bottom toolbar */
+    /* Bottom toolbar */
     hbox = gtk_hbox_new(TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
@@ -2485,12 +2508,14 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                              G_CALLBACK(gwy_app_data_browser_delete_object),
                              browser);
 
+    /*
     button = gwy_tool_like_button_new(_("_Close File"), GTK_STOCK_CLOSE);
     gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
     gwy_sensitivity_group_add_widget(browser->sensgroup, button, SENS_FILE);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_data_browser_close_file),
                              browser);
+                             */
 
     g_signal_connect_swapped(browser->notebook, "switch-page",
                              G_CALLBACK(gwy_app_data_browser_page_changed),
