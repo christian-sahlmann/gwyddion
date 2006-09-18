@@ -177,6 +177,7 @@ static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
 static GQuark page_id_quark   = 0;
 static GQuark filename_quark  = 0;
+static GQuark column_id_quark = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
@@ -952,6 +953,43 @@ gwy_app_data_list_update_last(GwyAppDataList *list,
     list->last = max;
 }
 
+static void
+gwy_app_data_list_row_activated(GtkTreeView *treeview,
+                                GtkTreePath *path,
+                                GtkTreeViewColumn *column,
+                                G_GNUC_UNUSED gpointer user_data)
+{
+    GList *list;
+    GtkCellRenderer *renderer;
+    const gchar *col_id;
+
+    /* Only do anything if the "title" column was activated */
+    col_id = g_object_get_qdata(G_OBJECT(column), column_id_quark);
+    if (!col_id || !gwy_strequal(col_id, "title"))
+        return;
+
+    list = gtk_tree_view_column_get_cell_renderers(column);
+    if (g_list_length(list) > 1)
+        g_warning("Too many cell renderers in title column");
+
+    renderer = GTK_CELL_RENDERER(list->data);
+    g_list_free(list);
+    g_return_if_fail(GTK_IS_CELL_RENDERER_TEXT(renderer));
+
+    /* The trick to make title editable on double click is to enable edit
+     * here and disable it again in "edited" signal handler of the
+     * renderer (this is set in particular lists handlers) */
+    g_object_set(renderer, "editable", TRUE, "editable-set", TRUE, NULL);
+    gtk_tree_view_set_cursor(treeview, path, column, TRUE);
+}
+
+static void
+gwy_app_data_list_disable_edit(GtkCellRenderer *renderer)
+{
+    gwy_debug("%p", renderer);
+    g_object_set(renderer, "editable", FALSE, NULL);
+}
+
 /**
  * gwy_app_data_proxy_new:
  * @browser: Parent data browser for the new proxy.
@@ -1627,7 +1665,7 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
 }
 
 static void
-gwy_app_data_browser_channel_name_edited(G_GNUC_UNUSED GtkCellRendererText *renderer,
+gwy_app_data_browser_channel_name_edited(GtkCellRenderer *renderer,
                                          const gchar *strpath,
                                          const gchar *text,
                                          GwyAppDataBrowser *browser)
@@ -1659,6 +1697,8 @@ gwy_app_data_browser_channel_name_edited(G_GNUC_UNUSED GtkCellRendererText *rend
         g_snprintf(key, sizeof(key), "/%d/data/title", id);
         gwy_container_set_string_by_name(proxy->container, key, title);
     }
+
+    gwy_app_data_list_disable_edit(renderer);
 }
 
 static GList*
@@ -1843,6 +1883,8 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     /* Construct the GtkTreeView that will display data channels */
     retval = gtk_tree_view_new();
     treeview = GTK_TREE_VIEW(retval);
+    g_signal_connect(treeview, "row-activated",
+                     G_CALLBACK(gwy_app_data_list_row_activated), NULL);
 
     /* Add the thumbnail column */
     renderer = gtk_cell_renderer_pixbuf_new();
@@ -1867,18 +1909,19 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     g_object_set(renderer,
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
-                 "editable", TRUE,
-                 "editable-set", TRUE,
                  NULL);
     g_signal_connect(renderer, "edited",
                      G_CALLBACK(gwy_app_data_browser_channel_name_edited),
                      browser);
+    g_signal_connect(renderer, "editing-canceled",
+                     G_CALLBACK(gwy_app_data_list_disable_edit), NULL);
     column = gtk_tree_view_column_new_with_attributes("Title", renderer,
                                                       NULL);
     gtk_tree_view_column_set_expand(column, TRUE);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_channel_render_title, browser, NULL);
+    g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the flags column */
@@ -2130,7 +2173,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
 }
 
 static void
-gwy_app_data_browser_graph_name_edited(G_GNUC_UNUSED GtkCellRendererText *renderer,
+gwy_app_data_browser_graph_name_edited(GtkCellRenderer *renderer,
                                        const gchar *strpath,
                                        const gchar *text,
                                        GwyAppDataBrowser *browser)
@@ -2160,6 +2203,8 @@ gwy_app_data_browser_graph_name_edited(G_GNUC_UNUSED GtkCellRendererText *render
     gwy_graph_model_set_title(gmodel, title);
     g_free(title);
     g_object_unref(gmodel);
+
+    gwy_app_data_list_disable_edit(renderer);
 }
 
 static GtkWidget*
@@ -2174,6 +2219,8 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     /* Construct the GtkTreeView that will display graphs */
     retval = gtk_tree_view_new();
     treeview = GTK_TREE_VIEW(retval);
+    g_signal_connect(treeview, "row-activated",
+                     G_CALLBACK(gwy_app_data_list_row_activated), NULL);
 
     /* Add the thumbnail column */
     renderer = gtk_cell_renderer_pixbuf_new();
@@ -2198,18 +2245,19 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     g_object_set(renderer,
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
-                 "editable", TRUE,
-                 "editable-set", TRUE,
                  NULL);
     g_signal_connect(renderer, "edited",
                      G_CALLBACK(gwy_app_data_browser_graph_name_edited),
                      browser);
+    g_signal_connect(renderer, "editing-canceled",
+                     G_CALLBACK(gwy_app_data_list_disable_edit), NULL);
     column = gtk_tree_view_column_new_with_attributes("Title", renderer,
                                                       NULL);
     gtk_tree_view_column_set_expand(column, TRUE);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_graph_render_title, browser, NULL);
+    g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the flags column */
@@ -2345,8 +2393,7 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
         gwy_app_data_browser_add(container);
     }
     else {
-        gwy_debug("Create a new object in file %s",
-                  gtk_label_get_text(GTK_LABEL(GTK_BIN(item)->child)));
+        gwy_debug("Create a new object in container %p", destproxy->container);
         container = destproxy->container;
     }
 
@@ -2603,6 +2650,8 @@ gwy_app_get_data_browser(void)
         = g_quark_from_static_string("gwy-app-data-browser-container");
     page_id_quark
         = g_quark_from_static_string("gwy-app-data-browser-page-id");
+    column_id_quark
+        = g_quark_from_static_string("gwy-app-data-browser-column-id");
     filename_quark
         = g_quark_from_static_string("/filename");
 
