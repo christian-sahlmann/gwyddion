@@ -57,7 +57,7 @@ enum {
 enum {
     PROP_0,
     PROP_DESCRIPTION,
-    PROP_CURVE_TYPE,
+    PROP_MODE,
     PROP_POINT_TYPE,
     PROP_POINT_SIZE,
     PROP_LINE_STYLE,
@@ -117,12 +117,11 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
                              "curve",
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 
-    /* XXX: This is called 'mode' elsewhere */
     g_object_class_install_property
         (gobject_class,
-         PROP_CURVE_TYPE,
-         g_param_spec_enum("curve-type",
-                           "Curve type",
+         PROP_MODE,
+         g_param_spec_enum("mode",
+                           "Mode",
                            "Curve plotting mode (line, points, ...)",
                            GWY_TYPE_GRAPH_CURVE_TYPE,
                            GWY_GRAPH_CURVE_LINE,
@@ -193,7 +192,7 @@ gwy_graph_curve_model_set_property(GObject *object,
         g_string_assign(gcmodel->description, g_value_get_string(value));
         break;
 
-        case PROP_CURVE_TYPE:
+        case PROP_MODE:
         gcmodel->mode = g_value_get_enum(value);
         break;
 
@@ -237,7 +236,7 @@ gwy_graph_curve_model_get_property(GObject*object,
         g_value_set_string(value, gcmodel->description->str);
         break;
 
-        case PROP_CURVE_TYPE:
+        case PROP_MODE:
         g_value_set_enum(value, gcmodel->mode);
         break;
 
@@ -340,6 +339,7 @@ gwy_graph_curve_model_serialize(GObject *object,
             { 'd', "color.red", &gcmodel->color.r, NULL },
             { 'd', "color.green", &gcmodel->color.g, NULL },
             { 'd', "color.blue", &gcmodel->color.b, NULL },
+            /* XXX: Legacy */
             { 'i', "type", &gcmodel->mode, NULL },
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
@@ -371,6 +371,7 @@ gwy_graph_curve_model_get_size(GObject *object)
             { 'd', "color.red", &gcmodel->color.r, NULL },
             { 'd', "color.green", &gcmodel->color.g, NULL },
             { 'd', "color.blue", &gcmodel->color.b, NULL },
+            /* XXX: Legacy */
             { 'i', "type", &gcmodel->mode, NULL },
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
@@ -405,7 +406,10 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             { 'd', "color.red", &gcmodel->color.r, NULL },
             { 'd', "color.green", &gcmodel->color.g, NULL },
             { 'd', "color.blue", &gcmodel->color.b, NULL },
+            /* XXX: Legacy */
             { 'i', "type", &gcmodel->mode, NULL },
+            /* Accept mode too */
+            { 'i', "mode", &gcmodel->mode, NULL },
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
             { 'i', "line_style", &gcmodel->line_style, NULL },
@@ -537,7 +541,7 @@ gwy_graph_curve_model_set_mode(GwyGraphCurveModel *gcmodel,
 
     if (mode != gcmodel->mode) {
         gcmodel->mode = mode;
-        g_object_notify(G_OBJECT(gcmodel), "curve-type");
+        g_object_notify(G_OBJECT(gcmodel), "mode");
     }
 }
 
