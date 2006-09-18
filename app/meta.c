@@ -277,10 +277,7 @@ gwy_meta_browser_construct(MetadataBrowser *browser)
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        g_object_set(G_OBJECT(renderer),
-                     "editable", TRUE,
-                     "editable-set", TRUE,
-                     NULL);
+        g_object_set(renderer, "editable", TRUE, "editable-set", TRUE, NULL);
         column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
                                                           renderer, NULL);
         gtk_tree_view_column_set_cell_data_func(column, renderer,

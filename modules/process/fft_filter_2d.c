@@ -759,7 +759,7 @@ switch_layer(guint new_mode, ControlsType *controls)
     GwySelection *selection;
 
     vlayer = create_vlayer(new_mode);
-    g_object_set(G_OBJECT(vlayer),
+    g_object_set(vlayer,
                  "snap-to-center", controls->snap,
                  "draw-reflection", !controls->snap,
                  NULL);
@@ -932,7 +932,7 @@ snap_cb(GtkWidget *check, ControlsType *controls)
         gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
 
     controls->snap = get_toggled(check);
-    g_object_set(G_OBJECT(layer),
+    g_object_set(layer,
                  "snap-to-center", controls->snap,
                  "draw-reflection", !controls->snap,
                  NULL);

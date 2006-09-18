@@ -499,7 +499,7 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
     for (i = 0; i < G_N_ELEMENTS(buttons); i++) {
         button = gtk_radio_button_new_from_widget(group);
         gtk_box_pack_start(GTK_BOX(box), button, FALSE, FALSE, 0);
-        g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
+        g_object_set(button, "draw-indicator", FALSE, NULL);
         gtk_container_add(GTK_CONTAINER(button),
                           gtk_image_new_from_stock(buttons[i].stock_id,
                                                    GTK_ICON_SIZE_LARGE_TOOLBAR));

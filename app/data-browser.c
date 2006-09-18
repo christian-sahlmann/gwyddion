@@ -1063,7 +1063,7 @@ gwy_app_data_browser_render_visible(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GtkWidget *widget;
 
     gtk_tree_model_get(model, iter, MODEL_WIDGET, &widget, -1);
-    g_object_set(G_OBJECT(renderer), "active", widget != NULL, NULL);
+    g_object_set(renderer, "active", widget != NULL, NULL);
     gwy_object_unref(widget);
 }
 
@@ -1102,7 +1102,7 @@ gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
     data = browser->current->container;
     gtk_tree_model_get(model, iter, MODEL_ID, &channel, -1);
     title = gwy_app_data_browser_figure_out_channel_title(data, channel);
-    g_object_set(G_OBJECT(renderer), "text", title, NULL);
+    g_object_set(renderer, "text", title, NULL);
 }
 
 static void
@@ -1131,7 +1131,7 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
                has_mask ? "M" : "",
                has_show ? "P" : "");
 
-    g_object_set(G_OBJECT(renderer), "text", key, NULL);
+    g_object_set(renderer, "text", key, NULL);
 }
 
 /**
@@ -1852,7 +1852,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     /* Add the visibility column */
     renderer = gtk_cell_renderer_toggle_new();
-    g_object_set(G_OBJECT(renderer), "activatable", TRUE, NULL);
+    g_object_set(renderer, "activatable", TRUE, NULL);
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_data_browser_channel_toggled), browser);
     column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
@@ -1864,7 +1864,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     /* Add the title column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(renderer),
+    g_object_set(renderer,
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
                  "editable", TRUE,
@@ -1883,7 +1883,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(renderer), "width-chars", 3, NULL);
+    g_object_set(renderer, "width-chars", 3, NULL);
     column = gtk_tree_view_column_new_with_attributes("Flags", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
@@ -1921,8 +1921,7 @@ gwy_app_data_browser_graph_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GwyGraphModel *gmodel;
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
-    g_object_set(G_OBJECT(renderer), "text", gwy_graph_model_get_title(gmodel),
-                 NULL);
+    g_object_set(renderer, "text", gwy_graph_model_get_title(gmodel), NULL);
     g_object_unref(gmodel);
 }
 
@@ -1938,7 +1937,7 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
     g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
-    g_object_set(G_OBJECT(renderer), "text", s, NULL);
+    g_object_set(renderer, "text", s, NULL);
     g_object_unref(gmodel);
 }
 
@@ -2184,7 +2183,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     /* Add the visibility column */
     renderer = gtk_cell_renderer_toggle_new();
-    g_object_set(G_OBJECT(renderer), "activatable", TRUE, NULL);
+    g_object_set(renderer, "activatable", TRUE, NULL);
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_data_browser_graph_toggled), browser);
     column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
@@ -2196,7 +2195,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     /* Add the title column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(renderer),
+    g_object_set(renderer,
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
                  "editable", TRUE,
@@ -2215,7 +2214,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(renderer), "width-chars", 3, NULL);
+    g_object_set(renderer, "width-chars", 3, NULL);
     column = gtk_tree_view_column_new_with_attributes("Curves", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
