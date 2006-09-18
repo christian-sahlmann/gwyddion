@@ -21,7 +21,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwyutils.h>
-#include <app/gwyapp.h>
+#include <app/settings.h>
+#include <app/gwytool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
