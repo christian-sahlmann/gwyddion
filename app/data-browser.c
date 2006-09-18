@@ -114,6 +114,7 @@ struct _GwyAppDataBrowser {
     GList *proxy_list;
     struct _GwyAppDataProxy *current;
     gint active_page;
+    gint untitled_counter;
     GwySensitivityGroup *sensgroup;
     GtkWidget *filename;
     GtkWidget *window;
@@ -124,6 +125,7 @@ struct _GwyAppDataBrowser {
 /* The proxy associated with each Container (this is non-GUI object) */
 struct _GwyAppDataProxy {
     guint finalize_id;
+    gint untitled_no;
     gboolean keep_invisible;
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
@@ -171,10 +173,10 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 
-static GQuark container_quark    = 0;
-static GQuark own_key_quark      = 0;
-static GQuark page_id_quark      = 0;
-static GQuark filename_quark     = 0;
+static GQuark container_quark = 0;
+static GQuark own_key_quark   = 0;
+static GQuark page_id_quark   = 0;
+static GQuark filename_quark  = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
@@ -975,6 +977,7 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     proxy = g_new0(GwyAppDataProxy, 1);
     proxy->container = data;
     proxy->parent = browser;
+    proxy->untitled_no = ++browser->untitled_counter;
     browser->proxy_list = g_list_prepend(browser->proxy_list, proxy);
     g_signal_connect_after(data, "item-changed",
                            G_CALLBACK(gwy_app_data_proxy_item_changed), proxy);
@@ -1486,8 +1489,15 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
         title = g_strdup_printf("%s [%s]", bname, ctitle);
         g_free(bname);
     }
-    else
-        title = g_strdup_printf("%s [%s]", _("Untitled"), ctitle);
+    else {
+        GwyAppDataBrowser *browser;
+        GwyAppDataProxy *proxy;
+
+        browser = gwy_app_get_data_browser();
+        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+        title = g_strdup_printf("%s %d [%s]",
+                                _("Untitled"), proxy->untitled_no, ctitle);
+    }
     gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
     g_free(title);
 }
@@ -2637,7 +2647,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
         if (browser->window) {
             for (i = 0; i < NPAGES; i++)
                 gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
-            gtk_label_set_text(GTK_LABEL(browser->filename), "");
+            gtk_label_set_text(GTK_LABEL(browser->filename), NULL);
             gwy_sensitivity_group_set_state(browser->sensgroup,
                                             SENS_FILE | SENS_OBJECT, 0);
         }
@@ -2656,19 +2666,18 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     browser->current = proxy;
 
     if (browser->window) {
+        gchar *s;
+
         for (i = 0; i < NPAGES; i++)
             gwy_app_data_browser_restore_active
                           (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
 
-        if (gwy_container_gis_string(data, filename_quark, &filename)) {
-            gchar *s;
-
+        if (gwy_container_gis_string(data, filename_quark, &filename))
             s = g_path_get_basename(filename);
-            gtk_label_set_text(GTK_LABEL(browser->filename), s);
-            g_free(s);
-        }
         else
-            gtk_label_set_text(GTK_LABEL(browser->filename), NULL);
+            s = g_strdup_printf("%s %d", _("Untitled"), proxy->untitled_no);
+        gtk_label_set_text(GTK_LABEL(browser->filename), s);
+        g_free(s);
         gwy_sensitivity_group_set_state(browser->sensgroup,
                                         SENS_FILE, SENS_FILE);
     }
