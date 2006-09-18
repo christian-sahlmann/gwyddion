@@ -25,6 +25,8 @@
 
 #include "gwymoduleinternal.h"
 
+#undef GWY_MODULE_PEDANTIC_CHECK
+
 #define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
 
 typedef struct {
@@ -444,6 +446,7 @@ gwy_load_modules_in_dir(GDir *gdir,
     }
 }
 
+#ifdef GWY_MODULE_PEDANTIC_CHECK
 static gboolean
 gwy_module_pedantic_check(_GwyModuleInfoInternal *iinfo)
 {
@@ -499,6 +502,13 @@ gwy_module_pedantic_check(_GwyModuleInfoInternal *iinfo)
 
     return TRUE;
 }
+#else
+static gboolean
+gwy_module_pedantic_check(G_GNUC_UNUSED _GwyModuleInfoInternal *iinfo)
+{
+    return TRUE;
+}
+#endif
 
 static void
 gwy_module_get_rid_of(const gchar *modname)
