@@ -1390,7 +1390,8 @@ gwy_expr_get_expression(GwyExpr *expr)
  * @expr: An expression evaluator.
  * @text: String containing the expression to evaluate.
  * @result: Location to store result to.
- * @err: Location to store compilation error to.
+ * @err: Location to store compilation or evaluation error to, or %NULL.
+ *       Errors from #GwyExprError domain can occur.
  *
  * Evaulates an arithmetic expression.
  *
@@ -1421,7 +1422,8 @@ gwy_expr_evaluate(GwyExpr *expr,
  * gwy_expr_compile:
  * @expr: An expression evaluator.
  * @text: String containing the expression to compile.
- * @err: Location to store compilation error to.
+ * @err: Location to store compilation or evaluation error to, or %NULL.
+ *       Errors from #GwyExprError domain can occur.
  *
  * Compiles an expression for later execution.
  *
@@ -1618,7 +1620,9 @@ gwy_expr_constant_name_is_valid(const gchar *name)
  * @expr: An expression evaluator.
  * @name: Name of constant to define.
  * @value: Constant numeric value.
- * @err: Location to store errors to (or %NULL).
+ * @err: Location to store error to, or %NULL.
+ *       Only %GWY_EXPR_ERROR_CONSTANT_NAME error from #GwyExprError domain can
+ *       occur.
  *
  * Defines a symbolic constant.
  *
