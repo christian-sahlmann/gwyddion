@@ -356,8 +356,8 @@ maskcor_do(MaskcorArgs *args)
         score = gwy_data_field_duplicate(retfield);
         newid = gwy_app_data_browser_add_data_field(score, args->data.data,
                                                     TRUE);
-        gwy_app_copy_data_items(args->data.data, args->data.data,
-                                args->data.id, newid,
+        gwy_app_sync_data_items(args->data.data, args->data.data,
+                                args->data.id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT, 0);
         gwy_app_set_data_field_title(args->data.data, newid,
                                      _("Correlation score"));

@@ -195,7 +195,8 @@ create_preview_data(GwyContainer *data,
     pfield = gwy_data_field_new_alike(pfield, FALSE);
     gwy_container_set_object_by_name(pdata, "/0/show", pfield);
     g_object_unref(pfield);
-    gwy_app_copy_data_items(data, pdata, id, 0, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_sync_data_items(data, pdata, id, 0, FALSE,
+                            GWY_DATA_ITEM_GRADIENT, 0);
 
     return pdata;
 }

@@ -233,7 +233,7 @@ poly_level_do(GwyContainer *data,
 
     newid = gwy_app_data_browser_add_data_field(bg, data, TRUE);
     g_object_unref(bg);
-    gwy_app_copy_data_items(data, data, oldid, newid,
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Background"));
@@ -273,8 +273,10 @@ create_preview_data(GwyContainer *data,
     gwy_container_set_object_by_name(pdata, "/1/data", pfield);
     g_object_unref(pfield);
 
-    gwy_app_copy_data_items(data, pdata, id, 0, GWY_DATA_ITEM_GRADIENT, 0);
-    gwy_app_copy_data_items(data, pdata, id, 1, GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_sync_data_items(data, pdata, id, 0, FALSE,
+                            GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_app_sync_data_items(data, pdata, id, 1, FALSE,
+                            GWY_DATA_ITEM_GRADIENT, 0);
 
     return pdata;
 }

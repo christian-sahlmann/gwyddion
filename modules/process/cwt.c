@@ -146,7 +146,7 @@ cwt(GwyContainer *data, GwyRunType run)
 
 
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-    gwy_app_copy_data_items(data, data, oldid, newid,
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);

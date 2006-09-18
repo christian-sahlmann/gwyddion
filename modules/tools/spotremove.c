@@ -414,8 +414,9 @@ gwy_tool_spot_remover_palette_changed(GwyToolSpotRemover *tool)
     GwyPlainTool *plain_tool;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    gwy_app_copy_data_items(plain_tool->container, tool->data,
+    gwy_app_sync_data_items(plain_tool->container, tool->data,
                             plain_tool->id, 0,
+                            TRUE,
                             GWY_DATA_ITEM_GRADIENT, 0);
 }
 

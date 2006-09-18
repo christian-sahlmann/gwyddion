@@ -191,7 +191,7 @@ sphrev(GwyContainer *data, GwyRunType run)
 
     newid = gwy_app_data_browser_add_data_field(background, data, TRUE);
     g_object_unref(dfield);
-    gwy_app_copy_data_items(data, data, oldid, newid,
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, _("Background"));

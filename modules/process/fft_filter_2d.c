@@ -238,7 +238,7 @@ run_main(GwyContainer *data, GwyRunType run)
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data",
                                      dfield);
-    gwy_app_copy_data_items(data, controls.mydata, id, 1,
+    gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
@@ -248,7 +248,7 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_container_set_object_by_name(controls.mydata, "/2/data",
                                      filtered);
     g_object_unref(filtered);
-    gwy_app_copy_data_items(data, controls.mydata, id, 2,
+    gwy_app_sync_data_items(data, controls.mydata, id, 2, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
@@ -258,7 +258,7 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_container_set_object_by_name(controls.mydata, "/3/data",
                                      diff);
     g_object_unref(diff);
-    gwy_app_copy_data_items(data, controls.mydata, id, 3,
+    gwy_app_sync_data_items(data, controls.mydata, id, 3, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
@@ -283,7 +283,7 @@ run_main(GwyContainer *data, GwyRunType run)
 
         if (out_image) {
             newid = gwy_app_data_browser_add_data_field(out_image, data, TRUE);
-            gwy_app_copy_data_items(data, data, id, newid,
+            gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                     GWY_DATA_ITEM_GRADIENT,
                                     GWY_DATA_ITEM_MASK_COLOR,
                                     GWY_DATA_ITEM_RANGE,
@@ -294,7 +294,7 @@ run_main(GwyContainer *data, GwyRunType run)
 
         if (out_fft) {
             newid = gwy_app_data_browser_add_data_field(out_fft, data, TRUE);
-            gwy_app_copy_data_items(controls.mydata, data, 0, newid,
+            gwy_app_sync_data_items(controls.mydata, data, 0, newid, FALSE,
                                     GWY_DATA_ITEM_GRADIENT,
                                     GWY_DATA_ITEM_MASK_COLOR,
                                     GWY_DATA_ITEM_RANGE,

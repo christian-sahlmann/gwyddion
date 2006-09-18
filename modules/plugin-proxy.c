@@ -575,18 +575,16 @@ proc_plugin_proxy_run(GwyContainer *data,
         }
 
         /* Merge stuff.  XXX: This is brutal and incomplete. */
-        gwy_app_copy_data_items(data, data, id, newid,
+        gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_RANGE_TYPE,
                                 GWY_DATA_ITEM_MASK_COLOR,
                                 GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
-        if (gwy_container_contains_by_name(newdata, "/0/base/palette"))
-            gwy_app_copy_data_items(newdata, data, 0, newid,
-                                    GWY_DATA_ITEM_GRADIENT, 0);
-        if (gwy_container_contains_by_name(newdata, "/0/base/range-type"))
-            gwy_app_copy_data_items(newdata, data, 0, newid,
-                                    GWY_DATA_ITEM_RANGE_TYPE, 0);
+        gwy_app_sync_data_items(newdata, data, 0, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                0);
 
         g_object_unref(newdata);
     }

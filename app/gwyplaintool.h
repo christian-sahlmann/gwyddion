@@ -100,7 +100,7 @@ GType        gwy_plain_tool_check_layer_type (GwyPlainTool *plain_tool,
 void         gwy_plain_tool_connect_selection(GwyPlainTool *plain_tool,
                                               GType layer_type,
                                               const gchar *bname);
-void         gwy_plain_tool_assure_layer     (GwyPlainTool *plain_tool,
+void         gwy_plain_tool_ensure_layer     (GwyPlainTool *plain_tool,
                                               GType layer_type);
 const gchar* gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
                                               const gchar *bname);

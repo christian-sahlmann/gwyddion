@@ -190,7 +190,9 @@ gwy_app_file_load(const gchar *filename_utf8,
         gwy_container_foreach(data, "/meta", (GHFunc)&warn_old_meta, NULL);
     }
     else {
-        if (err && err->code != GWY_MODULE_FILE_ERROR_CANCELLED) {
+        if (err && !g_error_matches(err,
+                                    GWY_MODULE_FILE_ERROR,
+                                    GWY_MODULE_FILE_ERROR_CANCELLED)) {
             dialog = gtk_message_dialog_new(NULL, 0,
                                             GTK_MESSAGE_ERROR,
                                             GTK_BUTTONS_CLOSE,
@@ -348,7 +350,9 @@ gwy_app_file_write(GwyContainer *data,
         break;
 
         default:
-        if (err->code != GWY_MODULE_FILE_ERROR_CANCELLED) {
+        if (err && !g_error_matches(err,
+                                    GWY_MODULE_FILE_ERROR,
+                                    GWY_MODULE_FILE_ERROR_CANCELLED)) {
             dialog = gtk_message_dialog_new(NULL, 0,
                                             GTK_MESSAGE_ERROR,
                                             GTK_BUTTONS_CLOSE,
@@ -362,6 +366,8 @@ gwy_app_file_write(GwyContainer *data,
             gtk_window_present(GTK_WINDOW(dialog));
             g_clear_error(&err);
         }
+        else if (!err)
+            g_warning("A file module failed to report error properly.");
         break;
     }
 

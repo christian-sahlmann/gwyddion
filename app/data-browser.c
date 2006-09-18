@@ -42,6 +42,11 @@
 #include <app/gwyapp.h>
 #include "app/gwyappinternal.h"
 
+/* The GtkTargetEntry for tree model drags.
+ * FIXME: Is it Gtk+ private or what? */
+#define GTK_TREE_MODEL_ROW \
+    { "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_APP, 0 }
+
 /* The container prefix all graph reside in.  This is a bit silly but it does
  * not worth to break file compatibility with 1.x. */
 #define GRAPH_PREFIX "/0/graph/graph"
@@ -155,6 +160,11 @@ static GList*   gwy_app_data_proxy_find_3d  (GwyAppDataProxy *proxy,
                                              Gwy3DWindow *window3d);
 static GList*   gwy_app_data_proxy_get_3d   (GwyAppDataProxy *proxy,
                                              gint id);
+static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
+                                                 guint pageno,
+                                                 GtkTreeModel *model,
+                                                 GtkTreeIter *iter,
+                                                 GwyAppDataProxy *destproxy);
 static const gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
@@ -1175,6 +1185,60 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
 }
 
 static void
+gwy_app_window_dnd_data_received(GtkWidget *window,
+                                 GdkDragContext *context,
+                                 G_GNUC_UNUSED gint x,
+                                 G_GNUC_UNUSED gint y,
+                                 GtkSelectionData *data,
+                                 G_GNUC_UNUSED guint info,
+                                 guint time_,
+                                 gpointer user_data)
+{
+    GwyAppDataBrowser *browser = (GwyAppDataBrowser*)user_data;
+    GwyAppDataProxy *srcproxy, *destproxy;
+    GwyContainer *container = NULL;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    guint pageno;
+
+    if (!gtk_tree_get_row_drag_data(data, &model, &path)) {
+        g_warning("Cannot get row drag data");
+        gtk_drag_finish(context, FALSE, FALSE, time_);
+        return;
+    }
+
+    srcproxy = browser->current;
+    pageno = browser->active_page;
+
+    /* FIXME: Need to check success? */
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    if (GWY_IS_DATA_WINDOW(window)) {
+        container = gwy_data_window_get_data(GWY_DATA_WINDOW(window));
+    }
+    else if (GWY_IS_GRAPH_WINDOW(window)) {
+        GtkWidget *graph;
+        GObject *object;
+
+        graph = gwy_graph_window_get_graph(GWY_GRAPH_WINDOW(window));
+        object = G_OBJECT(gwy_graph_get_model(GWY_GRAPH(graph)));
+        container = g_object_get_qdata(object, container_quark);
+    }
+
+    if (container) {
+        destproxy = gwy_app_data_browser_get_proxy(browser, container, FALSE);
+        gwy_app_data_browser_copy_object(srcproxy, pageno, model, &iter,
+                                         destproxy);
+    }
+    else
+        g_warning("Cannot determine drop target GwyContainer");
+
+    gtk_drag_finish(context, TRUE, FALSE, time_);
+}
+
+static void
 gwy_app_data_proxy_setup_mask(GwyContainer *data,
                               gint i)
 {
@@ -1275,6 +1339,8 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
                                     GwyAppDataProxy *proxy,
                                     gint id)
 {
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
     GtkWidget *data_view, *data_window;
     GObject *dfield = NULL;
     GwyPixmapLayer *layer;
@@ -1316,8 +1382,12 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
     _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
-    gtk_widget_show_all(data_window);
-    _gwy_app_data_view_set_current(GWY_DATA_VIEW(data_view));
+
+    gtk_drag_dest_set(data_window, GTK_DEST_DEFAULT_ALL,
+                      dnd_target_table, G_N_ELEMENTS(dnd_target_table),
+                      GDK_ACTION_COPY);
+    g_signal_connect(data_window, "drag-data-received",
+                     G_CALLBACK(gwy_app_window_dnd_data_received), browser);
 
     g_snprintf(key, sizeof(key), "/%d/mask", id);
     quark = g_quark_from_string(key);
@@ -1328,6 +1398,9 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     if (browser->sensgroup)
         gwy_sensitivity_group_set_state(browser->sensgroup,
                                         SENS_FILE, SENS_FILE);
+
+    gtk_widget_show_all(data_window);
+    _gwy_app_data_view_set_current(GWY_DATA_VIEW(data_view));
 
     return data_view;
 }
@@ -1749,6 +1822,8 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
 static GtkWidget*
 gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 {
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
     GtkWidget *retval;
     GtkTreeView *treeview;
     GtkCellRenderer *renderer;
@@ -1815,6 +1890,13 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
+
+    /* DnD */
+    gtk_tree_view_enable_model_drag_source(treeview,
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
 
     return retval;
 }
@@ -1918,6 +2000,8 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                                   GwyAppDataProxy *proxy,
                                   gint id)
 {
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
     GtkWidget *graph, *graph_window;
     gchar key[40];
     GObject *gmodel;
@@ -1942,14 +2026,20 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window));
     gtk_window_set_default_size(GTK_WINDOW(graph_window), 480, 360);
-    gtk_widget_show_all(graph_window);
-    /* This primarily adds the window to the list of visible windows */
-    _gwy_app_graph_set_current(GWY_GRAPH(graph));
+
+    gtk_drag_dest_set(graph_window, GTK_DEST_DEFAULT_ALL,
+                      dnd_target_table, G_N_ELEMENTS(dnd_target_table),
+                      GDK_ACTION_COPY);
+    g_signal_connect(graph_window, "drag-data-received",
+                     G_CALLBACK(gwy_app_window_dnd_data_received), browser);
 
     /* FIXME: A silly place for this? */
     if (browser->sensgroup)
         gwy_sensitivity_group_set_state(browser->sensgroup,
                                         SENS_FILE, SENS_FILE);
+
+    gtk_widget_show_all(graph_window);
+    _gwy_app_graph_set_current(GWY_GRAPH(graph));
 
     return graph;
 }
@@ -3616,11 +3706,13 @@ gwy_app_data_browser_foreach(GwyAppDataForeachFunc function,
 }
 
 /**
- * gwy_app_copy_data_items:
+ * gwy_app_sync_data_items:
  * @source: Source container.
  * @dest: Target container (may be identical to source).
  * @from_id: Data number to copy items from.
  * @to_id: Data number to copy items to.
+ * @delete_too: %TRUE to delete items in target if source does not contain
+ *              them, %FALSE to copy only.
  * @...: 0-terminated list of #GwyDataItem values defining the items to copy.
  *
  * Copy auxiliary data items between data containers.
@@ -3629,10 +3721,11 @@ gwy_app_data_browser_foreach(GwyAppDataForeachFunc function,
  * operation is more of a synchronization than a copy.
  **/
 void
-gwy_app_copy_data_items(GwyContainer *source,
+gwy_app_sync_data_items(GwyContainer *source,
                         GwyContainer *dest,
                         gint from_id,
                         gint to_id,
+                        gboolean delete_too,
                         ...)
 {
     /* FIXME: copy ALL selections */
@@ -3658,7 +3751,7 @@ gwy_app_copy_data_items(GwyContainer *source,
     if (source == dest && from_id == to_id)
         return;
 
-    va_start(ap, to_id);
+    va_start(ap, delete_too);
     while ((what = va_arg(ap, GwyDataItem))) {
         switch (what) {
             case GWY_DATA_ITEM_GRADIENT:
@@ -3666,7 +3759,7 @@ gwy_app_copy_data_items(GwyContainer *source,
             g_snprintf(key_to, sizeof(key_to), "/%d/base/palette", to_id);
             if (gwy_container_gis_string_by_name(source, key_from, &name))
                 gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
@@ -3675,7 +3768,7 @@ gwy_app_copy_data_items(GwyContainer *source,
             g_snprintf(key_to, sizeof(key_to), "/%d/mask", to_id);
             if (gwy_rgba_get_from_container(&rgba, source, key_from))
                 gwy_rgba_store_to_container(&rgba, dest, key_to);
-            else
+            else if (delete_too)
                 gwy_rgba_remove_from_container(dest, key_to);
             break;
 
@@ -3684,7 +3777,7 @@ gwy_app_copy_data_items(GwyContainer *source,
             g_snprintf(key_to, sizeof(key_to), "/%d/data/title", to_id);
             if (gwy_container_gis_string_by_name(source, key_from, &name))
                 gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
@@ -3693,14 +3786,14 @@ gwy_app_copy_data_items(GwyContainer *source,
             g_snprintf(key_to, sizeof(key_to), "/%d/base/min", to_id);
             if (gwy_container_gis_double_by_name(source, key_from, &dbl))
                 gwy_container_set_double_by_name(dest, key_to, dbl);
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             g_snprintf(key_from, sizeof(key_from), "/%d/base/max", from_id);
             g_snprintf(key_to, sizeof(key_to), "/%d/base/max", to_id);
             if (gwy_container_gis_double_by_name(source, key_from, &dbl)) {
                 gwy_container_set_double_by_name(dest, key_to, dbl);
             }
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             case GWY_DATA_ITEM_RANGE_TYPE:
             g_snprintf(key_from, sizeof(key_from), "/%d/base/range-type",
@@ -3708,7 +3801,7 @@ gwy_app_copy_data_items(GwyContainer *source,
             g_snprintf(key_to, sizeof(key_to), "/%d/base/range-type", to_id);
             if (gwy_container_gis_enum_by_name(source, key_from, &enumval))
                 gwy_container_set_enum_by_name(dest, key_to, enumval);
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
@@ -3719,7 +3812,7 @@ gwy_app_copy_data_items(GwyContainer *source,
             if (gwy_container_gis_boolean_by_name(source, key_from, &boolval)
                 && boolval)
                 gwy_container_set_boolean_by_name(dest, key_to, boolval);
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
@@ -3731,7 +3824,7 @@ gwy_app_copy_data_items(GwyContainer *source,
                 gwy_container_set_object_by_name(dest, key_to, obj);
                 g_object_unref(obj);
             }
-            else
+            else if (delete_too)
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
@@ -3746,7 +3839,7 @@ gwy_app_copy_data_items(GwyContainer *source,
                     gwy_container_set_object_by_name(dest, key_to, obj);
                     g_object_unref(obj);
                 }
-                else
+                else if (delete_too)
                     gwy_container_remove_by_name(dest, key_to);
             }
             break;
@@ -3804,7 +3897,7 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
         g_object_unref(dfield);
     }
 
-    gwy_app_copy_data_items(source, dest, id, newid,
+    gwy_app_sync_data_items(source, dest, id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_RANGE_TYPE,

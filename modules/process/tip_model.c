@@ -190,8 +190,8 @@ tip_model_dialog(TipModelArgs *args)
 
     /*set up data of rescaled image of the tip*/
     controls.vtip = gwy_container_new();
-    gwy_app_copy_data_items(args->object.data, controls.vtip,
-                            args->object.id, 0,
+    gwy_app_sync_data_items(args->object.data, controls.vtip,
+                            args->object.id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE, 0);
 
     dfield = gwy_data_field_new_alike(controls.tip, TRUE);
@@ -456,8 +456,8 @@ tip_model_do(TipModelArgs *args,
                                                 args->object.data,
                                                 TRUE);
     g_object_unref(controls->tip);
-    gwy_app_copy_data_items(args->object.data, args->object.data,
-                            args->object.id, newid,
+    gwy_app_sync_data_items(args->object.data, args->object.data,
+                            args->object.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
     gwy_app_set_data_field_title(args->object.data, newid, _("Modelled tip"));
     controls->tipdone = TRUE;

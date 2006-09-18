@@ -381,7 +381,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         gwy_tool_crop_one_field(dfield, isel, sel, tool->args.keep_offsets);
         id = gwy_app_data_browser_add_data_field(dfield, container, TRUE);
         g_object_unref(dfield);
-        gwy_app_copy_data_items(container, container, oldid, id,
+        gwy_app_sync_data_items(container, container, oldid, id, FALSE,
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_RANGE_TYPE,
                                 GWY_DATA_ITEM_MASK_COLOR,

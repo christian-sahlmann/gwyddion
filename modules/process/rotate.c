@@ -178,7 +178,7 @@ rotate(GwyContainer *data, GwyRunType run)
 
     newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
     g_object_unref(dfields[0]);
-    gwy_app_copy_data_items(data, data, oldid, newid,
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -228,7 +228,7 @@ create_preview_data(GwyContainer *data)
     gwy_container_set_object_by_name(preview, "/0/show", dfield_show);
     g_object_unref(dfield_show);
 
-    gwy_app_copy_data_items(data, preview, oldid, 0,
+    gwy_app_sync_data_items(data, preview, oldid, 0, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_MASK_COLOR,

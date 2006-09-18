@@ -129,7 +129,7 @@ presentation_extract(GwyContainer *data, GwyRunType run)
     dfield = gwy_data_field_duplicate(dfield);
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
-    gwy_app_copy_data_items(data, data, oldid, newid,
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
     gwy_app_set_data_field_title(data, newid, NULL);

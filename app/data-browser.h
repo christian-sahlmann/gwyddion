@@ -90,10 +90,11 @@ void   gwy_app_data_clear_selections        (GwyContainer *data,
                                              gint id);
 void   gwy_app_data_browser_foreach         (GwyAppDataForeachFunc function,
                                              gpointer user_data);
-void   gwy_app_copy_data_items              (GwyContainer *source,
+void   gwy_app_sync_data_items              (GwyContainer *source,
                                              GwyContainer *dest,
                                              gint from_id,
                                              gint to_id,
+                                             gboolean delete_too,
                                              ...);
 gint   gwy_app_data_browser_copy_channel    (GwyContainer *source,
                                              gint id,

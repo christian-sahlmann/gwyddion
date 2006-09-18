@@ -274,7 +274,7 @@ facets_dialog(FacetsArgs *args,
     controls.fdata = fdata;
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
-    gwy_app_copy_data_items(data, controls.mydata, id, 0,
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -434,7 +434,7 @@ facets_dialog(FacetsArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     facets_dialog_update_values(&controls, args);
-    gwy_app_copy_data_items(controls.mydata, data, 0, id,
+    gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);

@@ -369,7 +369,7 @@ square_samples(GwyContainer *data, GwyRunType run)
 
     newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
     g_object_unref(dfields[0]);
-    gwy_app_copy_data_items(data, data, oldid, newid,
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_MASK_COLOR,

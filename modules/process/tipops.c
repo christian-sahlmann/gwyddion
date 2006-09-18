@@ -281,8 +281,8 @@ tipops_do(TipOpsArgs *args,
             newid = gwy_app_data_browser_add_data_field(dfield,
                                                         args->target.data,
                                                         TRUE);
-            gwy_app_copy_data_items(args->target.data, args->target.data,
-                                    args->target.id, newid,
+            gwy_app_sync_data_items(args->target.data, args->target.data,
+                                    args->target.id, newid, FALSE,
                                     GWY_DATA_ITEM_PALETTE, 0);
             gwy_app_set_data_field_title(args->target.data, newid,
                                          data_titles[op]);

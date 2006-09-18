@@ -418,7 +418,7 @@ arithmetic_do(ArithmeticArgs *args)
     newid = gwy_app_data_browser_add_data_field(result, firstdata, TRUE);
     g_object_unref(result);
     gwy_app_set_data_field_title(firstdata, newid, _("Calculated"));
-    gwy_app_copy_data_items(firstdata, firstdata, firstid, newid,
+    gwy_app_sync_data_items(firstdata, firstdata, firstid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
 }
 

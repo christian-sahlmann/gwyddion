@@ -211,7 +211,7 @@ gwy_plain_tool_data_switched(GwyTool *tool,
     gwy_plain_tool_reconnect_container(plain_tool, data_view);
     gwy_plain_tool_update_units(plain_tool);
     if (data_view && plain_tool->layer_type) {
-        gwy_plain_tool_assure_layer(plain_tool, plain_tool->layer_type);
+        gwy_plain_tool_ensure_layer(plain_tool, plain_tool->layer_type);
         gwy_plain_tool_selection_reconnect(plain_tool);
     }
     else
@@ -595,7 +595,7 @@ gwy_plain_tool_check_layer_type(GwyPlainTool *plain_tool,
  * When @layer_type is 0 and @bname %NULL, plain tool stops automatically
  * managing selection (hopefully).
  *
- * This method performs gwy_plain_tool_assure_layer() and
+ * This method performs gwy_plain_tool_ensure_layer() and
  * gwy_plain_tool_set_selection_key(), connecting to the selection and making
  * sure the @selection field always points to the correct selection object
  * (or is %NULL).
@@ -625,7 +625,7 @@ gwy_plain_tool_connect_selection(GwyPlainTool *plain_tool,
     if (!bname || !layer_type || !plain_tool->data_view)
         return;
 
-    gwy_plain_tool_assure_layer(plain_tool, layer_type);
+    gwy_plain_tool_ensure_layer(plain_tool, layer_type);
     gwy_plain_tool_selection_reconnect(plain_tool);
 }
 
@@ -728,7 +728,7 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
 }
 
 /**
- * gwy_plain_tool_assure_layer:
+ * gwy_plain_tool_ensure_layer:
  * @plain_tool: A plain tool.
  * @layer_type: Layer type.  Use gwy_plain_tool_check_layer_type() in
  *              tool instance initialization to check for layer types.
@@ -739,7 +739,7 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
  * gwy_plain_tool_connect_selection().
  **/
 void
-gwy_plain_tool_assure_layer(GwyPlainTool *plain_tool,
+gwy_plain_tool_ensure_layer(GwyPlainTool *plain_tool,
                             GType layer_type)
 {
     gwy_debug("%s %s",

@@ -460,7 +460,7 @@ crosscor_do(CrosscorArgs *args)
 
     data = args->op1.data;
     newid = gwy_app_data_browser_add_data_field(dfieldx, data, TRUE);
-    gwy_app_copy_data_items(data, data, args->op1.id, newid,
+    gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
 
     /* create score mask if requested */
