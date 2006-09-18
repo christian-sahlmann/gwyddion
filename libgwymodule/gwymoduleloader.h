@@ -32,6 +32,18 @@ G_BEGIN_DECLS
     G_MODULE_EXPORT GwyModuleInfo* \
     _GWY_MODULE_QUERY(void) { return &mod_info; }
 
+#define GWY_MODULE_ERROR gwy_module_error_quark()
+
+typedef enum {
+    GWY_MODULE_ERROR_NAME,
+    GWY_MODULE_ERROR_DUPLICATE,
+    GWY_MODULE_ERROR_OPEN,
+    GWY_MODULE_ERROR_QUERY,
+    GWY_MODULE_ERROR_ABI,
+    GWY_MODULE_ERROR_INFO,
+    GWY_MODULE_ERROR_REGISTER
+} GwyModuleError;
+
 typedef struct _GwyModuleInfo GwyModuleInfo;
 
 typedef gboolean       (*GwyModuleRegisterFunc) (void);
@@ -47,13 +59,15 @@ struct _GwyModuleInfo {
     const gchar *date;
 };
 
+GQuark                  gwy_module_error_quark      (void);
 void                    gwy_module_register_modules (const gchar **paths);
 const GwyModuleInfo*    gwy_module_lookup           (const gchar *name);
 const gchar*            gwy_module_get_filename     (const gchar *name);
 GSList*                 gwy_module_get_functions    (const gchar *name);
 void                    gwy_module_foreach          (GHFunc function,
                                                      gpointer data);
-const GwyModuleInfo*    gwy_module_register_module  (const gchar *name);
+const GwyModuleInfo*    gwy_module_register_module  (const gchar *name,
+                                                     GError **error);
 
 G_END_DECLS
 

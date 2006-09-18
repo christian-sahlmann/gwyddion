@@ -40,19 +40,47 @@ static void     gwy_module_get_rid_of    (const gchar *modname);
 static void     gwy_module_init          (void);
 static const GwyModuleInfo*
 gwy_module_do_register_module(const gchar *modulename,
-                              GHashTable *mods);
+                              GHashTable *mods,
+                              GError **error);
+static void     gwy_module_register_fail (GError *myerr,
+                                          GError **error,
+                                          const gchar *modname,
+                                          const gchar *filename);
 
 static GHashTable *modules = NULL;
+static GHashTable *failures = NULL;
 static gboolean modules_initialized = FALSE;
 static gchar *currenly_registered_module = NULL;
 
 /**
+ * gwy_module_error_quark:
+ *
+ * Returns error domain for module loading.
+ *
+ * See and use %GWY_MODULE_ERROR.
+ *
+ * Returns: The error domain.
+ **/
+GQuark
+gwy_module_error_quark(void)
+{
+    static GQuark error_domain = 0;
+
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("gwy-expr-error-quark");
+
+    return error_domain;
+}
+
+/**
  * gwy_module_register_modules:
- * @paths: A %NULL delimited list of directory names.
+ * @paths: A %NULL-terminated list of directory names.
  *
- * Register all modules in given directories.
+ * Registers all modules in given directories.
  *
- * Can be called several times (on different directories).
+ * It can be called several times (on different directories).  No errors are
+ * reported, register modules individually with gwy_module_register_module()
+ * to get registration errors.
  **/
 void
 gwy_module_register_modules(const gchar **paths)
@@ -65,8 +93,8 @@ gwy_module_register_modules(const gchar **paths)
         return;
 
     for (dir = *paths; dir; dir = *(++paths)) {
-        GDir *gdir;
         GError *err = NULL;
+        GDir *gdir;
 
         gwy_debug("Opening module directory %s", dir);
         gdir = g_dir_open(dir, 0, &err);
@@ -96,6 +124,15 @@ _gwy_module_add_registered_function(const gchar *prefix,
     return TRUE;
 }
 
+
+void
+_gwy_module_failure_foreach(GHFunc function,
+                            gpointer data)
+{
+    if (failures)
+        g_hash_table_foreach(failures, function, data);
+}
+
 static void
 gwy_module_foreach_one(const gchar *name,
                        _GwyModuleInfoInternal *iinfo,
@@ -112,7 +149,7 @@ gwy_module_foreach_one(const gchar *name,
  * Runs @function on each registered module.
  *
  * It passes module name as the key and pointer to module
- * info as the value. Neither should be modified.
+ * info (#GwyModuleInfo) as the value.  Neither should be modified.
  **/
 void
 gwy_module_foreach(GHFunc function,
@@ -120,7 +157,7 @@ gwy_module_foreach(GHFunc function,
 {
     GwyModuleForeachData fdata;
 
-    g_assert(modules_initialized);
+    g_return_if_fail(modules_initialized);
 
     fdata.data = data;
     fdata.func = function;
@@ -140,7 +177,7 @@ gwy_module_get_filename(const gchar *name)
 {
     _GwyModuleInfoInternal *iinfo;
 
-    g_assert(modules_initialized);
+    g_return_val_if_fail(modules_initialized, NULL);
 
     iinfo = g_hash_table_lookup(modules, name);
     if (!iinfo) {
@@ -165,7 +202,7 @@ gwy_module_get_functions(const gchar *name)
 {
     _GwyModuleInfoInternal *iinfo;
 
-    g_assert(modules_initialized);
+    g_return_val_if_fail(modules_initialized, NULL);
 
     iinfo = g_hash_table_lookup(modules, name);
     if (!iinfo) {
@@ -179,23 +216,51 @@ gwy_module_get_functions(const gchar *name)
 /**
  * gwy_module_register_module:
  * @name: Module file name to load, including full path and extension.
+ * @error: Location to store error, or %NULL to ignore them.  Errors from
+ *         #GwyModuleError domain can occur.
  *
  * Loads a single module.
  *
  * Returns: Module info on success, %NULL on failure.
  **/
 const GwyModuleInfo*
-gwy_module_register_module(const gchar *name)
+gwy_module_register_module(const gchar *name,
+                           GError **error)
 {
     if (!modules_initialized)
         gwy_module_init();
 
-    return gwy_module_do_register_module(name, modules);
+    return gwy_module_do_register_module(name, modules, error);
+}
+
+static void
+gwy_module_register_fail(GError *myerr,
+                         GError **error,
+                         const gchar *modname,
+                         const gchar *filename)
+{
+    _GwyModuleFailureInfo *finfo;
+
+    if (!failures)
+        failures = g_hash_table_new(g_str_hash, g_str_equal);
+
+    if (g_hash_table_lookup(failures, filename))
+        return;
+
+    g_return_if_fail(myerr);
+    finfo = g_new(_GwyModuleFailureInfo, 1);
+    finfo->modname = g_strdup(modname);
+    finfo->filename = g_strdup(filename);
+    finfo->message = g_strdup(myerr->message);
+    g_hash_table_insert(failures, finfo->filename, finfo);
+
+    g_propagate_error(error, myerr);
 }
 
 static const GwyModuleInfo*
 gwy_module_do_register_module(const gchar *filename,
-                              GHashTable *mods)
+                              GHashTable *mods,
+                              GError **error)
 {
     GModule *mod;
     gboolean ok;
@@ -203,16 +268,21 @@ gwy_module_do_register_module(const gchar *filename,
     GwyModuleInfo *mod_info = NULL;
     GwyModuleQueryFunc query;
     gchar *modname, *s;
+    GError *err = NULL;
 
     s = g_path_get_basename(filename);
     modname = g_ascii_strdown(s, -1);
     g_free(s);
     /* FIXME: On normal platforms module names have an extension, but if
-     * it doesn't, just get over it. */
+     * it doesn't, just get over it.  This can happen only with explicit
+     * gwy_module_register_module() as gwy_load_modules_in_dir() accepts
+     * only sane names. */
     if ((s = strchr(modname, '.')))
         *s = '\0';
     if (!*modname) {
-        g_warning("File `%s' has empty module name", filename);
+        g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_NAME,
+                    "Module name is empty");
+        gwy_module_register_fail(err, error, modname, filename);
         g_free(modname);
         return NULL;
     }
@@ -222,7 +292,9 @@ gwy_module_do_register_module(const gchar *filename,
                   "It may be rejected in future.", modname);
 
     if (g_hash_table_lookup(mods, modname)) {
-        g_warning("Ignoring duplicate module `%s' (`%s')", modname, filename);
+        g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_DUPLICATE,
+                    "Module was already registered");
+        gwy_module_register_fail(err, error, modname, filename);
         g_free(modname);
         return NULL;
     }
@@ -231,35 +303,43 @@ gwy_module_do_register_module(const gchar *filename,
     mod = g_module_open(filename, G_MODULE_BIND_LAZY);
 
     if (!mod) {
-        g_warning("Cannot open module `%s': %s", filename, g_module_error());
+        g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_OPEN,
+                    "Cannot open module: %s", g_module_error());
+        gwy_module_register_fail(err, error, modname, filename);
         g_free(modname);
         return NULL;
     }
     gwy_debug("Module loaded successfully as `%s'.", g_module_name(mod));
 
-    /* Do a few sanity checks on the module before registration
-        * is performed. */
+    /* Sanity checks on the module before registration is attempted. */
     ok = TRUE;
     currenly_registered_module = modname;
     if (!g_module_symbol(mod, GWY_MODULE_QUERY_NAME, (gpointer)&query)
         || !query) {
-        g_warning("No query function in module %s", filename);
+        g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_QUERY,
+                    "Module contains no query function");
+        gwy_module_register_fail(err, error, modname, filename);
         ok = FALSE;
     }
 
     if (ok) {
         mod_info = query();
         if (!mod_info) {
-            g_warning("No module info in module %s", filename);
+            g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_INFO,
+                        "Module info is NULL");
+            gwy_module_register_fail(err, error, modname, filename);
             ok = FALSE;
         }
     }
 
     if (ok) {
         ok = mod_info->abi_version == GWY_MODULE_ABI_VERSION;
-        if (!ok)
-            g_warning("Module `%s' ABI version %d is different from %d",
-                      filename, mod_info->abi_version, GWY_MODULE_ABI_VERSION);
+        if (!ok) {
+            g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_ABI,
+                        "Module ABI version %d differs from %d",
+                        mod_info->abi_version, GWY_MODULE_ABI_VERSION);
+            gwy_module_register_fail(err, error, modname, filename);
+        }
     }
 
     if (ok) {
@@ -269,9 +349,11 @@ gwy_module_do_register_module(const gchar *filename,
                 && mod_info->version && *mod_info->version
                 && mod_info->copyright && *mod_info->copyright
                 && mod_info->date && *mod_info->date;
-        if (!ok)
-            g_warning("Module `%s' info is invalid.",
-                      filename);
+        if (!ok) {
+            g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_ABI,
+                        "Module info has missing/invalid fields");
+            gwy_module_register_fail(err, error, modname, filename);
+        }
     }
 
     if (ok) {
@@ -282,10 +364,15 @@ gwy_module_do_register_module(const gchar *filename,
         iinfo->loaded = TRUE;
         iinfo->funcs = NULL;
         g_hash_table_insert(mods, (gpointer)iinfo->name, iinfo);
-        if (!(ok = mod_info->register_func()))
-            g_warning("Module `%s' feature registration failed", iinfo->name);
+        if (!(ok = mod_info->register_func())) {
+            g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_REGISTER,
+                        "Module feature registration failed");
+            gwy_module_register_fail(err, error, modname, filename);
+        }
         if (ok && !iinfo->funcs) {
-            g_warning("Module `%s' did not register any function", iinfo->name);
+            g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_REGISTER,
+                        "Module did not register any function");
+            gwy_module_register_fail(err, error, modname, filename);
             ok = FALSE;
         }
 
@@ -352,7 +439,7 @@ gwy_load_modules_in_dir(GDir *gdir,
 #endif
             continue;
         modulename = g_build_filename(dirname, filename, NULL);
-        gwy_module_do_register_module(modulename, mods);
+        gwy_module_do_register_module(modulename, mods, NULL);
         g_free(modulename);
     }
 }
@@ -464,13 +551,13 @@ gwy_module_get_rid_of(const gchar *modname)
  * Initializes the loadable module system, aborting if there's no support
  * for modules on the platform.
  *
- * Must be called at most once.  It's automatically called on first
+ * Must be called at most once.  It is automatically called on first
  * gwy_module_register_modules() call.
  **/
 static void
 gwy_module_init(void)
 {
-    g_assert(!modules_initialized);
+    g_return_if_fail(!modules_initialized);
 
     /* Check whether modules are supported. */
     if (!g_module_supported()) {

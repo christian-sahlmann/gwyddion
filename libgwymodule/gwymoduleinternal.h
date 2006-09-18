@@ -41,10 +41,19 @@ typedef struct {
     GSList *funcs;
 } _GwyModuleInfoInternal;
 
+typedef struct {
+    gchar *modname;
+    gchar *filename;
+    gchar *message;
+} _GwyModuleFailureInfo;
+
 G_GNUC_INTERNAL
 gboolean _gwy_module_add_registered_function(const gchar *prefix,
                                              const gchar *name);
 
+G_GNUC_INTERNAL
+void     _gwy_module_failure_foreach        (GHFunc function,
+                                             gpointer data);
 G_GNUC_INTERNAL
 gboolean _gwy_file_func_remove              (const gchar *name);
 
