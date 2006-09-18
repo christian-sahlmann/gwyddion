@@ -115,12 +115,6 @@ gwy_app_set_current_directory(const gchar *directory)
 
 /*** File loading **********************************************************/
 
-static void
-warn_old_meta(gpointer key)
-{
-    g_warning("Old metadata \"%s\"", g_quark_to_string(GPOINTER_TO_UINT(key)));
-}
-
 /**
  * gwy_app_file_load:
  * @filename_utf8: Name of file to load, in UTF-8.
@@ -186,8 +180,6 @@ gwy_app_file_load(const gchar *filename_utf8,
         gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, 0);
         gwy_app_set_current_directory(filename_sys);
         g_object_unref(data);
-
-        gwy_container_foreach(data, "/meta", (GHFunc)&warn_old_meta, NULL);
     }
     else {
         if (err && !g_error_matches(err,
