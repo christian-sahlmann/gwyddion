@@ -1608,7 +1608,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
         pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_line_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_line_width(curvemodel);
         color = gwy_graph_curve_model_get_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);

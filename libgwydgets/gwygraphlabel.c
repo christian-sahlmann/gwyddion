@@ -309,7 +309,7 @@ gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
                                     winx + winwidth - 5,
                                     winy + ypos + rect.height/2,
                                     curvemodel->line_style,
-                                    curvemodel->line_size,
+                                    curvemodel->line_width,
                                     &(curvemodel->color));
             else
                 gwy_graph_draw_line(drawable, gc,
@@ -318,7 +318,7 @@ gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
                                     winx + 20 + frame_off,
                                     winy + ypos + rect.height/2,
                                     curvemodel->line_style,
-                                    curvemodel->line_size,
+                                    curvemodel->line_width,
                                     &(curvemodel->color));
         }
         if (curvemodel->mode == GWY_GRAPH_CURVE_POINTS
@@ -561,7 +561,7 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
         pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_line_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_line_width(curvemodel);
         color = gwy_graph_curve_model_get_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);

@@ -61,7 +61,7 @@ enum {
     PROP_POINT_TYPE,
     PROP_POINT_SIZE,
     PROP_LINE_STYLE,
-    PROP_LINE_SIZE,
+    PROP_LINE_WIDTH,
     PROP_COLOR,
     PROP_LAST
 };
@@ -161,17 +161,17 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
     /* XXX: This is actually line width */
      g_object_class_install_property
          (gobject_class,
-          PROP_LINE_SIZE,
-          g_param_spec_int("line-size",
-                           "Line size",
-                           "Curve line size",
+          PROP_LINE_WIDTH,
+          g_param_spec_int("line-width",
+                           "Line width",
+                           "Curve line width",
                            0, 100,
                            1,
                            G_PARAM_READABLE | G_PARAM_WRITABLE));
 
      g_object_class_install_property
          (gobject_class,
-          PROP_LINE_SIZE,
+          PROP_COLOR,
           g_param_spec_boxed("color",
                              "Color",
                              "Curve color",
@@ -205,8 +205,8 @@ gwy_graph_curve_model_set_property(GObject *object,
         gcmodel->line_style = g_value_get_enum(value);
         break;
 
-        case PROP_LINE_SIZE:
-        gcmodel->line_size = g_value_get_int(value);
+        case PROP_LINE_WIDTH:
+        gcmodel->line_width = g_value_get_int(value);
         break;
 
         case PROP_POINT_SIZE:
@@ -249,8 +249,8 @@ gwy_graph_curve_model_get_property(GObject*object,
         g_value_set_enum(value, gcmodel->line_style);
         break;
 
-        case PROP_LINE_SIZE:
-        g_value_set_int(value, gcmodel->line_size);
+        case PROP_LINE_WIDTH:
+        g_value_set_int(value, gcmodel->line_width);
         break;
 
         case PROP_POINT_SIZE:
@@ -286,7 +286,7 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
     gcmodel->point_size = 8;
 
     gcmodel->line_style = GDK_LINE_SOLID;
-    gcmodel->line_size = 1;
+    gcmodel->line_width = 1;
 }
 
 /**
@@ -312,6 +312,7 @@ static void
 gwy_graph_curve_model_finalize(GObject *object)
 {
     GwyGraphCurveModel *gcmodel;
+
     gwy_debug("");
     gcmodel = GWY_GRAPH_CURVE_MODEL(object);
 
@@ -343,7 +344,8 @@ gwy_graph_curve_model_serialize(GObject *object,
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
             { 'i', "line_style", &gcmodel->line_style, NULL },
-            { 'i', "line_size", &gcmodel->line_size, NULL },
+            /* XXX: Legacy */
+            { 'i', "line_size", &gcmodel->line_width, NULL },
         };
 
         return gwy_serialize_pack_object_struct(buffer,
@@ -373,7 +375,8 @@ gwy_graph_curve_model_get_size(GObject *object)
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
             { 'i', "line_style", &gcmodel->line_style, NULL },
-            { 'i', "line_size", &gcmodel->line_size, NULL },
+            /* XXX: Legacy */
+            { 'i', "line_size", &gcmodel->line_width, NULL },
         };
 
         return gwy_serialize_get_struct_size(GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
@@ -406,7 +409,10 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
             { 'i', "line_style", &gcmodel->line_style, NULL },
-            { 'i', "line_size", &gcmodel->line_size, NULL },
+            /* XXX: Legacy */
+            { 'i', "line_size", &gcmodel->line_width, NULL },
+            /* Accept line_width too */
+            { 'i', "line_width", &gcmodel->line_width, NULL },
         };
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                                 GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
@@ -455,7 +461,7 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
     duplicate->point_size = gcmodel->point_size;
 
     duplicate->line_style = gcmodel->line_style;
-    duplicate->line_size = gcmodel->line_size;
+    duplicate->line_width = gcmodel->line_width;
 
     return (GObject*)duplicate;
 }
@@ -494,18 +500,25 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
 /**
  * gwy_graph_curve_model_set_description:
  * @gcmodel: A graph curve model.
- * @description: curve description text
+ * @description: Curve description text.
  *
- * Sets curve model description. The description should appear on graph label,
- * for example. @description is duplicated.
+ * Sets description of a graph curve.
+ *
+ * The description would appear on graph label, for example.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                       const gchar *description)
 {
-    g_string_assign(gcmodel->description, description);
-    g_object_notify(G_OBJECT(gcmodel), "description");
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (!description)
+        description = "";
+
+    if (!gwy_strequal(description, gcmodel->description->str)) {
+        g_string_assign(gcmodel->description, description);
+        g_object_notify(G_OBJECT(gcmodel), "description");
+    }
 }
 
 /**
@@ -520,76 +533,100 @@ void
 gwy_graph_curve_model_set_mode(GwyGraphCurveModel *gcmodel,
                                GwyGraphCurveType mode)
 {
-    gcmodel->mode = mode;
-    g_object_notify(G_OBJECT(gcmodel), "curve-type");
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (mode != gcmodel->mode) {
+        gcmodel->mode = mode;
+        g_object_notify(G_OBJECT(gcmodel), "curve-type");
+    }
 }
 
 /**
  * gwy_graph_curve_model_set_point_type:
  * @gcmodel: A graph curve model.
- * @point_type: point type to be used for plot
+ * @point_type: Point type to be used for plot.
  *
- * Sets curve point type for plotting the curve. Curve type that is chosen must include
- * some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
+ * Sets the point type of a graph curve.
+ *
+ * Curve type that is chosen must include
+ * some kind of point plot to see any change, e.g. %GWY_GRAPH_CURVE_POINTS.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_point_type(GwyGraphCurveModel *gcmodel,
                                      GwyGraphPointType point_type)
 {
-    gcmodel->point_type = point_type;
-    g_object_notify(G_OBJECT(gcmodel), "point-type");
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (point_type != gcmodel->point_type) {
+        gcmodel->point_type = point_type;
+        g_object_notify(G_OBJECT(gcmodel), "point-type");
+    }
 }
 
 /**
  * gwy_graph_curve_model_set_point_size:
  * @gcmodel: A graph curve model.
- * @point_size: point size to be used for plot (in pixels)
+ * @point_size: Point (symbol) size to be used for plot (in pixels).
  *
- * Sets curve point size for plotting the curve. Curve type that is chosen must include
- * some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
+ * Sets the point size of a graph curve.
+ *
+ * Curve type that is chosen must include some kind of point plot to see
+ * any change, e.g., %GWY_GRAPH_CURVE_POINTS.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_point_size(GwyGraphCurveModel *gcmodel,
                                      gint point_size)
 {
-    gcmodel->point_size = point_size;
-    g_object_notify(G_OBJECT(gcmodel), "point-size");
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (point_size != gcmodel->point_size) {
+        gcmodel->point_size = point_size;
+        g_object_notify(G_OBJECT(gcmodel), "point-size");
+    }
 }
 
 /**
  * gwy_graph_curve_model_set_line_style:
  * @gcmodel: A graph curve model.
- * @line_style: line style to be used for plot
+ * @line_style: Line style to be used for plot.
  *
- * Sets curve line style for plotting the curve. Curve type that is chosen must include
- * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
+ * Sets the line style of a graph curve.
+ *
+ * Curve type that is chosen must include some kind of line plot to see
+ * any change, e.g. %GWY_GRAPH_CURVE_LINE.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_line_style(GwyGraphCurveModel *gcmodel,
                                      GdkLineStyle line_style)
 {
-    gcmodel->line_style = line_style;
-    g_object_notify(G_OBJECT(gcmodel), "line-style");
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (line_style != gcmodel->line_style) {
+        gcmodel->line_style = line_style;
+        g_object_notify(G_OBJECT(gcmodel), "line-style");
+    }
 }
 
 /**
- * gwy_graph_curve_model_set_line_size:
+ * gwy_graph_curve_model_set_line_width:
  * @gcmodel: A graph curve model.
- * @line_size: line size to be used for plot (in pixels)
+ * @line_width: Line size to be used for plot (in pixels).
  *
- * Sets curve line size (thickness). Curve type that is chosen must include
- * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
+ * Sets line width (thickness) of a graph curve.
+ *
+ * Curve type that is chosen must include
+ * some kind of line plot to see any change, e.g. %GWY_GRAPH_CURVE_LINE.
  **/
-/* XXX: Malformed documentation. */
 void
-gwy_graph_curve_model_set_line_size(GwyGraphCurveModel *gcmodel,
-                                    gint line_size)
+gwy_graph_curve_model_set_line_width(GwyGraphCurveModel *gcmodel,
+                                     gint line_width)
 {
-    gcmodel->line_size = line_size;
-    g_object_notify(G_OBJECT(gcmodel), "line-size");
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (line_width != gcmodel->line_width) {
+        gcmodel->line_width = line_width;
+        g_object_notify(G_OBJECT(gcmodel), "line-width");
+    }
 }
 
 /**
@@ -600,7 +637,7 @@ gwy_graph_curve_model_set_line_size(GwyGraphCurveModel *gcmodel,
  *
  * Data are used within the graph and cannot be freed.
  *
- * Returns: x data points
+ * Returns: X data points, owned by the curve model.
  **/
 const gdouble*
 gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
@@ -616,7 +653,7 @@ gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
  *
  * Data are used within the graph and cannot be freed.
  *
- * Returns: y data points
+ * Returns: Y data points, owned by the curve model.
  **/
 const gdouble*
 gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
@@ -706,16 +743,17 @@ gwy_graph_curve_model_get_line_style(GwyGraphCurveModel *gcmodel)
 }
 
 /**
- * gwy_graph_curve_model_get_line_size:
+ * gwy_graph_curve_model_get_line_width:
  * @gcmodel: A graph curve model.
  *
- * Returns: curve plot line size (in pixels)
+ * Gets the line width of a graph curve.
+ *
+ * Returns: Line width in pixels.
  **/
-/* XXX: Malformed documentation. */
 gint
-gwy_graph_curve_model_get_line_size(GwyGraphCurveModel *gcmodel)
+gwy_graph_curve_model_get_line_width(GwyGraphCurveModel *gcmodel)
 {
-    return gcmodel->line_size;
+    return gcmodel->line_width;
 }
 
 /**
@@ -788,7 +826,7 @@ gwy_graph_curve_model_set_color(GwyGraphCurveModel *gcmodel,
 {
     g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
     gcmodel->color = *color;
-    g_object_notify(G_OBJECT(gcmodel), "curve-type");
+    g_object_notify(G_OBJECT(gcmodel), "color");
 }
 
 /**

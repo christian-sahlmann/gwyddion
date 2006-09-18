@@ -123,7 +123,7 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
             gwy_graph_draw_line(drawable, gc,
                                 x, y,
                                 pxn, pyn,
-                                cmodel->line_style, cmodel->line_size,
+                                cmodel->line_style, cmodel->line_width,
                                 &(cmodel->color));
 
 

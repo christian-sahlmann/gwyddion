@@ -27,12 +27,12 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPH_CURVE_MODEL                  (gwy_graph_curve_model_get_type())
-#define GWY_GRAPH_CURVE_MODEL(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModel))
-#define GWY_GRAPH_CURVE_MODEL_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModelClass))
-#define GWY_IS_GRAPH_CURVE_MODEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_CURVE_MODEL))
-#define GWY_IS_GRAPH_CURVE_MODEL_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_CURVE_MODEL))
-#define GWY_GRAPH_CURVE_MODEL_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModelClass))
+#define GWY_TYPE_GRAPH_CURVE_MODEL             (gwy_graph_curve_model_get_type())
+#define GWY_GRAPH_CURVE_MODEL(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModel))
+#define GWY_GRAPH_CURVE_MODEL_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModelClass))
+#define GWY_IS_GRAPH_CURVE_MODEL(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_CURVE_MODEL))
+#define GWY_IS_GRAPH_CURVE_MODEL_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_CURVE_MODEL))
+#define GWY_GRAPH_CURVE_MODEL_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModelClass))
 
 
 typedef struct _GwyGraphCurveModel GwyGraphCurveModel;
@@ -55,7 +55,7 @@ struct _GwyGraphCurveModel {
     gint point_size;
 
     GdkLineStyle line_style;
-    gint line_size;
+    gint line_width;
 
     /* reserved stuff */
     GwyGraphPointType enum1;
@@ -93,29 +93,29 @@ void                gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveMo
                                                                  GwyDataLine *dline,
                                                                  gint from_index,
                                                                  gint to_index);
-void                gwy_graph_curve_model_set_description       (GwyGraphCurveModel *gcmodel,
-                                                                 const gchar *description);
-void                gwy_graph_curve_model_set_mode              (GwyGraphCurveModel *gcmodel,
-                                                                 GwyGraphCurveType mode);
-void                gwy_graph_curve_model_set_point_type        (GwyGraphCurveModel *gcmodel,
-                                                                 GwyGraphPointType point_type);
-void                gwy_graph_curve_model_set_point_size        (GwyGraphCurveModel *gcmodel,
-                                                                 gint point_size);
-void                gwy_graph_curve_model_set_line_style        (GwyGraphCurveModel *gcmodel,
-                                                                 GdkLineStyle line_style);
-void                gwy_graph_curve_model_set_line_size         (GwyGraphCurveModel *gcmodel,
-                                                                 gint line_size);
-void                gwy_graph_curve_model_set_color             (GwyGraphCurveModel *gcmodel,
-                                                                 const GwyRGBA *color);
 const gdouble*      gwy_graph_curve_model_get_xdata             (GwyGraphCurveModel *gcmodel);
 const gdouble*      gwy_graph_curve_model_get_ydata             (GwyGraphCurveModel *gcmodel);
 gint                gwy_graph_curve_model_get_ndata             (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_description       (GwyGraphCurveModel *gcmodel,
+                                                                 const gchar *description);
 const gchar*        gwy_graph_curve_model_get_description       (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_mode              (GwyGraphCurveModel *gcmodel,
+                                                                 GwyGraphCurveType mode);
 GwyGraphCurveType   gwy_graph_curve_model_get_mode              (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_point_type        (GwyGraphCurveModel *gcmodel,
+                                                                 GwyGraphPointType point_type);
 GwyGraphPointType   gwy_graph_curve_model_get_point_type        (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_point_size        (GwyGraphCurveModel *gcmodel,
+                                                                 gint point_size);
 gint                gwy_graph_curve_model_get_point_size        (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_line_style        (GwyGraphCurveModel *gcmodel,
+                                                                 GdkLineStyle line_style);
 GdkLineStyle        gwy_graph_curve_model_get_line_style        (GwyGraphCurveModel *gcmodel);
-gint                gwy_graph_curve_model_get_line_size         (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_line_width        (GwyGraphCurveModel *gcmodel,
+                                                                 gint line_width);
+gint                gwy_graph_curve_model_get_line_width        (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_set_color             (GwyGraphCurveModel *gcmodel,
+                                                                 const GwyRGBA *color);
 const GwyRGBA*      gwy_graph_curve_model_get_color             (GwyGraphCurveModel *gcmodel);
 
 G_END_DECLS

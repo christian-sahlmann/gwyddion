@@ -436,7 +436,7 @@ refresh(GwyGraphAreaDialog *dialog)
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->pointsize),
                              cmodel->point_size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize),
-                             cmodel->line_size);
+                             cmodel->line_width);
 
     gwy_sci_text_set_text(GWY_SCI_TEXT((dialog->sci_text)),
                           cmodel->description->str);
@@ -571,7 +571,7 @@ linesize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_line_size(cmodel, gtk_adjustment_get_value(adj));
+    gwy_graph_curve_model_set_line_width(cmodel, gwy_adjustment_get_int(adj));
 }
 
 static void
@@ -583,7 +583,7 @@ pointsize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_point_size(cmodel, gtk_adjustment_get_value(adj));
+    gwy_graph_curve_model_set_point_size(cmodel, gwy_adjustment_get_int(adj));
 }
 
 
