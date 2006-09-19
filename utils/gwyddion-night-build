@@ -153,7 +153,8 @@ function make_dists() {
 
   make dist
   if test -s $pkgname-$version.tar.bz2; then
-    rpmbuild -ta --clean $pkgname-$version.tar.bz2 && touch .releaseme
+    TAR_OPTIONS=--wildcards rpmbuild -ta --clean $pkgname-$version.tar.bz2 \
+      && touch .releaseme
     mv $pkgname-$version.tar.bz2 $pkgname-head.tar.bz2
     mv $pkgname-$version.tar.gz $pkgname-head.tar.gz
   fi
