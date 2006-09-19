@@ -34,6 +34,23 @@
 #include "err.h"
 #include "get.h"
 
+static const GwyEnum spmlab_channel_types[] = {
+    { "Height",       0,  },
+    { "Current",      1,  },
+    { "FFM",          2,  },
+    { "Spect",        3,  },
+    { "SpectV",       4,  },
+    { "ADC1",         5,  },
+    { "ADC2",         6,  },
+    { "TipV",         7,  },
+    { "DAC1",         8,  },
+    { "DAC2",         9,  },
+    { "ZPiezo",       10, },
+    { "Height error", 11, },
+    { "Linearized Z", 12, },
+    { "Feedback",     13, },
+};
+
 static gboolean      module_register    (void);
 static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
@@ -46,7 +63,6 @@ static GwyDataField* read_data_field    (const guchar *buffer,
                                          GError **error);
 
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -57,8 +73,6 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -172,11 +186,21 @@ read_data_field(const guchar *buffer,
 {
     enum { MIN_REMAINDER = 2620 };
     /* information offsets in different versions, in r5+ relative to data
-     * start, in order: data offset, pixel dimensions, physical dimensions,
-     * value multiplier, unit string */
-    const guint offsets34[] = { 0x0104, 0x0196, 0x01a2, 0x01b2, 0x01c2 };
-    const guint offsets56[] = { 0x0104, 0x025c, 0x0268, 0x0288, 0x02a0 };
-    gint xres, yres, doffset, i, power10;
+     * start, in order:
+     * data offset,
+     * pixel dimensions,
+     * physical dimensions,
+     * value multiplier,
+     * unit string,
+     * data type
+     */
+    const guint offsets34[] = {
+        0x0104, 0x0196, 0x01a2, 0x01b2, 0x01c2, 0x0400
+    };
+    const guint offsets56[] = {
+        0x0104, 0x025c, 0x0268, 0x0288, 0x02a0, 0x0708
+    };
+    gint xres, yres, doffset, i, power10, type, dir;
     gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
     GwySIUnit *unitxy, *unitz;
@@ -187,12 +211,12 @@ read_data_field(const guchar *buffer,
     gdouble (*getflt)(const guchar**);
 
     if (version == '5' || version == '6') {
-        /* There are more data in r5,
+        /* There are more headers in r5,
          * try to find something that looks like #R5. */
         last = r = buffer;
         while ((p = memchr(r, '#', size - (r - buffer) - MIN_REMAINDER))) {
             if (p[1] == 'R' && p[2] == version && p[3] == '.') {
-                gwy_debug("pos: %d", p - buffer);
+                gwy_debug("pos: %ld", (long)(p - buffer));
                 last = p;
                 r = p + MIN_REMAINDER-1;
             }
@@ -210,8 +234,8 @@ read_data_field(const guchar *buffer,
 
     p = buffer + *(offset++);
     doffset = get_DWORD_LE(&p);    /* this appears to be the same number as in
-                                   the ASCII miniheader -- so get it here
-                                   since it's easier */
+                                    * the ASCII miniheader -- so get it here
+                                    * since it's easier */
     gwy_debug("data offset = %u", doffset);
     p = buffer + *(offset++);
     xres = get_DWORD_LE(&p);
@@ -236,6 +260,11 @@ read_data_field(const guchar *buffer,
     gwy_debug("xres = %d, yres = %d, xreal = %g, yreal = %g, q = %g, z0 = %g",
               xres, yres, xreal, yreal, q, z0);
     gwy_debug("unitxy = %s, unitz = %s", p, p + 10);
+
+    p = buffer + *(offset++);
+    type = get_WORD_LE(&p);
+    dir = get_WORD_LE(&p);
+    gwy_debug("type = %d, dir = %d", type, dir);
 
     p = buffer + doffset;
     if (size - (p - buffer) < 2*xres*yres) {
