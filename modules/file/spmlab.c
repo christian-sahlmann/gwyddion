@@ -34,6 +34,18 @@
 #include "err.h"
 #include "get.h"
 
+static gboolean      module_register    (void);
+static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer* spmlab_load        (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static GwyDataField* read_data_field    (const guchar *buffer,
+                                         guint size,
+                                         guchar version,
+                                         gint *type,
+                                         GError **error);
+
 static const GwyEnum spmlab_channel_types[] = {
     { "Height",       0,  },
     { "Current",      1,  },
@@ -51,24 +63,12 @@ static const GwyEnum spmlab_channel_types[] = {
     { "Feedback",     13, },
 };
 
-static gboolean      module_register    (void);
-static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
-                                         gboolean only_name);
-static GwyContainer* spmlab_load        (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static GwyDataField* read_data_field    (const guchar *buffer,
-                                         guint size,
-                                         guchar version,
-                                         GError **error);
-
-
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Thermicroscopes SpmLab R4, R5, and R6 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -136,6 +136,8 @@ spmlab_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    const gchar *title;
+    gint type;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -158,7 +160,7 @@ spmlab_load(const gchar *filename,
         case '4':
         case '5':
         case '6':
-        dfield = read_data_field(buffer, size, buffer[2], error);
+        dfield = read_data_field(buffer, size, buffer[2], &type, error);
         break;
 
         default:
@@ -175,6 +177,13 @@ spmlab_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
+    title = gwy_enum_to_string(type,
+                               spmlab_channel_types,
+                               G_N_ELEMENTS(spmlab_channel_types));
+    if (*title)
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup(title));
+
     return container;
 }
 
@@ -182,6 +191,7 @@ static GwyDataField*
 read_data_field(const guchar *buffer,
                 guint size,
                 guchar version,
+                gint *type,
                 GError **error)
 {
     enum { MIN_REMAINDER = 2620 };
@@ -200,7 +210,7 @@ read_data_field(const guchar *buffer,
     const guint offsets56[] = {
         0x0104, 0x025c, 0x0268, 0x0288, 0x02a0, 0x0708
     };
-    gint xres, yres, doffset, i, power10, type, dir;
+    gint xres, yres, doffset, i, power10, dir;
     gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
     GwySIUnit *unitxy, *unitz;
@@ -262,9 +272,9 @@ read_data_field(const guchar *buffer,
     gwy_debug("unitxy = %s, unitz = %s", p, p + 10);
 
     p = buffer + *(offset++);
-    type = get_WORD_LE(&p);
+    *type = get_WORD_LE(&p);
     dir = get_WORD_LE(&p);
-    gwy_debug("type = %d, dir = %d", type, dir);
+    gwy_debug("type = %d, dir = %d", *type, dir);
 
     p = buffer + doffset;
     if (size - (p - buffer) < 2*xres*yres) {
