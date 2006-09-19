@@ -2502,9 +2502,9 @@ gwy_app_data_browser_construct_buttons(GwyAppDataBrowser *browser)
         const gchar *action;
     }
     actions[] = {
-        { GTK_STOCK_DELETE, N_("Delete"),                "delete",    },
-        { GTK_STOCK_COPY,   N_("Duplicate"),             "duplicate", },
         { GTK_STOCK_NEW,    N_("Extract to a new file"), "extract",   },
+        { GTK_STOCK_COPY,   N_("Duplicate"),             "duplicate", },
+        { GTK_STOCK_DELETE, N_("Delete"),                "delete",    },
     };
 
     GtkWidget *hbox, *button, *image;
