@@ -45,7 +45,6 @@ static void     gwy_graph_model_get_property     (GObject*object,
                                                   guint prop_id,
                                                   GValue *value,
                                                   GParamSpec *pspec);
-static void     gwy_graph_model_layout_changed   (GwyGraphModel *model);
 
 enum {
     PROP_0,
@@ -57,14 +56,6 @@ enum {
     PROP_AXIS_LABEL_TOP,
     PROP_LAST
 };
-
-enum {
-    LAYOUT_UPDATED,
-    LAST_SIGNAL
-};
-
-static guint graph_model_signals[LAST_SIGNAL] = { 0 };
-
 
 G_DEFINE_TYPE_EXTENDED
     (GwyGraphModel, gwy_graph_model, G_TYPE_OBJECT, 0,
@@ -144,24 +135,6 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "The label of the top axis",
                              "",
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
-
-    /**
-     * GwyGraphModel::layout-updated
-     * @gwygraphmodel: The #GwyGraphModel which received the signal.
-     *
-     * XXX XXX XXX:
-     * This bloody signal is emitted whenever anything in the bloody graph
-     * changes instead of making the bloody graph model properties real
-     * properties and emitting property change notification.
-     **/
-    graph_model_signals[LAYOUT_UPDATED]
-        = g_signal_new("layout-updated",
-                       G_OBJECT_CLASS_TYPE(gobject_class),
-                       G_SIGNAL_RUN_FIRST,
-                       G_STRUCT_OFFSET(GwyGraphModelClass, layout_updated),
-                       NULL, NULL,
-                       g_cclosure_marshal_VOID__VOID,
-                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -524,12 +497,6 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel,
     g_object_ref(curve);
     g_ptr_array_add(gmodel->curves, curve);
     idx = gmodel->curves->len - 1;
-    g_signal_connect_swapped(curve, "data-changed",
-                             G_CALLBACK(gwy_graph_model_layout_changed),
-                             gmodel);
-    g_signal_connect_swapped(curve, "notify",
-                             G_CALLBACK(gwy_graph_model_layout_changed),
-                             gmodel);
 
     /* In principle, this can change gmodel->curves->len, so we have to save
      * the index in idx. */
@@ -568,8 +535,6 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
         GwyGraphCurveModel *cmodel;
 
         cmodel = g_ptr_array_index(gmodel->curves, i);
-        g_signal_handlers_disconnect_by_func
-                       (cmodel, gwy_graph_model_layout_changed, gmodel);
         g_object_unref(cmodel);
     }
     g_ptr_array_set_size(gmodel->curves, 0);
@@ -600,8 +565,6 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     for (i = 0; i < gmodel->curves->len; i++) {
         cmodel = g_ptr_array_index(gmodel->curves, i);
         if (gwy_strequal(description, cmodel->description->str)) {
-            g_signal_handlers_disconnect_by_func
-                       (cmodel, gwy_graph_model_layout_changed, gmodel);
             g_object_unref(cmodel);
         }
         else
@@ -638,8 +601,6 @@ gwy_graph_model_remove_curve(GwyGraphModel *gmodel,
     g_return_if_fail(cindex >= 0 && cindex < gmodel->curves->len);
 
     cmodel = g_ptr_array_index(gmodel->curves, cindex);
-    g_signal_handlers_disconnect_by_func
-                       (cmodel, gwy_graph_model_layout_changed, gmodel);
     g_object_unref(cmodel);
 
     g_ptr_array_remove_index(gmodel->curves, cindex);
@@ -722,18 +683,6 @@ gwy_graph_model_get_curve_index(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_graph_model_layout_changed:
- * @model: A graph model.
- *
- * Emits the "layout-changed" signal on a graph model.
- **/
-static void
-gwy_graph_model_layout_changed(GwyGraphModel *model)
-{
-    g_signal_emit(model, graph_model_signals[LAYOUT_UPDATED], 0);
-}
-
-/**
  * gwy_graph_model_set_title:
  * @model: A graph model.
  * @title: A new graphmodel title.
@@ -768,7 +717,6 @@ gwy_graph_model_set_label_position(GwyGraphModel *model,
         return;
 
     model->label_position = position;
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -790,7 +738,6 @@ gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
         return;
 
     model->label_has_frame = label_has_frame;
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -811,7 +758,6 @@ gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
         return;
 
     model->label_frame_thickness = thickness;
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -832,7 +778,6 @@ gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
         return;
 
     model->label_reverse = reverse;
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -847,7 +792,6 @@ gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
 {
     g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
     model->label_visible = visible;
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -949,7 +893,6 @@ gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
     oldunit = model->x_unit;
     model->x_unit = gwy_si_unit_duplicate(siunit);
     gwy_object_unref(oldunit);
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -972,7 +915,6 @@ gwy_graph_model_set_si_unit_y(GwyGraphModel *model, GwySIUnit *siunit)
 
     oldunit = model->y_unit;
     model->y_unit = gwy_si_unit_duplicate(siunit);
-    gwy_graph_model_layout_changed(model);
 }
 
 /**
@@ -1050,8 +992,6 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
 
         model->x_is_logarithmic = is_logarithmic;
     }
-
-    gwy_graph_model_layout_changed(model);
 }
 
 /**

@@ -88,8 +88,7 @@ struct _GwyGraphModel {
 struct _GwyGraphModelClass {
     GObjectClass parent_class;
 
-    void (*layout_updated)(GwyGraphModel *gmodel);
-
+    gpointer reserved1;
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
