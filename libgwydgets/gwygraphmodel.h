@@ -46,16 +46,16 @@ struct _GwyGraphModel {
     GPtrArray *curves;
     GString *title;
 
-    /*these values reflect reasonable bounding values of all the curves. They can
-     be set for example during curve adding to graph. They can differ sligthly
-     depending on axis mode (eg. logarithmic)*/
+    /* These values reflect reasonable bounding values of all the curves.
+     * They can be set for example during curve adding to graph.
+     * They can differ sligthly depending on axis mode (eg. logarithmic).
+     * XXX XXX XXX: So are they persistent properties or arbitrary
+     * graph-computed values that do not belong here? */
     gdouble x_max;
     gdouble x_min;
     gdouble y_max;
     gdouble y_min;
 
-    gboolean has_x_unit;
-    gboolean has_y_unit;
     GwySIUnit *x_unit;
     GwySIUnit *y_unit;
 
@@ -68,19 +68,20 @@ struct _GwyGraphModel {
     GwyGraphLabelPosition label_position;
     gboolean label_has_frame;
     gint label_frame_thickness;
+    gboolean label_reverse;
+    gboolean label_visible;
 
-    /*logarithmic axis*/
+    /* logarithmic axes */
     gboolean x_is_logarithmic;
     gboolean y_is_logarithmic;
-
 
     /* reserved stuff */
     gint int1;
     gint int2;
     GwyGraphPointType enum1;
     GwyGraphPointType enum2;
-    gboolean label_reverse;
-    gboolean label_visible;
+    gpointer reserved1;
+    gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
 };

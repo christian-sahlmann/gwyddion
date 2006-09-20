@@ -22,6 +22,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include <libgwydgets/gwydgettypes.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraph.h>
@@ -54,6 +55,15 @@ enum {
     PROP_AXIS_LABEL_LEFT,
     PROP_AXIS_LABEL_RIGHT,
     PROP_AXIS_LABEL_TOP,
+    PROP_X_LOGARITHMIC,
+    PROP_Y_LOGARITHMIC,
+    PROP_X_UNIT,
+    PROP_Y_UNIT,
+    PROP_LABEL_FRAME_THICKNESS,
+    PROP_LABEL_HAS_FRAME,
+    PROP_LABEL_POSITION,
+    PROP_LABEL_REVERSE,
+    PROP_LABEL_VISIBLE,
     PROP_LAST
 };
 
@@ -86,9 +96,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
          g_param_spec_int("n-curves",
                           "Number of curves",
                           "The number of curves in graph model",
-                          0,
-                          100,
-                          0,
+                          0, 100, 0,
                           G_PARAM_READABLE));
 
     g_object_class_install_property
@@ -98,7 +106,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "Title",
                              "The graph title",
                              "New graph",
-                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -107,7 +115,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "Axis label bottom",
                              "The label of the bottom axis",
                              "x",
-                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -116,7 +124,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "Axis label left",
                              "The label of the left axis",
                              "y",
-                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -125,7 +133,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "Axis label right",
                              "The label of the right axis",
                              "",
-                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -134,7 +142,90 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "Axis label top",
                              "The label of the top axis",
                              "",
-                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_X_LOGARITHMIC,
+         g_param_spec_boolean("x-logarithmic",
+                              "X logarithmic",
+                              "TRUE if x coordinate is logarithimic",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_Y_LOGARITHMIC,
+         g_param_spec_boolean("y-logarithmic",
+                              "Y logarithmic",
+                              "TRUE if y coordinate is logarithimic",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_X_UNIT,
+         g_param_spec_object("x-unit",
+                             "X unit",
+                             "Unit of x axis",
+                             GWY_TYPE_SI_UNIT,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_Y_UNIT,
+         g_param_spec_object("y-unit",
+                             "Y unit",
+                             "Unit of y axis",
+                             GWY_TYPE_SI_UNIT,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_REVERSE,
+         g_param_spec_boolean("label-reverse",
+                              "Label reverse",
+                              "TRUE if text and curve sample is switched in "
+                                  "key",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_VISIBLE,
+         g_param_spec_boolean("label-visible",
+                              "Label visible",
+                              "TRUE if key label is visible",
+                              TRUE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_HAS_FRAME,
+         g_param_spec_boolean("label-has-frame",
+                              "Label has frame",
+                              "TRUE if key label has frame",
+                              TRUE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_FRAME_THICKNESS,
+         g_param_spec_int("label-frame-thickness",
+                          "Label frame thickness",
+                          "Thickness of key label frame",
+                          0, 16, 1,
+                          G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_POSITION,
+         g_param_spec_enum("label-position",
+                           "Label position",
+                           "Position type of key label",
+                           GWY_TYPE_GRAPH_LABEL_POSITION,
+                           GWY_GRAPH_LABEL_NORTHEAST,
+                           G_PARAM_READWRITE));
 }
 
 static void
@@ -154,9 +245,9 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->right_label = g_string_new("");
 
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
-    gmodel->label_has_frame = 1;
+    gmodel->label_has_frame = TRUE;
     gmodel->label_frame_thickness = 1;
-    gmodel->label_reverse = 0; /*designed to be added*/
+    gmodel->label_reverse = FALSE;
     gmodel->label_visible = TRUE;
 }
 
@@ -217,8 +308,6 @@ gwy_graph_model_serialize(GObject *obj,
     {
         guint32 ncurves = gmodel->curves->len;
         GwySerializeSpec spec[] = {
-            { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
-            { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
             { 'b', "x_is_logarithmic", &gmodel->x_is_logarithmic, NULL },
             { 'b', "y_is_logarithmic", &gmodel->y_is_logarithmic, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
@@ -236,6 +325,8 @@ gwy_graph_model_serialize(GObject *obj,
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
+            { 'b', "label.reverse", &gmodel->label_reverse, NULL },
+            { 'b', "label.visible", &gmodel->label_visible, NULL },
             { 'O', "curves", &gmodel->curves->pdata, &ncurves },
         };
 
@@ -257,8 +348,6 @@ gwy_graph_model_get_size(GObject *obj)
     {
         guint32 ncurves = gmodel->curves->len;
         GwySerializeSpec spec[] = {
-            { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
-            { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
             { 'b', "x_is_logarithmic", &gmodel->x_is_logarithmic, NULL },
             { 'b', "y_is_logarithmic", &gmodel->y_is_logarithmic, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
@@ -276,6 +365,8 @@ gwy_graph_model_get_size(GObject *obj)
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
+            { 'b', "label.reverse", &gmodel->label_reverse, NULL },
+            { 'b', "label.visible", &gmodel->label_visible, NULL },
             { 'O', "curves", &gmodel->curves->pdata, &ncurves },
         };
 
@@ -296,11 +387,13 @@ gwy_graph_model_deserialize(const guchar *buffer,
     gmodel = gwy_graph_model_new();
     {
         gchar *top_label, *bottom_label, *left_label, *right_label, *title;
+        gboolean b;
         GwyGraphCurveModel **curves = NULL;
         guint32 ncurves = 0;
         GwySerializeSpec spec[] = {
-            { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
-            { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
+            /* Accept, but ignore */
+            { 'b', "has_x_unit", &b, NULL },
+            { 'b', "has_y_unit", &b, NULL },
             { 'b', "x_is_logarithmic", &gmodel->x_is_logarithmic, NULL },
             { 'b', "y_is_logarithmic", &gmodel->y_is_logarithmic, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
@@ -318,6 +411,8 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
+            { 'b', "label.reverse", &gmodel->label_reverse, NULL },
+            { 'b', "label.visible", &gmodel->label_visible, NULL },
             { 'O', "curves", &curves, &ncurves },
         };
 
@@ -453,8 +548,6 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     duplicate = gwy_graph_model_new();
     /* widget stuff is already initialized to NULL */
     duplicate->title = g_string_new(gmodel->title->str);;
-    duplicate->has_x_unit = gmodel->has_x_unit;
-    duplicate->has_y_unit = gmodel->has_y_unit;
     duplicate->x_is_logarithmic = gmodel->x_is_logarithmic;
     duplicate->y_is_logarithmic = gmodel->y_is_logarithmic;
     duplicate->x_min = gmodel->x_min;
