@@ -77,6 +77,8 @@ static void     gwy_axis_get_property  (GObject*object,
                                         guint prop_id,
                                         GValue *value,
                                         GParamSpec *pspec);
+static void     gwy_axis_notify        (GObject *object,
+                                        GParamSpec *pspec);
 static void     gwy_axis_realize       (GtkWidget *widget);
 static void     gwy_axis_unrealize     (GtkWidget *widget);
 static void     gwy_axis_size_request  (GtkWidget *widget,
@@ -126,8 +128,6 @@ static void    gwy_axis_adjust              (GwyAxis *axis,
 static void    gwy_axis_entry               (GwySciText *sci_text,
                                              GwyAxis *axis);
 static void    gwy_axis_rescaled            (GwyAxis *axis);
-static void    gwy_axis_notify              (GwyAxis *axis,
-                                             GParamSpec *pspec);
 
 static guint axis_signals[LAST_SIGNAL] = { 0 };
 
@@ -146,6 +146,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
     gobject_class->finalize = gwy_axis_finalize;
     gobject_class->set_property = gwy_axis_set_property;
     gobject_class->get_property = gwy_axis_get_property;
+    gobject_class->notify = gwy_axis_notify;
 
     widget_class->realize = gwy_axis_realize;
     widget_class->expose_event = gwy_axis_expose;
@@ -275,7 +276,13 @@ gwy_axis_class_init(GwyAxisClass *klass)
 static void
 gwy_axis_init(GwyAxis *axis)
 {
+    PangoContext *context;
+    PangoFontDescription *description;
+    gint size;
+
     gwy_debug("");
+
+    axis->orientation = GTK_POS_BOTTOM;
 
     axis->is_visible = TRUE;
     axis->is_auto = TRUE;
@@ -291,8 +298,8 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.line_thickness = 1;
 
     axis->dialog = NULL;
-    axis->reqmax = 100;
-    axis->reqmin = 0;
+    axis->reqmax = 1.0;
+    axis->reqmin = 0.0;
 
     axis->enable_label_edit = TRUE;
 
@@ -300,37 +307,10 @@ gwy_axis_init(GwyAxis *axis)
     axis->magnification = 1;
 
     axis->outer_border_width = 5;
-}
 
-/**
- * gwy_axis_new:
- * @orientation:  axis orientation
- * @min: minimum value of the axis
- * @max: maximum value of the axis
- * @label: axis label
- *
- * Creates new axis.
- *
- * Returns: new axis as a #GtkWidget.
- **/
-GtkWidget*
-gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
-{
-    PangoContext *context;
-    PangoFontDescription *description;
-    GwyAxis *axis;
-    gint size;
-
-    gwy_debug("");
-
-    axis = (GwyAxis*)g_object_new(GWY_TYPE_AXIS, NULL);
-    axis->reqmin = min;
-    axis->reqmax = max;
-    axis->orientation = orientation;
-
-    axis->label_text = g_string_new(label);
     axis->mjticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisLabeledTick));
     axis->miticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisTick));
+    axis->label_text = g_string_new(NULL);
 
     context = gtk_widget_get_pango_context(GTK_WIDGET(axis));
     description = pango_context_get_font_description(context);
@@ -343,10 +323,25 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
 
     /* Keep label font to default. */
     axis->par.label_font = pango_font_description_copy(description);
+}
 
-    axis->notify_id = g_signal_connect_swapped(axis, "notify",
-                                               G_CALLBACK(gwy_axis_notify),
-                                               axis);
+/**
+ * gwy_axis_new:
+ * @orientation:  axis orientation
+ *
+ * Creates new axis.
+ *
+ * Returns: New axis as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_axis_new(gint orientation)
+{
+    GwyAxis *axis;
+
+    gwy_debug("");
+
+    axis = (GwyAxis*)g_object_new(GWY_TYPE_AXIS, NULL);
+    axis->orientation = orientation;
 
     return GTK_WIDGET(axis);
 }
@@ -489,7 +484,6 @@ gwy_axis_unrealize(GtkWidget *widget)
     GwyAxis *axis;
 
     axis = GWY_AXIS(widget);
-    g_signal_handler_disconnect(axis, axis->notify_id);
 
     if (GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize(widget);
@@ -715,16 +709,18 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
     }
 }
 
+/* FIXME: ugly. */
 static void
-gwy_axis_notify(GwyAxis *axis,
+gwy_axis_notify(GObject *object,
                 GParamSpec *pspec)
 {
-    if (!g_type_is_a(pspec->owner_type, GWY_TYPE_AXIS))
-        return;
+    G_OBJECT_CLASS(gwy_axis_parent_class)->notify(object, pspec);
 
-    gwy_axis_adjust(axis, -1, -1);
-    if (GTK_WIDGET_DRAWABLE(axis))
-        gtk_widget_queue_draw(GTK_WIDGET(axis));
+    if (g_type_is_a(pspec->owner_type, GWY_TYPE_AXIS)) {
+        gwy_axis_adjust(GWY_AXIS(object), -1, -1);
+        if (GTK_WIDGET_DRAWABLE(object))
+            gtk_widget_queue_draw(GTK_WIDGET(object));
+    }
 }
 
 /**

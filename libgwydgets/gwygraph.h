@@ -47,26 +47,18 @@ typedef struct _GwyGraphClass GwyGraphClass;
 struct _GwyGraph {
     GtkTable table;
 
-    GwyAxis *axis_top;
-    GwyAxis *axis_left;
-    GwyAxis *axis_right;
-    GwyAxis *axis_bottom;
-
-    GwyGraphCorner *corner_tl;
-    GwyGraphCorner *corner_bl;
-    GwyGraphCorner *corner_tr;
-    GwyGraphCorner *corner_br;
-
-    GwyGraphArea *area;
-
     GwyGraphModel *graph_model;
+
+    GwyAxis *axis[4];
+    GwyGraphCorner *corner[4];
+    GwyGraphArea *area;
 
     GwyGraphGridType grid_type;
     gboolean enable_user_input;
+    gboolean boolean1;
 
     gulong notify_id;
-    gulong rescaled_left_id;
-    gulong rescaled_bottom_id;
+    gulong rescaled_id[4];
     gulong handler_id1;
     gulong handler_id2;
 
@@ -77,10 +69,10 @@ struct _GwyGraph {
 struct _GwyGraphClass {
     GtkTableClass parent_class;
 
-    void (*gwygraph)(GwyGraph *graph);
-
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);

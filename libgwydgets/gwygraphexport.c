@@ -49,10 +49,10 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     width = (GTK_WIDGET(graph))->allocation.width;
     height = (GTK_WIDGET(graph))->allocation.height;
 
-    topheight = (GTK_WIDGET(graph->axis_top))->allocation.height;
-    bottomheight = (GTK_WIDGET(graph->axis_bottom))->allocation.height;
-    rightwidth = (GTK_WIDGET(graph->axis_left))->allocation.width;
-    leftwidth = (GTK_WIDGET(graph->axis_right))->allocation.width;
+    topheight = (GTK_WIDGET(graph->axis[GTK_POS_TOP]))->allocation.height;
+    bottomheight = (GTK_WIDGET(graph->axis[GTK_POS_BOTTOM]))->allocation.height;
+    rightwidth = (GTK_WIDGET(graph->axis[GTK_POS_LEFT]))->allocation.width;
+    leftwidth = (GTK_WIDGET(graph->axis[GTK_POS_RIGHT]))->allocation.width;
 
     labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + rightwidth;
     labely = (GTK_WIDGET(graph->area->lab))->allocation.y + topheight;
@@ -73,16 +73,16 @@ gwy_graph_export_pixmap(GwyGraph *graph,
                                     height - topheight - bottomheight);
 
     /* Draw axes */
-    gwy_axis_draw_on_drawable(graph->axis_top, pixmap, gc,
+    gwy_axis_draw_on_drawable(graph->axis[GTK_POS_TOP], pixmap, gc,
                               rightwidth, 0,
                               width - rightwidth - leftwidth, topheight);
-    gwy_axis_draw_on_drawable(graph->axis_bottom, pixmap, gc,
+    gwy_axis_draw_on_drawable(graph->axis[GTK_POS_BOTTOM], pixmap, gc,
                               rightwidth, height - bottomheight,
                               width - rightwidth - leftwidth, bottomheight);
-    gwy_axis_draw_on_drawable(graph->axis_left, pixmap, gc,
+    gwy_axis_draw_on_drawable(graph->axis[GTK_POS_LEFT], pixmap, gc,
                               0, topheight,
                               rightwidth, height - topheight - bottomheight);
-    gwy_axis_draw_on_drawable(graph->axis_right, pixmap, gc,
+    gwy_axis_draw_on_drawable(graph->axis[GTK_POS_RIGHT], pixmap, gc,
                               width - leftwidth, topheight,
                               leftwidth, height - topheight - bottomheight);
 
@@ -127,15 +127,19 @@ gwy_graph_export_postscript(GwyGraph *graph,
     areax = 90;
     areay = 90;
 
-    if (gwy_axis_is_visible(graph->axis_left) && gwy_axis_is_visible(graph->axis_right))
+    if (gwy_axis_is_visible(graph->axis[GTK_POS_LEFT])
+        && gwy_axis_is_visible(graph->axis[GTK_POS_RIGHT]))
         areaw = width - 2*areax;
-    else if (gwy_axis_is_visible(graph->axis_left) || gwy_axis_is_visible(graph->axis_right))
+    else if (gwy_axis_is_visible(graph->axis[GTK_POS_LEFT])
+             || gwy_axis_is_visible(graph->axis[GTK_POS_RIGHT]))
         areaw = width - areax - borderskip;
     else areaw = width - 2*borderskip;
 
-    if (gwy_axis_is_visible(graph->axis_top) && gwy_axis_is_visible(graph->axis_bottom))
+    if (gwy_axis_is_visible(graph->axis[GTK_POS_TOP])
+        && gwy_axis_is_visible(graph->axis[GTK_POS_BOTTOM]))
         areah = height - 2*areay;
-    else if (gwy_axis_is_visible(graph->axis_top) || gwy_axis_is_visible(graph->axis_bottom))
+    else if (gwy_axis_is_visible(graph->axis[GTK_POS_TOP])
+             || gwy_axis_is_visible(graph->axis[GTK_POS_BOTTOM]))
         areah = height - areay - borderskip;
     else areah = height - 2*borderskip;
 
@@ -204,37 +208,44 @@ gwy_graph_export_postscript(GwyGraph *graph,
 
 
     /*write axises*/
-    if (gwy_axis_is_visible(graph->axis_bottom))
-    {
-        psaxis = gwy_axis_export_vector(graph->axis_bottom, areax, 0, areaw, areay, fontsize);
+    if (gwy_axis_is_visible(graph->axis[GTK_POS_BOTTOM])) {
+        psaxis = gwy_axis_export_vector(graph->axis[GTK_POS_BOTTOM],
+                                        areax, 0, areaw, areay,
+                                        fontsize);
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }
-    if (gwy_axis_is_visible(graph->axis_top))
-    {
-        psaxis = gwy_axis_export_vector(graph->axis_top, areax, areay + areah, areaw, areay, fontsize);
+    if (gwy_axis_is_visible(graph->axis[GTK_POS_TOP])) {
+        psaxis = gwy_axis_export_vector(graph->axis[GTK_POS_TOP],
+                                        areax, areay + areah, areaw, areay,
+                                        fontsize);
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }
-    if (gwy_axis_is_visible(graph->axis_left))
-    {
-        psaxis = gwy_axis_export_vector(graph->axis_left, 0, areay, areax, areah, fontsize);
+    if (gwy_axis_is_visible(graph->axis[GTK_POS_LEFT])) {
+        psaxis = gwy_axis_export_vector(graph->axis[GTK_POS_LEFT],
+                                        0, areay, areax, areah,
+                                        fontsize);
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }
-    if (gwy_axis_is_visible(graph->axis_right))
-    {
-        psaxis = gwy_axis_export_vector(graph->axis_right, areax + areaw, areay, areax, areah, fontsize);
+    if (gwy_axis_is_visible(graph->axis[GTK_POS_RIGHT])) {
+        psaxis = gwy_axis_export_vector(graph->axis[GTK_POS_RIGHT],
+                                        areax + areaw, areay, areax, areah,
+                                        fontsize);
         g_string_append_printf(string, "%s", psaxis->str);
         g_string_free(psaxis, TRUE);
     }
 
     /*write area*/
-    psarea = gwy_graph_area_export_vector(graph->area, areax, areay, areaw, areah);
+    psarea = gwy_graph_area_export_vector(graph->area,
+                                          areax, areay, areaw, areah);
     g_string_append_printf(string, "%s", psarea->str);
 
     /*write label*/
-    pslabel = gwy_graph_label_export_vector(graph->area->lab, labelx, labely, labelw, labelh, fontsize);
+    pslabel = gwy_graph_label_export_vector(graph->area->lab,
+                                            labelx, labely, labelw, labelh,
+                                            fontsize);
     g_string_append_printf(string, "%s", pslabel->str);
 
     /*save stream*/

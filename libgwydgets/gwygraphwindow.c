@@ -368,6 +368,7 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 {
     const gchar* xstring, *ystring;
     GwyGraph *graph;
+    GwyAxis *axis;
     gdouble x, y;
     gchar buffer[200];
     gdouble xmag, ymag;
@@ -376,11 +377,13 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     gwy_graph_area_get_cursor(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                               &x, &y);
 
-    xmag = gwy_axis_get_magnification(graph->axis_top);
-    xstring = gwy_axis_get_magnification_string(graph->axis_top);
+    axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
+    xmag = gwy_axis_get_magnification(axis);
+    xstring = gwy_axis_get_magnification_string(axis);
 
-    ymag = gwy_axis_get_magnification(graph->axis_left);
-    ystring = gwy_axis_get_magnification_string(graph->axis_left);
+    axis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
+    ymag = gwy_axis_get_magnification(axis);
+    ystring = gwy_axis_get_magnification_string(axis);
 
     g_snprintf(buffer, sizeof(buffer), "%.4f %s, %.4f %s",
                x/xmag, xstring, y/ymag, ystring);

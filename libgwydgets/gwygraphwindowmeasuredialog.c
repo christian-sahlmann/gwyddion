@@ -162,6 +162,7 @@ selection_updated_cb(GwySelection *selection,
 {
     GtkWidget *label;
     GwyGraph *graph;
+    GwyAxis *axis;
     GString *str;
     gint i, n;
     gdouble *spoints = NULL;
@@ -187,20 +188,20 @@ selection_updated_cb(GwySelection *selection,
     }
 
     str = g_string_new("");
-    dialog->x_mag = gwy_axis_get_magnification(graph->axis_top);
-    dialog->y_mag = gwy_axis_get_magnification(graph->axis_left);
+
+    axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
+    dialog->x_mag = gwy_axis_get_magnification(axis);
     header_label_update(GTK_LABEL(dialog->header_x), "X",
-                        gwy_axis_get_magnification_string(graph->axis_top),
-                        str);
-    header_label_update(GTK_LABEL(dialog->header_y), "Y",
-                        gwy_axis_get_magnification_string(graph->axis_left),
-                        str);
+                        gwy_axis_get_magnification_string(axis), str);
     header_label_update(GTK_LABEL(dialog->header_distx), _("Length"),
-                        gwy_axis_get_magnification_string(graph->axis_top),
-                        str);
+                        gwy_axis_get_magnification_string(axis), str);
+
+    axis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
+    dialog->y_mag = gwy_axis_get_magnification(axis);
+    header_label_update(GTK_LABEL(dialog->header_y), "Y",
+                        gwy_axis_get_magnification_string(axis), str);
     header_label_update(GTK_LABEL(dialog->header_disty), _("Height"),
-                        gwy_axis_get_magnification_string(graph->axis_left),
-                        str);
+                        gwy_axis_get_magnification_string(axis), str);
 
     /*update points data */
     for (i = 0; i < NMAX; i++) {
@@ -279,6 +280,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     GtkWidget *label, *table;
     GwyGraphWindowMeasureDialog *dialog;
     GwyGraphModel *gmodel;
+    GwyAxis *axis;
     gint i;
     GString *str;
 
@@ -346,13 +348,24 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
 
-    dialog->x_mag = gwy_axis_get_magnification(graph->axis_top);
-    dialog->y_mag = gwy_axis_get_magnification(graph->axis_left);
+    axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
+    dialog->x_mag = gwy_axis_get_magnification(axis);
+    dialog->header_x = header_label(table, 1, 1, "X",
+                                    gwy_axis_get_magnification_string(axis),
+                                    str);
+    dialog->header_distx = header_label(table, 1, 3, _("Length"),
+                                        gwy_axis_get_magnification_string(axis),
+                                        str);
 
-    dialog->header_x = header_label(table, 1, 1, "X", gwy_axis_get_magnification_string(graph->axis_top), str);
-    dialog->header_y = header_label(table, 1, 2, "Y", gwy_axis_get_magnification_string(graph->axis_left), str);
-    dialog->header_distx = header_label(table, 1, 3, _("Length"), gwy_axis_get_magnification_string(graph->axis_top), str);
-    dialog->header_disty = header_label(table, 1, 4, _("Height"), gwy_axis_get_magnification_string(graph->axis_left), str);
+    axis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
+    dialog->y_mag = gwy_axis_get_magnification(axis);
+    dialog->header_y = header_label(table, 1, 2, "Y",
+                                    gwy_axis_get_magnification_string(axis),
+                                    str);
+    dialog->header_disty = header_label(table, 1, 4, _("Height"),
+                                        gwy_axis_get_magnification_string(axis),
+                                        str);
+
     header_label(table, 1, 5, _("Angle"), "deg", str);
 
     for (i = 0; i < NMAX; i++) {
