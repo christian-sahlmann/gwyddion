@@ -489,7 +489,7 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
-    g_signal_connect(object, "layout-updated", /* FIXME */
+    g_signal_connect(object, "notify::n-curves", /* FIXME */
                      G_CALLBACK(gwy_app_data_proxy_graph_changed), proxy);
 }
 
@@ -529,7 +529,7 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
     gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
-    g_signal_connect(object, "layout-updated", /* FIXME */
+    g_signal_connect(object, "notify::n-curves", /* FIXME */
                      G_CALLBACK(gwy_app_data_proxy_graph_changed), proxy);
     g_object_unref(old);
 }
