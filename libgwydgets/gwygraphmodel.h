@@ -118,42 +118,35 @@ gint           gwy_graph_model_get_curve_index          (GwyGraphModel *gmodel,
 void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
 void           gwy_graph_model_set_title                (GwyGraphModel *model,
                                                          const gchar *title);
+const gchar*   gwy_graph_model_get_title                (GwyGraphModel *model);
 void           gwy_graph_model_set_label_position       (GwyGraphModel *model,
                                                          GwyGraphLabelPosition position);
+GwyGraphLabelPosition gwy_graph_model_get_label_position(GwyGraphModel *model);
 void           gwy_graph_model_set_label_has_frame      (GwyGraphModel *model,
                                                          gboolean label_has_frame);
+gboolean       gwy_graph_model_get_label_has_frame      (GwyGraphModel *model);
 void           gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model,
                                                          gint thickness);
+gint           gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model);
 void           gwy_graph_model_set_label_reverse        (GwyGraphModel *model,
                                                          gboolean reverse);
+gboolean       gwy_graph_model_get_label_reverse        (GwyGraphModel *model);
 void           gwy_graph_model_set_label_visible        (GwyGraphModel *model,
                                                          gboolean visible);
+gboolean       gwy_graph_model_get_label_visible        (GwyGraphModel *model);
 void           gwy_graph_model_set_si_unit_x            (GwyGraphModel *model,
                                                          GwySIUnit *siunit);
+GwySIUnit*     gwy_graph_model_get_si_unit_x            (GwyGraphModel *model);
 void           gwy_graph_model_set_si_unit_y            (GwyGraphModel *model,
                                                          GwySIUnit *siunit);
+GwySIUnit*     gwy_graph_model_get_si_unit_y            (GwyGraphModel *model);
 void           gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
                                                         GwyDataLine *data_line);
-const gchar*   gwy_graph_model_get_title                (GwyGraphModel *model);
-GwyGraphLabelPosition gwy_graph_model_get_label_position(GwyGraphModel *model);
-gboolean       gwy_graph_model_get_label_has_frame      (GwyGraphModel *model);
-gint           gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model);
-gboolean       gwy_graph_model_get_label_reverse        (GwyGraphModel *model);
-gboolean       gwy_graph_model_get_label_visible        (GwyGraphModel *model);
-GwySIUnit*     gwy_graph_model_get_si_unit_x            (GwyGraphModel *model);
-GwySIUnit*     gwy_graph_model_get_si_unit_y            (GwyGraphModel *model);
-GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
-                                                         gboolean export_units,
-                                                         gboolean export_labels,
-                                                         gboolean export_metadata,
-                                                         GwyGraphModelExportStyle export_style,
-                                                         GString *string);
-
-const gchar*   gwy_graph_model_get_axis_label           (GwyGraphModel *model,
-                                                         GtkPositionType pos);
 void           gwy_graph_model_set_axis_label           (GwyGraphModel *model,
                                                          GtkPositionType pos,
                                                          const gchar *label);
+const gchar*   gwy_graph_model_get_axis_label           (GwyGraphModel *model,
+                                                         GtkPositionType pos);
 void           gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
                                                          GtkOrientation direction,
                                                          gboolean is_logarithmic);
@@ -170,6 +163,13 @@ void           gwy_graph_model_set_xmin                  (GwyGraphModel *model, 
 void           gwy_graph_model_set_xmax                  (GwyGraphModel *model, gdouble value);
 void           gwy_graph_model_set_ymin                  (GwyGraphModel *model, gdouble value);
 void           gwy_graph_model_set_ymax                  (GwyGraphModel *model, gdouble value);
+
+GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
+                                                         gboolean export_units,
+                                                         gboolean export_labels,
+                                                         gboolean export_metadata,
+                                                         GwyGraphModelExportStyle export_style,
+                                                         GString *string);
 
 G_END_DECLS
 

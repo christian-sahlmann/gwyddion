@@ -57,8 +57,8 @@ enum {
     PROP_AXIS_LABEL_TOP,
     PROP_X_LOGARITHMIC,
     PROP_Y_LOGARITHMIC,
-    PROP_X_UNIT,
-    PROP_Y_UNIT,
+    PROP_SI_UNIT_X,
+    PROP_SI_UNIT_Y,
     PROP_LABEL_FRAME_THICKNESS,
     PROP_LABEL_HAS_FRAME,
     PROP_LABEL_POSITION,
@@ -93,11 +93,11 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
     g_object_class_install_property
         (gobject_class,
          PROP_N_CURVES,
-         g_param_spec_int("n-curves",
-                          "Number of curves",
-                          "The number of curves in graph model",
-                          0, 100, 0,
-                          G_PARAM_READABLE));
+         g_param_spec_uint("n-curves",
+                           "Number of curves",
+                           "The number of curves in graph model",
+                           0, G_MAXUINT, 0,
+                           G_PARAM_READABLE));
 
     g_object_class_install_property
         (gobject_class,
@@ -164,8 +164,8 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
 
     g_object_class_install_property
         (gobject_class,
-         PROP_X_UNIT,
-         g_param_spec_object("x-unit",
+         PROP_SI_UNIT_X,
+         g_param_spec_object("si-unit-x",
                              "X unit",
                              "Unit of x axis",
                              GWY_TYPE_SI_UNIT,
@@ -173,8 +173,8 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
 
     g_object_class_install_property
         (gobject_class,
-         PROP_Y_UNIT,
-         g_param_spec_object("y-unit",
+         PROP_SI_UNIT_Y,
+         g_param_spec_object("si-unit-y",
                              "Y unit",
                              "Unit of y axis",
                              GWY_TYPE_SI_UNIT,
@@ -499,6 +499,58 @@ gwy_graph_model_set_property(GObject *object,
         g_string_assign(gmodel->title, g_value_get_string(value));
         break;
 
+        case PROP_AXIS_LABEL_BOTTOM:
+        g_string_assign(gmodel->bottom_label, g_value_get_string(value));
+        break;
+
+        case PROP_AXIS_LABEL_LEFT:
+        g_string_assign(gmodel->left_label, g_value_get_string(value));
+        break;
+
+        case PROP_AXIS_LABEL_RIGHT:
+        g_string_assign(gmodel->right_label, g_value_get_string(value));
+        break;
+
+        case PROP_AXIS_LABEL_TOP:
+        g_string_assign(gmodel->top_label, g_value_get_string(value));
+        break;
+
+        case PROP_SI_UNIT_X:
+        gwy_graph_model_set_si_unit_x(gmodel, g_value_get_object(value));
+        break;
+
+        case PROP_SI_UNIT_Y:
+        gwy_graph_model_set_si_unit_y(gmodel, g_value_get_object(value));
+        break;
+
+        case PROP_X_LOGARITHMIC:
+        gmodel->x_is_logarithmic = g_value_get_boolean(value);
+        break;
+
+        case PROP_Y_LOGARITHMIC:
+        gmodel->y_is_logarithmic = g_value_get_boolean(value);
+        break;
+
+        case PROP_LABEL_FRAME_THICKNESS:
+        gmodel->label_frame_thickness = g_value_get_int(value);
+        break;
+
+        case PROP_LABEL_HAS_FRAME:
+        gmodel->label_has_frame = g_value_get_boolean(value);
+        break;
+
+        case PROP_LABEL_POSITION:
+        gmodel->label_position = g_value_get_enum(value);
+        break;
+
+        case PROP_LABEL_REVERSE:
+        gmodel->label_reverse = g_value_get_boolean(value);
+        break;
+
+        case PROP_LABEL_VISIBLE:
+        gmodel->label_visible = g_value_get_boolean(value);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -515,11 +567,65 @@ gwy_graph_model_get_property(GObject*object,
 
     switch (prop_id) {
         case PROP_TITLE:
-        g_value_set_string(value, gwy_graph_model_get_title(gmodel));
+        g_value_set_string(value, gmodel->title->str);
         break;
 
         case PROP_N_CURVES:
-        g_value_set_int(value, gwy_graph_model_get_n_curves(gmodel));
+        g_value_set_uint(value, gmodel->curves->len);
+        break;
+
+        case PROP_AXIS_LABEL_BOTTOM:
+        g_value_set_string(value, gmodel->bottom_label->str);
+        break;
+
+        case PROP_AXIS_LABEL_LEFT:
+        g_value_set_string(value, gmodel->left_label->str);
+        break;
+
+        case PROP_AXIS_LABEL_RIGHT:
+        g_value_set_string(value, gmodel->right_label->str);
+        break;
+
+        case PROP_AXIS_LABEL_TOP:
+        g_value_set_string(value, gmodel->top_label->str);
+        break;
+
+        case PROP_SI_UNIT_X:
+        /* Keep the idiosyncratic semantics of gwy_graph_model_get_si_unit_x */
+        g_value_take_object(value, gwy_si_unit_duplicate(gmodel->x_unit));
+        break;
+
+        case PROP_SI_UNIT_Y:
+        /* Keep the idiosyncratic semantics of gwy_graph_model_get_si_unit_y */
+        g_value_take_object(value, gwy_si_unit_duplicate(gmodel->y_unit));
+        break;
+
+        case PROP_X_LOGARITHMIC:
+        g_value_set_boolean(value, gmodel->x_is_logarithmic);
+        break;
+
+        case PROP_Y_LOGARITHMIC:
+        g_value_set_boolean(value, gmodel->y_is_logarithmic);
+        break;
+
+        case PROP_LABEL_FRAME_THICKNESS:
+        g_value_set_int(value, gmodel->label_frame_thickness);
+        break;
+
+        case PROP_LABEL_HAS_FRAME:
+        g_value_set_boolean(value, gmodel->label_has_frame);
+        break;
+
+        case PROP_LABEL_POSITION:
+        g_value_set_enum(value, gmodel->label_position);
+        break;
+
+        case PROP_LABEL_REVERSE:
+        g_value_set_boolean(value, gmodel->label_reverse);
+        break;
+
+        case PROP_LABEL_VISIBLE:
+        g_value_set_boolean(value, gmodel->label_visible);
         break;
 
         default:
@@ -533,6 +639,7 @@ gwy_graph_model_get_property(GObject*object,
  * @gmodel: A graph model.
  *
  * Creates new graph model object that has the same settings as @gmodel.
+ *
  * This includes axis/label visibility, actual plotting range, etc.
  * Curves are not duplicated or referenced.
  *
@@ -546,7 +653,7 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     gwy_debug("");
 
     duplicate = gwy_graph_model_new();
-    /* widget stuff is already initialized to NULL */
+
     duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->x_is_logarithmic = gmodel->x_is_logarithmic;
     duplicate->y_is_logarithmic = gmodel->y_is_logarithmic;
@@ -810,18 +917,19 @@ gwy_graph_model_set_label_position(GwyGraphModel *model,
         return;
 
     model->label_position = position;
+    g_object_notify(G_OBJECT(model), "label-position");
 }
 
 /**
  * gwy_graph_model_set_label_has_frame:
  * @model: A graph model.
- * @label_has_frame: label frame mode.
+ * @label_has_frame: %TRUE to make label frame visible.
  *
- * Sets whether graph label widget should have a frame around it. Note that the
- * label must be visible (see #gwy_graph_model_set_label_visible())
- * to see label.
+ * Sets whether graph label has a frame around it.
+ *
+ * Note that the label must be visible
+ * (see #gwy_graph_model_set_label_visible()) to see the label.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
                                     gboolean label_has_frame)
@@ -831,6 +939,7 @@ gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
         return;
 
     model->label_has_frame = label_has_frame;
+    g_object_notify(G_OBJECT(model), "label-has-frame");
 }
 
 /**
@@ -851,6 +960,7 @@ gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
         return;
 
     model->label_frame_thickness = thickness;
+    g_object_notify(G_OBJECT(model), "label-frame-thickness");
 }
 
 /**
@@ -871,6 +981,7 @@ gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
         return;
 
     model->label_reverse = reverse;
+    g_object_notify(G_OBJECT(model), "label-reverse");
 }
 
 /**
@@ -884,7 +995,11 @@ void
 gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
 {
     g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (model->label_visible == visible)
+        return;
+
     model->label_visible = visible;
+    g_object_notify(G_OBJECT(model), "label-visible");
 }
 
 /**
@@ -968,24 +1083,22 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
 /**
  * gwy_graph_model_set_si_unit_x:
  * @model: A graph model.
- * @siunit: physical unit for x axis
+ * @siunit: Physical unit for x axis.
  *
- * Sets the physical unit for graph x axis. The unit is duplicated, so you are
- * responsible for freeing @siunit.
+ * Sets the physical unit for graph x axis.
+ *
+ * The unit is only assigned by value, the graph model does not directly use
+ * @siunit nor it takes any reference to it.
  **/
-/* XXX: Therefore graphs showing this model redraw even if the units
- * do not actually change. This is bloody not how it should work.  */
 void
 gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
 {
-    GwySIUnit *oldunit;
-
-    if (model->x_unit == siunit)
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (gwy_si_unit_equal(siunit, model->x_unit))
         return;
 
-    oldunit = model->x_unit;
-    model->x_unit = gwy_si_unit_duplicate(siunit);
-    gwy_object_unref(oldunit);
+    gwy_serializable_clone(G_OBJECT(siunit), G_OBJECT(model->x_unit));
+    g_object_notify(G_OBJECT(model), "si-unit-x");
 }
 
 /**
@@ -993,21 +1106,20 @@ gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
  * @model: A graph model.
  * @siunit: physical unit for y axis
  *
- * Sets the physical unit for graph y axis. The unit is duplicated, so you are
- * responsible for freeing @siunit.
+ * Sets the physical unit for graph y axis.
+ *
+ * The unit is only assigned by value, the graph model does not directly use
+ * @siunit nor it takes any reference to it.
  **/
-/* XXX: Therefore graphs showing this model redraw even if the units
- * do not actually change. This is bloody not how it should work.  */
 void
 gwy_graph_model_set_si_unit_y(GwyGraphModel *model, GwySIUnit *siunit)
 {
-    GwySIUnit *oldunit;
-
-    if (model->y_unit == siunit)
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    if (gwy_si_unit_equal(siunit, model->y_unit))
         return;
 
-    oldunit = model->y_unit;
-    model->y_unit = gwy_si_unit_duplicate(siunit);
+    gwy_serializable_clone(G_OBJECT(siunit), G_OBJECT(model->y_unit));
+    g_object_notify(G_OBJECT(model), "si-unit-y");
 }
 
 /**
@@ -1031,14 +1143,15 @@ gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
  * gwy_graph_model_get_si_unit_x:
  * @model: A graph model.
  *
- * Returns: A #GwySIUnit containing the physical unit of the x-axis of @model.
- *          (Do not free).
+ * Gets the physical unit of graph x axis.
+ *
+ * Returns: A newly allocated #GwySIUnit with the physical unit of the x-axis
+ *          of @model.
  **/
-/* XXX: This is a dirty lie. */
-/* XXX: Malformed documentation. */
 GwySIUnit*
 gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(model), NULL);
     return gwy_si_unit_duplicate(model->x_unit);
 }
 
@@ -1046,14 +1159,15 @@ gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
  * gwy_graph_model_get_si_unit_y:
  * @model: A graph model.
  *
- * Returns: A #GwySIUnit containing the physical unit of the y-axis of @model.
- *          (Do not free).
+ * Gets the physical unit of graph y axis.
+ *
+ * Returns: A newly allocated #GwySIUnit with the physical unit of the y-axis
+ *          of @model.
  **/
-/* XXX: This is a dirty lie. */
-/* XXX: Malformed documentation. */
 GwySIUnit*
 gwy_graph_model_get_si_unit_y(GwyGraphModel *model)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(model), NULL);
     return gwy_si_unit_duplicate(model->y_unit);
 }
 
@@ -1078,12 +1192,14 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
             return;
 
         model->y_is_logarithmic = is_logarithmic;
+        g_object_notify(G_OBJECT(model), "y-logarithmic");
     }
     else {
         if (model->x_is_logarithmic == is_logarithmic)
             return;
 
         model->x_is_logarithmic = is_logarithmic;
+        g_object_notify(G_OBJECT(model), "x-logarithmic");
     }
 }
 
