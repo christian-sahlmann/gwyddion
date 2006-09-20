@@ -65,9 +65,10 @@ struct _GwyGraph {
     gboolean enable_user_input;
 
     gulong notify_id;
-    gulong layout_updated_id;
     gulong rescaled_left_id;
     gulong rescaled_bottom_id;
+    gulong handler_id1;
+    gulong handler_id2;
 
     gpointer reserved1;
     gpointer reserved2;

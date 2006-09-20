@@ -64,7 +64,6 @@ gwy_graph_finalize(GObject *object)
     GwyGraph *graph = GWY_GRAPH(object);
 
     gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
-    gwy_signal_handler_disconnect(graph->graph_model, graph->layout_updated_id);
     gwy_object_unref(graph->graph_model);
 }
 
@@ -206,7 +205,6 @@ gwy_graph_refresh(GwyGraph *graph)
     if (graph->graph_model == NULL)
         return;
 
-    
     model = GWY_GRAPH_MODEL(graph->graph_model);
 
     logarithmic = gwy_graph_model_get_direction_logarithmic
@@ -291,7 +289,6 @@ void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 {
     gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
-    gwy_signal_handler_disconnect(graph->graph_model, graph->layout_updated_id);
 
     if (gmodel)
         g_object_ref(gmodel);
@@ -301,9 +298,6 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
     if (gmodel) {
         graph->notify_id
             = g_signal_connect_swapped(gmodel, "notify",
-                                       G_CALLBACK(gwy_graph_refresh), graph);
-        graph->layout_updated_id
-            = g_signal_connect_swapped(gmodel, "layout-updated",
                                        G_CALLBACK(gwy_graph_refresh), graph);
     }
 
