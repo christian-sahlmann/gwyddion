@@ -75,13 +75,13 @@ struct _GwyGraphClass {
     gpointer reserved4;
 };
 
-GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);
+GtkWidget* gwy_graph_new(GwyGraphModel *gmodel);
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
 
 GwyAxis*   gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type);
 void       gwy_graph_set_axis_visible(GwyGraph *graph, GtkPositionType type, gboolean is_visible);
 
-GtkWidget *gwy_graph_get_area(GwyGraph *graph);
+GtkWidget* gwy_graph_get_area(GwyGraph *graph);
 
 void       gwy_graph_set_model(GwyGraph *graph,
                                     GwyGraphModel *gmodel);
@@ -89,13 +89,15 @@ void       gwy_graph_set_status(GwyGraph *graph,
                                   GwyGraphStatusType status);
 GwyGraphStatusType  gwy_graph_get_status(GwyGraph *graph);
 
-GwyGraphModel *gwy_graph_get_model(GwyGraph *graph);
+GwyGraphModel* gwy_graph_get_model(GwyGraph *graph);
 
 
-void       gwy_graph_request_x_range(GwyGraph *graph, gdouble x_min_req, gdouble x_max_req);
-void       gwy_graph_request_y_range(GwyGraph *graph, gdouble y_min_req, gdouble y_max_req);
-void       gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max);
-void       gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max);
+void gwy_graph_get_x_range(GwyGraph *graph,
+                           gdouble *x_min,
+                           gdouble *x_max);
+void gwy_graph_get_y_range(GwyGraph *graph,
+                           gdouble *y_min,
+                           gdouble *y_max);
 
 void       gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable);
 
@@ -121,7 +123,6 @@ void gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data);
 
 const GArray* gwy_graph_get_x_grid_data(GwyGraph *graph);
 const GArray* gwy_graph_get_y_grid_data(GwyGraph *graph);
-
 
 G_END_DECLS
 
