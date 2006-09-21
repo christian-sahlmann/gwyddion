@@ -36,6 +36,7 @@ Modules:
   fixed.
 - Graph exports: User interface was made more consistent, memory leaks were
   fixed.
+- Mark Grain by Threshold: instant updates option available
 
 
 1.99.9 (2006-09-07)

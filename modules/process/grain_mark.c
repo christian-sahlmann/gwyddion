@@ -240,6 +240,7 @@ mark_dialog(MarkArgs *args,
     GwyPixmapLayer *layer;
     GwyDataField *mfield;
     gint row;
+    gboolean temp;
 
     controls.args = args;
 
@@ -386,8 +387,12 @@ mark_dialog(MarkArgs *args,
             break;
 
             case RESPONSE_RESET:
+            temp = args->update;
             *args = mark_defaults;
+            args->update = temp;
             mark_dialog_update_controls(&controls, args);
+            preview(&controls, args);
+            args->init = TRUE;
             break;
 
             case RESPONSE_PREVIEW:
