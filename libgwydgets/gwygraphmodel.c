@@ -1029,7 +1029,7 @@ gwy_graph_model_get_curve(GwyGraphModel *gmodel,
 
 /**
  * gwy_graph_model_get_curve_index:
- * @gmodel: A graph mode.
+ * @gmodel: A graph model.
  * @curve: A curve model present in @gmodel to find.
  *
  * Finds the index of a graph model curve.
@@ -1221,6 +1221,17 @@ gwy_graph_model_set_axis_label(GwyGraphModel *model,
     }
 }
 
+/**
+ * gwy_graph_model_get_x_range:
+ * @gmodel: A graph model.
+ * @x_min: Location to store minimum abscissa value, or %NULL.
+ * @x_max: Location to store maximum abscissa value, or %NULL.
+ *
+ * Gets the abscissa range of a graph.
+ *
+ * Explicitly set minimum and maximum range properties take precedence over
+ * values calculated from curve abscissa ranges.
+ **/
 void
 gwy_graph_model_get_x_range(GwyGraphModel *gmodel,
                             gdouble *x_min,
@@ -1243,12 +1254,28 @@ gwy_graph_model_get_x_range(GwyGraphModel *gmodel,
             xmax = cmax;
     }
 
+    if (gmodel->x_min_set)
+        xmin = gmodel->x_min;
+    if (gmodel->x_max_set)
+        xmax = gmodel->x_max;
+
     if (x_min)
         *x_min = xmin;
     if (x_max)
         *x_max = xmax;
 }
 
+/**
+ * gwy_graph_model_get_y_range:
+ * @gmodel: A graph model.
+ * @y_min: Location to store minimum ordinate value, or %NULL.
+ * @y_max: Location to store maximum ordinate value, or %NULL.
+ *
+ * Gets the ordinate range of a graph.
+ *
+ * Explicitly set minimum and maximum range properties take precedence over
+ * values calculated from curve ordinate ranges.
+ **/
 void
 gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
                             gdouble *y_min,
@@ -1270,6 +1297,11 @@ gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
         if (cmax > ymax)
             ymax = cmax;
     }
+
+    if (gmodel->y_min_set)
+        ymin = gmodel->y_min;
+    if (gmodel->y_max_set)
+        ymax = gmodel->y_max;
 
     if (y_min)
         *y_min = ymin;

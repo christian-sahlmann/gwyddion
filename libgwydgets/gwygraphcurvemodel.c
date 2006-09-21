@@ -858,6 +858,17 @@ gwy_graph_curve_model_get_color(GwyGraphCurveModel *gcmodel)
     return &gcmodel->color;
 }
 
+/**
+ * gwy_graph_curve_model_get_x_range:
+ * @gcmodel: A graph curve model.
+ * @x_min: Location to store minimum abscissa value, or %NULL.
+ * @x_max: Location to store maximum abscissa value, or %NULL.
+ *
+ * Gets the abscissa range of a graph curve.
+ *
+ * The values are cached in the curve model therefore repeated calls to this
+ * function (with unchanged data) are cheap.
+ **/
 void
 gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
                                   gdouble *x_min,
@@ -904,6 +915,17 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
         *x_max = xmax;
 }
 
+/**
+ * gwy_graph_curve_model_get_y_range:
+ * @gcmodel: A graph curve model.
+ * @y_min: Location to store minimum ordinate value, or %NULL.
+ * @y_max: Location to store maximum ordinate value, or %NULL.
+ *
+ * Gets the ordinate range of a graph curve.
+ *
+ * The values are cached in the curve model therefore repeated calls to this
+ * function (with unchanged data) are cheap.
+ **/
 void
 gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
                                   gdouble *y_min,
