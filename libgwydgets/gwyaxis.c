@@ -714,7 +714,11 @@ static void
 gwy_axis_notify(GObject *object,
                 GParamSpec *pspec)
 {
-    G_OBJECT_CLASS(gwy_axis_parent_class)->notify(object, pspec);
+    void (*method)(GObject*, GParamSpec*);
+
+    method = G_OBJECT_CLASS(gwy_axis_parent_class)->notify;
+    if (method)
+        method(object, pspec);
 
     if (g_type_is_a(pspec->owner_type, GWY_TYPE_AXIS)) {
         gwy_axis_adjust(GWY_AXIS(object), -1, -1);
