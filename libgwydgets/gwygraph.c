@@ -228,9 +228,9 @@ gwy_graph_refresh(GwyGraph *graph)
         }
 
         for (i = GTK_POS_LEFT; i <= GTK_POS_RIGHT; i++)
-            gwy_axis_set_req(graph->axis[i], x_reqmin, x_reqmax);
-        for (i = GTK_POS_TOP; i <= GTK_POS_BOTTOM; i++)
             gwy_axis_set_req(graph->axis[i], y_reqmin, y_reqmax);
+        for (i = GTK_POS_TOP; i <= GTK_POS_BOTTOM; i++)
+            gwy_axis_set_req(graph->axis[i], x_reqmin, x_reqmax);
 
     }
     else {
