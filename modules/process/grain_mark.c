@@ -52,7 +52,10 @@ typedef struct {
     gboolean is_height;
     gboolean is_slope;
     gboolean is_lap;
+    gboolean update;
     GwyMergeType merge_type;
+    gboolean computed;
+    gboolean init;
 } MarkArgs;
 
 typedef struct {
@@ -66,8 +69,9 @@ typedef struct {
     GtkObject *threshold_lap;
     GtkWidget *merge;
     GtkWidget *color_button;
+    GtkWidget *update;
     GwyContainer *mydata;
-    gboolean computed;
+    MarkArgs *args;
 } MarkControls;
 
 static gboolean    module_register            (void);
@@ -90,6 +94,7 @@ static void        mark_dialog_update_controls(MarkControls *controls,
                                                MarkArgs *args);
 static void        mark_dialog_update_values  (MarkControls *controls,
                                                MarkArgs *args);
+static void        update_change_cb           (MarkControls *controls);
 static void        mark_invalidate            (MarkControls *controls);
 static void        mark_invalidate2           (gpointer whatever,
                                                MarkControls *controls);
@@ -113,7 +118,10 @@ static const MarkArgs mark_defaults = {
     TRUE,
     FALSE,
     FALSE,
+    TRUE,
     GWY_MERGE_UNION,
+    FALSE,
+    FALSE,
 };
 
 static GwyModuleInfo module_info = {
@@ -233,6 +241,8 @@ mark_dialog(MarkArgs *args,
     GwyDataField *mfield;
     gint row;
 
+    controls.args = args;
+
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Threshold"), NULL, 0,
                                          _("_Update Preview"), RESPONSE_PREVIEW,
                                          _("_Reset"), RESPONSE_RESET,
@@ -326,6 +336,15 @@ mark_dialog(MarkArgs *args,
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
+    row++;
+
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.update, "toggled",
+                             G_CALLBACK(update_change_cb), &controls);
 
     mark_invalidate(&controls);
 
@@ -342,6 +361,13 @@ mark_dialog(MarkArgs *args,
                                  !args->is_lap);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap),
                                  args->is_lap);
+
+    /* finished initializing, allow instant updates */
+    args->init = TRUE;
+
+    /* show initial preview if instant updates are on */
+    if (args->update)
+        preview(&controls, args);
 
     gtk_widget_show_all(dialog);
     do {
@@ -381,7 +407,7 @@ mark_dialog(MarkArgs *args,
                             0);
     gtk_widget_destroy(dialog);
 
-    if (controls.computed) {
+    if (args->computed) {
         mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
         gwy_app_undo_qcheckpointv(data, 1, &mquark);
         gwy_container_set_object(data, mquark, mfield);
@@ -411,6 +437,8 @@ mark_dialog_update_controls(MarkControls *controls,
                                  args->is_slope);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
                                  args->is_lap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
+                                 args->update);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->merge),
                                   args->merge_type);
 }
@@ -433,20 +461,38 @@ mark_dialog_update_values(MarkControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_slope));
     args->is_lap
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_lap));
+    args->update
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
     args->merge_type
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->merge));
 }
 
 static void
+update_change_cb(MarkControls *controls)
+{
+    controls->args->update
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
+
+    if (controls->args->update)
+        mark_invalidate(controls);
+}
+
+static void
 mark_invalidate(MarkControls *controls)
 {
-    controls->computed = FALSE;
+    controls->args->computed = FALSE;
+
+    /* create preview if instant updates are on */
+    if (controls->args->update && controls->args->init) {
+        mark_dialog_update_values(controls, controls->args);
+        preview(controls, controls->args);
+    }
 }
 
 static void
 mark_invalidate2(G_GNUC_UNUSED gpointer whatever, MarkControls *controls)
 {
-    controls->computed = FALSE;
+    mark_invalidate(controls);
 }
 
 static void
@@ -499,7 +545,7 @@ preview(MarkControls *controls,
     mask_process(dfield, mask, args);
     gwy_data_field_data_changed(mask);
 
-    controls->computed = TRUE;
+    args->computed = TRUE;
 }
 
 static void
@@ -553,6 +599,7 @@ static const gchar inverted_key[]  = "/module/grain_mark/inverted";
 static const gchar isheight_key[]  = "/module/grain_mark/isheight";
 static const gchar isslope_key[]   = "/module/grain_mark/isslope";
 static const gchar islap_key[]     = "/module/grain_mark/islap";
+static const gchar update_key[]    = "/module/grain_mark/update";
 static const gchar height_key[]    = "/module/grain_mark/height";
 static const gchar slope_key[]     = "/module/grain_mark/slope";
 static const gchar lap_key[]       = "/module/grain_mark/lap";
@@ -565,6 +612,7 @@ mark_sanitize_args(MarkArgs *args)
     args->is_slope = !!args->is_slope;
     args->is_height = !!args->is_height;
     args->is_lap = !!args->is_lap;
+    args->update = !!args->update;
     args->height = CLAMP(args->height, 0.0, 100.0);
     args->slope = CLAMP(args->slope, 0.0, 100.0);
     args->lap = CLAMP(args->lap, 0.0, 100.0);
@@ -582,6 +630,7 @@ mark_load_args(GwyContainer *container,
                                       &args->is_height);
     gwy_container_gis_boolean_by_name(container, isslope_key, &args->is_slope);
     gwy_container_gis_boolean_by_name(container, islap_key, &args->is_lap);
+    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_double_by_name(container, height_key, &args->height);
     gwy_container_gis_double_by_name(container, slope_key, &args->slope);
     gwy_container_gis_double_by_name(container, lap_key, &args->lap);
@@ -598,6 +647,7 @@ mark_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
     gwy_container_set_boolean_by_name(container, isslope_key, args->is_slope);
     gwy_container_set_boolean_by_name(container, islap_key, args->is_lap);
+    gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_double_by_name(container, height_key, args->height);
     gwy_container_set_double_by_name(container, slope_key, args->slope);
     gwy_container_set_double_by_name(container, lap_key, args->lap);
