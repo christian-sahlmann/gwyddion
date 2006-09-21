@@ -45,7 +45,7 @@ struct _GwyGraphAreaDialog {
     GtkWidget *pointtype_menu;
     GtkWidget *linetype_menu;
     GtkObject *pointsize;
-    GtkObject *linesize;
+    GtkObject *thickness;
 
     GtkWidget *sci_text;
 

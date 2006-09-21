@@ -455,8 +455,9 @@ update_graph(FractalArgs *args,
                                    gwy_data_line_get_res(xline));
     gwy_graph_curve_model_set_description(gcmodel,
                                           gettext(methods[args->out].name));
-    gwy_graph_model_set_title(controls->graph_model,
-                              gettext(methods[args->out].name));
+    g_object_set(controls->graph_model,
+                 "title", gettext(methods[args->out].name),
+                 NULL);
     gwy_graph_model_add_curve(controls->graph_model, gcmodel);
     g_object_unref(gcmodel);
 

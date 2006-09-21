@@ -176,23 +176,19 @@ gwy_graph_refresh(GwyGraph *graph)
     gboolean has_data, lg;
     GwySIUnit *siunit;
 
-    if (graph->graph_model == NULL)
+    if (!graph->graph_model)
         return;
 
     model = GWY_GRAPH_MODEL(graph->graph_model);
 
-    siunit = gwy_graph_model_get_si_unit_x(model);
-    lg = gwy_graph_model_get_direction_logarithmic(model,
-                                                   GTK_ORIENTATION_HORIZONTAL);
+    g_object_get(model, "si-unit-x", &siunit, "x-logarithmic", &lg, NULL);
     for (i = GTK_POS_TOP; i <= GTK_POS_BOTTOM; i++)  {
         gwy_axis_set_logarithmic(graph->axis[i], lg);
         gwy_axis_set_unit(graph->axis[i], siunit);
     }
     g_object_unref(siunit);
 
-    siunit = gwy_graph_model_get_si_unit_y(model);
-    lg = gwy_graph_model_get_direction_logarithmic(model,
-                                                   GTK_ORIENTATION_VERTICAL);
+    g_object_get(model, "si-unit-y", &siunit, "y-logarithmic", &lg, NULL);
     for (i = GTK_POS_LEFT; i <= GTK_POS_RIGHT; i++)  {
         gwy_axis_set_logarithmic(graph->axis[i], lg);
         gwy_axis_set_unit(graph->axis[i], siunit);
@@ -402,17 +398,21 @@ gwy_graph_get_status(GwyGraph *graph)
  * Use gwy_graph_get_x_range() if you want to know the result.
  **/
 /* XXX: Malformed documentation. */
+/* XXX: Remove? Or at least move to GwyGraphModel, it does not belong here. */
 void
 gwy_graph_request_x_range(GwyGraph *graph,
                           gdouble x_min_req,
                           gdouble x_max_req)
 {
-    GwyGraphModel *model;
-
-    if (graph->graph_model == NULL)
+    if (!graph->graph_model)
         return;
-    model = GWY_GRAPH_MODEL(graph->graph_model);
 
+    g_object_set(graph->graph_model,
+                 "x-min", x_min_req, "x-min-set", TRUE,
+                 "x-max", x_max_req, "x-max-set", TRUE,
+                 NULL);
+
+#if 0
     gwy_axis_set_req(graph->axis[GTK_POS_TOP], x_min_req, x_max_req);
     gwy_axis_set_req(graph->axis[GTK_POS_BOTTOM], x_min_req, x_max_req);
 
@@ -423,7 +423,8 @@ gwy_graph_request_x_range(GwyGraph *graph,
 
     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
- }
+#endif
+}
 
 /**
  * gwy_graph_request_y_range:
@@ -437,17 +438,21 @@ gwy_graph_request_x_range(GwyGraph *graph,
  * Use gwy_graph_get_y_range() if you want to know the result.
  **/
 /* XXX: Malformed documentation. */
- void
+/* XXX: Remove? Or at least move to GwyGraphModel, it does not belong here. */
+void
 gwy_graph_request_y_range(GwyGraph *graph,
                           gdouble y_min_req,
                           gdouble y_max_req)
 {
-    GwyGraphModel *model;
-
-    if (graph->graph_model == NULL)
+    if (!graph->graph_model)
         return;
-    model = GWY_GRAPH_MODEL(graph->graph_model);
 
+    g_object_set(graph->graph_model,
+                 "y-min", y_min_req, "y-min-set", TRUE,
+                 "y-max", y_max_req, "y-max-set", TRUE,
+                 NULL);
+
+#if 0
     gwy_axis_set_req(graph->axis[GTK_POS_LEFT], y_min_req, y_max_req);
     gwy_axis_set_req(graph->axis[GTK_POS_RIGHT], y_min_req, y_max_req);
 
@@ -458,18 +463,21 @@ gwy_graph_request_y_range(GwyGraph *graph,
 
      /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
- }
+#endif
+}
 
 /**
  * gwy_graph_get_x_range:
  * @graph: A graph widget.
- * @x_min: x minimum
- * @x_max: x maximum
+ * @x_min: Location to store x minimum.
+ * @x_max: Location to store x maximum.
  *
  * Gets the actual boudaries of graph area and axis in the x direction.
  **/
 void
-gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max)
+gwy_graph_get_x_range(GwyGraph *graph,
+                      gdouble *x_min,
+                      gdouble *x_max)
 {
     *x_min = gwy_axis_get_minimum(graph->axis[GTK_POS_BOTTOM]);
     *x_max = gwy_axis_get_maximum(graph->axis[GTK_POS_BOTTOM]);
@@ -478,15 +486,15 @@ gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max)
 /**
  * gwy_graph_get_y_range:
  * @graph: A graph widget.
- * @y_min: y minimum
- * @y_max: y maximum
+ * @y_min: Location to store y minimum.
+ * @y_max: Location to store y maximum.
  *
- * Gets the actual boundaries of graph area and axis in the y direction
- * and store them in y_min and y_max.
+ * Gets the actual boudaries of graph area and axis in the y direction.
  **/
-/* XXX: Malformed documentation. */
 void
-gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max)
+gwy_graph_get_y_range(GwyGraph *graph,
+                      gdouble *y_min,
+                      gdouble *y_max)
 {
     *y_min = gwy_axis_get_minimum(graph->axis[GTK_POS_LEFT]);
     *y_max = gwy_axis_get_maximum(graph->axis[GTK_POS_LEFT]);
@@ -577,6 +585,8 @@ zoomed_cb(GwyGraph *graph)
 static void
 set_graph_model_ranges(GwyGraph *graph)
 {
+    /* Just don't do anything.  This direction of range info flow should not
+     * exist.
     gwy_graph_model_set_xmax(graph->graph_model,
                              gwy_axis_get_maximum(graph->axis[GTK_POS_BOTTOM]));
     gwy_graph_model_set_xmin(graph->graph_model,
@@ -585,6 +595,7 @@ set_graph_model_ranges(GwyGraph *graph)
                              gwy_axis_get_maximum(graph->axis[GTK_POS_LEFT]));
     gwy_graph_model_set_ymin(graph->graph_model,
                              gwy_axis_get_minimum(graph->axis[GTK_POS_LEFT]));
+                             */
 }
 
 static void

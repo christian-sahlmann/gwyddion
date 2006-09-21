@@ -368,6 +368,7 @@ gwy_graph_area_expose(GtkWidget *widget,
 {
     GwyGraphArea *area;
     GdkDrawable *drawable;
+    gboolean visible;
 
     gwy_debug("");
 
@@ -389,9 +390,10 @@ gwy_graph_area_expose(GtkWidget *widget,
         && (area->selecting != 0))
         gwy_graph_area_draw_zoom(drawable, area->gc, area);
 
-
-    if (gwy_graph_model_get_label_visible(area->graph_model))
+    g_object_get(area->graph_model, "label-visible", &visible, NULL);
+    if (visible)
         gtk_widget_queue_draw(GTK_WIDGET(area->lab));
+
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->expose_event(widget, event);
 
     return TRUE;
@@ -426,18 +428,16 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
     specs.ymin = y;
     specs.height = height;
     specs.width = width;
-    specs.real_xmin = gwy_graph_model_get_xmin(area->graph_model);
-    specs.real_ymin = gwy_graph_model_get_ymin(area->graph_model);
-    specs.real_width = gwy_graph_model_get_xmax(area->graph_model)
-        - gwy_graph_model_get_xmin(area->graph_model);
-    specs.real_height = gwy_graph_model_get_ymax(area->graph_model)
-        - gwy_graph_model_get_ymin(area->graph_model);
+    specs.real_xmin = area->x_min;
+    specs.real_ymin = area->y_min;
+    specs.real_width = area->x_max - area->x_min;
+    specs.real_height = area->y_max - area->y_min;
+    g_object_get(model,
+                 "x-logarithmic", &specs.log_x,
+                 "y-logarithmic", &specs.log_y,
+                 NULL);
 
-    specs.log_x = gwy_graph_model_get_direction_logarithmic(model,
-                                                 GTK_ORIENTATION_HORIZONTAL);
-    specs.log_y = gwy_graph_model_get_direction_logarithmic(model,
-                                                 GTK_ORIENTATION_VERTICAL);
-    /*draw continuous selection*/
+    /* draw continuous selection */
     if (area->status == GWY_GRAPH_STATUS_XSEL)
         gwy_graph_draw_selection_xareas(drawable, gc, &specs,
                                   GWY_SELECTION_GRAPH_1DAREA(area->xseldata));
@@ -446,15 +446,14 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
                                   GWY_SELECTION_GRAPH_1DAREA(area->yseldata));
 
 
-    /*FIXME gc should be different and should be set to gray drawing*/
+    /* FIXME gc should be different and should be set to gray drawing */
     gwy_graph_draw_grid(drawable, gc, &specs,
                         area->x_grid_data, area->y_grid_data);
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
-        gwy_graph_draw_curve(drawable, gc,
-                             &specs, G_OBJECT(curvemodel));
+        gwy_graph_draw_curve(drawable, gc, &specs, curvemodel);
     }
 
     switch (area->status) {
@@ -490,7 +489,7 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
     fg.red = fg.green = fg.blue = 0;
     gdk_gc_set_rgb_fg_color(gc, &fg);
     gdk_gc_set_line_attributes(gc, 1,
-                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+                               GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
     gdk_draw_line(drawable, gc, x, y, x + width-1, y);
     gdk_draw_line(drawable, gc, x + width-1, y, x + width-1, y + height-1);
     gdk_draw_line(drawable, gc, x + width-1, y + height-1, x, y + height-1);
@@ -499,14 +498,17 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
 }
 
 static void
-gwy_graph_area_draw_zoom(GdkDrawable *drawable, GdkGC *gc, GwyGraphArea *area)
+gwy_graph_area_draw_zoom(GdkDrawable *drawable,
+                         GdkGC *gc,
+                         GwyGraphArea *area)
 {
     gint xmin, ymin, xmax, ymax, n_of_zooms;
     gdouble selection_zoomdata[4];
 
     n_of_zooms = gwy_selection_get_data(area->zoomdata, NULL);
 
-    if (n_of_zooms != 1) return;
+    if (n_of_zooms != 1)
+        return;
 
     gwy_selection_get_object(area->zoomdata, 0, selection_zoomdata);
 
@@ -557,6 +559,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     gint x, y, curve, selection, nc;
     gdouble dx, dy, selection_pointdata[2], selection_areadata[2];
     gdouble selection_zoomdata[4];
+    gboolean visible;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
@@ -572,7 +575,9 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     nc = gwy_graph_model_get_n_curves(gmodel);
     child = gwy_graph_area_find_child(area, x, y);
     if (child) {
-        if (!gwy_graph_model_get_label_visible(gmodel))
+        g_return_val_if_fail(GWY_IS_GRAPH_LABEL(child), FALSE);
+        g_object_get(gmodel, "label-visible", &visible, NULL);
+        if (!visible)
             return FALSE;
 
         /* FIXME: The conditions below are strange.  Or I don't understand
@@ -1119,8 +1124,7 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
             }
         }
     }
-    if (fabs(closestdistance/(gwy_graph_model_get_ymax(model)
-                              - gwy_graph_model_get_ymin(model))) < 0.05)
+    if (fabs(closestdistance/(area->y_max - area->y_min)) < 0.05)
         return closestid;
     else
         return -1;
@@ -1129,25 +1133,26 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
 static gint
 gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *btype)
 {
-    gint i;
     GwyGraphModel *model;
     gdouble selection_areadata[2];
     gdouble min, max, xoff, yoff;
+    guint n, i;
 
     model = area->graph_model;
-    xoff = (gwy_graph_model_get_xmax(model)
-            - gwy_graph_model_get_xmin(model))/50;
-    yoff = (gwy_graph_model_get_ymax(model)
-            - gwy_graph_model_get_ymin(model))/50;
-
+    /* FIXME: What is 50? */
+    xoff = (area->x_max - area->x_min)/50;
+    yoff = (area->y_min - area->y_min)/50;
 
     *btype = BORDER_NONE;
-    if (area->status == GWY_GRAPH_STATUS_XSEL)
-    {
-        for (i = 0; i < gwy_selection_get_data(area->xseldata, NULL); i++) {
+    if (area->status == GWY_GRAPH_STATUS_XSEL) {
+        n = gwy_selection_get_data(area->xseldata, NULL);
+        for (i = 0; i < n; i++) {
+            /* FIXME: What was this supposed to mean?
             gwy_selection_get_object(area->xseldata,
-                                 gwy_selection_get_data(area->xseldata, NULL) - 1,
+                                     gwy_selection_get_data(area->xseldata, NULL) - 1,
                                  selection_areadata);
+                                 */
+            gwy_selection_get_object(area->xseldata, i, selection_areadata);
             min = MIN(selection_areadata[0], selection_areadata[1]);
             max = MAX(selection_areadata[0], selection_areadata[1]);
 
@@ -1157,22 +1162,28 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *bty
             } else if (max > x && max <= (x+xoff)) {
                 *btype = BORDER_MAX;
                 return i;
-            } else if (min < x && max > x) return i;
+            } else if (min < x && max > x)
+                return i;
         }
     }
-    else if (area->status == GWY_GRAPH_STATUS_YSEL)
-    {
-        for (i = 0; i < gwy_selection_get_data(area->yseldata, NULL); i++) {
+    else if (area->status == GWY_GRAPH_STATUS_YSEL) {
+        n = gwy_selection_get_data(area->yseldata, NULL);
+        for (i = 0; i < n; i++) {
+            /* FIXME: What was this supposed to mean?
             gwy_selection_get_object(area->yseldata,
                                  gwy_selection_get_data(area->yseldata, NULL) - 1,
                                  selection_areadata);
+                                 */
+            gwy_selection_get_object(area->yseldata, i, selection_areadata);
             min = MIN(selection_areadata[0], selection_areadata[1]);
             max = MAX(selection_areadata[0], selection_areadata[1]);
 
-            if (min < y && max > y) return i;
+            if (min < y && max > y)
+                return i;
         }
 
     }
+
     return -1;
 }
 
@@ -1185,10 +1196,9 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
     gdouble xmin, ymin, xmax, ymax, xoff, yoff, selection_data[2];
 
     model = area->graph_model;
-    xoff = (gwy_graph_model_get_xmax(model)
-            - gwy_graph_model_get_xmin(model))/50;
-    yoff = (gwy_graph_model_get_ymax(model)
-            - gwy_graph_model_get_ymin(model))/50;
+    /* FIXME: What is 50? */
+    xoff = (area->x_max - area->x_min)/50;
+    yoff = (area->y_min - area->y_min)/50;
 
     for (i = 0; i < gwy_selection_get_data(area->pointsdata, NULL); i++) {
         gwy_selection_get_object(area->pointsdata,
@@ -1207,20 +1217,18 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
 static gint
 gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
 {
-    gint i;
     GwyGraphModel *model;
     gdouble min = 0, max = 0, xoff, yoff, selection_data;
+    guint n, i;
 
     model = area->graph_model;
 
     if (area->status == GWY_GRAPH_STATUS_XLINES) {
-
-        xoff = (gwy_graph_model_get_xmax(model)
-            - gwy_graph_model_get_xmin(model))/100;
-
-        for (i = 0; i < gwy_selection_get_data(area->xlinesdata, NULL); i++) {
-            gwy_selection_get_object(area->xlinesdata,
-                                 i, &selection_data);
+        /* FIXME: What is 100? */
+        xoff = (area->x_max - area->x_min)/100;
+        n = gwy_selection_get_data(area->xlinesdata, NULL);
+        for (i = 0; i < n; i++) {
+            gwy_selection_get_object(area->xlinesdata, i, &selection_data);
 
             min = selection_data - xoff;
             max = selection_data + xoff;
@@ -1229,21 +1237,19 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
         }
     }
     else if (area->status == GWY_GRAPH_STATUS_YLINES) {
-
-        yoff = (gwy_graph_model_get_ymax(model)
-            - gwy_graph_model_get_ymin(model))/100;
-
-
-        for (i = 0; i < gwy_selection_get_data(area->ylinesdata, NULL); i++) {
-            gwy_selection_get_object(area->ylinesdata,
-                                 i, &selection_data);
+        /* FIXME: What is 100? */
+        yoff = (area->y_max - area->y_min)/100;
+        n = gwy_selection_get_data(area->ylinesdata, NULL);
+        for (i = 0; i < n; i++) {
+            gwy_selection_get_object(area->ylinesdata, i, &selection_data);
 
             min = selection_data - yoff;
             max = selection_data + yoff;
             if (min <= position && max >= position)
                 return i;
         }
-     }
+    }
+
     return -1;
 }
 
@@ -1314,22 +1320,20 @@ scr_to_data_x(GtkWidget *widget, gint scr)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
+    gboolean lg;
 
     area = GWY_GRAPH_AREA(widget);
     model = area->graph_model;
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
-    if (!gwy_graph_model_get_direction_logarithmic(model,
-                                                   GTK_ORIENTATION_HORIZONTAL))
-    {
-        return gwy_graph_model_get_xmin(model)
-           + scr*(gwy_graph_model_get_xmax(model)
-                  - gwy_graph_model_get_xmin(model))/(widget->allocation.width-1);
-    }
+    g_object_get(model, "x-logarithmic", &lg, NULL);
+    if (!lg)
+        return area->x_min + scr*(area->x_max
+                                  - area->x_min) /(widget->allocation.width-1);
     else
-        return pow(10, log10(gwy_graph_model_get_xmin(model))
-           + scr*(log10(gwy_graph_model_get_xmax(model)
-                  - log10(gwy_graph_model_get_xmin(model))))/(widget->allocation.width-1));
+        return pow(10, log10(area->x_min)
+                   + scr*(log10(area->x_max
+                                - log10(area->x_min)))/(widget->allocation.width-1));
 }
 
 static gint
@@ -1337,19 +1341,20 @@ data_to_scr_x(GtkWidget *widget, gdouble data)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
+    gboolean lg;
 
     area = GWY_GRAPH_AREA(widget);
     model = area->graph_model;
 
-    if (!gwy_graph_model_get_direction_logarithmic(model,
-                                                   GTK_ORIENTATION_HORIZONTAL))
-        return (data - gwy_graph_model_get_xmin(model))
-           /((gwy_graph_model_get_xmax(model)
-              - gwy_graph_model_get_xmin(model))/(widget->allocation.width-1));
+    g_object_get(model, "x-logarithmic", &lg, NULL);
+    if (!lg)
+        return (data - area->x_min)
+            /((area->x_max
+               - area->x_min)/(widget->allocation.width-1));
     else
-       return (log10(data) - log10(gwy_graph_model_get_xmin(model)))
-           /((log10(gwy_graph_model_get_xmax(model))
-              - log10(gwy_graph_model_get_xmin(model)))/(widget->allocation.width-1));
+        return (log10(data) - log10(area->x_min))
+            /((log10(area->x_max)
+               - log10(area->x_min))/(widget->allocation.width-1));
 }
 
 static gdouble
@@ -1357,21 +1362,23 @@ scr_to_data_y(GtkWidget *widget, gint scr)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
+    gboolean lg;
 
     area = GWY_GRAPH_AREA(widget);
     model = area->graph_model;
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
-    if (!gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
-        return gwy_graph_model_get_ymin(model)
-           + (widget->allocation.height - scr)*
-           (gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))
-             /(widget->allocation.height-1);
+    g_object_get(model, "y-logarithmic", &lg, NULL);
+    if (!lg)
+        return area->y_min
+            + (widget->allocation.height - scr)*
+            (area->y_max - area->y_min)
+            /(widget->allocation.height-1);
     else
-        return pow(10, log10(gwy_graph_model_get_ymin(model))
+        return pow(10, log10(area->y_min)
                    + (widget->allocation.height - scr)*
-                   (log10(gwy_graph_model_get_ymax(model)) - log10(gwy_graph_model_get_ymin(model)))
-                                                        /(widget->allocation.height-1));
+                   (log10(area->y_max) - log10(area->y_min))
+                   /(widget->allocation.height-1));
 }
 
 static gint
@@ -1379,21 +1386,22 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
+    gboolean lg;
 
     area = GWY_GRAPH_AREA(widget);
     model = area->graph_model;
-    if (!gwy_graph_model_get_direction_logarithmic(model, GTK_ORIENTATION_VERTICAL))
+    g_object_get(model, "y-logarithmic", &lg, NULL);
+    if (!lg)
         return widget->allocation.height
-           - (data - gwy_graph_model_get_ymin(model))
-             /((gwy_graph_model_get_ymax(model)
-                - gwy_graph_model_get_ymin(model))/((gdouble)widget->allocation.height-1));
+            - (data - area->y_min)
+            /((area->y_max
+               - area->y_min)/((gdouble)widget->allocation.height-1));
     else
         return widget->allocation.height
-            - (log10(data) - log10(gwy_graph_model_get_ymin(model)))
-            /((log10(gwy_graph_model_get_ymax(model))
-               - log10(gwy_graph_model_get_ymin(model)))/((gdouble)widget->allocation.height-1));
+            - (log10(data) - log10(area->y_min))
+            /((log10(area->y_max)
+               - log10(area->y_min))/((gdouble)widget->allocation.height-1));
 }
-
 
 /**
  * gwy_graph_area_refresh:
@@ -1404,8 +1412,11 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
-    /*refresh label*/
-    if (gwy_graph_model_get_label_visible(area->graph_model)) {
+    gboolean visible;
+
+    g_object_get(area->graph_model, "label-visible", &visible, NULL);
+    /* refresh label */
+    if (visible) {
         gtk_widget_show(GTK_WIDGET(area->lab));
         gwy_graph_label_refresh(area->lab);
     }
@@ -1420,7 +1431,8 @@ static void
 label_geometry_changed_cb(GtkWidget *area,
                           GtkAllocation *label_allocation)
 {
-    gwy_graph_area_repos_label(GWY_GRAPH_AREA(area), &(area->allocation), label_allocation);
+    gwy_graph_area_repos_label(GWY_GRAPH_AREA(area),
+                               &(area->allocation), label_allocation);
 }
 
 
@@ -1540,8 +1552,8 @@ static gchar *symbols[] =
  **/
 GString*
 gwy_graph_area_export_vector(GwyGraphArea *area,
-                                      gint x, gint y,
-                                      gint width, gint height)
+                             gint x, gint y,
+                             gint width, gint height)
 {
     gint i, j, nc;
     GwyGraphCurveModel *curvemodel;
@@ -1555,15 +1567,13 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     out = g_string_new("%%Area\n");
 
     model = area->graph_model;
-    if ((gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model))==0
-        || (gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model))==0)
-    {
+    if ((area->x_max - area->x_min) == 0 || (area->y_max - area->y_min) == 0) {
         g_warning("Graph null range.\n");
         return out;
     }
 
-    xmult = width/(gwy_graph_model_get_xmax(model) - gwy_graph_model_get_xmin(model));
-    ymult = height/(gwy_graph_model_get_ymax(model) - gwy_graph_model_get_ymin(model));
+    xmult = width/(area->x_max - area->x_min);
+    ymult = height/(area->y_max - area->y_min);
 
     g_string_append_printf(out, "/box {\n"
                            "newpath\n"
@@ -1622,34 +1632,33 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
             if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
                 || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
             {
-                if (j==0) g_string_append_printf(out, "%d %d M\n",
-                                   (gint)(x + (curvemodel->xdata[j]
-                                               - gwy_graph_model_get_xmin(model))*xmult),
-                                   (gint)(y + (curvemodel->ydata[j]
-                                               - gwy_graph_model_get_ymin(model))*ymult));
-                else
-                {
+                if (j == 0)
                     g_string_append_printf(out, "%d %d M\n",
-                                   (gint)(x + (curvemodel->xdata[j-1]
-                                               - gwy_graph_model_get_xmin(model))*xmult),
-                                   (gint)(y + (curvemodel->ydata[j-1]
-                                               - gwy_graph_model_get_ymin(model))*ymult));
+                                           (gint)(x + (curvemodel->xdata[j]
+                                                       - area->x_min)*xmult),
+                                           (gint)(y + (curvemodel->ydata[j]
+                                                       - area->y_min)*ymult));
+                else {
+                    g_string_append_printf(out, "%d %d M\n",
+                                           (gint)(x + (curvemodel->xdata[j-1]
+                                                       - area->x_min)*xmult),
+                                           (gint)(y + (curvemodel->ydata[j-1]
+                                                       - area->y_min)*ymult));
                     g_string_append_printf(out, "%d %d L\n",
-                                   (gint)(x + (curvemodel->xdata[j]
-                                               - gwy_graph_model_get_xmin(model))*xmult),
-                                   (gint)(y + (curvemodel->ydata[j]
-                                               - gwy_graph_model_get_ymin(model))*ymult));
+                                           (gint)(x + (curvemodel->xdata[j]
+                                                       - area->x_min)*xmult),
+                                           (gint)(y + (curvemodel->ydata[j]
+                                                       - area->y_min)*ymult));
                 }
             }
             if (curvemodel->mode == GWY_GRAPH_CURVE_POINTS
-                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
-            {
+                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS) {
                 g_string_append_printf(out, "%d %d %s\n",
-                          (gint)(x + (curvemodel->xdata[j]
-                                      - gwy_graph_model_get_xmin(model))*xmult),
-                          (gint)(y + (curvemodel->ydata[j]
-                                      - gwy_graph_model_get_ymin(model))*ymult),
-                          symbols[curvemodel->point_type]);
+                                       (gint)(x + (curvemodel->xdata[j]
+                                                   - area->x_min)*xmult),
+                                       (gint)(y + (curvemodel->ydata[j]
+                                                   - area->y_min)*ymult),
+                                       symbols[curvemodel->point_type]);
 
             }
         }

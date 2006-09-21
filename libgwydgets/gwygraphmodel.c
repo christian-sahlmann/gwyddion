@@ -51,6 +51,14 @@ enum {
     PROP_0,
     PROP_N_CURVES,
     PROP_TITLE,
+    PROP_X_MIN,
+    PROP_X_MIN_SET,
+    PROP_X_MAX,
+    PROP_X_MAX_SET,
+    PROP_Y_MIN,
+    PROP_Y_MIN_SET,
+    PROP_Y_MAX,
+    PROP_Y_MAX_SET,
     PROP_AXIS_LABEL_BOTTOM,
     PROP_AXIS_LABEL_LEFT,
     PROP_AXIS_LABEL_RIGHT,
@@ -80,7 +88,6 @@ gwy_graph_model_serializable_init(GwySerializableIface *iface)
     iface->duplicate = gwy_graph_model_duplicate_real;
 }
 
-
 static void
 gwy_graph_model_class_init(GwyGraphModelClass *klass)
 {
@@ -107,6 +114,78 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                              "The graph title",
                              "New graph",
                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_X_MIN,
+         g_param_spec_double("x-min",
+                             "X min",
+                             "Requested minimum x value",
+                             -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_X_MIN_SET,
+         g_param_spec_boolean("x-min-set",
+                              "X min set",
+                              "Whether x-min is set",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_X_MAX,
+         g_param_spec_double("x-max",
+                             "X max",
+                             "Requested maximum x value",
+                             -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_X_MAX_SET,
+         g_param_spec_boolean("x-max-set",
+                              "X max set",
+                              "Whether x-max is set",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_Y_MIN,
+         g_param_spec_double("y-min",
+                             "Y min",
+                             "Requested minimum y value",
+                             -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_Y_MIN_SET,
+         g_param_spec_boolean("y-min-set",
+                              "Y min set",
+                              "Whether y-min is set",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_Y_MAX,
+         g_param_spec_double("y-max",
+                             "Y max",
+                             "Requested maximum y value",
+                             -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_Y_MAX_SET,
+         g_param_spec_boolean("y-max-set",
+                              "Y max set",
+                              "Whether y-max is set",
+                              FALSE,
+                              G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -167,7 +246,9 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
          PROP_SI_UNIT_X,
          g_param_spec_object("si-unit-x",
                              "X unit",
-                             "Unit of x axis",
+                             "Unit of x axis.  Units are always passed by "
+                             "value, the unit object has a different identity "
+                             "than the object owned by the graph model.",
                              GWY_TYPE_SI_UNIT,
                              G_PARAM_READWRITE));
 
@@ -176,7 +257,9 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
          PROP_SI_UNIT_Y,
          g_param_spec_object("si-unit-y",
                              "Y unit",
-                             "Unit of y axis",
+                             "Unit of y axis.  Units are always passed by "
+                             "value, the unit object has a different identity "
+                             "than the object owned by the graph model.",
                              GWY_TYPE_SI_UNIT,
                              G_PARAM_READWRITE));
 
@@ -317,10 +400,14 @@ gwy_graph_model_serialize(GObject *obj,
             { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
             { 's', "left_label", &gmodel->left_label->str, NULL },
             { 's', "right_label", &gmodel->right_label->str, NULL },
-            { 'd', "x_reqmin", &gmodel->x_min, NULL },
-            { 'd', "y_reqmin", &gmodel->y_min, NULL },
-            { 'd', "x_reqmax", &gmodel->x_max, NULL },
-            { 'd', "y_reqmax", &gmodel->y_max, NULL },
+            { 'd', "x_min", &gmodel->x_min, NULL },
+            { 'b', "x_min_set", &gmodel->x_min_set, NULL },
+            { 'd', "y_min", &gmodel->y_min, NULL },
+            { 'b', "y_min_set", &gmodel->y_min_set, NULL },
+            { 'd', "x_max", &gmodel->x_max, NULL },
+            { 'b', "x_max_set", &gmodel->x_max_set, NULL },
+            { 'd', "y_max", &gmodel->y_max, NULL },
+            { 'b', "y_max_set", &gmodel->y_max_set, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -357,10 +444,14 @@ gwy_graph_model_get_size(GObject *obj)
             { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
             { 's', "left_label", &gmodel->left_label->str, NULL },
             { 's', "right_label", &gmodel->right_label->str, NULL },
-            { 'd', "x_reqmin", &gmodel->x_min, NULL },
-            { 'd', "y_reqmin", &gmodel->y_min, NULL },
-            { 'd', "x_reqmax", &gmodel->x_max, NULL },
-            { 'd', "y_reqmax", &gmodel->y_max, NULL },
+            { 'd', "x_min", &gmodel->x_min, NULL },
+            { 'b', "x_min_set", &gmodel->x_min_set, NULL },
+            { 'd', "y_min", &gmodel->y_min, NULL },
+            { 'b', "y_min_set", &gmodel->y_min_set, NULL },
+            { 'd', "x_max", &gmodel->x_max, NULL },
+            { 'b', "x_max_set", &gmodel->x_max_set, NULL },
+            { 'd', "y_max", &gmodel->y_max, NULL },
+            { 'b', "y_max_set", &gmodel->y_max_set, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -388,6 +479,7 @@ gwy_graph_model_deserialize(const guchar *buffer,
     {
         gchar *top_label, *bottom_label, *left_label, *right_label, *title;
         gboolean b;
+        gdouble d;
         GwyGraphCurveModel **curves = NULL;
         guint32 ncurves = 0;
         GwySerializeSpec spec[] = {
@@ -403,10 +495,19 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 's', "bottom_label", &bottom_label, NULL },
             { 's', "left_label", &left_label, NULL },
             { 's', "right_label", &right_label, NULL },
-            { 'd', "x_reqmin", &gmodel->x_min, NULL },
-            { 'd', "y_reqmin", &gmodel->y_min, NULL },
-            { 'd', "x_reqmax", &gmodel->x_max, NULL },
-            { 'd', "y_reqmax", &gmodel->y_max, NULL },
+            /* Accept, but ignore */
+            { 'd', "x_reqmin", &d, NULL },
+            { 'd', "y_reqmin", &d, NULL },
+            { 'd', "x_reqmax", &d, NULL },
+            { 'd', "y_reqmax", &d, NULL },
+            { 'd', "x_min", &gmodel->x_min, NULL },
+            { 'b', "x_min_set", &gmodel->x_min_set, NULL },
+            { 'd', "y_min", &gmodel->y_min, NULL },
+            { 'b', "y_min_set", &gmodel->y_min_set, NULL },
+            { 'd', "x_max", &gmodel->x_max, NULL },
+            { 'b', "x_max_set", &gmodel->x_max_set, NULL },
+            { 'd', "y_max", &gmodel->y_max, NULL },
+            { 'b', "y_max_set", &gmodel->y_max_set, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -499,6 +600,38 @@ gwy_graph_model_set_property(GObject *object,
         g_string_assign(gmodel->title, g_value_get_string(value));
         break;
 
+        case PROP_X_MIN:
+        gmodel->x_min = g_value_get_double(value);
+        break;
+
+        case PROP_X_MIN_SET:
+        gmodel->x_min_set = g_value_get_boolean(value);
+        break;
+
+        case PROP_X_MAX:
+        gmodel->x_max = g_value_get_double(value);
+        break;
+
+        case PROP_X_MAX_SET:
+        gmodel->x_max_set = g_value_get_boolean(value);
+        break;
+
+        case PROP_Y_MIN:
+        gmodel->y_min = g_value_get_double(value);
+        break;
+
+        case PROP_Y_MIN_SET:
+        gmodel->y_min_set = g_value_get_boolean(value);
+        break;
+
+        case PROP_Y_MAX:
+        gmodel->y_max = g_value_get_double(value);
+        break;
+
+        case PROP_Y_MAX_SET:
+        gmodel->y_max_set = g_value_get_boolean(value);
+        break;
+
         case PROP_AXIS_LABEL_BOTTOM:
         g_string_assign(gmodel->bottom_label, g_value_get_string(value));
         break;
@@ -516,11 +649,15 @@ gwy_graph_model_set_property(GObject *object,
         break;
 
         case PROP_SI_UNIT_X:
-        gwy_graph_model_set_si_unit_x(gmodel, g_value_get_object(value));
+        /* Keep the idiosyncratic semantics of gwy_graph_model_set_si_unit_x */
+        gwy_serializable_clone(g_value_get_object(value),
+                               G_OBJECT(gmodel->x_unit));
         break;
 
         case PROP_SI_UNIT_Y:
-        gwy_graph_model_set_si_unit_y(gmodel, g_value_get_object(value));
+        /* Keep the idiosyncratic semantics of gwy_graph_model_set_si_unit_x */
+        gwy_serializable_clone(g_value_get_object(value),
+                               G_OBJECT(gmodel->y_unit));
         break;
 
         case PROP_X_LOGARITHMIC:
@@ -572,6 +709,38 @@ gwy_graph_model_get_property(GObject*object,
 
         case PROP_N_CURVES:
         g_value_set_uint(value, gmodel->curves->len);
+        break;
+
+        case PROP_X_MIN:
+        g_value_set_double(value, gmodel->x_min);
+        break;
+
+        case PROP_X_MIN_SET:
+        g_value_set_boolean(value, gmodel->x_min_set);
+        break;
+
+        case PROP_X_MAX:
+        g_value_set_double(value, gmodel->x_max);
+        break;
+
+        case PROP_X_MAX_SET:
+        g_value_set_boolean(value, gmodel->x_max_set);
+        break;
+
+        case PROP_Y_MIN:
+        g_value_set_double(value, gmodel->y_min);
+        break;
+
+        case PROP_Y_MIN_SET:
+        g_value_set_boolean(value, gmodel->y_min_set);
+        break;
+
+        case PROP_Y_MAX:
+        g_value_set_double(value, gmodel->y_max);
+        break;
+
+        case PROP_Y_MAX_SET:
+        g_value_set_boolean(value, gmodel->y_max_set);
         break;
 
         case PROP_AXIS_LABEL_BOTTOM:
@@ -658,9 +827,13 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     duplicate->x_is_logarithmic = gmodel->x_is_logarithmic;
     duplicate->y_is_logarithmic = gmodel->y_is_logarithmic;
     duplicate->x_min = gmodel->x_min;
-    duplicate->y_min = gmodel->y_min;
+    duplicate->x_min_set = gmodel->x_min_set;
     duplicate->x_max = gmodel->x_max;
+    duplicate->x_max_set = gmodel->x_max_set;
+    duplicate->y_min = gmodel->y_min;
+    duplicate->y_min_set = gmodel->y_min_set;
     duplicate->y_max = gmodel->y_max;
+    duplicate->y_max_set = gmodel->y_max_set;
     duplicate->label_position = gmodel->label_position;
     duplicate->label_has_frame = gmodel->label_has_frame;
     duplicate->label_frame_thickness = gmodel->label_frame_thickness;
@@ -883,246 +1056,6 @@ gwy_graph_model_get_curve_index(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_graph_model_set_title:
- * @model: A graph model.
- * @title: A new graphmodel title.
- *
- * Sets the title of a graph model.
- **/
-void
-gwy_graph_model_set_title(GwyGraphModel *model,
-                          const gchar *title)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (gwy_strequal(model->title->str, title))
-        return;
-
-    g_string_assign(model->title, title);
-    g_object_notify(G_OBJECT(model), "title");
-}
-
-/**
- * gwy_graph_model_set_label_position:
- * @model: A graph model.
- * @position: A new graphmodel label position.
- *
- * Sets the label (curve desriptions) postion on graph widget.
- **/
-void
-gwy_graph_model_set_label_position(GwyGraphModel *model,
-                                   GwyGraphLabelPosition position)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (model->label_position == position)
-        return;
-
-    model->label_position = position;
-    g_object_notify(G_OBJECT(model), "label-position");
-}
-
-/**
- * gwy_graph_model_set_label_has_frame:
- * @model: A graph model.
- * @label_has_frame: %TRUE to make label frame visible.
- *
- * Sets whether graph label has a frame around it.
- *
- * Note that the label must be visible
- * (see #gwy_graph_model_set_label_visible()) to see the label.
- **/
-void
-gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
-                                    gboolean label_has_frame)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (model->label_has_frame == label_has_frame)
-        return;
-
-    model->label_has_frame = label_has_frame;
-    g_object_notify(G_OBJECT(model), "label-has-frame");
-}
-
-/**
- * gwy_graph_model_set_label_frame_thickness:
- * @model: A graph model.
- * @thickness: Label frame thickness (in pixels).
- *
- * Sets the label frame thickness. Note that both the frame and label must
- * be visible (see #gwy_graph_model_set_label_visible()) to see label and label
- * frame.
- **/
-/* XXX: Malformed documentation. */
-void
-gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (model->label_frame_thickness == thickness)
-        return;
-
-    model->label_frame_thickness = thickness;
-    g_object_notify(G_OBJECT(model), "label-frame-thickness");
-}
-
-/**
- * gwy_graph_model_set_label_reverse:
- * @model: A graph model.
- * @reverse: Label alingment mode.
- *
- * Sets the label alignment (curve samples and their description postion).
- * By setting the @reverse = TRUE you get alignment ("text", "sample"),
- * otherwise you get alignment ("sample", "text").
- **/
-/* XXX: Malformed documentation. */
-void
-gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (model->label_reverse == reverse)
-        return;
-
-    model->label_reverse = reverse;
-    g_object_notify(G_OBJECT(model), "label-reverse");
-}
-
-/**
- * gwy_graph_model_set_label_visible:
- * @model: A graph model.
- * @visible: Label visibility.
- *
- * Sets the graph widget label visibility.
- **/
-void
-gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (model->label_visible == visible)
-        return;
-
-    model->label_visible = visible;
-    g_object_notify(G_OBJECT(model), "label-visible");
-}
-
-/**
- * gwy_graph_model_get_title:
- * @model: A graph model.
- *
- * Returns: graph title.
- **/
-/* XXX: Malformed documentation. */
-const gchar*
-gwy_graph_model_get_title(GwyGraphModel *model)
-{
-    return model->title->str;
-}
-
-/**
- * gwy_graph_model_get_label_position:
- * @model: A graph model.
- *
- * Returns: graph widget label position.
- **/
-/* XXX: Malformed documentation. */
-GwyGraphLabelPosition
-gwy_graph_model_get_label_position(GwyGraphModel *model)
-{
-    return model->label_position;
-}
-
-/**
- * gwy_graph_model_get_label_has_frame:
- * @model: A graph model.
- *
- * Returns: graph widget label frame visibility.
- **/
-/* XXX: Malformed documentation. */
-gboolean
-gwy_graph_model_get_label_has_frame(GwyGraphModel *model)
-{
-    return model->label_has_frame;
-}
-
-/**
- * gwy_graph_model_get_label_frame_thickness:
- * @model: A graph model.
- *
- * Returns: graph widget label frame thickness.
- **/
-/* XXX: Malformed documentation. */
-gint
-gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model)
-{
-    return model->label_frame_thickness;
-}
-
-/**
- * gwy_graph_model_get_label_reverse:
- * @model: A graph model.
- *
- * Returns: graph widget label alignment mode.
- **/
-/* XXX: Malformed documentation. */
-gboolean
-gwy_graph_model_get_label_reverse(GwyGraphModel *model)
-{
-    return model->label_reverse;
-}
-
-/**
- * gwy_graph_model_get_label_visible:
- * @model: A graph model.
- *
- * Returns: graph widget label visibility.
- **/
-/* XXX: Malformed documentation. */
-gboolean
-gwy_graph_model_get_label_visible(GwyGraphModel *model)
-{
-    return model->label_visible;
-}
-
-/**
- * gwy_graph_model_set_si_unit_x:
- * @model: A graph model.
- * @siunit: Physical unit for x axis.
- *
- * Sets the physical unit for graph x axis.
- *
- * The unit is only assigned by value, the graph model does not directly use
- * @siunit nor it takes any reference to it.
- **/
-void
-gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (gwy_si_unit_equal(siunit, model->x_unit))
-        return;
-
-    gwy_serializable_clone(G_OBJECT(siunit), G_OBJECT(model->x_unit));
-    g_object_notify(G_OBJECT(model), "si-unit-x");
-}
-
-/**
- * gwy_graph_model_set_si_unit_y:
- * @model: A graph model.
- * @siunit: physical unit for y axis
- *
- * Sets the physical unit for graph y axis.
- *
- * The unit is only assigned by value, the graph model does not directly use
- * @siunit nor it takes any reference to it.
- **/
-void
-gwy_graph_model_set_si_unit_y(GwyGraphModel *model, GwySIUnit *siunit)
-{
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
-    if (gwy_si_unit_equal(siunit, model->y_unit))
-        return;
-
-    gwy_serializable_clone(G_OBJECT(siunit), G_OBJECT(model->y_unit));
-    g_object_notify(G_OBJECT(model), "si-unit-y");
-}
-
-/**
  * gwy_graph_model_set_units_from_data_line:
  * @model: A graph model.
  * @data_line: A data line to take units from.
@@ -1133,103 +1066,25 @@ void
 gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
                                          GwyDataLine *data_line)
 {
-    gwy_graph_model_set_si_unit_x(model,
-                                  gwy_data_line_get_si_unit_x(data_line));
-    gwy_graph_model_set_si_unit_y(model,
-                                  gwy_data_line_get_si_unit_y(data_line));
-}
+    GwySIUnit *unitx, *unity;
 
-/**
- * gwy_graph_model_get_si_unit_x:
- * @model: A graph model.
- *
- * Gets the physical unit of graph x axis.
- *
- * Returns: A newly allocated #GwySIUnit with the physical unit of the x-axis
- *          of @model.
- **/
-GwySIUnit*
-gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
-{
-    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(model), NULL);
-    return gwy_si_unit_duplicate(model->x_unit);
-}
-
-/**
- * gwy_graph_model_get_si_unit_y:
- * @model: A graph model.
- *
- * Gets the physical unit of graph y axis.
- *
- * Returns: A newly allocated #GwySIUnit with the physical unit of the y-axis
- *          of @model.
- **/
-GwySIUnit*
-gwy_graph_model_get_si_unit_y(GwyGraphModel *model)
-{
-    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(model), NULL);
-    return gwy_si_unit_duplicate(model->y_unit);
-}
-
-/**
- * gwy_graph_model_set_direction_logarithmic:
- * @model: A graph model.
- * @direction: axis orientation (e. g. horizontal, vertical).
- * @is_logarithmic: the logarithmic mode
- *
- * Sets data along the axis specified by @direction to display either
- * logarithmically (@is_logarithmic=TRUE) or normally (@is_logarithmic=FALSE).
- **/
-void
-gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
-                                          GtkOrientation direction,
-                                          gboolean is_logarithmic)
-{
     g_return_if_fail(GWY_IS_GRAPH_MODEL(model));
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
 
-    if (direction == GTK_ORIENTATION_VERTICAL) {
-        if (model->y_is_logarithmic == is_logarithmic)
-            return;
-
-        model->y_is_logarithmic = is_logarithmic;
-        g_object_notify(G_OBJECT(model), "y-logarithmic");
-    }
-    else {
-        if (model->x_is_logarithmic == is_logarithmic)
-            return;
-
-        model->x_is_logarithmic = is_logarithmic;
-        g_object_notify(G_OBJECT(model), "x-logarithmic");
-    }
-}
-
-/**
- * gwy_graph_model_get_direction_logarithmic:
- * @model: A graph model.
- * @direction: axis orientation (e. g. horizontal, vertical).
- *
- * Returns: TRUE if the axis specified by @direction is currently set to display
- * logarithmically. FALSE if it is set to display normally.
- **/
-/* XXX: Malformed documentation. */
-gboolean
-gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
-                                          GtkOrientation direction)
-{
-    if (direction == GTK_ORIENTATION_VERTICAL)
-        return model->y_is_logarithmic;
-
-    return model->x_is_logarithmic;
+    unitx = gwy_data_line_get_si_unit_x(data_line);
+    unity = gwy_data_line_get_si_unit_y(data_line);
+    g_object_set(model, "si-unit-x", unitx, "si-unit-y", unity, NULL);
 }
 
 /**
  * gwy_graph_model_x_data_can_be_logarithmed:
  * @model: A graph model.
  *
+ * Checks whehter x axis can be lograrithmed.
+ *
  * Returns: TRUE if all x-values are greater than zero (thus logarithmic
- * display of x-data is safe).
+ *          display of x-data is feasible).
  **/
-/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
 {
@@ -1253,10 +1108,11 @@ gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
  * gwy_graph_model_y_data_can_be_logarithmed:
  * @model: A graph model.
  *
+ * Checks whehter y axis can be lograrithmed.
+ *
  * Returns: TRUE if all y-values are greater than zero (thus logarithmic
- * display of y-data is safe).
+ *          display of y-data is feasible).
  **/
-/* XXX: Malformed documentation. */
 gboolean
 gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
 {
@@ -1274,127 +1130,6 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
         }
     }
     return TRUE;
-}
-
-/**
- * gwy_graph_model_get_xmin:
- * @model: A graph model.
- *
- * Returns bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- * Returns: x minimum bounding value of the curves
- **/
-gdouble
-gwy_graph_model_get_xmin(GwyGraphModel *model)
-{
-    return model->x_min;
-}
-/**
- * gwy_graph_model_get_ymin:
- * @model: A graph model.
- *
- * Returns bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- * Returns: y minimum bounding value of the curves
- **/
-gdouble
-gwy_graph_model_get_ymin(GwyGraphModel *model)
-{
-    return model->y_min;
-}
-
-/**
- * gwy_graph_model_get_xmax:
- * @model: A graph model.
- *
- * Returns bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- * Returns: x maximum bounding value of the curves
- **/
-gdouble
-gwy_graph_model_get_xmax(GwyGraphModel *model)
-{
-    return model->x_max;
-}
-
-/**
- * gwy_graph_model_get_ymax:
- * @model: A graph model.
- *
- * Returns bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- * Returns: y maximum bounding value of the curves
- **/
-gdouble
-gwy_graph_model_get_ymax(GwyGraphModel *model)
-{
-    return model->y_max;
-}
-
-/**
- * gwy_graph_model_set_xmin:
- * @model: A graph model.
- *
- * Sets bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- **/
-void
-gwy_graph_model_set_xmin(GwyGraphModel *model, gdouble value)
-{
-    model->x_min = value;
-}
-
-/**
- * gwy_graph_model_set_xmax:
- * @model: A graph model.
- *
- * Sets bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- **/
-void
-gwy_graph_model_set_xmax(GwyGraphModel *model, gdouble value)
-{
-    model->x_max = value;
-}
-/**
- * gwy_graph_model_set_ymin:
- * @model: A graph model.
- *
- * Sets bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- **/
-void
-gwy_graph_model_set_ymin(GwyGraphModel *model, gdouble value)
-{
-    model->y_min = value;
-}
-/**
- * gwy_graph_model_set_ymax:
- * @model: A graph model.
- *
- * Sets bounding value for all the curves within model.
- * This value is recomputed while adding curves to the
- * graph depending on actual graph settings.
- *
- **/
-void
-gwy_graph_model_set_ymax(GwyGraphModel *model, gdouble value)
-{
-    model->y_max = value;
 }
 
 /**

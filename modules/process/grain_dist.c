@@ -494,7 +494,7 @@ add_one_distribution(GwyContainer *container,
     g_object_unref(cmodel);
 
     s = gwy_enum_to_string(quantity, titles, G_N_ELEMENTS(titles));
-    gwy_graph_model_set_title(gmodel, _(s));
+    g_object_set(gmodel, "title", _(s), NULL);
     gwy_graph_model_set_units_from_data_line(gmodel, dataline);
     s = gwy_enum_to_string(quantity, descriptions, G_N_ELEMENTS(descriptions));
     gwy_graph_curve_model_set_description(cmodel, s);

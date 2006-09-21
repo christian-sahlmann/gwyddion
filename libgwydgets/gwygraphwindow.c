@@ -463,23 +463,24 @@ gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_x_log_cb(GwyGraphWindow *graphwindow)
 {
-    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
-                                              GTK_ORIENTATION_HORIZONTAL,
-                   !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
-                                                                           GTK_ORIENTATION_HORIZONTAL));
+    GwyGraphModel *model;
+    gboolean state;
+
+    model = gwy_graph_get_model(GWY_GRAPH(graphwindow->graph));
+    g_object_get(model, "x-logarithmic", &state, NULL);
+    g_object_set(model, "x-logarithmic", !state, NULL);
 }
 
 static void
 gwy_graph_window_y_log_cb(GwyGraphWindow *graphwindow)
 {
+    GwyGraphModel *model;
+    gboolean state;
 
-     gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
-                                              GTK_ORIENTATION_VERTICAL,
-                   !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
-                                                                           GTK_ORIENTATION_VERTICAL));
+    model = gwy_graph_get_model(GWY_GRAPH(graphwindow->graph));
+    g_object_get(model, "y-logarithmic", &state, NULL);
+    g_object_set(model, "y-logarithmic", !state, NULL);
 }
-
-
 
 static void
 gwy_graph_window_set_tooltip(GtkWidget *widget,
@@ -493,14 +494,18 @@ static void
 graph_title_changed(GwyGraphWindow *graphwindow)
 {
     GwyGraphModel *gmodel;
-    gmodel = gwy_graph_get_model(GWY_GRAPH(gwy_graph_window_get_graph(graphwindow)));
+    gchar *title;
 
-    if (gwy_graph_model_get_title(gmodel) != NULL){
-        gtk_window_set_title(GTK_WINDOW(graphwindow),
-                             gwy_graph_model_get_title(gmodel));
-    }
+    gmodel = gwy_graph_get_model(GWY_GRAPH(graphwindow->graph));
+    g_object_get(gmodel, "title", &title, NULL);
+
+    /* FIXME: Can it be NULL? */
+    if (title)
+        gtk_window_set_title(GTK_WINDOW(graphwindow), title);
     else
-        gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
+        gtk_window_set_title(GTK_WINDOW(graphwindow), _("Untitled"));
+
+    g_free(title);
 }
 
 

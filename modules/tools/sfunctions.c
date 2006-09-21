@@ -664,7 +664,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     title = gwy_enum_to_string(tool->args.output_type,
                                sf_types, G_N_ELEMENTS(sf_types));
     gwy_graph_curve_model_set_description(gcmodel, title);
-    gwy_graph_model_set_title(tool->gmodel, title);
+    g_object_set(tool->gmodel, "title", title, NULL);
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
 }
 

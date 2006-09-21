@@ -90,49 +90,48 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
  * @specs: specifications (boundaries) of the active area of the graph
  * @curvemodel: the curve model object
  *
- * Draw a curve on the graph
+ * Draws a signle graph curve on a drawable.
  **/
 void
 gwy_graph_draw_curve(GdkDrawable *drawable,
                      GdkGC *gc,
-                     GwyGraphActiveAreaSpecs *specs, GObject *curvemodel)
+                     GwyGraphActiveAreaSpecs *specs,
+                     GwyGraphCurveModel *gcmodel)
 {
     gint i, x, y, pxn = 0, pyn = 0;
-    GwyGraphCurveModel *cmodel;
 
-    cmodel = GWY_GRAPH_CURVE_MODEL(curvemodel);
-    for (i = 0; i < cmodel->n; i++) {
+    for (i = 0; i < gcmodel->n; i++) {
         if (i == 0) {
-            x = x_data_to_pixel(specs, cmodel->xdata[i]);
-            y = y_data_to_pixel(specs, cmodel->ydata[i]);
+            x = x_data_to_pixel(specs, gcmodel->xdata[i]);
+            y = y_data_to_pixel(specs, gcmodel->ydata[i]);
         }
         else {
             x = pxn;
             y = pyn;
         }
-        if (i < cmodel->n - 1) {
-            pxn = x_data_to_pixel(specs, cmodel->xdata[i + 1]);
-            pyn = y_data_to_pixel(specs, cmodel->ydata[i + 1]);
+        if (i < gcmodel->n - 1) {
+            pxn = x_data_to_pixel(specs, gcmodel->xdata[i + 1]);
+            pyn = y_data_to_pixel(specs, gcmodel->ydata[i + 1]);
         }
         if (x < (-specs->width) || x > (2*specs->width) || y < (-specs->height) || y > (2*specs->height) ||
             pxn < (-specs->width) || pxn > (2*specs->width) || pyn < (-specs->height) || pyn > (2*specs->height))
             continue;
-        if (i < cmodel->n - 1
-            && (cmodel->mode == GWY_GRAPH_CURVE_LINE
-                || cmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))
+        if (i < gcmodel->n - 1
+            && (gcmodel->mode == GWY_GRAPH_CURVE_LINE
+                || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))
             gwy_graph_draw_line(drawable, gc,
                                 x, y,
                                 pxn, pyn,
-                                cmodel->line_style, cmodel->line_width,
-                                &(cmodel->color));
+                                gcmodel->line_style, gcmodel->line_width,
+                                &(gcmodel->color));
 
 
-        if ((cmodel->mode == GWY_GRAPH_CURVE_POINTS
-             || cmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))
+        if ((gcmodel->mode == GWY_GRAPH_CURVE_POINTS
+             || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))
             gwy_graph_draw_point(drawable, gc,
                                  x, y,
-                                 cmodel->point_type, cmodel->point_size,
-                                 &(cmodel->color), FALSE);
+                                 gcmodel->point_type, gcmodel->point_size,
+                                 &(gcmodel->color), FALSE);
     }
 }
 

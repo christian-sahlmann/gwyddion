@@ -368,10 +368,13 @@ gwy_graph_data_update_headers(GwyGraphData *graph_data)
     ylabel = gwy_graph_model_get_axis_label(graph_data->graph_model,
                                             GTK_POS_LEFT);
 
-    siunit = gwy_graph_model_get_si_unit_x(graph_data->graph_model);
+    g_object_get(graph_data->graph_model, "si-unit-x", &siunit, NULL);
     sx = gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_MARKUP);
-    siunit = gwy_graph_model_get_si_unit_y(graph_data->graph_model);
+    g_object_unref(siunit);
+
+    g_object_get(graph_data->graph_model, "si-unit-y", &siunit, NULL);
     sy = gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_MARKUP);
+    g_object_unref(siunit);
 
     str = g_string_new("");
     for (i = 0; i < graph_data->curves->len; i++) {

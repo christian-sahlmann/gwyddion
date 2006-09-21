@@ -40,7 +40,7 @@ typedef struct _GwyGraphLabelDialogClass GwyGraphLabelDialogClass;
 struct _GwyGraphLabelDialog {
     GtkDialog dialog;
 
-    GtkObject *linesize;
+    GtkObject *thickness;
     GtkWidget *reversed;
 
     GwyGraphModel *graph_model;

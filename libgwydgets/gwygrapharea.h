@@ -90,7 +90,7 @@ struct _GwyGraphArea {
     GArray *x_grid_data;
     GArray *y_grid_data;
 
-    /*XXX remove this? It is not set! real boundaries*/
+    /* The real boundaries, from request */
     gint x_max;
     gint x_min;
     gint y_max;

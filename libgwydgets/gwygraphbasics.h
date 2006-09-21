@@ -23,6 +23,7 @@
 
 #include <gdk/gdk.h>
 #include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 #include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwygraphselections.h>
 
@@ -67,7 +68,7 @@ void gwy_graph_draw_line            (GdkDrawable *drawable,
 void gwy_graph_draw_curve           (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
-                                     GObject *curvemodel);
+                                     GwyGraphCurveModel *gcmodel);
 void gwy_graph_draw_selection_points(GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,

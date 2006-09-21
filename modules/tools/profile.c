@@ -386,11 +386,11 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     row++;
 
     tool->gmodel = gwy_graph_model_new();
-    gwy_graph_model_set_title(tool->gmodel, _("Profiles"));
+    g_object_set(tool->gmodel, "title", _("Profiles"), NULL);
 
     tool->graph = gwy_graph_new(tool->gmodel);
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
-    gwy_graph_model_set_label_visible(tool->gmodel, FALSE);
+    g_object_set(tool->gmodel, "label-visible", FALSE, NULL);
     gtk_box_pack_start(GTK_BOX(hbox), tool->graph, TRUE, TRUE, 2);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
@@ -694,7 +694,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
 
     if (!tool->args.separate) {
         gmodel = gwy_graph_model_duplicate(tool->gmodel);
-        gwy_graph_model_set_label_visible(gmodel, TRUE);
+        g_object_set(gmodel, "label-visible", TRUE, NULL);
         gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);
@@ -704,13 +704,14 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
 
     for (i = 0; i < n; i++) {
         gmodel = gwy_graph_model_new_alike(tool->gmodel);
-        gwy_graph_model_set_label_visible(gmodel, TRUE);
+        g_object_set(gmodel, "label-visible", TRUE, NULL);
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
         gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
-        gwy_graph_model_set_title
-                      (gmodel, gwy_graph_curve_model_get_description(gcmodel));
+        g_object_set(gmodel,
+                     "title", gwy_graph_curve_model_get_description(gcmodel),
+                     NULL);
         gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);

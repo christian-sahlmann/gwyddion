@@ -70,7 +70,7 @@ static void       label_change_cb                  (GwySciText *sci_text,
 static void       refresh                          (GwyGraphAreaDialog *dialog);
 static void       curvetype_changed_cb             (GtkWidget *combo,
                                                     GwyGraphAreaDialog *dialog);
-static void       linesize_changed_cb              (GtkAdjustment *adj,
+static void       thickness_changed_cb              (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
 static void       pointsize_changed_cb             (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
@@ -162,11 +162,11 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                             GWY_HSCALE_WIDGET);
     row++;
 
-    dialog->linesize = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
+    dialog->thickness = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("Line t_hickness:"), "px",
-                            dialog->linesize, 0);
-    g_signal_connect(dialog->linesize, "value-changed",
-                     G_CALLBACK(linesize_changed_cb), dialog);
+                            dialog->thickness, 0);
+    g_signal_connect(dialog->thickness, "value-changed",
+                     G_CALLBACK(thickness_changed_cb), dialog);
 
     row++;
 
@@ -435,7 +435,7 @@ refresh(GwyGraphAreaDialog *dialog)
                              cmodel->line_style);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->pointsize),
                              cmodel->point_size);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize),
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->thickness),
                              cmodel->line_width);
 
     gwy_sci_text_set_text(GWY_SCI_TEXT((dialog->sci_text)),
@@ -563,7 +563,7 @@ curvetype_changed_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 }
 
 static void
-linesize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
+thickness_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
 

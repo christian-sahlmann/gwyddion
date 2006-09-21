@@ -1692,12 +1692,10 @@ gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
     if (axis->unit && gwy_si_unit_equal(axis->unit, unit))
         return;
 
-    gwy_object_unref(axis->unit);
-    axis->unit = gwy_si_unit_duplicate(unit);
+    gwy_serializable_clone(G_OBJECT(unit), G_OBJECT(axis->unit));
     if (GTK_WIDGET_DRAWABLE(axis))
         gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
-
 
 /**
  * gwy_axis_enable_label_edit:

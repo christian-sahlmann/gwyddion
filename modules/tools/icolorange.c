@@ -242,7 +242,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     g_signal_connect(tool->graph_selection, "changed",
                      G_CALLBACK(gwy_tool_color_range_xsel_changed), tool);
 
-    gwy_graph_model_set_label_visible(tool->histogram_model, FALSE);
+    g_object_set(tool->histogram_model, "label-visible", FALSE, NULL);
     gwy_graph_set_axis_visible(tool->histogram, GTK_POS_TOP, FALSE);
     gwy_graph_set_axis_visible(tool->histogram, GTK_POS_BOTTOM, FALSE);
     gwy_graph_set_axis_visible(tool->histogram, GTK_POS_LEFT, FALSE);

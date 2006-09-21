@@ -396,11 +396,13 @@ slope_do_graph(GwyDataField *dfield,
     g_free(xder);
 
     gmodel = gwy_graph_model_new();
-    gwy_graph_model_set_title(gmodel, _("Angular Slope Distribution"));
     /* This is actualy (z/x)^2, but for users it's in arbitrary units */
-    siunit = gwy_si_unit_new("");
-    gwy_graph_model_set_si_unit_y(gmodel, siunit);
-    gwy_graph_model_set_si_unit_x(gmodel, gwy_si_unit_duplicate(siunit));
+    siunit = gwy_si_unit_new(NULL);
+    g_object_set(gmodel,
+                 "title", _("Angular Slope Distribution"),
+                 "si-unit-x", siunit,
+                 "si-unit-y", siunit,
+                 NULL);
     g_object_unref(siunit);
 
     cmodel = gwy_graph_curve_model_new();

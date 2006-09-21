@@ -1962,9 +1962,12 @@ gwy_app_data_browser_graph_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                         G_GNUC_UNUSED gpointer userdata)
 {
     GwyGraphModel *gmodel;
+    gchar *title;
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
-    g_object_set(renderer, "text", gwy_graph_model_get_title(gmodel), NULL);
+    g_object_get(gmodel, "title", &title, NULL);
+    g_object_set(renderer, "text", title, NULL);
+    g_free(title);
     g_object_unref(gmodel);
 }
 
@@ -2200,7 +2203,7 @@ gwy_app_data_browser_graph_name_edited(GtkCellRenderer *renderer,
         g_free(title);
         title = g_strdup_printf("%s %d", _("Untitled"), id);
     }
-    gwy_graph_model_set_title(gmodel, title);
+    g_object_set(gmodel, "title", title, NULL);
     g_free(title);
     g_object_unref(gmodel);
 
