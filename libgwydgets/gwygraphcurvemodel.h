@@ -46,6 +46,10 @@ struct _GwyGraphCurveModel {
     gdouble *xdata;
     gdouble *ydata;
 
+    /* range cache */
+    guint32 cached;
+    gdouble cache[4];
+
     /* like GwyGraphAreaCurveParams, but with proper field types */
     GString *description;
     GwyRGBA color;
@@ -117,6 +121,12 @@ gint                gwy_graph_curve_model_get_line_width        (GwyGraphCurveMo
 void                gwy_graph_curve_model_set_color             (GwyGraphCurveModel *gcmodel,
                                                                  const GwyRGBA *color);
 const GwyRGBA*      gwy_graph_curve_model_get_color             (GwyGraphCurveModel *gcmodel);
+void                gwy_graph_curve_model_get_x_range           (GwyGraphCurveModel *gcmodel,
+                                                                 gdouble *x_min,
+                                                                 gdouble *x_max);
+void                gwy_graph_curve_model_get_y_range           (GwyGraphCurveModel *gcmodel,
+                                                                 gdouble *y_min,
+                                                                 gdouble *y_max);
 
 G_END_DECLS
 

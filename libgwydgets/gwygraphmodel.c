@@ -1221,6 +1221,62 @@ gwy_graph_model_set_axis_label(GwyGraphModel *model,
     }
 }
 
+void
+gwy_graph_model_get_x_range(GwyGraphModel *gmodel,
+                            gdouble *x_min,
+                            gdouble *x_max)
+{
+    GwyGraphCurveModel *gcmodel;
+    gdouble xmin, xmax, cmin, cmax;
+    guint i;
+
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+
+    xmin = G_MAXDOUBLE;
+    xmax = -G_MAXDOUBLE;
+    for (i = 0; i < gmodel->curves->len; i++) {
+        gcmodel = g_ptr_array_index(gmodel->curves, i);
+        gwy_graph_curve_model_get_x_range(gcmodel, &cmin, &cmax);
+        if (cmin < xmin)
+            xmin = cmin;
+        if (cmax > xmax)
+            xmax = cmax;
+    }
+
+    if (x_min)
+        *x_min = xmin;
+    if (x_max)
+        *x_max = xmax;
+}
+
+void
+gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
+                            gdouble *y_min,
+                            gdouble *y_max)
+{
+    GwyGraphCurveModel *gcmodel;
+    gdouble ymin, ymax, cmin, cmax;
+    guint i;
+
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+
+    ymin = G_MAXDOUBLE;
+    ymax = -G_MAXDOUBLE;
+    for (i = 0; i < gmodel->curves->len; i++) {
+        gcmodel = g_ptr_array_index(gmodel->curves, i);
+        gwy_graph_curve_model_get_y_range(gcmodel, &cmin, &cmax);
+        if (cmin < ymin)
+            ymin = cmin;
+        if (cmax > ymax)
+            ymax = cmax;
+    }
+
+    if (y_min)
+        *y_min = ymin;
+    if (y_max)
+        *y_max = ymax;
+}
+
 /**
  * gwy_graph_model_export_ascii:
  * @model: A graph model.

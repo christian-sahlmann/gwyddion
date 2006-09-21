@@ -30,6 +30,18 @@
 
 #define GWY_GRAPH_CURVE_MODEL_TYPE_NAME "GwyGraphCurveModel"
 
+/* Cache operations */
+#define CVAL(cmodel, b)  ((cmodel)->cache[GWY_GRAPH_CURVE_MODEL_CACHE_##b])
+#define CBIT(b)          (1 << GWY_GRAPH_CURVE_MODEL_CACHE_##b)
+#define CTEST(cmodel, b) ((cmodel)->cached & CBIT(b))
+
+typedef enum {
+    GWY_GRAPH_CURVE_MODEL_CACHE_XMIN = 0,
+    GWY_GRAPH_CURVE_MODEL_CACHE_XMAX,
+    GWY_GRAPH_CURVE_MODEL_CACHE_YMIN,
+    GWY_GRAPH_CURVE_MODEL_CACHE_YMAX
+} GwyGraphCurveModelCached;
+
 static void     gwy_graph_curve_model_finalize         (GObject *object);
 static void     gwy_graph_curve_model_serializable_init(GwySerializableIface *iface);
 static GByteArray* gwy_graph_curve_model_serialize     (GObject *object,
@@ -47,7 +59,7 @@ static void     gwy_graph_curve_model_get_property     (GObject*object,
                                                         guint prop_id,
                                                         GValue *value,
                                                         GParamSpec *pspec);
-static void     gwy_graph_curve_model_data_changed  (GwyGraphCurveModel *model);
+static void   gwy_graph_curve_model_data_changed  (GwyGraphCurveModel *gcmodel);
 
 enum {
     DATA_CHANGED,
@@ -804,8 +816,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 
     ldata = gwy_data_line_get_data(dline);
     for (i = 0; i < res; i++) {
-        xdata[i] = realmin +
-            (gdouble)i*(realmax - realmin)/(gdouble)res + offset;
+        xdata[i] = realmin + i*(realmax - realmin)/res + offset;
         ydata[i] = ldata[i + from_index];
     }
 
@@ -847,10 +858,103 @@ gwy_graph_curve_model_get_color(GwyGraphCurveModel *gcmodel)
     return &gcmodel->color;
 }
 
-static void
-gwy_graph_curve_model_data_changed(GwyGraphCurveModel *model)
+void
+gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
+                                  gdouble *x_min,
+                                  gdouble *x_max)
 {
-    g_signal_emit(model, graph_curve_model_signals[DATA_CHANGED], 0);
+    gdouble xmin, xmax;
+    gboolean must_calculate = FALSE;
+    gint i;
+
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (x_min) {
+        if (CTEST(gcmodel, XMIN))
+            *x_min = CVAL(gcmodel, XMIN);
+        else
+            must_calculate = TRUE;
+    }
+
+    if (x_max) {
+        if (CTEST(gcmodel, XMAX))
+            *x_max = CVAL(gcmodel, XMAX);
+        else
+            must_calculate = TRUE;
+    }
+
+    if (!must_calculate)
+        return;
+
+    xmin = G_MAXDOUBLE;
+    xmax = -G_MAXDOUBLE;
+    for (i = 0; i < gcmodel->n; i++) {
+        if (G_UNLIKELY(gcmodel->xdata[i] < xmin))
+            xmin = gcmodel->xdata[i];
+        if (G_UNLIKELY(gcmodel->xdata[i] > xmax))
+            xmax = gcmodel->xdata[i];
+    }
+
+    CVAL(gcmodel, XMIN) = xmin;
+    CVAL(gcmodel, XMAX) = xmax;
+
+    if (x_min)
+        *x_min = xmin;
+    if (x_max)
+        *x_max = xmax;
+}
+
+void
+gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
+                                  gdouble *y_min,
+                                  gdouble *y_max)
+{
+    gdouble ymin, ymax;
+    gboolean must_calculate = FALSE;
+    gint i;
+
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (y_min) {
+        if (CTEST(gcmodel, YMIN))
+            *y_min = CVAL(gcmodel, YMIN);
+        else
+            must_calculate = TRUE;
+    }
+
+    if (y_max) {
+        if (CTEST(gcmodel, YMAX))
+            *y_max = CVAL(gcmodel, YMAX);
+        else
+            must_calculate = TRUE;
+    }
+
+    if (!must_calculate)
+        return;
+
+    ymin = G_MAXDOUBLE;
+    ymax = -G_MAXDOUBLE;
+    for (i = 0; i < gcmodel->n; i++) {
+        if (G_UNLIKELY(gcmodel->ydata[i] < ymin))
+            ymin = gcmodel->ydata[i];
+        if (G_UNLIKELY(gcmodel->ydata[i] > ymax))
+            ymax = gcmodel->ydata[i];
+    }
+
+    CVAL(gcmodel, YMIN) = ymin;
+    CVAL(gcmodel, YMAX) = ymax;
+
+    if (y_min)
+        *y_min = ymin;
+    if (y_max)
+        *y_max = ymax;
+}
+
+static void
+gwy_graph_curve_model_data_changed(GwyGraphCurveModel *gcmodel)
+{
+    gcmodel->cached = 0;
+    g_signal_emit(gcmodel, graph_curve_model_signals[DATA_CHANGED], 0);
 }
 
 /************************** Documentation ****************************/
