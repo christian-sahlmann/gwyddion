@@ -2063,7 +2063,7 @@ gwy_serialize_check_string(const guchar *buffer,
  * @title: GwySerializable
  * @short_description: Abstract interface for serializable objects
  *
- * GwySerializable is an abstract interface for value-like object that can be
+ * GwySerializable is an abstract interface for data-like object that can be
  * serialized and deserialized.  You can serialize any object implementing this
  * interface with gwy_serializable_serialize() and the restore (deserialize) it
  * with gwy_serializable_deserialize(). It is also posible it duplicate any
@@ -2078,12 +2078,14 @@ gwy_serialize_check_string(const guchar *buffer,
  * a particular object and user data set with g_object_set_data() or
  * g_object_set_qdata().
  *
- * You should implement serialization and deserialization in your classes with
+ * You can implement serialization and deserialization in your classes with
  * gwy_serialize_pack_object_struct() and gwy_serialize_unpack_object_struct()
  * or with gwy_serialize_object_items() and gwy_deserialize_object_hash().
  * The former two are useful for struct-like objects (most objects are of this
  * kind), the latter two for hash-like objects, i.e., objects that can contain
- * components of arbitrary name and type.
+ * components of arbitrary name and type.  Serialized size calculations can be
+ * in most cases performed by gwy_serialize_get_struct_size() and
+ * gwy_serialize_get_items_size() helper functions.
  **/
 
 /**
@@ -2169,17 +2171,19 @@ gwy_serialize_check_string(const guchar *buffer,
  *             description.
  * @deserialize: Restore method (obligatory), see #GwyDeserializeFunc for
  *               description.
+ * @clone: Clone method (obligatory).  Copies complete object `value' to an
+ *         existing object of the same type.  This method is called from
+ *         copy's class if source and copy classes differ.
+ * @duplicate: Duplication method (optional).  Creates a duplicate of an
+ *             object.  When it is absent, duplication is performed by
+ *             a rather inefficient serialize-and-deserialize fallback.
  * @get_size: Serialized size calculation method (optional).
  *            Calculates expected serialized object size (including object
  *            name and size header).
  *            Its purpose is to avoid frequent memory reallocations during
  *            serialization of large objects.
- *            The returned value may not be exact, it can be an upper bound.
- * @clone: Clone method (obligatory).  Copies complete object `value' to an
- *         existing object of the same type.  This method is called from
- *         copy's class if source and copy classes differ.
- * @duplicate: Duplication method (optional).  Creates a duplicate of an
- *             object.
+ *            The returned value may be inexact, a reasonable upper bound is
+ *            sufficient.  When it is absent, serialization is less efficient.
  *
  * The methods a serializable objects has to implement.
  **/
