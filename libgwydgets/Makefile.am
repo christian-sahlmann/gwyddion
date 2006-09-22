@@ -20,6 +20,7 @@ libgwydgets2include_HEADERS = \
 	gwydatawindow.h \
 	gwydgets.h \
 	gwydgetenums.h \
+	gwydgetmarshals.h \
 	gwydgettypes.h \
 	gwydgetutils.h \
 	gwygraphcurvemodel.h \
@@ -60,14 +61,23 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwydgets2.la
 
+EXTRA_DIST = \
+	makefile.msc \
+	makefile.msc.gwt \
+	libgwydgets2.def
+
+# Must init
+CLEANFILES =
+MAINTAINERCLEANFILES =
+BUILT_SOURCES =
+
 MKENUM_NAME = gwydgettypes
 MKENUM_HFILES = gwydgetenums.h
 include $(top_srcdir)/utils/mkenum.mk
 
-EXTRA_DIST += \
-	makefile.msc \
-	makefile.msc.gwt \
-	libgwydgets2.def
+GENMARSHAL_NAME = gwydgetmarshals
+GENMARSHAL_PREFIX = _gwydget_marshal
+include $(top_srcdir)/utils/genmarshal.mk
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -91,6 +101,7 @@ libgwydgets2_la_SOURCES = \
 	gwydatawindow.c \
 	gwydgets.c \
 	gwydgetenums.c \
+	gwydgetmarshals.c \
 	gwydgettypes.c \
 	gwydgetutils.c \
 	gwygraphcurvemodel.c \

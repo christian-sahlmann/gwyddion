@@ -26,26 +26,9 @@
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraph.h>
+#include "gwydgetmarshals.h"
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
-
-static void     gwy_graph_model_finalize         (GObject *object);
-static void     gwy_graph_model_serializable_init(GwySerializableIface *iface);
-static GByteArray* gwy_graph_model_serialize     (GObject *obj,
-                                                  GByteArray*buffer);
-static gsize    gwy_graph_model_get_size         (GObject *obj);
-static GObject* gwy_graph_model_deserialize      (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-static GObject* gwy_graph_model_duplicate_real   (GObject *object);
-static void     gwy_graph_model_set_property     (GObject *object,
-                                                  guint prop_id,
-                                                  const GValue *value,
-                                                  GParamSpec *pspec);
-static void     gwy_graph_model_get_property     (GObject*object,
-                                                  guint prop_id,
-                                                  GValue *value,
-                                                  GParamSpec *pspec);
 
 enum {
     PROP_0,
@@ -74,6 +57,44 @@ enum {
     PROP_LABEL_VISIBLE,
     PROP_LAST
 };
+
+enum {
+    CURVE_DATA_CHANGED,
+    CURVE_NOTIFY,
+    LAST_SIGNAL
+};
+
+typedef struct {
+    gulong data_changed_id;
+    gulong notify_id;
+} GwyGraphModelCurveAux;
+
+static void     gwy_graph_model_finalize          (GObject *object);
+static void     gwy_graph_model_serializable_init (GwySerializableIface *iface);
+static GByteArray* gwy_graph_model_serialize      (GObject *obj,
+                                                   GByteArray*buffer);
+static gsize    gwy_graph_model_get_size          (GObject *obj);
+static GObject* gwy_graph_model_deserialize       (const guchar *buffer,
+                                                   gsize size,
+                                                   gsize *position);
+static GObject* gwy_graph_model_duplicate_real    (GObject *object);
+static void     gwy_graph_model_set_property      (GObject *object,
+                                                   guint prop_id,
+                                                   const GValue *value,
+                                                   GParamSpec *pspec);
+static void     gwy_graph_model_get_property      (GObject*object,
+                                                   guint prop_id,
+                                                   GValue *value,
+                                                   GParamSpec *pspec);
+static void     gwy_graph_model_release_curve     (GwyGraphModel *gmodel,
+                                                   guint i);
+static void     gwy_graph_model_curve_data_changed(GwyGraphCurveModel *cmodel,
+                                                   GwyGraphModel *gmodel);
+static void     gwy_graph_model_curve_notify      (GwyGraphCurveModel *cmodel,
+                                                   GParamSpec *pspec,
+                                                   GwyGraphModel *gmodel);
+
+static guint graph_model_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE_EXTENDED
     (GwyGraphModel, gwy_graph_model, G_TYPE_OBJECT, 0,
@@ -309,6 +330,41 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                            GWY_TYPE_GRAPH_LABEL_POSITION,
                            GWY_GRAPH_LABEL_NORTHEAST,
                            G_PARAM_READWRITE));
+
+    /**
+     * GwyGraphModel::curve-data-changed:
+     * @gwygraphmodel: The #GwyGraphModel which received the signal.
+     * @arg1: The index of the changed curve in the model.
+     *
+     * The ::curve-data-changed signal is emitted whenever any of the curves
+     * in a graph model emits #GwyGraphCurveModel::data-changed.
+     **/
+    graph_model_signals[CURVE_DATA_CHANGED]
+        = g_signal_new("curve-data-changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyGraphModelClass, curve_data_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__INT,
+                       G_TYPE_NONE, 1, G_TYPE_INT);
+
+    /**
+     * GwyGraphModel::curve-notify:
+     * @gwygraphmodel: The #GwyGraphModel which received the signal.
+     * @arg1: The index of the changed curve in the model.
+     * @arg2: The #GParamSpec of the property that has changed.
+     *
+     * The ::curve-data-changed signal is emitted whenever any of the curves
+     * in a graph model emits #GObject::notify.
+     **/
+    graph_model_signals[CURVE_NOTIFY]
+        = g_signal_new("curve-notify",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyGraphModelClass, curve_notify),
+                       NULL, NULL,
+                       _gwydget_marshal_VOID__INT_PARAM,
+                       G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_PARAM);
 }
 
 static void
@@ -317,6 +373,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gwy_debug_objects_creation((GObject*)gmodel);
 
     gmodel->curves = g_ptr_array_new();
+    gmodel->curveaux = g_array_new(FALSE, FALSE, sizeof(GwyGraphModelCurveAux));
 
     gmodel->x_unit = gwy_si_unit_new("");
     gmodel->y_unit = gwy_si_unit_new("");
@@ -371,9 +428,11 @@ gwy_graph_model_finalize(GObject *object)
     g_string_free(gmodel->left_label, TRUE);
     g_string_free(gmodel->right_label, TRUE);
 
+    g_assert(gmodel->curves->len == gmodel->curveaux->len);
     for (i = 0; i < gmodel->curves->len; i++)
-        g_object_unref(g_ptr_array_index(gmodel->curves, i));
+        gwy_graph_model_release_curve(gmodel, i);
     g_ptr_array_free(gmodel->curves, TRUE);
+    g_array_free(gmodel->curveaux, TRUE);
 
     G_OBJECT_CLASS(gwy_graph_model_parent_class)->finalize(object);
 }
@@ -555,7 +614,7 @@ gwy_graph_model_deserialize(const guchar *buffer,
             guint i;
 
             for (i = 0; i < ncurves; i++)
-                g_ptr_array_add(gmodel->curves, curves[i]);
+                gwy_graph_model_add_curve(gmodel, curves[i]);
             g_free(curves);
         }
     }
@@ -862,6 +921,7 @@ gint
 gwy_graph_model_add_curve(GwyGraphModel *gmodel,
                           GwyGraphCurveModel *curve)
 {
+    GwyGraphModelCurveAux aux;
     gint idx;
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), -1);
@@ -870,6 +930,16 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel,
     g_object_ref(curve);
     g_ptr_array_add(gmodel->curves, curve);
     idx = gmodel->curves->len - 1;
+
+    aux.data_changed_id
+        = g_signal_connect(curve, "data-changed",
+                           G_CALLBACK(gwy_graph_model_curve_data_changed),
+                           gmodel);
+    aux.notify_id
+        = g_signal_connect(curve, "notify",
+                           G_CALLBACK(gwy_graph_model_curve_notify),
+                           gmodel);
+    g_array_append_val(gmodel->curveaux, aux);
 
     /* In principle, this can change gmodel->curves->len, so we have to save
      * the index in idx. */
@@ -904,12 +974,8 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 
     g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
 
-    for (i = 0; i < gmodel->curves->len; i++) {
-        GwyGraphCurveModel *cmodel;
-
-        cmodel = g_ptr_array_index(gmodel->curves, i);
-        g_object_unref(cmodel);
-    }
+    for (i = 0; i < gmodel->curves->len; i++)
+        gwy_graph_model_release_curve(gmodel, i);
     g_ptr_array_set_size(gmodel->curves, 0);
     g_object_notify(G_OBJECT(gmodel), "n-curves");
 }
@@ -937,9 +1003,8 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     newcurves = g_ptr_array_new();
     for (i = 0; i < gmodel->curves->len; i++) {
         cmodel = g_ptr_array_index(gmodel->curves, i);
-        if (gwy_strequal(description, cmodel->description->str)) {
-            g_object_unref(cmodel);
-        }
+        if (gwy_strequal(description, cmodel->description->str))
+            gwy_graph_model_release_curve(gmodel, i);
         else
             g_ptr_array_add(newcurves, cmodel);
     }
@@ -968,14 +1033,10 @@ void
 gwy_graph_model_remove_curve(GwyGraphModel *gmodel,
                              gint cindex)
 {
-    GwyGraphCurveModel *cmodel;
-
     g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
     g_return_if_fail(cindex >= 0 && cindex < gmodel->curves->len);
 
-    cmodel = g_ptr_array_index(gmodel->curves, cindex);
-    g_object_unref(cmodel);
-
+    gwy_graph_model_release_curve(gmodel, cindex);
     g_ptr_array_remove_index(gmodel->curves, cindex);
     g_object_notify(G_OBJECT(gmodel), "n-curves");
 }
@@ -1518,6 +1579,51 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
     }
 
     return string;
+}
+
+static void
+gwy_graph_model_release_curve(GwyGraphModel *gmodel,
+                              guint i)
+{
+    GwyGraphCurveModel *cmodel;
+    GwyGraphModelCurveAux *aux;
+
+    cmodel = g_ptr_array_index(gmodel->curves, i);
+    aux = &g_array_index(gmodel->curveaux, GwyGraphModelCurveAux, i);
+
+    g_signal_handler_disconnect(cmodel, aux->data_changed_id);
+    g_signal_handler_disconnect(cmodel, aux->notify_id);
+    g_object_unref(cmodel);
+
+    g_ptr_array_index(gmodel->curves, i) = NULL;
+}
+
+static void
+gwy_graph_model_curve_data_changed(GwyGraphCurveModel *cmodel,
+                                   GwyGraphModel *gmodel)
+{
+    gint i;
+
+    /* FIXME: This scales bad although for a reasonable number of curves it's
+     * quite fast. */
+    i = gwy_graph_model_get_curve_index(gmodel, cmodel);
+    g_return_if_fail(i > -1);
+    g_signal_emit(gmodel, CURVE_DATA_CHANGED, 0, i);
+}
+
+static void
+gwy_graph_model_curve_notify(GwyGraphCurveModel *cmodel,
+                             GParamSpec *pspec,
+                             GwyGraphModel *gmodel)
+{
+    gint i;
+
+    /* FIXME: This scales bad although for a reasonable number of curves it's
+     * quite fast. */
+    i = gwy_graph_model_get_curve_index(gmodel, cmodel);
+    g_return_if_fail(i > -1);
+    /* FIXME: Can't we do better? */
+    g_signal_emit(gmodel, CURVE_NOTIFY, 0, i, g_quark_from_string(pspec->name));
 }
 
 /************************** Documentation ****************************/

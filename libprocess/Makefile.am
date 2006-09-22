@@ -35,14 +35,19 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwyprocess2.la
 
-MKENUM_NAME = gwyprocesstypes
-MKENUM_HFILES = gwyprocessenums.h
-include $(top_srcdir)/utils/mkenum.mk
-
-EXTRA_DIST += \
+EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyprocess2.def
+
+# Must init
+CLEANFILES =
+MAINTAINERCLEANFILES =
+BUILT_SOURCES =
+
+MKENUM_NAME = gwyprocesstypes
+MKENUM_HFILES = gwyprocessenums.h
+include $(top_srcdir)/utils/mkenum.mk
 
 # In following order do:
 # Any code change     C:   R++: A

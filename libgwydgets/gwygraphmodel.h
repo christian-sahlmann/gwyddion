@@ -44,6 +44,8 @@ struct _GwyGraphModel {
     GObject parent_instance;
 
     GPtrArray *curves;
+    GArray *curveaux;
+
     GString *title;
 
     gdouble x_min;
@@ -88,6 +90,12 @@ struct _GwyGraphModel {
 
 struct _GwyGraphModelClass {
     GObjectClass parent_class;
+
+    void (*curve_data_changed)(GwyGraphModel *model,
+                               gint i);
+    void (*curve_notify)(GwyGraphModel *model,
+                         gint i,
+                         GParamSpec *pspec);
 
     gpointer reserved1;
     gpointer reserved2;

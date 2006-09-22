@@ -1019,7 +1019,8 @@ gwy_axis_format_label(GwyAxis *axis,
 
     plotlabel = g_string_new(axis->label_text->str);
     units = gwy_si_unit_get_string(axis->unit, GWY_SI_UNIT_FORMAT_MARKUP);
-    if (axis->magnification_string->len > 0 || *units) {
+    if ((axis->magnification_string && axis->magnification_string->len > 0)
+        || *units) {
         g_string_append(plotlabel, " [");
         if (axis->magnification_string)
             g_string_append(plotlabel, axis->magnification_string->str);

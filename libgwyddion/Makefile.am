@@ -32,15 +32,20 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwyddion2.la
 
-MKENUM_NAME = gwyddiontypes
-MKENUM_HFILES = gwyddionenums.h
-include $(top_srcdir)/utils/mkenum.mk
-
-EXTRA_DIST += \
+EXTRA_DIST = \
 	gwyversion.h.in \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyddion2.def
+
+# Must init
+CLEANFILES =
+MAINTAINERCLEANFILES =
+BUILT_SOURCES =
+
+MKENUM_NAME = gwyddiontypes
+MKENUM_HFILES = gwyddionenums.h
+include $(top_srcdir)/utils/mkenum.mk
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -78,7 +83,7 @@ AM_CPPFLAGS = \
 	-DGWY_LOCALEDIR=\"$(localedir)\"
 
 clean-local:
-	rm -f core.* *~ testser.object
+	rm -f core.* *~
 
 #noinst_PROGRAMS = main
 #main_SOURCES = \
