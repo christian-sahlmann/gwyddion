@@ -112,9 +112,6 @@ GString*   gwy_graph_export_postscript(GwyGraph *graph,
                                        gboolean export_labels,
                                        GString *str);
 
-void       gwy_graph_zoom_in(GwyGraph *graph);
-void       gwy_graph_zoom_out(GwyGraph *graph);
-
 void       gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type);
 GwyGraphGridType gwy_graph_get_grid_type(GwyGraph *graph);
 

@@ -30,7 +30,6 @@
 
 static void gwy_graph_finalize    (GObject *object);
 static void gwy_graph_refresh     (GwyGraph *graph);
-static void set_graph_model_ranges(GwyGraph *graph);
 static void rescaled_cb           (GtkWidget *widget,
                                    GwyGraph *graph);
 static void zoomed_cb             (GwyGraph *graph);
@@ -164,17 +163,14 @@ gwy_graph_new(GwyGraphModel *gmodel)
     return GTK_WIDGET(graph);
 }
 
-
 static void
 gwy_graph_refresh(GwyGraph *graph)
 {
     GwyGraphModel *model;
-    GwyGraphCurveModel *curvemodel;
-    gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
-    gint i, j, nc, ndata;
-    const gdouble *xdata, *ydata;
-    gboolean has_data, lg;
     GwySIUnit *siunit;
+    gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
+    gboolean lg;
+    gint i;
 
     if (!graph->graph_model)
         return;
@@ -209,7 +205,7 @@ gwy_graph_refresh(GwyGraph *graph)
     gwy_axis_set_req(graph->axis[GTK_POS_TOP], x_reqmin, x_reqmax);
     gwy_axis_set_req(graph->axis[GTK_POS_BOTTOM], x_reqmin, x_reqmax);
 
-    set_graph_model_ranges(graph);
+    /* TODO: set_graph_model_ranges(graph); */
 
     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
@@ -253,7 +249,6 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
         return;
 
     array = g_array_new(FALSE, FALSE, sizeof(gdouble));
-    set_graph_model_ranges(graph);
 
     if (graph->grid_type == GWY_GRAPH_GRID_AUTO) {
         gwy_axis_get_major_ticks(graph->axis[GTK_POS_LEFT], array);
@@ -264,6 +259,7 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
         g_array_free(array, TRUE);
     }
 
+    /* TODO: set_graph_model_ranges(graph); */
     gwy_graph_area_refresh(graph->area);
 }
 
@@ -414,83 +410,33 @@ gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable)
         gwy_axis_enable_label_edit(graph->axis[i], enable);
 }
 
-/**
- * gwy_graph_zoom_in:
- * @graph: A graph widget.
- *
- * Switch to zoom status. Graph will expect zoom selection
- * and will zoom afterwards automatically.
- **/
-void
-gwy_graph_zoom_in(GwyGraph *graph)
-{
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_ZOOM);
-}
-
-/**
- * gwy_graph_zoom_out:
- * @graph: A graph widget.
- *
- * Zoom out to see all the data points.
- **/
-void
-gwy_graph_zoom_out(GwyGraph *graph)
-{
-    gwy_graph_refresh(graph);
-}
-
 static void
 zoomed_cb(GwyGraph *graph)
 {
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
-    gdouble selection_zoomdata[4];
-    guint i;
+    GwySelection *selection;
+    gdouble zoomdata[4];
 
+    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(graph->area),
+                                             GWY_GRAPH_STATUS_ZOOM);
     if (graph->area->status != GWY_GRAPH_STATUS_ZOOM ||
-        gwy_selection_get_data(gwy_graph_area_get_selection(GWY_GRAPH_AREA(graph->area), GWY_GRAPH_STATUS_ZOOM), NULL) != 1)
+        gwy_selection_get_data(selection, NULL) != 1)
         return;
 
-    gwy_selection_get_object(GWY_SELECTION((graph->area)->zoomdata),
-                             gwy_selection_get_data(GWY_SELECTION((graph->area)->zoomdata), NULL) - 1,
-                             selection_zoomdata);
+    gwy_selection_get_object(selection, 0, zoomdata);
+    x_reqmin = MIN(zoomdata[0], zoomdata[0] + zoomdata[2]);
+    x_reqmax = MAX(zoomdata[0], zoomdata[0] + zoomdata[2]);
+    y_reqmin = MIN(zoomdata[1], zoomdata[1] + zoomdata[3]);
+    y_reqmax = MAX(zoomdata[1], zoomdata[1] + zoomdata[3]);
+    /* This in turn causes graph refresh including axes rescale */
+    g_object_set(graph->graph_model,
+                 "x-min", x_reqmin, "x-min-set", TRUE,
+                 "x-max", x_reqmax, "x-max-set", TRUE,
+                 "y-min", y_reqmin, "y-min-set", TRUE,
+                 "y-max", y_reqmax, "y-max-set", TRUE,
+                 NULL);
 
-    x_reqmin = MIN(selection_zoomdata[0],
-                   selection_zoomdata[0] + selection_zoomdata[2]);
-    x_reqmax = MAX(selection_zoomdata[0],
-                   selection_zoomdata[0] + selection_zoomdata[2]);
-    y_reqmin = MIN(selection_zoomdata[1],
-                   selection_zoomdata[1] + selection_zoomdata[3]);
-    y_reqmax = MAX(selection_zoomdata[1],
-                   selection_zoomdata[1] + selection_zoomdata[3]);
-
-    for (i = GTK_POS_LEFT; i <= GTK_POS_RIGHT; i++)
-        gwy_axis_set_req(graph->axis[i], x_reqmin, x_reqmax);
-    for (i = GTK_POS_TOP; i <= GTK_POS_BOTTOM; i++)
-        gwy_axis_set_req(graph->axis[i], y_reqmin, y_reqmax);
-
-    set_graph_model_ranges(graph);
-
-    /*refresh widgets*/
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_PLAIN);
-    gwy_graph_area_refresh(graph->area);
-}
-
-/* XXX: This should not bloody work this bloody way.  Requests are users
- * request, and if the graph recomputes it, then it's no request any more. */
-static void
-set_graph_model_ranges(GwyGraph *graph)
-{
-    /* Just don't do anything.  This direction of range info flow should not
-     * exist.
-    gwy_graph_model_set_xmax(graph->graph_model,
-                             gwy_axis_get_maximum(graph->axis[GTK_POS_BOTTOM]));
-    gwy_graph_model_set_xmin(graph->graph_model,
-                             gwy_axis_get_minimum(graph->axis[GTK_POS_BOTTOM]));
-    gwy_graph_model_set_ymax(graph->graph_model,
-                             gwy_axis_get_maximum(graph->axis[GTK_POS_LEFT]));
-    gwy_graph_model_set_ymin(graph->graph_model,
-                             gwy_axis_get_minimum(graph->axis[GTK_POS_LEFT]));
-                             */
 }
 
 static void

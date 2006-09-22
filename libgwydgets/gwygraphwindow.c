@@ -32,26 +32,22 @@
 #include <libgwydgets/gwystatusbar.h>
 #include "gwygraphwindowmeasuredialog.h"
 
-#define DEFAULT_SIZE 360
-
-/* Forward declarations */
-
-static void gwy_graph_window_destroy            (GtkObject *object);
-static void gwy_graph_window_finalize           (GObject *object);
-static gboolean gwy_graph_window_key_pressed    (GtkWidget *widget,
-                                                 GdkEventKey *event);
-static gboolean gwy_graph_cursor_motion_cb      (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_measure_cb         (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_zoom_in_cb         (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_zoom_out_cb        (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_x_log_cb           (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_y_log_cb           (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_zoom_finished_cb   (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
-                                                 gint response);
-static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
-                                                 const gchar *tip_text);
-static void graph_title_changed                 (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_destroy         (GtkObject *object);
+static void     gwy_graph_window_finalize        (GObject *object);
+static gboolean gwy_graph_window_key_pressed     (GtkWidget *widget,
+                                                  GdkEventKey *event);
+static gboolean gwy_graph_cursor_motion          (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_measure         (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_zoom_in         (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_zoom_to_fit     (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_x_log           (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_y_log           (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_zoom_finished   (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow,
+                                                  gint response);
+static void     gwy_graph_window_set_tooltip     (GtkWidget *widget,
+                                                  const gchar *tip_text);
+static void     graph_title_changed              (GwyGraphWindow *graphwindow);
 
 
 /* Local data */
@@ -166,7 +162,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gwy_graph_window_set_tooltip(graphwindow->button_measure_points,
                                  _("Measure distances in graph"));
     g_signal_connect_swapped(graphwindow->button_measure_points, "clicked",
-                           G_CALLBACK(gwy_graph_window_measure_cb),
+                           G_CALLBACK(gwy_graph_window_measure),
                            graphwindow);
 
 
@@ -179,19 +175,19 @@ gwy_graph_window_new(GwyGraph *graph)
     gwy_graph_window_set_tooltip(graphwindow->button_zoom_in,
                                  _("Zoom in by mouse selection"));
     g_signal_connect_swapped(graphwindow->button_zoom_in, "toggled",
-                           G_CALLBACK(gwy_graph_window_zoom_in_cb),
+                           G_CALLBACK(gwy_graph_window_zoom_in),
                            graphwindow);
 
-    graphwindow->button_zoom_out = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_out),
+    graphwindow->button_zoom_to_fit = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_to_fit),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_FIT,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_out,
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_to_fit,
                        FALSE, FALSE, 0);
-    gwy_graph_window_set_tooltip(graphwindow->button_zoom_out,
+    gwy_graph_window_set_tooltip(graphwindow->button_zoom_to_fit,
                                  _("Zoom out to full curve"));
-    g_signal_connect_swapped(graphwindow->button_zoom_out, "clicked",
-                           G_CALLBACK(gwy_graph_window_zoom_out_cb),
+    g_signal_connect_swapped(graphwindow->button_zoom_to_fit, "clicked",
+                           G_CALLBACK(gwy_graph_window_zoom_to_fit),
                            graphwindow);
 
 
@@ -202,7 +198,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log,
                        FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_x_log, "clicked",
-                           G_CALLBACK(gwy_graph_window_x_log_cb),
+                           G_CALLBACK(gwy_graph_window_x_log),
                            graphwindow);
 
     gtk_widget_set_sensitive(graphwindow->button_x_log,
@@ -215,7 +211,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log,
                        FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
-                           G_CALLBACK(gwy_graph_window_y_log_cb),
+                           G_CALLBACK(gwy_graph_window_y_log),
                            graphwindow);
 
     gtk_widget_set_sensitive(graphwindow->button_y_log,
@@ -231,18 +227,18 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow->measure_dialog
         = _gwy_graph_window_measure_dialog_new(graph);
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
-                           G_CALLBACK(gwy_graph_window_measure_finished_cb),
+                           G_CALLBACK(gwy_graph_window_measure_finished),
                            graphwindow);
 
     g_signal_connect_swapped(gwy_graph_get_area(graph),
                              "motion-notify-event",
-                             G_CALLBACK(gwy_graph_cursor_motion_cb),
+                             G_CALLBACK(gwy_graph_cursor_motion),
                              graphwindow);
 
     g_signal_connect_swapped(gwy_graph_area_get_selection(
                                        GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                                        GWY_GRAPH_STATUS_ZOOM), "finished",
-                             G_CALLBACK(gwy_graph_window_zoom_finished_cb),
+                             G_CALLBACK(gwy_graph_window_zoom_finished),
                              graphwindow);
 
 
@@ -364,7 +360,7 @@ gwy_graph_window_key_pressed(GtkWidget *widget,
 }
 
 static gboolean
-gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
+gwy_graph_cursor_motion(GwyGraphWindow *graphwindow)
 {
     const gchar* xstring, *ystring;
     GwyGraph *graph;
@@ -393,7 +389,7 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 }
 
 static void
-gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
+gwy_graph_window_measure(GwyGraphWindow *graphwindow)
 {
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_measure_points)))
     {
@@ -404,13 +400,13 @@ gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
     }
     else
     {
-        gwy_graph_window_measure_finished_cb(graphwindow, 0);
+        gwy_graph_window_measure_finished(graphwindow, 0);
     }
 }
 
 
 static void
-gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
+gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow, gint response)
 {
 
     gwy_selection_clear(gwy_graph_area_get_selection
@@ -433,35 +429,44 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 }
 
 static void
-gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
+gwy_graph_window_zoom_in(GwyGraphWindow *graphwindow)
 {
     GwyGraph *graph;
 
     graph = GWY_GRAPH(graphwindow->graph);
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in))) {
         graphwindow->last_status = gwy_graph_get_status(graph);
-        gwy_graph_zoom_in(graph);
+        gwy_graph_set_status(graph, GWY_GRAPH_STATUS_ZOOM);
     }
     else
         gwy_graph_set_status(graph, graphwindow->last_status);
 }
 
 static void
-gwy_graph_window_zoom_out_cb(GwyGraphWindow *graphwindow)
+gwy_graph_window_zoom_to_fit(GwyGraphWindow *graphwindow)
 {
-    gwy_graph_zoom_out(GWY_GRAPH(graphwindow->graph));
+    GwyGraph *graph;
+    GwyGraphModel *model;
+
+    graph = GWY_GRAPH(graphwindow->graph);
+    model = gwy_graph_get_model(graph);
+    g_object_set(model,
+                 "x-min-set", FALSE, "x-max-set", FALSE,
+                 "y-min-set", FALSE, "y-max-set", FALSE,
+                 NULL);
 }
 
 static void
-gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
+gwy_graph_window_zoom_finished(GwyGraphWindow *graphwindow)
 {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), graphwindow->last_status);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in),
+                                 FALSE);
+    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph),
+                         graphwindow->last_status);
 }
 
-
 static void
-gwy_graph_window_x_log_cb(GwyGraphWindow *graphwindow)
+gwy_graph_window_x_log(GwyGraphWindow *graphwindow)
 {
     GwyGraphModel *model;
     gboolean state;
@@ -472,7 +477,7 @@ gwy_graph_window_x_log_cb(GwyGraphWindow *graphwindow)
 }
 
 static void
-gwy_graph_window_y_log_cb(GwyGraphWindow *graphwindow)
+gwy_graph_window_y_log(GwyGraphWindow *graphwindow)
 {
     GwyGraphModel *model;
     gboolean state;
