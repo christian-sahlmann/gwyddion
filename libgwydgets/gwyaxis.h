@@ -143,7 +143,7 @@ GString*        gwy_axis_export_vector           (GwyAxis *axis,
                                                   gint width,
                                                   gint height,
                                                   gint fontsize);
-void            gwy_axis_set_grid_data           (GwyAxis *axis,
+void            gwy_axis_get_major_ticks         (GwyAxis *axis,
                                                   GArray *array);
 
 G_END_DECLS

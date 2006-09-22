@@ -195,44 +195,19 @@ gwy_graph_refresh(GwyGraph *graph)
     }
     g_object_unref(siunit);
 
-    nc = gwy_graph_model_get_n_curves(model);
-    if (nc > 0) {
-        /*refresh axis and reset axis requirements*/
-        x_reqmin = y_reqmin = G_MAXDOUBLE;
-        x_reqmax = y_reqmax = -G_MAXDOUBLE;
-        has_data = FALSE;
-        for (i = 0; i < nc; i++) {
-            curvemodel = gwy_graph_model_get_curve(model, i);
-            ndata = gwy_graph_curve_model_get_ndata(curvemodel);
-            xdata = gwy_graph_curve_model_get_xdata(curvemodel);
-            ydata = gwy_graph_curve_model_get_ydata(curvemodel);
-            for (j = 0; j < ndata; j++) {
-                if (x_reqmin > xdata[j])
-                    x_reqmin = xdata[j];
-                if (y_reqmin > ydata[j])
-                    y_reqmin = ydata[j];
-                if (x_reqmax < xdata[j])
-                    x_reqmax = xdata[j];
-                if (y_reqmax < ydata[j])
-                    y_reqmax = ydata[j];
-                has_data = TRUE;
-            }
-        }
-        if (!has_data) {
-            x_reqmin = y_reqmin = 0;
-            x_reqmax = y_reqmax = 1;
-        }
-
-        for (i = GTK_POS_LEFT; i <= GTK_POS_RIGHT; i++)
-            gwy_axis_set_req(graph->axis[i], y_reqmin, y_reqmax);
-        for (i = GTK_POS_TOP; i <= GTK_POS_BOTTOM; i++)
-            gwy_axis_set_req(graph->axis[i], x_reqmin, x_reqmax);
-
+    if (!gwy_graph_model_get_x_range(model, &x_reqmin, &x_reqmax)) {
+        x_reqmin = 0.0;
+        x_reqmax = 1.0;
     }
-    else {
-        for (i = GTK_POS_LEFT; i <= GTK_POS_BOTTOM; i++)
-            gwy_axis_set_req(graph->axis[i], 0.0, 1.0);
+    if (!gwy_graph_model_get_y_range(model, &y_reqmin, &y_reqmax)) {
+        y_reqmin = 0.0;
+        y_reqmax = 1.0;
     }
+
+    gwy_axis_set_req(graph->axis[GTK_POS_LEFT], y_reqmin, y_reqmax);
+    gwy_axis_set_req(graph->axis[GTK_POS_RIGHT], y_reqmin, y_reqmax);
+    gwy_axis_set_req(graph->axis[GTK_POS_TOP], x_reqmin, x_reqmax);
+    gwy_axis_set_req(graph->axis[GTK_POS_BOTTOM], x_reqmin, x_reqmax);
 
     set_graph_model_ranges(graph);
 
@@ -281,9 +256,9 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
     set_graph_model_ranges(graph);
 
     if (graph->grid_type == GWY_GRAPH_GRID_AUTO) {
-        gwy_axis_set_grid_data(graph->axis[GTK_POS_LEFT], array);
+        gwy_axis_get_major_ticks(graph->axis[GTK_POS_LEFT], array);
         gwy_graph_area_set_x_grid_data(graph->area, array);
-        gwy_axis_set_grid_data(graph->axis[GTK_POS_BOTTOM], array);
+        gwy_axis_get_major_ticks(graph->axis[GTK_POS_BOTTOM], array);
         gwy_graph_area_set_y_grid_data(graph->area, array);
 
         g_array_free(array, TRUE);

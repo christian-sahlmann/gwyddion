@@ -1994,13 +1994,14 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
 }
 
 /**
- * gwy_axis_set_grid_data:
- * @array: array of grid data
+ * gwy_axis_get_grid_data:
+ * @axis: An axis.
+ * @array: Array to fill with major tick positions.
  *
- * Sets the grid data for the axis
+ * Gets the positions of major ticks of an axis.
  **/
 void
-gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
+gwy_axis_get_major_ticks(GwyAxis *axis, GArray *array)
 {
     gint i;
     gdouble *pvalue;
