@@ -1922,8 +1922,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             guchar *val, *old = *(guchar**)p;
             gsize len;
 
-            val = gwy_deserialize_char_array(buffer, size,
-                                                  position, &len);
+            val = gwy_deserialize_char_array(buffer, size, position, &len);
             if (val) {
                 *a = len;
                 *(guchar**)p = val;
@@ -1936,8 +1935,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             guint32 *val, *old = *(guint32**)p;
             gsize len;
 
-            val = gwy_deserialize_int32_array(buffer, size,
-                                                   position, &len);
+            val = gwy_deserialize_int32_array(buffer, size, position, &len);
             if (val) {
                 *a = len;
                 *(guint32**)p = val;
@@ -1950,8 +1948,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             guint64 *val, *old = *(guint64**)p;
             gsize len;
 
-            val = gwy_deserialize_int64_array(buffer, size,
-                                                   position, &len);
+            val = gwy_deserialize_int64_array(buffer, size, position, &len);
             if (val) {
                 *a = len;
                 *(guint64**)p = val;
@@ -1964,8 +1961,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             gdouble *val, *old = *(gdouble**)p;
             gsize len;
 
-            val = gwy_deserialize_double_array(buffer, size,
-                                                    position, &len);
+            val = gwy_deserialize_double_array(buffer, size, position, &len);
             if (val) {
                 *a = len;
                 *(gdouble**)p = val;
