@@ -27,7 +27,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
-#include <libgwydgets/gwydgets.h>
 
 #include "err.h"
 #include "get.h"
@@ -150,12 +149,6 @@ typedef struct {
     guint nchannels;
     SISChannel *channels;
 } SISFile;
-
-typedef struct {
-    GtkWidget *data_view;
-    GwyContainer *data;
-    SISFile *sisfile;
-} SISDialogControls;
 
 static const GwyEnum sis_onoff[] = {
     { "Off", SIS_OFF },
