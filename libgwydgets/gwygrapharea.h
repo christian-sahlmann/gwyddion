@@ -57,14 +57,15 @@ typedef struct {
 struct _GwyGraphArea {
     GtkLayout parent_instance;
 
+    GwyGraphModel *graph_model;
+
+    GdkGC *gc;
     GdkCursor *cross_cursor;
     GdkCursor *fleur_cursor;
     GdkCursor *harrow_cursor;
     GdkCursor *varrow_cursor;
 
-
-    GdkGC *gc;
-    /*label*/
+    /* label */
     GwyGraphLabel *lab;
 
     GwyGraphStatusType status;
@@ -77,20 +78,17 @@ struct _GwyGraphArea {
 
     GwyGraphStatus_CursorData *actual_cursor_data;
 
-    GwyGraphModel *graph_model;
-    GPtrArray *curves;
-
-    /*selection drawing*/
+    /* selection drawing */
     gboolean selecting;
     gboolean mouse_present;
     gint selected_object_index;
     gint selected_border;
 
-    /*grid lines*/
+    /* grid lines */
     GArray *x_grid_data;
     GArray *y_grid_data;
 
-    /* The real boundaries, from request */
+    /* area boundaries, the real ones */
     gint x_max;
     gint x_min;
     gint y_max;
@@ -101,11 +99,11 @@ struct _GwyGraphArea {
     gint label_old_width;
     gint label_old_height;
 
-    /*linestyle dialog*/
+    /* linestyle dialog */
     GtkWidget *area_dialog;
     GtkWidget *label_dialog;
 
-    /*label movement*/
+    /* label movement */
     GtkWidget *active;
     gint x0;
     gint y0;
@@ -119,6 +117,7 @@ struct _GwyGraphArea {
     gboolean enable_user_input;
     gint selection_limit;
 
+    gpointer reserved1;
     gpointer reserved3;
     gpointer reserved4;
     gpointer reserved5;
@@ -128,48 +127,54 @@ struct _GwyGraphArea {
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
-    void (*status_changed)(GwyGraphArea *area, gint i);
+    void (*status_changed)(GwyGraphArea *area);
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
 
-GType gwy_graph_area_get_type(void) G_GNUC_CONST;
-
-GtkWidget*    gwy_graph_area_new              (GtkAdjustment *hadjustment,
-                                               GtkAdjustment *vadjustment);
-GtkWidget*    gwy_graph_area_get_label        (GwyGraphArea *area);
-void          gwy_graph_area_refresh          (GwyGraphArea *area);
-void          gwy_graph_area_set_model        (GwyGraphArea *area,
-                                               GwyGraphModel *gmodel);
-void          gwy_graph_area_draw_on_drawable (GwyGraphArea *area,
-                                               GdkDrawable *drawable,
-                                               GdkGC *gc,
-                                               gint x,
-                                               gint y,
-                                               gint width,
-                                               gint height);
-GString*      gwy_graph_area_export_vector    (GwyGraphArea *area,
-                                               gint x,
-                                               gint y,
-                                               gint width,
-                                               gint height);
-void          gwy_graph_area_enable_user_input(GwyGraphArea *area,
-                                               gboolean enable);
-void          gwy_graph_area_get_cursor       (GwyGraphArea *area,
-                                               gdouble *x_cursor,
-                                               gdouble *y_cursor);
-void          gwy_graph_area_set_x_grid_data  (GwyGraphArea *area,
-                                               GArray *grid_data);
-void          gwy_graph_area_set_y_grid_data  (GwyGraphArea *area,
-                                               GArray *grid_data);
-const GArray* gwy_graph_area_get_x_grid_data  (GwyGraphArea *area);
-const GArray* gwy_graph_area_get_y_grid_data  (GwyGraphArea *area);
-GwySelection* gwy_graph_area_get_selection    (GwyGraphArea *area,
-                                               GwyGraphStatusType status_type);
-void          gwy_graph_area_set_status       (GwyGraphArea *area,
-                                               GwyGraphStatusType status_type);
+GType              gwy_graph_area_get_type         (void) G_GNUC_CONST;
+GtkWidget*         gwy_graph_area_new              (void);
+GtkWidget*         gwy_graph_area_get_label        (GwyGraphArea *area);
+void               gwy_graph_area_refresh          (GwyGraphArea *area);
+void               gwy_graph_area_set_model        (GwyGraphArea *area,
+                                                    GwyGraphModel *gmodel);
+GwyGraphModel*     gwy_graph_area_get_model        (GwyGraphArea *area);
+void               gwy_graph_area_get_cursor       (GwyGraphArea *area,
+                                                    gdouble *x_cursor,
+                                                    gdouble *y_cursor);
+void               gwy_graph_area_set_x_range      (GwyGraphArea *area,
+                                                    gdouble x_min,
+                                                    gdouble x_max);
+void               gwy_graph_area_set_y_range      (GwyGraphArea *area,
+                                                    gdouble y_min,
+                                                    gdouble y_max);
+void               gwy_graph_area_set_x_grid_data  (GwyGraphArea *area,
+                                                    GArray *grid_data);
+void               gwy_graph_area_set_y_grid_data  (GwyGraphArea *area,
+                                                    GArray *grid_data);
+const GArray*      gwy_graph_area_get_x_grid_data  (GwyGraphArea *area);
+const GArray*      gwy_graph_area_get_y_grid_data  (GwyGraphArea *area);
+GwySelection*      gwy_graph_area_get_selection    (GwyGraphArea *area,
+                                                    GwyGraphStatusType status_type);
+void               gwy_graph_area_set_status       (GwyGraphArea *area,
+                                                    GwyGraphStatusType status_type);
+GwyGraphStatusType gwy_graph_area_get_status       (GwyGraphArea *area);
+void               gwy_graph_area_draw_on_drawable (GwyGraphArea *area,
+                                                    GdkDrawable *drawable,
+                                                    GdkGC *gc,
+                                                    gint x,
+                                                    gint y,
+                                                    gint width,
+                                                    gint height);
+GString*           gwy_graph_area_export_vector    (GwyGraphArea *area,
+                                                    gint x,
+                                                    gint y,
+                                                    gint width,
+                                                    gint height);
+void               gwy_graph_area_enable_user_input(GwyGraphArea *area,
+                                                    gboolean enable);
 
 G_END_DECLS
 

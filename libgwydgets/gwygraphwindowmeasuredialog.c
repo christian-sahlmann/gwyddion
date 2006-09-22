@@ -42,7 +42,6 @@ static void     index_changed_cb                        (GwyGraphWindowMeasureDi
 static void     method_cb                               (GtkWidget *combo,
                                                          GwyGraphWindowMeasureDialog *dialog);
 static void     status_cb                               (GwyGraphArea *area,
-                                                         gint status,
                                                          GwyGraphWindowMeasureDialog *dialog);
 
 GwyEnum method_type[] = {
@@ -459,13 +458,16 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 }
 
 static void
-status_cb(GwyGraphArea *area, gint status, GwyGraphWindowMeasureDialog *dialog)
+status_cb(GwyGraphArea *area, GwyGraphWindowMeasureDialog *dialog)
 {
     GwySelection *selection;
+    GwyGraphStatusType status;
 
+    status = gwy_graph_area_get_status(area);
     if (status == GWY_GRAPH_STATUS_XLINES
         || status == GWY_GRAPH_STATUS_POINTS) {
         selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_PLAIN);
+        /* XXX XXX XXX who in all the bloody hell disconnects it? */
         g_signal_connect(selection, "changed",
                          G_CALLBACK(selection_updated_cb), dialog);
     }

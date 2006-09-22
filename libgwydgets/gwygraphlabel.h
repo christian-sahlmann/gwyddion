@@ -65,27 +65,28 @@ struct _GwyGraphLabelClass {
 
 
 
-GType      gwy_graph_label_get_type         (void) G_GNUC_CONST;
-GtkWidget* gwy_graph_label_new              (void);
-void       gwy_graph_label_refresh          (GwyGraphLabel *label);
-void       gwy_graph_label_set_model        (GwyGraphLabel *label,
-                                             GwyGraphModel *gmodel);
-void       gwy_graph_label_draw_on_drawable (GwyGraphLabel *label,
-                                             GdkDrawable *drawable,
-                                             GdkGC *gc,
-                                             PangoLayout *layout,
-                                             gint x,
-                                             gint y,
-                                             gint width,
-                                             gint height);
-GString*   gwy_graph_label_export_vector    (GwyGraphLabel *label,
-                                             gint x,
-                                             gint y,
-                                             gint width,
-                                             gint height,
-                                             gint fontsize);
-void       gwy_graph_label_enable_user_input(GwyGraphLabel *label,
-                                             gboolean enable);
+GType          gwy_graph_label_get_type         (void) G_GNUC_CONST;
+GtkWidget*     gwy_graph_label_new              (void);
+void           gwy_graph_label_refresh          (GwyGraphLabel *label);
+void           gwy_graph_label_set_model        (GwyGraphLabel *label,
+                                                 GwyGraphModel *gmodel);
+GwyGraphModel* gwy_graph_label_get_model        (GwyGraphLabel *label);
+void           gwy_graph_label_enable_user_input(GwyGraphLabel *label,
+                                                 gboolean enable);
+void           gwy_graph_label_draw_on_drawable (GwyGraphLabel *label,
+                                                 GdkDrawable *drawable,
+                                                 GdkGC *gc,
+                                                 PangoLayout *layout,
+                                                 gint x,
+                                                 gint y,
+                                                 gint width,
+                                                 gint height);
+GString*       gwy_graph_label_export_vector    (GwyGraphLabel *label,
+                                                 gint x,
+                                                 gint y,
+                                                 gint width,
+                                                 gint height,
+                                                 gint fontsize);
 
 G_END_DECLS
 

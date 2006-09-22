@@ -470,6 +470,8 @@ gwy_graph_label_set_model(GwyGraphLabel *label,
 {
     gint i, n;
 
+    g_return_if_fail(GWY_IS_GRAPH_LABEL(label));
+
     if (gmodel != NULL) {
         label->graph_model = gmodel;
 
@@ -483,6 +485,14 @@ gwy_graph_label_set_model(GwyGraphLabel *label,
                                      G_CALLBACK(gwy_graph_label_refresh),
                                      label);
    }
+}
+
+GwyGraphModel*
+gwy_graph_label_get_model(GwyGraphLabel *label)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_LABEL(label), NULL);
+
+    return label->graph_model;
 }
 
 /**

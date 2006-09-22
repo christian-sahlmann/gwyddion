@@ -141,16 +141,14 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
     widget_class->leave_notify_event = gwy_graph_area_leave_notify;
 
-    klass->status_changed = NULL;
-    area_signals[STATUS_CHANGED] =
-          g_signal_new("status-changed",
-                     G_OBJECT_CLASS_TYPE(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(GwyGraphAreaClass, status_changed),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__INT,
-                     G_TYPE_NONE, 1, G_TYPE_INT);
-
+    area_signals[STATUS_CHANGED]
+        = g_signal_new("status-changed",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyGraphAreaClass, status_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -223,28 +221,19 @@ gwy_graph_area_init(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_new:
- * @hadjustment: horizontal adjustment
- *               (assigns lower and upper bounds as well as increments
- *               to the horizontal axis of the new graph area)
- * @vadjustment: vertical adjustment
- *               (assigns lower and upper bounds as well as increments
- *               to the vertical axis of the new graph area)
  *
- * Creates a graph area widget.
+ * Creates a new graph area widget.
  *
  * Returns: new #GwyGraphArea widget.
  **/
 GtkWidget*
-gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
+gwy_graph_area_new(void)
 {
     GwyGraphArea *area;
 
     gwy_debug("");
 
-    area = (GwyGraphArea*)gtk_widget_new(GWY_TYPE_GRAPH_AREA,
-                                         "hadjustment", hadjustment,
-                                         "vadjustment", vadjustment,
-                                         NULL);
+    area = (GwyGraphArea*)gtk_widget_new(GWY_TYPE_GRAPH_AREA, NULL);
 
     gtk_widget_add_events(GTK_WIDGET(area), GDK_BUTTON_PRESS_MASK
                           | GDK_BUTTON_RELEASE_MASK
@@ -1314,7 +1303,6 @@ gwy_graph_area_draw_child_rectangle(GwyGraphArea *area)
     gdk_gc_set_function(area->gc, GDK_COPY);
 }
 
-
 static gdouble
 scr_to_data_x(GtkWidget *widget, gint scr)
 {
@@ -1465,6 +1453,14 @@ gwy_graph_area_set_model(GwyGraphArea *area,
     gwy_graph_area_refresh(area);
 }
 
+GwyGraphModel*
+gwy_graph_area_get_model(GwyGraphArea *area)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
+
+    return area->graph_model;
+}
+
 static void
 gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog,
                         gint response_id,
@@ -1533,152 +1529,6 @@ gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *e
 }
 
 
-static gchar *symbols[] =
-{
-    "Box",
-    "Cross",
-    "Circle",
-    "Star",
-    "Times",
-    "TriU",
-    "TriD",
-    "Dia",
-};
-
-/**
- * gwy_graph_area_export_vector:
- * @area: the graph area to export
- *
- **/
-GString*
-gwy_graph_area_export_vector(GwyGraphArea *area,
-                             gint x, gint y,
-                             gint width, gint height)
-{
-    gint i, j, nc;
-    GwyGraphCurveModel *curvemodel;
-    GwyGraphModel *model;
-    GString *out;
-    gdouble xmult, ymult;
-    const GwyRGBA *color;
-    gint pointsize;
-    gint linesize;
-
-    out = g_string_new("%%Area\n");
-
-    model = area->graph_model;
-    if ((area->x_max - area->x_min) == 0 || (area->y_max - area->y_min) == 0) {
-        g_warning("Graph null range.\n");
-        return out;
-    }
-
-    xmult = width/(area->x_max - area->x_min);
-    ymult = height/(area->y_max - area->y_min);
-
-    g_string_append_printf(out, "/box {\n"
-                           "newpath\n"
-                           "%d %d M\n"
-                           "%d %d L\n"
-                           "%d %d L\n"
-                           "%d %d L\n"
-                           "closepath\n"
-                           "} def\n",
-                           x, y,
-                           x + width, y,
-                           x + width, y + height,
-                           x, y + height);
-
-    g_string_append_printf(out, "gsave\n");
-    g_string_append_printf(out, "box\n");
-    g_string_append_printf(out, "clip\n");
-
-    /*plot grid*/
-    /*
-    g_string_append_printf(out, "%d setlinewidth\n", 1);
-    for (i = 0; i < area->x_grid_data->len; i++) {
-        pvalue = &g_array_index(area->x_grid_data, gdouble, i);
-        pos = (gint)((*pvalue)*ymult) + y;
-        g_string_append_printf(out, "%d %d M\n", x, height - pos);
-        g_string_append_printf(out, "%d %d L\n", x + width, height - pos);
-        g_string_append_printf(out, "stroke\n");
-    }
-
-    for (i = 0; i < area->y_grid_data->len; i++) {
-        pvalue = &g_array_index(area->y_grid_data, gdouble, i);
-        pos = (gint)((*pvalue)*xmult) + x;
-        g_string_append_printf(out, "%d %d M\n", pos, y);
-        g_string_append_printf(out, "%d %d L\n", pos, y + height);
-        g_string_append_printf(out, "stroke\n");
-    }
-    */
-
-
-
-    nc = gwy_graph_model_get_n_curves(model);
-    for (i = 0; i < nc; i++) {
-        curvemodel = gwy_graph_model_get_curve(model, i);
-        pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_line_width(curvemodel);
-        color = gwy_graph_curve_model_get_color(curvemodel);
-        g_string_append_printf(out, "/hpt %d def\n", pointsize);
-        g_string_append_printf(out, "/vpt %d def\n", pointsize);
-        g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
-        g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
-        g_string_append_printf(out, "%d setlinewidth\n", linesize);
-        g_string_append_printf(out, "%f %f %f setrgbcolor\n",
-                               color->r, color->g, color->b);
-
-        for (j = 0; j < curvemodel->n - 1; j++) {
-            if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
-                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
-            {
-                if (j == 0)
-                    g_string_append_printf(out, "%d %d M\n",
-                                           (gint)(x + (curvemodel->xdata[j]
-                                                       - area->x_min)*xmult),
-                                           (gint)(y + (curvemodel->ydata[j]
-                                                       - area->y_min)*ymult));
-                else {
-                    g_string_append_printf(out, "%d %d M\n",
-                                           (gint)(x + (curvemodel->xdata[j-1]
-                                                       - area->x_min)*xmult),
-                                           (gint)(y + (curvemodel->ydata[j-1]
-                                                       - area->y_min)*ymult));
-                    g_string_append_printf(out, "%d %d L\n",
-                                           (gint)(x + (curvemodel->xdata[j]
-                                                       - area->x_min)*xmult),
-                                           (gint)(y + (curvemodel->ydata[j]
-                                                       - area->y_min)*ymult));
-                }
-            }
-            if (curvemodel->mode == GWY_GRAPH_CURVE_POINTS
-                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS) {
-                g_string_append_printf(out, "%d %d %s\n",
-                                       (gint)(x + (curvemodel->xdata[j]
-                                                   - area->x_min)*xmult),
-                                       (gint)(y + (curvemodel->ydata[j]
-                                                   - area->y_min)*ymult),
-                                       symbols[curvemodel->point_type]);
-
-            }
-        }
-        g_string_append_printf(out, "stroke\n");
-    }
-    g_string_append_printf(out, "grestore\n");
-
-    /*plot boundary*/
-    g_string_append_printf(out, "%d setlinewidth\n", 2);
-    g_string_append_printf(out, "%d %d M\n", x, y);
-    g_string_append_printf(out, "%d %d L\n", x + width, y);
-    g_string_append_printf(out, "%d %d L\n", x + width, y + height);
-    g_string_append_printf(out, "%d %d L\n", x, y + height);
-    g_string_append_printf(out, "%d %d L\n", x, y);
-    g_string_append_printf(out, "stroke\n");
-
-    return out;
-}
-
-
 /**
  * gwy_graph_area_get_label:
  * @area: graph area
@@ -1690,6 +1540,36 @@ GtkWidget*
 gwy_graph_area_get_label(GwyGraphArea *area)
 {
     return GTK_WIDGET(area->lab);
+}
+
+void
+gwy_graph_area_set_x_range(GwyGraphArea *area,
+                           gdouble x_min,
+                           gdouble x_max)
+{
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+
+    if (x_min != area->x_min || x_max != area->x_max) {
+        area->x_min = x_min;
+        area->x_max = x_max;
+        if (GTK_WIDGET_DRAWABLE(area))
+            gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+}
+
+void
+gwy_graph_area_set_y_range(GwyGraphArea *area,
+                           gdouble y_min,
+                           gdouble y_max)
+{
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+
+    if (y_min != area->y_min || y_max != area->y_max) {
+        area->y_min = y_min;
+        area->y_max = y_max;
+        if (GTK_WIDGET_DRAWABLE(area))
+            gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
 }
 
 /**
@@ -1704,13 +1584,18 @@ gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
 {
     guint i;
     gdouble *pdata, *psetdata;
-    g_array_set_size(area->x_grid_data, grid_data->len);
 
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+
+    g_array_set_size(area->x_grid_data, grid_data->len);
     for (i = 0; i < grid_data->len; i++){
         pdata = &g_array_index(area->x_grid_data, gdouble, i);
         psetdata = &g_array_index(grid_data, gdouble, i);
         *pdata = *psetdata;
     }
+
+    if (GTK_WIDGET_DRAWABLE(area))
+        gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 /**
@@ -1725,13 +1610,18 @@ gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
 {
     guint i;
     gdouble *pdata, *psetdata;
-    g_array_set_size(area->y_grid_data, grid_data->len);
 
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+
+    g_array_set_size(area->y_grid_data, grid_data->len);
     for (i = 0; i < grid_data->len; i++){
         pdata = &g_array_index(area->y_grid_data, gdouble, i);
         psetdata = &g_array_index(grid_data, gdouble, i);
         *pdata = *psetdata;
     }
+
+    if (GTK_WIDGET_DRAWABLE(area))
+        gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 /**
@@ -1805,9 +1695,171 @@ selection_changed_cb(GwyGraphArea *area)
 void
 gwy_graph_area_set_status(GwyGraphArea *area, GwyGraphStatusType status_type)
 {
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+
     area->status = status_type;
     g_signal_emit(area, area_signals[STATUS_CHANGED], 0, (gint)area->status);
 }
+
+GwyGraphStatusType
+gwy_graph_area_get_status(GwyGraphArea *area)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), 0);
+
+    return area->status;
+}
+
+/**
+ * gwy_graph_area_export_vector:
+ * @area: the graph area to export
+ *
+ **/
+GString*
+gwy_graph_area_export_vector(GwyGraphArea *area,
+                             gint x, gint y,
+                             gint width, gint height)
+{
+    static const gchar *symbols[] = {
+        "Box",
+        "Cross",
+        "Circle",
+        "Star",
+        "Times",
+        "TriU",
+        "TriD",
+        "Dia",
+    };
+
+    gint i, j, nc;
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model;
+    GString *out;
+    gdouble xmult, ymult;
+    const GwyRGBA *color;
+    gint pointsize;
+    gint linesize;
+    GwyGraphPointType pointtype;
+
+    out = g_string_new("%%Area\n");
+
+    model = area->graph_model;
+    if ((area->x_max - area->x_min) == 0 || (area->y_max - area->y_min) == 0) {
+        g_warning("Graph null range.\n");
+        return out;
+    }
+
+    xmult = width/(area->x_max - area->x_min);
+    ymult = height/(area->y_max - area->y_min);
+
+    g_string_append_printf(out, "/box {\n"
+                           "newpath\n"
+                           "%d %d M\n"
+                           "%d %d L\n"
+                           "%d %d L\n"
+                           "%d %d L\n"
+                           "closepath\n"
+                           "} def\n",
+                           x, y,
+                           x + width, y,
+                           x + width, y + height,
+                           x, y + height);
+
+    g_string_append_printf(out, "gsave\n");
+    g_string_append_printf(out, "box\n");
+    g_string_append_printf(out, "clip\n");
+
+    /*plot grid*/
+    /*
+    g_string_append_printf(out, "%d setlinewidth\n", 1);
+    for (i = 0; i < area->x_grid_data->len; i++) {
+        pvalue = &g_array_index(area->x_grid_data, gdouble, i);
+        pos = (gint)((*pvalue)*ymult) + y;
+        g_string_append_printf(out, "%d %d M\n", x, height - pos);
+        g_string_append_printf(out, "%d %d L\n", x + width, height - pos);
+        g_string_append_printf(out, "stroke\n");
+    }
+
+    for (i = 0; i < area->y_grid_data->len; i++) {
+        pvalue = &g_array_index(area->y_grid_data, gdouble, i);
+        pos = (gint)((*pvalue)*xmult) + x;
+        g_string_append_printf(out, "%d %d M\n", pos, y);
+        g_string_append_printf(out, "%d %d L\n", pos, y + height);
+        g_string_append_printf(out, "stroke\n");
+    }
+    */
+
+
+
+    nc = gwy_graph_model_get_n_curves(model);
+    for (i = 0; i < nc; i++) {
+        curvemodel = gwy_graph_model_get_curve(model, i);
+        pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_line_width(curvemodel);
+        pointtype = gwy_graph_curve_model_get_point_type(curvemodel);
+        /* FIXME */
+        if (pointtype >= G_N_ELEMENTS(symbols)) {
+            g_warning("Don't know how to draw point type #%u", pointtype);
+            pointtype = 0;
+        }
+        color = gwy_graph_curve_model_get_color(curvemodel);
+        g_string_append_printf(out, "/hpt %d def\n", pointsize);
+        g_string_append_printf(out, "/vpt %d def\n", pointsize);
+        g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
+        g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
+        g_string_append_printf(out, "%d setlinewidth\n", linesize);
+        g_string_append_printf(out, "%f %f %f setrgbcolor\n",
+                               color->r, color->g, color->b);
+
+        for (j = 0; j < curvemodel->n - 1; j++) {
+            if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
+                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
+            {
+                if (j == 0)
+                    g_string_append_printf(out, "%d %d M\n",
+                                           (gint)(x + (curvemodel->xdata[j]
+                                                       - area->x_min)*xmult),
+                                           (gint)(y + (curvemodel->ydata[j]
+                                                       - area->y_min)*ymult));
+                else {
+                    g_string_append_printf(out, "%d %d M\n",
+                                           (gint)(x + (curvemodel->xdata[j-1]
+                                                       - area->x_min)*xmult),
+                                           (gint)(y + (curvemodel->ydata[j-1]
+                                                       - area->y_min)*ymult));
+                    g_string_append_printf(out, "%d %d L\n",
+                                           (gint)(x + (curvemodel->xdata[j]
+                                                       - area->x_min)*xmult),
+                                           (gint)(y + (curvemodel->ydata[j]
+                                                       - area->y_min)*ymult));
+                }
+            }
+            if (curvemodel->mode == GWY_GRAPH_CURVE_POINTS
+                || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS) {
+                g_string_append_printf(out, "%d %d %s\n",
+                                       (gint)(x + (curvemodel->xdata[j]
+                                                   - area->x_min)*xmult),
+                                       (gint)(y + (curvemodel->ydata[j]
+                                                   - area->y_min)*ymult),
+                                       symbols[curvemodel->point_type]);
+
+            }
+        }
+        g_string_append_printf(out, "stroke\n");
+    }
+    g_string_append_printf(out, "grestore\n");
+
+    /*plot boundary*/
+    g_string_append_printf(out, "%d setlinewidth\n", 2);
+    g_string_append_printf(out, "%d %d M\n", x, y);
+    g_string_append_printf(out, "%d %d L\n", x + width, y);
+    g_string_append_printf(out, "%d %d L\n", x + width, y + height);
+    g_string_append_printf(out, "%d %d L\n", x, y + height);
+    g_string_append_printf(out, "%d %d L\n", x, y);
+    g_string_append_printf(out, "stroke\n");
+
+    return out;
+}
+
 
 /************************** Documentation ****************************/
 

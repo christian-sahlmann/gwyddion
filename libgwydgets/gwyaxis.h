@@ -112,15 +112,17 @@ gboolean        gwy_axis_is_logarithmic          (GwyAxis *axis);
 GtkPositionType gwy_axis_get_orientation         (GwyAxis *axis);
 void            gwy_axis_set_auto                (GwyAxis *axis,
                                                   gboolean is_auto);
-void            gwy_axis_set_req                 (GwyAxis *axis,
+void            gwy_axis_request_range           (GwyAxis *axis,
                                                   gdouble min,
                                                   gdouble max);
+void            gwy_axis_get_range               (GwyAxis *axis,
+                                                  gdouble *min,
+                                                  gdouble *max);
+void            gwy_axis_get_requested_range     (GwyAxis *axis,
+                                                  gdouble *min,
+                                                  gdouble *max);
 void            gwy_axis_set_style               (GwyAxis *axis,
                                                   GwyAxisParams style);
-gdouble         gwy_axis_get_maximum             (GwyAxis *axis);
-gdouble         gwy_axis_get_minimum             (GwyAxis *axis);
-gdouble         gwy_axis_get_reqmaximum          (GwyAxis *axis);
-gdouble         gwy_axis_get_reqminimum          (GwyAxis *axis);
 gdouble         gwy_axis_get_magnification       (GwyAxis *axis);
 const gchar*    gwy_axis_get_magnification_string(GwyAxis *axis);
 void            gwy_axis_set_label               (GwyAxis *axis,

@@ -625,7 +625,7 @@ gwy_axis_size_request(GtkWidget *widget,
 
 static void
 gwy_axis_size_allocate(GtkWidget *widget,
-                              GtkAllocation *allocation)
+                       GtkAllocation *allocation)
 {
     GwyAxis *axis;
 
@@ -638,14 +638,12 @@ gwy_axis_size_allocate(GtkWidget *widget,
     widget->allocation = *allocation;
 
     axis = GWY_AXIS(widget);
-    if (GTK_WIDGET_REALIZED(widget)) {
 
+    if (GTK_WIDGET_REALIZED(widget))
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-    }
     gwy_axis_adjust(axis, allocation->width, allocation->height);
-
 }
 
 static void
@@ -653,10 +651,13 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
     gint scaleres, iterations;
 
-    if (width == -1)
+    if (width == -1 && GTK_WIDGET_REALIZED(axis))
         width = GTK_WIDGET(axis)->allocation.width;
-    if (height == -1)
+    if (height == -1 && GTK_WIDGET_REALIZED(axis))
         height = GTK_WIDGET(axis)->allocation.height;
+
+    if (width == -1 || height == -1)
+        return;
 
     if (axis->is_auto)
         gwy_axis_autoset(axis, width, height);
@@ -1545,27 +1546,35 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 }
 
 /**
- * gwy_axis_set_req:
+ * gwy_axis_request_range:
  * @axis: An axis.
- * @min: minimum requisition (min boundary value)
- * @max: maximum requisition (max boundary value)
+ * @min: Minimum requisition (min boundary value).
+ * @max: Maximum requisition (max boundary value).
  *
  * Set requisition of axis boundaries. Axis will fix the boundaries
  * to satisfy requisition but still have reasonable tick values and spacing.
  **/
 void
-gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
+gwy_axis_request_range(GwyAxis *axis, gdouble min, gdouble max)
 {
+    g_return_if_fail(GWY_IS_AXIS(axis));
+
+    if (min > max) {
+        g_warning("min > max");
+        GWY_SWAP(gdouble, min, max);
+    }
+
     axis->reqmin = min;
     axis->reqmax = max;
 
-    /* Prevent axis to allow null range.
+    /* Prevent axis from real null range.
      * It has no sense and even gnuplot does the same...*/
     if (min == max)
         axis->reqmax += 1.0;
 
     gwy_axis_adjust(axis, -1, -1);
-    gtk_widget_queue_resize(GTK_WIDGET(axis));
+    if (GTK_WIDGET_REALIZED(axis))
+        gtk_widget_queue_resize(GTK_WIDGET(axis));
 }
 
 /**
@@ -1578,65 +1587,38 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 void
 gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 {
+    g_return_if_fail(GWY_IS_AXIS(axis));
+
     axis->par = style;
     gwy_axis_adjust(axis, -1, -1);
-    gtk_widget_queue_resize(GTK_WIDGET(axis));
+    if (GTK_WIDGET_REALIZED(axis))
+        gtk_widget_queue_resize(GTK_WIDGET(axis));
 }
 
-/**
- * gwy_axis_get_maximum:
- * @axis: An axis.
- *
- *
- *
- * Returns: real maximum of axis
- **/
-gdouble
-gwy_axis_get_maximum(GwyAxis *axis)
+void
+gwy_axis_get_range(GwyAxis *axis,
+                   gdouble *min,
+                   gdouble *max)
 {
-    return axis->max;
+    g_return_if_fail(GWY_IS_AXIS(axis));
+
+    if (min)
+        *min = axis->min;
+    if (max)
+        *max = axis->max;
 }
 
-/**
- * gwy_axis_get_minimum:
- * @axis: An axis.
- *
- *
- *
- * Returns: real minimum of axis
- **/
-gdouble
-gwy_axis_get_minimum(GwyAxis *axis)
+void
+gwy_axis_get_requested_range(GwyAxis *axis,
+                             gdouble *min,
+                             gdouble *max)
 {
-    return axis->min;
-}
+    g_return_if_fail(GWY_IS_AXIS(axis));
 
-/**
- * gwy_axis_get_reqmaximum:
- * @axis: An axis.
- *
- *
- *
- * Returns: axis requisition maximum
- **/
-gdouble
-gwy_axis_get_reqmaximum(GwyAxis *axis)
-{
-    return axis->reqmax;
-}
-
-/**
- * gwy_axis_get_reqminimum:
- * @axis: An axis.
- *
- *
- *
- * Returns: axis requisition minimum
- **/
-gdouble
-gwy_axis_get_reqminimum(GwyAxis *axis)
-{
-    return axis->reqmin;
+    if (min)
+        *min = axis->reqmin;
+    if (max)
+        *max = axis->reqmax;
 }
 
 /**
@@ -1717,7 +1699,7 @@ gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)
  * Returns: Magnification value of the axis
  **/
 gdouble
-gwy_axis_get_magnification (GwyAxis *axis)
+gwy_axis_get_magnification(GwyAxis *axis)
 {
     return axis->magnification;
 }

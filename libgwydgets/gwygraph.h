@@ -49,9 +49,9 @@ struct _GwyGraph {
 
     GwyGraphModel *graph_model;
 
+    GwyGraphArea *area;
     GwyAxis *axis[4];
     GwyGraphCorner *corner[4];
-    GwyGraphArea *area;
 
     GwyGraphGridType grid_type;
     gboolean enable_user_input;
@@ -75,51 +75,40 @@ struct _GwyGraphClass {
     gpointer reserved4;
 };
 
-GtkWidget* gwy_graph_new(GwyGraphModel *gmodel);
-GType      gwy_graph_get_type(void) G_GNUC_CONST;
-
-GwyAxis*   gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type);
-void       gwy_graph_set_axis_visible(GwyGraph *graph, GtkPositionType type, gboolean is_visible);
-
-GtkWidget* gwy_graph_get_area(GwyGraph *graph);
-
-void       gwy_graph_set_model(GwyGraph *graph,
-                                    GwyGraphModel *gmodel);
-void       gwy_graph_set_status(GwyGraph *graph,
-                                  GwyGraphStatusType status);
-GwyGraphStatusType  gwy_graph_get_status(GwyGraph *graph);
-
-GwyGraphModel* gwy_graph_get_model(GwyGraph *graph);
-
-
-void gwy_graph_get_x_range(GwyGraph *graph,
-                           gdouble *x_min,
-                           gdouble *x_max);
-void gwy_graph_get_y_range(GwyGraph *graph,
-                           gdouble *y_min,
-                           gdouble *y_max);
-
-void       gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable);
-
-
-GdkPixbuf* gwy_graph_export_pixmap    (GwyGraph *graph,
-                                       gboolean export_title,
-                                       gboolean export_axis,
-                                       gboolean export_labels);
-GString*   gwy_graph_export_postscript(GwyGraph *graph,
-                                       gboolean export_title,
-                                       gboolean export_axis,
-                                       gboolean export_labels,
-                                       GString *str);
-
-void       gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type);
-GwyGraphGridType gwy_graph_get_grid_type(GwyGraph *graph);
-
-void gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data);
-void gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data);
-
-const GArray* gwy_graph_get_x_grid_data(GwyGraph *graph);
-const GArray* gwy_graph_get_y_grid_data(GwyGraph *graph);
+GType              gwy_graph_get_type         (void) G_GNUC_CONST;
+GtkWidget*         gwy_graph_new              (GwyGraphModel *gmodel);
+GwyAxis*           gwy_graph_get_axis         (GwyGraph *graph,
+                                               GtkPositionType type);
+void               gwy_graph_set_axis_visible (GwyGraph *graph,
+                                               GtkPositionType type,
+                                               gboolean is_visible);
+GtkWidget*         gwy_graph_get_area         (GwyGraph *graph);
+void               gwy_graph_set_model        (GwyGraph *graph,
+                                               GwyGraphModel *gmodel);
+GwyGraphModel*     gwy_graph_get_model        (GwyGraph *graph);
+void               gwy_graph_set_status       (GwyGraph *graph,
+                                               GwyGraphStatusType status);
+GwyGraphStatusType gwy_graph_get_status       (GwyGraph *graph);
+void               gwy_graph_enable_user_input(GwyGraph *graph,
+                                               gboolean enable);
+void               gwy_graph_set_grid_type    (GwyGraph *graph,
+                                               GwyGraphGridType grid_type);
+GwyGraphGridType   gwy_graph_get_grid_type    (GwyGraph *graph);
+void               gwy_graph_set_x_grid_data  (GwyGraph *graph,
+                                               GArray *grid_data);
+void               gwy_graph_set_y_grid_data  (GwyGraph *graph,
+                                               GArray *grid_data);
+const GArray*      gwy_graph_get_x_grid_data  (GwyGraph *graph);
+const GArray*      gwy_graph_get_y_grid_data  (GwyGraph *graph);
+GdkPixbuf*         gwy_graph_export_pixmap    (GwyGraph *graph,
+                                               gboolean export_title,
+                                               gboolean export_axis,
+                                               gboolean export_labels);
+GString*           gwy_graph_export_postscript(GwyGraph *graph,
+                                               gboolean export_title,
+                                               gboolean export_axis,
+                                               gboolean export_labels,
+                                               GString *str);
 
 G_END_DECLS
 
