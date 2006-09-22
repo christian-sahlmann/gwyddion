@@ -1231,38 +1231,51 @@ gwy_graph_model_set_axis_label(GwyGraphModel *model,
  *
  * Explicitly set minimum and maximum range properties take precedence over
  * values calculated from curve abscissa ranges.
+ *
+ * Returns: %TRUE if the requested values were filled, %FALSE is there are no
+ *          data points and the ranges are not explicitly set.
  **/
-void
+gboolean
 gwy_graph_model_get_x_range(GwyGraphModel *gmodel,
                             gdouble *x_min,
                             gdouble *x_max)
 {
     GwyGraphCurveModel *gcmodel;
     gdouble xmin, xmax, cmin, cmax;
+    gboolean xmin_ok, xmax_ok;
     guint i;
 
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
 
     xmin = G_MAXDOUBLE;
     xmax = -G_MAXDOUBLE;
+    xmin_ok = xmax_ok = FALSE;
     for (i = 0; i < gmodel->curves->len; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
-        gwy_graph_curve_model_get_x_range(gcmodel, &cmin, &cmax);
-        if (cmin < xmin)
-            xmin = cmin;
-        if (cmax > xmax)
-            xmax = cmax;
+        if (gwy_graph_curve_model_get_x_range(gcmodel, &cmin, &cmax)) {
+            xmin_ok = xmax_ok = TRUE;
+            if (cmin < xmin)
+                xmin = cmin;
+            if (cmax > xmax)
+                xmax = cmax;
+        }
     }
 
-    if (gmodel->x_min_set)
+    if (gmodel->x_min_set) {
         xmin = gmodel->x_min;
-    if (gmodel->x_max_set)
+        xmin_ok = TRUE;
+    }
+    if (gmodel->x_max_set) {
         xmax = gmodel->x_max;
+        xmax_ok = TRUE;
+    }
 
-    if (x_min)
+    if (x_min && xmin_ok)
         *x_min = xmin;
-    if (x_max)
+    if (x_max && xmax_ok)
         *x_max = xmax;
+
+    return (xmin_ok || !x_min) && (xmax_ok || !x_max);
 }
 
 /**
@@ -1275,38 +1288,51 @@ gwy_graph_model_get_x_range(GwyGraphModel *gmodel,
  *
  * Explicitly set minimum and maximum range properties take precedence over
  * values calculated from curve ordinate ranges.
+ *
+ * Returns: %TRUE if the requested values were filled, %FALSE is there are no
+ *          data points and the ranges are not explicitly set.
  **/
-void
+gboolean
 gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
                             gdouble *y_min,
                             gdouble *y_max)
 {
     GwyGraphCurveModel *gcmodel;
     gdouble ymin, ymax, cmin, cmax;
+    gboolean ymin_ok, ymax_ok;
     guint i;
 
-    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
 
     ymin = G_MAXDOUBLE;
     ymax = -G_MAXDOUBLE;
+    ymin_ok = ymax_ok = FALSE;
     for (i = 0; i < gmodel->curves->len; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
-        gwy_graph_curve_model_get_y_range(gcmodel, &cmin, &cmax);
-        if (cmin < ymin)
-            ymin = cmin;
-        if (cmax > ymax)
-            ymax = cmax;
+        if (gwy_graph_curve_model_get_x_range(gcmodel, &cmin, &cmax)) {
+            ymin_ok = ymax_ok = TRUE;
+            if (cmin < ymin)
+                ymin = cmin;
+            if (cmax > ymax)
+                ymax = cmax;
+        }
     }
 
-    if (gmodel->y_min_set)
+    if (gmodel->y_min_set) {
         ymin = gmodel->y_min;
-    if (gmodel->y_max_set)
+        ymin_ok = TRUE;
+    }
+    if (gmodel->y_max_set) {
         ymax = gmodel->y_max;
+        ymax_ok = TRUE;
+    }
 
-    if (y_min)
+    if (y_min && ymin_ok)
         *y_min = ymin;
-    if (y_max)
+    if (y_max && ymax_ok)
         *y_max = ymax;
+
+    return (ymin_ok || !y_min) && (ymax_ok || !y_max);
 }
 
 /**

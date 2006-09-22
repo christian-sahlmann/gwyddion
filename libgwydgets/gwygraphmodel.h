@@ -125,10 +125,10 @@ void           gwy_graph_model_set_axis_label           (GwyGraphModel *model,
                                                          const gchar *label);
 const gchar*   gwy_graph_model_get_axis_label           (GwyGraphModel *model,
                                                          GtkPositionType pos);
-void           gwy_graph_model_get_x_range              (GwyGraphModel *gmodel,
+gboolean       gwy_graph_model_get_x_range              (GwyGraphModel *gmodel,
                                                          gdouble *x_min,
                                                          gdouble *x_max);
-void           gwy_graph_model_get_y_range              (GwyGraphModel *gmodel,
+gboolean       gwy_graph_model_get_y_range              (GwyGraphModel *gmodel,
                                                          gdouble *y_min,
                                                          gdouble *y_max);
 GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,

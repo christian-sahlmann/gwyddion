@@ -868,8 +868,14 @@ gwy_graph_curve_model_get_color(GwyGraphCurveModel *gcmodel)
  *
  * The values are cached in the curve model therefore repeated calls to this
  * function (with unchanged data) are cheap.
+ *
+ * If there are no data points in the curve, @x_min and @x_max are untouched
+ * and the function returns %FALSE.
+ *
+ * Returns: %TRUE if there are any data points in the curve and @x_min, @x_max
+ *          were set.
  **/
-void
+gboolean
 gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
                                   gdouble *x_min,
                                   gdouble *x_max)
@@ -878,7 +884,10 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
     gboolean must_calculate = FALSE;
     gint i;
 
-    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
+
+    if (!gcmodel->n)
+        return FALSE;
 
     if (x_min) {
         if (CTEST(gcmodel, XMIN))
@@ -895,14 +904,13 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
     }
 
     if (!must_calculate)
-        return;
+        return TRUE;
 
-    xmin = G_MAXDOUBLE;
-    xmax = -G_MAXDOUBLE;
-    for (i = 0; i < gcmodel->n; i++) {
+    xmin = xmax = gcmodel->xdata[0];
+    for (i = 1; i < gcmodel->n; i++) {
         if (G_UNLIKELY(gcmodel->xdata[i] < xmin))
             xmin = gcmodel->xdata[i];
-        if (G_UNLIKELY(gcmodel->xdata[i] > xmax))
+        if (G_LIKELY(gcmodel->xdata[i] > xmax))
             xmax = gcmodel->xdata[i];
     }
 
@@ -913,6 +921,8 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
         *x_min = xmin;
     if (x_max)
         *x_max = xmax;
+
+    return TRUE;
 }
 
 /**
@@ -925,8 +935,14 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
  *
  * The values are cached in the curve model therefore repeated calls to this
  * function (with unchanged data) are cheap.
+ *
+ * If there are no data points in the curve, @x_min and @x_max are untouched
+ * and the function returns %FALSE.
+ *
+ * Returns: %TRUE if there are any data points in the curve and @x_min, @x_max
+ *          were set.
  **/
-void
+gboolean
 gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
                                   gdouble *y_min,
                                   gdouble *y_max)
@@ -935,7 +951,9 @@ gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
     gboolean must_calculate = FALSE;
     gint i;
 
-    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
+    if (!gcmodel->n)
+        return FALSE;
 
     if (y_min) {
         if (CTEST(gcmodel, YMIN))
@@ -952,14 +970,13 @@ gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
     }
 
     if (!must_calculate)
-        return;
+        return TRUE;
 
-    ymin = G_MAXDOUBLE;
-    ymax = -G_MAXDOUBLE;
-    for (i = 0; i < gcmodel->n; i++) {
-        if (G_UNLIKELY(gcmodel->ydata[i] < ymin))
+    ymin = ymax = gcmodel->ydata[0];
+    for (i = 1; i < gcmodel->n; i++) {
+        if (gcmodel->ydata[i] < ymin)
             ymin = gcmodel->ydata[i];
-        if (G_UNLIKELY(gcmodel->ydata[i] > ymax))
+        if (gcmodel->ydata[i] > ymax)
             ymax = gcmodel->ydata[i];
     }
 
@@ -970,6 +987,8 @@ gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
         *y_min = ymin;
     if (y_max)
         *y_max = ymax;
+
+    return TRUE;
 }
 
 static void
