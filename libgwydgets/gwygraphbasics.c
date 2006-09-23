@@ -85,10 +85,10 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 
 /**
  * gwy_graph_draw_curve:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
- * @curvemodel: the curve model object
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
+ * @gcmodel: Curve model of the curve to draw.
  *
  * Draws a signle graph curve on a drawable.
  **/
@@ -137,8 +137,8 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
 
 /**
  * gwy_graph_draw_line:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
+ * @drawable: A drawable.
+ * @gc: Graphics context.
  * @x_from: x coordinate of the start point of the line
  * @y_from: y coordinate of the start point of the line
  * @x_to: x coordinate of the end point of the line
@@ -173,8 +173,8 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
 
 /**
  * gwy_graph_draw_point:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
+ * @drawable: A drawable.
+ * @gc: Graphics context.
  * @x: x coordinate of the point
  * @y: y coordinate of the point
  * @type: graph point type
@@ -291,9 +291,9 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
 
 /**
  * gwy_graph_draw_selection_points:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: a #GwySelectionGraphPoint structure
  *
  * Draw selection points on the graph
@@ -321,9 +321,9 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
 
 /**
  * gwy_graph_draw_selection_areas:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: a #GwySelectionGraphArea structure
  *
  * Draw selected area on the graph
@@ -360,9 +360,9 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
 }
 /**
  * gwy_graph_draw_selection_xareas:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: a #GwySelectionGraph1DArea structure
  *
  * Draw selected x-area on the graph
@@ -400,9 +400,9 @@ gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
 
 /**
  * gwy_graph_draw_selection_yareas:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: a #GwySelectionGraph1DArea structure
  *
  * Draw selected y-area on the graph
@@ -441,9 +441,9 @@ gwy_graph_draw_selection_yareas(GdkDrawable *drawable, GdkGC *gc,
 
 /**
  * gwy_graph_draw_selection_lines:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: a #GwySelectionGraphLine structure
  * @orientation: horizontal or vertical orientation
  *
@@ -488,9 +488,9 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
 
 /**
  * gwy_graph_draw_grid:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context
- * @specs: specifications (boundaries) of the active area of the graph
+ * @drawable: A drawable.
+ * @gc: Graphics context.
+ * @specs: Specifications (boundaries) of the active area of the graph.
  * @x_grid_data: array of grid data for the x-axis
  * @y_grid_data: array of grid data for the y-axis
  *
