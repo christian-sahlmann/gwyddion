@@ -19,15 +19,10 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <glib/gstdio.h>
-#include <glib-object.h>
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include <pango/pango.h>
-#include <libgwydgets/gwydgets.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwygraph.h"
+#include <libgwydgets/gwygraph.h>
 
 GdkPixbuf*
 gwy_graph_export_pixmap(GwyGraph *graph,
