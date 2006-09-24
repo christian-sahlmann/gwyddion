@@ -572,10 +572,10 @@ gwy_data_window_update_units(GwyDataWindow *data_window)
               data_window->value_format->precision,
               data_window->value_format->magnitude,
               data_window->value_format->units);
-    gwy_ruler_set_units(GWY_RULER(data_window->hruler),
-                        gwy_data_field_get_si_unit_xy(dfield));
-    gwy_ruler_set_units(GWY_RULER(data_window->vruler),
-                        gwy_data_field_get_si_unit_xy(dfield));
+    gwy_ruler_set_si_unit(GWY_RULER(data_window->hruler),
+                          gwy_data_field_get_si_unit_xy(dfield));
+    gwy_ruler_set_si_unit(GWY_RULER(data_window->vruler),
+                          gwy_data_field_get_si_unit_xy(dfield));
     gwy_color_axis_set_si_unit(GWY_COLOR_AXIS(data_window->coloraxis),
                                gwy_data_field_get_si_unit_z(dfield));
 }

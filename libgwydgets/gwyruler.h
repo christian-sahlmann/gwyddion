@@ -123,9 +123,9 @@ void              gwy_ruler_get_range           (GwyRuler *ruler,
                                                  gdouble  *upper,
                                                  gdouble  *position,
                                                  gdouble  *max_size);
-void              gwy_ruler_set_units           (GwyRuler *ruler,
+void              gwy_ruler_set_si_unit         (GwyRuler *ruler,
                                                  GwySIUnit *units);
-GwySIUnit*        gwy_ruler_get_units           (GwyRuler *ruler);
+GwySIUnit*        gwy_ruler_get_si_unit         (GwyRuler *ruler);
 GwyUnitsPlacement gwy_ruler_get_units_placement (GwyRuler *ruler);
 void              gwy_ruler_set_units_placement (GwyRuler *ruler,
                                                  GwyUnitsPlacement placement);

@@ -509,7 +509,7 @@ gwy_ruler_make_pixmap(GwyRuler *ruler)
 }
 
 /**
- * gwy_ruler_set_units:
+ * gwy_ruler_set_si_unit:
  * @ruler: A #GwyRuler.
  * @units: The base units this ruler should display.
  *
@@ -518,8 +518,8 @@ gwy_ruler_make_pixmap(GwyRuler *ruler)
  * Setting units to %NULL effectively disables them.
  **/
 void
-gwy_ruler_set_units(GwyRuler *ruler,
-                    GwySIUnit *units)
+gwy_ruler_set_si_unit(GwyRuler *ruler,
+                      GwySIUnit *units)
 {
     g_return_if_fail(GWY_IS_RULER(ruler));
     gwy_object_unref(ruler->units);
@@ -531,7 +531,7 @@ gwy_ruler_set_units(GwyRuler *ruler,
 }
 
 /**
- * gwy_ruler_get_units:
+ * gwy_ruler_get_si_unit:
  * @ruler: A #GwyRuler.
  *
  * Returns the base units a ruler uses.
@@ -539,7 +539,7 @@ gwy_ruler_set_units(GwyRuler *ruler,
  * Returns: The units the rules uses.
  **/
 GwySIUnit*
-gwy_ruler_get_units(GwyRuler *ruler)
+gwy_ruler_get_si_unit(GwyRuler *ruler)
 {
     g_return_val_if_fail(GWY_IS_RULER(ruler), NULL);
     return ruler->units;
@@ -866,7 +866,7 @@ gwy_ruler_next_scale(ScaleBase scale,
  * limits on the ranges or interpretation of displayed values.  It can display
  * units on the ruler (this can be controlled with
  * gwy_ruler_set_units_placement()) and cooperates with #GwySIUnit (see
- * gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
+ * gwy_ruler_set_si_unit()).  It also better follows Gtk+ theme than #GtkRuler.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

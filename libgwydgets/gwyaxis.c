@@ -1668,7 +1668,7 @@ gwy_axis_get_label(GwyAxis *axis)
     return axis->label_text->str;
 }
 /**
- * gwy_axis_set_unit:
+ * gwy_axis_set_si_unit:
  * @axis: An axis.
  * @unit: axis unit
  *
@@ -1676,7 +1676,7 @@ gwy_axis_get_label(GwyAxis *axis)
  * to the label. @unit is duplicated.
  **/
 void
-gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
+gwy_axis_set_si_unit(GwyAxis *axis, GwySIUnit *unit)
 {
     if (axis->unit && gwy_si_unit_equal(axis->unit, unit))
         return;

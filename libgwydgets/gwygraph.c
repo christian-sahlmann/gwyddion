@@ -180,13 +180,13 @@ gwy_graph_refresh_all(GwyGraph *graph)
     gmodel = GWY_GRAPH_MODEL(graph->graph_model);
 
     g_object_get(gmodel, "si-unit-x", &siunit, NULL);
-    gwy_axis_set_unit(graph->axis[GTK_POS_BOTTOM], siunit);
-    gwy_axis_set_unit(graph->axis[GTK_POS_TOP], siunit);
+    gwy_axis_set_si_unit(graph->axis[GTK_POS_BOTTOM], siunit);
+    gwy_axis_set_si_unit(graph->axis[GTK_POS_TOP], siunit);
     g_object_unref(siunit);
 
     g_object_get(gmodel, "si-unit-y", &siunit, NULL);
-    gwy_axis_set_unit(graph->axis[GTK_POS_LEFT], siunit);
-    gwy_axis_set_unit(graph->axis[GTK_POS_RIGHT], siunit);
+    gwy_axis_set_si_unit(graph->axis[GTK_POS_LEFT], siunit);
+    gwy_axis_set_si_unit(graph->axis[GTK_POS_RIGHT], siunit);
     g_object_unref(siunit);
 
     for (i = GTK_POS_LEFT; i <= GTK_POS_BOTTOM; i++) {
@@ -274,12 +274,12 @@ gwy_graph_model_notify(GwyGraph *graph,
         /* Both model and axis assign units by value so this is correct */
         g_object_get(gmodel, pspec->name, &unit, NULL);
         if (gwy_strequal(name, "x")) {
-            gwy_axis_set_unit(graph->axis[GTK_POS_BOTTOM], unit);
-            gwy_axis_set_unit(graph->axis[GTK_POS_TOP], unit);
+            gwy_axis_set_si_unit(graph->axis[GTK_POS_BOTTOM], unit);
+            gwy_axis_set_si_unit(graph->axis[GTK_POS_TOP], unit);
         }
         else if (gwy_strequal(name, "y")) {
-            gwy_axis_set_unit(graph->axis[GTK_POS_LEFT], unit);
-            gwy_axis_set_unit(graph->axis[GTK_POS_RIGHT], unit);
+            gwy_axis_set_si_unit(graph->axis[GTK_POS_LEFT], unit);
+            gwy_axis_set_si_unit(graph->axis[GTK_POS_RIGHT], unit);
         }
         g_object_unref(unit);
 

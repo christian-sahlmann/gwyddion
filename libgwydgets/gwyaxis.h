@@ -128,7 +128,7 @@ const gchar*    gwy_axis_get_magnification_string(GwyAxis *axis);
 void            gwy_axis_set_label               (GwyAxis *axis,
                                                   const gchar *label);
 const gchar*    gwy_axis_get_label               (GwyAxis *axis);
-void            gwy_axis_set_unit                (GwyAxis *axis,
+void            gwy_axis_set_si_unit             (GwyAxis *axis,
                                                   GwySIUnit *unit);
 void            gwy_axis_enable_label_edit       (GwyAxis *axis,
                                                   gboolean enable);
