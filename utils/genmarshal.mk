@@ -27,6 +27,7 @@ CLEANFILES += \
 	$(GENMARSHAL_NAME).h.xgen
 
 if MAINTAINER_MODE
+genmarshal_self = $(top_srcdir)/utils/genmarshal.mk
 genmarshal_stamp_files = stamp-$(GENMARSHAL_NAME).h
 
 MAINTAINERCLEANFILES += $(genmarshal_built_sources) $(genmarshal_stamp_files)
@@ -36,7 +37,7 @@ BUILT_SOURCES += $(genmarshal_built_sources)
 $(GENMARSHAL_NAME).h: stamp-$(GENMARSHAL_NAME).h
 	@true
 
-stamp-$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).list
+stamp-$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	$(GLIB_GENMARSHAL) --header --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
 		| sed -e 's/^extern /G_GNUC_INTERNAL /' \
@@ -46,10 +47,12 @@ stamp-$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).list
 	&& rm -f $(GENMARSHAL_NAME).h.xgen \
 	&& echo timestamp >stamp-$(GENMARSHAL_NAME).h
 
-$(GENMARSHAL_NAME).c: $(GENMARSHAL_NAME).list
+$(GENMARSHAL_NAME).c: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	echo '#include "$(GENMARSHAL_NAME).h"' >$(GENMARSHAL_NAME).c.xgen \
 	&& $(GLIB_GENMARSHAL) --body --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
+		| sed -e 's/^\( *\)\(GValue *\* *return_value,\)/\1G_GNUC_UNUSED \2/' \
+			  -e 's/^\( *\)\(gpointer *invocation_hint,\)/\1G_GNUC_UNUSED \2/' \
 		>>$(GENMARSHAL_NAME).c.xgen \
 	&& cp $(GENMARSHAL_NAME).c.xgen $(GENMARSHAL_NAME).c \
 	&& rm -f $(GENMARSHAL_NAME).c.xgen
