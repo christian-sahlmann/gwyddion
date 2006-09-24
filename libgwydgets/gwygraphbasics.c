@@ -113,8 +113,14 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
             pxn = x_data_to_pixel(specs, gcmodel->xdata[i + 1]);
             pyn = y_data_to_pixel(specs, gcmodel->ydata[i + 1]);
         }
-        if (x < (-specs->width) || x > (2*specs->width) || y < (-specs->height) || y > (2*specs->height) ||
-            pxn < (-specs->width) || pxn > (2*specs->width) || pyn < (-specs->height) || pyn > (2*specs->height))
+        if (x < -specs->width
+            || x > 2*specs->width
+            || y < -specs->height
+            || y > 2*specs->height
+            || pxn < -specs->width
+            || pxn > 2*specs->width
+            || pyn < -specs->height
+            || pyn > 2*specs->height)
             continue;
         if (i < gcmodel->n - 1
             && (gcmodel->mode == GWY_GRAPH_CURVE_LINE
@@ -124,7 +130,6 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
                                 pxn, pyn,
                                 gcmodel->line_style, gcmodel->line_width,
                                 &(gcmodel->color));
-
 
         if ((gcmodel->mode == GWY_GRAPH_CURVE_POINTS
              || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))

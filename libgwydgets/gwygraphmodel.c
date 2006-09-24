@@ -1394,7 +1394,7 @@ gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
     ymin_ok = ymax_ok = FALSE;
     for (i = 0; i < gmodel->curves->len; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
-        if (gwy_graph_curve_model_get_x_range(gcmodel, &cmin, &cmax)) {
+        if (gwy_graph_curve_model_get_y_range(gcmodel, &cmin, &cmax)) {
             ymin_ok = ymax_ok = TRUE;
             if (cmin < ymin)
                 ymin = cmin;
@@ -1632,7 +1632,7 @@ gwy_graph_model_curve_data_changed(GwyGraphCurveModel *cmodel,
      * quite fast. */
     i = gwy_graph_model_get_curve_index(gmodel, cmodel);
     g_return_if_fail(i > -1);
-    g_signal_emit(gmodel, CURVE_DATA_CHANGED, 0, i);
+    g_signal_emit(gmodel, graph_model_signals[CURVE_DATA_CHANGED], 0, i);
 }
 
 static void
@@ -1646,8 +1646,7 @@ gwy_graph_model_curve_notify(GwyGraphCurveModel *cmodel,
      * quite fast. */
     i = gwy_graph_model_get_curve_index(gmodel, cmodel);
     g_return_if_fail(i > -1);
-    /* FIXME: Can't we do better? */
-    g_signal_emit(gmodel, CURVE_NOTIFY, 0, i, g_quark_from_string(pspec->name));
+    g_signal_emit(gmodel, graph_model_signals[CURVE_NOTIFY], 0, i, pspec);
 }
 
 /************************** Documentation ****************************/

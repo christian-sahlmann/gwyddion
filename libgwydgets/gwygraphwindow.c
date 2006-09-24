@@ -162,9 +162,8 @@ gwy_graph_window_new(GwyGraph *graph)
     gwy_graph_window_set_tooltip(graphwindow->button_measure_points,
                                  _("Measure distances in graph"));
     g_signal_connect_swapped(graphwindow->button_measure_points, "clicked",
-                           G_CALLBACK(gwy_graph_window_measure),
-                           graphwindow);
-
+                             G_CALLBACK(gwy_graph_window_measure),
+                             graphwindow);
 
     graphwindow->button_zoom_in = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_in),
@@ -175,8 +174,8 @@ gwy_graph_window_new(GwyGraph *graph)
     gwy_graph_window_set_tooltip(graphwindow->button_zoom_in,
                                  _("Zoom in by mouse selection"));
     g_signal_connect_swapped(graphwindow->button_zoom_in, "toggled",
-                           G_CALLBACK(gwy_graph_window_zoom_in),
-                           graphwindow);
+                             G_CALLBACK(gwy_graph_window_zoom_in),
+                             graphwindow);
 
     graphwindow->button_zoom_to_fit = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_to_fit),
@@ -187,9 +186,8 @@ gwy_graph_window_new(GwyGraph *graph)
     gwy_graph_window_set_tooltip(graphwindow->button_zoom_to_fit,
                                  _("Zoom out to full curve"));
     g_signal_connect_swapped(graphwindow->button_zoom_to_fit, "clicked",
-                           G_CALLBACK(gwy_graph_window_zoom_to_fit),
-                           graphwindow);
-
+                             G_CALLBACK(gwy_graph_window_zoom_to_fit),
+                             graphwindow);
 
     graphwindow->button_x_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
@@ -198,8 +196,8 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log,
                        FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_x_log, "clicked",
-                           G_CALLBACK(gwy_graph_window_x_log),
-                           graphwindow);
+                             G_CALLBACK(gwy_graph_window_x_log),
+                             graphwindow);
 
     gtk_widget_set_sensitive(graphwindow->button_x_log,
                 gwy_graph_model_x_data_can_be_logarithmed(graph->graph_model));
@@ -211,8 +209,8 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log,
                        FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
-                           G_CALLBACK(gwy_graph_window_y_log),
-                           graphwindow);
+                             G_CALLBACK(gwy_graph_window_y_log),
+                             graphwindow);
 
     gtk_widget_set_sensitive(graphwindow->button_y_log,
                 gwy_graph_model_y_data_can_be_logarithmed(graph->graph_model));
@@ -224,16 +222,13 @@ gwy_graph_window_new(GwyGraph *graph)
 
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    graphwindow->measure_dialog
-        = _gwy_graph_window_measure_dialog_new(graph);
+    graphwindow->measure_dialog = _gwy_graph_window_measure_dialog_new(graph);
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
-                           G_CALLBACK(gwy_graph_window_measure_finished),
-                           graphwindow);
-
-    g_signal_connect_swapped(gwy_graph_get_area(graph),
-                             "motion-notify-event",
-                             G_CALLBACK(gwy_graph_cursor_motion),
+                             G_CALLBACK(gwy_graph_window_measure_finished),
                              graphwindow);
+
+    g_signal_connect_swapped(gwy_graph_get_area(graph), "motion-notify-event",
+                             G_CALLBACK(gwy_graph_cursor_motion), graphwindow);
 
     g_signal_connect_swapped(gwy_graph_area_get_selection(
                                        GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
@@ -398,8 +393,7 @@ gwy_graph_window_measure(GwyGraphWindow *graphwindow)
         gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
         gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
     }
-    else
-    {
+    else {
         gwy_graph_window_measure_finished(graphwindow, 0);
     }
 }

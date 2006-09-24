@@ -58,7 +58,7 @@ struct _GwyGraph {
     gboolean boolean1;
 
     gulong rescaled_id[4];
-    gulong notify_id;
+    gulong model_notify_id;
     gulong curve_data_changed_id;
     gulong zoom_finished_id;
     gulong handler_id1;

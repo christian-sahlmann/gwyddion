@@ -24,11 +24,9 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwygraphwindowmeasuredialog.h>
-#include <libgwydgets/gwygraphmodel.h>
-#include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include "gwygraphwindowmeasuredialog.h"
 
 enum { NMAX = 10 };
 

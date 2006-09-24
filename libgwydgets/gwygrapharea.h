@@ -39,21 +39,6 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphArea      GwyGraphArea;
 typedef struct _GwyGraphAreaClass GwyGraphAreaClass;
 
-
-typedef struct {
-    GwyGraphDataPoint data_point;
-} GwyGraphStatus_CursorData;
-
-
-/*single curve*/
-typedef struct {
-    GdkPoint *points;           /*points to be directly plotted*/
-
-    gpointer reserved;
-} GwyGraphAreaCurve;
-
-
-/*graph area structure*/
 struct _GwyGraphArea {
     GtkLayout parent_instance;
 
@@ -64,6 +49,10 @@ struct _GwyGraphArea {
     GdkCursor *fleur_cursor;
     GdkCursor *harrow_cursor;
     GdkCursor *varrow_cursor;
+
+    gulong curve_notify_id;
+    gulong curve_data_changed_id;
+    gulong model_notify_id;
 
     /* label */
     GwyGraphLabel *lab;
@@ -76,7 +65,7 @@ struct _GwyGraphArea {
     GwySelection *ylinesdata;
     GwySelection *zoomdata;
 
-    GwyGraphStatus_CursorData *actual_cursor_data;
+    GwyGraphDataPoint actual_cursor;
 
     /* selection drawing */
     gboolean selecting;
@@ -89,17 +78,17 @@ struct _GwyGraphArea {
     GArray *y_grid_data;
 
     /* area boundaries, the real ones */
-    gint x_max;
-    gint x_min;
-    gint y_max;
-    gint y_min;
+    gdouble x_max;
+    gdouble x_min;
+    gdouble y_max;
+    gdouble y_min;
 
     gint old_width;
     gint old_height;
     gint label_old_width;
     gint label_old_height;
 
-    /* linestyle dialog */
+    /* dialogs */
     GtkWidget *area_dialog;
     GtkWidget *label_dialog;
 
@@ -123,7 +112,6 @@ struct _GwyGraphArea {
     gpointer reserved5;
 };
 
-/*graph area class*/
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
@@ -133,11 +121,9 @@ struct _GwyGraphAreaClass {
     gpointer reserved2;
 };
 
-
 GType              gwy_graph_area_get_type         (void) G_GNUC_CONST;
 GtkWidget*         gwy_graph_area_new              (void);
 GtkWidget*         gwy_graph_area_get_label        (GwyGraphArea *area);
-void               gwy_graph_area_refresh          (GwyGraphArea *area);
 void               gwy_graph_area_set_model        (GwyGraphArea *area,
                                                     GwyGraphModel *gmodel);
 GwyGraphModel*     gwy_graph_area_get_model        (GwyGraphArea *area);

@@ -19,29 +19,16 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
+#include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-#include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphmodel.h>
-#include <libgwydgets/gwygraphcurvemodel.h>
-#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwygraphselections.h>
 #include "gwygraphareadialog.h"
 #include "gwygraphlabeldialog.h"
-
-
-enum {
-    COLOR_FG = 0,
-    COLOR_BG,
-    COLOR_SELECTION,
-    COLOR_LAST
-};
 
 enum {
     BORDER_NONE = 0,
@@ -54,10 +41,8 @@ enum {
     LAST_SIGNAL
 };
 
-static guint area_signals[LAST_SIGNAL] = { 0 };
-
-/* Forward declarations - widget related */
 static void     gwy_graph_area_finalize      (GObject *object);
+static void     gwy_graph_area_destroy       (GtkObject *object);
 static void     gwy_graph_area_realize       (GtkWidget *widget);
 static void     gwy_graph_area_unrealize     (GtkWidget *widget);
 static void     gwy_graph_area_size_allocate (GtkWidget *widget,
@@ -86,8 +71,15 @@ static void     gwy_graph_area_draw_zoom     (GdkDrawable *drawable,
                                               GdkGC *gc,
                                               GwyGraphArea *area);
 static void     selection_changed_cb         (GwyGraphArea *area);
+static void gwy_graph_area_model_notify      (GwyGraphArea *area,
+                                              GParamSpec *pspec,
+                                              GwyGraphModel *gmodel);
+static void gwy_graph_area_curve_notify      (GwyGraphArea *area,
+                                              gint i,
+                                              GParamSpec *pspec);
+static void gwy_graph_area_curve_data_changed(GwyGraphArea *area,
+                                              gint i);
 
-/* Forward declarations - area related */
 static gdouble    scr_to_data_x               (GtkWidget *widget,
                                                gint scr);
 static gdouble    scr_to_data_y               (GtkWidget *widget,
@@ -117,6 +109,8 @@ static void gwy_graph_area_clamp_coords_for_child(GwyGraphArea *area,
                                                   gint *x,
                                                   gint *y);
 
+static guint area_signals[LAST_SIGNAL] = { 0 };
+
 G_DEFINE_TYPE(GwyGraphArea, gwy_graph_area, GTK_TYPE_LAYOUT)
 
 static void
@@ -136,6 +130,8 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->expose_event = gwy_graph_area_expose;
     widget_class->size_allocate = gwy_graph_area_size_allocate;
 
+    object_class->destroy = gwy_graph_area_destroy;
+
     widget_class->button_press_event = gwy_graph_area_button_press;
     widget_class->button_release_event = gwy_graph_area_button_release;
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
@@ -143,12 +139,43 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 
     area_signals[STATUS_CHANGED]
         = g_signal_new("status-changed",
-                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwyGraphAreaClass, status_changed),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__VOID,
                        G_TYPE_NONE, 0);
+}
+
+static void
+gwy_graph_area_finalize(GObject *object)
+{
+    GwyGraphArea *area;
+
+    area = GWY_GRAPH_AREA(object);
+
+    g_array_free(area->x_grid_data, TRUE);
+    g_array_free(area->y_grid_data, TRUE);
+
+    gwy_signal_handler_disconnect(area->graph_model, area->curve_notify_id);
+    gwy_signal_handler_disconnect(area->graph_model, area->model_notify_id);
+    gwy_signal_handler_disconnect(area->graph_model,
+                                  area->curve_data_changed_id);
+
+    G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
+}
+
+static GwySelection*
+gwy_graph_area_make_selection(GwyGraphArea *area, GType type)
+{
+    GwySelection *selection;
+
+    selection = GWY_SELECTION(g_object_new(type, NULL));
+    gwy_selection_set_max_objects(selection, 1);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(selection_changed_cb), area);
+
+    return selection;
 }
 
 static void
@@ -160,48 +187,18 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->selecting = FALSE;
     area->mouse_present = FALSE;
 
-    area->pointsdata = GWY_SELECTION(g_object_new(
-                                    GWY_TYPE_SELECTION_GRAPH_POINT, NULL));
-    gwy_selection_set_max_objects(area->pointsdata, 10);
-    g_signal_connect_swapped(area->pointsdata, "changed",
-                     G_CALLBACK(selection_changed_cb), area);
-
-    area->xseldata = GWY_SELECTION(g_object_new(
-                                    GWY_TYPE_SELECTION_GRAPH_1DAREA, NULL));
-    gwy_selection_set_max_objects(area->xseldata, 1);
-    g_signal_connect_swapped(area->xseldata, "changed",
-                     G_CALLBACK(selection_changed_cb), area);
-
-
-    area->yseldata = GWY_SELECTION(g_object_new(
-                                    GWY_TYPE_SELECTION_GRAPH_1DAREA, NULL));
-    gwy_selection_set_max_objects(area->yseldata, 1);
-    g_signal_connect_swapped(area->yseldata, "changed",
-                     G_CALLBACK(selection_changed_cb), area);
-
-
-    area->xlinesdata = GWY_SELECTION(g_object_new(
-                                    GWY_TYPE_SELECTION_GRAPH_LINE, NULL));
-    gwy_selection_set_max_objects(area->xlinesdata, 10);
-    g_signal_connect_swapped(area->xlinesdata, "changed",
-                     G_CALLBACK(selection_changed_cb), area);
-
-
-    area->ylinesdata = GWY_SELECTION(g_object_new(
-                                    GWY_TYPE_SELECTION_GRAPH_LINE, NULL));
-    gwy_selection_set_max_objects(area->ylinesdata, 10);
-    g_signal_connect_swapped(area->ylinesdata, "changed",
-                     G_CALLBACK(selection_changed_cb), area);
-
-
-    area->zoomdata = GWY_SELECTION(g_object_new(
-                                    GWY_TYPE_SELECTION_GRAPH_ZOOM, NULL));
-    gwy_selection_set_max_objects(area->zoomdata, 1);
-    g_signal_connect_swapped(area->zoomdata, "changed",
-                     G_CALLBACK(selection_changed_cb), area);
-
-
-    area->actual_cursor_data = g_new(GwyGraphStatus_CursorData, 1);
+    area->pointsdata
+        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_POINT);
+    area->xseldata
+        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_1DAREA);
+    area->yseldata
+        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_1DAREA);
+    area->xlinesdata
+        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_LINE);
+    area->ylinesdata
+        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_LINE);
+    area->zoomdata
+        = gwy_graph_area_make_selection(area, GWY_TYPE_SELECTION_GRAPH_ZOOM);
 
     area->x_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
     area->y_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
@@ -212,7 +209,7 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->enable_user_input = TRUE;
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
-    g_signal_connect_swapped(GTK_WIDGET(area->lab), "size-allocate",
+    g_signal_connect_swapped(area->lab, "size-allocate",
                              G_CALLBACK(label_geometry_changed_cb), area);
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                    GTK_WIDGET(area)->allocation.width
@@ -224,48 +221,90 @@ gwy_graph_area_init(GwyGraphArea *area)
  *
  * Creates a new graph area widget.
  *
- * Returns: new #GwyGraphArea widget.
+ * Returns: Newly created graph area as #GtkWidget.
  **/
 GtkWidget*
 gwy_graph_area_new(void)
 {
-    GwyGraphArea *area;
+    GtkWidget *widget;
 
-    gwy_debug("");
+    widget = (GtkWidget*)g_object_new(GWY_TYPE_GRAPH_AREA, NULL);
 
-    area = (GwyGraphArea*)gtk_widget_new(GWY_TYPE_GRAPH_AREA, NULL);
+    return widget;
+}
 
-    gtk_widget_add_events(GTK_WIDGET(area), GDK_BUTTON_PRESS_MASK
-                          | GDK_BUTTON_RELEASE_MASK
-                          | GDK_BUTTON_MOTION_MASK
-                          | GDK_POINTER_MOTION_MASK
-                          | GDK_LEAVE_NOTIFY_MASK);
+/**
+ * gwy_graph_area_set_model:
+ * @area: A graph area.
+ * @gmodel: New graph model.
+ *
+ * Changes the graph model.
+ **/
+void
+gwy_graph_area_set_model(GwyGraphArea *area,
+                         GwyGraphModel *gmodel)
+{
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+    g_return_if_fail(!gmodel || GWY_IS_GRAPH_MODEL(gmodel));
 
-    area->area_dialog = _gwy_graph_area_dialog_new();
-    g_signal_connect(area->area_dialog, "response",
-                     G_CALLBACK(gwy_graph_area_entry_cb), area);
+    if (area->graph_model == gmodel)
+        return;
 
-    area->label_dialog = _gwy_graph_label_dialog_new();
-    g_signal_connect(area->label_dialog, "response",
-                     G_CALLBACK(gwy_graph_label_entry_cb), area);
+    gwy_signal_handler_disconnect(area->graph_model, area->curve_notify_id);
+    gwy_signal_handler_disconnect(area->graph_model, area->model_notify_id);
+    gwy_signal_handler_disconnect(area->graph_model,
+                                  area->curve_data_changed_id);
 
+    if (gmodel)
+        g_object_ref(gmodel);
+    gwy_object_unref(area->graph_model);
+    area->graph_model = gmodel;
 
-    return GTK_WIDGET(area);
+    if (gmodel) {
+        area->model_notify_id
+            = g_signal_connect_swapped(gmodel, "notify",
+                                       G_CALLBACK(gwy_graph_area_model_notify),
+                                       area);
+        area->curve_notify_id
+            = g_signal_connect_swapped(gmodel, "curve-notify",
+                                       G_CALLBACK(gwy_graph_area_curve_notify),
+                                       area);
+        area->curve_data_changed_id
+            = g_signal_connect_swapped(gmodel, "curve-data-changed",
+                                       G_CALLBACK(gwy_graph_area_curve_data_changed),
+                                       area);
+    }
+
+    gwy_graph_label_set_model(area->lab, gmodel);
+    gtk_widget_queue_draw(GTK_WIDGET(area));
+}
+
+GwyGraphModel*
+gwy_graph_area_get_model(GwyGraphArea *area)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
+
+    return area->graph_model;
 }
 
 static void
-gwy_graph_area_finalize(GObject *object)
+gwy_graph_area_destroy(GtkObject *object)
 {
     GwyGraphArea *area;
 
     area = GWY_GRAPH_AREA(object);
 
-    gtk_widget_destroy(GTK_WIDGET(area->area_dialog));
-    gtk_widget_destroy(GTK_WIDGET(area->label_dialog));
+    if (area->area_dialog) {
+        gtk_widget_destroy(area->area_dialog);
+        area->area_dialog = NULL;
+    }
+    if (area->label_dialog) {
+        gtk_widget_destroy(area->label_dialog);
+        area->label_dialog = NULL;
+    }
 
-    G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
+    GTK_OBJECT_CLASS(gwy_graph_area_parent_class)->destroy(object);
 }
-
 
 static void
 gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
@@ -296,17 +335,18 @@ gwy_graph_area_repos_label(GwyGraphArea *area,
     gint posx, posy;
     posx = (gint)(area->rx0*area_allocation->width);
     posy = (gint)(area->ry0*area_allocation->height);
-    posx = CLAMP(posx, 5, area_allocation->width - label_allocation->width - 5);
-    posy = CLAMP(posy, 5, area_allocation->height - label_allocation->height - 5);
+    posx = CLAMP(posx,
+                 5, area_allocation->width - label_allocation->width - 5);
+    posy = CLAMP(posy,
+                 5, area_allocation->height - label_allocation->height - 5);
 
-    if (((area->old_width != area_allocation->width
-          || area->old_height != area_allocation->height)
-         || (area->label_old_width != label_allocation->width
-          || area->label_old_height != label_allocation->height))) {
+    if (area->old_width != area_allocation->width
+        || area->old_height != area_allocation->height
+        || area->label_old_width != label_allocation->width
+        || area->label_old_height != label_allocation->height) {
         gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), posx, posy);
     }
 }
-
 
 static void
 gwy_graph_area_realize(GtkWidget *widget)
@@ -319,6 +359,13 @@ gwy_graph_area_realize(GtkWidget *widget)
 
     area = GWY_GRAPH_AREA(widget);
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
+
+    gtk_widget_add_events(GTK_WIDGET(area),
+                          GDK_BUTTON_PRESS_MASK
+                          | GDK_BUTTON_RELEASE_MASK
+                          | GDK_BUTTON_MOTION_MASK
+                          | GDK_POINTER_MOTION_MASK
+                          | GDK_LEAVE_NOTIFY_MASK);
 
     display = gtk_widget_get_display(widget);
     area->cross_cursor = gdk_cursor_new_for_display(display,
@@ -357,9 +404,8 @@ gwy_graph_area_expose(GtkWidget *widget,
 {
     GwyGraphArea *area;
     GdkDrawable *drawable;
-    gboolean visible;
 
-    gwy_debug("");
+    gwy_debug("%p", widget);
 
     area = GWY_GRAPH_AREA(widget);
     drawable = GTK_LAYOUT(widget)->bin_window;
@@ -379,10 +425,6 @@ gwy_graph_area_expose(GtkWidget *widget,
         && (area->selecting != 0))
         gwy_graph_area_draw_zoom(drawable, area->gc, area);
 
-    g_object_get(area->graph_model, "label-visible", &visible, NULL);
-    if (visible)
-        gtk_widget_queue_draw(GTK_WIDGET(area->lab));
-
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->expose_event(widget, event);
 
     return TRUE;
@@ -390,7 +432,7 @@ gwy_graph_area_expose(GtkWidget *widget,
 
 /**
  * gwy_graph_area_draw_on_drawable:
- * @area: the graph area to draw
+ * @area: A graph area.
  * @drawable: a #GdkDrawable (destination for graphics operations)
  * @gc: a #GdkGC graphics context
  * @x: X position in @drawable where the graph area should be drawn
@@ -398,7 +440,7 @@ gwy_graph_area_expose(GtkWidget *widget,
  * @width: width of the graph area on the drawable
  * @height: height of the graph area on the drawable
  *
- * Draws the graph area to a #GdkDrawable.
+ * Draws a graph area to a #GdkDrawable.
  **/
 void
 gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
@@ -417,6 +459,8 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
     specs.ymin = y;
     specs.height = height;
     specs.width = width;
+    gwy_debug("specs: %d %d %d %d",
+              specs.xmin, specs.ymin, specs.width, specs.height);
     specs.real_xmin = area->x_min;
     specs.real_ymin = area->y_min;
     specs.real_width = area->x_max - area->x_min;
@@ -425,6 +469,11 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
                  "x-logarithmic", &specs.log_x,
                  "y-logarithmic", &specs.log_y,
                  NULL);
+
+    gwy_debug("specs.real_xmin: %g, specs.real_ymin: %g",
+              specs.real_xmin, specs.real_ymin);
+    gwy_debug("specs.real_width: %g, specs.real_height: %g",
+              specs.real_width, specs.real_height);
 
     /* draw continuous selection */
     if (area->status == GWY_GRAPH_STATUS_XSEL)
@@ -483,7 +532,6 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
     gdk_draw_line(drawable, gc, x + width-1, y, x + width-1, y + height-1);
     gdk_draw_line(drawable, gc, x + width-1, y + height-1, x, y + height-1);
     gdk_draw_line(drawable, gc, x, y + height-1, x, y);
-
 }
 
 static void
@@ -573,8 +621,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
          * them. */
         if (event->type == GDK_2BUTTON_PRESS
             && area->enable_user_input) {
+            if (!area->label_dialog) {
+                area->label_dialog = _gwy_graph_label_dialog_new();
+                g_signal_connect(area->label_dialog, "response",
+                                 G_CALLBACK(gwy_graph_label_entry_cb), area);
+
+            }
             _gwy_graph_label_dialog_set_graph_data(area->label_dialog, gmodel);
-            gtk_widget_show_all(GTK_WIDGET(area->label_dialog));
+            gtk_widget_show_all(area->label_dialog);
+            gtk_window_present(GTK_WINDOW(area->label_dialog));
         }
         else {
             area->active = child;
@@ -594,10 +649,14 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         && area->enable_user_input) {
         curve = gwy_graph_area_find_curve(area, dx, dy);
         if (curve >= 0) {
+            if (!area->area_dialog) {
+                area->area_dialog = _gwy_graph_area_dialog_new();
+                g_signal_connect(area->area_dialog, "response",
+                                 G_CALLBACK(gwy_graph_area_entry_cb), area);
+            }
             cmodel = gwy_graph_model_get_curve(gmodel, curve);
-            _gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
-                                                  cmodel);
-            gtk_widget_show_all(GTK_WIDGET(area->area_dialog));
+            _gwy_graph_area_dialog_set_curve_data(area->area_dialog, cmodel);
+            gtk_widget_show_all(area->area_dialog);
             gtk_window_present(GTK_WINDOW(area->area_dialog));
         }
     }
@@ -947,8 +1006,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     gmodel = area->graph_model;
 
     area->mouse_present = TRUE;
-    area->actual_cursor_data->data_point.x = dx;
-    area->actual_cursor_data->data_point.y = dy;
+    area->actual_cursor.x = dx;
+    area->actual_cursor.y = dy;
 
     window = widget->window;
 
@@ -1324,6 +1383,38 @@ scr_to_data_x(GtkWidget *widget, gint scr)
                                 - log10(area->x_min)))/(widget->allocation.width-1));
 }
 
+static void
+gwy_graph_area_model_notify(GwyGraphArea *area,
+                            GParamSpec *pspec,
+                            G_GNUC_UNUSED GwyGraphModel *gmodel)
+{
+    if (gwy_strequal(pspec->name, "n-curves")
+        || gwy_strequal(pspec->name, "grid-type")) {
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+        return;
+    }
+
+    if (gwy_strequal(pspec->name, "label-position")) {
+        g_warning("Want to change label position, but don't know how.");
+        return;
+    }
+}
+
+static void
+gwy_graph_area_curve_notify(GwyGraphArea *area,
+                            G_GNUC_UNUSED gint i,
+                            G_GNUC_UNUSED GParamSpec *pspec)
+{
+    gtk_widget_queue_draw(GTK_WIDGET(area));
+}
+
+static void
+gwy_graph_area_curve_data_changed(GwyGraphArea *area,
+                                  G_GNUC_UNUSED gint i)
+{
+    gtk_widget_queue_draw(GTK_WIDGET(area));
+}
+
 static gint
 data_to_scr_x(GtkWidget *widget, gdouble data)
 {
@@ -1391,18 +1482,6 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
                - log10(area->y_min))/((gdouble)widget->allocation.height-1));
 }
 
-/**
- * gwy_graph_area_refresh:
- * @area: graph area
- *
- * Refreshes the area with respect to graph model.
- **/
-void
-gwy_graph_area_refresh(GwyGraphArea *area)
-{
-    gtk_widget_queue_draw(GTK_WIDGET(area));
-}
-
 static void
 label_geometry_changed_cb(GtkWidget *area,
                           GtkAllocation *label_allocation)
@@ -1411,43 +1490,6 @@ label_geometry_changed_cb(GtkWidget *area,
                                &(area->allocation), label_allocation);
 }
 
-
-/**
- * gwy_graph_area_set_model:
- * @area: A graph area.
- * @gmodel: New graph model.
- *
- * Changes the graph model.
- *
- * Calls refresh afterwards.
- **/
-void
-gwy_graph_area_set_model(GwyGraphArea *area,
-                         GwyGraphModel *gmodel)
-{
-    gint n, i;
-
-    area->graph_model = gmodel;
-    gwy_graph_label_set_model(area->lab, gmodel);
-
-    g_signal_connect_swapped(gmodel, "notify",
-                             G_CALLBACK(gwy_graph_area_refresh), area);
-
-    n = gwy_graph_model_get_n_curves(gmodel);
-    for (i = 0; i < n; i++)
-        g_signal_connect_swapped(gwy_graph_model_get_curve(gmodel, i), "notify",
-                                 G_CALLBACK(gwy_graph_area_refresh), area);
-
-    gwy_graph_area_refresh(area);
-}
-
-GwyGraphModel*
-gwy_graph_area_get_model(GwyGraphArea *area)
-{
-    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
-
-    return area->graph_model;
-}
 
 static void
 gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog,
@@ -1483,24 +1525,23 @@ gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
 }
 
 /**
-   * gwy_graph_area_get_cursor:
-   * @area: graph area
-   * @x_cursor: x value corresponding to cursor position
-   * @y_cursor: y value corresponding to cursor position
-   *
-   * Gets mouse cursor related values within graph area.
-   */
+ * gwy_graph_area_get_cursor:
+ * @area: graph area
+ * @x_cursor: x value corresponding to cursor position
+ * @y_cursor: y value corresponding to cursor position
+ *
+ * Gets mouse cursor related values within graph area.
+ **/
 void
-gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_cursor)
+gwy_graph_area_get_cursor(GwyGraphArea *area,
+                          gdouble *x_cursor, gdouble *y_cursor)
 {
-    if (area->mouse_present)
-    {
-        *x_cursor = area->actual_cursor_data->data_point.x;
-        *y_cursor = area->actual_cursor_data->data_point.y;
+    if (area->mouse_present) {
+        *x_cursor = area->actual_cursor.x;
+        *y_cursor = area->actual_cursor.y;
 
     }
-    else
-    {
+    else {
         *x_cursor = 0;
         *y_cursor = 0;
     }
@@ -1537,6 +1578,7 @@ gwy_graph_area_set_x_range(GwyGraphArea *area,
 {
     g_return_if_fail(GWY_IS_GRAPH_AREA(area));
 
+    gwy_debug("%p: %g, %g", area, x_min, x_max);
     if (x_min != area->x_min || x_max != area->x_max) {
         area->x_min = x_min;
         area->x_max = x_max;
@@ -1552,6 +1594,7 @@ gwy_graph_area_set_y_range(GwyGraphArea *area,
 {
     g_return_if_fail(GWY_IS_GRAPH_AREA(area));
 
+    gwy_debug("%p: %g, %g", area, y_min, y_max);
     if (y_min != area->y_min || y_max != area->y_max) {
         area->y_min = y_min;
         area->y_max = y_max;

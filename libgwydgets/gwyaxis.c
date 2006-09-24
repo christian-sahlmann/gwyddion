@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <string.h>
 #include <pango/pango.h>
 #include <gtk/gtk.h>
@@ -79,6 +78,7 @@ static void     gwy_axis_get_property  (GObject*object,
                                         GParamSpec *pspec);
 static void     gwy_axis_notify        (GObject *object,
                                         GParamSpec *pspec);
+static void     gwy_axis_destroy       (GtkObject *object);
 static void     gwy_axis_realize       (GtkWidget *widget);
 static void     gwy_axis_unrealize     (GtkWidget *widget);
 static void     gwy_axis_size_request  (GtkWidget *widget,
@@ -94,7 +94,7 @@ static gdouble gwy_axis_dbl_raise           (gdouble x,
                                              gint y);
 static gdouble gwy_axis_quantize_normal_tics(gdouble arg,
                                              gint guide);
-static gint    gwy_axis_normalscale         (GwyAxis *a);
+static gboolean gwy_axis_normalscale         (GwyAxis *a);
 static gboolean gwy_axis_logscale           (GwyAxis *a);
 static gint    gwy_axis_scale               (GwyAxis *a);
 static gint    gwy_axis_formatticks         (GwyAxis *a);
@@ -148,6 +148,8 @@ gwy_axis_class_init(GwyAxisClass *klass)
     gobject_class->get_property = gwy_axis_get_property;
     gobject_class->notify = gwy_axis_notify;
 
+    object_class->destroy = gwy_axis_destroy;
+
     widget_class->realize = gwy_axis_realize;
     widget_class->expose_event = gwy_axis_expose;
     widget_class->size_request = gwy_axis_size_request;
@@ -155,12 +157,9 @@ gwy_axis_class_init(GwyAxisClass *klass)
     widget_class->size_allocate = gwy_axis_size_allocate;
     widget_class->button_press_event = gwy_axis_button_press;
 
-    klass->label_updated = NULL;
-    klass->rescaled = NULL;
-
     axis_signals[LABEL_UPDATED] =
         g_signal_new("label-updated",
-                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_OBJECT_CLASS_TYPE(gobject_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyAxisClass, label_updated),
                      NULL, NULL,
@@ -168,7 +167,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                      G_TYPE_NONE, 0);
     axis_signals[RESCALED] =
         g_signal_new("rescaled",
-                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_OBJECT_CLASS_TYPE(gobject_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyAxisClass, rescaled),
                      NULL, NULL,
@@ -297,7 +296,6 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.minor_division = 10;
     axis->par.line_thickness = 1;
 
-    axis->dialog = NULL;
     axis->reqmax = 1.0;
     axis->reqmin = 0.0;
 
@@ -351,14 +349,9 @@ gwy_axis_finalize(GObject *object)
 {
     GwyAxis *axis;
 
-    gwy_debug("finalizing a GwyAxis (refcount = %u)", object->ref_count);
-
     g_return_if_fail(GWY_IS_AXIS(object));
 
     axis = GWY_AXIS(object);
-
-    if (axis->dialog)
-        gtk_widget_destroy(axis->dialog);
 
     g_string_free(axis->label_text, TRUE);
     g_array_free(axis->mjticks, TRUE);
@@ -373,6 +366,20 @@ gwy_axis_finalize(GObject *object)
         pango_font_description_free(axis->par.label_font);
 
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
+}
+
+static void
+gwy_axis_destroy(GtkObject *object)
+{
+    GwyAxis *axis;
+
+    axis = GWY_AXIS(object);
+    if (axis->dialog) {
+        gtk_widget_destroy(axis->dialog);
+        axis->dialog = NULL;
+    }
+
+    GTK_OBJECT_CLASS(gwy_axis_parent_class)->destroy(object);
 }
 
 static void
@@ -650,18 +657,6 @@ static void
 gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
     gint scaleres, iterations;
-
-#if 0
-    if (min > max) {
-        g_warning("min > max");
-        GWY_SWAP(gdouble, min, max);
-    }
-
-    /* Prevent axis from real null range.
-     * It has no sense and even gnuplot does the same...*/
-    if (min == max)
-        axis->reqmax += 1.0;
-#endif
 
     if (width == -1 && GTK_WIDGET_REALIZED(axis))
         width = GTK_WIDGET(axis)->allocation.width;
@@ -1217,8 +1212,7 @@ gwy_axis_quantize_normal_tics(gdouble arg, gint guide)
     return (tics * power);
 }
 
-
-static gint
+static gboolean
 gwy_axis_normalscale(GwyAxis *a)
 {
     gint i;
@@ -1242,20 +1236,21 @@ gwy_axis_normalscale(GwyAxis *a)
             reqmin -= range/2.0;
         }
     }
+    gwy_debug("%p: reqmin: %g, reqmax: %g", a, reqmin, reqmax);
 
     range = fabs(reqmax - reqmin); /* total range of the field */
 
     if (range > 1e40 || range < -1e40) {
         g_warning("Axis with extreme range (>1e40)!");
-        return 0;
+        return TRUE;
     }
 
     tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
     majorbase = ceil(reqmin/tickstep)*tickstep; /*starting value*/
     minortickstep = tickstep/(gdouble)a->par.minor_division;
     minorbase = ceil(reqmin/minortickstep)*minortickstep;
-    /*printf("tickstep: %g, majorbase: %g, minortickstep: %g, minorbase: %g, range: %g (%g, %g)\n",
-       tickstep, majorbase, minortickstep, minorbase, range, reqmin, reqmax);*/
+    gwy_debug("majorbase: %g, tickstep: %g, minorbase: %g: minortickstep %g",
+              majorbase, tickstep, minorbase, minortickstep);
     if (majorbase > reqmin) {
         majorbase -= tickstep;
         minorbase = majorbase;
@@ -1285,7 +1280,9 @@ gwy_axis_normalscale(GwyAxis *a)
         i++;
     } while (minorbase <= a->max && i < 20*a->par.major_maxticks);
 
-    return 0;
+    gwy_debug("min: %g, max: %g", a->min, a->max);
+
+    return TRUE;
 }
 
 static gboolean
@@ -1417,9 +1414,7 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 static gint
 gwy_axis_formatticks(GwyAxis *a)
 {
-    guint i;
-    gdouble value;
-    gdouble average;
+    gdouble value, average;
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
@@ -1427,7 +1422,9 @@ gwy_axis_formatticks(GwyAxis *a)
     gdouble range;
     GwySIValueFormat *format = NULL;
     GwyAxisLabeledTick mji, mjx, *pmjt;
-    /*determine range*/
+    guint i;
+
+    /* Determine range */
     if (a->mjticks->len == 0) {
         g_warning("No ticks found");
         return 1;
@@ -1469,7 +1466,7 @@ gwy_axis_formatticks(GwyAxis *a)
 
     for (i = 0; i < a->mjticks->len; i++)
     {
-        /*find the value we want to put in string*/
+        /* Find the value we want to put in string */
         pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
         if (a->is_logarithmic)
             value = pow(10, pmjt->t.value);
@@ -1479,7 +1476,7 @@ gwy_axis_formatticks(GwyAxis *a)
         if (format)
             value /= format->magnitude;
 
-        /*fill tick labels dependent to mode*/
+        /* Fill tick labels dependent to mode */
         if (a->is_logarithmic) {
             if (value >= 1 && value <= 1000)
                 g_string_printf(pmjt->ttext,"%d", (int)value);
@@ -1516,7 +1513,7 @@ gwy_axis_formatticks(GwyAxis *a)
     g_object_unref(layout);
     g_object_unref(context);
 
-    /*guess whether we dont have too many or not enough ticks*/
+    /* Guess whether we dont have too many or not enough ticks */
     if (a->orientation == GTK_POS_RIGHT
         || a->orientation == GTK_POS_LEFT) {
         if (totalheight > 200)

@@ -118,7 +118,7 @@ gwy_graph_label_finalize(GObject *object)
     gwy_signal_handler_disconnect(label->graph_model, label->curve_notify_id);
 
     gwy_object_unref(label->graph_model);
-    gwy_object_unref(label->font_desc);
+    pango_font_description_free(label->font_desc);
     g_array_free(label->samplepos, TRUE);
 
     G_OBJECT_CLASS(gwy_graph_label_parent_class)->finalize(object);
