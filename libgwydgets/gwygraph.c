@@ -287,8 +287,10 @@ gwy_graph_model_notify(GwyGraph *graph,
     }
 
     /* Number of curves */
-    if (gwy_strequal(pspec->name, "n-curves"))
+    if (gwy_strequal(pspec->name, "n-curves")) {
         gwy_graph_curve_data_changed(graph, -1);
+        return;
+    }
 
     gwy_debug("ignoring changed model property <%s>", pspec->name);
 }
