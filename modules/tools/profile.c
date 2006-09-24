@@ -594,7 +594,6 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
         g_snprintf(buf, sizeof(buf), "%d", idx + 1);
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, idx);
         g_object_get(gcmodel, "color", &rgba, NULL);
-        g_printerr("%d %f %f %f %f\n", idx, rgba->r, rgba->g, rgba->b, rgba->a);
         gwy_rgba_to_gdk_color(rgba, &gdkcolor);
         g_object_set(renderer, "foreground-gdk", &gdkcolor, "text", buf, NULL);
         gwy_rgba_free(rgba);
