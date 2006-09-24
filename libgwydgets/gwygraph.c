@@ -67,8 +67,12 @@ gwy_graph_finalize(GObject *object)
 {
     GwyGraph *graph = GWY_GRAPH(object);
 
+    gwy_signal_handler_disconnect(graph->graph_model, graph->zoom_finished_id);
     gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
+    gwy_signal_handler_disconnect(graph->graph_model,
+                                  graph->curve_data_changed_id);
     gwy_object_unref(graph->graph_model);
+    gwy_object_unref(graph->zoom_selection);
 }
 
 /**
@@ -82,7 +86,6 @@ gwy_graph_finalize(GObject *object)
 GtkWidget*
 gwy_graph_new(GwyGraphModel *gmodel)
 {
-    GwySelection *selection;
     GwyGraph *graph;
     guint i;
 
@@ -107,6 +110,8 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
     /* XXX: Is there any reason why we never connect to "rescaled" of top and
      * right axes? */
+    /* Axis signals never disconnected, we assume axes are not reparented
+     * elsewhere */
     graph->rescaled_id[GTK_POS_LEFT]
         = g_signal_connect(graph->axis[GTK_POS_LEFT], "rescaled",
                            G_CALLBACK(gwy_graph_axis_rescaled), graph);
@@ -141,10 +146,12 @@ gwy_graph_new(GwyGraphModel *gmodel)
         gtk_widget_show(GTK_WIDGET(graph->corner[i]));
     }
 
-    selection = gwy_graph_area_get_selection(graph->area,
-                                             GWY_GRAPH_STATUS_ZOOM);
-    g_signal_connect_swapped(selection, "finished",
-                             G_CALLBACK(gwy_graph_zoomed), graph);
+    graph->zoom_selection = gwy_graph_area_get_selection(graph->area,
+                                                         GWY_GRAPH_STATUS_ZOOM);
+    g_object_ref(graph->zoom_selection);
+    graph->zoom_finished_id
+        = g_signal_connect_swapped(graph->zoom_selection, "finished",
+                                   G_CALLBACK(gwy_graph_zoomed), graph);
 
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK,
@@ -204,11 +211,13 @@ gwy_graph_refresh_all(GwyGraph *graph)
 void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 {
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_if_fail(!gmodel || GWY_IS_GRAPH_MODEL(gmodel));
+
     if (graph->graph_model == gmodel)
         return;
 
-    gwy_signal_handler_disconnect(graph->graph_model,
-                                  graph->notify_id);
+    gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
     gwy_signal_handler_disconnect(graph->graph_model,
                                   graph->curve_data_changed_id);
 
@@ -500,8 +509,7 @@ gwy_graph_zoomed(GwyGraph *graph)
     GwySelection *selection;
     gdouble zoomdata[4];
 
-    selection = gwy_graph_area_get_selection(GWY_GRAPH_AREA(graph->area),
-                                             GWY_GRAPH_STATUS_ZOOM);
+    selection = graph->zoom_selection;
     if (graph->area->status != GWY_GRAPH_STATUS_ZOOM ||
         gwy_selection_get_data(selection, NULL) != 1)
         return;

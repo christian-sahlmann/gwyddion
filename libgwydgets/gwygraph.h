@@ -50,15 +50,17 @@ struct _GwyGraph {
     GwyGraphModel *graph_model;
 
     GwyGraphArea *area;
+    GwySelection *zoom_selection;
     GwyAxis *axis[4];
     GwyGraphCorner *corner[4];
 
     gboolean enable_user_input;
     gboolean boolean1;
 
+    gulong rescaled_id[4];
     gulong notify_id;
     gulong curve_data_changed_id;
-    gulong rescaled_id[4];
+    gulong zoom_finished_id;
     gulong handler_id1;
     gulong handler_id2;
 
