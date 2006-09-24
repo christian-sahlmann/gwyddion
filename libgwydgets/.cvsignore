@@ -14,3 +14,6 @@ makefile.msc
 gwydgettypes.c
 gwydgettypes.h
 stamp-gwydgettypes.h
+gwydgetmarshals.c
+gwydgetmarshals.h
+stamp-gwydgetmarshals.h
