@@ -87,7 +87,7 @@ gwy_graph_export_pixmap(GwyGraph *graph,
                               leftwidth, height - topheight - bottomheight);
 
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
-    pango_context_set_font_description(context, graph->area->lab->label_font);
+    pango_context_set_font_description(context, graph->area->lab->font_desc);
     layout = pango_layout_new(context);
     gwy_graph_label_draw_on_drawable(graph->area->lab, pixmap, gc, layout,
                                      labelx, labely, labelw, labelh);
@@ -112,7 +112,7 @@ gwy_graph_export_postscript(GwyGraph *graph,
                             G_GNUC_UNUSED gboolean export_labels,
                             GString* string)
 {
-    gint width, height, hpt, vpt, areax, areay, areaw, areah;
+    gint width, height, hpt, vpt, areax, areay, areaw, areah, size;
     gint labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
     GwyGraphModel *gmodel = graph->graph_model;
@@ -146,11 +146,11 @@ gwy_graph_export_postscript(GwyGraph *graph,
     hpt = vpt = 1;
 
     /*TODO remove the empirical part of these relations*/
+    size = pango_font_description_get_size(graph->area->lab->font_desc);
     labelh = 5 + 15*gwy_graph_model_get_n_curves(gmodel)*fontsize
-        /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE;
-    labelw = graph->area->lab->reqwidth*fontsize
-        /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE
-        - 0.08*fontsize*fontsize;
+             /(gdouble)size*PANGO_SCALE;
+    labelw = graph->area->lab->reqwidth*fontsize/(gdouble)size*PANGO_SCALE
+             - 0.08*fontsize*fontsize;
     labelx = width - areax - labelw - 5;
     labely = height - areay - labelh - 5;
 

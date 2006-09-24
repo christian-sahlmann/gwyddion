@@ -19,28 +19,31 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtkmain.h>
 #include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwygraph.h"
-#include "gwygraphmodel.h"
+#include <libgwydgets/gwygraphbasics.h>
+#include <libgwydgets/gwygraphlabel.h>
 
-/* Forward declarations - widget related*/
-static void     gwy_graph_label_finalize     (GObject *object);
-static void     gwy_graph_label_realize      (GtkWidget *widget);
-static void     gwy_graph_label_unrealize    (GtkWidget *widget);
-static void     gwy_graph_label_size_request (GtkWidget *widget,
-                                              GtkRequisition *requisition);
-static void     gwy_graph_label_size_allocate(GtkWidget *widget,
-                                              GtkAllocation *allocation);
-static gboolean gwy_graph_label_expose       (GtkWidget *widget,
-                                              GdkEventExpose *event);
-
-
-/* Forward declarations - label related*/
-static void     gwy_graph_label_draw_label   (GtkWidget *widget);
-
-/* Local data */
+static void     gwy_graph_label_finalize      (GObject *object);
+static void     gwy_graph_label_realize       (GtkWidget *widget);
+static void     gwy_graph_label_unrealize     (GtkWidget *widget);
+static void     gwy_graph_label_size_request  (GtkWidget *widget,
+                                               GtkRequisition *requisition);
+static void     gwy_graph_label_size_allocate (GtkWidget *widget,
+                                               GtkAllocation *allocation);
+static gboolean gwy_graph_label_expose        (GtkWidget *widget,
+                                               GdkEventExpose *event);
+static void     gwy_graph_label_refresh_all   (GwyGraphLabel *label);
+static void     gwy_graph_label_calculate_size(GwyGraphLabel *label);
+static void     gwy_graph_label_model_notify  (GwyGraphLabel *label,
+                                               GParamSpec *param,
+                                               GwyGraphModel *gmodel);
+static void     gwy_graph_label_curve_notify  (GwyGraphLabel *label,
+                                               gint i,
+                                               GParamSpec *param);
+static void     gwy_graph_label_draw_label    (GtkWidget *widget);
 
 G_DEFINE_TYPE(GwyGraphLabel, gwy_graph_label, GTK_TYPE_WIDGET)
 
@@ -61,16 +64,14 @@ gwy_graph_label_class_init(GwyGraphLabelClass *klass)
     widget_class->size_request = gwy_graph_label_size_request;
     widget_class->unrealize = gwy_graph_label_unrealize;
     widget_class->size_allocate = gwy_graph_label_size_allocate;
-
 }
 
 static void
 gwy_graph_label_init(GwyGraphLabel *label)
 {
-    gwy_debug("");
     label->reqwidth = 10;
     label->reqheight = 10;
-    label->samplepos = NULL;
+    label->samplepos = g_array_new(FALSE, FALSE, sizeof(gint));
 }
 
 /**
@@ -96,10 +97,10 @@ gwy_graph_label_new()
     description = pango_context_get_font_description(context);
 
     /* Make major font a bit smaller */
-    label->label_font = pango_font_description_copy(description);
-    size = pango_font_description_get_size(label->label_font);
+    label->font_desc = pango_font_description_copy(description);
+    size = pango_font_description_get_size(label->font_desc);
     size = MAX(1, size*10/11);
-    pango_font_description_set_size(label->label_font, size);
+    pango_font_description_set_size(label->font_desc, size);
 
     gtk_widget_set_events(GTK_WIDGET(label), 0);
 
@@ -111,11 +112,14 @@ gwy_graph_label_finalize(GObject *object)
 {
     GwyGraphLabel *label;
 
-    gwy_debug("finalizing a GwyGraphLabel (refcount = %u)", object->ref_count);
-
-    g_return_if_fail(GWY_IS_GRAPH_LABEL(object));
-
     label = GWY_GRAPH_LABEL(object);
+
+    gwy_signal_handler_disconnect(label->graph_model, label->model_notify_id);
+    gwy_signal_handler_disconnect(label->graph_model, label->curve_notify_id);
+
+    gwy_object_unref(label->graph_model);
+    gwy_object_unref(label->font_desc);
+    g_array_free(label->samplepos, TRUE);
 
     G_OBJECT_CLASS(gwy_graph_label_parent_class)->finalize(object);
 }
@@ -178,21 +182,13 @@ gwy_graph_label_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
     GwyGraphLabel *label;
+
     gwy_debug("");
 
-    if (widget==NULL)
-    {
-        requisition->width = 0;
-        requisition->height = 0;
-    }
-    else
-    {
-        label = GWY_GRAPH_LABEL(widget);
-        requisition->width = label->reqwidth;
-        requisition->height = label->reqheight;
-    }
+    label = GWY_GRAPH_LABEL(widget);
+    requisition->width = label->reqwidth;
+    requisition->height = label->reqheight;
 }
-
 
 static void
 gwy_graph_label_size_allocate(GtkWidget *widget,
@@ -224,14 +220,106 @@ gwy_graph_label_expose(GtkWidget *widget,
         return FALSE;
 
     label = GWY_GRAPH_LABEL(widget);
-
     gdk_window_clear_area(widget->window,
                           0, 0,
                           widget->allocation.width,
                           widget->allocation.height);
-
     gwy_graph_label_draw_label(widget);
+
     return FALSE;
+}
+
+/**
+ * gwy_graph_label_set_model:
+ * @label: A graph label.
+ * @gmodel: New graph model.
+ *
+ * Sets new model of a graph label.
+ **/
+void
+gwy_graph_label_set_model(GwyGraphLabel *label,
+                          GwyGraphModel *gmodel)
+{
+    g_return_if_fail(GWY_IS_GRAPH_LABEL(label));
+    g_return_if_fail(!gmodel || GWY_IS_GRAPH_MODEL(gmodel));
+
+    if (label->graph_model == gmodel)
+        return;
+
+    gwy_signal_handler_disconnect(label->graph_model, label->model_notify_id);
+    gwy_signal_handler_disconnect(label->graph_model, label->curve_notify_id);
+
+    if (gmodel)
+        g_object_ref(gmodel);
+    gwy_object_unref(label->graph_model);
+    label->graph_model = gmodel;
+
+    if (gmodel) {
+        label->model_notify_id
+            = g_signal_connect_swapped(gmodel, "notify",
+                                       G_CALLBACK(gwy_graph_label_model_notify),
+                                       label);
+        label->curve_notify_id
+            = g_signal_connect_swapped(gmodel, "curve-notify",
+                                       G_CALLBACK(gwy_graph_label_curve_notify),
+                                       label);
+    }
+
+    gwy_graph_label_refresh_all(label);
+}
+
+GwyGraphModel*
+gwy_graph_label_get_model(GwyGraphLabel *label)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_LABEL(label), NULL);
+
+    return label->graph_model;
+}
+
+static void
+gwy_graph_label_model_notify(GwyGraphLabel *label,
+                             GParamSpec *pspec,
+                             GwyGraphModel *gmodel)
+{
+    /* FIXME: A bit simplistic */
+    if (g_str_has_prefix(pspec->name, "label-")) {
+        const gchar *name = pspec->name + strlen("label-");
+
+        if (gwy_strequal(name, "visible")) {
+            gboolean visible;
+
+            g_object_get(gmodel, pspec->name, &visible, NULL);
+            if (GTK_WIDGET_REALIZED(label)) {
+                if (visible)
+                    gtk_widget_show(GTK_WIDGET(label));
+                else
+                    gtk_widget_hide(GTK_WIDGET(label));
+            }
+        }
+        else
+            gwy_graph_label_refresh_all(label);
+    }
+
+    if (gwy_strequal(pspec->name, "n-curves")) {
+        gwy_graph_label_refresh_all(label);
+        return;
+    }
+}
+
+static void
+gwy_graph_label_curve_notify(GwyGraphLabel *label,
+                             G_GNUC_UNUSED gint i,
+                             GParamSpec *pspec)
+{
+    /* These three should not change label size */
+    if (gwy_strequal(pspec->name, "color")
+        || gwy_strequal(pspec->name, "line-style")
+        || gwy_strequal(pspec->name, "point-type")) {
+        gtk_widget_queue_draw(GTK_WIDGET(label));
+        return;
+    }
+
+    gwy_graph_label_refresh_all(label);
 }
 
 /**
@@ -263,9 +351,11 @@ gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
     GdkColor fg = { 0, 0, 0, 0 };
     GdkColor color = { 0, 65535, 65535, 65535 };
 
-    if (!label->graph_model) return;
+    if (!label->graph_model)
+        return;
+
     model = GWY_GRAPH_MODEL(label->graph_model);
-    pango_layout_set_font_description(layout, label->label_font);
+    pango_layout_set_font_description(layout, label->font_desc);
 
     frame_off = model->label_frame_thickness/2;
     ypos = 5 + frame_off;
@@ -298,7 +388,7 @@ gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
                             winy + ypos,
                             layout);
 
-        label->samplepos[i] = ypos;
+        g_array_index(label->samplepos, gint, i) = ypos;
 
         if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
             || curvemodel->mode == GWY_GRAPH_CURVE_LINE_POINTS) {
@@ -394,9 +484,30 @@ gwy_graph_label_draw_label(GtkWidget *widget)
 
 }
 
-/*determine requested size of label (will be needed by grapharea to put the label into layout)*/
+/**
+ * gwy_graph_label_refresh:
+ * @label: graph label
+ *
+ * synchronize label with information in graphmodel
+ **/
 static void
-set_requised_size(GwyGraphLabel *label)
+gwy_graph_label_refresh_all(GwyGraphLabel *label)
+{
+    gint nc;
+
+    nc = gwy_graph_model_get_n_curves(label->graph_model);
+    g_array_set_size(label->samplepos, nc);
+    gwy_graph_label_calculate_size(label);
+    gtk_widget_queue_resize(GTK_WIDGET(label));
+    gtk_widget_queue_draw(GTK_WIDGET(label));
+}
+
+/* Determine requested size of label
+ * (It will be needed by grapharea to put the label into layout) */
+/* FIXME: It seems to overestimate the size a bit, it's visible on labels with
+ * many curves. */
+static void
+gwy_graph_label_calculate_size(GwyGraphLabel *label)
 {
     gint i, nc;
     PangoLayout *layout;
@@ -412,9 +523,9 @@ set_requised_size(GwyGraphLabel *label)
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
 
-        layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
+        layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), NULL);
 
-        pango_layout_set_font_description(layout, label->label_font);
+        pango_layout_set_font_description(layout, label->font_desc);
         pango_layout_set_markup(layout, curvemodel->description->str,
                                 curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
@@ -422,6 +533,8 @@ set_requised_size(GwyGraphLabel *label)
         if (label->reqwidth < rect.width)
             label->reqwidth = rect.width + 30 + model->label_frame_thickness;
         label->reqheight += rect.height + 5 + model->label_frame_thickness;
+
+        g_object_unref(layout);
     }
     if (label->reqwidth == 0)
         label->reqwidth = 30;
@@ -430,87 +543,23 @@ set_requised_size(GwyGraphLabel *label)
 }
 
 /**
- * gwy_graph_label_refresh:
- * @label: graph label
- *
- * synchronize label with information in graphmodel
- **/
-void
-gwy_graph_label_refresh(GwyGraphLabel *label)
-{
-    GwyGraphModel *model;
-    gint nc;
-
-    model = GWY_GRAPH_MODEL(label->graph_model);
-    nc = gwy_graph_model_get_n_curves(model);
-
-    /*repaint label samples and descriptions*/
-    if (label->samplepos)
-        g_free(label->samplepos);
-    if (nc > 0)
-        label->samplepos = g_new(gint, nc);
-    else
-        label->samplepos = NULL;
-
-    set_requised_size(label);
-    gtk_widget_queue_resize(GTK_WIDGET(label));
-    gtk_widget_queue_draw(GTK_WIDGET(label));
-}
-
-/**
- * gwy_graph_label_set_model:
- * @label: A graph label.
- * @gmodel: New graph model.
- *
- * Sets new model of a graph label.
- **/
-void
-gwy_graph_label_set_model(GwyGraphLabel *label,
-                          GwyGraphModel *gmodel)
-{
-    gint i, n;
-
-    g_return_if_fail(GWY_IS_GRAPH_LABEL(label));
-
-    if (gmodel != NULL) {
-        label->graph_model = gmodel;
-
-        g_signal_connect_swapped(gmodel, "notify",
-                                 G_CALLBACK(gwy_graph_label_refresh), label);
-
-        n = gwy_graph_model_get_n_curves(gmodel);
-        for (i = 0; i < n; i++)
-            g_signal_connect_swapped(gwy_graph_model_get_curve(gmodel, i),
-                                     "notify",
-                                     G_CALLBACK(gwy_graph_label_refresh),
-                                     label);
-   }
-}
-
-GwyGraphModel*
-gwy_graph_label_get_model(GwyGraphLabel *label)
-{
-    g_return_val_if_fail(GWY_IS_GRAPH_LABEL(label), NULL);
-
-    return label->graph_model;
-}
-
-/**
  * gwy_graph_label_enable_user_input:
- * @label: graph label
- * @enable: whether to enable/disable the user input
+ * @label: A graph label.
+ * @enable: Whether to enable the user input.
  *
- * enables/disables user input to the graph label
+ * Enables or disables user input to a graph label.
  **/
 void
 gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
 {
-    label->enable_user_input = enable;
+    g_return_if_fail(GWY_IS_GRAPH_LABEL(label));
+
+    label->enable_user_input = !!enable;
 }
 
 /**
  * gwy_graph_label_export_vector:
- * @label: graph label
+ * @label: A graph label.
  * @x: x position of the graph label
  * @y: y position of the graph label
  * @width: width of the graph label
@@ -519,6 +568,7 @@ gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
  *
  * Returns: the graph label vector (piece of postscript code) as a string
  **/
+/* XXX: Malformed documentation */
 GString*
 gwy_graph_label_export_vector(GwyGraphLabel *label,
                               gint x, gint y,

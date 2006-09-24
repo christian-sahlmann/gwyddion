@@ -1400,18 +1400,6 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
-    gboolean visible;
-
-    g_object_get(area->graph_model, "label-visible", &visible, NULL);
-    /* refresh label */
-    if (visible) {
-        gtk_widget_show(GTK_WIDGET(area->lab));
-        gwy_graph_label_refresh(area->lab);
-    }
-    else
-        gtk_widget_hide(GTK_WIDGET(area->lab));
-
-    /*repaint area data*/
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 

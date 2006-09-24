@@ -41,14 +41,18 @@ typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
 struct _GwyGraphLabel {
     GtkWidget widget;
 
-    PangoFontDescription *label_font;
     GwyGraphModel *graph_model;
 
-    gint *samplepos;
+    PangoFontDescription *font_desc;
+    GArray *samplepos;
     gint reqheight;
     gint reqwidth;
 
     gboolean enable_user_input;
+    gboolean bool1;
+
+    gulong model_notify_id;
+    gulong curve_notify_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -57,17 +61,12 @@ struct _GwyGraphLabel {
 struct _GwyGraphLabelClass {
     GtkWidgetClass parent_class;
 
-    void (*selected)(GwyGraphLabel *label);
-
     gpointer reserved1;
     gpointer reserved2;
 };
 
-
-
 GType          gwy_graph_label_get_type         (void) G_GNUC_CONST;
 GtkWidget*     gwy_graph_label_new              (void);
-void           gwy_graph_label_refresh          (GwyGraphLabel *label);
 void           gwy_graph_label_set_model        (GwyGraphLabel *label,
                                                  GwyGraphModel *gmodel);
 GwyGraphModel* gwy_graph_label_get_model        (GwyGraphLabel *label);
