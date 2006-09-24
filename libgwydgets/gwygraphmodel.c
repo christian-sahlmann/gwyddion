@@ -1001,6 +1001,7 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
     for (i = 0; i < gmodel->curves->len; i++)
         gwy_graph_model_release_curve(gmodel, i);
     g_ptr_array_set_size(gmodel->curves, 0);
+    g_array_set_size(gmodel->curveaux, 0);
     g_object_notify(G_OBJECT(gmodel), "n-curves");
 }
 
@@ -1018,6 +1019,7 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
                                             const gchar *description)
 {
     GPtrArray *newcurves;
+    GArray *newaux;
     GwyGraphCurveModel *cmodel;
     guint i;
 
@@ -1025,24 +1027,32 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     g_return_val_if_fail(description, 0);
 
     newcurves = g_ptr_array_new();
+    newaux = g_array_new(FALSE, FALSE, sizeof(GwyGraphModelCurveAux));
     for (i = 0; i < gmodel->curves->len; i++) {
         cmodel = g_ptr_array_index(gmodel->curves, i);
         if (gwy_strequal(description, cmodel->description->str))
             gwy_graph_model_release_curve(gmodel, i);
-        else
+        else {
+            GwyGraphModelCurveAux aux;
+
+            aux = g_array_index(gmodel->curveaux, GwyGraphModelCurveAux,
+                                newcurves->len);
             g_ptr_array_add(newcurves, cmodel);
+            g_array_append_val(newaux, aux);
+        }
     }
 
     /* Do nothing when no curve was actually removed */
     i = gmodel->curves->len - newcurves->len;
-    if (i == 0) {
-        g_ptr_array_free(newcurves, TRUE);
-        return 0;
+    if (i) {
+        GWY_SWAP(GPtrArray*, gmodel->curves, newcurves);
+        GWY_SWAP(GArray*, gmodel->curveaux, newaux);
     }
-    GWY_SWAP(GPtrArray*, gmodel->curves, newcurves);
     g_ptr_array_free(newcurves, TRUE);
+    g_array_free(newaux, TRUE);
+    if (i)
+        g_object_notify(G_OBJECT(gmodel), "n-curves");
 
-    g_object_notify(G_OBJECT(gmodel), "n-curves");
     return i;
 }
 
@@ -1062,6 +1072,7 @@ gwy_graph_model_remove_curve(GwyGraphModel *gmodel,
 
     gwy_graph_model_release_curve(gmodel, cindex);
     g_ptr_array_remove_index(gmodel->curves, cindex);
+    g_array_remove_index(gmodel->curveaux, cindex);
     g_object_notify(G_OBJECT(gmodel), "n-curves");
 }
 
