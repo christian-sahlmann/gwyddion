@@ -580,9 +580,10 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
     GwyGraphModel *model;
     GString *out;
     gint xpos, ypos;
-    const GwyRGBA *color;
+    GwyRGBA *color;
     gint pointsize;
     gint linesize;
+    gchar *description;
 
     out = g_string_new("%%Label\n");
 
@@ -620,9 +621,12 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
-        pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_line_width(curvemodel);
-        color = gwy_graph_curve_model_get_color(curvemodel);
+        g_object_get(curvemodel,
+                     "point-size", &pointsize,
+                     "line-width", &linesize,
+                     "color", &color,
+                     "description", &description,
+                     NULL);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
@@ -633,10 +637,11 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
         g_string_append_printf(out, "%d %d M\n", x + xpos, y + ypos);
         g_string_append_printf(out, "%d %d L\n", x + xpos + 20, y + ypos);
         g_string_append_printf(out, "%d %d R\n", 5, -(gint)(fontsize/4));
-        g_string_append_printf(out, "(%s) show\n",
-                               gwy_graph_curve_model_get_description(curvemodel));
+        g_string_append_printf(out, "(%s) show\n", description);
         g_string_append_printf(out, "stroke\n");
         ypos -= fontsize + 5;
+        g_free(description);
+        gwy_rgba_free(color);
     }
     g_string_append_printf(out, "grestore\n");
 

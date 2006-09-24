@@ -406,10 +406,12 @@ slope_do_graph(GwyDataField *dfield,
     g_object_unref(siunit);
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_description(cmodel, "Slopes");
+    g_object_set(cmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", _("Slopes"),
+                 NULL);
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
-    gwy_graph_curve_model_set_mode(cmodel, GWY_GRAPH_CURVE_LINE);
     gwy_graph_model_add_curve(gmodel, cmodel);
     g_object_unref(cmodel);
 

@@ -654,7 +654,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     if (nsel > 0 && n == 0) {
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
-        gwy_graph_curve_model_set_mode(gcmodel, GWY_GRAPH_CURVE_LINE);
+        g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
         g_object_unref(gcmodel);
     }
     else
@@ -663,7 +663,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
     title = gwy_enum_to_string(tool->args.output_type,
                                sf_types, G_N_ELEMENTS(sf_types));
-    gwy_graph_curve_model_set_description(gcmodel, title);
+    g_object_set(gcmodel, "description", title, NULL);
     g_object_set(tool->gmodel, "title", title, NULL);
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
 }

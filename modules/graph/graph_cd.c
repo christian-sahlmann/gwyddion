@@ -488,8 +488,10 @@ plot_inits(FitArgs *args, FitControls *controls)
 
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_mode(cmodel, GWY_GRAPH_CURVE_LINE);
-    gwy_graph_curve_model_set_description(cmodel, "fit");
+    g_object_set(cmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", "fit",
+                 NULL);
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
     gwy_graph_model_add_curve(args->graph_model, cmodel);
 
@@ -564,12 +566,11 @@ recompute(FitArgs *args, FitControls *controls)
 
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_mode(cmodel, GWY_GRAPH_CURVE_LINE);
-    gwy_graph_curve_model_set_data(cmodel,
-                                   xd,
-                                   yd,
-                                   n);
-    gwy_graph_curve_model_set_description(cmodel, "fit");
+    g_object_set(cmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", "fit",
+                 NULL);
+    gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
     gwy_graph_model_add_curve(args->graph_model, cmodel);
     g_object_unref(cmodel);
 
@@ -871,6 +872,7 @@ create_results_window(FitArgs *args)
 {
     enum { RESPONSE_SAVE = 1 };
     GtkWidget *window, *tab, *table, *label;
+    GwyGraphCurveModel *gcmodel;
     gdouble mag, value, sigma;
     gint row, curve, n, i;
     gint precision;
@@ -895,8 +897,10 @@ create_results_window(FitArgs *args)
     curve = args->curve - 1;
 
     attach_label(table, _("<b>Data:</b>"), row, 0, 0.0);
-    str = g_string_new(gwy_graph_curve_model_get_description(
-                    gwy_graph_model_get_curve(args->graph_model, curve)));
+    gcmodel = gwy_graph_model_get_curve(args->graph_model, curve);
+    g_object_get(gcmodel, "description", &p, NULL);
+    str = g_string_new(p);
+    g_free(p);
 
     attach_label(table, str->str, row, 1, 0.0);
     row++;
@@ -906,8 +910,7 @@ create_results_window(FitArgs *args)
     attach_label(table, _("Num of points:"), row, 0, 0.0);
     g_string_printf(str, "%d of %d",
                     count_really_fitted_points(args),
-                    gwy_graph_curve_model_get_ndata(
-                     gwy_graph_model_get_curve(args->graph_model, curve)));
+                    gwy_graph_curve_model_get_ndata(gcmodel));
 
     attach_label(table, str->str, row, 1, 0.0);
     row++;
@@ -988,6 +991,7 @@ create_results_window(FitArgs *args)
 static GString*
 create_fit_report(FitArgs *args)
 {
+    GwyGraphCurveModel *gcmodel;
     GString *report, *str;
     gchar *s, *s2;
     gint i, curve, n;
@@ -997,14 +1001,15 @@ create_fit_report(FitArgs *args)
     curve = args->curve - 1;
     g_string_append_printf(report, _("\n===== Fit Results =====\n"));
 
-    str = g_string_new(gwy_graph_curve_model_get_description(
-              gwy_graph_model_get_curve(args->graph_model, curve)));
+    gcmodel = gwy_graph_model_get_curve(args->graph_model, curve);
+    g_object_get(gcmodel, "description", &s, NULL);
+    str = g_string_new(s);
+    g_free(s);
     g_string_append_printf(report, _("Data: %s\n"), str->str);
-    str = g_string_new("");
+    g_string_assign(str, "");
     g_string_append_printf(report, _("Number of points: %d of %d\n"),
                            count_really_fitted_points(args),
-                           gwy_graph_curve_model_get_ndata(
-                             gwy_graph_model_get_curve(args->graph_model, curve)));
+                           gwy_graph_curve_model_get_ndata(gcmodel));
 
     g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);

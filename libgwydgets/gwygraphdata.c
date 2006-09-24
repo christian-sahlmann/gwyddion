@@ -353,7 +353,7 @@ static void
 gwy_graph_data_update_headers(GwyGraphData *graph_data)
 {
     const GwyGraphDataCurve *curve;
-    const gchar *s, *xlabel, *ylabel;
+    const gchar *xlabel, *ylabel;
     GtkTreeView *treeview;
     GtkTreeViewColumn *column;
     GtkWidget *table, *label;
@@ -383,8 +383,8 @@ gwy_graph_data_update_headers(GwyGraphData *graph_data)
         table = gtk_tree_view_column_get_widget(column);
 
         label = gwy_table_get_child_widget(table, 0, 0);
-        s = gwy_graph_curve_model_get_description(curve->gcmodel);
-        gtk_label_set_markup(GTK_LABEL(label), s);
+        gtk_label_set_markup(GTK_LABEL(label),
+                             curve->gcmodel->description->str);
 
         label = gwy_table_get_child_widget(table, 1, 0);
         g_string_assign(str, xlabel);

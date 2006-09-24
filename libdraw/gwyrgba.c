@@ -51,8 +51,6 @@ gwy_rgba_get_type(void)
  * Makes a copy of a rgba structure. The result must be freed using
  * gwy_rgba_free().
  *
- * XXX: Just kidding, we curently dont' use memchunks.
- *
  * Returns: A copy of @rgba.
  **/
 GwyRGBA*

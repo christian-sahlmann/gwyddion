@@ -236,7 +236,7 @@ pointtype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
     gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
-    gwy_graph_curve_model_set_point_type(cmodel, active);
+    g_object_set(cmodel, "point-type", active, NULL);
 }
 
 static void
@@ -255,7 +255,7 @@ linetype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
     gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
-    gwy_graph_curve_model_set_line_style(cmodel, active);
+    g_object_set(cmodel, "line-style", active, NULL);
 }
 
 GtkWidget*
@@ -488,7 +488,7 @@ colorsel_response_cb(GtkWidget *selector,
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
     colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
     if (response == GTK_RESPONSE_CANCEL) {
-        gwy_graph_curve_model_set_color(cmodel, &dialog->old_color);
+        g_object_set(cmodel, "color", &dialog->old_color, NULL);
         refresh(dialog);
     }
     gtk_widget_destroy(selector);
@@ -510,7 +510,7 @@ colorsel_changed_cb(GtkColorSelection *colorsel,
     gtk_color_selection_get_current_color(colorsel, &gcl);
     gwy_rgba_from_gdk_color(&rgba, &gcl);
     rgba.a = 1.0;
-    gwy_graph_curve_model_set_color(cmodel, &rgba);
+    g_object_set(cmodel, "color", &rgba, NULL);
     refresh(dialog);
 }
 
@@ -522,8 +522,9 @@ label_change_cb(GwySciText *sci_text, GwyGraphAreaDialog *dialog)
     if (dialog->curve_model == NULL)
         return;
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_description(cmodel,
-                     gwy_sci_text_get_text(GWY_SCI_TEXT(sci_text)));
+    g_object_set(cmodel,
+                 "description", gwy_sci_text_get_text(GWY_SCI_TEXT(sci_text)),
+                 NULL);
 }
 
 void
@@ -559,7 +560,7 @@ curvetype_changed_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
     ctype = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    gwy_graph_curve_model_set_mode(cmodel, ctype);
+    g_object_set(cmodel, "mode", ctype, NULL);
 }
 
 static void
@@ -571,7 +572,7 @@ thickness_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_line_width(cmodel, gwy_adjustment_get_int(adj));
+    g_object_set(cmodel, "line-width", gwy_adjustment_get_int(adj), NULL);
 }
 
 static void
@@ -583,7 +584,7 @@ pointsize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_point_size(cmodel, gwy_adjustment_get_int(adj));
+    g_object_set(cmodel, "point-size", gwy_adjustment_get_int(adj), NULL);
 }
 
 

@@ -535,12 +535,14 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     }
     else {
         gcmodel = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_mode(gcmodel, GWY_GRAPH_CURVE_LINE);
         desc = g_strdup_printf(_("Profile %d"), i+1);
-        gwy_graph_curve_model_set_description(gcmodel, desc);
-        g_free(desc);
         rgba = gwy_graph_get_preset_color(i);
-        gwy_graph_curve_model_set_color(gcmodel, rgba);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "description", desc,
+                     "color", rgba,
+                     NULL);
+        g_free(desc);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
         g_object_unref(gcmodel);
@@ -586,14 +588,16 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
     gtk_tree_model_get(model, iter, 0, &idx, -1);
     if (id == COLUMN_I) {
         GwyGraphCurveModel *gcmodel;
-        const GwyRGBA *rgba;
+        GwyRGBA *rgba;
         GdkColor gdkcolor;
 
         g_snprintf(buf, sizeof(buf), "%d", idx + 1);
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, idx);
-        rgba = gwy_graph_curve_model_get_color(gcmodel);
+        g_object_get(gcmodel, "color", &rgba, NULL);
+        g_printerr("%d %f %f %f %f\n", idx, rgba->r, rgba->g, rgba->b, rgba->a);
         gwy_rgba_to_gdk_color(rgba, &gdkcolor);
         g_object_set(renderer, "foreground-gdk", &gdkcolor, "text", buf, NULL);
+        gwy_rgba_free(rgba);
         return;
     }
 
@@ -685,6 +689,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel;
     GwyGraphModel *gmodel;
+    gchar *s;
     gint i, n;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -709,9 +714,9 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
-        g_object_set(gmodel,
-                     "title", gwy_graph_curve_model_get_description(gcmodel),
-                     NULL);
+        g_object_get(gcmodel, "description", &s, NULL);
+        g_object_set(gmodel, "title", s, NULL);
+        g_free(s);
         gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);

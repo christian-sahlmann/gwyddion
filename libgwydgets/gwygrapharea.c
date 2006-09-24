@@ -1766,7 +1766,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     GwyGraphModel *model;
     GString *out;
     gdouble xmult, ymult;
-    const GwyRGBA *color;
+    GwyRGBA *color;
     gint pointsize;
     gint linesize;
     GwyGraphPointType pointtype;
@@ -1824,15 +1824,17 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
-        pointsize = gwy_graph_curve_model_get_point_size(curvemodel);
-        linesize = gwy_graph_curve_model_get_line_width(curvemodel);
-        pointtype = gwy_graph_curve_model_get_point_type(curvemodel);
+        g_object_get(curvemodel,
+                     "point-size", &pointsize,
+                     "line-width", &linesize,
+                     "point-type", &pointtype,
+                     "color", &color,
+                     NULL);
         /* FIXME */
         if (pointtype >= G_N_ELEMENTS(symbols)) {
             g_warning("Don't know how to draw point type #%u", pointtype);
             pointtype = 0;
         }
-        color = gwy_graph_curve_model_get_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
@@ -1840,6 +1842,7 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
         g_string_append_printf(out, "%d setlinewidth\n", linesize);
         g_string_append_printf(out, "%f %f %f setrgbcolor\n",
                                color->r, color->g, color->b);
+        gwy_rgba_free(color);
 
         for (j = 0; j < curvemodel->n - 1; j++) {
             if (curvemodel->mode == GWY_GRAPH_CURVE_LINE
