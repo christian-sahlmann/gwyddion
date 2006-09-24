@@ -95,7 +95,7 @@ static gdouble gwy_axis_dbl_raise           (gdouble x,
 static gdouble gwy_axis_quantize_normal_tics(gdouble arg,
                                              gint guide);
 static gint    gwy_axis_normalscale         (GwyAxis *a);
-static gint    gwy_axis_logscale            (GwyAxis *a);
+static gboolean gwy_axis_logscale           (GwyAxis *a);
 static gint    gwy_axis_scale               (GwyAxis *a);
 static gint    gwy_axis_formatticks         (GwyAxis *a);
 static gint    gwy_axis_precompute          (GwyAxis *a,
@@ -651,6 +651,18 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
     gint scaleres, iterations;
 
+#if 0
+    if (min > max) {
+        g_warning("min > max");
+        GWY_SWAP(gdouble, min, max);
+    }
+
+    /* Prevent axis from real null range.
+     * It has no sense and even gnuplot does the same...*/
+    if (min == max)
+        axis->reqmax += 1.0;
+#endif
+
     if (width == -1 && GTK_WIDGET_REALIZED(axis))
         width = GTK_WIDGET(axis)->allocation.width;
     if (height == -1 && GTK_WIDGET_REALIZED(axis))
@@ -669,10 +681,10 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
             scaleres = gwy_axis_scale(axis);
             /*printf("scale: %d   iterations: %d\n", scaleres, iterations);*/
             if (scaleres > 0)
-                axis->par.major_maxticks = (gint)(0.5*(gdouble)axis->par.major_maxticks);
+                axis->par.major_maxticks = (gint)(0.5*axis->par.major_maxticks);
 
             if (scaleres < 0)
-                axis->par.major_maxticks = (gint)(2*(gdouble)axis->par.major_maxticks);
+                axis->par.major_maxticks = (gint)(2.0*axis->par.major_maxticks);
 
             iterations++;
         } while (scaleres != 0 && iterations < 10);
@@ -1212,14 +1224,26 @@ gwy_axis_normalscale(GwyAxis *a)
     gint i;
     GwyAxisTick mit;
     GwyAxisLabeledTick mjt;
+    gdouble reqmin, reqmax;
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
-    if (a->reqmax == a->reqmin) {
-        g_warning("Axis with zero range!");
-        a->reqmax = a->reqmin + 1;
+    /* Do something reasonable even with silly requests, they can easily occur
+     * when graph model properties are updated sequentially */
+    reqmin = MIN(a->reqmin, a->reqmax);
+    reqmax = MAX(a->reqmax, a->reqmin);
+    if (reqmax == reqmin) {
+        if (reqmax == 0.0) {
+            reqmin = 0.0;
+            reqmax = 1.0;
+        }
+        else {
+            range = reqmax;
+            reqmax += range/2.0;
+            reqmin -= range/2.0;
+        }
     }
 
-    range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
+    range = fabs(reqmax - reqmin); /* total range of the field */
 
     if (range > 1e40 || range < -1e40) {
         g_warning("Axis with extreme range (>1e40)!");
@@ -1227,18 +1251,18 @@ gwy_axis_normalscale(GwyAxis *a)
     }
 
     tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
-    majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
+    majorbase = ceil(reqmin/tickstep)*tickstep; /*starting value*/
     minortickstep = tickstep/(gdouble)a->par.minor_division;
-    minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
+    minorbase = ceil(reqmin/minortickstep)*minortickstep;
     /*printf("tickstep: %g, majorbase: %g, minortickstep: %g, minorbase: %g, range: %g (%g, %g)\n",
-       tickstep, majorbase, minortickstep, minorbase, range, a->reqmin, a->reqmax);*/
-    if (majorbase > a->reqmin) {
+       tickstep, majorbase, minortickstep, minorbase, range, reqmin, reqmax);*/
+    if (majorbase > reqmin) {
         majorbase -= tickstep;
         minorbase = majorbase;
         a->min = majorbase;
     }
     else
-        a->min = a->reqmin;
+        a->min = reqmin;
 
     /*major tics*/
     i = 0;
@@ -1248,7 +1272,7 @@ gwy_axis_normalscale(GwyAxis *a)
         a->mjticks = g_array_append_val(a->mjticks, mjt);
         majorbase += tickstep;
         i++;
-    } while ((majorbase - tickstep) < a->reqmax && i < 2*a->par.major_maxticks);
+    } while ((majorbase - tickstep) < reqmax && i < 2*a->par.major_maxticks);
     a->max = majorbase - tickstep;
 
 
@@ -1264,31 +1288,26 @@ gwy_axis_normalscale(GwyAxis *a)
     return 0;
 }
 
-static gint
+static gboolean
 gwy_axis_logscale(GwyAxis *a)
 {
     gint i;
-    gdouble max, min, _min, logmax, logmin, tickstep, base;
+    gdouble max, min, logmax, logmin, tickstep, base;
     GwyAxisLabeledTick mjt;
     GwyAxisTick mit;
 
-    max = a->reqmax;
-    min = a->reqmin;
-    _min = min+0.1;
+    max = MAX(a->reqmax, a->reqmin);
+    min = MIN(a->reqmin, a->reqmax);
 
-    /*no negative values are allowed*/
-    if (min > 0)
+    if (min < 0.0 || (min == max && max == 0.0))
+        return FALSE;
+
+    /* No negative values are allowed, do anything just don't crash... */
+    logmax = log10(max);
+    if (min > 0.0)
         logmin = log10(min);
-    else if (min == 0)
-        logmin = log10(_min);
     else
-        return 1;
-
-    if (max > 0)
-        logmax = log10(max);
-    else
-        return 1;
-
+        logmin = logmax - 1.0;
 
     /*ticks will be linearly distributed again*/
     /*major ticks - will be equally ditributed in the log domain 1,10,100*/
@@ -1325,7 +1344,7 @@ gwy_axis_logscale(GwyAxis *a)
     a->max = max;
     a->min = min;
 
-    return 0;
+    return TRUE;
 }
 
 
@@ -1560,18 +1579,8 @@ gwy_axis_request_range(GwyAxis *axis, gdouble min, gdouble max)
 {
     g_return_if_fail(GWY_IS_AXIS(axis));
 
-    if (min > max) {
-        g_warning("min > max");
-        GWY_SWAP(gdouble, min, max);
-    }
-
     axis->reqmin = min;
     axis->reqmax = max;
-
-    /* Prevent axis from real null range.
-     * It has no sense and even gnuplot does the same...*/
-    if (min == max)
-        axis->reqmax += 1.0;
 
     gwy_axis_adjust(axis, -1, -1);
     if (GTK_WIDGET_REALIZED(axis))
