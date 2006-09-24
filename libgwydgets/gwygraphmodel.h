@@ -47,6 +47,7 @@ struct _GwyGraphModel {
     GArray *curveaux;
 
     GString *title;
+    GwyGraphGridType grid_type;
 
     gdouble x_min;
     gdouble x_max;

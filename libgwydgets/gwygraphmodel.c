@@ -55,6 +55,7 @@ enum {
     PROP_LABEL_POSITION,
     PROP_LABEL_REVERSE,
     PROP_LABEL_VISIBLE,
+    PROP_GRID_TYPE,
     PROP_LAST
 };
 
@@ -331,6 +332,16 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                            GWY_GRAPH_LABEL_NORTHEAST,
                            G_PARAM_READWRITE));
 
+    g_object_class_install_property
+        (gobject_class,
+         PROP_GRID_TYPE,
+         g_param_spec_enum("grid-type",
+                           "Grid type",
+                           "Type of grid drawn on main graph area",
+                           GWY_TYPE_GRAPH_GRID_TYPE,
+                           GWY_GRAPH_GRID_AUTO,
+                           G_PARAM_READWRITE));
+
     /**
      * GwyGraphModel::curve-data-changed:
      * @gwygraphmodel: The #GwyGraphModel which received the signal.
@@ -385,6 +396,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->right_label = g_string_new("");
 
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
+    gmodel->grid_type = GWY_GRAPH_GRID_AUTO;
     gmodel->label_has_frame = TRUE;
     gmodel->label_frame_thickness = 1;
     gmodel->label_reverse = FALSE;
@@ -467,12 +479,13 @@ gwy_graph_model_serialize(GObject *obj,
             { 'b', "x_max_set", &gmodel->x_max_set, NULL },
             { 'd', "y_max", &gmodel->y_max, NULL },
             { 'b', "y_max_set", &gmodel->y_max_set, NULL },
-            { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
             { 'b', "label.reverse", &gmodel->label_reverse, NULL },
             { 'b', "label.visible", &gmodel->label_visible, NULL },
+            { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'i', "grid-type", &gmodel->grid_type, NULL },
             { 'O', "curves", &gmodel->curves->pdata, &ncurves },
         };
 
@@ -511,12 +524,13 @@ gwy_graph_model_get_size(GObject *obj)
             { 'b', "x_max_set", &gmodel->x_max_set, NULL },
             { 'd', "y_max", &gmodel->y_max, NULL },
             { 'b', "y_max_set", &gmodel->y_max_set, NULL },
-            { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
             { 'b', "label.reverse", &gmodel->label_reverse, NULL },
             { 'b', "label.visible", &gmodel->label_visible, NULL },
+            { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'i', "grid-type", &gmodel->grid_type, NULL },
             { 'O', "curves", &gmodel->curves->pdata, &ncurves },
         };
 
@@ -567,12 +581,13 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 'b', "x_max_set", &gmodel->x_max_set, NULL },
             { 'd', "y_max", &gmodel->y_max, NULL },
             { 'b', "y_max_set", &gmodel->y_max_set, NULL },
-            { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
             { 'b', "label.reverse", &gmodel->label_reverse, NULL },
             { 'b', "label.visible", &gmodel->label_visible, NULL },
+            { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'i', "grid-type", &gmodel->grid_type, NULL },
             { 'O', "curves", &curves, &ncurves },
         };
 
@@ -735,16 +750,20 @@ gwy_graph_model_set_property(GObject *object,
         gmodel->label_has_frame = g_value_get_boolean(value);
         break;
 
-        case PROP_LABEL_POSITION:
-        gmodel->label_position = g_value_get_enum(value);
-        break;
-
         case PROP_LABEL_REVERSE:
         gmodel->label_reverse = g_value_get_boolean(value);
         break;
 
         case PROP_LABEL_VISIBLE:
         gmodel->label_visible = g_value_get_boolean(value);
+        break;
+
+        case PROP_LABEL_POSITION:
+        gmodel->label_position = g_value_get_enum(value);
+        break;
+
+        case PROP_GRID_TYPE:
+        gmodel->grid_type = g_value_get_enum(value);
         break;
 
         default:
@@ -844,16 +863,20 @@ gwy_graph_model_get_property(GObject*object,
         g_value_set_boolean(value, gmodel->label_has_frame);
         break;
 
-        case PROP_LABEL_POSITION:
-        g_value_set_enum(value, gmodel->label_position);
-        break;
-
         case PROP_LABEL_REVERSE:
         g_value_set_boolean(value, gmodel->label_reverse);
         break;
 
         case PROP_LABEL_VISIBLE:
         g_value_set_boolean(value, gmodel->label_visible);
+        break;
+
+        case PROP_LABEL_POSITION:
+        g_value_set_enum(value, gmodel->label_position);
+        break;
+
+        case PROP_GRID_TYPE:
+        g_value_set_enum(value, gmodel->grid_type);
         break;
 
         default:
@@ -893,10 +916,11 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     duplicate->y_min_set = gmodel->y_min_set;
     duplicate->y_max = gmodel->y_max;
     duplicate->y_max_set = gmodel->y_max_set;
-    duplicate->label_position = gmodel->label_position;
     duplicate->label_has_frame = gmodel->label_has_frame;
     duplicate->label_frame_thickness = gmodel->label_frame_thickness;
     duplicate->label_visible = gmodel->label_visible;
+    duplicate->label_position = gmodel->label_position;
+    duplicate->grid_type = gmodel->grid_type;
     duplicate->x_unit = gwy_si_unit_duplicate(gmodel->x_unit);
     duplicate->y_unit = gwy_si_unit_duplicate(gmodel->y_unit);
     duplicate->top_label = g_string_new(gmodel->top_label->str);

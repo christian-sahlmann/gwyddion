@@ -53,11 +53,11 @@ struct _GwyGraph {
     GwyAxis *axis[4];
     GwyGraphCorner *corner[4];
 
-    GwyGraphGridType grid_type;
     gboolean enable_user_input;
     gboolean boolean1;
 
     gulong notify_id;
+    gulong curve_data_changed_id;
     gulong rescaled_id[4];
     gulong handler_id1;
     gulong handler_id2;
@@ -91,15 +91,6 @@ void               gwy_graph_set_status       (GwyGraph *graph,
 GwyGraphStatusType gwy_graph_get_status       (GwyGraph *graph);
 void               gwy_graph_enable_user_input(GwyGraph *graph,
                                                gboolean enable);
-void               gwy_graph_set_grid_type    (GwyGraph *graph,
-                                               GwyGraphGridType grid_type);
-GwyGraphGridType   gwy_graph_get_grid_type    (GwyGraph *graph);
-void               gwy_graph_set_x_grid_data  (GwyGraph *graph,
-                                               GArray *grid_data);
-void               gwy_graph_set_y_grid_data  (GwyGraph *graph,
-                                               GArray *grid_data);
-const GArray*      gwy_graph_get_x_grid_data  (GwyGraph *graph);
-const GArray*      gwy_graph_get_y_grid_data  (GwyGraph *graph);
 GdkPixbuf*         gwy_graph_export_pixmap    (GwyGraph *graph,
                                                gboolean export_title,
                                                gboolean export_axis,

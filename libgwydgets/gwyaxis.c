@@ -1979,7 +1979,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
 /**
  * gwy_axis_get_grid_data:
  * @axis: An axis.
- * @array: Array to fill with major tick positions.
+ * @array: Array of doubles to fill with major tick positions.
  *
  * Gets the positions of major ticks of an axis.
  **/

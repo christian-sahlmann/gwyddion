@@ -17,24 +17,30 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
-#include <math.h>
-#include <glib-object.h>
+#include <string.h>
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphmodel.h>
-#include <libgwydgets/gwygraphcurvemodel.h>
 
-static void gwy_graph_finalize     (GObject *object);
-static void gwy_graph_refresh      (GwyGraph *graph);
-static void rescaled_cb            (GtkWidget *widget,
-                                    GwyGraph *graph);
-static void gwy_graph_zoomed       (GwyGraph *graph);
-static void gwy_graph_label_updated(GwyAxis *axis,
-                                    GwyGraph *graph);
+static void gwy_graph_finalize          (GObject *object);
+static void gwy_graph_refresh_all       (GwyGraph *graph);
+static void gwy_graph_model_notify      (GwyGraph *graph,
+                                         GParamSpec *pspec,
+                                         GwyGraphModel *gmodel);
+static void gwy_graph_curve_data_changed(GwyGraph *graph,
+                                         gint i);
+static void gwy_graph_refresh_x_range   (GwyGraph *graph);
+static void gwy_graph_refresh_y_range   (GwyGraph *graph);
+static void gwy_graph_axis_rescaled     (GwyAxis *axis,
+                                         GwyGraph *graph);
+static void gwy_graph_zoomed            (GwyGraph *graph);
+static void gwy_graph_label_updated     (GwyAxis *axis,
+                                         GwyGraph *graph);
 
 G_DEFINE_TYPE(GwyGraph, gwy_graph, GTK_TYPE_TABLE)
 
@@ -93,8 +99,6 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_table_set_row_spacings(GTK_TABLE(graph), 0);
     gtk_table_set_col_spacings(GTK_TABLE(graph), 0);
 
-    graph->grid_type = GWY_GRAPH_GRID_AUTO;
-
     for (i = GTK_POS_LEFT; i <= GTK_POS_BOTTOM; i++)
         graph->axis[i] = GWY_AXIS(gwy_axis_new(i));
 
@@ -105,10 +109,10 @@ gwy_graph_new(GwyGraphModel *gmodel)
      * right axes? */
     graph->rescaled_id[GTK_POS_LEFT]
         = g_signal_connect(graph->axis[GTK_POS_LEFT], "rescaled",
-                           G_CALLBACK(rescaled_cb), graph);
+                           G_CALLBACK(gwy_graph_axis_rescaled), graph);
     graph->rescaled_id[GTK_POS_BOTTOM]
         = g_signal_connect(graph->axis[GTK_POS_BOTTOM], "rescaled",
-                           G_CALLBACK(rescaled_cb), graph);
+                           G_CALLBACK(gwy_graph_axis_rescaled), graph);
 
     gtk_table_attach(GTK_TABLE(graph), GTK_WIDGET(graph->axis[GTK_POS_LEFT]),
                      0, 1, 1, 2,
@@ -156,81 +160,57 @@ gwy_graph_new(GwyGraphModel *gmodel)
 }
 
 static void
-gwy_graph_refresh(GwyGraph *graph)
+gwy_graph_refresh_all(GwyGraph *graph)
 {
-    GwyGraphModel *model;
+    GwyGraphModel *gmodel;
     GwySIUnit *siunit;
-    gdouble x_min, x_max, y_min, y_max;
-    gboolean lg;
-    gint i;
+    guint i;
 
     if (!graph->graph_model)
         return;
 
-    model = GWY_GRAPH_MODEL(graph->graph_model);
+    gmodel = GWY_GRAPH_MODEL(graph->graph_model);
 
-    g_object_get(model, "si-unit-x", &siunit, "x-logarithmic", &lg, NULL);
-    for (i = GTK_POS_TOP; i <= GTK_POS_BOTTOM; i++)  {
-        gwy_axis_set_logarithmic(graph->axis[i], lg);
-        gwy_axis_set_unit(graph->axis[i], siunit);
-    }
+    g_object_get(gmodel, "si-unit-x", &siunit, NULL);
+    gwy_axis_set_unit(graph->axis[GTK_POS_BOTTOM], siunit);
+    gwy_axis_set_unit(graph->axis[GTK_POS_TOP], siunit);
     g_object_unref(siunit);
 
-    g_object_get(model, "si-unit-y", &siunit, "y-logarithmic", &lg, NULL);
-    for (i = GTK_POS_LEFT; i <= GTK_POS_RIGHT; i++)  {
-        gwy_axis_set_logarithmic(graph->axis[i], lg);
-        gwy_axis_set_unit(graph->axis[i], siunit);
-    }
+    g_object_get(gmodel, "si-unit-y", &siunit, NULL);
+    gwy_axis_set_unit(graph->axis[GTK_POS_LEFT], siunit);
+    gwy_axis_set_unit(graph->axis[GTK_POS_RIGHT], siunit);
     g_object_unref(siunit);
 
-    if (!gwy_graph_model_get_x_range(model, &x_min, &x_max)) {
-        x_min = 0.0;
-        x_max = 1.0;
-    }
-    if (!gwy_graph_model_get_y_range(model, &y_min, &y_max)) {
-        y_min = 0.0;
-        y_max = 1.0;
+    for (i = GTK_POS_LEFT; i <= GTK_POS_BOTTOM; i++) {
+        const gchar *label;
+
+        label = gmodel ? gwy_graph_model_get_axis_label(gmodel, i) : NULL;
+        gwy_axis_set_label(graph->axis[i], label);
     }
 
-    /* Request range */
-    gwy_axis_request_range(graph->axis[GTK_POS_LEFT], y_min, y_max);
-    gwy_axis_request_range(graph->axis[GTK_POS_RIGHT], y_min, y_max);
-    gwy_axis_request_range(graph->axis[GTK_POS_TOP], x_min, x_max);
-    gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], x_min, x_max);
-
-    /* Fetch the range axes actually decided to use */
-    gwy_axis_get_range(graph->axis[GTK_POS_LEFT], &y_min, &y_max);
-    gwy_axis_get_range(graph->axis[GTK_POS_BOTTOM], &x_min, &x_max);
-
-    gwy_graph_area_set_x_range(graph->area, x_min, x_max);
-    gwy_graph_area_set_y_range(graph->area, y_min, y_max);
-
-    /* TODO: set_graph_model_ranges(graph); */
-
-    /*refresh widgets*/
-    /*gwy_graph_area_refresh(graph->area);*/
+    gwy_graph_refresh_x_range(graph);
+    gwy_graph_refresh_y_range(graph);
 }
 
 /**
  * gwy_graph_set_model:
  * @graph: A graph widget.
- * @gmodel: new graph model
+ * @gmodel: New graph model
  *
- * Changes the graph model.
+ * Changes the model a graph displays.
  *
  * Everything in graph widgets will be reset to reflect the new data.
- * @gmodel is duplicated.
  **/
 void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 {
-    const gchar *label;
-    guint i;
-
     if (graph->graph_model == gmodel)
         return;
 
-    gwy_signal_handler_disconnect(graph->graph_model, graph->notify_id);
+    gwy_signal_handler_disconnect(graph->graph_model,
+                                  graph->notify_id);
+    gwy_signal_handler_disconnect(graph->graph_model,
+                                  graph->curve_data_changed_id);
 
     if (gmodel)
         g_object_ref(gmodel);
@@ -240,51 +220,170 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
     if (gmodel) {
         graph->notify_id
             = g_signal_connect_swapped(gmodel, "notify",
-                                       G_CALLBACK(gwy_graph_refresh), graph);
-    }
-
-    for (i = GTK_POS_LEFT; i <= GTK_POS_BOTTOM; i++) {
-        if (gmodel)
-            label = gwy_graph_model_get_axis_label(gmodel, i);
-        else
-            label = "";
-        gwy_axis_set_label(graph->axis[i], label);
+                                       G_CALLBACK(gwy_graph_model_notify),
+                                       graph);
+        graph->curve_data_changed_id
+            = g_signal_connect_swapped(gmodel, "curve-data-changed",
+                                       G_CALLBACK(gwy_graph_curve_data_changed),
+                                       graph);
     }
 
     gwy_graph_area_set_model(graph->area, gmodel);
-    gwy_graph_refresh(graph);
+    gwy_graph_refresh_all(graph);
 }
 
 static void
-rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
+gwy_graph_model_notify(GwyGraph *graph,
+                       GParamSpec *pspec,
+                       GwyGraphModel *gmodel)
 {
+    /* Axis labels */
+    if (g_str_has_prefix(pspec->name, "axis-label-")) {
+        const gchar *name = pspec->name + strlen("axis-label-");
+        gchar *label = NULL;
+
+        g_object_get(gmodel, pspec->name, &label, NULL);
+        if (gwy_strequal(name, "left"))
+            gwy_axis_set_label(graph->axis[GTK_POS_LEFT], label);
+        else if (gwy_strequal(name, "bottom"))
+            gwy_axis_set_label(graph->axis[GTK_POS_BOTTOM], label);
+        else if (gwy_strequal(name, "right"))
+            gwy_axis_set_label(graph->axis[GTK_POS_RIGHT], label);
+        else if (gwy_strequal(name, "top"))
+            gwy_axis_set_label(graph->axis[GTK_POS_TOP], label);
+        g_free(label);
+
+        return;
+    }
+
+    /* Units */
+    if (g_str_has_prefix(pspec->name, "si-unit")) {
+        const gchar *name = pspec->name + strlen("si-unit-");
+        GwySIUnit *unit = NULL;
+
+        /* Both model and axis assign units by value so this is correct */
+        g_object_get(gmodel, pspec->name, &unit, NULL);
+        if (gwy_strequal(name, "x")) {
+            gwy_axis_set_unit(graph->axis[GTK_POS_BOTTOM], unit);
+            gwy_axis_set_unit(graph->axis[GTK_POS_TOP], unit);
+        }
+        else if (gwy_strequal(name, "y")) {
+            gwy_axis_set_unit(graph->axis[GTK_POS_LEFT], unit);
+            gwy_axis_set_unit(graph->axis[GTK_POS_RIGHT], unit);
+        }
+        g_object_unref(unit);
+
+        return;
+    }
+
+    /* Ranges */
+    if (g_str_has_prefix(pspec->name, "x-")) {
+        gwy_graph_refresh_x_range(graph);
+        return;
+    }
+    if (g_str_has_prefix(pspec->name, "y-")) {
+        gwy_graph_refresh_y_range(graph);
+        return;
+    }
+
+    /* Number of curves */
+    if (gwy_strequal(pspec->name, "n-curves"))
+        gwy_graph_curve_data_changed(graph, -1);
+
+    gwy_debug("ignoring changed model property <%s>", pspec->name);
+}
+
+static void
+gwy_graph_curve_data_changed(GwyGraph *graph,
+                             G_GNUC_UNUSED gint i)
+{
+    gwy_graph_refresh_x_range(graph);
+    gwy_graph_refresh_y_range(graph);
+}
+
+static void
+gwy_graph_refresh_x_range(GwyGraph *graph)
+{
+    GwyGraphModel *gmodel = graph->graph_model;
+    gdouble min, max;
+    gboolean lg;
+
+    g_object_get(gmodel, "x-logarithmic", &lg, NULL);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_BOTTOM], lg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_TOP], lg);
+
+    /* Request range */
+    if (!gwy_graph_model_get_x_range(gmodel, &min, &max)) {
+        min = 0.0;
+        max = 1.0;
+    }
+
+    gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], min, max);
+    gwy_axis_request_range(graph->axis[GTK_POS_TOP], min, max);  /* XXX */
+
+    /* Fetch the range axes actually decided to use */
+    gwy_axis_get_range(graph->axis[GTK_POS_BOTTOM], &min, &max);
+
+    gwy_graph_area_set_x_range(graph->area, min, max);
+}
+
+static void
+gwy_graph_refresh_y_range(GwyGraph *graph)
+{
+    GwyGraphModel *gmodel = graph->graph_model;
+    gdouble min, max;
+    gboolean lg;
+
+    g_object_get(gmodel, "y-logarithmic", &lg, NULL);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_BOTTOM], lg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_TOP], lg);
+
+    /* Request range */
+    if (!gwy_graph_model_get_y_range(gmodel, &min, &max)) {
+        min = 0.0;
+        max = 1.0;
+    }
+
+    gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], min, max);
+    gwy_axis_request_range(graph->axis[GTK_POS_TOP], min, max);  /* XXX */
+
+    /* Fetch the range axes actually decided to use */
+    gwy_axis_get_range(graph->axis[GTK_POS_BOTTOM], &min, &max);
+
+    gwy_graph_area_set_y_range(graph->area, min, max);
+}
+
+static void
+gwy_graph_axis_rescaled(GwyAxis *axis, GwyGraph *graph)
+{
+    GwyGraphGridType grid_type;
     GArray *array;
 
     if (graph->graph_model == NULL)
         return;
 
-    array = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    g_object_get(graph->graph_model, "grid-type", &grid_type, NULL);
+    if (grid_type == GWY_GRAPH_GRID_AUTO) {
+        array = g_array_new(FALSE, FALSE, sizeof(gdouble));
+        gwy_axis_get_major_ticks(axis, array);
 
-    if (graph->grid_type == GWY_GRAPH_GRID_AUTO) {
-        gwy_axis_get_major_ticks(graph->axis[GTK_POS_LEFT], array);
-        gwy_graph_area_set_x_grid_data(graph->area, array);
-        gwy_axis_get_major_ticks(graph->axis[GTK_POS_BOTTOM], array);
-        gwy_graph_area_set_y_grid_data(graph->area, array);
+        if (axis == graph->axis[GTK_POS_LEFT])
+            gwy_graph_area_set_x_grid_data(graph->area, array);
+        if (axis == graph->axis[GTK_POS_BOTTOM])
+            gwy_graph_area_set_y_grid_data(graph->area, array);
 
         g_array_free(array, TRUE);
     }
-
-    /* TODO: set_graph_model_ranges(graph); */
-    gwy_graph_area_refresh(graph->area);
 }
 
 /**
  * gwy_graph_get_model:
  * @graph: A graph widget.
  *
+ * Gets the model of a graph.
+ *
  * Returns: Graph model associated with this graph widget (do not free).
  **/
-/* XXX: Malformed documentation. */
 GwyGraphModel*
 gwy_graph_get_model(GwyGraph *graph)
 {
@@ -428,89 +527,6 @@ gwy_graph_label_updated(GwyAxis *axis, GwyGraph *graph)
         gwy_graph_model_set_axis_label(graph->graph_model,
                                        gwy_axis_get_orientation(axis),
                                        gwy_axis_get_label(axis));
-}
-
-/**
- * gwy_graph_set_grid_type:
- * @graph: A graph widget.
- * @grid_type: The type of grid the graph should be set to
- *
- * Sets the graph to a particular grid type.
- **/
-void
-gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
-{
-    graph->grid_type = grid_type;
-    gwy_graph_refresh(graph);
-}
-
-/**
- * gwy_graph_get_grid_type:
- * @graph: A graph widget.
- *
- * Return: The grid type of the graph.
- **/
-/* XXX: Malformed documentation. */
-GwyGraphGridType
-gwy_graph_get_grid_type(GwyGraph *graph)
-{
-    return graph->grid_type;
-}
-
-/**
- * gwy_graph_set_x_grid_data:
- * @graph: A graph widget.
- * @grid_data: An array of grid data
- *
- * Sets the grid data for the x-axis of the graph area. @grid_data
- * is duplicated.
- **/
-/* XXX: Malformed documentation. */
-void
-gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
-{
-    gwy_graph_area_set_x_grid_data(graph->area, grid_data);
-}
-
-/**
- * gwy_graph_set_y_grid_data:
- * @graph: A graph widget.
- * @grid_data: An array of grid data
- *
- * Sets the grid data for the y-axis of the graph area. @grid_data
- * is duplicated.
- **/
-/* XXX: Malformed documentation. */
-void
-gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
-{
-    gwy_graph_area_set_y_grid_data(graph->area, grid_data);
-}
-
-/**
- * gwy_graph_get_x_grid_data:
- * @graph: A graph widget.
- *
- * Return: Array of grid data for the x-axis of the graph area (do not free).
- **/
-/* XXX: Malformed documentation. */
-const GArray*
-gwy_graph_get_x_grid_data(GwyGraph *graph)
-{
-    return gwy_graph_area_get_x_grid_data(graph->area);
-}
-
-/**
- * gwy_graph_get_y_grid_data:
- * @graph: A graph widget.
- *
- * Return: Array of grid data for the y-axis of the graph area (do not free).
- **/
-/* XXX: Malformed documentation. */
-const GArray*
-gwy_graph_get_y_grid_data(GwyGraph *graph)
-{
-    return gwy_graph_area_get_y_grid_data(graph->area);
 }
 
 /************************** Documentation ****************************/
