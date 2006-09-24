@@ -743,7 +743,7 @@ gwy_get_pango_ft2_font_map(gboolean unref)
  * gwy_adjustment_get_int:
  * @adj: A #GtkAdjustment to get value of.
  *
- * Gets a properly rounded integer value from an adjustment.
+ * Gets a properly rounded integer value from an adjustment, cast to #gint.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
