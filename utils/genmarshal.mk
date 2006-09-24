@@ -37,6 +37,8 @@ BUILT_SOURCES += $(genmarshal_built_sources)
 $(GENMARSHAL_NAME).h: stamp-$(GENMARSHAL_NAME).h
 	@true
 
+# XXX: Add G_GNUC_INTERNAL manually, glib-genmarshal can do it, but too new
+# version is required (2.13+)
 stamp-$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	$(GLIB_GENMARSHAL) --header --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
