@@ -335,8 +335,8 @@ gwy_graph_refresh_y_range(GwyGraph *graph)
     gboolean lg;
 
     g_object_get(gmodel, "y-logarithmic", &lg, NULL);
-    gwy_axis_set_logarithmic(graph->axis[GTK_POS_BOTTOM], lg);
-    gwy_axis_set_logarithmic(graph->axis[GTK_POS_TOP], lg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_LEFT], lg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_RIGHT], lg);
 
     /* Request range */
     if (!gwy_graph_model_get_y_range(gmodel, &min, &max)) {
@@ -344,11 +344,11 @@ gwy_graph_refresh_y_range(GwyGraph *graph)
         max = 1.0;
     }
 
-    gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], min, max);
-    gwy_axis_request_range(graph->axis[GTK_POS_TOP], min, max);  /* XXX */
+    gwy_axis_request_range(graph->axis[GTK_POS_LEFT], min, max);
+    gwy_axis_request_range(graph->axis[GTK_POS_RIGHT], min, max);  /* XXX */
 
     /* Fetch the range axes actually decided to use */
-    gwy_axis_get_range(graph->axis[GTK_POS_BOTTOM], &min, &max);
+    gwy_axis_get_range(graph->axis[GTK_POS_LEFT], &min, &max);
 
     gwy_graph_area_set_y_range(graph->area, min, max);
 }
