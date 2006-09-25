@@ -392,7 +392,6 @@ gwy_graph_axis_rescaled(GwyAxis *axis, GwyGraph *graph)
 {
     GwyGraphGridType grid_type;
     gdouble min, max;
-    GArray *array;
 
     if (graph->graph_model == NULL)
         return;

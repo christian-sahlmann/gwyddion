@@ -53,6 +53,8 @@ struct _GwyGraphArea {
     gulong curve_notify_id;
     gulong curve_data_changed_id;
     gulong model_notify_id;
+    gulong handler1_id;
+    gulong handler2_id;
 
     /* label */
     GwyGraphLabel *lab;
@@ -65,7 +67,10 @@ struct _GwyGraphArea {
     GwySelection *ylinesdata;
     GwySelection *zoomdata;
 
-    GwyGraphDataPoint actual_cursor;
+    struct {
+        gdouble x;
+        gdouble y;
+    } actual_cursor;
 
     /* selection drawing */
     gboolean selecting;
@@ -105,6 +110,13 @@ struct _GwyGraphArea {
 
     gboolean enable_user_input;
     gint selection_limit;
+
+    gboolean bool1;
+    gboolean bool2;
+    gint int1;
+    gint int2;
+    GwyGraphStatusType enum1;
+    GwyGraphStatusType enum2;
 
     gpointer reserved1;
     gpointer reserved3;

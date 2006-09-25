@@ -362,8 +362,7 @@ gwy_graph_point_combo_box_realize(GtkWidget *parent,
 
         gdk_gc_set_rgb_fg_color(gc, &bg);
         gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
-        gwy_graph_draw_point(pixmap, gc, width/2, height/2, i,
-                             size, &fg, FALSE);
+        gwy_graph_draw_point(pixmap, gc, width/2, height/2, i, size, &fg);
 
         pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
                                               0, 0, 0, 0, width, height);

@@ -30,23 +30,17 @@
 G_BEGIN_DECLS
 
 typedef struct {
-    gdouble x;
-    gdouble y;
-} GwyGraphDataPoint;
-
-typedef struct {
-    gint xmin;  /*x offset of the active area with respect to drawable left border*/
-    gint ymin;  /*y offset of the active area with respect to drawable top border*/
-    gint height;       /*active area height*/
-    gint width;        /*active area width*/
-    gdouble real_xmin; /*real units values*/
-    gdouble real_ymin; /*real units values*/
-    gdouble real_height; /*real units values*/
-    gdouble real_width; /*real units values*/
-    gboolean log_x;     /*x axis is logarithmic*/
-    gboolean log_y;     /*y axis is logarithmic*/
+    gint xmin;
+    gint ymin;
+    gint height;
+    gint width;
+    gdouble real_xmin;
+    gdouble real_ymin;
+    gdouble real_height;
+    gdouble real_width;
+    gboolean log_x;
+    gboolean log_y;
 } GwyGraphActiveAreaSpecs;
-
 
 void gwy_graph_draw_point           (GdkDrawable *drawable,
                                      GdkGC *gc,
@@ -54,8 +48,7 @@ void gwy_graph_draw_point           (GdkDrawable *drawable,
                                      gint y,
                                      GwyGraphPointType type,
                                      gint size,
-                                     const GwyRGBA *color,
-                                     gboolean clear);
+                                     const GwyRGBA *color);
 void gwy_graph_draw_line            (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      gint x_from,
@@ -82,8 +75,7 @@ void gwy_graph_draw_selection_lines (GdkDrawable *drawable,
                                      GwyGraphActiveAreaSpecs *specs,
                                      GwySelectionGraphLine *selection,
                                      GtkOrientation orientation);
-
-void gwy_graph_draw_selection_xareas (GdkDrawable *drawable,
+void gwy_graph_draw_selection_xareas(GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
                                      GwySelectionGraph1DArea *selection);
@@ -91,12 +83,13 @@ void gwy_graph_draw_selection_yareas (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
                                      GwySelectionGraph1DArea *selection);
-
 void gwy_graph_draw_grid            (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
-                                     GArray *x_grid_data,
-                                     GArray *y_grid_data);
+                                     guint nxdata,
+                                     const gdouble *x_grid_data,
+                                     guint nydata,
+                                     const gdouble *y_grid_data);
 
 const GwyRGBA* gwy_graph_get_preset_color     (guint i) G_GNUC_CONST;
 guint          gwy_graph_get_n_preset_colors  (void) G_GNUC_CONST;

@@ -419,14 +419,14 @@ gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
                                      winy + ypos + rect.height/2,
                                      curvemodel->point_type,
                                      curvemodel->point_size,
-                                     &(curvemodel->color), FALSE);
+                                     &(curvemodel->color));
             else
                 gwy_graph_draw_point(drawable, gc,
                                      winx + 12 + frame_off,
                                      winy + ypos + rect.height/2,
                                      curvemodel->point_type,
                                      curvemodel->point_size,
-                                     &(curvemodel->color), FALSE);
+                                     &(curvemodel->color));
         }
         gdk_gc_set_rgb_fg_color(gc, &fg);
 

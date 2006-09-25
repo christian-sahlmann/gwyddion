@@ -484,9 +484,11 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
                                   GWY_SELECTION_GRAPH_1DAREA(area->yseldata));
 
 
-    /* FIXME gc should be different and should be set to gray drawing */
     gwy_graph_draw_grid(drawable, gc, &specs,
-                        area->x_grid_data, area->y_grid_data);
+                        area->x_grid_data->len,
+                        (const gdouble*)area->x_grid_data->data,
+                        area->y_grid_data->len,
+                        (const gdouble*)area->y_grid_data);
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
