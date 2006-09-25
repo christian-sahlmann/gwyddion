@@ -1,9 +1,20 @@
-Building docs takes too much time, they are not built by default. go to the
+Building docs takes too much time, they are not built by default.  If gtk-doc
+is found the rules are enabled, but not automatically executed. Go to the
 appropriate dir and run
 
   make docs
 
-there if you want to update them.
+there if you want to update the API documentation.
+
+This may invoke only a partial update however.  To rebuild the documentation
+fully you can issue make maintainer-clean first, but this removes also
+Makefile and Makefile.in.  So instead the following scriptlet can be used:
+
+  make clean
+  rm -f libgwy*/*-sections.txt libgwy*/*-decl-list.txt libgwy*/template/*
+  for x in libgwy*; do make -C "$x" tmpl.stamp; make -C "$x" docs; done
+
+See build_documentation() in utils/gwyddion-night-build for explanation.
 
 
 =========================
@@ -37,6 +48,7 @@ gtk-doc.mk are universal rules to be included in Makefile.am.
 
 
 =========================
+[No longer relevant?]
 gtk-doc scan may place a slightly broken doctype declaration to
 MODULE-docs.sgml
 
