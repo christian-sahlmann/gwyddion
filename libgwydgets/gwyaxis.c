@@ -356,6 +356,8 @@ gwy_axis_finalize(GObject *object)
     g_string_free(axis->label_text, TRUE);
     g_array_free(axis->mjticks, TRUE);
     g_array_free(axis->miticks, TRUE);
+    if (axis->mjpubticks)
+        g_array_free(axis->mjpubticks, TRUE);
 
     gwy_object_unref(axis->unit);
     gwy_object_unref(axis->gc);
@@ -1983,29 +1985,42 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
 }
 
 /**
- * gwy_axis_get_grid_data:
+ * gwy_axis_get_major_ticks:
  * @axis: An axis.
- * @array: Array of doubles to fill with major tick positions.
+ * @nticks: Location to store the number of returned ticks.
  *
  * Gets the positions of major ticks of an axis.
+ *
+ * Returns: The positions of axis major ticks (as real values, not pixels),
+ *          owned by the axis.
  **/
-void
-gwy_axis_get_major_ticks(GwyAxis *axis, GArray *array)
+const gdouble*
+gwy_axis_get_major_ticks(GwyAxis *axis,
+                         guint *nticks)
 {
-    gint i;
-    gdouble *pvalue;
     GwyAxisLabeledTick *pmji;
+    gdouble *pvalue;
+    guint i;
 
-    g_array_set_size(array, axis->mjticks->len);
+    if (!axis->mjpubticks)
+        axis->mjpubticks = g_array_sized_new(FALSE, FALSE, sizeof(gdouble),
+                                             axis->mjticks->len);
+    else
+        g_array_set_size(axis->mjpubticks, axis->mjticks->len);
 
     for (i = 0; i < axis->mjticks->len; i++) {
         pmji = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
-        pvalue = &g_array_index(array, gdouble, i);
+        pvalue = &g_array_index(axis->mjpubticks, gdouble, i);
         if (!axis->is_logarithmic)
             *pvalue = pmji->t.value;
         else
             *pvalue = gwy_axis_dbl_raise(10.0, pmji->t.value);
     }
+
+    if (nticks)
+        *nticks = axis->mjpubticks->len;
+
+    return (const gdouble*)axis->mjpubticks->data;
 }
 
 /**

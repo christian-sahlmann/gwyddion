@@ -1605,25 +1605,22 @@ gwy_graph_area_set_y_range(GwyGraphArea *area,
 
 /**
  * gwy_graph_area_set_x_grid_data:
- * @area: graph area
- * @grid_data: array of grid data on the x axis
+ * @area: A graph area.
+ * @ndata: The number of points in @grid_data.
+ * @grid_data: Array of grid line positions on the x-axis (in real values,
+ *             not pixels).
  *
- * Sets the grid data on the x-axis of the graph area
+ * Sets the grid data on the x-axis of a graph area
  **/
 void
-gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
+gwy_graph_area_set_x_grid_data(GwyGraphArea *area,
+                               guint ndata,
+                               const gdouble *grid_data)
 {
-    guint i;
-    gdouble *pdata, *psetdata;
-
     g_return_if_fail(GWY_IS_GRAPH_AREA(area));
 
-    g_array_set_size(area->x_grid_data, grid_data->len);
-    for (i = 0; i < grid_data->len; i++){
-        pdata = &g_array_index(area->x_grid_data, gdouble, i);
-        psetdata = &g_array_index(grid_data, gdouble, i);
-        *pdata = *psetdata;
-    }
+    g_array_set_size(area->x_grid_data, 0);
+    g_array_append_vals(area->x_grid_data, grid_data, ndata);
 
     if (GTK_WIDGET_DRAWABLE(area))
         gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -1631,25 +1628,21 @@ gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
 
 /**
  * gwy_graph_area_set_y_grid_data:
- * @area: graph area
- * @grid_data: array of grid data on the y axis
+ * @ndata: The number of points in @grid_data.
+ * @grid_data: Array of grid line positions on the y-axis (in real values,
+ *             not pixels).
  *
- * Sets the grid data on the y-axis of the graph area
+ * Sets the grid data on the y-axis of a graph area
  **/
 void
-gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
+gwy_graph_area_set_y_grid_data(GwyGraphArea *area,
+                               guint ndata,
+                               const gdouble *grid_data)
 {
-    guint i;
-    gdouble *pdata, *psetdata;
-
     g_return_if_fail(GWY_IS_GRAPH_AREA(area));
 
-    g_array_set_size(area->y_grid_data, grid_data->len);
-    for (i = 0; i < grid_data->len; i++){
-        pdata = &g_array_index(area->y_grid_data, gdouble, i);
-        psetdata = &g_array_index(grid_data, gdouble, i);
-        *pdata = *psetdata;
-    }
+    g_array_set_size(area->y_grid_data, 0);
+    g_array_append_vals(area->y_grid_data, grid_data, ndata);
 
     if (GTK_WIDGET_DRAWABLE(area))
         gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -1657,31 +1650,44 @@ gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
 
 /**
  * gwy_graph_area_get_x_grid_data:
- * @area: graph area
+ * @area: A graph area.
+ * @ndata: Location to store the number of returned positions.
  *
- * Returns: the grid data on the x-axis of the graph area
- * as a #GArray (do not free).
+ * Gets the grid data on the x-axis of a graph area.
+ *
+ * Returns: Array of grid line positions (in real values, not pixels) owned
+ *          by the graph area.
  **/
-/* XXX: Malformed documentation. */
-const GArray*
-gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
+const gdouble*
+gwy_graph_area_get_x_grid_data(GwyGraphArea *area,
+                               guint *ndata)
 {
-    return area->x_grid_data;
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
+
+    if (ndata)
+        *ndata = area->x_grid_data->len;
+    return (const gdouble*)area->x_grid_data->data;
 }
 
 /**
  * gwy_graph_area_get_y_grid_data:
- * @area: graph area
+ * @area: A graph area.
+ * @ndata: Location to store the number of returned positions.
  *
- * Returns: the grid data on the y-axis of the graph area
- * as a #GArray (do not free).
+ * Gets the grid data on the y-axis of a graph area.
+ *
+ * Returns: Array of grid line positions (in real values, not pixels) owned
+ *          by the graph area.
  **/
-/* XXX: Malformed documentation. */
-const GArray*
-gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
+const gdouble*
+gwy_graph_area_get_y_grid_data(GwyGraphArea *area,
+                               guint *ndata)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
 
-    return area->y_grid_data;
+    if (ndata)
+        *ndata = area->y_grid_data->len;
+    return (const gdouble*)area->y_grid_data->data;
 }
 
 

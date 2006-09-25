@@ -342,12 +342,11 @@ gwy_graph_refresh_x_range(GwyGraph *graph)
 
     /* TODO */
     if (TRUE/* grid_type == GWY_GRAPH_GRID_AUTO */) {
-        GArray *array;
+        const gdouble *ticks;
+        guint nticks;
 
-        array = g_array_new(FALSE, FALSE, sizeof(gdouble));
-        gwy_axis_get_major_ticks(graph->axis[GTK_POS_BOTTOM], array);
-        gwy_graph_area_set_x_grid_data(graph->area, array);
-        g_array_free(array, TRUE);
+        ticks = gwy_axis_get_major_ticks(graph->axis[GTK_POS_BOTTOM], &nticks);
+        gwy_graph_area_set_x_grid_data(graph->area, nticks, ticks);
     }
 }
 
@@ -380,12 +379,11 @@ gwy_graph_refresh_y_range(GwyGraph *graph)
 
     /* TODO */
     if (TRUE/* grid_type == GWY_GRAPH_GRID_AUTO */) {
-        GArray *array;
+        const gdouble *ticks;
+        guint nticks;
 
-        array = g_array_new(FALSE, FALSE, sizeof(gdouble));
-        gwy_axis_get_major_ticks(graph->axis[GTK_POS_LEFT], array);
-        gwy_graph_area_set_y_grid_data(graph->area, array);
-        g_array_free(array, TRUE);
+        ticks = gwy_axis_get_major_ticks(graph->axis[GTK_POS_LEFT], &nticks);
+        gwy_graph_area_set_y_grid_data(graph->area, nticks, ticks);
     }
 }
 
@@ -402,15 +400,14 @@ gwy_graph_axis_rescaled(GwyAxis *axis, GwyGraph *graph)
     gwy_debug("%p: axis %p", graph, axis);
     g_object_get(graph->graph_model, "grid-type", &grid_type, NULL);
     if (grid_type == GWY_GRAPH_GRID_AUTO) {
-        array = g_array_new(FALSE, FALSE, sizeof(gdouble));
-        gwy_axis_get_major_ticks(axis, array);
+        const gdouble *ticks;
+        guint nticks;
 
+        ticks = gwy_axis_get_major_ticks(axis, &nticks);
         if (axis == graph->axis[GTK_POS_BOTTOM])
-            gwy_graph_area_set_x_grid_data(graph->area, array);
+            gwy_graph_area_set_x_grid_data(graph->area, nticks, ticks);
         if (axis == graph->axis[GTK_POS_LEFT])
-            gwy_graph_area_set_y_grid_data(graph->area, array);
-
-        g_array_free(array, TRUE);
+            gwy_graph_area_set_y_grid_data(graph->area, nticks, ticks);
     }
 
     gwy_axis_get_range(axis, &min, &max);

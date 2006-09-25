@@ -137,11 +137,15 @@ void               gwy_graph_area_set_y_range      (GwyGraphArea *area,
                                                     gdouble y_min,
                                                     gdouble y_max);
 void               gwy_graph_area_set_x_grid_data  (GwyGraphArea *area,
-                                                    GArray *grid_data);
+                                                    guint ndata,
+                                                    const gdouble *grid_data);
 void               gwy_graph_area_set_y_grid_data  (GwyGraphArea *area,
-                                                    GArray *grid_data);
-const GArray*      gwy_graph_area_get_x_grid_data  (GwyGraphArea *area);
-const GArray*      gwy_graph_area_get_y_grid_data  (GwyGraphArea *area);
+                                                    guint ndata,
+                                                    const gdouble *grid_data);
+const gdouble*     gwy_graph_area_get_x_grid_data  (GwyGraphArea *area,
+                                                    guint *ndata);
+const gdouble*     gwy_graph_area_get_y_grid_data  (GwyGraphArea *area,
+                                                    guint *ndata);
 GwySelection*      gwy_graph_area_get_selection    (GwyGraphArea *area,
                                                     GwyGraphStatusType status_type);
 void               gwy_graph_area_set_status       (GwyGraphArea *area,

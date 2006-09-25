@@ -75,6 +75,8 @@ struct _GwyAxis {
 
     GArray *mjticks;            /*array of GwyLabeledTicks*/
     GArray *miticks;            /*array of GwyTicks*/
+    GArray *mjpubticks;
+    GArray *mipubticks;
 
     GString *label_text;
 
@@ -145,8 +147,8 @@ GString*        gwy_axis_export_vector           (GwyAxis *axis,
                                                   gint width,
                                                   gint height,
                                                   gint fontsize);
-void            gwy_axis_get_major_ticks         (GwyAxis *axis,
-                                                  GArray *array);
+const gdouble*  gwy_axis_get_major_ticks         (GwyAxis *axis,
+                                                  guint *nticks);
 
 G_END_DECLS
 
