@@ -28,6 +28,7 @@
 
 static gboolean gwy_axis_dialog_delete    (GtkWidget *widget,
                                            GdkEventAny *event);
+/*
 static void     major_length_changed_cb   (GtkAdjustment *adj,
                                            GObject *axis);
 static void     major_thickness_changed_cb(GtkAdjustment *adj,
@@ -42,6 +43,7 @@ static void     minor_division_changed_cb (GtkAdjustment *adj,
                                            GObject *axis);
 static void     autoscale_changed_cb      (GtkToggleButton *button,
                                            GwyAxisDialog *dialog);
+*/
 
 G_DEFINE_TYPE(GwyAxisDialog, _gwy_axis_dialog, GTK_TYPE_DIALOG)
 
@@ -82,8 +84,11 @@ _gwy_axis_dialog_new(GwyAxis *axis)
 {
     GwyAxisDialog *dialog;
     GtkWidget *label, *table;
-    gint i, row = 0;
+    gint row;
+    /*
+    gint row;
     gboolean is_auto;
+    */
 
     gwy_debug("");
     dialog = GWY_AXIS_DIALOG(g_object_new(GWY_TYPE_AXIS_DIALOG, NULL));
@@ -93,16 +98,22 @@ _gwy_axis_dialog_new(GwyAxis *axis)
         gtk_window_set_title(GTK_WINDOW(dialog), _("Axis Properties"));
     else
         gtk_window_set_title(GTK_WINDOW(dialog), _("Label Properties"));
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
-    table = gtk_table_new(4, 4, FALSE);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
+
+    table = gtk_table_new(2, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    row = 0;
 
-
+    /*
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Axis settings:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Axis settings</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -165,28 +176,25 @@ _gwy_axis_dialog_new(GwyAxis *axis)
                                 dialog->minor_length);
     g_signal_connect(dialog->minor_length, "value-changed",
                      G_CALLBACK(minor_length_changed_cb), dialog->axis);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->is_auto),
                                  is_auto);
+    */
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Label text:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Label text</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    row++;
 
     dialog->sci_text = gwy_sci_text_new();
-    gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+    gtk_table_attach(GTK_TABLE(table), dialog->sci_text,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                      dialog->sci_text);
-    gtk_widget_show_all(dialog->sci_text);
+    gtk_widget_show_all(table);
 
     return GTK_WIDGET(dialog);
 }
@@ -197,6 +205,7 @@ _gwy_axis_dialog_get_sci_text(GtkWidget* dialog)
     return GWY_AXIS_DIALOG(dialog)->sci_text;
 }
 
+/*
 static void
 major_length_changed_cb(GtkAdjustment *adj, GObject *axis)
 {
@@ -250,6 +259,7 @@ autoscale_changed_cb(GtkToggleButton *button, GwyAxisDialog *dialog)
     g_object_set(dialog->axis, "minor-division",
                  gwy_adjustment_get_int(dialog->minor_division), NULL);
 }
+*/
 
 /**
  * SECTION:gwyaxisdialog

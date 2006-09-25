@@ -103,7 +103,11 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 
     gwy_debug("");
 
+    gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(7, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -184,14 +188,6 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       dialog->sci_text);
     gtk_widget_show_all(dialog->sci_text);
-
-    refresh(dialog);
-
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
-
-    dialog->curve_model = NULL;
-    gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
 }
 
 static gboolean

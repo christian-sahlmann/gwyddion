@@ -194,7 +194,7 @@ gwy_sci_text_get_property(GObject *object,
 GtkWidget*
 gwy_sci_text_new(void)
 {
-    GtkWidget *label, *button, *hbox;
+    GtkWidget *button, *hbox;
     GtkTreeModel *model;
     GtkCellLayout *layout;
     GtkCellRenderer *cell;
@@ -204,13 +204,7 @@ gwy_sci_text_new(void)
     sci_text = (GwySciText*)g_object_new(GWY_TYPE_SCI_TEXT, NULL);
 
     /* Entry */
-    label = gtk_label_new_with_mnemonic("Hyper_text");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(sci_text), label, FALSE, FALSE, 0);
-    gtk_widget_show(label);
-
     sci_text->entry = gtk_entry_new();
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), sci_text->entry);
     gtk_box_pack_start(GTK_BOX(sci_text), sci_text->entry, FALSE, FALSE, 0);
     sci_text->changed_id
         = g_signal_connect_swapped(sci_text->entry, "changed",

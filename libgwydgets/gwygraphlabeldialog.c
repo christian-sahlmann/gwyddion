@@ -55,38 +55,37 @@ _gwy_graph_label_dialog_class_init(GwyGraphLabelDialogClass *klass)
 static void
 _gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
 {
-    GtkWidget *label, *table;
+    GtkWidget *table;
     gint row = 0;
-    gwy_debug("");
 
-    table = gtk_table_new(2, 8, FALSE);
+    gwy_debug("");
+    gtk_window_set_title(GTK_WINDOW(dialog), _("Label Properties"));
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
+
+    table = gtk_table_new(2, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
 
     dialog->thickness = gtk_adjustment_new(1, 0, 6, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("Frame thickness:"), NULL,
-                                dialog->thickness);
+    gwy_table_attach_hscale(table, row, _("Frame thickness:"), NULL,
+                            dialog->thickness, 0);
     g_signal_connect(dialog->thickness, "value-changed",
                      G_CALLBACK(thickness_changed_cb), dialog);
     row++;
 
-    label = gtk_label_new("Layout:");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row + 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    dialog->reversed = gtk_check_button_new_with_mnemonic(_("_reversed"));
+    dialog->reversed
+        = gtk_check_button_new_with_mnemonic(_("_Reversed layout"));
     g_signal_connect(dialog->reversed, "toggled",
                      G_CALLBACK(reverse_changed_cb), dialog);
-    gtk_table_attach(GTK_TABLE(table), dialog->reversed, 1, 2, row, row + 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), dialog->reversed, 0, 3, row, row + 1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
-
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
-                      table);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
-
-    gtk_window_set_title(GTK_WINDOW(dialog), "Label properties");
-    dialog->graph_model = NULL;
 }
 
 static gboolean
