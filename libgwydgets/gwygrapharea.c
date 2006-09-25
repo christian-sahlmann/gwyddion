@@ -488,7 +488,7 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
                         area->x_grid_data->len,
                         (const gdouble*)area->x_grid_data->data,
                         area->y_grid_data->len,
-                        (const gdouble*)area->y_grid_data);
+                        (const gdouble*)area->y_grid_data->data);
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {

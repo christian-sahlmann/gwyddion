@@ -60,12 +60,12 @@ x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
    if (!specs->log_x)
        return specs->xmin
             + (gint)((data - specs->real_xmin)
-                     /(specs->real_width)*((gdouble)specs->width-1));
+                     /(specs->real_width)*(specs->width - 1.0));
 
    return specs->xmin
        + (gint)((log10(data) - log10(specs->real_xmin))
                 /((log10(specs->real_xmin + specs->real_width)
-                   - log10(specs->real_xmin)))*((gdouble)specs->width-1));
+                   - log10(specs->real_xmin)))*(specs->width - 1.0));
 
 }
 
@@ -75,12 +75,12 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
     if (!specs->log_y)
         return specs->ymin + specs->height
             - (gint)((data - specs->real_ymin)
-                     /(specs->real_height)*((gdouble)specs->height-1));
+                     /(specs->real_height)*(specs->height - 1.0));
 
     return specs->ymin + specs->height
         - (gint)((log10(data) - log10(specs->real_ymin))
                 /((log10(specs->real_ymin + specs->real_height)
-                   - log10(specs->real_ymin)))*((gdouble)specs->height-1));
+                   - log10(specs->real_ymin)))*(specs->height - 1.0));
 }
 
 /**
@@ -523,28 +523,30 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
                     const gdouble *y_grid_data)
 {
     static const GwyRGBA color = { 0.90, 0.90, 0.90, 1.0 };
-    gdouble pos;
-    gint i;
+    gint pos;
+    guint i;
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     if (nxdata) {
         g_return_if_fail(x_grid_data);
         for (i = 0; i < nxdata; i++) {
-            pos = y_data_to_pixel(specs, x_grid_data[i]);
+            pos = x_data_to_pixel(specs, x_grid_data[i]);
+            gwy_debug("x%u %g %d", i, x_grid_data[i], pos);
             gdk_draw_line(drawable, gc,
-                          specs->xmin - 1, specs->height - pos,
-                          specs->xmin + specs->width + 1, specs->height - pos);
+                          pos, specs->ymin - 1,
+                          pos, specs->ymin + specs->height + 1);
         }
     }
 
     if (nydata) {
         g_return_if_fail(y_grid_data);
         for (i = 0; i < nydata; i++) {
-            pos = x_data_to_pixel(specs, y_grid_data[i]);
+            pos = y_data_to_pixel(specs, y_grid_data[i]);
+            gwy_debug("y%u %g %d", i, y_grid_data[i], pos);
             gdk_draw_line(drawable, gc,
-                          pos, specs->ymin - 1, pos,
-                          specs->ymin + specs->height + 1);
+                          specs->xmin - 1, specs->height - pos,
+                          specs->xmin + specs->width + 1, specs->height - pos);
         }
     }
 }
@@ -559,7 +561,7 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
  *
  * Preset colors are a set of selected colors one can use to distingush graph
  * curves when there is no reason to prefer a particular color.  Note they
- * can change between version, even their number can change.
+ * can occasionally change between version, even their number can change.
  *
  * Returns: A constant color that must not be neither modified nor freed.
  **/
