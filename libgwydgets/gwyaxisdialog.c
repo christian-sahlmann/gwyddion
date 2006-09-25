@@ -105,13 +105,13 @@ _gwy_axis_dialog_new(GwyAxis *axis)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Axis settings:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                 0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     g_object_get(dialog->axis, "auto", &is_auto, NULL);
     dialog->is_auto = gtk_check_button_new_with_mnemonic(_("_Autoscale"));
     gtk_table_attach(GTK_TABLE(table), dialog->is_auto,
-                       0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(dialog->is_auto, "toggled",
                      G_CALLBACK(autoscale_changed_cb), dialog);
     row++;

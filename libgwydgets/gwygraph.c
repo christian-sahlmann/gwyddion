@@ -333,21 +333,7 @@ gwy_graph_refresh_x_range(GwyGraph *graph)
 
     gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], min, max);
     gwy_axis_request_range(graph->axis[GTK_POS_TOP], min, max);  /* XXX */
-
-    /* Fetch the range axes actually decided to use */
-    gwy_axis_get_range(graph->axis[GTK_POS_BOTTOM], &min, &max);
-    gwy_debug("%p: axis: %g, %g", graph, min, max);
-
-    gwy_graph_area_set_x_range(graph->area, min, max);
-
-    /* TODO */
-    if (TRUE/* grid_type == GWY_GRAPH_GRID_AUTO */) {
-        const gdouble *ticks;
-        guint nticks;
-
-        ticks = gwy_axis_get_major_ticks(graph->axis[GTK_POS_BOTTOM], &nticks);
-        gwy_graph_area_set_x_grid_data(graph->area, nticks, ticks);
-    }
+    /* The range propagation happens in "rescaled" handler. */
 }
 
 static void
@@ -370,21 +356,7 @@ gwy_graph_refresh_y_range(GwyGraph *graph)
 
     gwy_axis_request_range(graph->axis[GTK_POS_LEFT], min, max);
     gwy_axis_request_range(graph->axis[GTK_POS_RIGHT], min, max);  /* XXX */
-
-    /* Fetch the range axes actually decided to use */
-    gwy_axis_get_range(graph->axis[GTK_POS_LEFT], &min, &max);
-    gwy_debug("%p: axis: %g, %g", graph, min, max);
-
-    gwy_graph_area_set_y_range(graph->area, min, max);
-
-    /* TODO */
-    if (TRUE/* grid_type == GWY_GRAPH_GRID_AUTO */) {
-        const gdouble *ticks;
-        guint nticks;
-
-        ticks = gwy_axis_get_major_ticks(graph->axis[GTK_POS_LEFT], &nticks);
-        gwy_graph_area_set_y_grid_data(graph->area, nticks, ticks);
-    }
+    /* The range propagation happens in "rescaled" handler. */
 }
 
 static void
@@ -397,6 +369,13 @@ gwy_graph_axis_rescaled(GwyAxis *axis, GwyGraph *graph)
         return;
 
     gwy_debug("%p: axis %p", graph, axis);
+
+    gwy_axis_get_range(axis, &min, &max);
+    if (axis == graph->axis[GTK_POS_BOTTOM])
+        gwy_graph_area_set_x_range(graph->area, min, max);
+    if (axis == graph->axis[GTK_POS_LEFT])
+        gwy_graph_area_set_y_range(graph->area, min, max);
+
     g_object_get(graph->graph_model, "grid-type", &grid_type, NULL);
     if (grid_type == GWY_GRAPH_GRID_AUTO) {
         const gdouble *ticks;
@@ -408,12 +387,6 @@ gwy_graph_axis_rescaled(GwyAxis *axis, GwyGraph *graph)
         if (axis == graph->axis[GTK_POS_LEFT])
             gwy_graph_area_set_y_grid_data(graph->area, nticks, ticks);
     }
-
-    gwy_axis_get_range(axis, &min, &max);
-    if (axis == graph->axis[GTK_POS_BOTTOM])
-        gwy_graph_area_set_x_range(graph->area, min, max);
-    if (axis == graph->axis[GTK_POS_LEFT])
-        gwy_graph_area_set_y_range(graph->area, min, max);
 }
 
 /**

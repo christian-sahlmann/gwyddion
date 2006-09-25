@@ -127,7 +127,6 @@ static void    gwy_axis_adjust              (GwyAxis *axis,
                                              gint height);
 static void    gwy_axis_entry               (GwySciText *sci_text,
                                              GwyAxis *axis);
-static void    gwy_axis_rescaled            (GwyAxis *axis);
 
 static guint axis_signals[LAST_SIGNAL] = { 0 };
 
@@ -692,6 +691,8 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
     else
         gwy_axis_precompute(axis, 0, height);
 
+    g_signal_emit(axis, axis_signals[RESCALED], 0);
+
     if (GTK_WIDGET_DRAWABLE(axis))
         gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
@@ -730,11 +731,8 @@ gwy_axis_notify(GObject *object,
     if (method)
         method(object, pspec);
 
-    if (g_type_is_a(pspec->owner_type, GWY_TYPE_AXIS)) {
+    if (g_type_is_a(pspec->owner_type, GWY_TYPE_AXIS))
         gwy_axis_adjust(GWY_AXIS(object), -1, -1);
-        if (GTK_WIDGET_DRAWABLE(object))
-            gtk_widget_queue_draw(GTK_WIDGET(object));
-    }
 }
 
 /**
@@ -748,7 +746,14 @@ void
 gwy_axis_set_logarithmic(GwyAxis *axis,
                          gboolean is_logarithmic)
 {
+    g_return_if_fail(GWY_IS_AXIS(axis));
+
+    is_logarithmic = !!is_logarithmic;
+    if (axis->is_logarithmic == is_logarithmic)
+        return;
+
     axis->is_logarithmic = is_logarithmic;
+    gwy_axis_adjust(axis, -1, -1);
 }
 
 static gboolean
@@ -1161,18 +1166,6 @@ gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
         gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
-/**
- * gwy_axis_rescaled:
- * @axis: An axis.
- *
- * Signals that the axis has been rescaled
- **/
-static void
-gwy_axis_rescaled(GwyAxis *axis)
-{
-    g_signal_emit(axis, axis_signals[RESCALED], 0);
-}
-
 static gdouble
 gwy_axis_dbl_raise(gdouble x, gint y)
 {
@@ -1376,7 +1369,6 @@ gwy_axis_scale(GwyAxis *a)
     ret = gwy_axis_formatticks(a);
     /*precompute screen coordinates of ticks (must be done after each geometry change)*/
 
-    gwy_axis_rescaled(a);
     return ret;
 }
 
@@ -1578,27 +1570,12 @@ gwy_axis_request_range(GwyAxis *axis, gdouble min, gdouble max)
 {
     g_return_if_fail(GWY_IS_AXIS(axis));
 
+    if (axis->reqmin == min && axis->reqmax == max)
+        return;
+
     axis->reqmin = min;
     axis->reqmax = max;
 
-    gwy_axis_adjust(axis, -1, -1);
-    if (GTK_WIDGET_REALIZED(axis))
-        gtk_widget_queue_resize(GTK_WIDGET(axis));
-}
-
-/**
- * gwy_axis_set_style:
- * @axis: An axis.
- * @style: axis style
- *
- * Set axis style. The style affects used tick sizes, fonts etc.
- **/
-void
-gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
-{
-    g_return_if_fail(GWY_IS_AXIS(axis));
-
-    axis->par = style;
     gwy_axis_adjust(axis, -1, -1);
     if (GTK_WIDGET_REALIZED(axis))
         gtk_widget_queue_resize(GTK_WIDGET(axis));

@@ -123,8 +123,6 @@ void            gwy_axis_get_range               (GwyAxis *axis,
 void            gwy_axis_get_requested_range     (GwyAxis *axis,
                                                   gdouble *min,
                                                   gdouble *max);
-void            gwy_axis_set_style               (GwyAxis *axis,
-                                                  GwyAxisParams style);
 gdouble         gwy_axis_get_magnification       (GwyAxis *axis);
 const gchar*    gwy_axis_get_magnification_string(GwyAxis *axis);
 void            gwy_axis_set_label               (GwyAxis *axis,
