@@ -22,9 +22,10 @@
 #define __GWY_GRAPH_BASIC_H__
 
 #include <gdk/gdk.h>
+#include <gtk/gtkenums.h>
+#include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
-#include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwygraphselections.h>
 
 G_BEGIN_DECLS

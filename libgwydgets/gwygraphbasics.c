@@ -19,13 +19,9 @@
  */
 
 #include "config.h"
-#include <gtk/gtkmain.h>
-#include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "gwygraph.h"
-#include "gwygraphmodel.h"
-#include "gwygraphcurvemodel.h"
+#include <libgwydgets/gwygraphbasics.h>
 
 static const GwyRGBA nice_colors[] = {
     { 0.000, 0.000, 0.000, 1.000 },    /* Black */

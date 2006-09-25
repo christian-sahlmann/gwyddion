@@ -21,11 +21,9 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphselections.h>
 #include "gwygraphareadialog.h"
 #include "gwygraphlabeldialog.h"
