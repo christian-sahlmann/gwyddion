@@ -132,7 +132,7 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graph_title_changed(graphwindow);
 
-    label = gtk_label_new("Graph");
+    label = gtk_label_new(_("Graph"));
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(graph),
                              label);
@@ -142,7 +142,7 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow->data = gwy_graph_data_new(gwy_graph_get_model(graph));
     gtk_container_add(GTK_CONTAINER(swindow), graphwindow->data);
 
-    label = gtk_label_new("Data");
+    label = gtk_label_new(_("Data"));
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(swindow),
                              label);
@@ -390,8 +390,8 @@ gwy_graph_window_measure(GwyGraphWindow *graphwindow)
     {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
         gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_XLINES);
-        gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
-        gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
+        gtk_widget_queue_draw(graphwindow->graph);
+        gtk_widget_show_all(graphwindow->measure_dialog);
     }
     else {
         gwy_graph_window_measure_finished(graphwindow, 0);
@@ -402,13 +402,16 @@ gwy_graph_window_measure(GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow, gint response)
 {
+    GwyGraphArea *area;
 
-    gwy_selection_clear(gwy_graph_area_get_selection
-                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
-                         GWY_GRAPH_STATUS_POINTS));
-    gwy_selection_clear(gwy_graph_area_get_selection
-                        (GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))),
-                         GWY_GRAPH_STATUS_XLINES));
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)));
+
+    /* XXX: Why, why, tell me why are *both* selections cleared when one clicks
+     * on clear and why it's done here instead of the dialog itself. */
+    gwy_selection_clear(gwy_graph_area_get_selection(area,
+                                                     GWY_GRAPH_STATUS_POINTS));
+    gwy_selection_clear(gwy_graph_area_get_selection(area,
+                                                     GWY_GRAPH_STATUS_XLINES));
 
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
         return;
@@ -417,9 +420,8 @@ gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow, gint response)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
     gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_PLAIN);
 
-    gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
-    gtk_widget_hide(GTK_WIDGET(graphwindow->measure_dialog));
-
+    gtk_widget_queue_draw(graphwindow->graph);
+    gtk_widget_hide(graphwindow->measure_dialog);
 }
 
 static void

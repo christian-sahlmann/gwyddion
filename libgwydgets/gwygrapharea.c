@@ -1780,7 +1780,12 @@ gwy_graph_area_set_status(GwyGraphArea *area, GwyGraphStatusType status_type)
 {
     g_return_if_fail(GWY_IS_GRAPH_AREA(area));
 
+    if (status_type == area->status)
+        return;
+
     area->status = status_type;
+    if (GTK_WIDGET_DRAWABLE(area))
+        gtk_widget_queue_draw(GTK_WIDGET(area));
     g_signal_emit(area, area_signals[STATUS_CHANGED], 0, (gint)area->status);
 }
 

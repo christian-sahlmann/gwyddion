@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* TODO: Use a treeview instead of the ugly table. */
+
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -30,17 +32,21 @@
 
 enum { NMAX = 10 };
 
-static void     gwy_graph_window_measure_dialog_finalize(GObject *object);
-static gboolean gwy_graph_window_measure_dialog_delete  (GtkWidget *widget,
-                                                         GdkEventAny *event);
-static void     selection_updated_cb                    (GwySelection *selection,
-                                                         gint k,
-                                                         GwyGraphWindowMeasureDialog *dialog);
-static void     index_changed_cb                        (GwyGraphWindowMeasureDialog *dialog);
-static void     method_cb                               (GtkWidget *combo,
-                                                         GwyGraphWindowMeasureDialog *dialog);
-static void     status_cb                               (GwyGraphArea *area,
-                                                         GwyGraphWindowMeasureDialog *dialog);
+static void     gwy_graph_window_measure_dialog_finalize            (GObject *object);
+static gboolean gwy_graph_window_measure_dialog_delete              (GtkWidget *widget,
+                                                                     GdkEventAny *event);
+static void     gwy_graph_window_measure_dialog_show                (GtkWidget *widget);
+static void     gwy_graph_window_measure_dialog_hide                (GtkWidget *widget);
+static void     gwy_graph_window_measure_dialog_connect_selection   (GwyGraphWindowMeasureDialog *dialog);
+static void     gwy_graph_window_measure_dialog_disconnect_selection(GwyGraphWindowMeasureDialog *dialog);
+static void     selection_updated_cb                                (GwySelection *selection,
+                                                                     gint k,
+                                                                     GwyGraphWindowMeasureDialog *dialog);
+static void     index_changed_cb                                    (GwyGraphWindowMeasureDialog *dialog);
+static void     method_cb                                           (GtkWidget *combo,
+                                                                     GwyGraphWindowMeasureDialog *dialog);
+static void     status_cb                                           (GwyGraphArea *area,
+                                                                     GwyGraphWindowMeasureDialog *dialog);
 
 GwyEnum method_type[] = {
     { N_("Intersections"),   METHOD_INTERSECTIONS, },
@@ -57,7 +63,10 @@ _gwy_graph_window_measure_dialog_class_init(GwyGraphWindowMeasureDialogClass *kl
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     gobject_class->finalize = gwy_graph_window_measure_dialog_finalize;
+
     widget_class->delete_event = gwy_graph_window_measure_dialog_delete;
+    widget_class->show = gwy_graph_window_measure_dialog_show;
+    widget_class->hide = gwy_graph_window_measure_dialog_hide;
 }
 
 static void
@@ -72,6 +81,52 @@ gwy_graph_window_measure_dialog_delete(GtkWidget *widget,
     gtk_widget_hide(widget);
 
     return TRUE;
+}
+
+static void
+gwy_graph_window_measure_dialog_show(GtkWidget *widget)
+{
+    GwyGraphWindowMeasureDialog *dialog;
+
+    dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(widget);
+    GTK_WIDGET_CLASS(_gwy_graph_window_measure_dialog_parent_class)->show(widget);
+    gwy_graph_window_measure_dialog_connect_selection(dialog);
+}
+
+static void
+gwy_graph_window_measure_dialog_hide(GtkWidget *widget)
+{
+    GwyGraphWindowMeasureDialog *dialog;
+
+    dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(widget);
+    gwy_graph_window_measure_dialog_disconnect_selection(dialog);
+    GTK_WIDGET_CLASS(_gwy_graph_window_measure_dialog_parent_class)->hide(widget);
+}
+
+static void
+gwy_graph_window_measure_dialog_connect_selection(GwyGraphWindowMeasureDialog *dialog)
+{
+    GwyGraphStatusType status;
+    GwyGraphArea *area;
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)));
+    status = gwy_graph_area_get_status(area);
+    g_return_if_fail(status == GWY_GRAPH_STATUS_XLINES
+                     || status == GWY_GRAPH_STATUS_POINTS);
+
+    dialog->selection = gwy_graph_area_get_selection(area, status);
+    g_object_ref(dialog->selection);
+    gwy_selection_set_max_objects(dialog->selection, NMAX);
+    dialog->selection_id
+        = g_signal_connect(dialog->selection, "changed",
+                           G_CALLBACK(selection_updated_cb), dialog);
+}
+
+static void
+gwy_graph_window_measure_dialog_disconnect_selection(GwyGraphWindowMeasureDialog *dialog)
+{
+    gwy_signal_handler_disconnect(dialog->selection, dialog->selection_id);
+    gwy_object_unref(dialog->selection);
 }
 
 static void
@@ -203,20 +258,17 @@ selection_updated_cb(GwySelection *selection,
     /*update points data */
     for (i = 0; i < NMAX; i++) {
         if (i < n) {
-            if (i)
-            {
+            if (i) {
                 xp = x;
                 yp = y;
                 prevret = ret;
             }
 
-            if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
-            {
+            if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS) {
                 x = spoints[2*i];
                 y = spoints[2*i + 1];
             }
-            else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)
-            {
+            else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) {
                 x = spoints[i];
                 y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
             }
@@ -227,7 +279,7 @@ selection_updated_cb(GwySelection *selection,
             if (ret)
                 value_label(label, y/dialog->y_mag, str);
             else
-                gtk_label_set_text(GTK_LABEL(label), "");
+                gtk_label_set_text(GTK_LABEL(label), NULL);
 
             if (!i)
                 continue;
@@ -240,28 +292,25 @@ selection_updated_cb(GwySelection *selection,
             if (ret && prevret)
                 value_label(label, (y - yp)/dialog->y_mag, str);
             else
-                gtk_label_set_text(GTK_LABEL(label), "");
+                gtk_label_set_text(GTK_LABEL(label), NULL);
 
             label = g_ptr_array_index(dialog->slope, i);
             if (ret && prevret)
-                value_label(label,
-                        180.0/G_PI*atan2((y - yp),
-                                         (x - xp)),
-                        str);
+                value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)), str);
             else
-                gtk_label_set_text(GTK_LABEL(label), "");
+                gtk_label_set_text(GTK_LABEL(label), NULL);
         }
         else {
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(dialog->pointx, i)),
-                               "");
+                               NULL);
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(dialog->pointy, i)),
-                               "");
+                               NULL);
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(dialog->distx, i)),
-                               "");
+                               NULL);
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(dialog->disty, i)),
-                               "");
+                               NULL);
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(dialog->slope, i)),
-                               "");
+                               NULL);
         }
     }
 
@@ -282,7 +331,9 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     GString *str;
 
     gwy_debug("");
+
     dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(g_object_new(GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, NULL));
+    gtk_window_set_title(GTK_WINDOW(dialog), _("Measure Distances"));
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     dialog->graph = GTK_WIDGET(graph);
@@ -305,20 +356,16 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     dialog->index = gtk_adjustment_new(dialog->curve_index,
                                        1, gwy_graph_model_get_n_curves(gmodel),
                                        1, 5, 0);
-    gwy_table_attach_spinbutton(table, 0, "Curve:", "", dialog->index);
+    gwy_table_attach_spinbutton(table, 0, _("Curve:"), NULL, dialog->index);
     g_signal_connect_swapped(dialog->index, "value-changed",
                              G_CALLBACK(index_changed_cb), dialog);
     g_signal_connect(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                      "status-changed",
                      G_CALLBACK(status_cb), dialog);
 
-    gtk_window_set_title(GTK_WINDOW(dialog), "Measure distances");
-
-
-
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Method:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
@@ -329,8 +376,6 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                                             dialog->mmethod, TRUE);
     gtk_table_attach(GTK_TABLE(table), dialog->method, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
-
-
 
     /* big table */
     table = gtk_table_new(6, 11, FALSE);
@@ -343,7 +388,6 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
-
 
     axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
     dialog->x_mag = gwy_axis_get_magnification(axis);
@@ -405,10 +449,11 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     g_string_free(str, TRUE);
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                "Clear", GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR);
+                          GTK_STOCK_CLEAR,
+                          GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR);
 
     return GTK_WIDGET(dialog);
 }
@@ -416,6 +461,18 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 static void
 gwy_graph_window_measure_dialog_finalize(GObject *object)
 {
+    GwyGraphWindowMeasureDialog *dialog;
+
+    dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(object);
+
+    gwy_graph_window_measure_dialog_disconnect_selection(dialog);
+    g_ptr_array_free(dialog->labpoint, TRUE);
+    g_ptr_array_free(dialog->pointx, TRUE);
+    g_ptr_array_free(dialog->pointy, TRUE);
+    g_ptr_array_free(dialog->distx, TRUE);
+    g_ptr_array_free(dialog->disty, TRUE);
+    g_ptr_array_free(dialog->slope, TRUE);
+
     G_OBJECT_CLASS(_gwy_graph_window_measure_dialog_parent_class)->finalize(object);
 }
 
@@ -434,41 +491,34 @@ index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
 static void
 method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
-    GwyGraphArea *area;
-    GwySelection *selection;
+    GwyGraphStatusType status;
 
-    if (gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo))) {
-        area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)));
-        dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    switch (dialog->mmethod) {
+        case METHOD_INTERSECTIONS:
+        status = GWY_GRAPH_STATUS_XLINES;
+        break;
 
-        selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_POINTS);
-        gwy_selection_clear(selection);
-        selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XLINES);
-        gwy_selection_clear(selection);
+        case METHOD_CROSSES:
+        status = GWY_GRAPH_STATUS_POINTS;
+        break;
 
-        if (dialog->mmethod == METHOD_INTERSECTIONS)
-            gwy_graph_set_status(GWY_GRAPH(dialog->graph),
-                                 GWY_GRAPH_STATUS_XLINES);
-        else
-            gwy_graph_set_status(GWY_GRAPH(dialog->graph),
-                                 GWY_GRAPH_STATUS_POINTS);
+        default:
+        g_return_if_reached();
+        break;
     }
+
+    gwy_graph_window_measure_dialog_disconnect_selection(dialog);
+    gwy_graph_set_status(GWY_GRAPH(dialog->graph), status);
+    gwy_graph_window_measure_dialog_connect_selection(dialog);
+    selection_updated_cb(dialog->selection, -1, dialog);
 }
 
 static void
 status_cb(GwyGraphArea *area, GwyGraphWindowMeasureDialog *dialog)
 {
-    GwySelection *selection;
-    GwyGraphStatusType status;
-
-    status = gwy_graph_area_get_status(area);
-    if (status == GWY_GRAPH_STATUS_XLINES
-        || status == GWY_GRAPH_STATUS_POINTS) {
-        selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_PLAIN);
-        /* XXX XXX XXX who in all the bloody hell disconnects it? */
-        g_signal_connect(selection, "changed",
-                         G_CALLBACK(selection_updated_cb), dialog);
-    }
+    /* FIXME: Who knows. What should happen when *someone else* changes the
+     * status while the measure dialog is active? */
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

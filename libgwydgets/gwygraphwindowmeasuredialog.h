@@ -23,9 +23,14 @@
 
 #include <gtk/gtkdialog.h>
 
+G_BEGIN_DECLS
+
 #define GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR 1
 
-G_BEGIN_DECLS
+typedef enum {
+    METHOD_INTERSECTIONS = 0,
+    METHOD_CROSSES       = 1
+} GwyMeasureMethodType;
 
 #define GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG            (_gwy_graph_window_measure_dialog_get_type())
 #define GWY_GRAPH_WINDOW_MEASURE_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, GwyGraphWindowMeasureDialog))
@@ -33,11 +38,6 @@ G_BEGIN_DECLS
 #define GWY_IS_GRAPH_WINDOW_MEASURE_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG))
 #define GWY_IS_GRAPH_WINDOW_MEASURE_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG))
 #define GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
-
-typedef enum {
-    METHOD_INTERSECTIONS = 0,
-    METHOD_CROSSES       = 1
-} GwyMeasureMethodType;
 
 typedef struct _GwyGraphWindowMeasureDialog      GwyGraphWindowMeasureDialog;
 typedef struct _GwyGraphWindowMeasureDialogClass GwyGraphWindowMeasureDialogClass;
@@ -68,6 +68,9 @@ struct _GwyGraphWindowMeasureDialog {
     gint curve_index;
     gdouble x_mag;
     gdouble y_mag;
+
+    GwySelection *selection;
+    gulong selection_id;
 
     gpointer reserved1;
     gpointer reserved2;
