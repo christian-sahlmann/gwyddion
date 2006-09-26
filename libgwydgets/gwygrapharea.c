@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1600,8 +1600,8 @@ gwy_graph_area_set_x_range(GwyGraphArea *area,
 /**
  * gwy_graph_area_set_y_range:
  * @area: A graph area.
- * @x_min: The minimum y value, in real coodrinates.
- * @x_max: The maximum y value, in real coodrinates.
+ * @y_min: The minimum y value, in real coodrinates.
+ * @y_max: The maximum y value, in real coodrinates.
  *
  * Sets the vertical range a graph area displays.
  **/
