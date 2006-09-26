@@ -246,7 +246,7 @@ gwy_graph_draw_curve_segment(const GdkPoint *points,
  * @specs: Specifications (boundaries) of the active area of the graph.
  * @gcmodel: Curve model of the curve to draw.
  *
- * Draws a signle graph curve on a drawable.
+ * Draws a single graph curve on a drawable.
  **/
 void
 gwy_graph_draw_curve(GdkDrawable *drawable,
@@ -305,7 +305,7 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
  * @size: point size
  * @color: point color
  *
- * Draw a line on the graph.
+ * Draws a line segment on a drawable.
  **/
 void
 gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
@@ -341,7 +341,7 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
  * @size: point size
  * @color: point color
  *
- * Draw a point on the graph.
+ * Draws a point on a drawable.
  **/
 void
 gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
@@ -367,7 +367,7 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
  * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: A selection of type #GwySelectionGraphPoint.
  *
- * Draw selection points on the graph
+ * Draws selection points on a drawable.
  **/
 void
 gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
@@ -376,13 +376,19 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
 {
     /* FIXME: use Gtk+ theme */
     static const GwyRGBA color = { 0.4, 0.4, 0.4, 1.0 };
-    gint i, size;
+    gint i, size, n_points;
     gdouble selection_data[2];
+    GwySelection *sel;
 
     size = 6;
 
-    for (i = 0; i < gwy_selection_get_data(GWY_SELECTION(selection), NULL); i++) {
-        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_data);
+    sel = GWY_SELECTION(selection);
+    n_points = gwy_selection_get_data(sel, NULL);
+    if (!n_points)
+        return;
+
+    for (i = 0; i < n_points; i++) {
+        gwy_selection_get_object(sel, i, selection_data);
         gwy_graph_draw_point(drawable, gc,
                              x_data_to_pixel(specs, selection_data[0]),
                              y_data_to_pixel(specs, selection_data[1]),
@@ -398,7 +404,7 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
  * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: A selection of type #GwySelectionGraphArea.
  *
- * Draw selected area on the graph
+ * Draws selected area on a drawable.
  **/
 void
 gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
@@ -410,23 +416,23 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
     gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
+    GwySelection *sel;
 
-    n_of_areas = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
+    sel = GWY_SELECTION(selection);
+    n_of_areas = gwy_selection_get_data(sel, NULL);
     if (n_of_areas == 0)
         return;
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
-        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_areadata);
+        gwy_selection_get_object(sel, i, selection_areadata);
         xmin = x_data_to_pixel(specs, selection_areadata[0]);
         xmax = x_data_to_pixel(specs, selection_areadata[2]);
         ymin = y_data_to_pixel(specs, selection_areadata[1]);
         ymax = y_data_to_pixel(specs, selection_areadata[3]);
-
         gdk_draw_rectangle(drawable, gc, TRUE,
-                           MIN(xmin, xmax),
-                           MIN(ymin, ymax),
+                           MIN(xmin, xmax), MIN(ymin, ymax),
                            fabs(xmax - xmin), fabs(ymax - ymin));
     }
 }
@@ -438,7 +444,7 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
  * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: A selection of type #GwySelectionGraph1DArea.
  *
- * Draw selected x-area on the graph
+ * Draws selected x-area on a drawable.
  **/
 void
 gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
@@ -450,23 +456,23 @@ gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
     gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
+    GwySelection *sel;
 
-    n_of_areas = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
+    sel = GWY_SELECTION(selection);
+    n_of_areas = gwy_selection_get_data(sel, NULL);
     if (n_of_areas == 0)
         return;
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
-        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_areadata);
+        gwy_selection_get_object(sel, i, selection_areadata);
         xmin = x_data_to_pixel(specs, selection_areadata[0]);
         xmax = x_data_to_pixel(specs, selection_areadata[1]);
         ymin = 0;
         ymax = specs->height;
-
         gdk_draw_rectangle(drawable, gc, TRUE,
-                           MIN(xmin, xmax),
-                           MIN(ymin, ymax),
+                           MIN(xmin, xmax), MIN(ymin, ymax),
                            fabs(xmax - xmin), fabs(ymax - ymin));
     }
 }
@@ -479,7 +485,7 @@ gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
  * @specs: Specifications (boundaries) of the active area of the graph.
  * @selection: A selection of type #GwySelectionGraph1DArea.
  *
- * Draws selected y-area on the graph.
+ * Drawss selected y-area on a drawable.
  **/
 void
 gwy_graph_draw_selection_yareas(GdkDrawable *drawable,
@@ -492,24 +498,23 @@ gwy_graph_draw_selection_yareas(GdkDrawable *drawable,
     gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
+    GwySelection *sel;
 
-    n_of_areas = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
+    sel = GWY_SELECTION(selection);
+    n_of_areas = gwy_selection_get_data(sel, NULL);
     if (n_of_areas == 0)
         return;
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
-        gwy_selection_get_object(GWY_SELECTION(selection),
-                                 i, selection_areadata);
+        gwy_selection_get_object(sel, i, selection_areadata);
         xmin = 0;
         xmax = specs->width;
         ymin = y_data_to_pixel(specs, selection_areadata[0]);
         ymax = y_data_to_pixel(specs, selection_areadata[1]);
-
         gdk_draw_rectangle(drawable, gc, TRUE,
-                           MIN(xmin, xmax),
-                           MIN(ymin, ymax),
+                           MIN(xmin, xmax), MIN(ymin, ymax),
                            fabs(xmax - xmin), fabs(ymax - ymin));
     }
 }
@@ -524,7 +529,7 @@ gwy_graph_draw_selection_yareas(GdkDrawable *drawable,
  * @selection: a #GwySelectionGraphLine structure
  * @orientation: horizontal or vertical orientation
  *
- * Draw selected lines on the graph
+ * Draws selected lines on a drawable.
  **/
 void
 gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
@@ -536,16 +541,17 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
     gint i, n_of_lines;
     gdouble selection_linedata;
+    GwySelection *sel;
 
-    n_of_lines = gwy_selection_get_data(GWY_SELECTION(selection), NULL);
+    sel = GWY_SELECTION(selection);
+    n_of_lines = gwy_selection_get_data(sel, NULL);
     if (n_of_lines == 0)
         return;
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_lines; i++) {
-        gwy_selection_get_object(GWY_SELECTION(selection),
-                                 i, &selection_linedata);
+        gwy_selection_get_object(sel, i, &selection_linedata);
         if (orientation == GTK_ORIENTATION_HORIZONTAL)
             gwy_graph_draw_line(drawable, gc,
                                 specs->xmin,
@@ -576,7 +582,7 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
  * @y_grid_data: Array of grid data for the y-axis, it can be %NULL if
  *               @nydata is zero.
  *
- * Draw array of grid lines on the graph
+ * Draws an array of grid lines on a drawable.
  **/
 void
 gwy_graph_draw_grid(GdkDrawable *drawable,
