@@ -1,10 +1,48 @@
-Building docs takes too much time, they are not built by default.  If gtk-doc
-is found the rules are enabled, but not automatically executed. Go to the
-appropriate dir and run
+
+Contents:
+0. Using devhelp
+1. Building documentation
+2. Custom scripts
+3. Makefile rules
+4. Cruft
+
+===[ 0. Using devhelp ]======================================================
+
+If you install Gwyddion to a system directory, its API documentation should
+appear in the table of contents automatically.  To find documentation in a
+nonstandard location, let's assume $HOME/opt/gwyddion, do either:
+
+  export DEVHELP_SEARCH_PATH=$HOME/opt/gwyddion/share/gtk-doc/html
+
+or
+
+  mkdir -p ~/.devhelp/books
+  cd ~/.devhelp/books
+  for x in $HOME/opt/gwyddion/share/gtk-doc/html/*; do ln -s $x .; done
+
+To integrate devehelp to vim, define
+
+  function! DevHelpCurrentWord()
+      let word = expand("<cword>")
+      exe "!devhelp -s " . word
+  endfunction
+
+and map
+
+  :call DevHelpCurrentWord<cr>
+
+to a keystroke of your choice.
+
+
+===[ 1. Building documentation ]=============================================
+
+Building docs takes too much time, they are not built automatically whenever
+source code changes.  If gtk-doc is found the documentation rebuild rules are
+only enabled, not executed.  Change to the appropriate dir and run
 
   make docs
 
-there if you want to update the API documentation.
+if you want to update the API documentation.
 
 This may invoke only a partial update however.  To rebuild the documentation
 fully you can issue make maintainer-clean first, but this removes also
@@ -14,48 +52,61 @@ Makefile and Makefile.in.  So instead the following scriptlet can be used:
   rm -f libgwy*/*-sections.txt libgwy*/*-decl-list.txt libgwy*/template/*
   for x in libgwy*; do make -C "$x" tmpl.stamp; make -C "$x" docs; done
 
-See build_documentation() in utils/gwyddion-night-build for explanation.
+See build_documentation() in utils/gwyddion-night-build for discussion (note
+this script is not distributed, fetch it from CVS).
 
 
-=========================
+===[ 2. Custom scripts ]=====================================================
+
 Almost everything is generated, pay attention as other gtk-doc employing
-projects often let humans maintain much more files.
+projects often let humans maintain much more files.  The ONLY human-edited
+files are:
 
-- libgwy*.types is generated
+- libgwy*-docs.sgml (driver files)
+- libgwy*.overrides (symbol overrides)
+- content files (optional)
+- Makefile templates
+
+The rest is generated:
+
+- libgwy*.types
   rationale: its purpose is to instantiate all type classes a library defines,
              such a task is better automated
   tools: extract-types.py extracts type names from lines
          #define GWY_FOO_GET_(CLASS|IFACE)
 
-- libgwy*-sections.txt is generated
+- libgwy*-sections.txt
   rationale: if header files are organized reasonably they naturaly form
              sections, therefore sections created by gtkdoc-scan are directly
              used
   tools: add-objects.py adds GwyFoo and GwyFooClass to appropriate sections
          for classed types (using libgwy*.hierarchy as class list)
 
-- template/* are generated
-  rationale: the usual state when these files are partially generated and
-             partially human-edited causes neverending revision management
-             pain, therefore *all* section documentation is in the source
-             code
-  the directory is usually called tmpl, but it confused CVS if it was kept
+- template/*
+  rationale: the usual approach when these files are partially generated and
+             partially human-edited is a source of neverending revision
+             management pain, therefore *all* section documentation is in the
+             source code
+  this directory is usually called tmpl, but it confused CVS if it was kept
   after removal
 
 
-=========================
-gtk-doc.mk are universal rules to be included in Makefile.am.
+===[ 3. Makefile rules ]=====================================================
+
+gtk-doc.mk are universal rules to be included in every documentation
+Makefile.am.
 
 
-=========================
-[No longer relevant?]
+===[ 4. Cruft ]==============================================================
+
 gtk-doc scan may place a slightly broken doctype declaration to
 MODULE-docs.sgml
 
-<!doctype book PUBLIC "-//DavenPort//DTD DocBook V3.0//EN" [
+  <!doctype book PUBLIC "-//DavenPort//DTD DocBook V3.0//EN" [
 
 fix it to
 
-<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+  <!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
 
 or else you'll get really weird errors.
+
