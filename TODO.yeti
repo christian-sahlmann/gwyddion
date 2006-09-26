@@ -1,22 +1,16 @@
-- 2.0: Fix library versioning
-- 2.0: Update module -> user guide mapping
-- 2.0: Remove Old metadata warning
-- 2.0: Disable module naming warning
-- Fix facet level to do nothing instead of dumping NaNs on bad data.
-- Graph axes don't initially request correct sizes for labels
 - Graph minor and major ticks are misaligned
-- Graph legend seems to be present even if it's set invisible -- it cannot be
-  seen but it can be moved, try Profiles
+- Fix graph curves drawn by single segment to GdkLines
 - Common functions in file modules, try to reduce duplication:
   highly-nonsquare test
   channel title guess from units
+- Fix facet level to do nothing instead of dumping NaNs on bad data.
 - Add more supported files to MIME types (gwyddion.xml)
 - Ruler:
   - When range is all negative, units are not placed anywhere
-- Why DWT methods have return values?
 - Surf file: units and scales are botched
 - 3D:
   light source grid not visible on some machines?
+- Fix copied channel naming (identical)
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
   complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
