@@ -42,7 +42,7 @@ static GtkWidget *gwy_app_main_window = NULL;
 static GwyTool* current_tool = NULL;
 static GQuark corner_item_quark = 0;
 
-static void       gwy_app_main_window_save_position(void);
+static gboolean   gwy_app_main_window_save_position(void);
 static void       gwy_app_main_window_restore_position(void);
 static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
@@ -90,11 +90,12 @@ gwy_app_quit(void)
     return TRUE;
 }
 
-static void
+static gboolean
 gwy_app_main_window_save_position(void)
 {
     gwy_app_save_window_position(GTK_WINDOW(gwy_app_main_window),
                                  "/app/toolbox", TRUE, FALSE);
+    return FALSE;
 }
 
 static void
@@ -163,7 +164,7 @@ gwy_app_main_window_set(GtkWidget *window)
 
     gwy_app_main_window = window;
     gwy_app_main_window_restore_position();
-    g_signal_connect(window, "unmap",
+    g_signal_connect(window, "delete-event",
                      G_CALLBACK(gwy_app_main_window_save_position), NULL);
     g_signal_connect(window, "show",
                      G_CALLBACK(gwy_app_main_window_restore_position), NULL);
