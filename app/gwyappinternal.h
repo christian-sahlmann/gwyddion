@@ -43,8 +43,6 @@ G_GNUC_INTERNAL
 void     _gwy_app_graph_set_current           (GwyGraph *graph);
 
 void     gwy_app_main_window_set              (GtkWidget *window);
-gboolean gwy_app_main_window_save_position    (void);
-void     gwy_app_main_window_restore_position (void);
 void     gwy_app_menu_set_recent_files_menu   (GtkWidget *menu);
 
 G_END_DECLS

@@ -232,7 +232,6 @@ gwy_app_toolbox_create(void)
     gtk_window_set_role(GTK_WINDOW(toolbox), "toolbox");
     gtk_window_set_resizable(GTK_WINDOW(toolbox), FALSE);
     gwy_app_main_window_set(toolbox);
-    gwy_app_main_window_restore_position();
 
     accel_group = gtk_accel_group_new();
     g_object_set_data(G_OBJECT(toolbox), "accel_group", accel_group);
@@ -290,14 +289,11 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
     /* XXX */
-    g_signal_connect(toolbox, "delete-event",
-                     G_CALLBACK(gwy_app_main_window_save_position), NULL);
     g_signal_connect(toolbox, "delete-event", G_CALLBACK(gwy_app_quit), NULL);
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
 
     gtk_widget_show_all(toolbox);
-    gwy_app_main_window_restore_position();
     for (l = toolbars; l; l = g_slist_next(l))
         gtk_widget_set_no_show_all(GTK_WIDGET(l->data), FALSE);
     g_slist_free(toolbars);

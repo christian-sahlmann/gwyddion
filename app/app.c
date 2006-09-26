@@ -42,6 +42,8 @@ static GtkWidget *gwy_app_main_window = NULL;
 static GwyTool* current_tool = NULL;
 static GQuark corner_item_quark = 0;
 
+static void       gwy_app_main_window_save_position(void);
+static void       gwy_app_main_window_restore_position(void);
 static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
@@ -88,16 +90,14 @@ gwy_app_quit(void)
     return TRUE;
 }
 
-gboolean
+static void
 gwy_app_main_window_save_position(void)
 {
     gwy_app_save_window_position(GTK_WINDOW(gwy_app_main_window),
                                  "/app/toolbox", TRUE, FALSE);
-    /* to be usable as an event handler */
-    return FALSE;
 }
 
-void
+static void
 gwy_app_main_window_restore_position(void)
 {
     gwy_app_restore_window_position(GTK_WINDOW(gwy_app_main_window),
@@ -155,11 +155,18 @@ gwy_app_main_window_get(void)
 void
 gwy_app_main_window_set(GtkWidget *window)
 {
-    if (gwy_app_main_window && window != gwy_app_main_window)
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    if (gwy_app_main_window && window != gwy_app_main_window) {
         g_critical("Trying to change app main window");
-    if (!GTK_IS_WINDOW(window))
-        g_critical("Setting app main window to a non-GtkWindow");
+        return;
+    }
+
     gwy_app_main_window = window;
+    gwy_app_main_window_restore_position();
+    g_signal_connect(window, "unmap",
+                     G_CALLBACK(gwy_app_main_window_save_position), NULL);
+    g_signal_connect(window, "show",
+                     G_CALLBACK(gwy_app_main_window_restore_position), NULL);
 }
 
 static gboolean
