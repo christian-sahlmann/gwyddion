@@ -1,4 +1,4 @@
-1.99.9.20060912
+1.99.9.20060926
 
 2.0 (0000-00-00)
 Application:
@@ -6,37 +6,64 @@ Application:
   only when a mask is present (fixing crashes when they were activated without
   a mask).
 - Data browser window can be closed, Meta/Show Data Browser displays it again
-  and/or raises and deminimizes it
+  and/or raises and deminimizes it.
+- Data browser UI was reorganized.
+- It is possible to copy channels and graphs to new or other open files
+  (using data browser buttons and/or drag'n'drop).
 - 3D window reflects channel title changes.
 
 Libraries:
-- Unix shared library versioning was switched back to normal, with libgwyfoo2
-  as the base name (that is soname versions start from 0 again).
+- Library base names was changed to libgwyfoo2 with versions starting
+  from 0 again. Unix shared library versioning was switched from hardcoded
+  versions back to normal.
 - libgwydgets: GwyColorAxis behaviour for bad ranges was improved.
 - libgwydgets: Set Curve Color dialog is updated properly upon switch to
   another curve.
 - libgwydgets: Curve titles are no longer reset to empty upon switch to
   another curve.
-- libgwydgets: Text graph export functions accept NULL initial string, bogus
-  pixbuf argument was removed from pixmap export.
-- libgwydgets: foo_draw_on_drawable() graph component methods have the object
-  as their first argument, as is usual; duplicite nouns were removed from
-  their names.
 - libgwydgets: Wrong position of the bottom axis label on exported pixmaps was
   fixed.
 - libgwydgets: Posibility to move inivisible graph legend was fixed.
+- libgwyapp: gwy_app_copy_data_items() was renamed to
+  gwy_app_sync_data_items(), it can synchronize more items and deletion is
+  optional now.
+- libgwydgets: Graph widget updates are really model-driven now, various
+  refresh functions were removed.
+- libgwydgets: GwyAxis makes a clear difference between requested and
+  actually used range, the latter no longer affects the former.  Graph axis
+  range API was reworked.
+- libgwydgets: Most getters and setters were removed from GwyGraphModel and
+  GwyGraphCurveModel interfaces in favour of properties.
+- libgwydgets: GwyGraphModel and GwyGraphCurveModel can claculate axis range
+  request themselves and cache the results.
+- libgwydgets: Questionable GwyGraphModel signal "layout-updated" was
+  removed, graph model properly emits notifications on property changes,
+  it has new "curve-data-changed" and "curve-notify" signals that simplify
+  notifications of curve changes.
+- libgwydgets: Auxiliary graph dialog user interface was improved.
+- libgwydgets: Graph vector export crash when on unimplemented point symbol
+  types was fixed.
+- libgwydgets: Dashed line style really works in graphs.
+- There were miscellaneous changes in the graph API with bogus functions or
+  function arguments removed, misnamed functions renamed and argument
+  handling sanitized.
 
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
 - Color range: Crash upon tool switch when there was already a selection
   was fixed.
 - Assing AFM: Crash on import introduced in 1.99.9 was fixed.
+- SPMLab: Channel type is imported and used as the channel title.
 - Crop, Color range, Filters, Mask editor, Statistical function, Statistical
   quantities: Wrong selection boundaries when it was drawn `backwards' were
   fixed.
 - Graph exports: User interface was made more consistent, memory leaks were
   fixed.
 - Mark Grain by Threshold: instant updates option available
+
+Other:
+- Source files dependent on ./configure-set installation paths are properly
+  rebuilt when ./configure is re-run.
 
 
 1.99.9 (2006-09-07)
