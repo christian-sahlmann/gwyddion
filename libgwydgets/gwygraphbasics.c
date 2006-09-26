@@ -79,6 +79,165 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
                    - log10(specs->real_ymin)))*(specs->height - 1.0));
 }
 
+static void
+gwy_graph_draw_points(GdkDrawable *drawable,
+                      GdkGC *gc,
+                      guint n,
+                      const GdkPoint *points,
+                      GwyGraphPointType point_type,
+                      gint size)
+{
+    gint x, y, size_half;
+    gboolean filled;
+    guint i;
+
+    size_half = size/2;
+    filled = FALSE;
+
+    switch (point_type) {
+        case GWY_GRAPH_POINT_SQUARE:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_rectangle(drawable, gc, FALSE,
+                               x - size_half, y - size_half,
+                               2*size_half, 2*size_half);
+        }
+        break;
+
+        case GWY_GRAPH_POINT_FILLED_SQUARE:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_rectangle(drawable, gc, TRUE,
+                               x - size_half, y - size_half,
+                               2*size_half + 1, 2*size_half + 1);
+        }
+        break;
+
+        case GWY_GRAPH_POINT_CROSS:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_line(drawable, gc, x - size_half, y, x + size_half, y);
+            gdk_draw_line(drawable, gc, x, y - size_half, x, y + size_half);
+        }
+        break;
+
+        case GWY_GRAPH_POINT_DISC:
+        filled = TRUE;
+        case GWY_GRAPH_POINT_CIRCLE:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_arc(drawable, gc, filled,
+                         x - size_half, y - size_half,
+                         2*size_half + 1, 2*size_half + 1,
+                         0, 23040);
+        }
+        break;
+
+        case GWY_GRAPH_POINT_STAR:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_line(drawable, gc, x - size_half, y, x + size_half, y);
+            gdk_draw_line(drawable, gc, x, y - size_half, x, y + size_half);
+            gdk_draw_line(drawable, gc,
+                          x - 3*size/8, y - 3*size/8,
+                          x + 3*size/8, y + 3*size/8);
+            gdk_draw_line(drawable, gc,
+                          x - 3*size/8, y + 3*size/8,
+                          x + 3*size/8, y - 3*size/8);
+        }
+        case GWY_GRAPH_POINT_TIMES:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_line(drawable, gc,
+                          x - 3*size/8, y - 3*size/8,
+                          x + 3*size/8, y + 3*size/8);
+            gdk_draw_line(drawable, gc,
+                          x - 3*size/8, y + 3*size/8,
+                          x + 3*size/8, y - 3*size/8);
+        }
+        break;
+
+        case GWY_GRAPH_POINT_FILLED_TRIANGLE_UP:
+        filled = TRUE;
+        case GWY_GRAPH_POINT_TRIANGLE_UP:
+        for (i = 0; i < n; i++) {
+            GdkPoint vertices[] = {
+                { points[i].x, points[i].y - size/GWY_SQRT3 },
+                { points[i].x - size_half, points[i].y + size/GWY_SQRT3/2.0 },
+                { points[i].x + size_half, points[i].y + size/GWY_SQRT3/2.0 },
+            };
+            gdk_draw_polygon(drawable, gc, filled,
+                             vertices, G_N_ELEMENTS(vertices));
+        }
+        break;
+
+        case GWY_GRAPH_POINT_FILLED_TRIANGLE_DOWN:
+        filled = TRUE;
+        case GWY_GRAPH_POINT_TRIANGLE_DOWN:
+        for (i = 0; i < n; i++) {
+            GdkPoint vertices[] = {
+                { points[i].x, points[i].y + size/GWY_SQRT3 },
+                { points[i].x - size_half, points[i].y - size/GWY_SQRT3/2.0 },
+                { points[i].x + size_half, points[i].y - size/GWY_SQRT3/2.0 },
+            };
+            gdk_draw_polygon(drawable, gc, filled,
+                             vertices, G_N_ELEMENTS(vertices));
+        }
+        break;
+
+        case GWY_GRAPH_POINT_FILLED_DIAMOND:
+        filled = TRUE;
+        case GWY_GRAPH_POINT_DIAMOND:
+        for (i = 0; i < n; i++) {
+            GdkPoint vertices[] = {
+                { points[i].x - size_half, points[i].y },
+                { points[i].x, points[i].y - size_half },
+                { points[i].x + size_half, points[i].y },
+                { points[i].x, points[i].y + size_half },
+            };
+            gdk_draw_polygon(drawable, gc, filled,
+                             vertices, G_N_ELEMENTS(vertices));
+        }
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+}
+
+static void
+gwy_graph_draw_curve_segment(const GdkPoint *points,
+                             guint n,
+                             GdkDrawable *drawable,
+                             GdkGC *gc,
+                             GdkLineStyle line_style,
+                             gint line_width,
+                             GwyGraphPointType point_type,
+                             gint symbol_size)
+{
+    /* Line */
+    if (line_width) {
+        gdk_gc_set_line_attributes(gc, line_width,
+                                   line_style, GDK_CAP_BUTT, GDK_JOIN_MITER);
+        /* XXX: gdk_draw_lines() do not take const argument */
+        gdk_draw_lines(drawable, gc, (GdkPoint*)points, n);
+    }
+
+    /* Symbols */
+    if (symbol_size) {
+        gdk_gc_set_line_attributes(gc, MAX(symbol_size/16, 1),
+                               GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+        gwy_graph_draw_points(drawable, gc, n, points, point_type, symbol_size);
+    }
+}
+
 /**
  * gwy_graph_draw_curve:
  * @drawable: A drawable.
@@ -95,46 +254,42 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
                      GwyGraphActiveAreaSpecs *specs,
                      GwyGraphCurveModel *gcmodel)
 {
-    gint i, x, y, pxn = 0, pyn = 0;
+    GdkPoint *points;
+    gint i, n, symbol_size, line_width;
 
-    for (i = 0; i < gcmodel->n; i++) {
-        if (i == 0) {
-            x = x_data_to_pixel(specs, gcmodel->xdata[i]);
-            y = y_data_to_pixel(specs, gcmodel->ydata[i]);
-        }
-        else {
-            x = pxn;
-            y = pyn;
-        }
-        if (i < gcmodel->n - 1) {
-            pxn = x_data_to_pixel(specs, gcmodel->xdata[i + 1]);
-            pyn = y_data_to_pixel(specs, gcmodel->ydata[i + 1]);
-        }
-        if (x < -specs->width
-            || x > 2*specs->width
-            || y < -specs->height
-            || y > 2*specs->height
-            || pxn < -specs->width
-            || pxn > 2*specs->width
-            || pyn < -specs->height
-            || pyn > 2*specs->height)
-            continue;
-        if (i < gcmodel->n - 1
-            && (gcmodel->mode == GWY_GRAPH_CURVE_LINE
-                || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))
-            gwy_graph_draw_line(drawable, gc,
-                                x, y,
-                                pxn, pyn,
-                                gcmodel->line_style, gcmodel->line_width,
-                                &(gcmodel->color));
+    line_width = symbol_size = 0;
+    if (gcmodel->mode == GWY_GRAPH_CURVE_LINE
+        || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
+        line_width = gcmodel->line_width;
+    if (gcmodel->mode == GWY_GRAPH_CURVE_POINTS
+        || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS)
+        symbol_size = gcmodel->point_size;
 
-        if ((gcmodel->mode == GWY_GRAPH_CURVE_POINTS
-             || gcmodel->mode == GWY_GRAPH_CURVE_LINE_POINTS))
-            gwy_graph_draw_point(drawable, gc,
-                                 x, y,
-                                 gcmodel->point_type, gcmodel->point_size,
-                                 &(gcmodel->color));
+    if (!line_width && !symbol_size)
+        return;
+
+    gwy_rgba_set_gdk_gc_fg(&gcmodel->color, gc);
+    points = g_new(GdkPoint, gcmodel->n);
+
+    for (i = n = 0; i < gcmodel->n; i++) {
+        points[n].x = x_data_to_pixel(specs, gcmodel->xdata[i]);
+        points[n].y = y_data_to_pixel(specs, gcmodel->ydata[i]);
+        /* Split the line into segments that do not stick out of the area */
+        if (points[n].x >= -specs->width && points[n].x <= 2*specs->width
+            && points[n].y >= -specs->height && points[n].y <= 2*specs->height)
+            n++;
+        else if (n) {
+            gwy_graph_draw_curve_segment(points, n, drawable, gc,
+                                         gcmodel->line_style, line_width,
+                                         gcmodel->point_type, symbol_size);
+            n = 0;
+        }
     }
+    if (n)
+        gwy_graph_draw_curve_segment(points, n, drawable, gc,
+                                     gcmodel->line_style, line_width,
+                                     gcmodel->point_type, symbol_size);
+    g_free(points);
 }
 
 /**
@@ -163,6 +318,7 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
     GwyRGBA rgba;
 
     gwy_rgba_set_gdk_gc_fg(color, gc);
+    /* FIXME: WTF? */
     rgba.r = MIN(color->g + 0.2, 1.0);
     rgba.g = MIN(color->b + 0.2, 1.0);
     rgba.b = MIN(color->r + 0.2, 1.0);
@@ -194,101 +350,14 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
                      gint size,
                      const GwyRGBA *color)
 {
-    gint point_thickness;
-    gint i, j;
-    gint size_half = size/2;
-    gboolean filled = FALSE;
-
-    point_thickness = MAX(size/10, 1);
+    GdkPoint point;
 
     gwy_rgba_set_gdk_gc_fg(color, gc);
-    gdk_gc_set_line_attributes(gc, point_thickness,
+    gdk_gc_set_line_attributes(gc, MAX(size/16, 1),
                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
-
-    i = x;
-    j = y;
-    switch (type) {
-        case GWY_GRAPH_POINT_SQUARE:
-        gdk_draw_rectangle(drawable, gc, FALSE,
-                           i - size_half, j - size_half,
-                           2*size_half, 2*size_half);
-        break;
-
-        case GWY_GRAPH_POINT_FILLED_SQUARE:
-        gdk_draw_rectangle(drawable, gc, TRUE,
-                           i - size_half, j - size_half,
-                           2*size_half + 1, 2*size_half + 1);
-        break;
-
-        case GWY_GRAPH_POINT_CROSS:
-        gdk_draw_line(drawable, gc, i - size_half, j, i + size_half, j);
-        gdk_draw_line(drawable, gc, i, j - size_half, i, j + size_half);
-        break;
-
-        case GWY_GRAPH_POINT_DISC:
-        filled = TRUE;
-        case GWY_GRAPH_POINT_CIRCLE:
-        gdk_draw_arc(drawable, gc, filled,
-                     i - size_half, j - size_half,
-                     2*size_half + 1, 2*size_half + 1,
-                     0, 23040);
-        break;
-
-        case GWY_GRAPH_POINT_STAR:
-        gdk_draw_line(drawable, gc, i - size_half, j, i + size_half, j);
-        gdk_draw_line(drawable, gc, i, j - size_half, i, j + size_half);
-        case GWY_GRAPH_POINT_TIMES:
-        gdk_draw_line(drawable, gc,
-                      i - 3*size/8, j - 3*size/8, i + 3*size/8, j + 3*size/8);
-        gdk_draw_line(drawable, gc,
-                      i - 3*size/8, j + 3*size/8, i + 3*size/8, j - 3*size/8);
-        break;
-
-        case GWY_GRAPH_POINT_FILLED_TRIANGLE_UP:
-        filled = TRUE;
-        case GWY_GRAPH_POINT_TRIANGLE_UP:
-        {
-            GdkPoint vertices[] = {
-                { i, j - size/GWY_SQRT3 },
-                { i - size_half, j + size/GWY_SQRT3/2.0 },
-                { i + size_half, j + size/GWY_SQRT3/2.0 },
-            };
-            gdk_draw_polygon(drawable, gc, filled,
-                             vertices, G_N_ELEMENTS(vertices));
-        }
-        break;
-
-        case GWY_GRAPH_POINT_FILLED_TRIANGLE_DOWN:
-        filled = TRUE;
-        case GWY_GRAPH_POINT_TRIANGLE_DOWN:
-        {
-            GdkPoint vertices[] = {
-                { i, j + size/GWY_SQRT3 },
-                { i - size_half, j - size/GWY_SQRT3/2.0 },
-                { i + size_half, j - size/GWY_SQRT3/2.0 },
-            };
-            gdk_draw_polygon(drawable, gc, filled,
-                             vertices, G_N_ELEMENTS(vertices));
-        }
-        break;
-
-        case GWY_GRAPH_POINT_FILLED_DIAMOND:
-        filled = TRUE;
-        case GWY_GRAPH_POINT_DIAMOND:
-        {
-            GdkPoint vertices[] = {
-                { i - size_half, j }, { i, j - size_half },
-                { i + size_half, j }, { i, j + size_half },
-            };
-            gdk_draw_polygon(drawable, gc, filled,
-                             vertices, G_N_ELEMENTS(vertices));
-        }
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
+    point.x = x;
+    point.y = y;
+    gwy_graph_draw_points(drawable, gc, 1, &point, type, size);
 }
 
 /**
