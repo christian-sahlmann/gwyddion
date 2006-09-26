@@ -60,6 +60,7 @@ Modules:
 - Graph exports: User interface was made more consistent, memory leaks were
   fixed.
 - Mark Grain by Threshold: instant updates option available
+- Remove Grain by Threshold: instant updates option available
 
 Other:
 - Source files dependent on ./configure-set installation paths are properly
