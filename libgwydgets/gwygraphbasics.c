@@ -503,7 +503,7 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
  * @nxdata: Number of x grid positions.
  * @x_grid_data: Array of grid data for the x-axis, it can be %NULL if
  *               @nxdata is zero.
- * @nxdata: Number of y grid positions.
+ * @nydata: Number of y grid positions.
  * @y_grid_data: Array of grid data for the y-axis, it can be %NULL if
  *               @nydata is zero.
  *
