@@ -138,7 +138,7 @@ clean-local:
 
 maintainer-clean-local: clean
 	cd $(srcdir) && rm -rf xml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
-	cd $(srcdir) && rm -rf $(DOC_MODULE).types $(DOC_MODULE)-sections.txt
+	cd $(srcdir) && rm -rf template $(DOC_MODULE).types $(DOC_MODULE)-sections.txt
 
 install-data-local:
 	installfiles=`echo $(srcdir)/html/*`; \
