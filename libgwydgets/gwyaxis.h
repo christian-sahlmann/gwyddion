@@ -67,6 +67,7 @@ struct _GwyAxis {
     GtkPositionType orientation;
 
     gint outer_border_width;
+    gboolean rerequest_size;
 
     gdouble reqmin;
     gdouble reqmax;

@@ -562,6 +562,7 @@ gwy_axis_size_request(GtkWidget *widget,
     gint sep;
 
     axis = GWY_AXIS(widget);
+    gwy_debug("%p(%d)", axis, axis->orientation);
 
     requisition->height = requisition->width = 0;
 
@@ -611,6 +612,14 @@ gwy_axis_size_request(GtkWidget *widget,
             pango_layout_get_pixel_extents(layout, NULL, &rect);
             rect_label.width = MAX(rect_label.width, rect.width);
         }
+        if (!axis->mjticks->len) {
+            axis->rerequest_size++;
+            if (G_UNLIKELY(axis->rerequest_size > 3)) {
+                g_warning("Axis size rerequest repeated 3 times, giving up");
+                axis->rerequest_size = 0;
+            }
+        }
+        gwy_debug("%p must rerequest: %d", axis, axis->rerequest_size);
         requisition->width += rect_label.width;
         break;
 
@@ -659,6 +668,8 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
     gint scaleres, iterations;
 
+    gwy_debug("%p(%d)", axis, axis->orientation);
+
     if (width == -1 && GTK_WIDGET_REALIZED(axis))
         width = GTK_WIDGET(axis)->allocation.width;
     if (height == -1 && GTK_WIDGET_REALIZED(axis))
@@ -693,6 +704,11 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 
     g_signal_emit(axis, axis_signals[RESCALED], 0);
 
+    if (axis->rerequest_size) {
+        gwy_debug("%p issuing rerequest", axis);
+        axis->rerequest_size = 0;
+        gtk_widget_queue_resize(GTK_WIDGET(axis));
+    }
     if (GTK_WIDGET_DRAWABLE(axis))
         gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
