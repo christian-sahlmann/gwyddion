@@ -140,7 +140,7 @@ CVS generally doesn't contain generated files, no matter how unusual tools
 may be needed to generate them.  Consider use of nightly snapshot tarballs
 available at
 
-  http://gwyddion.net/download.php#cvs
+  http://gwyddion.net/download.php#head
 
 Prerequisities:
 - everything needed for compilation from tarballs
