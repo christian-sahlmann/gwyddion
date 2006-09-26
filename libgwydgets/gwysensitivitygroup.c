@@ -526,7 +526,7 @@ gwy_sensitivity_group_get_senslist(GwySensitivityGroup *sensgroup,
  * We create buttons for three actions, one operates on image data, another
  * on graph data, and the last on both:
  * <informalexample><programlisting>
- * sensgroup = gwy_sensitivity_group_new();
+ * sensgroup = gwy_sensitivity_group_new<!-- -->();
  * button = gtk_button_new_with_label("Filter Data");
  * gwy_sensitivity_group_add_widget(sensgroup, button, SENS_IMAGE);
  * button = gtk_button_new_with_label("Fit Graph");
