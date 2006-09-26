@@ -242,6 +242,22 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
     gwy_graph_refresh_all(graph);
 }
 
+/**
+ * gwy_graph_get_model:
+ * @graph: A graph widget.
+ *
+ * Gets the model of a graph.
+ *
+ * Returns: The graph model this graph widget displays.
+ **/
+GwyGraphModel*
+gwy_graph_get_model(GwyGraph *graph)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
+
+    return graph->graph_model;
+}
+
 static void
 gwy_graph_model_notify(GwyGraph *graph,
                        GParamSpec *pspec,
@@ -390,27 +406,14 @@ gwy_graph_axis_rescaled(GwyAxis *axis, GwyGraph *graph)
 }
 
 /**
- * gwy_graph_get_model:
- * @graph: A graph widget.
- *
- * Gets the model of a graph.
- *
- * Returns: Graph model associated with this graph widget (do not free).
- **/
-GwyGraphModel*
-gwy_graph_get_model(GwyGraph *graph)
-{
-    return  graph->graph_model;
-}
-
-/**
  * gwy_graph_get_axis:
  * @graph: A graph widget.
  * @type: Axis orientation
  *
- * Returns: the #GwyAxis (of given orientation) within @graph (do not free).
+ * Gets a graph axis.
+ *
+ * Returns: The axis (of given orientation) within the graph widget.
  **/
-/* XXX: Malformed documentation. */
 GwyAxis*
 gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
 {
@@ -444,12 +447,15 @@ gwy_graph_set_axis_visible(GwyGraph *graph,
  * gwy_graph_get_area:
  * @graph: A graph widget.
  *
- * Returns: the #GwyGraphArea within @graph (do not free).
+ * Gets the area widget of a graph.
+ *
+ * Returns: The graph area widget within the graph.
  **/
-/* XXX: Malformed documentation. */
 GtkWidget*
 gwy_graph_get_area(GwyGraph *graph)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
+
     return GTK_WIDGET(graph->area);
 }
 
@@ -458,11 +464,11 @@ gwy_graph_get_area(GwyGraph *graph)
  * @graph: A graph widget.
  * @status: graph status
  *
- * Set status of the graph widget. Status determines how the graph
- * reacts on mouse events. This includes point or area selection and zooming.
+ * Sets the status of a graph widget.
  *
+ * The status determines how the graph reacts on mouse events.
+ * This includes point or area selection and zooming.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
 {
@@ -473,10 +479,11 @@ gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
  * gwy_graph_get_status:
  * @graph: A graph widget.
  *
- * Get status of the graph widget. Status determines how the graph
- * reacts on mouse events. This includes point or area selection and zooming.
+ * Get the status of a graph widget.
  *
- * Returns: graph status
+ * See gwy_graph_set_status() for more.
+ *
+ * Returns: The current graph status.
  **/
 GwyGraphStatusType
 gwy_graph_get_status(GwyGraph *graph)
@@ -549,9 +556,16 @@ gwy_graph_label_updated(GwyAxis *axis, GwyGraph *graph)
  * @short_description: Widget for displaying graphs
  *
  * #GwyGraph is a basic widget for displaying graphs.
- * It consists of several widgets that can also be used separately.
- * However, it is recomended (and it should be easy)
- * to use the whole #GwyGraph widget and its API for most purposes.
+ * It consists of several widgets that can also be used separately (at least
+ * in principle):
+ * #GwyGraphArea forms the main part of the graph,
+ * #GwyAxis is used for the axes,
+ * #GwyGraphLabel represents the key
+ * and #GwyGraphCorner is a dummy widget (at this moment) used for graph
+ * corners.
+ *
+ * Persisent graph properties and data are represented with #GwyGraphModel.
+ * Changes to the model are automatically reflected in the graph.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

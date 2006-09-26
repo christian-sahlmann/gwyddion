@@ -77,9 +77,9 @@ gwy_graph_label_init(GwyGraphLabel *label)
 /**
  * gwy_graph_label_new:
  *
- * creates new graph label.
+ * Creates a new graph label.
  *
- * Returns: new graph label widget
+ * Returns: A new graph label widget as a #GtkWidget.
  **/
 GtkWidget*
 gwy_graph_label_new()
@@ -268,6 +268,15 @@ gwy_graph_label_set_model(GwyGraphLabel *label,
     gwy_graph_label_refresh_all(label);
 }
 
+/**
+ * gwy_graph_label_get_model:
+ * @label: A graph label.
+ *
+ * Gets the model of a graph key.
+ *
+ * Returns: The graph model this graph label takes curve properties and
+ * descriptions from.
+ **/
 GwyGraphModel*
 gwy_graph_label_get_model(GwyGraphLabel *label)
 {
@@ -326,7 +335,8 @@ gwy_graph_label_curve_notify(GwyGraphLabel *label,
  * gwy_graph_label_draw_on_drawable:
  * @label: graph label
  * @drawable: the #GdkDrawable
- * @gc: a #GdkGC graphics context.
+ * @gc: Graphics context.
+ *      It is modified by this function unpredictably.
  * @layout: pango layout
  * @x: x position where label is to be drawn
  * @y: y position where label is to be drawn
@@ -504,8 +514,9 @@ gwy_graph_label_refresh_all(GwyGraphLabel *label)
 
 /* Determine requested size of label
  * (It will be needed by grapharea to put the label into layout) */
-/* FIXME: It seems to overestimate the size a bit, it's visible on labels with
- * many curves. */
+/* FIXME: It seems to overestimate the height a bit, it's visible on labels
+ * with many curves.  It also seems to strangely underestimate the width
+ * for curve descriptions under certain length. */
 static void
 gwy_graph_label_calculate_size(GwyGraphLabel *label)
 {
@@ -566,9 +577,11 @@ gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
  * @height: hieght of the graph label
  * @fontsize: fontsize of the label
  *
- * Returns: the graph label vector (piece of postscript code) as a string
+ * Creates PostScript representation of a graph label.
+ *
+ * Returns: A fragment of PostScript code representing the the graph label
+ *          as a newly allocated #GString.
  **/
-/* XXX: Malformed documentation */
 GString*
 gwy_graph_label_export_vector(GwyGraphLabel *label,
                               gint x, gint y,
@@ -653,10 +666,10 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
 /**
  * SECTION:gwygraphlabel
  * @title: GwyGraphLabel
- * @short_description: Graph curve legend
+ * @short_description: Graph curve key
  *
  * #GwyGraphLabel is a part of #GwyGraph, it renders frame with graph curve
- * legend.  It can be probabaly used only within #GwyGraph.
+ * key.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -326,7 +326,7 @@ gwy_axis_init(GwyAxis *axis)
  * gwy_axis_new:
  * @orientation:  axis orientation
  *
- * Creates new axis.
+ * Creates a new axis.
  *
  * Returns: New axis as a #GtkWidget.
  **/
@@ -788,7 +788,8 @@ gwy_axis_expose(GtkWidget *widget,
  * gwy_axis_draw_on_drawable:
  * @axis: An axis.
  * @drawable: Drawable to draw on.
- * @gc: A #GdkGC graphics context.
+ * @gc: Graphics context.
+ *      It is modified by this function unpredictably.
  * @xmin: The minimum x-axis value.
  * @ymin: The minimum y-axis value.
  * @width: The width of the x-axis.
@@ -1530,7 +1531,7 @@ gwy_axis_formatticks(GwyAxis *a)
  * @axis: An axis.
  * @is_visible: visibility
  *
- * Sets visibility of axis.
+ * Sets the visibility of an axis.
  **/
 void
 gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
@@ -1543,11 +1544,10 @@ gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
 /**
  * gwy_axis_set_auto:
  * @axis: An axis.
- * @is_auto: auto preperty
+ * @is_auto: %TRUE to enable automatic tick size and distribution adjustment,
+ *           %FALSE to disable it.
  *
- * Sets the auto property. If TRUE, axis changes fonts
- * and ticks sizes to produce reasonable output at different
- * widget sizes.
+ * Enables or disables automatic axis adjustmet.
  **/
 void
 gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
@@ -1562,8 +1562,11 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
  * @min: Minimum requisition (min boundary value).
  * @max: Maximum requisition (max boundary value).
  *
- * Set requisition of axis boundaries. Axis will fix the boundaries
- * to satisfy requisition but still have reasonable tick values and spacing.
+ * Sets the requisition of axis boundaries.
+ *
+ * The axis will adjust the boundaries to satisfy requisition but still have
+ * reasonable tick values and spacing.  Use gwy_axis_get_range() to obtain the
+ * boundaries the axis actually decided to use.
  **/
 void
 gwy_axis_request_range(GwyAxis *axis, gdouble min, gdouble max)
@@ -1581,6 +1584,14 @@ gwy_axis_request_range(GwyAxis *axis, gdouble min, gdouble max)
         gtk_widget_queue_resize(GTK_WIDGET(axis));
 }
 
+/**
+ * gwy_axis_get_range:
+ * @axis: An axis.
+ * @min: Location to store actual axis minimum, or %NULL.
+ * @max: Location to store actual axis maximum, or %NULL.
+ *
+ * Gets the actual boundaries of an axis.
+ **/
 void
 gwy_axis_get_range(GwyAxis *axis,
                    gdouble *min,
@@ -1594,6 +1605,14 @@ gwy_axis_get_range(GwyAxis *axis,
         *max = axis->max;
 }
 
+/**
+ * gwy_axis_get_requested_range:
+ * @axis: An axis.
+ * @min: Location to store requested axis minimum, or %NULL.
+ * @max: Location to store requested axis maximum, or %NULL.
+ *
+ * Gets the requested boundaries of an axis.
+ **/
 void
 gwy_axis_get_requested_range(GwyAxis *axis,
                              gdouble *min,
@@ -1692,7 +1711,7 @@ gwy_axis_get_magnification(GwyAxis *axis)
 
 /**
  * gwy_axis_get_magnification_string:
- * @axis: Axis widget
+ * @axis: An axis.
  *
  * Gets the magnification string of an axis.
  *
@@ -1709,14 +1728,14 @@ gwy_axis_get_magnification_string(GwyAxis *axis)
 
 /**
  * gwy_axis_export_vector:
- * @axis: Axis widget
- * @xmin: minimum value of x-axis
- * @ymin: minimum value of y-axis
+ * @axis: An axis.
+ * @xmin:
+ * @ymin:
  * @width: width of the x-axis
  * @height: hieght of the y-axis
- * @fontsize: the fontsize
+ * @fontsize:
  *
- * Returns: Magnification string of the axis
+ *
  **/
 GString*
 gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
@@ -1968,8 +1987,8 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
  *
  * Gets the positions of major ticks of an axis.
  *
- * Returns: The positions of axis major ticks (as real values, not pixels),
- *          owned by the axis.
+ * Returns: The positions of axis major ticks (as real values, not pixels).
+ *          The returned array is owned by the axis.
  **/
 const gdouble*
 gwy_axis_get_major_ticks(GwyAxis *axis,

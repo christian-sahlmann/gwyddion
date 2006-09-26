@@ -19,12 +19,9 @@
  */
 
 #include "config.h"
-#include <gtk/gtk.h>
-
-#include <glib-object.h>
-
+#include <gtk/gtkwidget.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwygraph.h"
+#include <libgwydgets/gwygraphcorner.h>
 
 static void     gwy_graph_corner_realize       (GtkWidget *widget);
 static void     gwy_graph_corner_size_request  (GtkWidget *widget,
@@ -55,9 +52,9 @@ gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *graph_corner)
 /**
  * gwy_graph_corner_new:
  *
- * GwyGraphCorner has now no special features. It is reserved for future.
+ * Creates a new graph corner.
  *
- * Returns: A new #GwyGraphCorner widget.
+ * Returns: A new graph corner as a #GtkWidget.
  **/
 GtkWidget*
 gwy_graph_corner_new()
@@ -131,7 +128,6 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
     }
 }
 
-
 static gboolean
 gwy_graph_corner_expose(GtkWidget *widget,
                        GdkEventExpose *event)
@@ -151,7 +147,6 @@ gwy_graph_corner_expose(GtkWidget *widget,
     return FALSE;
 }
 
-
 /************************** Documentation ****************************/
 
 /**
@@ -159,9 +154,9 @@ gwy_graph_corner_expose(GtkWidget *widget,
  * @title: GwyGraphCorner
  * @short_description: Graph corners
  *
- * #GwyGraphCorner is a part of #GwyGraph and currently had no functionality.
- * It is reserved for future. It will be probably used for some graph options
- * quick accesibility.
+ * #GwyGraphCorner is a part of #GwyGraph and it currently has no
+ * functionality.  It is reserved for future.  It will be probably used for
+ * some graph options quick accesibility.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

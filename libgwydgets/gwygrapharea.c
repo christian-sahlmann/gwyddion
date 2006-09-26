@@ -236,7 +236,7 @@ gwy_graph_area_new(void)
  * @area: A graph area.
  * @gmodel: New graph model.
  *
- * Changes the graph model.
+ * Sets the graph model of a graph area.
  **/
 void
 gwy_graph_area_set_model(GwyGraphArea *area,
@@ -277,6 +277,14 @@ gwy_graph_area_set_model(GwyGraphArea *area,
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
+/**
+ * gwy_graph_area_get_model:
+ * @area: A graph area.
+ *
+ * Gets the model of a graph area.
+ *
+ * Returns: The graph model this graph area widget displays.
+ **/
 GwyGraphModel*
 gwy_graph_area_get_model(GwyGraphArea *area)
 {
@@ -432,13 +440,14 @@ gwy_graph_area_expose(GtkWidget *widget,
  * gwy_graph_area_draw_on_drawable:
  * @area: A graph area.
  * @drawable: a #GdkDrawable (destination for graphics operations)
- * @gc: a #GdkGC graphics context
+ * @gc: Graphics context.
+ *      It is modified by this function unpredictably.
  * @x: X position in @drawable where the graph area should be drawn
  * @y: Y position in @drawable where the graph area should be drawn
  * @width: width of the graph area on the drawable
  * @height: height of the graph area on the drawable
  *
- * Draws a graph area to a #GdkDrawable.
+ * Draws a graph area to a Gdk drawable.
  **/
 void
 gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
@@ -522,7 +531,7 @@ gwy_graph_area_draw_on_drawable(GwyGraphArea *area,
         break;
     }
 
-    /*draw area boundaries*/
+    /* draw area boundaries */
     /* FIXME: use Gtk+ theme */
     fg.red = fg.green = fg.blue = 0;
     gdk_gc_set_rgb_fg_color(gc, &fg);
@@ -582,8 +591,6 @@ gwy_graph_area_draw_zoom(GdkDrawable *drawable,
 
     gdk_gc_set_function(area->gc, GDK_COPY);
 }
-
-
 
 static gboolean
 gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
@@ -825,8 +832,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
     }
 
-    if (area->status == GWY_GRAPH_STATUS_ZOOM)
-    {
+    if (area->status == GWY_GRAPH_STATUS_ZOOM) {
         gwy_selection_clear(area->zoomdata);
         selection_zoomdata[0] = dx;
         selection_zoomdata[1] = dy;
@@ -1179,7 +1185,10 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
 }
 
 static gint
-gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *btype)
+gwy_graph_area_find_selection(GwyGraphArea *area,
+                              gdouble x,
+                              gdouble y,
+                              int *btype)
 {
     GwyGraphModel *model;
     gdouble selection_areadata[2];
@@ -1195,11 +1204,6 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *bty
     if (area->status == GWY_GRAPH_STATUS_XSEL) {
         n = gwy_selection_get_data(area->xseldata, NULL);
         for (i = 0; i < n; i++) {
-            /* FIXME: What was this supposed to mean?
-            gwy_selection_get_object(area->xseldata,
-                                     gwy_selection_get_data(area->xseldata, NULL) - 1,
-                                 selection_areadata);
-                                 */
             gwy_selection_get_object(area->xseldata, i, selection_areadata);
             min = MIN(selection_areadata[0], selection_areadata[1]);
             max = MAX(selection_areadata[0], selection_areadata[1]);
@@ -1217,11 +1221,6 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *bty
     else if (area->status == GWY_GRAPH_STATUS_YSEL) {
         n = gwy_selection_get_data(area->yseldata, NULL);
         for (i = 0; i < n; i++) {
-            /* FIXME: What was this supposed to mean?
-            gwy_selection_get_object(area->yseldata,
-                                 gwy_selection_get_data(area->yseldata, NULL) - 1,
-                                 selection_areadata);
-                                 */
             gwy_selection_get_object(area->yseldata, i, selection_areadata);
             min = MIN(selection_areadata[0], selection_areadata[1]);
             max = MAX(selection_areadata[0], selection_areadata[1]);
@@ -1229,7 +1228,6 @@ gwy_graph_area_find_selection(GwyGraphArea *area, gdouble x, gdouble y, int *bty
             if (min < y && max > y)
                 return i;
         }
-
     }
 
     return -1;
@@ -1405,14 +1403,16 @@ gwy_graph_area_curve_notify(GwyGraphArea *area,
                             G_GNUC_UNUSED gint i,
                             G_GNUC_UNUSED GParamSpec *pspec)
 {
-    gtk_widget_queue_draw(GTK_WIDGET(area));
+    if (GTK_WIDGET_DRAWABLE(area))
+        gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 static void
 gwy_graph_area_curve_data_changed(GwyGraphArea *area,
                                   G_GNUC_UNUSED gint i)
 {
-    gtk_widget_queue_draw(GTK_WIDGET(area));
+    if (GTK_WIDGET_DRAWABLE(area))
+        gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 static gint
@@ -1512,10 +1512,10 @@ gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog,
 
 /**
  * gwy_graph_area_enable_user_input:
- * @area: graph area
- * @enable: enable/disable user input
+ * @area: A graph area.
+ * @enable: %TRUE to enable user interaction, %FALSE to disable it.
  *
- * Enables/disables all the user input dialogs (to be invoked by clicking the mouse).
+ * Enables/disables all user input dialogs (invoked by clicking the mouse).
  **/
 void
 gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
@@ -1526,11 +1526,11 @@ gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
 
 /**
  * gwy_graph_area_get_cursor:
- * @area: graph area
- * @x_cursor: x value corresponding to cursor position
- * @y_cursor: y value corresponding to cursor position
+ * @area: A graph area.
+ * @x_cursor: Location to store the x value corresponding to cursor position.
+ * @y_cursor: Location to store the y value corresponding to cursor position.
  *
- * Gets mouse cursor related values within graph area.
+ * Gets mouse cursor related values within a graph area.
  **/
 void
 gwy_graph_area_get_cursor(GwyGraphArea *area,
@@ -1548,7 +1548,8 @@ gwy_graph_area_get_cursor(GwyGraphArea *area,
 }
 
 static gboolean
-gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *event)
+gwy_graph_area_leave_notify(GtkWidget *widget,
+                            G_GNUC_UNUSED GdkEventCrossing *event)
 {
     GwyGraphArea *area = GWY_GRAPH_AREA(widget);
 
@@ -1560,17 +1561,26 @@ gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *e
 
 /**
  * gwy_graph_area_get_label:
- * @area: graph area
+ * @area: A graph area.
  *
- * Returns: the #GwyGraphLabel within @area (do not free).
+ * Gets the label inside a graph area.
+ *
+ * Returns: The graph label widget within the graph area.
  **/
-/* XXX: Malformed documentation. */
 GtkWidget*
 gwy_graph_area_get_label(GwyGraphArea *area)
 {
     return GTK_WIDGET(area->lab);
 }
 
+/**
+ * gwy_graph_area_set_x_range:
+ * @area: A graph area.
+ * @x_min: The minimum x value, in real coodrinates.
+ * @x_max: The maximum x value, in real coodrinates.
+ *
+ * Sets the horizontal range a graph area displays.
+ **/
 void
 gwy_graph_area_set_x_range(GwyGraphArea *area,
                            gdouble x_min,
@@ -1587,6 +1597,14 @@ gwy_graph_area_set_x_range(GwyGraphArea *area,
     }
 }
 
+/**
+ * gwy_graph_area_set_y_range:
+ * @area: A graph area.
+ * @x_min: The minimum y value, in real coodrinates.
+ * @x_max: The maximum y value, in real coodrinates.
+ *
+ * Sets the vertical range a graph area displays.
+ **/
 void
 gwy_graph_area_set_y_range(GwyGraphArea *area,
                            gdouble y_min,
@@ -1691,8 +1709,26 @@ gwy_graph_area_get_y_grid_data(GwyGraphArea *area,
 }
 
 
+/**
+ * gwy_graph_area_get_selection:
+ * @area: A graph area.
+ * @status_type: Graph status.  Value %GWY_GRAPH_STATUS_PLAIN mode (which has
+ *               no selection associated) stands for the currentl selection
+ *               mode.
+ *
+ * Gets the selection object corresponding to a status of a graph area.
+ *
+ * A selection object exists even for inactive status types (selection modes),
+ * therefore also selections for other modes than the currently active one can
+ * be requested.
+ *
+ * Returns: The requested selection.  It is %NULL only if @status_type is
+ *          %GWY_GRAPH_STATUS_PLAIN and the current selection mode is
+ *          %GWY_GRAPH_STATUS_PLAIN.
+ **/
 GwySelection*
-gwy_graph_area_get_selection(GwyGraphArea *area, GwyGraphStatusType status_type)
+gwy_graph_area_get_selection(GwyGraphArea *area,
+                             GwyGraphStatusType status_type)
 {
     if (status_type == GWY_GRAPH_STATUS_PLAIN)
         status_type = area->status;
@@ -1729,6 +1765,16 @@ selection_changed_cb(GwyGraphArea *area)
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
+/**
+ * gwy_graph_area_set_status:
+ * @area: A graph area.
+ * @status_type: New graph area status.
+ *
+ * Sets the status of a graph area.
+ *
+ * When the area is inside a #GwyGraph, use gwy_graph_set_status() instead
+ * (also see this function for details).
+ **/
 void
 gwy_graph_area_set_status(GwyGraphArea *area, GwyGraphStatusType status_type)
 {
@@ -1738,6 +1784,16 @@ gwy_graph_area_set_status(GwyGraphArea *area, GwyGraphStatusType status_type)
     g_signal_emit(area, area_signals[STATUS_CHANGED], 0, (gint)area->status);
 }
 
+/**
+ * gwy_graph_area_get_status:
+ * @area: A graph area.
+ *
+ * Gets the status of a grap area.
+ *
+ * See gwy_graph_area_set_status().
+ *
+ * Returns: The current graph area status.
+ **/
 GwyGraphStatusType
 gwy_graph_area_get_status(GwyGraphArea *area)
 {
@@ -1748,8 +1804,16 @@ gwy_graph_area_get_status(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_export_vector:
- * @area: the graph area to export
+ * @area: A graph area.
+ * @x:
+ * @y:
+ * @width:
+ * @height:
  *
+ * Creates PostScript representation of a graph area.
+ *
+ * Returns: A fragment of PostScript code representing the the graph area
+ *          as a newly allocated #GString.
  **/
 GString*
 gwy_graph_area_export_vector(GwyGraphArea *area,
