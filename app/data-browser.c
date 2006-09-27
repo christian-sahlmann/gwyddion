@@ -2854,6 +2854,13 @@ gwy_app_data_browser_select(GwyContainer *data,
 
 }
 
+/**
+ * gwy_app_data_browser_select_data_field:
+ * @data: The container to select.
+ * @id: Number (id) of the data field in @data to select.
+ *
+ * Makes a data field (channel) current in the data browser.
+ **/
 void
 gwy_app_data_browser_select_data_field(GwyContainer *data,
                                        gint id)
@@ -2873,6 +2880,13 @@ gwy_app_data_browser_select_data_field(GwyContainer *data,
     }
 }
 
+/**
+ * gwy_app_data_browser_select_graph_model:
+ * @data: The container to select.
+ * @id: Number (id) of the graph model in @data to select.
+ *
+ * Makes a graph model (channel) current in the data browser.
+ **/
 void
 gwy_app_data_browser_select_graph_model(GwyContainer *data,
                                         gint id)
@@ -3376,6 +3390,11 @@ gwy_app_get_data_field_title(GwyContainer *data,
  *
  * The rules for id arguments are similar to quarks, except they are set to -1
  * to indicate undefined result.
+ *
+ * The current objects can change due to user interaction even during the
+ * execution of modal dialogs (typically used by modules).  Therefore to
+ * achieve consistency one has to ask for the complete set of interesting
+ * current objects at once.
  **/
 void
 gwy_app_data_browser_get_current(GwyAppWhat what,
@@ -4187,6 +4206,19 @@ render_mask_thumbnail(GwyDataField *dfield,
     return pixbuf;
 }
 
+/**
+ * gwy_app_get_channel_thumbnail:
+ * @data: A data container.
+ * @id: Data channel id.
+ * @max_width: Maximum width of the created pixbuf, it must be at least 2.
+ * @max_height: Maximum height of the created pixbuf, it must be at least 2.
+ *
+ * Creates a channel thumbnail.
+ *
+ * Returns: A newly created pixbuf with channel thumbnail.  It keeps the aspect
+ *          ratio of the data field while not exceeding @max_width and
+ *          @max_height.
+ **/
 GdkPixbuf*
 gwy_app_get_channel_thumbnail(GwyContainer *data,
                               gint id,
@@ -4282,6 +4314,42 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
  * The precise behaviour of @GWY_VISIBILITY_RESET_DEFAULT may be subject of
  * further changes.  It indicates the wish to restore saved visibilities
  * and do something reasonable when there are no visibilities to restore.
+ **/
+
+/**
+ * GwyAppWhat:
+ * @GWY_APP_CONTAINER: Data container (corresponds to files).
+ * @GWY_APP_DATA_VIEW: Data view widget (shows a channel).
+ * @GWY_APP_GRAPH: Graph widget (shows a graph model).
+ * @GWY_APP_DATA_FIELD: Data field (channel).
+ * @GWY_APP_DATA_FIELD_KEY: Quark corresponding to the data field (channel).
+ * @GWY_APP_DATA_FIELD_ID: Number (id) of the data field (channel) in its
+ *                         container.
+ * @GWY_APP_MASK_FIELD: Mask data field.
+ * @GWY_APP_MASK_FIELD_KEY: Quark corresponding to the mask field.
+ * @GWY_APP_SHOW_FIELD: Presentation data field.
+ * @GWY_APP_SHOW_FIELD_KEY: Quark corresponding to the presentation field.
+ * @GWY_APP_GRAPH_MODEL: Graph model.
+ * @GWY_APP_GRAPH_MODEL_KEY: Quark corresponding to the graph model.
+ * @GWY_APP_GRAPH_MODEL_ID: Number (id) of the graph model in its container.
+ *
+ * Types of current objects that can be requested with
+ * gwy_app_data_browser_get_current().
+ **/
+
+/**
+ * GwyDataItem:
+ * @GWY_DATA_ITEM_GRADIENT: Color gradient.
+ * @GWY_DATA_ITEM_PALETTE: An alias of @GWY_DATA_ITEM_GRADIENT.
+ * @GWY_DATA_ITEM_MASK_COLOR: Mask color components.
+ * @GWY_DATA_ITEM_TITLE: Channel title.
+ * @GWY_DATA_ITEM_RANGE: Range type and range boundaries.
+ * @GWY_DATA_ITEM_RANGE_TYPE: Range type.
+ * @GWY_DATA_ITEM_REAL_SQUARE: Physical/pixel aspect ratio mode.
+ * @GWY_DATA_ITEM_SELECTIONS: Data selections.
+ * @GWY_DATA_ITEM_META: Metadata.
+ *
+ * Auxiliary channel data type.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

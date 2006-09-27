@@ -52,7 +52,7 @@ static gboolean gwy_gl_ok = FALSE;
  *
  * The settings are a #GwyContainer automatically loaded at program startup
  * and saved ad its exit.  For storing persistent module data you should
- * use "/module/YOUR_MODULE_NAME/" prefix.
+ * use <literal>"/module/YOUR_MODULE_NAME/"</literal> prefix.
  *
  * Returns: The settings as a #GwyContainer.
  **/
@@ -582,6 +582,14 @@ gwy_app_settings_error_quark(void)
  *
  * The rest of the setting manipulating functions is normally useful only in
  * main application.
+ **/
+
+/**
+ * GWY_APP_SETTINGS_ERROR:
+ *
+ * Error domain for application settings operations. Errors in this domain will
+ * be from the #GwyAppSettingsError enumeration. See #GError for information
+ * on error domains.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

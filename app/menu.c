@@ -454,6 +454,18 @@ gwy_app_menu_add_proc_func(const gchar *name,
                           gwy_process_func_get_stock_id(name));
 }
 
+/**
+ * gwy_app_build_process_menu:
+ * @accel_group: Acceleration group to be associated with the menu.
+ *
+ * Constructs the application <guimenu>Data Process</guimenu> menu.
+ *
+ * The menu is created from data processing functions registered by modules,
+ * therefore module registeration has to be performed first for this function
+ * to make sense.
+ *
+ * Returns: A newly ceated data processing menu (a #GtkMenu).
+ **/
 GtkWidget*
 gwy_app_build_process_menu(GtkAccelGroup *accel_group)
 {
@@ -485,6 +497,18 @@ gwy_app_menu_add_graph_func(const gchar *name,
                           gwy_graph_func_get_stock_id(name));
 }
 
+/**
+ * gwy_app_build_graph_menu:
+ * @accel_group: Acceleration group to be associated with the menu.
+ *
+ * Constructs the application <guimenu>Graph</guimenu> menu.
+ *
+ * The menu is created from graph functions registered by modules,
+ * therefore module registeration has to be performed first for this function
+ * to make sense.
+ *
+ * Returns: A newly ceated graph menu (a #GtkMenu).
+ **/
 GtkWidget*
 gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
 {
@@ -507,6 +531,15 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
     return menu;
 }
 
+/**
+ * gwy_app_process_menu_add_run_last:
+ * @menu: Menu created with gwy_app_build_process_menu().
+ *
+ * Adds <guimenitem>Re-show Last</guimenitem> and
+ * <guimenitem>Repeat Last</guimenitem> items to application data process menu.
+ *
+ * This function is essentially useful only for toolbox construction.
+ **/
 void
 gwy_app_process_menu_add_run_last(GtkWidget *menu)
 {
@@ -754,7 +787,10 @@ gwy_app_menu_recent_files_set_thumbnail(GtkWidget *item,
  * gwy_app_menu_recent_files_update:
  * @recent_files: A list of recent file names, in UTF-8.
  *
- * Updates recent file menu to show @recent_files.
+ * Updates recent file menu.
+ *
+ * If the list of files is longer than the maximum number of recent file menu
+ * items, only the maximum number is shown.
  **/
 void
 gwy_app_menu_recent_files_update(GList *recent_files)
@@ -879,6 +915,7 @@ gwy_app_menu_recent_files_get(void)
         gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
         g_object_add_weak_pointer(G_OBJECT(recent_files_menu),
                                   (gpointer*)&recent_files_menu);
+        gwy_app_menu_recent_files_update(NULL);
     }
 
     return recent_files_menu;

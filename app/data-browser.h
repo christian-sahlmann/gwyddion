@@ -41,7 +41,7 @@ typedef enum {
     GWY_APP_SHOW_FIELD_KEY,
     GWY_APP_GRAPH_MODEL,
     GWY_APP_GRAPH_MODEL_KEY,
-    GWY_APP_GRAPH_MODEL_ID,
+    GWY_APP_GRAPH_MODEL_ID
 } GwyAppWhat;
 /* XXX: silly name */
 
