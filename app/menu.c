@@ -822,7 +822,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
         i++;
     }
 
-    /* FIXME: if the menu is in tear-off state and entries were added, it
+    /* FIXME: if the menu is in torn-off state and entries were added, it
      * doesn't grow but an ugly scrollbar appears. How to make it grow? */
 
     /* if there are still some entries, the separated entires already exist,
@@ -857,14 +857,31 @@ fix_recent_file_underscores(gchar *s)
     return s2;
 }
 
-void
-gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
+/**
+ * gwy_app_menu_recent_files_get:
+ *
+ * Gets the application recent files menu.
+ *
+ * The menu is initially empty and can be updated
+ * with gwy_app_menu_recent_files_update().  This function is essentially
+ * useful only for toolbox construction.
+ *
+ * Returns: The recent files menu (a #GtkMenu).
+ **/
+GtkWidget*
+gwy_app_menu_recent_files_get(void)
 {
-    g_return_if_fail(GTK_IS_MENU(menu));
-    g_return_if_fail(!recent_files_menu);
+    if (!recent_files_menu) {
+        GtkWidget *item;
 
-    recent_files_menu = menu;
-    g_object_add_weak_pointer(G_OBJECT(menu), (gpointer*)&recent_files_menu);
+        recent_files_menu = gtk_menu_new();
+        item = gtk_tearoff_menu_item_new();
+        gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
+        g_object_add_weak_pointer(G_OBJECT(recent_files_menu),
+                                  (gpointer*)&recent_files_menu);
+    }
+
+    return recent_files_menu;
 }
 
 static void

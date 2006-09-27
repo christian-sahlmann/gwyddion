@@ -554,14 +554,6 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             NULL
         },
         {
-            N_("/Open Recent/---"),
-            NULL,
-            NULL,
-            0,
-            "<Tearoff>",
-            NULL
-        },
-        {
             N_("/_Save"),
             "<control>S",
             gwy_app_file_save,
@@ -595,6 +587,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
         },
     };
     GtkItemFactory *item_factory;
+    GtkWidget *item, *menu;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<file>", accel_group);
 #ifdef ENABLE_NLS
@@ -608,11 +601,11 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     set_sensitivity(item_factory,
                     "<file>/Save",         GWY_MENU_FLAG_DATA,
                     "<file>/Save As",      GWY_MENU_FLAG_DATA,
-                 /* "<file>/Close Window", GWY_MENU_FLAG_DATA, */
                     NULL);
 
-    gwy_app_menu_set_recent_files_menu
-             (gtk_item_factory_get_widget(item_factory, "<file>/Open Recent"));
+    item = gtk_item_factory_get_item(item_factory, "<file>/Open Recent");
+    menu = gwy_app_menu_recent_files_get();
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
 
     return gtk_item_factory_get_widget(item_factory, "<file>");
 }
