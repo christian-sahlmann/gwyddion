@@ -49,9 +49,6 @@ static void     gwy_graph_window_set_tooltip     (GtkWidget *widget,
                                                   const gchar *tip_text);
 static void     graph_title_changed              (GwyGraphWindow *graphwindow);
 
-
-/* Local data */
-
 /* These are actually class data.  To put them to Class struct someone would
  * have to do class_ref() and live with this reference to the end of time. */
 static GtkTooltips *tooltips = NULL;
@@ -195,6 +192,8 @@ gwy_graph_window_new(GwyGraph *graph)
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log,
                        FALSE, FALSE, 0);
+    gwy_graph_window_set_tooltip(graphwindow->button_x_log,
+                                 _("Toggle logarithmic x axis"));
     g_signal_connect_swapped(graphwindow->button_x_log, "clicked",
                              G_CALLBACK(gwy_graph_window_x_log),
                              graphwindow);
@@ -208,6 +207,8 @@ gwy_graph_window_new(GwyGraph *graph)
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log,
                        FALSE, FALSE, 0);
+    gwy_graph_window_set_tooltip(graphwindow->button_x_log,
+                                 _("Toggle logarithmic y axis"));
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
                              G_CALLBACK(gwy_graph_window_y_log),
                              graphwindow);
