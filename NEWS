@@ -53,14 +53,16 @@ Modules:
 - Color range: Crash upon tool switch when there was already a selection
   was fixed.
 - Assing AFM: Crash on import introduced in 1.99.9 was fixed.
+- Revolve arc, Median background: Bugs causing subsequent application crashes
+  were fixed.
 - SPMLab: Channel type is imported and used as the channel title.
 - Crop, Color range, Filters, Mask editor, Statistical function, Statistical
   quantities: Wrong selection boundaries when it was drawn `backwards' were
   fixed.
 - Graph exports: User interface was made more consistent, memory leaks were
   fixed.
-- Mark Grain by Threshold: instant updates option available
-- Remove Grain by Threshold: instant updates option available
+- Mark Grain by Threshold: Instant updates option is available.
+- Remove Grain by Threshold: Instant updates option is available.
 
 Other:
 - Source files dependent on ./configure-set installation paths are properly

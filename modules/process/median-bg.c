@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts background using a rank-based algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -156,7 +156,7 @@ median(GwyContainer *data, GwyRunType run)
     }
 
     newid = gwy_app_data_browser_add_data_field(background, data, TRUE);
-    g_object_unref(dfield);
+    g_object_unref(background);
     gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             0);
