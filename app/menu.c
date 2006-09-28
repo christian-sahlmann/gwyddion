@@ -535,8 +535,9 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
  * gwy_app_process_menu_add_run_last:
  * @menu: Menu created with gwy_app_build_process_menu().
  *
- * Adds <guimenitem>Re-show Last</guimenitem> and
- * <guimenitem>Repeat Last</guimenitem> items to application data process menu.
+ * Adds <guimenuitem>Re-show Last</guimenuitem> and
+ * <guimenuitem>Repeat Last</guimenuitem> items to application data process
+ * menu.
  *
  * This function is essentially useful only for toolbox construction.
  **/
