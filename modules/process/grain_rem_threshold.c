@@ -189,7 +189,7 @@ remove_dialog(RemoveArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *spin, *hbox, *label;
+    GtkWidget *dialog, *table, *spin, *hbox;
     RemoveControls controls;
     enum {
         RESPONSE_RESET = 1,

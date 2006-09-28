@@ -233,7 +233,7 @@ mark_dialog(MarkArgs *args,
         RESPONSE_RESET = 1,
         RESPONSE_PREVIEW = 2
     };
-    GtkWidget *dialog, *table, *label, *hbox;
+    GtkWidget *dialog, *table, *hbox;
     MarkControls controls;
     gint response;
     gdouble zoomval;

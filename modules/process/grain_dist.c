@@ -250,7 +250,7 @@ grain_dist_dialog(GrainDistArgs *args,
     };
 
     GrainDistControls controls;
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table;
     gint row, response;
     GSList *l;
 
