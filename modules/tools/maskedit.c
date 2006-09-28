@@ -295,9 +295,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     row = 0;
 
     /* Editor */
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Editor</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Editor"));
     gtk_table_attach(table, label, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
@@ -307,8 +305,8 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
-    gtk_table_attach(table, GTK_WIDGET(hbox), 1, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, GTK_WIDGET(hbox),
+                     1, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     group = NULL;
     for (i = 0; i < G_N_ELEMENTS(modes); i++) {
@@ -336,8 +334,8 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
-    gtk_table_attach(table, GTK_WIDGET(hbox), 1, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, GTK_WIDGET(hbox),
+                     1, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     group = NULL;
     for (i = 0; i < G_N_ELEMENTS(shapes); i++) {
@@ -361,15 +359,13 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     row++;
 
     /* Actions */
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Actions</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Actions"));
     gtk_table_attach(table, label, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
-    gtk_table_attach(table, GTK_WIDGET(hbox), 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, GTK_WIDGET(hbox),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     button = gwy_stock_like_button_new(_("_Invert"), GWY_STOCK_MASK_INVERT);
     gtk_size_group_add_widget(sizegroup, button);
@@ -400,16 +396,14 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     row++;
 
     /* Grow/Shrink */
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Grow/Shrink</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Grow/Shrink"));
     gtk_table_attach(table, label, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     /* Buttons */
     hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
-    gtk_table_attach(table, GTK_WIDGET(hbox), 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, GTK_WIDGET(hbox),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     button = gwy_stock_like_button_new(_("_Grow"), GWY_STOCK_MASK_GROW);
     gtk_size_group_add_widget(sizegroup, button);
@@ -444,8 +438,8 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         = gtk_check_button_new_with_mnemonic(_("Shrink from _border"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->from_border),
                                  tool->args.from_border);
-    gtk_table_attach(table, tool->from_border, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, tool->from_border,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(tool->from_border, "toggled",
                      G_CALLBACK(gwy_tool_mask_editor_from_border_changed),
                      tool);

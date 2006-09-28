@@ -383,9 +383,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Points</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Points"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 

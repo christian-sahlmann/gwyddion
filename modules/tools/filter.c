@@ -226,9 +226,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
                        FALSE, FALSE, 0);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Filter"));
     gtk_table_attach(table, label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;

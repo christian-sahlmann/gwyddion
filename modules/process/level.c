@@ -25,6 +25,7 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -269,11 +270,9 @@ level_dialog(LevelArgs *args)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Plane Fit Mode</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gwy_label_new_header(_("Plane Fit Mode"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),

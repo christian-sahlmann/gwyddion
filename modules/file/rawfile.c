@@ -552,7 +552,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    table_attach_heading(table, _("<b>Resolution</b>"), row);
+    table_attach_heading(table, _("Resolution"), row);
     row++;
 
     adj = gtk_adjustment_new(args->p.xres, 1, 16384, 1, 10, 100);
@@ -575,7 +575,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    table_attach_heading(table, _("<b>Physical dimensions</b>"), row);
+    table_attach_heading(table, _("Physical Dimensions"), row);
     row++;
 
     adj = gtk_adjustment_new(args->p.xreal, 0.01, 10000, 1, 100, 100);
@@ -642,7 +642,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    table_attach_heading(table, _("<b>Options</b>"), row);
+    table_attach_heading(table, _("Options"), row);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("_Automatically offer raw "

@@ -289,9 +289,11 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
     label = gtk_label_new(NULL);
+    /* `select areas with mouse' should be a tooltip or something...
     gtk_label_set_markup(GTK_LABEL(label),
                          _("<b>Power spectrum (select areas by mouse):</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+                         */
+    label = gwy_label_new_header(_("Power Spectrum"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     controls.gmodel = gwy_graph_model_new();
@@ -308,15 +310,12 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, FALSE, FALSE, 4);
 
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Settings:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Options"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     table = gtk_table_new(2, 7, FALSE);
 
-    label = gtk_label_new_with_mnemonic(_("Suppress type:"));
+    label = gtk_label_new_with_mnemonic(_("_Suppress type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
@@ -330,7 +329,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.menu_suppress, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Preview type:"));
+    label = gtk_label_new_with_mnemonic(_("_Preview type:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 

@@ -331,9 +331,7 @@ facets_dialog(FacetsArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox2), table, TRUE, TRUE, 4);
     row = 0;
 
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Normal</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Normal"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -349,9 +347,7 @@ facets_dialog(FacetsArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Mean Normal</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Mean Normal"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;

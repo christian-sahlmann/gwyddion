@@ -256,9 +256,9 @@ fit_dialog(FitArgs *args)
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          _("_Reset inits"), RESPONSE_RESET);
+                          _("_Reset Inits"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          _("_Plot inits"), RESPONSE_PLOT);
+                          _("_Plot Inits"), RESPONSE_PLOT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -274,10 +274,8 @@ fit_dialog(FitArgs *args)
     gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
 
     /*fit equation*/
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Function definition:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    gtk_container_add(GTK_CONTAINER(vbox),
+                      gwy_label_new_header(_("Function Definition")));
 
     controls.selector = create_preset_menu(G_CALLBACK(type_changed_cb),
                                            &controls, args->function_type);
@@ -288,10 +286,8 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), controls.equation);
 
     /*fit parameters*/
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fitting parameters:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    gtk_container_add(GTK_CONTAINER(vbox),
+                      gwy_label_new_header(_("Fitting Parameters")));
 
     table = gtk_table_new(MAX_PARAMS, 7, FALSE);
     label = gtk_label_new(NULL);
@@ -300,27 +296,21 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Initial</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Initial"));
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Result</b>"));
+    label = gwy_label_new_header(_("Result"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Error</b>"));
+    label = gwy_label_new_header(_("Error"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fix</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Fix"));
     gtk_table_attach(GTK_TABLE(table), label, 5, 6, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
@@ -387,10 +377,8 @@ fit_dialog(FitArgs *args)
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Correlation matrix:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    gtk_container_add(GTK_CONTAINER(vbox),
+                      gwy_label_new_header(_("Correlation Matrix")));
 
     controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
     table = gtk_table_new(MAX_PARAMS, MAX_PARAMS, TRUE);
@@ -406,7 +394,7 @@ fit_dialog(FitArgs *args)
 
     hbox2 = gtk_hbox_new(FALSE, 0);
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Chi-square result:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("χ<sup>2</sup> result:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
@@ -416,18 +404,15 @@ fit_dialog(FitArgs *args)
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
-    /*FIt area*/
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fit area</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    /* Fit area */
+    gtk_container_add(GTK_CONTAINER(vbox), gwy_label_new_header(_("Fit Area")));
 
     table2 = gtk_table_new(2, 2, FALSE);
     gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
     controls.data = gtk_adjustment_new(args->curve, 1,
                                        gwy_graph_model_get_n_curves(gmodel),
                                        1, 5, 0);
-    gwy_table_attach_spinbutton(table2, 1, _("Graph data curve"), "",
+    gwy_table_attach_spinbutton(table2, 1, _("Graph data curve:"), NULL,
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
     g_signal_connect(controls.data, "changed",
@@ -1062,10 +1047,11 @@ create_results_window(FitArgs *args)
     g_return_if_fail(args->is_fitted);
     g_return_if_fail(fitter->covar);
 
-    window = gtk_dialog_new_with_buttons(_("Fit results"), NULL, 0,
+    window = gtk_dialog_new_with_buttons(_("Fit Results"), NULL, 0,
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(window), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(9, 2, FALSE);
@@ -1147,7 +1133,7 @@ create_results_window(FitArgs *args)
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
-    attach_label(table, _("<b>Correlation matrix</b>"), row, 0, 0.0);
+    attach_label(table, _("<b>Correlation Matrix</b>"), row, 0, 0.0);
     row++;
 
     tab = gtk_table_new(n, n, TRUE);

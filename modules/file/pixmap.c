@@ -779,7 +779,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_container_add(GTK_CONTAINER(align), table);
     row = 0;
 
-    table_attach_heading(table, _("<b>Resolution</b>"), row++);
+    table_attach_heading(table, _("Resolution"), row++);
 
     g_snprintf(buf, sizeof(buf), "%u", xres);
     label = gtk_label_new(buf);
@@ -821,7 +821,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                        FALSE, FALSE, 0);
     row = 0;
 
-    table_attach_heading(table, _("<b>Physical dimensions</b>"), row++);
+    table_attach_heading(table, _("Physical Dimensions"), row++);
 
     adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 100);
     controls.xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);

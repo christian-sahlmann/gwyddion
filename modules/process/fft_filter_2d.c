@@ -443,9 +443,7 @@ run_dialog(ControlsType *controls)
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 10);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter Mask</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+    label = gwy_label_new_header(_("Filter Mask"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
@@ -514,9 +512,7 @@ run_dialog(ControlsType *controls)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
     row++;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Preview Options</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+    label = gwy_label_new_header(_("Preview Options"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
@@ -557,9 +553,7 @@ run_dialog(ControlsType *controls)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
     row++;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Output Options</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+    label = gwy_label_new_header(_("Output Options"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);

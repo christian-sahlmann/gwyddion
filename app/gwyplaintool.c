@@ -941,9 +941,7 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     g_signal_connect_swapped(table, "destroy", G_CALLBACK(g_free), rlabels);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Origin"));
     gtk_table_attach(table, label, 0, 1, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("X");
@@ -954,9 +952,7 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, 2, 3, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Size"));
     gtk_table_attach(table, label, 0, 1, 3, 4, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(_("Width"));

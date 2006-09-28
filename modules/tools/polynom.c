@@ -229,9 +229,7 @@ gwy_tool_polynom_init_dialog(GwyToolPolynom *tool)
                        FALSE, FALSE, 0);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fiting mode</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Fiting Mode"));
     gtk_table_attach(table, label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;

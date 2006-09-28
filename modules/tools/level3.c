@@ -410,13 +410,13 @@ gwy_tool_level3_update_headers(GwyToolLevel3 *tool)
     str = g_string_new("");
 
     gwy_tool_level3_update_header(tool, COLUMN_I, str,
-                                  "<b>n</b>", NULL);
+                                  "n", NULL);
     gwy_tool_level3_update_header(tool, COLUMN_X, str,
-                                  "<b>x</b>", plain_tool->coord_format);
+                                  "x", plain_tool->coord_format);
     gwy_tool_level3_update_header(tool, COLUMN_Y, str,
-                                  "<b>y</b>", plain_tool->coord_format);
+                                  "y", plain_tool->coord_format);
     gwy_tool_level3_update_header(tool, COLUMN_Z, str,
-                                  _("<b>Value</b>"), plain_tool->value_format);
+                                  _("Value"), plain_tool->value_format);
 
     g_string_free(str, TRUE);
 }

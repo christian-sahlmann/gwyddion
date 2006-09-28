@@ -29,6 +29,7 @@
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -42,7 +43,6 @@ enum {
     PREVIEW_SIZE = 320
 };
 
-
 typedef enum {
     GWY_FIT_2D_DISPLAY_DATA = 0,
     GWY_FIT_2D_DISPLAY_RESULT = 1,
@@ -54,7 +54,6 @@ typedef enum {
     GWY_FIT_2D_FIT_SPHERE_DOWN = 1
 } GwyFit2DFunctionType;
 
-/* Data for this function. */
 typedef struct {
     gdouble par_init[MAX_PARAMS];
     gdouble par_res[MAX_PARAMS];
@@ -149,7 +148,6 @@ static GwyNLFitter* gwy_math_nlfit_fit_2d   (GwyNLFitFunc ff,
                                              const gboolean *fixed_param,
                                              gpointer user_data);
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -160,8 +158,6 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -260,10 +256,7 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     vbox = gtk_vbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fitting parameters:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Fitting Parameters"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     table = gtk_table_new(2, 2, FALSE);
@@ -304,32 +297,22 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Initial</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Initial"));
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Result</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Result"));
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Error</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Error"));
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fix</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Fix"));
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-
-
 
     controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -381,12 +364,8 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     }
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Correlation matrix:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Correlation Matrix"));
     gtk_container_add(GTK_CONTAINER(vbox), label);
-
 
     controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
     table = gtk_table_new(MAX_PARAMS, MAX_PARAMS, TRUE);
@@ -402,7 +381,7 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
 
     hbox2 = gtk_hbox_new(FALSE, 0);
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Chi-square result:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("χ<sup>2</sup> result:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
@@ -1108,7 +1087,7 @@ create_results_window(Fit2DControls *controls, Fit2DArgs *args)
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
-    attach_label(table, _("<b>Correlation matrix</b>"), row, 0, 0.0);
+    attach_label(table, _("<b>Correlation Matrix</b>"), row, 0, 0.0);
     row++;
 
     tab = gtk_table_new(n, n, TRUE);

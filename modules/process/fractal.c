@@ -261,9 +261,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fit area</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Fit Area"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
@@ -281,9 +279,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Result</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Result"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;

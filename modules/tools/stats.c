@@ -29,6 +29,7 @@
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
 #define GWY_TYPE_TOOL_STATS            (gwy_tool_stats_get_type())
@@ -297,16 +298,14 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(table, label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     tool->use_mask = gtk_check_button_new_with_mnemonic(_("Use _mask"));
-    gtk_table_attach(table, tool->use_mask, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, tool->use_mask,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->use_mask),
                                  tool->args.use_mask);
     g_signal_connect(tool->use_mask, "toggled",
@@ -315,8 +314,8 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
 
     tool->instant_update
         = gtk_check_button_new_with_mnemonic(_("_Instant updates"));
-    gtk_table_attach(table, tool->instant_update, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, tool->instant_update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->instant_update),
                                  tool->args.instant_update);
     g_signal_connect(tool->instant_update, "toggled",
@@ -331,27 +330,24 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
     gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(table), TRUE, TRUE, 0);
     row = 0;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Parameters</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gwy_label_new_header(_("Parameters")),
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     for (i = 0; i < G_N_ELEMENTS(values); i++) {
         label = gtk_label_new(_(values[i].name));
         gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_table_attach(table, label, 0, 1, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        gtk_table_attach(table, label,
+                         0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
         plabel = (GtkWidget**)G_STRUCT_MEMBER_P(tool, values[i].offset);
         *plabel = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(*plabel), 1.0, 0.5);
         gtk_label_set_single_line_mode(GTK_LABEL(*plabel), TRUE);
         gtk_label_set_selectable(GTK_LABEL(*plabel), TRUE);
-        gtk_table_attach(table, *plabel, 1, 2, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        gtk_table_attach(table, *plabel,
+                         1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
         row++;
     }

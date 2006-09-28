@@ -251,10 +251,8 @@ fit_dialog(FitArgs *args)
     gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
 
     /*fit equation*/
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Function definition:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    gtk_container_add(GTK_CONTAINER(vbox),
+                      gwy_label_new_header(_("Function Definition")));
 
     controls.selector = create_preset_menu(G_CALLBACK(type_changed_cb),
                                            &controls, args->function_type);
@@ -272,10 +270,8 @@ fit_dialog(FitArgs *args)
     g_free(filename);
 
     /*fit parameters*/
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), N_("<b>Fitting parameters</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    gtk_container_add(GTK_CONTAINER(vbox),
+                      gwy_label_new_header(_("Fitting Parameters")));
 
     table = gtk_table_new(MAX_PARAMS, 4, FALSE);
     label = gtk_label_new(NULL);
@@ -284,15 +280,11 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Result</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Result"));
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Error</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Error"));
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
@@ -325,22 +317,18 @@ fit_dialog(FitArgs *args)
 
     }
 
-
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
-
-    /*FIt area*/
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fit area</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
+    /* Fit area */
+    gtk_container_add(GTK_CONTAINER(vbox),
+                      gwy_label_new_header(_("Fit Area")));
 
     table2 = gtk_table_new(2, 2, FALSE);
     gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
     controls.data = gtk_adjustment_new(args->curve, 1,
                                        gwy_graph_model_get_n_curves(gmodel),
                                        1, 5, 0);
-    gwy_table_attach_spinbutton(table2, 1, _("Graph data curve"), "",
+    gwy_table_attach_spinbutton(table2, 1, _("Graph data curve:"), NULL,
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
 
@@ -348,7 +336,7 @@ fit_dialog(FitArgs *args)
     hbox2 = gtk_hbox_new(FALSE, 0);
     gtk_box_set_spacing(GTK_BOX(hbox2), 4);
 
-    label = gtk_label_new("From");
+    label = gtk_label_new(_("From"));
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
     controls.from = gtk_entry_new();
@@ -359,7 +347,7 @@ fit_dialog(FitArgs *args)
                       G_CALLBACK(from_changed_cb), &controls);
 
 
-    label = gtk_label_new("to");
+    label = gtk_label_new(_("To"));
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
     controls.to = gtk_entry_new();
@@ -883,10 +871,11 @@ create_results_window(FitArgs *args)
 
     g_return_if_fail(args->is_fitted);
 
-    window = gtk_dialog_new_with_buttons(_("Fit results"), NULL, 0,
+    window = gtk_dialog_new_with_buttons(_("Fit Results"), NULL, 0,
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(window), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(9, 2, FALSE);

@@ -27,7 +27,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwydraw.h>
 #include <pango/pangoft2.h>
-#include "gwydgetutils.h"
+#include <libgwydgets/gwydgetutils.h>
 
 enum {
     GWY_HSCALE_WIDTH = 96
@@ -642,7 +642,8 @@ gwy_dialog_prevent_delete_cb(void)
  * Creates a bold, left aligned label.
  *
  * The purpose of this function is to avoid propagation of too much markup to
- * translations (and reduce code clutter by left-aligning automatically).
+ * translations (and to reduce code clutter by avoiding dummy constructor and
+ * left-aligning automatically).
  *
  * Returns: A newly created #GtkLabel.
  **/
@@ -656,7 +657,8 @@ gwy_label_new_header(const gchar *text)
     label = gtk_label_new(NULL);
     len = strlen(text);
     s = g_newa(gchar, len + sizeof("<b></b>"));
-    g_stpcpy(g_stpcpy(strcpy(s, "<b>"), text), "</b>");
+    s[0] = '\0';
+    g_stpcpy(g_stpcpy(g_stpcpy(s, "<b>"), text), "</b>");
     gtk_label_set_markup(GTK_LABEL(label), s);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
