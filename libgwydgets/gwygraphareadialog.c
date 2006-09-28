@@ -98,7 +98,7 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
         N_("Diamond"), N_("Full square"), N_("Disc"),
         N_("Full triangle up"), N_("Full triangle down"), N_("Full diamond"),
     };
-    GtkWidget *label, *table;
+    GtkWidget *table;
     gint row;
 
     gwy_debug("");
@@ -171,14 +171,11 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                             dialog->thickness, 0);
     g_signal_connect(dialog->thickness, "value-changed",
                      G_CALLBACK(thickness_changed_cb), dialog);
-
     row++;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Label text:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Label Text")),
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
     dialog->sci_text = gwy_sci_text_new();
     gtk_container_set_border_width(GTK_CONTAINER(dialog->sci_text), 4);
