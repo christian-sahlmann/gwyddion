@@ -800,16 +800,16 @@ gwy_tool_stats_save(GwyToolStats *tool)
                                                 xreal*yreal, q, vf);
     g_object_unref(siunitarea);
 
-    area = tool->same_units ? fmt_val(area) : g_strdup(_("N.A"));
+    area = tool->same_units ? fmt_val(area) : g_strdup(_("N.A."));
     projarea = fmt_val(projarea);
 
     gwy_si_unit_value_format_free(vf);
     vf = tool->angle_format;
 
     theta = ((tool->same_units && !mask_in_use)
-             ? fmt_val(theta) : g_strdup(_("N.A")));
+             ? fmt_val(theta) : g_strdup(_("N.A.")));
     phi = ((tool->same_units && !mask_in_use)
-           ? fmt_val(phi) : g_strdup(_("N.A")));
+           ? fmt_val(phi) : g_strdup(_("N.A.")));
 
     fprintf(fh,
             _("Selected area:     %s × %s at (%s, %s) px\n"
