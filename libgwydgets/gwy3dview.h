@@ -123,12 +123,12 @@ struct _Gwy3DViewClass {
 
     gpointer list_pool;
 
-    gpointer reserved1;             /* reserved for future use (signals) */
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
-    gpointer reserved5;
-    gpointer reserved6;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
 };
 
 GtkWidget*        gwy_3d_view_new               (GwyContainer *data);

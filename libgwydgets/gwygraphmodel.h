@@ -98,11 +98,10 @@ struct _GwyGraphModelClass {
                          gint i,
                          GParamSpec *pspec);
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
-    gpointer reserved5;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
 };
 
 #define gwy_graph_model_duplicate(gmodel) \

@@ -43,6 +43,7 @@ struct _GwyLayerMask {
     gulong green_id;
     gulong blue_id;
     gulong alpha_id;
+    gulong handler_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -51,8 +52,8 @@ struct _GwyLayerMask {
 struct _GwyLayerMaskClass {
     GwyPixmapLayerClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType            gwy_layer_mask_get_type        (void) G_GNUC_CONST;

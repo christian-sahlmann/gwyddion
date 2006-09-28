@@ -105,8 +105,8 @@ struct _GwyRulerClass {
                        gint length);
     void (*draw_pos)   (GwyRuler *ruler);
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 

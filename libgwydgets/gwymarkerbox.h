@@ -56,6 +56,9 @@ struct _GwyMarkerBox {
     gint selected;
     gint button;
     gint offset;
+
+    gpointer reserved1;
+    gint int1;
 };
 
 struct _GwyMarkerBoxClass {
@@ -77,10 +80,9 @@ struct _GwyMarkerBoxClass {
     void (*draw_marker)(GwyMarkerBox *mbox,
                         gint i);
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 GType      gwy_marker_box_get_type              (void) G_GNUC_CONST;

@@ -45,6 +45,11 @@ struct _GwyTool {
 
     GtkWidget *dialog;
     gboolean is_visible;
+
+    gulong handler_id;
+    gpointer reserved1;
+    gpointer reserved2;
+    gint int1;
 };
 
 struct _GwyToolClass {
@@ -64,6 +69,11 @@ struct _GwyToolClass {
                           GwyDataView *data_view);
     void (*response)(GwyTool *tool,
                      gint response_id);
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
 };
 
 GType        gwy_tool_get_type          (void) G_GNUC_CONST;

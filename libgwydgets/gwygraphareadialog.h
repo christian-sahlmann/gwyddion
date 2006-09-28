@@ -53,16 +53,10 @@ struct _GwyGraphAreaDialog {
     GwyRGBA old_color;
 
     GwyGraphCurveModel *curve_model;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 struct _GwyGraphAreaDialogClass {
     GtkDialogClass parent_class;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 G_GNUC_INTERNAL

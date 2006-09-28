@@ -69,7 +69,7 @@ struct _GwyShaderClass {
 
     void (*angle_changed)(GwyShader *shader);
 
-    gpointer reserved1;
+    void (*reserved1)(void);
 };
 
 GType         gwy_shader_get_type         (void) G_GNUC_CONST;

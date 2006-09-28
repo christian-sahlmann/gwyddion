@@ -45,10 +45,12 @@ struct _GwyPixmapLayer {
     GObject *data_field;
     gulong item_changed_id;
     gulong data_changed_id;
+    gulong handler_id;
     gboolean wants_repaint;
 
     gpointer reserved1;
     gpointer reserved2;
+    gint int1;
 };
 
 struct _GwyPixmapLayerClass {
@@ -56,8 +58,8 @@ struct _GwyPixmapLayerClass {
 
     GdkPixbuf* (*paint)(GwyPixmapLayer *layer);
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType            gwy_pixmap_layer_get_type      (void) G_GNUC_CONST;

@@ -69,10 +69,14 @@ typedef struct _GwyHRulerClass  GwyHRulerClass;
 
 struct _GwyHRuler {
     GwyRuler ruler;
+
+    gpointer reserved1;
 };
 
 struct _GwyHRulerClass {
     GwyRulerClass parent_class;
+
+    void (*reserved1)(void);
 };
 
 GType      gwy_hruler_get_type (void) G_GNUC_CONST;

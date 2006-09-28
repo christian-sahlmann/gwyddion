@@ -44,6 +44,7 @@ struct _GwySelection {
 
     gpointer reserved1;
     gpointer reserved2;
+    gint int1;
 };
 
 struct _GwySelectionClass {
@@ -69,10 +70,12 @@ struct _GwySelectionClass {
     void (*set_max_objects)(GwySelection *selection,
                             guint max_objects);
     /* TODO: maybe geometrical methods: clamp, move, scale */
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
 
     /* Signals */
     void (*changed)(GwySelection *selection,

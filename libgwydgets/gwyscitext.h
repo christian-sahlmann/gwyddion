@@ -46,6 +46,7 @@ struct _GwySciText {
     GtkWidget *symbols;
 
     gulong changed_id;
+    gulong handler_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -57,8 +58,8 @@ struct _GwySciTextClass {
     /* Signals */
     void (*edited)(GwySciText *sci_text);
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 

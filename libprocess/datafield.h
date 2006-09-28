@@ -44,6 +44,8 @@ struct _GwyDataField {
     gdouble yreal;
     gdouble xoff;
     gdouble yoff;
+    gdouble double1;
+    gdouble double2;
     gdouble *data;
 
     GwySIUnit *si_unit_xy;
@@ -51,12 +53,17 @@ struct _GwyDataField {
 
     guint32 cached;
     gdouble cache[GWY_DATA_FIELD_CACHE_SIZE];
+
+    gpointer reserved1;
+    gpointer reserved2;
+    gint int1;
 };
 
 struct _GwyDataFieldClass {
     GObjectClass parent_class;
 
     void (*data_changed)(GwyDataField *data_field);
+    void (*reserved1)(void);
 };
 
 #define gwy_data_field_invalidate(data_field) (data_field)->cached = 0

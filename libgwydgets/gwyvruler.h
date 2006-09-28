@@ -68,10 +68,14 @@ typedef struct _GwyVRulerClass  GwyVRulerClass;
 
 struct _GwyVRuler {
     GwyRuler ruler;
+
+    gpointer reserved1;
 };
 
 struct _GwyVRulerClass {
     GwyRulerClass parent_class;
+
+    void (*reserved1)(void);
 };
 
 

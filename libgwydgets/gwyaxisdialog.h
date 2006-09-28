@@ -52,16 +52,10 @@ struct _GwyAxisDialog {
     GtkObject *line_thickness;
 
     GwyAxis *axis;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 struct _GwyAxisDialogClass {
     GtkDialogClass parent_class;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 G_GNUC_INTERNAL

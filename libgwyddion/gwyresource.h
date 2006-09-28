@@ -46,6 +46,7 @@ struct _GwyResource {
     gboolean is_modified;
     gboolean is_preferred;
     gboolean boolean1;
+    gint int1;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -71,8 +72,8 @@ struct _GwyResourceClass {
     GwyResource* (*parse)(const gchar *text,
                           gboolean is_const);
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType             gwy_resource_get_type              (void) G_GNUC_CONST;

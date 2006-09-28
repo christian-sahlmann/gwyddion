@@ -47,6 +47,11 @@ struct _GwyResourceEditor {
     GtkWidget *edit_window;
     GString *edited_resource;
     guint commit_id;
+
+    gpointer reserved1;
+    gpointer reserved2;
+    gint int1;
+    gulong handler_id;
 };
 
 struct _GwyResourceEditorClass {
@@ -65,6 +70,9 @@ struct _GwyResourceEditorClass {
     void (*construct_editor)(GwyResourceEditor *editor);
     void (*apply_changes)(GwyResourceEditor *editor);
     void (*switch_resource)(GwyResourceEditor *editor);
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 
     GwyResourceEditor *instance;
 };

@@ -44,12 +44,18 @@ struct _GwyContainer {
 
     GHashTable *values;
     gboolean in_construction;
+
+    gpointer reserved1;
+    gpointer reserved2;
+    gint int1;
+    gint int2;
 };
 
 struct _GwyContainerClass {
     GObjectClass parent_class;
 
     void (*item_changed)(GwyContainer *container, const gchar *key);
+    void (*reserved1)(void);
 };
 
 #define gwy_container_duplicate(container) \

@@ -73,11 +73,13 @@ struct _GwyAxis {
     gdouble reqmax;
     gdouble max;                /*axis beginning value*/
     gdouble min;                /*axis end value*/
+    gdouble double1;
+    gdouble double2;
 
     GArray *mjticks;            /*array of GwyLabeledTicks*/
     GArray *miticks;            /*array of GwyTicks*/
     GArray *mjpubticks;
-    GArray *mipubticks;
+    GArray *mipubticks;         /* unused */
 
     GString *label_text;
 
@@ -91,6 +93,8 @@ struct _GwyAxis {
 
     gpointer reserved1;
     gpointer reserved2;
+    gint int1;
+    gint int2;
 };
 
 struct _GwyAxisClass {
@@ -99,8 +103,8 @@ struct _GwyAxisClass {
     void (*label_updated)(GwyAxis *axis);
     void (*rescaled)(GwyAxis *axis);
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 

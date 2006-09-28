@@ -71,16 +71,10 @@ struct _GwyGraphWindowMeasureDialog {
 
     GwySelection *selection;
     gulong selection_id;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 struct _GwyGraphWindowMeasureDialogClass {
     GtkDialogClass parent_class;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 G_GNUC_INTERNAL

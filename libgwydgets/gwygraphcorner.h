@@ -45,8 +45,8 @@ struct _GwyGraphCorner {
 struct _GwyGraphCornerClass {
     GtkWidgetClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType gwy_graph_corner_get_type(void) G_GNUC_CONST;

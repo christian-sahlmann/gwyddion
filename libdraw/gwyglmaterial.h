@@ -50,6 +50,7 @@ struct _GwyGLMaterial {
     GwyRGBA emission;
     GwyRGBA reserved;
     gdouble shininess;
+    gdouble double1;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -58,8 +59,8 @@ struct _GwyGLMaterial {
 struct _GwyGLMaterialClass {
     GwyResourceClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType          gwy_gl_material_get_type        (void) G_GNUC_CONST;

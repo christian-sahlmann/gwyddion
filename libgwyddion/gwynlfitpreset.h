@@ -52,8 +52,8 @@ struct _GwyNLFitPreset {
 struct _GwyNLFitPresetClass {
     GwyResourceClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType         gwy_nlfit_preset_get_type      (void) G_GNUC_CONST;

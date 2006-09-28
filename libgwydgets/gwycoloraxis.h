@@ -71,8 +71,8 @@ struct _GwyColorAxis {
 struct _GwyColorAxisClass {
     GtkWidgetClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 

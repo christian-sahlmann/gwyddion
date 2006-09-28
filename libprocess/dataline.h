@@ -42,16 +42,21 @@ struct _GwyDataLine {
     gint res;
     gdouble real;
     gdouble off;
+    gdouble double1;
     gdouble *data;
 
     GwySIUnit *si_unit_x;
     GwySIUnit *si_unit_y;
+
+    gpointer reserved1;
+    gint int1;
 };
 
 struct _GwyDataLineClass {
     GObjectClass parent_class;
 
     void (*data_changed)(GwyDataLine *data_line);
+    void (*reserved1)(void);
 };
 
 #define gwy_data_line_duplicate(data_line) \

@@ -50,7 +50,8 @@ struct _GwySIUnit {
     gint power10;
     GArray *units;
 
-    gpointer *reserved1;
+    gpointer reserved1;
+    gint int1;
 };
 
 struct _GwySIUnitClass {
@@ -58,8 +59,8 @@ struct _GwySIUnitClass {
 
     void (*value_changed)(GwySIUnit *siunit);
 
-    gpointer *reserved1;
-    gpointer *reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 #define gwy_si_unit_duplicate(siunit) \

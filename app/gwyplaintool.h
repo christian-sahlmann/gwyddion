@@ -79,8 +79,14 @@ struct _GwyPlainTool {
     gulong selection_item_id;
     gulong selection_cid;
     gulong selection_fid;
+    gulong handler_id1;
+    gulong handler_id2;
 
     GtkWidget *clear;
+    gpointer reserved1;
+    gpointer reserved2;
+    gpointer reserved3;
+    gint int1;
 };
 
 struct _GwyPlainToolClass {
@@ -92,6 +98,10 @@ struct _GwyPlainToolClass {
     void (*selection_changed)(GwyPlainTool *plain_tool,
                               gint hint);
     void (*selection_finished)(GwyPlainTool *plain_tool);
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 GType        gwy_plain_tool_get_type         (void) G_GNUC_CONST;

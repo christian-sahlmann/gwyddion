@@ -89,6 +89,11 @@ struct _GwyInventory {
     GArray *ridx;
     /* Name hash.  A map from name to storage position. */
     GHashTable *hash;
+
+    gpointer reserved1;
+    gpointer reserved2;
+    gint int1;
+    gint int2;
 };
 
 struct _GwyInventoryClass {
@@ -104,6 +109,9 @@ struct _GwyInventoryClass {
     void (*items_reordered)(GwyInventory *inventory,
                             const gint *new_order);
     void (*default_changed)(GwyInventory *inventory);
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType         gwy_inventory_get_type       (void) G_GNUC_CONST;

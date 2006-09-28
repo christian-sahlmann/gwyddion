@@ -91,8 +91,8 @@ struct _GwyDataViewClass {
     void (*layer_unplugged)(GwyDataView *data_view,
                             GwyDataViewLayerType layer);
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType           gwy_data_view_get_type            (void) G_GNUC_CONST;

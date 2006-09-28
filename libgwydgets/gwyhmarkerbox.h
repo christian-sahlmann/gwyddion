@@ -45,8 +45,8 @@ struct _GwyHMarkerBox {
 struct _GwyHMarkerBoxClass {
     GwyMarkerBoxClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType       gwy_hmarker_box_get_type(void) G_GNUC_CONST;

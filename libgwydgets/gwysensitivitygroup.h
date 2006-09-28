@@ -42,18 +42,19 @@ struct _GwySensitivityGroup {
     guint old_state;
     GList *lists;
     gulong source_id;
+    gulong handler_id;
 
     gpointer reserved1;
     gpointer reserved2;
+    gint int1;
 };
 
 struct _GwySensitivityGroupClass {
     GObjectClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 

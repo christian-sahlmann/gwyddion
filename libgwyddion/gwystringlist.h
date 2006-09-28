@@ -44,6 +44,8 @@ struct _GwyStringList {
 
     gpointer *reserved1;
     gpointer *reserved2;
+    gint int1;
+    gint int2;
 };
 
 struct _GwyStringListClass {
@@ -51,10 +53,9 @@ struct _GwyStringListClass {
 
     void (*value_changed)(GwyStringList *strlist);
 
-    gpointer *reserved1;
-    gpointer *reserved2;
-    gpointer *reserved3;
-    gpointer *reserved4;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 #define gwy_string_list_duplicate(strlist) \

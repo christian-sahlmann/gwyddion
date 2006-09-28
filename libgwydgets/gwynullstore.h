@@ -50,7 +50,7 @@ struct _GwyNullStore {
 struct _GwyNullStoreClass {
     GObjectClass parent_class;
 
-    gpointer reserved1;
+    void (*reserved1)(void);
 };
 
 

@@ -53,6 +53,7 @@ struct _GwyGraphLabel {
 
     gulong model_notify_id;
     gulong curve_notify_id;
+    gulong handler_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -61,8 +62,8 @@ struct _GwyGraphLabel {
 struct _GwyGraphLabelClass {
     GtkWidgetClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType          gwy_graph_label_get_type         (void) G_GNUC_CONST;

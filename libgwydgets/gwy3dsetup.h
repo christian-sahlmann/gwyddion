@@ -69,8 +69,8 @@ struct _Gwy3DSetup {
 struct _Gwy3DSetupClass {
     GObjectClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType       gwy_3d_setup_get_type(void) G_GNUC_CONST;

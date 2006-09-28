@@ -57,10 +57,10 @@ struct _GwyGraphData {
 struct _GwyGraphDataClass {
     GtkTreeViewClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
 };
 
 GType          gwy_graph_data_get_type (void) G_GNUC_CONST;

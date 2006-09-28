@@ -70,9 +70,9 @@ struct _GwyDataWindow {
 struct _GwyDataWindowClass {
     GtkWindowClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 GType         gwy_data_window_get_type             (void) G_GNUC_CONST;

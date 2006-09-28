@@ -48,6 +48,7 @@ struct _GwyVectorLayer {
     GQuark selection_key;
     gulong item_changed_id;
     gulong selection_changed_id;
+    gulong handler_id;
 
     gboolean editable;
     gint focus;
@@ -87,10 +88,10 @@ struct _GwyVectorLayerClass {
     gboolean (*set_focus)(GwyVectorLayer *layer,
                           gint object);
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
-    gpointer reserved4;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
 };
 
 GType         gwy_vector_layer_get_type         (void) G_GNUC_CONST;

@@ -61,24 +61,24 @@ typedef struct _GwyColorButton          GwyColorButton;
 typedef struct _GwyColorButtonClass     GwyColorButtonClass;
 
 struct _GwyColorButton {
-  GtkButton button;
+    GtkButton button;
 
-  /*< private >*/
-  GdkPixbuf *pixbuf;    /* Pixbuf for rendering sample */
-  GdkGC *gc;            /* GC for drawing */
-  GtkWidget *drawing_area;/* Drawing area for color sample */
-  GwyRGBA color;
-  guint use_alpha : 1;  /* Use alpha or not */
+    /*< private >*/
+    GdkPixbuf *pixbuf;    /* Pixbuf for rendering sample */
+    GdkGC *gc;            /* GC for drawing */
+    GtkWidget *drawing_area;/* Drawing area for color sample */
+    GwyRGBA color;
+    gboolean use_alpha;  /* Use alpha or not */
+
+    gpointer reserved1;
 };
 
 struct _GwyColorButtonClass {
-  GtkButtonClass parent_class;
+    GtkButtonClass parent_class;
 
-  /* Padding for future expansion */
-  void (*reserved1)(void);
-  void (*reserved2)(void);
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
-
 
 GType      gwy_color_button_get_type       (void) G_GNUC_CONST;
 GtkWidget *gwy_color_button_new            (void);
@@ -90,7 +90,6 @@ void       gwy_color_button_get_color      (GwyColorButton *color_button,
 void       gwy_color_button_set_use_alpha  (GwyColorButton *color_button,
                                             gboolean        use_alpha);
 gboolean   gwy_color_button_get_use_alpha  (GwyColorButton *color_button);
-
 
 G_END_DECLS
 

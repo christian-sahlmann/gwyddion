@@ -35,10 +35,6 @@ G_BEGIN_DECLS
 typedef struct _Gwy3DLabel                Gwy3DLabel;
 typedef struct _Gwy3DLabelClass           Gwy3DLabelClass;
 
-struct _Gwy3DLabelClass {
-    GObjectClass parent_class;
-};
-
 struct _Gwy3DLabel {
     GObject parent_instance;
 
@@ -49,9 +45,20 @@ struct _Gwy3DLabel {
     gdouble size;
     gboolean fixed_size;
 
+    gdouble double1;
+    gint int1;
+    gpointer reserved1;
+
     /* private */
     gchar *default_text;
     GString *text;
+};
+
+struct _Gwy3DLabelClass {
+    GObjectClass parent_class;
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
 };
 
 GType          gwy_3d_label_get_type                (void) G_GNUC_CONST;

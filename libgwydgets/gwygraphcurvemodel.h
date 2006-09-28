@@ -79,9 +79,9 @@ struct _GwyGraphCurveModelClass {
 
     void (*data_changed)(GwyGraphCurveModel *model);
 
-    gpointer reserved1;
-    gpointer reserved2;
-    gpointer reserved3;
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 #define gwy_graph_curve_model_duplicate(gcmodel) \

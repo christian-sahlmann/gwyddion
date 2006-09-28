@@ -49,10 +49,15 @@ struct _GwyInventoryStore {
     gulong item_inserted_id;
     gulong item_deleted_id;
     gulong items_reordered_id;
+    gulong handler_id;
+
+    gpointer reserved1;
 };
 
 struct _GwyInventoryStoreClass {
     GObjectClass parent_class;
+
+    void (*reserved1)(void);
 };
 
 

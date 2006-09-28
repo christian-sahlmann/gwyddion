@@ -48,8 +48,7 @@ struct _GwyStatusbar {
 struct _GwyStatusbarClass {
     GtkStatusbarClass parent_class;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    void (*reserved1)(void);
 };
 
 GtkWidget*       gwy_statusbar_new              (void);

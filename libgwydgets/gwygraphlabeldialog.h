@@ -40,20 +40,14 @@ typedef struct _GwyGraphLabelDialogClass GwyGraphLabelDialogClass;
 struct _GwyGraphLabelDialog {
     GtkDialog dialog;
 
-    GtkObject *thickness;
-    GtkWidget *reversed;
-
     GwyGraphModel *graph_model;
 
-    gpointer reserved1;
-    gpointer reserved2;
+    GtkObject *thickness;
+    GtkWidget *reversed;
 };
 
 struct _GwyGraphLabelDialogClass {
     GtkDialogClass parent_class;
-
-    gpointer reserved1;
-    gpointer reserved2;
 };
 
 G_GNUC_INTERNAL
