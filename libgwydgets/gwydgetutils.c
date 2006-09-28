@@ -635,6 +635,35 @@ gwy_dialog_prevent_delete_cb(void)
 }
 
 /**
+ * gwy_label_new_header:
+ * @text: Text to put into the label.  It must be a valid markup and it will
+ *        be made bold by adding appropriate markup around it.
+ *
+ * Creates a bold, left aligned label.
+ *
+ * The purpose of this function is to avoid propagation of too much markup to
+ * translations (and reduce code clutter by left-aligning automatically).
+ *
+ * Returns: A newly created #GtkLabel.
+ **/
+GtkWidget*
+gwy_label_new_header(const gchar *text)
+{
+    GtkWidget *label;
+    guint len;
+    gchar *s;
+
+    label = gtk_label_new(NULL);
+    len = strlen(text);
+    s = g_newa(gchar, len + sizeof("<b></b>"));
+    g_stpcpy(g_stpcpy(strcpy(s, "<b>"), text), "</b>");
+    gtk_label_set_markup(GTK_LABEL(label), s);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+
+    return label;
+}
+
+/**
  * gwy_stock_like_button_new:
  * @label_text: Button label text (with mnemonic).
  * @stock_id: Button icon stock id.

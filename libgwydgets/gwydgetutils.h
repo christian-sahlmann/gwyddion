@@ -72,6 +72,7 @@ void         gwy_list_store_row_changed     (GtkListStore *store,
                                              GtkTreePath *path,
                                              gint row);
 gboolean     gwy_dialog_prevent_delete_cb   (void);
+GtkWidget*   gwy_label_new_header           (const gchar *text);
 GtkWidget*   gwy_stock_like_button_new      (const gchar *label_text,
                                              const gchar *stock_id);
 GtkWidget*   gwy_tool_like_button_new       (const gchar *label_text,
