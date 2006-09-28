@@ -27,19 +27,19 @@ G_BEGIN_DECLS
 
 typedef struct _GwyFunctionUse GwyFunctionUse;
 
-GwyFunctionUse* gwy_func_use_new         (void);
-void            gwy_func_use_free        (GwyFunctionUse *functions);
-void            gwy_func_use_add         (GwyFunctionUse *functions,
-                                          const gchar *name);
-const gchar*    gwy_func_use_get         (GwyFunctionUse *functions,
-                                          guint i);
-GwyFunctionUse* gwy_func_use_load        (const gchar *filename);
-void            gwy_func_use_save        (GwyFunctionUse *functions,
-                                          const gchar *filename);
-gchar*          gwy_func_use_get_filename(const gchar *type);
+GwyFunctionUse* gwy_func_use_new             (void);
+void            gwy_func_use_free            (GwyFunctionUse *functions);
+void            gwy_func_use_add             (GwyFunctionUse *functions,
+                                              const gchar *name);
+const gchar*    gwy_func_use_get             (GwyFunctionUse *functions,
+                                              guint i);
+GwyFunctionUse* gwy_func_use_load            (const gchar *filename);
+void            gwy_func_use_save            (GwyFunctionUse *functions,
+                                              const gchar *filename);
+gchar*          gwy_func_use_get_filename    (const gchar *type);
 
-GwyFunctionUse* gwy_process_func_get_use (void);
-void            gwy_process_func_save_use(void);
+GwyFunctionUse* gwy_app_process_func_get_use (void);
+void            gwy_app_process_func_save_use(void);
 
 G_END_DECLS
 

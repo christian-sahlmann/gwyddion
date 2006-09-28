@@ -105,6 +105,13 @@ gwy_func_use_sort_up(GArray *functions,
     g_array_index(functions, GwyFunctionUseInfo, pos) = info;
 }
 
+/**
+ * gwy_func_use_add:
+ * @functions: Function use statistics.
+ * @name: Function name.
+ *
+ * Adds an use of a function to the statistics.
+ **/
 void
 gwy_func_use_add(GwyFunctionUse *functions,
                  const gchar *name)
@@ -155,6 +162,16 @@ gwy_func_use_add(GwyFunctionUse *functions,
 #endif
 }
 
+/**
+ * gwy_func_use_get:
+ * @functions: Function use statistics.
+ * @i: Position in the top used functions (starting from 0).
+ *
+ * Gets the n-th most function from a function statistics.
+ *
+ * Returns: The function name, or %NULL if there are not more functions with
+ *          use statistics records than @i.
+ **/
 const gchar*
 gwy_func_use_get(GwyFunctionUse *functions,
                  guint i)
@@ -168,6 +185,13 @@ gwy_func_use_get(GwyFunctionUse *functions,
     return g_quark_to_string(info->quark);
 }
 
+/**
+ * gwy_func_use_new:
+ *
+ * Creates new function use statistics.
+ *
+ * Returns: A newly created function use statistics.
+ **/
 GwyFunctionUse*
 gwy_func_use_new(void)
 {
@@ -181,6 +205,12 @@ gwy_func_use_new(void)
     return functions;
 }
 
+/**
+ * gwy_func_use_free:
+ * @functions: Function use statistics.
+ *
+ * Destroys function use statistics, freeing all associated resourced.
+ **/
 void
 gwy_func_use_free(GwyFunctionUse *functions)
 {
@@ -188,6 +218,15 @@ gwy_func_use_free(GwyFunctionUse *functions)
     g_free(functions);
 }
 
+/**
+ * gwy_func_use_load:
+ * @filename: A file name (in GLib encoding).
+ *
+ * Loads function use statistics from a file.
+ *
+ * Returns: A newly created function use statistics filled with data from
+ *          file @filename.
+ **/
 GwyFunctionUse*
 gwy_func_use_load(const gchar *filename)
 {
@@ -223,6 +262,13 @@ gwy_func_use_load(const gchar *filename)
     return functions;
 }
 
+/**
+ * gwy_func_use_save:
+ * @functions: Function use statistics.
+ * @filename: A file name (in GLib encoding).
+ *
+ * Saves function use statistics data to a file.
+ **/
 void
 gwy_func_use_save(GwyFunctionUse *functions,
                   const gchar *filename)
@@ -248,6 +294,15 @@ gwy_func_use_save(GwyFunctionUse *functions,
     fclose(fh);
 }
 
+/**
+ * gwy_func_use_get_filename:
+ * @type: Function type, that is an identifier of the type of statistics
+ *        gathered.  It must be a valid identifier.
+ *
+ * Gets the (preferred) name for a file to store function use statistics to.
+ *
+ * Returns: The file name as a newly allocated string.
+ **/
 gchar*
 gwy_func_use_get_filename(const gchar *type)
 {
@@ -261,8 +316,20 @@ gwy_func_use_get_filename(const gchar *type)
     return path;
 }
 
+/**
+ * gwy_process_func_get_use:
+ *
+ * Gets the application data processing function statistics.
+ *
+ * The statistics will be loaded from user settings directory if it was not
+ * referenced yet, or failing that, newly created.
+ *
+ * Returns: The application data processing function statistics.  The returned
+ *          object is owned `by the application' and it is supposed to exist
+ *          to its termination.
+ **/
 GwyFunctionUse*
-gwy_process_func_get_use(void)
+gwy_app_process_func_get_use(void)
 {
     gchar *filename;
 
@@ -275,8 +342,13 @@ gwy_process_func_get_use(void)
     return process_use_info;
 }
 
+/**
+ * gwy_app_process_func_save_use:
+ *
+ * Saves application data processing function statistics.
+ **/
 void
-gwy_process_func_save_use(void)
+gwy_app_process_func_save_use(void)
 {
     gchar *filename;
 
@@ -287,5 +359,11 @@ gwy_process_func_save_use(void)
     gwy_func_use_save(process_use_info, filename);
     g_free(filename);
 }
+
+/**
+ * SECTION:funcuse
+ * @title: funcuse
+ * @short_description: Gather function use statistics
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

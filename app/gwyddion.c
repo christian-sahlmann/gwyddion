@@ -172,7 +172,7 @@ main(int argc, char *argv[])
     debug_time(timer, "save settings");
     gwy_app_recent_file_list_save(recent_file_file);
     debug_time(timer, "save document history");
-    gwy_process_func_save_use();
+    gwy_app_process_func_save_use();
     debug_time(timer, "save funcuse");
     gwy_app_settings_free();
     gwy_debug_objects_dump_to_file(stderr, 0);

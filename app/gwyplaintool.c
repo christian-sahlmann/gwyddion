@@ -1215,4 +1215,16 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
  * @short_description: Base class for simple tools
  **/
 
+/**
+ * GwyPlainToolChanged:
+ * @GWY_PLAIN_TOOL_CHANGED_DATA: Channel data field was changed.
+ * @GWY_PLAIN_TOOL_CHANGED_MASK: Mask data field was changed.
+ * @GWY_PLAIN_TOOL_CHANGED_SHOW: Presentation data field was changed.
+ * @GWY_PLAIN_TOOL_CHANGED_SELECTION: Selection was changed.
+ * @GWY_PLAIN_TOOL_FINISHED_SELECTION: Selection was finished (that is emitted
+ *                                     #GwySelection::finished).
+ *
+ * The type of pending changes that accumulated during tool inactivity.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

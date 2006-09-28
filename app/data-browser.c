@@ -1848,6 +1848,19 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     return window3d;
 }
 
+/**
+ * gwy_app_data_browser_show_3d:
+ * @data: A data container.
+ * @id: Channel id.
+ *
+ * Shows a 3D window displaying a channel.
+ *
+ * If a 3D window of the specified channel already exists, it is just presented
+ * to the user.  If it does not exist, it is created.
+ *
+ * The caller must ensure 3D display is available, for example by checking
+ * gwy_app_gl_is_ok().
+ **/
 void
 gwy_app_data_browser_show_3d(GwyContainer *data,
                              gint id)
@@ -1866,6 +1879,7 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
         window3d = GTK_WIDGET(((GwyApp3DAssociation*)item->data)->window);
     else
         window3d = gwy_app_data_browser_create_3d(browser, proxy, id);
+    g_return_if_fail(window3d);
     gtk_window_present(GTK_WINDOW(window3d));
 }
 
@@ -3991,7 +4005,7 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
 }
 
 /**
- * gwy_app_data_browser_get_window:
+ * gwy_app_data_browser_show:
  *
  * Shows the data browser window.
  *

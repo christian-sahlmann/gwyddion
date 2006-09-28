@@ -70,6 +70,19 @@ static void       gwy_app_change_mask_color_cb     (void);
  *                                                                           *
  *****************************************************************************/
 
+/**
+ * gwy_app_quit:
+ *
+ * Quits the application.
+ *
+ * This function may present a confirmation dialog to the user and it may
+ * let the application to continue running.  If it quits the application,
+ * it performs some shutdown actions and then quits the Gtk+ main loop with
+ * gtk_main_quit().
+ *
+ * Returns: Always %TRUE to be usable as an event handler.  However, if the
+ *          application is actually terminated, this function does not return.
+ **/
 gboolean
 gwy_app_quit(void)
 {
@@ -678,6 +691,12 @@ gwy_app_data_window_change_square(GtkWidget *item,
     g_free(s);
 }
 
+/**
+ * gwy_app_switch_tool:
+ * @toolname: Tool name, that is #GType name of the tool type.
+ *
+ * Switches the current tool.
+ **/
 void
 gwy_app_switch_tool(const gchar *toolname)
 {
@@ -1127,16 +1146,6 @@ gwy_app_init_common(GError **error,
  * SECTION:app
  * @title: app
  * @short_description: Core application interface, window management
- **/
-
-/**
- * GwyAppWindowType:
- * @GWY_APP_WINDOW_TYPE_DATA: Normal 2D data window.
- * @GWY_APP_WINDOW_TYPE_GRAPH: Graph window.
- * @GWY_APP_WINDOW_TYPE_3D: 3D view window.
- * @GWY_APP_WINDOW_TYPE_ANY: Window of any type.
- *
- * Application window types.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -606,7 +606,7 @@ gwy_app_rerun_process_func(gpointer user_data)
  * gwy_app_run_process_func:
  * @name: A data processing function name.
  *
- * Runs a data processing function on current data.
+ * Runs a data processing function on the current data.
  *
  * From the run modes function @name supports, the most interactive one is
  * selected.
@@ -637,7 +637,7 @@ gwy_app_run_process_func(const gchar *name)
  * @name: A data processing function name.
  * @run: A run mode.
  *
- * Runs a data processing function @on current data in specified mode.
+ * Runs a data processing function on current data in specified mode.
  **/
 void
 gwy_app_run_process_func_in_mode(const gchar *name,
@@ -665,7 +665,7 @@ gwy_app_update_last_process_func(const gchar *name)
     const gchar *menu_path;
     gchar *s, *lab;
 
-    gwy_func_use_add(gwy_process_func_get_use(), name);
+    gwy_func_use_add(gwy_app_process_func_get_use(), name);
 
     if (!last_name_quark)
         last_name_quark = g_quark_from_static_string("gwy-app-menu-last"
@@ -703,6 +703,12 @@ gwy_app_update_last_process_func(const gchar *name)
     g_free(lab);
 }
 
+/**
+ * gwy_app_run_graph_func:
+ * @name: A graph function name.
+ *
+ * Runs a graph function on the current graph.
+ **/
 void
 gwy_app_run_graph_func(const gchar *name)
 {

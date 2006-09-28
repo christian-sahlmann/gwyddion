@@ -507,7 +507,6 @@ gwy_app_settings_get_recent_file_list_filename(void)
     return g_build_filename(gwy_get_user_dir(), "recent-files", NULL);
 }
 
-/* FIXME: move elsewhere? */
 /**
  * gwy_app_gl_init:
  * @argc: Address of the argc parameter of main(). Passed to
@@ -539,8 +538,9 @@ gwy_app_gl_init(G_GNUC_UNUSED int *argc,
  *
  * Returns OpenGL availability.
  *
- * Returns: The return value is the same as return value of gwy_app_gl_init(),
- *          which must be called prior to this function.
+ * Returns: The return value is the same as the return value of
+ *          gwy_app_gl_init() which needs to be called prior to this function
+ *          (until then, the return value is always %FALSE).
  **/
 gboolean
 gwy_app_gl_is_ok(void)
@@ -590,6 +590,17 @@ gwy_app_settings_error_quark(void)
  * Error domain for application settings operations. Errors in this domain will
  * be from the #GwyAppSettingsError enumeration. See #GError for information
  * on error domains.
+ **/
+
+/**
+ * GwyAppSettingsError:
+ * @GWY_APP_SETTINGS_ERROR_FILE: Settings file is not readable or writable.
+ * @GWY_APP_SETTINGS_ERROR_CORRUPT: Settings file contents is corrupted.
+ * @GWY_APP_SETTINGS_ERROR_CFGDIR: User configuration directory is not
+ *                                 readable or writable or it does not exist
+ *                                 and its creation failed.
+ *
+ * Error codes returned by application settings functions.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
