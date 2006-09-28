@@ -26,24 +26,25 @@
 #include <libgwydgets/gwygraphbasics.h>
 #include <libgwydgets/gwygraphlabel.h>
 
-static void     gwy_graph_label_finalize      (GObject *object);
-static void     gwy_graph_label_realize       (GtkWidget *widget);
-static void     gwy_graph_label_unrealize     (GtkWidget *widget);
-static void     gwy_graph_label_size_request  (GtkWidget *widget,
-                                               GtkRequisition *requisition);
-static void     gwy_graph_label_size_allocate (GtkWidget *widget,
-                                               GtkAllocation *allocation);
-static gboolean gwy_graph_label_expose        (GtkWidget *widget,
-                                               GdkEventExpose *event);
-static void     gwy_graph_label_refresh_all   (GwyGraphLabel *label);
-static void     gwy_graph_label_calculate_size(GwyGraphLabel *label);
-static void     gwy_graph_label_model_notify  (GwyGraphLabel *label,
-                                               GParamSpec *param,
-                                               GwyGraphModel *gmodel);
-static void     gwy_graph_label_curve_notify  (GwyGraphLabel *label,
-                                               gint i,
-                                               GParamSpec *param);
-static void     gwy_graph_label_draw_label    (GtkWidget *widget);
+static void     gwy_graph_label_finalize       (GObject *object);
+static void     gwy_graph_label_realize        (GtkWidget *widget);
+static void     gwy_graph_label_unrealize      (GtkWidget *widget);
+static void     gwy_graph_label_size_request   (GtkWidget *widget,
+                                                GtkRequisition *requisition);
+static void     gwy_graph_label_size_allocate  (GtkWidget *widget,
+                                                GtkAllocation *allocation);
+static gboolean gwy_graph_label_expose         (GtkWidget *widget,
+                                                GdkEventExpose *event);
+static void     gwy_graph_label_refresh_visible(GwyGraphLabel *label);
+static void     gwy_graph_label_refresh_all    (GwyGraphLabel *label);
+static void     gwy_graph_label_calculate_size (GwyGraphLabel *label);
+static void     gwy_graph_label_model_notify   (GwyGraphLabel *label,
+                                                GParamSpec *param,
+                                                GwyGraphModel *gmodel);
+static void     gwy_graph_label_curve_notify   (GwyGraphLabel *label,
+                                                gint i,
+                                                GParamSpec *param);
+static void     gwy_graph_label_draw_label     (GtkWidget *widget);
 
 G_DEFINE_TYPE(GwyGraphLabel, gwy_graph_label, GTK_TYPE_WIDGET)
 
@@ -266,6 +267,7 @@ gwy_graph_label_set_model(GwyGraphLabel *label,
     }
 
     gwy_graph_label_refresh_all(label);
+    gwy_graph_label_refresh_visible(label);
 }
 
 /**
@@ -288,23 +290,14 @@ gwy_graph_label_get_model(GwyGraphLabel *label)
 static void
 gwy_graph_label_model_notify(GwyGraphLabel *label,
                              GParamSpec *pspec,
-                             GwyGraphModel *gmodel)
+                             G_GNUC_UNUSED GwyGraphModel *gmodel)
 {
     /* FIXME: A bit simplistic */
     if (g_str_has_prefix(pspec->name, "label-")) {
         const gchar *name = pspec->name + strlen("label-");
 
-        if (gwy_strequal(name, "visible")) {
-            gboolean visible;
-
-            g_object_get(gmodel, pspec->name, &visible, NULL);
-            if (GTK_WIDGET_REALIZED(label)) {
-                if (visible)
-                    gtk_widget_show(GTK_WIDGET(label));
-                else
-                    gtk_widget_hide(GTK_WIDGET(label));
-            }
-        }
+        if (gwy_strequal(name, "visible"))
+            gwy_graph_label_refresh_visible(label);
         else
             gwy_graph_label_refresh_all(label);
     }
@@ -492,6 +485,23 @@ gwy_graph_label_draw_label(GtkWidget *widget)
     g_object_unref(mygc);
     g_object_unref(layout);
 
+}
+
+static void
+gwy_graph_label_refresh_visible(GwyGraphLabel *label)
+{
+    GtkWidget *widget;
+    gboolean visible = TRUE;
+
+    widget = GTK_WIDGET(label);
+    if (label->graph_model)
+        g_object_get(label->graph_model, "label-visible", &visible, NULL);
+
+    gtk_widget_set_no_show_all(widget, !visible);
+    if (visible)
+        gtk_widget_show(widget);
+    else
+        gtk_widget_hide(widget);
 }
 
 /**
