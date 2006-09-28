@@ -211,7 +211,7 @@ fit_2d_dialog(Fit2DArgs *args, GwyContainer *data)
     dialog = gtk_dialog_new_with_buttons(_("Fit sphere"), NULL, 0,
                                          _("_Fit"), RESPONSE_FIT,
                                          _("_Guess"), RESPONSE_GUESS,
-                                         _("_Plot inits"), RESPONSE_INITS,
+                                         _("_Plot Inits"), RESPONSE_INITS,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -475,10 +475,11 @@ guess
 (Fit2DControls *controls, Fit2DArgs *args)
 {
     gint i, j;
-    GwyDataField *dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                                           "/0/data"));
+    GwyDataField *dfield;
     gchar buffer[20];
 
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
+                                                             "/0/data"));
     if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP)
         guess_sphere_up(dfield, 4, args->par_init);
     else
@@ -490,8 +491,7 @@ guess
     gtk_label_set_text(GTK_LABEL(controls->param_des[3]), "z center");
 
     gtk_label_set_text(GTK_LABEL(controls->chisq), " ");
-    for (i = 0; i < 4; i++)
-    {
+    for (i = 0; i < 4; i++) {
         gtk_widget_set_sensitive(controls->param_init[i], TRUE);
         gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par_init[i]);
