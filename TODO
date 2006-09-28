@@ -1,6 +1,6 @@
 Too many things.  Use
 
-  find . -name \*.\[ch] | xargs grep -ir '\<\(XXX\|TODO\|FIXME\|provisory\|fuck\|shit\)\>'
+  grep --include '*.[ch]' -i '\<\(XXX\|TODO\|FIXME\|provisory\|fuck\|shit|hell\)\>' .
 
 to locate them ;-)
 
@@ -8,17 +8,12 @@ Particularly (overall app issues, module issues not listed):
 - Printing
 - Integrated help
 - Proper associations and drag'n'drop support
-- Palette, GL material editor
-- Editable metadata
 - Module profiles
 - Sessions
 - ...
 
 Quite a few of these items are intrusive and will have to wait for the next
 unstable version.
-
-============================================================================
-Elaboration of 2.0 items started on http://gwyddion.net/gwyddion-2/.
 
 ============================================================================
 Unimplemented stuff:
@@ -29,23 +24,21 @@ Unimplemented stuff:
 Release checklist:
 - must build on Linux from tarballs
 - must build on MS Windows
-- update splashscreen
 - update translation(s)
-- make sure global library headers (libfoo.h) include all others
+- make sure global library headers (libfoo.h) include all other public
+  headers
 - update library versions, if something changed
-- make sure gwyddion.iss.in contains all translations (XXX: automatize this)
+- make sure devel-docs/libfoo/libfoo.types loads all new types
+- make sure gwyddion.iss.in contains all translations (XXX: automate this)
 - update version in configure.ac
 - update version in gwyddion-night-build
 - switch segfault on critical messages off (stable only)
 - check and update NEWS, generate HTML version
 - generate on-line module list
-- make sure devel-docs/libfoo/libfoo.types loads all new types
-- make sure stock icon images are included in libgwydgets API docs
 - generate stable API docs for gwyddion.net and upload them
 - tag CVS
 - build and upload packages
 - sign packages and upload signatures
 - update gwyddion main page
 - publish files on Freshmeat, GnomeFiles, SourceForge
-- add the new version to bugzilla
 
