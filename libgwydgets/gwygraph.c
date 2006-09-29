@@ -40,6 +40,7 @@ static void gwy_graph_axis_rescaled     (GwyAxis *axis,
                                          GwyGraph *graph);
 static void gwy_graph_zoomed            (GwyGraph *graph);
 static void gwy_graph_label_updated     (GwyAxis *axis,
+                                         GParamSpec *pspec,
                                          GwyGraph *graph);
 
 G_DEFINE_TYPE(GwyGraph, gwy_graph, GTK_TYPE_TABLE)
@@ -134,7 +135,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
 
     for (i = GTK_POS_LEFT; i <= GTK_POS_BOTTOM; i++) {
-        g_signal_connect(graph->axis[i], "label-updated",
+        g_signal_connect(graph->axis[i], "notify::label",
                          G_CALLBACK(gwy_graph_label_updated), graph);
         gtk_widget_show(GTK_WIDGET(graph->axis[i]));
     }
@@ -540,7 +541,9 @@ gwy_graph_zoomed(GwyGraph *graph)
 }
 
 static void
-gwy_graph_label_updated(GwyAxis *axis, GwyGraph *graph)
+gwy_graph_label_updated(GwyAxis *axis,
+                        G_GNUC_UNUSED GParamSpec *pspec,
+                        GwyGraph *graph)
 {
     if (graph->graph_model)
         gwy_graph_model_set_axis_label(graph->graph_model,

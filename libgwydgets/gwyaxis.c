@@ -30,13 +30,13 @@
 #include <libgwydgets/gwyaxis.h>
 
 enum {
-    LABEL_UPDATED,
     RESCALED,
     LAST_SIGNAL
 };
 
 enum {
     PROP_0,
+    PROP_LABEL,
     PROP_OUTER_BORDER_WIDTH,
     /* XXX: Where this stuff *really* belongs to? To the model? */
     PROP_AUTO,
@@ -156,14 +156,6 @@ gwy_axis_class_init(GwyAxisClass *klass)
     widget_class->size_allocate = gwy_axis_size_allocate;
     widget_class->button_press_event = gwy_axis_button_press;
 
-    axis_signals[LABEL_UPDATED] =
-        g_signal_new("label-updated",
-                     G_OBJECT_CLASS_TYPE(gobject_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(GwyAxisClass, label_updated),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE, 0);
     axis_signals[RESCALED] =
         g_signal_new("rescaled",
                      G_OBJECT_CLASS_TYPE(gobject_class),
@@ -172,6 +164,15 @@ gwy_axis_class_init(GwyAxisClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL,
+         g_param_spec_string("label",
+                             "Label",
+                             "Axis label (without units).",
+                             "",
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -392,6 +393,10 @@ gwy_axis_set_property(GObject *object,
     GwyAxis *axis = GWY_AXIS(object);
 
     switch (prop_id) {
+        case PROP_LABEL:
+        gwy_axis_set_label(axis, g_value_get_string(value));
+        break;
+
         case PROP_AUTO:
         axis->is_auto = g_value_get_boolean(value);
         break;
@@ -444,6 +449,10 @@ gwy_axis_get_property(GObject*object,
     GwyAxis *axis = GWY_AXIS(object);
 
     switch (prop_id) {
+        case PROP_LABEL:
+        g_value_set_string(value, axis->label_text->str);
+        break;
+
         case PROP_AUTO:
         g_value_set_boolean(value, axis->is_auto);
         break;
@@ -1165,22 +1174,19 @@ gwy_axis_button_press(GtkWidget *widget,
 static void
 gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
 {
-    GdkRectangle rec;
     gchar *text;
-    gwy_debug("");
 
+    gwy_debug("");
     g_assert(GWY_IS_AXIS(axis));
-    rec.x = GTK_WIDGET(axis)->allocation.x;
-    rec.y = GTK_WIDGET(axis)->allocation.y;
-    rec.width = GTK_WIDGET(axis)->allocation.width;
-    rec.height = GTK_WIDGET(axis)->allocation.height;
 
     text = gwy_sci_text_get_text(sci_text);
+    if (gwy_strequal(text, axis->label_text->str)) {
+        g_free(text);
+        return;
+    }
     g_string_assign(axis->label_text, text);
     g_free(text);
-    g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
-    if (GTK_WIDGET_DRAWABLE(axis))
-        gtk_widget_queue_draw(GTK_WIDGET(axis));
+    g_object_notify(G_OBJECT(axis), "label");
 }
 
 static gdouble
@@ -1657,15 +1663,16 @@ gwy_axis_set_label(GwyAxis *axis,
         label = "";
 
     gwy_debug("label_text = <%s>", label);
+    if (gwy_strequal(label, axis->label_text->str))
+        return;
+
     g_string_assign(axis->label_text, label);
     if (axis->dialog) {
         GwyAxisDialog *dialog = GWY_AXIS_DIALOG(axis->dialog);
 
         gwy_sci_text_set_text(GWY_SCI_TEXT(dialog->sci_text), label);
     }
-    g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
-    if (GTK_WIDGET_DRAWABLE(axis))
-        gtk_widget_queue_draw(GTK_WIDGET(axis));
+    g_object_notify(G_OBJECT(axis), "label");
 }
 
 /**

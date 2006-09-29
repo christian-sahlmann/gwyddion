@@ -100,7 +100,6 @@ struct _GwyAxis {
 struct _GwyAxisClass {
     GtkWidgetClass parent_class;
 
-    void (*label_updated)(GwyAxis *axis);
     void (*rescaled)(GwyAxis *axis);
 
     void (*reserved1)(void);
