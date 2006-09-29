@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Common defines for dealing with JPK files.
  *  Copyright (C) 2005  JPK Instruments AG.
  *  Written by Sven Neumann <neumann@jpk.com>.

@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Loader for JPK Image Scans.
  *  Copyright (C) 2005  JPK Instruments AG.
  *  Written by Sven Neumann <neumann@jpk.com>.
@@ -90,7 +91,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JPK image scans."),
     "Sven Neumann <neumann@jpk.com>",
-    "0.4",
+    "0.5",
     "JPK Instruments AG",
     "2005",
 };
@@ -111,7 +112,7 @@ module_register(void)
 }
 
 static gint
-jpkscan_detect(const GwyFileDetectInfo * fileinfo, gboolean only_name)
+jpkscan_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
     gint score = 0;
 
@@ -134,8 +135,10 @@ jpkscan_detect(const GwyFileDetectInfo * fileinfo, gboolean only_name)
 
 static GwyContainer*
 jpkscan_load(const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode, GError **error)
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
+    TIFFErrorHandler old_error, old_warning;
     GwyContainer *container;
 
     gwy_debug("Loading <%s>", filename);
@@ -144,10 +147,13 @@ jpkscan_load(const gchar *filename,
     if (!tiff_check_version(3, 6, error))
         return NULL;
 
-    TIFFSetWarningHandler(tiff_warning);
-    TIFFSetErrorHandler(tiff_error);
+    old_warning = TIFFSetWarningHandler(tiff_warning);
+    old_error = TIFFSetErrorHandler(tiff_error);
 
     container = jpkscan_load_tiff(filename, error);
+
+    TIFFSetErrorHandler(old_error);
+    TIFFSetErrorHandler(old_warning);
 
     return container;
 }
