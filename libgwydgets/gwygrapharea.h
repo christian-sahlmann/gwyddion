@@ -127,8 +127,6 @@ struct _GwyGraphArea {
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
-    void (*status_changed)(GwyGraphArea *area);
-
     void (*reserved1)(void);
     void (*reserved2)(void);
 };

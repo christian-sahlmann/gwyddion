@@ -360,7 +360,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     g_signal_connect_swapped(dialog->index, "value-changed",
                              G_CALLBACK(index_changed_cb), dialog);
     g_signal_connect(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
-                     "status-changed",
+                     "notify::status",
                      G_CALLBACK(status_cb), dialog);
 
     label = gtk_label_new(NULL);

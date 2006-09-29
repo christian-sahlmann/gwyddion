@@ -192,7 +192,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                               "Autoscale",
                               "Autoscale ticks with changing content",
                               TRUE,
-                              G_PARAM_READABLE | G_PARAM_WRITABLE));
+                              G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -203,7 +203,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           20,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -214,7 +214,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           20,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -225,7 +225,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           50,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -236,7 +236,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           20,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -247,7 +247,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           20,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -258,7 +258,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           20,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 
     g_object_class_install_property
         (gobject_class,
@@ -269,7 +269,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                           0,
                           20,
                           5,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+                          G_PARAM_READWRITE));
 }
 
 static void
