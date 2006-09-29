@@ -331,7 +331,7 @@ facets_dialog(FacetsArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox2), table, TRUE, TRUE, 4);
     row = 0;
 
-    label = gwy_label_new_header(_("Normal"));
+    label = gwy_label_new_header(gwy_sgettext("noun|Normal"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
