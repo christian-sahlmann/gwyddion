@@ -1,6 +1,5 @@
-1.99.9.20060926
 
-2.0 (0000-00-00)
+2.0 (2006-09-30)
 Application:
 - Edit/Mask color menu item and similar right-click menu item are sensitive
   only when a mask is present (fixing crashes when they were activated without
@@ -11,6 +10,7 @@ Application:
 - It is possible to copy channels and graphs to new or other open files
   (using data browser buttons and/or drag'n'drop).
 - 3D window reflects channel title changes.
+- Translations updated: Czech.
 
 Libraries:
 - Library base names was changed to libgwyfoo2 with versions starting
@@ -55,6 +55,7 @@ Modules:
 - Assing AFM: Crash on import introduced in 1.99.9 was fixed.
 - Revolve arc, Median background: Bugs causing subsequent application crashes
   were fixed.
+- Fit sphere: Was ported to 2.0 and reenabled.
 - SPMLab: Channel type is imported and used as the channel title.
 - Crop, Color range, Filters, Mask editor, Statistical function, Statistical
   quantities: Wrong selection boundaries when it was drawn `backwards' were
