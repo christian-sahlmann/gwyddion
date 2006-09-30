@@ -1,8 +1,8 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-m4_define([gwy_version_major],[1])
-m4_define([gwy_version_minor],[99])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.9.20060917])
+m4_define([gwy_version_major],[2])
+m4_define([gwy_version_minor],[0])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -294,8 +294,7 @@ AC_SUBST([GTKGLEXT_DEPENDENCY])
 
 #############################################################################
 # TIFF
-# TODO: Add some message to end of configure what is supported and what isn't
-# Missing libtiff is not fatal.
+# Optional.
 GWY_WITH([tiff],,[build with TIFF support])
 if test x$enable_tiff != xno && test -z "$LIBTIFF"; then
   AC_CHECK_LIB(tiff, TIFFReadScanline,
