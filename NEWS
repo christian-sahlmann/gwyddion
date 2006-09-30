@@ -1,4 +1,10 @@
 
+
+2.1 (0000-00-00)
+Other:
+- Missing file utils/genmarshal.mk was added to distribution.
+
+
 2.0 (2006-09-30)
 Application:
 - Edit/Mask color menu item and similar right-click menu item are sensitive

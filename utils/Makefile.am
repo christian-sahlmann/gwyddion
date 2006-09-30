@@ -11,6 +11,7 @@ moduledir = $(top_srcdir)/modules
 GUIDE_MAP = user-guide-modules
 
 EXTRA_DIST = \
+	genmarshal.mk \
 	gwywin32.bat.in \
 	mkenum.mk \
 	modules-web.xsl \
