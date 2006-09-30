@@ -1,5 +1,4 @@
 - Graph minor and major ticks are misaligned
-- Fix graph curves drawn by single segment to GdkLines
 - Common functions in file modules, try to reduce duplication:
   highly-nonsquare test
   channel title guess from units
@@ -36,3 +35,4 @@
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Add some guessing to Rawfile
 - Use gtk_paint_* to keep style in widgets.
+- Display module loading failures in the browser
