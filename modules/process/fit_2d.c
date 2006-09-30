@@ -207,7 +207,7 @@ fit_2d_dialog(Fit2DArgs *args,
               GwyDataField *dfield,
               gint id)
 {
-    GtkWidget *dialog, *table, *hbox, *vbox, *hbox2;
+    GtkWidget *dialog, *table, *hbox, *vbox, *hbox2, *alignment;
     Fit2DControls controls;
     gdouble zoomval;
     enum {
@@ -260,7 +260,9 @@ fit_2d_dialog(Fit2DArgs *args,
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
+    gtk_container_add(GTK_CONTAINER(alignment), controls.view);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
 
     /*set up fit controls*/
     vbox = gtk_vbox_new(FALSE, 3);
