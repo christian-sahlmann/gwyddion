@@ -157,7 +157,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D fitting"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -225,7 +225,7 @@ fit_2d_dialog(Fit2DArgs *args,
     controls.original_id = id;
     dialog = gtk_dialog_new_with_buttons(_("Fit sphere"), NULL, 0,
                                          _("_Fit"), RESPONSE_FIT,
-                                         _("_Guess"), RESPONSE_GUESS,
+                                         _("_Estimage"), RESPONSE_GUESS,
                                          _("_Plot Inits"), RESPONSE_INITS,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -489,10 +489,10 @@ guess
     else
         guess_sphere_down(controls->original_field, 4, args->par_init);
 
-    gtk_label_set_text(GTK_LABEL(controls->param_des[0]), "radius");
-    gtk_label_set_text(GTK_LABEL(controls->param_des[1]), "x center");
-    gtk_label_set_text(GTK_LABEL(controls->param_des[2]), "y center");
-    gtk_label_set_text(GTK_LABEL(controls->param_des[3]), "z center");
+    gtk_label_set_text(GTK_LABEL(controls->param_des[0]), _("Radius"));
+    gtk_label_set_text(GTK_LABEL(controls->param_des[1]), _("X center"));
+    gtk_label_set_text(GTK_LABEL(controls->param_des[2]), _("Y center"));
+    gtk_label_set_text(GTK_LABEL(controls->param_des[3]), _("Z center"));
 
     gtk_label_set_text(GTK_LABEL(controls->chisq), " ");
     for (i = 0; i < 4; i++) {
@@ -1028,6 +1028,7 @@ create_results_window(Fit2DControls *controls, Fit2DArgs *args)
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
+    gtk_dialog_set_has_separator(GTK_DIALOG(window), FALSE);
 
     table = gtk_table_new(9, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
@@ -1043,8 +1044,10 @@ create_results_window(Fit2DControls *controls, Fit2DArgs *args)
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, "sphere",
-                 row, 1, 0.0);
+    if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP) 
+        attach_label(table, "sphere (up)", row, 1, 0.0);
+    else if (args->function_type == GWY_FIT_2D_FIT_SPHERE_DOWN)
+        attach_label(table, "sphere (down)", row, 1, 0.0);
     row++;
 
     attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
@@ -1057,10 +1060,10 @@ create_results_window(Fit2DControls *controls, Fit2DArgs *args)
     for (i = 0; i < n; i++) {
         attach_label(tab, "=", i, 1, 0.5);
         attach_label(tab, "±", i, 3, 0.5);
-        if (i==0) attach_label(tab, "radius", i, 0, 0.0);
-        if (i==1) attach_label(tab, "x center", i, 0, 0.0);
-        if (i==2) attach_label(tab, "y center", i, 0, 0.0);
-        if (i==3) attach_label(tab, "z center", i, 0, 0.0);
+        if (i==0) attach_label(tab, _("Radius"), i, 0, 0.0);
+        if (i==1) attach_label(tab, _("X center"), i, 0, 0.0);
+        if (i==2) attach_label(tab, _("Y center"), i, 0, 0.0);
+        if (i==3) attach_label(tab, _("Z center"), i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->par_err[i];
         mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
@@ -1120,15 +1123,19 @@ create_fit_report(Fit2DControls *controls, Fit2DArgs *args)
     str = g_string_new(gwy_app_get_data_field_title(controls->data, controls->original_id));
     g_string_append_printf(report, _("Data: %s\n"), str->str);
     str = g_string_new("");
-    g_string_append_printf(report, _("Fitted function: sphere\n"));
+    if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP) 
+        g_string_append_printf(report, _("Fitted function: sphere (orientation up)\n"));
+    else if (args->function_type == GWY_FIT_2D_FIT_SPHERE_DOWN)
+        g_string_append_printf(report, _("Fitted function: sphere (orientation down)\n"));
+
     g_string_append_printf(report, _("\nResults\n"));
     n = 4;
     for (i = 0; i < n; i++) {
         /* FIXME: how to do this better? use pango_parse_markup()? */
-        if (i==0) s = gwy_strreplace("radius", "<sub>", "", (gsize)-1);
-        if (i==1) s = gwy_strreplace("x center", "<sub>", "", (gsize)-1);
-        if (i==2) s = gwy_strreplace("y center", "<sub>", "", (gsize)-1);
-        if (i==3) s = gwy_strreplace("z center", "<sub>", "", (gsize)-1);
+        if (i==0) s = gwy_strreplace(_("Radius"), "<sub>", "", (gsize)-1);
+        if (i==1) s = gwy_strreplace(_("X center"), "<sub>", "", (gsize)-1);
+        if (i==2) s = gwy_strreplace(_("Y center"), "<sub>", "", (gsize)-1);
+        if (i==3) s = gwy_strreplace(_("Z center"), "<sub>", "", (gsize)-1);
         s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
         g_string_append_printf(report, "%s = %g ± %g\n",
                                s2, args->par_res[i], args->par_err[i]);
