@@ -2,8 +2,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
-"Report-Msgid-Bugs-To: klapetek@gwyddion.net\n"
-"POT-Creation-Date: 2006-09-28 21:37+0200\n"
+"Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
+"POT-Creation-Date: 2006-09-30 22:51+0200\n"
 "PO-Revision-Date: 2006-09-28 21:51+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -518,7 +518,7 @@ msgstr "_Obrácené rozmístění"
 msgid "Graph"
 msgstr "Graf"
 
-#: libgwydgets/gwygraphwindow.c:142 modules/process/fit_2d.c:673
+#: libgwydgets/gwygraphwindow.c:142 modules/process/fit_2d.c:667
 msgid "Data"
 msgstr "Data"
 
@@ -1438,23 +1438,23 @@ msgstr "Hitachi AFM soubory, staré (.afm)"
 msgid "Hitachi-AFM has not registered file type `%s'."
 msgstr "Hitachi-AFM neregistroval typ souboru `%s'."
 
-#: modules/file/jpkscan.c:91
+#: modules/file/jpkscan.c:92
 msgid "Imports JPK image scans."
 msgstr "Načítá skeny ve formátu JPK."
 
-#: modules/file/jpkscan.c:104
+#: modules/file/jpkscan.c:105
 msgid "JPK image scans (.jpk)"
 msgstr "JPK sken (.jpk)"
 
-#: modules/file/jpkscan.c:172
+#: modules/file/jpkscan.c:178
 msgid "JPK scan"
 msgstr "JPK sken"
 
-#: modules/file/jpkscan.c:181
+#: modules/file/jpkscan.c:187
 msgid "File does not contain grid dimensions."
 msgstr "Soubor neobsahuje rozměry mřížky."
 
-#: modules/file/jpkscan.c:264
+#: modules/file/jpkscan.c:270
 #, c-format
 msgid ""
 "LibTIFF too old!\n"
@@ -1794,7 +1794,7 @@ msgid "Dem"
 msgstr ""
 
 #: modules/file/pnifile.c:149 modules/graph/graph_cd.c:287
-#: modules/graph/graph_fit.c:308 modules/process/fit_2d.c:309
+#: modules/graph/graph_fit.c:308 modules/process/fit_2d.c:321
 msgid "Error"
 msgstr ""
 
@@ -2437,7 +2437,7 @@ msgid "Critical Dimension"
 msgstr "Kritická dimenze"
 
 #: modules/graph/graph_cd.c:236 modules/graph/graph_fit.c:255
-#: modules/process/fit_2d.c:212
+#: modules/process/fit_2d.c:227
 msgid "_Fit"
 msgstr "_Proložit"
 
@@ -2446,12 +2446,12 @@ msgid "Function Definition"
 msgstr "Definice funkce"
 
 #: modules/graph/graph_cd.c:274 modules/graph/graph_fit.c:290
-#: modules/process/fit_2d.c:259
+#: modules/process/fit_2d.c:271
 msgid "Fitting Parameters"
 msgstr "Parametry proložení"
 
 #: modules/graph/graph_cd.c:283 modules/graph/graph_fit.c:303
-#: modules/process/fit_2d.c:304 modules/process/fractal.c:282
+#: modules/process/fit_2d.c:316 modules/process/fractal.c:282
 msgid "Result"
 msgstr "Výsledek"
 
@@ -2473,7 +2473,7 @@ msgid "To"
 msgstr "Do"
 
 #: modules/graph/graph_cd.c:783 modules/graph/graph_fit.c:957
-#: modules/process/evaluator_run.c:581 modules/process/fit_2d.c:970
+#: modules/process/evaluator_run.c:581 modules/process/fit_2d.c:964
 #, c-format
 msgid ""
 "Cannot save report to %s.\n"
@@ -2483,7 +2483,7 @@ msgstr ""
 "%s\n"
 
 #: modules/graph/graph_cd.c:807 modules/graph/graph_fit.c:981
-#: modules/process/fit_2d.c:994
+#: modules/process/fit_2d.c:988
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
@@ -2492,7 +2492,7 @@ msgid "Fit Results"
 msgstr "Výsledek proložení"
 
 #: modules/graph/graph_cd.c:888 modules/graph/graph_fit.c:1065
-#: modules/process/fit_2d.c:1046
+#: modules/process/fit_2d.c:1041
 msgid "<b>Data:</b>"
 msgstr "<b>Data:</b>"
 
@@ -2505,17 +2505,17 @@ msgid "X range:"
 msgstr "X-ový rozsah"
 
 #: modules/graph/graph_cd.c:918 modules/graph/graph_fit.c:1093
-#: modules/process/fit_2d.c:1052
+#: modules/process/fit_2d.c:1048
 msgid "<b>Function:</b>"
 msgstr "<b>Funkce:</b>"
 
 #: modules/graph/graph_cd.c:938 modules/graph/graph_fit.c:1105
-#: modules/process/fit_2d.c:1057
+#: modules/process/fit_2d.c:1055
 msgid "<b>Results</b>"
 msgstr "<b>Výsledky</b>"
 
 #: modules/graph/graph_cd.c:991 modules/graph/graph_fit.c:1173
-#: modules/process/fit_2d.c:1125
+#: modules/process/fit_2d.c:1123
 msgid ""
 "\n"
 "===== Fit Results =====\n"
@@ -2524,7 +2524,7 @@ msgstr ""
 "===== Výsledky fitu =====\n"
 
 #: modules/graph/graph_cd.c:997 modules/graph/graph_fit.c:1179
-#: modules/process/fit_2d.c:1128
+#: modules/process/fit_2d.c:1126
 #, c-format
 msgid "Data: %s\n"
 msgstr "Data: %s\n"
@@ -2545,7 +2545,7 @@ msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
 #: modules/graph/graph_cd.c:1007 modules/graph/graph_fit.c:1189
-#: modules/process/fit_2d.c:1131
+#: modules/process/fit_2d.c:1133
 msgid ""
 "\n"
 "Results\n"
@@ -2641,23 +2641,23 @@ msgstr "Proložení grafu"
 msgid "_Reset Inits"
 msgstr "_Obnovit odhad"
 
-#: modules/graph/graph_fit.c:261 modules/process/fit_2d.c:214
+#: modules/graph/graph_fit.c:261 modules/process/fit_2d.c:229
 msgid "_Plot Inits"
 msgstr "Vy_kreslit odhad"
 
-#: modules/graph/graph_fit.c:299 modules/process/fit_2d.c:300
+#: modules/graph/graph_fit.c:299 modules/process/fit_2d.c:312
 msgid "Initial"
 msgstr "Poč."
 
-#: modules/graph/graph_fit.c:313 modules/process/fit_2d.c:313
+#: modules/graph/graph_fit.c:313 modules/process/fit_2d.c:325
 msgid "Fix"
 msgstr "Fix."
 
-#: modules/graph/graph_fit.c:381 modules/process/fit_2d.c:367
+#: modules/graph/graph_fit.c:381 modules/process/fit_2d.c:379
 msgid "Correlation Matrix"
 msgstr "Korelační matice"
 
-#: modules/graph/graph_fit.c:397 modules/process/fit_2d.c:384
+#: modules/graph/graph_fit.c:397 modules/process/fit_2d.c:396
 msgid "χ<sup>2</sup> result:"
 msgstr "Výsledné χ<sup>2</sup>:"
 
@@ -2671,18 +2671,20 @@ msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu
 
 #: modules/graph/graph_fit.c:685 modules/tools/stats.c:529
 #: modules/tools/stats.c:538 modules/tools/stats.c:539
+#: modules/tools/stats.c:803 modules/tools/stats.c:810
+#: modules/tools/stats.c:812
 msgid "N.A."
 msgstr "nelze použít"
 
-#: modules/graph/graph_fit.c:1128 modules/process/fit_2d.c:1082
+#: modules/graph/graph_fit.c:1128 modules/process/fit_2d.c:1080
 msgid "Residual sum:"
 msgstr "Suma reziduí:"
 
-#: modules/graph/graph_fit.c:1136 modules/process/fit_2d.c:1090
+#: modules/graph/graph_fit.c:1136 modules/process/fit_2d.c:1088
 msgid "<b>Correlation Matrix</b>"
 msgstr "<b>Korelační matice</b>"
 
-#: modules/graph/graph_fit.c:1201 modules/process/fit_2d.c:1145
+#: modules/graph/graph_fit.c:1201 modules/process/fit_2d.c:1147
 #, c-format
 msgid ""
 "\n"
@@ -2691,7 +2693,7 @@ msgstr ""
 "\n"
 "Suma reziduí:   %g\n"
 
-#: modules/graph/graph_fit.c:1203 modules/process/fit_2d.c:1147
+#: modules/graph/graph_fit.c:1203 modules/process/fit_2d.c:1149
 msgid ""
 "\n"
 "Correlation matrix\n"
@@ -3976,77 +3978,101 @@ msgstr "Odstranit celou masku"
 msgid "Forces new markers to center around the origin"
 msgstr "Upevnit středy nových oblastí do počátku"
 
-#: modules/process/fit_2d.c:154
+#: modules/process/fit_2d.c:158
 msgid "2D fitting"
 msgstr "2D fitování"
 
-#: modules/process/fit_2d.c:168
+#: modules/process/fit_2d.c:172
 msgid "/_Level/_Fit Sphere..."
 msgstr "/_Vyrovnání/Proložit s_féru..."
 
-#: modules/process/fit_2d.c:172
+#: modules/process/fit_2d.c:176
 msgid "Fit by sphere"
 msgstr ""
 
-#: modules/process/fit_2d.c:211
+#: modules/process/fit_2d.c:226
 msgid "Fit sphere"
 msgstr "Proložení sféry"
 
-#: modules/process/fit_2d.c:213
-msgid "_Guess"
-msgstr "_Provést odhad"
+#: modules/process/fit_2d.c:228
+msgid "_Estimage"
+msgstr ""
 
-#: modules/process/fit_2d.c:264
+#: modules/process/fit_2d.c:276
 msgid "Function type:"
 msgstr "Typ funkce"
 
-#: modules/process/fit_2d.c:277
+#: modules/process/fit_2d.c:289
 msgid "Preview type:"
 msgstr "Typ náhledu"
+
+#: modules/process/fit_2d.c:494 modules/process/fit_2d.c:1065
+#: modules/process/fit_2d.c:1137
+msgid "Radius"
+msgstr ""
+
+#: modules/process/fit_2d.c:495 modules/process/fit_2d.c:1066
+#: modules/process/fit_2d.c:1138
+msgid "X center"
+msgstr ""
+
+#: modules/process/fit_2d.c:496 modules/process/fit_2d.c:1067
+#: modules/process/fit_2d.c:1139
+msgid "Y center"
+msgstr ""
+
+#: modules/process/fit_2d.c:497 modules/process/fit_2d.c:1068
+#: modules/process/fit_2d.c:1140
+msgid "Z center"
+msgstr ""
 
 #: modules/process/fit_2d.c:571
 #, c-format
 msgid "%s: Radius cannot be null or negative."
 msgstr ""
 
-#: modules/process/fit_2d.c:582 modules/process/grain_wshed.c:492
+#: modules/process/fit_2d.c:578 modules/process/grain_wshed.c:492
 #: modules/process/immerse.c:406 modules/process/maskcor.c:329
 #: modules/process/merge.c:621 modules/process/tip_blind.c:558
 #: modules/process/tipops.c:267
 msgid "Initializing"
 msgstr "Inicializace"
 
-#: modules/process/fit_2d.c:597
+#: modules/process/fit_2d.c:591
 msgid "Fitting"
 msgstr "Fitovat"
 
-#: modules/process/fit_2d.c:664
+#: modules/process/fit_2d.c:658
 msgid "Fitted sphere"
 msgstr ""
 
-#: modules/process/fit_2d.c:674
+#: modules/process/fit_2d.c:668
 msgid "Fit result"
 msgstr "Výsledek fitování"
 
-#: modules/process/fit_2d.c:675
+#: modules/process/fit_2d.c:669
 msgid "Difference"
 msgstr "Rozdíl"
 
-#: modules/process/fit_2d.c:687
+#: modules/process/fit_2d.c:681
 msgid "Sphere (up)"
 msgstr "Koule (horní část)"
 
-#: modules/process/fit_2d.c:688
+#: modules/process/fit_2d.c:682
 msgid "Sphere (down)"
 msgstr "Koule (dolní část)"
 
-#: modules/process/fit_2d.c:1034
+#: modules/process/fit_2d.c:1028
 msgid "Fit results"
 msgstr "Výsledky"
 
-#: modules/process/fit_2d.c:1130
-msgid "Fitted function: sphere\n"
-msgstr "Fitovaná funkce: koule\n"
+#: modules/process/fit_2d.c:1129
+msgid "Fitted function: sphere (orientation up)\n"
+msgstr ""
+
+#: modules/process/fit_2d.c:1131
+msgid "Fitted function: sphere (orientation down)\n"
+msgstr ""
 
 #: modules/process/fraccor.c:38
 msgid "Removes data under mask using fractal interpolation."
@@ -5965,11 +5991,6 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: modules/tools/stats.c:803 modules/tools/stats.c:810
-#: modules/tools/stats.c:812
-msgid "N.A"
-msgstr ""
-
 #: modules/tools/stats.c:815
 #, c-format
 msgid ""
@@ -5990,6 +6011,12 @@ msgid ""
 "Inclination theta: %s\n"
 "Inclination phi:   %s\n"
 msgstr ""
+
+#~ msgid "_Guess"
+#~ msgstr "_Provést odhad"
+
+#~ msgid "Fitted function: sphere\n"
+#~ msgstr "Fitovaná funkce: koule\n"
 
 #~ msgid "<b>Label text</b>"
 #~ msgstr "<b>Text popisku</b>"
