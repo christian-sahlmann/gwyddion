@@ -3,7 +3,7 @@
 disabled=
 pkgname=gwyddion
 basever=2.0
-dont_update_version=dont
+dont_update_version=
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs
