@@ -133,17 +133,8 @@ gwy_graph_window_measure_dialog_disconnect_selection(GwyGraphWindowMeasureDialog
 static void
 value_label(GtkWidget *label, gdouble value, gint precision, GString *str)
 {
-    GString *format;
-
-    /* create formatting string based on "precision" */
-    format = g_string_new("");
-    g_string_printf(format, "%%.%if", precision + 1);
-
-    /* create formatting value string */
-    g_string_printf(str, format->str, value);
+    g_string_printf(str, "%.*f", precision, value);
     gtk_label_set_text(GTK_LABEL(label), str->str);
-
-    g_string_free(format, TRUE);
 }
 
 static GtkWidget *
@@ -275,12 +266,12 @@ selection_updated_cb(GwySelection *selection,
     xformat = gwy_si_unit_get_format_with_resolution(xunit,
                                                      GWY_SI_UNIT_FORMAT_PLAIN,
                                                      xrange,
-                                                     xresolution,
+                                                     xresolution/6,
                                                      xformat);
     yformat = gwy_si_unit_get_format_with_resolution(yunit,
                                                      GWY_SI_UNIT_FORMAT_PLAIN,
                                                      yrange,
-                                                     yresolution,
+                                                     yresolution/6,
                                                      yformat);
 
     /* set up header labels */
