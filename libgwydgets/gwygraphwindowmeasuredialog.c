@@ -129,15 +129,21 @@ gwy_graph_window_measure_dialog_disconnect_selection(GwyGraphWindowMeasureDialog
     gwy_object_unref(dialog->selection);
 }
 
+/*XXX: the formatting for numbers is hardcoded and thus crappy */
 static void
-value_label(GtkWidget *label, gdouble value, GString *str)
+value_label(GtkWidget *label, gdouble value, gint precision, GString *str)
 {
-    if ((fabs(value) <= 1e5 && fabs(value) > 1e-2) || fabs(value) == 0)
-        g_string_printf(str, "%.2f", value);
-    else
-        g_string_printf(str, "%.2e", value);
+    GString *format;
 
+    /* create formatting string based on "precision" */
+    format = g_string_new("");
+    g_string_printf(format, "%%.%if", precision + 1);
+
+    /* create formatting value string */
+    g_string_printf(str, format->str, value);
     gtk_label_set_text(GTK_LABEL(label), str->str);
+
+    g_string_free(format, TRUE);
 }
 
 static GtkWidget *
@@ -214,14 +220,26 @@ selection_updated_cb(GwySelection *selection,
 {
     GtkWidget *label;
     GwyGraph *graph;
-    GwyAxis *axis;
+    GwyGraphModel *gmodel;
+    GwyGraphArea *garea;
+    GwyAxis *xaxis, *yaxis;
     GString *str;
     gint i, n;
     gdouble *spoints = NULL;
     gdouble x = 0, y = 0, xp = 0, yp = 0;
     gboolean ret = TRUE, prevret = TRUE;
+    GwySIUnit *xunit;
+    GwySIUnit *yunit;
+    GwySIValueFormat *xformat = NULL;
+    GwySIValueFormat *yformat = NULL;
+    gdouble xmin, xmax, xrange, xresolution;
+    gdouble ymin, ymax, yrange, yresolution;
+    guint width, height;
 
     graph = GWY_GRAPH(dialog->graph);
+    gmodel = GWY_GRAPH_MODEL(gwy_graph_get_model(graph));
+    garea = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
+
     if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS
           || gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES))
         return;
@@ -241,19 +259,39 @@ selection_updated_cb(GwySelection *selection,
 
     str = g_string_new("");
 
-    axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
-    dialog->x_mag = gwy_axis_get_magnification(axis);
-    header_label_update(GTK_LABEL(dialog->header_x), "X",
-                        gwy_axis_get_magnification_string(axis), str);
-    header_label_update(GTK_LABEL(dialog->header_distx), _("Length"),
-                        gwy_axis_get_magnification_string(axis), str);
+    xaxis = gwy_graph_get_axis(graph, GTK_POS_TOP);
+    xunit = gwy_si_unit_new(gwy_axis_get_magnification_string(xaxis));
+    yaxis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
+    yunit = gwy_si_unit_new(gwy_axis_get_magnification_string(yaxis));
 
-    axis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
-    dialog->y_mag = gwy_axis_get_magnification(axis);
+    /* set up some nice formatting for the values */
+    gtk_layout_get_size(GTK_LAYOUT(garea), &width, &height);
+    gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
+    gwy_graph_model_get_y_range(gmodel, &ymin, &ymax);
+    xrange = xmax - xmin;
+    yrange = ymax - ymin;
+    xresolution = xrange / width;
+    yresolution = yrange / height;
+    xformat = gwy_si_unit_get_format_with_resolution(xunit,
+                                                     GWY_SI_UNIT_FORMAT_PLAIN,
+                                                     xrange,
+                                                     xresolution,
+                                                     xformat);
+    yformat = gwy_si_unit_get_format_with_resolution(yunit,
+                                                     GWY_SI_UNIT_FORMAT_PLAIN,
+                                                     yrange,
+                                                     yresolution,
+                                                     yformat);
+
+    /* set up header labels */
+    header_label_update(GTK_LABEL(dialog->header_x), "X",
+                        xformat->units, str);
+    header_label_update(GTK_LABEL(dialog->header_distx), _("Length"),
+                        xformat->units, str);
     header_label_update(GTK_LABEL(dialog->header_y), "Y",
-                        gwy_axis_get_magnification_string(axis), str);
+                        yformat->units, str);
     header_label_update(GTK_LABEL(dialog->header_disty), _("Height"),
-                        gwy_axis_get_magnification_string(axis), str);
+                        yformat->units, str);
 
     /*update points data */
     for (i = 0; i < NMAX; i++) {
@@ -273,11 +311,11 @@ selection_updated_cb(GwySelection *selection,
                 y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
             }
             label = g_ptr_array_index(dialog->pointx, i);
-            value_label(label, x/dialog->x_mag, str);
+            value_label(label, x/xformat->magnitude, xformat->precision, str);
 
             label = g_ptr_array_index(dialog->pointy, i);
             if (ret)
-                value_label(label, y/dialog->y_mag, str);
+                value_label(label, y/yformat->magnitude, yformat->precision, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
 
@@ -285,18 +323,18 @@ selection_updated_cb(GwySelection *selection,
                 continue;
 
             label = g_ptr_array_index(dialog->distx, i);
-            value_label(label, (x - xp)/dialog->x_mag, str);
+            value_label(label, (x - xp)/xformat->magnitude, yformat->precision, str);
 
 
             label = g_ptr_array_index(dialog->disty, i);
             if (ret && prevret)
-                value_label(label, (y - yp)/dialog->y_mag, str);
+                value_label(label, (y - yp)/yformat->magnitude, yformat->precision, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
 
             label = g_ptr_array_index(dialog->slope, i);
             if (ret && prevret)
-                value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)), str);
+                value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)), 2, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
         }
@@ -317,6 +355,11 @@ selection_updated_cb(GwySelection *selection,
     if (n)
         g_free(spoints);
     g_string_free(str, TRUE);
+
+    gwy_si_unit_value_format_free(xformat);
+    gwy_si_unit_value_format_free(yformat);
+    g_object_unref(xunit);
+    g_object_unref(yunit);
 }
 
 
@@ -388,7 +431,6 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
     axis = gwy_graph_get_axis(graph, GTK_POS_TOP);
-    dialog->x_mag = gwy_axis_get_magnification(axis);
     dialog->header_x = header_label(table, 1, 1, "X",
                                     gwy_axis_get_magnification_string(axis),
                                     str);
@@ -397,7 +439,6 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                                         str);
 
     axis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
-    dialog->y_mag = gwy_axis_get_magnification(axis);
     dialog->header_y = header_label(table, 1, 2, "Y",
                                     gwy_axis_get_magnification_string(axis),
                                     str);

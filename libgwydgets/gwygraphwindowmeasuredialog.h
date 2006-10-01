@@ -66,8 +66,8 @@ struct _GwyGraphWindowMeasureDialog {
     GwyMeasureMethodType mmethod;
     gint n;
     gint curve_index;
-    gdouble x_mag;
-    gdouble y_mag;
+//    gdouble x_mag;
+//    gdouble y_mag;
 
     GwySelection *selection;
     gulong selection_id;
