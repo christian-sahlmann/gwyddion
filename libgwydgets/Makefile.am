@@ -20,7 +20,6 @@ libgwydgets2include_HEADERS = \
 	gwydatawindow.h \
 	gwydgets.h \
 	gwydgetenums.h \
-	gwydgetmarshals.h \
 	gwydgettypes.h \
 	gwydgetutils.h \
 	gwygraphcurvemodel.h \
@@ -55,6 +54,7 @@ libgwydgets2include_HEADERS = \
 
 noinst_HEADERS = \
 	gwyaxisdialog.h \
+	gwydgetmarshals.h \
 	gwygraphwindowmeasuredialog.h \
 	gwygraphareadialog.h \
 	gwygraphlabeldialog.h
