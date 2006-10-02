@@ -3,9 +3,10 @@ Gwyddion is a SPM (scanning probe microscopy) data visualization and analysis
 tool, written with Gtk+ and working in both Linux/Unix and MS Windows.
 
 Web site:         http://gwyddion.net/
-Sourceforge page: http://sourceforge.net/projects/gwyddion/
-Public CVS:       http://cvs.sourceforge.net/viewcvs.py/gwyddion/
 Bug reports:      klapetek@gwyddion.net
+Sourceforge page: http://sourceforge.net/projects/gwyddion/
+Subversion:       https://svn.sourceforge.net/svnroot/gwyddion/
+SVN on-line view: http://svn.sourceforge.net/viewvc/gwyddion/trunk/
 Mailing lists:    gwyddion-users@lists.sourceforge.net
                   (http://lists.sourceforge.net/lists/listinfo/gwyddion-users)
                   gwyddion-devel@lists.sourceforge.net

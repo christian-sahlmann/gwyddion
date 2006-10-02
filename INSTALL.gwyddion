@@ -4,7 +4,7 @@ Contents:
 1. From sources -- Linux/Unix
 2. From sources -- MS Windows
 3. From sources -- Mac OS X
-4. From CVS (Linux/Unix only)
+4. From Subversion (Linux/Unix only)
 5. Modules and plug-ins
 
 ===[ 0. Prebuilt binaries ]==================================================
@@ -133,11 +133,11 @@ Note until Gtk+ Quartz port is finished, it's necessary to start an X11
 server before running Gwyddion.
 
 
-===[ 4. From CVS (Linux/Unix only) ]=========================================
+===[ 4. From Subversion (Linux/Unix only) ]==================================
 
-CVS generally doesn't contain generated files, no matter how unusual tools
-may be needed to generate them.  Consider use of nightly snapshot tarballs
-available at
+The Subversion repository generally doesn't contain generated files, no
+matter how unusual tools may be needed to generate them.  Consider use of
+nightly snapshot tarballs available at
 
   http://gwyddion.net/download.php#head
 
