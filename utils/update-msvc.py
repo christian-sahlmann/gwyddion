@@ -170,7 +170,7 @@ def expand_template(makefile, name, supplementary=None):
 
     SELF: defines TOP_SRCDIR, LIBRARY, LIBDIR
     DATA: install-data rule, created from foo_DATA
-    LIB_HEADERS: this variable, filled from lib_LTLIBRARIES, fooinclude_HEADERS
+    LIB_HEADERS: install rules, filled from lib_LTLIBRARIES, fooinclude_HEADERS
     LIB_OBJECTS: this variable, filled from lib_LTLIBRARIES, foo_SOURCES
     LIB_OBJ_RULES: .c -> .obj rules, filled from lib_LTLIBRARIES, foo_SOURCES
     PRG_OBJECTS: this variable, filled from bin_PROGRAMS, foo_SOURCES
@@ -207,7 +207,11 @@ def expand_template(makefile, name, supplementary=None):
         for l in libraries:
             ul = underscorize(l)
             lst += get_list(makefile, '%sinclude_HEADERS' % ul)
-        return name + ' =' + format_list(lst)
+        list_part = name + ' =' + format_list(lst)
+        inst_part = [('$(INSTALL) %s "$(DEST_DIR)\include\$(LIBDIR)"' % x)
+                     for x in lst]
+        inst_part = '\n\t'.join(['install-headers:'] + inst_part)
+        return list_part + '\n\n' + inst_part
     elif name == 'LIB_OBJECTS':
         libraries = get_list(makefile, 'lib_LTLIBRARIES')
         lst = []

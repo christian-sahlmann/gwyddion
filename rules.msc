@@ -16,11 +16,10 @@ $(LIBRARY)-$(LIB_VER).dll: $(LIB_OBJECTS) $(LIBRARY)-$(LIB_VER).def
 install-prg: prg
 	$(INSTALL) $(PROGRAM).exe "$(DEST_DIR)"
 
-install-lib: lib
+install-lib: lib install-headers
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).dll "$(DEST_DIR)"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).lib "$(DEST_DIR)\lib"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
-	$(INSTALL) *.h "$(DEST_DIR)\include\$(LIBDIR)"
 
 !IFDEF MOD_TYPE
 MOD_DIR = \$(MOD_TYPE)
