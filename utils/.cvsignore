@@ -1,8 +1,0 @@
-Makefile
-Makefile.in
-dump-modules
-gwywin32.bat
-.libs
-.deps
-core.*
-*.html

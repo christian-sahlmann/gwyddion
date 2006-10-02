@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-POTFILES
-POTFILES.in
-gwyddion.pot
-remove-potcdate.sed
-*.gmo
-stamp-*
-makefile.msc
