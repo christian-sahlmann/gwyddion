@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 <[[:SELF:]]>
-MOD_TYPE = tools
+MOD_TYPE = tool
 <[[:MODULES:]]>
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
