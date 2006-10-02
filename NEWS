@@ -1,8 +1,13 @@
 
 
 2.1 (0000-00-00)
+Libraries:
+- libgwydgets: Value formatting in graph distance measure window was
+  improved.
+
 Other:
 - Missing file utils/genmarshal.mk was added to distribution.
+- Private header files installed by mistake are no longer installed.
 
 
 2.0 (2006-09-30)
