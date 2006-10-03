@@ -952,8 +952,8 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel,
     g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(curve), -1);
 
     g_object_ref(curve);
+    idx = gmodel->curves->len;
     g_ptr_array_add(gmodel->curves, curve);
-    idx = gmodel->curves->len - 1;
 
     aux.data_changed_id
         = g_signal_connect(curve, "data-changed",
@@ -1035,8 +1035,7 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
         else {
             GwyGraphModelCurveAux aux;
 
-            aux = g_array_index(gmodel->curveaux, GwyGraphModelCurveAux,
-                                newcurves->len);
+            aux = g_array_index(gmodel->curveaux, GwyGraphModelCurveAux, i);
             g_ptr_array_add(newcurves, cmodel);
             g_array_append_val(newaux, aux);
         }
