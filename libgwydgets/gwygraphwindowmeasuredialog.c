@@ -129,7 +129,6 @@ gwy_graph_window_measure_dialog_disconnect_selection(GwyGraphWindowMeasureDialog
     gwy_object_unref(dialog->selection);
 }
 
-/*XXX: the formatting for numbers is hardcoded and thus crappy */
 static void
 value_label(GtkWidget *label, gdouble value, gint precision, GString *str)
 {
