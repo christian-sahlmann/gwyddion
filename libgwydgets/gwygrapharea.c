@@ -421,6 +421,7 @@ gwy_graph_area_realize(GtkWidget *widget)
                           | GDK_BUTTON_RELEASE_MASK
                           | GDK_BUTTON_MOTION_MASK
                           | GDK_POINTER_MOTION_MASK
+                          | GDK_POINTER_MOTION_HINT_MASK
                           | GDK_LEAVE_NOTIFY_MASK);
 
     display = gtk_widget_get_display(widget);
@@ -655,13 +656,12 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     gdouble selection_zoomdata[4];
     gboolean visible;
 
-    gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
 
     area = GWY_GRAPH_AREA(widget);
-    gdk_window_get_position(event->window, &x, &y);
-    x += (gint)event->x;
-    y += (gint)event->y;
+    gwy_debug("event: %g %g", event->x, event->y);
+    x = (gint)event->x;
+    y = (gint)event->y;
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
@@ -905,13 +905,12 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gdouble dx, dy, selection_pointdata[2], selection_areadata[2];
     gdouble selection_zoomdata[4], selection_linedata;
 
-    gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
 
     area = GWY_GRAPH_AREA(widget);
-    gdk_window_get_position(event->window, &x, &y);
-    x += (gint)event->x;
-    y += (gint)event->y;
+    gwy_debug("event: %g %g", event->x, event->y);
+    x = (gint)event->x;
+    y = (gint)event->y;
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
@@ -1014,9 +1013,8 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         gwy_graph_area_draw_child_rectangle(area);
 
         if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
+            x = (gint)event->x;
+            y = (gint)event->y;
             ispos = 1;
         }
         gwy_graph_area_clamp_coords_for_child(area, &x, &y);
@@ -1039,11 +1037,10 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     GwyGraphArea *area;
     GwyGraphModel *gmodel;
     GdkWindow *window;
-    gint x, y, wx, wy, ispos = 0, border, nselected;
+    gint x, y, ispos = 0, border, nselected;
     gdouble dx, dy, selection_pointdata[2], selection_areadata[2];
     gdouble selection_zoomdata[4], selection_linedata;
 
-    gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
 
     area = GWY_GRAPH_AREA(widget);
@@ -1053,9 +1050,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         x = event->x;
         y = event->y;
     }
-    gdk_window_get_position(event->window, &wx, &wy);
-    x += wx;
-    y += wy;
+    gwy_debug("event: %d %d", x, y);
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
@@ -1172,9 +1167,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     if (area->active) {
 
         if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
+            x = (gint)event->x;
+            y = (gint)event->y;
             ispos = 1;
         }
         gwy_graph_area_clamp_coords_for_child(area, &x, &y);
