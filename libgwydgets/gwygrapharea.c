@@ -224,6 +224,14 @@ gwy_graph_area_init(GwyGraphArea *area)
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                    GTK_WIDGET(area)->allocation.width
                             - GTK_WIDGET(area->lab)->allocation.width - 5, 5);
+
+    gtk_widget_add_events(GTK_WIDGET(area),
+                          GDK_BUTTON_PRESS_MASK
+                          | GDK_BUTTON_RELEASE_MASK
+                          | GDK_BUTTON_MOTION_MASK
+                          | GDK_POINTER_MOTION_MASK
+                          | GDK_POINTER_MOTION_HINT_MASK
+                          | GDK_LEAVE_NOTIFY_MASK);
 }
 
 static void
@@ -415,14 +423,6 @@ gwy_graph_area_realize(GtkWidget *widget)
 
     area = GWY_GRAPH_AREA(widget);
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
-
-    gtk_widget_add_events(GTK_WIDGET(area),
-                          GDK_BUTTON_PRESS_MASK
-                          | GDK_BUTTON_RELEASE_MASK
-                          | GDK_BUTTON_MOTION_MASK
-                          | GDK_POINTER_MOTION_MASK
-                          | GDK_POINTER_MOTION_HINT_MASK
-                          | GDK_LEAVE_NOTIFY_MASK);
 
     display = gtk_widget_get_display(widget);
     area->cross_cursor = gdk_cursor_new_for_display(display,
