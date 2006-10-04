@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[0])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20061004])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -302,13 +302,31 @@ if test x$enable_tiff != xno && test -z "$LIBTIFF"; then
     [AC_CHECK_LIB(tiff, TIFFWriteScanline,
       [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff -ljpeg -lz',
         [enable_tiff=no])],
-      [AC_CHECK_LIB(tiff34, TIFFFlushData,
-        [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff34 -ljpeg -lz',
-          [enable_tiff=no])],
-        [enable_tiff=no;],
-        [-ljpeg -lz])],
+      [enable_tiff=no],
       [-ljpeg -lz])],
     [])
+  if test x$enable_tiff != xno; then
+    AC_MSG_CHECKING([whether libtiff version is at least 3.6])
+    ORIG_LIBS="$LIBS"
+    LIBS="$LIBS $LIBTIFF"
+    AC_RUN_IFELSE(AC_LANG_PROGRAM([[#include <tiffio.h>
+                                    #include <stdio.h>
+                                   ]],
+                                  [[const char *v;
+                                    int major, minor, micro;
+                                    v = TIFFGetVersion();
+                                    while (*v && (*v < '0' || *v > '9')) v++;
+                                    if (sscanf(v, "%d.%d.%d",
+                                        &major, &minor, &micro) != 3) return 1;
+                                    if (major < 3 || (major == 3 && minor < 6))
+                                        return 1;
+                                    ]]),
+       [enable_tiff=yes],
+       [enable_tiff=no],
+       [enable_tiff=no])
+    LIBS="$ORIG_LIBS"
+    AC_MSG_RESULT([$enable_tiff])
+  fi
 fi
 if test x$enable_tiff != xno && test -n "$LIBTIFF"; then
   AC_DEFINE(HAVE_TIFF,1,[Define if we have the TIFF library.])
