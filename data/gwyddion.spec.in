@@ -1,8 +1,8 @@
 # @(#) $Id$
 %{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
+%{expand:%global distro_is_mdk %(test ! -f /etc/mandriva-release; echo $?)}
 # Untested
-%{expand:%global distro_is_mdk %(test ! -f /etc/mandrake-release; echo $?)}
 %{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
 Name:          @PACKAGE_TARNAME@
@@ -14,7 +14,7 @@ Group:         Applications/Engineering
 License:       GNU GPL
 URL:           @PACKAGE_URL@
 Source0:       http://gwyddion.net/download/%{version}/%{name}-%{version}.tar.bz2
-BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(id -un)
 Requires(pre): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
@@ -29,12 +29,18 @@ BuildRequires: ruby >= 1.8
 BuildRequires: gettext
 BuildRequires: pkgconfig
 BuildRequires: findutils
+
 %if %{distro_is_suse}
 BuildRequires: xorg-x11-Mesa-devel
 %define fftw3 fftw3
 %else
+%if %{distro_is_mdk}
+%define fftw3 libfftw3
+%else
 %define fftw3 fftw
 %endif
+%endif
+
 %ifarch %ix86
 BuildRequires: %{fftw3} >= 3.0
 %else
