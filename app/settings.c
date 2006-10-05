@@ -283,7 +283,7 @@ static void
 gwy_app_settings_set_defaults(GwyContainer *settings)
 {
     static const GwyRGBA default_mask_color = { 1.0, 0.0, 0.0, 0.5 };
-    static const gchar *default_preferred_gradients =
+    static const gchar default_preferred_gradients[] =
         "BW1\n"
         "Blend2\n"
         "Caribbean\n"
@@ -300,7 +300,7 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
         "Spectral\n"
         "Spring\n"
         "Warm";
-    static const gchar *default_preferred_gl_materials =
+    static const gchar default_preferred_gl_materials[] =
         "Brass\n"
         "Cyan-Plastic\n"
         "OpenGL-Default\n"
@@ -328,6 +328,22 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
     if (!gwy_container_contains_by_name(settings, "/app/glmaterials/preferred"))
         gwy_container_set_string_by_name(settings, "/app/glmaterials/preferred",
                                          g_strdup(default_preferred_gl_materials));
+    if (!gwy_container_contains_by_name(settings,
+                                        "/app/toolbox/visible/graph"))
+        gwy_container_set_boolean_by_name(settings,
+                                          "/app/toolbox/visible/graph", TRUE);
+    if (!gwy_container_contains_by_name(settings,
+                                        "/app/toolbox/visible/proc"))
+        gwy_container_set_boolean_by_name(settings,
+                                          "/app/toolbox/visible/proc", TRUE);
+    if (!gwy_container_contains_by_name(settings,
+                                        "/app/toolbox/visible/tool"))
+        gwy_container_set_boolean_by_name(settings,
+                                          "/app/toolbox/visible/tool", TRUE);
+    if (!gwy_container_contains_by_name(settings,
+                                        "/app/toolbox/visible/zoom"))
+        gwy_container_set_boolean_by_name(settings,
+                                          "/app/toolbox/visible/zoom", TRUE);
 }
 
 static void
