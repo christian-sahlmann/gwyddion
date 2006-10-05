@@ -97,6 +97,8 @@ static GwyContainer* psia_load           (const gchar *filename,
                                           GError **error);
 static GwyContainer* psia_load_tiff      (TIFF *tiff,
                                           GError **error);
+static gchar*        psia_wchar_to_utf8  (const guchar **src,
+                                          guint len);
 static gboolean      tiff_check_version  (gint macro,
                                           gint micro,
                                           GError **error);
@@ -240,13 +242,11 @@ psia_load_tiff(TIFF *tiff, GError **error)
     if (count < 580) { /* TODO */ }
 
     memset(&header, 0, sizeof(PSIAImageHeader));
-    header.image_type = get_WORD_LE(&p);
+    header.image_type = get_DWORD_LE(&p);
     gwy_debug("image_type: %d", header.image_type);
     /* TODO: Byte order conversion */
-    header.source_name = g_utf16_to_utf8(p, 32, NULL, NULL, NULL);
-    p += 2*32;
-    header.image_mode = g_utf16_to_utf8(p, 8, NULL, NULL, NULL);
-    p += 2*8;
+    header.source_name = psia_wchar_to_utf8(&p, 32);
+    header.image_mode = psia_wchar_to_utf8(&p, 8);
     gwy_debug("source_name: <%s>, image_mode: <%s>",
               header.source_name, header.image_mode);
     header.lpf_strength = get_DOUBLE_LE(&p);
@@ -255,6 +255,21 @@ psia_load_tiff(TIFF *tiff, GError **error)
     header.xres = get_DWORD_LE(&p);
     header.yres = get_DWORD_LE(&p);
     gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
+    header.angle = get_DOUBLE_LE(&p);
+    header.sine_scan = get_DWORD_LE(&p);
+    header.overscan_rate = get_DOUBLE_LE(&p);
+    header.forward = get_DWORD_LE(&p);
+    header.scan_up = get_DWORD_LE(&p);
+    header.swap_xy = get_DWORD_LE(&p);
+    header.xreal = get_DOUBLE_LE(&p) * 1e-6;
+    header.yreal = get_DOUBLE_LE(&p) * 1e-6;
+    gwy_debug("xreal: %g, yreal: %g", header.xreal, header.yreal);
+    header.xoff = get_DOUBLE_LE(&p) * 1e-6;
+    header.yoff = get_DOUBLE_LE(&p) * 1e-6;
+    gwy_debug("xoff: %g, yoff: %g", header.xoff, header.yoff);
+    header.scan_rate = get_DOUBLE_LE(&p);
+    header.set_point = get_DOUBLE_LE(&p);
+    header.set_point_unit = psia_wchar_to_utf8(&p, 8);
 
 #if 0
     /*  sanity check, grid dimensions must be present!  */
@@ -315,6 +330,24 @@ psia_load_tiff(TIFF *tiff, GError **error)
 #endif
 
     return container;
+}
+
+static gchar*
+psia_wchar_to_utf8(const guchar **src,
+                   guint len)
+{
+    gchar *s;
+    gunichar2 *wstr;
+    guint i;
+
+    wstr = g_memdup(*src, 2*len);
+    for (i = 0; i < len; i++)
+        wstr[i] = GUINT16_FROM_LE(wstr[i]);
+    s = g_utf16_to_utf8(wstr, len, NULL, NULL, NULL);
+    g_free(wstr);
+    *src += 2*len;
+
+    return s;
 }
 
 static gboolean
