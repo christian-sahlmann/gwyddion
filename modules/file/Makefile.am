@@ -5,9 +5,13 @@
 if HAVE_TIFF
 jpkscan_module = jpkscan.la
 jpkscan_sources =
+psia_module = psia.la
+psia_sources =
 else
 jpkscan_module =
 jpkscan_sources = jpk.h jpkscan.c
+psia_module =
+psia_sources = psia.c
 endif
 
 if HAVE_XML2
@@ -41,6 +45,7 @@ file_LTLIBRARIES = \
 	omicron.la \
 	pixmap.la \
 	pnifile.la \
+	$(psia_module) \
 	rawfile.la \
 	rhk-sm3.la \
 	rhk-spm32.la \
@@ -62,6 +67,7 @@ noinst_HEADERS = \
 
 EXTRA_DIST = \
 	$(jpkscan_sources) \
+	$(psia_sources) \
 	$(spml_sources) \
 	makefile.msc \
 	makefile.msc.gwt
@@ -157,6 +163,11 @@ pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 
 pnifile_la_SOURCES = pnifile.c
 pnifile_la_LIBADD = $(module_libadd)
+
+if HAVE_TIFF
+psia_la_SOURCES = psia.c
+psia_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
+endif
 
 rawfile_la_SOURCES = rawfile.c rawfilepreset.h
 rawfile_la_LIBADD = $(module_libadd)
