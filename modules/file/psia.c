@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -34,8 +34,9 @@
 #include <libprocess/stats.h>
 
 #include "err.h"
+#include "get.h"
 
-#define MAGIC      "II\x00\x2a"
+#define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
 /* Custom TIFF tags */
@@ -49,13 +50,52 @@
  * remaining tags. */
 #define PSIA_MAGIC_NUMBER              0x0E031301
 
+typedef enum {
+    PSIA_2D_MAPPED    = 0,
+    PSIA_LINE_PROFILE = 1
+} PSIAImageType;
+
+typedef struct {
+    PSIAImageType image_type;
+    gchar *source_name;
+    gchar *image_mode;
+    gdouble lpf_strength;
+    gboolean auto_flatten;
+    gboolean ac_track;
+    guint32 xres;
+    guint32 yres;
+    gdouble angle;
+    gboolean sine_scan;
+    gdouble overscan_rate;
+    gboolean forward;
+    gboolean scan_up;
+    gboolean swap_xy;
+    gdouble xreal;
+    gdouble yreal;
+    gdouble xoff;
+    gdouble yoff;
+    gdouble scan_rate;
+    gdouble set_point;
+    gchar *set_point_unit;
+    gdouble tip_bias;
+    gdouble sample_bias;
+    gdouble data_gain;
+    gdouble z_scale;
+    gdouble z_offset;
+    gchar *z_unit;
+    gint data_min;
+    gint data_max;
+    gint data_avg;
+    gboolean compression;
+} PSIAImageHeader;
+
 static gboolean      module_register     (void);
 static gint          psia_detect         (const GwyFileDetectInfo *fileinfo,
                                           gboolean only_name);
 static GwyContainer* psia_load           (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
-static GwyContainer* psia_load_tiff      (const gchar *filename,
+static GwyContainer* psia_load_tiff      (TIFF *tiff,
                                           GError **error);
 static gboolean      tiff_check_version  (gint macro,
                                           gint micro,
@@ -117,7 +157,7 @@ psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
     TIFFErrorHandler old_error, old_warning;
     TIFF *tiff;
     gint score = 0;
-    guint magic;
+    guint magic = 0;
 
     if (only_name)
         return score;
@@ -149,6 +189,7 @@ psia_load(const gchar *filename,
              GError **error)
 {
     TIFFErrorHandler old_error, old_warning;
+    TIFF *tiff;
     GwyContainer *container;
 
     gwy_debug("Loading <%s>", filename);
@@ -156,7 +197,14 @@ psia_load(const gchar *filename,
     old_warning = TIFFSetWarningHandler(tiff_ignore);
     old_error = TIFFSetErrorHandler(tiff_error);
 
-    container = psia_load_tiff(filename, error);
+    tiff = TIFFOpen(filename, "r");
+    if (!tiff)
+        /* This can be I/O too, but it's hard to tell the difference. */
+        err_FILE_TYPE(error, _("PSIA"));
+    else {
+        container = psia_load_tiff(tiff, error);
+        TIFFClose(tiff);
+    }
 
     TIFFSetErrorHandler(old_error);
     TIFFSetErrorHandler(old_warning);
@@ -165,18 +213,48 @@ psia_load(const gchar *filename,
 }
 
 static GwyContainer*
-psia_load_tiff(const gchar *filename, GError **error)
+psia_load_tiff(TIFF *tiff, GError **error)
 {
+    PSIAImageHeader header;
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
-    TIFF *tiff;
+    guint magic, version;
+    const guchar *p;
+    gint count;
 
-    tiff = TIFFOpen(filename, "r");
-    if (!tiff) {
-        /* This can be I/O too, but it's hard to tell the difference. */
+    if (!tiff_get_custom_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
+        || magic != PSIA_MAGIC_NUMBER
+        || !tiff_get_custom_uint(tiff, PSIA_TIFFTAG_Version, &version)
+        || version < 0x01000001) {
         err_FILE_TYPE(error, _("PSIA"));
         return NULL;
     }
+
+    if (!TIFFGetField(tiff, PSIA_TIFFTAG_Header, &count, &p)) {
+        err_FILE_TYPE(error, _("PSIA"));
+        return NULL;
+    }
+    gwy_debug("[Header] count: %d", count);
+    g_file_set_contents("psia-header", p, count, NULL);
+
+    if (count < 580) { /* TODO */ }
+
+    memset(&header, 0, sizeof(PSIAImageHeader));
+    header.image_type = get_WORD_LE(&p);
+    gwy_debug("image_type: %d", header.image_type);
+    /* TODO: Byte order conversion */
+    header.source_name = g_utf16_to_utf8(p, 32, NULL, NULL, NULL);
+    p += 2*32;
+    header.image_mode = g_utf16_to_utf8(p, 8, NULL, NULL, NULL);
+    p += 2*8;
+    gwy_debug("source_name: <%s>, image_mode: <%s>",
+              header.source_name, header.image_mode);
+    header.lpf_strength = get_DOUBLE_LE(&p);
+    header.auto_flatten = get_DWORD_LE(&p);
+    header.ac_track = get_DWORD_LE(&p);
+    header.xres = get_DWORD_LE(&p);
+    header.yres = get_DWORD_LE(&p);
+    gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
 
 #if 0
     /*  sanity check, grid dimensions must be present!  */
@@ -233,10 +311,8 @@ psia_load_tiff(const gchar *filename, GError **error)
         tiff_load_channel(tiff, container, meta, idx++, ilen, jlen, ulen, vlen);
     }
     while (TIFFReadDirectory(tiff));
+    g_object_unref(meta);
 #endif
-
-    TIFFClose(tiff);
-/*    g_object_unref(meta); */
 
     return container;
 }
