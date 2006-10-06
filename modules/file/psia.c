@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -115,10 +115,7 @@ static void          tiff_ignore           (const gchar *module,
 static void          tiff_error            (const gchar *module,
                                             const gchar *format,
                                             va_list args);
-static void          meta_store_double     (GwyContainer *container,
-                                            const gchar *name,
-                                            gdouble value,
-                                            const gchar *unit);
+static GwyContainer* psia_get_metadata     (PSIAImageHeader *header);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -230,6 +227,7 @@ psia_load_tiff(TIFF *tiff, GError **error)
     const guint16 *data;
     const gchar *comment = NULL;
     gint count, data_len, power10;
+    gdouble q, z0;
     gdouble *d;
 
     if (!tiff_get_custom_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
@@ -256,6 +254,10 @@ psia_load_tiff(TIFF *tiff, GError **error)
     memset(&header, 0, sizeof(PSIAImageHeader));
     header.image_type = get_DWORD_LE(&p);
     gwy_debug("image_type: %d", header.image_type);
+    if (header.image_type != PSIA_2D_MAPPED) {
+        err_NO_DATA(error);
+        return NULL;
+    }
     header.source_name = psia_wchar_to_utf8(&p, 32);
     header.image_mode = psia_wchar_to_utf8(&p, 8);
     gwy_debug("source_name: <%s>, image_mode: <%s>",
@@ -281,6 +283,8 @@ psia_load_tiff(TIFF *tiff, GError **error)
     header.scan_rate = get_DOUBLE_LE(&p);
     header.set_point = get_DOUBLE_LE(&p);
     header.set_point_unit = psia_wchar_to_utf8(&p, 8);
+    if (!header.set_point_unit)
+        header.set_point_unit = g_strdup("V");
     header.tip_bias = get_DOUBLE_LE(&p);
     header.sample_bias = get_DOUBLE_LE(&p);
     header.data_gain = get_DOUBLE_LE(&p);
@@ -312,11 +316,6 @@ psia_load_tiff(TIFF *tiff, GError **error)
     dfield = gwy_data_field_new(header.xres, header.yres,
                                 header.xreal, header.yreal,
                                 FALSE);
-    for (i = 0; i < header.yres; i++) {
-        d = gwy_data_field_get_data(dfield) + (header.yres-1 - i)*header.xres;
-        for (j = 0; j < header.xres; j++)
-            d[j] = GINT16_FROM_LE(data[i*header.xres + j]);
-    }
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
@@ -330,7 +329,17 @@ psia_load_tiff(TIFF *tiff, GError **error)
     }
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
-    gwy_data_field_multiply(dfield, pow10(power10));
+
+    if (header.z_scale == 0.0)
+        header.z_scale = 1.0;
+    z0 = header.z_offset;
+    q = pow10(power10)*header.data_gain;
+    for (i = 0; i < header.yres; i++) {
+        d = gwy_data_field_get_data(dfield) + (header.yres-1 - i)*header.xres;
+        for (j = 0; j < header.xres; j++)
+            d[j] = q*(GINT16_FROM_LE(data[i*header.xres + j])*header.z_scale
+                      + z0);
+    }
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -338,7 +347,21 @@ psia_load_tiff(TIFF *tiff, GError **error)
 
     if (header.source_name && *header.source_name)
         gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup_printf(header.source_name));
+                                         g_strdup(header.source_name));
+
+    meta = psia_get_metadata(&header);
+    if (comment && *comment) {
+        /* FIXME: Charset conversion. But from what? */
+        gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
+        comment = NULL;
+    }
+    gwy_container_set_string_by_name(meta, "Version",
+                                     g_strdup_printf("%08x", version));
+
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
+
+    psia_free_image_header(&header);
 
     return container;
 }
@@ -456,21 +479,54 @@ tiff_error(const gchar *module G_GNUC_UNUSED, const gchar *format, va_list args)
     g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, format, args);
 }
 
-static void
-meta_store_double(GwyContainer *container,
-                  const gchar *name, gdouble value, const gchar *unit)
+static GwyContainer*
+psia_get_metadata(PSIAImageHeader *header)
 {
-    GwySIUnit *siunit = gwy_si_unit_new(unit);
-    GwySIValueFormat *format = gwy_si_unit_get_format(siunit,
-                                                      GWY_SI_UNIT_FORMAT_MARKUP,
-                                                      value, NULL);
+    GwyContainer *meta;
 
-    gwy_container_set_string_by_name(container, name,
-                                     g_strdup_printf("%5.3f %s",
-                                                     value/format->magnitude,
-                                                     format->units));
-    g_object_unref(siunit);
-    gwy_si_unit_value_format_free(format);
+    meta = gwy_container_new();
+
+    if (header->source_name && *header->source_name) {
+        gwy_container_set_string_by_name(meta, "Source name",
+                                         header->source_name);
+        header->source_name = NULL;
+    }
+    if (header->image_mode && *header->image_mode) {
+        gwy_container_set_string_by_name(meta, "Image mode",
+                                         header->image_mode);
+        header->image_mode = NULL;
+    }
+
+    gwy_container_set_string_by_name(meta, "Fast direction",
+                                     g_strdup(header->swap_xy ? "Y" : "X"));
+    gwy_container_set_string_by_name(meta, "Angle",
+                                     g_strdup_printf("%g°", header->angle));
+    gwy_container_set_string_by_name(meta, "Scanning direction",
+                                     g_strdup(header->scan_up
+                                              ? "Bottom to top"
+                                              : "Top to bottom"));
+    gwy_container_set_string_by_name(meta, "Line direction",
+                                     g_strdup(header->forward
+                                              ? "Forward"
+                                              : "Backward"));
+    gwy_container_set_string_by_name(meta, "Sine scan",
+                                     g_strdup(header->sine_scan
+                                              ? "Yes"
+                                              : "No"));
+    gwy_container_set_string_by_name(meta, "Scan rate",
+                                     g_strdup_printf("%g s<sup>-1</sup>",
+                                                     header->scan_rate));
+    gwy_container_set_string_by_name(meta, "Set point",
+                                     g_strdup_printf("%g %s",
+                                                     header->set_point,
+                                                     header->set_point_unit));
+    gwy_container_set_string_by_name(meta, "Tip bias",
+                                     g_strdup_printf("%g V", header->tip_bias));
+    gwy_container_set_string_by_name(meta, "Sample bias",
+                                     g_strdup_printf("%g V",
+                                                     header->sample_bias));
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
