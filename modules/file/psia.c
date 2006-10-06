@@ -315,7 +315,7 @@ psia_load_tiff(TIFF *tiff, GError **error)
     for (i = 0; i < header.yres; i++) {
         d = gwy_data_field_get_data(dfield) + (header.yres-1 - i)*header.xres;
         for (j = 0; j < header.xres; j++)
-            d[j] = GUINT16_FROM_LE(data[i*header.xres + j]);
+            d[j] = GINT16_FROM_LE(data[i*header.xres + j]);
     }
 
     siunit = gwy_si_unit_new("m");
