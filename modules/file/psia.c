@@ -89,33 +89,36 @@ typedef struct {
     gboolean compression;
 } PSIAImageHeader;
 
-static gboolean      module_register     (void);
-static gint          psia_detect         (const GwyFileDetectInfo *fileinfo,
-                                          gboolean only_name);
-static GwyContainer* psia_load           (const gchar *filename,
-                                          GwyRunType mode,
-                                          GError **error);
-static GwyContainer* psia_load_tiff      (TIFF *tiff,
-                                          GError **error);
-static gchar*        psia_wchar_to_utf8  (const guchar **src,
-                                          guint len);
-static gboolean      tiff_check_version  (gint macro,
-                                          gint micro,
-                                          GError **error);
-static gboolean      tiff_get_custom_uint(TIFF *tif,
-                                          ttag_t tag,
-                                          guint *value);
-static void          tiff_ignore         (const gchar *module,
-                                          const gchar *format,
-                                          va_list args);
-static void          tiff_error          (const gchar *module,
-                                          const gchar *format,
-                                          va_list args);
-static void          meta_store_double   (GwyContainer *container,
-                                          const gchar *name,
-                                          gdouble value,
-                                          const gchar *unit);
-
+static gboolean      module_register       (void);
+static gint          psia_detect           (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* psia_load             (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static GwyContainer* psia_load_tiff        (TIFF *tiff,
+                                            GError **error);
+static void          psia_free_image_header(PSIAImageHeader *header);
+static gchar*        psia_wchar_to_utf8    (const guchar **src,
+                                            guint len);
+static gboolean      tiff_check_version    (gint macro,
+                                            gint micro,
+                                            GError **error);
+static gboolean      tiff_get_custom_uint  (TIFF *tiff,
+                                            ttag_t tag,
+                                            guint *value);
+static gboolean      tiff_get_custom_string(TIFF *tiff,
+                                            ttag_t tag,
+                                            const gchar **value);
+static void          tiff_ignore           (const gchar *module,
+                                            const gchar *format,
+                                            va_list args);
+static void          tiff_error            (const gchar *module,
+                                            const gchar *format,
+                                            va_list args);
+static void          meta_store_double     (GwyContainer *container,
+                                            const gchar *name,
+                                            gdouble value,
+                                            const gchar *unit);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -192,7 +195,7 @@ psia_load(const gchar *filename,
 {
     TIFFErrorHandler old_error, old_warning;
     TIFF *tiff;
-    GwyContainer *container;
+    GwyContainer *container = NULL;
 
     gwy_debug("Loading <%s>", filename);
 
@@ -220,9 +223,14 @@ psia_load_tiff(TIFF *tiff, GError **error)
     PSIAImageHeader header;
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
-    guint magic, version;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    guint magic, version, i, j;
     const guchar *p;
-    gint count;
+    const guint16 *data;
+    const gchar *comment = NULL;
+    gint count, data_len, power10;
+    gdouble *d;
 
     if (!tiff_get_custom_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         || magic != PSIA_MAGIC_NUMBER
@@ -237,14 +245,17 @@ psia_load_tiff(TIFF *tiff, GError **error)
         return NULL;
     }
     gwy_debug("[Header] count: %d", count);
-    g_file_set_contents("psia-header", p, count, NULL);
 
-    if (count < 580) { /* TODO */ }
+    if (count < 356) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Header is too short (only %d bytes)."),
+                    count);
+        return NULL;
+    }
 
     memset(&header, 0, sizeof(PSIAImageHeader));
     header.image_type = get_DWORD_LE(&p);
     gwy_debug("image_type: %d", header.image_type);
-    /* TODO: Byte order conversion */
     header.source_name = psia_wchar_to_utf8(&p, 32);
     header.image_mode = psia_wchar_to_utf8(&p, 8);
     gwy_debug("source_name: <%s>, image_mode: <%s>",
@@ -270,66 +281,75 @@ psia_load_tiff(TIFF *tiff, GError **error)
     header.scan_rate = get_DOUBLE_LE(&p);
     header.set_point = get_DOUBLE_LE(&p);
     header.set_point_unit = psia_wchar_to_utf8(&p, 8);
+    header.tip_bias = get_DOUBLE_LE(&p);
+    header.sample_bias = get_DOUBLE_LE(&p);
+    header.data_gain = get_DOUBLE_LE(&p);
+    header.z_scale = get_DOUBLE_LE(&p);
+    header.z_offset = get_DOUBLE_LE(&p);
+    gwy_debug("data_gain: %g, z_scale: %g", header.data_gain, header.z_scale);
+    header.z_unit = psia_wchar_to_utf8(&p, 8);
+    gwy_debug("z_unit: <%s>", header.z_unit);
+    header.data_min = get_DWORD_LE(&p);
+    header.data_max = get_DWORD_LE(&p);
+    header.data_avg = get_DWORD_LE(&p);
+    header.compression = get_DWORD_LE(&p);
 
-#if 0
-    /*  sanity check, grid dimensions must be present!  */
-    if (!(tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_uLength, &ulen)
-          && tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_vLength, &vlen))) {
-        TIFFClose(tiff);
+    tiff_get_custom_string(tiff, PSIA_TIFFTAG_Comments, &comment);
+    if (comment) {
+        gwy_debug("comment: <%s>", comment);
+    }
+
+    if (!TIFFGetField(tiff, PSIA_TIFFTAG_Data, &data_len, &data)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File does not contain grid dimensions."));
+                    _("Data tag is missing."));
+        psia_free_image_header(&header);
         return NULL;
     }
+    /* FIXME: This is always a totally bogus value, although tiffdump(1) can
+     * print the right size. Why? */
+    gwy_debug("data_len: %d", data_len);
+
+    dfield = gwy_data_field_new(header.xres, header.yres,
+                                header.xreal, header.yreal,
+                                FALSE);
+    for (i = 0; i < header.yres; i++) {
+        d = gwy_data_field_get_data(dfield) + (header.yres-1 - i)*header.xres;
+        for (j = 0; j < header.xres; j++)
+            d[j] = GUINT16_FROM_LE(data[i*header.xres + j]);
+    }
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    if (header.z_unit)
+        siunit = gwy_si_unit_new_parse(header.z_unit, &power10);
+    else {
+        g_warning("Z units are missing");
+        siunit = gwy_si_unit_new_parse("um", &power10);
+    }
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+    gwy_data_field_multiply(dfield, pow10(power10));
 
     container = gwy_container_new();
-    meta = gwy_container_new();
-    /* FIXME: I'm unable to meaningfully sort out the metadata to channels,
-     * so each one receives an identical copy of the global metadata now. */
-    tiff_load_meta(tiff, meta);
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    g_object_unref(dfield);
 
-    gwy_debug("ulen: %g vlen: %g", ulen, vlen);
-
-    do {
-        if (!TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &ilen)) {
-            g_warning("Could not get image width, skipping");
-            continue;
-        }
-
-        if (!TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &jlen)) {
-            g_warning("Could not get image length, skipping");
-            continue;
-        }
-
-        TIFFGetFieldDefaulted(tiff, TIFFTAG_BITSPERSAMPLE, &bps);
-
-        if (!TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &photo)) {
-            g_warning("Could not get photometric tag, skipping");
-            continue;
-        }
-
-        /*  we are only interested in 16bit grayscale  */
-        switch (photo) {
-            case PHOTOMETRIC_MINISBLACK:
-            case PHOTOMETRIC_MINISWHITE:
-                if (bps == 16)
-                    break;
-            default:
-                continue;
-        }
-
-        if (TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &planar)
-            && planar != PLANARCONFIG_CONTIG) {
-            g_warning("Can only handle planar data, skipping");
-            continue;
-        }
-
-        tiff_load_channel(tiff, container, meta, idx++, ilen, jlen, ulen, vlen);
-    }
-    while (TIFFReadDirectory(tiff));
-    g_object_unref(meta);
-#endif
+    if (header.source_name && *header.source_name)
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup_printf(header.source_name));
 
     return container;
+}
+
+static void
+psia_free_image_header(PSIAImageHeader *header)
+{
+    g_free(header->source_name);
+    g_free(header->image_mode);
+    g_free(header->set_point_unit);
+    g_free(header->z_unit);
 }
 
 static gchar*
@@ -390,17 +410,33 @@ tiff_check_version(gint required_macro, gint required_micro, GError **error)
 
 /*  reads what the TIFF spec calls LONG  */
 static gboolean
-tiff_get_custom_uint(TIFF *tif, ttag_t tag, guint *value)
+tiff_get_custom_uint(TIFF *tiff, ttag_t tag, guint *value)
 {
     guint32 *l;
     gint count;
 
-    if (TIFFGetField(tif, tag, &count, &l)) {
+    if (TIFFGetField(tiff, tag, &count, &l)) {
         *value = *l;
         return TRUE;
     }
     else {
         *value = 0;
+        return FALSE;
+    }
+}
+
+static gboolean
+tiff_get_custom_string(TIFF *tiff, ttag_t tag, const gchar **value)
+{
+    const gchar *s;
+    gint count;
+
+    if (TIFFGetField(tiff, tag, &count, &s)) {
+        *value = s;
+        return TRUE;
+    }
+    else {
+        *value = NULL;
         return FALSE;
     }
 }
