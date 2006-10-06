@@ -43,7 +43,7 @@ static GwyContainer* jpkscan_load_tiff      (const gchar *filename,
 static gboolean      tiff_check_version     (gint macro,
                                              gint micro,
                                              GError **error);
-static void          tiff_load_channel      (TIFF *tif,
+static void          tiff_load_channel      (TIFF *tiff,
                                              GwyContainer *container,
                                              GwyContainer *meta,
                                              gint idx,
@@ -51,30 +51,30 @@ static void          tiff_load_channel      (TIFF *tif,
                                              gint jlen,
                                              gdouble ulen,
                                              gdouble vlen);
-static void          tiff_load_meta         (TIFF *tif,
+static void          tiff_load_meta         (TIFF *tiff,
                                              GwyContainer *container);
-static void          tiff_load_meta_string  (TIFF *tif,
+static void          tiff_load_meta_string  (TIFF *tiff,
                                              GwyContainer *container,
                                              ttag_t tag,
                                              const gchar *name);
-static void          tiff_load_meta_double  (TIFF *tif,
+static void          tiff_load_meta_double  (TIFF *tiff,
                                              GwyContainer *container,
                                              ttag_t tag,
                                              const gchar *unit,
                                              const gchar *name);
-static gboolean      tiff_get_custom_string (TIFF *tif,
+static gboolean      tiff_get_custom_string (TIFF *tiff,
                                              ttag_t tag,
                                              const gchar **value);
-static gboolean      tiff_get_custom_boolean(TIFF *tif,
+static gboolean      tiff_get_custom_boolean(TIFF *tiff,
                                              ttag_t tag,
                                              gboolean *value);
-static gint          tiff_get_custom_integer(TIFF *tif,
+static gint          tiff_get_custom_integer(TIFF *tiff,
                                              ttag_t tag,
                                              gint *value);
-static gboolean      tiff_get_custom_double (TIFF *tif,
+static gboolean      tiff_get_custom_double (TIFF *tiff,
                                              ttag_t tag,
                                              gdouble *value);
-static void          tiff_warning           (const gchar *module,
+static void          tiff_ignore            (const gchar *module,
                                              const gchar *format,
                                              va_list args);
 static void          tiff_error             (const gchar *module,
@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JPK image scans."),
     "Sven Neumann <neumann@jpk.com>",
-    "0.5",
+    "0.6",
     "JPK Instruments AG",
     "2005",
 };
@@ -101,6 +101,17 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+    GError *err = NULL;
+
+    /* Handling of custom tags was introduced with LibTIFF version 3.6.0 */
+    /* FIXME: Can we do better?  Module registration should be able to return
+     * GErrors too... */
+    if (!tiff_check_version(3, 6, &err)) {
+        g_warning("%s", err->message);
+        g_clear_error(&err);
+        return FALSE;
+    }
+
     gwy_file_func_register("jpkscan",
                            N_("JPK image scans (.jpk)"),
                            (GwyFileDetectFunc)&jpkscan_detect,
@@ -114,21 +125,36 @@ module_register(void)
 static gint
 jpkscan_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
+    TIFFErrorHandler old_error, old_warning;
+    TIFF *tiff;
+    gdouble ulen, vlen;
+    const gchar *name;
     gint score = 0;
-
-    /* Since JPK files are just standard TIFF files, we always
-     * look at the filename extension.
-     */
-
-    if (g_str_has_suffix(fileinfo->name_lowercase, ".jpk"))
-        score += 50;
 
     if (only_name)
         return score;
 
-    if (fileinfo->buffer_len > JPK_SCAN_MAGIC_SIZE
-        && memcmp(fileinfo->head, JPK_SCAN_MAGIC, JPK_SCAN_MAGIC_SIZE) == 0)
-        score += 50;
+    if (fileinfo->buffer_len <= MAGIC_SIZE
+        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+        return 0;
+
+    old_warning = TIFFSetWarningHandler(tiff_ignore);
+    old_error = TIFFSetErrorHandler(tiff_ignore);
+
+    if ((tiff = TIFFOpen(fileinfo->name, "r"))
+        && tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_uLength, &ulen)
+        && tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_vLength, &vlen)
+        && ulen > 0.0
+        && vlen > 0.0
+        && (tiff_get_custom_string(tiff, JPK_TIFFTAG_ChannelFancyName, &name)
+            || tiff_get_custom_string(tiff, JPK_TIFFTAG_Channel, &name)))
+        score = 100;
+
+    if (tiff)
+        TIFFClose(tiff);
+
+    TIFFSetErrorHandler(old_error);
+    TIFFSetErrorHandler(old_warning);
 
     return score;
 }
@@ -143,11 +169,7 @@ jpkscan_load(const gchar *filename,
 
     gwy_debug("Loading <%s>", filename);
 
-    /*  Handling of custom tags was introduced with LibTIFF version 3.6.0  */
-    if (!tiff_check_version(3, 6, error))
-        return NULL;
-
-    old_warning = TIFFSetWarningHandler(tiff_warning);
+    old_warning = TIFFSetWarningHandler(tiff_ignore);
     old_error = TIFFSetErrorHandler(tiff_error);
 
     container = jpkscan_load_tiff(filename, error);
@@ -163,7 +185,7 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
 {
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
-    TIFF *tif;
+    TIFF *tiff;
     gint ilen;
     gint jlen;
     gint idx = 0;
@@ -172,17 +194,17 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
     gushort planar;
     gdouble ulen, vlen;
 
-    tif = TIFFOpen(filename, "r");
-    if (!tif) {
+    tiff = TIFFOpen(filename, "r");
+    if (!tiff) {
         /* This can be I/O too, but it's hard to tell the difference. */
         err_FILE_TYPE(error, _("JPK scan"));
         return NULL;
     }
 
     /*  sanity check, grid dimensions must be present!  */
-    if (!(tiff_get_custom_double(tif, JPK_TIFFTAG_Grid_uLength, &ulen)
-          && tiff_get_custom_double(tif, JPK_TIFFTAG_Grid_vLength, &vlen))) {
-        TIFFClose(tif);
+    if (!(tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_uLength, &ulen)
+          && tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_vLength, &vlen))) {
+        TIFFClose(tiff);
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("File does not contain grid dimensions."));
         return NULL;
@@ -192,24 +214,24 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
     meta = gwy_container_new();
     /* FIXME: I'm unable to meaningfully sort out the metadata to channels,
      * so each one receives an identical copy of the global metadata now. */
-    tiff_load_meta(tif, meta);
+    tiff_load_meta(tiff, meta);
 
     gwy_debug("ulen: %g vlen: %g", ulen, vlen);
 
     do {
-        if (!TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &ilen)) {
+        if (!TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &ilen)) {
             g_warning("Could not get image width, skipping");
             continue;
         }
 
-        if (!TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &jlen)) {
+        if (!TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &jlen)) {
             g_warning("Could not get image length, skipping");
             continue;
         }
 
-        TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bps);
+        TIFFGetFieldDefaulted(tiff, TIFFTAG_BITSPERSAMPLE, &bps);
 
-        if (!TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photo)) {
+        if (!TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &photo)) {
             g_warning("Could not get photometric tag, skipping");
             continue;
         }
@@ -224,17 +246,17 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
                 continue;
         }
 
-        if (TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &planar)
+        if (TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &planar)
             && planar != PLANARCONFIG_CONTIG) {
             g_warning("Can only handle planar data, skipping");
             continue;
         }
 
-        tiff_load_channel(tif, container, meta, idx++, ilen, jlen, ulen, vlen);
+        tiff_load_channel(tiff, container, meta, idx++, ilen, jlen, ulen, vlen);
     }
-    while (TIFFReadDirectory(tif));
+    while (TIFFReadDirectory(tiff));
 
-    TIFFClose(tif);
+    TIFFClose(tiff);
     g_object_unref(meta);
 
     return container;
@@ -282,7 +304,7 @@ tiff_check_version(gint required_macro, gint required_micro, GError **error)
  * file is damaged and no data field can be loaded, suspicionless caller can
  * return empty Container */
 static void
-tiff_load_channel(TIFF *tif,
+tiff_load_channel(TIFF *tiff,
                   GwyContainer *container, GwyContainer *meta,
                   gint idx, gint ilen, gint jlen, gdouble ulen, gdouble vlen)
 {
@@ -302,25 +324,25 @@ tiff_load_channel(TIFF *tif,
     gint num_slots = 0;
     gint i, j;
 
-    tiff_get_custom_string(tif, JPK_TIFFTAG_ChannelFancyName, &name);
+    tiff_get_custom_string(tiff, JPK_TIFFTAG_ChannelFancyName, &name);
     if (!name)
-        tiff_get_custom_string(tif, JPK_TIFFTAG_Channel, &name);
+        tiff_get_custom_string(tiff, JPK_TIFFTAG_Channel, &name);
     g_return_if_fail(name != NULL);
 
-    tiff_get_custom_boolean(tif, JPK_TIFFTAG_Channel_retrace, &retrace);
+    tiff_get_custom_boolean(tiff, JPK_TIFFTAG_Channel_retrace, &retrace);
 
     channel = g_strdup_printf("%s%s", name, retrace ? " (retrace)" : "");
 
     gwy_debug("channel: %s", channel);
 
-    tiff_get_custom_integer(tif, JPK_TIFFTAG_NrOfSlots, &num_slots);
+    tiff_get_custom_integer(tiff, JPK_TIFFTAG_NrOfSlots, &num_slots);
     g_return_if_fail(num_slots > 0);
 
     gwy_debug("num_slots: %d", num_slots);
 
     /* Locate the default slot */
 
-    tiff_get_custom_string(tif, JPK_TIFFTAG_DefaultSlot, &slot);
+    tiff_get_custom_string(tiff, JPK_TIFFTAG_DefaultSlot, &slot);
     g_return_if_fail(slot != NULL);
 
     gwy_debug("num_slots: %d, default slot: %s", num_slots, slot);
@@ -328,18 +350,20 @@ tiff_load_channel(TIFF *tif,
     for (i = 0; i < num_slots; i++) {
         const gchar *string;
 
-        if (tiff_get_custom_string(tif, JPK_TIFFTAG_Slot_Name(i), &string)
+        if (tiff_get_custom_string(tiff, JPK_TIFFTAG_Slot_Name(i), &string)
             && string
             && gwy_strequal(string, slot)) {
-            tiff_get_custom_string(tif, JPK_TIFFTAG_Scaling_Type(i), &string);
+            tiff_get_custom_string(tiff, JPK_TIFFTAG_Scaling_Type(i), &string);
             g_return_if_fail(gwy_strequal(string, "LinearScaling"));
 
-            tiff_get_custom_double(tif, JPK_TIFFTAG_Scaling_Multiply(i), &mult);
-            tiff_get_custom_double(tif, JPK_TIFFTAG_Scaling_Offset(i), &offset);
+            tiff_get_custom_double(tiff, JPK_TIFFTAG_Scaling_Multiply(i),
+                                   &mult);
+            tiff_get_custom_double(tiff, JPK_TIFFTAG_Scaling_Offset(i),
+                                   &offset);
 
             gwy_debug("multipler: %g offset: %g", mult, offset);
 
-            tiff_get_custom_string(tif, JPK_TIFFTAG_Encoder_Unit(i), &unit);
+            tiff_get_custom_string(tiff, JPK_TIFFTAG_Encoder_Unit(i), &unit);
 
             break;
         }
@@ -363,9 +387,9 @@ tiff_load_channel(TIFF *tif,
 
     data = gwy_data_field_get_data(dfield);
 
-    buffer = g_new(guchar, TIFFScanlineSize(tif));
+    buffer = g_new(guchar, TIFFScanlineSize(tiff));
 
-    tiff_get_custom_boolean(tif, JPK_TIFFTAG_Grid_Reflect, &reflect);
+    tiff_get_custom_boolean(tiff, JPK_TIFFTAG_Grid_Reflect, &reflect);
 
     if (!reflect)
         data += (jlen - 1) * ilen;
@@ -374,7 +398,7 @@ tiff_load_channel(TIFF *tif,
         const guint16 *src = (const guint16 *)buffer;
         gdouble *dest = data;
 
-        TIFFReadScanline(tif, buffer, j, 0);
+        TIFFReadScanline(tiff, buffer, j, 0);
 
         for (i = 0; i < ilen; i++) {
             guint16 s = *src++;
@@ -411,69 +435,71 @@ tiff_load_channel(TIFF *tif,
 }
 
 static void
-tiff_load_meta(TIFF *tif, GwyContainer *container)
+tiff_load_meta(TIFF *tiff, GwyContainer *container)
 {
     const gchar *string;
     gdouble frequency;
     gdouble value;
 
-    tiff_load_meta_string(tif, container, JPK_TIFFTAG_Name, "Name");
-    tiff_load_meta_string(tif, container, JPK_TIFFTAG_Comment, "Comment");
-    tiff_load_meta_string(tif, container, JPK_TIFFTAG_Sample, "Probe");
-    tiff_load_meta_string(tif, container, JPK_TIFFTAG_AccountName, "Account");
+    tiff_load_meta_string(tiff, container, JPK_TIFFTAG_Name, "Name");
+    tiff_load_meta_string(tiff, container, JPK_TIFFTAG_Comment, "Comment");
+    tiff_load_meta_string(tiff, container, JPK_TIFFTAG_Sample, "Probe");
+    tiff_load_meta_string(tiff, container, JPK_TIFFTAG_AccountName, "Account");
 
-    tiff_load_meta_string(tif, container, JPK_TIFFTAG_StartDate, "Time Start");
-    tiff_load_meta_string(tif, container, JPK_TIFFTAG_EndDate, "Time End");
+    tiff_load_meta_string(tiff, container, JPK_TIFFTAG_StartDate, "Time Start");
+    tiff_load_meta_string(tiff, container, JPK_TIFFTAG_EndDate, "Time End");
 
-    tiff_load_meta_double(tif, container, JPK_TIFFTAG_Grid_x0, "m", "Origin X");
-    tiff_load_meta_double(tif, container, JPK_TIFFTAG_Grid_y0, "m", "Origin Y");
-    tiff_load_meta_double(tif, container,
+    tiff_load_meta_double(tiff, container,
+                          JPK_TIFFTAG_Grid_x0, "m", "Origin X");
+    tiff_load_meta_double(tiff, container,
+                          JPK_TIFFTAG_Grid_y0, "m", "Origin Y");
+    tiff_load_meta_double(tiff, container,
                           JPK_TIFFTAG_Grid_uLength, "m", "Size X");
-    tiff_load_meta_double(tif, container,
+    tiff_load_meta_double(tiff, container,
                           JPK_TIFFTAG_Grid_vLength, "m", "Size Y");
 
-    tiff_load_meta_double(tif, container,
+    tiff_load_meta_double(tiff, container,
                           JPK_TIFFTAG_Scanrate_Dutycycle, NULL, "Duty Cycle");
 
-    tiff_load_meta_string(tif, container,
+    tiff_load_meta_string(tiff, container,
                           JPK_TIFFTAG_Feedback_Mode, "Feedback Mode");
-    tiff_load_meta_double(tif, container,
+    tiff_load_meta_double(tiff, container,
                           JPK_TIFFTAG_Feedback_iGain, "Hz", "Feedback IGain");
-    tiff_load_meta_double(tif, container,
+    tiff_load_meta_double(tiff, container,
                           JPK_TIFFTAG_Feedback_pGain, NULL, "Feedback PGain");
-    tiff_load_meta_double(tif, container,
+    tiff_load_meta_double(tiff, container,
                           JPK_TIFFTAG_Feedback_Setpoint, "V",
                           "Feedback Setpoint");
 
     /*  some values need special treatment  */
 
-    if (tiff_get_custom_double(tif,
+    if (tiff_get_custom_double(tiff,
                                JPK_TIFFTAG_Scanrate_Frequency, &frequency)
-        && tiff_get_custom_double(tif, JPK_TIFFTAG_Scanrate_Dutycycle, &value)
+        && tiff_get_custom_double(tiff, JPK_TIFFTAG_Scanrate_Dutycycle, &value)
         && value > 0.0) {
         meta_store_double(container, "Scan Rate", frequency/value, "Hz");
     }
 
-    if (tiff_get_custom_double(tif, JPK_TIFFTAG_Feedback_iGain, &value))
+    if (tiff_get_custom_double(tiff, JPK_TIFFTAG_Feedback_iGain, &value))
         meta_store_double(container, "Feedback IGain", fabs(value), "Hz");
 
-    if (tiff_get_custom_double(tif, JPK_TIFFTAG_Feedback_pGain, &value))
+    if (tiff_get_custom_double(tiff, JPK_TIFFTAG_Feedback_pGain, &value))
         meta_store_double(container, "Feedback PGain", fabs(value), NULL);
 
-    if (tiff_get_custom_string(tif, JPK_TIFFTAG_Feedback_Mode, &string)) {
+    if (tiff_get_custom_string(tiff, JPK_TIFFTAG_Feedback_Mode, &string)) {
         if (gwy_strequal(string, "contact")) {
-            tiff_load_meta_double(tif, container,
+            tiff_load_meta_double(tiff, container,
                                   JPK_TIFFTAG_Feedback_Baseline, "V",
                                   "Feedback Baseline");
         }
         else if (gwy_strequal(string, "intermittent")) {
-            tiff_load_meta_double(tif, container,
+            tiff_load_meta_double(tiff, container,
                                   JPK_TIFFTAG_Feedback_Amplitude, "V",
                                   "Feedback Amplitude");
-            tiff_load_meta_double(tif, container,
+            tiff_load_meta_double(tiff, container,
                                   JPK_TIFFTAG_Feedback_Frequency, "Hz",
                                   "Feedback Frequency");
-            tiff_load_meta_double(tif, container,
+            tiff_load_meta_double(tiff, container,
                                   JPK_TIFFTAG_Feedback_Phaseshift, "deg",
                                   "Feedback Phaseshift");
         }
@@ -481,33 +507,33 @@ tiff_load_meta(TIFF *tif, GwyContainer *container)
 }
 
 static void
-tiff_load_meta_string(TIFF *tif,
+tiff_load_meta_string(TIFF *tiff,
                       GwyContainer *container, ttag_t tag, const gchar *name)
 {
     const gchar *string;
 
-    if (tiff_get_custom_string(tif, tag, &string))
+    if (tiff_get_custom_string(tiff, tag, &string))
         gwy_container_set_string_by_name(container, name, g_strdup(string));
 }
 
 static void
-tiff_load_meta_double(TIFF *tif,
+tiff_load_meta_double(TIFF *tiff,
                       GwyContainer *container,
                       ttag_t tag, const gchar *unit, const gchar *name)
 {
     gdouble value;
 
-    if (tiff_get_custom_double(tif, tag, &value))
+    if (tiff_get_custom_double(tiff, tag, &value))
         meta_store_double(container, name, value, unit);
 }
 
 static gboolean
-tiff_get_custom_string(TIFF *tif, ttag_t tag, const gchar **value)
+tiff_get_custom_string(TIFF *tiff, ttag_t tag, const gchar **value)
 {
     const gchar *s;
     gint count;
 
-    if (TIFFGetField(tif, tag, &count, &s)) {
+    if (TIFFGetField(tiff, tag, &count, &s)) {
         *value = s;
         return TRUE;
     }
@@ -519,12 +545,12 @@ tiff_get_custom_string(TIFF *tif, ttag_t tag, const gchar **value)
 
 /*  reads what the TIFF spec calls SSHORT and interprets it as a boolean  */
 static gboolean
-tiff_get_custom_boolean(TIFF *tif, ttag_t tag, gboolean *value)
+tiff_get_custom_boolean(TIFF *tiff, ttag_t tag, gboolean *value)
 {
     gshort *s;
     gint count;
 
-    if (TIFFGetField(tif, tag, &count, &s)) {
+    if (TIFFGetField(tiff, tag, &count, &s)) {
         *value = (*s != 0);
         return TRUE;
     }
@@ -536,12 +562,12 @@ tiff_get_custom_boolean(TIFF *tif, ttag_t tag, gboolean *value)
 
 /*  reads what the TIFF spec calls SLONG  */
 static gboolean
-tiff_get_custom_integer(TIFF *tif, ttag_t tag, gint *value)
+tiff_get_custom_integer(TIFF *tiff, ttag_t tag, gint *value)
 {
     gint32 *l;
     gint count;
 
-    if (TIFFGetField(tif, tag, &count, &l)) {
+    if (TIFFGetField(tiff, tag, &count, &l)) {
         *value = *l;
         return TRUE;
     }
@@ -553,12 +579,12 @@ tiff_get_custom_integer(TIFF *tif, ttag_t tag, gint *value)
 
 /*  reads what the TIFF spec calls DOUBLE  */
 static gboolean
-tiff_get_custom_double(TIFF *tif, ttag_t tag, gdouble *value)
+tiff_get_custom_double(TIFF *tiff, ttag_t tag, gdouble *value)
 {
     gdouble *d;
     gint count;
 
-    if (TIFFGetField(tif, tag, &count, &d)) {
+    if (TIFFGetField(tiff, tag, &count, &d)) {
         *value = *d;
         return TRUE;
     }
@@ -569,9 +595,9 @@ tiff_get_custom_double(TIFF *tif, ttag_t tag, gdouble *value)
 }
 
 static void
-tiff_warning(const gchar *module G_GNUC_UNUSED,
-             const gchar *format G_GNUC_UNUSED,
-             va_list args G_GNUC_UNUSED)
+tiff_ignore(const gchar *module G_GNUC_UNUSED,
+            const gchar *format G_GNUC_UNUSED,
+            va_list args G_GNUC_UNUSED)
 {
     /*  ignore  */
 }

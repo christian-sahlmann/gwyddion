@@ -24,8 +24,8 @@
 
 
 /*  JPK image scans are TIFF files  */
-#define JPK_SCAN_MAGIC      "MM\x00\x2a"
-#define JPK_SCAN_MAGIC_SIZE (sizeof(JPK_SCAN_MAGIC) - 1)
+#define MAGIC      "MM\x00\x2a"
+#define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 
 /*  Custom TIFF tags  */
