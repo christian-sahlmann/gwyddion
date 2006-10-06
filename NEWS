@@ -1,9 +1,17 @@
-
+2.0.20061006
 
 2.1 (0000-00-00)
 Libraries:
 - libgwydgets: Value formatting in graph distance measure window was
   improved.
+- libgwydgets: Graph area problems (broken selection, zoom) on Gtk+ 2.6 was
+  fixed.
+- libgwydgets: gwy_graph_model_remove_curve_by_description() disconnecting
+  wrong signal handlers was fixed.
+
+Modules:
+- PSIA (new): Imports PSIA data files.
+- JPK scan: It's no longer built when too old libtiff is detected.
 
 Other:
 - Missing file utils/genmarshal.mk was added to distribution.
