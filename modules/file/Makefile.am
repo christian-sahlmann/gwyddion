@@ -34,6 +34,7 @@ file_LTLIBRARIES = \
 	ezdfile.la \
 	ecsfile.la \
 	gwyfile.la \
+	hdf4file.la \
 	hitachi-afm.la \
 	$(jpkscan_module) \
 	metropro.la \
@@ -126,8 +127,8 @@ ezdfile_la_LIBADD = $(module_libadd)
 gwyfile_la_SOURCES = gwyfile.c
 gwyfile_la_LIBADD = $(module_libadd)
 
-#hdf4file_la_SOURCES = hdf4file.c
-#hdf4file_la_LIBADD = $(module_libadd)
+hdf4file_la_SOURCES = hdf4file.c
+hdf4file_la_LIBADD = $(module_libadd)
 
 hitachi_afm_la_SOURCES = hitachi-afm.c
 hitachi_afm_la_LIBADD = $(module_libadd)

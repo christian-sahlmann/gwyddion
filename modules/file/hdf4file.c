@@ -69,10 +69,11 @@
  *  suffered by the users arising out of the use of this software, even if
  *  advised of the possibility of such damage.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
@@ -84,6 +85,8 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 #define EXTENSION ".hdf"
+
+#define Micrometer (1e-6)
 
 typedef enum {
     /* Common */
@@ -289,15 +292,19 @@ static gint          psi_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* psi_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
+static gboolean      psi_read_header(const guchar *buffer,
+                                     gsize size,
+                                     PsiHeader *header,
+                                     GError **error);
 static GArray*       hdf4_read_tags (const guchar *buffer,
                                      gsize size,
                                      GError **error);
 
+#ifdef DEBUG
 static guint         get_data_type_size(HDF4TypeInfo id,
                                         GError **error);
 static HDF4TypeInfo  map_number_type(guint32 number_type);
 
-#ifdef DEBUG
 static gchar*        hdf4_describe_tag(const HDF4DataDescriptor *desc);
 static gchar*        hdf4_describe_data_type(HDF4TypeInfo id);
 #endif
@@ -307,7 +314,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hierarchical Data Format (HDF) files, version 4."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -366,6 +373,7 @@ psi_detect(const GwyFileDetectInfo *fileinfo,
                     break;
                 }
             }
+            g_array_free(tags, TRUE);
         }
         gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -374,279 +382,22 @@ psi_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
-#if 0
-static GwyDataField*
-read_data_field(int32 sd_id,
-                int32 sds_id,
-                int32 data_type,
-                int32 *dim_sizes,
-                GError **error)
-{
-    gchar label[MAX_NC_NAME];
-    gchar unitz[MAX_NC_NAME];
-    GwyDataField *dfield;
-    int32 start[2], edges[2];
-    int32 dim_id;
-    guint data_size;
-    guchar *d;
-    guint i, xres, yres;
-    gdouble *data;
-    intn status;
-
-    if ((data_size = get_data_type_size(data_type, error)) == 0)
-        return NULL;
-
-    status = SDgetdatastrs(sds_id, label, unitz, NULL, NULL, MAX_NC_NAME);
-    if (status == FAIL) {
-        err_HDF(error, "SDgetdatastrs");
-        return NULL;
-    }
-    gwy_debug("label: `%s'", label);
-    gwy_debug("z-unit: `%s'", unitz);
-
-    if ((dim_id = SDgetdimid(sds_id, 0)) == FAIL) {
-        err_HDF(error, "SDgetdimid");
-        return NULL;
-    }
-    {
-        char dim_name[MAX_NC_NAME];
-        int32 n_values, dtype, n_attrs;
-
-        status = SDdiminfo(dim_id, dim_name, &n_values, &dtype, &n_attrs);
-        if (status == FAIL) {
-            err_HDF(error, "SDdiminfo");
-            return NULL;
-        }
-        gwy_debug("dim_name: `%s', n_values: %u, data_type: %u, n_attrs: %u",
-                  dim_name, (guint)n_values, (guint)dtype, (guint)n_attrs);
-    }
-    /*
-    status = SDgetdimstrs(dim_id, NULL, unity, NULL, MAX_NC_NAME);
-    if (status == FAIL) {
-        err_HDF(error, "SDgetdimstrs");
-        return NULL;
-    }
-    gwy_debug("y-unit: `%s'", unity);
-    */
-
-    if ((dim_id = SDgetdimid(sds_id, 1)) == FAIL) {
-        err_HDF(error, "SDgetdimid");
-        return NULL;
-    }
-    /*
-    status = SDgetdimstrs(dim_id, NULL, unitx, NULL, MAX_NC_NAME);
-    if (status == FAIL) {
-        err_HDF(error, "SDgetdimstrs");
-        return NULL;
-    }
-    gwy_debug("x-unit: `%s'", unitx);
-    */
-
-    start[0] = start[1] = 0;
-    yres = edges[0] = dim_sizes[0];
-    xres = edges[1] = dim_sizes[1];
-    d = g_malloc(edges[0] * edges[1] * data_size);
-    if ((status = SDreaddata(sds_id, start, NULL, edges, d)) == FAIL) {
-        err_HDF(error, "SDreaddata");
-        g_free(d);
-        return NULL;
-    }
-
-    dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
-    data = gwy_data_field_get_data(dfield);
-    switch (data_type) {
-        case DFNT_CHAR8:
-        case DFNT_CHAR8 | DFNT_LITEND:
-        case DFNT_INT8:
-        case DFNT_INT8 | DFNT_LITEND:
-        {
-            gint8 *d8 = (gint8*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = d8[i];
-        }
-        break;
-
-        case DFNT_UCHAR8:
-        case DFNT_UCHAR8 | DFNT_LITEND:
-        case DFNT_UINT8:
-        case DFNT_UINT8 | DFNT_LITEND:
-        {
-            guint8 *d8 = (guint8*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = d8[i];
-        }
-        break;
-
-        case DFNT_INT16:
-        {
-            gint16 *d16 = (gint16*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT16_FROM_BE(d16[i]);
-        }
-        break;
-
-        case DFNT_INT16 | DFNT_LITEND:
-        {
-            gint16 *d16 = (gint16*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT16_FROM_LE(d16[i]);
-        }
-        break;
-
-        case DFNT_UINT16:
-        {
-            gint16 *d16 = (gint16*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GUINT16_FROM_BE(d16[i]);
-        }
-        break;
-
-        case DFNT_UINT16 | DFNT_LITEND:
-        {
-            gint16 *d16 = (gint16*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GUINT16_FROM_LE(d16[i]);
-        }
-        break;
-
-        case DFNT_INT32:
-        {
-            gint32 *d32 = (gint32*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT32_FROM_BE(d32[i]);
-        }
-        break;
-
-        case DFNT_INT32 | DFNT_LITEND:
-        {
-            gint32 *d32 = (gint32*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT32_FROM_LE(d32[i]);
-        }
-        break;
-
-        case DFNT_UINT32:
-        {
-            gint32 *d32 = (gint32*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GUINT32_FROM_BE(d32[i]);
-        }
-        break;
-
-        case DFNT_UINT32 | DFNT_LITEND:
-        {
-            gint32 *d32 = (gint32*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GUINT32_FROM_LE(d32[i]);
-        }
-        break;
-
-        case DFNT_INT64:
-        {
-            gint64 *d64 = (gint64*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT64_FROM_BE(d64[i]);
-        }
-        break;
-
-        case DFNT_INT64 | DFNT_LITEND:
-        {
-            gint64 *d64 = (gint64*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT64_FROM_LE(d64[i]);
-        }
-        break;
-
-        case DFNT_UINT64:
-        {
-            gint64 *d64 = (gint64*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GUINT64_FROM_BE(d64[i]);
-        }
-        break;
-
-        case DFNT_UINT64 | DFNT_LITEND:
-        {
-            gint64 *d64 = (gint64*)d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GUINT64_FROM_LE(d64[i]);
-        }
-        break;
-
-        case DFNT_FLOAT32:
-        {
-            const guchar *p = d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = get_FLOAT_BE(&p);
-        }
-        break;
-
-        case DFNT_FLOAT32 | DFNT_LITEND:
-        {
-            const guchar *p = d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = get_FLOAT_LE(&p);
-        }
-        break;
-
-        case DFNT_FLOAT64:
-        {
-            const guchar *p = d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = get_DOUBLE_BE(&p);
-        }
-        break;
-
-        case DFNT_FLOAT64 | DFNT_LITEND:
-        {
-            const guchar *p = d;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = get_DOUBLE_LE(&p);
-        }
-        break;
-
-        default:
-        err_UNSUPPORTED(error, "data_type");
-        gwy_object_unref(dfield);
-        g_free(d);
-        return NULL;
-    }
-
-    g_free(d);
-
-    return dfield;
-}
-#endif
-
 static GwyContainer*
 psi_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
+    GwyContainer *container = NULL;
     guchar *buffer = NULL;
     GError *err = NULL;
+    PsiHeader *header;
+    const gint16 *data;
     gsize size;
     GArray *tags;
     const guchar *p;
-    guint i;
+    guint i, data_len;
+    gboolean fail;
+    gdouble *d;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -654,27 +405,95 @@ psi_load(const gchar *filename,
         return NULL;
     }
 
-    p = buffer;
     tags = hdf4_read_tags(buffer, size, error);
     if (!tags) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
+    fail = FALSE;
+    header = NULL;
+    data = NULL;
     for (i = 0; i < tags->len; i++) {
         const HDF4DataDescriptor *desc;
-        gchar *s;
 
         desc = &g_array_index(tags, HDF4DataDescriptor, i);
-        s = hdf4_describe_tag(desc);
-        gwy_debug("%s", s);
-        g_free(s);
+#ifdef DEBUG
+        {
+            gchar *s;
+
+            s = hdf4_describe_tag(desc);
+            gwy_debug("%s", s);
+            g_free(s);
+        }
+#endif
+        if (desc->tag == HDF4_MT)
+            continue;
+        if (desc->offset == 0xFFFFFFFFUL || desc->length == 0xFFFFFFFFUL)
+            continue;
+
+        p = desc->data;
+        switch (desc->tag) {
+            case HDF4_PSIHD:
+            header = g_new0(PsiHeader, 1);
+            fail = !psi_read_header(p, desc->length, header, error);
+            break;
+
+            case HDF4_SD:
+            /* TODO: check size */
+            data = (const guint16*)desc->data;
+            data_len = desc->length;
+            break;
+
+            default:
+            break;
+        }
+
+        if (fail)
+            break;
     }
+
+    if (header && data && !fail) {
+        GwyDataField *dfield;
+        GwySIUnit *siunit;
+        gint power10;
+
+        dfield = gwy_data_field_new(header->xres, header->yres,
+                                    header->xscale * Micrometer,
+                                    header->yscale * Micrometer,
+                                    FALSE);
+
+        d = gwy_data_field_get_data(dfield);
+        for (i = 0; i < header->xres*header->yres; i++)
+            d[i] = GINT16_FROM_LE(data[i]);
+
+        siunit = gwy_si_unit_new("m");
+        gwy_data_field_set_si_unit_xy(dfield, siunit);
+        g_object_unref(siunit);
+
+        siunit = gwy_si_unit_new_parse(header->zgain_unit, &power10);
+        gwy_data_field_set_si_unit_z(dfield, siunit);
+        g_object_unref(siunit);
+
+        gwy_data_field_multiply(dfield, header->zgain*pow10(power10));
+
+        container = gwy_container_new();
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
+
+        if (header->title[0])
+            gwy_container_set_string_by_name(container, "/0/data/title",
+                                             g_strdup(header->title));
+    }
+
     gwy_file_abandon_contents(buffer, size, NULL);
+    g_array_free(tags, TRUE);
+    g_free(header);
 
-    err_NO_DATA(error);
+    if (!container && !fail)
+        err_NO_DATA(error);
 
-    return NULL;
+    return container;
 }
 
 static gboolean
@@ -792,6 +611,7 @@ hdf4_read_tags(const guchar *buffer,
     return tags;
 }
 
+#ifdef DEBUG
 static guint
 get_data_type_size(HDF4TypeInfo id,
                    GError **error)
@@ -915,7 +735,6 @@ map_number_type(guint32 number_type)
     return typeinfo;
 }
 
-#ifdef DEBUG
 static const GwyEnum tag_names[] = {
     /* Common */
     { "No data", HDF4_NULL, },
@@ -1100,6 +919,20 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
             max = get_WORD_BE(&p);
             g_string_append_printf(str, " %u %u", min, max);
         }
+        break;
+
+        case HDF4_SD:
+        /* Nothing interesting to print */
+        break;
+
+        case HDF4_PSI:
+        if (desc->length == 4) {
+            guint32 version;
+
+            version = get_DWORD_BE(&p);
+            g_string_append_printf(str, " %x", version);
+        }
+        break;
 
         case HDF4_PSIHD:
         {
@@ -1110,6 +943,7 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
         break;
 
         default:
+        g_string_append(str, " (UNHANDLED)");
         break;
     }
 
