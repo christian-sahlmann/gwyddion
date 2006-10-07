@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="gwymodule-tutorial-file" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>File Modules</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>File Modules</refname>
+    <refpurpose>
+      
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>File Module Registration</title>
+    <para>
+      To be written.
+    </para>
+  </refsect1>
+</refentry>
+

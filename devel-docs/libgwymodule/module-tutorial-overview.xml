@@ -18,56 +18,78 @@
   <refsect1>
     <title>Overview</title>
     <para>
-      <application>Gwyddion</application> is quite a modular application.  In fact, most of its basic
-      functionallity is provided by modules.  Modules allow to easily extend
-      <application>Gwyddion</application> without the need to recompile. Modules need to be copied
-      in appropriate directories only followed by <application>Gwyddion</application> restart.
-      Modules are then automatically detected, registered and the functions provided by modules
-      are added to <application>Gwyddion</application> menu.
+      <application>Gwyddion</application> is quite a modular application.  In
+      fact, most of its basic functionallity is provided by modules.  Modules
+      allow to easily extend <application>Gwyddion</application> without the
+      need to recompile.  However, it is currently impossible to load, unload
+      and change modules while <application>Gwyddion</application> is running,
+      therefore it has to be restarted when the set of modules change. Modules
+      are then automatically detected, registered and the functions provided by
+      modules are added to <application>Gwyddion</application> menus and/or
+      toolboxes.
     </para>
     <para>
       There are several distinct module types:
       <itemizedlist>
         <listitem><para>
-          <link linkend="gwymodule-process">data processing modules</link> – these modules
-          provide functions for processing of two-dimensional data arrays (e. g. <emphasis>fast fourier transform</emphasis> module),
-          or changing the graphical presentation of data (e. g. <emphasis>shading</emphasis> module). Data processing
-          modules usually get data (e. g. two-dimensional field of SPM data), ask for processing options
-          and do requested data processing. For more interactive use, we recommend to use <emphasis>tool module</emphasis> type.
+          <link linkend="module-tutorial-process">data processing
+          modules</link> that provide functions for processing of
+          two-dimensional data arrays (e.g. <emphasis>Fast Fourier
+          Transform</emphasis> module), or changing the graphical presentation
+          of data (e.g. <emphasis>shading</emphasis> module). Data processing
+          modules usually get data (i.e. two-dimensional field of SPM data),
+          possibly ask for processing options and do the requested data
+          processing. More interactive functions are typically better
+          implemented as tool modules.
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-file">file loading and saving modules</link>
+          <link linkend="module-tutorial-file">file loading and saving
+          modules</link> that handle import and export of foreign file formats,
+          also the <application>Gwyddion</application> native file format is
+          handled by a module.
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-graph">graph modules</link> – these modules are used
-          to process special class of data in the apllication – graphs of one-dimensional functions
-          (e. g. profiles obtained by <emphasis>Profile selection</emphasis> tool).
+          <link linkend="module-tutorial-graph">graph modules</link> that
+          operate on one-dimensional data (graphs), e.g. profiles obtained by
+          <emphasis>Profile selection</emphasis> tool. An example is
+          <emphasis>Function fit</emphasis> module.
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-tool">tool modules</link> – tools are modules extended
-          to provide more interactive interface (namely connected with selections by mouse).
-          This means ability of active recomputation of the requested parameters while creating and changing selections
-          on the original data (e. g. <emphasis>read value</emphasis> tool, <emphasis>three-point leveling</emphasis> tool).
+          <link linkend="module-tutorial-tool">tool modules</link> that provide
+          tools operating on two-dimensional data directly in application data
+          windows. They have typically more interactive interface than
+          processing modules and allow to select objects on the data with
+          mouse.  Examples include <emphasis>Read value</emphasis> or
+          <emphasis>Three-point leveling</emphasis> tools.
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-layer">layer modules</link> – FIXME
+          <link linkend="module-tutorial-layer">layer modules</link> that
+          implement two-dimensional data selections as <emphasis>rectangular
+          selection</emphasis> or <emphasis>line selection</emphasis>.
+          Selections are mostly employed in tool modules, however several data
+          processing modules use them too.
         </para></listitem>
       </itemizedlist>
     </para>
     <para>
-      The types above are in fact
-      <emphasis>function</emphasis> types, not module types.
-      One module can provide a single function or a whole
-      bunch of completely unrelated functions, even of different type.
-      However, it's usual to
-      group functions containing considreable amount of common code to one
-      module to allow its sharing, and use separate modules for unrelated
-      functions.
+      The above types are in fact <emphasis>function</emphasis> types, not
+      module types.  One module often provides a single function, but it can
+      also provide a whole bunch of completely unrelated functions, even of
+      different types.  However, it is usual to group functions containing
+      considreable amount of common code to one module (to allow sharing), and
+      use separate modules for unrelated functions.
     </para>
     <para>
-      More precisely, a file (i.e., a shared/dynamically linked library)
-      always corresponds to a one <application>Gwyddion</application> module.  A module can register
-      zero or more functions (features).
+      More precisely, a file (i.e., a shared/dynamically linked library) always
+      corresponds to a one <application>Gwyddion</application> module.
+      A module can register zero or more functions (features) of arbitrary
+      type.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Data Organization</title>
+    <para>
+      To be written.
     </para>
   </refsect1>
 </refentry>

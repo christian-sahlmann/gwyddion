@@ -11,82 +11,74 @@
   <refnamediv>
     <refname>A Minimal Module</refname>
     <refpurpose>
-      Dissection of a minimal <application>Gwyddion</application> data processing module.
+      Dissection of a minimal <application>Gwyddion</application> data
+      processing module.
     </refpurpose>
   </refnamediv>
 
   <refsect1>
     <title>A Minimal Module</title>
     <para>
-      A minimal <application>Gwyddion</application> data-processing module could look like this:
+      A minimal <application>Gwyddion</application> data-processing module that
+      inverts values in a channel about zero could look as follows:
     </para>
     <informalexample><programlisting><![CDATA[
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-process.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
-#define INVERT_VALUE_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define INVERT_VALUE_RUN_MODES GWY_RUN_IMMEDIATE
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    my_invert_value            (GwyContainer *data,
-                                               GwyRunType run);
+static gboolean module_register(void);
+static void     my_invert_value(GwyContainer *data,
+                                GwyRunType run);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "value_invert",
-    "Inverts data value.",
+    N_("Inverts data value."),
     "J. Random Hacker <hacker.jr@example.org>",
     "1.0",
-    "J. Random Hacker",
-    "2004",
+    "Bittwiddle Inc.",
+    "2006",
 };
 
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
-    static GwyProcessFuncInfo my_invert_value_func_info = {
-        "my_invert_value",
-        "/_Test/_Invert Value",
-        (GwyProcessFunc)&my_invert_value,
-        INVERT_VALUE_RUN_MODES,
-        0,
-    };
-
-    gwy_process_func_register(name, &my_invert_value_func_info);
+    gwy_process_func_register("my_invert_value",
+                              (GwyProcessFunc)&my_invert_value,
+                              _("/_Test/_Invert Value"),
+                              GWY_STOCK_VALUE_INVERT,
+                              INVERT_VALUE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              _("Invert data value about origin"));
 
     return TRUE;
 }
 
-static gboolean
-my_invert_value(GwyContainer *data, GwyRunType run)
+static void
+my_invert_value(GwyContainer *data,
+                GwyRunType run)
 {
     GwyDataField *dfield;
+    GQuark quark;
 
-    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES, FALSE);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
-    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
-
-    return TRUE;
+    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &quark,
+                                     0);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
+    gwy_data_field_multiply(dfield, -1.0);
 }
 ]]></programlisting></informalexample>
   <para>
-    Now, we should be able to compile this code (see below),  make a dynamically linked library (*.so, *.dll, depending on
-    the operating system) and put it to your <application>Gwyddion</application> modules directory
-    (e. g. /lib/gwyddion/modules/process/, however depending on your actual installation and operating
-    system). After <application>Gwyddion</application> starts, the module is found and menu entry <emphasis>Test/Invert Value</emphasis>
-    will appear in the main menu. Clicking on this menu item will invert the actual data.
-    As this is the minimal module it even does not have graphical user interface to change parameters
-    of data processing. However, for its purpose – data inversion – it is sufficient.
-  </para>
-  <para>
-    Though the above example is minimal it still constis of quite a bit of code.
-    We will analyse it piece-by-piece in the following paragraphs.
+    Though the above example is minimal it still constis of quite a bit of
+    code.  We will analyse it piece-by-piece in the following paragraphs.
   </para>
   </refsect1>
   <refsect1>
@@ -96,48 +88,24 @@ my_invert_value(GwyContainer *data, GwyRunType run)
     </para>
     <informalexample><programlisting><![CDATA[
 #include <libgwyddion/gwymacros.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-process.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 ]]></programlisting></informalexample>
     <para>
       These four are essential, for a complex modules you may need additional
       headers.
       <filename><link linkend="libgwyddion-gwymacros">gwymacros.h</link></filename>
-      contains some basic macros (none of them is actually used here),
-      <filename><link linkend="libgwymodule-gwymoduleloader">gwymodule.h</link></filename>
-      declares functions essential for registering the module and its features,
+      contains some basic macros,
       <filename><link linkend="GwyDataField">datafield.h</link></filename>
-      declared basic <link linkend="GwyDataField">GwyDataField</link> functions
-      (like value inversion we will use in the module later), and
-      <filename><link linkend="libgwyapp-app">gwyapp.h</link></filename>
-      declares undo/redo functions and other main application related
-      stuff.
-    </para>
-  </refsect1>
-  <refsect1>
-    <title>Run Modes</title>
-    <para>
-      Now we declare the
-      <link linkend="GwyRunType">run modes</link> our module supports.
-    </para>
-    <informalexample><programlisting><![CDATA[
-#define INVERT_VALUE_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
-]]></programlisting></informalexample>
-    <para>
-      This is just a convenience macro, so we don't have to type them
-      several times manually.
-    </para>
-    <para>
-      There are four <link linkend="GwyRunType">run modes</link> total,
-      though <literal>GWY_RUN_MODAL</literal> and
-      <literal>GWY_RUN_INTERACTIVE</literal> are useful only for modules
-      with a graphical user interface.
-      <literal>GWY_RUN_NONINTERACTIVE</literal> is the right
-      run mode for a noninteractive module like our example.
-      <literal>GWY_RUN_WITH_DEFAULT</literal> is currently
-      unused in <application>Gwyddion</application>, but it's a good idea (and easy) to support it too.
+      declares basic #GwyDataField methods,
+      <filename><link linkend="libgwydgets-gwystock">gwystock.h</link></filename>
+      contains stock icon definitions,
+      <filename><link linkend="libgwymodule-gwymoduleloader-process">gwymodule-process.h</link></filename>
+      declares functions essential for registering the module and its data processing functions,
+      and <filename><link linkend="libgwyapp-gwyapp">gwyapp.h</link></filename>
+      includes everything necessary for interfacing with the application.
     </para>
   </refsect1>
   <refsect1>
@@ -146,56 +114,62 @@ my_invert_value(GwyContainer *data, GwyRunType run)
       Function prototypes of our functions.
     </para>
     <informalexample><programlisting><![CDATA[
-static gboolean    module_register            (const gchar *name);
-static gboolean    my_invert_value            (GwyContainer *data,
-                                               GwyRunType run);
+static gboolean module_register(void);
+static void     my_invert_value(GwyContainer *data,
+                                GwyRunType run);
 ]]></programlisting></informalexample>
-    <para>Note <emphasis>all</emphasis>
-      functions and global variables should be declared
-      <literal>static</literal>, the module should export no symbol
-      except <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link>
-      described below.
+    <para>
+      Note <emphasis>all</emphasis> functions and global variables should be
+      declared <literal>static</literal>, the module should export no symbol
+      except %GWY_MODULE_QUERY described below.
+    </para>
+    <para>
+      An attentive reader has probably noticed we omitted the line
+    </para>
+    <informalexample><programlisting><![CDATA[
+#define INVERT_VALUE_RUN_MODES GWY_RUN_IMMEDIATE
+]]></programlisting></informalexample>
+    <para>
+      where so-called run mode is defined.  We will describe run modes in
+      detail in the <link linkend="gwymodule-tutorial-process">section about
+      data processing modules</link>.  At this point it suffices to say
+      %GWY_RUN_IMMEDIATE means the function is non-interactive, executed
+      %mmediately.
     </para>
   </refsect1>
   <refsect1>
     <title>The Module Info Structure</title>
     <para>
-      Here the interesting part starts.  The
-      <link linkend="GwyModuleInfo">GwyModuleInfo</link> structure contains
+      Here the interesting part starts.  The #GwyModuleInfo structure contains
       overall information about the module, most of it is presented in
-      a more-or-less human-readable form <application>Gwyddion</application> in the module browser.
+      a more-or-less human-readable form <application>Gwyddion</application> in
+      the module browser.
     </para>
     <informalexample><programlisting><![CDATA[
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "value_invert",
-    "Inverts data value.",
+    N_("Inverts data value."),
     "J. Random Hacker <hacker.jr@example.org>",
     "1.0",
-    "J. Random Hacker",
-    "2004",
-]]></programlisting></informalexample>
+    "Bittwiddle Inc.",
+    "2006",
 };
+]]></programlisting></informalexample>
     <para>
-      The first item is always
-      <link linkend="GWY-MODULE-ABI-VERSION-CAPS">GWY_MODULE_ABI_VERSION</link>.
-      The second one is a pointer to module registration function, by
-      convention called <function>module_register</function>, it is described
-      in details below.
+      The first item is always %GWY_MODULE_ABI_VERSION.  The ABI version
+      compiled to the module is checked by the loader on load-time and
+      modules with wrong ABI version are rejected.
     </para>
     <para>
-      The third item (<literal>"value_invert"</literal>) is the module name.
-      It will appear as Module in the browser.
-      A module is uniquely identified by its name, so module name have to be
-      unique, <application>Gwyddion</application> refuses to load more modules of the same name. Otherwise
-      it is a free-form string, though by convention, it is usually kept
-      the same as file name of the module.
+      The second item is a pointer to module registration function, by
+      convention called <function>module_register</function>.  It is described
+      in details below.
     </para>
     <para>
       The fourth item is module description.  It will appear as Description
       in the browser.  This is a short text (up to a paragraph or two)
-      informing curious humans what the module is about.
+      informing curious humans what the module contains and/or does.
     </para>
     <para>
       The next item is the module author(s).  Under normal circumstances this
@@ -211,25 +185,26 @@ static GwyModuleInfo module_info = {
       preferable.
     </para>
     <para>
-      The last but one and last items are module copyright and date.
+      The last but one and last items are the module copyright and date.
       The copyright field may be the same as authors field (except without
-      the eventual e-mail address), it may be an organization, or even
-      someone else than the author.
+      the e-mail address), it may be an organization, or whoever owns the
+      copyright.
     </para>
   </refsect1>
   <refsect1>
     <title>The Module Query Function</title>
     <para>
-      A <application>Gwyddion</application> module is loaded in two stages.  First, it is queried,
-      the module responds with its module info, <application>Gwyddion</application> checks whether it
-      looks good (e.g., whether module ABI version matches). If it is OK,
-      <application>Gwyddion</application> continues with registration of particular module features.
+      A <application>Gwyddion</application> module is loaded in two stages.
+      First, it is queried, the module responds with its module info,
+      <application>Gwyddion</application> then performs some basic sanity
+      checks (e.g., whether module ABI version matches).  If it looks all
+      right, <application>Gwyddion</application> continues with the
+      registration of particular module features.
     </para>
     <para>
       The query function should be always constructed using the
-      <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link> macro
-      as follows (note there is <emphasis>no</emphasis> semicolon after
-      the right parenthesis):
+      %GWY_MODULE_QUERY macro as follows (note there is <emphasis>no</emphasis>
+      semicolon after the right parenthesis):
     </para>
     <informalexample><programlisting><![CDATA[
 GWY_MODULE_QUERY(module_info)
@@ -244,127 +219,90 @@ GWY_MODULE_QUERY(module_info)
     <title>Module Feature Registration</title>
     <para>
       The module registration function is called in the second registration
-      stage and is responsible for registering particular module functions.
-      Our module registeres only a one function,
-      <literal>my_invert_value</literal>.
+      stage and is responsible for registering particular module functions,
+      each in one turn.  Our sample module registeres only a one function,
+      <function>my_invert_value</function>.
     </para>
     <para>
       Each function type has its own registration function, our function
       is a data processing one, so it's registered with
-      <link linkend="gwy-process-func-register">gwy_process_func_register()</link>.
+      gwy_process_func_register().
       File loading and/or saving functions are registered with
-      <link linkend="gwy-file-func-register">gwy_file_func_register()</link>,
-      etc. (at the time of writing this there exist four module function
-      types).
-    </para>
-    <para>
-      The registration itself is carried out by filling a function info
-      structure and calling <function>gwy_*_func_register()</function> with
-      the info.  Note the function info has to be persistent (static), because
-      <application>Gwyddion</application> doesn't make a copy of it.  It must not be freed or changed
-      after the registration.
+      gwy_file_func_register(), etc.
     </para>
     <informalexample><programlisting><![CDATA[
 static gboolean
-module_register(const gchar *name)
+module_register(void)
 {
-    static GwyProcessFuncInfo my_invert_value_func_info = {
-        "my_invert_value",
-        "/_Test/My _Invert Value",
-        (GwyProcessFunc)&my_invert_value,
-        INVERT_VALUE_RUN_MODES,
-        0,
-    };
-
-    gwy_process_func_register(name, &my_invert_value_func_info);
+    gwy_process_func_register("my_invert_value",
+                              (GwyProcessFunc)&my_invert_value,
+                              _("/_Test/_Invert Value"),
+                              GWY_STOCK_VALUE_INVERT,
+                              INVERT_VALUE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              _("Invert data value about origin"));
 
     return TRUE;
 }
 ]]></programlisting></informalexample>
    <para>
-     The registration function should always return <literal>TRUE</literal>.
+     The registration function almost always returns <literal>TRUE</literal>.
      Returning <literal>FALSE</literal> means the registration failed, and
-     <application>Gwyddion</application> then tries to unregister all its already registered functions
-     and unload the module.  Normally there is hardly any reason why the
-     registration could fail.
-   </para>
-   <para>
-     The <parameter>name</parameter> argument has to be passed as the first
-     argument of all function registration calls
-     (<link linkend="gwy-process-func-register">gwy_process_func_register()</link>
-     here).
-     Now it is identical to module name specified in module info, but
-     don't count on it.
-   </para>
-   <para>
-     Each function type has a different function info structure, though some
-     fields are present in all of them.  Data processing function info
-     <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link> consits
-     of function name (again, this has to be an unique identifier, among
-     the functions of the same type), path where it should be placed into
-     the Data Process menu, a pointer to the function itself
-     (<function>my_invert_value</function>), and run modes it supports (we
-     cleverly defined the <literal>INVERT_VALUE_RUN_MODES</literal> macro
-     for them).
+     <application>Gwyddion</application> then attempts to unregister all its
+     already registered functions, unload the module and proceed as if it
+     didn't exist.
    </para>
   </refsect1>
   <refsect1>
     <title>Executive</title>
     <para>
-      Now, let's do the actuall data processing:
+      Now let's do some actuall data processing:
     </para>
     <informalexample><programlisting><![CDATA[
-static gboolean
-my_invert_value(GwyContainer *data, GwyRunType run)
+static void
+my_invert_value(GwyContainer *data,
+                GwyRunType run)
 {
     GwyDataField *dfield;
+    GQuark quark;
 
-    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES, FALSE);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
-    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
-
-    return TRUE;
+    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &quark,
+                                     0);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
+    gwy_data_field_multiply(dfield, -1.0);
 }
 ]]></programlisting></informalexample>
    <para>
-     A few things can be seen here.  First, we check the run mode.  More
-     sofisticated modules with a GUI and their own settings can do different
+     A few things can be seen here.  First, we check the run mode we were
+     executed in.  More sofisticated modules can in principle do different
      things based on the run mode, but we just check whether it looks sane.
    </para>
    <para>
-     Next, we get a datafield from some container.
-     The <link linkend="GwyDataField">GwyDataField</link> object is the
-     basic data object representing two-dimensional array of values
-     (height field).
-     Quite a few datafield manipulating functions already exist in
-     <link linkend="libprocess">libprocess</link>, we use one of them
-     (<link linkend="gwy-data-field-invert">gwy_data_field_invert()</link>)
-     to perform the value inversion too.
+     Next, we get the data field to operate on.  The notion of current object
+     is maintained by the application data browser therefore we us a data
+     browser method (beside the current data field, we also ask for its key
+     that will be useful for undo later).
    </para>
    <para>
-     The obscure part is getting the datafield out from some container that
-     was passed to our function.  Just take it as a fact the data are
-     called <literal>"/0/data"</literal>, it is probably equally good name
-     as anything else.  There are other strange things in the container
-     but you'd rather not want to know about them (at least not now, some
-     more exotic container inhabitants are described in the
-     <link linkend="module-tutorial-beyond">Beyond Minimal Module</link>
-     section).
+     #GwyDataField is the basic data object representing a two-dimensional
+     array of values (typically a height field).  Quite a few datafield
+     manipulating functions already exist in <link
+     linkend="libprocess">libprocess</link>, we will use one of them
+     to perform the value inversion.
    </para>
    <para>
-     The
-     <link linkend="gwy-app-undo-checkpoint">gwy_app_undo_checkpoint()</link>
-     creates a point in the undo history we can return to later, call it
-     just before you start modifying the data.  Its second argument is
-     what is to be saved, so <literal>"/0/data"</literal> follows us here
-     too.  The <literal>NULL</literal> just terminates the argument list.
+     Function gwy_app_undo_qcheckpointv() creates a point in the undo history
+     we can return to later.  It is necessary to call it before we start
+     modifying the data.  Its first argument is the
+     <link linkend="GwyContainer">data container</link> the objects we will
+     change reside in.  Then we pass the number of changed items (1) and
+     an array of their indentifiers in the data container.
    </para>
    <para>
-     Then we finally invert the value with
-     <link linkend="gwy-data-field-invert">gwy_data_field_invert()</link>
-     and return <literal>TRUE</literal> since we modified the data.  If we
-     didn't modify them, we would have returned <literal>FALSE</literal>.
+     Then we finally invert the value with gwy_data_field_multiply() and we are
+     done.
    </para>
   </refsect1>
 </refentry>

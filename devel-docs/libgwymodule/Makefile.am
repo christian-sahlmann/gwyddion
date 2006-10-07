@@ -58,9 +58,14 @@ TYPES_INCLUDE =
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml
 content_files = \
 	module-tutorial-overview.xml \
-	module-tutorial-minimal.xml \
 	module-tutorial-beyond.xml \
 	module-tutorial-install.xml \
+	module-tutorial-process.xml \
+	module-tutorial-minimal.xml \
+	module-tutorial-file.xml \
+	module-tutorial-layer.xml \
+	module-tutorial-graph.xml \
+	module-tutorial-tool.xml \
 	plugin-proxy-overview.xml \
 	plugin-proxy-dump.xml \
 	plugin-proxy-file.xml \
@@ -70,7 +75,12 @@ content_files = \
 # SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
-expand_content_files=
+expand_content_files= \
+	module-tutorial-minimal.xml \
+	module-tutorial-file.xml \
+	module-tutorial-layer.xml \
+	module-tutorial-graph.xml \
+	module-tutorial-tool.xml
 
 # CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.
 # Only needed if you are using gtkdoc-scangobj to dynamically query widget
