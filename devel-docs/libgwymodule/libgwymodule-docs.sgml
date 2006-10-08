@@ -20,7 +20,7 @@
 
   <chapter id="ModuleTutorial">
     <title>Gwyddion Module Tutorial</title>
-    <xi:include href="module-tutorial-overview.xml"/>
+    <xi:include href="xml/module-tutorial-overview.xml"/>
     <xi:include href="xml/module-tutorial-minimal.xml"/>
     <xi:include href="module-tutorial-process.xml"/>
     <xi:include href="xml/module-tutorial-file.xml"/>

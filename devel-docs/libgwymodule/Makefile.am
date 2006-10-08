@@ -76,6 +76,7 @@ content_files = \
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
 expand_content_files= \
+	module-tutorial-overview.xml \
 	module-tutorial-minimal.xml \
 	module-tutorial-file.xml \
 	module-tutorial-layer.xml \

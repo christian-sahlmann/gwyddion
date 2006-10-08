@@ -3,13 +3,13 @@
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id="gwymodule-tutorial-minimal" revision="@(#) $Id$">
   <refmeta>
-    <refentrytitle>A Minimal Module</refentrytitle>
+    <refentrytitle>Minimal Module</refentrytitle>
     <manvolnum>3</manvolnum>
     <refmiscinfo>Gwyddion</refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>A Minimal Module</refname>
+    <refname>Minimal Module</refname>
     <refpurpose>
       Dissection of a minimal <application>Gwyddion</application> data
       processing module.
@@ -17,19 +17,21 @@
   </refnamediv>
 
   <refsect1>
-    <title>A Minimal Module</title>
+    <title>Module Overview</title>
     <para>
-      A minimal <application>Gwyddion</application> data-processing module that
-      inverts values in a channel about zero could look as follows:
+      In this section we will describe a minimal
+      <application>Gwyddion</application> data-processing module.
+      It provides a function to invert values in a channel about zero.
+      The complete module code is:
     </para>
-    <informalexample><programlisting><![CDATA[
-#include <libgwyddion/gwymacros.h>
-#include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <libgwydgets/gwystock.h>
-#include <app/gwyapp.h>
+    <informalexample><programlisting>
+&num;include &lt;libgwyddion/gwymacros.h&gt;
+&num;include &lt;libprocess/datafield.h&gt;
+&num;include &lt;libgwymodule/gwymodule-process.h&gt;
+&num;include &lt;libgwydgets/gwystock.h&gt;
+&num;include &lt;app/gwyapp.h&gt;
 
-#define INVERT_VALUE_RUN_MODES GWY_RUN_IMMEDIATE
+&num;define INVERT_VALUE_RUN_MODES GWY_RUN_IMMEDIATE
 
 static gboolean module_register(void);
 static void     my_invert_value(GwyContainer *data,
@@ -37,14 +39,14 @@ static void     my_invert_value(GwyContainer *data,
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
-    &module_register,
+    &amp;module_register,
     N_("Inverts data value."),
-    "J. Random Hacker <hacker.jr@example.org>",
+    "J. Random Hacker &lt;hacker.jr&commat;example.org&gt;",
     "1.0",
     "Bittwiddle Inc.",
     "2006",
 };
-
+<![CDATA[
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -86,13 +88,13 @@ my_invert_value(GwyContainer *data,
     <para>
       First of all, of course, some header files.
     </para>
-    <informalexample><programlisting><![CDATA[
-#include <libgwyddion/gwymacros.h>
-#include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <libgwydgets/gwystock.h>
-#include <app/gwyapp.h>
-]]></programlisting></informalexample>
+    <informalexample><programlisting>
+&num;include &lt;libgwyddion/gwymacros.h&gt;
+&num;include &lt;libprocess/datafield.h&gt;
+&num;include &lt;libgwymodule/gwymodule-process.h&gt;
+&num;include &lt;libgwydgets/gwystock.h&gt;
+&num;include &lt;app/gwyapp.h&gt;
+</programlisting></informalexample>
     <para>
       These four are essential, for a complex modules you may need additional
       headers.
@@ -126,9 +128,9 @@ static void     my_invert_value(GwyContainer *data,
     <para>
       An attentive reader has probably noticed we omitted the line
     </para>
-    <informalexample><programlisting><![CDATA[
-#define INVERT_VALUE_RUN_MODES GWY_RUN_IMMEDIATE
-]]></programlisting></informalexample>
+    <informalexample><programlisting>
+&num;define INVERT_VALUE_RUN_MODES GWY_RUN_IMMEDIATE
+</programlisting></informalexample>
     <para>
       where so-called run mode is defined.  We will describe run modes in
       detail in the <link linkend="gwymodule-tutorial-process">section about
@@ -142,20 +144,20 @@ static void     my_invert_value(GwyContainer *data,
     <para>
       Here the interesting part starts.  The #GwyModuleInfo structure contains
       overall information about the module, most of it is presented in
-      a more-or-less human-readable form <application>Gwyddion</application> in
-      the module browser.
+      a more-or-less human-readable form in <application>Gwyddion</application>
+      in the module browser.
     </para>
-    <informalexample><programlisting><![CDATA[
+    <informalexample><programlisting>
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
-    &module_register,
+    &amp;module_register,
     N_("Inverts data value."),
-    "J. Random Hacker <hacker.jr@example.org>",
+    "J. Random Hacker &lt;hacker.jr&commat;example.org&gt;",
     "1.0",
     "Bittwiddle Inc.",
     "2006",
 };
-]]></programlisting></informalexample>
+</programlisting></informalexample>
     <para>
       The first item is always %GWY_MODULE_ABI_VERSION.  The ABI version
       compiled to the module is checked by the loader on load-time and
@@ -168,7 +170,7 @@ static GwyModuleInfo module_info = {
     </para>
     <para>
       The fourth item is module description.  It will appear as Description
-      in the browser.  This is a short text (up to a paragraph or two)
+      in the module browser.  This is a short text (up to a paragraph or two)
       informing curious humans what the module contains and/or does.
     </para>
     <para>
@@ -246,7 +248,7 @@ module_register(void)
 }
 ]]></programlisting></informalexample>
    <para>
-     The registration function almost always returns <literal>TRUE</literal>.
+     The registration function normally returns <literal>TRUE</literal>.
      Returning <literal>FALSE</literal> means the registration failed, and
      <application>Gwyddion</application> then attempts to unregister all its
      already registered functions, unload the module and proceed as if it
@@ -281,9 +283,10 @@ my_invert_value(GwyContainer *data,
    </para>
    <para>
      Next, we get the data field to operate on.  The notion of current object
-     is maintained by the application data browser therefore we us a data
-     browser method (beside the current data field, we also ask for its key
-     that will be useful for undo later).
+     is maintained by the application
+     <link linkend="libgwyapp-data-browser">data browser</link> therefore we us
+     a data browser method (beside the current data field, we also ask for its
+     key that will be useful for undo later).
    </para>
    <para>
      #GwyDataField is the basic data object representing a two-dimensional
