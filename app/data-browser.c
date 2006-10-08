@@ -3811,10 +3811,7 @@ gwy_app_data_browser_foreach(GwyAppDataForeachFunc function,
  *              them, %FALSE to copy only.
  * @...: 0-terminated list of #GwyDataItem values defining the items to copy.
  *
- * Copy auxiliary data items between data containers.
- *
- * Items that do not exist in @source are removed from @dest.  Therefore the
- * operation is more of a synchronization than a copy.
+ * Synchronizes auxiliary data items between data containers.
  **/
 void
 gwy_app_sync_data_items(GwyContainer *source,
