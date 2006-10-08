@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>Beyond the Minimal Module</refname>
     <refpurpose>
-      Some common and useful module idioms
+      Common module idioms
     </refpurpose>
   </refnamediv>
 
@@ -78,14 +78,14 @@ module_register(void)
     </para>
     <para>
       Saving and restoring settings usually has sense only for modules with
-      a GUI, simple noninteractive modules like value inversion don't have any
+      a GUI, simple noninteractive modules like value inversion have no
       settings to remember.  We will get to GUI later.
     </para>
     <para>
       There is a one #GwyContainer in <application>Gwyddion</application>
       containing settings for all modules (and other creatures). The function
       gwy_app_settings_get() will bring it to you.  It is loaded on startup and
-      saved on exit and you don't need to take care about this. So the only
+      saved on exit and you don not need to take care about this. So the only
       thing you have to care about is to read the settings from it when your
       module starts and store them there on exit.  OK, there are in fact two
       things you have to care about.  There are no limitations on who can
@@ -139,18 +139,19 @@ gwy_container_set_double_by_name(settings,
   <refsect1>
     <title>Creating New Files, Data Fields and Graphs</title>
     <para>
-      Not always one wants to modify the original data but prefers to create
-      a new window for the result, or the output is perhaps of diffrent kind
-      than the source: a graph is created from two-dimensional data.
+      Not always one wants to modify the original data instead one prefers to
+      create a new window for the result, or the output is perhaps of diffrent
+      kind than the source: a graph is created from two-dimensional data.
     </para>
     <para>
-      Modules usually do not create new files, if they create new objects,
-      they put them to the same container as the source data.  A notable
-      exception are file modules, they however just return the newly created
-      container.  To add a completely new data container one uses
-      gwy_app_data_browser_add().  If it contains no (visible) data, it would
-      be inaccessible by the user and present a memory leak.  Therefore some
-      data must be added and made visible later (or beforehand).
+      Modules usually do not create new files, if they create new objects, they
+      put them to the same container as the source data.  A notable exception
+      are file modules, they however just return the newly created container.
+      New data containers, if one wishes to create them, are put under the
+      control of the data browser with gwy_app_data_browser_add().  If they
+      contain no visible data, they would be inaccessible by the user and
+      present a memory leak.  Therefore some data must be added and made
+      visible later (or beforehand).
     </para>
     <informalexample><programlisting>
 GwyContainer *container;
@@ -180,7 +181,7 @@ g_object_unref(data_field);
       The data browser would notice it and add the data field, but this method
       is generally very inconvenient – for start, how we came to
       <literal>"/12345/data"</literal>?. Therefore we use the high-level
-      interface and obtain the new channel number:
+      interface and obtain the new channel number for free:
     </para>
     <informalexample><programlisting><![CDATA[
 new_id = gwy_app_data_browser_add_data_field(container, data_field);
@@ -201,7 +202,8 @@ gwy_app_sync_data_items(container, container,
                         0);
 ]]></programlisting></informalexample>
     <para>
-      The id number was obtained with gwy_app_data_browser_get_current()
+      The id number of the source data field (<symbol>old_id</symbol>)
+      was obtained with gwy_app_data_browser_get_current()
       (normally together with the data field itself, its key and/or other
       current objects)
     </para>
@@ -235,7 +237,7 @@ g_object_unref(graph_model);
         <listitem>
           It is used by <application>Gwyddion</application> itself.
           Any specialized <application>Gwyddion</application> widgets
-          you could make use of are Gtk+.
+          you could make use of are Gtk+ widgets.
         </listitem>
         <listitem>
           It is available for a variety of platforms, allowing to easily
@@ -265,6 +267,7 @@ slope_dialog(gdouble *amount)
     GtkObject *adjust;
     gint response;
 
+    /* Create the dialog */
     dialog = gtk_dialog_new_with_buttons(_("Frobnicate"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -272,6 +275,7 @@ slope_dialog(gdouble *amount)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
+    /* Create the parameter controls */
     table = gtk_table_new(1, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
@@ -280,6 +284,7 @@ slope_dialog(gdouble *amount)
     spin = gwy_table_attach_hscale(table, 0, _("Amount:"), "percent",
                                    adjust, 0);
 
+    /* Run the dialog and respond to user actions */
     gtk_widget_show_all(dialog);
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     switch (response) {
