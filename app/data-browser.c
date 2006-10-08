@@ -3046,6 +3046,9 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
  * @data: A data container.
  *
  * Adds a data container to the application data browser.
+ *
+ * The data browser takes a reference on the container so you can release
+ * yours.
  **/
 void
 gwy_app_data_browser_add(GwyContainer *data)
