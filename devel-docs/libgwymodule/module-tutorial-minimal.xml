@@ -12,7 +12,7 @@
     <refname>Minimal Module</refname>
     <refpurpose>
       Dissection of a minimal <application>Gwyddion</application> data
-      processing module.
+      processing module
     </refpurpose>
   </refnamediv>
 
@@ -54,11 +54,11 @@ module_register(void)
 {
     gwy_process_func_register("my_invert_value",
                               (GwyProcessFunc)&my_invert_value,
-                              _("/_Test/_Invert Value"),
+                              N_("/_Test/_Invert Value"),
                               GWY_STOCK_VALUE_INVERT,
                               INVERT_VALUE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              _("Invert data value about origin"));
+                              N_("Invert data value about origin"));
 
     return TRUE;
 }
@@ -83,6 +83,7 @@ my_invert_value(GwyContainer *data,
     code.  We will analyse it piece-by-piece in the following paragraphs.
   </para>
   </refsect1>
+
   <refsect1>
     <title>Boilerplate</title>
     <para>
@@ -110,6 +111,7 @@ my_invert_value(GwyContainer *data,
       includes everything necessary for interfacing with the application.
     </para>
   </refsect1>
+
   <refsect1>
     <title>Function Prototypes</title>
     <para>
@@ -139,6 +141,7 @@ static void     my_invert_value(GwyContainer *data,
       %mmediately.
     </para>
   </refsect1>
+
   <refsect1>
     <title>The Module Info Structure</title>
     <para>
@@ -193,6 +196,7 @@ static GwyModuleInfo module_info = {
       copyright.
     </para>
   </refsect1>
+
   <refsect1>
     <title>The Module Query Function</title>
     <para>
@@ -217,6 +221,7 @@ GWY_MODULE_QUERY(module_info)
       too.
     </para>
   </refsect1>
+
   <refsect1>
     <title>Module Feature Registration</title>
     <para>
@@ -238,11 +243,11 @@ module_register(void)
 {
     gwy_process_func_register("my_invert_value",
                               (GwyProcessFunc)&my_invert_value,
-                              _("/_Test/_Invert Value"),
+                              N_("/_Test/_Invert Value"),
                               GWY_STOCK_VALUE_INVERT,
                               INVERT_VALUE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              _("Invert data value about origin"));
+                              N_("Invert data value about origin"));
 
     return TRUE;
 }
@@ -255,6 +260,7 @@ module_register(void)
      didn't exist.
    </para>
   </refsect1>
+
   <refsect1>
     <title>Executive</title>
     <para>

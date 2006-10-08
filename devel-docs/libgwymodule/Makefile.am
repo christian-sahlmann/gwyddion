@@ -57,18 +57,18 @@ TYPES_INCLUDE =
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml
 content_files = \
-	module-tutorial-overview.xml \
 	module-tutorial-beyond.xml \
-	module-tutorial-install.xml \
-	module-tutorial-process.xml \
-	module-tutorial-minimal.xml \
 	module-tutorial-file.xml \
-	module-tutorial-layer.xml \
 	module-tutorial-graph.xml \
+	module-tutorial-install.xml \
+	module-tutorial-layer.xml \
+	module-tutorial-minimal.xml \
+	module-tutorial-overview.xml \
+	module-tutorial-process.xml \
 	module-tutorial-tool.xml \
-	plugin-proxy-overview.xml \
 	plugin-proxy-dump.xml \
 	plugin-proxy-file.xml \
+	plugin-proxy-overview.xml \
 	plugin-proxy-process.xml \
 	plugin-proxy-rgi.xml
 
@@ -76,11 +76,13 @@ content_files = \
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
 expand_content_files= \
-	module-tutorial-overview.xml \
-	module-tutorial-minimal.xml \
+	module-tutorial-beyond.xml \
 	module-tutorial-file.xml \
-	module-tutorial-layer.xml \
 	module-tutorial-graph.xml \
+	module-tutorial-layer.xml \
+	module-tutorial-minimal.xml \
+	module-tutorial-overview.xml \
+	module-tutorial-process.xml \
 	module-tutorial-tool.xml
 
 # CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.

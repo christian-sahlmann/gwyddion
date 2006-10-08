@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>File Modules</refname>
     <refpurpose>
-      
+      More about file modules
     </refpurpose>
   </refnamediv>
 
@@ -19,6 +19,28 @@
     <title>File Module Registration</title>
     <para>
       To be written.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>File Type Modules</title>
+    <para>
+      File type modules implement loading and saving of files.  They are
+      quite similar to data processing modules.   The function info
+      (<link linkend="libgwymodule-gwymodule-file-GwyFileFuncInfo">GwyFileFuncInfo</link>)
+      contains pointers to three functions instead of one: loading, saving
+      and file type detection.  You don't have to implement all, just
+      set the unimplemented members to <literal>NULL</literal>.  If
+      detection is not implemented, files of this type are loaded or
+      saved only when user explicitely requests it from the Import or Export
+      menu.
+    </para>
+    <para>
+      The loading function gets a file name and returns a container with
+      data from the file; conversely, the saving function gets a container
+      and a file name and writes the data from the container to the file.
+      The exact signatures of the functions are described in the
+      <link linkend="libgwymodule-gwymodule-file">reference</link> part.
     </para>
   </refsect1>
 </refentry>

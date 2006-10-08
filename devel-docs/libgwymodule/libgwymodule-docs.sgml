@@ -22,12 +22,12 @@
     <title>Gwyddion Module Tutorial</title>
     <xi:include href="xml/module-tutorial-overview.xml"/>
     <xi:include href="xml/module-tutorial-minimal.xml"/>
-    <xi:include href="module-tutorial-process.xml"/>
+    <xi:include href="xml/module-tutorial-beyond.xml"/>
+    <xi:include href="xml/module-tutorial-process.xml"/>
     <xi:include href="xml/module-tutorial-file.xml"/>
     <xi:include href="xml/module-tutorial-graph.xml"/>
     <xi:include href="xml/module-tutorial-tool.xml"/>
     <xi:include href="xml/module-tutorial-layer.xml"/>
-    <xi:include href="module-tutorial-beyond.xml"/>
     <xi:include href="module-tutorial-install.xml"/>
   </chapter>
 

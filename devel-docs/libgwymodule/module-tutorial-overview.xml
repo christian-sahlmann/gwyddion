@@ -86,12 +86,13 @@
       type.
     </para>
   </refsect1>
+
   <refsect1>
     <title>Data Representation</title>
     <para>
       The object representing a data file in Gwyddion is #GwyContainer.
       It is a general container that can hold values of mixes types: atomic,
-      strings or objects.  Its items are identified with #GQuark<!-- -->s,
+      strings or objects.  Its items are identified with #GQuark<!--x-->s,
       that is either by strings or by integers associated with the strings.
     </para>
     <para>
