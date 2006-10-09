@@ -76,6 +76,7 @@ my_invert_value(GwyContainer *data,
                                      0);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_data_field_multiply(dfield, -1.0);
+    gwy_data_field_data_changed(dfield);
 }
 ]]></programlisting></informalexample>
   <para>
@@ -280,6 +281,7 @@ my_invert_value(GwyContainer *data,
                                      0);
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_data_field_multiply(dfield, -1.0);
+    gwy_data_field_data_changed(dfield);
 }
 ]]></programlisting></informalexample>
    <para>
@@ -311,7 +313,9 @@ my_invert_value(GwyContainer *data,
    </para>
    <para>
      Then we finally invert the value with gwy_data_field_multiply() and we are
-     done.
+     done – almost.  To notify views displaying our data field that its data
+     has changed we call gwy_data_field_data_changed().  This function should
+     be called once on each changed data field after all processing is done.
    </para>
   </refsect1>
 </refentry>
