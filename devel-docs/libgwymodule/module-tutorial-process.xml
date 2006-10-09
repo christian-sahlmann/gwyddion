@@ -210,9 +210,9 @@ gwy_data_view_set_zoom(GWY_DATA_VIEW(data_view), zoomval);
 </programlisting></informalexample>
     <para>
       The foregoing example uses raw data keys as <literal>"/0/data"</literal>.
-      Assuming we keep the standard naming scheme we can partially avoid it
+      Assuming we keep the standard naming scheme we can partially avoid this
       with functions like gwy_app_get_data_key_for_id() and
-      g_quark_to_string().  However, such helper functions do not exist for
+      g_quark_to_string().  However, such helper functions do not exist for all
       objects that can appear in a container therefore some knowledge of
       the naming scheme is usually necessary.
     </para>
