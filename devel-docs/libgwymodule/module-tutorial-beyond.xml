@@ -117,14 +117,14 @@ ratio = CLAMP(ratio, 1.0, 2.0);
     <para>
       Saving settings is equally easy:
     </para>
-    <informalexample><programlisting><![CDATA[
+    <informalexample><programlisting>
 GwyContainer *settings;
 
-settings = gwy_app_settings_get();
+settings = gwy_app_settings_get<!--x-->();
 gwy_container_set_double_by_name(settings,
                                  "/module/my_module/ratio",
                                  ratio);
-]]></programlisting></informalexample>
+</programlisting></informalexample>
     <para>
       Modules customarily define a function <symbol>load_settings()</symbol>
       that fills its internal parameter representation on the start of
