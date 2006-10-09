@@ -49,11 +49,17 @@ static GHashTable *process_funcs = NULL;
 
 /**
  * gwy_process_func_register:
- * @name: Name of function to register.  It should be a valid identifier.
+ * @name: Name of function to register.  It should be a valid identifier and
+ *        if a module registers only one function, module and function names
+ *        should be the same.
  * @func: The function itself.
- * @menu_path: Menu path under Data Process menu.
+ * @menu_path: Menu path under Data Process menu.  The menu path should be
+ *             marked translatabe, but passed untranslated (to allow merging
+ *             of translated and untranslated submenus).
  * @stock_id: Stock icon id for toolbar.
- * @run: Supported run modes.
+ * @run: Supported run modes.  Data processing functions can have two run
+ *       modes: %GWY_RUN_IMMEDIATE (no questions asked) and
+ *       %GWY_RUN_INTERACTIVE (a modal dialog with parameters).
  * @sens_mask: Sensitivity mask (a combination of #GwyMenuSensFlags flags).
  *             Usually it contains #GWY_MENU_FLAG_DATA, possibly other
  *             requirements.

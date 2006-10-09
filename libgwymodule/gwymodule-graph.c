@@ -47,9 +47,13 @@ static GHashTable *graph_funcs = NULL;
 
 /**
  * gwy_graph_func_register:
- * @name: Name of function to register.  It should be a valid identifier.
+ * @name: Name of function to register.  It should be a valid identifier and
+ *        if a module registers only one function, module and function names
+ *        should be the same.
  * @func: The function itself.
- * @menu_path: Menu path under Graph menu.
+ * @menu_path: Menu path under Graph menu.  The menu path should be
+ *             marked translatabe, but passed untranslated (to allow merging
+ *             of translated and untranslated submenus).
  * @stock_id: Stock icon id for toolbar.
  * @sens_mask: Sensitivity mask (a combination of #GwyMenuSensFlags flags).
  *             Usually it is equal to #GWY_MENU_FLAG_GRAPH, but it's

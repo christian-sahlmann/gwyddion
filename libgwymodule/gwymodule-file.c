@@ -84,10 +84,12 @@ static GList *container_list = NULL;
 
 /**
  * gwy_file_func_register:
- * @name: Name of function to register.  It should be a valid identifier.
+ * @name: Name of function to register.  It should be a valid identifier and
+ *        if a module registers only one function, module and function names
+ *        should be the same.
  * @description: File type description (will be used in file type selectors).
  * @detect: Detection function.  It may be %NULL, files of such a type can
- *          can be then loaded and saved only on explict request.
+ *          can be then loaded and saved only on explict user request.
  * @load: File load/import function.
  * @save: File save function.
  * @export_: File export function.
