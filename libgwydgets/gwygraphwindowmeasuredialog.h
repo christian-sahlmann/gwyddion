@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*< private_header >*/
+
 #ifndef __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__
 #define __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__
 
