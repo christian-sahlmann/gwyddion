@@ -16,32 +16,165 @@
   </refnamediv>
 
   <refsect1>
-    <title>File Module Registration</title>
+    <title>Overview</title>
     <para>
-      To be written.
+      File modules implement loading and saving of files.
     </para>
-  </refsect1>
+    <informalexample><programlisting>
+&num;include &lt;string.h&gt;
+&num;include &lt;stdio.h&gt;
+&num;include &lt;glib/gstdio.h&gt;
+&num;include &lt;libgwyddion/gwymacros.h&gt;
+&num;include &lt;libgwyddion/gwymath.h&gt;
+&num;include &lt;libprocess/stats.h&gt;
+&num;include &lt;libgwymodule/gwymodule-file.h&gt;
+&num;include &lt;app/gwyapp.h&gt;
 
-  <refsect1>
-    <title>File Type Modules</title>
-    <para>
-      File type modules implement loading and saving of files.  They are
-      quite similar to data processing modules.   The function info
-      (<link linkend="libgwymodule-gwymodule-file-GwyFileFuncInfo">GwyFileFuncInfo</link>)
-      contains pointers to three functions instead of one: loading, saving
-      and file type detection.  You don't have to implement all, just
-      set the unimplemented members to <literal>NULL</literal>.  If
-      detection is not implemented, files of this type are loaded or
-      saved only when user explicitely requests it from the Import or Export
-      menu.
-    </para>
-    <para>
-      The loading function gets a file name and returns a container with
-      data from the file; conversely, the saving function gets a container
-      and a file name and writes the data from the container to the file.
-      The exact signatures of the functions are described in the
-      <link linkend="libgwymodule-gwymodule-file">reference</link> part.
-    </para>
+&num;include "err.h"
+&num;include "get.h"
+
+&num;define EXTENSION ".ssd"
+
+&num;define MAGIC "SMPL"
+&num;define MAGIC_SIZE (sizeof(MAGIC) - 1)
+
+enum { HEADER_SIZE = MAGIC_SIZE + 2*2 + 3*4 };
+
+typedef struct {
+    guint xres;
+    guint yres;
+    gdouble measure;
+    gdouble z0;
+    gdouble gain;
+} SimpleFile;
+
+static gboolean      module_register(void);
+static gint          simple_detect  (const GwyFileDetectInfo *fileinfo,
+                                     gboolean only_name);
+static GwyContainer* simple_load    (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+static gboolean      simple_export  (GwyContainer *data,
+                                     const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &amp;module_register,
+    N_("Imports simple data files."),
+    "J. Random Hacker &lt;hacker.jr&commat;example.org&gt;",
+    "1.0",
+    "Bittwiddle Inc.",
+    "2006",
+};
+<![CDATA[
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(void)
+{
+    gwy_file_func_register("simple",
+                           N_("Simple AFM files (.afm)"),
+                           (GwyFileDetectFunc)&simple_detect,
+                           (GwyFileLoadFunc)&simple_load,
+                           NULL,
+                           (GwyFileSaveFunc)&simple_export);
+
+    return TRUE;
+}
+
+static gint
+simple_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name)
+{
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
+
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
+        return 100;
+
+    return 0;
+}
+
+static GwyContainer*
+simple_load(const gchar *filename,
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
+{
+    SimpleFile simple;
+    GwyContainer *container = NULL;
+    GwySIUnit *unit;
+    GwyDataField *dfield;
+    guchar *buffer;
+    const guchar *p;
+    GError *err = NULL;
+    gsize size, expected_size;
+    const guint16 *rawdata;
+    gdouble *data;
+    gint i;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    if (size <= HEADER_SIZE) {
+        err_TOO_SHORT(error);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
+        err_FILE_TYPE(error, "Simple");
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    p = buffer + MAGIC_SIZE;
+    simple.xres = get_WORD_LE(&p);
+    simple.yres = get_WORD_LE(&p);
+    simple.measure = get_FLOAT_LE(&p);
+    simple.z0 = get_FLOAT_LE(&p);
+    simple.gain = get_FLOAT_LE(&p);
+
+    expected_size = 2*simple.xres*simple.yres + HEADER_SIZE;
+    if (size != expected_size) {
+        err_SIZE_MISMATCH(error, expected_size, size);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    dfield = gwy_data_field_new(simple.xres, simple.yres,
+                                simple.xres*simple.measure,
+                                simple.yres*simple.measure,
+                                FALSE);
+    data = gwy_data_field_get_data(dfield);
+    rawdata = (const guint16*)p;
+    for (i = 0; i < simple.xres*simple.yres; i++)
+        data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
+
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, unit);
+    g_object_unref(unit);
+
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, unit);
+    g_object_unref(unit);
+
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup("Topography"));
+    g_object_unref(dfield);
+
+    gwy_file_abandon_contents(buffer, size, NULL);
+
+    return container;
+}
+]]></programlisting></informalexample>
   </refsect1>
 </refentry>
 
