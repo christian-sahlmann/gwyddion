@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*< private_header >*/
+
 #ifndef __GWY_TEST_SER_H__
 #define __GWY_TEST_SER_H__
 

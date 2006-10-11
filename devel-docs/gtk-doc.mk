@@ -64,7 +64,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	@-chmod -R u+w $(srcdir)
 	if test "x$(TYPES_INCLUDE)" != x; then \
 	    echo "$(TYPES_INCLUDE)"; \
-	    IGNORE_HFILES="$(IGNORE_HFILES)" $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
+	    $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
 	fi >$(srcdir)/$(DOC_MODULE).types
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types >/dev/null 2>&1 ; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
