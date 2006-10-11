@@ -1,5 +1,7 @@
 /* This is a private header for now, may require clean-up before publishing */
 
+/*< private_header >*/
+
 #ifndef __GWY_MORPH_LIB_H__
 #define __GWY_MORPH_LIB_H__
 
