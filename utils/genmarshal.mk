@@ -28,18 +28,18 @@ CLEANFILES += \
 
 if MAINTAINER_MODE
 genmarshal_self = $(top_srcdir)/utils/genmarshal.mk
-genmarshal_stamp_files = stamp-$(GENMARSHAL_NAME).h
+genmarshal_stamp_files = $(GENMARSHAL_NAME).h.stamp
 
 MAINTAINERCLEANFILES += $(genmarshal_built_sources) $(genmarshal_stamp_files)
 
 BUILT_SOURCES += $(genmarshal_built_sources)
 
-$(GENMARSHAL_NAME).h: stamp-$(GENMARSHAL_NAME).h
+$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).h.stamp
 	@true
 
 # XXX: Add G_GNUC_INTERNAL manually, glib-genmarshal can do it, but too new
 # version is required (2.13+)
-stamp-$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).list $(genmarshal_self)
+$(GENMARSHAL_NAME).h.stamp: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	$(GLIB_GENMARSHAL) --header --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
 		| sed -e 's/^extern /G_GNUC_INTERNAL /' \
@@ -47,7 +47,7 @@ stamp-$(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	&& ( cmp -s $(GENMARSHAL_NAME).h.xgen $(GENMARSHAL_NAME).h \
 		|| cp $(GENMARSHAL_NAME).h.xgen $(GENMARSHAL_NAME).h) \
 	&& rm -f $(GENMARSHAL_NAME).h.xgen \
-	&& echo timestamp >stamp-$(GENMARSHAL_NAME).h
+	&& echo timestamp >$(GENMARSHAL_NAME).h.stamp
 
 $(GENMARSHAL_NAME).c: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	echo '#include "$(GENMARSHAL_NAME).h"' >$(GENMARSHAL_NAME).c.xgen \
