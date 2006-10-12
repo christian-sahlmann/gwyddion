@@ -286,27 +286,27 @@ typedef struct {
     gint32 max;
 } PsiHeader;
 
-static gboolean      module_register(void);
-static gint          psi_detect     (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* psi_load       (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static gboolean      psi_read_header(const guchar *buffer,
-                                     gsize size,
-                                     PsiHeader *header,
-                                     GError **error);
-static GArray*       hdf4_read_tags (const guchar *buffer,
-                                     gsize size,
-                                     GError **error);
+static gboolean      module_register   (void);
+static gint          psi_detect        (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static GwyContainer* psi_load          (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static gboolean      psi_read_header   (const guchar *buffer,
+                                        gsize size,
+                                        PsiHeader *header,
+                                        GError **error);
+static GArray*       hdf4_read_tags    (const guchar *buffer,
+                                        gsize size,
+                                        GError **error);
+static GwyContainer* psi_get_metadadata(const PsiHeader *header);
 
 #ifdef DEBUG
-static guint         get_data_type_size(HDF4TypeInfo id,
-                                        GError **error);
-static HDF4TypeInfo  map_number_type(guint32 number_type);
-
-static gchar*        hdf4_describe_tag(const HDF4DataDescriptor *desc);
-static gchar*        hdf4_describe_data_type(HDF4TypeInfo id);
+static guint        get_data_type_size     (HDF4TypeInfo id,
+                                            GError **error);
+static HDF4TypeInfo map_number_type        (guint32 number_type);
+static gchar*       hdf4_describe_tag      (const HDF4DataDescriptor *desc);
+static gchar*       hdf4_describe_data_type(HDF4TypeInfo id);
 #endif
 
 static GwyModuleInfo module_info = {
@@ -454,6 +454,7 @@ psi_load(const gchar *filename,
     }
 
     if (header && data && !fail) {
+        GwyContainer *meta;
         GwyDataField *dfield;
         GwySIUnit *siunit;
         gint power10;
@@ -484,6 +485,10 @@ psi_load(const gchar *filename,
         if (header->title[0])
             gwy_container_set_string_by_name(container, "/0/data/title",
                                              g_strdup(header->title));
+
+        meta = psi_get_metadadata(header);
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -554,6 +559,36 @@ psi_read_header(const guchar *buffer,
     header->max = get_WORD_LE(&p);
 
     return TRUE;
+}
+
+static GwyContainer*
+psi_get_metadadata(const PsiHeader *header)
+{
+    GwyContainer *meta;
+
+    meta = gwy_container_new();
+
+    gwy_container_set_string_by_name(meta, "Set point",
+                                     g_strdup_printf("%g %s",
+                                                     header->set_point,
+                                                     header->set_point_unit));
+    gwy_container_set_string_by_name(meta, "Sample bias",
+                                     g_strdup_printf("%g V",
+                                                     header->sample_bias));
+    gwy_container_set_string_by_name(meta, "Tip bias",
+                                     g_strdup_printf("%g V",
+                                                     header->tip_bias));
+    gwy_container_set_string_by_name(meta, "Instrument",
+                                     g_strdup_printf("%s",
+                                                     header->instrument));
+    gwy_container_set_string_by_name(meta, "Rotation",
+                                     g_strdup_printf("%g deg",
+                                                     header->rotation));
+    gwy_container_set_string_by_name(meta, "Scan speed",
+                                     g_strdup_printf("%g lines/s",
+                                                     header->lines_per_sec));
+
+    return meta;
 }
 
 static GArray*
