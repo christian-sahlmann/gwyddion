@@ -28,7 +28,7 @@ CLEANFILES += \
 	$(MKENUM_NAME).h.xgen
 
 if MAINTAINER_MODE
-mkenum_stamp_files = $(MKENUM_NAME).h.stamo
+mkenum_stamp_files = $(MKENUM_NAME).h.stamp
 mkenum_self = $(top_srcdir)/utils/mkenum.mk
 
 MAINTAINERCLEANFILES += $(mkenum_built_sources) $(mkenum_stamp_files)
