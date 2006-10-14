@@ -37,29 +37,28 @@ typedef struct {
     GwyFileOperationType fileop;
 } TypeListData;
 
-static void       gwy_app_file_chooser_finalize      (GObject *object);
-static GtkWidget* gwy_app_file_chooser_new_valist    (const gchar *title,
-                                                      GtkWindow *parent,
-                                                      GtkFileChooserAction action,
-                                                      const gchar *backend,
-                                                      const gchar *first_btn_text,
-                                                      va_list varargs);
-static void       gwy_app_file_chooser_setup_filter  (GwyAppFileChooser *chooser);
-static gboolean   gwy_app_file_chooser_open_filter   (const GtkFileFilterInfo *filter_info,
-                                                      gpointer data);
-static gboolean   gwy_app_file_chooser_save_filter   (const GtkFileFilterInfo *filter_info,
-                                                      gpointer data);
-static void       gwy_app_file_chooser_add_type      (const gchar *name,
-                                                      TypeListData *data);
-static gint       gwy_app_file_chooser_type_compare  (gconstpointer a,
-                                                      gconstpointer b);
-static void       gwy_app_file_chooser_add_types     (GtkListStore *store,
-                                                      GwyFileOperationType fileop);
-static void       gwy_app_file_chooser_add_type_list (GwyAppFileChooser *chooser);
-static void       gwy_app_file_chooser_type_changed  (GwyAppFileChooser *chooser,
-                                                      GtkTreeSelection *selection);
-static void       gwy_app_file_chooser_filter_toggled(GwyAppFileChooser *chooser,
-                                                      GtkCheckButton *check);
+static void       gwy_app_file_chooser_finalize       (GObject *object);
+static GtkWidget* gwy_app_file_chooser_new_valist     (const gchar *title,
+                                                       GtkWindow *parent,
+                                                       GtkFileChooserAction action,
+                                                       const gchar *backend,
+                                                       const gchar *first_btn_text,
+                                                       va_list varargs);
+static void       gwy_app_file_chooser_setup_filter   (GwyAppFileChooser *chooser);
+static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
+                                                       gpointer userdata);
+static void       gwy_app_file_chooser_add_type       (const gchar *name,
+                                                       TypeListData *data);
+static gint       gwy_app_file_chooser_type_compare   (gconstpointer a,
+                                                       gconstpointer b);
+static void       gwy_app_file_chooser_add_types      (GtkListStore *store,
+                                                       GwyFileOperationType fileop);
+static void       gwy_app_file_chooser_add_type_list  (GwyAppFileChooser *chooser);
+static void       gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser);
+static void       gwy_app_file_chooser_type_changed   (GwyAppFileChooser *chooser,
+                                                       GtkTreeSelection *selection);
+static void       gwy_app_file_chooser_filter_toggled (GwyAppFileChooser *chooser,
+                                                       GtkToggleButton *check);
 
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
@@ -78,6 +77,11 @@ _gwy_app_file_chooser_init(GwyAppFileChooser *chooser)
     chooser->filter = gtk_file_filter_new();
     g_object_ref(chooser->filter);
     gtk_object_sink(GTK_OBJECT(chooser->filter));
+
+    chooser->no_filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(chooser->no_filter, "*");
+    g_object_ref(chooser->no_filter);
+    gtk_object_sink(GTK_OBJECT(chooser->no_filter));
 }
 
 static void
@@ -202,11 +206,7 @@ gwy_app_file_chooser_setup_filter(GwyAppFileChooser *chooser)
         break;
 
         case GTK_FILE_CHOOSER_ACTION_SAVE:
-        gtk_file_filter_add_custom(chooser->filter,
-                                   GTK_FILE_FILTER_FILENAME,
-                                   gwy_app_file_chooser_save_filter,
-                                   chooser,
-                                   NULL);
+        /* Nothing? */
         break;
 
         default:
@@ -287,26 +287,54 @@ _gwy_app_file_chooser_get_selected_type(GwyAppFileChooser *chooser)
 }
 
 static void
-gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
-                                  GtkTreeSelection *selection)
+gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser)
 {
+    GtkTreeSelection *selection;
     GtkTreeModel *model;
     GtkTreeIter iter;
-    gchar *label, *name;
+    gchar *name, *label;
 
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(chooser->type_list));
     if (!gtk_tree_selection_get_selected(selection, &model, &iter))
-        return;
-    gtk_tree_model_get(model, &iter, COLUMN_LABEL, &name, -1);
-    label = g_strdup_printf(_("File _type: %s"), name);
+        name = g_strdup("???");
+    else
+        gtk_tree_model_get(model, &iter, COLUMN_LABEL, &name, -1);
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chooser->filter_enable)))
+        label = g_strdup_printf(_("File _type: %s, filtered"), name);
+    else
+        label = g_strdup_printf(_("File _type: %s"), name);
     g_free(name);
+
     gtk_expander_set_label(GTK_EXPANDER(chooser->expander), label);
     g_free(label);
 }
 
 static void
-gwy_app_file_chooser_filter_toggled(GwyAppFileChooser *chooser,
-                                    GtkCheckButton *check)
+gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
+                                  GtkTreeSelection *selection)
 {
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+    g_free(chooser->filetype);
+    gtk_tree_model_get(model, &iter, COLUMN_FILETYPE, &chooser->filetype, -1);
+    gwy_app_file_chooser_update_expander(chooser);
+}
+
+static void
+gwy_app_file_chooser_filter_toggled(GwyAppFileChooser *chooser,
+                                    GtkToggleButton *check)
+{
+    if (gtk_toggle_button_get_active(check))
+        gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
+                                    chooser->filter);
+    else
+        gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
+                                    chooser->no_filter);
+    gwy_app_file_chooser_update_expander(chooser);
 }
 
 static void
@@ -403,20 +431,25 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
     gwy_app_file_chooser_type_changed(chooser, selection);
 }
 
-/* TODO */
 static gboolean
 gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
-                                 gpointer data)
+                                 gpointer userdata)
 {
-    return TRUE;
-}
+    GwyAppFileChooser *chooser;
+    const gchar *name;
 
-/* TODO */
-static gboolean
-gwy_app_file_chooser_save_filter(const GtkFileFilterInfo *filter_info,
-                                 gpointer data)
-{
-    return TRUE;
+    chooser = GWY_APP_FILE_CHOOSER(userdata);
+    if (chooser->filetype && *chooser->filetype)
+        return gwy_file_func_run_detect(chooser->filetype,
+                                        filter_info->filename,
+                                        FALSE);
+
+    name = gwy_file_detect(filter_info->filename,
+                           FALSE,
+                           GWY_FILE_OPERATION_LOAD);
+    /* XXX: Dirty hack to filter out "rawfile" module which makes everything
+     * importable */
+    return name != NULL && !gwy_strequal(name, "rawfile");
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
