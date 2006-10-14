@@ -27,6 +27,8 @@
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwygraphwindow.h>
 
+#include <app/gwyappfilechooser.h>
+
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL

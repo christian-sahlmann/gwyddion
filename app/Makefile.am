@@ -29,6 +29,7 @@ libgwyapp2include_HEADERS = \
 
 noinst_HEADERS = \
 	authors.h \
+	gwyappfilechooser.h \
 	gwyappinternal.h \
 	gwyddion.h
 
@@ -70,6 +71,7 @@ libgwyapp2_la_SOURCES = \
 	funcuse.c \
 	glmaterial-editor.c \
 	gradient-editor.c \
+	gwyappfilechooser.c \
 	gwyapptypes.c \
 	gwyplaintool.c \
 	gwytool.c \

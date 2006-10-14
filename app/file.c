@@ -29,22 +29,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <gtk/gtk.h>
 #include <app/gwyapp.h>
-
-enum {
-    COLUMN_FILETYPE,
-    COLUMN_LABEL
-};
-
-typedef struct {
-    GSList *list;
-    GwyFileOperationType fileop;
-} TypeListData;
-
-static void       gwy_app_file_add_types         (GtkListStore *store,
-                                                  GwyFileOperationType fileop);
-static void       gwy_app_file_select_type       (GtkWidget *selector);
-static gchar*     gwy_app_file_get_and_store_type(GtkWidget *selector);
-static GtkWidget* gwy_app_file_types_new         (GtkFileChooserAction action);
+#include "gwyappfilechooser.h"
 
 static gchar *current_dir = NULL;
 
@@ -218,27 +203,25 @@ gwy_app_file_load(const gchar *filename_utf8,
 void
 gwy_app_file_open(void)
 {
-    GtkWidget *dialog, *types;
+    GtkWidget *dialog;
     GSList *filenames = NULL, *l;
     gchar *name;
     gint response;
 
-    dialog = gtk_file_chooser_dialog_new(_("Open File"), NULL,
-                                         GTK_FILE_CHOOSER_ACTION_OPEN,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OPEN, GTK_RESPONSE_OK,
-                                         NULL);
+    dialog = _gwy_app_file_chooser_new(_("Open File"), NULL,
+                                       GTK_FILE_CHOOSER_ACTION_OPEN,
+                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                       GTK_STOCK_OPEN, GTK_RESPONSE_OK,
+                                       NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(dialog), TRUE);
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     /* XXX: UTF-8 conversion missing */
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
-    types = gwy_app_file_types_new(GTK_FILE_CHOOSER_ACTION_OPEN);
-    gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(dialog), types);
 
     response = gtk_dialog_run(GTK_DIALOG(dialog));
-    name = gwy_app_file_get_and_store_type(types);
+    name = _gwy_app_file_chooser_get_selected_type(GWY_APP_FILE_CHOOSER(dialog));
     if (response == GTK_RESPONSE_OK)
         filenames = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog));
     gtk_widget_destroy(dialog);
@@ -410,7 +393,7 @@ gwy_app_file_save(void)
 void
 gwy_app_file_save_as(void)
 {
-    GtkWidget *dialog, *types;
+    GtkWidget *dialog;
     gchar *name = NULL, *filename_sys = NULL, *filename_utf8;
     gint response;
     GwyContainer *data;
@@ -419,11 +402,11 @@ gwy_app_file_save_as(void)
     g_return_if_fail(data);
     gwy_file_get_data_info(data, NULL, (const gchar**)&filename_sys);
 
-    dialog = gtk_file_chooser_dialog_new(_("Save File"), NULL,
-                                         GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                         NULL);
+    dialog = _gwy_app_file_chooser_new(_("Save File"), NULL,
+                                       GTK_FILE_CHOOSER_ACTION_SAVE,
+                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                       GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                       NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     /* XXX: UTF-8 conversion missing */
@@ -437,13 +420,11 @@ gwy_app_file_save_as(void)
         g_free(filename_utf8);
         g_free(filename_sys);
     }
-    types = gwy_app_file_types_new(GTK_FILE_CHOOSER_ACTION_SAVE);
-    gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(dialog), types);
 
     filename_sys = NULL;
     while (TRUE) {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
-        name = gwy_app_file_get_and_store_type(types);
+        name = _gwy_app_file_chooser_get_selected_type(GWY_APP_FILE_CHOOSER(dialog));
         if (response != GTK_RESPONSE_OK)
             break;
 
@@ -515,210 +496,6 @@ gwy_app_file_confirm_overwrite(GtkWidget *chooser)
     gtk_widget_destroy(dialog);
 
     return response == GTK_RESPONSE_YES;
-}
-
-/*** Common ****************************************************************/
-
-static void
-gwy_app_file_add_type(const gchar *name,
-                      TypeListData *data)
-{
-    if (!(gwy_file_func_get_operations(name) & data->fileop))
-        return;
-
-    data->list = g_slist_prepend(data->list, (gpointer)name);
-}
-
-static gint
-gwy_app_file_type_compare(gconstpointer a,
-                          gconstpointer b)
-{
-    return g_utf8_collate(_(gwy_file_func_get_description((const gchar*)a)),
-                          _(gwy_file_func_get_description((const gchar*)b)));
-}
-
-static void
-gwy_app_file_add_types(GtkListStore *store,
-                       GwyFileOperationType fileop)
-{
-    TypeListData tldata;
-    GtkTreeIter iter;
-    GSList *l;
-
-    tldata.list = NULL;
-    tldata.fileop = fileop;
-    gwy_file_func_foreach((GFunc)gwy_app_file_add_type, &tldata);
-    tldata.list = g_slist_sort(tldata.list, gwy_app_file_type_compare);
-
-    for (l = tldata.list; l; l = g_slist_next(l)) {
-        gtk_list_store_insert_with_values
-                (store, &iter, G_MAXINT,
-                 COLUMN_FILETYPE, l->data,
-                 COLUMN_LABEL, gettext(gwy_file_func_get_description(l->data)),
-                 -1);
-    }
-
-    g_slist_free(tldata.list);
-}
-
-/**
- * gwy_app_file_select_type:
- * @selector: File type selection widget.
- *
- * Selects the same file type as the last time.
- *
- * If no information about last selection is available or the type is not
- * present any more, first combo item is selected.
- **/
-static void
-gwy_app_file_select_type(GtkWidget *selector)
-{
-    GtkWidget *types;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    const guchar *name;
-    gboolean ok;
-    gchar *s;
-    GQuark key;
-
-    types = g_object_get_data(G_OBJECT(selector), "combo");
-    g_return_if_fail(GTK_IS_COMBO_BOX(types));
-    key = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(selector), "key"));
-    g_return_if_fail(key);
-
-    ok = gwy_container_gis_string(gwy_app_settings_get(), key, &name);
-    if (!ok) {
-        gtk_combo_box_set_active(GTK_COMBO_BOX(types), 0);
-        return;
-    }
-
-    model = gtk_combo_box_get_model(GTK_COMBO_BOX(types));
-    if (!gtk_tree_model_get_iter_first(model, &iter)) {
-        gtk_combo_box_set_active(GTK_COMBO_BOX(types), 0);
-        return;
-    }
-
-    do {
-        gtk_tree_model_get(model, &iter, COLUMN_FILETYPE, &s, -1);
-        ok = gwy_strequal(name, s);
-        g_free(s);
-        if (ok) {
-            gtk_combo_box_set_active_iter(GTK_COMBO_BOX(types), &iter);
-            return;
-        }
-    } while (gtk_tree_model_iter_next(model, &iter));
-
-    gtk_combo_box_set_active(GTK_COMBO_BOX(types), 0);
-}
-
-/**
- * gwy_app_file_get_and_store_type:
- * @selector: File type selection widget.
- *
- * Stores selected file type to settings and returns it.
- *
- * Returns: The selected file type name as a new string that must be freed
- *          by caller.  If nothing is selected (should not happen) or empty
- *          (automatic) file type is selected, %NULL is returned.
- **/
-static gchar*
-gwy_app_file_get_and_store_type(GtkWidget *selector)
-{
-    GtkWidget *types;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gchar *s;
-    GQuark key;
-
-    types = g_object_get_data(G_OBJECT(selector), "combo");
-    g_return_val_if_fail(GTK_IS_COMBO_BOX(types), NULL);
-    key = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(selector), "key"));
-    g_return_val_if_fail(key, NULL);
-
-    if (!(gtk_combo_box_get_active_iter(GTK_COMBO_BOX(types), &iter)))
-        return NULL;
-    model = gtk_combo_box_get_model(GTK_COMBO_BOX(types));
-    gtk_tree_model_get(model, &iter, COLUMN_FILETYPE, &s, -1);
-    if (!*s) {
-        g_free(s);
-        gwy_container_remove(gwy_app_settings_get(), key);
-        s = NULL;
-    }
-    else
-        gwy_container_set_string(gwy_app_settings_get(), key, g_strdup(s));
-
-    return s;
-}
-
-/**
- * gwy_app_file_types_new:
- * @action: File operation (only %GTK_FILE_CHOOSER_ACTION_OPEN and
- *          %GTK_FILE_CHOOSER_ACTION_SAVE are allowed).
- *
- * Creates file type selection widget for given action.
- *
- * Returns: A new file type selection widget.  Nothing should be assumed
- *          about its type, only gwy_app_file_get_and_store_type() and
- *          gwy_app_file_select_type() can be used to access it.
- **/
-static GtkWidget*
-gwy_app_file_types_new(GtkFileChooserAction action)
-{
-    GtkWidget *types, *hbox, *label;
-    GtkCellRenderer *renderer;
-    GtkListStore *store;
-    GtkTreeIter iter;
-    GQuark key;
-
-    store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-    gtk_list_store_append(store, &iter);
-    switch (action) {
-        case GTK_FILE_CHOOSER_ACTION_SAVE:
-        key = g_quark_from_static_string("/app/file/save/type");
-        gtk_list_store_set(store, &iter,
-                           COLUMN_FILETYPE, "",
-                           COLUMN_LABEL, _("Automatic by extension"),
-                           -1);
-        gwy_app_file_add_types(store, GWY_FILE_OPERATION_SAVE);
-        gwy_app_file_add_types(store, GWY_FILE_OPERATION_EXPORT);
-        break;
-
-        case GTK_FILE_CHOOSER_ACTION_OPEN:
-        key = g_quark_from_static_string("/app/file/load/type");
-        gtk_list_store_set(store, &iter,
-                           COLUMN_FILETYPE, "",
-                           COLUMN_LABEL, _("Automatically detected"),
-                           -1);
-        gwy_app_file_add_types(store, GWY_FILE_OPERATION_LOAD);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    /* TODO: This needs usability improvements */
-    types = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
-    g_object_unref(store);
-    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(types), 1);
-
-    renderer = gtk_cell_renderer_text_new();
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(types), renderer, TRUE);
-    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(types), renderer,
-                                  "text", COLUMN_LABEL);
-
-    hbox = gtk_hbox_new(FALSE, 8);
-    label = gtk_label_new_with_mnemonic(_("File _type:"));
-    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), types, TRUE, TRUE, 0);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), types);
-
-    g_object_set_data(G_OBJECT(hbox), "combo", types);
-    g_object_set_data(G_OBJECT(hbox), "key", GUINT_TO_POINTER(key));
-    gwy_app_file_select_type(hbox);
-    gtk_widget_show_all(hbox);
-
-    return hbox;
 }
 
 /************************** Documentation ****************************/
