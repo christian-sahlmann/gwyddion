@@ -41,6 +41,7 @@ struct _GwyAppFileChooser {
     GtkFileChooserDialog parent_instance;
 
     GQuark type_key;
+    const gchar *prefix;
     gchar *filetype;
 
     GtkFileFilter *filter;
