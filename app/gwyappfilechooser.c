@@ -306,7 +306,8 @@ gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser)
     else
         gtk_tree_model_get(model, &iter, COLUMN_LABEL, &name, -1);
 
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chooser->filter_enable)))
+    if (chooser->filter_enable
+        && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chooser->filter_enable)))
         label = g_strdup_printf(_("File _type: %s, filtered"), name);
     else
         label = g_strdup_printf(_("File _type: %s"), name);
