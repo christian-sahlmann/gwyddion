@@ -59,11 +59,7 @@ GType      _gwy_app_file_chooser_get_type         (void) G_GNUC_CONST;
 
 
 G_GNUC_INTERNAL
-GtkWidget* _gwy_app_file_chooser_new              (const gchar *title,
-                                                   GtkWindow *parent,
-                                                   GtkFileChooserAction action,
-                                                   const gchar *first_btn_text,
-                                                   ...);
+GtkWidget* _gwy_app_file_chooser_get              (GtkFileChooserAction action);
 
 G_GNUC_INTERNAL
 gchar*     _gwy_app_file_chooser_get_selected_type(GwyAppFileChooser *chooser);

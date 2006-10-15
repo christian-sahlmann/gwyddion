@@ -208,14 +208,7 @@ gwy_app_file_open(void)
     gchar *name;
     gint response;
 
-    dialog = _gwy_app_file_chooser_new(_("Open File"), NULL,
-                                       GTK_FILE_CHOOSER_ACTION_OPEN,
-                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                       GTK_STOCK_OPEN, GTK_RESPONSE_OK,
-                                       NULL);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(dialog), TRUE);
-    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
+    dialog = _gwy_app_file_chooser_get(GTK_FILE_CHOOSER_ACTION_OPEN);
     /* XXX: UTF-8 conversion missing */
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
@@ -224,7 +217,7 @@ gwy_app_file_open(void)
     name = _gwy_app_file_chooser_get_selected_type(GWY_APP_FILE_CHOOSER(dialog));
     if (response == GTK_RESPONSE_OK)
         filenames = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog));
-    gtk_widget_destroy(dialog);
+    gtk_widget_hide(dialog);
 
     for (l = filenames; l; l = g_slist_next(l)) {
         gwy_app_file_load(NULL, (const gchar*)l->data, name);
@@ -402,13 +395,7 @@ gwy_app_file_save_as(void)
     g_return_if_fail(data);
     gwy_file_get_data_info(data, NULL, (const gchar**)&filename_sys);
 
-    dialog = _gwy_app_file_chooser_new(_("Save File"), NULL,
-                                       GTK_FILE_CHOOSER_ACTION_SAVE,
-                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                       GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                       NULL);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
+    dialog = _gwy_app_file_chooser_get(GTK_FILE_CHOOSER_ACTION_SAVE);
     /* XXX: UTF-8 conversion missing */
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
@@ -436,7 +423,7 @@ gwy_app_file_save_as(void)
         g_free(filename_sys);
         filename_sys = NULL;
     }
-    gtk_widget_destroy(dialog);
+    gtk_widget_hide(dialog);
     g_free(filename_sys);
     g_free(name);
 }

@@ -38,12 +38,6 @@ typedef struct {
 } TypeListData;
 
 static void       gwy_app_file_chooser_finalize       (GObject *object);
-static GtkWidget* gwy_app_file_chooser_new_valist     (const gchar *title,
-                                                       GtkWindow *parent,
-                                                       GtkFileChooserAction action,
-                                                       const gchar *backend,
-                                                       const gchar *first_btn_text,
-                                                       va_list varargs);
 static void       gwy_app_file_chooser_setup_filter   (GwyAppFileChooser *chooser);
 static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
                                                        gpointer userdata);
@@ -62,6 +56,9 @@ static void       gwy_app_file_chooser_filter_toggled (GwyAppFileChooser *choose
 
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
+
+static GtkWidget *instance_open = NULL;
+static GtkWidget *instance_save = NULL;
 
 static void
 _gwy_app_file_chooser_class_init(GwyAppFileChooserClass *klass)
@@ -138,48 +135,57 @@ gwy_app_file_chooser_add_types(GtkListStore *store,
 }
 
 GtkWidget*
-_gwy_app_file_chooser_new(const gchar *title,
-                          GtkWindow *parent,
-                          GtkFileChooserAction action,
-                          const gchar *first_btn_text,
-                          ...)
+_gwy_app_file_chooser_get(GtkFileChooserAction action)
 {
-    GtkWidget *chooser;
-    va_list ap;
+    GtkDialog *dialog;
+    GtkWidget *chooser, **instance;
+    const char *label, *title;
 
-    va_start(ap, first_btn_text);
-    chooser = gwy_app_file_chooser_new_valist(title, parent, action, NULL,
-                                              first_btn_text, ap);
-    va_end(ap);
+    switch (action) {
+        case GTK_FILE_CHOOSER_ACTION_OPEN:
+        instance = &instance_open;
+        title = _("Open File");
+        break;
 
-    return chooser;
-}
+        case GTK_FILE_CHOOSER_ACTION_SAVE:
+        instance = &instance_save;
+        title = _("Save File");
+        break;
 
-static GtkWidget*
-gwy_app_file_chooser_new_valist(const gchar *title,
-                                GtkWindow *parent,
-                                GtkFileChooserAction action,
-                                const gchar *backend,
-                                const gchar *first_btn_text,
-                                va_list ap)
-{
-    GtkWidget *chooser;
-    const char *label;
-    gint response;
+        default:
+        g_return_val_if_reached(NULL);
+        break;
+    }
+
+    if (*instance)
+        return *instance;
 
     chooser = g_object_new(GWY_TYPE_APP_FILE_CHOOSER,
                            "title", title,
                            "action", action,
-                           "file-system-backend", backend,
                            NULL);
+    *instance = chooser;
+    g_object_add_weak_pointer(G_OBJECT(chooser), (gpointer*)instance);
+    dialog = GTK_DIALOG(chooser);
 
-    if (parent)
-        gtk_window_set_transient_for(GTK_WINDOW(chooser), parent);
+    gtk_dialog_add_button(dialog, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    switch (action) {
+        case GTK_FILE_CHOOSER_ACTION_OPEN:
+        gtk_dialog_add_button(dialog, GTK_STOCK_OPEN, GTK_RESPONSE_OK);
+        gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(chooser), TRUE);
+        break;
 
-    for (label = first_btn_text; label; label = va_arg(ap, const gchar*)) {
-        response = va_arg(ap, gint);
-        gtk_dialog_add_button(GTK_DIALOG(chooser), label, response);
+        case GTK_FILE_CHOOSER_ACTION_SAVE:
+        gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, GTK_RESPONSE_OK);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
     }
+
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
 
     gwy_app_file_chooser_setup_filter(GWY_APP_FILE_CHOOSER(chooser));
     gwy_app_file_chooser_add_type_list(GWY_APP_FILE_CHOOSER(chooser));
