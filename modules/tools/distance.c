@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -75,13 +76,15 @@ static void   gwy_tool_distance_render_cell      (GtkCellLayout *layout,
                                                   GtkTreeModel *model,
                                                   GtkTreeIter *iter,
                                                   gpointer user_data);
+static gboolean gwy_tool_distance_list_key_press (GwyToolDistance *tool,
+                                                  GdkEventKey *event);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.2",
+    "2.3",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -175,6 +178,9 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     store = gwy_null_store_new(0);
     tool->model = GTK_TREE_MODEL(store);
     tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
+    g_signal_connect_swapped(tool->treeview, "key-press-event",
+                             G_CALLBACK(gwy_tool_distance_list_key_press),
+                             tool);
 
     for (i = 0; i < NCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
@@ -387,6 +393,31 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
         g_snprintf(buf, sizeof(buf), "%.3g", val);
 
     g_object_set(renderer, "text", buf, NULL);
+}
+
+static gboolean
+gwy_tool_distance_list_key_press(GwyToolDistance *tool,
+                                 GdkEventKey *event)
+{
+    GtkTreeSelection *selection;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gint *indices;
+
+    if (event->keyval == GDK_Delete) {
+        selection = gtk_tree_view_get_selection(tool->treeview);
+        if (gtk_tree_selection_get_selected(selection, NULL, &iter)) {
+            path = gtk_tree_model_get_path(tool->model, &iter);
+            indices = gtk_tree_path_get_indices(path);
+            gwy_selection_delete_object(GWY_PLAIN_TOOL(tool)->selection,
+                                        indices[0]);
+            gtk_tree_path_free(path);
+        }
+
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

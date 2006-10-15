@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -121,6 +122,8 @@ static void   gwy_tool_profile_separate_changed     (GtkToggleButton *check,
                                                      GwyToolProfile *tool);
 static void   gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
                                                      GwyToolProfile *tool);
+static gboolean gwy_tool_profile_list_key_press     (GwyToolProfile *tool,
+                                                     GdkEventKey *event);
 static void   gwy_tool_profile_apply                (GwyToolProfile *tool);
 
 static GwyModuleInfo module_info = {
@@ -128,7 +131,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -289,6 +292,8 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     store = gwy_null_store_new(0);
     tool->model = GTK_TREE_MODEL(store);
     tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
+    g_signal_connect_swapped(tool->treeview, "key-press-event",
+                             G_CALLBACK(gwy_tool_profile_list_key_press), tool);
 
     for (i = 0; i < NCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
@@ -680,6 +685,31 @@ gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
 {
     tool->args.interpolation = gwy_enum_combo_box_get_active(combo);
     gwy_tool_profile_update_all_curves(tool);
+}
+
+static gboolean
+gwy_tool_profile_list_key_press(GwyToolProfile *tool,
+                                GdkEventKey *event)
+{
+    GtkTreeSelection *selection;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gint *indices;
+
+    if (event->keyval == GDK_Delete) {
+        selection = gtk_tree_view_get_selection(tool->treeview);
+        if (gtk_tree_selection_get_selected(selection, NULL, &iter)) {
+            path = gtk_tree_model_get_path(tool->model, &iter);
+            indices = gtk_tree_path_get_indices(path);
+            gwy_selection_delete_object(GWY_PLAIN_TOOL(tool)->selection,
+                                        indices[0]);
+            gtk_tree_path_free(path);
+        }
+
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 static void
