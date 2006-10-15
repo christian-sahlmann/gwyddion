@@ -77,8 +77,10 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	cd $(srcdir) && \
 	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
 	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
-		${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	    ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-decl-list.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
 	fi
+	diff $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-sections.txt >/dev/null 2>&1 || \
+	    cat $(DOC_MODULE)-decl-list.txt >$(DOC_MODULE)-sections.txt
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
@@ -92,7 +94,7 @@ tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections
 	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE) --output-dir=$(srcdir)/template $(MKTMPL_OPTIONS)
 	for i in $(srcdir)/template/*.sgml; do \
 	  sed '2s/.*//' "$$i" >$(DOC_MODULE).rstmpl; \
-	    if diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1; then :; else \
+	    diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1 || \
 	      cat $(DOC_MODULE).rstmpl >"$$i"; \
 	    fi; \
 	  done; \
