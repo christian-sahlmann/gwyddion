@@ -44,8 +44,12 @@
     <xi:include href="xml/gwygraphlabel.xml"/>
     <xi:include href="xml/gwygraphdata.xml"/>
     <xi:include href="xml/gwygraphbasics.xml"/>
-    <xi:include href="xml/gwygraphselections.xml"/>
     <xi:include href="xml/gwygraphcorner.xml"/>
+    <xi:include href="xml/gwyselectiongraph1darea.xml"/>
+    <xi:include href="xml/gwyselectiongrapharea.xml"/>
+    <xi:include href="xml/gwyselectiongraphline.xml"/>
+    <xi:include href="xml/gwyselectiongraphpoint.xml"/>
+    <xi:include href="xml/gwyselectiongraphzoom.xml"/>
   </chapter>
 
   <chapter id="Widgets3D">
