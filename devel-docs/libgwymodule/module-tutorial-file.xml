@@ -18,7 +18,7 @@
   <refsect1>
     <title>Overview</title>
     <para>
-      File modules implement loading and saving of files.
+      File modules implement loading and saving of SPM files.
     </para>
     <informalexample><programlisting>
 &num;include &lt;string.h&gt;
@@ -54,10 +54,6 @@ static gint          simple_detect  (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* simple_load    (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
-static gboolean      simple_export  (GwyContainer *data,
-                                     const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -79,7 +75,7 @@ module_register(void)
                            (GwyFileDetectFunc)&simple_detect,
                            (GwyFileLoadFunc)&simple_load,
                            NULL,
-                           (GwyFileSaveFunc)&simple_export);
+                           NULL);
 
     return TRUE;
 }
@@ -175,6 +171,252 @@ simple_load(const gchar *filename,
     return container;
 }
 ]]></programlisting></informalexample>
+  </refsect1>
+
+  <refsect1>
+    <title>Administrative and Conventions</title>
+    <para>
+      Beside standard headers our module includes two special headers that
+      provide some common inline functions
+    </para>
+    <informalexample><programlisting>
+&num;include "err.h"
+&num;include "get.h"
+    </programlisting></informalexample>
+    <para>
+      They are located in <filename>modules/file</filename> for the use by
+      in-tree modules.  External modules can copy the headers or the
+      actually used functions to their source code.
+    </para>
+    <para>
+      Header <filename>err.h</filename> contains common error reporting
+      functions.  Its primary purpose it to ensure consistency of error
+      messages between file modules and ease translator's work.
+    </para>
+    <para id="module-tutorial-file-get-h">
+      Header <filename>get.h</filename> provides
+      <link linkend="module-tutorial-file-portability">portable</link>
+      functions for obtaining miscellaneous data types from byte buffers.  They
+      take a pointer to a byte buffer, read and return the value stored there
+      and advance the pointer to point after the value to faciliate sequential
+      reading.  For instance to obtain two 16bit big-endian integers and
+      a big-endian single-precission float number from a byte buffer at given
+      position one does
+    </para>
+    <informalexample><programlisting><![CDATA[
+guint i, j;
+gdouble f;
+const guchar *p;
+
+p = ...;
+i = get_WORD_BE(&p);
+j = get_WORD_BE(&p);
+f = get_FLOAT_BE(&p);
+]]></programlisting></informalexample>
+    <para>
+      Next we define a few convenience symbols: the file extension, the magic
+      header and its size, and header size
+    </para>
+    <informalexample><programlisting>
+&num;define EXTENSION ".ssd"
+
+&num;define MAGIC "SMPL"
+&num;define MAGIC_SIZE (sizeof(MAGIC) - 1)
+
+enum { HEADER_SIZE = MAGIC_SIZE + 2*2 + 3*4 };
+    </programlisting></informalexample>
+    <para>
+      We also define a structure representing the imported file.  It is a bit
+      superfluous in our module as we do not pass this information around, but
+      it is useful in many modules
+    </para>
+    <informalexample><programlisting><![CDATA[
+typedef struct {
+    guint xres;
+    guint yres;
+    gdouble measure;
+    gdouble z0;
+    gdouble gain;
+} SimpleFile;
+]]></programlisting></informalexample>
+  </refsect1>
+
+  <refsect1>
+    <title>Registration</title>
+    <para>
+      The feature registration is similar to data processing functions,
+      there are just no menu paths and stock icons, on the other hand there are
+      more functions the module can provide: one for each file operation.  Our
+      module implements only file detection and import therefore we pass
+      %NULL for the save and export functions.
+    </para>
+    <informalexample><programlisting><![CDATA[
+static gboolean
+module_register(void)
+{
+    gwy_file_func_register("simple",
+                           N_("Simple AFM files (.afm)"),
+                           (GwyFileDetectFunc)&simple_detect,
+                           (GwyFileLoadFunc)&simple_load,
+                           NULL,
+                           NULL);
+
+    return TRUE;
+}
+]]></programlisting></informalexample>
+    <para>
+      It is necessary to provide at least one of load, save and export
+      operations, otherwise the file type would be rejected.  It is highly
+      recommended to provide a detection function, although it is not
+      required.  If no detection function exists for a file type the user
+      has to always explicitly request the type to load and/or save files
+      in this format.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Detection</title>
+    <para>
+      There are two types of detection: on load when we have the file
+      available, and on save when the file does not exist and we know only
+      the requested file name.  They are differentiated by
+      <varname>only_name</varname> argument.  In both cases the detection
+      function gets a #GwyFileDetectInfo structure, but if
+      <varname>only_name</varname> is %FALSE, some fields are unset.
+    </para>
+    <informalexample><programlisting><![CDATA[
+static gint
+simple_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name)
+{
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
+
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
+        return 100;
+
+    return 0;
+}
+]]></programlisting></informalexample>
+    <para>
+      The latter case is usually trivial, we just compare the extension with
+      the normal extension of our file type.
+    </para>
+    <para>
+      The former case can be more complex.  File name does not tell us much
+      about file type: consider just the number of formats using extension
+      <filename>.afm</filename> (not talking about <filename>.dat</filename>
+      which can be essentially anything).  Therefore we use file names only
+      as the last resort and base the detection on actual file contents.
+    </para>
+    <para>
+      Many formats have well defined magic headers, precisely for the puropose
+      of easy detection.  If out format has one, we are lucky and the detection
+      code can look as simple as in the example.  To detect a particular
+      version or type of a file format a more detailed analysis is necessary,
+      but not substantially different from the simple case.
+    </para>
+    <para>
+      The most problematic case arises when the format has no detectable magic
+      header at all.  Often we can employ the following approach: read the
+      header data and check whether it makes sense if interpreted as our
+      file format.  For example we read the number of lines and pixels per
+      line, calculate expected file size and compare it to the real file size.
+      Or we read the physical dimensions and check they are positive (and
+      approximately of expected magnitude).  If our detection routine requires
+      significant processing or <structfield>head</structfield> and
+      <structfield>tail</structfield> are not sufficient and we have to open
+      the file ourselves, it is advisable to perform a quick check that can
+      eliminate most files that are <emphasis>not</emphasis> of our type first,
+      and then perform the sophisticated test only on the likely candidates.
+    </para>
+  </refsect1>
+
+  <refsect1 id="module-tutorial-file-portability">
+    <title>Portability</title>
+    <para>
+      Gwyddion runs on many platforms and can be compiled with various
+      compilers.  File import is the area most affected by the differences
+      between them, therefore certain care must be taken to make file modules
+      work across all platforms.
+    </para>
+    <refsect2>
+      <title>Text Data</title>
+      <para>
+        Text files can encode <emphasis>line ends</emphasis>
+        differently from the platform Gwyddion is running on.  Therefore
+        opening files as text may lead to unexpected results.  One usually
+        opens all files as binary and uses gwy_str_next_line () to parse text
+        files (or text parts of files) to lines.
+      </para>
+      <para>
+        The text representation of <emphasis>real numbers</emphasis> is
+        local-dependent.  User's locale is unpredictable and a module must not
+        set locale to arbitrary values because it would affect the rest of the
+        application.  Therefore one has to use functions like g_ascii_strtod()
+        to read real numbers portably.
+      </para>
+      <para>
+        Many text strings, like comments and remarks, are stored in an
+        arbitrary <emphasis>character encoding</emphasis>.
+        Typically it is ISO 8895-1, but sometimes more exotic encodings are
+        used.  Since Gwyddion uses UTF-8 for all text data (like Gtk+ does)
+        they must be converted, e.g., with g_convert().
+      </para>
+    </refsect2>
+    <refsect2>
+      <title>Binary Data</title>
+      <para>
+        The canonical bad example is
+      </para>
+      <informalexample><programlisting><![CDATA[
+struct {
+    char c;
+    LONG i;
+    wchar_t remark[20];
+} header;
+
+fread(&header, sizeof(header), 1, filehandle);
+]]></programlisting></informalexample>
+      <para>
+        For start, <type>LONG</type> is unlikely to exist on non-Microsoft
+        platforms.  So should we fix it to <type>long int</type>?  No, the
+        <emphasis>type size</emphasis> of classic C types (<type>short</type>,
+        <type>long</type>, etc.) is different on different architectures (more
+        precisely ABIs) and the standard prescribes only the lower limit. If we
+        mean `32bit integer' we also have to express it in our code:
+        <type>gint32</type>.
+      </para>
+      <para>
+        Likewise, <type>wchar_t</type> size is not defined either.   If the
+        file comes from a Microsoft platform, where <type>wchar_t</type> is
+        used a lot, it is probably 16bit, so we write <type>gunichar2</type>
+        and use g_utf16_to_utf8() to get UTF-8.
+      </para>
+      <para>
+        Then we have <emphasis>byte order</emphasis>.  If we are on a platform
+        with different native byte order than the file uses, we have to swap
+        the byte order in each multi-byte value.  GLib provides macros like
+        GUINT16_FROM_LE() to ease this task.
+      </para>
+      <para>
+        And last but not least, different ABIs prescribe different
+        <emphasis>structure padding</emphasis>.  Typically there can be
+        from 0 to 7 unused bytes between <structfield>c</structfield> and
+        <structfield>i</structfield>.  While most compilers provide some
+        packing <literal>&num;pragma</literal>s or other means to specify
+        desired structure padding, the portability of this constructs is
+        questionable at best.
+      </para>
+      <para>
+        The answer to (almost) all the problems above is: Don't do that then.
+        Avoid direct reading of structures, read the data into a flat byte
+        buffer instead and use
+        <link linkend="module-tutorial-file-get-h"><filename>get.h</filename></link>
+        functions to get individual values.
+      </para>
+    </refsect2>
   </refsect1>
 </refentry>
 
