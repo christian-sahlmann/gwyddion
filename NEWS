@@ -1,16 +1,21 @@
-2.0.20061006
+2.0.20061015
 
 2.1 (0000-00-00)
 Libraries:
+- libgwyapp: File type selection user interface was improved, filtering by
+  file type is possible.
 - libgwydgets: Value formatting in graph distance measure window was
   improved.
 - libgwydgets: Graph area problems (broken selection, zoom) on Gtk+ 2.6 was
   fixed.
 - libgwydgets: gwy_graph_model_remove_curve_by_description() disconnecting
   wrong signal handlers was fixed.
+- libgwydgets: Graph selections have per-class headers, gwygraphselections.h
+  includes them all.
 
 Modules:
 - PSIA (new): Imports PSIA data files.
+- HDF4 (new): Imports HDF4 files, currently only PSI HDF.
 - JPK scan: It's no longer built when too old libtiff is detected.
 
 Other:
