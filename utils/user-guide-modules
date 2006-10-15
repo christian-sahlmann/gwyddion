@@ -40,6 +40,7 @@ graph_fit features-graph.html
 graph_level features-graph.html
 graph_stats features-graph.html
 gwyfile managing-files.html
+hdf4file managing-files.html
 hitachi-afm managing-files.html
 hough features-inttrans.html
 icolorange features-basic.html
@@ -68,6 +69,7 @@ pixmap managing-files.html
 plugin-proxy plugins.html
 pnifile managing-files.html
 point selections.html
+psia managing-files.html
 polylevel features-leveling.html
 polynom features-leveling.html
 presentationops presentations-masks.html
