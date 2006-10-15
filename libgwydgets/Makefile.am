@@ -44,6 +44,7 @@ libgwydgets2include_HEADERS = \
 	gwyradiobuttons.h \
 	gwyruler.h \
 	gwyscitext.h \
+	gwyselectiongraphpoint.h \
 	gwysensitivitygroup.h \
 	gwyshader.h \
 	gwystatusbar.h \
@@ -117,7 +118,6 @@ libgwydgets2_la_SOURCES = \
 	gwygraphexport.c \
 	gwygraphlabeldialog.c \
 	gwygraphlabel.c \
-	gwygraphselections.c \
 	gwyhmarkerbox.c \
 	gwyhruler.c \
 	gwyinventorystore.c \
@@ -130,6 +130,11 @@ libgwydgets2_la_SOURCES = \
 	gwyradiobuttons.c \
 	gwyruler.c \
 	gwyscitext.c \
+	gwyselectiongraph1darea.c \
+	gwyselectiongrapharea.c \
+	gwyselectiongraphline.c \
+	gwyselectiongraphpoint.c \
+	gwyselectiongraphzoom.c \
 	gwysensitivitygroup.c \
 	gwyshader.c \
 	gwystatusbar.c \

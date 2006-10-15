@@ -51,6 +51,11 @@ gwy_widgets_type_init(void)
     g_type_class_peek(GWY_TYPE_GRAPH_MODEL);
     g_type_class_peek(GWY_TYPE_3D_LABEL);
     g_type_class_peek(GWY_TYPE_3D_SETUP);
+    g_type_class_peek(GWY_TYPE_SELECTION_GRAPH_POINT);
+    g_type_class_peek(GWY_TYPE_SELECTION_GRAPH_AREA);
+    g_type_class_peek(GWY_TYPE_SELECTION_GRAPH_ZOOM);
+    g_type_class_peek(GWY_TYPE_SELECTION_GRAPH_LINE);
+    g_type_class_peek(GWY_TYPE_SELECTION_GRAPH_1DAREA);
     types_initialized = 1;
 
     gtk_rc_parse_string
@@ -129,6 +134,24 @@ gwy_widgets_get_gl_config(void)
  *
  * Before 3D widgets (#Gwy3DView) can be used, OpenGL must be initialized with
  * gwy_widgets_gl_init().
+ **/
+
+/**
+ * GdkGLConfig:
+ *
+ * Placeholder typedef.
+ *
+ * If Gwyddion is compiled with OpenGL (i.e., GtkGLExt) this is the real
+ * <type>GdkGLConfig</type>.  However, if Gwyddion is compiled without OpenGL
+ * this type is typedefed as <type>void</type>.
+ *
+ * Since one cannot actually use any of the Gwyddion OpenGL widgets if they
+ * are not enabled, this usually works well.  However, it can break in the
+ * unlikely case one compiles with wibgwydgets that have OpenGL disabled and
+ * at the same time he uses GtkGLExt directly.  In such case
+ * <type>GdkGLConfig</type> is defined twice.   The only known fix is not
+ * to include <filename>gwydgets.h</filename> and GtkGLExt headers in the same
+ * source file.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

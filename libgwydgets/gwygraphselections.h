@@ -18,130 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHSEL_H__
-#define __GWY_GRAPHSEL_H__
+#ifndef __GWY_GRAPH_SELECTIONS_H__
+#define __GWY_GRAPH_SELECTIONS_H__
 
-#include <libdraw/gwyselection.h>
+#include <libgwydgets/gwyselectiongraph1darea.h>
+#include <libgwydgets/gwyselectiongrapharea.h>
+#include <libgwydgets/gwyselectiongraphline.h>
+#include <libgwydgets/gwyselectiongraphpoint.h>
+#include <libgwydgets/gwyselectiongraphzoom.h>
 
-G_BEGIN_DECLS
-
-#define GWY_TYPE_SELECTION_GRAPH_POINT            (gwy_selection_graph_point_get_type())
-#define GWY_SELECTION_GRAPH_POINT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_POINT, GwySelectionGraphPoint))
-#define GWY_SELECTION_GRAPH_POINT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_POINT, GwySelectionGraphPointClass))
-#define GWY_IS_SELECTION_GRAPH_POINT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_POINT))
-#define GWY_IS_SELECTION_GRAPH_POINT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_POINT))
-#define GWY_SELECTION_GRAPH_POINT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_POINT, GwySelectionGraphPointClass))
-
-typedef struct _GwySelectionGraphPoint      GwySelectionGraphPoint;
-typedef struct _GwySelectionGraphPointClass GwySelectionGraphPointClass;
-
-struct _GwySelectionGraphPoint {
-    GwySelection parent_instance;
-};
-
-struct _GwySelectionGraphPointClass {
-    GwySelectionClass parent_class;
-};
-
-
-GType    gwy_selection_graph_point_get_type       (void) G_GNUC_CONST;
-
-
-
-#define GWY_TYPE_SELECTION_GRAPH_AREA            (gwy_selection_graph_area_get_type())
-#define GWY_SELECTION_GRAPH_AREA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_AREA, GwySelectionGraphArea))
-#define GWY_SELECTION_GRAPH_AREA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_AREA, GwySelectionGraphAreaClass))
-#define GWY_IS_SELECTION_GRAPH_AREA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_AREA))
-#define GWY_IS_SELECTION_GRAPH_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_AREA))
-#define GWY_SELECTION_GRAPH_AREA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_AREA, GwySelectionGraphAreaClass))
-
-typedef struct _GwySelectionGraphArea      GwySelectionGraphArea;
-typedef struct _GwySelectionGraphAreaClass GwySelectionGraphAreaClass;
-
-
-struct _GwySelectionGraphArea {
-    GwySelection parent_instance;
-};
-
-struct _GwySelectionGraphAreaClass {
-    GwySelectionClass parent_class;
-};
-
-
-GType    gwy_selection_graph_area_get_type       (void) G_GNUC_CONST;
-
-
-
-#define GWY_TYPE_SELECTION_GRAPH_LINE            (gwy_selection_graph_line_get_type())
-#define GWY_SELECTION_GRAPH_LINE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_LINE, GwySelectionGraphLine))
-#define GWY_SELECTION_GRAPH_LINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_LINE, GwySelectionGraphLineClass))
-#define GWY_IS_SELECTION_GRAPH_LINE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_LINE))
-#define GWY_IS_SELECTION_GRAPH_LINE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_LINE))
-#define GWY_SELECTION_GRAPH_LINE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_LINE, GwySelectionGraphLineClass))
-
-typedef struct _GwySelectionGraphLine      GwySelectionGraphLine;
-typedef struct _GwySelectionGraphLineClass GwySelectionGraphLineClass;
-
-
-struct _GwySelectionGraphLine {
-    GwySelection parent_instance;
-};
-
-struct _GwySelectionGraphLineClass {
-    GwySelectionClass parent_class;
-};
-
-
-GType    gwy_selection_graph_line_get_type       (void) G_GNUC_CONST;
-
-
-#define GWY_TYPE_SELECTION_GRAPH_ZOOM            (gwy_selection_graph_zoom_get_type())
-#define GWY_SELECTION_GRAPH_ZOOM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_ZOOM, GwySelectionGraphZoom))
-#define GWY_SELECTION_GRAPH_ZOOM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_ZOOM, GwySelectionGraphZoomClass))
-#define GWY_IS_SELECTION_GRAPH_ZOOM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_ZOOM))
-#define GWY_IS_SELECTION_GRAPH_ZOOM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_ZOOM))
-#define GWY_SELECTION_GRAPH_ZOOM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_ZOOM, GwySelectionGraphZoomClass))
-
-typedef struct _GwySelectionGraphZoom      GwySelectionGraphZoom;
-typedef struct _GwySelectionGraphZoomClass GwySelectionGraphZoomClass;
-
-
-struct _GwySelectionGraphZoom {
-    GwySelection parent_instance;
-};
-
-struct _GwySelectionGraphZoomClass {
-    GwySelectionClass parent_class;
-};
-
-
-GType    gwy_selection_graph_zoom_get_type       (void) G_GNUC_CONST;
-
-#define GWY_TYPE_SELECTION_GRAPH_1DAREA            (gwy_selection_graph_1darea_get_type())
-#define GWY_SELECTION_GRAPH_1DAREA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_1DAREA, GwySelectionGraph1DArea))
-#define GWY_SELECTION_GRAPH_1DAREA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_1DAREA, GwySelectionGraph1DAreaClass))
-#define GWY_IS_SELECTION_GRAPH_1DAREA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_1DAREA))
-#define GWY_IS_SELECTION_GRAPH_1DAREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_1DAREA))
-#define GWY_SELECTION_GRAPH_1DAREA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_1DAREA, GwySelectionGraph1DAreaClass))
-
-typedef struct _GwySelectionGraph1DArea      GwySelectionGraph1DArea;
-typedef struct _GwySelectionGraph1DAreaClass GwySelectionGraph1DAreaClass;
-
-
-struct _GwySelectionGraph1DArea {
-    GwySelection parent_instance;
-};
-
-struct _GwySelectionGraph1DAreaClass {
-    GwySelectionClass parent_class;
-};
-
-
-GType    gwy_selection_graph_1darea_get_type       (void) G_GNUC_CONST;
-
-
-G_END_DECLS
-
-#endif /* __GWY_GRAPHSEL_H__ */
+#endif /* __GWY_GRAPH_SELECTIONS_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

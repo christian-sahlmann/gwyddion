@@ -61,6 +61,11 @@
 #include <libgwydgets/gwypixmaplayer.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwyruler.h>
+#include <libgwydgets/gwyselectiongraph1darea.h>
+#include <libgwydgets/gwyselectiongrapharea.h>
+#include <libgwydgets/gwyselectiongraphline.h>
+#include <libgwydgets/gwyselectiongraphpoint.h>
+#include <libgwydgets/gwyselectiongraphzoom.h>
 #include <libgwydgets/gwysensitivitygroup.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyshader.h>
