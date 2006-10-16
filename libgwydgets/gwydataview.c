@@ -1433,8 +1433,10 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
  * @data_view: A data view.
  * @prefix: Container prefix for data  (eg. "/0/data").
  *
- * Sets the prefix for the container data channel that the data view ought
- * to display.
+ * Sets the prefix for the container data channel to display in a data view.
+ *
+ * This function only affects where the data view itself takes parameters
+ * from, it does not affect layer keys.
  **/
 void
 gwy_data_view_set_data_prefix(GwyDataView *data_view,
