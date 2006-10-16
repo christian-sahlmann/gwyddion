@@ -137,6 +137,8 @@ static void            save_settings       (ControlsType *controls);
 static void            load_settings       (ControlsType *controls);
 static void            build_tooltips      (GHashTable *hash_tips);
 
+static const GwyRGBA mask_color = { 0.56, 0.39, 0.07, 0.5 };
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -169,7 +171,6 @@ run_main(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *mfield, *fft, *filtered, *diff;
     GwyDataField *out_image = NULL, *out_fft = NULL;
     gint id, newid;
-    GwyRGBA rgba;
     ControlsType controls;
     gboolean response;
 
@@ -233,8 +234,7 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_container_set_object_by_name(controls.mydata, "/0/mask",
                                      mfield);
     g_object_unref(mfield);
-    rgba.r = rgba.g = rgba.b = 1.0; rgba.a = 0.5;
-    gwy_rgba_store_to_container(&rgba, controls.mydata, "/0/mask");
+    gwy_rgba_store_to_container(&mask_color, controls.mydata, "/0/mask");
 
     gwy_container_set_object_by_name(controls.mydata, "/1/data",
                                      dfield);

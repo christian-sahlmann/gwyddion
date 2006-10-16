@@ -145,6 +145,8 @@ static const FacetsArgs facets_defaults = {
     0.0,
 };
 
+static const GwyRGBA mask_color = { 0.56, 0.39, 0.07, 0.5 };
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -918,7 +920,6 @@ static void
 preview(FacetsControls *controls,
         FacetsArgs *args)
 {
-    static const GwyRGBA mask_color = { 0.56, 0.39, 0.07, 0.6 };
     GwyDataField *dtheta, *dphi, *dfield, *mfield;
     GwyContainer *data, *fdata;
 
