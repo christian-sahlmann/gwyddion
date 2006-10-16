@@ -279,7 +279,16 @@ gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
 /**
  * SECTION:gwypixfield
  * @title: gwypixfield
- * @short_description: Draw #GwyDataField's to #GdkPixbuf's
+ * @short_description: Draw #GwyDataField<!-- -->s to #GdkPixbuf<!-- -->s
+ *
+ * The simpliest method to render a #GwyDataField to a #GdkPixbuf with a
+ * false color scale is gwy_pixbuf_draw_data_field() which uniformly stretches
+ * the color gradient from value minimum to maximum.  Functions
+ * gwy_pixbuf_draw_data_field_with_range() and
+ * gwy_pixbuf_draw_data_field_adaptive() offer other false color mapping
+ * possibilities.  A bit different is
+ * gwy_pixbuf_draw_data_field_as_mask() which represents the values as
+ * opacities of a signle color.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
