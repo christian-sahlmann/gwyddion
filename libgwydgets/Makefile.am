@@ -44,7 +44,11 @@ libgwydgets2include_HEADERS = \
 	gwyradiobuttons.h \
 	gwyruler.h \
 	gwyscitext.h \
+	gwyselectiongraph1darea.h \
+	gwyselectiongrapharea.h \
+	gwyselectiongraphline.h \
 	gwyselectiongraphpoint.h \
+	gwyselectiongraphzoom.h \
 	gwysensitivitygroup.h \
 	gwyshader.h \
 	gwystatusbar.h \
