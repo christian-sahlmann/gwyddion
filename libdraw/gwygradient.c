@@ -141,7 +141,7 @@ gwy_gradient_release(GwyResource *resource)
  * @x: Position in gradient, in range 0..1.
  * @color: Color to fill with interpolated color at position @x.
  *
- * Computes color at given position of a color gradient.
+ * Computes the color at a given position of a color gradient.
  **/
 void
 gwy_gradient_get_color(GwyGradient *gradient,
@@ -212,7 +212,7 @@ gwy_gradient_get_samples(GwyGradient *gradient,
  * @nsamples: Required number of samples.
  * @samples: Pointer to array to be filled.
  *
- * Samples gradient to an array #GdkPixbuf-like samples.
+ * Samples a gradient to an array #GdkPixbuf-like samples.
  *
  * If @samples is not %NULL, it's resized to 4*@nsamples bytes, otherwise a
  * new buffer is allocated.
@@ -277,11 +277,11 @@ gwy_gradient_sample_real(GwyGradient *gradient,
  * @gradient: A color gradient to sample.
  * @pixbuf: A pixbuf to sample gradient to (in horizontal direction).
  *
- * Samples gradient to a provided pixbuf.
+ * Samples a color gradient to a provided pixbuf.
  *
  * Unlike gwy_gradient_sample() which simply takes samples at equidistant
- * points this method uses supersampling and thus gives a bit better looking
- * gradient presentation.
+ * points this method uses supersampling and thus it gives a bit better
+ * looking gradient presentation.
  **/
 void
 gwy_gradient_sample_to_pixbuf(GwyGradient *gradient,
@@ -344,7 +344,7 @@ gwy_gradient_sample_to_pixbuf(GwyGradient *gradient,
  * gwy_gradient_get_npoints:
  * @gradient: A color gradient.
  *
- * Returns the number of points in a gradient.
+ * Returns the number of points in a color gradient.
  *
  * Returns: The number of points in @gradient.
  **/
@@ -360,7 +360,7 @@ gwy_gradient_get_npoints(GwyGradient *gradient)
  * @gradient: A color gradient.
  * @index_: Color point index in @gradient.
  *
- * Returns point at given index of a color gradient.
+ * Returns the point at given index of a color gradient.
  *
  * Returns: Color point at @index_.
  **/
@@ -406,7 +406,7 @@ gwy_gradient_fix_rgba(const GwyRGBA *color)
  * @i: Index a point should be inserted.
  * @pos: Position the point should be inserted to.
  *
- * Fixes position of a color point between neighbours and to range 0..1.
+ * Fixes the position of a color point between neighbours and to range 0..1.
  *
  * Returns: Fixed position.
  **/
@@ -474,7 +474,7 @@ gwy_gradient_set_point(GwyGradient *gradient,
  * @index_: Color point index in @gradient.
  * @color: Color to set the point to.
  *
- * Sets a color of color gradient point without moving it.
+ * Sets the color of a color gradient point without moving it.
  **/
 void
 gwy_gradient_set_point_color(GwyGradient *gradient,
@@ -509,7 +509,7 @@ gwy_gradient_set_point_color(GwyGradient *gradient,
  * Inserts a point to a color gradient.
  *
  * It is an error to try to position a outside its future neighbours, or to
- * move first (or last) point from 0 (or 1).
+ * move the first (or last) point from 0 (or 1).
  **/
 void
 gwy_gradient_insert_point(GwyGradient *gradient,
@@ -554,7 +554,7 @@ gwy_gradient_insert_point(GwyGradient *gradient,
  * @gradient: A color gradient.
  * @point: Color point to insert.
  *
- * Inserts a point into color gradient based on its x position.
+ * Inserts a point into a color gradient based on its x position.
  *
  * Returns: The index @point was inserted at.
  **/
@@ -593,7 +593,7 @@ gwy_gradient_insert_point_sorted(GwyGradient *gradient,
  * @gradient: A color gradient.
  * @index_: Color point index in @gradient.
  *
- * Deletes a point at given index in color gradient.
+ * Deletes a point at given index in a color gradient.
  *
  * It is not possible to delete points in gradients with less than 3 points.
  * First and last points should not be deleted unless there's another point
@@ -634,7 +634,7 @@ gwy_gradient_delete_point(GwyGradient *gradient,
  * gwy_gradient_reset:
  * @gradient: A color gradient.
  *
- * Resets a gradient to default two-point gray scale.
+ * Resets a gradient to the default two-point gray scale state.
  **/
 void
 gwy_gradient_reset(GwyGradient *gradient)
@@ -734,7 +734,7 @@ gwy_gradient_sanitize(GwyGradient *gradient)
  * @npoints: The length of @points.
  * @points: Color points to set as new gradient definition.
  *
- * Sets complete color gradient definition to given set of points.
+ * Sets the complete color gradient definition to a given set of points.
  *
  * The point positions should be ordered, and first point should start at 0.0,
  * last end at 1.0.  There should be no redundant points.
@@ -764,7 +764,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
  *             When negative, default value 1/80 suitable for most purposes
  *             is used.
  *
- * Reconstructs color gradient definition from sampled colors.
+ * Reconstructs a color gradient definition from sampled colors.
  *
  * The result is usually approximate.
  **/
@@ -1101,7 +1101,7 @@ gwy_gradients_get_gradient(const gchar *name)
  * is defined by an ordered set of color points, the first of them is always at
  * 0.0, the last at 1.0 (thus each gradient must consist of at least two
  * points).  Between them, the color is interpolated.  Color points of
- * modifiable gradients (see below) can be edited with functions like
+ * modifiable gradients (see #GwyResource) can be edited with functions like
  * gwy_gradient_insert_point(), gwy_gradient_set_point_color(), or
  * gwy_gradient_set_points().
  *
@@ -1113,7 +1113,7 @@ gwy_gradients_get_gradient(const gchar *name)
 /**
  * GwyGradient:
  *
- * The #GwyGradient struct contains private data only and should be accessed
+ * #GwyGradient struct contains private data only and should be accessed
  * using the functions below.
  **/
 
@@ -1139,7 +1139,7 @@ gwy_gradients_get_gradient(const gchar *name)
  * It is guaranteed to always exist.
  *
  * Note this is not the same as user's default gradient which corresponds to
- * the default item in gwy_gradients() inventory and it change over time.
+ * the default item in gwy_gradients() inventory and it changes over time.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
