@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -450,7 +450,7 @@ fit_dialog(FitArgs *args)
     gtk_widget_set_size_request(controls.graph, 400, 300);
 
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 0);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
