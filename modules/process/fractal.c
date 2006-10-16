@@ -145,7 +145,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates fractal dimension using several methods "
        "(partitioning, box counting, triangulation, power spectrum)."),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
@@ -174,7 +174,7 @@ fractal(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & FRACTAL_RUN_MODES);
     fractal_load_args(gwy_app_settings_get(), &args);
     fractal_dialog(&args, data);
-    fractal_save_args(data, &args);
+    fractal_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
@@ -603,7 +603,7 @@ fractal_sanitize_args(FractalArgs *args)
 {
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->out = MIN(args->out, GWY_FRACTAL_PSDF);
+    args->out = MIN(args->out, GWY_FRACTAL_LAST-1);
 }
 
 static void
