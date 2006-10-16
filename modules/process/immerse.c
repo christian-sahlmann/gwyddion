@@ -17,19 +17,27 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
+#include <libdraw/gwypixfield.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define IMMERSE_RUN_MODES GWY_RUN_INTERACTIVE
+
+enum {
+    PREVIEW_SIZE = 320
+};
 
 typedef enum {
     GWY_IMMERSE_LEVELING_LARGE,
@@ -63,36 +71,62 @@ typedef struct {
     GwyDataObjectId detail;
 } ImmerseArgs;
 
-static gboolean module_register      (void);
-static void     immerse              (GwyContainer *data,
-                                      GwyRunType run);
-static gboolean immerse_dialog       (ImmerseArgs *args);
-static void     immerse_detail_cb    (GwyDataChooser *chooser,
-                                      GwyDataObjectId *object);
-static gboolean immerse_data_filter  (GwyContainer *data,
-                                      gint id,
-                                      gpointer user_data);
-static gboolean immerse_do           (ImmerseArgs *args);
-/*
-static void     immerse_leveling_cb  (GtkWidget *combo,
-                                      ImmerseArgs *args);
-                                      */
-static void     immerse_mode_cb      (GtkWidget *combo,
-                                      ImmerseArgs *args);
-static void     immerse_sampling_cb  (GtkWidget *combo,
-                                      ImmerseArgs *args);
-static void     immerse_load_args    (GwyContainer *settings,
-                                      ImmerseArgs *args);
-static void     immerse_save_args    (GwyContainer *settings,
-                                      ImmerseArgs *args);
-static void     immerse_sanitize_args(ImmerseArgs *args);
-static gboolean get_score_iteratively(GwyDataField *data_field,
-                                      GwyDataField *kernel_field,
-                                      GwyDataField *score,
-                                      ImmerseArgs *args);
-static void     find_score_maximum   (GwyDataField *correlation_score,
-                                      gint *max_col,
-                                      gint *max_row);
+typedef struct {
+    ImmerseArgs *args;
+    GwyContainer *mydata;
+    GtkWidget *view;
+    GdkPixbuf *detail;
+    gdouble xpos;
+    gdouble ypos;
+    gint xc;
+    gint yc;
+    gint button;
+    GdkCursor *near_cursor;
+    GdkCursor *move_cursor;
+} ImmerseControls;
+
+static gboolean module_register             (void);
+static void     immerse                     (GwyContainer *data,
+                                             GwyRunType run);
+static gboolean immerse_dialog              (ImmerseArgs *args);
+static void     immerse_detail_cb           (GwyDataChooser *chooser,
+                                             ImmerseControls *controls);
+static void     immerse_update_detail_pixbuf(ImmerseControls *controls);
+static gboolean immerse_data_filter         (GwyContainer *data,
+                                             gint id,
+                                             gpointer user_data);
+static gboolean immerse_do                  (ImmerseArgs *args);
+static void     immerse_mode_cb             (GtkWidget *combo,
+                                             ImmerseArgs *args);
+static void     immerse_sampling_cb         (GtkWidget *combo,
+                                             ImmerseArgs *args);
+static gboolean immerse_view_expose         (GtkWidget *view,
+                                             GdkEventExpose *event,
+                                             ImmerseControls *controls);
+static gboolean immerse_view_button_press   (GtkWidget *view,
+                                             GdkEventButton *event,
+                                             ImmerseControls *controls);
+static gboolean immerse_view_button_release (GtkWidget *view,
+                                             GdkEventButton *event,
+                                             ImmerseControls *controls);
+static gboolean immerse_view_motion_notify  (GtkWidget *view,
+                                             GdkEventMotion *event,
+                                             ImmerseControls *controls);
+static gboolean immerse_view_inside_detail  (ImmerseControls *controls,
+                                             gint x,
+                                             gint y);
+static void     immerse_load_args           (GwyContainer *settings,
+                                             ImmerseArgs *args);
+static void     immerse_save_args           (GwyContainer *settings,
+                                             ImmerseArgs *args);
+static void     immerse_sanitize_args       (ImmerseArgs *args);
+static gboolean get_score_iteratively       (GwyDataField *data_field,
+                                             GwyDataField *kernel_field,
+                                             GwyDataField *score,
+                                             ImmerseArgs *args);
+static void     find_score_maximum          (GwyDataField *correlation_score,
+                                             gint *max_col,
+                                             gint *max_row);
 
 static const GwyEnum levelings[] = {
     { N_("Large image"),   GWY_IMMERSE_LEVELING_LARGE },
@@ -123,7 +157,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -168,9 +202,17 @@ immerse(GwyContainer *data, GwyRunType run)
 static gboolean
 immerse_dialog(ImmerseArgs *args)
 {
+    ImmerseControls controls;
     GtkWidget *dialog, *table, *chooser, *combo;
-    gint response, row;
+    GdkDisplay *display;
+    GwyPixmapLayer *layer;
+    GwyDataField *dfield;
+    gint response, row, id;
+    gdouble zoomval;
     gboolean ok;
+
+    memset(&controls, 0, sizeof(ImmerseControls));
+    controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Immerse Detail"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -179,12 +221,48 @@ immerse_dialog(ImmerseArgs *args)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
+
+    id = args->image.id;
+    dfield = gwy_container_get_object(args->image.data,
+                                      gwy_app_get_data_key_for_id(id));
+
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_sync_data_items(args->image.data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
+    gwy_container_set_boolean_by_name(controls.mydata, "/0/data/realsquare",
+                                      TRUE);
+    controls.view = gwy_data_view_new(controls.mydata);
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    /* XXX: This is wrong with realsquare=TRUE */
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+    gtk_table_attach(GTK_TABLE(table), controls.view,
+                     0, 4, row, row+1, 0, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    g_signal_connect_after(controls.view, "expose-event",
+                           G_CALLBACK(immerse_view_expose), &controls);
+    g_signal_connect(controls.view, "button-press-event",
+                     G_CALLBACK(immerse_view_button_press), &controls);
+    g_signal_connect(controls.view, "button-release-event",
+                     G_CALLBACK(immerse_view_button_release), &controls);
+    g_signal_connect(controls.view, "motion-notify-event",
+                     G_CALLBACK(immerse_view_motion_notify), &controls);
 
     /* Detail to immerse */
     chooser = gwy_data_chooser_new_channels();
@@ -192,8 +270,7 @@ immerse_dialog(ImmerseArgs *args)
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 immerse_data_filter, &args->image, NULL);
     g_signal_connect(chooser, "changed",
-                     G_CALLBACK(immerse_detail_cb), &args->detail);
-    immerse_detail_cb(GWY_DATA_CHOOSER(chooser), &args->detail);
+                     G_CALLBACK(immerse_detail_cb), &controls);
     gwy_table_attach_hscale(table, row, _("_Detail image:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
     row++;
@@ -222,6 +299,10 @@ immerse_dialog(ImmerseArgs *args)
     row++;
 
     gtk_widget_show_all(dialog);
+    display = gtk_widget_get_display(dialog);
+    controls.near_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
+    controls.move_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
+    immerse_detail_cb(GWY_DATA_CHOOSER(chooser), &controls);
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -230,6 +311,10 @@ immerse_dialog(ImmerseArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
             gtk_widget_destroy(dialog);
+            g_object_unref(controls.mydata);
+            gdk_cursor_unref(controls.near_cursor);
+            gdk_cursor_unref(controls.move_cursor);
+            gwy_object_unref(controls.detail);
             return FALSE;
             break;
 
@@ -244,16 +329,22 @@ immerse_dialog(ImmerseArgs *args)
     } while (!ok);
 
     gtk_widget_destroy(dialog);
+    g_object_unref(controls.mydata);
+    gdk_cursor_unref(controls.near_cursor);
+    gdk_cursor_unref(controls.move_cursor);
+    gwy_object_unref(controls.detail);
 
     return TRUE;
 }
 
 static void
 immerse_detail_cb(GwyDataChooser *chooser,
-                  GwyDataObjectId *object)
+                  ImmerseControls *controls)
 {
     GtkWidget *dialog;
+    GwyDataObjectId *object;
 
+    object = &controls->args->detail;
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
     gwy_debug("data: %p %d", object->data, object->id);
 
@@ -261,6 +352,50 @@ immerse_detail_cb(GwyDataChooser *chooser,
     g_assert(GTK_IS_DIALOG(dialog));
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
                                       object->data != NULL);
+    immerse_update_detail_pixbuf(controls);
+    if (GTK_WIDGET_DRAWABLE(controls->view))
+        gtk_widget_queue_draw(controls->view);
+}
+
+static void
+immerse_update_detail_pixbuf(ImmerseControls *controls)
+{
+    GwyDataField *dfield;
+    GwyGradient *gradient;
+    GdkPixbuf *pixbuf;
+    const guchar *name;
+    gchar *key;
+    GQuark quark;
+    gint w, h, xres, yres;
+
+    gwy_object_unref(controls->detail);
+    if (!controls->args->detail.data)
+        return;
+
+    quark = gwy_app_get_data_key_for_id(controls->args->detail.id);
+    dfield = gwy_container_get_object(controls->args->detail.data, quark);
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(controls->view),
+                                    gwy_data_field_get_xreal(dfield),
+                                    gwy_data_field_get_yreal(dfield),
+                                    &w, &h);
+    gwy_debug("%dx%d", w, h);
+    w = MAX(w, 2);
+    h = MAX(h, 2);
+
+    key = g_strdup_printf("/%d/base/palette", controls->args->image.id);
+    name = NULL;
+    gwy_container_gis_string_by_name(controls->args->image.data, key, &name);
+    g_free(key);
+    gradient = gwy_gradients_get_gradient(name);
+
+    /* Handle real-square properly by using an intermediate
+     * pixel-square pixbuf with sufficient resolution */
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
+    gwy_pixbuf_draw_data_field(pixbuf, dfield, gradient);
+    controls->detail = gdk_pixbuf_scale_simple(pixbuf, w, h, GDK_INTERP_TILES);
+    g_object_unref(pixbuf);
 }
 
 static gboolean
@@ -467,6 +602,134 @@ static void
 immerse_sampling_cb(GtkWidget *combo, ImmerseArgs *args)
 {
     args->sampling = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+}
+
+static gboolean
+immerse_view_expose(GtkWidget *view,
+                    GdkEventExpose *event,
+                    ImmerseControls *controls)
+{
+    if (event->count > 0)
+        return FALSE;
+
+    gwy_debug("%p", controls->detail);
+    if (controls->detail) {
+        GdkGC *gc;
+        gint xoff, yoff;
+
+        gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(view),
+                                        controls->xpos, controls->ypos,
+                                        &xoff, &yoff);
+        gwy_debug("(%d,%d) %dx%d",
+                  xoff, yoff,
+                  gdk_pixbuf_get_width(controls->detail),
+                  gdk_pixbuf_get_height(controls->detail));
+        gc = gdk_gc_new(view->window);
+        gdk_draw_pixbuf(view->window, gc, controls->detail,
+                        0, 0, xoff, yoff, -1, -1,
+                        GDK_RGB_DITHER_NORMAL, 0, 0);
+        g_object_unref(gc);
+    }
+
+    return FALSE;
+}
+
+static gboolean
+immerse_view_button_press(GtkWidget *view,
+                          GdkEventButton *event,
+                          ImmerseControls *controls)
+{
+    gint xoff, yoff;
+
+    if (event->button != 1
+        || !immerse_view_inside_detail(controls, event->x, event->y))
+        return FALSE;
+
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(view),
+                                    controls->xpos, controls->ypos,
+                                    &xoff, &yoff);
+    controls->button = event->button;
+    /* Cursor offset wrt top left corner */
+    controls->xc = event->x - xoff;
+    controls->yc = event->y - yoff;
+    gdk_window_set_cursor(view->window, controls->move_cursor);
+
+    return TRUE;
+}
+
+static gboolean
+immerse_view_button_release(GtkWidget *view,
+                            GdkEventButton *event,
+                            ImmerseControls *controls)
+{
+    if (event->button != controls->button)
+        return FALSE;
+
+    controls->button = 0;
+    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(view),
+                                    event->x - controls->xc,
+                                    event->y - controls->yc,
+                                    &controls->xpos,
+                                    &controls->ypos);
+    gtk_widget_queue_draw(controls->view);
+    gdk_window_set_cursor(view->window, controls->near_cursor);
+
+    return TRUE;
+}
+
+static gboolean
+immerse_view_motion_notify(GtkWidget *view,
+                           GdkEventMotion *event,
+                           ImmerseControls *controls)
+{
+    GdkWindow *window;
+    gint x, y;
+
+    if (!controls->detail)
+        return FALSE;
+
+    window = view->window;
+    if (event->is_hint)
+        gdk_window_get_pointer(window, &x, &y, NULL);
+    else {
+        x = event->x;
+        y = event->y;
+    }
+
+    if (!controls->button) {
+        if (immerse_view_inside_detail(controls, x, y))
+            gdk_window_set_cursor(window, controls->near_cursor);
+        else
+            gdk_window_set_cursor(window, NULL);
+    }
+    else {
+        gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(view),
+                                        x - controls->xc,
+                                        y - controls->yc,
+                                        &controls->xpos,
+                                        &controls->ypos);
+        gtk_widget_queue_draw(controls->view);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+immerse_view_inside_detail(ImmerseControls *controls,
+                           gint x, gint y)
+{
+    gint xoff, yoff;
+
+    if (!controls->detail)
+        return FALSE;
+
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(controls->view),
+                                    controls->xpos, controls->ypos,
+                                    &xoff, &yoff);
+    return (x >= xoff
+            && x < xoff + gdk_pixbuf_get_width(controls->detail)
+            && y >= yoff
+            && y < yoff + gdk_pixbuf_get_height(controls->detail));
 }
 
 static const gchar leveling_key[] = "/module/immerse/leveling";
