@@ -1,6 +1,9 @@
-2.0.20061015
+2.0.20061016
 
 2.1 (0000-00-00)
+Application:
+- Translations updated: Italian.
+
 Libraries:
 - libgwyapp: File type selection user interface was improved, filtering by
   file type is possible.
@@ -17,6 +20,11 @@ Modules:
 - PSIA (new): Imports PSIA data files.
 - HDF4 (new): Imports HDF4 files, currently only PSI HDF.
 - JPK scan: It's no longer built when too old libtiff is detected.
+- Profile, Distance tools: Individual lines can be deleted by selecting them
+  in the list and pressing Delete key.
+- Graph fit, Critical dimension: Graphs can be resized by resizing the
+  dialog.
+- Fractal: Saving of parameters to data instead of settings was fixed.
 
 Other:
 - Missing file utils/genmarshal.mk was added to distribution.
