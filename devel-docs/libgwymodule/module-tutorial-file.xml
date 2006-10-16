@@ -20,6 +20,70 @@
     <para>
       File modules implement loading and saving of SPM files.
     </para>
+    <para>
+      The sample file format our module will load looks as follows:
+      <informaltable frame='none'>
+        <tgroup cols='4'>
+          <thead>
+            <row>
+              <entry>Position</entry>
+              <entry>Type</entry>
+              <entry>Name</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>0x00</entry>
+              <entry><type>char</type>[4]</entry>
+              <entry><varname>magic</varname></entry>
+              <entry>Magic header <literal>"SMPL"</literal></entry>
+            </row>
+            <row>
+              <entry>0x04</entry>
+              <entry><type>uint16</type></entry>
+              <entry><varname>xres</varname></entry>
+              <entry>Pixels per line</entry>
+            </row>
+            <row>
+              <entry>0x06</entry>
+              <entry><type>uint16</type></entry>
+              <entry><varname>xres</varname></entry>
+              <entry>Number of lines</entry>
+            </row>
+            <row>
+              <entry>0x08</entry>
+              <entry><type>float</type></entry>
+              <entry><varname>measure</varname></entry>
+              <entry>Size of one pixel [m]</entry>
+            </row>
+            <row>
+              <entry>0x0c</entry>
+              <entry><type>float</type></entry>
+              <entry><varname>z0</varname></entry>
+              <entry>Value corresponding to 0 in raw data [m]</entry>
+            </row>
+            <row>
+              <entry>0x10</entry>
+              <entry><type>float</type></entry>
+              <entry><varname>gain</varname></entry>
+              <entry>
+                Conversion factor from raw data to physical values [m]
+              </entry>
+            </row>
+            <row>
+              <entry>0x14</entry>
+              <entry><type>uint16</type>[<varname>xres</varname>*<varname>yres</varname>]</entry>
+              <entry><varname>data</varname></entry>
+              <entry>Raw data values</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+      This is a typical example of a one-image binary data format, though for
+      the sake of simplicity it contain only the information our module needs
+      and nothing else.
+    </para>
     <informalexample><programlisting>
 &num;include &lt;string.h&gt;
 &num;include &lt;stdio.h&gt;
@@ -61,7 +125,7 @@ static GwyModuleInfo module_info = {
     N_("Imports simple data files."),
     "J. Random Hacker &lt;hacker.jr&commat;example.org&gt;",
     "1.0",
-    "Bittwiddle Inc.",
+    "Bit Rot Inc.",
     "2006",
 };
 <![CDATA[
