@@ -416,7 +416,7 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       </para>
       <para>
         The text representation of <emphasis>real numbers</emphasis> is
-        local-dependent.  User's locale is unpredictable and a module must not
+        locale-dependent.  User's locale is unpredictable and a module must not
         set locale to arbitrary values because it would affect the rest of the
         application.  Therefore one has to use functions like g_ascii_strtod()
         to read real numbers portably.
@@ -424,9 +424,9 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       <para>
         Many text strings, like comments and remarks, are stored in an
         arbitrary <emphasis>character encoding</emphasis>.
-        Typically it is ISO 8895-1, but sometimes more exotic encodings are
-        used.  Since Gwyddion uses UTF-8 for all text data (like Gtk+ does)
-        they must be converted, e.g., with g_convert().
+        Typically it is ISO 8895-1 (Latin1) or UTF-16, but sometimes more
+        exotic encodings are used.  Since Gwyddion uses UTF-8 for all text data
+        (like Gtk+ does) they must be converted, e.g., with g_convert().
       </para>
     </refsect2>
     <refsect2>
@@ -450,18 +450,18 @@ fread(&header, sizeof(header), 1, filehandle);
         <type>long</type>, etc.) is different on different architectures (more
         precisely ABIs) and the standard prescribes only the lower limit. If we
         mean `32bit integer' we also have to express it in our code:
-        <type>gint32</type>.
+        #gint32.
       </para>
       <para>
-        Likewise, <type>wchar_t</type> size is not defined either.   If the
+        Likewise, <type>wchar_t</type> size is not well-defined.   If the
         file comes from a Microsoft platform, where <type>wchar_t</type> is
-        used a lot, it is probably 16bit, so we write <type>gunichar2</type>
+        used a lot, it is probably 16bit, so we write #gunichar2 instead
         and use g_utf16_to_utf8() to get UTF-8.
       </para>
       <para>
         Then we have <emphasis>byte order</emphasis>.  If we are on a platform
-        with different native byte order than the file uses, we have to swap
-        the byte order in each multi-byte value.  GLib provides macros like
+        with different native byte order than the file uses, we have to reverse
+        the bytes in each multi-byte value.  GLib provides macros like
         GUINT16_FROM_LE() to ease this task.
       </para>
       <para>
@@ -470,7 +470,7 @@ fread(&header, sizeof(header), 1, filehandle);
         from 0 to 7 unused bytes between <structfield>c</structfield> and
         <structfield>i</structfield>.  While most compilers provide some
         packing <literal>&num;pragma</literal>s or other means to specify
-        desired structure padding, the portability of this constructs is
+        desired structure padding, the portability of these constructs is
         questionable at best.
       </para>
       <para>
