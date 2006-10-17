@@ -867,7 +867,7 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  *
  * The difference between save and export is that save is supposed to create
  * a file containing fairly complete representation of the container, while
- * export is the possibility to write some information so given file type.
+ * export is the possibility to write some information to given file type.
  * Generally only native file format module implements
  * %GWY_FILE_OPERATION_SAVE, all others implement %GWY_FILE_OPERATION_EXPORT.
  **/
