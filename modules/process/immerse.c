@@ -73,9 +73,14 @@ typedef struct {
 
 typedef struct {
     ImmerseArgs *args;
+    GtkWidget *dialog;
     GwyContainer *mydata;
     GtkWidget *view;
+    GtkWidget *pos;
     GdkPixbuf *detail;
+    GwySIValueFormat *vf;
+    gdouble xmax;
+    gdouble ymax;
     gdouble xpos;
     gdouble ypos;
     gint xc;
@@ -89,6 +94,7 @@ static gboolean module_register             (void);
 static void     immerse                     (GwyContainer *data,
                                              GwyRunType run);
 static gboolean immerse_dialog              (ImmerseArgs *args);
+static void     immerse_controls_destroy    (ImmerseControls *controls);
 static void     immerse_detail_cb           (GwyDataChooser *chooser,
                                              ImmerseControls *controls);
 static void     immerse_update_detail_pixbuf(ImmerseControls *controls);
@@ -115,6 +121,9 @@ static gboolean immerse_view_motion_notify  (GtkWidget *view,
 static gboolean immerse_view_inside_detail  (ImmerseControls *controls,
                                              gint x,
                                              gint y);
+static gboolean immerse_clamp_detail_offset (ImmerseControls *controls,
+                                             gdouble xpos,
+                                             gdouble ypos);
 static void     immerse_load_args           (GwyContainer *settings,
                                              ImmerseArgs *args);
 static void     immerse_save_args           (GwyContainer *settings,
@@ -203,7 +212,8 @@ static gboolean
 immerse_dialog(ImmerseArgs *args)
 {
     ImmerseControls controls;
-    GtkWidget *dialog, *table, *chooser, *combo;
+    GtkWidget *table, *chooser, *combo, *hbox, *alignment, *label;
+    GtkWidget *vbox;
     GdkDisplay *display;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
@@ -214,23 +224,27 @@ immerse_dialog(ImmerseArgs *args)
     memset(&controls, 0, sizeof(ImmerseControls));
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Immerse Detail"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog
+        = gtk_dialog_new_with_buttons(_("Immerse Detail"), NULL, 0,
+                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                      GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                      NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(controls.dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(controls.dialog),
+                                    GTK_RESPONSE_OK);
 
-    table = gtk_table_new(5, 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
-    row = 0;
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(controls.dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    /* Preview */
 
     id = args->image.id;
     dfield = gwy_container_get_object(args->image.data,
                                       gwy_app_get_data_key_for_id(id));
+    controls.vf
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
@@ -250,10 +264,10 @@ immerse_dialog(ImmerseArgs *args)
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
-    gtk_table_attach(GTK_TABLE(table), controls.view,
-                     0, 4, row, row+1, 0, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    row++;
+
+    alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
+    gtk_container_add(GTK_CONTAINER(alignment), controls.view);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
 
     g_signal_connect_after(controls.view, "expose-event",
                            G_CALLBACK(immerse_view_expose), &controls);
@@ -264,9 +278,18 @@ immerse_dialog(ImmerseArgs *args)
     g_signal_connect(controls.view, "motion-notify-event",
                      G_CALLBACK(immerse_view_motion_notify), &controls);
 
+    vbox = gtk_vbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+
+    /* Parameters */
+    table = gtk_table_new(4, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
+    row = 0;
+
     /* Detail to immerse */
     chooser = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 immerse_data_filter, &args->image, NULL);
     g_signal_connect(chooser, "changed",
@@ -298,23 +321,37 @@ immerse_dialog(ImmerseArgs *args)
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
-    gtk_widget_show_all(dialog);
-    display = gtk_widget_get_display(dialog);
+    /* Position */
+    table = gtk_table_new(4, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_end(GTK_BOX(vbox), table, FALSE, FALSE, 4);
+    row = 0;
+
+    label = gtk_label_new(_("Detail position:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, 0, 0, 0, 0);
+
+    controls.pos = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.pos), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.pos,
+                     1, 3, row, row+1, 0, 0, 0, 0);
+    row++;
+
+    gtk_widget_show_all(controls.dialog);
+    display = gtk_widget_get_display(controls.dialog);
     controls.near_cursor = gdk_cursor_new_for_display(display, GDK_FLEUR);
     controls.move_cursor = gdk_cursor_new_for_display(display, GDK_CROSS);
     immerse_detail_cb(GWY_DATA_CHOOSER(chooser), &controls);
 
     do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        response = gtk_dialog_run(GTK_DIALOG(controls.dialog));
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
-            gtk_widget_destroy(dialog);
-            g_object_unref(controls.mydata);
-            gdk_cursor_unref(controls.near_cursor);
-            gdk_cursor_unref(controls.move_cursor);
-            gwy_object_unref(controls.detail);
+            immerse_controls_destroy(&controls);
             return FALSE;
             break;
 
@@ -328,31 +365,51 @@ immerse_dialog(ImmerseArgs *args)
         }
     } while (!ok);
 
-    gtk_widget_destroy(dialog);
-    g_object_unref(controls.mydata);
-    gdk_cursor_unref(controls.near_cursor);
-    gdk_cursor_unref(controls.move_cursor);
-    gwy_object_unref(controls.detail);
+    immerse_controls_destroy(&controls);
 
     return TRUE;
+}
+
+static void
+immerse_controls_destroy(ImmerseControls *controls)
+{
+    gtk_widget_destroy(controls->dialog);
+    gwy_si_unit_value_format_free(controls->vf);
+    g_object_unref(controls->mydata);
+    gdk_cursor_unref(controls->near_cursor);
+    gdk_cursor_unref(controls->move_cursor);
+    gwy_object_unref(controls->detail);
 }
 
 static void
 immerse_detail_cb(GwyDataChooser *chooser,
                   ImmerseControls *controls)
 {
-    GtkWidget *dialog;
+    GwyDataField *dfield, *ifield;
+    GQuark quark;
     GwyDataObjectId *object;
 
     object = &controls->args->detail;
     object->data = gwy_data_chooser_get_active(chooser, &object->id);
     gwy_debug("data: %p %d", object->data, object->id);
 
-    dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
-    g_assert(GTK_IS_DIALOG(dialog));
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK,
                                       object->data != NULL);
+
+    if (object->data) {
+        quark = gwy_app_get_data_key_for_id(object->id);
+        dfield = gwy_container_get_object(object->data, quark);
+        quark = gwy_app_get_data_key_for_id(controls->args->image.id);
+        ifield = gwy_container_get_object(controls->args->image.data, quark);
+        controls->xmax = (gwy_data_field_get_xreal(ifield)
+                          - gwy_data_field_get_xreal(dfield));
+        controls->ymax = (gwy_data_field_get_yreal(ifield)
+                          - gwy_data_field_get_yreal(dfield));
+    }
+
     immerse_update_detail_pixbuf(controls);
+    immerse_clamp_detail_offset(controls, controls->xpos, controls->ypos);
     if (GTK_WIDGET_DRAWABLE(controls->view))
         gtk_widget_queue_draw(controls->view);
 }
@@ -614,20 +671,23 @@ immerse_view_expose(GtkWidget *view,
 
     gwy_debug("%p", controls->detail);
     if (controls->detail) {
+        GdkColor white = { 0, 0xffff, 0xffff, 0xffff };
         GdkGC *gc;
-        gint xoff, yoff;
+        gint w, h, xoff, yoff;
 
         gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(view),
                                         controls->xpos, controls->ypos,
                                         &xoff, &yoff);
-        gwy_debug("(%d,%d) %dx%d",
-                  xoff, yoff,
-                  gdk_pixbuf_get_width(controls->detail),
-                  gdk_pixbuf_get_height(controls->detail));
+        w = gdk_pixbuf_get_width(controls->detail);
+        h = gdk_pixbuf_get_height(controls->detail);
+        gwy_debug("(%d,%d) %dx%d", xoff, yoff, w, h);
         gc = gdk_gc_new(view->window);
         gdk_draw_pixbuf(view->window, gc, controls->detail,
-                        0, 0, xoff, yoff, -1, -1,
+                        0, 0, xoff, yoff, w, h,
                         GDK_RGB_DITHER_NORMAL, 0, 0);
+        gdk_gc_set_function(gc, GDK_XOR);
+        gdk_gc_set_rgb_fg_color(gc, &white);
+        gdk_draw_rectangle(view->window, gc, FALSE, xoff, yoff, w-1, h-1);
         g_object_unref(gc);
     }
 
@@ -662,6 +722,8 @@ immerse_view_button_release(GtkWidget *view,
                             GdkEventButton *event,
                             ImmerseControls *controls)
 {
+    gdouble xpos, ypos;
+
     if (event->button != controls->button)
         return FALSE;
 
@@ -669,9 +731,9 @@ immerse_view_button_release(GtkWidget *view,
     gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(view),
                                     event->x - controls->xc,
                                     event->y - controls->yc,
-                                    &controls->xpos,
-                                    &controls->ypos);
-    gtk_widget_queue_draw(controls->view);
+                                    &xpos,
+                                    &ypos);
+    immerse_clamp_detail_offset(controls, xpos, ypos);
     gdk_window_set_cursor(view->window, controls->near_cursor);
 
     return TRUE;
@@ -703,12 +765,13 @@ immerse_view_motion_notify(GtkWidget *view,
             gdk_window_set_cursor(window, NULL);
     }
     else {
+        gdouble xpos, ypos;
+
         gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(view),
                                         x - controls->xc,
                                         y - controls->yc,
-                                        &controls->xpos,
-                                        &controls->ypos);
-        gtk_widget_queue_draw(controls->view);
+                                        &xpos, &ypos);
+        immerse_clamp_detail_offset(controls, xpos, ypos);
     }
 
     return TRUE;
@@ -731,6 +794,35 @@ immerse_view_inside_detail(ImmerseControls *controls,
             && y >= yoff
             && y < yoff + gdk_pixbuf_get_height(controls->detail));
 }
+
+static gboolean
+immerse_clamp_detail_offset(ImmerseControls *controls,
+                            gdouble xpos, gdouble ypos)
+{
+    xpos = CLAMP(xpos, 0.0, controls->xmax);
+    ypos = CLAMP(ypos, 0.0, controls->ymax);
+    if (xpos != controls->xpos || ypos != controls->ypos) {
+        gchar *s;
+
+        controls->xpos = xpos;
+        controls->ypos = ypos;
+        s = g_strdup_printf("(%.*f, %.*f) %s",
+                            controls->vf->precision,
+                            xpos/controls->vf->magnitude,
+                            controls->vf->precision,
+                            ypos/controls->vf->magnitude,
+                            controls->vf->units);
+        gtk_label_set_text(GTK_LABEL(controls->pos), s);
+        g_free(s);
+
+        if (GTK_WIDGET_DRAWABLE(controls->view))
+            gtk_widget_queue_draw(controls->view);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 
 static const gchar leveling_key[] = "/module/immerse/leveling";
 static const gchar mode_key[]     = "/module/immerse/mode";
