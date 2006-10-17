@@ -99,6 +99,7 @@ gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 # This is ugly a bit, but uses only very basic sed constructs
 authors.h: ${top_srcdir}/AUTHORS
 	{ \
+		echo '/* This is a GENERATED file */'; \
 		echo 'static const gchar *core_developers[] = {'; \
 		sed -n -e '/=== Core developers ===/,/^$$/{' \
 			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
