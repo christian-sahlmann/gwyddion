@@ -93,6 +93,37 @@ gwy_radio_buttons_create(const GwyEnum *entries,
 }
 
 /**
+ * gwy_radio_buttons_attach_to_table:
+ * @group: A radio button group.  Not necessarily created by
+ *         gwy_radio_buttons_create().
+ * @table: A table.
+ * @colspan: The number of columns the radio buttons should span across.
+ * @row: Table row to start attaching at.
+ *
+ * Attaches a group of radio buttons to table rows.
+ *
+ * Returns: The row after the last attached radio button.
+ **/
+gint
+gwy_radio_buttons_attach_to_table(GSList *group,
+                                  GtkTable *table,
+                                  gint colspan,
+                                  gint row)
+{
+    g_return_val_if_fail(GTK_IS_TABLE(table), row);
+
+    while (group) {
+        gtk_table_attach(table, GTK_WIDGET(group->data),
+                         0, colspan, row, row + 1,
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+        group = g_slist_next(group);
+    }
+
+    return row;
+}
+
+/**
  * gwy_radio_buttons_set_current:
  * @group: A radio button group created by gwy_radio_buttons_create().
  * @current: Value to be shown as currently selected.
