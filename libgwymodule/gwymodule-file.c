@@ -353,7 +353,7 @@ file_detect_max_score_cb(const gchar *key,
  * @operations: The file operations the file type must support (it must
  *              support all of them to be considered).
  *
- * Detects file type of file @filename.
+ * Detects the type of a file.
  *
  * Returns: The type name (i.e., the same name as passed to
  *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
@@ -363,6 +363,29 @@ const gchar*
 gwy_file_detect(const gchar *filename,
                 gboolean only_name,
                 GwyFileOperationType operations)
+{
+    return gwy_file_detect_with_score(filename, only_name, operations, NULL);
+}
+
+/**
+ * gwy_file_detect_with_score:
+ * @filename: A file name to detect type of.
+ * @only_name: Whether to use only file name for a guess, or try to actually
+ * @operations: The file operations the file type must support (it must
+ * @score: Location to store the maximum score (corresponding to the returned
+ *         type) to.
+ *
+ * Detects the type of a file and gives the score.
+ *
+ * Returns: The type name (i.e., the same name as passed to
+ *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
+ *          or %NULL if there's no probable one.
+ **/
+const gchar*
+gwy_file_detect_with_score(const gchar *filename,
+                           gboolean only_name,
+                           GwyFileOperationType operations,
+                           gint *score)
 {
     FileDetectData ddata;
     GwyFileDetectInfo fileinfo;
@@ -383,9 +406,9 @@ gwy_file_detect(const gchar *filename,
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
     gwy_file_detect_free_info(&fileinfo);
 
-    if (!ddata.score)
-        return NULL;
-    return ddata.winner;
+    if (score)
+        *score = ddata.score;
+    return ddata.score ? ddata.winner : NULL;
 }
 
 static gboolean

@@ -94,19 +94,23 @@ void                 gwy_file_func_foreach        (GFunc function,
                                                    gpointer user_data);
 
 /* high-level interface */
-const gchar*         gwy_file_detect       (const gchar *filename,
-                                            gboolean only_name,
-                                            GwyFileOperationType operations);
-GwyContainer*        gwy_file_load         (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-GwyFileOperationType gwy_file_save         (GwyContainer *data,
-                                            const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-gboolean             gwy_file_get_data_info(GwyContainer *data,
-                                            const gchar **name,
-                                            const gchar **filename_sys);
+const gchar*        gwy_file_detect           (const gchar *filename,
+                                               gboolean only_name,
+                                               GwyFileOperationType operations);
+const gchar*        gwy_file_detect_with_score(const gchar *filename,
+                                               gboolean only_name,
+                                               GwyFileOperationType operations,
+                                               gint *score);
+GwyContainer*       gwy_file_load             (const gchar *filename,
+                                               GwyRunType mode,
+                                               GError **error);
+GwyFileOperationType gwy_file_save            (GwyContainer *data,
+                                               const gchar *filename,
+                                               GwyRunType mode,
+                                               GError **error);
+gboolean            gwy_file_get_data_info    (GwyContainer *data,
+                                               const gchar **name,
+                                               const gchar **filename_sys);
 
 GQuark gwy_module_file_error_quark(void);
 
