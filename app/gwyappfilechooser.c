@@ -503,6 +503,7 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
 {
     GwyAppFileChooser *chooser;
     const gchar *name;
+    gint score;
 
     chooser = GWY_APP_FILE_CHOOSER(userdata);
     if (chooser->filetype && *chooser->filetype)
@@ -510,12 +511,12 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
                                         filter_info->filename,
                                         FALSE);
 
-    name = gwy_file_detect(filter_info->filename,
-                           FALSE,
-                           GWY_FILE_OPERATION_LOAD);
-    /* XXX: Dirty hack to filter out "rawfile" module which makes everything
-     * importable */
-    return name != NULL && !gwy_strequal(name, "rawfile");
+    name = gwy_file_detect_with_score(filter_info->filename,
+                                      FALSE,
+                                      GWY_FILE_OPERATION_LOAD,
+                                      &score);
+    /* To filter out `fallback' importers like rawfile */
+    return name != NULL && score >= 5;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
