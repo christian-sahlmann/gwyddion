@@ -77,7 +77,9 @@ def check_file(filename, lines):
 def check_long_lines(lines, warnings):
     "Check for lines longer than 80 characters"
     for i, l in enumerate(lines):
-        if len(l) > 80 and not l.startswith('/* vim: '):
+        if len(l) > 80 \
+                and not l.startswith('/* vim: ') \
+                and not l.startswith('#define' ):
             w = 'Line longer than 80 characters: %s'
             warnings.append((i, w % l.lstrip()))
 
@@ -253,7 +255,7 @@ def check_eol_operators(tokens, lines, warnings):
     "Check for operators on the end of line."
     # XXX: don't check `=', not always sure about the style
     oplist = '&&', '||', '+', '-', '*', '/', '%', '|', '&', '^', \
-             '==', '!=', '<', '>', '<=', '>=', '?' #, '='
+             '==', '!=', '<', '>', '<=', '>=', '?', '='
     operators = dict([(x, 1) for x in oplist])
     for t in tokens:
         if t.bracelevel == 0:
