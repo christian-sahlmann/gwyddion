@@ -35,7 +35,6 @@ class Token:
         self.end = column + len(string)    # one character *after*
 
 def check_file(filename, lines):
-    sys.stderr.write(filename + '\n')
     line_checks = [
         check_tab_characters,
         check_long_lines
