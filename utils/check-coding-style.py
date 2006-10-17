@@ -35,6 +35,7 @@ class Token:
         self.end = column + len(string)    # one character *after*
 
 def check_file(filename, lines):
+    sys.stderr.write(filename + '\n')
     line_checks = [
         check_tab_characters,
         check_long_lines
@@ -206,7 +207,7 @@ def check_multistatements(tokens, lines, warnings):
     for t in tokens:
         if t.typ != Token.punct or t.string != ';' or t.parenlevel > 0:
             continue
-        if t.succ.line == t.line:
+        if t.succ and t.succ.line == t.line:
             w = 'More than one statement on a line (col %d): %s'
             warnings.append((t.line, w % (t.succ.col, lines[t.line])))
 
