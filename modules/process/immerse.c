@@ -28,8 +28,8 @@
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -77,6 +77,7 @@ typedef struct {
     GwyContainer *mydata;
     GtkWidget *view;
     GtkWidget *pos;
+    GSList *sampling;
     GdkPixbuf *detail;
     GwySIValueFormat *vf;
     gdouble xmax;
@@ -101,11 +102,10 @@ static void     immerse_update_detail_pixbuf(ImmerseControls *controls);
 static gboolean immerse_data_filter         (GwyContainer *data,
                                              gint id,
                                              gpointer user_data);
+static void     immerse_improve             (ImmerseControls *controls);
 static gboolean immerse_do                  (ImmerseArgs *args);
-static void     immerse_mode_cb             (GtkWidget *combo,
-                                             ImmerseArgs *args);
-static void     immerse_sampling_cb         (GtkWidget *combo,
-                                             ImmerseArgs *args);
+static void     immerse_sampling_cb         (GtkWidget *button,
+                                             ImmerseControls *controls);
 static gboolean immerse_view_expose         (GtkWidget *view,
                                              GdkEventExpose *event,
                                              ImmerseControls *controls);
@@ -149,8 +149,8 @@ static const GwyEnum modes[] = {
 };
 
 static const GwyEnum samplings[] = {
-    { N_("Upsample large image"), GWY_IMMERSE_SAMPLING_UP },
-    { N_("Downsample detail"),    GWY_IMMERSE_SAMPLING_DOWN },
+    { N_("_Upsample large image"), GWY_IMMERSE_SAMPLING_UP },
+    { N_("_Downsample detail"),    GWY_IMMERSE_SAMPLING_DOWN },
 };
 
 static const ImmerseArgs immerse_defaults = {
@@ -212,8 +212,8 @@ static gboolean
 immerse_dialog(ImmerseArgs *args)
 {
     ImmerseControls controls;
-    GtkWidget *table, *chooser, *combo, *hbox, *alignment, *label;
-    GtkWidget *vbox;
+    GtkWidget *table, *chooser, *hbox, *alignment, *label, *button, *vbox;
+    GtkTooltips *tooltips;
     GdkDisplay *display;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
@@ -222,6 +222,7 @@ immerse_dialog(ImmerseArgs *args)
     gboolean ok;
 
     memset(&controls, 0, sizeof(ImmerseControls));
+    controls.xpos = controls.ypos = -1e38;  /* ensure update */
     controls.args = args;
 
     controls.dialog
@@ -238,7 +239,6 @@ immerse_dialog(ImmerseArgs *args)
                        FALSE, FALSE, 4);
 
     /* Preview */
-
     id = args->image.id;
     dfield = gwy_container_get_object(args->image.data,
                                       gwy_app_get_data_key_for_id(id));
@@ -296,37 +296,33 @@ immerse_dialog(ImmerseArgs *args)
                      G_CALLBACK(immerse_detail_cb), &controls);
     gwy_table_attach_hscale(table, row, _("_Detail image:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     /*Parameters*/
     /*TODO, uncomment after it is clear what this should do*/
-    /*combo = gwy_enum_combo_box_new(levelings, G_N_ELEMENTS(levelings),
+    /*
+    combo = gwy_enum_combo_box_new(levelings, G_N_ELEMENTS(levelings),
                                    G_CALLBACK(immerse_leveling_cb), args,
                                    args->leveling, TRUE);
     gwy_table_attach_hscale(table, row, _("_Leveling:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
     */
-    combo = gwy_enum_combo_box_new(modes, G_N_ELEMENTS(modes),
-                                   G_CALLBACK(immerse_mode_cb), args,
-                                   args->mode, TRUE);
-    gwy_table_attach_hscale(table, row, _("_Align detail:"), NULL,
-                            GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
+
+    label = gtk_label_new(_("Result Sampling"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    combo = gwy_enum_combo_box_new(samplings, G_N_ELEMENTS(samplings),
-                                   G_CALLBACK(immerse_sampling_cb), args,
-                                   args->sampling, TRUE);
-    gwy_table_attach_hscale(table, row, _("_Result sampling:"), NULL,
-                            GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
-    row++;
-
-    /* Position */
-    table = gtk_table_new(4, 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_box_pack_end(GTK_BOX(vbox), table, FALSE, FALSE, 4);
-    row = 0;
+    controls.sampling
+        = gwy_radio_buttons_create(samplings, G_N_ELEMENTS(samplings),
+                                   G_CALLBACK(immerse_sampling_cb), &controls,
+                                   args->sampling);
+    row = gwy_radio_buttons_attach_to_table(controls.sampling, GTK_TABLE(table),
+                                            4, row);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new(_("Detail position:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -338,6 +334,18 @@ immerse_dialog(ImmerseArgs *args)
     gtk_table_attach(GTK_TABLE(table), controls.pos,
                      1, 3, row, row+1, 0, 0, 0, 0);
     row++;
+
+    button = gtk_button_new_with_mnemonic(_("_Improve"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(immerse_improve), &controls);
+    tooltips = gwy_app_get_tooltips();
+    gtk_tooltips_set_tip(tooltips, button,
+                         _("Improve detail position by correlation"), NULL);
+
+    alignment = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(alignment), button);
+    gtk_table_attach(GTK_TABLE(table), alignment,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     gtk_widget_show_all(controls.dialog);
     display = gtk_widget_get_display(controls.dialog);
@@ -484,6 +492,12 @@ immerse_data_filter(GwyContainer *data,
         return FALSE;
 
     return TRUE;
+}
+
+static void
+immerse_improve(ImmerseControls *controls)
+{
+    g_printerr("Bad luck!\n");
 }
 
 static gboolean
@@ -650,15 +664,11 @@ immerse_leveling_cb(GtkWidget *combo, ImmerseArgs *args)
 */
 
 static void
-immerse_mode_cb(GtkWidget *combo, ImmerseArgs *args)
+immerse_sampling_cb(G_GNUC_UNUSED GtkWidget *button,
+                    ImmerseControls *controls)
 {
-    args->mode = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-immerse_sampling_cb(GtkWidget *combo, ImmerseArgs *args)
-{
-    args->sampling = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    controls->args->sampling
+        = gwy_radio_buttons_get_current(controls->sampling);
 }
 
 static gboolean
@@ -825,14 +835,12 @@ immerse_clamp_detail_offset(ImmerseControls *controls,
 
 
 static const gchar leveling_key[] = "/module/immerse/leveling";
-static const gchar mode_key[]     = "/module/immerse/mode";
 static const gchar sampling_key[] = "/module/immerse/sampling";
 
 static void
 immerse_sanitize_args(ImmerseArgs *args)
 {
     args->leveling = MIN(args->leveling, GWY_IMMERSE_LEVELING_LAST - 1);
-    args->mode = MIN(args->mode, GWY_IMMERSE_MODE_LAST - 1);
     args->sampling = MIN(args->sampling, GWY_IMMERSE_SAMPLING_LAST - 1);
 }
 
@@ -842,7 +850,6 @@ immerse_load_args(GwyContainer *settings,
 {
     *args = immerse_defaults;
     gwy_container_gis_enum_by_name(settings, leveling_key, &args->leveling);
-    gwy_container_gis_enum_by_name(settings, mode_key, &args->mode);
     gwy_container_gis_enum_by_name(settings, sampling_key, &args->sampling);
     immerse_sanitize_args(args);
 }
@@ -852,7 +859,6 @@ immerse_save_args(GwyContainer *settings,
                    ImmerseArgs *args)
 {
     gwy_container_set_enum_by_name(settings, leveling_key, args->leveling);
-    gwy_container_set_enum_by_name(settings, mode_key, args->mode);
     gwy_container_set_enum_by_name(settings, sampling_key, args->sampling);
 }
 
