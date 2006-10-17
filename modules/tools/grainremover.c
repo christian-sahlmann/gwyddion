@@ -220,12 +220,7 @@ gwy_tool_grain_remover_init_dialog(GwyToolGrainRemover *tool)
                        (modes, G_N_ELEMENTS(modes),
                         G_CALLBACK(gwy_tool_grain_remover_mode_changed), tool,
                         tool->args.mode);
-    while (group) {
-        gtk_table_attach(table, GTK_WIDGET(group->data),
-                         0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
-        group = g_slist_next(group);
-    }
+    row = gwy_radio_buttons_attach_to_table(group, table, 2, row);
     gtk_table_set_row_spacing(table, row-1, 8);
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation method:"));

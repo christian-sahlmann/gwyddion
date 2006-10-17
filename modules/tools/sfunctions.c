@@ -295,7 +295,6 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
     GtkDialog *dialog;
     GtkWidget *label, *hbox, *vbox, *hbox2, *image;
     GtkTable *table;
-    GSList *radio;
     guint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
@@ -371,17 +370,11 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
-    radio = gwy_radio_buttons_create
-                    (directions, G_N_ELEMENTS(directions),
-                     G_CALLBACK(gwy_tool_sfunctions_direction_changed), tool,
-                     tool->args.direction);
-    tool->direction = radio;
-    while (radio) {
-        gtk_table_attach(table, GTK_WIDGET(radio->data),
-                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
-        radio = g_slist_next(radio);
-    }
+    tool->direction = gwy_radio_buttons_create
+                        (directions, G_N_ELEMENTS(directions),
+                        G_CALLBACK(gwy_tool_sfunctions_direction_changed), tool,
+                        tool->args.direction);
+    row = gwy_radio_buttons_attach_to_table(tool->direction, table, 3, row);
     gtk_table_set_row_spacing(table, row-1, 8);
 
     hbox2 = gtk_hbox_new(FALSE, 4);

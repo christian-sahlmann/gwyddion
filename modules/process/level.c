@@ -250,7 +250,6 @@ level_dialog(LevelArgs *args)
 
     GtkWidget *dialog, *label, *table;
     gint row, response;
-    GSList *list;
     LevelControls controls;
 
     controls.args = args;
@@ -278,13 +277,8 @@ level_dialog(LevelArgs *args)
     controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
                                              G_CALLBACK(mode_changed_cb),
                                              &controls, args->level_mode);
-    list = controls.mode;
-    do {
-        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(list->data),
-                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
-        list = g_slist_next(list);
-    } while (list);
+    row = gwy_radio_buttons_attach_to_table(controls.mode, GTK_TABLE(table),
+                                            3, row);
 
     gtk_widget_show_all(dialog);
     do {

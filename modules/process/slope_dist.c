@@ -178,7 +178,6 @@ slope_dialog(SlopeArgs *args)
         { N_("Per-angle _graph"),              SLOPE_DIST_GRAPH },
     };
     GtkWidget *dialog, *table, *label;
-    GSList *group;
     SlopeControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -206,17 +205,13 @@ slope_dialog(SlopeArgs *args)
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    group = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
-                                     G_CALLBACK(slope_output_type_cb),
-                                     &controls,
-                                     args->output_type);
-    controls.output_type_group = group;
-    while (group) {
-        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
-                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
-        group = g_slist_next(group);
-    }
+    controls.output_type_group
+        = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
+                                   G_CALLBACK(slope_output_type_cb),
+                                   &controls,
+                                   args->output_type);
+    row = gwy_radio_buttons_attach_to_table(controls.output_type_group,
+                                            GTK_TABLE(table), 4, row);
 
     controls.size = gtk_adjustment_new(args->size, 10, MAX_OUT_SIZE, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Output _size:"), "px",

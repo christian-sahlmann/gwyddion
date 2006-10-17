@@ -209,7 +209,6 @@ sphrev_dialog(Sphrev1DArgs *args)
     GtkWidget *dialog, *table, *spin;
     Sphrev1DControls controls;
     gint response, row;
-    GSList *radio;
     gdouble q;
 
     dialog = gtk_dialog_new_with_buttons(_("Revolve Arc"), NULL, 0,
@@ -249,17 +248,12 @@ sphrev_dialog(Sphrev1DArgs *args)
                      G_CALLBACK(size_changed_cb), args);
     row++;
 
-    radio = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
-                                     G_CALLBACK(direction_changed_cb), args,
-                                     args->direction);
-    controls.direction = radio;
-    while (radio) {
-        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(radio->data),
-                         0, 4, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
-        radio = g_slist_next(radio);
-    }
+    controls.direction
+        = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
+                                   G_CALLBACK(direction_changed_cb), args,
+                                   args->direction);
+    gwy_radio_buttons_attach_to_table(controls.direction, GTK_TABLE(table),
+                                      4, row);
 
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));

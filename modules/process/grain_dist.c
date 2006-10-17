@@ -303,12 +303,8 @@ grain_dist_dialog(GrainDistArgs *args,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.mode->data),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.mode->next->data),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
+    row = gwy_radio_buttons_attach_to_table(controls.mode, GTK_TABLE(table),
+                                            4, row);
 
     controls.resolution = gtk_adjustment_new(args->resolution,
                                              MIN_RESOLUTION, MAX_RESOLUTION,
