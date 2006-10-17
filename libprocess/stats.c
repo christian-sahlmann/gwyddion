@@ -3003,9 +3003,12 @@ gwy_data_field_area_get_normal_coeffs(GwyDataField *data_field,
             dcz = d1x*d2y - d1y*d2x; /* Always 1 */
             /* Normalize and add */
             dd = sqrt(dcx*dcx + dcy*dcy + dcz*dcz);
-            dcx /= dd; sumdx += dcx;
-            dcy /= dd; sumdy += dcy;
-            dcz /= dd; sumdz += dcz;
+            dcx /= dd;
+            sumdx += dcx;
+            dcy /= dd;
+            sumdy += dcy;
+            dcz /= dd;
+            sumdz += dcz;
             sumw += 1.0/dd;
             ctr++;
         }

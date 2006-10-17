@@ -298,8 +298,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
         return;
     }
 
-    switch (method)
-    {
+    switch (method) {
         case GWY_CORRELATION_NORMAL:
         gwy_data_field_fill(score, -1);
         /*correlation request outside kernel */
@@ -376,15 +375,15 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                              GWY_TRANSFORM_DIRECTION_FORWARD,
                              GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
 
-        for (i = 0; i < fftxres*fftyres; i++)
-        {
-            /*NOTE: now we construct new "complex field" from data and kernel fields, just to save memory*/
+        for (i = 0; i < fftxres*fftyres; i++) {
+            /*NOTE: now we construct new "complex field" from data
+             * and kernel fields, just to save memory*/
             data_in_re->data[i] = data_out_re->data[i]*kernel_out_re->data[i]
                 + data_out_im->data[i]*kernel_out_im->data[i];
             kernel_in_re->data[i] = -data_out_re->data[i]*kernel_out_im->data[i]
                 + data_out_im->data[i]*kernel_out_re->data[i];
             if (method == GWY_CORRELATION_POC) {
-                norm = sqrt(data_in_re->data[i]*data_in_re->data[i] + kernel_in_re->data[i]*kernel_in_re->data[i]);
+                norm = hypot(data_in_re->data[i], kernel_in_re->data[i]);
                 data_in_re->data[i] /= norm;
                 kernel_in_re->data[i] /= norm;
             }

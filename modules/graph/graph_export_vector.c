@@ -62,12 +62,12 @@ export(GwyGraph *graph)
     GString *str;
     FILE *fw;
 
-    dialog = gtk_file_chooser_dialog_new ("Export to postscript",
-                                          NULL,
-                                          GTK_FILE_CHOOSER_ACTION_SAVE,
-                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                          GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                          NULL);
+    dialog = gtk_file_chooser_dialog_new("Export to postscript",
+                                         NULL,
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());

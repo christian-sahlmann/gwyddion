@@ -274,7 +274,7 @@ gwy_data_line_deserialize(const guchar *buffer,
     }
 
     /* don't allocate large amount of memory just to immediately free it */
-    data_line = gwy_data_line_new(1, real, 0);
+    data_line = gwy_data_line_new(1, real, FALSE);
     g_free(data_line->data);
     data_line->res = res;
     data_line->off = off;

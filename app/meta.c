@@ -401,7 +401,7 @@ gwy_meta_browser_add_line(gpointer hkey,
      * stored to container.  But in practice we cannot rely on it. */
     fd = g_new0(FixupData, 1);
     fd->quark = quark;
-    if (g_utf8_validate(val, -1 , NULL)) {
+    if (g_utf8_validate(val, -1, NULL)) {
         fd->value = (gchar*)val;
         fd->isok = TRUE;
     }

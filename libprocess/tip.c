@@ -708,8 +708,7 @@ gwy_tip_cmap(GwyDataField *tip,
                                        ftip, buffertip->yres, buffertip->xres,
                                        buffertip->yres/2, buffertip->xres/2,
                                        set_fraction, set_message);
-    if (!rsurface)
-    {
+    if (!rsurface) {
         _gwy_morph_lib_ifreematrix(ftip, buffertip->xres);
         _gwy_morph_lib_ifreematrix(fsurface, newx);
        if (freetip)
@@ -741,7 +740,8 @@ gwy_tip_cmap(GwyDataField *tip,
     _gwy_morph_lib_ifreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_ifreematrix(fsurface, newx);
     _gwy_morph_lib_ifreematrix(rsurface, newx);
-    if (fresult) _gwy_morph_lib_ifreematrix(fresult, result->xres);
+    if (fresult)
+        _gwy_morph_lib_ifreematrix(fresult, result->xres);
     if (freetip)
         g_object_unref(buffertip);
     else

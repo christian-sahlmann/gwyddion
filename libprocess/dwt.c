@@ -519,7 +519,6 @@ gwy_data_field_dwt_denoise(GwyDataField *dfield,
     }
 */
     gwy_data_field_ydwt(dfield, wt_coefs, GWY_TRANSFORM_DIRECTION_BACKWARD, 4);
-  //  printf("coutn: %d\n", count);
 }
 
 /*universal thresholding with supplied threshold value*/
@@ -647,8 +646,7 @@ remove_by_threshold(GwyDataField *dfield,
         gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < (brcol - ulcol); j++) {
-            if (fabs(*drow) < threshold)
-            {
+            if (fabs(*drow) < threshold) {
                 if (hard)
                     *drow = 0;
                 else {
@@ -864,8 +862,7 @@ find_anisotropy(GwyDataField *dfield,
         trdrow = trpos + i*dfield->xres;
 
         for (j = 0; j < (br - ul); j++) {
-            if ((fabs(*bldrow) - fabs(*trdrow))>(rms/threshold))
-            {
+            if ((fabs(*bldrow) - fabs(*trdrow))>(rms/threshold)) {
                 /* note that we shift a little result neighbourhood.
                  * This is probably due to bad centering,
                    of scaling function, but it should be studied yet */
@@ -878,8 +875,7 @@ find_anisotropy(GwyDataField *dfield,
                                          maxcol - mincol, maxrow - minrow,
                                          1.0);
             }
-            else if ((fabs(*trdrow) - fabs(*bldrow)) > (rms/threshold))
-            {
+            else if ((fabs(*trdrow) - fabs(*bldrow)) > (rms/threshold)) {
                 /* note that we shift a little result neighbourhood.
                  * This is probably due to bad centering,
                    of scaling function, but it should be studied yet */

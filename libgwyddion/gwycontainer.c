@@ -2377,8 +2377,8 @@ gwy_container_deserialize_from_text(const gchar *text)
         if (!(len = token_length(tok)) || len == (guint)-1)
             goto fail;
         /* boolean */
-        if (typelen+1 == sizeof("boolean") &&
-            g_str_has_prefix(type, "boolean")) {
+        if (typelen+1 == sizeof("boolean")
+            && g_str_has_prefix(type, "boolean")) {
             if (len == 4 && g_str_has_prefix(tok, "True"))
                 gwy_container_set_boolean(container, key, TRUE);
             else if (len == 5 && g_str_has_prefix(tok, "False"))

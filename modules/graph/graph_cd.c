@@ -87,7 +87,7 @@ static void        to_changed_cb             (GtkWidget *entry,
 static void        dialog_update             (FitControls *controls,
                                               FitArgs *args);
 static void        graph_selected            (GwySelection *selection,
-                                              gint i, 
+                                              gint i,
                                               FitControls *controls);
 static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
@@ -186,8 +186,7 @@ normalize_data(FitArgs *args,
     for (i = 0; i < n; i++) {
         if ((xs[i] >= args->from
              && xs[i] <= args->to)
-              || (args->from == args->to))
-        {
+              || (args->from == args->to)) {
             xd[j] = xs[i];
             yd[j] = ys[i];
             j++;
@@ -456,8 +455,7 @@ plot_inits(FitArgs *args, FitControls *controls)
 
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
-    if (!normalize_data(args, xdata, ydata, args->curve - 1))
-    {
+    if (!normalize_data(args, xdata, ydata, args->curve - 1)) {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
@@ -509,8 +507,7 @@ recompute(FitArgs *args, FitControls *controls)
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
 
-    if (!normalize_data(args, xdata, ydata, args->curve - 1))
-    {
+    if (!normalize_data(args, xdata, ydata, args->curve - 1)) {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
@@ -520,8 +517,7 @@ recompute(FitArgs *args, FitControls *controls)
                                              args->function_type);
     nparams = gwy_cdline_get_nparams(args->fitfunc);
 
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         fixed[i] = args->par_fix[i];
         args->par_res[i] = args->par_init[i];
     }
@@ -579,6 +575,7 @@ static void
 type_changed_cb(GtkWidget *combo, FitControls *controls)
 {
     char *p, *filename;
+    const gchar *definition;
     gint active;
 
     active = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
@@ -591,8 +588,8 @@ type_changed_cb(GtkWidget *combo, FitControls *controls)
                                              controls->args->function_type);
 
     p = gwy_find_self_dir("pixmaps");
-    filename = g_build_filename(p, gwy_cdline_get_definition(controls->args->fitfunc),
-                                NULL);
+    definition = gwy_cdline_get_definition(controls->args->fitfunc);
+    filename = g_build_filename(p, definition, NULL);
     g_free(p);
 
     gtk_image_set_from_file(GTK_IMAGE(controls->image), filename);
@@ -867,7 +864,7 @@ create_results_window(FitArgs *args)
     gchar *p, *filename;
     GString *str, *su;
     GtkWidget *image;
-    const gchar *s;
+    const gchar *s, *definition;
 
     g_return_if_fail(args->is_fitted);
 
@@ -919,7 +916,8 @@ create_results_window(FitArgs *args)
     row++;
 
     p = gwy_find_self_dir("pixmaps");
-    filename = g_build_filename(p, gwy_cdline_get_definition(args->fitfunc), NULL);
+    definition = gwy_cdline_get_definition(args->fitfunc);
+    filename = g_build_filename(p, definition, NULL);
     g_free(p);
 
     image = gtk_image_new_from_file(filename);
@@ -949,8 +947,7 @@ create_results_window(FitArgs *args)
         attach_label(tab, s, i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->err[i];
-        if (sigma == -1)
-        {
+        if (sigma == -1) {
             g_string_printf(str, "%g", value);
             attach_label(tab, str->str, i, 2, 1.0);
             g_string_printf(str, "-");

@@ -202,14 +202,14 @@ gwy_layer_line_class_init(GwyLayerLineClass *klass)
     vector_class->button_press = gwy_layer_line_button_pressed;
     vector_class->button_release = gwy_layer_line_button_released;
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_LINE_NUMBERS,
-        g_param_spec_boolean("line-numbers",
-                             "Number lines",
-                             "Whether to attach line numbers to the lines.",
-                             TRUE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LINE_NUMBERS,
+         g_param_spec_boolean("line-numbers",
+                              "Number lines",
+                              "Whether to attach line numbers to the lines.",
+                              TRUE,
+                              G_PARAM_READWRITE));
 }
 
 static void

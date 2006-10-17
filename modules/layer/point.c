@@ -168,25 +168,25 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
     vector_class->button_press = gwy_layer_point_button_pressed;
     vector_class->button_release = gwy_layer_point_button_released;
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_DRAW_MARKER,
-        g_param_spec_boolean("draw-marker",
-                             "Draw marker",
-                             "Whether to draw point marker(s)",
-                             TRUE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DRAW_MARKER,
+         g_param_spec_boolean("draw-marker",
+                              "Draw marker",
+                              "Whether to draw point marker(s)",
+                              TRUE,
+                              G_PARAM_READWRITE));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_MARKER_RADIUS,
-        g_param_spec_uint("marker-radius",
-                          "Marker radius",
-                          "fill me in",
-                          0,
-                          50,
-                          0,
-                          G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MARKER_RADIUS,
+         g_param_spec_uint("marker-radius",
+                           "Marker radius",
+                           "fill me in",
+                           0,
+                           50,
+                           0,
+                           G_PARAM_READWRITE));
 }
 
 static void

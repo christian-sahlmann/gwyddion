@@ -184,35 +184,36 @@ gwy_layer_rectangle_class_init(GwyLayerRectangleClass *klass)
     vector_class->button_press = gwy_layer_rectangle_button_pressed;
     vector_class->button_release = gwy_layer_rectangle_button_released;
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_IS_CROP,
-        g_param_spec_boolean("is-crop",
-                             "Crop style",
-                             "Whether the selection is drawn crop-style with "
-                             "lines from border to border instead of plain "
-                             "rectangle",
-                             FALSE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_IS_CROP,
+         g_param_spec_boolean("is-crop",
+                              "Crop style",
+                              "Whether the selection is drawn crop-style with "
+                              "lines from border to border instead of plain "
+                              "rectangle",
+                              FALSE,
+                              G_PARAM_READWRITE));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_DRAW_REFLECTION,
-        g_param_spec_boolean("draw-reflection",
-                             "Draw reflection",
-                             "Whether central reflection of selection should "
-                             "be drawn too",
-                             FALSE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DRAW_REFLECTION,
+         g_param_spec_boolean("draw-reflection",
+                              "Draw reflection",
+                              "Whether central reflection of selection should "
+                              "be drawn too",
+                              FALSE,
+                              G_PARAM_READWRITE));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_SNAP_TO_CENTER,
-        g_param_spec_boolean("snap-to-center",
-                             "Snap to Center",
-                             "Whether the selection should snap to the center.",
-                             FALSE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SNAP_TO_CENTER,
+         g_param_spec_boolean("snap-to-center",
+                              "Snap to Center",
+                              "Whether the selection should snap to the "
+                              "center.",
+                              FALSE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -331,7 +332,7 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
                                             &xy_pixel[0], &xy_pixel[1]);
             gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3],
                                             &xy_pixel[2], &xy_pixel[3]);
-            for (j=0; j<OBJECT_SIZE; j++)
+            for (j = 0; j < OBJECT_SIZE; j++)
                 xy_pixel[j]++;
             gwy_data_view_coords_xy_to_real(data_view, xy_pixel[0], xy_pixel[1],
                                             &xy[0], &xy[1]);
@@ -473,7 +474,8 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
         if (TRUE) {
             /* shift down/right one pixel */
             gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
-            x++; y++;
+            x++;
+            y++;
             gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[0], &xy[1]);
         }
     }

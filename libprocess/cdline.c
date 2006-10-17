@@ -243,7 +243,7 @@ cd_rstepheight(const gdouble *x,
     nout = 0;
     for (i = 0; i < n_dat; i++) {
         if ((i < (imin - iwidth/3) && i > (imin - iwidth))    /* /3 */
-            ||(i > (imax + iwidth/3) && i < (imax + iwidth))) {       /* /3 */
+            || (i > (imax + iwidth/3) && i < (imax + iwidth))) {       /* /3 */
             param[1] += y[i];
             err[1] += y[i] * y[i];
             nout++;
@@ -312,7 +312,7 @@ cd_stepheight(const gdouble *x,
     nout = 0;
     for (i = 0; i < n_dat; i++) {
         if ((i < (imax - iwidth/3) && i > (imax - iwidth))    /* /3 */
-            ||(i > (imin + iwidth/3) && i < (imin + iwidth))) {       /* /3 */
+            || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       /* /3 */
             param[1] += y[i];
             err[1] += y[i] * y[i];
             nout++;
@@ -345,19 +345,19 @@ func_stepheight(gdouble x,
 
 /************************** cdlines ****************************/
 
-static const GwyCDLineParam stepheight_pars[]= {
-   {"h", " ", 1 },
-   {"y<sub>1</sub>", " ", 2 },
-   {"y<sub>2</sub>", " ", 2 },
-   {"x<sub>1</sub>", " ", 3 },
-   {"x<sub>2</sub>", " ", 4 },
+static const GwyCDLineParam stepheight_pars[] = {
+   { "h",             " ", 1, },
+   { "y<sub>1</sub>", " ", 2, },
+   { "y<sub>2</sub>", " ", 2, },
+   { "x<sub>1</sub>", " ", 3, },
+   { "x<sub>2</sub>", " ", 4, },
 };
 
-static const GwyCDLineParam edgeheight_pars[]= {
-   {"h", " ", 1 },
-   {"x", " ", 2 },
-   {"y<sub>1</sub>", " ", 2 },
-   {"y<sub>2</sub>", " ", 2 },
+static const GwyCDLineParam edgeheight_pars[] = {
+   { "h",             " ", 1, },
+   { "x",             " ", 2, },
+   { "y<sub>1</sub>", " ", 2, },
+   { "y<sub>2</sub>", " ", 2, },
 };
 
 
@@ -469,7 +469,8 @@ gwy_cdline_get_param_default(GwyCDLine* cdline,
 {
     const GwyCDLineParam *par;
 
-    g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams, G_MAXDOUBLE);
+    g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams,
+                         G_MAXDOUBLE);
     par = cdline->builtin->param + param;
 
     return par->default_init;

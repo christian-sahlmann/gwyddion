@@ -127,7 +127,8 @@ evaluator_run(GwyContainer *data, GwyRunType run)
 
     /*get filename of evaluator preset*/
     filename = get_filename();
-    if (!filename) return;
+    if (!filename)
+        return;
 
     args.evaluator = get_evaluator(filename);
 
@@ -188,27 +189,27 @@ evaluator_run_automatically(GwyContainer *data, GwyRunType run)
 }
 
 static gint
-get_closest_point(GwyDataField *dfield, gdouble *xdata, gdouble *ydata, gdouble *zdata, gint ndata,
+get_closest_point(GwyDataField *dfield,
+                  gdouble *xdata, gdouble *ydata, gdouble *zdata, gint ndata,
                   gdouble x, gdouble y, gint width, gint height)
 {
     gint i, mini = -1;
     gdouble minval, val;
 
     minval = G_MAXDOUBLE;
-    for (i = 0; i<ndata; i++){
-        if (fabs(x - xdata[i]) < width/2 &&
-            fabs(y - ydata[i]) < height/2)
-        {
-              val = sqrt((x - xdata[i])*(x - xdata[i])
-                         + (y - ydata[i])*(y - ydata[i]));
-              if (minval > val) {
-                  minval = val;
-                  mini = i;
-              }
+    for (i = 0; i < ndata; i++) {
+        if (fabs(x - xdata[i]) < width/2
+            && fabs(y - ydata[i]) < height/2) {
+            val = sqrt((x - xdata[i])*(x - xdata[i])
+                       + (y - ydata[i])*(y - ydata[i]));
+            if (minval > val) {
+                minval = val;
+                mini = i;
+            }
         }
     }
-    return mini;
 
+    return mini;
 }
 
 static void
@@ -247,7 +248,7 @@ get_detected_points(ErunArgs *args)
                                          threshval,
                                          TRUE);
 
-    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+    for (k = 0; k < args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
 
         j = get_closest_point(dfield, xdata, ydata, zdata, ndata,
@@ -272,18 +273,17 @@ get_detected_lines(ErunArgs *args)
     gdouble zdata[10];
     GwySearchLine *psline;
     gint ndata = 10, skip = 10;
-    gint i, j, px1, px2, py1, py2;
+    gint i, j, px1, px2, py1, py2, xres, yres,;
     gdouble threshval, hmin, hmax, rho, theta;
 
     dfield = args->dfield;
     edgefield = gwy_data_field_duplicate(dfield);
     f1 = gwy_data_field_duplicate(dfield);
     f2 = gwy_data_field_duplicate(dfield);
-    filtered = gwy_data_field_new(3*(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
-                             +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield))),
-                             360, 0, 0,
-                             FALSE);
-
+    filtered = gwy_data_field_new(3*(hypot(gwy_data_field_get_xres(dfield),
+                                           gwy_data_field_get_yres(dfield))),
+                                  360, 0, 0,
+                                  FALSE);
 
     gwy_data_field_filter_canny(edgefield, 0.1);
     gwy_data_field_filter_sobel(f1, GWY_ORIENTATION_HORIZONTAL);
@@ -297,7 +297,8 @@ get_detected_lines(ErunArgs *args)
 
     water = gwy_data_field_duplicate(filtered);
     gwy_data_field_grains_splash_water(filtered, water, 2,
-                                 0.005*(gwy_data_field_get_max(filtered) - gwy_data_field_get_min(filtered)));
+                                       0.005*(gwy_data_field_get_max(filtered)
+                                              - gwy_data_field_get_min(filtered)));
 
     hmin = gwy_data_field_get_min(water);
     hmax = gwy_data_field_get_max(water);
@@ -311,7 +312,7 @@ get_detected_lines(ErunArgs *args)
                                          threshval,
                                          TRUE);
 
-    for (i=0; i<ndata; i++) {
+    for (i = 0; i < ndata; i++) {
         xdata[i] = ((gdouble)xdata[i])*
                                     gwy_data_field_get_xreal(filtered)/((gdouble)gwy_data_field_get_xres(filtered))
                                                             - gwy_data_field_get_xreal(filtered)/2.0;
@@ -330,14 +331,16 @@ get_detected_lines(ErunArgs *args)
         ydata[i] = theta;
     }
 
-    for (i=0; i<args->evaluator->detected_line_array->len; i++) {
+    for (i = 0; i < args->evaluator->detected_line_array->len; i++) {
         psline = g_ptr_array_index(args->evaluator->detected_line_array, i);
 
 
         j = get_closest_point(dfield, xdata, ydata, zdata, ndata,
-                              psline->rhoc, psline->thetac, psline->rho, psline->theta);
+                              psline->rhoc, psline->thetac,
+                              psline->rho, psline->theta);
 
-        if (j == -1) continue;
+        if (j == -1)
+            continue;
         gwy_data_field_hough_polar_line_to_datafield(dfield,
                                                      xdata[i], ydata[i],
                                                      &px1, &px2, &py1, &py2);
@@ -387,22 +390,25 @@ get_correlation_points(ErunArgs *args)
 
     dfield = args->dfield;
 
-    for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+    for (k = 0; k < args->evaluator->correlation_point_array->len; k++) {
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
 
         xstart = gwy_data_field_rtoi(dfield, pcpoint->xc) - pcpoint->swidth/2;
         ystart = gwy_data_field_rtoj(dfield, pcpoint->yc) - pcpoint->sheight/2;
         xstart = MAX(0, xstart);
         ystart = MAX(0, ystart);
-        width = MIN(pcpoint->swidth, gwy_data_field_get_xres(dfield) - xstart - 1);
-        height = MIN(pcpoint->sheight, gwy_data_field_get_yres(dfield) - ystart - 1);
+        width = MIN(pcpoint->swidth,
+                    gwy_data_field_get_xres(dfield) - xstart - 1);
+        height = MIN(pcpoint->sheight,
+                     gwy_data_field_get_yres(dfield) - ystart - 1);
 
         part = gwy_data_field_area_extract(dfield,
                                            xstart, ystart,
                                            width, height);
         score = gwy_data_field_new_alike(part, FALSE);
 
-        gwy_data_field_correlate(part, pcpoint->pattern, score, GWY_CORRELATION_NORMAL);
+        gwy_data_field_correlate(part, pcpoint->pattern, score,
+                                 GWY_CORRELATION_NORMAL);
 
         get_maximum(score, &colmax, &rowmax);
 
@@ -422,43 +428,42 @@ get_features(ErunArgs *args)
     GwySearchLine *psline;
     GwyCorrelationPoint *pcpoint;
     gint k;
-    
-    
+
     gwy_debug("Requested:\n");
-    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+    for (k = 0; k < args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
         gwy_debug("dpoint: %s: %g %g\n", pspoint->id, pspoint->xc, pspoint->yc);
     }
-    for (k=0; k<args->evaluator->detected_line_array->len; k++) {
+    for (k = 0; k < args->evaluator->detected_line_array->len; k++) {
         psline = g_ptr_array_index(args->evaluator->detected_line_array, k);
         gwy_debug("dline: %s: %g %g\n", psline->id, psline->rhoc, psline->thetac);
     }
-    for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+    for (k = 0; k < args->evaluator->correlation_point_array->len; k++) {
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
         gwy_debug("cpoint: %s: %g %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc);
     }
-    
+
 
     /*get_detected_points(args);
     get_detected_lines(args);*/
     get_correlation_points(args);
 
     /*print summary for debug*/
-    
+
     gwy_debug("Detected:\n");
-    for (k=0; k<args->evaluator->detected_point_array->len; k++) {
+    for (k = 0; k < args->evaluator->detected_point_array->len; k++) {
         pspoint = g_ptr_array_index(args->evaluator->detected_point_array, k);
         gwy_debug("dpoint: %s: %g %g\n", pspoint->id, pspoint->xc, pspoint->yc);
     }
-    for (k=0; k<args->evaluator->detected_line_array->len; k++) {
+    for (k = 0; k < args->evaluator->detected_line_array->len; k++) {
         psline = g_ptr_array_index(args->evaluator->detected_line_array, k);
         gwy_debug("dline: %s: %g %g\n", psline->id, psline->rhoc, psline->thetac);
      }
-    for (k=0; k<args->evaluator->correlation_point_array->len; k++) {
+    for (k = 0; k < args->evaluator->correlation_point_array->len; k++) {
         pcpoint = g_ptr_array_index(args->evaluator->correlation_point_array, k);
         gwy_debug("cpoint: %s: %g %g score: %g\n", pcpoint->id, pcpoint->xc, pcpoint->yc, pcpoint->score);
      }
-     
+
 
 }
 
@@ -624,7 +629,7 @@ create_results_window(ErunArgs *args)
     gint k;
     GwyEvaluatorTask *petask;
     EvalData *edata;
-        
+
 
     window = gtk_dialog_new_with_buttons(_("Evaluator results"), NULL, 0,
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
@@ -657,7 +662,7 @@ create_results_window(ErunArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
                                        GTK_EXPAND | GTK_FILL, 0, 2, 2);
-       
+
     for (k=0; k<args->evaluator->expression_task_array->len; k++) {
         petask = g_ptr_array_index(args->evaluator->expression_task_array, k);
         edata = g_ptr_array_index(args->evaldata, k);
@@ -668,27 +673,27 @@ create_results_window(ErunArgs *args)
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, k+1, k+2,
                                              GTK_EXPAND | GTK_FILL, 0, 2, 2);
-         
+
         label = gtk_label_new(petask->expression);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 1, 2, k+1, k+2,
                                              GTK_EXPAND | GTK_FILL, 0, 2, 2);
-        
+
         label = gtk_label_new(petask->threshold);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 2, 3, k+1, k+2,
                                              GTK_EXPAND | GTK_FILL, 0, 2, 2);
-  
-        
+
+
         label = gtk_label_new(g_strdup_printf("%g", edata->result));
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, k+1, k+2,
                                              GTK_EXPAND | GTK_FILL, 0, 2, 2);
-       
+
     }
 
     str = create_evaluator_report(args);
-    
+
 
     g_signal_connect(window, "response",
                      G_CALLBACK(results_window_response_cb), str);
@@ -1328,7 +1333,7 @@ static void evaluate(ErunArgs *args)
         etset = g_ptr_array_index(args->evaluator->expression_task_array, k);
         expression = g_string_new(etset->expression);
         objvar = g_ptr_array_new();
-        
+
         done = FALSE;
         do
             expression = preparse_expression(args, expression, objvar, &done);
@@ -1365,10 +1370,10 @@ static void evaluate(ErunArgs *args)
         edata->error = g_strdup("none");
 
         edata->bresult = get_bresult(edata->result, etset->threshold);
-       
+
         /*add object variables to the fields*/
         nobjects = objvar->len;
-        
+
         variable_ids = g_new(gchar *, edata->nvariables + nobjects);
         for (i = 1; i<edata->nvariables; i++)
         {
@@ -1380,11 +1385,11 @@ static void evaluate(ErunArgs *args)
             object_id = (GString *)(g_ptr_array_index(objvar, i - edata->nvariables));
             variable_ids[i] = g_strdup(object_id->str);
         }
-         
+
         edata->nvariables += nobjects;
         g_free(edata->variable_ids);
         edata->variable_ids = variable_ids;
-        
+
         g_ptr_array_add(args->evaldata, edata);
         g_ptr_array_free(objvar, TRUE);
     }

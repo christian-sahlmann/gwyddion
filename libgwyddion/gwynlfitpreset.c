@@ -972,35 +972,35 @@ weights_linear_decrease(gint n_dat,
 
 /************************** presets ****************************/
 
-static const GwyNLFitParam gaussexp_params[]= {
+static const GwyNLFitParam gaussexp_params[] = {
    { "x<sub>0</sub>" },
    { "y<sub>0</sub>" },
    { "a" },
    { "b" },
 };
 
-static const GwyNLFitParam gaussexp_two_params[]= {
+static const GwyNLFitParam gaussexp_two_params[] = {
    { "σ" },
    { "T" },
 };
 
 
-static const GwyNLFitParam poly0_params[]= {
+static const GwyNLFitParam poly0_params[] = {
    { "a" },
 };
 
-static const GwyNLFitParam poly1_params[]= {
+static const GwyNLFitParam poly1_params[] = {
    { "a" },
    { "b" },
 };
 
-static const GwyNLFitParam poly2_params[]= {
+static const GwyNLFitParam poly2_params[] = {
    { "a" },
    { "b" },
    { "c" },
 };
 
-static const GwyNLFitParam poly3_params[]= {
+static const GwyNLFitParam poly3_params[] = {
    { "a" },
    { "b" },
    { "c" },

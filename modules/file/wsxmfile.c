@@ -138,15 +138,15 @@ wsxmfile_load(const gchar *filename,
     ok = file_read_meta(meta, p, error);
     g_free(p);
 
-    if (ok &&
-        (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))
+    if (ok
+        && (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))
          || (xres = atol(p)) <= 0)) {
         err_INVALID(error, _("number of columns"));
         ok = FALSE;
     }
 
-    if (ok &&
-        (!(p = g_hash_table_lookup(meta, "General Info::Number of rows"))
+    if (ok
+        && (!(p = g_hash_table_lookup(meta, "General Info::Number of rows"))
          || (yres = atol(p)) <= 0)) {
         err_INVALID(error, _("number of rows"));
         ok = FALSE;

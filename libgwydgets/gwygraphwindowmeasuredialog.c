@@ -188,8 +188,7 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
     ndata = gwy_graph_curve_model_get_ndata(cmodel);
 
     pos = -1;
-    for (i = 0; i < (ndata - 1); i++)
-    {
+    for (i = 0; i < (ndata - 1); i++) {
         if (xdata[i] < x && xdata[i+1] >= x) {
             pos = i;
             break;
@@ -200,7 +199,8 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
         return 0;
     }
     *ret = TRUE;
-    return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1]-xdata[pos]);
+
+    return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1] - xdata[pos]);
 }
 
 static void
@@ -305,7 +305,8 @@ selection_updated_cb(GwySelection *selection,
 
             label = g_ptr_array_index(dialog->pointy, i);
             if (ret)
-                value_label(label, y/yformat->magnitude, yformat->precision, str);
+                value_label(label, y/yformat->magnitude,
+                            yformat->precision, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
 
@@ -313,18 +314,21 @@ selection_updated_cb(GwySelection *selection,
                 continue;
 
             label = g_ptr_array_index(dialog->distx, i);
-            value_label(label, (x - xp)/xformat->magnitude, yformat->precision, str);
+            value_label(label, (x - xp)/xformat->magnitude,
+                        yformat->precision, str);
 
 
             label = g_ptr_array_index(dialog->disty, i);
             if (ret && prevret)
-                value_label(label, (y - yp)/yformat->magnitude, yformat->precision, str);
+                value_label(label, (y - yp)/yformat->magnitude,
+                            yformat->precision, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
 
             label = g_ptr_array_index(dialog->slope, i);
             if (ret && prevret)
-                value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)), 2, str);
+                value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)),
+                            2, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
         }

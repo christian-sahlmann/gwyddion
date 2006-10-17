@@ -211,7 +211,8 @@ esetup(GwyContainer *data, GwyRunType run)
 static void
 esetup_dialog(EsetupArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *label, *hbox, *tree, *notebook, *page, *button, *scroll;
+    GtkWidget *dialog, *table, *label, *hbox, *tree, *notebook, *page;
+    GtkWidget *button, *scroll;
     GtkCellRenderer *renderer;
     EsetupControls controls;
     gint response;
@@ -241,8 +242,8 @@ esetup_dialog(EsetupArgs *args, GwyContainer *data)
     controls.args = args;
     args->evaluator = gwy_evaluator_new();
 
-    controls.detected_point_chosen = g_array_new (FALSE, FALSE, sizeof(gboolean));
-    controls.detected_line_chosen = g_array_new (FALSE, FALSE, sizeof(gboolean));
+    controls.detected_point_chosen = g_array_new(FALSE, FALSE, sizeof(gboolean));
+    controls.detected_line_chosen = g_array_new(FALSE, FALSE, sizeof(gboolean));
     controls.task_edited = -1;
     controls.correlation_point_max = 0;
     controls.fixed_point_max = 0;

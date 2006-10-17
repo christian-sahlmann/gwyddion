@@ -463,10 +463,12 @@ VARIANT_RollUdate(UDATE *lpUd)
         lpUd->st.wMonth = 12;
         lpUd->st.wYear--;
     }
-    else while (lpUd->st.wMonth > 12) {
-        /* Roll forward the correct number of months */
-        lpUd->st.wYear++;
-        lpUd->st.wMonth -= 12;
+    else {
+        while (lpUd->st.wMonth > 12) {
+            /* Roll forward the correct number of months */
+            lpUd->st.wYear++;
+            lpUd->st.wMonth -= 12;
+        }
     }
 
     if (lpUd->st.wYear > 9999 || lpUd->st.wHour > 23

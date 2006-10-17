@@ -176,11 +176,6 @@ stats_dialog(StatsControls *data)
     graph = GWY_GRAPH(data->graph);
     gmodel = gwy_graph_get_model(graph);
 
-//     for (i = 0; i < data->ncurves; i++)
-//     {
-//         curve_desc[i] =
-//     }
-
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
                                                NULL,
                                                GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -235,8 +230,6 @@ stats_dialog(StatsControls *data)
         break;
     }
 
-    //gwy_table_attach_row(table, 0, _("Select Curve"), NULL, label);
-
     label = gtk_label_new("from");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
@@ -287,7 +280,7 @@ stats_dialog(StatsControls *data)
     data->area_under_curve_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(data->area_under_curve_label), buffer);
 
-    button = gtk_button_new_with_label("Fit"); //gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
+    button = gtk_button_new_with_label("Fit");
     gtk_box_pack_end(GTK_BOX(dialog->action_area), button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(stat_updated_cb),
@@ -400,8 +393,7 @@ stat_updated_cb(StatsControls *data)
     g_return_if_fail(GWY_IS_GRAPH(graph));
     gmodel = gwy_graph_get_model(graph);
 
-    if ((gwy_graph_model_get_n_curves(gmodel)) > data->ncurves)
-    {
+    if ((gwy_graph_model_get_n_curves(gmodel)) > data->ncurves) {
         format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
                                         GWY_SI_UNIT_FORMAT_VFMARKUP,
                                         data->stat, NULL);

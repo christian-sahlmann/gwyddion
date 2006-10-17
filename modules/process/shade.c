@@ -253,7 +253,7 @@ shade_dialog(ShadeArgs *args,
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 
-    controls.mix = gtk_adjustment_new(args->mix, 0.0, 100.0, 1,5,0);
+    controls.mix = gtk_adjustment_new(args->mix, 0.0, 100.0, 1, 5, 0);
 
     spin = gwy_table_attach_hscale(table, row, _("_Mix:"), "%",
                                    controls.mix, GWY_HSCALE_CHECK);
@@ -261,7 +261,7 @@ shade_dialog(ShadeArgs *args,
     controls.do_mix = g_object_get_data(G_OBJECT(controls.mix), "check");
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
-                                 ! args->do_mix);
+                                 !args->do_mix);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
                                  args->do_mix);
     g_signal_connect_swapped(controls.mix, "value-changed",
@@ -300,9 +300,9 @@ shade_dialog(ShadeArgs *args,
             *args = shade_defaults;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.mix), args->mix);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
-                                     ! args->do_mix);
+                                         !args->do_mix);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_mix),
-                                     args->do_mix);
+                                         args->do_mix);
             gwy_shader_set_angle(GWY_SHADER(controls.shader),
                                  args->theta, args->phi);
             break;

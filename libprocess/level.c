@@ -129,8 +129,8 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
                      && row + height <= data_field->yres);
     if (mask) {
         g_return_if_fail(GWY_IS_DATA_FIELD(mask));
-        g_return_if_fail(mask->xres == data_field->xres &&
-                            mask->yres == data_field->yres);
+        g_return_if_fail(mask->xres == data_field->xres
+                         && mask->yres == data_field->yres);
     }
 
     xres = data_field->xres;
@@ -149,11 +149,11 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
         datapos = data_field->data + row*xres + col;
         if (mask)
             maskpos = mask->data + row*xres + col;
-        for (i=0; i < height; i++) {
+        for (i = 0; i < height; i++) {
             drow = datapos + i*xres;
             if (mask)
                 mrow = maskpos + i*xres;
-            for (j=0; j < width; j++) {
+            for (j = 0; j < width; j++) {
                 skip = FALSE;
                 if (mask)
                     if (mrow[j] == 0.0)

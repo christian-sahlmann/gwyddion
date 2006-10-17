@@ -163,8 +163,8 @@ hough_dialog(HoughArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum hough_outputs[] = {
-        { N_("Line"),      GWY_HOUGH_OUTPUT_LINE,  },
-        { N_("Circle"),    GWY_HOUGH_OUTPUT_CIRCLE,},
+        { N_("Line"),   GWY_HOUGH_OUTPUT_LINE,   },
+        { N_("Circle"), GWY_HOUGH_OUTPUT_CIRCLE, },
     };
 
     GtkWidget *dialog, *table;
@@ -237,7 +237,8 @@ hough_dialog(HoughArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->circle_size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.circle_size));
+    args->circle_size
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.circle_size));
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -281,7 +282,8 @@ hough_load_args(GwyContainer *container,
     *args = hough_defaults;
 
     gwy_container_gis_enum_by_name(container, output_key, &args->output);
-    gwy_container_gis_int32_by_name(container, circle_size_key, &args->circle_size);
+    gwy_container_gis_int32_by_name(container, circle_size_key,
+                                    &args->circle_size);
     hough_sanitize_args(args);
 }
 
@@ -290,7 +292,8 @@ hough_save_args(GwyContainer *container,
               HoughArgs *args)
 {
     gwy_container_set_enum_by_name(container, output_key, args->output);
-    gwy_container_set_int32_by_name(container, circle_size_key, args->circle_size);
+    gwy_container_set_int32_by_name(container, circle_size_key,
+                                    args->circle_size);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -81,33 +81,33 @@ gwy_marker_box_class_init(GwyMarkerBoxClass *klass)
     widget_class->expose_event = gwy_marker_box_expose;
     widget_class->state_changed = gwy_marker_box_state_changed;
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_FLIPPED,
-        g_param_spec_boolean("flipped",
-                             "Flipped",
-                             "Whether marks are drawn upside down.",
-                             FALSE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_FLIPPED,
+         g_param_spec_boolean("flipped",
+                              "Flipped",
+                              "Whether marks are drawn upside down.",
+                              FALSE,
+                              G_PARAM_READWRITE));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_FLIPPED,
-        g_param_spec_boolean("highlight-selected",
-                             "Highlight selected",
-                             "Whether to visually differentiate selected "
-                             "marker.",
-                             TRUE,
-                             G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_FLIPPED,
+         g_param_spec_boolean("highlight-selected",
+                              "Highlight selected",
+                              "Whether to visually differentiate selected "
+                              "marker.",
+                              TRUE,
+                              G_PARAM_READWRITE));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_SELECTED_MARKER,
-        g_param_spec_int("selected-marker",
-                         "Selected marker",
-                         "The index of selected marker, -1 if none.",
-                         -1, 1024, -1,
-                         G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SELECTED_MARKER,
+         g_param_spec_int("selected-marker",
+                          "Selected marker",
+                          "The index of selected marker, -1 if none.",
+                          -1, 1024, -1,
+                          G_PARAM_READWRITE));
 
     /**
      * GwyMarkerBox::marker-selected:

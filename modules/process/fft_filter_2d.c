@@ -423,9 +423,8 @@ run_dialog(ControlsType *controls)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/1/data"));
-    zoomval = PREVIEW_SIZE /
-              (gdouble)MAX(gwy_data_field_get_xres(dfield),
-                           gwy_data_field_get_yres(dfield));
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
 
@@ -461,8 +460,7 @@ run_dialog(ControlsType *controls)
                                          SENS_EDIT);
         g_object_set(button, "draw-indicator", FALSE, NULL);
         image = gtk_image_new_from_stock(modes[i].stock_id,
-                                         GTK_ICON_SIZE_BUTTON
-                                         /*GTK_ICON_SIZE_LARGE_TOOLBAR*/);
+                                         GTK_ICON_SIZE_BUTTON);
         gtk_container_add(GTK_CONTAINER(button), image);
         gwy_radio_button_set_value(button, modes[i].edit_mode);
         gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
@@ -666,7 +664,7 @@ prev_mode_changed_cb(ControlsType *controls)
             g_debug("No diff.");
 
 
-        switch(new_mode) {
+        switch (new_mode) {
             case PREV_FFT:
             set_layer_channel(layer, 0);
             mlayer = gwy_layer_mask_new();
@@ -724,8 +722,7 @@ create_vlayer(guint new_mode)
 {
     GwyVectorLayer *vlayer = NULL;
 
-    switch(new_mode)
-    {
+    switch (new_mode) {
         case FFT_RECT_ADD:
         case FFT_RECT_SUB:
         vlayer = g_object_new(g_type_from_name("GwyLayerRectangle"), NULL);
@@ -760,20 +757,21 @@ switch_layer(guint new_mode, ControlsType *controls)
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls->view), vlayer);
     selection = gwy_vector_layer_ensure_selection(vlayer);
 
-    switch(new_mode)
-    {
+    switch (new_mode) {
         case FFT_RECT_ADD:
         case FFT_RECT_SUB:
         if (!controls->rect_signal)
-            controls->rect_signal = g_signal_connect(selection, "finished",
-                                    G_CALLBACK(selection_finished_cb), controls);
+            controls->rect_signal
+                = g_signal_connect(selection, "finished",
+                                   G_CALLBACK(selection_finished_cb), controls);
         break;
 
         case FFT_ELLIPSE_ADD:
         case FFT_ELLIPSE_SUB:
         if (!controls->ellipse_signal)
-            controls->ellipse_signal = g_signal_connect(selection, "finished",
-                                    G_CALLBACK(selection_finished_cb), controls);
+            controls->ellipse_signal
+                = g_signal_connect(selection, "finished",
+                                   G_CALLBACK(selection_finished_cb), controls);
         break;
 
         default:
@@ -1000,9 +998,11 @@ fft_filter_2d(GwyDataField *input,
     i_out = GWY_DATA_FIELD(gwy_data_field_new_alike(r_in, FALSE));
 
     /*XXX Should I normalize? */
-    //gwy_data_field_multiply(r_in, 1.0
-    //                        /(gwy_data_field_get_max(r_in)
-    //                                - gwy_data_field_get_min(r_in)));
+    /*
+      gwy_data_field_multiply(r_in, 1.0
+                              /(gwy_data_field_get_max(r_in)
+                                      - gwy_data_field_get_min(r_in)));
+    */
 
     gwy_data_field_2dfft(r_in, NULL, r_out, i_out,
                          GWY_WINDOWING_NONE,
@@ -1014,9 +1014,7 @@ fft_filter_2d(GwyDataField *input,
     gwy_data_field_2dfft_humanize(i_out);
 
     if (output_fft != NULL)
-    {
         set_dfield_modulus(r_out, i_out, output_fft);
-    }
 
     /* Apply mask to the fft */
     gwy_data_field_multiply_fields(r_out, r_out, mask);

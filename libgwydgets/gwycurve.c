@@ -166,88 +166,88 @@ static gdouble   spline_eval                     (int n,
 static void
 gwy_curve_class_init (GwyCurveClass *class)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS (class);
-    parent_class = g_type_class_peek_parent (class);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(class);
+    parent_class = g_type_class_peek_parent(class);
     gobject_class->finalize = gwy_curve_finalize;
     gobject_class->set_property = gwy_curve_set_property;
     gobject_class->get_property = gwy_curve_get_property;
 
-    g_object_class_install_property(gobject_class,
-                                    PROP_CURVE_TYPE,
-                                    g_param_spec_enum("curve-type",
-                                        "Curve type",
-                                        "Is this curve linear, spline "
-                                        "interpolated, or free-form",
-                                        GWY_TYPE_CURVE_TYPE,
-                                        GWY_CURVE_TYPE_LINEAR,
-                                        G_PARAM_READABLE |
-                                        G_PARAM_WRITABLE));
-    g_object_class_install_property(gobject_class,
-                                    PROP_MIN_X,
-                                    g_param_spec_float("min-x",
-                                        "Minimum X",
-                                        "Minimum possible value for X",
-                                        -G_MAXFLOAT,
-                                        G_MAXFLOAT,
-                                        0.0,
-                                        G_PARAM_READABLE |
-                                        G_PARAM_WRITABLE));
-    g_object_class_install_property(gobject_class,
-                                    PROP_MAX_X,
-                                    g_param_spec_float("max-x",
-                                        "Maximum X",
-                                        "Maximum possible X value",
-                                        -G_MAXFLOAT,
-                                        G_MAXFLOAT,
-                                        1.0,
-                                        G_PARAM_READABLE |
-                                        G_PARAM_WRITABLE));
-    g_object_class_install_property(gobject_class,
-                                    PROP_MIN_Y,
-                                    g_param_spec_float("min-y",
-                                        "Minimum Y",
-                                        "Minimum possible value for Y",
-                                        -G_MAXFLOAT,
-                                        G_MAXFLOAT,
-                                        0.0,
-                                        G_PARAM_READABLE |
-                                        G_PARAM_WRITABLE));
-    g_object_class_install_property(gobject_class,
-                                    PROP_MAX_Y,
-                                    g_param_spec_float("max-y",
-                                        "Maximum Y",
-                                        "Maximum possible value for Y",
-                                        -G_MAXFLOAT,
-                                        G_MAXFLOAT,
-                                        1.0,
-                                        G_PARAM_READABLE |
-                                        G_PARAM_WRITABLE));
-    g_object_class_install_property(gobject_class,
-                                    PROP_SNAP,
-                                    g_param_spec_boolean("snap",
-                                        "Snap Mode",
-                                        "Snap to control points mode",
-                                        TRUE,
-                                        G_PARAM_READABLE |
-                                        G_PARAM_WRITABLE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_CURVE_TYPE,
+         g_param_spec_enum("curve-type",
+                           "Curve type",
+                           "Is this curve linear, spline "
+                           "interpolated, or free-form",
+                           GWY_TYPE_CURVE_TYPE,
+                           GWY_CURVE_TYPE_LINEAR,
+                           G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MIN_X,
+         g_param_spec_float("min-x",
+                            "Minimum X",
+                            "Minimum possible value for X",
+                            -G_MAXFLOAT,
+                            G_MAXFLOAT,
+                            0.0,
+                            G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MAX_X,
+         g_param_spec_float("max-x",
+                            "Maximum X",
+                            "Maximum possible X value",
+                            -G_MAXFLOAT,
+                            G_MAXFLOAT,
+                            1.0,
+                            G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MIN_Y,
+         g_param_spec_float("min-y",
+                            "Minimum Y",
+                            "Minimum possible value for Y",
+                            -G_MAXFLOAT,
+                            G_MAXFLOAT,
+                            0.0,
+                            G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MAX_Y,
+         g_param_spec_float("max-y",
+                            "Maximum Y",
+                            "Maximum possible value for Y",
+                            -G_MAXFLOAT,
+                            G_MAXFLOAT,
+                            1.0,
+                            G_PARAM_READWRITE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SNAP,
+         g_param_spec_boolean("snap",
+                              "Snap Mode",
+                              "Snap to control points mode",
+                              TRUE,
+                              G_PARAM_READABLE));
 
-    curve_type_changed_signal =
-        g_signal_new ("curve-type-changed",
-                      G_OBJECT_CLASS_TYPE (gobject_class),
-                      G_SIGNAL_RUN_FIRST,
-                      G_STRUCT_OFFSET (GwyCurveClass, curve_type_changed),
-                      NULL, NULL,
-                      g_cclosure_marshal_VOID__VOID,
-                      G_TYPE_NONE, 0);
+    curve_type_changed_signal
+        = g_signal_new("curve-type-changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyCurveClass, curve_type_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 
-    curve_edited_signal =
-        g_signal_new ("curve-edited",
-                      G_OBJECT_CLASS_TYPE (gobject_class),
-                      G_SIGNAL_RUN_FIRST,
-                      G_STRUCT_OFFSET (GwyCurveClass, curve_edited),
-                      NULL, NULL,
-                      g_cclosure_marshal_VOID__VOID,
-                      G_TYPE_NONE, 0);
+    curve_edited_signal
+        = g_signal_new("curve-edited",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyCurveClass, curve_edited),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -256,8 +256,7 @@ gwy_curve_get_property(GObject *object, guint prop_id,
 {
     GwyCurve *curve = GWY_CURVE (object);
 
-    switch (prop_id)
-    {
+    switch (prop_id) {
         case PROP_CURVE_TYPE:
         g_value_set_enum(value, curve->curve_type);
         break;
@@ -294,10 +293,9 @@ gwy_curve_set_property(GObject *object, guint prop_id,
 {
     GwyCurve *curve = GWY_CURVE(object);
 
-    switch (prop_id)
-    {
+    switch (prop_id) {
         case PROP_CURVE_TYPE:
-        gwy_curve_set_curve_type(curve, g_value_get_enum (value));
+        gwy_curve_set_curve_type(curve, g_value_get_enum(value));
         break;
 
         case PROP_MIN_X:
@@ -334,7 +332,7 @@ gwy_curve_set_property(GObject *object, guint prop_id,
 static void
 gwy_curve_init(GwyCurve *curve)
 {
-    GwyRGBA color;
+    GwyRGBA color = { 0.0, 0.0, 0.0, 1.0 };
     gint old_mask;
     gint i;
 
@@ -345,8 +343,6 @@ gwy_curve_init(GwyCurve *curve)
     curve->grab_point = -1;
     curve->grab_channel = -1;
     curve->num_channels = 3;
-
-    color.r = 0; color.b = 0; color.g = 0; color.a = 1;
 
     curve->channel_data = g_new(GwyChannelData, curve->num_channels);
     for (i = 0; i < curve->num_channels; i++) {
@@ -362,7 +358,7 @@ gwy_curve_init(GwyCurve *curve)
     curve->min_y = 0.0;
     curve->max_y = 1.0;
 
-    old_mask = gtk_widget_get_events(GTK_WIDGET (curve));
+    old_mask = gtk_widget_get_events(GTK_WIDGET(curve));
     gtk_widget_set_events(GTK_WIDGET(curve), old_mask | GRAPH_MASK);
 
     g_signal_connect_swapped(curve, "configure-event",
@@ -424,7 +420,7 @@ gwy_curve_get_type(void)
 
     if (!curve_type) {
         static const GTypeInfo curve_info = {
-            sizeof (GwyCurveClass),
+            sizeof(GwyCurveClass),
             NULL,           /* base_init */
             NULL,           /* base_finalize */
             (GClassInitFunc) gwy_curve_class_init,
@@ -551,7 +547,7 @@ gwy_curve_button_press(GtkWidget *widget,
             channel->ctlpoints =
                 g_realloc(channel->ctlpoints,
                           channel->num_ctlpoints * sizeof(GwyPoint));
-            for (i=channel->num_ctlpoints - 1; i>closest_point; --i)
+            for (i = channel->num_ctlpoints - 1; i > closest_point; --i)
                 memcpy(channel->ctlpoints + i, channel->ctlpoints + i - 1,
                        sizeof(GwyPoint));
         }
@@ -601,7 +597,7 @@ gwy_curve_button_release(GtkWidget *widget,
     width = w->allocation.width - RADIUS * 2;
     height = w->allocation.height - RADIUS * 2;
 
-    gtk_grab_remove (widget);
+    gtk_grab_remove(widget);
 
     channel = &c->channel_data[c->grab_channel];
 
@@ -727,11 +723,11 @@ gwy_curve_motion_notify(GwyCurve *c)
             channel->ctlpoints[c->grab_point].y = ry;
 
             /*If "snap" mode is on, and the user has not grabbed an endpoint:*/
-            if (c->snap &&
-                c->grab_point != 0 &&
-                c->grab_point != channel->num_ctlpoints-1) {
+            if (c->snap
+                && c->grab_point != 0
+                && c->grab_point != channel->num_ctlpoints-1) {
                 /* Look in other channels for closest control point to this
-                one. If it is within the threshold, snap to it.*/
+                   one. If it is within the threshold, snap to it.*/
                 for (i = 0, distance = 2; i < c->num_channels; i++) {
                     if (i != c->grab_channel) {
                         channel2 = &c->channel_data[i];
@@ -745,7 +741,8 @@ gwy_curve_motion_notify(GwyCurve *c)
                         }
                     }
                 }
-                if (project(distance,c->min_x,c->max_x,width) < SNAP_THRESH) {
+                if (project(distance, c->min_x, c->max_x, width)
+                    < SNAP_THRESH) {
                     channel2 = &c->channel_data[closest_channel];
                     snapx = channel2->ctlpoints[closest_point].x;
 
@@ -832,8 +829,7 @@ gwy_curve_reset(GwyCurve *curve)
     curve->curve_type = GWY_CURVE_TYPE_LINEAR;
     gwy_curve_reset_vector(curve);
 
-    if (old_type != GWY_CURVE_TYPE_LINEAR)
-    {
+    if (old_type != GWY_CURVE_TYPE_LINEAR) {
         g_signal_emit(curve, curve_type_changed_signal, 0);
         g_object_notify(G_OBJECT(curve), "curve-type");
     }
@@ -862,8 +858,8 @@ gwy_curve_set_range(GwyCurve *curve, gdouble min_x, gdouble max_x,
     }
     g_object_thaw_notify(G_OBJECT(curve));
 
-    gwy_curve_size_graph (curve);
-    gwy_curve_reset_vector (curve);
+    gwy_curve_size_graph(curve);
+    gwy_curve_reset_vector(curve);
 }
 
 void
@@ -929,7 +925,7 @@ gwy_curve_set_channels(GwyCurve *c,
 {
     gint width, height;
     gint i;
-    GwyRGBA color;
+    GwyRGBA color = { 1.0, 0.0, 0.0, 1.0 };
 
     if (c->num_channels != num_channels) {
 
@@ -944,7 +940,6 @@ gwy_curve_set_channels(GwyCurve *c,
 
         /* Create new channels and reset them */
         c->num_channels = num_channels;
-        color.r = 1; color.b = 0; color.g = 0; color.a = 1;
 
         c->channel_data = g_new(GwyChannelData, c->num_channels);
         for (i = 0; i < c->num_channels; i++) {
@@ -1107,13 +1102,15 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     /* Duplicate control points so that we have nothing but RGB triples */
     if (triplets) {
         for (c_index = 0; c_index < 3; c_index++) {
-            others[0] = c_index+1; wrap(others[0]);
-            others[1] = c_index+2; wrap(others[1]);
+            others[0] = c_index+1;
+            wrap(others[0]);
+            others[1] = c_index+2;
+            wrap(others[1]);
             curve_channel = &curve->channel_data[c_index];
 
             /* Loop through all middle control pts for this channel
             (we will ignore the endpoints for now) */
-            for (i=1; i < curve_channel->num_ctlpoints - 1; i++) {
+            for (i = 1; i < curve_channel->num_ctlpoints - 1; i++) {
                 point = g_array_index(ctlpoints[c_index], GwyPoint, i);
                 x_val = point.x;
 
@@ -1144,8 +1141,8 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
                                                left_point);
                         point2 = g_array_index(ctlpoints[others[j]], GwyPoint,
                                                right_point);
-                        y_val = (((point2.y-point1.y) / (point2.x-point1.x)) *
-                                (x_val - point1.x)) + point1.y;
+                        y_val = (((point2.y-point1.y) / (point2.x-point1.x))
+                                 * (x_val - point1.x)) + point1.y;
 
                         /* Create new point */
                         point.x = x_val;
@@ -1202,7 +1199,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
         gwy_curve_interpolate(c, width, height);
 
     state = GTK_STATE_NORMAL;
-    if (!GTK_WIDGET_IS_SENSITIVE (GTK_WIDGET (c)))
+    if (!GTK_WIDGET_IS_SENSITIVE(c))
         state = GTK_STATE_INSENSITIVE;
 
     style = GTK_WIDGET(c)->style;
@@ -1296,8 +1293,10 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
                 ry = channel->ctlpoints[first_active].y;
             else
                 ry = c->min_y;
-            if (ry < c->min_y) ry = c->min_y;
-            if (ry > c->max_y) ry = c->max_y;
+            if (ry < c->min_y)
+                ry = c->min_y;
+            if (ry > c->max_y)
+                ry = c->max_y;
             for (x = 0; x < veclen; ++x)
                 vector[x] = ry;
             return;
@@ -1327,12 +1326,14 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
         dx = (c->max_x - c->min_x) / (veclen - 1);
         for (x = 0; x < veclen; ++x, rx += dx) {
             ry = spline_eval(num_active_ctlpoints, xv, yv, y2v, rx);
-            if (ry < c->min_y) ry = c->min_y;
-            if (ry > c->max_y) ry = c->max_y;
+            if (ry < c->min_y)
+                ry = c->min_y;
+            if (ry > c->max_y)
+                ry = c->max_y;
             vector[x] = ry;
         }
 
-        g_free (mem);
+        g_free(mem);
         break;
 
         case GWY_CURVE_TYPE_LINEAR:
@@ -1347,15 +1348,15 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
                     ry = c->min_y;
                 dy = 0.0;
                 next = i + 1;
-                while (next < channel->num_ctlpoints &&
-                       channel->ctlpoints[next].x <= channel->ctlpoints[i].x)
+                while (next < channel->num_ctlpoints
+                       && channel->ctlpoints[next].x <= channel->ctlpoints[i].x)
                     ++next;
 
                 if (next < channel->num_ctlpoints) {
-                    delta_x = channel->ctlpoints[next].x -
-                        channel->ctlpoints[i].x;
-                    dy = ((channel->ctlpoints[next].y -
-                        channel->ctlpoints[i].y) / delta_x);
+                    delta_x = (channel->ctlpoints[next].x
+                               - channel->ctlpoints[i].x);
+                    dy = ((channel->ctlpoints[next].y
+                           - channel->ctlpoints[i].y) / delta_x);
                     dy *= dx;
                     ry = channel->ctlpoints[i].y;
                     i = next;
@@ -1372,7 +1373,7 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
             dx = channel->num_points / (double) veclen;
             for (x = 0; x < veclen; ++x, rx += dx) {
                 vector[x] = unproject(RADIUS + c->height -
-                        channel->points[(int)rx].y,
+                                      channel->points[(int)rx].y,
                 c->min_y, c->max_y,
                 c->height);
             }
@@ -1465,7 +1466,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
         if (channel->num_points != width) {
             channel->num_points = width;
             if (channel->points)
-                g_free (channel->points);
+                g_free(channel->points);
             channel->points = g_new(GwyPoint, channel->num_points);
         }
 
@@ -1475,7 +1476,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
                 RADIUS+height - project(vector[i], c->min_y, c->max_y, height);
         }
     }
-    g_free (vector);
+    g_free(vector);
 }
 
 static int
@@ -1503,8 +1504,7 @@ spline_solve(int n, gdouble x[], gdouble y[], gdouble y2[])
 
     y2[0] = u[0] = 0.0;   /* set lower boundary condition to "natural" */
 
-    for (i = 1; i < n - 1; ++i)
-    {
+    for (i = 1; i < n - 1; ++i) {
         sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
         p = sig * y2[i - 1] + 2.0;
         y2[i] = (sig - 1.0) / p;
@@ -1517,7 +1517,7 @@ spline_solve(int n, gdouble x[], gdouble y[], gdouble y2[])
     for (k = n - 2; k >= 0; --k)
         y2[k] = y2[k] * y2[k + 1] + u[k];
 
-    g_free (u);
+    g_free(u);
 }
 
 static gdouble
@@ -1527,10 +1527,10 @@ spline_eval(int n, gdouble x[], gdouble y[], gdouble y2[], gdouble val)
     gdouble h, b, a;
 
     /* do a binary search for the right interval: */
-    k_lo = 0; k_hi = n - 1;
-    while (k_hi - k_lo > 1)
-    {
-        k = (k_hi + k_lo) / 2;
+    k_lo = 0;
+    k_hi = n - 1;
+    while (k_hi - k_lo > 1) {
+        k = (k_hi + k_lo)/2;
         if (x[k] > val)
             k_hi = k;
         else
@@ -1538,12 +1538,12 @@ spline_eval(int n, gdouble x[], gdouble y[], gdouble y2[], gdouble val)
     }
 
     h = x[k_hi] - x[k_lo];
-    g_assert (h > 0.0);
+    g_assert(h > 0.0);
 
     a = (x[k_hi] - val) / h;
     b = (val - x[k_lo]) / h;
-    return a*y[k_lo] + b*y[k_hi] +
-            ((a*a*a - a)*y2[k_lo] + (b*b*b - b)*y2[k_hi]) * (h*h)/6.0;
+    return a*y[k_lo] + b*y[k_hi]
+           + ((a*a*a - a)*y2[k_lo] + (b*b*b - b)*y2[k_hi]) * (h*h)/6.0;
 }
 
 

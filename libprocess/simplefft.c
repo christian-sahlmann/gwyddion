@@ -96,16 +96,16 @@ gwy_fft_simple(GwyTransformDirection dir,
             im_out[(j-1)*ostride] = it;
         }
         m = n >> 1;
-        while (j > m && m)
-        {
-            j -=m; m >>= 1;
+        while (j > m && m) {
+            j -=m;
+            m >>= 1;
         }
         j += m;
 
     }
 
     l = 1;
-    while (l < n){
+    while (l < n) {
         is = l << 1;
         for (m = 1; m <= l; m++) {
             rc = cos(imlt * (m - 1)/l);

@@ -128,7 +128,8 @@ gwy_graph_export_postscript(GwyGraph *graph,
     else if (gwy_axis_is_visible(graph->axis[GTK_POS_LEFT])
              || gwy_axis_is_visible(graph->axis[GTK_POS_RIGHT]))
         areaw = width - areax - borderskip;
-    else areaw = width - 2*borderskip;
+    else
+        areaw = width - 2*borderskip;
 
     if (gwy_axis_is_visible(graph->axis[GTK_POS_TOP])
         && gwy_axis_is_visible(graph->axis[GTK_POS_BOTTOM]))
@@ -136,7 +137,8 @@ gwy_graph_export_postscript(GwyGraph *graph,
     else if (gwy_axis_is_visible(graph->axis[GTK_POS_TOP])
              || gwy_axis_is_visible(graph->axis[GTK_POS_BOTTOM]))
         areah = height - areay - borderskip;
-    else areah = height - 2*borderskip;
+    else
+        areah = height - 2*borderskip;
 
     hpt = vpt = 1;
 
@@ -154,7 +156,8 @@ gwy_graph_export_postscript(GwyGraph *graph,
     g_string_append_printf(string, "%%!PS-Adobe EPSF-3.0\n");
     g_string_append_printf(string, "%%%%Title: Gwyddion vector graph export\n");
     g_string_append_printf(string, "%%%%Creator: Gwyddion\n");
-    g_string_append_printf(string, "%%%%BoundingBox: %d %d %d %d\n", 0, 0, width, height);
+    g_string_append_printf(string, "%%%%BoundingBox: %d %d %d %d\n",
+                           0, 0, width, height);
     g_string_append_printf(string, "%%%%Orientation: Portrait\n");
     g_string_append_printf(string, "%%%%EndComments\n");
     g_string_append_printf(string, "/hpt %d def\n", hpt);
@@ -170,34 +173,42 @@ gwy_graph_export_postscript(GwyGraph *graph,
     g_string_append_printf(string, "/C {setrgbcolor} bind def\n");
     g_string_append_printf(string, "/Pnt { stroke [] 0 setdash\n"
                 "gsave 1 setlinecap M 0 0 V stroke grestore } def\n");
-    g_string_append_printf(string, "/Dia { stroke [] 0 setdash 2 copy vpt add M\n"
-                "hpt neg vpt neg V hpt vpt neg V\n"
-                "hpt vpt V hpt neg vpt V closepath stroke\n"
-                " } def\n");
-    g_string_append_printf(string, "/Box { stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M\n"
-                "0 vpt2 neg V hpt2 0 V 0 vpt2 V\n"
-                "hpt2 neg 0 V closepath stroke\n"
-                " } def\n");
-    g_string_append_printf(string, "/Circle { stroke [] 0 setdash 2 copy\n"
-                "hpt 0 360 arc stroke } def\n");
-    g_string_append_printf(string, "/Times { stroke [] 0 setdash exch hpt sub exch vpt add M\n"
-                "hpt2 vpt2 neg V currentpoint stroke M\n"
-                "hpt2 neg 0 R hpt2 vpt2 V stroke } def\n");
-    g_string_append_printf(string, "/Cross { stroke [] 0 setdash vpt sub M 0 vpt2 V\n"
-                "currentpoint stroke M\n"
-                "hpt neg vpt neg R hpt2 0 V stroke\n"
-                "} def\n");
-    g_string_append_printf(string, "/Star { 2 copy Cross Times } def\n");
-    g_string_append_printf(string, "/TriU { stroke [] 0 setdash 2 copy vpt 1.12 mul add M\n"
-                "hpt neg vpt -1.62 mul V\n"
-                "hpt 2 mul 0 V\n"
-                "hpt neg vpt 1.62 mul V closepath stroke\n"
-                "} def\n");
-    g_string_append_printf(string, "/TriD { stroke [] 0 setdash 2 copy vpt 1.12 mul sub M\n"
-                "hpt neg vpt 1.62 mul V\n"
-                "hpt 2 mul 0 V\n"
-                "hpt neg vpt -1.62 mul V closepath stroke\n"
-                "} def\n");
+    g_string_append_printf(string,
+                           "/Dia { stroke [] 0 setdash 2 copy vpt add M\n"
+                           "hpt neg vpt neg V hpt vpt neg V\n"
+                           "hpt vpt V hpt neg vpt V closepath stroke\n"
+                           " } def\n");
+    g_string_append_printf(string,
+                           "/Box { stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M\n"
+                           "0 vpt2 neg V hpt2 0 V 0 vpt2 V\n"
+                           "hpt2 neg 0 V closepath stroke\n"
+                           " } def\n");
+    g_string_append_printf(string,
+                           "/Circle { stroke [] 0 setdash 2 copy\n"
+                           "hpt 0 360 arc stroke } def\n");
+    g_string_append_printf(string,
+                           "/Times { stroke [] 0 setdash exch hpt sub exch vpt add M\n"
+                           "hpt2 vpt2 neg V currentpoint stroke M\n"
+                           "hpt2 neg 0 R hpt2 vpt2 V stroke } def\n");
+    g_string_append_printf(string,
+                           "/Cross { stroke [] 0 setdash vpt sub M 0 vpt2 V\n"
+                           "currentpoint stroke M\n"
+                           "hpt neg vpt neg R hpt2 0 V stroke\n"
+                           "} def\n");
+    g_string_append_printf(string,
+                           "/Star { 2 copy Cross Times } def\n");
+    g_string_append_printf(string,
+                           "/TriU { stroke [] 0 setdash 2 copy vpt 1.12 mul add M\n"
+                           "hpt neg vpt -1.62 mul V\n"
+                           "hpt 2 mul 0 V\n"
+                           "hpt neg vpt 1.62 mul V closepath stroke\n"
+                           "} def\n");
+    g_string_append_printf(string,
+                           "/TriD { stroke [] 0 setdash 2 copy vpt 1.12 mul sub M\n"
+                           "hpt neg vpt 1.62 mul V\n"
+                           "hpt 2 mul 0 V\n"
+                           "hpt neg vpt -1.62 mul V closepath stroke\n"
+                           "} def\n");
     g_string_append_printf(string, "/Times-Roman findfont\n");
     g_string_append_printf(string, "%%%%EndProlog\n");
 

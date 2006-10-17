@@ -205,12 +205,14 @@ process_preinit_options(int *argc,
     if (*argc == 1)
         return;
 
-    if (gwy_strequal((*argv)[1], "--help") || gwy_strequal((*argv)[1], "-h")) {
+    if (gwy_strequal((*argv)[1], "--help")
+        || gwy_strequal((*argv)[1], "-h")) {
         print_help();
         exit(0);
     }
 
-    if (gwy_strequal((*argv)[1], "--version") || gwy_strequal((*argv)[1], "-v")) {
+    if (gwy_strequal((*argv)[1], "--version")
+        || gwy_strequal((*argv)[1], "-v")) {
         printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
         exit(0);
     }

@@ -311,7 +311,7 @@ mifile_load(const gchar *filename,
                 g_object_unref(cmodel);
 
                 g_object_set(gmodel, "title", _("Spectroscopy Graph"), NULL);
-                //XXXSET UNITS HERE gwy_graph_model_set_si_unit_x
+                /* XXX: SET UNITS HERE gwy_graph_model_set_si_unit_x */
                 g_object_set(cmodel,
                              "description", "Curve 1",
                              "mode", GWY_GRAPH_CURVE_POINTS,

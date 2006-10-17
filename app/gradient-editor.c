@@ -224,11 +224,15 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
         { N_("_Points"), EDITING_MODE_POINTS, },
         { N_("_Curve"),  EDITING_MODE_CURVE,  },
     };
+    static const GwyRGBA colors[3] = {
+        { 0.95, 0.00, 0.00, 1.00 },
+        { 0.00, 0.90, 0.00, 1.00 },
+        { 0.00, 0.00, 1.00, 1.00 },
+    };
     static const gdouble default_markers[] = { 0.0, 1.0 };
     GtkWidget *vbox, *vvbox, *hbox, *colorsel;
     GSList *group, *l;
     GwyGradientEditor *editor;
-    GwyRGBA colors[3];
 
     g_return_if_fail(GTK_IS_WINDOW(res_editor->edit_window));
     editor = GWY_GRADIENT_EDITOR(res_editor);
@@ -265,10 +269,7 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
     editor->curve = gwy_curve_new();
     g_object_set(editor->curve, "snap", FALSE, NULL);
     gwy_curve_set_range(GWY_CURVE(editor->curve), 0, 1, 0, 1);
-    colors[0].r = 0.95; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
-    colors[1].r = 0; colors[1].g = 0.9; colors[1].b = 0; colors[1].a = 1;
-    colors[2].r = 0; colors[2].g = 0; colors[2].b = 1; colors[2].a = 1;
-    gwy_curve_set_channels(GWY_CURVE(editor->curve), 3, colors);
+    gwy_curve_set_channels(GWY_CURVE(editor->curve), 3, (GwyRGBA*)colors);
     gtk_box_pack_start(GTK_BOX(vbox), editor->curve, TRUE, TRUE, 0);
     gtk_widget_set_size_request(editor->curve, 400, 200);
     g_signal_connect_swapped(editor->curve, "curve-edited",
@@ -384,7 +385,7 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
     GwyGradientPoint *points;
     GdkColor gdkcolor;
     gdouble q;
-    gint i, num_pts;;
+    gint i, num_pts;
 
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
     g_return_if_fail(gradient

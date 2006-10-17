@@ -303,7 +303,7 @@ harris_do(GwyDataField *dfield, GwyDataField *show)
 
     gwy_data_field_filter_harris(x_gradient, y_gradient, show, 20, 0.1);
     /*gwy_data_field_clear(show);
-    gwy_data_field_grains_mark_watershed_minima(ble, show, 1, 0, 5, 
+    gwy_data_field_grains_mark_watershed_minima(ble, show, 1, 0, 5,
                        0.05*(gwy_data_field_get_max(ble) - gwy_data_field_get_min(ble)));
 */
 }

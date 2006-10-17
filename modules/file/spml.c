@@ -32,7 +32,7 @@
  * * Fixed offset of datafield (datafield is starting on location of axes start)
  * * Rotation of datafield (consult the meaning of axis)
  * * FIXME: Correct width and length of datafiels (rounding problem)
- *  
+ *
  */
 /*#define DEBUG*/
 
@@ -251,8 +251,8 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
                 }
                 num = g_ascii_strtod(p, &end_ptr);
                 if (num == 0 && end_ptr == p) {
-                    g_warning
-                        ("SPML: decode_data(): No conversion performed from ASCII string.");
+                    g_warning("SPML: decode_data(): No conversion performed "
+                              "from ASCII string.");
                     break;
                 }
                 g_array_append_val(data_stream, num);
@@ -264,8 +264,8 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
             /*/ TODO: */
         case HEX:
         case BINARY:
-            g_warning
-                ("SPML: decode_data(): Data coding 'HEX' and 'BINARY' not supported.");
+            g_warning("SPML: decode_data(): Data coding 'HEX' and 'BINARY' "
+                      "not supported.");
             break;
         case UNKNOWN_CODING:
             break;
@@ -273,9 +273,11 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
     if (coding == ASCII) {
         /* we have already decoded data */
         if (max_input_len != -1 && data_count != max_input_len) {
-            /* not enough input data to fill array defined by length max_input_len */
+            /* not enough input data to fill array defined by length
+             * max_input_len */
             g_warning("SPML: decode_data():\n"
-                      "Input has not the same length as declared in dimensions\n"
+                      "Input has not the same length as declared in "
+                        "dimensions\n"
                       "(max:%d vs read:%d). Has the channel attribute\n"
                       "'channelReadMethodName'? The channel may be  one\n"
                       "dimensional data used for axis values but not as\n"
@@ -286,9 +288,9 @@ decode_data(double **data, const xmlChar * input, dataFormat data_format,
             return 0;
         }
         else {
-
             *data = (double *)data_stream->data;
-            g_array_free(data_stream, FALSE);   /* we can free dynamic array, but not */
+            /* we can free dynamic array, but not */
+            g_array_free(data_stream, FALSE);
             /* containing data. */
             gwy_debug("Datacount: %d", data_count);
             return data_count;
@@ -499,9 +501,8 @@ get_data(gboolean read_data_only, char *filename, char *datachannel_name,
             else if (state == 1) {
                 value = xmlTextReaderConstValue(reader);
                 if (value == NULL) {
-                    g_warning
-                        ("SPML: get_data(): No data available for datachannel '%s'",
-                         datachannel_name);
+                    g_warning("SPML: get_data(): No data available for "
+                              "datachannel '%s'", datachannel_name);
                     *data = NULL;
                     break;
                 }
@@ -708,8 +709,8 @@ get_axis(char *filename, char *datachannel_name, GArray ** axes,
 
     if (axes_node == NULL || datachannels_node == NULL) {
         /* incomplete xml file */
-        g_warning
-            ("SPML: get_axis(): incomplete file, missing Axes or Datachannels tags.");
+        g_warning("SPML: get_axis(): incomplete file, missing Axes or "
+                  "Datachannels tags.");
         xmlFreeDoc(doc);
         *axes = NULL;
         *units = NULL;
@@ -775,9 +776,9 @@ get_axis(char *filename, char *datachannel_name, GArray ** axes,
     }
     if (g_array_index(read_method_axes, xmlChar *, 0) == NULL) {
         /* ReadMethod mentioned in selected DataChannel not found in ReadMethod section */
-        g_warning
-            ("SPML: get_axis(): ReadMethod '%s' for datachannel '%s' not found.",
-             channelReadMethodName, datachannel_name);
+        g_warning("SPML: get_axis(): ReadMethod '%s' for datachannel "
+                  "'%s' not found.",
+                  channelReadMethodName, datachannel_name);
         xmlFreeDoc(doc);
         *axes = NULL;
         *units = NULL;
@@ -873,9 +874,9 @@ get_dimensions(GArray * axes)
     for (i = 0; i < axes->len; i++) {
         axis = g_array_index(axes, GArray *, i);
         if (axis->len > 1) {
-            width = (g_array_index(axis, double, 1) - g_array_index(axis, double, 0)) 
+            width = (g_array_index(axis, double, 1) - g_array_index(axis, double, 0))
                 * axis->len;
-            out_array = g_array_append_val(out_array, width);            
+            out_array = g_array_append_val(out_array, width);
             gwy_debug("Start: %e, step: %e, count: %d, width: %e",
                       g_array_index(axis, double, 0),
                       g_array_index(axis, double, 1) - g_array_index(axis, double, 0),
@@ -952,14 +953,14 @@ spml_load(const gchar *filename)
                 y_dimen = g_array_index(real_width_height, double, 1);
 
                 /* parse unit and return power of 10 according to unit */
-                siunit =
-                    gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar *, 0),
-                                          &x_power10);
+                siunit = gwy_si_unit_new_parse(g_array_index(axes_units,
+                                                             xmlChar*, 0),
+                                               &x_power10);
                 g_object_unref(siunit);
 
-                siunit =
-                    gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar *, 1),
-                                          &y_power10);
+                siunit = gwy_si_unit_new_parse(g_array_index(axes_units,
+                                                             xmlChar*, 1),
+                                               &y_power10);
                 /* create and allocate datafield of given dimensions and given physical
                    dimensions */
                 if (rotate == 90) {
@@ -979,7 +980,7 @@ spml_load(const gchar *filename)
                 gwy_debug("X real_width_height: %f", x_dimen);
                 gwy_data = gwy_data_field_get_data(dfield);
                 /* copy raw array of doubles extracted from spml file to Gwyddion's
-                   datafield 
+                   datafield
                    rotate -90 degrees: */
                 if (rotate == 90) {
                     for (i = 0; i < dimensions[0]; i++) {
@@ -1002,18 +1003,18 @@ spml_load(const gchar *filename)
 
                 gwy_data_field_multiply(dfield, pow10(z_power10));
 
-                /* set offset to match axes */                
+                /* set offset to match axes */
                 siunit = gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar*, 0), &z_power10);
                 gwy_data_field_set_si_unit_z(dfield, siunit);
                 g_object_unref(siunit);
-                gwy_data_field_set_xoffset(dfield, 
-                    pow10(z_power10)*g_array_index(g_array_index(axes, GArray *, 0), double, 0) );
+                gwy_data_field_set_xoffset(dfield,
+                    pow10(z_power10)*g_array_index(g_array_index(axes, GArray*, 0), double, 0) );
 
                 siunit = gwy_si_unit_new_parse(g_array_index(axes_units, xmlChar*, 1), &z_power10);
                 gwy_data_field_set_si_unit_z(dfield, siunit);
                 g_object_unref(siunit);
-                gwy_data_field_set_yoffset(dfield, 
-                    pow10(z_power10)*g_array_index(g_array_index(axes, GArray *, 1), double, 0) );
+                gwy_data_field_set_yoffset(dfield,
+                    pow10(z_power10)*g_array_index(g_array_index(axes, GArray*, 1), double, 0) );
 
                 if (object == NULL) {
                     /* create gwyddion container */

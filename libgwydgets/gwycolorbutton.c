@@ -284,7 +284,8 @@ gwy_color_button_style_set(GtkWidget *widget,
 {
     GwyColorButton *color_button = GWY_COLOR_BUTTON(widget);
 
-    GTK_WIDGET_CLASS(gwy_color_button_parent_class)->style_set(widget, previous_style);
+    GTK_WIDGET_CLASS(gwy_color_button_parent_class)->style_set(widget,
+                                                               previous_style);
 
     if (GTK_WIDGET_REALIZED(widget))
         gwy_object_unref(color_button->pixbuf);

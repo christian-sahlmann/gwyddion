@@ -420,7 +420,7 @@ gwy_data_field_get_row_correlation_score(GwyDataField *data_field,
                                             gint area_length)
 {
     gint i;
-    gdouble score=0, avg1=0, avg2=0, rms1=0, rms2=0;
+    gdouble score = 0, avg1 = 0, avg2 = 0, rms1 = 0, rms2 = 0;
 
     for (i = 0; i < area_length; i++)
     {

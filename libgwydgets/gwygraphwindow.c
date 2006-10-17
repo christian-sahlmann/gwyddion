@@ -106,6 +106,8 @@ GtkWidget*
 gwy_graph_window_new(GwyGraph *graph)
 {
     GwyGraphWindow *graphwindow;
+    GwyGraphArea *area;
+    GwySelection *selection;
     GtkScrolledWindow *swindow;
     GtkWidget *vbox, *hbox;
     GtkWidget *label;
@@ -231,9 +233,9 @@ gwy_graph_window_new(GwyGraph *graph)
     g_signal_connect_swapped(gwy_graph_get_area(graph), "motion-notify-event",
                              G_CALLBACK(gwy_graph_cursor_motion), graphwindow);
 
-    g_signal_connect_swapped(gwy_graph_area_get_selection(
-                                       GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
-                                       GWY_GRAPH_STATUS_ZOOM), "finished",
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
+    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_ZOOM);
+    g_signal_connect_swapped(selection, "finished",
                              G_CALLBACK(gwy_graph_window_zoom_finished),
                              graphwindow);
 
@@ -387,10 +389,10 @@ gwy_graph_cursor_motion(GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_measure(GwyGraphWindow *graphwindow)
 {
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_measure_points)))
-    {
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_measure_points))) {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_XLINES);
+        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph),
+                             GWY_GRAPH_STATUS_XLINES);
         gtk_widget_queue_draw(graphwindow->graph);
         gtk_widget_show_all(graphwindow->measure_dialog);
     }

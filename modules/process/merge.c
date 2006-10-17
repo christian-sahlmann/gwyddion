@@ -689,10 +689,8 @@ merge_boundary(GwyDataField *dfield1,
 
     /* XXX: Do not waste CPU with gwy_data_field_inside() when you can
      * fix the for-cycle boundaries. */
-    for (col = 0; col < res_rect.width; col++)
-    {
-        for (row = 0; row < res_rect.height; row++)
-        {
+    for (col = 0; col < res_rect.width; col++) {
+        for (row = 0; row < res_rect.height; row++) {
             if (!gwy_data_field_inside(dfield1, col + f1_pos.x, row + f1_pos.y))
                 continue;
             if (!gwy_data_field_inside(dfield2, col + f2_pos.x, row + f2_pos.y))

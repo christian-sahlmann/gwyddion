@@ -272,9 +272,6 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                                  &args->method, args->method, TRUE);
 
- //   g_signal_connect(controls.method, "value_changed",
- //                                     G_CALLBACK(drift_invalidate), &controls);
-
 
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.method);
     gtk_table_attach(GTK_TABLE(table), controls.method, 1, 2, row, row+1,
@@ -546,7 +543,8 @@ drift_ok(DriftControls *controls,
                                      0);
     g_return_if_fail(data_field);
 
-    if (!controls->computed) return;
+    if (!controls->computed)
+        return;
 
     newdata_field = gwy_data_field_duplicate(data_field);
 
@@ -555,8 +553,7 @@ drift_ok(DriftControls *controls,
                                                  controls->result,
                                                  args->is_crop);
 
-    if (args->is_correct)
-    {
+    if (args->is_correct) {
         newid = gwy_app_data_browser_add_data_field(newdata_field, data, TRUE);
 
         gwy_app_copy_data_items(data, data, oldid, newid,
@@ -570,8 +567,7 @@ drift_ok(DriftControls *controls,
     }
     g_object_unref(newdata_field);
 
-    if (args->is_graph)
-    {
+    if (args->is_graph) {
         gmodel = gwy_graph_model_new();
         cmodel = gwy_graph_curve_model_new();
         gwy_graph_model_add_curve(gmodel, cmodel);
@@ -579,7 +575,8 @@ drift_ok(DriftControls *controls,
         gwy_graph_model_set_title(gmodel, _("Drift graph"));
         gwy_graph_model_set_units_from_data_line(gmodel, controls->result);
         gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
-        gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result, 0, 0);
+        gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result,
+                                                     0, 0);
 
         newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         gwy_object_unref(cmodel);
@@ -652,17 +649,20 @@ drift_load_args(GwyContainer *container,
 {
     *args = drift_defaults;
 
-    gwy_container_gis_boolean_by_name(container, iscorrect_key, &args->is_correct);
+    gwy_container_gis_boolean_by_name(container, iscorrect_key,
+                                      &args->is_correct);
     gwy_container_gis_boolean_by_name(container, iscrop_key,
                                       &args->is_crop);
     gwy_container_gis_boolean_by_name(container, isgraph_key, &args->is_graph);
-    gwy_container_gis_double_by_name(container, sensitivity_key, &args->sensitivity);
-    gwy_container_gis_double_by_name(container, smoothing_key, &args->smoothing);
+    gwy_container_gis_double_by_name(container, sensitivity_key,
+                                     &args->sensitivity);
+    gwy_container_gis_double_by_name(container, smoothing_key,
+                                     &args->smoothing);
     gwy_container_gis_enum_by_name(container, method_key,
                                    &args->method);
     gwy_container_gis_enum_by_name(container, interpolation_key,
                                    &args->interpolation);
-     drift_sanitize_args(args);
+    drift_sanitize_args(args);
 }
 
 static void
@@ -670,11 +670,14 @@ drift_save_args(GwyContainer *container,
                DriftArgs *args)
 {
     gwy_container_set_boolean_by_name(container, isgraph_key, args->is_graph);
-    gwy_container_set_boolean_by_name(container, iscorrect_key, args->is_correct);
+    gwy_container_set_boolean_by_name(container, iscorrect_key,
+                                      args->is_correct);
     gwy_container_set_boolean_by_name(container, iscrop_key, args->is_crop);
-    gwy_container_set_double_by_name(container, sensitivity_key, args->sensitivity);
+    gwy_container_set_double_by_name(container, sensitivity_key,
+                                     args->sensitivity);
     gwy_container_set_double_by_name(container, smoothing_key, args->smoothing);
-    gwy_container_set_enum_by_name(container, interpolation_key, args->interpolation);
+    gwy_container_set_enum_by_name(container, interpolation_key,
+                                   args->interpolation);
     gwy_container_set_enum_by_name(container, method_key, args->method);
 }
 

@@ -208,8 +208,7 @@ normalize_data(FitArgs *args,
     for (i = 0; i < res; i++) {
         if ((xs[i] >= args->from
              && xs[i] <= args->to)
-            || (args->from == args->to))
-        {
+            || (args->from == args->to)) {
             if (skip_first_point && i == 0)
                 continue;
 
@@ -466,7 +465,7 @@ fit_dialog(FitArgs *args)
     reset(args, &controls);
     dialog_update(&controls, args);
 
-    //graph_selected(GWY_GRAPH(controls.graph), &controls);
+    /* graph_selected(GWY_GRAPH(controls.graph), &controls); */
 
     gtk_widget_show_all(dialog);
 
@@ -524,7 +523,8 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i, j;
 
-    gwy_graph_model_remove_curve_by_description(args->graph_model, "Fitted curve");
+    gwy_graph_model_remove_curve_by_description(args->graph_model,
+                                                "Fitted curve");
     args->is_fitted = FALSE;
 
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -618,7 +618,8 @@ recompute(FitArgs *args, FitControls *controls)
         fixed[i] = args->par_fix[i];
         allfixed &= fixed[i];
         args->par_res[i] = args->par_init[i];
-        if (!fixed[i]) nfree++;
+        if (!fixed[i])
+            nfree++;
     }
     if (allfixed)
         return;
@@ -660,8 +661,7 @@ recompute(FitArgs *args, FitControls *controls)
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), buffer);
     }
 
-    if (args->fitter->covar)
-    {
+    if (args->fitter->covar) {
         /* FIXME: this is _scaled_ dispersion */
         g_snprintf(buffer, sizeof(buffer), "%2.3g",
                    gwy_math_nlfit_get_dispersion(args->fitter));

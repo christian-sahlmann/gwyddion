@@ -179,7 +179,7 @@ do_level(GwyContainer *data, GwyRunType run, guint level_type)
     else
         gwy_data_field_fit_plane(dfield, &c, &bx, &by);
 
-    switch(level_type) {
+    switch (level_type) {
         case LEVEL_SUBTRACT:
         c = -0.5*(bx*gwy_data_field_get_xres(dfield)
                   + by*gwy_data_field_get_yres(dfield));
@@ -284,7 +284,7 @@ level_dialog(LevelArgs *args)
                          0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
         list = g_slist_next(list);
-    } while(list);
+    } while (list);
 
     gtk_widget_show_all(dialog);
     do {

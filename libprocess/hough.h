@@ -25,8 +25,6 @@
 
 G_BEGIN_DECLS
 
-
-
 void gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *x_gradient,
                                GwyDataField *y_gradient,
@@ -63,17 +61,17 @@ gint gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
                                           gdouble threshold,
                                           gboolean subpixel);
 
-void gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield, 
-                                                  gdouble rho, 
-                                                  gdouble theta, 
-                                                  gint *px1, 
-                                                  gint *px2, 
-                                                  gint *py1, 
+void gwy_data_field_hough_polar_line_to_datafield(GwyDataField *dfield,
+                                                  gdouble rho,
+                                                  gdouble theta,
+                                                  gint *px1,
+                                                  gint *px2,
+                                                  gint *py1,
                                                   gint *py2);
 
-void gwy_data_field_hough_datafield_line_to_polar(gint px1, 
-                                                  gint px2, 
-                                                  gint py1, 
+void gwy_data_field_hough_datafield_line_to_polar(gint px1,
+                                                  gint px2,
+                                                  gint py1,
                                                   gint py2,
                                                   gdouble *rho,
                                                   gdouble *theta);

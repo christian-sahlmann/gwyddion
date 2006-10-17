@@ -36,7 +36,7 @@ gwy_app_about(void)
     GtkWidget *vbox, *hbox, *widget, *credits;
     gchar *s, *s2;
     GString *str;
-    gint i;
+    gint i, size;
 
     if (about) {
         gtk_window_present(GTK_WINDOW(about));
@@ -63,9 +63,8 @@ gwy_app_about(void)
     hbox = gtk_hbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    widget = gtk_image_new_from_stock(GWY_STOCK_GWYDDION,
-                                      gtk_icon_size_from_name(
-                                                         GWY_ICON_SIZE_ABOUT));
+    size = gtk_icon_size_from_name(GWY_ICON_SIZE_ABOUT);
+    widget = gtk_image_new_from_stock(GWY_STOCK_GWYDDION, size);
 
     gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.5, 0.0);

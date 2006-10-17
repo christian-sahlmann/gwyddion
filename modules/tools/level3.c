@@ -525,7 +525,8 @@ gwy_tool_level3_apply(GwyToolLevel3 *tool)
     coeffs[2] = -0.5*(coeffs[0]*xres + coeffs[1]*yres);
     if (tool->args.allow_undo)
         gwy_app_undo_qcheckpoint(plain_tool->container,
-                                 gwy_app_get_data_key_for_id(plain_tool->id), 0);
+                                 gwy_app_get_data_key_for_id(plain_tool->id),
+                                 0);
     gwy_data_field_plane_level(plain_tool->data_field,
                                coeffs[2], coeffs[0], coeffs[1]);
 

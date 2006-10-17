@@ -324,8 +324,7 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
             for (tpy = tpymin; tpy <= tpymax && count < 2; tpy++) {
                 for (tpx = tpxmin; tpx <= tpxmax && count < 2; tpx++) {
                     if (image[imy][imx]-tip[tip_ysiz-1-tpy][tip_xsiz-1-tpx]
-                        == rsurf[tpy+imy-ryc][tpx+imx-rxc])
-                    {
+                        == rsurf[tpy+imy-ryc][tpx+imx-rxc]) {
                         count++;        /* increment count */
                         x = tpx + imx - rxc;    /* remember coordinates */
                         y = tpy + imy - ryc;
@@ -612,7 +611,7 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
     while (count) {
         iter++;
         g_string_printf(str, N_("Iterating estimate (iteration %d)"), iter);
-        if (set_message && ! set_message(str->str))
+        if (set_message && !set_message(str->str))
             return -1;
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
@@ -651,8 +650,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
             if (image[jxp][ixp] - open[jxp][ixp] > thresh)
                 if (itip_estimate_point(ixp, jxp, image,
                                         im_xsiz, im_ysiz, tip_xsiz, tip_ysiz,
-                                        xc, yc, tip0, thresh, use_edges))
-                {
+                                        xc, yc, tip0, thresh, use_edges)) {
                     count++;
                 }
                 if (set_fraction) {
@@ -662,7 +660,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                     fraction = MAX(fraction, 0);
                     if (set_fraction && !set_fraction(fraction)) {
                         _gwy_morph_lib_ifreematrix(open, im_ysiz);
-                        return -1;;
+                        return -1;
                     }
                 }
         }
@@ -718,8 +716,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
 
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
-    if (set_message && !set_message(N_("Searching for local maxima")))
-    {
+    if (set_message && !set_message(N_("Searching for local maxima"))) {
         g_free(x);
         g_free(y);
         return -1;
@@ -742,8 +739,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         }
     }
     g_string_printf(str, N_("Found %d internal local maxima"), n);
-    if (set_message && !set_message(str->str))
-    {
+    if (set_message && !set_message(str->str)) {
         g_free(x);
         g_free(y);
         return -1;
@@ -757,8 +753,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         count = 0;
         iter++;
         g_string_printf(str, N_("Iterating estimate (iteration %d)"), iter);
-        if (set_message && !set_message(str->str))
-        {
+        if (set_message && !set_message(str->str)) {
             g_free(x);
             g_free(y);
             return -1;
@@ -767,13 +762,11 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         for (i = 0; i < n; i++) {
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
                                     tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
-                                    use_edges))
-            {
+                                    use_edges)) {
                 count++;
                 sumcount++;
             }
-            if (set_fraction && !set_fraction((gdouble)i/(gdouble)n))
-            {
+            if (set_fraction && !set_fraction((gdouble)i/(gdouble)n)) {
                 g_free(x);
                 g_free(y);
                 return -1;
@@ -781,8 +774,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         }
         g_string_printf(str, N_("%d image locations produced refinement"),
                         count);
-        if (set_message && !set_message(str->str))
-        {
+        if (set_message && !set_message(str->str)) {
                 g_free(x);
                 g_free(y);
                 return -1;

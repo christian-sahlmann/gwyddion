@@ -277,9 +277,9 @@ gwy_rgba_remove_from_container(GwyContainer *container,
     g_return_val_if_fail(container && prefix, FALSE);
 
     gwy_rgba_compute_color_quarks(prefix, keys);
-    return gwy_container_remove(container, keys[0]);
-           + gwy_container_remove(container, keys[1]);
-           + gwy_container_remove(container, keys[2]);
+    return gwy_container_remove(container, keys[0])
+           + gwy_container_remove(container, keys[1])
+           + gwy_container_remove(container, keys[2])
            + gwy_container_remove(container, keys[3]);
 }
 

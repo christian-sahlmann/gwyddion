@@ -1,7 +1,7 @@
 #ifndef __SPML_UTILS_H
 #define __SPML_UTILS_H
 /*
- * =====================================================================================
+ * ============================================================================
  *
  *        Filename:  spml-utils.c
  *
@@ -16,7 +16,7 @@
  *          Author:  Jan Horak (xhorak@gmail.com),
  *         Company:
  *
- * =====================================================================================
+ * ============================================================================
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -148,8 +148,8 @@ inflate_get_out_buffer(zlib_stream * zstr, GArray ** out_buf)
         count = CHUNK - zstr->strm.avail_out;
         *out_buf = g_array_append_vals(*out_buf, zstr->out, count);
         if (*out_buf == NULL) {
-            g_warning
-                ("Zlib inflate: output buffer wasn't written to dynamic array.\n");
+            g_warning("Zlib inflate: output buffer wasn't written "
+                      "to dynamic array.");
             return Z_ERRNO;
         }
     } while (zstr->strm.avail_out == 0);
@@ -190,8 +190,8 @@ inflate_dynamic_array(GArray * in_buf, GArray ** out_buf)
             break;
         }
         if (inflate_get_out_buffer(&zstr, out_buf) != Z_OK) {
-            g_warning
-                ("Cannot inflate zlib compression. Be sure it is a compressed stream.\n");
+            g_warning("Cannot inflate zlib compression. Be sure it is "
+                      "a compressed stream.");
             ret = -1;
             break;
         }
@@ -202,8 +202,8 @@ inflate_dynamic_array(GArray * in_buf, GArray ** out_buf)
             ret = -1;
         }
         if (inflate_get_out_buffer(&zstr, out_buf) != Z_STREAM_END) {
-            g_warning
-                ("Cannot inflate zlib compression. Be sure it is a compressed stream.\n");
+            g_warning("Cannot inflate zlib compression. Be sure it is "
+                      "a compressed stream.");
             ret = -1;
         }
     }

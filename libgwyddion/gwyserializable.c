@@ -33,7 +33,7 @@ static GByteArray* gwy_serializable_do_serialize   (GObject *serializable,
 static void        gwy_serialize_skip_type         (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
-                                                    guchar ctype);;
+                                                    guchar ctype);
 static void        gwy_serializable_base_init      (gpointer g_class);
 static GObject*    gwy_serializable_duplicate_hard_way(GObject *object);
 

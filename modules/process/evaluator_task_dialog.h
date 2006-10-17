@@ -43,7 +43,7 @@ typedef enum {
     GWY_EVALUATOR_THRESHOLD_SMALLER = 1,
     GWY_EVALUATOR_THRESHOLD_EQUAL = 2,
     GWY_EVALUATOR_THRESHOLD_INTERVAL = 3,
-} GwyEvaluatorThresholdFunction; 
+} GwyEvaluatorThresholdFunction;
 
 #define GWY_TYPE_EVALUATOR_TASK_DIALOG            (gwy_evaluator_task_dialog_get_type())
 #define GWY_EVALUATOR_TASK_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_EVALUATOR_TASK_DIALOG, GwyEvaluatorTaskDialog))
@@ -267,14 +267,14 @@ gwy_evaluator_task_dialog_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static void        
+static void
 function_changed_cb(GtkWidget *combo, GwyEvaluatorTaskDialog *dialog)
 {
     dialog->task = (GwyEvaluatorTaskFunction)gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
 
 }
 
-static void        
+static void
 function_add_cb(GwyEvaluatorTaskDialog *dialog)
 {
     GtkEditable *editable;
@@ -299,7 +299,7 @@ function_add_cb(GwyEvaluatorTaskDialog *dialog)
 
 
     p = gwy_enum_to_string(dialog->task, tasks, G_N_ELEMENTS(tasks));
-    
+
     editable = GTK_EDITABLE(dialog->expression);
     pos = gtk_editable_get_position(editable);
     gtk_editable_insert_text(editable, p, strlen(p), &pos);
@@ -307,14 +307,14 @@ function_add_cb(GwyEvaluatorTaskDialog *dialog)
 
 }
 
-static void        
+static void
 threshold_changed_cb(GtkWidget *combo, GwyEvaluatorTaskDialog *dialog)
 {
     dialog->threshold = (GwyEvaluatorThresholdFunction)gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
 
 }
 
-static void        
+static void
 threshold_add_cb(GwyEvaluatorTaskDialog *dialog)
 {
     GtkEditable *editable;
@@ -329,7 +329,7 @@ threshold_add_cb(GwyEvaluatorTaskDialog *dialog)
      };
 
     p = gwy_enum_to_string(dialog->threshold, thresholds, G_N_ELEMENTS(thresholds));
-    
+
     editable = GTK_EDITABLE(dialog->threshold_expression);
     pos = gtk_editable_get_position(editable);
     gtk_editable_insert_text(editable, p, strlen(p), &pos);

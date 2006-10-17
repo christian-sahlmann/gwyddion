@@ -619,7 +619,9 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
                      && row + height <= yres);
 
     if (kxres > width || kyres > height) {
-        g_warning("Kernel size (%d x %d) larger than field area size (%d x %d).", kxres, kyres, width, height);
+        g_warning("Kernel size (%d x %d) larger "
+                  "than field area size (%d x %d).",
+                  kxres, kyres, width, height);
         return;
     }
 
@@ -815,9 +817,9 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
                   + fabs(sobel_vertical->data[k]);
     gwy_data_field_invalidate(data_field);
 
-    threshold = gwy_data_field_get_min(data_field) +
-               (gwy_data_field_get_max(data_field)
-                - gwy_data_field_get_min(data_field))*threshold;
+    threshold = gwy_data_field_get_min(data_field)
+                + (gwy_data_field_get_max(data_field)
+                   - gwy_data_field_get_min(data_field))*threshold;
 
     for (i = 0; i < data_field->yres; i++) {
         for (j = 0; j < data_field->xres; j++) {
@@ -825,8 +827,7 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
             if (data[j + data_field->xres*i] > threshold
                 && i > 0 && j > 0
                 && i < (data_field->yres - 1)
-                && j < (data_field->xres - 1))
-            {
+                && j < (data_field->xres - 1)) {
                 angle = atan2(sobel_vertical->data[j + data_field->xres*i],
                               sobel_horizontal->data[j + data_field->xres*i]);
 
@@ -1735,7 +1736,7 @@ gwy_data_field_area_filter_kuwahara(GwyDataField *data_field,
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
 
-            ctr=0;
+            ctr = 0;
             for (y = -2; y <= 2; y++) {
                 for (x = -2; x <= 2; x++)
                     kernel[ctr++] = gwy_data_field_get_val_closest(data_field,

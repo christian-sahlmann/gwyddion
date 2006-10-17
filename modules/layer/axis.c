@@ -162,15 +162,15 @@ gwy_selection_axis_class_init(GwySelectionAxisClass *klass)
 
     sel_class->object_size = OBJECT_SIZE;
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_ORIENTATION,
-        g_param_spec_enum("orientation",
-                          "Orientation",
-                          "Orientation of selected lines",
-                          GWY_TYPE_ORIENTATION,
-                          GWY_ORIENTATION_HORIZONTAL,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property
+        (gobject_class,
+         PROP_ORIENTATION,
+         g_param_spec_enum("orientation",
+                           "Orientation",
+                           "Orientation of selected lines",
+                           GWY_TYPE_ORIENTATION,
+                           GWY_ORIENTATION_HORIZONTAL,
+                           G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void

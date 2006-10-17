@@ -233,8 +233,8 @@ gwy_tool_spot_remover_init(GwyToolSpotRemover *tool)
     if (!tool->layer_type_point)
         return;
 
-    tool->layer_type_rect= gwy_plain_tool_check_layer_type(plain_tool,
-                                                           "GwyLayerRectangle");
+    tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
+                                                            "GwyLayerRectangle");
     if (!tool->layer_type_rect)
         return;
 

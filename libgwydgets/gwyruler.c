@@ -390,9 +390,9 @@ gwy_ruler_realize(GtkWidget *widget)
     attributes.visual = gtk_widget_get_visual(widget);
     attributes.colormap = gtk_widget_get_colormap(widget);
     attributes.event_mask = gtk_widget_get_events(widget);
-    attributes.event_mask |= (GDK_EXPOSURE_MASK |
-                              GDK_POINTER_MOTION_MASK |
-                              GDK_POINTER_MOTION_HINT_MASK);
+    attributes.event_mask |= (GDK_EXPOSURE_MASK
+                              | GDK_POINTER_MOTION_MASK
+                              | GDK_POINTER_MOTION_HINT_MASK);
 
     attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
 
@@ -488,8 +488,8 @@ gwy_ruler_make_pixmap(GwyRuler *ruler)
 
     if (ruler->backing_store) {
         gdk_drawable_get_size(ruler->backing_store, &width, &height);
-        if ((width == widget->allocation.width) &&
-            (height == widget->allocation.height))
+        if ((width == widget->allocation.width)
+            && (height == widget->allocation.height))
             return;
 
         g_object_unref(ruler->backing_store);
