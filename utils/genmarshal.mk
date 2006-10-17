@@ -51,7 +51,7 @@ $(GENMARSHAL_NAME).h.stamp: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	&& echo timestamp >$(GENMARSHAL_NAME).h.stamp
 
 $(GENMARSHAL_NAME).c: $(GENMARSHAL_NAME).list $(genmarshal_self)
-	echo '/* This is a GENERATED file */' >$(GENMARSHAL_SELF).c.xgen \
+	echo '/* This is a GENERATED file */' >$(GENMARSHAL_NAME).c.xgen \
 	&& echo '#include "$(GENMARSHAL_NAME).h"' >>$(GENMARSHAL_NAME).c.xgen \
 	&& $(GLIB_GENMARSHAL) --body --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
