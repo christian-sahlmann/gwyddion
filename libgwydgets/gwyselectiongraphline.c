@@ -50,6 +50,8 @@ gwy_selection_graph_line_init(GwySelectionGraphLine *selection)
  * Creates a new line-wise graph selection.
  *
  * Returns: A new selection object.
+ *
+ * Since: 2.1
  **/
 GwySelection*
 gwy_selection_graph_line_new(void)

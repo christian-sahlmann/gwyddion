@@ -50,6 +50,8 @@ gwy_selection_graph_point_init(GwySelectionGraphPoint *selection)
  * Creates a new point-wise graph selection.
  *
  * Returns: A new selection object.
+ *
+ * Since: 2.1
  **/
 GwySelection*
 gwy_selection_graph_point_new(void)

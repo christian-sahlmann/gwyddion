@@ -380,6 +380,8 @@ gwy_file_detect(const gchar *filename,
  * Returns: The type name (i.e., the same name as passed to
  *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
  *          or %NULL if there's no probable one.
+ *
+ * Since: 2.1
  **/
 const gchar*
 gwy_file_detect_with_score(const gchar *filename,

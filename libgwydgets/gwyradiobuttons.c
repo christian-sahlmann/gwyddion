@@ -103,6 +103,8 @@ gwy_radio_buttons_create(const GwyEnum *entries,
  * Attaches a group of radio buttons to table rows.
  *
  * Returns: The row after the last attached radio button.
+ *
+ * Since: 2.1
  **/
 gint
 gwy_radio_buttons_attach_to_table(GSList *group,

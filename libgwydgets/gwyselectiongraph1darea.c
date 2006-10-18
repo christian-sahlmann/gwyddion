@@ -50,6 +50,8 @@ gwy_selection_graph_1darea_init(GwySelectionGraph1DArea *selection)
  * Creates a new 1darea-wise graph selection.
  *
  * Returns: A new selection object.
+ *
+ * Since: 2.1
  **/
 GwySelection*
 gwy_selection_graph_1darea_new(void)

@@ -50,6 +50,8 @@ gwy_selection_graph_area_init(GwySelectionGraphArea *selection)
  * Creates a new area-wise graph selection.
  *
  * Returns: A new selection object.
+ *
+ * Since: 2.1
  **/
 GwySelection*
 gwy_selection_graph_area_new(void)

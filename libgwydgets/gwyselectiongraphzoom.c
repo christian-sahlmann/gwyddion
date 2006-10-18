@@ -50,6 +50,8 @@ gwy_selection_graph_zoom_init(GwySelectionGraphZoom *selection)
  * Creates a new zoom-wise graph selection.
  *
  * Returns: A new selection object.
+ *
+ * Since: 2.1
  **/
 GwySelection*
 gwy_selection_graph_zoom_new(void)
