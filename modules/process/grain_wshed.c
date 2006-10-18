@@ -48,8 +48,8 @@ typedef struct {
 } WshedArgs;
 
 typedef struct {
-    GtkWidget *inverted;
     GtkWidget *dialog;
+    GtkWidget *inverted;
     GtkWidget *view;
     GtkObject *locate_steps;
     GtkObject *locate_thresh;
@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.11",
+    "1.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -389,7 +389,8 @@ mask_color_change_cb(GtkWidget *color_button,
     GwyContainer *data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button), data,
+    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
+                                GWY_COLOR_BUTTON(color_button), data,
                                 "/0/mask");
     load_mask_color(color_button, data);
 }

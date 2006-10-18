@@ -51,6 +51,7 @@ typedef struct {
 } RemoveArgs;
 
 typedef struct {
+    GtkWidget *dialog;
     GtkWidget *inverted;
     GtkWidget *view;
     GtkWidget *is_height;
@@ -123,7 +124,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -214,6 +215,7 @@ remove_dialog(RemoveArgs *args,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
 
@@ -469,7 +471,8 @@ mask_color_change_cb(GtkWidget *color_button,
     GwyContainer *data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button), data,
+    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
+                                GWY_COLOR_BUTTON(color_button), data,
                                 "/0/mask");
     load_mask_color(color_button, data);
 }

@@ -58,6 +58,7 @@ typedef struct {
 typedef struct {
     ScarsArgs *args;
     GSList *type;
+    GtkWidget *dialog;
     GtkWidget *view;
     GtkObject *threshold_high;
     GtkObject *threshold_low;
@@ -113,7 +114,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -463,6 +464,7 @@ scars_mark_dialog(ScarsArgs *args,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -679,7 +681,8 @@ mask_color_change_cb(GtkWidget *color_button,
     GwyContainer *data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button), data,
+    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
+                                GWY_COLOR_BUTTON(color_button), data,
                                 "/0/mask");
     load_mask_color(color_button, data);
 }

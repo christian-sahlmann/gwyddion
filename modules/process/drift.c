@@ -52,6 +52,7 @@ typedef struct {
 } DriftArgs;
 
 typedef struct {
+    GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *is_graph;
     GtkWidget *is_correct;
@@ -118,19 +119,16 @@ static const DriftArgs drift_defaults = {
     GWY_INTERPOLATION_BILINEAR,
 };
 
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Evaluate/correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -230,6 +228,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
 
@@ -448,7 +447,7 @@ static void
 mask_color_change_cb(GtkWidget *color_button,
                      DriftControls *controls)
 {
-    gwy_color_selector_for_mask("Select color",
+    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
                                 GWY_COLOR_BUTTON(color_button),
                                 NULL, "/0/mask");
     load_mask_color(color_button,

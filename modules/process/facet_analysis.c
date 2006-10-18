@@ -57,6 +57,7 @@ typedef struct {
 
 typedef struct {
     FacetsArgs *args;
+    GtkWidget *dialog;
     GtkWidget *inverted;
     GtkWidget *view;
     GtkWidget *fview;
@@ -152,7 +153,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -267,6 +268,7 @@ facets_dialog(FacetsArgs *args,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -897,7 +899,8 @@ static void
 mask_color_change_cb(GtkWidget *color_button,
                      FacetsControls *controls)
 {
-    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button),
+    gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
+                                GWY_COLOR_BUTTON(color_button),
                                 controls->mydata, "/0/mask");
     load_mask_color(color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
