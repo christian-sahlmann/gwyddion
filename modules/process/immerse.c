@@ -103,6 +103,10 @@ static gboolean immerse_data_filter         (GwyContainer *data,
                                              gint id,
                                              gpointer user_data);
 static void     immerse_improve             (ImmerseControls *controls);
+static gboolean immerse_correlate           (GwyDataField *image,
+                                             GwyDataField *detail,
+                                             gint *col,
+                                             gint *row);
 static gboolean immerse_do                  (ImmerseArgs *args);
 static void     immerse_sampling_cb         (GtkWidget *button,
                                              ImmerseControls *controls);
@@ -498,7 +502,7 @@ static gdouble
 immerse_get_downsample_factor(GwyDataField *dfield,
                               GwyDataField *kernel)
 {
-    static const gdouble calculation_length_limit = 3e7;
+    static const gdouble calculation_length_limit = 1e7;
 
     gint xres, yres, kxres, kyres;
     gdouble x;
@@ -527,8 +531,9 @@ immerse_improve(ImmerseControls *controls)
 {
     GwyDataField *dfield, *dfieldsub, *ifield, *iarea;
     gdouble factor, q = 2;
-    gdouble wr, hr, delta;
-    gint w, h, xfrom, xto, yfrom, yto, ixres, iyres;
+    gdouble wr, hr, xpos, ypos, delta;
+    gint w, h, xfrom, xto, yfrom, yto, ixres, iyres, col, row;
+    gboolean ok;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(controls->args->detail.id);
@@ -547,19 +552,21 @@ immerse_improve(ImmerseControls *controls)
 
     w = ROUND(MAX(wr, 1.0));
     h = ROUND(MAX(hr, 1.0));
+    gwy_debug("w: %d, h: %d", w, h);
     g_assert(w <= ixres && h <= iyres);
-    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(controls->view),
-                                    controls->xpos, controls->ypos,
-                                    &xfrom, &yfrom);
+    xfrom = gwy_data_field_rtoj(ifield, controls->xpos);
+    yfrom = gwy_data_field_rtoi(ifield, controls->ypos);
     /* Calculate the area we will search the detail in */
-    delta = (sqrt((w - h)*(w - h) + 4*(q*w)*(q*h)) - (w + h))/2.0;
-    xto = MIN(xfrom + w + delta, ixres - w);
-    yto = MIN(yfrom + h + delta, iyres - h);
+    delta = (sqrt((w - h)*(w - h) + 4*(q*w)*(q*h)) - (w + h))/4.0;
+    gwy_debug("delta: %g", delta);
+    xto = MIN(xfrom + w + delta, ixres);
+    yto = MIN(yfrom + h + delta, iyres);
     xfrom = MAX(xfrom - delta, 0);
     yfrom = MAX(yfrom - delta, 0);
+    gwy_debug("x: %d..%d, y: %d..%d", xfrom, xto, yfrom, yto);
 
     /* Cut out only the interesting part from the image data field */
-    if (xfrom == 0 && yfrom == 0 && xto == ixres - w && yto == iyres - h)
+    if (xfrom == 0 && yfrom == 0 && xto == ixres && yto == iyres)
         iarea = g_object_ref(ifield);
     else
         iarea = gwy_data_field_area_extract(ifield,
@@ -569,23 +576,120 @@ immerse_improve(ImmerseControls *controls)
     dfieldsub = gwy_data_field_new_resampled(dfield, w, h,
                                              GWY_INTERPOLATION_BILINEAR);
 
-    factor = immerse_get_downsample_factor(iarea, dfield);
-    if (factor < 1.0) {
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog),
+                       _("Correlating subsampled..."));
+
+    factor = immerse_get_downsample_factor(iarea, dfieldsub);
+    /* TODO */
+#if 0
+    if (factor < 1.0 && factor*w > 2.0 && factor*h > 2.0) {
+        GwyDataField *dsubsub, *iareasub, *subscore;
+        gdouble last = -1.0;
+
         /* Downsample and find approximate starting point */
+        dsubsub = gwy_data_field_new_resampled(dfieldsub, factor*w, factor*h,
+                                               GWY_INTERPOLATION_BILINEAR);
+        iareasub = gwy_data_field_new_resampled(iarea,
+                                                factor*(xto - xfrom),
+                                                factor*(yto - yfrom),
+                                                GWY_INTERPOLATION_BILINEAR);
+        immerse_correlate(iarea, dfieldsub, &col, &row);
+        ...
+
         /* Cut a new, smaller iarea just +-1/factor around the starting point */
     }
+#endif
 
     /* Perform search through comlete iarea with gwy_correlation_iter()
      * and subsampled dfield */
 
+    gwy_app_wait_set_message(_("Correlating..."));
+    ok = immerse_correlate(iarea, dfieldsub, &col, &row);
+    gwy_debug("[c] col: %d, row: %d", col, row);
+    if (ok) {
+        col += xfrom;
+        row += yfrom;
+        xpos = gwy_data_field_jtor(dfieldsub, col + 0.5);
+        ypos = gwy_data_field_itor(dfieldsub, row + 0.5);
+    }
+    g_object_unref(iarea);
     g_object_unref(dfieldsub);
+
+    if (!ok) {
+        gwy_app_wait_finish();
+        return;
+    }
+    gwy_debug("[C] col: %d, row: %d", col, row);
 
     if (controls->args->sampling == GWY_IMMERSE_SAMPLING_UP) {
         /* Upsample neighbourhood of the best match in iarea and do
          * gwy_correlation_iter() with original (non-subsampled) dfield */
+        g_printerr("Gotcha!\n");
     }
 
-    g_object_unref(iarea);
+    gwy_app_wait_finish();
+
+    immerse_clamp_detail_offset(controls, xpos, ypos);
+}
+
+static gboolean
+immerse_correlate(GwyDataField *image,
+                  GwyDataField *detail,
+                  gint *col,
+                  gint *row)
+{
+    GwyComputationState *state;
+    GwyDataField *score;
+    const gdouble *d;
+    gint xres, yres, i, m;
+
+    if (!gwy_app_wait_set_fraction(0.0))
+        return FALSE;
+
+    score = gwy_data_field_new_alike(image, FALSE);
+    state = gwy_data_field_correlate_init(image, detail, score);
+    do {
+        gwy_data_field_correlate_iteration(state);
+        if (!gwy_app_wait_set_fraction(state->fraction)) {
+            gwy_data_field_correlate_finalize(state);
+            g_object_unref(score);
+            return FALSE;
+        }
+    } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+    gwy_data_field_correlate_finalize(state);
+
+    d = gwy_data_field_get_data_const(score);
+    xres = gwy_data_field_get_xres(score);
+    yres = gwy_data_field_get_yres(score);
+    m = 0;
+    for (i = 1; i < xres*yres; i++) {
+        if (d[i] > d[m])
+            m = i;
+    }
+#if 0
+    {
+        GwyContainer *data;
+        GByteArray *b;
+
+        data = gwy_container_new();
+        gwy_container_set_object_by_name(data, "/0/data", score);
+        b = g_byte_array_new();
+        g_byte_array_append(b, "GWYP", 4);
+        gwy_serializable_serialize(G_OBJECT(data), b);
+        g_file_set_contents("ble.gwy", b->data, b->len, NULL);
+        g_byte_array_free(b, TRUE);
+        g_object_unref(data);
+    }
+#endif
+    g_object_unref(score);
+
+    if (!gwy_app_wait_set_fraction(1.0))
+        return FALSE;
+
+    *row = m/xres - (gwy_data_field_get_yres(detail) - 1)/2;
+    *col = m % xres - (gwy_data_field_get_xres(detail) - 1)/2;
+
+    return TRUE;
 }
 
 static gboolean
@@ -767,7 +871,6 @@ immerse_view_expose(GtkWidget *view,
     if (event->count > 0)
         return FALSE;
 
-    gwy_debug("%p", controls->detail);
     if (controls->detail) {
         GdkColor white = { 0, 0xffff, 0xffff, 0xffff };
         GdkGC *gc;
@@ -778,7 +881,7 @@ immerse_view_expose(GtkWidget *view,
                                         &xoff, &yoff);
         w = gdk_pixbuf_get_width(controls->detail);
         h = gdk_pixbuf_get_height(controls->detail);
-        gwy_debug("(%d,%d) %dx%d", xoff, yoff, w, h);
+        /* gwy_debug("(%d,%d) %dx%d", xoff, yoff, w, h); */
         gc = gdk_gc_new(view->window);
         gdk_draw_pixbuf(view->window, gc, controls->detail,
                         0, 0, xoff, yoff, w, h,
