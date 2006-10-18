@@ -494,10 +494,98 @@ immerse_data_filter(GwyContainer *data,
     return TRUE;
 }
 
+static gdouble
+immerse_get_downsample_factor(GwyDataField *dfield,
+                              GwyDataField *kernel)
+{
+    static const gdouble calculation_length_limit = 3e7;
+
+    gint xres, yres, kxres, kyres;
+    gdouble x;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    kxres = gwy_data_field_get_xres(kernel);
+    kyres = gwy_data_field_get_yres(kernel);
+
+    /* Total calculation time ~ this value */
+    x = (gdouble)xres*yres*kxres*kyres;
+    gwy_debug("Total work %dx%dx%dx%d = %g, max allowed work %g",
+              xres, yres, kxres, kyres, x, calculation_length_limit);
+
+    if (x < calculation_length_limit)
+        return 1.0;
+
+    x = sqrt(sqrt(calculation_length_limit/x));
+    gwy_debug("Downsample factor: %g", x);
+
+    return x;
+}
+
 static void
 immerse_improve(ImmerseControls *controls)
 {
-    g_printerr("Bad luck!\n");
+    GwyDataField *dfield, *dfieldsub, *ifield, *iarea;
+    gdouble factor, q = 2;
+    gdouble wr, hr, delta;
+    gint w, h, xfrom, xto, yfrom, yto, ixres, iyres;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(controls->args->detail.id);
+    dfield = gwy_container_get_object(controls->args->detail.data, quark);
+    quark = gwy_app_get_data_key_for_id(controls->args->image.id);
+    ifield = gwy_container_get_object(controls->args->image.data, quark);
+    ixres = gwy_data_field_get_xres(ifield);
+    iyres = gwy_data_field_get_yres(ifield);
+
+    wr = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xmeasure(ifield);
+    hr = gwy_data_field_get_yreal(dfield)/gwy_data_field_get_ymeasure(ifield);
+    if (wr*hr < 6.0) {
+        g_warning("Detail image is too small for correlation");
+        return;
+    }
+
+    w = ROUND(MAX(wr, 1.0));
+    h = ROUND(MAX(hr, 1.0));
+    g_assert(w <= ixres && h <= iyres);
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(controls->view),
+                                    controls->xpos, controls->ypos,
+                                    &xfrom, &yfrom);
+    /* Calculate the area we will search the detail in */
+    delta = (sqrt((w - h)*(w - h) + 4*(q*w)*(q*h)) - (w + h))/2.0;
+    xto = MIN(xfrom + w + delta, ixres - w);
+    yto = MIN(yfrom + h + delta, iyres - h);
+    xfrom = MAX(xfrom - delta, 0);
+    yfrom = MAX(yfrom - delta, 0);
+
+    /* Cut out only the interesting part from the image data field */
+    if (xfrom == 0 && yfrom == 0 && xto == ixres - w && yto == iyres - h)
+        iarea = g_object_ref(ifield);
+    else
+        iarea = gwy_data_field_area_extract(ifield,
+                                            xfrom, yfrom,
+                                            xto - xfrom, yto - yfrom);
+
+    dfieldsub = gwy_data_field_new_resampled(dfield, w, h,
+                                             GWY_INTERPOLATION_BILINEAR);
+
+    factor = immerse_get_downsample_factor(iarea, dfield);
+    if (factor < 1.0) {
+        /* Downsample and find approximate starting point */
+        /* Cut a new, smaller iarea just +-1/factor around the starting point */
+    }
+
+    /* Perform search through comlete iarea with gwy_correlation_iter()
+     * and subsampled dfield */
+
+    g_object_unref(dfieldsub);
+
+    if (controls->args->sampling == GWY_IMMERSE_SAMPLING_UP) {
+        /* Upsample neighbourhood of the best match in iarea and do
+         * gwy_correlation_iter() with original (non-subsampled) dfield */
+    }
+
+    g_object_unref(iarea);
 }
 
 static gboolean
