@@ -504,6 +504,7 @@ gwy_data_field_correlate_iteration(GwyComputationState *cstate)
                 state->cs.state = GWY_COMPUTATION_STATE_FINISHED;
         }
         state->cs.fraction += 1.0/((xres - kxres + 1)*(yres - kyres + 1));
+        state->cs.fraction = MIN(state->cs.fraction, 1.0);
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_FINISHED)
         return;
@@ -778,6 +779,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
         state->cs.fraction
             += 1.0/(xres - state->search_width + 1)
                   /(yres - state->search_height + 1);
+        state->cs.fraction = MIN(state->cs.fraction, 1.0);
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_FINISHED)
         return;
