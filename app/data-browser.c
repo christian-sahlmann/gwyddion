@@ -134,6 +134,7 @@ struct _GwyAppDataProxy {
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
+static void gwy_app_data_browser_update_filename(GwyAppDataProxy *proxy);
 static GwyAppDataProxy* gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
                                                        GwyContainer *data,
                                                        gboolean do_create);
@@ -714,8 +715,10 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     strkey = g_quark_to_string(quark);
     i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
     if (i < 0) {
-        if (type == KEY_IS_FILENAME)
+        if (type == KEY_IS_FILENAME) {
+            gwy_app_data_browser_update_filename(proxy);
             gwy_app_data_proxy_update_window_titles(proxy);
+        }
         return;
     }
 
@@ -988,6 +991,25 @@ gwy_app_data_list_disable_edit(GtkCellRenderer *renderer)
 {
     gwy_debug("%p", renderer);
     g_object_set(renderer, "editable", FALSE, NULL);
+}
+
+static void
+gwy_app_data_browser_update_filename(GwyAppDataProxy *proxy)
+{
+    GwyAppDataBrowser *browser;
+    const guchar *filename;
+    gchar *s;
+
+    browser = gwy_app_data_browser;
+    if (!browser->window)
+        return;
+
+    if (gwy_container_gis_string(proxy->container, filename_quark, &filename))
+        s = g_path_get_basename(filename);
+    else
+        s = g_strdup_printf("%s %d", _("Untitled"), proxy->untitled_no);
+    gtk_label_set_text(GTK_LABEL(browser->filename), s);
+    g_free(s);
 }
 
 /**
@@ -2704,7 +2726,6 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
-    const guchar *filename;
     guint i;
 
     browser = gwy_app_get_data_browser();
@@ -2730,19 +2751,12 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
 
     browser->current = proxy;
 
+    gwy_app_data_browser_update_filename(proxy);
     if (browser->window) {
-        gchar *s;
-
         for (i = 0; i < NPAGES; i++)
             gwy_app_data_browser_restore_active
                           (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
 
-        if (gwy_container_gis_string(data, filename_quark, &filename))
-            s = g_path_get_basename(filename);
-        else
-            s = g_strdup_printf("%s %d", _("Untitled"), proxy->untitled_no);
-        gtk_label_set_text(GTK_LABEL(browser->filename), s);
-        g_free(s);
         gwy_sensitivity_group_set_state(browser->sensgroup,
                                         SENS_FILE, SENS_FILE);
     }
