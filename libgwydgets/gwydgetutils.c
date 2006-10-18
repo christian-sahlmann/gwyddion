@@ -498,11 +498,37 @@ mask_color_updated_cb(GtkWidget *sel, MaskColorSelectorData *mcsdata)
  *
  * Creates and runs a color selector dialog for a mask.
  *
- * Note this function does not return anything, it runs the dialog modally
- * and returns when it finishes.
+ * See gwy_mask_color_selector_run() for details.
  **/
 void
 gwy_color_selector_for_mask(const gchar *dialog_title,
+                            GwyColorButton *color_button,
+                            GwyContainer *container,
+                            const gchar *prefix)
+{
+    gwy_mask_color_selector_run(dialog_title, NULL, color_button, container,
+                                prefix);
+}
+
+/**
+ * gwy_mask_color_selector_run:
+ * @dialog_title: Title of the color selection dialog (%NULL to use default).
+ * @parent: Dialog parent window.  The color selector dialog will be made
+ *          transient for this window.
+ * @color_button: Color button to update on color change (or %NULL).
+ * @container: Container to initialize the color from and save it to.
+ * @prefix: Prefix in @container (normally "/0/mask").
+ *
+ * Creates and runs a color selector dialog for a mask.
+ *
+ * Note this function does not return anything, it runs the color selection
+ * dialog modally and returns when it is finished.
+ *
+ * Since: 2.1
+ **/
+void
+gwy_mask_color_selector_run(const gchar *dialog_title,
+                            GtkWindow *parent,
                             GwyColorButton *color_button,
                             GwyContainer *container,
                             const gchar *prefix)
@@ -513,6 +539,7 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
     guint16 gdkalpha;
     GwyRGBA rgba;
     gint response;
+    gboolean parent_is_modal;
 
     g_return_if_fail(prefix && *prefix == '/');
 
@@ -540,8 +567,23 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
     g_signal_connect(selector, "color-changed",
                      G_CALLBACK(mask_color_updated_cb), mcsdata);
 
+    if (parent) {
+        gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+        /* Steal modality from the parent window, prevents appearing under it
+         * on MS Windows */
+        parent_is_modal = gtk_window_get_modal(parent);
+        if (parent_is_modal)
+            gtk_window_set_modal(parent, FALSE);
+    }
+    else
+        parent_is_modal = FALSE;
+
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+
+    if (parent_is_modal)
+        gtk_window_set_modal(parent, TRUE);
+
     if (response != GTK_RESPONSE_OK) {
         gwy_rgba_store_to_container(&rgba, container, mcsdata->prefix);
         if (mcsdata->color_button)

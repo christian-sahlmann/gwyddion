@@ -67,6 +67,11 @@ void         gwy_color_selector_for_mask    (const gchar *dialog_title,
                                              GwyColorButton *color_button,
                                              GwyContainer *container,
                                              const gchar *prefix);
+void         gwy_mask_color_selector_run    (const gchar *dialog_title,
+                                             GtkWindow *parent,
+                                             GwyColorButton *color_button,
+                                             GwyContainer *container,
+                                             const gchar *prefix);
 void         gwy_list_store_row_changed     (GtkListStore *store,
                                              GtkTreeIter *iter,
                                              GtkTreePath *path,
