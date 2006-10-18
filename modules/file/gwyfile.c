@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -304,7 +304,7 @@ hash_data_find_func(gpointer key,
     g_array_append_val(array, i);
 }
 
-/* Remap /N/data, /N/mask, /N/show, /N/select
+/* Remap /N/data, /N/mask, /N/show, /N/select, /N/meta
  * trees elsewhere. copying other values to the same keys */
 static void
 hash_data_index_map_func(gpointer key,
@@ -348,7 +348,8 @@ hash_data_index_map_func(gpointer key,
     if ((g_str_has_prefix(strkey + len, "data")
          || g_str_has_prefix(strkey + len, "base")
          || g_str_has_prefix(strkey + len, "mask")
-         || g_str_has_prefix(strkey + len, "show"))
+         || g_str_has_prefix(strkey + len, "show")
+         || g_str_has_prefix(strkey + len, "meta"))
         && (strkey[len + 4] == '\0'
             || strkey[len + 4] == GWY_CONTAINER_PATHSEP))
         remap = TRUE;
