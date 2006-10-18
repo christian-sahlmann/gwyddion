@@ -347,7 +347,7 @@ gwy_correlation_type_get_enum(void)
  * @GWY_DATA_FIELD_CACHE_ARE: Surface area.
  * @GWY_DATA_FIELD_CACHE_SIZE: The size of statistics cache.
  *
- * Cached data field quantity types.
+ * Cached data field quantity type.
  *
  * There should be little need to this enum directly except in libgwyprocess
  * methods.
@@ -364,7 +364,7 @@ gwy_correlation_type_get_enum(void)
  * @GWY_COMPUTATION_STATE_FINISHED: Calculation has been finished, further
  *                                  calls to the iterator will be no-op.
  *
- * Common iterative computation iterator state.
+ * Common iterative computation iterator state type.
  **/
 
 /**
@@ -372,7 +372,7 @@ gwy_correlation_type_get_enum(void)
  * @state: Current computation state, usually of #GwyComputationStateType, but
  *         particular iterators can define their own types.
  * @fraction: Fraction of computation completed.  For staged algorithms,
- *            the fraction refer to the current stage only.
+ *            the fraction refers to the current stage only.
  *
  * State of iterative computation.
  *
@@ -383,6 +383,7 @@ gwy_correlation_type_get_enum(void)
  * default #GwyComputationStateType state could be:
  * <informalexample><programlisting>
  * GwyComputationStateType *state;
+ * <!-- Hello, gtk-doc! -->
  * state = gwy_data_field_foo_init(GwyDataField *data_field, ...);
  * do {
  *     gwy_data_field_foo_iteration(state);

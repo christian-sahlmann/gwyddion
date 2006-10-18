@@ -385,7 +385,7 @@ gwy_data_field_area_clamp(GwyDataField *data_field,
  * @average: %TRUE to divide resulting sums by the number of involved samples
  *           to get averages instead of sums.
  *
- * Sum or average values in reactangular areas around each sample in a data
+ * Sums or averages values in reactangular areas around each sample in a data
  * field.
  *
  * When the gathered area extends out of calculation area, only samples from
