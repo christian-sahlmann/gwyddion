@@ -22,6 +22,7 @@
 #define __GWY_GWYDGET_UTILS_H__
 
 #include <gtk/gtkliststore.h>
+#include <gtk/gtkwindow.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwycolorbutton.h>
 
