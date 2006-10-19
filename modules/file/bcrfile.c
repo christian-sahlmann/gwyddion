@@ -32,13 +32,24 @@
 #include "err.h"
 #include "get.h"
 
+/* in characters, not bytes */
 #define HEADER_SIZE 2048
 
+/* 16bit integers */
 #define MAGIC1 "fileformat = bcrstm\n"
 #define MAGIC_SIZE1 (sizeof(MAGIC1) - 1)
+
+/* floats */
 #define MAGIC2 "fileformat = bcrf\n"
 #define MAGIC_SIZE2 (sizeof(MAGIC2) - 1)
-#define MAGIC_SIZE (MAX(MAGIC_SIZE1, MAGIC_SIZE2))
+
+/* floats, text header is in Microsoft-style wide characters (~ucs2) */
+#define MAGIC3 \
+    "f\0i\0l\0e\0f\0o\0r\0m\0a\0t\0 \0=\0 " \
+    "\0b\0c\0r\0f\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"
+#define MAGIC_SIZE3 (sizeof(MAGIC3) - 1)
+
+#define MAGIC_SIZE (MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAGIC_SIZE3))
 
 /* values are bytes per pixel */
 typedef enum {
@@ -54,6 +65,7 @@ static GwyContainer* bcrfile_load              (const gchar *filename,
                                                 GError **error);
 static GwyDataField* file_load_real            (const guchar *buffer,
                                                 gsize size,
+                                                gsize header_size,
                                                 GHashTable *meta,
                                                 GwyDataField **voidmask,
                                                 GError **error);
@@ -79,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -111,8 +123,9 @@ bcrfile_detect(const GwyFileDetectInfo *fileinfo,
                 ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && (!memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE1)
-            || !memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE2)))
+        && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE1) == 0
+            || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE2) == 0
+            || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE3) == 0))
         score = 100;
 
     return score;
@@ -125,23 +138,51 @@ bcrfile_load(const gchar *filename,
 {
     GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
+    gchar *header;
+    gsize header_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL, *voidmask = NULL;
     GHashTable *bcrmeta = NULL;
+    gboolean utf16 = FALSE;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    if (size < HEADER_SIZE) {
+
+    if (size > 2*HEADER_SIZE && memcmp(buffer, MAGIC3, MAGIC_SIZE3) == 0)
+        utf16 = TRUE;
+    else if (size < HEADER_SIZE) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
+    gwy_debug("utf16: %d", utf16);
 
     bcrmeta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    dfield = file_load_real(buffer, size, bcrmeta, &voidmask, error);
+    if (utf16) {
+        gunichar2 *s;
+
+        header_size = 2*HEADER_SIZE;
+        s = (gunichar2*)g_memdup(buffer, header_size);
+        header = g_utf16_to_utf8(s, HEADER_SIZE, 0, 0, NULL);
+        g_free(s);
+        /* FIXME (this causes a failure later) */
+        if (!header) {
+            g_warning("Header not convertible from UTF-16");
+            header = g_strdup("");
+        }
+    }
+    else {
+        header_size = HEADER_SIZE;
+        header = g_memdup(buffer, header_size);
+        header[header_size-1] = '\0';
+    }
+    load_metadata(header, bcrmeta);
+    g_free(header);
+
+    dfield = file_load_real(buffer + header_size, size, header_size, bcrmeta,
+                            &voidmask, error);
     gwy_file_abandon_contents(buffer, size, NULL);
     if (dfield) {
         container = gwy_container_new();
@@ -166,6 +207,7 @@ bcrfile_load(const gchar *filename,
 static GwyDataField*
 file_load_real(const guchar *buffer,
                gsize size,
+               gsize header_size,
                GHashTable *meta,
                GwyDataField **voidmask,
                GError **error)
@@ -178,11 +220,6 @@ file_load_real(const guchar *buffer,
     gint xres, yres, power10;
     guchar *s;
 
-    s = g_memdup(buffer, HEADER_SIZE);
-    s[HEADER_SIZE-1] = '\0';
-    load_metadata(s, meta);
-    g_free(s);
-
     if (!(s = g_hash_table_lookup(meta, "fileformat"))) {
         err_FILE_TYPE(error, "BCR/BCFR");
         return NULL;
@@ -190,7 +227,7 @@ file_load_real(const guchar *buffer,
 
     if (gwy_strequal(s, "bcrstm"))
         type = BCR_FILE_INT16;
-    else if (gwy_strequal(s, "bcrf"))
+    else if (gwy_strequal(s, "bcrf") || gwy_strequal(s, "bcrf_unicode"))
         type = BCR_FILE_FLOAT;
     else {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -218,17 +255,16 @@ file_load_real(const guchar *buffer,
     if ((s = g_hash_table_lookup(meta, "voidpixels")))
         voidpixels = !!atol(s);
 
-    if (size < HEADER_SIZE + xres*yres*type) {
-        err_SIZE_MISMATCH(error, xres*yres*type, (guint)(size - HEADER_SIZE));
+    if (size < header_size + xres*yres*type) {
+        err_SIZE_MISMATCH(error, xres*yres*type, (guint)(size - header_size));
         return NULL;
     }
 
     if (voidpixels)
-        dfield = read_data_field_with_voids(buffer + HEADER_SIZE, xres, yres,
+        dfield = read_data_field_with_voids(buffer, xres, yres,
                                             type, intelmode, voidmask);
     else
-        dfield = read_data_field(buffer + HEADER_SIZE, xres, yres,
-                                 type, intelmode);
+        dfield = read_data_field(buffer, xres, yres, type, intelmode);
 
     if ((s = g_hash_table_lookup(meta, "xlength"))
         && (q = g_ascii_strtod(s, NULL)) > 0) {
@@ -564,4 +600,3 @@ load_metadata(gchar *buffer,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
