@@ -159,18 +159,27 @@ bcrfile_load(const gchar *filename,
     }
     gwy_debug("utf16: %d", utf16);
 
-    bcrmeta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     if (utf16) {
         gunichar2 *s;
 
         header_size = 2*HEADER_SIZE;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
         s = (gunichar2*)g_memdup(buffer, header_size);
-        header = g_utf16_to_utf8(s, HEADER_SIZE, 0, 0, NULL);
+#endif
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+        s = g_new(gunichar2, HEADER_SIZE);
+        gwy_memcpy_byte_swap(buffer, s, sizeof(gunichar2), HEADER_SIZE, 1);
+#endif
+        header = g_utf16_to_utf8(s, HEADER_SIZE, 0, 0, &err);
         g_free(s);
-        /* FIXME (this causes a failure later) */
         if (!header) {
-            g_warning("Header not convertible from UTF-16");
-            header = g_strdup("");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("File header is not convertible from UTF-16: %s"),
+                        err->message);
+            gwy_file_abandon_contents(buffer, size, NULL);
+
+            return NULL;
         }
     }
     else {
@@ -178,6 +187,7 @@ bcrfile_load(const gchar *filename,
         header = g_memdup(buffer, header_size);
         header[header_size-1] = '\0';
     }
+    bcrmeta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     load_metadata(header, bcrmeta);
     g_free(header);
 
