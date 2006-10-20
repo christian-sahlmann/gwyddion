@@ -43,13 +43,20 @@
 #define MAGIC2 "fileformat = bcrf\n"
 #define MAGIC_SIZE2 (sizeof(MAGIC2) - 1)
 
-/* floats, text header is in Microsoft-style wide characters (~ucs2) */
+/* 16bit integers, text header is in Microsoft-style wide characters (utf16) */
 #define MAGIC3 \
     "f\0i\0l\0e\0f\0o\0r\0m\0a\0t\0 \0=\0 " \
-    "\0b\0c\0r\0f\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"
+    "\0b\0c\0r\0s\0t\0m\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"
 #define MAGIC_SIZE3 (sizeof(MAGIC3) - 1)
 
-#define MAGIC_SIZE (MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAGIC_SIZE3))
+/* floats, text header is in Microsoft-style wide characters (utf16) */
+#define MAGIC4 \
+    "f\0i\0l\0e\0f\0o\0r\0m\0a\0t\0 \0=\0 " \
+    "\0b\0c\0r\0f\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"
+#define MAGIC_SIZE4 (sizeof(MAGIC4) - 1)
+
+#define MAGIC_SIZE \
+    (MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAX(MAGIC_SIZE3, MAGIC_SIZE4)))
 
 /* values are bytes per pixel */
 typedef enum {
@@ -125,7 +132,8 @@ bcrfile_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len > MAGIC_SIZE
         && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE1) == 0
             || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE2) == 0
-            || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE3) == 0))
+            || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE3) == 0
+            || memcmp(fileinfo->head, MAGIC4, MAGIC_SIZE4) == 0))
         score = 100;
 
     return score;
@@ -150,7 +158,9 @@ bcrfile_load(const gchar *filename,
         return NULL;
     }
 
-    if (size > 2*HEADER_SIZE && memcmp(buffer, MAGIC3, MAGIC_SIZE3) == 0)
+    if (size > 2*HEADER_SIZE
+        && (memcmp(buffer, MAGIC3, MAGIC_SIZE3) == 0
+            || memcmp(buffer, MAGIC4, MAGIC_SIZE4) == 0))
         utf16 = TRUE;
     else if (size < HEADER_SIZE) {
         err_TOO_SHORT(error);
@@ -235,7 +245,7 @@ file_load_real(const guchar *buffer,
         return NULL;
     }
 
-    if (gwy_strequal(s, "bcrstm"))
+    if (gwy_strequal(s, "bcrstm") || gwy_strequal(s, "bcrstm_unicode"))
         type = BCR_FILE_INT16;
     else if (gwy_strequal(s, "bcrf") || gwy_strequal(s, "bcrf_unicode"))
         type = BCR_FILE_FLOAT;
