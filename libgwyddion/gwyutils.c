@@ -743,6 +743,49 @@ gwy_str_next_line(gchar **buffer)
 }
 
 /**
+ * gwy_memcpy_byte_swap:
+ * @source: Source memory block.
+ * @dest: Destination memory location.
+ * @item_size: Size of one copied item, it should be a power of two.
+ * @nitems: Number of items of size @item_size to copy.
+ * @byteswap: Byte swap pattern.
+ *
+ * Copies a block of memory swapping bytes along the way.
+ *
+ * The bits in @byteswap correspond to groups of bytes to swap: if j-th bit is
+ * set, adjacent groups of 2j bits are swapped. For example, value 3 means
+ * items will be divided into couples (bit 1) of bytes and adjacent couples of
+ * bytes swapped, and then divided into single bytes (bit 0) and adjacent bytes
+ * swapped. The net effect is reversal of byte order in groups of four bytes.
+ * More generally, if you want to reverse byte order in groups of size
+ * 2<sup>j</sup>, use byte swap pattern j-1.
+ *
+ * When @byteswap is zero, this function reduces to plain memcpy().
+ **/
+void
+gwy_memcpy_byte_swap(const guint8 *source,
+                     guint8 *dest,
+                     gsize item_size,
+                     gsize nitems,
+                     gsize byteswap)
+{
+    gsize i, k;
+
+    if (!byteswap) {
+        memcpy(dest, source, item_size*nitems);
+        return;
+    }
+
+    for (i = 0; i < nitems; i++) {
+        guint8 *b = dest + i*item_size;
+
+        for (k = 0; k < item_size; k++)
+            b[k ^ byteswap] = *(source++);
+    }
+}
+
+
+/**
  * gwy_object_set_or_reset:
  * @object: A #GObject.
  * @type: The type whose properties are to reset, may be zero for all types.
