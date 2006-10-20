@@ -359,43 +359,6 @@ gwy_serializable_clone(GObject *source,
 }
 
 /**
- * gwy_byteswapped_copy:
- * @source: Pointer to memory to copy.
- * @dest: Pointer where to copy @src to.
- * @size: Size of one item, must be a power of 2.
- * @len: Number of items to copy.
- * @byteswap: Byte swapping pattern -- if a bit is set, blocks of
- *            corresponding size are swapped.  For byte order reversion,
- *            @byteswap must be equal to @size-1.
- *
- * Copies memory, byte swapping meanwhile.
- *
- * This function is not very fast, but neither assumes any memory alignment
- * nor alocates any temporary buffers.
- **/
-static inline void
-gwy_byteswapped_copy(const guint8 *source,
-                     guint8 *dest,
-                     gsize size,
-                     gsize len,
-                     gsize byteswap)
-{
-    gsize i, k;
-
-    if (!byteswap) {
-        memcpy(dest, source, size*len);
-        return;
-    }
-
-    for (i = 0; i < len; i++) {
-        guint8 *b = dest + i*size;
-
-        for (k = 0; k < size; k++)
-            b[k ^ byteswap] = *(source++);
-    }
-}
-
-/**
  * gwy_byteswapped_append:
  * @source: Pointer to memory to copy.
  * @dest: #GByteArray to copy the memory to.
@@ -1558,7 +1521,7 @@ gwy_deserialize_int32_array(const guchar *buffer,
     value = g_memdup(buffer + *position, newasize*sizeof(gint32));
 #else
     value = g_new(gint32, newasize*sizeof(gint32));
-    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+    gwy_memcpy_byte_swap(buffer + *position, (guint8*)value,
                          sizeof(gint32), newasize, sizeof(gint32) - 1);
 #endif
     *position += newasize*sizeof(gint32);
@@ -1633,7 +1596,7 @@ gwy_deserialize_int64_array(const guchar *buffer,
     value = g_memdup(buffer + *position, newasize*sizeof(gint64));
 #else
     value = g_new(gint64, newasize*sizeof(gint64));
-    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+    gwy_memcpy_byte_swap(buffer + *position, (guint8*)value,
                          sizeof(gint64), newasize, sizeof(gint64) - 1);
 #endif
     *position += newasize*sizeof(gint64);
@@ -1670,7 +1633,7 @@ gwy_deserialize_double(const guchar *buffer,
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     memcpy(&value, buffer + *position, sizeof(gdouble));
 #else
-    gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
+    gwy_memcpy_byte_swap(buffer + *position, (guint8*)&value,
                          sizeof(gdouble), 1, sizeof(gdouble) - 1);
 #endif
     *position += sizeof(gdouble);
@@ -1712,7 +1675,7 @@ gwy_deserialize_double_array(const guchar *buffer,
     value = g_memdup(buffer + *position, newasize*sizeof(gdouble));
 #else
     value = g_new(gdouble, newasize*sizeof(gdouble));
-    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+    gwy_memcpy_byte_swap(buffer + *position, (guint8*)value,
                          sizeof(gdouble), newasize, sizeof(gdouble) - 1);
 #endif
     *position += newasize*sizeof(gdouble);
