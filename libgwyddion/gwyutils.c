@@ -758,7 +758,7 @@ gwy_str_next_line(gchar **buffer)
  * bytes swapped, and then divided into single bytes (bit 0) and adjacent bytes
  * swapped. The net effect is reversal of byte order in groups of four bytes.
  * More generally, if you want to reverse byte order in groups of size
- * 2<sup>j</sup>, use byte swap pattern j-1.
+ * 2<superscript>j</superscript>, use byte swap pattern j-1.
  *
  * When @byteswap is zero, this function reduces to plain memcpy().
  **/
