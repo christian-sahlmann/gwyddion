@@ -520,8 +520,8 @@ gwy_data_field_copy(GwyDataField *src,
  * @dest: Destination data field.
  * @col: Area upper-left column coordinate in @src.
  * @row: Area upper-left row coordinate @src.
- * @width: Area width (number of columns).
- * @height: Area height (number of rows).
+ * @width: Area width (number of columns), pass -1 for full @src widdth.
+ * @height: Area height (number of rows), pass -1 for full @src height.
  * @destcol: Destination column in @dest.
  * @destrow: Destination row in @dest.
  *
@@ -547,6 +547,10 @@ gwy_data_field_area_copy(GwyDataField *src,
 
     g_return_if_fail(GWY_IS_DATA_FIELD(src));
     g_return_if_fail(GWY_IS_DATA_FIELD(dest));
+    if (width == -1)
+        width = src->xres;
+    if (height == -1)
+        height = src->yres;
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 0 && height >= 0
                      && col + width <= src->xres
