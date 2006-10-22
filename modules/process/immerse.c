@@ -23,6 +23,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
 #include <libdraw/gwypixfield.h>
@@ -58,6 +59,12 @@ typedef enum {
 } GwyImmerseSamplingType;
 
 typedef enum {
+    GWY_IMMERSE_LEVEL_NONE,
+    GWY_IMMERSE_LEVEL_MEAN,
+    GWY_IMMERSE_LEVEL_LAST
+} GwyImmerseLevelType;
+
+typedef enum {
     IMMERSE_RESPONSE_IMPROVE = 1,
     IMMERSE_RESPONSE_LOCATE
 } ImmerseResponseType;
@@ -69,6 +76,7 @@ typedef struct {
 
 typedef struct {
     GwyImmerseSamplingType sampling;
+    GwyImmerseLevelType leveling;
     gboolean draw_frame;
     GwyDataObjectId image;
     GwyDataObjectId detail;
@@ -84,6 +92,7 @@ typedef struct {
     GtkWidget *view;
     GtkWidget *pos;
     GSList *sampling;
+    GSList *leveling;
     GtkWidget *draw_frame;
     GdkPixbuf *detail;
     GwySIValueFormat *vf;
@@ -117,7 +126,9 @@ static void     immerse_find_maximum        (GwyDataField *score,
                                              gint *col,
                                              gint *row);
 static void     immerse_do                  (ImmerseArgs *args);
-static void     immerse_sampling_cb         (GtkWidget *button,
+static void     immerse_sampling_changed    (GtkWidget *button,
+                                             ImmerseControls *controls);
+static void     immerse_leveling_changed    (GtkWidget *button,
                                              ImmerseControls *controls);
 static void     immerse_frame_toggled       (GtkToggleButton *check,
                                              ImmerseControls *controls);
@@ -150,8 +161,14 @@ static const GwyEnum samplings[] = {
     { N_("_Downsample detail"),    GWY_IMMERSE_SAMPLING_DOWN },
 };
 
+static const GwyEnum levelings[] = {
+    { N_("_None"),       GWY_IMMERSE_LEVEL_NONE, },
+    { N_("_Mean value"), GWY_IMMERSE_LEVEL_MEAN, },
+};
+
 static const ImmerseArgs immerse_defaults = {
     GWY_IMMERSE_SAMPLING_UP,
+    GWY_IMMERSE_LEVEL_MEAN,
     TRUE,
     { NULL, -1 },
     { NULL, -1 },
@@ -290,8 +307,8 @@ immerse_dialog(ImmerseArgs *args)
     vbox = gtk_vbox_new(FALSE, 8);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
-    /* Parameters */
-    table = gtk_table_new(5, 4, FALSE);
+    /* Parameters table */
+    table = gtk_table_new(8, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
@@ -308,21 +325,39 @@ immerse_dialog(ImmerseArgs *args)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    /* Sampling */
     label = gtk_label_new(_("Result Sampling"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    /* Sampling */
     controls.sampling
         = gwy_radio_buttons_create(samplings, G_N_ELEMENTS(samplings),
-                                   G_CALLBACK(immerse_sampling_cb), &controls,
+                                   G_CALLBACK(immerse_sampling_changed),
+                                   &controls,
                                    args->sampling);
     row = gwy_radio_buttons_attach_to_table(controls.sampling, GTK_TABLE(table),
                                             4, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
+    /* Leveling */
+    label = gtk_label_new(_("Detail Leveling"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.leveling
+        = gwy_radio_buttons_create(levelings, G_N_ELEMENTS(levelings),
+                                   G_CALLBACK(immerse_leveling_changed),
+                                   &controls,
+                                   args->leveling);
+    row = gwy_radio_buttons_attach_to_table(controls.leveling, GTK_TABLE(table),
+                                            4, row);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    /* Detail position */
     label = gtk_label_new(_("Detail position:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -335,6 +370,7 @@ immerse_dialog(ImmerseArgs *args)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    /* Draw frame */
     controls.draw_frame = gtk_check_button_new_with_mnemonic(_("Draw _frame"));
     gtk_table_attach(GTK_TABLE(table), controls.draw_frame,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -687,6 +723,7 @@ immerse_do(ImmerseArgs *args)
     gint newid;
     gint xres1, xres2, yres1, yres2;
     gint x, y, w, h;
+    gdouble iavg, davg;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(args->image.id);
@@ -694,6 +731,7 @@ immerse_do(ImmerseArgs *args)
 
     quark = gwy_app_get_data_key_for_id(args->detail.id);
     detail = GWY_DATA_FIELD(gwy_container_get_object(args->detail.data, quark));
+    davg = gwy_data_field_get_avg(detail);
 
     result = gwy_data_field_duplicate(image);
 
@@ -714,6 +752,10 @@ immerse_do(ImmerseArgs *args)
         h = MAX(h, 1);
         resampled = gwy_data_field_new_resampled(detail, w, h,
                                                  GWY_INTERPOLATION_BILINEAR);
+        if (args->leveling == GWY_IMMERSE_LEVEL_MEAN) {
+            iavg = gwy_data_field_area_get_avg(result, NULL, x, y, w, h);
+            gwy_data_field_add(resampled, iavg - davg);
+        }
         gwy_data_field_area_copy(resampled, result, 0, 0, w, h, x, y);
         g_object_unref(resampled);
         break;
@@ -729,11 +771,19 @@ immerse_do(ImmerseArgs *args)
 }
 
 static void
-immerse_sampling_cb(G_GNUC_UNUSED GtkWidget *button,
-                    ImmerseControls *controls)
+immerse_sampling_changed(G_GNUC_UNUSED GtkWidget *button,
+                         ImmerseControls *controls)
 {
     controls->args->sampling
         = gwy_radio_buttons_get_current(controls->sampling);
+}
+
+static void
+immerse_leveling_changed(G_GNUC_UNUSED GtkWidget *button,
+                         ImmerseControls *controls)
+{
+    controls->args->leveling
+        = gwy_radio_buttons_get_current(controls->leveling);
 }
 
 static void
@@ -911,12 +961,14 @@ immerse_clamp_detail_offset(ImmerseControls *controls,
 }
 
 static const gchar sampling_key[]   = "/module/immerse/sampling";
+static const gchar leveling_key[]   = "/module/immerse/leveling";
 static const gchar draw_frame_key[] = "/module/immerse/draw-frame";
 
 static void
 immerse_sanitize_args(ImmerseArgs *args)
 {
     args->sampling = MIN(args->sampling, GWY_IMMERSE_SAMPLING_LAST - 1);
+    args->leveling = MIN(args->leveling, GWY_IMMERSE_LEVEL_LAST - 1);
     args->draw_frame = !!args->draw_frame;
 }
 
@@ -926,6 +978,7 @@ immerse_load_args(GwyContainer *settings,
 {
     *args = immerse_defaults;
     gwy_container_gis_enum_by_name(settings, sampling_key, &args->sampling);
+    gwy_container_gis_enum_by_name(settings, leveling_key, &args->leveling);
     gwy_container_gis_boolean_by_name(settings, draw_frame_key,
                                       &args->draw_frame);
     immerse_sanitize_args(args);
@@ -936,6 +989,7 @@ immerse_save_args(GwyContainer *settings,
                    ImmerseArgs *args)
 {
     gwy_container_set_enum_by_name(settings, sampling_key, args->sampling);
+    gwy_container_set_enum_by_name(settings, leveling_key, args->leveling);
     gwy_container_set_boolean_by_name(settings, draw_frame_key,
                                       args->draw_frame);
 }
