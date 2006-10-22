@@ -1,4 +1,4 @@
-2.0.20061018
+2.0.20061022
 
 2.1 (0000-00-00)
 Application:
@@ -23,9 +23,16 @@ Libraries:
 Modules:
 - PSIA (new): Imports PSIA data files.
 - HDF4 (new): Imports HDF4 files, currently only PSI HDF.
+- BCR file: Supports a new file subtype with UTF-18 encoded text header.
+- Immerse: User interface was rewritten and speed was improved by several
+  orders so that the module is actually usable now.
 - JPK scan: It's no longer built when too old libtiff is detected.
 - Profile, Distance tools: Individual lines can be deleted by selecting them
   in the list and pressing Delete key.
+- Grain and Scars: Mask color dialog hiding under the main dialog on Win32
+  was fixed.
+- Color range tool: Fixed range is not lost upon switch to another data and
+  back.
 - Graph fit, Critical dimension: Graphs can be resized by resizing the
   dialog.
 - Fractal: Saving of parameters to data instead of settings was fixed.
