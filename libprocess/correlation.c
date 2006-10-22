@@ -270,11 +270,18 @@ gwy_data_field_get_raw_correlation_score(GwyDataField *data_field,
  * @data_field: A data field.
  * @kernel_field: Correlation kernel.
  * @score: Data field to store correlation scores to.
+ * @method: Correlation score calculation method.
  *
  * Computes correlation score for all positions in a data field.
  *
  * Correlation score is compute for all points in data field @data_field
  * and full size of correlation kernel @kernel_field.
+ *
+ * The points in @score correspond to centers of kernel.  More precisely, the
+ * point ((@kxres-1)/2, (@kyres-1)/2) in @score corresponds to kernel field
+ * top left corner coincident with data field top left corner.  Points outside
+ * the area where the kernel field fits into the data field completely are
+ * set to -1 for %GWY_CORRELATION_NORMAL.
  **/
 void
 gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
