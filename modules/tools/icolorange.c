@@ -65,6 +65,7 @@ struct _GwyToolColorRange {
 
     ColorRangeSource range_source;
     gboolean programmatic_update;
+    gboolean data_switch;
     GSList *modelist;
 
     GQuark key_min;
@@ -111,7 +112,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.3",
+    "3.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -314,8 +315,13 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
     gwy_tool_color_range_make_keys(tool, data_view);
 
+    gwy_debug("A");
+    tool->data_switch = TRUE;
     GWY_TOOL_CLASS(gwy_tool_color_range_parent_class)->data_switched(gwytool,
                                                                      data_view);
+    tool->data_switch = FALSE;
+    gwy_debug("B");
+
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     if (plain_tool->init_failed)
         return;
@@ -332,12 +338,18 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), FALSE);
     }
 
-    /* TODO: make sure we do update when switching to a FIXED data (even from
-     * another FIXED) */
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
-    range_type = gwy_tool_color_range_get_range_type(tool);
-    gwy_radio_buttons_set_current(tool->modelist, range_type);
     gwy_tool_color_range_update_histogram(tool);
+    range_type = gwy_tool_color_range_get_range_type(tool);
+    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
+        gdouble sel[2];
+
+        gwy_tool_color_range_get_min_max(tool, sel);
+        gwy_selection_set_data(tool->graph_selection, 1, sel);
+    }
+    else
+        gwy_selection_clear(tool->graph_selection);
+    gwy_radio_buttons_set_current(tool->modelist, range_type);
     gwy_tool_color_range_update_fullrange(tool);
     gwy_tool_color_range_set_min_max(tool);
 }
@@ -474,7 +486,7 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
     gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), fixed);
 
     gwy_tool_color_range_set_range_type(tool, range_type);
-    if (fixed)
+    if (fixed && !tool->data_switch)
         gwy_tool_color_range_set_min_max(tool);
 }
 
@@ -551,6 +563,9 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
     gchar buf[40];
     gdouble sel[4];
     gint isel[4];
+
+    if (tool->data_switch)
+        return;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (!plain_tool->container) {
