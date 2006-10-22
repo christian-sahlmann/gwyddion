@@ -322,6 +322,18 @@ immerse_dialog(ImmerseArgs *args)
                      G_CALLBACK(immerse_detail_cb), &controls);
     gwy_table_attach_hscale(table, row, _("_Detail image:"), NULL,
                             GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
+    row++;
+
+    /* Detail position */
+    label = gtk_label_new(_("Position:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.pos = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.pos), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.pos,
+                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -356,19 +368,6 @@ immerse_dialog(ImmerseArgs *args)
     row = gwy_radio_buttons_attach_to_table(controls.leveling, GTK_TABLE(table),
                                             4, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-
-    /* Detail position */
-    label = gtk_label_new(_("Detail position:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, 0, 0, 0, 0);
-
-    controls.pos = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.pos), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.pos,
-                     1, 3, row, row+1, 0, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    row++;
 
     /* Draw frame */
     controls.draw_frame = gtk_check_button_new_with_mnemonic(_("Draw _frame"));
@@ -600,28 +599,30 @@ immerse_search(ImmerseControls *controls,
     ypos = gwy_data_field_itor(dfieldsub, row + 0.5);
     g_object_unref(iarea);
     g_object_unref(dfieldsub);
-
-    /*
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog),
-                       _("Correlating subsampled..."));
-    gwy_app_wait_set_message(_("Correlating..."));
-    if (!ok) {
-        gwy_app_wait_finish();
-        return;
-    }
-    */
     gwy_debug("[C] col: %d, row: %d", col, row);
 
-    if (controls->args->sampling == GWY_IMMERSE_SAMPLING_UP) {
-        /* Upsample neighbourhood of the best match in iarea and do
-         * gwy_correlation_iter() with original (non-subsampled) dfield */
-        g_printerr("Gotcha!\n");
-    }
+    /* Upsample and refine */
+    xfrom = MAX(col - 1, 0);
+    yfrom = MAX(row - 1, 0);
+    xto = MIN(col + w + 1, ixres);
+    yto = MIN(row + h + 1, iyres);
+    gwy_debug("x: %d..%d, y: %d..%d", xfrom, xto, yfrom, yto);
+    iarea = gwy_data_field_area_extract(ifield,
+                                        xfrom, yfrom,
+                                        xto - xfrom, yto - yfrom);
+    wr = gwy_data_field_get_xreal(iarea)/gwy_data_field_get_xmeasure(dfield);
+    hr = gwy_data_field_get_yreal(iarea)/gwy_data_field_get_ymeasure(dfield);
+    gwy_data_field_resample(iarea, ROUND(wr), ROUND(hr),
+                            GWY_INTERPOLATION_BILINEAR);
+    immerse_correlate(iarea, dfield, &col, &row);
+    gwy_debug("[U] col: %d, row: %d", col, row);
 
-    /*
-    gwy_app_wait_finish();
-    */
+    xpos = gwy_data_field_jtor(dfield, col + 0.5)
+           + gwy_data_field_jtor(ifield, xfrom);
+    ypos = gwy_data_field_itor(dfield, row + 0.5)
+           + gwy_data_field_itor(ifield, yfrom);
 
+    g_object_unref(iarea);
     immerse_clamp_detail_offset(controls, xpos, ypos);
 }
 
