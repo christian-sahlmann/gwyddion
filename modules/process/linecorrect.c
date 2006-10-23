@@ -39,30 +39,30 @@ typedef struct {
     guint n;
 } MedianLineData;
 
-static gboolean module_register                   (void);
-static void     line_correct_modus                (GwyContainer *data,
-                                                   GwyRunType run);
-static void     line_correct_median               (GwyContainer *data,
-                                                   GwyRunType run);
-static void     line_correct_match                (GwyContainer *data,
-                                                   GwyRunType run);
-static void     line_correct_step                 (GwyContainer *data,
-                                                   GwyRunType run);
-static gdouble  find_minima_golden                (gdouble (*func)(gdouble x,
-                                                   gpointer data),
-                                                   gdouble from,
-                                                   gdouble to,
-                                                   gpointer data);
-static void     gwy_data_field_median_line_correct(GwyDataField *dfield);
-static gdouble  sum_of_abs_diff                   (gdouble shift,
-                                                   gpointer data);
+static gboolean module_register                    (void);
+static void     line_correct_modus                 (GwyContainer *data,
+                                                    GwyRunType run);
+static void     line_correct_median                (GwyContainer *data,
+                                                    GwyRunType run);
+static void     line_correct_match                 (GwyContainer *data,
+                                                    GwyRunType run);
+static void     line_correct_step                  (GwyContainer *data,
+                                                    GwyRunType run);
+static gdouble  find_minima_golden                 (gdouble (*func)(gdouble x,
+                                                    gpointer data),
+                                                    gdouble from,
+                                                    gdouble to,
+                                                    gpointer data);
+static void     gwy_data_field_absdiff_line_correct(GwyDataField *dfield);
+static gdouble  sum_of_abs_diff                    (gdouble shift,
+                                                    gpointer data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -146,7 +146,10 @@ static void
 line_correct_median(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
+    GwyDataLine *line, *modi;
+    gint xres, yres, i;
     GQuark dquark;
+    gdouble median;
 
     g_return_if_fail(run & LINECORR_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
@@ -154,7 +157,26 @@ line_correct_median(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
-    gwy_data_field_median_line_correct(dfield);
+
+    xres = gwy_data_field_get_xres(dfield);
+    line = gwy_data_line_new(xres, 1.0, FALSE);
+    yres = gwy_data_field_get_yres(dfield);
+    modi = gwy_data_line_new(yres, 1.0, FALSE);
+
+    for (i = 0; i < yres; i++) {
+        gwy_data_field_get_row(dfield, line, i);
+        median = gwy_data_line_get_median(line);
+        gwy_data_line_set_val(modi, i, median);
+    }
+    median = gwy_data_line_get_median(modi);
+
+    for (i = 0; i < yres; i++) {
+        gwy_data_field_area_add(dfield, 0, i, xres, 1,
+                                median - gwy_data_line_get_val(modi, i));
+    }
+
+    g_object_unref(modi);
+    g_object_unref(line);
     gwy_data_field_data_changed(dfield);
 }
 
@@ -205,7 +227,7 @@ find_minima_golden(gdouble (*func)(gdouble x, gpointer data),
 }
 
 static void
-gwy_data_field_median_line_correct(GwyDataField *dfield)
+gwy_data_field_absdiff_line_correct(GwyDataField *dfield)
 {
     MedianLineData mldata;
     gint xres, yres, i, j;
@@ -553,7 +575,7 @@ line_correct_step(GwyContainer *data,
     g_return_if_fail(dfield && dquark);
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
-    gwy_data_field_median_line_correct(dfield);
+    gwy_data_field_absdiff_line_correct(dfield);
 
     mask = gwy_data_field_new_alike(dfield, TRUE);
     line_correct_step_iter(dfield, mask);
