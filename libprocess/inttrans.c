@@ -111,10 +111,6 @@ static void  gwy_preserve_rms_simple       (gint nsrc,
                                             gint stridedata,
                                             gdouble *data1,
                                             gdouble *data2);
-static gdouble edist                       (gint xc1,
-                                            gint yc1,
-                                            gint xc2,
-                                            gint yc2);
 
 #ifdef HAVE_FFTW3
 /* Good FFTW array sizes for extended and resampled arrays.
@@ -361,6 +357,29 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     g_object_unref(ibuf);
 }
 
+static void
+gwy_data_field_2dfft_prepare(GwyDataField *dfield,
+                             gint level,
+                             GwyWindowingType windowing,
+                             gboolean preserverms,
+                             gdouble *rms)
+{
+    gdouble a, bx, by;
+
+    if (level == 2) {
+        gwy_data_field_fit_plane(dfield, &a, &bx, &by);
+        gwy_data_field_plane_level(dfield, a, bx, by);
+    }
+    else if (level == 1)
+        gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
+    if (preserverms) {
+        a = gwy_data_field_get_rms(dfield);
+        *rms = hypot(*rms, a);
+    }
+    gwy_fft_window_data_field(dfield, GWY_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_data_field(dfield, GWY_ORIENTATION_VERTICAL, windowing);
+}
+
 /**
  * gwy_data_field_area_2dfft:
  * @rin: Real input data field.
@@ -399,7 +418,7 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     gint j, k, newxres, newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
-    gdouble a, bx, by, rmsa = 0.0, rmsb;
+    gdouble rmsa = 0.0, rmsb;
 
     if (!ia) {
         gwy_data_field_area_2dfft_real(ra, rb, ib,
@@ -430,30 +449,12 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
-    if (level == 2) {
-        gwy_data_field_fit_plane(rbuf, &a, &bx, &by);
-        gwy_data_field_plane_level(rbuf, a, bx, by);
-    }
-    else if (level == 1)
-        gwy_data_field_add(rbuf, -gwy_data_field_get_avg(rbuf));
-    if (preserverms)
-        rmsa = gwy_data_field_get_rms(rbuf);
-    gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
+    gwy_data_field_2dfft_prepare(rbuf, level, windowing, preserverms, &rmsa);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
-    if (level == 2) {
-        gwy_data_field_fit_plane(ibuf, &a, &bx, &by);
-        gwy_data_field_plane_level(ibuf, a, bx, by);
-    }
-    else if (level == 1)
-        gwy_data_field_add(ibuf, -gwy_data_field_get_avg(ibuf));
-    if (preserverms)
-        rmsa = hypot(rmsa, gwy_data_field_get_rms(ibuf));
-    gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
+    gwy_data_field_2dfft_prepare(ibuf, level, windowing, preserverms, &rmsa);
     gwy_data_field_resample(ibuf, newxres, newyres, interpolation);
     in_idata = ibuf->data;
 
@@ -563,7 +564,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     gint newxres, newyres, j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
-    gdouble a, bx, by, rmsa = 0.0, rmsb;
+    gdouble rmsa = 0.0, rmsb;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
@@ -583,16 +584,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
-    if (level == 2) {
-        gwy_data_field_fit_plane(rbuf, &a, &bx, &by);
-        gwy_data_field_plane_level(rbuf, a, bx, by);
-    }
-    else if (level == 1)
-        gwy_data_field_add(rbuf, -gwy_data_field_get_avg(rbuf));
-    if (preserverms)
-        rmsa = gwy_data_field_get_rms(rbuf);
-    gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
+    gwy_data_field_2dfft_prepare(rbuf, level, windowing, preserverms, &rmsa);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
     in_rdata = rbuf->data;
 
@@ -1609,13 +1601,6 @@ gwy_preserve_rms_simple(gint nsrc,
         *pdata *= q;
 }
 
-static inline gdouble
-edist(gint xc1, gint yc1, gint xc2, gint yc2)
-{
-    return sqrt(((gdouble)xc1-xc2)*((gdouble)xc1-xc2)
-                + ((gdouble)yc1-yc2)*((gdouble)yc1-yc2));
-}
-
 /**
  * gwy_data_field_mult_wav:
  * @real_field: A data field of real values
@@ -1641,30 +1626,27 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
     xresh = xres/2;
     yresh = yres/2;
 
-
     for (i = 0; i < xres; i++) {
         for (j = 0; j < yres; j++) {
             val = 1;
             if (i < xresh) {
                 if (j < yresh)
-                    mval = edist(0, 0, i, j);
+                    mval = hypot(i, j);
                 else
-                    mval = edist(0, yres, i, j);
+                    mval = hypot(i, yres - j);
             }
             else {
                 if (j < yresh)
-                    mval = edist(xres, 0, i, j);
+                    mval = hypot(xres - i, j);
                 else
-                    mval = edist(xres, yres, i, j);
+                    mval = hypot(xres - i, yres - j);
             }
             val = gwy_cwt_wfunc_2d(scale, mval, xres, wtype);
-
 
             real_field->data[i + j * xres] *= val;
             imag_field->data[i + j * xres] *= val;
         }
     }
-
 }
 
 /**
