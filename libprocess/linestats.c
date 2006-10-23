@@ -615,6 +615,9 @@ gwy_data_line_get_length(GwyDataLine *data_line)
  *
  * Finds approximate modus of a data line part.
  *
+ * As each number in the data line is usually unique, this function does not
+ * return modus of the data itself, but modus of a histogram.
+ *
  * Returns: The modus.
  **/
 gdouble
@@ -689,8 +692,7 @@ gwy_data_line_part_get_modus(GwyDataLine *data_line,
  *
  * Finds approximate modus of a data line.
  *
- * As each number in the data line is usually unique, this function does not
- * return modus of the data itself, but modus of a histogram.
+ * See gwy_data_line_part_get_modus() for details and caveats.
  *
  * Returns: The modus.
  **/
@@ -702,6 +704,50 @@ gwy_data_line_get_modus(GwyDataLine *data_line,
 
     return gwy_data_line_part_get_modus(data_line, 0, data_line->res,
                                         histogram_steps);
+}
+
+/**
+ * gwy_data_line_part_get_median:
+ * @data_line: A data line.
+ * @from: The index in @data_line to start from (inclusive).
+ * @to: The index in @data_line to stop (noninclusive).
+ *
+ * Finds median of a data line part.
+ *
+ * Returns: The median.
+ **/
+gdouble
+gwy_data_line_part_get_median(GwyDataLine *data_line,
+                              gint from, gint to)
+{
+    gdouble *d;
+    gdouble med;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+    g_return_val_if_fail(from >= 0 && to <= data_line->res, 0);
+    g_return_val_if_fail(from != to, 0);
+
+    d = g_memdup(data_line->data + from, (to - from)*sizeof(gdouble));
+    med = gwy_math_median(to - from, d);
+    g_free(d);
+
+    return med;
+}
+
+/**
+ * gwy_data_line_get_median:
+ * @data_line: A data line.
+ *
+ * Finds median of a data line.
+ *
+ * Returns: The median.
+ **/
+gdouble
+gwy_data_line_get_median(GwyDataLine *data_line)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+
+    return gwy_data_line_part_get_median(data_line, 0, data_line->res);
 }
 
 /************************** Documentation ****************************/
