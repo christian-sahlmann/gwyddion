@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -370,7 +370,7 @@ immerse_dialog(ImmerseArgs *args)
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     /* Draw frame */
-    controls.draw_frame = gtk_check_button_new_with_mnemonic(_("Draw _frame"));
+    controls.draw_frame = gtk_check_button_new_with_mnemonic(_("Show _frame"));
     gtk_table_attach(GTK_TABLE(table), controls.draw_frame,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.draw_frame),
@@ -722,7 +722,7 @@ immerse_do(ImmerseArgs *args)
     GwyContainer *data;
     GwyDataField *resampled, *image, *detail, *result;
     gint newid;
-    gint xres1, xres2, yres1, yres2;
+    gint ixres, kxres, iyres, kyres;
     gint x, y, w, h;
     gdouble iavg, davg;
     GQuark quark;
@@ -734,15 +734,14 @@ immerse_do(ImmerseArgs *args)
     detail = GWY_DATA_FIELD(gwy_container_get_object(args->detail.data, quark));
     davg = gwy_data_field_get_avg(detail);
 
-    result = gwy_data_field_duplicate(image);
-
-    xres1 = gwy_data_field_get_xres(image);
-    xres2 = gwy_data_field_get_xres(detail);
-    yres1 = gwy_data_field_get_yres(image);
-    yres2 = gwy_data_field_get_yres(detail);
+    ixres = gwy_data_field_get_xres(image);
+    kxres = gwy_data_field_get_xres(detail);
+    iyres = gwy_data_field_get_yres(image);
+    kyres = gwy_data_field_get_yres(detail);
 
     switch (args->sampling) {
         case GWY_IMMERSE_SAMPLING_DOWN:
+        result = gwy_data_field_duplicate(image);
         x = gwy_data_field_rtoj(image, args->xpos);
         y = gwy_data_field_rtoi(image, args->ypos);
         w = ROUND(gwy_data_field_get_xreal(detail)
@@ -751,6 +750,7 @@ immerse_do(ImmerseArgs *args)
                   /gwy_data_field_get_ymeasure(image));
         w = MAX(w, 1);
         h = MAX(h, 1);
+        gwy_debug("w: %d, h: %d", w, h);
         resampled = gwy_data_field_new_resampled(detail, w, h,
                                                  GWY_INTERPOLATION_BILINEAR);
         if (args->leveling == GWY_IMMERSE_LEVEL_MEAN) {
@@ -761,13 +761,34 @@ immerse_do(ImmerseArgs *args)
         g_object_unref(resampled);
         break;
 
+        case GWY_IMMERSE_SAMPLING_UP:
+        w = ROUND(gwy_data_field_get_xreal(image)
+                  /gwy_data_field_get_xmeasure(detail));
+        h = ROUND(gwy_data_field_get_yreal(image)
+                  /gwy_data_field_get_ymeasure(detail));
+        gwy_debug("w: %d, h: %d", w, h);
+        result = gwy_data_field_new_resampled(image, w, h,
+                                              GWY_INTERPOLATION_BILINEAR);
+        x = gwy_data_field_rtoj(result, args->xpos);
+        y = gwy_data_field_rtoi(result, args->ypos);
+        if (args->leveling == GWY_IMMERSE_LEVEL_MEAN) {
+            iavg = gwy_data_field_area_get_avg(result, NULL,
+                                               x, y, kxres, kyres);
+            gwy_data_field_area_copy(detail, result, 0, 0, kxres, kyres, x, y);
+            gwy_data_field_area_add(result, x, y, kxres, kyres, iavg - davg);
+        }
+        else
+            gwy_data_field_area_copy(detail, result, 0, 0, kxres, kyres, x, y);
+        break;
+
         default:
+        g_return_if_reached();
         break;
     }
 
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-    gwy_app_set_data_field_title(data, newid, _("Immersed detail data"));
+    gwy_app_set_data_field_title(data, newid, _("Immersed detail"));
     g_object_unref(result);
 }
 
