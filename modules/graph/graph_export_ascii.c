@@ -58,9 +58,9 @@ static const GwyEnum style_type[] = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Graph ASCII export."),
+    N_("Exports graph data to text files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -72,7 +72,7 @@ module_register(void)
 {
     gwy_graph_func_register("graph_export_ascii",
                             (GwyGraphFunc)&export,
-                            N_("/Export _ASCII"),
+                            N_("/Export _Text..."),
                             NULL,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Export graph data to a text file"));
@@ -99,10 +99,10 @@ export_dialog(GwyGraph *graph,
     GtkWidget *dialog, *check, *combo;
     GtkBox *vbox;
 
-    dialog = gtk_dialog_new_with_buttons(_("Export ASCII"),
+    dialog = gtk_dialog_new_with_buttons(_("Export Text"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
@@ -118,20 +118,20 @@ export_dialog(GwyGraph *graph,
     check = gtk_check_button_new_with_mnemonic(_("Export _labels"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->labels);
     gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
-    g_signal_connect_swapped(check, "toggled",
-                             G_CALLBACK(boolean_changed_cb), &params->labels);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(boolean_changed_cb), &params->labels);
 
     check = gtk_check_button_new_with_mnemonic(_("Export _units"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->units);
     gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
-    g_signal_connect_swapped(check, "toggled",
-                             G_CALLBACK(boolean_changed_cb), &params->units);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(boolean_changed_cb), &params->units);
 
     check = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->metadata);
     gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
-    g_signal_connect_swapped(check, "toggled",
-                             G_CALLBACK(boolean_changed_cb), &params->metadata);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(boolean_changed_cb), &params->metadata);
 
     gtk_widget_show_all(dialog);
     switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
@@ -139,7 +139,6 @@ export_dialog(GwyGraph *graph,
         case GTK_RESPONSE_DELETE_EVENT:
         gtk_widget_destroy(dialog);
         case GTK_RESPONSE_NONE:
-        return;
         break;
 
         case GTK_RESPONSE_OK:
@@ -149,7 +148,6 @@ export_dialog(GwyGraph *graph,
 
         default:
         g_warning("Unhandled dialog response");
-        return;
         break;
     }
 }
@@ -163,7 +161,7 @@ export_dialog_choose_file(GwyGraph *graph,
     GString *str;
     FILE *fw;
 
-    dialog = gtk_file_chooser_dialog_new("Export to ASCII File", NULL,
+    dialog = gtk_file_chooser_dialog_new("Export to Text File", NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_SAVE, GTK_RESPONSE_OK,
