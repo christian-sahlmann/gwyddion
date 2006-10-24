@@ -225,7 +225,6 @@ gwy_app_toolbox_create(void)
     GtkBox *vbox;
     GtkTooltips *tooltips;
     GtkAccelGroup *accel_group;
-    GSList *toolbars = NULL, *l;
     guint i;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -267,19 +266,15 @@ gwy_app_toolbox_create(void)
         gwy_app_sensitivity_add_widget(button, GWY_MENU_FLAG_DATA);
     }
     gwy_app_toolbox_create_group(vbox, _("View"), "zoom", toolbar);
-    toolbars = g_slist_append(toolbars, toolbar);
 
     toolbar = gwy_app_toolbox_process_new();
     gwy_app_toolbox_create_group(vbox, _("Data Process"), "proc", toolbar);
-    toolbars = g_slist_append(toolbars, toolbar);
 
     toolbar = gwy_app_toolbox_graph_new();
     gwy_app_toolbox_create_group(vbox, _("Graph"), "graph", toolbar);
-    toolbars = g_slist_append(toolbars, toolbar);
 
     toolbar = gwy_app_toolbox_tools_new();
     gwy_app_toolbox_create_group(vbox, _("Tools"), "tool", toolbar);
-    toolbars = g_slist_append(toolbars, toolbar);
 
     /***************************************************************/
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
@@ -293,11 +288,7 @@ gwy_app_toolbox_create(void)
     g_signal_connect(toolbox, "delete-event", G_CALLBACK(gwy_app_quit), NULL);
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
-
     gtk_widget_show_all(toolbox);
-    for (l = toolbars; l; l = g_slist_next(l))
-        gtk_widget_set_no_show_all(GTK_WIDGET(l->data), FALSE);
-    g_slist_free(toolbars);
 
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
