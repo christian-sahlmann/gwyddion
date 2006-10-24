@@ -51,8 +51,7 @@ static void       gwy_app_toolbox_create_group (GtkBox *box,
                                                 const gchar *text,
                                                 const gchar *id,
                                                 GtkWidget *toolbox);
-static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
-                                                GtkWidget *widget);
+static void       gwy_app_toolbox_showhide_cb  (GtkWidget *expander);
 static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 GdkDragContext *context,
                                                 gint x,
@@ -153,6 +152,7 @@ add_button(GtkWidget *toolbar,
     const gchar *stock_id;
 
     button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
     gtk_table_attach_defaults(GTK_TABLE(toolbar), button,
                               i%4, i%4 + 1, i/4, i/4 + 1);
     stock_id = action->stock_id ? action->stock_id : GTK_STOCK_MISSING_IMAGE;
@@ -177,6 +177,7 @@ add_rbutton(GtkWidget *toolbar,
     const gchar *stock_id;
 
     button = gtk_radio_button_new_from_widget(group);
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
     gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
     gtk_table_attach_defaults(GTK_TABLE(toolbar), button,
                               i%4, i%4 + 1, i/4, i/4 + 1);
@@ -697,7 +698,7 @@ gwy_app_toolbox_create_group(GtkBox *box,
                              GtkWidget *toolbox)
 {
     GwyContainer *settings;
-    GtkWidget *label, *hbox, *button, *arrow;
+    GtkWidget *expander;
     gboolean visible = TRUE;
     gchar *s, *key;
     GQuark quark;
@@ -708,59 +709,31 @@ gwy_app_toolbox_create_group(GtkBox *box,
     g_free(key);
     gwy_container_gis_boolean(settings, quark, &visible);
 
-    hbox = gtk_hbox_new(FALSE, 2);
-
-    arrow = gtk_arrow_new(visible ? GTK_ARROW_DOWN : GTK_ARROW_RIGHT,
-                          GTK_SHADOW_ETCHED_IN);
-    gtk_box_pack_start(GTK_BOX(hbox), arrow, FALSE, FALSE, 0);
+    gtk_box_pack_start(box, gtk_hseparator_new(), FALSE, FALSE, 0);
 
     s = g_strconcat("<small>", text, "</small>", NULL);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), s);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    expander = gtk_expander_new(s);
+    gtk_expander_set_use_markup(GTK_EXPANDER(expander), TRUE);
     g_free(s);
-    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-
-    button = gtk_button_new();
-    gtk_widget_set_name(button, "toolboxheader");
-    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_HALF);
-    g_object_set(button, "can-focus", FALSE, "can-default", FALSE, NULL);
-    gtk_container_add(GTK_CONTAINER(button), hbox);
-
-    g_object_set_data(G_OBJECT(button), "arrow", arrow);
-    g_object_set_data(G_OBJECT(button), "key", GUINT_TO_POINTER(quark));
-
-    gtk_box_pack_start(box, button, FALSE, FALSE, 0);
-    gtk_widget_set_no_show_all(toolbox, !visible);
-    gtk_box_pack_start(box, toolbox, FALSE, FALSE, 0);
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbox);
+    g_object_set_data(G_OBJECT(expander), "key", GUINT_TO_POINTER(quark));
+    gtk_container_add(GTK_CONTAINER(expander), toolbox);
+    gtk_expander_set_expanded(GTK_EXPANDER(expander), visible);
+    gtk_box_pack_start(box, expander, FALSE, FALSE, 0);
+    g_signal_connect_after(expander, "activate",
+                           G_CALLBACK(gwy_app_toolbox_showhide_cb), NULL);
 }
 
 static void
-gwy_app_toolbox_showhide_cb(GtkWidget *button,
-                            GtkWidget *widget)
+gwy_app_toolbox_showhide_cb(GtkWidget *expander)
 {
     GwyContainer *settings;
-    GtkWidget *arrow;
     gboolean visible;
     GQuark quark;
 
     settings = gwy_app_settings_get();
-    quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button), "key"));
-    visible = gwy_container_get_boolean(settings, quark);
-    arrow = GTK_WIDGET(g_object_get_data(G_OBJECT(button), "arrow"));
-    g_assert(GTK_IS_ARROW(arrow));
-    visible = !visible;
+    quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(expander), "key"));
+    visible = gtk_expander_get_expanded(GTK_EXPANDER(expander));
     gwy_container_set_boolean(settings, quark, visible);
-
-    if (visible)
-        gtk_widget_show_all(widget);
-    else
-        gtk_widget_hide(widget);
-    g_object_set(arrow, "arrow-type",
-                 visible ? GTK_ARROW_DOWN : GTK_ARROW_RIGHT,
-                 NULL);
 }
 
 static void
