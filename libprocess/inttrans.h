@@ -47,6 +47,11 @@ void gwy_data_line_part_fft       (GwyDataLine *rsrc,
                                    GwyInterpolationType interpolation,
                                    gboolean preserverms,
                                    gint level);
+void gwy_data_line_fft_raw        (GwyDataLine *rsrc,
+                                   GwyDataLine *isrc,
+                                   GwyDataLine *rdest,
+                                   GwyDataLine *idest,
+                                   GwyTransformDirection direction);
 void gwy_data_field_1dfft         (GwyDataField *rin,
                                    GwyDataField *iin,
                                    GwyDataField *rout,
@@ -71,6 +76,12 @@ void gwy_data_field_area_1dfft    (GwyDataField *rin,
                                    GwyInterpolationType interpolation,
                                    gboolean preserverms,
                                    gint level);
+void gwy_data_field_1dfft_raw     (GwyDataField *rin,
+                                   GwyDataField *iin,
+                                   GwyDataField *rout,
+                                   GwyDataField *iout,
+                                   GwyOrientation orientation,
+                                   GwyTransformDirection direction);
 void gwy_data_field_2dfft         (GwyDataField *rin,
                                    GwyDataField *iin,
                                    GwyDataField *rout,
@@ -93,6 +104,11 @@ void gwy_data_field_area_2dfft    (GwyDataField *rin,
                                    GwyInterpolationType interpolation,
                                    gboolean preserverms,
                                    gint level);
+void gwy_data_field_2dfft_raw     (GwyDataField *rin,
+                                   GwyDataField *iin,
+                                   GwyDataField *rout,
+                                   GwyDataField *iout,
+                                   GwyTransformDirection direction);
 void gwy_data_field_2dfft_humanize(GwyDataField *data_field);
 void gwy_data_field_cwt           (GwyDataField *data_field,
                                    GwyInterpolationType interpolation,

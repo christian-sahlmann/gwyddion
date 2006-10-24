@@ -26,6 +26,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/linestats.h>
 #include <libprocess/simplefft.h>
@@ -357,6 +358,26 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     g_object_unref(ibuf);
 }
 
+void
+gwy_data_line_fft_raw(GwyDataLine *rsrc,
+                      GwyDataLine *isrc,
+                      GwyDataLine *rdest,
+                      GwyDataLine *idest,
+                      GwyTransformDirection direction)
+{
+    gint newres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(rsrc));
+    g_return_if_fail(!isrc || GWY_IS_DATA_FIELD(isrc));
+    if (isrc)
+        g_return_if_fail(!gwy_data_line_check_compatibility
+                                     (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rdest));
+    g_return_if_fail(GWY_IS_DATA_FIELD(idest));
+    newres = gwy_fft_find_nice_size(rsrc->res);
+    g_return_if_fail(rsrc->res != newres);
+}
+
 static void
 gwy_data_field_2dfft_prepare(GwyDataField *dfield,
                              gint level,
@@ -527,6 +548,28 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);
+}
+
+void
+gwy_data_field_area_2dfft_raw(GwyDataField *rin,
+                              GwyDataField *iin,
+                              GwyDataField *rout,
+                              GwyDataField *iout,
+                              GwyTransformDirection direction)
+{
+    gint newxres, newyres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(rin));
+    g_return_if_fail(!iin || GWY_IS_DATA_FIELD(iin));
+    if (iin)
+        g_return_if_fail(!gwy_data_field_check_compatibility
+                                       (rin, iin, GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rout));
+    g_return_if_fail(GWY_IS_DATA_FIELD(iout));
+    newxres = gwy_fft_find_nice_size(rin->xres);
+    g_return_if_fail(rin->xres != newxres);
+    newyres = gwy_fft_find_nice_size(rin->yres);
+    g_return_if_fail(rin->yres != newyres);
 }
 
 /**
@@ -924,6 +967,40 @@ gwy_data_field_1dfft(GwyDataField *rin, GwyDataField *iin,
                                      0, 0, rin->xres, rin->yres,
                                      windowing, direction, interpolation,
                                      preserverms, level);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+void
+gwy_data_field_1dfft_raw(GwyDataField *rin,
+                         GwyDataField *iin,
+                         GwyDataField *rout,
+                         GwyDataField *iout,
+                         GwyOrientation orientation,
+                         GwyTransformDirection direction)
+{
+    gint newres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(rin));
+    g_return_if_fail(!iin || GWY_IS_DATA_FIELD(iin));
+    if (iin)
+        g_return_if_fail(!gwy_data_field_check_compatibility
+                                       (rin, iin, GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rout));
+    g_return_if_fail(GWY_IS_DATA_FIELD(iout));
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        newres = gwy_fft_find_nice_size(rin->xres);
+        g_return_if_fail(rin->xres == newres);
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        newres = gwy_fft_find_nice_size(rin->yres);
+        g_return_if_fail(rin->yres == newres);
         break;
 
         default:
