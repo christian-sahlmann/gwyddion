@@ -374,7 +374,7 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
     g_return_if_fail(GWY_IS_DATA_FIELD(rdest));
     g_return_if_fail(GWY_IS_DATA_FIELD(idest));
     newres = gwy_fft_find_nice_size(rsrc->res);
-    g_return_if_fail(rsrc->res != newres);
+    g_return_if_fail(rsrc->res == newres);
 
     gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
@@ -582,9 +582,9 @@ gwy_data_field_2dfft_raw(GwyDataField *rin,
     g_return_if_fail(GWY_IS_DATA_FIELD(rout));
     g_return_if_fail(GWY_IS_DATA_FIELD(iout));
     newxres = gwy_fft_find_nice_size(rin->xres);
-    g_return_if_fail(rin->xres != newxres);
+    g_return_if_fail(rin->xres == newxres);
     newyres = gwy_fft_find_nice_size(rin->yres);
-    g_return_if_fail(rin->yres != newyres);
+    g_return_if_fail(rin->yres == newyres);
 
     gwy_data_field_resample(rout, newxres, newyres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(iout, newxres, newyres, GWY_INTERPOLATION_NONE);
