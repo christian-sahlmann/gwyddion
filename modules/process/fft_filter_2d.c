@@ -204,10 +204,20 @@ run_main(GwyContainer *data, GwyRunType run)
                                      0);
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    /* Calculate nice resolutions for FFT.
+     * FIXME: They must be even because either humanize or humanize together
+     * with mask editting breaks lower frequencies on odd sizes. */
     controls.origxres = gwy_data_field_get_xres(dfield);
+    controls.newxres = controls.origxres - 1;
+    do {
+        controls.newxres = gwy_fft_find_nice_size(controls.newxres + 1);
+    } while (controls.newxres % 2);
+
     controls.origyres = gwy_data_field_get_yres(dfield);
-    controls.newxres = gwy_fft_find_nice_size(controls.origxres);
-    controls.newyres = gwy_fft_find_nice_size(controls.origyres);
+    controls.newyres = controls.origyres - 1;
+    do {
+        controls.newyres = gwy_fft_find_nice_size(controls.newyres + 1);
+    } while (controls.newyres % 2);
 
     /* Create datafields */
     if (controls.newxres == controls.origxres
