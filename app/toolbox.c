@@ -52,6 +52,7 @@ static void       gwy_app_toolbox_create_group (GtkBox *box,
                                                 const gchar *id,
                                                 GtkWidget *toolbox);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *expander);
+static void       gwy_app_toolbox_focus_first  (GtkWidget *toolbar);
 static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 GdkDragContext *context,
                                                 gint x,
@@ -275,6 +276,7 @@ gwy_app_toolbox_create(void)
 
     toolbar = gwy_app_toolbox_tools_new();
     gwy_app_toolbox_create_group(vbox, _("Tools"), "tool", toolbar);
+    gwy_app_toolbox_focus_first(toolbar);
 
     /***************************************************************/
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
@@ -725,6 +727,17 @@ gwy_app_toolbox_showhide_cb(GtkWidget *expander)
     quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(expander), "key"));
     visible = gtk_expander_get_expanded(GTK_EXPANDER(expander));
     gwy_container_set_boolean(settings, quark, visible);
+}
+
+static void
+gwy_app_toolbox_focus_first(GtkWidget *toolbar)
+{
+    GtkWidget *child;
+
+    g_return_if_fail(GTK_IS_TABLE(toolbar));
+    child = gwy_table_get_child_widget(toolbar, 0, 0);
+    if (child)
+        gtk_widget_grab_focus(child);
 }
 
 static void
