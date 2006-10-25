@@ -659,6 +659,8 @@ gwy_data_field_2dfft_do(GwyDataField *rin,
     }
     g_free(rbuf);
 #endif
+    gwy_data_field_invalidate(rout);
+    gwy_data_field_invalidate(iout);
 }
 
 /**
@@ -833,6 +835,8 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
                        rin->xres, rin->data + k, ibuf->data + k,
                        rin->xres, rout->data + k, iout->data + k);
 #endif
+    gwy_data_field_invalidate(rout);
+    gwy_data_field_invalidate(iout);
 }
 
 /**
