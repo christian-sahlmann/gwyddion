@@ -34,6 +34,11 @@
 #include <libprocess/stats.h>
 #include <libprocess/cwt.h>
 
+static void  gwy_data_line_fft_do          (GwyDataLine *rsrc,
+                                            GwyDataLine *isrc,
+                                            GwyDataLine *rdest,
+                                            GwyDataLine *idest,
+                                            GwyTransformDirection direction);
 static void  gwy_data_field_area_2dfft_real(GwyDataField *ra,
                                             GwyDataField *rb,
                                             GwyDataField *ib,
@@ -46,6 +51,16 @@ static void  gwy_data_field_area_2dfft_real(GwyDataField *ra,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
                                             gint level);
+static void  gwy_data_field_2dfft_real_do  (GwyDataField *rin,
+                                            GwyDataField *ibuf,
+                                            GwyDataField *rout,
+                                            GwyDataField *iout,
+                                            GwyTransformDirection direction);
+static void  gwy_data_field_2dfft_do       (GwyDataField *rin,
+                                            GwyDataField *iin,
+                                            GwyDataField *rout,
+                                            GwyDataField *iout,
+                                            GwyTransformDirection direction);
 static void  gwy_data_field_area_xfft      (GwyDataField *ra,
                                             GwyDataField *ia,
                                             GwyDataField *rb,
@@ -219,8 +234,10 @@ gwy_fft_find_nice_size(gint size)
  * gwy_data_line_fft:
  * @rsrc: Real input data line.
  * @isrc: Imaginary input data line.
- * @rdest: Real output data line.
- * @idest: Imaginary output data line.
+ * @rdest: Real output data line.  It will be resized to the size of the input
+ *         data line.
+ * @idest: Imaginary output data line.  It will be resized to the size of the
+ *         input data line.
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -282,13 +299,14 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 {
     gint newres;
     GwyDataLine *rbuf, *ibuf;
-    gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(GWY_IS_DATA_LINE(isrc));
+    if (isrc)
+        g_return_if_fail(!gwy_data_line_check_compatibility
+                                     (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
-    g_return_if_fail(rsrc->res == isrc->res);
     g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(from >= 0
                      && len >= 4
@@ -297,59 +315,24 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     newres = gwy_fft_find_nice_size(rsrc->res);
 
     gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
-    out_rdata = rdest->data;
-
     gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
-    out_idata = idest->data;
 
     rbuf = gwy_data_line_part_extract(rsrc, from, len);
     gwy_level_simple(len, 1, rbuf->data, level);
     gwy_fft_window(len, rbuf->data, windowing);
     gwy_data_line_resample(rbuf, newres, interpolation);
-    in_rdata = rbuf->data;
 
+    /* TODO: Support transform from real part only */
     ibuf = gwy_data_line_part_extract(isrc, from, len);
     gwy_level_simple(len, 1, ibuf->data, level);
     gwy_fft_window(len, ibuf->data, windowing);
     gwy_data_line_resample(ibuf, newres, interpolation);
-    in_idata = ibuf->data;
 
-#ifdef HAVE_FFTW3
-    {
-        fftw_iodim dims[1], howmany_dims[1];
-        fftw_plan plan;
-
-        dims[0].n = newres;
-        dims[0].is = 1;
-        dims[0].os = 1;
-        howmany_dims[0].n = 1;
-        howmany_dims[0].is = newres;
-        howmany_dims[0].os = newres;
-        if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
-            plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                            in_rdata, in_idata,
-                                            out_rdata, out_idata,
-                                            FFTW_MEASURE);
-        else
-            plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                            in_idata, in_rdata,
-                                            out_idata, out_rdata,
-                                            FFTW_MEASURE);
-        g_return_if_fail(plan);
-        fftw_execute(plan);
-        fftw_destroy_plan(plan);
-    }
-    gwy_data_line_multiply(rdest, 1.0/sqrt(newres));
-    gwy_data_line_multiply(idest, 1.0/sqrt(newres));
-#else
-    gwy_fft_simple(direction, newres,
-                   1, in_rdata, in_idata,
-                   1, out_rdata, out_idata);
-#endif
+    gwy_data_line_fft_do(rbuf, ibuf, rdest, idest, direction);
 
     if (preserverms)
         gwy_preserve_rms_simple(len, 1, rsrc->data + from, isrc->data + from,
-                                newres, 1, out_rdata, out_idata);
+                                newres, 1, rdest->data, idest->data);
 
     gwy_data_line_resample(rdest, len, interpolation);
     gwy_data_line_resample(idest, len, interpolation);
@@ -358,6 +341,22 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     g_object_unref(ibuf);
 }
 
+/**
+ * gwy_data_line_fft_raw:
+ * @rsrc: Real input data line.
+ * @isrc: Imaginary input data line.
+ * @rdest: Real output data line.  It will be resized to the size of the input
+ *         data line.
+ * @idest: Imaginary output data line.  It will be resized to the size of the
+ *         input data line.
+ * @direction: FFT direction.
+ *
+ * Calculates Fast Fourier Transform of a data line.
+ *
+ * The resolutions of @rsrc and @isrc have to be from the set
+ * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
+ * scaling is performed.
+ **/
 void
 gwy_data_line_fft_raw(GwyDataLine *rsrc,
                       GwyDataLine *isrc,
@@ -376,6 +375,53 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
     g_return_if_fail(GWY_IS_DATA_FIELD(idest));
     newres = gwy_fft_find_nice_size(rsrc->res);
     g_return_if_fail(rsrc->res != newres);
+
+    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
+
+    /* TODO: Support transform from real part only */
+    gwy_data_line_fft_do(rsrc, isrc, rdest, idest, direction);
+}
+
+static void
+gwy_data_line_fft_do(GwyDataLine *rsrc,
+                     GwyDataLine *isrc,
+                     GwyDataLine *rdest,
+                     GwyDataLine *idest,
+                     GwyTransformDirection direction)
+{
+#ifdef HAVE_FFTW3
+    fftw_iodim dims[1], howmany_dims[1];
+    fftw_plan plan;
+
+    dims[0].n = rsrc->res;
+    dims[0].is = 1;
+    dims[0].os = 1;
+    howmany_dims[0].n = 1;
+    howmany_dims[0].is = rsrc->res;
+    howmany_dims[0].os = rsrc->res;
+    /* Backward direction is equivalent to switching real and imaginary parts */
+    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+        plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
+                                        rsrc->data, isrc->data,
+                                        rdest->data, idest->data,
+                                        FFTW_MEASURE);
+    else
+        plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
+                                        isrc->data, rsrc->data,
+                                        idest->data, rdest->data,
+                                        FFTW_MEASURE);
+    g_return_if_fail(plan);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    gwy_data_line_multiply(rdest, 1.0/sqrt(rsrc->res));
+    gwy_data_line_multiply(idest, 1.0/sqrt(rsrc->res));
+#else
+    gwy_fft_simple(direction, rsrc->res,
+                   1, rsrc->data, isrc->data,
+                   1, rdest->data, idest->data);
+#endif
 }
 
 static void
@@ -427,8 +473,8 @@ gwy_data_field_2dfft_prepare(GwyDataField *dfield,
  * obtain reasonable results.
  **/
 void
-gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
-                          GwyDataField *rb, GwyDataField *ib,
+gwy_data_field_area_2dfft(GwyDataField *rin, GwyDataField *iin,
+                          GwyDataField *rout, GwyDataField *iout,
                           gint col, gint row,
                           gint width, gint height,
                           GwyWindowingType windowing,
@@ -438,92 +484,46 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
 {
     gint j, k, newxres, newyres;
     GwyDataField *rbuf, *ibuf;
-    gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+    gdouble *out_rdata, *out_idata;
     gdouble rmsa = 0.0, rmsb;
 
-    if (!ia) {
-        gwy_data_field_area_2dfft_real(ra, rb, ib,
+    if (!iin) {
+        gwy_data_field_area_2dfft_real(rin, rout, iout,
                                        col, row, width, height,
                                        windowing, direction, interpolation,
                                        preserverms, level);
         return;
     }
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(ra));
-    g_return_if_fail(GWY_IS_DATA_FIELD(rb));
-    g_return_if_fail(GWY_IS_DATA_FIELD(ia));
-    g_return_if_fail(GWY_IS_DATA_FIELD(ib));
-    g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(GWY_IS_DATA_FIELD(rin));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rout));
+    g_return_if_fail(GWY_IS_DATA_FIELD(iin));
+    g_return_if_fail(GWY_IS_DATA_FIELD(iout));
+    g_return_if_fail(rin->xres == iin->xres && rin->yres == rout->yres);
     g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
-                     && col + width <= ra->xres
-                     && row + height <= ra->yres);
+                     && col + width <= rin->xres
+                     && row + height <= rin->yres);
 
     newxres = gwy_fft_find_nice_size(width);
     newyres = gwy_fft_find_nice_size(height);
 
-    gwy_data_field_resample(rb, newxres, newyres, GWY_INTERPOLATION_NONE);
-    out_rdata = rb->data;
+    gwy_data_field_resample(rout, newxres, newyres, GWY_INTERPOLATION_NONE);
+    out_rdata = rout->data;
 
-    gwy_data_field_resample(ib, newxres, newyres, GWY_INTERPOLATION_NONE);
-    out_idata = ib->data;
+    gwy_data_field_resample(iout, newxres, newyres, GWY_INTERPOLATION_NONE);
+    out_idata = iout->data;
 
-    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    rbuf = gwy_data_field_area_extract(rin, col, row, width, height);
     gwy_data_field_2dfft_prepare(rbuf, level, windowing, preserverms, &rmsa);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
-    in_rdata = rbuf->data;
 
-    ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
+    ibuf = gwy_data_field_area_extract(iin, col, row, width, height);
     gwy_data_field_2dfft_prepare(ibuf, level, windowing, preserverms, &rmsa);
     gwy_data_field_resample(ibuf, newxres, newyres, interpolation);
-    in_idata = ibuf->data;
 
-#ifdef HAVE_FFTW3
-    {
-        fftw_iodim dims[2], howmany_dims[1];
-        fftw_plan plan;
-
-        dims[1].n = newxres;
-        dims[1].is = 1;
-        dims[1].os = 1;
-        dims[0].n = newyres;
-        dims[0].is = dims[1].is * dims[1].n;
-        dims[0].os = dims[1].os * dims[1].n;
-        howmany_dims[0].n = 1;
-        howmany_dims[0].is = newxres*newyres;
-        howmany_dims[0].os = newxres*newyres;
-        if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
-            plan = fftw_plan_guru_split_dft(2, dims, 1, howmany_dims,
-                                            in_rdata, in_idata,
-                                            out_rdata, out_idata,
-                                            FFTW_MEASURE);
-        else
-            plan = fftw_plan_guru_split_dft(2, dims, 1, howmany_dims,
-                                            in_idata, in_rdata,
-                                            out_idata, out_rdata,
-                                            FFTW_MEASURE);
-        g_return_if_fail(plan);
-        fftw_execute(plan);
-        fftw_destroy_plan(plan);
-    }
-    gwy_data_field_multiply(rb, 1.0/sqrt(newxres*newyres));
-    gwy_data_field_multiply(ib, 1.0/sqrt(newxres*newyres));
-#else
-    for (k = 0; k < newyres; k++) {
-        gwy_fft_simple(direction, newxres,
-                       1, in_rdata + k*newxres, in_idata + k*newxres,
-                       1, out_rdata + k*newxres, out_idata + k*newxres);
-    }
-    /* FIXME: this is a bit cruel */
-    gwy_data_field_copy(rb, rbuf, FALSE);
-    gwy_data_field_copy(ib, ibuf, FALSE);
-    for (k = 0; k < newxres; k++) {
-        gwy_fft_simple(direction, newyres,
-                       newxres, in_rdata + k, in_idata + k,
-                       newxres, out_rdata + k, out_idata + k);
-    }
-#endif
+    gwy_data_field_2dfft_do(rbuf, ibuf, rout, iout, direction);
 
     if (preserverms) {
         /* Ignore coefficient [0,0] */
@@ -535,27 +535,42 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
         }
         rmsb = sqrt(rmsb)/(newxres*newyres);
         if (rmsb > 0.0) {
-            gwy_data_field_multiply(rb, rmsa/rmsb);
-            gwy_data_field_multiply(ib, rmsa/rmsb);
+            gwy_data_field_multiply(rout, rmsa/rmsb);
+            gwy_data_field_multiply(iout, rmsa/rmsb);
         }
     }
 
-    gwy_data_field_resample(rb, width, height, interpolation);
-    gwy_data_field_resample(ib, width, height, interpolation);
+    gwy_data_field_resample(rout, width, height, interpolation);
+    gwy_data_field_resample(iout, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
 
-    gwy_data_field_invalidate(rb);
-    gwy_data_field_invalidate(ib);
+    gwy_data_field_invalidate(rout);
+    gwy_data_field_invalidate(iout);
 }
 
+/**
+ * gwy_data_field_2dfft_raw:
+ * @rin: Real input data field.
+ * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
+ *       transform.
+ * @rout: Real output data field, it will be resized to @rin size.
+ * @iout: Imaginary output data field, it will be resized to @rin size.
+ * @direction: FFT direction.
+ *
+ * Calculates 2D Fast Fourier Transform of a rectangular area of a data field.
+ *
+ * The resolutions of @rin and @iin have to be from the set
+ * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
+ * scaling is performed.
+ **/
 void
-gwy_data_field_area_2dfft_raw(GwyDataField *rin,
-                              GwyDataField *iin,
-                              GwyDataField *rout,
-                              GwyDataField *iout,
-                              GwyTransformDirection direction)
+gwy_data_field_2dfft_raw(GwyDataField *rin,
+                         GwyDataField *iin,
+                         GwyDataField *rout,
+                         GwyDataField *iout,
+                         GwyTransformDirection direction)
 {
     gint newxres, newyres;
 
@@ -570,11 +585,85 @@ gwy_data_field_area_2dfft_raw(GwyDataField *rin,
     g_return_if_fail(rin->xres != newxres);
     newyres = gwy_fft_find_nice_size(rin->yres);
     g_return_if_fail(rin->yres != newyres);
+
+    gwy_data_field_resample(rout, newxres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(iout, newxres, newyres, GWY_INTERPOLATION_NONE);
+
+    if (iin)
+        gwy_data_field_2dfft_do(rin, iin, rout, iout, direction);
+    else {
+        iin = gwy_data_field_new_alike(rin, FALSE);
+        gwy_data_field_2dfft_real_do(rin, iin, rout, iout, direction);
+        g_object_unref(iin);
+    }
+}
+
+static void
+gwy_data_field_2dfft_do(GwyDataField *rin,
+                        GwyDataField *iin,
+                        GwyDataField *rout,
+                        GwyDataField *iout,
+                        GwyTransformDirection direction)
+{
+#ifdef HAVE_FFTW3
+    fftw_iodim dims[2], howmany_dims[1];
+    fftw_plan plan;
+
+    dims[1].n = rin->xres;
+    dims[1].is = 1;
+    dims[1].os = 1;
+    dims[0].n = rin->yres;
+    dims[0].is = dims[1].is * dims[1].n;
+    dims[0].os = dims[1].os * dims[1].n;
+    howmany_dims[0].n = 1;
+    howmany_dims[0].is = rin->xres*rin->yres;
+    howmany_dims[0].os = rin->xres*rin->yres;
+    /* Backward direction is equivalent to switching real and imaginary parts */
+    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+        plan = fftw_plan_guru_split_dft(2, dims, 1, howmany_dims,
+                                        rin->data, iin->data,
+                                        rout->data, iout->data,
+                                        FFTW_MEASURE);
+    else
+        plan = fftw_plan_guru_split_dft(2, dims, 1, howmany_dims,
+                                        iin->data, rin->data,
+                                        iout->data, rout->data,
+                                        FFTW_MEASURE);
+    g_return_if_fail(plan);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    gwy_data_field_multiply(rout, 1.0/sqrt(rin->xres*rin->yres));
+    gwy_data_field_multiply(iout, 1.0/sqrt(rin->xres*rin->yres));
+#else
+    gdouble *ibuf, *rbuf;
+    gint j, k;
+
+    for (k = 0; k < rin->yres; k++) {
+        gwy_fft_simple(direction, rin->xres,
+                       1, rin->data + k*rin->xres, iin->data + k*rin->xres,
+                       1, rout->data + k*rin->xres, iout->data + k*rin->xres);
+    }
+    /* Use a one-row temporary buffer */
+    rbuf = g_new(gdouble, 2*rin->yres);
+    ibuf = rbuf + rin->yres;
+    for (k = 0; k < rin->xres; k++) {
+        gwy_fft_simple(direction, rin->yres,
+                       rin->xres, rin->data + k, iin->data + k,
+                       1, rbuf, ibuf);
+        /* Move the result from buffer to iout, rout columns */
+        for (j = 0; j < rin->yres; j++) {
+            rout[j*rin->xres + k] = rbuf[j];
+            iout[j*rin->xres + k] = ibuf[j];
+        }
+    }
+    g_free(rbuf);
+#endif
 }
 
 /**
  * gwy_data_field_area_2dfft_real:
- * @ra: Real input data field.
+ * @rin: Real input data field.
  * @rout: Real output data field, it will be resized to area size.
  * @iout: Imaginary output data field, it will be resized to area size.
  * @col: Upper-left column coordinate.
@@ -595,8 +684,8 @@ gwy_data_field_area_2dfft_raw(GwyDataField *rin,
  * than gwy_data_field_2dfft().
  **/
 static void
-gwy_data_field_area_2dfft_real(GwyDataField *ra,
-                               GwyDataField *rb, GwyDataField *ib,
+gwy_data_field_area_2dfft_real(GwyDataField *rin,
+                               GwyDataField *rout, GwyDataField *iout,
                                gint col, gint row,
                                gint width, gint height,
                                GwyWindowingType windowing,
@@ -606,110 +695,33 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
 {
     gint newxres, newyres, j, k;
     GwyDataField *rbuf, *ibuf;
-    gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+    gdouble *out_rdata, *out_idata;
     gdouble rmsa = 0.0, rmsb;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(ra));
-    g_return_if_fail(GWY_IS_DATA_FIELD(rb));
-    g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rin));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rout));
+    g_return_if_fail(GWY_IS_DATA_FIELD(iout));
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 4 && height >= 4
-                     && col + width <= ra->xres
-                     && row + height <= ra->yres);
+                     && col + width <= rin->xres
+                     && row + height <= rin->yres);
 
     newxres = gwy_fft_find_nice_size(width);
     newyres = gwy_fft_find_nice_size(height);
 
-    gwy_data_field_resample(rb, newxres, newyres, GWY_INTERPOLATION_NONE);
-    out_rdata = rb->data;
+    gwy_data_field_resample(rout, newxres, newyres, GWY_INTERPOLATION_NONE);
+    out_rdata = rout->data;
 
-    gwy_data_field_resample(ib, newxres, newyres, GWY_INTERPOLATION_NONE);
-    out_idata = ib->data;
+    gwy_data_field_resample(iout, newxres, newyres, GWY_INTERPOLATION_NONE);
+    out_idata = iout->data;
 
-    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    rbuf = gwy_data_field_area_extract(rin, col, row, width, height);
     gwy_data_field_2dfft_prepare(rbuf, level, windowing, preserverms, &rmsa);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
-    in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_new_alike(rbuf, FALSE);
-    in_idata = ibuf->data;
 
-#ifdef HAVE_FFTW3
-    {
-        fftw_iodim dims[2], howmany_dims[1];
-        fftw_plan plan;
-
-        dims[1].n = newxres;
-        dims[1].is = 1;
-        dims[1].os = 1;
-        dims[0].n = newyres;
-        dims[0].is = dims[1].is * dims[1].n;
-        dims[0].os = dims[1].os * dims[1].n;
-        howmany_dims[0].n = 1;
-        howmany_dims[0].is = newxres*newyres;
-        howmany_dims[0].os = newxres*newyres;
-        plan = fftw_plan_guru_split_dft_r2c(2, dims, 1, howmany_dims,
-                                            in_idata, out_rdata, out_idata,
-                                            FFTW_MEASURE);
-        g_return_if_fail(plan);
-        /* R2C destroys input, and especially, the planner destroys input too */
-        gwy_data_field_copy(rbuf, ibuf, FALSE);
-        fftw_execute(plan);
-        fftw_destroy_plan(plan);
-
-        /* Complete the missing half of transform.  */
-        for (j = newxres/2 + 1; j < newxres; j++) {
-            out_rdata[j] = out_rdata[newxres - j];
-            out_idata[j] = -out_idata[newxres - j];
-        }
-        for (k = 1; k < newyres; k++) {
-            gdouble *r0, *i0, *r1, *i1;
-
-            r0 = out_rdata + k*newxres;
-            i0 = out_idata + k*newxres;
-            r1 = out_rdata + (newyres - k)*newxres;
-            i1 = out_idata + (newyres - k)*newxres;
-            for (j = newxres/2 + 1; j < newxres; j++) {
-                r0[j] = r1[newxres - j];
-                i0[j] = -i1[newxres - j];
-            }
-        }
-    }
-    gwy_data_field_multiply(rb, 1.0/sqrt(newxres*newyres));
-    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
-        gwy_data_field_multiply(ib, 1.0/sqrt(newxres*newyres));
-    else
-        gwy_data_field_multiply(ib, -1.0/sqrt(newxres*newyres));
-#else
-    for (k = 0; k < newyres; k += 2) {
-        gdouble *re, *im, *r0, *r1, *i0, *i1;
-
-        re = out_rdata + k*newxres;
-        im = out_rdata + (k + 1)*newxres;
-        r0 = in_rdata + k*newxres;
-        r1 = in_rdata + (k + 1)*newxres;
-        i0 = in_idata + k*newxres;
-        i1 = in_idata + (k + 1)*newxres;
-
-        gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
-
-        /* Disentangle transforms of the row couples */
-        r0[0] = re[0];
-        i0[0] = 0.0;
-        r1[0] = im[0];
-        i1[0] = 0.0;
-        for (j = 1; j < newxres; j++) {
-            r0[j] = (re[j] + re[newxres - j])/2.0;
-            i0[j] = (im[j] - im[newxres - j])/2.0;
-            r1[j] = (im[j] + im[newxres - j])/2.0;
-            i1[j] = (-re[j] + re[newxres - j])/2.0;
-        }
-    }
-    for (k = 0; k < newxres; k++)
-        gwy_fft_simple(direction, newyres,
-                       newxres, in_rdata + k, in_idata + k,
-                       newxres, out_rdata + k, out_idata + k);
-#endif
+    gwy_data_field_2dfft_real_do(rbuf, ibuf, rout, iout, direction);
 
     if (preserverms) {
         /* Ignore coefficient [0,0] */
@@ -721,19 +733,106 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
         }
         rmsb = sqrt(rmsb)/(newxres*newyres);
         if (rmsb > 0.0) {
-            gwy_data_field_multiply(rb, rmsa/rmsb);
-            gwy_data_field_multiply(ib, rmsa/rmsb);
+            gwy_data_field_multiply(rout, rmsa/rmsb);
+            gwy_data_field_multiply(iout, rmsa/rmsb);
         }
     }
 
-    gwy_data_field_resample(rb, width, height, interpolation);
-    gwy_data_field_resample(ib, width, height, interpolation);
+    gwy_data_field_resample(rout, width, height, interpolation);
+    gwy_data_field_resample(iout, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
 
-    gwy_data_field_invalidate(rb);
-    gwy_data_field_invalidate(ib);
+    gwy_data_field_invalidate(rout);
+    gwy_data_field_invalidate(iout);
+}
+
+static void
+gwy_data_field_2dfft_real_do(GwyDataField *rin,
+                             GwyDataField *ibuf,
+                             GwyDataField *rout,
+                             GwyDataField *iout,
+                             GwyTransformDirection direction)
+{
+#ifdef HAVE_FFTW3
+    fftw_iodim dims[2], howmany_dims[1];
+    fftw_plan plan;
+    gint j, k;
+
+    dims[1].n = rin->xres;
+    dims[1].is = 1;
+    dims[1].os = 1;
+    dims[0].n = rin->yres;
+    dims[0].is = dims[1].is * dims[1].n;
+    dims[0].os = dims[1].os * dims[1].n;
+    howmany_dims[0].n = 1;
+    howmany_dims[0].is = rin->xres*rin->yres;
+    howmany_dims[0].os = rin->xres*rin->yres;
+    plan = fftw_plan_guru_split_dft_r2c(2, dims, 1, howmany_dims,
+                                        ibuf->data, rout->data, iout->data,
+                                        FFTW_MEASURE);
+    g_return_if_fail(plan);
+    /* R2C destroys input, and especially, the planner destroys input too */
+    gwy_data_field_copy(rin, ibuf, FALSE);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    /* Complete the missing half of transform.  */
+    for (j = rin->xres/2 + 1; j < rin->xres; j++) {
+        rout->data[j] = rout->data[rin->xres - j];
+        iout->data[j] = -iout->data[rin->xres - j];
+    }
+    for (k = 1; k < rin->yres; k++) {
+        gdouble *r0, *i0, *r1, *i1;
+
+        r0 = rout->data + k*rin->xres;
+        i0 = iout->data + k*rin->xres;
+        r1 = rout->data + (rin->yres - k)*rin->xres;
+        i1 = iout->data + (rin->yres - k)*rin->xres;
+        for (j = rin->xres/2 + 1; j < rin->xres; j++) {
+            r0[j] = r1[rin->xres - j];
+            i0[j] = -i1[rin->xres - j];
+        }
+    }
+
+    gwy_data_field_multiply(rout, 1.0/sqrt(rin->xres*rin->yres));
+    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+        gwy_data_field_multiply(iout, 1.0/sqrt(rin->xres*rin->yres));
+    else
+        gwy_data_field_multiply(iout, -1.0/sqrt(rin->xres*rin->yres));
+#else
+    gint k;
+
+    for (k = 0; k < rin->yres; k += 2) {
+        gdouble *re, *im, *r0, *r1, *i0, *i1;
+
+        re = rout->data + k*rin->xres;
+        im = rout->data + (k + 1)*rin->xres;
+        r0 = rin->data + k*rin->xres;
+        r1 = rin->data + (k + 1)*rin->xres;
+        i0 = ibuf->data + k*rin->xres;
+        i1 = ibuf->data + (k + 1)*rin->xres;
+
+        gwy_fft_simple(direction, rin->xres, 1, r0, r1, 1, re, im);
+
+        /* Disentangle transforms of the row couples */
+        r0[0] = re[0];
+        i0[0] = 0.0;
+        r1[0] = im[0];
+        i1[0] = 0.0;
+        for (j = 1; j < rin->xres; j++) {
+            r0[j] = (re[j] + re[rin->xres - j])/2.0;
+            i0[j] = (im[j] - im[rin->xres - j])/2.0;
+            r1[j] = (im[j] + im[rin->xres - j])/2.0;
+            i1[j] = (-re[j] + re[rin->xres - j])/2.0;
+        }
+    }
+    for (k = 0; k < rin->xres; k++)
+        gwy_fft_simple(direction, rin->yres,
+                       rin->xres, rin->data + k, ibuf->data + k,
+                       rin->xres, rout->data + k, iout->data + k);
+#endif
 }
 
 /**
@@ -996,11 +1095,21 @@ gwy_data_field_1dfft_raw(GwyDataField *rin,
         case GWY_ORIENTATION_HORIZONTAL:
         newres = gwy_fft_find_nice_size(rin->xres);
         g_return_if_fail(rin->xres == newres);
+
+        gwy_data_field_resample(rout, newres, rin->yres,
+                                GWY_INTERPOLATION_NONE);
+        gwy_data_field_resample(iout, newres, rin->yres,
+                                GWY_INTERPOLATION_NONE);
         break;
 
         case GWY_ORIENTATION_VERTICAL:
         newres = gwy_fft_find_nice_size(rin->yres);
         g_return_if_fail(rin->yres == newres);
+
+        gwy_data_field_resample(rout, rin->xres, newres,
+                                GWY_INTERPOLATION_NONE);
+        gwy_data_field_resample(iout, rin->xres, newres,
+                                GWY_INTERPOLATION_NONE);
         break;
 
         default:
