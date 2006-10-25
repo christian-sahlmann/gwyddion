@@ -11,4 +11,4 @@ Icon=gwyddion.png
 MimeType=application/x-gwyddion-spm;application/x-sis-spm;application/x-nt-mdt-spm;application/x-nanoscope-spm
 Terminal=false
 StartupNotify=true
-Categories=Application;GTK;Physics;Science;
+Categories=GTK;Physics;Science;Engineering;RasterGraphics;2DGraphics;Graphics
