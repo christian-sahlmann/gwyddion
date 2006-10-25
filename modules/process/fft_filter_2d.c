@@ -82,7 +82,7 @@ typedef struct {
     GwySensitivityGroup *sensgroup;
 
     gulong          rect_signal;
-    gulong            ellipse_signal;
+    gulong          ellipse_signal;
 
     GtkWidget       *view;
 
@@ -91,6 +91,11 @@ typedef struct {
 
     guint           prev_mode;
     GSList          *pmode;
+
+    gint            origxres;
+    gint            origyres;
+    gint            newxres;
+    gint            newyres;
 
     gboolean        snap;
     gboolean        zoom;
@@ -144,7 +149,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.1",
+    "1.2",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -199,8 +204,21 @@ run_main(GwyContainer *data, GwyRunType run)
                                      0);
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    controls.origxres = gwy_data_field_get_xres(dfield);
+    controls.origyres = gwy_data_field_get_yres(dfield);
+    controls.newxres = gwy_fft_find_nice_size(controls.origxres);
+    controls.newyres = gwy_fft_find_nice_size(controls.origyres);
 
     /* Create datafields */
+    if (controls.newxres == controls.origxres
+        && controls.newyres == controls.origyres)
+        g_object_ref(dfield);
+    else
+        dfield = gwy_data_field_new_resampled(dfield,
+                                              controls.newxres,
+                                              controls.newyres,
+                                              GWY_INTERPOLATION_NNA);
+
     fft = gwy_data_field_new_alike(dfield, FALSE);
     do_fft(dfield, fft);
 
@@ -242,7 +260,6 @@ run_main(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_RANGE_TYPE,
                             0);
 
     gwy_container_set_object_by_name(controls.mydata, "/2/data",
@@ -251,7 +268,7 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_app_sync_data_items(data, controls.mydata, id, 2, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_RANGE,
+                            /* GWY_DATA_ITEM_RANGE, */
                             GWY_DATA_ITEM_RANGE_TYPE,
                             0);
 
@@ -261,8 +278,6 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_app_sync_data_items(data, controls.mydata, id, 3, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_RANGE_TYPE,
                             0);
 
     /* Run the dialog */
@@ -303,6 +318,7 @@ run_main(GwyContainer *data, GwyRunType run)
             gwy_app_set_data_field_title(data, newid, _("Filtered FFT"));
         }
     }
+    g_object_unref(dfield);
 }
 
 static GwyDataField*
@@ -413,8 +429,8 @@ run_dialog(ControlsType *controls)
     controls->sensgroup = gwy_sensitivity_group_new();
 
     /* Main Horizontal Box (contains the GwyDataView and the control panel) */
-    hbox = gtk_hbox_new(FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 5);
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
     /* Setup the GwyDataView and base layer */
     controls->view = gwy_data_view_new(controls->mydata);
@@ -426,7 +442,7 @@ run_dialog(ControlsType *controls)
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), zoomval);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 4);
 
     /* setup vector layer */
     switch_layer(controls->edit_mode, controls);
@@ -438,14 +454,16 @@ run_dialog(ControlsType *controls)
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
 
     /* Setup the control panel */
-    table = gtk_table_new(20, 2, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 10);
+    table = gtk_table_new(10, 2, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gwy_label_new_header(_("Filter Mask"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
     hbox2 = gtk_hbox_new(FALSE, 0);
@@ -474,9 +492,9 @@ run_dialog(ControlsType *controls)
     gwy_radio_buttons_set_current(controls->mode, controls->edit_mode);
 
     /* Remaining controls: */
-    hbox2 = gtk_vbox_new(FALSE, 5);
+    hbox2 = gtk_vbox_new(FALSE, 4);
     gtk_table_attach(GTK_TABLE(table), hbox2, 1, 2, row, row+2,
-                     GTK_EXPAND | GTK_FILL, 0, 5, 0);
+                     GTK_EXPAND | GTK_FILL, 0, 4, 0);
 
     button = gwy_stock_like_button_new(_("_Undo"), GTK_STOCK_UNDO);
     gwy_sensitivity_group_add_widget(controls->sensgroup, button,
@@ -495,7 +513,6 @@ run_dialog(ControlsType *controls)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(remove_all_cb), controls);
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("_Snap to origin"));
@@ -507,13 +524,12 @@ run_dialog(ControlsType *controls)
     set_toggled(button, controls->snap);
     g_signal_connect(button, "clicked", G_CALLBACK(snap_cb), controls);
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     label = gwy_label_new_header(_("Preview Options"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
     /*XXX zoom hidden for now
@@ -548,13 +564,12 @@ run_dialog(ControlsType *controls)
     }
     controls->pmode = gtk_radio_button_get_group(group);
     gwy_radio_buttons_set_current(controls->pmode, controls->prev_mode);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 15);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     label = gwy_label_new_header(_("Output Options"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
     row++;
 
     combo = gwy_enum_combo_box_new(output_types, G_N_ELEMENTS(output_types),
@@ -563,15 +578,30 @@ run_dialog(ControlsType *controls)
     gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-
     label = gtk_label_new_with_mnemonic(_("Output _type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 0, 0);
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 5);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
+
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    if (controls->origxres != controls->newxres
+        || controls->origyres != controls->newyres) {
+        gchar *s;
+
+        s = g_strdup_printf(_("<small>Resampled from %dx%d to %dx%d "
+                              "for FFT</small>"),
+                            controls->origxres, controls->origyres,
+                            controls->newxres, controls->newxres);
+        gtk_label_set_markup(GTK_LABEL(label), s);
+        g_free(s);
+    }
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_EDIT, SENS_EDIT);
     g_object_unref(controls->sensgroup);
@@ -1004,11 +1034,8 @@ fft_filter_2d(GwyDataField *input,
                                       - gwy_data_field_get_min(r_in)));
     */
 
-    gwy_data_field_2dfft(r_in, NULL, r_out, i_out,
-                         GWY_WINDOWING_NONE,
-                         GWY_TRANSFORM_DIRECTION_FORWARD,
-                         GWY_INTERPOLATION_BILINEAR,
-                         FALSE, FALSE);
+    gwy_data_field_2dfft_raw(r_in, NULL, r_out, i_out,
+                             GWY_TRANSFORM_DIRECTION_FORWARD);
 
     gwy_data_field_2dfft_humanize(r_out);
     gwy_data_field_2dfft_humanize(i_out);
@@ -1025,15 +1052,11 @@ fft_filter_2d(GwyDataField *input,
     /* Run the inverse FFT */
     gwy_data_field_2dfft_humanize(r_out);
     gwy_data_field_2dfft_humanize(i_out);
-    gwy_data_field_2dfft(r_out, i_out, r_in, i_in,
-                         GWY_WINDOWING_NONE,
-                         GWY_TRANSFORM_DIRECTION_BACKWARD,
-                         GWY_INTERPOLATION_BILINEAR,
-                         FALSE, FALSE);
+    gwy_data_field_2dfft_raw(r_out, i_out, r_in, i_in,
+                             GWY_TRANSFORM_DIRECTION_BACKWARD);
 
     if (output_image != NULL)
         gwy_data_field_copy(r_in, output_image, TRUE);
-
 
     /* Finalize */
     g_object_unref(i_out);
