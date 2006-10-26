@@ -50,7 +50,7 @@ Makefile and Makefile.in.  So instead the following scriptlet can be used:
 
   make clean
   rm -f libgwy*/*-sections.txt libgwy*/*-decl-list.txt libgwy*/template/*
-  for x in libgwy*; do make -C "$x" tmpl.stamp; make -C "$x" docs; done
+  make docs
 
 See build_documentation() in utils/gwyddion-night-build for discussion (note
 this script is not distributed, fetch it from CVS).

@@ -163,9 +163,7 @@ You should be able to build executables then with
 There are other things to generate, however.  They can be created only after
 a successful project build.
 - Documentation:
-    make -k docs
-  It fails the for the very first time due to gtk-doc peculiarities, but don't
-  worry and just run it again, it should succeed then.
+    make docs
 - MSVC files (makefiles, .def files):
     ./utils/update-msvc.py
 
