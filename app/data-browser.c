@@ -2598,18 +2598,15 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
     /* Filename */
-    frame = gtk_frame_new(NULL);
-    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
-    gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 0);
-
     browser->filename = gtk_label_new(NULL);
     gtk_label_set_ellipsize(GTK_LABEL(browser->filename), PANGO_ELLIPSIZE_END);
     gtk_misc_set_alignment(GTK_MISC(browser->filename), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(browser->filename), 4, 2);
-    gtk_container_add(GTK_CONTAINER(frame), browser->filename);
+    gtk_box_pack_start(GTK_BOX(hbox), browser->filename, TRUE, TRUE, 0);
 
     /* Close button */
     button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
     image = gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_BUTTON);
     gtk_container_add(GTK_CONTAINER(button), image);
     gtk_tooltips_set_tip(tips, button, _("Close file"), NULL);
