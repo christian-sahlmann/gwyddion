@@ -2575,7 +2575,7 @@ gwy_app_data_browser_construct_buttons(GwyAppDataBrowser *browser)
 static void
 gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
 {
-    GtkWidget *label, *box_page, *scwin, *vbox, *hbox, *button, *image, *frame;
+    GtkWidget *label, *box_page, *scwin, *vbox, *hbox, *button, *image;
     GtkTooltips *tips;
 
     tips = gwy_app_get_tooltips();
