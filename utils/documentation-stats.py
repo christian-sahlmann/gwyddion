@@ -12,7 +12,7 @@ def parse(fh):
     stats = []
     group = None
     for line in fh:
-        m = re.match(r'make: Entering directory `.*/(?P<group>.*)\'\n', line)
+        m = re.match(r'make(?:\[\d+\]): Entering directory `.*/(?P<group>.*)\'\n', line)
         if m:
             group = m.group('group')
             continue
