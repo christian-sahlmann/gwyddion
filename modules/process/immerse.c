@@ -441,6 +441,12 @@ immerse_detail_cb(GwyDataChooser *chooser,
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       GTK_RESPONSE_OK,
                                       object->data != NULL);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      IMMERSE_RESPONSE_LOCATE,
+                                      object->data != NULL);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      IMMERSE_RESPONSE_IMPROVE,
+                                      object->data != NULL);
 
     if (object->data) {
         quark = gwy_app_get_data_key_for_id(object->id);
