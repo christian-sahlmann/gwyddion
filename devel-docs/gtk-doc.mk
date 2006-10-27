@@ -25,9 +25,6 @@ EXTRA_DIST = \
 	makefile.msc \
 	$(HTML_IMAGES) \
 	$(DOC_MAIN_SGML_FILE) \
-	$(DOC_MODULE)-sections.txt \
-	$(DOC_MODULE)-decl.txt \
-	$(DOC_MODULE).types \
 	$(DOC_MODULE)-overrides.txt
 
 DOC_STAMPS = \
@@ -47,6 +44,13 @@ SCANOBJ_FILES = \
 	$(DOC_MODULE).signals
 
 CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
+
+DISTCLEANFILES = \
+	$(DOC_MODULE)-sections.txt \
+	$(DOC_MODULE)-undocumented.txt \
+	$(DOC_MODULE)-decl-list.txt \
+	$(DOC_MODULE)-decl.txt \
+	$(DOC_MODULE).types
 
 HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB = $(DOC_SOURCE_DIR)/*.c
@@ -137,9 +141,11 @@ clean-local:
 	rm -f *~ *.bak
 	rm -rf .libs
 
-maintainer-clean-local: clean
-	cd $(srcdir) && rm -rf xml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
-	cd $(srcdir) && rm -rf template $(DOC_MODULE).types $(DOC_MODULE)-sections.txt
+distclean-local:
+	cd $(srcdir) && rm -rf xml template
+
+maintainer-clean-local:
+	cd $(srcdir) && rm -rf html
 
 install-data-local:
 	installfiles=`echo $(srcdir)/html/*`; \
@@ -161,6 +167,8 @@ uninstall-local:
 
 #
 # Require gtk-doc when making dist
+# FIXME: We should require *built* docs, because this is not guaranteed just
+# by having gtk-doc enabled.
 #
 if ENABLE_GTK_DOC
 dist-check-gtkdoc:
@@ -171,14 +179,7 @@ dist-check-gtkdoc:
 endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
-	mkdir $(distdir)/template
-	mkdir $(distdir)/xml
 	mkdir $(distdir)/html
-	-cp $(srcdir)/template/*.sgml $(distdir)/template
-	-cp $(srcdir)/xml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/* $(distdir)/html
-	if test -f $(srcdir)/$(DOC_MODULE).types; then \
-	  cp $(srcdir)/$(DOC_MODULE).types $(distdir)/$(DOC_MODULE).types; \
-	fi
 
 .PHONY: docs dist-hook-local
