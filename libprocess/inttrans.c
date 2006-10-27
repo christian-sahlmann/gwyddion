@@ -1974,14 +1974,12 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                              GwyOrientation orientation,
                              GwyInterpolationType interpolation)
 {
-    gint i, j;
-    GwyDataField *idata_field, *hlp_dfield, *hlp_idfield, *iresult_field;
+    gint i, j, size;
+    GwyDataField *buffer, *idata_field, *hlp_dfield, *hlp_idfield, *iresult_field;
     GwyDataLine *dline;
 
-    idata_field = gwy_data_field_new_alike(data_field, TRUE);
-    hlp_dfield = gwy_data_field_new_alike(data_field, TRUE);
-    hlp_idfield = gwy_data_field_new_alike(data_field, TRUE);
-    iresult_field = gwy_data_field_new_alike(data_field, TRUE);
+    buffer = gwy_data_field_new_alike(data_field, FALSE);
+    gwy_data_field_copy(data_field, buffer, FALSE);
 
     dline = GWY_DATA_LINE(gwy_data_line_new(data_field->xres, data_field->xres,
                                             FALSE));
@@ -1989,16 +1987,26 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(data_field, G_PI/2, interpolation);
 
-    gwy_data_field_area_xfft(data_field, result_field,
-                             hlp_dfield, hlp_idfield,
-                             0, 0, data_field->xres, data_field->yres,
-                             GWY_WINDOWING_NONE,
-                             GWY_TRANSFORM_DIRECTION_FORWARD,
-                             interpolation,
-                             FALSE, FALSE);
+    size = gwy_fft_find_nice_size(
+                         gwy_data_field_get_xres(data_field));
+    gwy_data_field_resample(buffer, 
+                            size, 
+                            gwy_data_field_get_yres(buffer),
+                            interpolation);
+    gwy_data_field_resample(result_field, 
+                            size, 
+                            gwy_data_field_get_yres(buffer),
+                            interpolation);
 
-    if (orientation == GWY_ORIENTATION_VERTICAL)
-        gwy_data_field_rotate(data_field, -G_PI/2, interpolation);
+    idata_field = gwy_data_field_new_alike(buffer, TRUE);
+    hlp_dfield = gwy_data_field_new_alike(buffer, TRUE);
+    hlp_idfield = gwy_data_field_new_alike(buffer, TRUE);
+    iresult_field = gwy_data_field_new_alike(buffer, TRUE);
+
+    gwy_data_field_1dfft_raw(buffer, result_field,
+                             hlp_dfield, hlp_idfield,
+                             GWY_ORIENTATION_HORIZONTAL,
+                             GWY_TRANSFORM_DIRECTION_FORWARD);
 
     gwy_data_line_resample(weights, hlp_dfield->xres/2, interpolation);
     for (i = 0; i < hlp_dfield->yres; i++) {
@@ -2017,21 +2025,24 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
         gwy_data_field_set_row(hlp_idfield, dline, i);
     }
 
-    gwy_data_field_area_xfft(hlp_dfield, hlp_idfield,
+    gwy_data_field_1dfft_raw(hlp_dfield, hlp_idfield,
                              result_field, iresult_field,
-                             0, 0, data_field->xres, data_field->yres,
-                             GWY_WINDOWING_NONE,
-                             GWY_TRANSFORM_DIRECTION_BACKWARD,
-                             interpolation,
-                             FALSE, FALSE);
+                             GWY_ORIENTATION_HORIZONTAL,
+                             GWY_TRANSFORM_DIRECTION_BACKWARD);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(result_field, -G_PI/2, interpolation);
+
+    gwy_data_field_resample(result_field, 
+                            data_field->xres,
+                            data_field->yres,
+                            interpolation);
 
     g_object_unref(idata_field);
     g_object_unref(hlp_dfield);
     g_object_unref(hlp_idfield);
     g_object_unref(iresult_field);
+    g_object_unref(buffer);
     g_object_unref(dline);
 }
 

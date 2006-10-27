@@ -415,11 +415,13 @@ update_view(Fftf1dControls *controls,
             Fftf1dArgs *args)
 {
     GwyDataField *rfield;
+    gint size;
+
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->result_data,
                                                              "/0/data"));
-
     gwy_data_field_fft_filter_1d(controls->original_field, rfield, controls->weights, args->direction,
                                  args->interpolation);
+
 
     gwy_data_field_data_changed(rfield);
 }

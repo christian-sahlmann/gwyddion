@@ -15,6 +15,7 @@ process_LTLIBRARIES = \
 	facet-level.la \
 	facet_analysis.la \
 	fft.la \
+	fft_filter_1d.la \
 	fft_filter_2d.la \
 	fit_2d.la \
 	fraccor.la \
@@ -126,8 +127,8 @@ facet_analysis_la_LIBADD = $(module_libadd)
 facet_level_la_SOURCES = facet-level.c
 facet_level_la_LIBADD = $(module_libadd)
 
-#fft_filter_1d_la_SOURCES = fft_filter_1d.c
-#fft_filter_1d_la_LIBADD = $(module_libadd)
+fft_filter_1d_la_SOURCES = fft_filter_1d.c
+fft_filter_1d_la_LIBADD = $(module_libadd)
 
 fft_filter_2d_la_SOURCES = fft_filter_2d.c
 fft_filter_2d_la_LIBADD = $(module_libadd)
