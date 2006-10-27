@@ -673,8 +673,8 @@ gwy_data_field_2dfft_do(GwyDataField *rin,
                        1, rbuf, ibuf);
         /* Move the result from buffer to iout, rout columns */
         for (j = 0; j < rin->yres; j++) {
-            rout[j*rin->xres + k] = rbuf[j];
-            iout[j*rin->xres + k] = ibuf[j];
+            rout->data[j*rin->xres + k] = rbuf[j];
+            iout->data[j*rin->xres + k] = ibuf[j];
         }
     }
     g_free(rbuf);
@@ -821,7 +821,7 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
     else
         gwy_data_field_multiply(iout, -1.0/sqrt(rin->xres*rin->yres));
 #else
-    gint k;
+    gint k, j;
 
     for (k = 0; k < rin->yres; k += 2) {
         gdouble *re, *im, *r0, *r1, *i0, *i1;
