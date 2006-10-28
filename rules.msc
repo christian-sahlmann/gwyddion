@@ -69,4 +69,4 @@ sub1-install:
 	nmake -nologo -f makefile.msc install
 	cd ..
 
-# vim: ft=make
+# vim: ff=dos ft=make :

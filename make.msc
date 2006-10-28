@@ -205,4 +205,4 @@ MOD_LINK = \
 	libgwyprocess2-$(LIBGWYPROCESS_VER).lib \
 	libgwyddion2-$(LIBGWYDDION_VER).lib
 
-# vim: ft=make
+# vim: ff=dos ft=make :

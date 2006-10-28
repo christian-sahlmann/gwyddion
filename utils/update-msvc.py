@@ -62,6 +62,8 @@ def write_file(filename, text):
         t = '\n'.join(text) + '\n'
     else:
         t = text
+    # Convert from any mix of LF and CRLF to CRLF
+    t = t.replace('\r', '').replace('\n', '\r\n')
     fh = file(filename, 'w')
     fh.write(t);
     fh.close()
