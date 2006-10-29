@@ -428,6 +428,12 @@ gwy_app_build_module_func_menu(GNode *root,
 {
     GtkWidget *menu;
 
+    /* If root is leaf, the menu is empty */
+    if (G_NODE_IS_LEAF(root)) {
+        g_node_destroy(root);
+        return gtk_menu_new();
+    }
+
     g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
                     &gwy_app_menu_resolve_translations, NULL);
     g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,

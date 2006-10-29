@@ -574,8 +574,7 @@ compose_splash(const gchar *version)
 
     base = gdk_pixbuf_new_from_file(filename, &err);
     if (!base) {
-        g_warning("Cannot load base splash image %s: %s",
-                  filename, err->message);
+        g_warning("Cannot load base splash image: %s", err->message);
         g_clear_error(&err);
         g_free(filename);
         return NULL;
