@@ -6,7 +6,6 @@
 DIE=0
 
 PROJECT=Gwyddion
-ACLOCAL_FLAGS="-I m4"
 # When runnig autogen.sh one normally wants this.
 CONF_FLAGS="--enable-maintainer-mode"
 AUTOCONF=${AUTOCONF:-autoconf}
@@ -116,7 +115,7 @@ dir=.
 test -z "$QUIET" && echo processing $dir
 (cd $dir && \
   eval $QUIET $LIBTOOLIZE --automake --force && \
-  eval $QUIET $ACLOCAL $ACLOCAL_FLAGS && \
+  eval $QUIET $ACLOCAL -I m4 $ACLOCAL_FLAGS && \
   eval $QUIET $AUTOHEADER && \
   eval $QUIET $AUTOMAKE --add-missing $am_opt && \
   eval $QUIET $AUTOCONF) || {
