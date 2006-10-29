@@ -522,8 +522,8 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  *  gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
  * </programlisting></informalexample>
  *
- * The cell data function multiply() just multiplies the column number with
- * the number of (virtual) null store row:
+ * The cell data function multiply<!-- -->() just multiplies the column number
+ * with the number of (virtual) null store row:
  * <informalexample><programlisting>
  * static void
  * multiply(GtkTreeViewColumn *column,
@@ -536,7 +536,7 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  *     gint i;
  *     <!-- Hello, gtk-doc! -->
  *     gtk_tree_model_get(model, iter, 0, &amp;i, -1);
- *     g_snprintf(buf, sizeof(buf), "%d", (i + 1)*GPOINTER_TO_INT(data));
+ *     g_snprintf(buf, sizeof(buf), "&percnt;d", (i + 1)*GPOINTER_TO_INT(data));
  *     g_object_set(renderer, "text", buf, NULL);
  * }
  * </programlisting></informalexample>
