@@ -153,7 +153,7 @@ def get_file_deps(name, sources=None):
             if not os.access(depfile, os.R_OK):
                 continue
 
-            x += '\\.' + ext
+            x = '(?:(?:\.libs/)?' + x + '\.l?o\s*)+'
             l = get_list(get_file(depfile), x, ':')
             return [x for x in l if not x.startswith('/')]
     print 'WARNING: No deps for %s.c' % name
