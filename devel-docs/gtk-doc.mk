@@ -70,7 +70,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
 	if test "x$(TYPES_INCLUDE)" != x; then \
 	    echo "$(TYPES_INCLUDE)"; \
-	    $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
+	    $(PYTHON) $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
 	fi >$(srcdir)/$(DOC_MODULE).types
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types >/dev/null 2>&1 ; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
@@ -81,7 +81,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	    done \
 	fi
 	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
-	    ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-decl-list.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	    $(PYTHON) ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-decl-list.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
 	fi
 	diff $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-sections.txt >/dev/null 2>&1 || \
 	    cat $(DOC_MODULE)-decl-list.txt >$(DOC_MODULE)-sections.txt
