@@ -1,14 +1,1 @@
-Use the CVS log.
-Handy tools:
-
-    http://cia.navi.cx/stats/project/gwyddion
-    for recent commits
-
-    cvs2cl.pl --follow-only trunk --accum
-    to generate a changelog
-
-After switch to subversion:
-
-    svn log
-    generates a decent changelog
-
+Use the subversion log.
