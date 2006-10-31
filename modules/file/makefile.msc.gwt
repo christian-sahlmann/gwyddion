@@ -2,6 +2,7 @@
 
 jpkscan_module = jpkscan.la
 spml_module = spml.la
+psia_module = psia.la
 
 <[[:SELF:]]>
 MOD_TYPE = file
