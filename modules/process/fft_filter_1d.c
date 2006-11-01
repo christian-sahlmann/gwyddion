@@ -210,7 +210,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
 
     hbox = gtk_hbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+                       TRUE, TRUE, 4);
 
     /* store pointer to data container */
     controls.args = args;
@@ -277,7 +277,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
 
     /*settings*/
     vbox = gtk_vbox_new(FALSE, 3);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
 
     label = gtk_label_new(NULL);
     /* `select areas with mouse' should be a tooltip or something...
@@ -300,7 +300,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
                      G_CALLBACK(graph_selected), &controls);
 
 
-    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
 
     label = gtk_label_new(_("Options"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
@@ -311,7 +311,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     FALSE, FALSE, 2, 2);
 
     controls.menu_suppress
         = gwy_enum_combo_box_new(suppress_types, G_N_ELEMENTS(suppress_types),
@@ -319,21 +319,21 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
                                  args->suppress, TRUE);
 
     gtk_table_attach(GTK_TABLE(table), controls.menu_suppress, 1, 2, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     FALSE, FALSE, 2, 2);
 
     label = gtk_label_new_with_mnemonic(_("_Preview type:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     FALSE, FALSE, 2, 2);
 
     controls.menu_view_type
         = gwy_enum_combo_box_new(view_types, G_N_ELEMENTS(view_types),
                                  G_CALLBACK(view_type_changed_cb), &controls,
                                  args->view_type, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.menu_view_type, 1, 2, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     FALSE, FALSE, 2, 2);
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
@@ -356,7 +356,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
                = gtk_check_button_new_with_mnemonic(_("_Update dynamically"));
 
     gtk_table_attach(GTK_TABLE(table), controls.update, 0, 4, 6, 7,
-                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                      FALSE, FALSE, 2, 2);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
                                  args->update);
