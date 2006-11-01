@@ -200,7 +200,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
 
     dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0,
                                          _("_Run"), RESPONSE_RUN,
-                                         _("_Restore PS"), RESPONSE_RESTORE,
+                                         _("_Clear"), RESPONSE_RESTORE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -295,7 +295,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
 
-    gwy_selection_set_max_objects(selection, 1);
+    gwy_selection_set_max_objects(selection, 20);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(graph_selected), &controls);
 
