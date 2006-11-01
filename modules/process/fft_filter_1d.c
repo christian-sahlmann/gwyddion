@@ -166,8 +166,16 @@ fftf_1d(GwyContainer *data, GwyRunType run)
 }
 
 static void
-fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint id)
+fftf_1d_dialog(Fftf1dArgs *args,
+               GwyContainer *data,
+               GwyDataField *dfield,
+               gint id)
 {
+    enum {
+        RESPONSE_RUN = 1,
+        RESPONSE_CLEAR = 2
+    };
+
     static const GwyEnum view_types[] = {
         { N_("Marked"),    GWY_FFTF_1D_VIEW_MARKED,    },
         { N_("Unmarked"),  GWY_FFTF_1D_VIEW_UNMARKED,  },
@@ -177,25 +185,18 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
         { N_("Suppress"),  GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD, },
     };
 
-    GtkWidget *dialog, *table, *hbox, *vbox;
+    GtkWidget *dialog, *table, *hbox, *vbox, *align;
     Fftf1dControls controls;
     GwyDataField *result_field;
     GwyGraphArea *area;
     GwySelection *selection;
-
-    enum {
-        RESPONSE_RUN = 1,
-        RESPONSE_RESTORE = 2
-    };
-
-    gint response;
     GwyPixmapLayer *layer;
-    GtkWidget *label;
     gdouble zoomval;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0,
-                                         _("_Run"), RESPONSE_RUN,
-                                         _("_Clear"), RESPONSE_RESTORE,
+                                         _("_Update"), RESPONSE_RUN,
+                                         GTK_STOCK_CLEAR, RESPONSE_CLEAR,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -224,7 +225,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
 
     controls.weights = NULL;
 
-    vbox = gtk_vbox_new(FALSE, 3);
+    vbox = gtk_vbox_new(FALSE, 4);
     /*set up rescaled image of the surface*/
     controls.view_original = gwy_data_view_new(controls.original_data);
     layer = gwy_layer_basic_new();
@@ -251,12 +252,10 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
-
     /*settings*/
-    vbox = gtk_vbox_new(FALSE, 3);
+    vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
 
-    label = gtk_label_new(NULL);
     /* `select areas with mouse' should be a tooltip or something...
     gtk_label_set_markup(GTK_LABEL(label),
                          _("<b>Power spectrum (select areas by mouse):</b>"));
@@ -265,6 +264,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     controls.graph = gwy_graph_new(controls.gmodel);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
     gtk_widget_set_size_request(controls.graph, 300, 200);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
@@ -273,71 +273,62 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     g_signal_connect(selection, "changed",
                      G_CALLBACK(graph_selected), &controls);
 
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(vbox), align, FALSE, FALSE, 0);
 
-    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
+    table = gtk_table_new(6, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_container_add(GTK_CONTAINER(align), table);
+    row = 0;
 
-    label = gwy_label_new_header(_("Options"));
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Options")),
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
-    table = gtk_table_new(2, 7, FALSE);
-
-    label = gtk_label_new_with_mnemonic(_("_Suppress type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     FALSE, FALSE, 2, 2);
+    controls.menu_direction
+        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
+                                 G_CALLBACK(direction_changed_cb), &controls,
+                                 args->direction, TRUE);
+    gwy_table_attach_row(table, row, _("_Direction:"), NULL,
+                         controls.menu_direction);
+    row++;
 
     controls.menu_suppress
         = gwy_enum_combo_box_new(suppress_types, G_N_ELEMENTS(suppress_types),
                                  G_CALLBACK(suppress_changed_cb), &controls,
                                  args->suppress, TRUE);
-
-    gtk_table_attach(GTK_TABLE(table), controls.menu_suppress, 1, 2, 0, 1,
-                     FALSE, FALSE, 2, 2);
-
-    label = gtk_label_new_with_mnemonic(_("_Preview type:"));
-
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-                     FALSE, FALSE, 2, 2);
+    gwy_table_attach_row(table, row, _("Suppress type:"), NULL,
+                         controls.menu_suppress);
+    row++;
 
     controls.menu_view_type
         = gwy_enum_combo_box_new(view_types, G_N_ELEMENTS(view_types),
                                  G_CALLBACK(view_type_changed_cb), &controls,
                                  args->view_type, TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.menu_view_type, 1, 2, 1, 2,
-                     FALSE, FALSE, 2, 2);
-
-    gtk_container_add(GTK_CONTAINER(vbox), table);
+    gwy_table_attach_row(table, row, _("_Filter type:"), NULL,
+                         controls.menu_view_type);
+    row++;
 
     controls.menu_interpolation
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
                                  G_CALLBACK(interpolation_changed_cb),
                                  &controls,
                                  args->interpolation, TRUE);
-    gwy_table_attach_row(table, 4, _("_Interpolation type:"), "",
+    gwy_table_attach_row(table, row, _("_Interpolation type:"), NULL,
                          controls.menu_interpolation);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
-
-    controls.menu_direction
-        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
-                                 G_CALLBACK(direction_changed_cb), &controls,
-                                 args->direction, TRUE);
-    gwy_table_attach_row(table, 5, _("_Direction:"), "",
-                         controls.menu_direction);
-
-    controls.update
-        = gtk_check_button_new_with_mnemonic(_("_Update dynamically"));
-
-    gtk_table_attach(GTK_TABLE(table), controls.update, 0, 4, 6, 7,
-                      FALSE, FALSE, 2, 2);
-
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
                                  args->update);
-
     g_signal_connect(controls.update, "toggled",
                      G_CALLBACK(update_changed_cb), &controls);
+    row++;
 
     args->update = 0;
     restore_ps(&controls, args);
@@ -362,7 +353,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
             fftf_1d_run(&controls, args);
             break;
 
-            case RESPONSE_RESTORE:
+            case RESPONSE_CLEAR:
             restore_ps(&controls, args);
             break;
 
