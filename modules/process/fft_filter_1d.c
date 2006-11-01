@@ -217,24 +217,6 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     controls.original_data = data;
     controls.original_field = dfield;
 
-    /*setup original container*/
-    /*controls.mydata = gwy_container_new();
-    gwy_container_set_object_by_name(controls.mydata, "/0/data", gwy_data_field_duplicate(dfield));
-
-    dfield = gwy_data_field_duplicate(orig_dfield);
-    args->original_xres = dfield->xres;
-    args->original_yres = dfield->yres;
-    newsize = gwy_fft_find_nice_size(MAX(dfield->xres, dfield->yres));
-    gwy_data_field_resample(dfield, newsize, newsize, args->interpolation);
-    args->original = gwy_container_new();
-    gwy_container_set_object_by_name(args->original, "/0/data", dfield);
-    gwy_app_copy_data_items(data, args->original, oldid, 0,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
-    g_object_unref(dfield);
-*/
     /*setup result container*/
     result_field = gwy_data_field_new_alike(dfield, TRUE);
     controls.result_data = gwy_container_new();
@@ -284,9 +266,6 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
     gtk_label_set_markup(GTK_LABEL(label),
                          _("<b>Power spectrum (select areas by mouse):</b>"));
                          */
-    label = gtk_label_new(_("Power Spectrum"));
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
-
     controls.gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(controls.gmodel);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
@@ -302,7 +281,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
 
-    label = gtk_label_new(_("Options"));
+    label = gwy_label_new_header(_("Options"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     table = gtk_table_new(2, 7, FALSE);
