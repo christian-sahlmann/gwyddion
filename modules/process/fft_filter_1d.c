@@ -117,7 +117,7 @@ static void       direction_changed_cb    (GtkWidget *combo,
 static void       interpolation_changed_cb(GtkWidget *combo,
                                            Fftf1dControls *controls);
 static void       update_changed_cb       (GtkToggleButton *button,
-                                           Fftf1dArgs *args);
+                                           Fftf1dControls *controls);
 static void       update_view             (Fftf1dControls *controls,
                                            Fftf1dArgs *args);
 static void       graph_selected          (GwySelection* selection,
@@ -341,7 +341,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data, GwyDataField *dfield, gint 
                                  args->update);
 
     g_signal_connect(controls.update, "toggled",
-                     G_CALLBACK(update_changed_cb), args);
+                     G_CALLBACK(update_changed_cb), &controls);
 
     args->update = 0;
     restore_ps(&controls, args);
@@ -394,7 +394,6 @@ update_view(Fftf1dControls *controls,
             Fftf1dArgs *args)
 {
     GwyDataField *rfield;
-    gint size;
 
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->result_data,
                                                              "/0/data"));
@@ -541,9 +540,12 @@ fftf_1d_do(Fftf1dControls *controls)
 }
 
 static void
-update_changed_cb(GtkToggleButton *button, Fftf1dArgs *args)
+update_changed_cb(GtkToggleButton *button, Fftf1dControls *controls)
 {
-    args->update = gtk_toggle_button_get_active(button);
+    controls->args->update = gtk_toggle_button_get_active(button);
+    if (controls->args->update)
+             update_view(controls, controls->args);
+ 
 }
 
 static void
