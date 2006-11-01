@@ -1033,7 +1033,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Gaussian (PSDF)",
         "<i>f</i>(<i>x</i>) "
-            "= σ<sup>2</sup><i>T</i>/2 "
+            "= σ<sup>2</sup><i>T</i>/(2√π) "
             "exp[−(<i>x</i><i>T</i>/2)<sup>2</sup>]",
         &gauss_psdf_func,
         NULL,
