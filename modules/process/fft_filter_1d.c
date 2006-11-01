@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -203,7 +203,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    hbox = gtk_hbox_new(FALSE, 3);
+    hbox = gtk_hbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        TRUE, TRUE, 4);
 
@@ -330,7 +330,6 @@ fftf_1d_dialog(Fftf1dArgs *args,
                      G_CALLBACK(update_changed_cb), &controls);
     row++;
 
-    args->update = 0;
     restore_ps(&controls, args);
     update_view(&controls, args);
 
@@ -381,6 +380,7 @@ update_view(Fftf1dControls *controls,
 {
     GwyDataField *rfield;
 
+    gwy_debug("args->update = %d", args->update);
     rfield
         = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->result_data,
                                                           "/0/data"));
