@@ -70,6 +70,9 @@ GwyDataLine*   gwy_data_line_new                   (gint res,
 GwyDataLine*   gwy_data_line_new_alike             (GwyDataLine *model,
                                                     gboolean nullme);
 void           gwy_data_line_data_changed          (GwyDataLine *data_line);
+GwyDataLine*   gwy_data_line_new_resampled (GwyDataLine *data_line,
+                                            gint res,
+                                            GwyInterpolationType interpolation);
 void           gwy_data_line_resample      (GwyDataLine *data_line,
                                             gint res,
                                             GwyInterpolationType interpolation);

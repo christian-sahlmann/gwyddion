@@ -173,6 +173,53 @@ gwy_data_line_new_alike(GwyDataLine *model,
     return data_line;
 }
 
+/**
+ * gwy_data_line_new_resampled:
+ * @data_line: A data line.
+ * @res: Desired resolution.
+ * @interpolation: Interpolation method to use.
+ *
+ * Creates a new data line by resampling an existing one.
+ *
+ * This method is equivalent to gwy_data_line_duplicate() followed by
+ * gwy_data_line_resample(), but it is more efficient.
+ *
+ * Returns: A newly created data line.
+ **/
+GwyDataLine*
+gwy_data_line_new_resampled(GwyDataLine *data_line,
+                            gint res,
+                            GwyInterpolationType interpolation)
+{
+    GwyDataLine *result;
+    gdouble *p;
+    gdouble ratio;
+    gint j;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    if (data_line->res == res)
+        return gwy_data_line_duplicate(data_line);
+
+    g_return_val_if_fail(res > 0, NULL);
+
+    result = gwy_data_line_new(res, data_line->real, FALSE);
+    result->off = data_line->off;
+    if (data_line->si_unit_x)
+        result->si_unit_x = gwy_si_unit_duplicate(data_line->si_unit_x);
+    if (data_line->si_unit_y)
+        result->si_unit_y = gwy_si_unit_duplicate(data_line->si_unit_y);
+
+    if (interpolation == GWY_INTERPOLATION_NONE)
+        return result;
+
+    ratio = data_line->res/(gdouble)res;
+
+    p = result->data;
+    for (j = 0; j < res; j++, p++)
+        *p = gwy_data_line_get_dval(data_line, (j + 0.5)*ratio, interpolation);
+
+    return result;
+}
 
 static GByteArray*
 gwy_data_line_serialize(GObject *obj,
