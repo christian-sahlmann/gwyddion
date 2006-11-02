@@ -200,7 +200,7 @@ gwy_data_field_new_alike(GwyDataField *model,
 
 /**
  * gwy_data_field_new_resampled:
- * @data_field: A data source field.
+ * @data_field: A data field.
  * @xres: Desired X resolution.
  * @yres: Desired Y resolution.
  * @interpolation: Interpolation method to use.
