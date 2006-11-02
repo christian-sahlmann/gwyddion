@@ -1,4 +1,4 @@
-2.0.20061027
+2.0.20061102
 
 2.1 (0000-00-00)
 Application:
@@ -22,10 +22,14 @@ Libraries:
   higher than 1.0 were fixed.
 - libprocess: A set of raw FFT functions, that however still use the current
   FFT backend, was added.
+- libprocess: gwy_data_line_new_resampled(), similar to
+  gwy_data_field_new_resampled() was added.
+- libprocess: gwy_data_field_fft_filter_1d() actually works.
 
 Modules:
 - PSIA (new): Imports PSIA data files.
 - HDF4 (new): Imports HDF4 files, currently only PSI HDF.
+- 1D FFT filter: Was ported to version 2.x and restored.
 - BCR file: Supports a new file subtype with UTF-18 encoded text header.
 - Immerse: User interface was rewritten and speed was improved by several
   orders so that the module is actually usable now.
@@ -50,7 +54,9 @@ Other:
 - Missing file utils/genmarshal.mk was added to distribution.
 - Private header files installed by mistake are no longer installed.
 - Intermediate gtk-doc files are no longer distributed (the resulting HTML
-  API documentation is present in the tarball).
+  API documentation is present in the source tarball as usual).
+- Building and portability problems were fixed (mainly on non-GNU/Linux and
+  from Subversion checkout).
 
 
 2.0 (2006-09-30)
