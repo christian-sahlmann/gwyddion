@@ -17,7 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#include <stdio.h>
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
@@ -616,13 +615,13 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                 }
             }
             score->data[i + xres * j] = cormax;
-            
+
             z0 = cormax;
             zm = gwy_data_field_get_correlation_score(data_field1,
                                                       data_field2,
                                                       i-search_width/2,
                                                       j-search_height/2,
-                                                      imax - search_width/2 - 1, 
+                                                      imax - search_width/2 - 1,
                                                       jmax - search_height/2,
                                                       imax + search_width/2 - 1,
                                                       jmax + search_height/2);
@@ -630,7 +629,7 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                                       data_field2,
                                                       i-search_width/2,
                                                       j-search_height/2,
-                                                      imax - search_width/2 + 1, 
+                                                      imax - search_width/2 + 1,
                                                       jmax - search_height/2,
                                                       imax + search_width/2 + 1,
                                                       jmax + search_height/2);
@@ -644,7 +643,7 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                                       data_field2,
                                                       i-search_width/2,
                                                       j-search_height/2,
-                                                      imax - search_width/2, 
+                                                      imax - search_width/2,
                                                       jmax - search_height/2 - 1,
                                                       imax + search_width/2,
                                                       jmax + search_height/2 - 1);
@@ -652,7 +651,7 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                                       data_field2,
                                                       i-search_width/2,
                                                       j-search_height/2,
-                                                      imax - search_width/2, 
+                                                      imax - search_width/2,
                                                       jmax - search_height/2 + 1,
                                                       imax + search_width/2,
                                                       jmax + search_height/2 + 1);
@@ -815,7 +814,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
                                                       state->data_field2,
                                                       i - state->search_width/2,
                                                       j - state->search_height/2,
-                                                      imax - state->search_width/2 - 1, 
+                                                      imax - state->search_width/2 - 1,
                                                       jmax - state->search_height/2,
                                                       state->search_width,
                                                       state->search_height);
@@ -823,14 +822,13 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
                                                       state->data_field2,
                                                       i - state->search_width/2,
                                                       j - state->search_height/2,
-                                                      imax - state->search_width/2 + 1, 
+                                                      imax - state->search_width/2 + 1,
                                                       jmax - state->search_height/2,
                                                       state->search_width,
                                                       state->search_height);
 
 
             ipos = imax + (zm - zp)/(zm + zp - 2*z0)/2.0;
-            printf("%g %d (%g %g %g)\n", ipos, imax, zm, z0, zp);
             state->x_dist->data[i + xres * j]
                 = (ipos - i)*state->data_field1->xreal/state->data_field1->xres;
         }
@@ -840,7 +838,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
                                                       state->data_field2,
                                                       i - state->search_width/2,
                                                       j - state->search_height/2,
-                                                      imax - state->search_width/2, 
+                                                      imax - state->search_width/2,
                                                       jmax - state->search_height/2 - 1,
                                                       state->search_width,
                                                       state->search_height);
@@ -848,7 +846,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
                                                       state->data_field2,
                                                       i - state->search_width/2,
                                                       j - state->search_height/2,
-                                                      imax - state->search_width/2, 
+                                                      imax - state->search_width/2,
                                                       jmax - state->search_height/2 + 1,
                                                       state->search_width,
                                                       state->search_height);
