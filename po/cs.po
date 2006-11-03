@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2006-10-26 03:52+0200\n"
-"PO-Revision-Date: 2006-10-26 21:00+0200\n"
+"POT-Creation-Date: 2006-11-02 03:48+0100\n"
+"PO-Revision-Date: 2006-11-03 10:43+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:510
 #: app/data-browser.c:1010 app/data-browser.c:1559 app/data-browser.c:2240
-#: app/data-browser.c:3340 app/resource-editor.c:364
+#: app/data-browser.c:3337 app/resource-editor.c:364
 msgid "Untitled"
 msgstr "Nepojmenovaný"
 
@@ -779,19 +779,19 @@ msgstr "Smazat"
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:2615
+#: app/data-browser.c:2612
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:2628
+#: app/data-browser.c:2625
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:2642
+#: app/data-browser.c:2639
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:3378
+#: app/data-browser.c:3375
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
@@ -995,31 +995,31 @@ msgstr "Šířka"
 msgid "Hide"
 msgstr "Skrýt"
 
-#: app/menu.c:478 app/toolbox.c:254
+#: app/menu.c:484 app/toolbox.c:254
 msgid "_Data Process"
 msgstr "Zpracování _dat"
 
-#: app/menu.c:521 app/toolbox.c:258
+#: app/menu.c:527 app/toolbox.c:258
 msgid "_Graph"
 msgstr "_Graf"
 
-#: app/menu.c:554
+#: app/menu.c:560
 msgid "Re-show Last"
 msgstr "Ukázat poslední"
 
-#: app/menu.c:569
+#: app/menu.c:575
 msgid "Repeat Last"
 msgstr "Opakovat poslední"
 
-#: app/menu.c:693
+#: app/menu.c:699
 msgid "Repeat"
 msgstr "Opakovat"
 
-#: app/menu.c:699
+#: app/menu.c:705
 msgid "Re-show"
 msgstr "Ukázat znovu"
 
-#: app/menu.c:882
+#: app/menu.c:888
 msgid "_Document history"
 msgstr "_Historie dokumentů"
 
@@ -1106,11 +1106,11 @@ msgstr "Nelze vytvořit adresář pro uživatelské nastavení %s: %s"
 msgid "Cannot create user module directory %s: %s"
 msgstr "Nelze vytvořit adresář pro uživatelské moduly %s: %s"
 
-#: app/splash.c:643
+#: app/splash.c:642
 msgid "Starting "
 msgstr "Spouštím "
 
-#: app/splash.c:689
+#: app/splash.c:688
 msgid " is free software released under GNU GPL."
 msgstr " je svobodný software uvolněný pod GNU GPL."
 
@@ -1905,8 +1905,8 @@ msgstr "Formát dat"
 msgid "Presets"
 msgstr "Předvolby"
 
-#: modules/file/rawfile.c:503 modules/tools/sfunctions.c:404
-#: modules/tools/stats.c:355
+#: modules/file/rawfile.c:503 modules/process/fft_filter_1d.c:198
+#: modules/tools/sfunctions.c:404 modules/tools/stats.c:355
 msgid "_Update"
 msgstr "_Aktualizovat"
 
@@ -1933,7 +1933,7 @@ msgstr "Šířk_a:"
 msgid "H_eight:"
 msgstr "_Výška:"
 
-#: modules/file/rawfile.c:645 modules/process/fft_filter_1d.c:305
+#: modules/file/rawfile.c:645 modules/process/fft_filter_1d.c:286
 #: modules/process/grain_dist.c:302 modules/process/grain_mark.c:305
 #: modules/process/grain_rem_threshold.c:285 modules/process/grain_wshed.c:270
 #: modules/tools/spotremove.c:320 modules/tools/stats.c:301
@@ -3237,7 +3237,7 @@ msgstr "Zachovat velikost (neškálovat na mocninu 2)"
 
 #: modules/process/cwt.c:201 modules/process/dwt.c:193
 #: modules/process/dwtanisotropy.c:200 modules/process/dwtdenoise.c:205
-#: modules/process/fft.c:324 modules/process/fft_filter_1d.c:344
+#: modules/process/fft.c:324 modules/process/fft_filter_1d.c:319
 #: modules/process/fractal.c:227 modules/process/nanoindent_adjust.c:228
 #: modules/process/rotate.c:281 modules/process/scale.c:221
 #: modules/process/unrotate.c:281 modules/tools/profile.c:380
@@ -3833,67 +3833,56 @@ msgstr "Zachovat velikost (neškálovat na %d × %d)"
 msgid "Subtract mean _value beforehand"
 msgstr "Nejprve odečíst _střední hodnotu"
 
-#: modules/process/fft_filter_1d.c:131
+#: modules/process/fft_filter_1d.c:126
 msgid "FFT filtering"
 msgstr "Filtrování pomocí FFT"
 
-#: modules/process/fft_filter_1d.c:145
+#: modules/process/fft_filter_1d.c:140
 msgid "/_Correct Data/1D _FFT filtering..."
 msgstr "/_Korekce dat/1D _FFT filtrování..."
 
-#: modules/process/fft_filter_1d.c:149
+#: modules/process/fft_filter_1d.c:144
 msgid "1D FFT Filtering"
 msgstr "1D FFT filtrování"
 
-#: modules/process/fft_filter_1d.c:177
+#: modules/process/fft_filter_1d.c:180
 msgid "Marked"
-msgstr "označené"
-
-#: modules/process/fft_filter_1d.c:178
-msgid "Unmarked"
-msgstr "neoznačené"
+msgstr "Označené"
 
 #: modules/process/fft_filter_1d.c:181
+msgid "Unmarked"
+msgstr "Neoznačené"
+
+#: modules/process/fft_filter_1d.c:184
 msgid "Null"
-msgstr "nulovat"
+msgstr "Nulovat"
 
-#: modules/process/fft_filter_1d.c:182
+#: modules/process/fft_filter_1d.c:185
 msgid "Suppress"
-msgstr "potlačit"
+msgstr "Potlačit"
 
-#: modules/process/fft_filter_1d.c:201
+#: modules/process/fft_filter_1d.c:197
 msgid "1D FFT filter"
 msgstr "1D FFT filtr"
 
-#: modules/process/fft_filter_1d.c:202
-msgid "_Run"
-msgstr "_Filtrovat"
-
-#: modules/process/fft_filter_1d.c:203
-msgid "_Restore PS"
-msgstr "Obnovit spekt_rum"
-
-#: modules/process/fft_filter_1d.c:287
-msgid "Power Spectrum"
-msgstr ""
-
-#: modules/process/fft_filter_1d.c:310
-msgid "_Suppress type:"
-msgstr "Typ _potlačení:"
-
-#: modules/process/fft_filter_1d.c:324
-msgid "_Preview type:"
-msgstr "Typ _náhledu:"
-
-#: modules/process/fft_filter_1d.c:352
+#: modules/process/fft_filter_1d.c:294
 msgid "_Direction:"
 msgstr "S_měr:"
 
-#: modules/process/fft_filter_1d.c:356
-msgid "_Update dynamically"
-msgstr "_Dynamicky obnovovat"
+#: modules/process/fft_filter_1d.c:302
+msgid "_Suppress type:"
+msgstr "Typ _potlačení:"
 
-#: modules/process/fft_filter_1d.c:559
+#: modules/process/fft_filter_1d.c:310
+msgid "_Filter type:"
+msgstr "Typ _filtru:"
+
+#: modules/process/fft_filter_1d.c:324 modules/process/grain_mark.c:338
+#: modules/process/grain_rem_threshold.c:318
+msgid "I_nstant updates"
+msgstr "Okamžité _aktualizace"
+
+#: modules/process/fft_filter_1d.c:527
 msgid "1D FFT Filtered Data"
 msgstr "1D FFT filtrovaná data"
 
@@ -4069,7 +4058,7 @@ msgstr "Střed v Z"
 #: modules/process/fit_2d.c:578
 #, c-format
 msgid "%s: Radius cannot be null or negative."
-msgstr ""
+msgstr "%s: Poloměr nemůže být nulový ani záporný."
 
 #: modules/process/fit_2d.c:585 modules/process/grain_wshed.c:493
 #: modules/process/maskcor.c:329 modules/process/merge.c:621
@@ -4494,10 +4483,6 @@ msgstr "_Invertovat výšku"
 msgid "Mer_ge mode:"
 msgstr "Spo_jení kritérií:"
 
-#: modules/process/grain_mark.c:338 modules/process/grain_rem_threshold.c:318
-msgid "I_nstant updates"
-msgstr "Okamžité _aktualizace"
-
 #: modules/process/grain_rem_threshold.c:125
 msgid "Removes grains by thresholding (height, size)."
 msgstr "Odstraňuje zrna podle prahu (výšky, velikosti)."
@@ -4666,7 +4651,7 @@ msgstr "Vyrovnání detailu"
 msgid "Show _frame"
 msgstr "_Ukázat rámeček"
 
-#: modules/process/immerse.c:791
+#: modules/process/immerse.c:797
 msgid "Immersed detail"
 msgstr "Zapuštený detail"
 
@@ -5028,7 +5013,7 @@ msgstr "Hrot má jiný poměr rozlišení ku reálné velikosti. Bude převzorko
 
 #: modules/process/nanoindent_adjust.c:333
 msgid "Immersed detail data"
-msgstr ""
+msgstr "Zapuštěný detail"
 
 #: modules/process/outliers.c:37
 msgid "Creates mask of outliers."
@@ -6077,3 +6062,4 @@ msgid ""
 "Inclination theta: %s\n"
 "Inclination phi:   %s\n"
 msgstr ""
+
