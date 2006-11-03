@@ -1967,6 +1967,19 @@ gwy_data_field_cwt(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
+/**
+ * gwy_data_field_fft_filter_1d:
+ * @data_field: A data field to filter.
+ * @result_field: A data field to store the result to.  It will be resampled
+ *                to @data_field's size.
+ * @weights: Filter weights for the lower half of the spectrum (the other
+ *           half is symmetric).  Its size can be arbitrary, it will be
+ *           interpolated.
+ * @orientation: Filter direction.
+ * @interpolation: The interpolation to use for resampling.
+ *
+ * Performs 1D FFT filtering of a data field.
+ **/
 void
 gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                              GwyDataField *result_field,
