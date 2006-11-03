@@ -185,6 +185,8 @@ gwy_data_line_new_alike(GwyDataLine *model,
  * gwy_data_line_resample(), but it is more efficient.
  *
  * Returns: A newly created data line.
+ *
+ * Since: 2.1
  **/
 GwyDataLine*
 gwy_data_line_new_resampled(GwyDataLine *data_line,

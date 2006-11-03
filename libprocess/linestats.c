@@ -715,6 +715,8 @@ gwy_data_line_get_modus(GwyDataLine *data_line,
  * Finds median of a data line part.
  *
  * Returns: The median.
+ *
+ * Since: 2.1
  **/
 gdouble
 gwy_data_line_part_get_median(GwyDataLine *data_line,
@@ -741,6 +743,8 @@ gwy_data_line_part_get_median(GwyDataLine *data_line,
  * Finds median of a data line.
  *
  * Returns: The median.
+ *
+ * Since: 2.1
  **/
 gdouble
 gwy_data_line_get_median(GwyDataLine *data_line)

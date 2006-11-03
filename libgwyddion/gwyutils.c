@@ -761,6 +761,8 @@ gwy_str_next_line(gchar **buffer)
  * 2<superscript>j</superscript>, use byte swap pattern j-1.
  *
  * When @byteswap is zero, this function reduces to plain memcpy().
+ *
+ * Since: 2.1
  **/
 void
 gwy_memcpy_byte_swap(const guint8 *source,

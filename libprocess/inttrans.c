@@ -376,6 +376,8 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
  * The resolutions of @rsrc and @isrc have to be from the set
  * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
  * scaling is performed.
+ *
+ * Since: 2.1
  **/
 void
 gwy_data_line_fft_raw(GwyDataLine *rsrc,
@@ -584,6 +586,8 @@ gwy_data_field_area_2dfft(GwyDataField *rin, GwyDataField *iin,
  * The resolutions of @rin and @iin have to be from the set
  * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
  * scaling is performed.
+ *
+ * Since: 2.1
  **/
 void
 gwy_data_field_2dfft_raw(GwyDataField *rin,
@@ -1112,6 +1116,8 @@ gwy_data_field_1dfft(GwyDataField *rin, GwyDataField *iin,
  * The resolution of @rin and @iin in the transformed direction has to be from
  * the set of sizes returned by gwy_fft_find_nice_size().  No leveling,
  * windowing nor scaling is performed.
+ *
+ * Since: 2.1
  **/
 void
 gwy_data_field_1dfft_raw(GwyDataField *rin,
