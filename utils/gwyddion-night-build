@@ -88,10 +88,7 @@ function build_project() {
 function build_documentation() {
   # Note this need build_project() to pass
   cd ./devel-docs
-  make -k clean >/dev/null
-  # This is removed by maintainer-clean, but that would require to rerun all
-  # the autostuff
-  rm -fv libgwy*/*-sections.txt libgwy*/*-decl-list.txt libgwy*/template/*
+  make -k distclean >/dev/null
   make -k docs
 }
 
