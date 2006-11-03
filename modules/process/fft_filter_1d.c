@@ -299,7 +299,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
         = gwy_enum_combo_box_new(suppress_types, G_N_ELEMENTS(suppress_types),
                                  G_CALLBACK(suppress_changed_cb), &controls,
                                  args->suppress, TRUE);
-    gwy_table_attach_row(table, row, _("Suppress type:"), NULL,
+    gwy_table_attach_row(table, row, _("_Suppress type:"), NULL,
                          controls.menu_suppress);
     row++;
 
