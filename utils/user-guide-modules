@@ -22,6 +22,7 @@ ezdfile managing-files.html
 facet-level features-leveling.html
 facet_analysis features-stats.html#facet-analysis
 fft features-inttrans.html
+fft_filter_1d
 fft_filter_2d
 filter features-filters.html
 fraccor features-edit.html
@@ -50,7 +51,7 @@ laplace features-edit.html
 level features-leveling.html
 level3 features-leveling.html
 line selections.html
-linecorrect features-leveling.html
+linecorrect features-line-correction.html
 local_contrast features-filters.html
 maskcor
 maskedit presentations-masks.html

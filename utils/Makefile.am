@@ -28,7 +28,7 @@ noinst_PROGRAMS = \
 dump_modules_SOURCES = \
 	dump-modules.c
 
-dump_modules_LDADD = @GTKGLEXT_LIBS@ \
+dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 	$(libgwyapp) \
 	$(libgwymodule) \
 	$(libgwydgets) \

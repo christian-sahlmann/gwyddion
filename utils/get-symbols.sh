@@ -26,4 +26,6 @@ out=$toplevel.symbols
 test ! -e "$out"  -o -n "$force" \
   || die "Refusing to overwrite existing $out"
 
-tar -Ojxvf "$1" "$toplevel/devel-docs/libgwy*/libgwy*-sections.txt" >$out
+tar -Ojxvf "$1" "$toplevel/devel-docs/libgwy*/html/libgwy*.devhelp2" \
+  | sed -e 's/^ *<keyword /<keyword /;t;d' \
+  >$out
