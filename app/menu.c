@@ -581,7 +581,7 @@ gwy_app_process_menu_add_run_last(GtkWidget *menu)
                                           | GWY_MENU_FLAG_LAST_PROC));
     g_signal_connect_swapped(item, "activate",
                              G_CALLBACK(gwy_app_rerun_process_func),
-                             GUINT_TO_POINTER(GWY_RUN_INTERACTIVE));
+                             GUINT_TO_POINTER(GWY_RUN_IMMEDIATE));
 }
 
 static void
