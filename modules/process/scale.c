@@ -35,8 +35,12 @@ typedef struct {
     gdouble ratio;
     GwyInterpolationType interp;
     /* interface only */
+    gint org_xres;
+    gint org_yres;
+    gboolean proportional;
     gint xres;
     gint yres;
+    gdouble aspectratio;
 } ScaleArgs;
 
 typedef struct {
@@ -45,6 +49,7 @@ typedef struct {
     /* interface only */
     GtkObject *xres;
     GtkObject *yres;
+    GtkWidget *proportional;
     gboolean in_update;
 } ScaleControls;
 
@@ -52,6 +57,8 @@ static gboolean    module_register           (void);
 static void        scale                     (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    scale_dialog              (ScaleArgs *args);
+static void        proportional_changed_cb   (GtkToggleButton *check_button,
+                                              ScaleArgs *args);
 static void        scale_changed_cb          (GtkAdjustment *adj,
                                               ScaleArgs *args);
 static void        width_changed_cb          (GtkAdjustment *adj,
@@ -71,6 +78,10 @@ static const ScaleArgs scale_defaults = {
     GWY_INTERPOLATION_BILINEAR,
     0,
     0,
+    TRUE,
+    0,
+    0,
+    1.0
 };
 
 static GwyModuleInfo module_info = {
@@ -78,8 +89,8 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Scales data by arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "1.4",
+    "David Nečas (Yeti) & Petr Klapetek & Dirk Kähler",
     "2003",
 };
 
@@ -117,8 +128,13 @@ scale(GwyContainer *data, GwyRunType run)
     g_return_if_fail(dfields[0]);
 
     scale_load_args(gwy_app_settings_get(), &args);
-    args.xres = gwy_data_field_get_xres(dfields[0]);
-    args.yres = gwy_data_field_get_yres(dfields[0]);
+    args.org_xres = gwy_data_field_get_xres(dfields[0]);
+    args.org_yres = gwy_data_field_get_yres(dfields[0]);
+    args.xres = ROUND(args.ratio*args.org_xres);
+    if (args.proportional)
+        args.aspectratio = 1.0;
+    args.yres = ROUND(args.aspectratio*args.ratio*args.org_yres);
+
     if (run == GWY_RUN_INTERACTIVE) {
         ok = scale_dialog(&args);
         scale_save_args(gwy_app_settings_get(), &args);
@@ -127,19 +143,19 @@ scale(GwyContainer *data, GwyRunType run)
     }
 
     dfields[0] = gwy_data_field_new_resampled(dfields[0],
-                                              ROUND(args.ratio*args.xres),
-                                              ROUND(args.ratio*args.yres),
+                                              ROUND(args.xres),
+                                              ROUND(args.yres),
                                               args.interp);
     if (dfields[1]) {
         dfields[1] = gwy_data_field_new_resampled(dfields[1],
-                                                  ROUND(args.ratio*args.xres),
-                                                  ROUND(args.ratio*args.yres),
+                                                  ROUND(args.xres),
+                                                  ROUND(args.yres),
                                                   args.interp);
     }
     if (dfields[2]) {
         dfields[2] = gwy_data_field_new_resampled(dfields[2],
-                                                  ROUND(args.ratio*args.xres),
-                                                  ROUND(args.ratio*args.yres),
+                                                  ROUND(args.xres),
+                                                  ROUND(args.yres),
                                                   args.interp);
     }
 
@@ -180,7 +196,7 @@ scale_dialog(ScaleArgs *args)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(4, 5, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -197,6 +213,16 @@ scale_dialog(ScaleArgs *args)
     g_object_set_data(G_OBJECT(controls.ratio), "controls", &controls);
     g_signal_connect(controls.ratio, "value-changed",
                      G_CALLBACK(scale_changed_cb), args);
+
+    controls.proportional
+        = gtk_check_button_new_with_mnemonic(_("_proportional"));
+    gtk_table_attach_defaults(GTK_TABLE(table), controls.proportional,
+                              3, 4, 0, 1);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.proportional),
+                                 args->proportional);
+    g_object_set_data(G_OBJECT(controls.proportional), "controls", &controls);
+    g_signal_connect(controls.proportional, "toggled",
+                     G_CALLBACK(proportional_changed_cb), args);
 
     controls.xres = gtk_adjustment_new(args->ratio*args->xres,
                                        2, 4096, 1, 10, 0);
@@ -242,6 +268,10 @@ scale_dialog(ScaleArgs *args)
 
             case RESPONSE_RESET:
             args->ratio = scale_defaults.ratio;
+            args->xres = args->org_xres;
+            args->yres = args->org_yres;
+            args->proportional = scale_defaults.proportional;
+            args->aspectratio = scale_defaults.aspectratio;
             args->interp = scale_defaults.interp;
             scale_dialog_update(&controls, args);
             break;
@@ -259,6 +289,26 @@ scale_dialog(ScaleArgs *args)
 }
 
 static void
+proportional_changed_cb(GtkToggleButton *check_button,
+                        ScaleArgs *args)
+{
+    ScaleControls *controls;
+
+    controls = g_object_get_data(G_OBJECT(check_button), "controls");
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    args->proportional = gtk_toggle_button_get_active(check_button);
+    if (args->proportional) {
+        args->xres = ROUND(args->ratio*args->org_xres);
+        args->yres = ROUND(args->ratio*args->org_yres);
+    }
+    scale_dialog_update(controls, args);
+    controls->in_update = FALSE;
+}
+
+static void
 scale_changed_cb(GtkAdjustment *adj,
                  ScaleArgs *args)
 {
@@ -270,6 +320,9 @@ scale_changed_cb(GtkAdjustment *adj,
 
     controls->in_update = TRUE;
     args->ratio = gtk_adjustment_get_value(adj);
+    /* occurs only if args->proportional */
+    args->xres = ROUND(args->ratio*args->org_xres);
+    args->yres = ROUND(args->ratio*args->org_yres);
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -285,7 +338,12 @@ width_changed_cb(GtkAdjustment *adj,
         return;
 
     controls->in_update = TRUE;
-    args->ratio = gtk_adjustment_get_value(adj)/args->xres;
+
+    args->xres = gtk_adjustment_get_value(adj);
+    if (args->proportional) {
+        args->ratio = (gdouble)args->xres/args->org_xres;
+        args->yres = ROUND(args->ratio*args->org_yres);
+    }
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -301,7 +359,11 @@ height_changed_cb(GtkAdjustment *adj,
         return;
 
     controls->in_update = TRUE;
-    args->ratio = gtk_adjustment_get_value(adj)/args->yres;
+    args->yres = gtk_adjustment_get_value(adj);
+    if (args->proportional) {
+        args->ratio = (gdouble)args->yres/args->org_yres;
+        args->xres = ROUND(args->ratio*args->org_xres);
+    }
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -310,25 +372,37 @@ static void
 scale_dialog_update(ScaleControls *controls,
                     ScaleArgs *args)
 {
+    args->aspectratio = (gdouble)args->yres/args->org_yres
+                        *(gdouble)args->org_xres/args->xres;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xres),
+                             ROUND(args->xres));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres),
+                             ROUND(args->yres));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ratio),
                              args->ratio);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xres),
-                             args->ratio*args->xres);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres),
-                             args->ratio*args->yres);
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->proportional),
+                                 args->proportional);
+    /* deactivate Ratio */
+    gwy_table_hscale_set_sensitive(controls->ratio,args->proportional);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
 }
 
-static const gchar ratio_key[]  = "/module/scale/ratio";
-static const gchar interp_key[] = "/module/scale/interp";
+static const gchar ratio_key[]        = "/module/scale/ratio";
+static const gchar interp_key[]       = "/module/scale/interp";
+static const gchar proportional_key[] = "/module/scale/proportional";
+static const gchar aspectratio_key[]  = "/module/scale/aspectratio";
 
 static void
 scale_sanitize_args(ScaleArgs *args)
 {
-    args->ratio = CLAMP(args->ratio, 0.01, 100.0);
+    args->ratio = CLAMP(args->ratio, 0.001, 100.0);
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->proportional = !!args->proportional;
+    if (args->aspectratio <= 0.0)
+        args->aspectratio = 1.0;
 }
 
 static void
@@ -339,6 +413,10 @@ scale_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, ratio_key, &args->ratio);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_enum_by_name(container, proportional_key,
+                                   &args->proportional);
+    gwy_container_gis_double_by_name(container, aspectratio_key,
+                                     &args->aspectratio);
     scale_sanitize_args(args);
 }
 
@@ -346,8 +424,12 @@ static void
 scale_save_args(GwyContainer *container,
                 ScaleArgs *args)
 {
+    gwy_container_set_enum_by_name(container, proportional_key,
+                                   args->proportional);
     gwy_container_set_double_by_name(container, ratio_key, args->ratio);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_double_by_name(container, aspectratio_key,
+                                     args->aspectratio);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
