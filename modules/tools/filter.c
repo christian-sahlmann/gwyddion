@@ -72,21 +72,22 @@ struct _GwyToolFilterClass {
 
 static gboolean module_register(void);
 
-static GType  gwy_tool_filter_get_type            (void) G_GNUC_CONST;
-static void   gwy_tool_filter_finalize         (GObject *object);
-static void   gwy_tool_filter_init_dialog      (GwyToolFilter *tool);
-static void   gwy_tool_filter_data_switched    (GwyTool *gwytool,
-                                                GwyDataView *data_view);
-static void   gwy_tool_filter_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_filter_response         (GwyTool *tool,
-                                                gint response_id);
-static void   gwy_tool_filter_selection_changed(GwyPlainTool *plain_tool,
-                                                gint hint);
-static void   gwy_tool_filter_size_changed     (GwyToolFilter *tool,
-                                                GtkAdjustment *adj);
-static void   gwy_tool_filter_type_changed     (GtkComboBox *combo,
-                                                GwyToolFilter *tool);
-static void   gwy_tool_filter_apply            (GwyToolFilter *tool);
+static GType    gwy_tool_filter_get_type         (void) G_GNUC_CONST;
+static void     gwy_tool_filter_finalize         (GObject *object);
+static void     gwy_tool_filter_init_dialog      (GwyToolFilter *tool);
+static void     gwy_tool_filter_data_switched    (GwyTool *gwytool,
+                                                  GwyDataView *data_view);
+static void     gwy_tool_filter_data_changed     (GwyPlainTool *plain_tool);
+static void     gwy_tool_filter_response         (GwyTool *tool,
+                                                  gint response_id);
+static void     gwy_tool_filter_selection_changed(GwyPlainTool *plain_tool,
+                                                  gint hint);
+static void     gwy_tool_filter_size_changed     (GwyToolFilter *tool,
+                                                  GtkAdjustment *adj);
+static void     gwy_tool_filter_type_changed     (GtkComboBox *combo,
+                                                  GwyToolFilter *tool);
+static gboolean gwy_tool_filter_is_sized         (GwyFilterType type);
+static void     gwy_tool_filter_apply            (GwyToolFilter *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -247,7 +248,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
     gwy_table_attach_hscale(GTK_WIDGET(table), row, _("Si_ze:"), "px",
                             tool->size, 0);
     gwy_table_hscale_set_sensitive
-                  (tool->size, tool->args.filter_type != GWY_FILTER_KUWAHARA);
+                 (tool->size, gwy_tool_filter_is_sized(tool->args.filter_type));
     g_signal_connect_swapped(tool->size, "value-changed",
                              G_CALLBACK(gwy_tool_filter_size_changed), tool);
     row++;
@@ -343,10 +344,17 @@ gwy_tool_filter_type_changed(GtkComboBox *combo,
     gboolean sensitive;
 
     tool->args.filter_type = gwy_enum_combo_box_get_active(combo);
-    sensitive = tool->args.filter_type != GWY_FILTER_KUWAHARA;
+    sensitive = gwy_tool_filter_is_sized(tool->args.filter_type);
     gwy_table_hscale_set_sensitive(tool->size, sensitive);
 }
 
+static gboolean
+gwy_tool_filter_is_sized(GwyFilterType type)
+{
+    return (type != GWY_FILTER_KUWAHARA && type != GWY_FILTER_DECHECKER);
+}
+
+/* FIXME: move somehwere... */
 static void
 gwy_data_field_area_filter_dechecker(GwyDataField *data_field,
                                      gint col, gint row,
