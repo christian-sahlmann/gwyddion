@@ -8,8 +8,8 @@ Petr Klapetek <klapetek@gwyddion.net>
     SPM expertise, 1D and 2D data processing, graphs, most of nontrivial
     tools and data filters, user guide.
 Christopher Anderson <sidewinder.asu@gmail.com>
-    2D FFT filtering, MI file import, GwyCurve, Gradient editor, docs,
-    miscellaneous.
+    2D FFT filtering, MI file import, GwyCurve, Gradient editor, user
+    interface improvements, docs, miscellaneous.
 
 
 === Developers ===
@@ -31,6 +31,10 @@ Jan Hořák <xhorak@gmail.com>
     Nanotop import module.
 Owain Davies <owain.davies@blueyonder.co.uk>
     Win32 maintenance.
+Rolf Würdemann <rowue@digitalis.org>
+    OS X porting, Shader mixer.
+Dirk Kähler <dirk.kaehler@isit.fraunhofer.de>
+    Scale improvements.
 
 
 === Translators ===

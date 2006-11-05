@@ -2,8 +2,8 @@
 # @(#) $Id$
 disabled=
 pkgname=gwyddion
-basever=2.0
-dont_update_version=
+basever=2.1
+dont_update_version=wedontneednostinkingversionupdates
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 docdir=$HOME/Projects/Gwyddion/devel-docs
@@ -88,7 +88,7 @@ function build_project() {
 function build_documentation() {
   # Note this need build_project() to pass
   cd ./devel-docs
-  make -k distclean >/dev/null
+  make -k clean >/dev/null
   make -k docs
 }
 

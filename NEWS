@@ -1,4 +1,3 @@
-2.0.20061102
 
 2.1 (0000-00-00)
 Application:
@@ -8,6 +7,7 @@ Application:
 Libraries:
 - libgwyapp: File type selection user interface was improved, filtering by
   file type is possible.
+- libgwyapp: Repeat Last menu item behaving identically to Re-Show was fixed.
 - libgwydgets: Value formatting in graph distance measure window was
   improved.
 - libgwydgets: Graph area problems (broken selection, zoom) on Gtk+ 2.6 was
@@ -15,16 +15,24 @@ Libraries:
 - libgwydgets: gwy_graph_model_remove_curve_by_description() disconnecting
   wrong signal handlers was fixed.
 - libgwydgets: Graph selections have per-class headers, gwygraphselections.h
-  includes them all.
+  includes them all.  They also have standard gwy_selection_graph_foo_new()
+  constructors now.
 - libgwyapp: File name in data browser is properly updated when a file is
   saved under a different name.
 - libprocess: Correlation iterators sometimes reporting progress (slightly)
   higher than 1.0 were fixed.
-- libprocess: A set of raw FFT functions, that however still use the current
-  FFT backend, was added.
+- libprocess: A set of raw FFT functions, that however still abstract the FFT
+  backend, was added.
 - libprocess: gwy_data_line_new_resampled(), similar to
   gwy_data_field_new_resampled() was added.
 - libprocess: gwy_data_field_fft_filter_1d() actually works.
+- libgwydgets: A convenience function to pack a radio button group to a table
+  was added.
+- libgwyddion: Function gwy_memcpy_byte_swap() to copy memory swapping bytes
+  along according to given pattern was added.
+- libgwymodule: It is possible to get the score corresponding to the detected
+  file type with gwy_file_detect_with_score().
+- libprocess: Functions to get median of data lines added.
 
 Modules:
 - PSIA (new): Imports PSIA data files.
@@ -49,6 +57,10 @@ Modules:
   fixed.
 - 2D FFT filter: Was fixed for non-nice data field sizes, displays resampling
   information in the dialog.
+- Scale: It is possible to scale width and height differently.
+- Filters: New Dechecker filter for checker pattern removal.
+- Nanoscope: Tries harder to import something from files with strange
+  dimensions.
 
 Other:
 - Missing file utils/genmarshal.mk was added to distribution.
@@ -57,6 +69,7 @@ Other:
   API documentation is present in the source tarball as usual).
 - Building and portability problems were fixed (mainly on non-GNU/Linux and
   from Subversion checkout).
+- Module tutorial was brought up to date and expanded.
 
 
 2.0 (2006-09-30)
