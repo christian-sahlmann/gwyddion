@@ -659,6 +659,14 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
+/**
+ * gwy_data_field_convolve:
+ * @data_field: A data field to convolve.  It must be larger than @kernel_field
+ *              (or at least of the same size).
+ * @kernel_field: Kenrel field to convolve @data_field with.
+ *
+ * Convolves a data field with given kernel.
+ **/
 void
 gwy_data_field_convolve(GwyDataField *data_field,
                         GwyDataField *kernel_field)
@@ -670,7 +678,7 @@ gwy_data_field_convolve(GwyDataField *data_field,
 
 /**
  * gwy_data_field_area_filter_mean:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @size: Averaged area size.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
@@ -694,7 +702,7 @@ gwy_data_field_area_filter_mean(GwyDataField *data_field,
 
 /**
  * gwy_data_field_filter_mean:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @size: Averaged area size.
  *
  * Filters a data field with mean filter of size @size.
@@ -788,7 +796,7 @@ gwy_data_field_filter_rms(GwyDataField *data_field,
 
 /**
  * gwy_data_field_filter_canny:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @threshold: Slope detection threshold (range 0..1).
  *
  * Filters a rectangular part of a data field with canny edge detector filter.
@@ -867,7 +875,7 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
 
  /**
  * gwy_data_field_area_filter_laplacian:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -894,6 +902,12 @@ gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
     g_object_unref(kernel);
 }
 
+/**
+ * gwy_data_field_filter_laplacian:
+ * @data_field: A data field to apply the filter to.
+ *
+ * Filters a data field with Laplacian filter.
+ **/
 void
 gwy_data_field_filter_laplacian(GwyDataField *data_field)
 {
@@ -904,14 +918,14 @@ gwy_data_field_filter_laplacian(GwyDataField *data_field)
 
 /**
  * gwy_data_field_area_filter_sobel:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @orientation: Filter orientation.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Filters a rectangular part of a data field with Laplacian filter.
+ * Filters a rectangular part of a data field with Sobel filter.
  **/
 void
 gwy_data_field_area_filter_sobel(GwyDataField *data_field,
@@ -943,6 +957,13 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
     g_object_unref(kernel);
 }
 
+/**
+ * gwy_data_field_filter_sobel:
+ * @data_field: A data field to apply the filter to.
+ * @orientation: Filter orientation.
+ *
+ * Filters a data field with Sobel filter.
+ **/
 void
 gwy_data_field_filter_sobel(GwyDataField *data_field,
                             GwyOrientation orientation)
@@ -955,7 +976,7 @@ gwy_data_field_filter_sobel(GwyDataField *data_field,
 
 /**
  * gwy_data_field_area_filter_prewitt:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @orientation: Filter orientation.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
@@ -994,6 +1015,13 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
     g_object_unref(kernel);
 }
 
+/**
+ * gwy_data_field_filter_prewitt:
+ * @data_field: A data field to apply the filter to.
+ * @orientation: Filter orientation.
+ *
+ * Filters a data field with Prewitt filter.
+ **/
 void
 gwy_data_field_filter_prewitt(GwyDataField *data_field,
                               GwyOrientation orientation)
@@ -1001,6 +1029,57 @@ gwy_data_field_filter_prewitt(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_filter_prewitt(data_field, orientation, 0, 0,
                                        data_field->xres, data_field->yres);
+}
+
+/**
+ * gwy_data_field_area_filter_dechecker:
+ * @data_field: A data field to apply the filter to.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with 5x5 checker pattern removal
+ * filter.
+ *
+ * Since: 2.1
+ **/
+void
+gwy_data_field_area_filter_dechecker(GwyDataField *data_field,
+                                     gint col, gint row,
+                                     gint width, gint height)
+{
+    enum { size = 5 };
+    static const gdouble checker[size*size] = {
+         0.0,        1.0/144.0, -1.0/72.0,  1.0/144.0,  0.0,
+         1.0/144.0, -1.0/18.0,   1.0/9.0,  -1.0/18.0,   1.0/144.0,
+        -1.0/72.0,   1.0/9.0,    7.0/9.0,   1.0/9.0,   -1.0/72.0,
+         1.0/144.0, -1.0/18.0,   1.0/9.0,  -1.0/18.0,   1.0/144.0,
+         0.0,        1.0/144.0, -1.0/72.0,  1.0/144.0,  0.0,
+    };
+    GwyDataField *kernel;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    kernel = gwy_data_field_new(size, size, 1.0, 1.0, FALSE);
+    memcpy(kernel->data, checker, sizeof(checker));
+    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    g_object_unref(kernel);
+}
+
+/**
+ * gwy_data_field_filter_dechecker:
+ * @data_field: A data field to apply the filter to.
+ *
+ * Filters a data field with 5x5 checker pattern removal filter.
+ *
+ * Since: 2.1
+ **/
+void
+gwy_data_field_filter_dechecker(GwyDataField *data_field)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_dechecker(data_field, 0, 0,
+                                         data_field->xres, data_field->yres);
 }
 
 /**
@@ -1059,8 +1138,8 @@ gwy_data_field_area_fix_3x3_filter_edges(GwyDataField *data_field,
 
 /**
  * gwy_data_field_area_filter_median:
- * @data_field: A data field to apply mean filter to.
- * @size: Averaged area size.
+ * @data_field: A data field to apply the filter to.
+ * @size: Size of area to take median of.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -1116,6 +1195,13 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
+/**
+ * gwy_data_field_filter_median:
+ * @data_field: A data field to apply the filter to.
+ * @size: Size of area to take median of.
+ *
+ * Filters a data field with median filter.
+ **/
 void
 gwy_data_field_filter_median(GwyDataField *data_field,
                              gint size)
@@ -1127,7 +1213,7 @@ gwy_data_field_filter_median(GwyDataField *data_field,
 
 /**
  * gwy_data_field_area_filter_conservative:
- * @data_field: A data field to apply mean filter to.
+ * @data_field: A data field to apply the filter to.
  * @size: Filtered area size.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
@@ -1204,6 +1290,13 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
+/**
+ * gwy_data_field_filter_conservative:
+ * @data_field: A data field to apply the filter to.
+ * @size: Filtered area size.
+ *
+ * Filters a data field with conservative denoise filter.
+ **/
 void
 gwy_data_field_filter_conservative(GwyDataField *data_field,
                                    gint size)
@@ -1372,6 +1465,8 @@ thin_data_field(GwyDataField *data_field)
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with minimum filter.
+ *
+ * This operation is often called erosion filter.
  **/
 void
 gwy_data_field_area_filter_minimum(GwyDataField *data_field,
@@ -1518,6 +1613,8 @@ gwy_data_field_filter_minimum(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with maximum filter.
+ *
+ * This operation is often called dilation filter.
  **/
 void
 gwy_data_field_area_filter_maximum(GwyDataField *data_field,
@@ -1894,7 +1991,6 @@ gwy_data_field_filter_harris(GwyDataField *x_gradient,
     g_object_unref(xy);
     g_object_unref(yy);
 }
-
 
 /************************** Documentation ****************************/
 

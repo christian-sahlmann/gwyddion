@@ -115,6 +115,10 @@ void gwy_data_field_area_filter_prewitt        (GwyDataField *data_field,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_area_filter_dechecker      (GwyDataField *data_field,
+                                                gint col, gint row,
+                                                gint width, gint height);
+void gwy_data_field_filter_dechecker           (GwyDataField *data_field);
 void gwy_data_field_filter_minimum             (GwyDataField *data_field,
                                                 gint size);
 void gwy_data_field_area_filter_minimum        (GwyDataField *data_field,

@@ -354,33 +354,6 @@ gwy_tool_filter_is_sized(GwyFilterType type)
     return (type != GWY_FILTER_KUWAHARA && type != GWY_FILTER_DECHECKER);
 }
 
-/* FIXME: move somehwere... */
-static void
-gwy_data_field_area_filter_dechecker(GwyDataField *data_field,
-                                     gint col, gint row,
-                                     gint width, gint height)
-{
-    enum { size = 5 };
-    static const gdouble checker[size*size] = {
-         0.0,      -1.0/32.0, 1.0/16.0, -1.0/32.0, 0.0,
-        -1.0/32.0,  1.0/4.0, -1.0/2.0,   1.0/4.0, -1.0/32.0,
-         1.0/16.0, -1.0/2.0,  1.0,      -1.0/2.0,  1.0/16.0,
-        -1.0/32.0,  1.0/4.0, -1.0/2.0,   1.0/4.0, -1.0/32.0,
-         0.0,      -1.0/32.0, 1.0/16.0, -1.0/32.0, 0.0,
-    };
-    GwyDataField *kernel;
-
-    if (width < size || height < size)
-        return;
-
-    kernel = gwy_data_field_new(size, size, 1.0, 1.0, FALSE);
-    memcpy(kernel->data, checker, sizeof(checker));
-    gwy_data_field_multiply(kernel, -0.222);
-    kernel->data[(size/2)*size + (size/2)] += 1.0;
-    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
-    g_object_unref(kernel);
-}
-
 static void
 gwy_tool_filter_apply(GwyToolFilter *tool)
 {
