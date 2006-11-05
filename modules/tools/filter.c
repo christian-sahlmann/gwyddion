@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
@@ -39,7 +40,8 @@ typedef enum {
     GWY_FILTER_CONSERVATIVE  = 2,
     GWY_FILTER_MINIMUM       = 3,
     GWY_FILTER_MAXIMUM       = 4,
-    GWY_FILTER_KUWAHARA      = 5
+    GWY_FILTER_KUWAHARA      = 5,
+    GWY_FILTER_DECHECKER     = 6
 } GwyFilterType;
 
 typedef struct _GwyToolFilter      GwyToolFilter;
@@ -92,7 +94,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -202,6 +204,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
         { N_("Minimum"),              GWY_FILTER_MINIMUM,      },
         { N_("Maximum"),              GWY_FILTER_MAXIMUM,      },
         { N_("Kuwahara"),             GWY_FILTER_KUWAHARA,     },
+        { N_("Dechecker"),            GWY_FILTER_DECHECKER,    },
     };
     GtkDialog *dialog;
     GtkTable *table;
@@ -345,6 +348,32 @@ gwy_tool_filter_type_changed(GtkComboBox *combo,
 }
 
 static void
+gwy_data_field_area_filter_dechecker(GwyDataField *data_field,
+                                     gint col, gint row,
+                                     gint width, gint height)
+{
+    enum { size = 5 };
+    static const gdouble checker[size*size] = {
+         0.0,      -1.0/32.0, 1.0/16.0, -1.0/32.0, 0.0,
+        -1.0/32.0,  1.0/4.0, -1.0/2.0,   1.0/4.0, -1.0/32.0,
+         1.0/16.0, -1.0/2.0,  1.0,      -1.0/2.0,  1.0/16.0,
+        -1.0/32.0,  1.0/4.0, -1.0/2.0,   1.0/4.0, -1.0/32.0,
+         0.0,      -1.0/32.0, 1.0/16.0, -1.0/32.0, 0.0,
+    };
+    GwyDataField *kernel;
+
+    if (width < size || height < size)
+        return;
+
+    kernel = gwy_data_field_new(size, size, 1.0, 1.0, FALSE);
+    memcpy(kernel->data, checker, sizeof(checker));
+    gwy_data_field_multiply(kernel, -0.245);
+    kernel->data[(size/2)*size + (size/2)] += 1.0;
+    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    g_object_unref(kernel);
+}
+
+static void
 gwy_tool_filter_apply(GwyToolFilter *tool)
 {
     GwyPlainTool *plain_tool;
@@ -416,6 +445,12 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
         gwy_data_field_area_filter_kuwahara(plain_tool->data_field,
                                             isel[0], isel[1],
                                             isel[2], isel[3]);
+        break;
+
+        case GWY_FILTER_DECHECKER:
+        gwy_data_field_area_filter_dechecker(plain_tool->data_field,
+                                             isel[0], isel[1],
+                                             isel[2], isel[3]);
         break;
 
         default:
