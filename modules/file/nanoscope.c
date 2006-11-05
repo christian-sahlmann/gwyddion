@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Veeco (Digital Instruments) Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -396,6 +396,7 @@ hash_to_data_field(GHashTable *hash,
     gint xres, yres, bpp, offset, size, power10;
     gdouble xreal, yreal, q;
     gdouble *data;
+    gboolean size_ok, use_global;
 
     if (!require_keys(hash, error, "Samps/line", "Number of lines",
                       "Scan size", "Data offset", "Data length", NULL))
@@ -447,8 +448,36 @@ hash_to_data_field(GHashTable *hash,
 
         val = g_hash_table_lookup(hash, "Data length");
         size = ROUND(val->hard_value);
-        if (size != bpp*xres*yres) {
-            /* Keep square pixels */
+
+        size_ok = FALSE;
+        use_global = FALSE;
+
+        /* Try channel size and local size */
+        if (!size_ok && size == bpp*xres*yres)
+            size_ok = TRUE;
+
+        if (!size_ok && size == bpp*gxres*gyres) {
+            size_ok = TRUE;
+            use_global = TRUE;
+        }
+
+        /* If they don't match exactly, try whether they at least fit inside */
+        if (!size_ok && size > bpp*MAX(xres*yres, gxres*gyres)) {
+            size_ok = TRUE;
+            use_global = (xres*yres < gxres*gyres);
+        }
+
+        if (!size_ok && size > bpp*MIN(xres*yres, gxres*gyres)) {
+            size_ok = TRUE;
+            use_global = (xres*yres > gxres*gyres);
+        }
+
+        if (!size_ok) {
+            err_SIZE_MISMATCH(error, size, bpp*xres*yres);
+            return NULL;
+        }
+
+        if (use_global) {
             if (gxres) {
                 xreal *= (gdouble)gxres/xres;
                 xres = gxres;
@@ -456,10 +485,6 @@ hash_to_data_field(GHashTable *hash,
             if (gyres) {
                 yreal *= (gdouble)gyres/yres;
                 yres = gyres;
-            }
-            if (size != bpp*xres*yres) {
-                err_SIZE_MISMATCH(error, size, bpp*xres*yres);
-                return NULL;
             }
         }
 
