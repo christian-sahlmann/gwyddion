@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2006-11-03 10:49+0100\n"
+"POT-Creation-Date: 2006-11-05 19:02+0100\n"
 "PO-Revision-Date: 2006-11-04 13:54+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -342,7 +342,7 @@ msgstr "_Svisle:"
 msgid "Scale size _automatically"
 msgstr "_Automaticky uprav velikost"
 
-#: libgwydgets/gwy3dwindow.c:990 modules/tools/filter.c:244
+#: libgwydgets/gwy3dwindow.c:990 modules/tools/filter.c:247
 msgid "Si_ze:"
 msgstr "Veli_kost:"
 
@@ -370,7 +370,7 @@ msgstr "pixelů"
 #: modules/process/hough.c:175 modules/process/level.c:258
 #: modules/process/local_contrast.c:126 modules/process/median-bg.c:176
 #: modules/process/polylevel.c:307 modules/process/rotate.c:252
-#: modules/process/scale.c:176 modules/process/scars.c:461
+#: modules/process/scale.c:192 modules/process/scars.c:461
 #: modules/process/shade.c:213 modules/process/slope_dist.c:187
 #: modules/process/sphere-revolve.c:215 modules/process/tip_model.c:167
 #: modules/process/unrotate.c:225
@@ -1550,20 +1550,20 @@ msgstr "Nanoscope soubory"
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Soubor není typu Nanoscope nebo je to neznámý podtyp."
 
-#: modules/file/nanoscope.c:418 modules/file/nanoscope.c:434
+#: modules/file/nanoscope.c:419 modules/file/nanoscope.c:435
 msgid "Cannot parse `Scan size' field."
 msgstr "Nedaří se analyzovat položku „Scan size“."
 
-#: modules/file/nanoscope.c:614
+#: modules/file/nanoscope.c:639
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Po datovém vzorku č. %d následují nesmysly."
 
-#: modules/file/nanoscope.c:692
+#: modules/file/nanoscope.c:717
 msgid "Truncated header line."
 msgstr "Předčasně ukončený řádek hlavičky."
 
-#: modules/file/nanoscope.c:702 modules/file/omicron.c:234
+#: modules/file/nanoscope.c:727 modules/file/omicron.c:234
 msgid "Missing colon in header line."
 msgstr "V řádku hlavičky schází dvojtečka."
 
@@ -3239,7 +3239,7 @@ msgstr "Zachovat velikost (neškálovat na mocninu 2)"
 #: modules/process/dwtanisotropy.c:200 modules/process/dwtdenoise.c:205
 #: modules/process/fft.c:324 modules/process/fft_filter_1d.c:319
 #: modules/process/fractal.c:227 modules/process/nanoindent_adjust.c:228
-#: modules/process/rotate.c:281 modules/process/scale.c:221
+#: modules/process/rotate.c:281 modules/process/scale.c:247
 #: modules/process/unrotate.c:281 modules/tools/profile.c:380
 #: modules/tools/sfunctions.c:384
 msgid "_Interpolation type:"
@@ -5143,35 +5143,39 @@ msgstr "Otočit o ú_hel:"
 msgid "E_xpand result to fit complete data"
 msgstr "_Rozšířit výsledek, aby se vešla celá data"
 
-#: modules/process/scale.c:79
+#: modules/process/scale.c:90
 msgid "Scales data by arbitrary factor."
 msgstr "Škáluje data o libovolný faktor."
 
-#: modules/process/scale.c:93
+#: modules/process/scale.c:104
 msgid "/_Basic Operations/Scale..."
 msgstr "/_Jednoduché operace/Změna velikosti..."
 
-#: modules/process/scale.c:97
+#: modules/process/scale.c:108
 msgid "Scale data"
 msgstr "Zvětšení/zmenšení dat"
 
-#: modules/process/scale.c:164
+#: modules/process/scale.c:180
 msgid "Scaled Data"
 msgstr "Škálovaná data"
 
-#: modules/process/scale.c:175
+#: modules/process/scale.c:191
 msgid "Scale"
 msgstr "Změnit velikost"
 
-#: modules/process/scale.c:194
+#: modules/process/scale.c:210
 msgid "Scale by _ratio:"
 msgstr "Zvětšit/zmenšit v _poměru:"
 
-#: modules/process/scale.c:203
+#: modules/process/scale.c:218
+msgid "_proportional"
+msgstr ""
+
+#: modules/process/scale.c:229
 msgid "New _width:"
 msgstr "Nová šířk_a:"
 
-#: modules/process/scale.c:211
+#: modules/process/scale.c:237
 msgid "New _height:"
 msgstr "Nová _výška:"
 
@@ -5549,7 +5553,7 @@ msgstr "Vzdálenosti"
 msgid "Measure distances and directions between points"
 msgstr "Měření vzdáleností a směrů mezi body"
 
-#: modules/tools/filter.c:92
+#: modules/tools/filter.c:94
 msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
@@ -5557,39 +5561,43 @@ msgstr ""
 "Nástroj filtr, zpracovává vybranou část dat filtrem (konzervativní odšumění, "
 "střední hodnota, medián, Kuwahara, minimum, maximum)."
 
-#: modules/tools/filter.c:130 modules/tools/filter.c:229
+#: modules/tools/filter.c:132 modules/tools/filter.c:232
 msgid "Filter"
 msgstr "Filtr"
 
-#: modules/tools/filter.c:131
+#: modules/tools/filter.c:133
 msgid "Basic filters: mean, median, denoise, …"
 msgstr "Základní filtry: střední hodnota, medián, odšumování, …"
 
-#: modules/tools/filter.c:199
+#: modules/tools/filter.c:201
 msgid "Mean value"
 msgstr "Střední hodnota"
 
-#: modules/tools/filter.c:200
+#: modules/tools/filter.c:202
 msgid "Median value"
 msgstr "Medián"
 
-#: modules/tools/filter.c:201
+#: modules/tools/filter.c:203
 msgid "Conservative denoise"
 msgstr "Konzervativní odšumění"
 
-#: modules/tools/filter.c:202 modules/tools/stats.c:261
+#: modules/tools/filter.c:204 modules/tools/stats.c:261
 msgid "Minimum"
 msgstr "Minimum"
 
-#: modules/tools/filter.c:203 modules/tools/stats.c:262
+#: modules/tools/filter.c:205 modules/tools/stats.c:262
 msgid "Maximum"
 msgstr "Maximum"
 
-#: modules/tools/filter.c:204
+#: modules/tools/filter.c:206
 msgid "Kuwahara"
 msgstr "Kuwahara"
 
-#: modules/tools/filter.c:239 modules/tools/polynom.c:242
+#: modules/tools/filter.c:207
+msgid "Dechecker"
+msgstr ""
+
+#: modules/tools/filter.c:242 modules/tools/polynom.c:242
 msgid "_Type:"
 msgstr "_Typ:"
 
@@ -6062,4 +6070,3 @@ msgid ""
 "Inclination theta: %s\n"
 "Inclination phi:   %s\n"
 msgstr ""
-
