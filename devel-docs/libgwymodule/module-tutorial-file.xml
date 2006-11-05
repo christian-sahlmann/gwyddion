@@ -426,11 +426,11 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       keeping the data part mapped read-only.
     </para>
     <informalexample><programlisting><![CDATA[
-    if (size <= HEADER_SIZE) {
-        err_TOO_SHORT(error);
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
+if (size <= HEADER_SIZE) {
+    err_TOO_SHORT(error);
+    gwy_file_abandon_contents(buffer, size, NULL);
+    return NULL;
+}
 ]]></programlisting></informalexample>
     <para>
       The header is parsed using the
@@ -438,12 +438,12 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       binary buffer reading functions.
     </para>
     <informalexample><programlisting><![CDATA[
-    p = buffer + MAGIC_SIZE;
-    simple.xres = get_WORD_LE(&p);
-    simple.yres = get_WORD_LE(&p);
-    simple.measure = get_FLOAT_LE(&p);
-    simple.z0 = get_FLOAT_LE(&p);
-    simple.gain = get_FLOAT_LE(&p);
+p = buffer + MAGIC_SIZE;
+simple.xres = get_WORD_LE(&p);
+simple.yres = get_WORD_LE(&p);
+simple.measure = get_FLOAT_LE(&p);
+simple.z0 = get_FLOAT_LE(&p);
+simple.gain = get_FLOAT_LE(&p);
 ]]></programlisting></informalexample>
     <para>
       Then we can create the data field and read the data into it.  Since
@@ -457,41 +457,41 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       GUINT16_FROM_LE().
     </para>
     <informalexample><programlisting><![CDATA[
-    simple.measure *= 1e-9;
-    simple.z0 *= 1e-9;
-    simple.gain *= 1e-9;
-    dfield = gwy_data_field_new(simple.xres, simple.yres,
-                                simple.xres*simple.measure,
-                                simple.yres*simple.measure,
-                                FALSE);
-    data = gwy_data_field_get_data(dfield);
-    rawdata = (const guint16*)p;
-    for (i = 0; i < simple.xres*simple.yres; i++)
-        data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
+simple.measure *= 1e-9;
+simple.z0 *= 1e-9;
+simple.gain *= 1e-9;
+dfield = gwy_data_field_new(simple.xres, simple.yres,
+                            simple.xres*simple.measure,
+                            simple.yres*simple.measure,
+                            FALSE);
+data = gwy_data_field_get_data(dfield);
+rawdata = (const guint16*)p;
+for (i = 0; i < simple.xres*simple.yres; i++)
+    data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
 ]]></programlisting></informalexample>
     <para>
       We have to set also the lateral and value units of the created data
       field (by default, the dimensions and values are unitless).
     </para>
     <informalexample><programlisting><![CDATA[
-    unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, unit);
-    g_object_unref(unit);
+unit = gwy_si_unit_new("m");
+gwy_data_field_set_si_unit_xy(dfield, unit);
+g_object_unref(unit);
 
-    unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_z(dfield, unit);
-    g_object_unref(unit);
+unit = gwy_si_unit_new("m");
+gwy_data_field_set_si_unit_z(dfield, unit);
+g_object_unref(unit);
 ]]></programlisting></informalexample>
     <para>
       Our sample file format can only store topography channels, therefore
       the units are always meters.  For different types of channels the units
       have to be set accordingly.  Note that
     <informalexample><programlisting><![CDATA[
-    unit = gwy_si_unit_new("nA");
+unit = gwy_si_unit_new("nA");
 ]]></programlisting></informalexample>
       is exactly the same as
     <informalexample><programlisting><![CDATA[
-    unit = gwy_si_unit_new("A");
+unit = gwy_si_unit_new("A");
 ]]></programlisting></informalexample>
       In other words, the prefixes are ignored because #GwySIUnit represents
       the unit type and contains no magnitude information.  However, if the
@@ -500,33 +500,61 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       subsequently multiply data field values with the correct multiplier).
     </para>
     <informalexample><programlisting><![CDATA[
-    unit = gwy_si_unit_new_parse("nA", &power10);
+unit = gwy_si_unit_new_parse("nA", &power10);
 ]]></programlisting></informalexample>
     <para>
-      Finally we create a new #GwyContainer, put the data field under
+      Finally we create a new #GwyContainer, put the data field at
       <literal>"/0/data"</literal> and set the channel title
-      <literal>"/0/data/title"</literal>, and return the container.  The
-      application then takes care of adding it to the data browser and
-      showing it in a data window.
+      <literal>"/0/data/title"</literal> (if the file contains explicit
+      channel names, they are good candidates for a channel title, otherwise
+      we settle for channel type as Topography or Current), and return the
+      container.  The application then takes care of adding it to the data
+      browser and showing it in a data window.
     </para>
     <informalexample><programlisting>
-    container = gwy_container_new<!--x-->();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strdup("Topography"));
+container = gwy_container_new<!--x-->();
+gwy_container_set_object_by_name(container, "/0/data", dfield);
+gwy_container_set_string_by_name(container, "/0/data/title",
+                                 g_strdup("Topography"));
 
-    g_object_unref(dfield);
+g_object_unref(dfield);
 
-    gwy_file_abandon_contents(buffer, size, NULL);
+gwy_file_abandon_contents(buffer, size, NULL);
 
-    return container;
-</programlisting></informalexample>
+return container;
+  </programlisting></informalexample>
   </refsect1>
 
   <refsect1>
     <title>Loading More</title>
     <para>
+      Real file formats often contain more information we would like to
+      import.  First, they can contain several data fields (channels or even
+      unrelated images).  We store the second data at
+      <literal>"/1/data"</literal> and its title at
+      <literal>"/1/data/title"</literal>, the third channel data at
+      <literal>"/2/data"</literal>, etc.  The number sequence does not have
+      to be contignuous but it is customary to make it so (in any case
+      small integers should be used, do not start counting from 12758933).
     </para>
+    <para>
+      Auxiliary information about the data as date and time of scanning, scan
+      speed, tunneling current, tip oscillation frequency or user-defined
+      comments can be stored to metadata.  Metadata is a nested #GwyContainer
+      at <literal>"/0/meta"</literal> (for the first channel, the number of
+      course corresponds to channel id).  The keys are simply names of the
+      values, the values are always strings.  Note both keys and values have
+      to be converted to UTF-8.
+    </para>
+    <informalexample><programlisting>
+meta = gwy_container_new<!--x-->();
+gwy_container_set_string_by_name(meta, "Comment",
+                                 g_strdup(myfile-&gt;user_comment));
+gwy_container_set_string_by_name(meta, "Tip oscillation frequency",
+                                 g_strdup_printf("&percnt;g Hz", myfile-&gt;freq));
+gwy_container_set_object_by_name(container, "/0/meta", meta);
+g_object_unref(meta);
+    </programlisting></informalexample>
   </refsect1>
 
   <refsect1 id="module-tutorial-file-portability">
@@ -550,7 +578,7 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
         The text representation of <emphasis>real numbers</emphasis> is
         locale-dependent.  User's locale is unpredictable and a module must not
         set locale to arbitrary values because it would affect the rest of the
-        application.  Therefore one has to use functions like g_ascii_strtod()
+        application.  Therefore one has to use functions as g_ascii_strtod()
         to read real numbers portably.
       </para>
       <para>
@@ -593,17 +621,17 @@ fread(&header, sizeof(header), 1, filehandle);
       <para>
         Then we have <emphasis>byte order</emphasis>.  If we are on a platform
         with different native byte order than the file uses, we have to reverse
-        the bytes in each multi-byte value.  GLib provides macros like
+        the bytes in each multi-byte value.  GLib provides macros as
         GUINT16_FROM_LE() to ease this task.
       </para>
       <para>
         And last but not least, different ABIs prescribe different
         <emphasis>structure padding</emphasis>.  Typically there can be
         from 0 to 7 unused bytes between <structfield>c</structfield> and
-        <structfield>i</structfield>.  While most compilers provide some
-        packing <literal>&num;pragma</literal>s or other means to specify
-        desired structure padding, the portability of these constructs is
-        questionable at best.
+        <structfield>i</structfield> fields.  While most compilers provide
+        some packing <literal>&num;pragma</literal>s or other means to
+        specify desired structure padding, the portability of these
+        constructs is questionable at best.
       </para>
       <para>
         The answer to (almost) all the problems above is: Don't do that then.
