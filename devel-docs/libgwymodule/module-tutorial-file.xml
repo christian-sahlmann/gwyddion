@@ -18,10 +18,17 @@
   <refsect1>
     <title>Overview</title>
     <para>
-      File modules implement loading and saving of SPM files.
+      File modules implement loading and saving of SPM files.  The structure
+      and operation of file modules will be explained on a simple but complete
+      sample file module.  This module imports a sample data format that was
+      construed for this tutorial and does not occur in practice.  However,
+      the format resembles many (binary) data formats used in practice,
+      except it contains no device and manufacturer information as they
+      are not essential for the example.
     </para>
     <para>
-      The sample file format our module will load looks as follows:
+      The sample file format our module will load looks as follows, all
+      values are stored in little-endian:
       <informaltable frame='none'>
         <tgroup cols='4'>
           <thead>
@@ -55,20 +62,20 @@
               <entry>0x08</entry>
               <entry><type>float</type></entry>
               <entry><varname>measure</varname></entry>
-              <entry>Size of one pixel [m]</entry>
+              <entry>Size of one pixel [nm]</entry>
             </row>
             <row>
               <entry>0x0c</entry>
               <entry><type>float</type></entry>
               <entry><varname>z0</varname></entry>
-              <entry>Value corresponding to 0 in raw data [m]</entry>
+              <entry>Value corresponding to 0 in raw data [nm]</entry>
             </row>
             <row>
               <entry>0x10</entry>
               <entry><type>float</type></entry>
               <entry><varname>gain</varname></entry>
               <entry>
-                Conversion factor from raw data to physical values [m]
+                Conversion factor from raw data to physical values [nm]
               </entry>
             </row>
             <row>
@@ -80,9 +87,9 @@
           </tbody>
         </tgroup>
       </informaltable>
-      This is a typical example of a one-image binary data format, though for
-      the sake of simplicity it contain only the information our module needs
-      and nothing else.
+      Furthermore we will assume files of this type get the extension
+      <filename>.ssd</filename> (Simple SPM Data).  The complete module source
+      code follows, it will be described in detail below.
     </para>
     <informalexample><programlisting>
 &num;include &lt;string.h&gt;
@@ -128,7 +135,6 @@ static GwyModuleInfo module_info = {
     "Bit Rot Inc.",
     "2006",
 };
-<![CDATA[
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -136,8 +142,8 @@ module_register(void)
 {
     gwy_file_func_register("simple",
                            N_("Simple AFM files (.afm)"),
-                           (GwyFileDetectFunc)&simple_detect,
-                           (GwyFileLoadFunc)&simple_load,
+                           (GwyFileDetectFunc)&amp;simple_detect,
+                           (GwyFileLoadFunc)&amp;simple_load,
                            NULL,
                            NULL);
 
@@ -152,7 +158,7 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
+        &amp;&amp; memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
         return 100;
 
     return 0;
@@ -175,13 +181,13 @@ simple_load(const gchar *filename,
     gdouble *data;
     gint i;
 
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        g_clear_error(&err);
+    if (!gwy_file_get_contents(filename, &amp;buffer, &amp;size, &amp;err)) {
+        err_GET_FILE_CONTENTS(error, &amp;err);
+        g_clear_error(&amp;err);
         return NULL;
     }
 
-    if (size <= HEADER_SIZE) {
+    if (size &lt;= HEADER_SIZE) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -194,11 +200,11 @@ simple_load(const gchar *filename,
     }
 
     p = buffer + MAGIC_SIZE;
-    simple.xres = get_WORD_LE(&p);
-    simple.yres = get_WORD_LE(&p);
-    simple.measure = get_FLOAT_LE(&p);
-    simple.z0 = get_FLOAT_LE(&p);
-    simple.gain = get_FLOAT_LE(&p);
+    simple.xres = get_WORD_LE(&amp;p);
+    simple.yres = get_WORD_LE(&amp;p);
+    simple.measure = get_FLOAT_LE(&amp;p);
+    simple.z0 = get_FLOAT_LE(&amp;p);
+    simple.gain = get_FLOAT_LE(&amp;p);
 
     expected_size = 2*simple.xres*simple.yres + HEADER_SIZE;
     if (size != expected_size) {
@@ -207,13 +213,16 @@ simple_load(const gchar *filename,
         return NULL;
     }
 
+    simple.measure *= 1e-9;
+    simple.z0 *= 1e-9;
+    simple.gain *= 1e-9;
     dfield = gwy_data_field_new(simple.xres, simple.yres,
                                 simple.xres*simple.measure,
                                 simple.yres*simple.measure,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
     rawdata = (const guint16*)p;
-    for (i = 0; i < simple.xres*simple.yres; i++)
+    for (i = 0; i &lt; simple.xres*simple.yres; i++)
         data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
 
     unit = gwy_si_unit_new("m");
@@ -224,7 +233,7 @@ simple_load(const gchar *filename,
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
-    container = gwy_container_new();
+    container = gwy_container_new<!--x-->();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
@@ -234,7 +243,7 @@ simple_load(const gchar *filename,
 
     return container;
 }
-]]></programlisting></informalexample>
+</programlisting></informalexample>
   </refsect1>
 
   <refsect1>
@@ -254,8 +263,9 @@ simple_load(const gchar *filename,
     </para>
     <para>
       Header <filename>err.h</filename> contains common error reporting
-      functions.  Its primary purpose it to ensure consistency of error
-      messages between file modules and ease translator's work.
+      functions (called <function>err_ERROR_TYPE</function>).
+      Its primary purpose it to ensure consistency of error
+      messages between file modules and to ease translators' work.
     </para>
     <para id="module-tutorial-file-get-h">
       Header <filename>get.h</filename> provides
@@ -341,7 +351,7 @@ module_register(void)
   <refsect1>
     <title>Detection</title>
     <para>
-      There are two types of detection: on load when we have the file
+      Two types of detection exist: on load when we have the file
       available, and on save when the file does not exist and we know only
       the requested file name.  They are differentiated by
       <varname>only_name</varname> argument.  In both cases the detection
@@ -394,6 +404,128 @@ simple_detect(const GwyFileDetectInfo *fileinfo,
       the file ourselves, it is advisable to perform a quick check that can
       eliminate most files that are <emphasis>not</emphasis> of our type first,
       and then perform the sophisticated test only on the likely candidates.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Loading</title>
+    <para>
+      The task of the load function is to read the file and create
+      a #GwyContainer containing all importable data. It must not assume
+      anything about the file properties and contents, not even that the file
+      passed the detection because the user can request a file type
+      explicitly, bypassing detection.  It has also deal with broken files,
+      checking whether the file is long enough to contain the data it claims
+      to and performing further parameter validation if necessary.
+    </para>
+    <para>
+      The file contents can be often read with gwy_file_get_contents() which
+      uses mmap() (if available).  The returned memory
+      is read-only.  Sometimes destructive header parsing is useful, in such
+      a case it is possible to use g_memdup() to duplicate the header,
+      keeping the data part mapped read-only.
+    </para>
+    <informalexample><programlisting><![CDATA[
+    if (size <= HEADER_SIZE) {
+        err_TOO_SHORT(error);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+]]></programlisting></informalexample>
+    <para>
+      The header is parsed using the
+      <link linkend="module-tutorial-file-portability">portable</link>
+      binary buffer reading functions.
+    </para>
+    <informalexample><programlisting><![CDATA[
+    p = buffer + MAGIC_SIZE;
+    simple.xres = get_WORD_LE(&p);
+    simple.yres = get_WORD_LE(&p);
+    simple.measure = get_FLOAT_LE(&p);
+    simple.z0 = get_FLOAT_LE(&p);
+    simple.gain = get_FLOAT_LE(&p);
+]]></programlisting></informalexample>
+    <para>
+      Then we can create the data field and read the data into it.  Since
+      <application>Gwyddion</application> always works with values in base
+      SI units, we have to convert the raw data values to physical values.
+      If the file uses non-base units (which is common in SPM), we have to
+      multiply the data by the corresponding factor: in your case with
+      10<superscript>-9</superscript> as the physcial quantities are stored
+      in nanometers in the file.
+      Data reading can be most easily performed with GLibs function like
+      GUINT16_FROM_LE().
+    </para>
+    <informalexample><programlisting><![CDATA[
+    simple.measure *= 1e-9;
+    simple.z0 *= 1e-9;
+    simple.gain *= 1e-9;
+    dfield = gwy_data_field_new(simple.xres, simple.yres,
+                                simple.xres*simple.measure,
+                                simple.yres*simple.measure,
+                                FALSE);
+    data = gwy_data_field_get_data(dfield);
+    rawdata = (const guint16*)p;
+    for (i = 0; i < simple.xres*simple.yres; i++)
+        data[i] = GUINT16_FROM_LE(rawdata[i])*simple.gain + simple.z0;
+]]></programlisting></informalexample>
+    <para>
+      We have to set also the lateral and value units of the created data
+      field (by default, the dimensions and values are unitless).
+    </para>
+    <informalexample><programlisting><![CDATA[
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, unit);
+    g_object_unref(unit);
+
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, unit);
+    g_object_unref(unit);
+]]></programlisting></informalexample>
+    <para>
+      Our sample file format can only store topography channels, therefore
+      the units are always meters.  For different types of channels the units
+      have to be set accordingly.  Note that
+    <informalexample><programlisting><![CDATA[
+    unit = gwy_si_unit_new("nA");
+]]></programlisting></informalexample>
+      is exactly the same as
+    <informalexample><programlisting><![CDATA[
+    unit = gwy_si_unit_new("A");
+]]></programlisting></informalexample>
+      In other words, the prefixes are ignored because #GwySIUnit represents
+      the unit type and contains no magnitude information.  However, if the
+      format stores the units as a string including the prefix we can use
+      gwy_si_unit_new_parse() to obtain the corresponding power of 10 (and
+      subsequently multiply data field values with the correct multiplier).
+    </para>
+    <informalexample><programlisting><![CDATA[
+    unit = gwy_si_unit_new_parse("nA", &power10);
+]]></programlisting></informalexample>
+    <para>
+      Finally we create a new #GwyContainer, put the data field under
+      <literal>"/0/data"</literal> and set the channel title
+      <literal>"/0/data/title"</literal>, and return the container.  The
+      application then takes care of adding it to the data browser and
+      showing it in a data window.
+    </para>
+    <informalexample><programlisting>
+    container = gwy_container_new<!--x-->();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup("Topography"));
+
+    g_object_unref(dfield);
+
+    gwy_file_abandon_contents(buffer, size, NULL);
+
+    return container;
+</programlisting></informalexample>
+  </refsect1>
+
+  <refsect1>
+    <title>Loading More</title>
+    <para>
     </para>
   </refsect1>
 
