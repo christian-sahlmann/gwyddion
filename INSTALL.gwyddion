@@ -24,6 +24,7 @@ Prerequisities:
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
 - GLib-2.6 and Gtk+-2.6 or newer, including development files
+- pkg-config 0.16 or newer
 
 Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
@@ -149,7 +150,6 @@ Prerequisities:
 - GNU libtool 1.4 or newer
 - Python-2.2 or newer
 - Perl5
-- pkg-config 0.16 or newer
 - gtk-doc 1.4 or newer
 - GNU gettext 0.12 or newer, including development stuff
 - who knows what else
