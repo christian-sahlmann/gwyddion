@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/filters.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -271,7 +272,6 @@ presentation_attach_filter(GwyContainer *source,
 {
     const GwyDataObjectId *target = (const GwyDataObjectId*)user_data;
     GwyDataField *source_dfield, *target_dfield;
-    gdouble xreal1, xreal2, yreal1, yreal2;
     GQuark quark;
 
     quark = gwy_app_get_data_key_for_id(id);
@@ -281,21 +281,10 @@ presentation_attach_filter(GwyContainer *source,
     target_dfield = GWY_DATA_FIELD(gwy_container_get_object(target->data,
                                                             quark));
 
-    if ((gwy_data_field_get_xres(target_dfield)
-         != gwy_data_field_get_xres(source_dfield))
-        || (gwy_data_field_get_yres(target_dfield)
-            != gwy_data_field_get_yres(source_dfield)))
-        return FALSE;
-
-    xreal1 = gwy_data_field_get_xreal(target_dfield);
-    yreal1 = gwy_data_field_get_yreal(target_dfield);
-    xreal2 = gwy_data_field_get_xreal(source_dfield);
-    yreal2 = gwy_data_field_get_yreal(source_dfield);
-    if (fabs(log(xreal1/xreal2)) > 0.0001
-        || fabs(log(yreal1/yreal2)) > 0.0001)
-        return FALSE;
-
-    return TRUE;
+    return !gwy_data_field_check_compatibility(source_dfield, target_dfield,
+                                               GWY_DATA_COMPATIBILITY_RES
+                                               | GWY_DATA_COMPATIBILITY_REAL
+                                               | GWY_DATA_COMPATIBILITY_LATERAL);
 }
 
 static void
