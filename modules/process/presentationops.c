@@ -80,15 +80,13 @@ module_register(void)
                               PRESENTATIONOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
                               N_("Extract presentation to a new channel"));
-    /* XXX: not really ported */
     gwy_process_func_register("presentation_attach",
                               (GwyProcessFunc)&presentation_attach,
                               N_("/_Presentation/_Attach Presentation..."),
                               NULL,
                               PRESENTATION_ATTACH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Attaches another data field as "
-                                 "presentation"));
+                              N_("Attach another data field as presentation"));
     gwy_process_func_register("presentation_logscale",
                               (GwyProcessFunc)&presentation_logscale,
                               N_("/_Presentation/_Logscale"),
