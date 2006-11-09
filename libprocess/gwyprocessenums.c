@@ -179,8 +179,10 @@ gwy_dwt_denoise_type_get_enum(void)
  *                           interpolation).
  * @GWY_INTERPOLATION_BILINEAR: Bilinear interpolation.
  * @GWY_INTERPOLATION_KEY: Key interpolation.
- * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation.
- * @GWY_INTERPOLATION_OMOMS: Omoms interpolation
+ * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation. This interpolation type
+ *                             is misimplemented and should not be used.
+ * @GWY_INTERPOLATION_OMOMS: Omoms interpolation. This interpolation type
+ *                           is misimplemented and should not be used.
  * @GWY_INTERPOLATION_NNA: Nearest neighbour approximation.
  *
  * Interpolation types.
