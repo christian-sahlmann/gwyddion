@@ -1,3 +1,12 @@
+2.1.20061114
+
+2.2 (0000-00-00)
+Libraries:
+- libgwyprocess: Broken B-spline and Omoms interpolations were made identical
+  to Key.
+
+Modules:
+- Mask operations: It is possible to copy mask from one channel to another.
 
 
 2.1 (2006-11-05)
