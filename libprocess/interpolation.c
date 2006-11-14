@@ -129,6 +129,11 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
     switch (interpolation) {
         case GWY_INTERPOLATION_KEY:
+        /* One cannot do B-spline and o-MOMS this way.  Read e.g.
+         * `Interpolation Revisited' by Philippe Thevenaz for explanation.
+         * Replace them with Key. */
+        case GWY_INTERPOLATION_BSPLINE:
+        case GWY_INTERPOLATION_OMOMS:
         /*
         w1 = rest + 1.0;
         w2 = rest;
@@ -144,43 +149,6 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         w2 = 1.0 + (-2.5 + 1.5*rest)*rest*rest;
         w3 = (0.5 + (2.0 - 1.5*rest)*rest)*rest;
         w4 = (-0.5 + rest/2.0)*rest*rest;
-        break;
-
-        case GWY_INTERPOLATION_BSPLINE:
-        /*
-        w1 = rest + 1.0;
-        w2 = rest;
-        w3 = 1.0 - rest;
-        w4 = 2.0 - rest;
-        w1 = (2-w1)*(2-w1)*(2-w1)/6;
-        w2 = 0.6666667-0.5*w2*w2*(2-w2);
-        w3 = 0.6666667-0.5*w3*w3*(2-w3);
-        w4 = (2-w4)*(2-w4)*(2-w4)/6;
-        */
-        /* horner schema (by maple) */
-        w1 = 1.0-rest;
-        w1 = w1*w1*w1/6.0;
-        w2 = 2.0/3.0 + (-1.0 + rest/2.0)*rest*rest;
-        w3 = 1.0/6.0 + (0.5 + (0.5 - rest/2.0)*rest)*rest;
-        w4 = rest*rest*rest/6.0;
-        break;
-
-        case GWY_INTERPOLATION_OMOMS:
-        /*
-        w1 = rest + 1.0;
-        w2 = rest;
-        w3 = 1.0 - rest;
-        w4 = 2.0 - rest;
-        w1 = -w1*w1*w1/6 + w1*w1-85*w1/42 + 1.3809523;
-        w2 = w2*w2*w2/2-w2*w2 + w2/14 + 0.6190476;
-        w3 = w3*w3*w3/2-w3*w3 + w3/14 + 0.6190476;
-        w4 = -w4*w4*w4/6 + w4*w4-85*w4/42 + 1.3809523;
-        */
-        /* horner schema (by maple) */
-        w1 = 4.0/21.0 + (-11.0/21.0 + (0.5 - rest/6.0)*rest)*rest;
-        w2 = 13.0/21.0 + (1.0/14.0 + (-1.0 + rest/2.0)*rest)*rest;
-        w3 = 4.0/21.0 + (3.0/7.0 + (0.5 - rest/2.0)*rest)*rest;
-        w4 = (1.0/42.0 + rest*rest/6.0)*rest;
         break;
 
         case GWY_INTERPOLATION_NNA:
