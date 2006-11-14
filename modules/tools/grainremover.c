@@ -97,7 +97,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -310,8 +310,8 @@ gwy_tool_grain_remover_selection_finised(GwyPlainTool *plain_tool)
         || !gwy_selection_get_object(plain_tool->selection, 0, point))
         return;
 
-    row = ROUND(gwy_data_field_rtoi(plain_tool->mask_field, point[1]));
-    col = ROUND(gwy_data_field_rtoj(plain_tool->mask_field, point[0]));
+    row = gwy_data_field_rtoi(plain_tool->mask_field, point[1]);
+    col = gwy_data_field_rtoj(plain_tool->mask_field, point[0]);
     if (!gwy_data_field_get_val(plain_tool->mask_field, col, row))
         return;
 
