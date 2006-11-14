@@ -7,6 +7,7 @@ process_LTLIBRARIES = \
 	arithmetic.la \
 	basicops.la \
 	calibrate.la \
+	convolution_filter.la \
 	crosscor.la \
 	cwt.la \
 	dwt.la \
@@ -93,6 +94,9 @@ basicops_la_LIBADD = $(module_libadd)
 
 calibrate_la_SOURCES = calibrate.c
 calibrate_la_LIBADD = $(module_libadd)
+
+convolution_filter_la_SOURCES = convolution_filter.c convolutionfilterpreset.h
+convolution_filter_la_LIBADD = $(module_libadd)
 
 crosscor_la_SOURCES = crosscor.c
 crosscor_la_LIBADD = $(module_libadd)

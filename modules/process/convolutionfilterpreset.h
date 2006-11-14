@@ -46,6 +46,8 @@ struct _GwyConvolutionFilterPresetClass {
 
 static GType       gwy_convolution_filter_preset_get_type (void) G_GNUC_CONST;
 static void        gwy_convolution_filter_preset_finalize (GObject *object);
+static void        gwy_convolution_filter_preset_data_copy(const GwyConvolutionFilterPresetData *src,
+                                                           GwyConvolutionFilterPresetData *dest);
 static GwyConvolutionFilterPreset* gwy_convolution_filter_preset_new(const gchar *name,
                                           const GwyConvolutionFilterPresetData *data,
                                           gboolean is_const);
@@ -93,7 +95,7 @@ static void
 gwy_convolution_filter_preset_init(GwyConvolutionFilterPreset *preset)
 {
     gwy_debug_objects_creation(G_OBJECT(preset));
-    gwy_convolution_filter_preset_data_copy(convolutionpresetdata_default,
+    gwy_convolution_filter_preset_data_copy(&convolutionpresetdata_default,
                                             &preset->data);
 }
 
@@ -111,7 +113,7 @@ gwy_convolution_filter_preset_finalize(GObject *object)
 static void
 gwy_convolution_filter_preset_data_autodiv(GwyConvolutionFilterPresetData *data)
 {
-    gdouble sum;
+    gdouble max, sum;
     guint i;
 
     max = sum = 0.0;
@@ -131,8 +133,8 @@ static void
 gwy_convolution_filter_preset_data_sanitize(GwyConvolutionFilterPresetData *data)
 {
     /* Simply replace the filter with default when it't really weird */
-    if (data->size < 1 || data->size > 15 || !(size & 1)) {
-        gwy_convolution_filter_preset_data_copy(convolutionpresetdata_default,
+    if (data->size < 1 || data->size > 15 || !(data->size & 1)) {
+        gwy_convolution_filter_preset_data_copy(&convolutionpresetdata_default,
                                                 data);
         return;
     }
@@ -188,7 +190,7 @@ gwy_convolution_filter_preset_dump(GwyResource *resource,
     g_string_append_printf(str,
                            "size %u\n"
                            "divisor %s\n"
-                           "auto_divisor %s\n",
+                           "auto_divisor %d\n",
                            preset->data.size,
                            buf,
                            preset->data.auto_divisor);
@@ -209,18 +211,17 @@ gwy_convolution_filter_preset_parse(const gchar *text,
     GwyConvolutionFilterPresetData data;
     GwyConvolutionFilterPreset *preset = NULL;
     GwyConvolutionFilterPresetClass *klass;
-    gchar *str, *p, *line, *key, *value;
-    gboolean size_found;
-    guint len;
+    gchar *str, *p, *line, *key, *value, *end;
+    guint i;
 
     g_return_val_if_fail(text, NULL);
     klass = g_type_class_peek(GWY_TYPE_CONVOLUTION_PRESET);
     g_return_val_if_fail(klass, NULL);
 
-    data->divisor = 1.0;
-    data->auto_divisor = TRUE;
-    data->size = 0;
-    data->matrix = NULL;
+    data.divisor = 1.0;
+    data.auto_divisor = TRUE;
+    data.size = 0;
+    data.matrix = NULL;
 
     p = str = g_strdup(text);
     while ((line = gwy_str_next_line(&p))) {
@@ -257,7 +258,7 @@ gwy_convolution_filter_preset_parse(const gchar *text,
             g_warning("Unknown field `%s'.", key);
     }
 
-    if (data->size < 1 || data->size > 15 || !(size & 1)) {
+    if (data.size < 1 || data.size > 15 || !(data.size & 1)) {
         g_free(str);
         return NULL;
     }
