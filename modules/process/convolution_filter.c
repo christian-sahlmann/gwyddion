@@ -78,11 +78,16 @@ static void
 convolution_filter(GwyContainer *data,
                    GwyRunType run)
 {
+    GwyResourceClass *rklass;
     GwyDataField *dfield;
     GQuark dquark;
     gint id;
 
     g_return_if_fail(run & CONVOLUTION_RUN_MODES);
+
+    rklass = g_type_class_ref(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
+    gwy_resource_class_mkdir(rklass);
+    g_type_class_unref(rklass);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
