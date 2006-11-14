@@ -53,6 +53,16 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+    static gint types_initialized = 0;
+    GwyResourceClass *klass;
+
+    if (!types_initialized) {
+        types_initialized += gwy_convolution_filter_preset_get_type();
+        klass = g_type_class_ref(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
+        gwy_resource_class_load(klass);
+        g_type_class_unref(klass);
+    }
+
     gwy_process_func_register("convolution_filter",
                               (GwyProcessFunc)&convolution_filter,
                               N_("/_Basic Operations/Convolution _Filter..."),

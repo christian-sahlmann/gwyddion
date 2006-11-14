@@ -18,12 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define GWY_TYPE_CONVOLUTION_PRESET             (gwy_convolution_filter_preset_get_type())
-#define GWY_CONVOLUTION_FILTER_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CONVOLUTION_PRESET, GwyConvolutionFilterPreset))
-#define GWY_CONVOLUTION_FILTER_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CONVOLUTION_PRESET, GwyConvolutionFilterPresetClass))
-#define GWY_IS_CONVOLUTION_PRESET(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_CONVOLUTION_PRESET))
-#define GWY_IS_CONVOLUTION_PRESET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_CONVOLUTION_PRESET))
-#define GWY_CONVOLUTION_FILTER_PRESET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_CONVOLUTION_PRESET, GwyConvolutionFilterPresetClass))
+#define GWY_TYPE_CONVOLUTION_FILTER_PRESET             (gwy_convolution_filter_preset_get_type())
+#define GWY_CONVOLUTION_FILTER_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPreset))
+#define GWY_CONVOLUTION_FILTER_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPresetClass))
+#define GWY_IS_CONVOLUTION_FILTER_PRESET(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_CONVOLUTION_FILTER_PRESET))
+#define GWY_IS_CONVOLUTION_FILTER_PRESET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_CONVOLUTION_FILTER_PRESET))
+#define GWY_CONVOLUTION_FILTER_PRESET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPresetClass))
 
 typedef struct _GwyConvolutionFilterPreset      GwyConvolutionFilterPreset;
 typedef struct _GwyConvolutionFilterPresetClass GwyConvolutionFilterPresetClass;
@@ -163,7 +163,7 @@ gwy_convolution_filter_preset_new(const gchar *name,
 {
     GwyConvolutionFilterPreset *preset;
 
-    preset = g_object_new(GWY_TYPE_CONVOLUTION_PRESET,
+    preset = g_object_new(GWY_TYPE_CONVOLUTION_FILTER_PRESET,
                           "is-const", is_const,
                           NULL);
     gwy_convolution_filter_preset_data_copy(data, &preset->data);
@@ -182,7 +182,7 @@ gwy_convolution_filter_preset_dump(GwyResource *resource,
     GwyConvolutionFilterPreset *preset;
     guint i;
 
-    g_return_if_fail(GWY_IS_CONVOLUTION_PRESET(resource));
+    g_return_if_fail(GWY_IS_CONVOLUTION_FILTER_PRESET(resource));
     preset = GWY_CONVOLUTION_FILTER_PRESET(resource);
 
     /* Information */
@@ -215,7 +215,7 @@ gwy_convolution_filter_preset_parse(const gchar *text,
     guint i;
 
     g_return_val_if_fail(text, NULL);
-    klass = g_type_class_peek(GWY_TYPE_CONVOLUTION_PRESET);
+    klass = g_type_class_peek(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
     g_return_val_if_fail(klass, NULL);
 
     data.divisor = 1.0;
@@ -292,5 +292,5 @@ static GwyInventory*
 gwy_convolution_filter_presets(void)
 {
     return GWY_RESOURCE_CLASS(g_type_class_peek
-                                     (GWY_TYPE_CONVOLUTION_PRESET))->inventory;
+                               (GWY_TYPE_CONVOLUTION_FILTER_PRESET))->inventory;
 }
