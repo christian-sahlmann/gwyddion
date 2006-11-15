@@ -130,6 +130,41 @@ gwy_convolution_filter_preset_data_autodiv(GwyConvolutionFilterPresetData *data)
 }
 
 static void
+gwy_convolution_filter_preset_data_resize(GwyConvolutionFilterPresetData *data,
+                                          guint newsize)
+{
+    gdouble *oldmatrix;
+    guint i, d;
+
+    g_return_if_fail(newsize >= 1 && newsize <= 15 && (newsize & 1));
+
+    if (newsize == data->size)
+        return;
+
+    oldmatrix = data->matrix;
+    data->matrix = g_new0(gdouble, newsize*newsize);
+    if (newsize < data->size) {
+        d = (data->size - newsize)/2;
+        for (i = 0; i < newsize; i++)
+            memcpy(data->matrix + i*newsize,
+                   oldmatrix + (i + d)*data->size + d,
+                   newsize*sizeof(gdouble));
+    }
+    else {
+        d = (newsize - data->size)/2;
+        for (i = 0; i < data->size; i++)
+            memcpy(data->matrix + (i + d)*newsize + d,
+                   oldmatrix + i*data->size,
+                   data->size*sizeof(gdouble));
+    }
+    data->size = newsize;
+    g_free(oldmatrix);
+
+    if (data->auto_divisor)
+        gwy_convolution_filter_preset_data_autodiv(data);
+}
+
+static void
 gwy_convolution_filter_preset_data_sanitize(GwyConvolutionFilterPresetData *data)
 {
     /* Simply replace the filter with default when it't really weird */
