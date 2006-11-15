@@ -18,6 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+enum {
+    CONVOLUTION_MAX_SIZE = 9
+};
+
 #define GWY_TYPE_CONVOLUTION_FILTER_PRESET             (gwy_convolution_filter_preset_get_type())
 #define GWY_CONVOLUTION_FILTER_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPreset))
 #define GWY_CONVOLUTION_FILTER_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPresetClass))
@@ -110,6 +114,12 @@ gwy_convolution_filter_preset_finalize(GObject *object)
     G_OBJECT_CLASS(gwy_convolution_filter_preset_parent_class)->finalize(object);
 }
 
+static inline gboolean
+gwy_convolution_filter_preset_check_size(guint size)
+{
+    return size >= 1 && size <= CONVOLUTION_MAX_SIZE && (size & 1);
+}
+
 static void
 gwy_convolution_filter_preset_data_autodiv(GwyConvolutionFilterPresetData *data)
 {
@@ -136,8 +146,7 @@ gwy_convolution_filter_preset_data_resize(GwyConvolutionFilterPresetData *data,
     gdouble *oldmatrix;
     guint i, d;
 
-    g_return_if_fail(newsize >= 1 && newsize <= 15 && (newsize & 1));
-
+    g_return_if_fail(gwy_convolution_filter_preset_check_size(newsize));
     if (newsize == data->size)
         return;
 
@@ -168,7 +177,7 @@ static void
 gwy_convolution_filter_preset_data_sanitize(GwyConvolutionFilterPresetData *data)
 {
     /* Simply replace the filter with default when it't really weird */
-    if (data->size < 1 || data->size > 15 || !(data->size & 1)) {
+    if (!gwy_convolution_filter_preset_check_size(data->size)) {
         gwy_convolution_filter_preset_data_copy(&convolutionpresetdata_default,
                                                 data);
         return;
@@ -293,7 +302,7 @@ gwy_convolution_filter_preset_parse(const gchar *text,
             g_warning("Unknown field `%s'.", key);
     }
 
-    if (data.size < 1 || data.size > 15 || !(data.size & 1)) {
+    if (!gwy_convolution_filter_preset_check_size(data.size)) {
         g_free(str);
         return NULL;
     }
