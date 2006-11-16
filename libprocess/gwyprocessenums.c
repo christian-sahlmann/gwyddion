@@ -178,12 +178,13 @@ gwy_dwt_denoise_type_get_enum(void)
  * @GWY_INTERPOLATION_ROUND: Round interpolation (nearest neighbour
  *                           interpolation).
  * @GWY_INTERPOLATION_BILINEAR: Bilinear interpolation.
- * @GWY_INTERPOLATION_KEY: Key interpolation.
+ * @GWY_INTERPOLATION_KEY: Cubic Key's interpolation (with a=-1/2).
  * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation. This interpolation type
  *                             is misimplemented and should not be used.
  * @GWY_INTERPOLATION_OMOMS: Omoms interpolation. This interpolation type
  *                           is misimplemented and should not be used.
  * @GWY_INTERPOLATION_NNA: Nearest neighbour approximation.
+ * @GWY_INTERPOLATION_SCHAUM: Cubic Schaum interpolation.
  *
  * Interpolation types.
  **/
@@ -204,6 +205,7 @@ gwy_interpolation_type_get_enum(void)
         { N_("BSpline"),  GWY_INTERPOLATION_BSPLINE,  },
         { N_("OMOMS"),    GWY_INTERPOLATION_OMOMS,    },
         { N_("NNA"),      GWY_INTERPOLATION_NNA,      },
+        { N_("Schaum"),   GWY_INTERPOLATION_SCHAUM,   },
         { NULL,           0,                          },
     };
     return entries;

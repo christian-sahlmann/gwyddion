@@ -163,6 +163,13 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         return (w1*data[l-1] + w2*data[l]
                 + w3*data[l+1] + w4*data[l+2])/(w1 + w2 + w3 + w4);
 
+        case GWY_INTERPOLATION_SCHAUM:
+        w1 = -rest*(rest - 1.0)*(rest - 2.0)/6.0;
+        w2 = (rest*rest - 1.0)*(rest - 2.0)/2.0;
+        w3 = -rest*(rest + 1.0)*(rest - 2.0)/2.0;
+        w4 = rest*(rest*rest - 1.0)/6.0;
+        break;
+
         default:
         g_assert_not_reached();
         w1 = w2 = w3 = w4 = 0.0;
