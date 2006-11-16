@@ -60,21 +60,24 @@ typedef struct {
     GtkWidget *matrix;
     GtkWidget **coeff;
     gboolean in_update;
+    GQuark position_quark;
 } ConvolutionControls;
 
-static gboolean module_register                  (void);
-static void     convolution_filter               (GwyContainer *data,
-                                                  GwyRunType run);
-static void     convolution_filter_dialog        (ConvolutionArgs *args,
-                                                  GwyContainer *data,
-                                                  GwyDataField *dfield,
-                                                  gint id,
-                                                  GQuark dquark);
-static void     convolution_filter_find_symmetry (ConvolutionArgs *args);
-static void     convolution_filter_set_value     (ConvolutionControls *controls,
-                                                  guint j,
-                                                  guint i,
-                                                  gdouble val);
+static gboolean module_register                 (void);
+static void     convolution_filter              (GwyContainer *data,
+                                                 GwyRunType run);
+static void     convolution_filter_dialog       (ConvolutionArgs *args,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 gint id,
+                                                 GQuark dquark);
+static void     convolution_filter_coeff_changed(GtkEntry *entry,
+                                                 ConvolutionControls *controls);
+static void     convolution_filter_find_symmetry(ConvolutionArgs *args);
+static void     convolution_filter_set_value    (ConvolutionControls *controls,
+                                                 guint j,
+                                                 guint i,
+                                                 gdouble val);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -160,12 +163,14 @@ convolution_filter_dialog(ConvolutionArgs *args,
     };
     ConvolutionControls controls;
     GwyPixmapLayer *layer;
-    GtkWidget *dialog, *hbox, *vbox, *table, *notebook, *label;
+    GtkWidget *dialog, *hbox, *vbox, *notebook, *label;
     gdouble zoomval;
     gint response;
 
-    controls.args = args;
     args->computed = FALSE;
+    controls.args = args;
+    controls.coeff = NULL;
+    controls.position_quark = g_quark_from_static_string("position");
 
     dialog = gtk_dialog_new_with_buttons(_("Convolution Filter"), NULL, 0,
                                          _("_Update"), RESPONSE_PREVIEW,
@@ -205,6 +210,9 @@ convolution_filter_dialog(ConvolutionArgs *args,
     label = gtk_label_new(_("Filter"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
+    controls.matrix = gtk_table_new(1, 1, TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.matrix, TRUE, TRUE, 0);
+
     /* Presets */
     vbox = gtk_vbox_new(FALSE, 8);
     label = gtk_label_new(_("Presets"));
@@ -219,6 +227,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
             /* mark_dialog_update_values(&controls, args); */
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            g_free(controls.coeff);
             g_object_unref(controls.mydata);
             return;
             break;
@@ -246,6 +255,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    g_free(controls.coeff);
     gtk_widget_destroy(dialog);
 
     if (args->computed) {
@@ -263,6 +273,79 @@ convolution_filter_dialog(ConvolutionArgs *args,
 }
 
 static void
+convolution_filter_resize_matrix(ConvolutionControls *controls)
+{
+    GtkTable *table;
+    guint size, cols, i;
+
+    size = controls->args->preset->data.size;
+    g_object_get(controls->matrix, "n-columns", &cols, NULL);
+    if (cols == size)
+        return;
+
+    gtk_widget_destroy(controls->matrix);
+    controls->matrix = gtk_table_new(size, size, TRUE);
+    controls->coeff = g_renew(GtkWidget*, controls->coeff, size*size);
+    table = GTK_TABLE(controls->matrix);
+    for (i = 0; i < size*size; i++) {
+        controls->coeff[i] = gtk_entry_new();
+        g_object_set_qdata(G_OBJECT(controls->coeff[i]),
+                           controls->position_quark, GUINT_TO_POINTER(i));
+        gtk_entry_set_width_chars(GTK_ENTRY(controls->coeff[i]), 5);
+        gtk_table_attach(table, controls->coeff[i],
+                         i % size, i % size + 1, i/size, i/size + 1,
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect(controls->coeff[i], "changed",
+                         G_CALLBACK(convolution_filter_coeff_changed),
+                         controls);
+    }
+}
+
+static void
+convolution_filter_update_symmetry(ConvolutionControls *controls)
+{
+    ConvolutionArgs *args;
+    guint i, j, size;
+    gboolean sensitive;
+
+    args = controls->args;
+    size = args->preset->data.size;
+
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            if ((args->vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN
+                 && i > size/2)
+                || (args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD
+                    && i >= size/2)
+                || (args->hsym == CONVOLUTION_FILTER_SYMMETRY_EVEN
+                    && j > size/2)
+                || (args->hsym == CONVOLUTION_FILTER_SYMMETRY_ODD
+                    && j >= size/2))
+                sensitive = FALSE;
+            else
+                sensitive = TRUE;
+
+            gtk_widget_set_sensitive(controls->coeff[i*size + j], sensitive);
+        }
+    }
+}
+
+static void
+convolution_filter_coeff_changed(GtkEntry *entry,
+                                 ConvolutionControls *controls)
+{
+    guint size, i;
+
+    controls->in_update = TRUE;
+    size = controls->args->preset->data.size;
+    i = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(entry),
+                                            controls->position_quark));
+    convolution_filter_set_value(controls, i % size, i/size,
+                                 g_strtod(gtk_entry_get_text(entry), NULL));
+    controls->in_update = FALSE;
+}
+
+static void
 convolution_filter_find_symmetry(ConvolutionArgs *args)
 {
     const gdouble *matrix;
@@ -275,8 +358,8 @@ convolution_filter_find_symmetry(ConvolutionArgs *args)
                              | CONVOLUTION_FILTER_SYMMETRY_ODD
                              | CONVOLUTION_FILTER_SYMMETRY_NONE);
 
-    for (i = 0; i < size/2; i++) {
-        for (j = 0; j < size/2; j++) {
+    for (i = 0; i <= size/2; i++) {
+        for (j = 0; j <= size/2; j++) {
             if (matrix[i*size + j] != matrix[i*size + size-1-j])
                 hpossible &= ~(1U << CONVOLUTION_FILTER_SYMMETRY_EVEN);
             if (matrix[i*size + j] != -matrix[i*size + size-1-j])
@@ -304,6 +387,12 @@ convolution_filter_find_symmetry(ConvolutionArgs *args)
 }
 
 static void
+convolution_filter_symmetrize(ConvolutionControls *controls)
+{
+    /* TODO: symmetrize coeffs, zero center row/col for odd */
+}
+
+static void
 convolution_filter_do_set_value(ConvolutionControls *controls,
                                 guint j,
                                 guint i,
@@ -319,6 +408,23 @@ convolution_filter_do_set_value(ConvolutionControls *controls,
     pdata->matrix[i*pdata->size + j] = val;
     g_snprintf(buf, sizeof(buf), "%.8g", val);
     gtk_entry_set_text(GTK_ENTRY(controls->coeff[i*pdata->size + j]), buf);
+}
+
+static void
+convolution_filter_update_matrix(ConvolutionControls *controls)
+{
+    GwyConvolutionFilterPresetData *pdata;
+    guint i, j;
+
+    controls->in_update = TRUE;
+    pdata = &controls->args->preset->data;
+    for (i = 0; i < pdata->size; i++) {
+        for (j = 0; j < pdata->size; j++) {
+            convolution_filter_do_set_value(controls, j, i,
+                                            pdata->matrix[pdata->size*i + j]);
+        }
+    }
+    controls->in_update = FALSE;
 }
 
 static void
