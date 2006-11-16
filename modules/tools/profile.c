@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/datafield.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwystock.h>
@@ -247,6 +248,9 @@ gwy_tool_profile_init(GwyToolProfile *tool)
                                       &tool->args.fixres);
     gwy_container_gis_enum_by_name(settings, interpolation_key,
                                    &tool->args.interpolation);
+    tool->args.interpolation
+        = gwy_enum_sanitize_value(tool->args.interpolation,
+                                  GWY_TYPE_INTERPOLATION_TYPE);
     gwy_container_gis_boolean_by_name(settings, separate_key,
                                       &tool->args.separate);
 

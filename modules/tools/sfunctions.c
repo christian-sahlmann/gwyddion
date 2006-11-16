@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
@@ -263,8 +264,13 @@ gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
                                       &tool->args.fixres);
     gwy_container_gis_enum_by_name(settings, interpolation_key,
                                    &tool->args.interpolation);
+    tool->args.interpolation
+        = gwy_enum_sanitize_value(tool->args.interpolation,
+                                  GWY_TYPE_INTERPOLATION_TYPE);
     gwy_container_gis_enum_by_name(settings, direction_key,
                                    &tool->args.direction);
+    tool->args.direction
+        = gwy_enum_sanitize_value(tool->args.direction, GWY_TYPE_ORIENTATION);
 
     tool->line = gwy_data_line_new(4, 1.0, FALSE);
 

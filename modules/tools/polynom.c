@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -173,6 +174,8 @@ gwy_tool_polynom_init(GwyToolPolynom *tool)
                                     &tool->args.order);
     gwy_container_gis_enum_by_name(settings, direction_key,
                                    &tool->args.direction);
+    tool->args.direction
+        = gwy_enum_sanitize_value(tool->args.direction, GWY_TYPE_ORIENTATION);
     gwy_container_gis_boolean_by_name(settings, exclude_key,
                                       &tool->args.exclude);
 
