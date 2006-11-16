@@ -21,6 +21,7 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/cwt.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -267,9 +268,10 @@ static void
 cwt_sanitize_args(CWTArgs *args)
 {
     args->preserve = !!args->preserve;
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->wavelet = MIN(args->wavelet, GWY_2DCWT_HAT);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
+    args->wavelet = gwy_enum_sanitize_value(args->wavelet,
+                                            GWY_TYPE_2D_CWT_WAVELET_TYPE);
     args->scale = CLAMP(args->scale, 0.0, 1000.0);
 }
 

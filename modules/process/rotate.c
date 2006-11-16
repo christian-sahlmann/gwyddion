@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydataview.h>
@@ -370,8 +371,8 @@ static void
 rotate_sanitize_args(RotateArgs *args)
 {
     args->angle = fmod(args->angle, 2*G_PI);
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->expand = !!args->expand;
 }
 

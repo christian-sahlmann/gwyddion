@@ -639,7 +639,8 @@ drift_sanitize_args(DriftArgs *args)
     args->sensitivity = CLAMP(args->sensitivity, 0.0, 100.0);
     args->smoothing = CLAMP(args->smoothing, 0.0, 100.0);
     args->method = MIN(args->method, GWY_DRIFT_SAMPLE);
-    args->interpolation = MIN(args->interpolation, GWY_INTERPOLATION_NNA);
+    args->interpolation = gwy_enum_sanitize_value(args->interpolation,
+                                                  GWY_TYPE_INTERPOLATION_TYPE);
 }
 
 static void

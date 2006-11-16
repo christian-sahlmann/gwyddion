@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
@@ -605,8 +606,10 @@ fftf_1d_sanitize_args(Fftf1dArgs *args)
 {
     args->suppress = MIN(args->suppress, GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD);
     args->view_type = MIN(args->view_type, GWY_FFTF_1D_VIEW_UNMARKED);
-    args->direction = MIN(args->direction, GWY_ORIENTATION_VERTICAL);
-    args->interpolation = MIN(args->interpolation, GWY_INTERPOLATION_NNA);
+    args->direction = gwy_enum_sanitize_value(args->direction,
+                                              GWY_TYPE_ORIENTATION);
+    args->interpolation = gwy_enum_sanitize_value(args->interpolation,
+                                                  GWY_TYPE_INTERPOLATION_TYPE);
     args->update = !!args->update;
 
     if (args->suppress == GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD)

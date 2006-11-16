@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/fractals.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwygraph.h>
@@ -601,8 +602,8 @@ static const gchar out_key[]    = "/module/fractal/out";
 static void
 fractal_sanitize_args(FractalArgs *args)
 {
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->out = MIN(args->out, GWY_FRACTAL_LAST-1);
 }
 

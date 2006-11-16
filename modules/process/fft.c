@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -433,9 +434,10 @@ fft_sanitize_args(FFTArgs *args)
 {
     args->preserve = !!args->preserve;
     args->zeromean = !!args->zeromean;
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->window = MIN(args->window, GWY_WINDOWING_RECT);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
+    args->window = gwy_enum_sanitize_value(args->window,
+                                           GWY_TYPE_WINDOWING_TYPE);
     args->out = MIN(args->out, GWY_FFT_OUTPUT_PHASE);
 }
 

@@ -287,8 +287,8 @@ static const gchar lowlimit_key[] = "/module/dwtanisotropy/lowlimit";
 static void
 dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)
 {
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->wavelet = gwy_enum_sanitize_value(args->wavelet, GWY_TYPE_DWT_TYPE);
     args->lowlimit = CLAMP(args->lowlimit, 1, 20);
 }

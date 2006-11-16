@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
@@ -398,8 +399,8 @@ static void
 scale_sanitize_args(ScaleArgs *args)
 {
     args->ratio = CLAMP(args->ratio, 0.001, 100.0);
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->proportional = !!args->proportional;
     if (args->aspectratio <= 0.0)
         args->aspectratio = 1.0;

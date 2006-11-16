@@ -486,17 +486,14 @@ static const gchar expand_key[] = "/module/nanoindent_adjust/expand";
 static const gchar rotate_key[] = "/module/nanoindent_adjust/rotate";
 static const gchar move_key[]   = "/module/nanoindent_adjust/move";
 
-
 static void
 nanoindent_adjust_sanitize_args(NanoindentAdjustArgs *args)
 {
-    args->interp = CLAMP(args->interp,
-                       GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->expand = !!args->expand;
     args->rotate = !!args->rotate;
     args->move = !!args->move;
-
 }
 
 static void
@@ -517,9 +514,7 @@ nanoindent_adjust_save_args(GwyContainer *container, NanoindentAdjustArgs *args)
     gwy_container_set_boolean_by_name(container, expand_key, args->expand);
     gwy_container_set_boolean_by_name(container, rotate_key, args->rotate);
     gwy_container_set_boolean_by_name(container, move_key, args->move);
-
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

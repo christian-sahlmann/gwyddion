@@ -277,8 +277,8 @@ static void
 dwt_denoise_sanitize_args(DWTDenoiseArgs *args)
 {
     args->preserve = !!args->preserve;
-    args->interp = CLAMP(args->interp,
-                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->wavelet = gwy_enum_sanitize_value(args->wavelet, GWY_TYPE_DWT_TYPE);
     args->method = gwy_enum_sanitize_value(args->method,
                                            GWY_TYPE_DWT_DENOISE_TYPE);
