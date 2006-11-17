@@ -65,8 +65,8 @@ typedef struct {
     GtkWidget *matrix_parent;
     GtkWidget *matrix;
     GtkWidget **coeff;
-    GtkObject *divisor;
-    GtkWidget *auto_divisor;
+    GtkWidget *divisor;
+    GtkWidget *divisor_auto;
     gboolean in_update;
     GQuark position_quark;
 } ConvolutionControls;
@@ -79,9 +79,14 @@ static void     convolution_filter_dialog       (ConvolutionArgs *args,
                                                  GwyDataField *dfield,
                                                  gint id,
                                                  GQuark dquark);
+static void     convolution_filter_hsym_changed (GtkToggleButton *button,
+                                                 ConvolutionControls *controls);
+static void     convolution_filter_vsym_changed (GtkToggleButton *button,
+                                                 ConvolutionControls *controls);
 static void     convolution_filter_size_changed (GtkToggleButton *button,
                                                  ConvolutionControls *controls);
 static void     convolution_filter_resize_matrix(ConvolutionControls *controls);
+static void     convolution_filter_update_symmetry(ConvolutionControls *controls);
 static void     convolution_filter_update_matrix(ConvolutionControls *controls);
 static gboolean convolution_filter_coeff_unfocus(GtkEntry *entry,
                                                  GdkEventFocus *event,
@@ -89,6 +94,7 @@ static gboolean convolution_filter_coeff_unfocus(GtkEntry *entry,
 static void     convolution_filter_coeff_changed(GtkEntry *entry,
                                                  ConvolutionControls *controls);
 static void     convolution_filter_find_symmetry(ConvolutionArgs *args);
+static void     convolution_filter_symmetrize   (ConvolutionControls *controls);
 static void     convolution_filter_set_value    (ConvolutionControls *controls,
                                                  guint j,
                                                  guint i,
@@ -161,7 +167,6 @@ convolution_filter(GwyContainer *data,
         = gwy_convolution_filter_preset_new("Foo",
                                             &convolutionpresetdata_default,
                                             FALSE);
-    convolution_filter_find_symmetry(&args);
     convolution_filter_dialog(&args, data, dfield, id, dquark);
 }
 
@@ -190,6 +195,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gdouble zoomval;
     gint response;
     guint i, nsizes;
+    gchar buf[16];
 
     args->computed = FALSE;
     controls.args = args;
@@ -217,7 +223,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
 
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+                       TRUE, TRUE, 4);
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
@@ -271,11 +277,73 @@ convolution_filter_dialog(ConvolutionArgs *args,
 
     controls.matrix = gtk_table_new(1, 1, TRUE);
     gtk_box_pack_start(GTK_BOX(vbox2), controls.matrix, TRUE, TRUE, 0);
+    convolution_filter_find_symmetry(controls.args);
     convolution_filter_resize_matrix(&controls);
     convolution_filter_update_matrix(&controls);
+    convolution_filter_update_symmetry(&controls);
 
     table = gtk_table_new(1, 3, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+
+    controls.divisor = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.divisor), 8);
+    g_snprintf(buf, sizeof(buf), "%.8g", controls.args->preset->data.divisor);
+    gtk_entry_set_text(GTK_ENTRY(controls.divisor), buf);
+    gtk_table_attach(GTK_TABLE(table), controls.divisor,
+                     1, 2, 0, 1, 0, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Divisor:"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, 0, 1, 0, 0, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), label);
+
+    controls.divisor_auto = gtk_check_button_new_with_mnemonic(_("_automatic"));
+    gtk_table_attach(GTK_TABLE(table), controls.divisor_auto,
+                     2, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    vbox2 = gtk_vbox_new(FALSE, 2);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox2), 4);
+    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
+
+    gtk_box_pack_start(GTK_BOX(vbox2), gwy_label_new_header(_("Symmetry")),
+                       FALSE, FALSE, 0);
+
+    hbox2 = gtk_hbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(vbox2), hbox2, TRUE, TRUE, 0);
+
+    table = gtk_table_new(4, 1, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(hbox2), table, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Horizontal"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+
+    controls.hsym
+        = gwy_radio_buttons_create(symmetries, G_N_ELEMENTS(symmetries),
+                                   G_CALLBACK(convolution_filter_hsym_changed),
+                                   &controls,
+                                   controls.args->hsym);
+    gwy_radio_buttons_attach_to_table(controls.hsym, GTK_TABLE(table), 1, 1);
+
+    table = gtk_table_new(4, 1, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(hbox2), table, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Vertical"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+
+    controls.vsym
+        = gwy_radio_buttons_create(symmetries, G_N_ELEMENTS(symmetries),
+                                   G_CALLBACK(convolution_filter_vsym_changed),
+                                   &controls,
+                                   controls.args->vsym);
+    gwy_radio_buttons_attach_to_table(controls.vsym, GTK_TABLE(table), 1, 1);
 
     /* Presets */
     vbox = gtk_vbox_new(FALSE, 8);
@@ -339,6 +407,24 @@ convolution_filter_dialog(ConvolutionArgs *args,
 }
 
 static void
+convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
+                                ConvolutionControls *controls)
+{
+    controls->args->hsym = gwy_radio_buttons_get_current(controls->hsym);
+    convolution_filter_symmetrize(controls);
+    convolution_filter_update_symmetry(controls);
+}
+
+static void
+convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
+                                ConvolutionControls *controls)
+{
+    controls->args->vsym = gwy_radio_buttons_get_current(controls->vsym);
+    convolution_filter_symmetrize(controls);
+    convolution_filter_update_symmetry(controls);
+}
+
+static void
 convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
@@ -349,6 +435,7 @@ convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
                                               newsize);
     convolution_filter_resize_matrix(controls);
     convolution_filter_update_matrix(controls);
+    convolution_filter_update_symmetry(controls);
 }
 
 static void
@@ -390,29 +477,19 @@ static void
 convolution_filter_update_symmetry(ConvolutionControls *controls)
 {
     ConvolutionArgs *args;
-    guint i, j, size;
+    guint i, size;
     gboolean sensitive;
 
     args = controls->args;
     size = args->preset->data.size;
 
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < size; j++) {
-            if ((args->vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN
-                 && i > size/2)
-                || (args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD
-                    && i >= size/2)
-                || (args->hsym == CONVOLUTION_FILTER_SYMMETRY_EVEN
-                    && j > size/2)
-                || (args->hsym == CONVOLUTION_FILTER_SYMMETRY_ODD
-                    && j >= size/2))
-                sensitive = FALSE;
-            else
-                sensitive = TRUE;
+    sensitive = (args->vsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
+    for (i = 0; i < size; i++)
+        gtk_widget_set_sensitive(controls->coeff[size/2*size + i], sensitive);
 
-            gtk_widget_set_sensitive(controls->coeff[i*size + j], sensitive);
-        }
-    }
+    sensitive = (args->hsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
+    for (i = 0; i < size; i++)
+        gtk_widget_set_sensitive(controls->coeff[i*size + size/2], sensitive);
 }
 
 static gboolean
@@ -569,6 +646,9 @@ convolution_filter_do_set_value(ConvolutionControls *controls,
     g_return_if_fail(j < pdata->size);
 
     pdata->matrix[i*pdata->size + j] = val;
+    /* Fix `negative zeroes' */
+    if (val == 0.0)
+        val = fabs(val);
     g_snprintf(buf, sizeof(buf), "%.8g", val);
     gtk_entry_set_text(GTK_ENTRY(controls->coeff[i*pdata->size + j]), buf);
 }
