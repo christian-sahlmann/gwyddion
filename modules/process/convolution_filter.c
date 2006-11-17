@@ -65,6 +65,7 @@ typedef struct {
     GtkWidget *matrix_parent;
     GtkWidget *matrix;
     GtkWidget **coeff;
+    GtkObject *divisor;
     gboolean in_update;
     GQuark position_quark;
 } ConvolutionControls;
