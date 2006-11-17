@@ -19,6 +19,7 @@
  */
 
 enum {
+    CONVOLUTION_MIN_SIZE = 3,
     CONVOLUTION_MAX_SIZE = 9
 };
 
@@ -117,7 +118,9 @@ gwy_convolution_filter_preset_finalize(GObject *object)
 static inline gboolean
 gwy_convolution_filter_preset_check_size(guint size)
 {
-    return size >= 1 && size <= CONVOLUTION_MAX_SIZE && (size & 1);
+    return size >= CONVOLUTION_MIN_SIZE
+           && size <= CONVOLUTION_MAX_SIZE
+           && (size & 1);
 }
 
 static void
