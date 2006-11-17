@@ -80,6 +80,10 @@ static void convolution_filter_dialog           (ConvolutionArgs *args,
                                                  gint id,
                                                  GQuark dquark);
 static void convolution_filter_preview          (ConvolutionControls *controls);
+static void convolution_filter_run_noninteractive(ConvolutionArgs *args,
+                                                  GwyContainer *data,
+                                                  GwyDataField *dfield,
+                                                  GQuark dquark);
 static void convolution_filter_fetch_coeff      (ConvolutionControls *controls);
 static void convolution_filter_update_preset    (ConvolutionControls *controls);
 static void convolution_filter_hsym_changed     (GtkToggleButton *button,
@@ -107,6 +111,10 @@ static void convolution_filter_set_value        (ConvolutionControls *controls,
                                                  guint j,
                                                  guint i,
                                                  gdouble val);
+static void convolution_filter_load_args        (GwyContainer *settings,
+                                                 ConvolutionArgs *args);
+static void convolution_filter_save_args        (GwyContainer *settings,
+                                                 ConvolutionArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -166,16 +174,13 @@ convolution_filter(GwyContainer *data,
                                      0);
     g_return_if_fail(dfield && dquark);
 
-    /*
-    gwy_app_undo_qcheckpointv(data, 1, &dquark);
-    gwy_data_field_data_changed(dfield);
-    */
-
-    args.preset
-        = gwy_convolution_filter_preset_new("Foo",
-                                            &convolutionpresetdata_default,
-                                            FALSE);
-    convolution_filter_dialog(&args, data, dfield, id, dquark);
+    convolution_filter_load_args(gwy_app_settings_get(), &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        convolution_filter_dialog(&args, data, dfield, id, dquark);
+        convolution_filter_save_args(gwy_app_settings_get(), &args);
+    }
+    else
+        convolution_filter_run_noninteractive(&args, data, dfield, dquark);
 }
 
 static void
@@ -371,7 +376,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            /* mark_dialog_update_values(&controls, args); */
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_free(controls.coeff);
@@ -411,9 +415,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     }
     else {
         g_object_unref(controls.mydata);
-        /* TODO
-        run_noninteractive(args, data, dfield, mquark);
-        */
+        convolution_filter_run_noninteractive(args, data, dfield, dquark);
     }
 }
 
@@ -448,6 +450,26 @@ convolution_filter_preview(ConvolutionControls *controls)
     g_object_unref(kernel);
 
     gwy_data_field_data_changed(preview);
+}
+
+static void
+convolution_filter_run_noninteractive(ConvolutionArgs *args,
+                                      GwyContainer *data,
+                                      GwyDataField *dfield,
+                                      GQuark dquark)
+{
+    GwyConvolutionFilterPresetData *pdata;
+    GwyDataField *kernel;
+
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+
+    pdata = &args->preset->data;
+    kernel = gwy_data_field_new(pdata->size, pdata->size, 1.0, 1.0, FALSE);
+    memcpy(gwy_data_field_get_data(kernel), pdata->matrix,
+           pdata->size*pdata->size*sizeof(gdouble));
+    gwy_data_field_convolve(dfield, kernel);
+    g_object_unref(kernel);
+    gwy_data_field_data_changed(dfield);
 }
 
 static void
@@ -848,6 +870,34 @@ convolution_filter_set_value(ConvolutionControls *controls,
         else if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD)
             convolution_filter_do_set_value(controls, j, size-1-i, -val);
     }
+}
+
+static const gchar preset_key[] = "/module/convolution_filter/preset";
+
+static void
+convolution_filter_load_args(GwyContainer *settings,
+                             ConvolutionArgs *args)
+{
+    const guchar *name;
+
+    memset(args, 0, sizeof(ConvolutionArgs));
+    if (gwy_container_gis_string_by_name(settings, preset_key, &name)) {
+        /* TODO */
+    }
+    args->preset
+        = gwy_convolution_filter_preset_new("Untitled",
+                                            &convolutionpresetdata_default,
+                                            FALSE);
+}
+
+static void
+convolution_filter_save_args(GwyContainer *settings,
+                             ConvolutionArgs *args)
+{
+    gchar *name;
+
+    name = g_strdup(gwy_resource_get_name(GWY_RESOURCE(args->preset)));
+    gwy_container_set_string_by_name(settings, preset_key, name);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
