@@ -72,30 +72,36 @@ typedef struct {
 } ConvolutionControls;
 
 static gboolean module_register                 (void);
-static void     convolution_filter              (GwyContainer *data,
+static void convolution_filter                  (GwyContainer *data,
                                                  GwyRunType run);
-static void     convolution_filter_dialog       (ConvolutionArgs *args,
+static void convolution_filter_dialog           (ConvolutionArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  gint id,
                                                  GQuark dquark);
-static void     convolution_filter_hsym_changed (GtkToggleButton *button,
+static void convolution_filter_update_preset    (ConvolutionControls *controls);
+static void convolution_filter_hsym_changed     (GtkToggleButton *button,
                                                  ConvolutionControls *controls);
-static void     convolution_filter_vsym_changed (GtkToggleButton *button,
+static void convolution_filter_vsym_changed     (GtkToggleButton *button,
                                                  ConvolutionControls *controls);
-static void     convolution_filter_size_changed (GtkToggleButton *button,
+static void convolution_filter_size_changed     (GtkToggleButton *button,
                                                  ConvolutionControls *controls);
-static void     convolution_filter_resize_matrix(ConvolutionControls *controls);
-static void     convolution_filter_update_symmetry(ConvolutionControls *controls);
-static void     convolution_filter_update_matrix(ConvolutionControls *controls);
+static void convolution_filter_divisor_changed  (GtkEntry *entry,
+                                                 ConvolutionControls *controls);
+static void convolution_filter_autodiv_changed  (GtkToggleButton *check,
+                                                 ConvolutionControls *controls);
+static void convolution_filter_update_divisor   (ConvolutionControls *controls);
+static void convolution_filter_resize_matrix    (ConvolutionControls *controls);
+static void convolution_filter_update_symmetry  (ConvolutionControls *controls);
+static void convolution_filter_update_matrix    (ConvolutionControls *controls);
 static gboolean convolution_filter_coeff_unfocus(GtkEntry *entry,
                                                  GdkEventFocus *event,
                                                  ConvolutionControls *controls);
-static void     convolution_filter_coeff_changed(GtkEntry *entry,
+static void convolution_filter_coeff_changed    (GtkEntry *entry,
                                                  ConvolutionControls *controls);
-static void     convolution_filter_find_symmetry(ConvolutionArgs *args);
-static void     convolution_filter_symmetrize   (ConvolutionControls *controls);
-static void     convolution_filter_set_value    (ConvolutionControls *controls,
+static void convolution_filter_find_symmetry    (ConvolutionArgs *args);
+static void convolution_filter_symmetrize       (ConvolutionControls *controls);
+static void convolution_filter_set_value        (ConvolutionControls *controls,
                                                  guint j,
                                                  guint i,
                                                  gdouble val);
@@ -191,6 +197,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     ConvolutionControls controls;
     GwyPixmapLayer *layer;
     GtkWidget *dialog, *hbox, *vbox, *hbox2, *vbox2, *notebook, *label, *table;
+    GtkWidget *align;
     GwyEnum *sizes;
     gdouble zoomval;
     gint response;
@@ -221,9 +228,13 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
 
-    hbox = gtk_hbox_new(FALSE, 2);
+    hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        TRUE, TRUE, 4);
+
+    /* Preview */
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 4);
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
@@ -238,8 +249,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
-
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    gtk_container_add(GTK_CONTAINER(align), controls.view);
 
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 4);
@@ -277,10 +287,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
 
     controls.matrix = gtk_table_new(1, 1, TRUE);
     gtk_box_pack_start(GTK_BOX(vbox2), controls.matrix, TRUE, TRUE, 0);
-    convolution_filter_find_symmetry(controls.args);
-    convolution_filter_resize_matrix(&controls);
-    convolution_filter_update_matrix(&controls);
-    convolution_filter_update_symmetry(&controls);
 
     table = gtk_table_new(1, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -293,6 +299,8 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gtk_entry_set_text(GTK_ENTRY(controls.divisor), buf);
     gtk_table_attach(GTK_TABLE(table), controls.divisor,
                      1, 2, 0, 1, 0, 0, 0, 0);
+    g_signal_connect(controls.divisor, "changed",
+                     G_CALLBACK(convolution_filter_divisor_changed), &controls);
 
     label = gtk_label_new_with_mnemonic(_("_Divisor:"));
     gtk_table_attach(GTK_TABLE(table), label,
@@ -302,6 +310,8 @@ convolution_filter_dialog(ConvolutionArgs *args,
     controls.divisor_auto = gtk_check_button_new_with_mnemonic(_("_automatic"));
     gtk_table_attach(GTK_TABLE(table), controls.divisor_auto,
                      2, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.divisor_auto, "toggled",
+                     G_CALLBACK(convolution_filter_autodiv_changed), &controls);
 
     vbox2 = gtk_vbox_new(FALSE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(vbox2), 4);
@@ -344,6 +354,8 @@ convolution_filter_dialog(ConvolutionArgs *args,
                                    &controls,
                                    controls.args->vsym);
     gwy_radio_buttons_attach_to_table(controls.vsym, GTK_TABLE(table), 1, 1);
+
+    convolution_filter_update_preset(&controls);
 
     /* Presets */
     vbox = gtk_vbox_new(FALSE, 8);
@@ -407,9 +419,24 @@ convolution_filter_dialog(ConvolutionArgs *args,
 }
 
 static void
+convolution_filter_update_preset(ConvolutionControls *controls)
+{
+    convolution_filter_find_symmetry(controls->args);
+    convolution_filter_resize_matrix(controls);
+    convolution_filter_update_matrix(controls);
+    convolution_filter_update_symmetry(controls);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->divisor_auto),
+                                 controls->args->preset->data.auto_divisor);
+    convolution_filter_update_divisor(controls);
+}
+
+static void
 convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
+    if (controls->in_update)
+        return;
+
     controls->args->hsym = gwy_radio_buttons_get_current(controls->hsym);
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
@@ -419,6 +446,9 @@ static void
 convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
+    if (controls->in_update)
+        return;
+
     controls->args->vsym = gwy_radio_buttons_get_current(controls->vsym);
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
@@ -430,12 +460,56 @@ convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
 {
     guint newsize;
 
+    if (controls->in_update)
+        return;
+
     newsize = gwy_radio_buttons_get_current(controls->sizes);
     gwy_convolution_filter_preset_data_resize(&controls->args->preset->data,
                                               newsize);
     convolution_filter_resize_matrix(controls);
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
+}
+
+static void
+convolution_filter_divisor_changed(GtkEntry *entry,
+                                   ConvolutionControls *controls)
+{
+    if (controls->in_update)
+        return;
+
+    controls->args->preset->data.divisor = g_strtod(gtk_entry_get_text(entry),
+                                                    NULL);
+}
+
+static void
+convolution_filter_autodiv_changed(GtkToggleButton *check,
+                                   ConvolutionControls *controls)
+{
+    gboolean autodiv;
+
+    if (controls->in_update)
+        return;
+
+    autodiv = gtk_toggle_button_get_active(check);
+    controls->args->preset->data.auto_divisor = autodiv;
+    gtk_widget_set_sensitive(controls->divisor, !autodiv);
+    if (!autodiv)
+        return;
+
+    gwy_convolution_filter_preset_data_autodiv(&controls->args->preset->data);
+    convolution_filter_update_divisor(controls);
+}
+
+static void
+convolution_filter_update_divisor(ConvolutionControls *controls)
+{
+    gchar buf[16];
+
+    controls->in_update = TRUE;
+    g_snprintf(buf, sizeof(buf), "%.8g", controls->args->preset->data.divisor);
+    gtk_entry_set_text(GTK_ENTRY(controls->divisor), buf);
+    controls->in_update = FALSE;
 }
 
 static void
@@ -520,6 +594,12 @@ convolution_filter_coeff_changed(GtkEntry *entry,
     if (!*end)
         convolution_filter_set_value(controls, i % size, i/size, val);
     controls->in_update = FALSE;
+
+    if (!controls->args->preset->data.auto_divisor)
+        return;
+
+    gwy_convolution_filter_preset_data_autodiv(&controls->args->preset->data);
+    convolution_filter_update_divisor(controls);
 }
 
 static void
