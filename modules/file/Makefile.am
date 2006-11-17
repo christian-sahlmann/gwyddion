@@ -31,6 +31,7 @@ file_LTLIBRARIES = \
 	bcrfile.la \
 	burleigh.la \
 	createc.la \
+	dmefile.la \
 	ezdfile.la \
 	ecsfile.la \
 	gwyfile.la \
@@ -117,6 +118,9 @@ burleigh_la_LIBADD = $(module_libadd)
 
 createc_la_SOURCES = createc.c
 createc_la_LIBADD = $(module_libadd)
+
+dmefile_la_SOURCES = dmefile.c
+dmefile_la_LIBADD = $(module_libadd)
 
 ecsfile_la_SOURCES = ecsfile.c
 ecsfile_la_LIBADD = $(module_libadd)
