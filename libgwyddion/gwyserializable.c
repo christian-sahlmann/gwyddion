@@ -24,7 +24,8 @@
 #include <glib/gutils.h>
 
 #include <libgwyddion/gwymacros.h>
-#include "gwyserializable.h"
+#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwyserializable.h>
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
