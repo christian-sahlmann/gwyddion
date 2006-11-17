@@ -272,6 +272,9 @@ convolution_filter_dialog(ConvolutionArgs *args,
     convolution_filter_resize_matrix(&controls);
     convolution_filter_update_matrix(&controls);
 
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+
     /* Presets */
     vbox = gtk_vbox_new(FALSE, 8);
     label = gtk_label_new(_("Presets"));
