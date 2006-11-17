@@ -184,6 +184,36 @@ get_PASCAL_STRING(const guchar **p,
     return s;
 }
 
+static inline gdouble
+get_PASCAL_REAL_LE(const guchar **p)
+{
+    gint power;
+    gdouble x;
+
+    if (!(*p)[0]) {
+        *p += 6;
+        return 0.0;
+    }
+    x = 1.0 + (((((*p)[1]/256.0 + (*p)[2])/256.0 + (*p)[3])/256.0
+                + (*p)[4])/256.0 + ((*p)[5] & 0x7f))/128.0;
+    if ((*p)[5] & 0x80)
+        x = -x;
+
+    power = (gint)(*p)[0] - 129;
+    while (power > 0) {
+        x *= 2.0;
+        power--;
+    }
+    while (power < 0) {
+        x /= 2.0;
+        power++;
+    }
+
+    p += 6;
+
+    return x;
+}
+
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
