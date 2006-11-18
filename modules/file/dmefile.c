@@ -39,7 +39,7 @@
 #define Angstrom (1e-10)
 
 enum {
-    HEADER_SIZE = 2048
+    HEADER_SIZE = 4048
 };
 
 typedef struct {
