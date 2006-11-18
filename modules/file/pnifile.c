@@ -93,7 +93,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Pacific Nanotechnology PNI data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -203,7 +203,7 @@ pni_load(const gchar *filename,
     data = gwy_data_field_get_data(dfield);
     d16 = (const gint16*)(buffer + DATA_START);
     for (i = 0; i < xres*yres; i++)
-        data[i] = zscale*d16[i]/65536.0;
+        data[i] = zscale*GINT16_FROM_LE(d16[i])/65536.0;
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     gwy_file_abandon_contents(buffer, size, NULL);
