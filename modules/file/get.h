@@ -209,7 +209,7 @@ get_PASCAL_REAL_LE(const guchar **p)
         power++;
     }
 
-    p += 6;
+    *p += 6;
 
     return x;
 }
