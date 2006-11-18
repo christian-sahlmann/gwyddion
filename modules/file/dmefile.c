@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -232,8 +232,6 @@ static void
 dme_read_header(const guchar *p,
                 DMEFile *dmefile)
 {
-    const guchar *q = p;
-
     get_CHARARRAY(dmefile->program_name, &p);
     dmefile->file_version = get_WORD_LE(&p);
     dmefile->program_version = get_WORD_LE(&p);
@@ -245,8 +243,8 @@ dme_read_header(const guchar *p,
     get_PASCAL_CHARARRAY0(dmefile->comment, &p);
     g_strstrip(dmefile->comment);
     dmefile->data_type = *(p++);
+    gwy_debug("data_type: %u", dmefile->data_type);
     p += 123;  /* reserved */
-    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->xres = get_DWORD_LE(&p);
     dmefile->yres = get_DWORD_LE(&p);
     gwy_debug("xres: %u, yres: %u", dmefile->xres, dmefile->yres);
@@ -259,18 +257,22 @@ dme_read_header(const guchar *p,
     g_strstrip(dmefile->title);
     dmefile->sample_pause = get_PASCAL_REAL_LE(&p);
     dmefile->sample_speed = get_PASCAL_REAL_LE(&p);
+    gwy_debug("sample_pause: %g, sample_speed: %g",
+              dmefile->sample_pause, dmefile->sample_speed);
     dmefile->tunnel_current = get_PASCAL_REAL_LE(&p);
     dmefile->bias = get_PASCAL_REAL_LE(&p);
     dmefile->loop_gain = get_PASCAL_REAL_LE(&p);
+    gwy_debug("tunnel_current: %g, bias: %g, loop_gain: %g",
+              dmefile->tunnel_current, dmefile->bias, dmefile->loop_gain);
     dmefile->direction = get_WORD_LE(&p);
     dmefile->head_type = *(p++);
+    gwy_debug("direction: %u, head_type: %u",
+              dmefile->direction, dmefile->head_type);
     p += 291;  /* reserved */
-    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->x_calibration = get_PASCAL_REAL_LE(&p);
     dmefile->y_calibration = get_PASCAL_REAL_LE(&p);
     dmefile->z_calibration = get_PASCAL_REAL_LE(&p);
     p += 120;  /* reserved */
-    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->min = get_PASCAL_REAL_LE(&p);
     dmefile->max = get_PASCAL_REAL_LE(&p);
     dmefile->mean = get_PASCAL_REAL_LE(&p);
@@ -285,17 +287,14 @@ dme_read_header(const guchar *p,
     dmefile->rms = get_PASCAL_REAL_LE(&p);
     dmefile->ry = get_PASCAL_REAL_LE(&p);
     p += 2017;  /* reserved */
-    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->display_form_mode = *(p++);
     dmefile->display_rotated = get_WORD_LE(&p);
     dmefile->display_angle_polar = get_WORD_LE(&p);
     dmefile->display_angle_azimuthal = get_WORD_LE(&p);
     dmefile->scale_fraction = get_PASCAL_REAL_LE(&p);
     p += 334;  /* reserved */
-    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->slope_mode = *(p++);
     p += 38;  /* reserved */
-    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->height_scale_factor = get_PASCAL_REAL_LE(&p);
     gwy_debug("height_scale_factor: %g", dmefile->height_scale_factor);
 }
