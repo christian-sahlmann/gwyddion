@@ -184,6 +184,27 @@ get_PASCAL_STRING(const guchar **p,
     return s;
 }
 
+/* Get a non-terminated string preceded by one byte containing the length.
+ * Size is the maximum size of the string and the number of bytes the pointer
+ * will move forward.
+ * Dest must be one byte larger to hold the terminating NUL. */
+static inline void
+get_PASCAL_CHARS0(gchar *dest,
+                  const guchar **p,
+                  gsize size)
+{
+    guint len;
+
+    len = MIN(**p, size);
+    (*p)++;
+    memcpy(dest, *p, len);
+    dest[len] = '\0';
+    *p += size;
+}
+
+#define get_PASCAL_CHARARRAY0(dest, p) \
+    get_PASCAL_CHARS0(dest, p, sizeof(dest)-1)
+
 static inline gdouble
 get_PASCAL_REAL_LE(const guchar **p)
 {

@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
@@ -48,7 +49,7 @@ typedef struct {
     guint32 header_size;
     guint32 data_size;
     gchar time[17];
-    gchar comment[149];
+    gchar comment[148 + 1];
     guint data_type;  /* FIXME */
     guint32 xres;
     guint32 yres;
@@ -56,7 +57,7 @@ typedef struct {
     gdouble yreal;
     gdouble xoff;
     gdouble yoff;
-    gchar title[19];
+    gchar title[19 + 1];
     gdouble sample_pause;
     gdouble sample_speed;
     gdouble tunnel_current;
@@ -65,6 +66,7 @@ typedef struct {
     guint direction;  /* FIXME */
     guint head_type;  /* FIXME */
     gdouble x_calibration;
+    gdouble y_calibration;  /* XXX: Missing in the documentation? */
     gdouble z_calibration;
     gdouble min;
     gdouble max;
@@ -146,15 +148,12 @@ dme_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    const guchar *p;
-    gint i, xres, yres;
+    guint i, j;
     DMEFile dmefile;
-    gdouble xreal, yreal, zscale;
     gdouble *data;
-    const gint16 *d16;
+    const gint16 *d16, *ls16;
     GwySIUnit *siunit;
-    const gchar *title;
-    gchar *s;
+    gdouble q;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -168,17 +167,42 @@ dme_load(const gchar *filename,
 
     dme_read_header(buffer, &dmefile);
 
-    gwy_file_abandon_contents(buffer, size, NULL);
-    err_NO_DATA(error);
-    return NULL;
+    if (dmefile.header_size < HEADER_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Header is too short (only %d bytes)."),
+                    dmefile.header_size);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
 
-#if 0
-    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    if (dmefile.header_size + dmefile.data_size != size) {
+        err_SIZE_MISMATCH(error, dmefile.header_size + dmefile.data_size, size);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    if (dmefile.data_size != 2*(dmefile.xres + 1)*dmefile.yres) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Data size %u do not match data dimensions (%ux%u)."),
+                    dmefile.data_size, dmefile.xres, dmefile.yres);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    dfield = gwy_data_field_new(dmefile.xres, dmefile.yres,
+                                Angstrom*dmefile.xreal, Angstrom*dmefile.yreal,
+                                FALSE);
     data = gwy_data_field_get_data(dfield);
-    d16 = (const gint16*)(buffer + DATA_START);
-    for (i = 0; i < xres*yres; i++)
-        data[i] = zscale*d16[i]/65536.0;
-    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+    d16 = (const gint16*)(buffer + dmefile.header_size);
+    ls16 = (const gint16*)(buffer + dmefile.header_size)
+           + dmefile.xres*dmefile.yres;
+    for (i = 0; i < dmefile.yres; i++) {
+        q = Angstrom * dmefile.height_scale_factor * pow(2.0, ls16[i] & 0x0f);
+        for (j = 0; j < dmefile.xres; j++) {
+            data[i*dmefile.xres + j]
+                = q*GINT16_FROM_LE(d16[i*dmefile.xres + j]);
+        }
+    }
 
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -186,22 +210,7 @@ dme_load(const gchar *filename,
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
 
-    switch (value_type) {
-        case VALUE_TYPE_NM:
-        siunit = gwy_si_unit_new("m");
-        gwy_data_field_multiply(dfield, Nanometer);
-        break;
-
-        case VALUE_TYPE_MV:
-        siunit = gwy_si_unit_new("V");
-        gwy_data_field_multiply(dfield, Milivolt);
-        break;
-
-        default:
-        g_warning("Value type %d is unknown", value_type);
-        siunit = gwy_si_unit_new(NULL);
-        break;
-    }
+    siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
@@ -209,18 +218,14 @@ dme_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    title = gwy_enum_to_string(data_type, titles, G_N_ELEMENTS(titles));
-    if (title) {
-        s = g_strdup_printf("%s (%s)",
-                            title,
-                            direction ? "Forward" : "Backward");
-        gwy_container_set_string_by_name(container, "/0/data/title", s);
-    }
+    if (dmefile.title[0])
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup(dmefile.title));
     else
-        g_warning("Data type %d is unknown", data_type);
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup("Topography"));
 
     return container;
-#endif
 }
 
 static void
@@ -237,9 +242,11 @@ dme_read_header(const guchar *p,
     gwy_debug("header_size: %u data_size: %u",
               dmefile->header_size, dmefile->data_size);
     get_CHARARRAY(dmefile->time, &p);
-    get_CHARARRAY0(dmefile->comment, &p);
+    get_PASCAL_CHARARRAY0(dmefile->comment, &p);
+    g_strstrip(dmefile->comment);
     dmefile->data_type = *(p++);
     p += 123;  /* reserved */
+    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->xres = get_DWORD_LE(&p);
     dmefile->yres = get_DWORD_LE(&p);
     gwy_debug("xres: %u, yres: %u", dmefile->xres, dmefile->yres);
@@ -248,7 +255,8 @@ dme_read_header(const guchar *p,
     gwy_debug("xreal: %g, yreal: %g", dmefile->xreal, dmefile->yreal);
     dmefile->xoff = get_PASCAL_REAL_LE(&p);
     dmefile->yoff = get_PASCAL_REAL_LE(&p);
-    get_CHARARRAY0(dmefile->title, &p);
+    get_PASCAL_CHARARRAY0(dmefile->title, &p);
+    g_strstrip(dmefile->title);
     dmefile->sample_pause = get_PASCAL_REAL_LE(&p);
     dmefile->sample_speed = get_PASCAL_REAL_LE(&p);
     dmefile->tunnel_current = get_PASCAL_REAL_LE(&p);
@@ -257,11 +265,12 @@ dme_read_header(const guchar *p,
     dmefile->direction = get_WORD_LE(&p);
     dmefile->head_type = *(p++);
     p += 291;  /* reserved */
+    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->x_calibration = get_PASCAL_REAL_LE(&p);
+    dmefile->y_calibration = get_PASCAL_REAL_LE(&p);
     dmefile->z_calibration = get_PASCAL_REAL_LE(&p);
-    gwy_debug("x_calibration: %g, z_calibration: %g",
-              dmefile->x_calibration, dmefile->z_calibration);
     p += 120;  /* reserved */
+    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->min = get_PASCAL_REAL_LE(&p);
     dmefile->max = get_PASCAL_REAL_LE(&p);
     dmefile->mean = get_PASCAL_REAL_LE(&p);
@@ -276,15 +285,19 @@ dme_read_header(const guchar *p,
     dmefile->rms = get_PASCAL_REAL_LE(&p);
     dmefile->ry = get_PASCAL_REAL_LE(&p);
     p += 2017;  /* reserved */
+    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->display_form_mode = *(p++);
     dmefile->display_rotated = get_WORD_LE(&p);
     dmefile->display_angle_polar = get_WORD_LE(&p);
     dmefile->display_angle_azimuthal = get_WORD_LE(&p);
     dmefile->scale_fraction = get_PASCAL_REAL_LE(&p);
-    p += 38;  /* reserved */
+    p += 334;  /* reserved */
+    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->slope_mode = *(p++);
     p += 38;  /* reserved */
+    gwy_debug("%u %x", (guint)(p - q), (guint)(p - q));
     dmefile->height_scale_factor = get_PASCAL_REAL_LE(&p);
+    gwy_debug("height_scale_factor: %g", dmefile->height_scale_factor);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
