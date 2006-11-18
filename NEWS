@@ -1,12 +1,21 @@
-2.1.20061114
+2.1.20061118
 
 2.2 (0000-00-00)
+Application:
+- Translations updated: Italian.
+
 Libraries:
 - libgwyprocess: Broken B-spline and Omoms interpolations were made identical
-  to Key.
+  to Key.  Cubic Schaum interpolation was added.
 
 Modules:
+- DME file (new): DME Rasterscope data file import.
 - Mask operations: It is possible to copy mask from one channel to another.
+- PNI file: Missing value endian conversion was added (affected big-endian
+  machines).
+
+Other:
+- Build errors on big-endian systems (from 2.1) were fixed.
 
 
 2.1 (2006-11-05)
