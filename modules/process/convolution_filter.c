@@ -69,6 +69,7 @@ typedef struct {
     gboolean in_update;
     GQuark position_quark;
     gboolean computed;
+    gboolean preset_edited;
 } ConvolutionControls;
 
 static gboolean module_register                 (void);
@@ -213,6 +214,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
 
     controls.args = args;
     controls.computed = FALSE;
+    controls.preset_edited = FALSE;
     controls.coeff = NULL;
     controls.position_quark = g_quark_from_static_string("position");
 
@@ -512,6 +514,7 @@ convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
+    controls->preset_edited = TRUE;
 }
 
 static void
@@ -525,6 +528,7 @@ convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
+    controls->preset_edited = TRUE;
 }
 
 static void
@@ -543,6 +547,7 @@ convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
+    controls->preset_edited = TRUE;
 }
 
 static void
@@ -555,6 +560,7 @@ convolution_filter_divisor_changed(GtkEntry *entry,
     controls->args->preset->data.divisor = g_strtod(gtk_entry_get_text(entry),
                                                     NULL);
     controls->computed = FALSE;
+    controls->preset_edited = TRUE;
 }
 
 static void
@@ -575,6 +581,7 @@ convolution_filter_autodiv_changed(GtkToggleButton *check,
     gwy_convolution_filter_preset_data_autodiv(&controls->args->preset->data);
     convolution_filter_update_divisor(controls);
     controls->computed = FALSE;
+    controls->preset_edited = TRUE;
 }
 
 static void
@@ -662,15 +669,18 @@ convolution_filter_coeff_changed(GtkEntry *entry,
     if (controls->in_update)
         return;
 
-    controls->in_update = TRUE;
-    size = controls->args->preset->data.size;
     i = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(entry),
                                             controls->position_quark));
     val = g_strtod(gtk_entry_get_text(entry), &end);
-    if (!*end)
-        convolution_filter_set_value(controls, i % size, i/size, val);
+    if (val == controls->args->preset->data.matrix[i])
+        return;
+
+    controls->in_update = TRUE;
+    size = controls->args->preset->data.size;
+    convolution_filter_set_value(controls, i % size, i/size, val);
     controls->in_update = FALSE;
     controls->computed = FALSE;
+    controls->preset_edited = TRUE;
 
     if (!controls->args->preset->data.auto_divisor)
         return;
