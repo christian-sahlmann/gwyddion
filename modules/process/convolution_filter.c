@@ -27,6 +27,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
+#include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -51,6 +52,7 @@ typedef struct {
     GwyConvolutionFilterPreset *preset;
     ConvolutionFilterSymmetryType hsym;
     ConvolutionFilterSymmetryType vsym;
+    gboolean edited;
 } ConvolutionArgs;
 
 typedef struct {
@@ -69,7 +71,6 @@ typedef struct {
     gboolean in_update;
     GQuark position_quark;
     gboolean computed;
-    gboolean preset_edited;
 } ConvolutionControls;
 
 static gboolean module_register                 (void);
@@ -80,6 +81,8 @@ static void convolution_filter_dialog           (ConvolutionArgs *args,
                                                  GwyDataField *dfield,
                                                  gint id,
                                                  GQuark dquark);
+static GtkWidget* convolution_filter_create_filter_tab(ConvolutionControls *controls);
+static GtkWidget* convolution_filter_create_preset_tab(ConvolutionControls *controls);
 static void convolution_filter_preview          (ConvolutionControls *controls);
 static void convolution_filter_run_noninteractive(ConvolutionArgs *args,
                                                   GwyContainer *data,
@@ -133,13 +136,14 @@ static gboolean
 module_register(void)
 {
     static gint types_initialized = 0;
-    GwyResourceClass *klass;
 
     if (!types_initialized) {
+        GwyResourceClass *klass;
+
         types_initialized += gwy_convolution_filter_preset_get_type();
-        klass = g_type_class_ref(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
+        gwy_convolution_filter_preset_class_setup_presets();
+        klass = g_type_class_peek(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
         gwy_resource_class_load(klass);
-        g_type_class_unref(klass);
     }
 
     gwy_process_func_register("convolution_filter",
@@ -165,9 +169,8 @@ convolution_filter(GwyContainer *data,
 
     g_return_if_fail(run & CONVOLUTION_RUN_MODES);
 
-    rklass = g_type_class_ref(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
+    rklass = g_type_class_peek(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
     gwy_resource_class_mkdir(rklass);
-    g_type_class_unref(rklass);
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
                                      GWY_APP_DATA_FIELD, &dfield,
@@ -176,12 +179,14 @@ convolution_filter(GwyContainer *data,
     g_return_if_fail(dfield && dquark);
 
     convolution_filter_load_args(gwy_app_settings_get(), &args);
+    gwy_resource_use(GWY_RESOURCE(args.preset));
     if (run == GWY_RUN_INTERACTIVE) {
         convolution_filter_dialog(&args, data, dfield, id, dquark);
         convolution_filter_save_args(gwy_app_settings_get(), &args);
     }
     else
         convolution_filter_run_noninteractive(&args, data, dfield, dquark);
+    gwy_resource_release(GWY_RESOURCE(args.preset));
 }
 
 static void
@@ -196,36 +201,16 @@ convolution_filter_dialog(ConvolutionArgs *args,
         RESPONSE_PREVIEW = 2
     };
 
-    static const GwyEnum symmetries[] = {
-        { N_("None"), CONVOLUTION_FILTER_SYMMETRY_NONE, },
-        { N_("Even"), CONVOLUTION_FILTER_SYMMETRY_EVEN, },
-        { N_("Odd"),  CONVOLUTION_FILTER_SYMMETRY_ODD,  },
-    };
-
     ConvolutionControls controls;
     GwyPixmapLayer *layer;
-    GtkWidget *dialog, *hbox, *vbox, *hbox2, *vbox2, *notebook, *label, *table;
+    GtkWidget *dialog, *hbox, *vbox, *notebook, *label;
     GtkWidget *align;
-    GwyEnum *sizes;
     gdouble zoomval;
     gint response;
-    guint i, nsizes;
-    gchar buf[16];
 
     controls.args = args;
     controls.computed = FALSE;
-    controls.preset_edited = FALSE;
-    controls.coeff = NULL;
     controls.position_quark = g_quark_from_static_string("position");
-
-    nsizes = (CONVOLUTION_MAX_SIZE - CONVOLUTION_MIN_SIZE)/2 + 1;
-    sizes = g_new0(GwyEnum, nsizes + 1);
-    for (i = 0; i < nsizes; i++) {
-        sizes[i].value = CONVOLUTION_MIN_SIZE + 2*i;
-        sizes[i].name = g_strdup_printf("%s%d × %d",
-                                        sizes[i].value < 11 ? "_" : "",
-                                        sizes[i].value, sizes[i].value);
-    }
 
     dialog = gtk_dialog_new_with_buttons(_("Convolution Filter"), NULL, 0,
                                          _("_Update"), RESPONSE_PREVIEW,
@@ -264,9 +249,88 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 4);
 
     /* Filter */
-    vbox = gtk_vbox_new(FALSE, 0);
+    vbox = convolution_filter_create_filter_tab(&controls);
     label = gtk_label_new(_("Filter"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+
+    convolution_filter_update_preset(&controls);
+
+    /* Presets */
+    vbox = convolution_filter_create_preset_tab(&controls);
+    label = gtk_label_new(_("Presets"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        convolution_filter_fetch_coeff(&controls);
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            g_object_unref(controls.mydata);
+            return;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            /* FIXME: keep and fix or remove? */
+            case RESPONSE_RESET:
+            gwy_convolution_filter_preset_data_copy(&convolutionpresetdata_default,
+                                                    &controls.args->preset->data);
+            convolution_filter_update_preset(&controls);
+            break;
+
+            case RESPONSE_PREVIEW:
+            convolution_filter_preview(&controls);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    if (controls.computed) {
+        dfield = gwy_container_get_object_by_name(controls.mydata, "/0/data");
+        gwy_app_undo_qcheckpointv(data, 1, &dquark);
+        gwy_container_set_object(data, dquark, dfield);
+        g_object_unref(controls.mydata);
+    }
+    else {
+        g_object_unref(controls.mydata);
+        convolution_filter_run_noninteractive(args, data, dfield, dquark);
+    }
+}
+
+static GtkWidget*
+convolution_filter_create_filter_tab(ConvolutionControls *controls)
+{
+    static const GwyEnum symmetries[] = {
+        { N_("None"), CONVOLUTION_FILTER_SYMMETRY_NONE, },
+        { N_("Even"), CONVOLUTION_FILTER_SYMMETRY_EVEN, },
+        { N_("Odd"),  CONVOLUTION_FILTER_SYMMETRY_ODD,  },
+    };
+
+    GtkWidget *table, *vbox, *hbox2, *vbox2, *label;
+    GwyEnum *sizes;
+    guint i, nsizes;
+    gchar buf[16];
+
+    nsizes = (CONVOLUTION_MAX_SIZE - CONVOLUTION_MIN_SIZE)/2 + 1;
+    sizes = g_new0(GwyEnum, nsizes + 1);
+    for (i = 0; i < nsizes; i++) {
+        sizes[i].value = CONVOLUTION_MIN_SIZE + 2*i;
+        sizes[i].name = g_strdup_printf("%s%d × %d",
+                                        sizes[i].value < 11 ? "_" : "",
+                                        sizes[i].value, sizes[i].value);
+    }
+
+    vbox = gtk_vbox_new(FALSE, 0);
 
     hbox2 = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
@@ -278,49 +342,51 @@ convolution_filter_dialog(ConvolutionArgs *args,
 
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Size")),
                      0, 1, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.sizes
+    controls->sizes
         = gwy_radio_buttons_create(sizes, nsizes,
                                    G_CALLBACK(convolution_filter_size_changed),
-                                   &controls,
-                                   controls.args->preset->data.size);
-    gwy_radio_buttons_attach_to_table(controls.sizes, GTK_TABLE(table), 1, 1);
+                                   controls,
+                                   controls->args->preset->data.size);
+    gwy_radio_buttons_attach_to_table(controls->sizes, GTK_TABLE(table), 1, 1);
+    g_signal_connect_swapped(GTK_WIDGET(controls->sizes->data), "destroy",
+                             G_CALLBACK(gwy_enum_freev), sizes);
 
     vbox2 = gtk_vbox_new(FALSE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(vbox2), 4);
     gtk_box_pack_start(GTK_BOX(hbox2), vbox2, TRUE, TRUE, 0);
-    controls.matrix_parent = vbox2;
+    controls->matrix_parent = vbox2;
 
     gtk_box_pack_start(GTK_BOX(vbox2),
                        gwy_label_new_header(_("Coefficient Matrix")),
                        FALSE, FALSE, 0);
 
-    controls.matrix = gtk_table_new(1, 1, TRUE);
-    gtk_box_pack_start(GTK_BOX(vbox2), controls.matrix, TRUE, TRUE, 0);
+    controls->matrix = gtk_table_new(1, 1, TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox2), controls->matrix, TRUE, TRUE, 0);
 
     table = gtk_table_new(1, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
-    controls.divisor = gtk_entry_new();
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.divisor), 8);
-    g_snprintf(buf, sizeof(buf), "%.8g", controls.args->preset->data.divisor);
-    gtk_entry_set_text(GTK_ENTRY(controls.divisor), buf);
-    gtk_table_attach(GTK_TABLE(table), controls.divisor,
+    controls->divisor = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->divisor), 8);
+    g_snprintf(buf, sizeof(buf), "%.8g", controls->args->preset->data.divisor);
+    gtk_entry_set_text(GTK_ENTRY(controls->divisor), buf);
+    gtk_table_attach(GTK_TABLE(table), controls->divisor,
                      1, 2, 0, 1, 0, 0, 0, 0);
-    g_signal_connect(controls.divisor, "changed",
-                     G_CALLBACK(convolution_filter_divisor_changed), &controls);
+    g_signal_connect(controls->divisor, "changed",
+                     G_CALLBACK(convolution_filter_divisor_changed), controls);
 
     label = gtk_label_new_with_mnemonic(_("_Divisor:"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, 0, 1, 0, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), label);
 
-    controls.divisor_auto = gtk_check_button_new_with_mnemonic(_("_automatic"));
-    gtk_table_attach(GTK_TABLE(table), controls.divisor_auto,
+    controls->divisor_auto = gtk_check_button_new_with_mnemonic(_("_automatic"));
+    gtk_table_attach(GTK_TABLE(table), controls->divisor_auto,
                      2, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.divisor_auto, "toggled",
-                     G_CALLBACK(convolution_filter_autodiv_changed), &controls);
+    g_signal_connect(controls->divisor_auto, "toggled",
+                     G_CALLBACK(convolution_filter_autodiv_changed), controls);
 
     vbox2 = gtk_vbox_new(FALSE, 2);
     gtk_container_set_border_width(GTK_CONTAINER(vbox2), 4);
@@ -341,12 +407,12 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
 
-    controls.hsym
+    controls->hsym
         = gwy_radio_buttons_create(symmetries, G_N_ELEMENTS(symmetries),
                                    G_CALLBACK(convolution_filter_hsym_changed),
-                                   &controls,
-                                   controls.args->hsym);
-    gwy_radio_buttons_attach_to_table(controls.hsym, GTK_TABLE(table), 1, 1);
+                                   controls,
+                                   controls->args->hsym);
+    gwy_radio_buttons_attach_to_table(controls->hsym, GTK_TABLE(table), 1, 1);
 
     table = gtk_table_new(4, 1, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -357,68 +423,40 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
 
-    controls.vsym
+    controls->vsym
         = gwy_radio_buttons_create(symmetries, G_N_ELEMENTS(symmetries),
                                    G_CALLBACK(convolution_filter_vsym_changed),
-                                   &controls,
-                                   controls.args->vsym);
-    gwy_radio_buttons_attach_to_table(controls.vsym, GTK_TABLE(table), 1, 1);
+                                   controls,
+                                   controls->args->vsym);
+    gwy_radio_buttons_attach_to_table(controls->vsym, GTK_TABLE(table), 1, 1);
 
-    convolution_filter_update_preset(&controls);
+    return vbox;
+}
 
-    /* Presets */
-    vbox = gtk_vbox_new(FALSE, 8);
-    label = gtk_label_new(_("Presets"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+static GtkWidget*
+convolution_filter_create_preset_tab(ConvolutionControls *controls)
+{
+    GwyInventoryStore *store;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkWidget *vbox, *treeview;
+    gint i;
 
-    gtk_widget_show_all(dialog);
-    do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
-        convolution_filter_fetch_coeff(&controls);
-        switch (response) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
-            case GTK_RESPONSE_NONE:
-            g_free(controls.coeff);
-            gwy_enum_freev(sizes);
-            g_object_unref(controls.mydata);
-            return;
-            break;
+    vbox = gtk_vbox_new(FALSE, 0);
 
-            case GTK_RESPONSE_OK:
-            break;
+    store = gwy_inventory_store_new(gwy_convolution_filter_presets());
+    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(store);
+    gtk_box_pack_start(GTK_BOX(vbox), treeview, TRUE, TRUE, 0);
 
-            case RESPONSE_RESET:
-            gwy_convolution_filter_preset_data_copy(&convolutionpresetdata_default,
-                                                    &controls.args->preset->data);
-            convolution_filter_update_preset(&controls);
-            break;
+    renderer = gtk_cell_renderer_text_new();
+    i = gwy_inventory_store_get_column_by_name(store, "name");
+    column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
+                                                      "text", i,
+                                                      NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
-            case RESPONSE_PREVIEW:
-            convolution_filter_preview(&controls);
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (response != GTK_RESPONSE_OK);
-
-    g_free(controls.coeff);
-    gtk_widget_destroy(dialog);
-    gwy_enum_freev(sizes);
-
-    if (controls.computed) {
-        dfield = gwy_container_get_object_by_name(controls.mydata, "/0/data");
-        gwy_app_undo_qcheckpointv(data, 1, &dquark);
-        gwy_container_set_object(data, dquark, dfield);
-        g_object_unref(controls.mydata);
-    }
-    else {
-        g_object_unref(controls.mydata);
-        convolution_filter_run_noninteractive(args, data, dfield, dquark);
-    }
+    return vbox;
 }
 
 static void
@@ -514,7 +552,7 @@ convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    controls->preset_edited = TRUE;
+    controls->args->edited = TRUE;
 }
 
 static void
@@ -528,7 +566,7 @@ convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    controls->preset_edited = TRUE;
+    controls->args->edited = TRUE;
 }
 
 static void
@@ -547,7 +585,7 @@ convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    controls->preset_edited = TRUE;
+    controls->args->edited = TRUE;
 }
 
 static void
@@ -560,7 +598,7 @@ convolution_filter_divisor_changed(GtkEntry *entry,
     controls->args->preset->data.divisor = g_strtod(gtk_entry_get_text(entry),
                                                     NULL);
     controls->computed = FALSE;
-    controls->preset_edited = TRUE;
+    controls->args->edited = TRUE;
 }
 
 static void
@@ -581,7 +619,7 @@ convolution_filter_autodiv_changed(GtkToggleButton *check,
     gwy_convolution_filter_preset_data_autodiv(&controls->args->preset->data);
     convolution_filter_update_divisor(controls);
     controls->computed = FALSE;
-    controls->preset_edited = TRUE;
+    controls->args->edited = TRUE;
 }
 
 static void
@@ -608,7 +646,9 @@ convolution_filter_resize_matrix(ConvolutionControls *controls)
 
     gtk_widget_destroy(controls->matrix);
     controls->matrix = gtk_table_new(size, size, TRUE);
-    controls->coeff = g_renew(GtkWidget*, controls->coeff, size*size);
+    controls->coeff = g_new(GtkWidget*, size*size);
+    g_signal_connect_swapped(controls->matrix, "destroy",
+                             G_CALLBACK(g_free), controls->coeff);
     table = GTK_TABLE(controls->matrix);
     for (i = 0; i < size*size; i++) {
         controls->coeff[i] = gtk_entry_new();
@@ -680,7 +720,7 @@ convolution_filter_coeff_changed(GtkEntry *entry,
     convolution_filter_set_value(controls, i % size, i/size, val);
     controls->in_update = FALSE;
     controls->computed = FALSE;
-    controls->preset_edited = TRUE;
+    controls->args->edited = TRUE;
 
     if (!controls->args->preset->data.auto_divisor)
         return;
@@ -888,16 +928,18 @@ static void
 convolution_filter_load_args(GwyContainer *settings,
                              ConvolutionArgs *args)
 {
+    GwyInventory *presets;
     const guchar *name;
 
     memset(args, 0, sizeof(ConvolutionArgs));
+    presets = gwy_convolution_filter_presets();
     if (gwy_container_gis_string_by_name(settings, preset_key, &name)) {
-        /* TODO */
+        if ((args->preset = gwy_inventory_get_item(presets, name)))
+            return;
     }
-    args->preset
-        = gwy_convolution_filter_preset_new("Untitled",
-                                            &convolutionpresetdata_default,
-                                            FALSE);
+
+    name = GWY_CONVOLUTION_FILTER_PRESET_DEFAULT;
+    args->preset = gwy_inventory_get_item(presets, name);
 }
 
 static void

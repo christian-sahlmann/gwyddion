@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define GWY_CONVOLUTION_FILTER_PRESET_DEFAULT "Identity"
+
 enum {
     CONVOLUTION_MIN_SIZE = 3,
     CONVOLUTION_MAX_SIZE = 9
@@ -92,8 +94,30 @@ gwy_convolution_filter_preset_class_init(GwyConvolutionFilterPresetClass *klass)
 
     res_class->name = "convolutionfilter";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
+    gwy_inventory_set_default_item_name(res_class->inventory,
+                                        GWY_CONVOLUTION_FILTER_PRESET_DEFAULT);
     res_class->dump = gwy_convolution_filter_preset_dump;
     res_class->parse = gwy_convolution_filter_preset_parse;
+}
+
+static void
+gwy_convolution_filter_preset_class_setup_presets(void)
+{
+    GwyResourceClass *klass;
+    GwyConvolutionFilterPreset *preset;
+
+    /* Force class instantiation, this function is called before it's first
+     * referenced. */
+    klass = g_type_class_ref(GWY_TYPE_CONVOLUTION_FILTER_PRESET);
+
+    preset = gwy_convolution_filter_preset_new
+                                        (GWY_CONVOLUTION_FILTER_PRESET_DEFAULT,
+                                         &convolutionpresetdata_default, TRUE);
+    gwy_inventory_insert_item(klass->inventory, preset);
+    g_object_unref(preset);
+
+    /* The preset added a reference so we can safely unref it again */
+    g_type_class_unref(klass);
 }
 
 static void
