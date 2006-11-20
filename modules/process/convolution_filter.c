@@ -42,17 +42,8 @@ enum {
     PREVIEW_SIZE = 320
 };
 
-typedef enum {
-    CONVOLUTION_FILTER_SYMMETRY_NONE,
-    CONVOLUTION_FILTER_SYMMETRY_EVEN,
-    CONVOLUTION_FILTER_SYMMETRY_ODD
-} ConvolutionFilterSymmetryType;
-
 typedef struct {
     GwyConvolutionFilterPreset *preset;
-    ConvolutionFilterSymmetryType hsym;
-    ConvolutionFilterSymmetryType vsym;
-    gboolean edited;
 } ConvolutionArgs;
 
 typedef struct {
@@ -109,7 +100,6 @@ static gboolean convolution_filter_coeff_unfocus(GtkEntry *entry,
                                                  ConvolutionControls *controls);
 static void convolution_filter_coeff_changed    (GtkEntry *entry,
                                                  ConvolutionControls *controls);
-static void convolution_filter_find_symmetry    (ConvolutionArgs *args);
 static void convolution_filter_symmetrize       (ConvolutionControls *controls);
 static void convolution_filter_set_value        (ConvolutionControls *controls,
                                                  guint j,
@@ -119,6 +109,12 @@ static void convolution_filter_load_args        (GwyContainer *settings,
                                                  ConvolutionArgs *args);
 static void convolution_filter_save_args        (GwyContainer *settings,
                                                  ConvolutionArgs *args);
+
+static const GwyEnum symmetries[] = {
+    { N_("None"), CONVOLUTION_FILTER_SYMMETRY_NONE, },
+    { N_("Even"), CONVOLUTION_FILTER_SYMMETRY_EVEN, },
+    { N_("Odd"),  CONVOLUTION_FILTER_SYMMETRY_ODD,  },
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -158,6 +154,22 @@ module_register(void)
 }
 
 static void
+use_filter(G_GNUC_UNUSED gpointer i,
+           gpointer item,
+           G_GNUC_UNUSED gpointer user_data)
+{
+    gwy_resource_use(GWY_RESOURCE(item));
+}
+
+static void
+release_filter(G_GNUC_UNUSED gpointer i,
+               gpointer item,
+               G_GNUC_UNUSED gpointer user_data)
+{
+    gwy_resource_release(GWY_RESOURCE(item));
+}
+
+static void
 convolution_filter(GwyContainer *data,
                    GwyRunType run)
 {
@@ -181,8 +193,12 @@ convolution_filter(GwyContainer *data,
     convolution_filter_load_args(gwy_app_settings_get(), &args);
     gwy_resource_use(GWY_RESOURCE(args.preset));
     if (run == GWY_RUN_INTERACTIVE) {
+        gwy_inventory_foreach(gwy_convolution_filter_presets(), use_filter,
+                              NULL);
         convolution_filter_dialog(&args, data, dfield, id, dquark);
         convolution_filter_save_args(gwy_app_settings_get(), &args);
+        gwy_inventory_foreach(gwy_convolution_filter_presets(), release_filter,
+                              NULL);
     }
     else
         convolution_filter_run_noninteractive(&args, data, dfield, dquark);
@@ -310,12 +326,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
 static GtkWidget*
 convolution_filter_create_filter_tab(ConvolutionControls *controls)
 {
-    static const GwyEnum symmetries[] = {
-        { N_("None"), CONVOLUTION_FILTER_SYMMETRY_NONE, },
-        { N_("Even"), CONVOLUTION_FILTER_SYMMETRY_EVEN, },
-        { N_("Odd"),  CONVOLUTION_FILTER_SYMMETRY_ODD,  },
-    };
-
     GtkWidget *table, *vbox, *hbox2, *vbox2, *label;
     GwyEnum *sizes;
     guint i, nsizes;
@@ -411,7 +421,7 @@ convolution_filter_create_filter_tab(ConvolutionControls *controls)
         = gwy_radio_buttons_create(symmetries, G_N_ELEMENTS(symmetries),
                                    G_CALLBACK(convolution_filter_hsym_changed),
                                    controls,
-                                   controls->args->hsym);
+                                   controls->args->preset->hsym);
     gwy_radio_buttons_attach_to_table(controls->hsym, GTK_TABLE(table), 1, 1);
 
     table = gtk_table_new(4, 1, FALSE);
@@ -427,10 +437,45 @@ convolution_filter_create_filter_tab(ConvolutionControls *controls)
         = gwy_radio_buttons_create(symmetries, G_N_ELEMENTS(symmetries),
                                    G_CALLBACK(convolution_filter_vsym_changed),
                                    controls,
-                                   controls->args->vsym);
+                                   controls->args->preset->vsym);
     gwy_radio_buttons_attach_to_table(controls->vsym, GTK_TABLE(table), 1, 1);
 
     return vbox;
+}
+
+static void
+render_size(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            G_GNUC_UNUSED gpointer data)
+{
+    GwyConvolutionFilterPreset *preset;
+    gchar buf[16];
+
+    gtk_tree_model_get(model, iter, 0, &preset, -1);
+    g_snprintf(buf, sizeof(buf), "%u", preset->data.size);
+    g_object_set(renderer, "text", buf, NULL);
+}
+
+static void
+render_symmetry(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                GtkCellRenderer *renderer,
+                GtkTreeModel *model,
+                GtkTreeIter *iter,
+                gpointer data)
+{
+    GwyConvolutionFilterPreset *preset;
+    ConvolutionFilterSymmetryType sym;
+    const gchar *str;
+
+    gtk_tree_model_get(model, iter, 0, &preset, -1);
+    if (GPOINTER_TO_INT(data) == GWY_ORIENTATION_HORIZONTAL)
+        sym = preset->hsym;
+    else
+        sym = preset->vsym;
+    str = gwy_enum_to_string(sym, symmetries, G_N_ELEMENTS(symmetries));
+    g_object_set(renderer, "text", str, NULL);
 }
 
 static GtkWidget*
@@ -449,11 +494,43 @@ convolution_filter_create_preset_tab(ConvolutionControls *controls)
     g_object_unref(store);
     gtk_box_pack_start(GTK_BOX(vbox), treeview, TRUE, TRUE, 0);
 
+    /* Name */
     renderer = gtk_cell_renderer_text_new();
     i = gwy_inventory_store_get_column_by_name(store, "name");
     column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
                                                       "text", i,
                                                       NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    /* Size */
+    /* GwyConvolutionFilterPreset could register size as a property, but
+     * that would be a bit of overkill. */
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Size"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_size, NULL, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    /* Horizontal symmetry */
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("HSym"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+                (column, renderer,
+                 render_symmetry, GINT_TO_POINTER(GWY_ORIENTATION_HORIZONTAL),
+                 NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    /* Vertical symmetry */
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("VSym"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+                (column, renderer,
+                 render_symmetry, GINT_TO_POINTER(GWY_ORIENTATION_VERTICAL),
+                 NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
     return vbox;
@@ -529,12 +606,13 @@ convolution_filter_update_preset(ConvolutionControls *controls)
 {
     gwy_radio_buttons_set_current(controls->sizes,
                                   controls->args->preset->data.size);
-    convolution_filter_find_symmetry(controls->args);
     convolution_filter_resize_matrix(controls);
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
-    gwy_radio_buttons_set_current(controls->hsym, controls->args->hsym);
-    gwy_radio_buttons_set_current(controls->vsym, controls->args->vsym);
+    gwy_radio_buttons_set_current(controls->hsym,
+                                  controls->args->preset->hsym);
+    gwy_radio_buttons_set_current(controls->vsym,
+                                  controls->args->preset->vsym);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->divisor_auto),
                                  controls->args->preset->data.auto_divisor);
     convolution_filter_update_divisor(controls);
@@ -548,11 +626,12 @@ convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     if (controls->in_update)
         return;
 
-    controls->args->hsym = gwy_radio_buttons_get_current(controls->hsym);
+    controls->args->preset->hsym
+        = gwy_radio_buttons_get_current(controls->hsym);
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    controls->args->edited = TRUE;
+    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
 }
 
 static void
@@ -562,11 +641,12 @@ convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     if (controls->in_update)
         return;
 
-    controls->args->vsym = gwy_radio_buttons_get_current(controls->vsym);
+    controls->args->preset->vsym
+        = gwy_radio_buttons_get_current(controls->vsym);
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    controls->args->edited = TRUE;
+    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
 }
 
 static void
@@ -585,7 +665,7 @@ convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    controls->args->edited = TRUE;
+    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
 }
 
 static void
@@ -598,7 +678,7 @@ convolution_filter_divisor_changed(GtkEntry *entry,
     controls->args->preset->data.divisor = g_strtod(gtk_entry_get_text(entry),
                                                     NULL);
     controls->computed = FALSE;
-    controls->args->edited = TRUE;
+    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
 }
 
 static void
@@ -619,7 +699,7 @@ convolution_filter_autodiv_changed(GtkToggleButton *check,
     gwy_convolution_filter_preset_data_autodiv(&controls->args->preset->data);
     convolution_filter_update_divisor(controls);
     controls->computed = FALSE;
-    controls->args->edited = TRUE;
+    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
 }
 
 static void
@@ -680,11 +760,11 @@ convolution_filter_update_symmetry(ConvolutionControls *controls)
     args = controls->args;
     size = args->preset->data.size;
 
-    sensitive = (args->vsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
+    sensitive = (args->preset->vsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
     for (i = 0; i < size; i++)
         gtk_widget_set_sensitive(controls->coeff[size/2*size + i], sensitive);
 
-    sensitive = (args->hsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
+    sensitive = (args->preset->hsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
     for (i = 0; i < size; i++)
         gtk_widget_set_sensitive(controls->coeff[i*size + size/2], sensitive);
 }
@@ -720,7 +800,7 @@ convolution_filter_coeff_changed(GtkEntry *entry,
     convolution_filter_set_value(controls, i % size, i/size, val);
     controls->in_update = FALSE;
     controls->computed = FALSE;
-    controls->args->edited = TRUE;
+    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
 
     if (!controls->args->preset->data.auto_divisor)
         return;
@@ -730,82 +810,28 @@ convolution_filter_coeff_changed(GtkEntry *entry,
 }
 
 static void
-convolution_filter_find_symmetry(ConvolutionArgs *args)
-{
-    enum {
-        NONE_BIT = 1 << CONVOLUTION_FILTER_SYMMETRY_NONE,
-        EVEN_BIT = 1 << CONVOLUTION_FILTER_SYMMETRY_EVEN,
-        ODD_BIT  = 1 << CONVOLUTION_FILTER_SYMMETRY_ODD,
-        ALL_BITS = (NONE_BIT | EVEN_BIT | ODD_BIT)
-    };
-    const gdouble *matrix;
-    gdouble ul, ur, ll, lr;
-    guint size, i, j;
-    guint hpossible, vpossible, hp, vp;
-
-    hpossible = vpossible = ALL_BITS;
-    matrix = args->preset->data.matrix;
-    size = args->preset->data.size;
-
-    for (i = 0; i <= size/2; i++) {
-        for (j = 0; j <= size/2; j++) {
-            ul = matrix[i*size + j];
-            ur = matrix[i*size + size-1-j];
-            ll = matrix[(size-1-i)*size + j];
-            lr = matrix[(size-1-i)*size + size-1-j];
-            hp = vp = NONE_BIT;
-            if (ul == ur && ll == lr)
-                hp |= EVEN_BIT;
-            if (ul == -ur && ll == -lr)
-                hp |= ODD_BIT;
-            if (ul == ll && ur == lr)
-                vp |= EVEN_BIT;
-            if (ul == -ll && ur == -lr)
-                vp |= ODD_BIT;
-            hpossible &= hp;
-            vpossible &= vp;
-            gwy_debug("allowed by (%u, %u): %x %x", j, i, hp, vp);
-        }
-    }
-    gwy_debug("final allowed: %x %x", hpossible, vpossible);
-
-    if (hpossible & EVEN_BIT)
-        args->hsym = CONVOLUTION_FILTER_SYMMETRY_EVEN;
-    else if (hpossible & ODD_BIT)
-        args->hsym = CONVOLUTION_FILTER_SYMMETRY_ODD;
-    else
-        args->hsym = CONVOLUTION_FILTER_SYMMETRY_NONE;
-
-    if (vpossible & EVEN_BIT)
-        args->vsym = CONVOLUTION_FILTER_SYMMETRY_EVEN;
-    else if (vpossible & ODD_BIT)
-        args->vsym = CONVOLUTION_FILTER_SYMMETRY_ODD;
-    else
-        args->vsym = CONVOLUTION_FILTER_SYMMETRY_NONE;
-
-    gwy_debug("symmetries: %u %u", args->hsym, args->vsym);
-}
-
-static void
 convolution_filter_symmetrize(ConvolutionControls *controls)
 {
+    ConvolutionFilterSymmetryType hsym, vsym;
     const gdouble *matrix;
     gdouble val;
     guint i, j, size;
 
     matrix = controls->args->preset->data.matrix;
     size = controls->args->preset->data.size;
+    hsym = controls->args->preset->hsym;
+    vsym = controls->args->preset->vsym;
 
     controls->in_update = TRUE;
-    if (controls->args->hsym) {
-        if (controls->args->vsym) {
+    if (hsym) {
+        if (vsym) {
             for (i = 0; i <= size/2; i++) {
                 for (j = 0; j <= size/2; j++) {
                     val = matrix[i*size + j];
-                    if (controls->args->hsym == CONVOLUTION_FILTER_SYMMETRY_ODD
+                    if (hsym == CONVOLUTION_FILTER_SYMMETRY_ODD
                         && j == size/2)
                         val = 0.0;
-                    if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD
+                    if (vsym == CONVOLUTION_FILTER_SYMMETRY_ODD
                         && i == size/2)
                         val = 0.0;
                     convolution_filter_set_value(controls, j, i, val);
@@ -816,7 +842,7 @@ convolution_filter_symmetrize(ConvolutionControls *controls)
             for (i = 0; i < size; i++) {
                 for (j = 0; j <= size/2; j++) {
                     val = matrix[i*size + j];
-                    if (controls->args->hsym == CONVOLUTION_FILTER_SYMMETRY_ODD
+                    if (hsym == CONVOLUTION_FILTER_SYMMETRY_ODD
                         && j == size/2)
                         val = 0.0;
                     convolution_filter_set_value(controls, j, i, val);
@@ -825,11 +851,11 @@ convolution_filter_symmetrize(ConvolutionControls *controls)
         }
     }
     else {
-        if (controls->args->vsym) {
+        if (vsym) {
             for (i = 0; i <= size/2; i++) {
                 for (j = 0; j < size; j++) {
                     val = matrix[i*size + j];
-                    if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD
+                    if (vsym == CONVOLUTION_FILTER_SYMMETRY_ODD
                         && i == size/2)
                         val = 0.0;
                     convolution_filter_set_value(controls, j, i, val);
@@ -887,37 +913,40 @@ convolution_filter_set_value(ConvolutionControls *controls,
                              guint i,
                              gdouble val)
 {
+    ConvolutionFilterSymmetryType hsym, vsym;
     guint size;
 
     size = controls->args->preset->data.size;
+    hsym = controls->args->preset->hsym;
+    vsym = controls->args->preset->vsym;
 
     convolution_filter_do_set_value(controls, j, i, val);
-    if (controls->args->hsym == CONVOLUTION_FILTER_SYMMETRY_EVEN) {
+    if (hsym == CONVOLUTION_FILTER_SYMMETRY_EVEN) {
         convolution_filter_do_set_value(controls, size-1-j, i, val);
-        if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN) {
+        if (vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN) {
             convolution_filter_do_set_value(controls, j, size-1-i, val);
             convolution_filter_do_set_value(controls, size-1-j, size-1-i, val);
         }
-        else if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD) {
+        else if (vsym == CONVOLUTION_FILTER_SYMMETRY_ODD) {
             convolution_filter_do_set_value(controls, j, size-1-i, -val);
             convolution_filter_do_set_value(controls, size-1-j, size-1-i, -val);
         }
     }
-    else if (controls->args->hsym == CONVOLUTION_FILTER_SYMMETRY_ODD) {
+    else if (hsym == CONVOLUTION_FILTER_SYMMETRY_ODD) {
         convolution_filter_do_set_value(controls, size-1-j, i, -val);
-        if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN) {
+        if (vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN) {
             convolution_filter_do_set_value(controls, j, size-1-i, val);
             convolution_filter_do_set_value(controls, size-1-j, size-1-i, -val);
         }
-        else if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD) {
+        else if (vsym == CONVOLUTION_FILTER_SYMMETRY_ODD) {
             convolution_filter_do_set_value(controls, j, size-1-i, -val);
             convolution_filter_do_set_value(controls, size-1-j, size-1-i, val);
         }
     }
     else {
-        if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN)
+        if (vsym == CONVOLUTION_FILTER_SYMMETRY_EVEN)
             convolution_filter_do_set_value(controls, j, size-1-i, val);
-        else if (controls->args->vsym == CONVOLUTION_FILTER_SYMMETRY_ODD)
+        else if (vsym == CONVOLUTION_FILTER_SYMMETRY_ODD)
             convolution_filter_do_set_value(controls, j, size-1-i, -val);
     }
 }

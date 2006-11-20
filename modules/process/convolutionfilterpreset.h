@@ -25,6 +25,12 @@ enum {
     CONVOLUTION_MAX_SIZE = 9
 };
 
+typedef enum {
+    CONVOLUTION_FILTER_SYMMETRY_NONE,
+    CONVOLUTION_FILTER_SYMMETRY_EVEN,
+    CONVOLUTION_FILTER_SYMMETRY_ODD
+} ConvolutionFilterSymmetryType;
+
 #define GWY_TYPE_CONVOLUTION_FILTER_PRESET             (gwy_convolution_filter_preset_get_type())
 #define GWY_CONVOLUTION_FILTER_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPreset))
 #define GWY_CONVOLUTION_FILTER_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CONVOLUTION_FILTER_PRESET, GwyConvolutionFilterPresetClass))
@@ -44,7 +50,10 @@ typedef struct {
 
 struct _GwyConvolutionFilterPreset {
     GwyResource parent_instance;
+
     GwyConvolutionFilterPresetData data;
+    ConvolutionFilterSymmetryType hsym;
+    ConvolutionFilterSymmetryType vsym;
 };
 
 struct _GwyConvolutionFilterPresetClass {
@@ -55,6 +64,7 @@ static GType       gwy_convolution_filter_preset_get_type (void) G_GNUC_CONST;
 static void        gwy_convolution_filter_preset_finalize (GObject *object);
 static void        gwy_convolution_filter_preset_data_copy(const GwyConvolutionFilterPresetData *src,
                                                            GwyConvolutionFilterPresetData *dest);
+static void       gwy_convolution_filter_preset_use       (GwyResource *resource);
 static GwyConvolutionFilterPreset* gwy_convolution_filter_preset_new(const gchar *name,
                                           const GwyConvolutionFilterPresetData *data,
                                           gboolean is_const);
@@ -96,6 +106,8 @@ gwy_convolution_filter_preset_class_init(GwyConvolutionFilterPresetClass *klass)
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
     gwy_inventory_set_default_item_name(res_class->inventory,
                                         GWY_CONVOLUTION_FILTER_PRESET_DEFAULT);
+    res_class->use = gwy_convolution_filter_preset_use;
+    /* release() not necessary */
     res_class->dump = gwy_convolution_filter_preset_dump;
     res_class->parse = gwy_convolution_filter_preset_parse;
 }
@@ -225,6 +237,72 @@ gwy_convolution_filter_preset_data_copy(const GwyConvolutionFilterPresetData *sr
     g_free(dest->matrix);
     *dest = *src;
     dest->matrix = g_memdup(src->matrix, src->size*src->size*sizeof(gdouble));
+}
+
+static void
+gwy_convolution_filter_preset_find_symmetry(GwyConvolutionFilterPreset *preset)
+{
+    enum {
+        NONE_BIT = 1 << CONVOLUTION_FILTER_SYMMETRY_NONE,
+        EVEN_BIT = 1 << CONVOLUTION_FILTER_SYMMETRY_EVEN,
+        ODD_BIT  = 1 << CONVOLUTION_FILTER_SYMMETRY_ODD,
+        ALL_BITS = (NONE_BIT | EVEN_BIT | ODD_BIT)
+    };
+    guint size, i, j;
+    guint hpossible, vpossible;
+
+    hpossible = vpossible = ALL_BITS;
+    size = preset->data.size;
+
+    for (i = 0; i <= size/2; i++) {
+        for (j = 0; j <= size/2; j++) {
+            gdouble ul, ur, ll, lr;
+            guint hp, vp;
+
+            ul = preset->data.matrix[i*size + j];
+            ur = preset->data.matrix[i*size + size-1-j];
+            ll = preset->data.matrix[(size-1-i)*size + j];
+            lr = preset->data.matrix[(size-1-i)*size + size-1-j];
+            hp = vp = NONE_BIT;
+            if (ul == ur && ll == lr)
+                hp |= EVEN_BIT;
+            if (ul == -ur && ll == -lr)
+                hp |= ODD_BIT;
+            if (ul == ll && ur == lr)
+                vp |= EVEN_BIT;
+            if (ul == -ll && ur == -lr)
+                vp |= ODD_BIT;
+            hpossible &= hp;
+            vpossible &= vp;
+            gwy_debug("allowed by (%u, %u): %x %x", j, i, hp, vp);
+        }
+    }
+    gwy_debug("final allowed: %x %x", hpossible, vpossible);
+
+    if (hpossible & EVEN_BIT)
+        preset->hsym = CONVOLUTION_FILTER_SYMMETRY_EVEN;
+    else if (hpossible & ODD_BIT)
+        preset->hsym = CONVOLUTION_FILTER_SYMMETRY_ODD;
+    else
+        preset->hsym = CONVOLUTION_FILTER_SYMMETRY_NONE;
+
+    if (vpossible & EVEN_BIT)
+        preset->vsym = CONVOLUTION_FILTER_SYMMETRY_EVEN;
+    else if (vpossible & ODD_BIT)
+        preset->vsym = CONVOLUTION_FILTER_SYMMETRY_ODD;
+    else
+        preset->vsym = CONVOLUTION_FILTER_SYMMETRY_NONE;
+
+    gwy_debug("symmetries: %u %u", preset->hsym, preset->vsym);
+}
+
+static void
+gwy_convolution_filter_preset_use(GwyResource *resource)
+{
+    GwyConvolutionFilterPreset *preset;
+
+    preset = GWY_CONVOLUTION_FILTER_PRESET(resource);
+    gwy_convolution_filter_preset_find_symmetry(preset);
 }
 
 static GwyConvolutionFilterPreset*
