@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # vim-syn-gen.py -- Generate vim syntax highligting from gtk-doc documentation
-# Written by Yeti <yeti@physics.muni.cz>, last changed: 2004-08-13.
+# Written by Yeti <yeti@physics.muni.cz>, last changed: 2006-11-20.
 # This file is in the public domain.
 import re, glob, time, sys, os, pwd
 
@@ -26,7 +26,8 @@ Config-file options:
   types             Type highligting override map (like {'Enum': 'Keyword'})
 
 Gtk-doc types (case doesn't matter):
-  Constant, Macro, Function, Struct, Enum, Union, Typedef, User_Function
+  Constant, Macro, Function, Struct, Enum, Union, Typedef, User_Function,
+  Variable
 Extra vim-syn-gen types:
   Define (parameterless macro)
 
@@ -55,6 +56,7 @@ types = {
     'DEFINE': 'Constant',   # non-parametric macros
     'MACRO': 'Macro',
     'FUNCTION': 'Function',
+    'VARIABLE': 'Identifier',
     'STRUCT': 'Type',
     'ENUM': 'Type',
     'UNION': 'Type',
