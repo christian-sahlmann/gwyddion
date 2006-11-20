@@ -60,18 +60,19 @@ struct _GwyConvolutionFilterPresetClass {
     GwyResourceClass parent_class;
 };
 
-static GType       gwy_convolution_filter_preset_get_type (void) G_GNUC_CONST;
-static void        gwy_convolution_filter_preset_finalize (GObject *object);
-static void        gwy_convolution_filter_preset_data_copy(const GwyConvolutionFilterPresetData *src,
-                                                           GwyConvolutionFilterPresetData *dest);
-static void       gwy_convolution_filter_preset_use       (GwyResource *resource);
+static GType    gwy_convolution_filter_preset_get_type (void) G_GNUC_CONST;
+static void     gwy_convolution_filter_preset_finalize (GObject *object);
+static void     gwy_convolution_filter_preset_data_copy(const GwyConvolutionFilterPresetData *src,
+                                                         GwyConvolutionFilterPresetData *dest);
+static gpointer gwy_convolution_filter_preset_copy      (gpointer item);
+static void     gwy_convolution_filter_preset_use       (GwyResource *resource);
 static GwyConvolutionFilterPreset* gwy_convolution_filter_preset_new(const gchar *name,
-                                          const GwyConvolutionFilterPresetData *data,
-                                          gboolean is_const);
-static void           gwy_convolution_filter_preset_dump  (GwyResource *resource,
-                                                    GString *str);
-static GwyResource*   gwy_convolution_filter_preset_parse (const gchar *text,
-                                                    gboolean is_const);
+                                                                     const GwyConvolutionFilterPresetData *data,
+                                                                     gboolean is_const);
+static void           gwy_convolution_filter_preset_dump (GwyResource *resource,
+                                                          GString *str);
+static GwyResource*   gwy_convolution_filter_preset_parse(const gchar *text,
+                                                          gboolean is_const);
 
 
 static gdouble convolution_identity[] = {
@@ -101,6 +102,7 @@ gwy_convolution_filter_preset_class_init(GwyConvolutionFilterPresetClass *klass)
     res_class->item_type = *gwy_resource_class_get_item_type(parent_class);
 
     res_class->item_type.type = G_TYPE_FROM_CLASS(klass);
+    res_class->item_type.copy = gwy_convolution_filter_preset_copy;
 
     res_class->name = "convolutionfilter";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
@@ -296,6 +298,21 @@ gwy_convolution_filter_preset_find_symmetry(GwyConvolutionFilterPreset *preset)
     gwy_debug("symmetries: %u %u", preset->hsym, preset->vsym);
 }
 
+gpointer
+gwy_convolution_filter_preset_copy(gpointer item)
+{
+    GwyConvolutionFilterPreset *preset, *copy;
+    const gchar *name;
+
+    g_return_val_if_fail(GWY_IS_CONVOLUTION_FILTER_PRESET(item), NULL);
+
+    preset = GWY_CONVOLUTION_FILTER_PRESET(item);
+    name = gwy_resource_get_name(GWY_RESOURCE(item));
+    copy = gwy_convolution_filter_preset_new(name, &preset->data, FALSE);
+
+    return copy;
+}
+
 static void
 gwy_convolution_filter_preset_use(GwyResource *resource)
 {
@@ -343,8 +360,14 @@ gwy_convolution_filter_preset_dump(GwyResource *resource,
                            preset->data.size,
                            buf,
                            preset->data.auto_divisor);
-    for (i = 0; i < preset->data.size; i++) {
-        g_ascii_formatd(buf, sizeof(buf), "%.8g", preset->data.matrix[i]);
+    for (i = 0; i < preset->data.size*preset->data.size; i++) {
+        gdouble val;
+
+        val = preset->data.matrix[i];
+        /* Fix `negative zeroes' */
+        if (val == 0.0)
+            val = fabs(val);
+        g_ascii_formatd(buf, sizeof(buf), "%.8g", val);
         g_string_append(str, buf);
         if ((i + 1) % preset->data.size == 0)
             g_string_append_c(str, '\n');
@@ -401,7 +424,7 @@ gwy_convolution_filter_preset_parse(const gchar *text,
             data.size = atoi(value);
         else if (gwy_strequal(key, "auto_divisor"))
             data.auto_divisor = !!atoi(value);
-        else if (gwy_strequal(key, "xreal"))
+        else if (gwy_strequal(key, "divisor"))
             data.divisor = g_ascii_strtod(value, NULL);
         else
             g_warning("Unknown field `%s'.", key);
@@ -413,16 +436,18 @@ gwy_convolution_filter_preset_parse(const gchar *text,
     }
 
     data.matrix = g_new0(gdouble, data.size*data.size);
-    for (i = 0; i < data.size*data.size; i++) {
-        if (!(line = gwy_str_next_line(&p)))
-            break;
+    for (i = 0; line && i < data.size*data.size; line = gwy_str_next_line(&p)) {
         g_strstrip(line);
         if (!line[0] || line[0] == '#')
             continue;
 
-        data.matrix[i] = g_ascii_strtod(line, &end);
-        if (end == line)
-            break;
+        while (i < data.size*data.size) {
+            data.matrix[i] = g_ascii_strtod(line, &end);
+            if (end == line)
+                break;
+            line = end;
+            i++;
+        }
     }
     g_free(str);
 
@@ -443,3 +468,5 @@ gwy_convolution_filter_presets(void)
     return GWY_RESOURCE_CLASS(g_type_class_peek
                                (GWY_TYPE_CONVOLUTION_FILTER_PRESET))->inventory;
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

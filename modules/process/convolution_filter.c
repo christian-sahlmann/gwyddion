@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -53,12 +54,16 @@ typedef struct {
     GSList *hsym;
     GSList *vsym;
     GtkWidget *dialog;
+    GtkWidget *filter_page;
     GtkWidget *view;
     GtkWidget *matrix_parent;
     GtkWidget *matrix;
     GtkWidget **coeff;
     GtkWidget *divisor;
     GtkWidget *divisor_auto;
+    GtkWidget *delete_preset;
+    GtkTreeSelection *selection;
+    GwyInventoryStore *presets;
     gboolean in_update;
     GQuark position_quark;
     gboolean computed;
@@ -74,13 +79,21 @@ static void convolution_filter_dialog           (ConvolutionArgs *args,
                                                  GQuark dquark);
 static GtkWidget* convolution_filter_create_filter_tab(ConvolutionControls *controls);
 static GtkWidget* convolution_filter_create_preset_tab(ConvolutionControls *controls);
+static void convolution_filter_switch_preset    (GtkTreeSelection *selection,
+                                                 ConvolutionControls *controls);
+static void convolution_filter_preset_delete    (ConvolutionControls *controls);
+static void convolution_filter_preset_duplicate (ConvolutionControls *controls);
+static void convolution_filter_preset_new       (ConvolutionControls *controls);
+static void convolution_filter_preset_copy      (ConvolutionControls *controls,
+                                                 const gchar *name,
+                                                 const gchar *newname);
+static gboolean convolution_filter_preset_save  (GwyConvolutionFilterPreset *preset);
 static void convolution_filter_preview          (ConvolutionControls *controls);
 static void convolution_filter_run_noninteractive(ConvolutionArgs *args,
                                                   GwyContainer *data,
                                                   GwyDataField *dfield,
                                                   GQuark dquark);
 static void convolution_filter_fetch_coeff      (ConvolutionControls *controls);
-static void convolution_filter_update_preset    (ConvolutionControls *controls);
 static void convolution_filter_hsym_changed     (GtkToggleButton *button,
                                                  ConvolutionControls *controls);
 static void convolution_filter_vsym_changed     (GtkToggleButton *button,
@@ -191,7 +204,6 @@ convolution_filter(GwyContainer *data,
     g_return_if_fail(dfield && dquark);
 
     convolution_filter_load_args(gwy_app_settings_get(), &args);
-    gwy_resource_use(GWY_RESOURCE(args.preset));
     if (run == GWY_RUN_INTERACTIVE) {
         gwy_inventory_foreach(gwy_convolution_filter_presets(), use_filter,
                               NULL);
@@ -202,7 +214,6 @@ convolution_filter(GwyContainer *data,
     }
     else
         convolution_filter_run_noninteractive(&args, data, dfield, dquark);
-    gwy_resource_release(GWY_RESOURCE(args.preset));
 }
 
 static void
@@ -212,10 +223,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
                           gint id,
                           GQuark dquark)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_PREVIEW = 2
-    };
+    enum { RESPONSE_PREVIEW = 1 };
 
     ConvolutionControls controls;
     GwyPixmapLayer *layer;
@@ -230,7 +238,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
 
     dialog = gtk_dialog_new_with_buttons(_("Convolution Filter"), NULL, 0,
                                          _("_Update"), RESPONSE_PREVIEW,
-                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -268,8 +275,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     vbox = convolution_filter_create_filter_tab(&controls);
     label = gtk_label_new(_("Filter"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
-
-    convolution_filter_update_preset(&controls);
+    controls.filter_page = vbox;
 
     /* Presets */
     vbox = convolution_filter_create_preset_tab(&controls);
@@ -290,13 +296,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            break;
-
-            /* FIXME: keep and fix or remove? */
-            case RESPONSE_RESET:
-            gwy_convolution_filter_preset_data_copy(&convolutionpresetdata_default,
-                                                    &controls.args->preset->data);
-            convolution_filter_update_preset(&controls);
             break;
 
             case RESPONSE_PREVIEW:
@@ -481,22 +480,48 @@ render_symmetry(G_GNUC_UNUSED GtkTreeViewColumn *column,
 static GtkWidget*
 convolution_filter_create_preset_tab(ConvolutionControls *controls)
 {
-    GwyInventoryStore *store;
+    static const struct {
+        const gchar *stock_id;
+        const gchar *tooltip;
+        GCallback callback;
+    }
+    toolbar_buttons[] = {
+        {
+            GTK_STOCK_NEW,
+            N_("Create a new item"),
+            G_CALLBACK(convolution_filter_preset_new),
+        },
+        {
+            GTK_STOCK_COPY,
+            N_("Create a new item based on selected one"),
+            G_CALLBACK(convolution_filter_preset_duplicate),
+        },
+        {
+            GTK_STOCK_DELETE,
+            N_("Delete selected item"),
+            G_CALLBACK(convolution_filter_preset_delete),
+        },
+    };
+
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
-    GtkWidget *vbox, *treeview;
-    gint i;
+    GtkWidget *vbox, *treeview, *hbox, *image, *button;
+    GtkTreeIter iter;
+    GtkTooltips *tooltips;
+    const gchar *name;
+    guint i;
 
     vbox = gtk_vbox_new(FALSE, 0);
 
-    store = gwy_inventory_store_new(gwy_convolution_filter_presets());
-    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    g_object_unref(store);
+    controls->presets
+        = gwy_inventory_store_new(gwy_convolution_filter_presets());
+    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls->presets));
+    g_object_unref(controls->presets);
     gtk_box_pack_start(GTK_BOX(vbox), treeview, TRUE, TRUE, 0);
 
     /* Name */
     renderer = gtk_cell_renderer_text_new();
-    i = gwy_inventory_store_get_column_by_name(store, "name");
+    i = gwy_inventory_store_get_column_by_name(controls->presets, "name");
     column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
                                                       "text", i,
                                                       NULL);
@@ -533,7 +558,176 @@ convolution_filter_create_preset_tab(ConvolutionControls *controls)
                  NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
+    /* Selection */
+    controls->selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    gtk_tree_selection_set_mode(controls->selection, GTK_SELECTION_BROWSE);
+    name = gwy_resource_get_name(GWY_RESOURCE(controls->args->preset));
+    gwy_inventory_store_get_iter(controls->presets, name, &iter);
+    g_signal_connect(controls->selection, "changed",
+                     G_CALLBACK(convolution_filter_switch_preset), controls);
+
+    /* Controls */
+    tooltips = gwy_app_get_tooltips();
+    hbox = gtk_hbox_new(TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+    for (i = 0; i < G_N_ELEMENTS(toolbar_buttons); i++) {
+        image = gtk_image_new_from_stock(toolbar_buttons[i].stock_id,
+                                         GTK_ICON_SIZE_LARGE_TOOLBAR);
+        button = gtk_button_new();
+        gtk_container_add(GTK_CONTAINER(button), image);
+        gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
+        gtk_tooltips_set_tip(tooltips, button,
+                             toolbar_buttons[i].tooltip, NULL);
+        g_signal_connect_swapped(button, "clicked",
+                                 toolbar_buttons[i].callback, controls);
+
+        if (toolbar_buttons[i].callback
+            == G_CALLBACK(convolution_filter_preset_delete))
+            controls->delete_preset = button;
+    }
+
+    /* This causes sync of all other controls */
+    gtk_tree_selection_select_iter(controls->selection, &iter);
+
     return vbox;
+}
+
+static void
+convolution_filter_switch_preset(GtkTreeSelection *selection,
+                                 ConvolutionControls *controls)
+{
+    GwyConvolutionFilterPreset *preset;
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    gboolean sensitive;
+
+    /* Can hapen in a transitional state? */
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    convolution_filter_preset_save(controls->args->preset);
+
+    gtk_tree_model_get(model, &iter, 0, &preset, -1);
+    controls->args->preset = preset;
+
+    gwy_radio_buttons_set_current(controls->sizes, preset->data.size);
+    convolution_filter_resize_matrix(controls);
+    convolution_filter_update_matrix(controls);
+    convolution_filter_update_symmetry(controls);
+    gwy_radio_buttons_set_current(controls->hsym, preset->hsym);
+    gwy_radio_buttons_set_current(controls->vsym, preset->vsym);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->divisor_auto),
+                                 preset->data.auto_divisor);
+    convolution_filter_update_divisor(controls);
+    controls->computed = FALSE;
+
+    sensitive = gwy_resource_get_is_modifiable(GWY_RESOURCE(preset));
+    gtk_widget_set_sensitive(controls->filter_page, sensitive);
+    gtk_widget_set_sensitive(controls->delete_preset, sensitive);
+}
+
+static void
+convolution_filter_preset_delete(ConvolutionControls *controls)
+{
+    GwyResource *resource;
+    GwyInventory *inventory;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gchar *name;
+    gchar *filename;
+    gint result;
+
+    resource = GWY_RESOURCE(controls->args->preset);
+    inventory = gwy_convolution_filter_presets();
+    name = gwy_resource_get_name(resource);
+
+    /* Delete the resource file */
+    filename = gwy_resource_build_filename(resource);
+    result = g_remove(filename);
+    if (result) {
+        /* FIXME: GUIze this */
+        g_warning("Resource (%s) could not be deleted.", name);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+
+    /* Delete the resource from the inventory */
+    gwy_inventory_store_get_iter(controls->presets, name, &iter);
+    path = gtk_tree_model_get_path(GTK_TREE_MODEL(controls->presets), &iter);
+    gwy_inventory_delete_item(inventory, name);
+    gtk_tree_selection_select_path(controls->selection, path);
+    gtk_tree_path_free(path);
+}
+
+static void
+convolution_filter_preset_new(ConvolutionControls *controls)
+{
+    convolution_filter_preset_copy(controls,
+                                   GWY_CONVOLUTION_FILTER_PRESET_DEFAULT,
+                                   _("Untitled"));
+}
+
+static void
+convolution_filter_preset_duplicate(ConvolutionControls *controls)
+{
+    const gchar *name;
+
+    name = gwy_resource_get_name(GWY_RESOURCE(controls->args->preset));
+    convolution_filter_preset_copy(controls, name, NULL);
+}
+
+static void
+convolution_filter_preset_copy(ConvolutionControls *controls,
+                               const gchar *name,
+                               const gchar *newname)
+{
+    GwyResource *resource;
+    GtkTreeIter iter;
+
+    gwy_debug("<%s> -> <%s>", name, newname);
+    resource = gwy_inventory_new_item(gwy_convolution_filter_presets(),
+                                      name, newname);
+    gwy_resource_use(resource);
+    gwy_inventory_store_get_iter(controls->presets,
+                                 gwy_resource_get_name(resource), &iter);
+    gtk_tree_selection_select_iter(controls->selection, &iter);
+}
+
+static gboolean
+convolution_filter_preset_save(GwyConvolutionFilterPreset *preset)
+{
+    GwyResource *resource;
+    GString *str;
+    gchar *filename;
+    FILE *fh;
+
+    resource = GWY_RESOURCE(preset);
+    if (!resource->is_modified)
+        return TRUE;
+
+    if (!gwy_resource_get_is_modifiable(resource)) {
+        g_warning("Non-modifiable resource was modified and is about to be "
+                  "saved");
+        return FALSE;
+    }
+
+    filename = gwy_resource_build_filename(resource);
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        /* FIXME: GUIze this */
+        g_warning("Cannot save resource file: %s", filename);
+        g_free(filename);
+        return FALSE;
+    }
+    g_free(filename);
+
+    str = gwy_resource_dump(resource);
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    return TRUE;
 }
 
 static void
@@ -602,24 +796,6 @@ convolution_filter_fetch_coeff(ConvolutionControls *controls)
 }
 
 static void
-convolution_filter_update_preset(ConvolutionControls *controls)
-{
-    gwy_radio_buttons_set_current(controls->sizes,
-                                  controls->args->preset->data.size);
-    convolution_filter_resize_matrix(controls);
-    convolution_filter_update_matrix(controls);
-    convolution_filter_update_symmetry(controls);
-    gwy_radio_buttons_set_current(controls->hsym,
-                                  controls->args->preset->hsym);
-    gwy_radio_buttons_set_current(controls->vsym,
-                                  controls->args->preset->vsym);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->divisor_auto),
-                                 controls->args->preset->data.auto_divisor);
-    convolution_filter_update_divisor(controls);
-    controls->computed = FALSE;
-}
-
-static void
 convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
@@ -631,7 +807,7 @@ convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
+    gwy_resource_data_changed(GWY_RESOURCE(controls->args->preset));
 }
 
 static void
@@ -646,7 +822,7 @@ convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_symmetrize(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
+    gwy_resource_data_changed(GWY_RESOURCE(controls->args->preset));
 }
 
 static void
@@ -665,7 +841,7 @@ convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
     controls->computed = FALSE;
-    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
+    gwy_resource_data_changed(GWY_RESOURCE(controls->args->preset));
 }
 
 static void
@@ -678,7 +854,7 @@ convolution_filter_divisor_changed(GtkEntry *entry,
     controls->args->preset->data.divisor = g_strtod(gtk_entry_get_text(entry),
                                                     NULL);
     controls->computed = FALSE;
-    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
+    gwy_resource_data_changed(GWY_RESOURCE(controls->args->preset));
 }
 
 static void
@@ -699,7 +875,7 @@ convolution_filter_autodiv_changed(GtkToggleButton *check,
     gwy_convolution_filter_preset_data_autodiv(&controls->args->preset->data);
     convolution_filter_update_divisor(controls);
     controls->computed = FALSE;
-    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
+    gwy_resource_data_changed(GWY_RESOURCE(controls->args->preset));
 }
 
 static void
@@ -767,6 +943,11 @@ convolution_filter_update_symmetry(ConvolutionControls *controls)
     sensitive = (args->preset->hsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
     for (i = 0; i < size; i++)
         gtk_widget_set_sensitive(controls->coeff[i*size + size/2], sensitive);
+
+    sensitive = (args->preset->vsym != CONVOLUTION_FILTER_SYMMETRY_ODD)
+                && (args->preset->hsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
+    gtk_widget_set_sensitive(controls->coeff[(size/2)*size + size/2],
+                             sensitive);
 }
 
 static gboolean
@@ -800,7 +981,7 @@ convolution_filter_coeff_changed(GtkEntry *entry,
     convolution_filter_set_value(controls, i % size, i/size, val);
     controls->in_update = FALSE;
     controls->computed = FALSE;
-    GWY_RESOURCE(controls->args->preset)->is_modified = TRUE;
+    gwy_resource_data_changed(GWY_RESOURCE(controls->args->preset));
 
     if (!controls->args->preset->data.auto_divisor)
         return;
@@ -977,6 +1158,7 @@ convolution_filter_save_args(GwyContainer *settings,
 {
     gchar *name;
 
+    convolution_filter_preset_save(args->preset);
     name = g_strdup(gwy_resource_get_name(GWY_RESOURCE(args->preset)));
     gwy_container_set_string_by_name(settings, preset_key, name);
 }
