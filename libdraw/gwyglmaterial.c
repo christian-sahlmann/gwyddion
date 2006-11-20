@@ -436,7 +436,7 @@ gwy_gl_material_new(const gchar *name,
     return gl_material;
 }
 
-gpointer
+static gpointer
 gwy_gl_material_copy(gpointer item)
 {
     GwyGLMaterial *gl_material, *copy;

@@ -942,7 +942,7 @@ gwy_gradient_new(const gchar *name,
     return gradient;
 }
 
-gpointer
+static gpointer
 gwy_gradient_copy(gpointer item)
 {
     GwyGradient *gradient, *copy;
