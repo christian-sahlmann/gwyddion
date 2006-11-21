@@ -134,17 +134,6 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
          * Replace them with Key. */
         case GWY_INTERPOLATION_BSPLINE:
         case GWY_INTERPOLATION_OMOMS:
-        /*
-        w1 = rest + 1.0;
-        w2 = rest;
-        w3 = 1.0 - rest;
-        w4 = 2.0 - rest;
-        w1 = -0.5*w1*w1*w1 + 2.5*w1*w1 - 4*w1 + 2;
-        w2 = 1.5*w2*w2*w2 - 2.5*w2*w2 + 1;
-        w3 = 1.5*w3*w3*w3 - 2.5*w3*w3 + 1;
-        w4 = -0.5*w4*w4*w4 + 2.5*w4*w4 - 4*w4 + 2;
-        */
-        /* horner schema (by maple) */
         w1 = (-0.5 + (1.0 - rest/2.0)*rest)*rest;
         w2 = 1.0 + (-2.5 + 1.5*rest)*rest*rest;
         w3 = (0.5 + (2.0 - 1.5*rest)*rest)*rest;
@@ -179,6 +168,175 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
     return w1*data[l-1] + w2*data[l] + w3*data[l+1] + w4*data[l+2];
 }
 
+/**
+ * deconvolve3_row:
+ * @width: The number of items in @data.
+ * @data: An array to deconvolve of size @width.
+ * @buffer: Scratch space of at least @width items.
+ * @a: The central convolution filter element.
+ * @b: The side convolution filter element.
+ *
+ * Undoes the effect of mirror-extended (@b, @a, @b) convolution filter
+ * on an array.
+ *
+ * This function acts on a signle line that can be either a data line or
+ * a row of two-dimensional structure.  Each row should be processed
+ * separatelty as it is not CPU-cache-efficient to jump between rows.
+ **/
+static void
+deconvolve3_rows(gint width,
+                 gint height,
+                 gint rowstride,
+                 gdouble *data,
+                 gdouble *buffer,
+                 gdouble a,
+                 gdouble b)
+{
+    gdouble *row;
+    gdouble q, b2;
+    gint i, j;
+
+    g_return_if_fail(height < 2 || rowstride >= width);
+    b2 = 2.0*b;
+    g_return_if_fail(b2 < a);
+
+    if (!height || !width)
+        return;
+
+    if (width == 1) {
+        for (i = 0; i < height; i++)
+            data[i*rowstride] /= (a + b2);
+        return;
+    }
+    if (width == 2) {
+        q = a*a - b2*b2;
+        for (i = 0; i < height; i++) {
+            row = data + i*rowstride;
+            buffer[0] = a*row[0] - b2*row[1];
+            row[1] = a*row[1] - b2*row[0];
+            row[0] = buffer[0];
+        }
+        return;
+    }
+
+    /* Special-case first item */
+    buffer[0] = a/2.0;
+    data[0] /= 2.0;
+    /* Inner items */
+    for (j = 1; j < width-1; j++) {
+        q = b/buffer[j-1];
+        buffer[j] = a - q*b;
+        data[j] -= q*data[j-1];
+    }
+    /* Special-case last item */
+    q = b2/buffer[j-1];
+    buffer[j] = a - q*b;
+    data[j] -= q*data[j-1];
+    /* Go back */
+    data[j] /= buffer[j];
+    do {
+        j--;
+        data[j] = (data[j] - b*data[j+1])/buffer[j];
+    } while (j >= 0);
+
+    /* Remaining rows */
+    for (i = 1; i < height; i++) {
+        row = data + i*rowstride;
+        /* Forward */
+        row[0] /= 2.0;
+        for (j = 1; j < width-1; j++)
+            row[j] -= b*row[j-1]/buffer[j-1];
+        row[j] -= b2*row[j-1]/buffer[j-1];
+        /* Back */
+        row[j] /= buffer[i];
+        do {
+            j--;
+            row[j] = (row[j] - b*row[j+1])/buffer[j];
+        } while (j >= 0);
+    }
+}
+
+/**
+ * deconvolve3_row:
+ * @width: The number of columns in @data.
+ * @height: The number of rows in @data.
+ * @rowstride: The total row length (including width).
+ * @data: A two-dimensional array of size @width*height to deconvolve.
+ * @buffer: Scratch space of at least @height items.
+ * @a: The central convolution filter element.
+ * @b: The side convolution filter element.
+ *
+ * Undoes the effect of mirror-extended (@b, @a, @b) vertical convolution
+ * filter on a two-dimensional array.
+ *
+ * This function acts on a two-dimensional data array, accessing it at linearly
+ * as possible for CPU cache utilization reasons.
+ **/
+static void
+deconvolve3_columns(gint width,
+                    gint height,
+                    gint rowstride,
+                    gdouble *data,
+                    gdouble *buffer,
+                    gdouble a,
+                    gdouble b)
+{
+    gdouble *row;
+    gdouble q, b2;
+    gint i, j;
+
+    g_return_if_fail(height < 2 || rowstride >= width);
+    b2 = 2.0*b;
+    g_return_if_fail(b2 < a);
+
+    if (!height || !width)
+        return;
+
+    if (height == 1) {
+        for (j = 0; j < width; j++)
+            data[j] /= (a + b2);
+        return;
+    }
+    if (height == 2) {
+        q = a*a - b2*b2;
+        for (j = 0; j < width; j++) {
+            buffer[0] = a*data[j] - b2*data[rowstride + j];
+            data[rowstride + j] = a*data[rowstride + j] - b2*data[j];
+            data[j] = buffer[0];
+        }
+        return;
+    }
+
+    /* Special-case first row */
+    buffer[0] = a/2.0;
+    for (j = 0; j < width; j++)
+        data[j] /= 2.0;
+    /* Inner rows */
+    for (i = 1; i < height-1; i++) {
+        q = b/buffer[i-1];
+        buffer[i] = a - q*b;
+        row = data + (i - 1)*rowstride;
+        for (j = 0; j < width; j++)
+            row[rowstride + j] -= q*row[j];
+    }
+    /* Special-case last row */
+    q = b2/buffer[i-1];
+    buffer[i] = a - q*b;
+    row = data + (i - 1)*rowstride;
+    for (j = 0; j < width; j++)
+        row[rowstride + j] -= q*row[j];
+    /* Go back */
+    row += rowstride;
+    for (j = 0; j < width; j++)
+        row[j] /= buffer[i];
+    do {
+        i--;
+        row = data + i*rowstride;
+        for (j = 0; j < width; j++)
+            row[j] = (row[j] - b*row[rowstride + j])/buffer[i];
+    } while (i >= 0);
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -190,39 +348,5 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
  * That means the contribution of individual data saples is preserved on
  * scaling.
  **/
-
-/* Maple source of Hornerization.
-
-{VERSION 5 0 "IBM INTEL LINUX" "5.0" }
-{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0
-1 0 0 0 0 1 }{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 }0 0 0 -1 -1 -1 0 0 0 0 0 0 -1 0 }}
-{SECT 0 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 23 "restart; with(codege
-n):" }}}{EXCHG {PARA 0 "" 0 "" {TEXT -1 17 "Key interpolation" }}}
-{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 146 "intp := [ -1/2*w1*w1*w1 + 5
-/2*w1*w1 - 4*w1 + 2, 3/2*w2*w2*w2 - 5/2*w2*w2 + 1, 3/2*w3*w3*w3 - 5/2*
-w3*w3 + 1, -1/2*w4*w4*w4 + 5/2*w4*w4 - 4*w4 + 2];" }}{PARA 0 "" 0 ""
-{TEXT -1 0 "" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 88 "hintp := co
-nvert(subs(w1 = rest+1, w2 = rest, w3 = 1-rest, w4 = 2-rest, intp), ho
-rner); " }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 67 "C([ w1 = hintp[1
-], w2 = hintp[2], w3 = hintp[3], w4 = hintp[4] ] );" }}}{EXCHG {PARA
-0 "" 0 "" {TEXT -1 21 "Bspline interpolation" }}}{EXCHG {PARA 0 "> "
-0 "" {MPLTEXT 1 0 107 "intp := [ (2-w1)*(2-w1)*(2-w1)/6, 2/3 - 1/2*w2*
-w2*(2-w2), 2/3 - 1/2*w3*w3*(2-w3), (2-w4)*(2-w4)*(2-w4)/6 ];" }}}
-{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 88 "hintp := convert(subs(w1 = r
-est+1, w2 = rest, w3 = 1-rest, w4 = 2-rest, intp), horner); " }}}
-{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 67 "C([ w1 = hintp[1], w2 = hint
-p[2], w3 = hintp[3], w4 = hintp[4] ] );" }}}{EXCHG {PARA 0 "" 0 ""
-{TEXT -1 19 "OMOMS interpolation" }}}{EXCHG {PARA 0 "> " 0 ""
-{MPLTEXT 1 0 172 "intp := [ -1/6*w1*w1*w1 + w1*w1 - 85/42*w1 + 29/21, \+
-1/2*w2*w2*w2 - w2*w2 + w2/14 + 13/21, 1/2*w3*w3*w3 - w3*w3 + w3/14 + 1
-3/21, -1/6*w4*w4*w4 + w4*w4 - 85/42*w4 + 29/21 ]; " }}}{EXCHG {PARA 0
-"> " 0 "" {MPLTEXT 1 0 88 "hintp := convert(subs(w1 = rest+1, w2 = res
-t, w3 = 1-rest, w4 = 2-rest, intp), horner); " }}}{EXCHG {PARA 0 "> "
-0 "" {MPLTEXT 1 0 67 "C([ w1 = hintp[1], w2 = hintp[2], w3 = hintp[3],
- w4 = hintp[4] ] );" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 0 "" }}}
-}{MARK "14" 0 }{VIEWOPTS 1 1 0 1 1 1803 1 1 1 1 }{PAGENUMBERS 0 1 2
-33 1 1 }
-*/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
