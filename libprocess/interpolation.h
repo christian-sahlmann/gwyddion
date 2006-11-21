@@ -38,6 +38,18 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         gdouble *data,
                                         GwyInterpolationType interpolation);
 
+void
+gwy_interpolation_resolve_coeffs_1d(gint n,
+                                    gdouble *data,
+                                    GwyInterpolationType interpolation);
+
+void
+gwy_interpolation_resolve_coeffs_2d(gint width,
+                                    gint height,
+                                    gint rowstride,
+                                    gdouble *data,
+                                    GwyInterpolationType interpolation);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_INTERPOLATION_H__ */

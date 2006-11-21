@@ -23,6 +23,14 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/interpolation.h>
 
+static const gdouble synth_func_values_bspline3[] = {
+    1.0/6.0, 2.0/3.0, 1.0/6.0,
+};
+
+static const gdouble synth_func_values_omoms3[] = {
+    4.0/21.0, 13.0/21.0, 4.0/21.0,
+};
+
 /**
  * gwy_interpolation_get_dval:
  * @x: requested value coordinate
@@ -337,6 +345,111 @@ deconvolve3_columns(gint width,
         for (j = 0; j < width; j++)
             row[j] = (row[j] - b*row[rowstride + j])/buffer[i];
     } while (i > 0);
+}
+
+/**
+ * gwy_interpolation_resolve_coeffs_1d:
+ * @n: The number of points in @data.
+ * @data: An array of data values.  It will be rewritten with the coefficients.
+ * @interpolation: Interpolation type to prepare @data for.
+ *
+ * Transforms data values in a one-dimensional array to interpolation
+ * coefficients.
+ *
+ * This function is no-op for interpolation types with finite-support
+ * interpolating function.  Therefore you can also omit it and use the data
+ * array directly for these interpolation types.
+ **/
+void
+gwy_interpolation_resolve_coeffs_1d(gint n,
+                                    gdouble *data,
+                                    GwyInterpolationType interpolation)
+{
+    gdouble *buffer;
+    gdouble a, b;
+
+    switch (interpolation) {
+        case GWY_INTERPOLATION_NONE:
+        case GWY_INTERPOLATION_ROUND:
+        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_KEY:
+        case GWY_INTERPOLATION_NNA:
+        case GWY_INTERPOLATION_SCHAUM:
+        return;
+
+        case GWY_INTERPOLATION_BSPLINE:
+        a = synth_func_values_bspline3[1];
+        b = synth_func_values_bspline3[0];
+        break;
+
+        case GWY_INTERPOLATION_OMOMS:
+        a = synth_func_values_omoms3[1];
+        b = synth_func_values_omoms3[0];
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
+    buffer = g_new(gdouble, n);
+    deconvolve3_rows(n, 1, n, data, buffer, a, b);
+    g_free(buffer);
+}
+
+/**
+ * gwy_interpolation_resolve_coeffs_2d:
+ * @width: The number of columns in @data.
+ * @height: The number of rows in @data.
+ * @rowstride: The total row length (including @width).
+ * @data: An array of data values.  It will be rewritten with the coefficients.
+ * @interpolation: Interpolation type to prepare @data for.
+ *
+ * Transforms data values in a two-dimensional array to interpolation
+ * coefficients.
+ *
+ * This function is no-op for interpolation types with finite-support
+ * interpolating function.  Therefore you can also omit it and use the data
+ * array directly for these interpolation types.
+ **/
+void
+gwy_interpolation_resolve_coeffs_2d(gint width,
+                                    gint height,
+                                    gint rowstride,
+                                    gdouble *data,
+                                    GwyInterpolationType interpolation)
+{
+    gdouble *buffer;
+    gdouble a, b;
+
+    switch (interpolation) {
+        case GWY_INTERPOLATION_NONE:
+        case GWY_INTERPOLATION_ROUND:
+        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_KEY:
+        case GWY_INTERPOLATION_NNA:
+        case GWY_INTERPOLATION_SCHAUM:
+        return;
+
+        case GWY_INTERPOLATION_BSPLINE:
+        a = synth_func_values_bspline3[1];
+        b = synth_func_values_bspline3[0];
+        break;
+
+        case GWY_INTERPOLATION_OMOMS:
+        a = synth_func_values_omoms3[1];
+        b = synth_func_values_omoms3[0];
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
+    buffer = g_new(gdouble, MAX(width, height));
+    deconvolve3_rows(width, height, rowstride, data, buffer, a, b);
+    deconvolve3_columns(width, height, rowstride, data, buffer, a, b);
+    g_free(buffer);
 }
 
 /************************** Documentation ****************************/
