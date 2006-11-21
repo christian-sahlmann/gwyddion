@@ -88,6 +88,9 @@ static void convolution_filter_preset_copy      (ConvolutionControls *controls,
                                                  const gchar *name,
                                                  const gchar *newname);
 static gboolean convolution_filter_preset_save  (GwyConvolutionFilterPreset *preset);
+static void convolution_filter_preset_name_edited(ConvolutionControls *controls,
+                                                  const gchar *strpath,
+                                                  const gchar *text);
 static void convolution_filter_preview          (ConvolutionControls *controls);
 static void convolution_filter_run_noninteractive(ConvolutionArgs *args,
                                                   GwyContainer *data,
@@ -443,6 +446,21 @@ convolution_filter_create_filter_tab(ConvolutionControls *controls)
 }
 
 static void
+render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            G_GNUC_UNUSED gpointer data)
+{
+    GwyResource *resource;
+
+    gtk_tree_model_get(model, iter, 0, &resource, -1);
+    g_object_set(renderer,
+                 "editable", gwy_resource_get_is_modifiable(resource),
+                 NULL);
+}
+
+static void
 render_size(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkCellRenderer *renderer,
             GtkTreeModel *model,
@@ -521,10 +539,16 @@ convolution_filter_create_preset_tab(ConvolutionControls *controls)
 
     /* Name */
     renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "editable-set", TRUE, NULL);
     i = gwy_inventory_store_get_column_by_name(controls->presets, "name");
     column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
                                                       "text", i,
                                                       NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, NULL, NULL);
+    g_signal_connect_swapped(renderer, "edited",
+                             G_CALLBACK(convolution_filter_preset_name_edited),
+                             controls);
     gtk_tree_view_column_set_expand(column, TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
@@ -614,10 +638,12 @@ convolution_filter_switch_preset(GtkTreeSelection *selection,
     convolution_filter_resize_matrix(controls);
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
+    controls->in_update = TRUE;
     gwy_radio_buttons_set_current(controls->hsym, preset->hsym);
     gwy_radio_buttons_set_current(controls->vsym, preset->vsym);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->divisor_auto),
                                  preset->data.auto_divisor);
+    controls->in_update = FALSE;
     convolution_filter_update_divisor(controls);
     controls->computed = FALSE;
 
@@ -728,6 +754,59 @@ convolution_filter_preset_save(GwyConvolutionFilterPreset *preset)
     g_string_free(str, TRUE);
 
     return TRUE;
+}
+
+static void
+convolution_filter_preset_name_edited(ConvolutionControls *controls,
+                                      const gchar *strpath,
+                                      const gchar *text)
+{
+    GwyResource *resource, *item;
+    GwyInventory *inventory;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gchar *s;
+    gchar *oldname, *newname, *oldfilename, *newfilename;
+
+    gwy_debug("path: <%s>, text: <%s>", strpath, text);
+    newname = g_newa(gchar, strlen(text)+1);
+    strcpy(newname, text);
+    g_strstrip(newname);
+    gwy_debug("newname: <%s>", newname);
+
+    model = GTK_TREE_MODEL(controls->presets);
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+    gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    s = gwy_resource_get_name(resource);
+    oldname = g_newa(gchar, strlen(s)+1);
+    strcpy(oldname, s);
+    gwy_debug("oldname: <%s>", oldname);
+    if (gwy_strequal(newname, oldname))
+        return;
+
+    inventory = gwy_convolution_filter_presets();
+    item = gwy_inventory_get_item(inventory, newname);
+    if (item)
+        return;
+
+    convolution_filter_preset_save(GWY_CONVOLUTION_FILTER_PRESET(resource));
+    oldfilename = gwy_resource_build_filename(resource);
+    gwy_inventory_rename_item(inventory, oldname, newname);
+    newfilename = gwy_resource_build_filename(resource);
+    if (g_rename(oldfilename, newfilename) != 0) {
+        /* FIXME: GUIze this */
+        g_warning("Cannot rename resource file: %s to %s",
+                  oldfilename, newfilename);
+        gwy_inventory_rename_item(inventory, newname, oldname);
+    }
+    g_free(oldfilename);
+    g_free(newfilename);
+
+    gwy_inventory_store_get_iter(controls->presets, newname, &iter);
+    gtk_tree_selection_select_iter(controls->selection, &iter);
 }
 
 static void
