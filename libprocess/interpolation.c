@@ -169,19 +169,21 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 }
 
 /**
- * deconvolve3_row:
+ * deconvolve3_rows:
  * @width: The number of items in @data.
+ * @height: The number of rows in @data.
+ * @rowstride: The total row length (including width).
  * @data: An array to deconvolve of size @width.
  * @buffer: Scratch space of at least @width items.
  * @a: The central convolution filter element.
  * @b: The side convolution filter element.
  *
- * Undoes the effect of mirror-extended (@b, @a, @b) convolution filter
- * on an array.
+ * Undoes the effect of mirror-extended (@b, @a, @b) vertical convolution
+ * filter on a two-dimensional array.  It can be also used for one-dimensional
+ * arrays, pass @height=1, @rowstride=@width then.
  *
- * This function acts on a signle line that can be either a data line or
- * a row of two-dimensional structure.  Each row should be processed
- * separatelty as it is not CPU-cache-efficient to jump between rows.
+ * This function acts on a two-dimensional data array, accessing it at linearly
+ * as possible for CPU cache utilization reasons.
  **/
 static void
 deconvolve3_rows(gint width,
@@ -237,7 +239,7 @@ deconvolve3_rows(gint width,
     do {
         j--;
         data[j] = (data[j] - b*data[j+1])/buffer[j];
-    } while (j >= 0);
+    } while (j > 0);
 
     /* Remaining rows */
     for (i = 1; i < height; i++) {
@@ -248,16 +250,16 @@ deconvolve3_rows(gint width,
             row[j] -= b*row[j-1]/buffer[j-1];
         row[j] -= b2*row[j-1]/buffer[j-1];
         /* Back */
-        row[j] /= buffer[i];
+        row[j] /= buffer[j];
         do {
             j--;
             row[j] = (row[j] - b*row[j+1])/buffer[j];
-        } while (j >= 0);
+        } while (j > 0);
     }
 }
 
 /**
- * deconvolve3_row:
+ * deconvolve3_columns:
  * @width: The number of columns in @data.
  * @height: The number of rows in @data.
  * @rowstride: The total row length (including width).
@@ -334,7 +336,7 @@ deconvolve3_columns(gint width,
         row = data + i*rowstride;
         for (j = 0; j < width; j++)
             row[j] = (row[j] - b*row[rowstride + j])/buffer[i];
-    } while (i >= 0);
+    } while (i > 0);
 }
 
 /************************** Documentation ****************************/
