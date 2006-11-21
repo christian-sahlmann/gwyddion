@@ -359,6 +359,8 @@ deconvolve3_columns(gint width,
  * This function is no-op for interpolation types with finite-support
  * interpolating function.  Therefore you can also omit it and use the data
  * array directly for these interpolation types.
+ *
+ * Since: 2.2
  **/
 void
 gwy_interpolation_resolve_coeffs_1d(gint n,
@@ -411,6 +413,8 @@ gwy_interpolation_resolve_coeffs_1d(gint n,
  * This function is no-op for interpolation types with finite-support
  * interpolating function.  Therefore you can also omit it and use the data
  * array directly for these interpolation types.
+ *
+ * Since: 2.2
  **/
 void
 gwy_interpolation_resolve_coeffs_2d(gint width,
