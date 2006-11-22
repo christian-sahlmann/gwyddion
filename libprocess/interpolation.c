@@ -183,6 +183,9 @@ gwy_interpolation_get_dval(gdouble x,
  * {data[i-1], data[i], data[i+1], data[i+2]} and function again
  * returns value at data[i+x].
  *
+ * The interpolation basis support size can be obtained generically with
+ * gwy_interpolation_get_support_size().
+ *
  * Returns: Interpolated value.
  **/
 gdouble
@@ -244,9 +247,9 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
  * @a: The central convolution filter element.
  * @b: The side convolution filter element.
  *
- * Undoes the effect of border value extended (@b, @a, @b) horizontal
- * convolution filter on a two-dimensional array.  It can be also used for
- * one-dimensional arrays, pass @height=1, @rowstride=@width then.
+ * Undoes the effect of mirror-extended with border value repeated (@b, @a, @b)
+ * horizontal convolution filter on a two-dimensional array.  It can be also
+ * used for one-dimensional arrays, pass @height=1, @rowstride=@width then.
  *
  * This function acts on a two-dimensional data array, accessing it at linearly
  * as possible for CPU cache utilization reasons.
@@ -332,8 +335,8 @@ deconvolve3_rows(gint width,
  * @a: The central convolution filter element.
  * @b: The side convolution filter element.
  *
- * Undoes the effect of border value extended (@b, @a, @b) vertical convolution
- * filter on a two-dimensional array.
+ * Undoes the effect of mirror-extended with border value repeated (@b, @a, @b)
+ * vertical convolution filter on a two-dimensional array.
  *
  * This function acts on a two-dimensional data array, accessing it at linearly
  * as possible for CPU cache utilization reasons.
@@ -418,6 +421,8 @@ deconvolve3_columns(gint width,
  * Returns: %TRUE if the inteprolation type has interpolating basis,
  *          %FALSE if data values cannot be directly used for interpolation
  *          of this type.
+ *
+ * Since: 2.2
  **/
 gboolean
 gwy_interpolation_has_interpolating_basis(GwyInterpolationType interpolation)
@@ -439,6 +444,41 @@ gwy_interpolation_has_interpolating_basis(GwyInterpolationType interpolation)
 
         default:
         g_return_val_if_reached(FALSE);
+        break;
+    }
+}
+
+/**
+ * gwy_interpolation_get_support_size:
+ * @interpolation: Interpolation type.
+ *
+ * Obtains the basis support size for an interpolation type.
+ *
+ * Returns: The length of the support interval of the interpolation basis.
+ **/
+gint
+gwy_interpolation_get_support_size(GwyInterpolationType interpolation)
+{
+    switch (interpolation) {
+        case GWY_INTERPOLATION_NONE:
+        return 0;
+        break;
+
+        case GWY_INTERPOLATION_ROUND:
+        case GWY_INTERPOLATION_LINEAR:
+        return 2;
+        break;
+
+        case GWY_INTERPOLATION_KEY:
+        case GWY_INTERPOLATION_BSPLINE:
+        case GWY_INTERPOLATION_OMOMS:
+        case GWY_INTERPOLATION_NNA:
+        case GWY_INTERPOLATION_SCHAUM:
+        return 4;
+        break;
+
+        default:
+        g_return_val_if_reached(-1);
         break;
     }
 }
@@ -550,6 +590,27 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
     deconvolve3_rows(width, height, rowstride, data, buffer, a, b);
     deconvolve3_columns(width, height, rowstride, data, buffer, a, b);
     g_free(buffer);
+}
+
+static void
+calculate_weights_for_rescale(gint oldn,
+                              gint newn,
+                              gint *positions,
+                              gdouble *weights,
+                              GwyInterpolationType interpolation)
+{
+    gint i, suplen;
+    gdouble q, x0, x;
+
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    q = (gdouble)oldn/newn;
+    x0 = (q - 1.0)/2.0;
+    for (i = 0; i < newn; i++) {
+        x = q*i + x0;
+        positions[i] = (gint)floor(x);
+        x -= positions[i];
+        gwy_interpolation_get_weights(x, interpolation, weights + suplen*i);
+    }
 }
 
 /************************** Documentation ****************************/

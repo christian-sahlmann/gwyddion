@@ -41,6 +41,9 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 gboolean
 gwy_interpolation_has_interpolating_basis(GwyInterpolationType interpolation);
 
+gint
+gwy_interpolation_get_support_size(GwyInterpolationType interpolation);
+
 void
 gwy_interpolation_resolve_coeffs_1d(gint n,
                                     gdouble *data,
