@@ -72,8 +72,17 @@ gwy_interpolation_get_weights(gdouble x,
         break;
 
         case GWY_INTERPOLATION_BSPLINE:
+        w[0] = (1.0 - x)*(1.0 - x)*(1.0 - x)/6.0;
+        w[1] = 2.0/3.0 - x*x*(1.0 - x/2.0);
+        w[2] = (1.0/3.0 + x*(1.0 + x*(1.0 - x)))/2.0;
+        w[3] = x*x*x/6.0;
+        break;
+
         case GWY_INTERPOLATION_OMOMS:
-        g_warning("Implement me!");
+        w[0] = 4.0/21.0 - x*(11.0/21.0 - x*(1.0/2.0 - x/6.0));
+        w[1] = 13.0/21.0 - x*(1.0/14.0 + x*(1.0 - x/2.0));
+        w[2] = 4.0/21.0 + x*(3.0/7.0 + x*(1.0 - x)/2.0);
+        w[3] = x*(1.0/7.0 + x*x)/6.0;
         break;
 
         case GWY_INTERPOLATION_NNA:
