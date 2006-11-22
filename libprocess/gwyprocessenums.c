@@ -173,11 +173,16 @@ gwy_dwt_denoise_type_get_enum(void)
 /**
  * GwyInterpolationType:
  * @GWY_INTERPOLATION_NONE: No interpolation at all, resulting values are not
- *                          meaningful and should not be used (use for
- *                          resize operations discarding original data).
- * @GWY_INTERPOLATION_ROUND: Round interpolation (nearest neighbour
- *                           interpolation).
- * @GWY_INTERPOLATION_BILINEAR: Bilinear interpolation.
+ *                          defined, it must not be used for interpolation.
+ *                          It can be used in resize operations discarding
+ *                          original data.
+ * @GWY_INTERPOLATION_ROUND: Round interpolation (more precisely symmetric
+ *                           nearest neighbour interpolation).
+ * @GWY_INTERPOLATION_LINEAR: Linear interpolation.
+ * @GWY_INTERPOLATION_BILINEAR: Old name for %GWY_INTERPOLATION_LINEAR.  This
+ *                              is a misnomer because it in fact denotes linear
+ *                              interpolation of arbitrary dimension.  Use
+ *                              %GWY_INTERPOLATION_LINEAR instead.
  * @GWY_INTERPOLATION_KEY: Cubic Key's interpolation (with a=-1/2).
  * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation. This interpolation type
  *                             is misimplemented and should not be used.
@@ -199,14 +204,14 @@ const GwyEnum*
 gwy_interpolation_type_get_enum(void)
 {
     static const GwyEnum entries[] = {
-        { N_("Round"),    GWY_INTERPOLATION_ROUND,    },
-        { N_("Bilinear"), GWY_INTERPOLATION_BILINEAR, },
-        { N_("Key"),      GWY_INTERPOLATION_KEY,      },
-        { N_("BSpline"),  GWY_INTERPOLATION_BSPLINE,  },
-        { N_("OMOMS"),    GWY_INTERPOLATION_OMOMS,    },
-        { N_("NNA"),      GWY_INTERPOLATION_NNA,      },
-        { N_("Schaum"),   GWY_INTERPOLATION_SCHAUM,   },
-        { NULL,           0,                          },
+        { N_("Round"),   GWY_INTERPOLATION_ROUND,   },
+        { N_("Linear"),  GWY_INTERPOLATION_LINEAR,  },
+        { N_("Key"),     GWY_INTERPOLATION_KEY,     },
+        { N_("BSpline"), GWY_INTERPOLATION_BSPLINE, },
+        { N_("OMOMS"),   GWY_INTERPOLATION_OMOMS,   },
+        { N_("NNA"),     GWY_INTERPOLATION_NNA,     },
+        { N_("Schaum"),  GWY_INTERPOLATION_SCHAUM,  },
+        { NULL,          0,                         },
     };
     return entries;
 }
