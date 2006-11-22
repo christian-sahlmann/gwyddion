@@ -244,9 +244,9 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
  * @a: The central convolution filter element.
  * @b: The side convolution filter element.
  *
- * Undoes the effect of mirror-extended (@b, @a, @b) vertical convolution
- * filter on a two-dimensional array.  It can be also used for one-dimensional
- * arrays, pass @height=1, @rowstride=@width then.
+ * Undoes the effect of border value extended (@b, @a, @b) horizontal
+ * convolution filter on a two-dimensional array.  It can be also used for
+ * one-dimensional arrays, pass @height=1, @rowstride=@width then.
  *
  * This function acts on a two-dimensional data array, accessing it at linearly
  * as possible for CPU cache utilization reasons.
@@ -261,35 +261,34 @@ deconvolve3_rows(gint width,
                  gdouble b)
 {
     gdouble *row;
-    gdouble q, b2;
+    gdouble q;
     gint i, j;
 
     g_return_if_fail(height < 2 || rowstride >= width);
-    b2 = 2.0*b;
-    g_return_if_fail(b2 < a);
+    g_return_if_fail(2.0*b < a);
 
     if (!height || !width)
         return;
 
     if (width == 1) {
+        q = a + 2.0*b;
         for (i = 0; i < height; i++)
-            data[i*rowstride] /= (a + b2);
+            data[i*rowstride] /= q;
         return;
     }
     if (width == 2) {
-        q = a*a - b2*b2;
+        q = a*(a + 2.0*b);
         for (i = 0; i < height; i++) {
             row = data + i*rowstride;
-            buffer[0] = a*row[0] - b2*row[1];
-            row[1] = a*row[1] - b2*row[0];
+            buffer[0] = (a + b)/q*row[0] - b/q*row[1];
+            row[1] = (a + b)/q*row[1] - b/q*row[0];
             row[0] = buffer[0];
         }
         return;
     }
 
     /* Special-case first item */
-    buffer[0] = a/2.0;
-    data[0] /= 2.0;
+    buffer[0] = a + b;
     /* Inner items */
     for (j = 1; j < width-1; j++) {
         q = b/buffer[j-1];
@@ -297,8 +296,8 @@ deconvolve3_rows(gint width,
         data[j] -= q*data[j-1];
     }
     /* Special-case last item */
-    q = b2/buffer[j-1];
-    buffer[j] = a - q*b;
+    q = b/buffer[j-1];
+    buffer[j] = a + b*(1.0 - q);
     data[j] -= q*data[j-1];
     /* Go back */
     data[j] /= buffer[j];
@@ -311,10 +310,9 @@ deconvolve3_rows(gint width,
     for (i = 1; i < height; i++) {
         row = data + i*rowstride;
         /* Forward */
-        row[0] /= 2.0;
         for (j = 1; j < width-1; j++)
             row[j] -= b*row[j-1]/buffer[j-1];
-        row[j] -= b2*row[j-1]/buffer[j-1];
+        row[j] -= b*row[j-1]/buffer[j-1];
         /* Back */
         row[j] /= buffer[j];
         do {
@@ -334,7 +332,7 @@ deconvolve3_rows(gint width,
  * @a: The central convolution filter element.
  * @b: The side convolution filter element.
  *
- * Undoes the effect of mirror-extended (@b, @a, @b) vertical convolution
+ * Undoes the effect of border value extended (@b, @a, @b) vertical convolution
  * filter on a two-dimensional array.
  *
  * This function acts on a two-dimensional data array, accessing it at linearly
@@ -350,35 +348,33 @@ deconvolve3_columns(gint width,
                     gdouble b)
 {
     gdouble *row;
-    gdouble q, b2;
+    gdouble q;
     gint i, j;
 
     g_return_if_fail(height < 2 || rowstride >= width);
-    b2 = 2.0*b;
-    g_return_if_fail(b2 < a);
+    g_return_if_fail(2.0*b < a);
 
     if (!height || !width)
         return;
 
     if (height == 1) {
+        q = a + 2.0*b;
         for (j = 0; j < width; j++)
-            data[j] /= (a + b2);
+            data[j] /= q;
         return;
     }
     if (height == 2) {
-        q = a*a - b2*b2;
+        q = a*(a + 2.0*b);
         for (j = 0; j < width; j++) {
-            buffer[0] = a*data[j] - b2*data[rowstride + j];
-            data[rowstride + j] = a*data[rowstride + j] - b2*data[j];
+            buffer[0] = (a + b)/q*data[j] - b/q*data[rowstride + j];
+            data[rowstride + j] = (a + b)/q*data[rowstride + j] - b/q*data[j];
             data[j] = buffer[0];
         }
         return;
     }
 
     /* Special-case first row */
-    buffer[0] = a/2.0;
-    for (j = 0; j < width; j++)
-        data[j] /= 2.0;
+    buffer[0] = a + b;
     /* Inner rows */
     for (i = 1; i < height-1; i++) {
         q = b/buffer[i-1];
@@ -388,8 +384,8 @@ deconvolve3_columns(gint width,
             row[rowstride + j] -= q*row[j];
     }
     /* Special-case last row */
-    q = b2/buffer[i-1];
-    buffer[i] = a - q*b;
+    q = b/buffer[i-1];
+    buffer[i] = a + b*(1.0 - q);
     row = data + (i - 1)*rowstride;
     for (j = 0; j < width; j++)
         row[rowstride + j] -= q*row[j];
