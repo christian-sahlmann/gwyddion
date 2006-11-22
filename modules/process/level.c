@@ -191,7 +191,7 @@ do_level(GwyContainer *data, GwyRunType run, guint level_type)
         bx = gwy_data_field_rtoj(dfield, bx);
         by = gwy_data_field_rtoi(dfield, by);
         gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
-                                    GWY_INTERPOLATION_BILINEAR);
+                                    GWY_INTERPOLATION_LINEAR);
         gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
                   bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
         gwy_data_field_data_changed(dfield);

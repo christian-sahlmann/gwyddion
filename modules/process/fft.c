@@ -88,7 +88,7 @@ static void     fft_sanitize_args  (FFTArgs *args);
 static const FFTArgs fft_defaults = {
     FALSE,
     TRUE,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     GWY_WINDOWING_HANN,
     GWY_FFT_OUTPUT_MOD,
 };
@@ -161,7 +161,7 @@ fft(GwyContainer *data, GwyRunType run)
     }
 
     dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
-                                          GWY_INTERPOLATION_BILINEAR);
+                                          args.interp);
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_power(xyunit, -1, xyunit);
 

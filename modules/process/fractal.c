@@ -115,7 +115,7 @@ static const FractalArgs fractal_defaults = {
     { 0, 0, 0, 0, },
     { 0, 0, 0, 0, },
     { 0, 0, 0, 0, },
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     GWY_FRACTAL_PARTITIONING,
 };
 

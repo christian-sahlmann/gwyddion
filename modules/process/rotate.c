@@ -76,7 +76,7 @@ static void     rotate_save_args    (GwyContainer *container,
 
 static const RotateArgs rotate_defaults = {
     0.0,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     FALSE,
 };
 
@@ -221,7 +221,7 @@ create_preview_data(GwyContainer *data)
     yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
     gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
-                            GWY_INTERPOLATION_BILINEAR);
+                            GWY_INTERPOLATION_LINEAR);
     dfield_show = gwy_data_field_duplicate(dfield);
 
     gwy_container_set_object_by_name(preview, "/0/data", dfield);

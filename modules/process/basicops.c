@@ -345,16 +345,16 @@ square_samples(GwyContainer *data, GwyRunType run)
             yres = MAX(ROUND(yreal*qx), 1);
 
         dfields[0] = gwy_data_field_new_resampled(dfields[0], xres, yres,
-                                                  GWY_INTERPOLATION_BILINEAR);
+                                                  GWY_INTERPOLATION_LINEAR);
         if (dfields[1]) {
             dfields[1]
                 = gwy_data_field_new_resampled(dfields[1], xres, yres,
-                                               GWY_INTERPOLATION_BILINEAR);
+                                               GWY_INTERPOLATION_LINEAR);
         }
         if (dfields[2]) {
             dfields[2]
                 = gwy_data_field_new_resampled(dfields[2], xres, yres,
-                                               GWY_INTERPOLATION_BILINEAR);
+                                               GWY_INTERPOLATION_LINEAR);
         }
     }
     else {

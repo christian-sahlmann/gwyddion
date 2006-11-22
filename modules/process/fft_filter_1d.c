@@ -620,7 +620,7 @@ static void
 fftf_1d_load_args(GwyContainer *container,
                   Fftf1dArgs *args)
 {
-    args->interpolation = GWY_INTERPOLATION_BILINEAR;
+    args->interpolation = GWY_INTERPOLATION_LINEAR;
     args->direction = GWY_ORIENTATION_HORIZONTAL;
     args->suppress = GWY_FFTF_1D_SUPPRESS_NULL;
 

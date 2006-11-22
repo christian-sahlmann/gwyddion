@@ -76,7 +76,7 @@ static void        scale_save_args           (GwyContainer *container,
 
 static const ScaleArgs scale_defaults = {
     1.0,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     0,
     0,
     TRUE,

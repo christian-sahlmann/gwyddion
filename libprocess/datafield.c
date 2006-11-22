@@ -797,7 +797,7 @@ gwy_data_field_get_dval(GwyDataField *a,
         iy = CLAMP(floory, 0, a->yres - 1);
         return a->data[ix + a->xres*iy];
 
-        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_LINEAR:
         /* To centered pixel value */
         x -= 0.5;
         y -= 0.5;
@@ -1933,7 +1933,7 @@ gwy_data_field_set_row_part(GwyDataField *data_field,
         GWY_SWAP(gint, from, to);
 
     if (data_line->res != (to - from))
-        gwy_data_line_resample(data_line, to-from, GWY_INTERPOLATION_BILINEAR);
+        gwy_data_line_resample(data_line, to-from, GWY_INTERPOLATION_LINEAR);
 
     memcpy(data_field->data + row*data_field->xres + from,
            data_line->data,
@@ -1970,7 +1970,7 @@ gwy_data_field_set_column_part(GwyDataField *data_field,
         GWY_SWAP(gint, from, to);
 
     if (data_line->res != (to-from))
-        gwy_data_line_resample(data_line, to-from, GWY_INTERPOLATION_BILINEAR);
+        gwy_data_line_resample(data_line, to-from, GWY_INTERPOLATION_LINEAR);
 
     for (k = 0; k < to-from; k++)
         data_field->data[(k+from)*data_field->xres + col] = data_line->data[k];

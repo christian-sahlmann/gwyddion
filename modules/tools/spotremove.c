@@ -667,7 +667,7 @@ fractal_average(GwyDataField *dfield,
     gwy_data_field_clear(mask);
     gwy_data_field_area_fill(mask, ximin, yimin, ximax - ximin, yimax - yimin,
                              1.0);
-    gwy_data_field_fractal_correction(dfield, mask, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_fractal_correction(dfield, mask, GWY_INTERPOLATION_LINEAR);
     g_object_unref(mask);
 }
 

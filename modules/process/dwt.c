@@ -63,7 +63,7 @@ static void     dwt_sanitize_args  (DWTArgs *args);
 
 static const DWTArgs dwt_defaults = {
     0,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     GWY_DWT_DAUB12,
 };
 

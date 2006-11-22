@@ -73,8 +73,7 @@ fraccor(GwyContainer *data, GwyRunType run)
     g_return_if_fail(dfield && dquark && mfield);
 
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
-    gwy_data_field_fractal_correction(dfield, mfield,
-                                      GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_fractal_correction(dfield, mfield, GWY_INTERPOLATION_LINEAR);
     gwy_data_field_data_changed(dfield);
 }
 

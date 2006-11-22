@@ -993,7 +993,7 @@ do_fft(GwyDataField *data_input, GwyDataField *data_output)
     GwyDataField *r_in, *r_out, *i_out;
     GwyWindowingType window = GWY_WINDOWING_LANCZOS;
     GwyTransformDirection direction = GWY_TRANSFORM_DIRECTION_FORWARD;
-    GwyInterpolationType interp = GWY_INTERPOLATION_BILINEAR;
+    GwyInterpolationType interp = GWY_INTERPOLATION_LINEAR;
     gint level = 1; /* subtract mean value */
 
     r_in = gwy_data_field_duplicate(data_input);

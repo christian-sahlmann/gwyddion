@@ -570,7 +570,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
         case GWY_INTERPOLATION_ROUND:
         return a->data[l];
 
-        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_LINEAR:
         return (1.0 - rest)*a->data[l] + rest*a->data[l+1];
 
         default:
@@ -1349,7 +1349,7 @@ gwy_data_line_line_rotate(GwyDataLine *a,
         yl2 = dy[k];
 
         if (interpolation == GWY_INTERPOLATION_ROUND
-            || interpolation == GWY_INTERPOLATION_BILINEAR)
+            || interpolation == GWY_INTERPOLATION_LINEAR)
             a->data[i] = gwy_interpolation_get_dval(x, xl1, yl1, xl2, yl2,
                                                     interpolation);
         else

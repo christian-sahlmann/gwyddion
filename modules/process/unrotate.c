@@ -79,7 +79,7 @@ static void             save_args                (GwyContainer *container,
 static void             sanitize_args            (UnrotateArgs *args);
 
 static const UnrotateArgs unrotate_defaults = {
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     GWY_SYMMETRY_AUTO,
 };
 

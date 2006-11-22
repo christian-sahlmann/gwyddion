@@ -156,7 +156,7 @@ static const ToolArgs default_args = {
     120,
     FALSE,
     GWY_ORIENTATION_HORIZONTAL,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
 };
 
 static const GwyEnum sf_types[] =  {

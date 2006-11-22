@@ -331,7 +331,7 @@ gwy_tool_grain_remover_selection_finised(GwyPlainTool *plain_tool)
 
             case GRAIN_REMOVE_FRACTAL:
             gwy_data_field_fractal_correction(plain_tool->data_field, tmp,
-                                              GWY_INTERPOLATION_BILINEAR);
+                                              GWY_INTERPOLATION_LINEAR);
             break;
         }
         g_object_unref(tmp);

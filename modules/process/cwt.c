@@ -62,7 +62,7 @@ static void        cwt_dialog_update          (CWTControls *controls,
 static const CWTArgs cwt_defaults = {
     1,
     10,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     GWY_2DCWT_GAUSS,
 };
 

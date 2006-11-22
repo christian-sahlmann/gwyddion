@@ -595,7 +595,7 @@ immerse_search(ImmerseControls *controls,
                                             xto - xfrom, yto - yfrom);
 
     dfieldsub = gwy_data_field_new_resampled(dfield, w, h,
-                                             GWY_INTERPOLATION_BILINEAR);
+                                             GWY_INTERPOLATION_LINEAR);
 
     immerse_correlate(iarea, dfieldsub, &col, &row);
     gwy_debug("[c] col: %d, row: %d", col, row);
@@ -619,7 +619,7 @@ immerse_search(ImmerseControls *controls,
     wr = gwy_data_field_get_xreal(iarea)/gwy_data_field_get_xmeasure(dfield);
     hr = gwy_data_field_get_yreal(iarea)/gwy_data_field_get_ymeasure(dfield);
     gwy_data_field_resample(iarea, ROUND(wr), ROUND(hr),
-                            GWY_INTERPOLATION_BILINEAR);
+                            GWY_INTERPOLATION_LINEAR);
     immerse_correlate(iarea, dfield, &col, &row);
     gwy_debug("[U] col: %d, row: %d", col, row);
 
@@ -661,10 +661,10 @@ immerse_correlate(GwyDataField *image,
     gwy_debug("skernel: %dx%d, simage: %dx%d", skxres, skyres, sixres, siyres);
 
     subimage = gwy_data_field_new_resampled(image, sixres, siyres,
-                                            GWY_INTERPOLATION_BILINEAR);
+                                            GWY_INTERPOLATION_LINEAR);
     score = gwy_data_field_new_alike(subimage, FALSE);
     subkernel = gwy_data_field_new_resampled(kernel, skxres, skyres,
-                                             GWY_INTERPOLATION_BILINEAR);
+                                             GWY_INTERPOLATION_LINEAR);
 
     gwy_data_field_correlate(subimage, subkernel, score,
                              GWY_CORRELATION_NORMAL);
@@ -758,7 +758,7 @@ immerse_do(ImmerseArgs *args)
         h = MAX(h, 1);
         gwy_debug("w: %d, h: %d", w, h);
         resampled = gwy_data_field_new_resampled(detail, w, h,
-                                                 GWY_INTERPOLATION_BILINEAR);
+                                                 GWY_INTERPOLATION_LINEAR);
         if (args->leveling == GWY_IMMERSE_LEVEL_MEAN) {
             iavg = gwy_data_field_area_get_avg(result, NULL, x, y, w, h);
             gwy_data_field_add(resampled, iavg - davg);
@@ -774,7 +774,7 @@ immerse_do(ImmerseArgs *args)
                   /gwy_data_field_get_ymeasure(detail));
         gwy_debug("w: %d, h: %d", w, h);
         result = gwy_data_field_new_resampled(image, w, h,
-                                              GWY_INTERPOLATION_BILINEAR);
+                                              GWY_INTERPOLATION_LINEAR);
         x = gwy_data_field_rtoj(result, args->xpos);
         y = gwy_data_field_rtoi(result, args->ypos);
         if (args->leveling == GWY_IMMERSE_LEVEL_MEAN) {
