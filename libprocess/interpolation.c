@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/interpolation.h>
 
+
 static const gdouble synth_func_values_bspline3[] = {
     1.0/6.0, 2.0/3.0, 1.0/6.0,
 };
@@ -31,6 +32,82 @@ static const gdouble synth_func_values_omoms3[] = {
     4.0/21.0, 13.0/21.0, 4.0/21.0,
 };
 
+
+static inline void
+gwy_interpolation_get_weights(gdouble x,
+                              GwyInterpolationType interpolation,
+                              gdouble *w)
+{
+    g_return_if_fail(x >= 0.0 && x <= 1.0);
+
+    switch (interpolation) {
+        case GWY_INTERPOLATION_NONE:
+        /* Don't really care. */
+        break;
+
+        /* Silently use first order B-spline instead of NN for symmetry */
+        case GWY_INTERPOLATION_ROUND:
+        if (x < 0.5) {
+            w[0] = 1.0;
+            w[1] = 0.0;
+        }
+        else if (x > 0.5) {
+            w[0] = 0.0;
+            w[1] = 1.0;
+        }
+        else
+            w[0] = w[1] = 0.5;
+        break;
+
+        case GWY_INTERPOLATION_LINEAR:
+        w[0] = 1.0 - x;
+        w[1] = x;
+        break;
+
+        case GWY_INTERPOLATION_KEY:
+        w[0] = (-0.5 + (1.0 - x/2.0)*x)*x;
+        w[1] = 1.0 + (-2.5 + 1.5*x)*x*x;
+        w[2] = (0.5 + (2.0 - 1.5*x)*x)*x;
+        w[3] = (-0.5 + x/2.0)*x*x;
+        break;
+
+        case GWY_INTERPOLATION_BSPLINE:
+        case GWY_INTERPOLATION_OMOMS:
+        g_warning("Implement me!");
+        break;
+
+        case GWY_INTERPOLATION_NNA:
+        w[0] = x + 1.0;
+        w[1] = x;
+        w[2] = 1.0 - x;
+        w[3] = 2.0 - x;
+        w[0] = 1.0/(w[0]*w[0]);
+        w[0] *= w[0];
+        w[1] = 1.0/(w[1]*w[1]);
+        w[1] *= w[1];
+        w[2] = 1.0/(w[2]*w[2]);
+        w[2] *= w[2];
+        w[3] = 1.0/(w[3]*w[3]);
+        w[3] *= w[3];
+        x = w[0] + w[1] + w[2] + w[3];
+        w[0] /= x;
+        w[1] /= x;
+        w[2] /= x;
+        w[3] /= x;
+        break;
+
+        case GWY_INTERPOLATION_SCHAUM:
+        w[0] = -x*(x - 1.0)*(x - 2.0)/6.0;
+        w[1] = (x*x - 1.0)*(x - 2.0)/2.0;
+        w[2] = -x*(x + 1.0)*(x - 2.0)/2.0;
+        w[3] = x*(x*x - 1.0)/6.0;
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
 /**
  * gwy_interpolation_get_dval:
  * @x: requested value coordinate
@@ -66,7 +143,7 @@ gwy_interpolation_get_dval(gdouble x,
         break;
 
 
-        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_LINEAR:
         return y1_ + (x - x1_)/(x2_ - x1_)*(y2_ - y1_);
         break;
 
@@ -88,7 +165,7 @@ gwy_interpolation_get_dval(gdouble x,
  * For %GWY_INTERPOLATION_NONE no @data value is actually used, and zero is
  * returned.
  *
- * For %GWY_INTERPOLATION_ROUND or %GWY_INTERPOLATION_BILINEAR
+ * For %GWY_INTERPOLATION_ROUND or %GWY_INTERPOLATION_LINEAR
  * it is enough to set middle two @data values, that to use @data in format
  * {0, data[i], data[i+1], 0} and function computes value at data[i+x]
  * (the outer values are not used).
@@ -104,10 +181,8 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         gdouble *data,
                                         GwyInterpolationType interpolation)
 {
-
-
     gint l;
-    gdouble w1, w2, w3, w4;
+    gdouble w[4];
     gdouble rest;
 
     x += 1.0;
@@ -119,61 +194,35 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
     if (rest == 0)
         return data[l];
 
-    /*simple (and fast) methods*/
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         return 0.0;
+        break;
 
         case GWY_INTERPOLATION_ROUND:
-        return data[(gint)(x + 0.5)];
-
-        case GWY_INTERPOLATION_BILINEAR:
-        return
-            (1.0 - rest)*data[l] + rest*data[l+1];
-
-        default:
+        case GWY_INTERPOLATION_LINEAR:
+        gwy_interpolation_get_weights(rest, interpolation, w);
+        return w[0]*data[l] + w[1]*data[l + 1];
         break;
-    }
 
-    switch (interpolation) {
-        case GWY_INTERPOLATION_KEY:
         /* One cannot do B-spline and o-MOMS this way.  Read e.g.
          * `Interpolation Revisited' by Philippe Thevenaz for explanation.
          * Replace them with Key. */
         case GWY_INTERPOLATION_BSPLINE:
         case GWY_INTERPOLATION_OMOMS:
-        w1 = (-0.5 + (1.0 - rest/2.0)*rest)*rest;
-        w2 = 1.0 + (-2.5 + 1.5*rest)*rest*rest;
-        w3 = (0.5 + (2.0 - 1.5*rest)*rest)*rest;
-        w4 = (-0.5 + rest/2.0)*rest*rest;
-        break;
-
+        interpolation = GWY_INTERPOLATION_KEY;
+        case GWY_INTERPOLATION_KEY:
         case GWY_INTERPOLATION_NNA:
-        w1 = rest + 1.0;
-        w2 = rest;
-        w3 = 1.0 - rest;
-        w4 = 2.0 - rest;
-        w1 = 1/(w1*w1*w1*w1);
-        w2 = 1/(w2*w2*w2*w2);
-        w3 = 1/(w3*w3*w3*w3);
-        w4 = 1/(w4*w4*w4*w4);
-        return (w1*data[l-1] + w2*data[l]
-                + w3*data[l+1] + w4*data[l+2])/(w1 + w2 + w3 + w4);
-
         case GWY_INTERPOLATION_SCHAUM:
-        w1 = -rest*(rest - 1.0)*(rest - 2.0)/6.0;
-        w2 = (rest*rest - 1.0)*(rest - 2.0)/2.0;
-        w3 = -rest*(rest + 1.0)*(rest - 2.0)/2.0;
-        w4 = rest*(rest*rest - 1.0)/6.0;
+        gwy_interpolation_get_weights(rest, interpolation, w);
+        return w[0]*data[l - 1] + w[1]*data[l]
+               + w[2]*data[l + 1] + w[3]*data[l + 2];
         break;
 
         default:
-        g_assert_not_reached();
-        w1 = w2 = w3 = w4 = 0.0;
+        g_return_val_if_reached(0.0);
         break;
     }
-
-    return w1*data[l-1] + w2*data[l] + w3*data[l+1] + w4*data[l+2];
 }
 
 /**
@@ -348,6 +397,48 @@ deconvolve3_columns(gint width,
 }
 
 /**
+ * gwy_interpolation_has_interpolating_basis:
+ * @interpolation: Interpolation type.
+ *
+ * Obtains the interpolating basis property of an inteprolation type.
+ *
+ * Interpolation types with inteprolating basis directly use data values
+ * for interpolation.  For these types gwy_interpolation_resolve_coeffs_1d()
+ * and gwy_interpolation_resolve_coeffs_2d() are no-op.
+ *
+ * Generalized interpolation types (with non-interpolation basis) require to
+ * preprocess the data values to obtain interpolation coefficients first.  On
+ * the ohter hand they typically offer much higher interpolation quality.
+ *
+ * Returns: %TRUE if the inteprolation type has interpolating basis,
+ *          %FALSE if data values cannot be directly used for interpolation
+ *          of this type.
+ **/
+gboolean
+gwy_interpolation_has_interpolating_basis(GwyInterpolationType interpolation)
+{
+    switch (interpolation) {
+        case GWY_INTERPOLATION_NONE:
+        case GWY_INTERPOLATION_ROUND:
+        case GWY_INTERPOLATION_LINEAR:
+        case GWY_INTERPOLATION_KEY:
+        case GWY_INTERPOLATION_NNA:
+        case GWY_INTERPOLATION_SCHAUM:
+        return TRUE;
+        break;
+
+        case GWY_INTERPOLATION_BSPLINE:
+        case GWY_INTERPOLATION_OMOMS:
+        return FALSE;
+        break;
+
+        default:
+        g_return_val_if_reached(FALSE);
+        break;
+    }
+}
+
+/**
  * gwy_interpolation_resolve_coeffs_1d:
  * @n: The number of points in @data.
  * @data: An array of data values.  It will be rewritten with the coefficients.
@@ -373,7 +464,7 @@ gwy_interpolation_resolve_coeffs_1d(gint n,
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         case GWY_INTERPOLATION_ROUND:
-        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_LINEAR:
         case GWY_INTERPOLATION_KEY:
         case GWY_INTERPOLATION_NNA:
         case GWY_INTERPOLATION_SCHAUM:
@@ -429,7 +520,7 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         case GWY_INTERPOLATION_ROUND:
-        case GWY_INTERPOLATION_BILINEAR:
+        case GWY_INTERPOLATION_LINEAR:
         case GWY_INTERPOLATION_KEY:
         case GWY_INTERPOLATION_NNA:
         case GWY_INTERPOLATION_SCHAUM:
