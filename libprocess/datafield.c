@@ -218,9 +218,6 @@ gwy_data_field_new_resampled(GwyDataField *data_field,
                              GwyInterpolationType interpolation)
 {
     GwyDataField *result;
-    gdouble *p;
-    gdouble xratio, yratio;
-    gint i, j;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     if (data_field->xres == xres && data_field->yres == yres)
@@ -238,20 +235,11 @@ gwy_data_field_new_resampled(GwyDataField *data_field,
     if (data_field->si_unit_z)
         result->si_unit_z = gwy_si_unit_duplicate(data_field->si_unit_z);
 
-    if (interpolation == GWY_INTERPOLATION_NONE)
-        return result;
-
-    xratio = data_field->xres/(gdouble)xres;
-    yratio = data_field->yres/(gdouble)yres;
-
-    p = result->data;
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++, p++) {
-            *p = gwy_data_field_get_dval(data_field,
-                                         (j + 0.5)*xratio, (i + 0.5)*yratio,
-                                         interpolation);
-        }
-    }
+    gwy_interpolation_resample_block_2d(data_field->xres, data_field->yres,
+                                        data_field->xres, data_field->data,
+                                        result->xres, result->yres,
+                                        result->xres, result->data,
+                                        interpolation, TRUE);
 
     return result;
 }
@@ -606,9 +594,7 @@ gwy_data_field_resample(GwyDataField *data_field,
                         gint xres, gint yres,
                         GwyInterpolationType interpolation)
 {
-    gdouble *bdata, *p;
-    gdouble xratio, yratio;
-    gint i, j;
+    gdouble *bdata;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (data_field->xres == xres && data_field->yres == yres)
@@ -626,18 +612,10 @@ gwy_data_field_resample(GwyDataField *data_field,
     }
 
     bdata = g_new(gdouble, xres*yres);
-
-    xratio = data_field->xres/(gdouble)xres;
-    yratio = data_field->yres/(gdouble)yres;
-
-    p = bdata;
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++, p++) {
-            *p = gwy_data_field_get_dval(data_field,
-                                         (j + 0.5)*xratio, (i + 0.5)*yratio,
-                                         interpolation);
-        }
-    }
+    gwy_interpolation_resample_block_2d(data_field->xres, data_field->yres,
+                                        data_field->xres, data_field->data,
+                                        xres, yres, xres, bdata,
+                                        interpolation, FALSE);
     g_free(data_field->data);
     data_field->data = bdata;
     data_field->xres = xres;

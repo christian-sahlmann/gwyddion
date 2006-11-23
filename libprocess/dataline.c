@@ -194,9 +194,6 @@ gwy_data_line_new_resampled(GwyDataLine *data_line,
                             GwyInterpolationType interpolation)
 {
     GwyDataLine *result;
-    gdouble *p;
-    gdouble ratio;
-    gint j;
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
     if (data_line->res == res)
@@ -211,14 +208,9 @@ gwy_data_line_new_resampled(GwyDataLine *data_line,
     if (data_line->si_unit_y)
         result->si_unit_y = gwy_si_unit_duplicate(data_line->si_unit_y);
 
-    if (interpolation == GWY_INTERPOLATION_NONE)
-        return result;
-
-    ratio = data_line->res/(gdouble)res;
-
-    p = result->data;
-    for (j = 0; j < res; j++, p++)
-        *p = gwy_data_line_get_dval(data_line, (j + 0.5)*ratio, interpolation);
+    gwy_interpolation_resample_block_1d(data_line->res, data_line->data,
+                                        result->res, result->data,
+                                        interpolation, TRUE);
 
     return result;
 }
@@ -421,8 +413,6 @@ gwy_data_line_resample(GwyDataLine *data_line,
                        GwyInterpolationType interpolation)
 {
     gdouble *bdata;
-    gdouble ratio;
-    gint i;
 
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     if (res == data_line->res)
@@ -436,10 +426,9 @@ gwy_data_line_resample(GwyDataLine *data_line,
     }
 
     bdata = g_new(gdouble, res);
-    ratio = data_line->res/(gdouble)res;
-    for (i = 0; i < res; i++)
-        bdata[i] = gwy_data_line_get_dval(data_line, (i + 0.5)*ratio,
-                                          interpolation);
+    gwy_interpolation_resample_block_1d(data_line->res, data_line->data,
+                                        res, bdata,
+                                        interpolation, FALSE);
     g_free(data_line->data);
     data_line->data = bdata;
     data_line->res = res;
