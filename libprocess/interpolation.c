@@ -466,6 +466,8 @@ gwy_interpolation_has_interpolating_basis(GwyInterpolationType interpolation)
  * Obtains the basis support size for an interpolation type.
  *
  * Returns: The length of the support interval of the interpolation basis.
+ *
+ * Since: 2.2
  **/
 gint
 gwy_interpolation_get_support_size(GwyInterpolationType interpolation)
