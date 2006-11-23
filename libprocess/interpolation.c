@@ -240,13 +240,13 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
 /**
  * deconvolve3_rows:
- * @width: The number of items in @data.
- * @height: The number of rows in @data.
- * @rowstride: The total row length (including width).
+ * @width: Number of items in @data.
+ * @height: Number of rows in @data.
+ * @rowstride: Total row length (including width).
  * @data: An array to deconvolve of size @width.
  * @buffer: Scratch space of at least @width items.
- * @a: The central convolution filter element.
- * @b: The side convolution filter element.
+ * @a: Central convolution filter element.
+ * @b: Side convolution filter element.
  *
  * Undoes the effect of mirror-extended with border value repeated (@b, @a, @b)
  * horizontal convolution filter on a two-dimensional array.  It can be also
@@ -328,13 +328,13 @@ deconvolve3_rows(gint width,
 
 /**
  * deconvolve3_columns:
- * @width: The number of columns in @data.
- * @height: The number of rows in @data.
- * @rowstride: The total row length (including width).
+ * @width: Number of columns in @data.
+ * @height: Number of rows in @data.
+ * @rowstride: Total row length (including width).
  * @data: A two-dimensional array of size @width*height to deconvolve.
  * @buffer: Scratch space of at least @height items.
- * @a: The central convolution filter element.
- * @b: The side convolution filter element.
+ * @a: Central convolution filter element.
+ * @b: Side convolution filter element.
  *
  * Undoes the effect of mirror-extended with border value repeated (@b, @a, @b)
  * vertical convolution filter on a two-dimensional array.
@@ -486,7 +486,7 @@ gwy_interpolation_get_support_size(GwyInterpolationType interpolation)
 
 /**
  * gwy_interpolation_resolve_coeffs_1d:
- * @n: The number of points in @data.
+ * @n: Number of points in @data.
  * @data: An array of data values.  It will be rewritten with the coefficients.
  * @interpolation: Interpolation type to prepare @data for.
  *
@@ -538,9 +538,9 @@ gwy_interpolation_resolve_coeffs_1d(gint n,
 
 /**
  * gwy_interpolation_resolve_coeffs_2d:
- * @width: The number of columns in @data.
- * @height: The number of rows in @data.
- * @rowstride: The total row length (including @width).
+ * @width: Number of columns in @data.
+ * @height: Number of rows in @data.
+ * @rowstride: Total row length (including @width).
  * @data: An array of data values.  It will be rewritten with the coefficients.
  * @interpolation: Interpolation type to prepare @data for.
  *
@@ -593,6 +593,23 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
     g_free(buffer);
 }
 
+/**
+ * gwy_interpolation_resample_block_1d:
+ * @length: Data block length.
+ * @data: Data block to resample.
+ * @newlength: Requested length after resampling.
+ * @newdata: Array to put the resampled data to.
+ * @interpolation: Interpolation type to use.
+ * @preserve: %TRUE to preserve the content of @data, %FALSE to permit its
+ *            overwriting with temporary data.
+ *
+ * Resamples a one-dimensional data array.
+ *
+ * This is a primitive operation, in most cases methods such as
+ * gwy_data_line_new_resampled() provide more convenient interface.
+ *
+ * Since: 2.2
+ **/
 void
 gwy_interpolation_resample_block_1d(gint length,
                                     gdouble *data,
@@ -662,6 +679,28 @@ calculate_weights_for_rescale(gint oldn,
     }
 }
 
+/**
+ * gwy_interpolation_resample_block_2d:
+ * @width: Number of columns in @data.
+ * @height: Number of rows in @data.
+ * @rowstride: Total row length (including @width).
+ * @data: Data block to resample.
+ * @newwidth: Requested number of columns after resampling.
+ * @newheight: Requested number of rows after resampling.
+ * @newrowstride: Requested total row length after resampling (including
+ *                @newwidth).
+ * @newdata: Array to put the resampled data to.
+ * @interpolation: Interpolation type to use.
+ * @preserve: %TRUE to preserve the content of @data, %FALSE to permit its
+ *            overwriting with temporary data.
+ *
+ * Resamples a two-dimensional data array.
+ *
+ * This is a primitive operation, in most cases methods such as
+ * gwy_data_filed_new_resampled() provide more convenient interface.
+ *
+ * Since: 2.2
+ **/
 void
 gwy_interpolation_resample_block_2d(gint width,
                                     gint height,
