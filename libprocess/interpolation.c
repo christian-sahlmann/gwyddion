@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/interpolation.h>
@@ -592,6 +593,54 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
     g_free(buffer);
 }
 
+void
+gwy_interpolation_resample_block_1d(gint length,
+                                    gdouble *data,
+                                    gint newlength,
+                                    gdouble *newdata,
+                                    GwyInterpolationType interpolation,
+                                    gboolean preserve)
+{
+    gdouble *w, *coeffs = NULL;
+    gdouble q, x0, x, v;
+    gint i, ii, oldi, newi, suplen;
+    gint sf, st;
+
+    if (interpolation == GWY_INTERPOLATION_NONE)
+        return;
+
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    g_return_if_fail(suplen > 0);
+    w = g_newa(gdouble, suplen);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    if (!gwy_interpolation_has_interpolating_basis(interpolation)) {
+        if (preserve)
+            data = coeffs = g_memdup(data, length*sizeof(gdouble));
+        gwy_interpolation_resolve_coeffs_1d(length, data, interpolation);
+    }
+
+    q = (gdouble)length/newlength;
+    x0 = (q - 1.0)/2.0;
+    for (newi = 0; newi < newlength; newi++) {
+        x = q*newi + x0;
+        oldi = (gint)floor(x);
+        x -= oldi;
+        gwy_interpolation_get_weights(x, interpolation, w);
+        v = 0.0;
+        for (i = sf; i <= st; i++) {
+            ii = (oldi + i + 2*st*length) % (2*length);
+            if (G_UNLIKELY(ii >= length))
+                ii = 2*length-1 - ii;
+            v += data[ii]*w[i - sf];
+        }
+        newdata[newi] = v;
+    }
+
+    g_free(coeffs);
+}
+
 static void
 calculate_weights_for_rescale(gint oldn,
                               gint newn,
@@ -611,6 +660,86 @@ calculate_weights_for_rescale(gint oldn,
         x -= positions[i];
         gwy_interpolation_get_weights(x, interpolation, weights + suplen*i);
     }
+}
+
+void
+gwy_interpolation_resample_block_2d(gint width,
+                                    gint height,
+                                    gint rowstride,
+                                    gdouble *data,
+                                    gint newwidth,
+                                    gint newheight,
+                                    gint newrowstride,
+                                    gdouble *newdata,
+                                    GwyInterpolationType interpolation,
+                                    gboolean preserve)
+{
+    gdouble *xw, *yw, *coeffs = NULL;
+    gint *xp, *yp;
+    gdouble v, vx;
+    gint i, ii, oldi, newi, j, jj, oldj, newj, suplen;
+    gint sf, st;
+
+    if (interpolation == GWY_INTERPOLATION_NONE)
+        return;
+
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    g_return_if_fail(suplen > 0);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    if (!gwy_interpolation_has_interpolating_basis(interpolation)) {
+        if (preserve) {
+            if (rowstride == width)
+                data = coeffs = g_memdup(data, width*height*sizeof(gdouble));
+            else {
+                coeffs = g_new(gdouble, width*height);
+                for (i = 0; i < height; i++) {
+                    memcpy(coeffs + i*width,
+                           data + i*rowstride,
+                           width*sizeof(gdouble));
+                }
+                data = coeffs;
+                rowstride = width;
+            }
+        }
+        gwy_interpolation_resolve_coeffs_2d(width, height, rowstride,
+                                            data, interpolation);
+    }
+
+    xw = g_new(gdouble, suplen*newwidth);
+    yw = g_new(gdouble, suplen*newheight);
+    xp = g_new(gint, newwidth);
+    yp = g_new(gint, newheight);
+    calculate_weights_for_rescale(width, newwidth, xp, xw, interpolation);
+    calculate_weights_for_rescale(height, newheight, yp, yw, interpolation);
+    for (newi = 0; newi < newheight; newi++) {
+        oldi = yp[newi];
+        for (newj = 0; newj < newwidth; newj++) {
+            oldj = xp[newj];
+            v = 0.0;
+            for (i = sf; i <= st; i++) {
+                ii = (oldi + i + 2*st*height) % (2*height);
+                if (G_UNLIKELY(ii >= height))
+                    ii = 2*height-1 - ii;
+                vx = 0.0;
+                for (j = sf; j <= st; j++) {
+                    jj = (oldi + j + 2*st*width) % (2*width);
+                    if (G_UNLIKELY(jj >= width))
+                        jj = 2*width-1 - jj;
+                    vx += data[ii*rowstride + jj]*xw[newj*suplen + j - sf];
+                }
+                v += vx*yw[newi*suplen + i - sf];
+            }
+            newdata[newi*newrowstride + newj] = v;
+        }
+    }
+    g_free(yp);
+    g_free(xp);
+    g_free(yw);
+    g_free(xw);
+
+    g_free(coeffs);
 }
 
 /************************** Documentation ****************************/

@@ -56,6 +56,26 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
                                     gdouble *data,
                                     GwyInterpolationType interpolation);
 
+void
+gwy_interpolation_resample_block_1d(gint length,
+                                    gdouble *data,
+                                    gint newlength,
+                                    gdouble *newdata,
+                                    GwyInterpolationType interpolation,
+                                    gboolean preserve);
+
+void
+gwy_interpolation_resample_block_2d(gint width,
+                                    gint height,
+                                    gint rowstride,
+                                    gdouble *data,
+                                    gint newwidth,
+                                    gint newheight,
+                                    gint newrowstride,
+                                    gdouble *newdata,
+                                    GwyInterpolationType interpolation,
+                                    gboolean preserve);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_INTERPOLATION_H__ */
