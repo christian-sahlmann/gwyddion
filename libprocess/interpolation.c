@@ -763,7 +763,7 @@ gwy_interpolation_resample_block_2d(gint width,
                     ii = 2*height-1 - ii;
                 vx = 0.0;
                 for (j = sf; j <= st; j++) {
-                    jj = (oldi + j + 2*st*width) % (2*width);
+                    jj = (oldj + j + 2*st*width) % (2*width);
                     if (G_UNLIKELY(jj >= width))
                         jj = 2*width-1 - jj;
                     vx += data[ii*rowstride + jj]*xw[newj*suplen + j - sf];
