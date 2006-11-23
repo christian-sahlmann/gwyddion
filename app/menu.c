@@ -264,7 +264,6 @@ static gboolean
 gwy_app_menu_sort_submenus(GNode *node,
                            G_GNUC_UNUSED gpointer userdata)
 {
-    MenuNodeData *data1, *data2;
     GNode *c1, *c2;
     gboolean ok = FALSE;
 
@@ -275,10 +274,19 @@ gwy_app_menu_sort_submenus(GNode *node,
     while (!ok) {
         ok = TRUE;
         for (c1 = node->children, c2 = c1->next; c2; c1 = c2, c2 = c2->next) {
-            data1 = (MenuNodeData*)c1->data;
-            data2 = (MenuNodeData*)c2->data;
-            if (strcmp(data1->item_collated, data2->item_collated) < 0)
+            MenuNodeData *data1 = (MenuNodeData*)c1->data;
+            MenuNodeData *data2 = (MenuNodeData*)c2->data;
+            gint cmpresult;
+
+            cmpresult = strcmp(data1->item_collated, data2->item_collated);
+            if (cmpresult < 0)
                 continue;
+
+            if (cmpresult == 0 && data1 != data2) {
+                g_warning("Menu items <%s> and <%s> are identical",
+                          data1->item_canonical, data2->item_canonical);
+                continue;
+            }
 
             c1->next = c2->next;
             c2->prev = c1->prev;
