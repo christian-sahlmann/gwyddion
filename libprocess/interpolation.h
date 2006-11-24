@@ -38,6 +38,18 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         gdouble *data,
                                         GwyInterpolationType interpolation);
 
+gdouble
+gwy_interpolation_interpolate_1d(gdouble x,
+                                 const gdouble *coeff,
+                                 GwyInterpolationType interpolation);
+
+gdouble
+gwy_interpolation_interpolate_2d(gdouble x,
+                                 gdouble y,
+                                 gint rowstride,
+                                 const gdouble *coeff,
+                                 GwyInterpolationType interpolation);
+
 gboolean
 gwy_interpolation_has_interpolating_basis(GwyInterpolationType interpolation);
 

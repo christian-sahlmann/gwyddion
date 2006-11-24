@@ -24,15 +24,15 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/interpolation.h>
 
+enum { SUPPORT_LENGTH_MAX = 4 };
 
 static const gdouble synth_func_values_bspline3[] = {
-    1.0/6.0, 2.0/3.0, 1.0/6.0,
+    2.0/3.0, 1.0/6.0,
 };
 
 static const gdouble synth_func_values_omoms3[] = {
-    4.0/21.0, 13.0/21.0, 4.0/21.0,
+    13.0/21.0, 4.0/21.0,
 };
-
 
 static inline void
 gwy_interpolation_get_weights(gdouble x,
@@ -171,12 +171,13 @@ gwy_interpolation_get_dval(gdouble x,
         g_warning("Interpolation not implemented yet.\n");
         break;
     }
+
     return 0.0;
 }
 
 /**
  * gwy_interpolation_get_dval_of_equidists:
- * @x: Noninteger part of requested x, that is a number from interval [0,1).
+ * @x: Possibily noninteger position in @data to get value at.
  * @data: Array of 4 values to interpolate between (see below).
  * @interpolation: Interpolation type to use.
  *
@@ -194,8 +195,10 @@ gwy_interpolation_get_dval(gdouble x,
  * {data[i-1], data[i], data[i+1], data[i+2]} and function again
  * returns value at data[i+x].
  *
- * The interpolation basis support size can be obtained generically with
- * gwy_interpolation_get_support_size().
+ * Interpolation with non-interpolating bases are silently replaced with an
+ * interpolating function with the same support size.  See
+ * gwy_interpolation_interpolate_1d() for a function interpolating from
+ * either function values or interpolation coefficients.
  *
  * Returns: Interpolated value.
  **/
@@ -205,7 +208,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         GwyInterpolationType interpolation)
 {
     gint l;
-    gdouble w[4];
+    gdouble w[SUPPORT_LENGTH_MAX];
     gdouble rest;
 
     x += 1.0;
@@ -246,6 +249,86 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         g_return_val_if_reached(0.0);
         break;
     }
+}
+
+/**
+ * gwy_interpolation_interpolate_1d:
+ * @x: Position in interval [0,1) to get value at.
+ * @coeff: Array of support-length size with interpolation coefficients
+ *         (that are equal to data values for an interpolating basis).
+ * @interpolation: Interpolation type to use.
+ *
+ * Interpolates a signle data point in one dimension.
+ *
+ * The interpolation basis support size can be obtained generically with
+ * gwy_interpolation_get_support_size().
+ *
+ * Returns: Interpolated value.
+ **/
+gdouble
+gwy_interpolation_interpolate_1d(gdouble x,
+                                 const gdouble *coeff,
+                                 GwyInterpolationType interpolation)
+{
+    gdouble w[SUPPORT_LENGTH_MAX];
+    gint i, suplen;
+    gdouble v;
+
+    g_return_val_if_fail(x >= 0.0 && x <= 1.0, 0.0);
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    if (G_UNLIKELY(suplen == 0))
+        return 0.0;
+    g_return_val_if_fail(suplen > 0, 0.0);
+    gwy_interpolation_get_weights(x, interpolation, w);
+
+    v = 0.0;
+    for (i = 0; i < suplen; i++)
+        v += w[i]*coeff[i];
+
+    return v;
+}
+
+/**
+ * gwy_interpolation_interpolate_2d:
+ * @x: X-position in interval [0,1) to get value at.
+ * @y: Y-position in interval [0,1) to get value at.
+ * @rowstride: Row stride of @coeff.
+ * @coeff: Array of support-length-squared size with interpolation coefficients
+ *         (that are equal to data values for an interpolating basis).
+ * @interpolation: Interpolation type to use.
+ *
+ * Interpolates a signle data point in two dimensions.
+ *
+ * Returns: Interpolated value.
+ **/
+gdouble
+gwy_interpolation_interpolate_2d(gdouble x,
+                                 gdouble y,
+                                 gint rowstride,
+                                 const gdouble *coeff,
+                                 GwyInterpolationType interpolation)
+{
+    gdouble wx[SUPPORT_LENGTH_MAX], wy[SUPPORT_LENGTH_MAX];
+    gint i, j, suplen;
+    gdouble v, vx;
+
+    g_return_val_if_fail(x >= 0.0 && x <= 1.0 && y >= 0.0 && y <= 1.0, 0.0);
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    if (G_UNLIKELY(suplen == 0))
+        return 0.0;
+    g_return_val_if_fail(suplen > 0, 0.0);
+    gwy_interpolation_get_weights(x, interpolation, wx);
+    gwy_interpolation_get_weights(y, interpolation, wy);
+
+    v = 0.0;
+    for (i = 0; i < suplen; i++) {
+        vx = 0.0;
+        for (j = 0; j < suplen; j++)
+            vx += coeff[i*rowstride + j]*wx[j];
+        v += wy[i]*vx;
+    }
+
+    return v;
 }
 
 /**
@@ -517,7 +600,7 @@ gwy_interpolation_resolve_coeffs_1d(gint n,
                                     GwyInterpolationType interpolation)
 {
     gdouble *buffer;
-    gdouble a, b;
+    const gdouble *ab;
 
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
@@ -529,13 +612,11 @@ gwy_interpolation_resolve_coeffs_1d(gint n,
         return;
 
         case GWY_INTERPOLATION_BSPLINE:
-        a = synth_func_values_bspline3[1];
-        b = synth_func_values_bspline3[0];
+        ab = synth_func_values_bspline3;
         break;
 
         case GWY_INTERPOLATION_OMOMS:
-        a = synth_func_values_omoms3[1];
-        b = synth_func_values_omoms3[0];
+        ab = synth_func_values_omoms3;
         break;
 
         default:
@@ -544,7 +625,7 @@ gwy_interpolation_resolve_coeffs_1d(gint n,
     }
 
     buffer = g_new(gdouble, n);
-    deconvolve3_rows(n, 1, n, data, buffer, a, b);
+    deconvolve3_rows(n, 1, n, data, buffer, ab[0], ab[1]);
     g_free(buffer);
 }
 
@@ -573,7 +654,7 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
                                     GwyInterpolationType interpolation)
 {
     gdouble *buffer;
-    gdouble a, b;
+    const gdouble *ab;
 
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
@@ -585,13 +666,11 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
         return;
 
         case GWY_INTERPOLATION_BSPLINE:
-        a = synth_func_values_bspline3[1];
-        b = synth_func_values_bspline3[0];
+        ab = synth_func_values_bspline3;
         break;
 
         case GWY_INTERPOLATION_OMOMS:
-        a = synth_func_values_omoms3[1];
-        b = synth_func_values_omoms3[0];
+        ab = synth_func_values_omoms3;
         break;
 
         default:
@@ -600,8 +679,8 @@ gwy_interpolation_resolve_coeffs_2d(gint width,
     }
 
     buffer = g_new(gdouble, MAX(width, height));
-    deconvolve3_rows(width, height, rowstride, data, buffer, a, b);
-    deconvolve3_columns(width, height, rowstride, data, buffer, a, b);
+    deconvolve3_rows(width, height, rowstride, data, buffer, ab[0], ab[1]);
+    deconvolve3_columns(width, height, rowstride, data, buffer, ab[0], ab[1]);
     g_free(buffer);
 }
 
