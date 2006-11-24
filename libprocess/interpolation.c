@@ -198,7 +198,7 @@ gwy_interpolation_get_dval(gdouble x,
  * Interpolation with non-interpolating bases are silently replaced with an
  * interpolating function with the same support size.  See
  * gwy_interpolation_interpolate_1d() for a function interpolating from
- * either function values or interpolation coefficients.
+ * interpolation coefficients.
  *
  * Returns: Interpolated value.
  **/
@@ -264,6 +264,8 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
  * gwy_interpolation_get_support_size().
  *
  * Returns: Interpolated value.
+ *
+ * Since: 2.2
  **/
 gdouble
 gwy_interpolation_interpolate_1d(gdouble x,
@@ -300,6 +302,8 @@ gwy_interpolation_interpolate_1d(gdouble x,
  * Interpolates a signle data point in two dimensions.
  *
  * Returns: Interpolated value.
+ *
+ * Since: 2.2
  **/
 gdouble
 gwy_interpolation_interpolate_2d(gdouble x,
@@ -881,7 +885,8 @@ gwy_interpolation_resample_block_2d(gint width,
  *
  * Data interpolation is usually pixel-like in Gwyddion, not function-like.
  * That means the contribution of individual data saples is preserved on
- * scaling.
+ * scaling (the area that <quote>belongs</quote> to all values is the same,
+ * it is not reduced to half for edge pixels).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
