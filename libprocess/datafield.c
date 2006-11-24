@@ -1369,66 +1369,86 @@ gwy_data_field_rotate(GwyDataField *a,
                       GwyInterpolationType interpolation)
 {
     GwyDataField *b;
-    gdouble inew, jnew, ir, jr, ang, icor, jcor, sn, cs, val;
-    gint i, j;
+    gdouble icor, jcor, sn, cs, val, x, y, v;
+    gdouble *coeff;
+    gint xres, yres, newi, newj, oldi, oldj, i, j, ii, jj, suplen, sf, st;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    if (suplen <= 0)
+        return;
 
     angle = fmod(angle, 2*G_PI);
     if (angle < 0.0)
         angle += 2*G_PI;
 
-    if (angle == 0.0)
+    if (fabs(angle) < 1e-15)
         return;
+    if (fabs(angle - G_PI) < 2e-15) {
+        gwy_data_field_invert(a, TRUE, TRUE, FALSE);
+        return;
+    }
 
-    b = gwy_data_field_duplicate(a);
-
-    val = gwy_data_field_get_min(a);
-    ang = 3*G_PI/4 + angle;
     if (fabs(angle - G_PI/2) < 1e-15) {
         sn = 1.0;
         cs = 0.0;
-        icor = 1.0;
-        jcor = 0.0;
     }
-    if (fabs(angle - G_PI) < 2e-15) {
-        sn = 0.0;
-        cs = -1.0;
-        icor = 1.0;
-        jcor = a->xres;
-    }
-    if (fabs(angle - 3*G_PI/4) < 3e-15) {
+    else if (fabs(angle - 3*G_PI/4) < 3e-15) {
         sn = -1.0;
         cs = 0.0;
-        icor = a->yres;
-        jcor = a->xres;
     }
     else {
         sn = sin(angle);
         cs = cos(angle);
-        icor = a->yres*(1.0 + cs)/2.0 - sn*a->xres/2.0;
-        jcor = a->xres*(1.0 - cs)/2.0 - sn*a->yres/2.0;
     }
 
-    for (i = 0; i < a->yres; i++) { /*row*/
-        for (j = 0; j < a->xres; j++) { /*column*/
-            ir = a->yres - (i + 0.5) - icor;
-            jr = (j + 0.5) - jcor;
-            inew = -ir*cs + jr*sn;
-            jnew = ir*sn + jr*cs;
-            if (inew > a->yres+1 || jnew > a->xres+1 || inew < -1 || jnew < -1)
-                a->data[j + a->xres*i] = val;
+    xres = a->xres;
+    yres = a->yres;
+    icor = ((yres - 1.0)*(1.0 - cs) - (xres - 1.0)*sn)/2.0;
+    jcor = ((xres - 1.0)*(1.0 - cs) + (yres - 1.0)*sn)/2.0;
+
+    coeff = g_newa(gdouble, suplen*suplen);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    val = gwy_data_field_get_min(a);
+    b = gwy_data_field_duplicate(a);
+    gwy_interpolation_resolve_coeffs_2d(xres, yres, xres, b->data,
+                                        interpolation);
+
+    for (newi = 0; newi < yres; newi++) {
+        for (newj = 0; newj < xres; newj++) {
+            y = newi*cs + newj*sn + icor;
+            x = -newi*sn + newj*cs + jcor;
+            if (y > yres || x > xres || y < 0.0 || x < 0.0)
+                v = val;
             else {
-                inew = CLAMP(inew, 0, a->yres);
-                jnew = CLAMP(jnew, 0, a->xres);
-                a->data[j + a->xres*i] = gwy_data_field_get_dval(b, jnew, inew,
-                                                                 interpolation);
+                oldi = (gint)floor(y);
+                y -= oldi;
+                oldj = (gint)floor(x);
+                x -= oldj;
+                for (i = sf; i <= st; i++) {
+                    ii = (oldi + i + 2*st*yres) % (2*yres);
+                    if (G_UNLIKELY(ii >= yres))
+                        ii = 2*yres-1 - ii;
+                    for (j = sf; j <= st; j++) {
+                        jj = (oldj + j + 2*st*xres) % (2*xres);
+                        if (G_UNLIKELY(jj >= xres))
+                            jj = 2*xres-1 - jj;
+                        coeff[(i - sf)*suplen + j - sf] = b->data[ii*xres + jj];
+                    }
+                }
+                v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
+                                                     interpolation);
             }
+            a->data[newj + xres*newi] = v;
         }
     }
 
     g_object_unref(b);
     gwy_data_field_invalidate(a);
 }
-
 
 /**
  * gwy_data_field_invert:
