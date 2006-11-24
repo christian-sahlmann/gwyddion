@@ -266,7 +266,7 @@ rotate_dialog(RotateArgs *args,
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
 
     controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
                                         -360, 360, 1, 30, 0);
@@ -280,7 +280,8 @@ rotate_dialog(RotateArgs *args,
                                  G_CALLBACK(interp_changed_cb), &controls,
                                  args->interp, TRUE);
     gwy_table_attach_hscale(table, 1, _("_Interpolation type:"), NULL,
-                            GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
+                            GTK_OBJECT(controls.interp),
+                            GWY_HSCALE_WIDGET_NO_EXPAND);
 
     controls.expand
         = gtk_check_button_new_with_mnemonic(_("E_xpand result to fit "
