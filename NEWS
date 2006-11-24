@@ -1,4 +1,4 @@
-2.1.20061118
+2.1.20061124
 
 2.2 (0000-00-00)
 Application:
@@ -6,13 +6,22 @@ Application:
 
 Libraries:
 - libgwyprocess: Broken B-spline and Omoms interpolations were made identical
-  to Key.  Cubic Schaum interpolation was added.
+  to Key where they could not be fixed.  A new set of interpolation functions
+  that work with non-interpolating basis too was added.
+- libgwyprocess: Interpolation and convolution filters use mirror-extension
+  for outside data values instead of various kluges.
+- libgwyprocess: Cubic Schaum interpolation was added.
+- libgwyapp: Menu construction hang when two identical items occured was
+  fixed.
 
 Modules:
 - DME file (new): DME Rasterscope data file import.
+- Convolution filter (new): General convolution filter with user-defined
+  matrix.
 - Mask operations: It is possible to copy mask from one channel to another.
 - PNI file: Missing value endian conversion was added (affected big-endian
   machines).
+- Rotate: Units lost with enabled expansion were fixed.
 
 Other:
 - Build errors on big-endian systems (from 2.1) were fixed.
