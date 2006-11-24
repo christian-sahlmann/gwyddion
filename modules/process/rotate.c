@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -135,7 +135,7 @@ rotate_datafield(GwyDataField *dfield,
     gwy_data_field_rotate(df, args->angle, args->interp);
     gwy_data_field_resample(dfield, xres + 2*xborder, yres + 2*yborder,
                             GWY_INTERPOLATION_NONE);
-    gwy_data_field_copy(df, dfield, TRUE);
+    gwy_data_field_copy(df, dfield, FALSE);
     gwy_data_field_set_xreal(dfield, xreal*(xres + 2.0*xborder)/xres);
     gwy_data_field_set_yreal(dfield, yreal*(yres + 2.0*yborder)/yres);
     g_object_unref(df);
