@@ -3238,7 +3238,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
 
                 case GWY_LINE_STAT_LENGTH:
                 /* FIXME: Optimize for linear memory access. */
-                buf = gwy_data_line_new(height, gwy_data_field_itor, FALSE);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
                                                    j, row, row + height);
@@ -3284,7 +3284,9 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 break;
 
                 case GWY_LINE_STAT_MEDIAN:
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(width,
+                                        gwy_data_field_jtor(data_field, width),
+                                        FALSE);
                 for (i = 0; i < height; i++) {
                     memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
                     ldata[i] = gwy_math_median(width, buf->data);
@@ -3315,7 +3317,9 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 break;
 
                 case GWY_LINE_STAT_RMS:
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(width,
+                                        gwy_data_field_jtor(data_field, width),
+                                        FALSE);
                 for (i = 0; i < height; i++) {
                     memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
                     ldata[i] = gwy_data_line_get_rms(buf);
@@ -3324,7 +3328,9 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 break;
 
                 case GWY_LINE_STAT_LENGTH:
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(width,
+                                        gwy_data_field_jtor(data_field, width),
+                                        FALSE);
                 for (i = 0; i < height; i++) {
                     memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
                     ldata[i] = gwy_data_line_get_length(buf);
@@ -3333,7 +3339,9 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 break;
 
                 case GWY_LINE_STAT_SLOPE:
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(width,
+                                        gwy_data_field_jtor(data_field, width),
+                                        FALSE);
                 for (i = 0; i < height; i++) {
                     memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
                     gwy_data_line_get_line_coeffs(buf, NULL, &v);
@@ -3353,6 +3361,8 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
     }
 
     xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    lunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lunit));
     zunit = gwy_data_field_get_si_unit_z(data_field);
     lunit = gwy_data_line_get_si_unit_y(target_line);
     switch (quantity) {
