@@ -49,7 +49,6 @@ typedef enum {
 } GwySFOutputType;
 
 enum {
-    MAX_THICKNESS = 128,
     MIN_RESOLUTION = 4,
     MAX_RESOLUTION = 1024
 };
