@@ -505,6 +505,13 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_GRAPH_VERTICAL
+ *
+ * The "Graph-Vertical" stock icon.
+ * <inlinegraphic fileref="../gwy_graph_vertical-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_GRAPH_ZOOM_FIT
  *
  * The "Graph-Zoom-Fit" stock icon.
