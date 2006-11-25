@@ -95,7 +95,7 @@ static const gchar *default_tools[] = {
     "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
     "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
     "GwyToolProfile", "GwyToolGrainRemover", "GwyToolSpotRemover",
-    "GwyToolColorRange", "GwyToolMaskEditor"
+    "GwyToolColorRange", "GwyToolMaskEditor", "GwyToolLineStats",
 };
 
 /* FIXME: A temporary hack. */
