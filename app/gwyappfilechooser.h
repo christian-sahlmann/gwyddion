@@ -49,6 +49,7 @@ struct _GwyAppFileChooser {
     GtkWidget *filter_enable;
     GtkWidget *type_list;
     GtkWidget *expander;
+    GtkWidget *preview;
 };
 
 struct _GwyAppFileChooserClass {

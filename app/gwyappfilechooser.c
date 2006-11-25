@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
@@ -26,11 +26,17 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <app/app.h>
 #include <app/settings.h>
+#include <app/filelist.h>
 #include "gwyappfilechooser.h"
 
 enum {
     COLUMN_FILETYPE,
     COLUMN_LABEL
+};
+
+enum {
+    COLUMN_FILENAME,
+    COLUMN_PIXBUF
 };
 
 typedef struct {
@@ -58,6 +64,8 @@ static void       gwy_app_file_chooser_expanded       (GwyAppFileChooser *choose
                                                        GtkExpander *expander);
 static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
                                                        gpointer userdata);
+static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
+static void       gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
 
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
@@ -197,6 +205,7 @@ _gwy_app_file_chooser_get(GtkFileChooserAction action)
 
     gwy_app_file_chooser_setup_filter(chooser);
     gwy_app_file_chooser_add_type_list(chooser);
+    gwy_app_file_chooser_add_preview(chooser);
 
     g_signal_connect(chooser, "response",
                      G_CALLBACK(gwy_app_file_chooser_save_position), NULL);
@@ -517,6 +526,60 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
                                       &score);
     /* To filter out `fallback' importers like rawfile */
     return name != NULL && score >= 5;
+}
+
+static void
+gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
+{
+    GtkListStore *store;
+    GtkIconView *preview;
+
+    store = gtk_list_store_new(2, G_TYPE_STRING, GDK_TYPE_PIXBUF);
+    chooser->preview = gtk_icon_view_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(store);
+    preview = GTK_ICON_VIEW(chooser->preview);
+    gtk_icon_view_set_columns(preview, 1);
+    gtk_widget_set_size_request(chooser->preview, 160, -1);
+    gtk_icon_view_set_markup_column(preview, COLUMN_FILENAME);
+    gtk_icon_view_set_pixbuf_column(preview, COLUMN_PIXBUF);
+    gtk_icon_view_set_selection_mode(preview, GTK_SELECTION_NONE);
+    gtk_icon_view_set_item_width(preview,
+                                 160 - gtk_icon_view_get_margin(preview));
+    gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(chooser),
+                                        chooser->preview);
+    g_signal_connect(chooser, "update-preview",
+                     G_CALLBACK(gwy_app_file_chooser_update_preview), NULL);
+}
+
+static void
+gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
+{
+    GtkFileChooser *fchooser;
+    GtkTreeModel *model;
+    GdkPixbuf *pixbuf;
+    GtkTreeIter iter;
+    gchar *filename_sys = NULL, *filename_utf8 = NULL;
+
+    gwy_debug(" ");
+
+    model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
+    gtk_list_store_clear(GTK_LIST_STORE(model));
+
+    fchooser = GTK_FILE_CHOOSER(chooser);
+    if ((filename_sys = gtk_file_chooser_get_preview_filename(fchooser)))
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+
+    g_free(filename_sys);
+    if (!filename_utf8) {
+        gtk_file_chooser_set_preview_widget_active(fchooser, FALSE);
+        return;
+    }
+
+    pixbuf = gwy_app_recent_file_get_thumbnail(filename_utf8);
+    gtk_list_store_insert_with_values(GTK_LIST_STORE(model), &iter, -1,
+                                      COLUMN_PIXBUF, pixbuf,
+                                      -1);
+    g_object_unref(pixbuf);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
