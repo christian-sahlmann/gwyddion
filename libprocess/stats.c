@@ -3194,7 +3194,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
 
                 case GWY_LINE_STAT_MEDIAN:
                 /* FIXME: Can we optimize this for linear memory access? */
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
                                                    j, row, row + height);
@@ -3227,7 +3227,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
 
                 case GWY_LINE_STAT_RMS:
                 /* FIXME: Optimize for linear memory access. */
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
                                                    j, row, row + height);
@@ -3238,7 +3238,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
 
                 case GWY_LINE_STAT_LENGTH:
                 /* FIXME: Optimize for linear memory access. */
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(height, gwy_data_field_itor, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
                                                    j, row, row + height);
@@ -3249,7 +3249,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
 
                 case GWY_LINE_STAT_SLOPE:
                 /* FIXME: Optimize for linear memory access. */
-                buf = gwy_data_line_new(width, 1.0, FALSE);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
                                                    j, row, row + height);
