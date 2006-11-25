@@ -9,6 +9,7 @@ tools_LTLIBRARIES = \
 	grainremover.la \
 	icolorange.la \
 	level3.la \
+	linestats.la \
 	maskedit.la \
 	polynom.la \
 	profile.la \
@@ -69,6 +70,9 @@ icolorange_la_LIBADD = $(module_libadd)
 
 level3_la_SOURCES = level3.c
 level3_la_LIBADD = $(module_libadd)
+
+linestats_la_SOURCES = linestats.c
+linestats_la_LIBADD = $(module_libadd)
 
 maskedit_la_SOURCES = maskedit.c
 maskedit_la_LIBADD = $(module_libadd)
