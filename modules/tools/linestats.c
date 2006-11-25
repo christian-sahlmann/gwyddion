@@ -176,7 +176,7 @@ gwy_tool_line_stats_class_init(GwyToolLineStatsClass *klass)
     gobject_class->finalize = gwy_tool_line_stats_finalize;
 
     tool_class->stock_id = GWY_STOCK_GRAPH_VERTICAL;
-    tool_class->title = _("Statistical Functions");
+    tool_class->title = _("Row/Column Statistics");
     tool_class->tooltip = _("Calculate row/column statistical functions");
     tool_class->prefix = "/module/line_stats";
     tool_class->default_width = 640;
@@ -277,8 +277,8 @@ static void
 gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
 {
     static const GwyEnum directions[] = {
-        { N_("_Horizontal direction"), GWY_ORIENTATION_HORIZONTAL, },
-        { N_("_Vertical direction"),   GWY_ORIENTATION_VERTICAL,   },
+        { N_("Ro_ws"),    GWY_ORIENTATION_HORIZONTAL, },
+        { N_("Co_lumns"), GWY_ORIENTATION_VERTICAL,   },
     };
     GtkDialog *dialog;
     GtkWidget *label, *hbox, *vbox, *hbox2, *image;
@@ -583,6 +583,7 @@ gwy_tool_line_stats_fixres_changed(GtkToggleButton *check,
                                    GwyToolLineStats *tool)
 {
     tool->args.fixres = gtk_toggle_button_get_active(check);
+    gwy_tool_line_stats_update_sensitivity(tool);
     gwy_tool_line_stats_update_curve(tool);
 }
 
