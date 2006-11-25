@@ -254,6 +254,17 @@ void   gwy_data_field_area_get_inclination  (GwyDataField *data_field,
 void   gwy_data_field_get_inclination       (GwyDataField *data_field,
                                              gdouble *theta,
                                              gdouble *phi);
+void   gwy_data_field_area_get_line_stats   (GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyDataLine *target_line,
+                                             gint col, gint row,
+                                             gint width, gint height,
+                                             GwyLineStatQuantity quantity,
+                                             GwyOrientation orientation);
+void   gwy_data_field_get_line_stats        (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             GwyLineStatQuantity quantity,
+                                             GwyOrientation orientation);
 
 G_END_DECLS
 

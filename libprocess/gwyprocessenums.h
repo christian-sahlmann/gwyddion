@@ -169,6 +169,16 @@ typedef enum {
     GWY_DATA_COMPATIBILITY_ALL     = 0x001f
 } GwyDataCompatibilityFlags;
 
+typedef enum {
+    GWY_LINE_STAT_MEAN,
+    GWY_LINE_STAT_MEDIAN,
+    GWY_LINE_STAT_MINIMUM,
+    GWY_LINE_STAT_MAXIMUM,
+    GWY_LINE_STAT_RMS,
+    GWY_LINE_STAT_LENGTH,
+    GWY_LINE_STAT_SLOPE
+} GwyLineStatQuantity;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;

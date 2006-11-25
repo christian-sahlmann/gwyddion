@@ -363,6 +363,22 @@ gwy_correlation_type_get_enum(void)
  **/
 
 /**
+ * GwyLineStatQuantity:
+ * @GWY_LINE_STAT_MEAN: Mean value.
+ * @GWY_LINE_STAT_MEDIAN: Median.
+ * @GWY_LINE_STAT_MINIMUM: Minimum value.
+ * @GWY_LINE_STAT_MAXIMUM: Maximum value.
+ * @GWY_LINE_STAT_RMS: Root mean square of deviations from the mean value.
+ * @GWY_LINE_STAT_LENGTH: Line length.
+ * @GWY_LINE_STAT_SLOPE: Overall line slope.
+ *
+ * Line statistical quantities to be requested with
+ * gwy_data_field_area_get_line_stats().
+ *
+ * Since: 2.2
+ **/
+
+/**
  * GwyComputationStateType:
  * @GWY_COMPUTATION_STATE_INIT: Iterator was set up, the next step will
  *                              actually create temporary data structures
