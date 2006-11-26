@@ -3123,11 +3123,7 @@ gwy_data_field_get_inclination(GwyDataField *data_field,
  * gwy_data_field_area_get_line_stats:
  * @data_field: A data field.
  * @mask: Mask of values to take values into account, or %NULL for full
- *        @data_field.  Values equal to 0.0 and below cause corresponding
- *        @data_field samples to be ignored, values equal to 1.0 and above
- *        cause inclusion of corresponding @data_field samples.  The behaviour
- *        for values inside (0.0, 1.0) is undefined (it may be specified
- *        in the future).
+ *        @data_field.  Masking is currently unimplemented.
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to the number of rows (columns).
  * @col: Upper-left column coordinate.
@@ -3258,6 +3254,21 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 }
                 g_object_unref(buf);
                 break;
+
+                case GWY_LINE_STAT_TAN_BETA0:
+                /* FIXME: Optimize for linear memory access. */
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   j, row, row + height);
+                    ldata[j] = gwy_data_line_get_tan_beta0(buf);
+                }
+                g_object_unref(buf);
+                break;
+
+                default:
+                g_return_if_reached();
+                break;
             }
         }
         else {
@@ -3349,6 +3360,21 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 }
                 g_object_unref(buf);
                 break;
+
+                case GWY_LINE_STAT_TAN_BETA0:
+                buf = gwy_data_line_new(width,
+                                        gwy_data_field_jtor(data_field, width),
+                                        FALSE);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    ldata[i] = gwy_data_line_get_tan_beta0(buf);
+                }
+                g_object_unref(buf);
+                break;
+
+                default:
+                g_return_if_reached();
+                break;
             }
         }
         else {
@@ -3379,6 +3405,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
         break;
 
         case GWY_LINE_STAT_SLOPE:
+        case GWY_LINE_STAT_TAN_BETA0:
         gwy_si_unit_divide(zunit, xyunit, lunit);
         break;
 

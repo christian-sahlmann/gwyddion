@@ -176,7 +176,8 @@ typedef enum {
     GWY_LINE_STAT_MAXIMUM,
     GWY_LINE_STAT_RMS,
     GWY_LINE_STAT_LENGTH,
-    GWY_LINE_STAT_SLOPE
+    GWY_LINE_STAT_SLOPE,
+    GWY_LINE_STAT_TAN_BETA0
 } GwyLineStatQuantity;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;

@@ -371,6 +371,7 @@ gwy_correlation_type_get_enum(void)
  * @GWY_LINE_STAT_RMS: Root mean square of deviations from the mean value.
  * @GWY_LINE_STAT_LENGTH: Line length.
  * @GWY_LINE_STAT_SLOPE: Overall line slope.
+ * @GWY_LINE_STAT_TAN_BETA0: Root mean square slope.
  *
  * Line statistical quantities to be requested with
  * gwy_data_field_area_get_line_stats().

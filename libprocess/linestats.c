@@ -232,7 +232,7 @@ gdouble
 gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
 {
     gint i;
-    gdouble rms = 0;
+    gdouble rms = 0.0;
     gdouble avg;
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(a), rms);
@@ -245,7 +245,59 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
     for (i = from; i < to; i++)
         rms += (avg - a->data[i])*(avg - a->data[i]);
 
-    return sqrt(rms)/(gdouble)(to-from);
+    return sqrt(rms)/(to-from);
+}
+
+/**
+ * gwy_data_line_get_tan_beta0:
+ * @data_line: A data line.
+ *
+ * Computes root mean square slope in a data line.
+ *
+ * Returns: Root mean square slope within a given interval.
+ *
+ * Since: 2.2
+ **/
+gdouble
+gwy_data_line_get_tan_beta0(GwyDataLine *a)
+{
+    return gwy_data_line_part_get_tan_beta0(a, 0, a->res);
+}
+
+/**
+ * gwy_data_line_part_get_tan_beta0:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Computes root mean square slope in a part of a data line.
+ *
+ * This is the root mean square of value derivatives, it is also proportional
+ * to the second derivative of both HHCF and ACF at zero.
+ *
+ * Returns: Root mean square slope within a given interval.
+ *
+ * Since: 2.2
+ **/
+gdouble
+gwy_data_line_part_get_tan_beta0(GwyDataLine *a, gint from, gint to)
+{
+    gint i;
+    gdouble rms = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), rms);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    g_return_val_if_fail(from >= 0 && to <= a->res, rms);
+
+    if (to - from < 2)
+        return rms;
+
+    for (i = from + 1; i < to; i++)
+        rms += (a->data[i] - a->data[i-1])*(a->data[i] - a->data[i-1]);
+
+    return sqrt(rms)/gwy_data_line_itor(a, to-from - 1);
 }
 
 /**

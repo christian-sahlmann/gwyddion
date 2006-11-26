@@ -145,13 +145,14 @@ static const ToolArgs default_args = {
 };
 
 static const GwyEnum sf_types[] =  {
-    { N_("Mean"),    GWY_LINE_STAT_MEAN,    },
-    { N_("Median"),  GWY_LINE_STAT_MEDIAN,  },
-    { N_("Minimum"), GWY_LINE_STAT_MINIMUM, },
-    { N_("Maximum"), GWY_LINE_STAT_MAXIMUM, },
-    { N_("RMS"),     GWY_LINE_STAT_RMS,     },
-    { N_("Length"),  GWY_LINE_STAT_LENGTH,  },
-    { N_("Slope"),   GWY_LINE_STAT_SLOPE,   },
+    { N_("Mean"),               GWY_LINE_STAT_MEAN,      },
+    { N_("Median"),             GWY_LINE_STAT_MEDIAN,    },
+    { N_("Minimum"),            GWY_LINE_STAT_MINIMUM,   },
+    { N_("Maximum"),            GWY_LINE_STAT_MAXIMUM,   },
+    { N_("RMS"),                GWY_LINE_STAT_RMS,       },
+    { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
+    { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
+    { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
 };
 
 GWY_MODULE_QUERY(module_info)
