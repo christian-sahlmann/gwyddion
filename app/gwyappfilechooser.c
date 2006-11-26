@@ -20,14 +20,21 @@
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/app.h>
 #include <app/settings.h>
 #include <app/filelist.h>
+#include <app/data-browser.h>
 #include "gwyappinternal.h"
+
+enum {
+    TMS_NORMAL_THUMB_SIZE = 128
+};
 
 enum {
     COLUMN_FILETYPE,
@@ -35,7 +42,7 @@ enum {
 };
 
 enum {
-    COLUMN_FILENAME,
+    COLUMN_FILEINFO,
     COLUMN_PIXBUF
 };
 
@@ -45,6 +52,7 @@ typedef struct {
 } TypeListData;
 
 static void       gwy_app_file_chooser_finalize       (GObject *object);
+static void       gwy_app_file_chooser_destroy        (GtkObject *object);
 static void       gwy_app_file_chooser_setup_filter   (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_save_position  (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_add_type       (const gchar *name,
@@ -66,6 +74,7 @@ static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *
                                                        gpointer userdata);
 static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
+static gboolean   gwy_app_file_chooser_do_full_preview(gpointer user_data);
 
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
@@ -77,8 +86,11 @@ static void
 _gwy_app_file_chooser_class_init(GwyAppFileChooserClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_app_file_chooser_finalize;
+
+    object_class->destroy = gwy_app_file_chooser_destroy;
 }
 
 static void
@@ -103,6 +115,20 @@ gwy_app_file_chooser_finalize(GObject *object)
 
     if (G_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->finalize)
         G_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->finalize(object);
+}
+
+static void
+gwy_app_file_chooser_destroy(GtkObject *object)
+{
+    GwyAppFileChooser *chooser = GWY_APP_FILE_CHOOSER(object);
+
+    if (chooser->full_preview_id) {
+        g_source_remove(chooser->full_preview_id);
+        chooser->full_preview_id = 0;
+    }
+
+    if (GTK_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->destroy)
+        GTK_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->destroy(object);
 }
 
 static void
@@ -533,20 +559,42 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
 {
     GtkListStore *store;
     GtkIconView *preview;
+    GtkCellLayout *layout;
+    GtkCellRenderer *renderer;
+    GtkWidget *scwin;
+    gint w;
 
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
     store = gtk_list_store_new(2, G_TYPE_STRING, GDK_TYPE_PIXBUF);
     chooser->preview = gtk_icon_view_new_with_model(GTK_TREE_MODEL(store));
     g_object_unref(store);
     preview = GTK_ICON_VIEW(chooser->preview);
+    layout = GTK_CELL_LAYOUT(preview);
     gtk_icon_view_set_columns(preview, 1);
-    gtk_widget_set_size_request(chooser->preview, 160, -1);
-    gtk_icon_view_set_markup_column(preview, COLUMN_FILENAME);
-    gtk_icon_view_set_pixbuf_column(preview, COLUMN_PIXBUF);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(preview), renderer, FALSE);
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(preview), renderer,
+                                  "pixbuf", COLUMN_PIXBUF);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+                 "ellipsize", PANGO_ELLIPSIZE_END,
+                 "ellipsize-set", TRUE,
+                 NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(preview), renderer, FALSE);
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(preview), renderer,
+                                  "markup", COLUMN_FILEINFO);
+
     gtk_icon_view_set_selection_mode(preview, GTK_SELECTION_NONE);
-    gtk_icon_view_set_item_width(preview,
-                                 160 - 2*gtk_icon_view_get_margin(preview));
-    gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(chooser),
-                                        chooser->preview);
+    gtk_icon_view_set_item_width(preview, TMS_NORMAL_THUMB_SIZE);
+    w = TMS_NORMAL_THUMB_SIZE + 2*gtk_icon_view_get_margin(preview);
+    gtk_widget_set_size_request(chooser->preview, w, -1);
+    gtk_container_add(GTK_CONTAINER(scwin), chooser->preview);
+    gtk_widget_show(chooser->preview);
+    gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(chooser), scwin);
     g_signal_connect(chooser, "update-preview",
                      G_CALLBACK(gwy_app_file_chooser_update_preview), NULL);
 }
@@ -562,11 +610,17 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
 
     gwy_debug(" ");
 
+    if (chooser->full_preview_id) {
+        g_source_remove(chooser->full_preview_id);
+        chooser->full_preview_id = 0;
+    }
+
     model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
     gtk_list_store_clear(GTK_LIST_STORE(model));
 
     fchooser = GTK_FILE_CHOOSER(chooser);
     filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    /* Never set the preview inactive.  Gtk behaviour can be quite silly. */
     if (!filename_sys)
         return;
 
@@ -580,8 +634,162 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
 
     gtk_list_store_insert_with_values(GTK_LIST_STORE(model), &iter, -1,
                                       COLUMN_PIXBUF, pixbuf,
+                                      COLUMN_FILEINFO,
+                                      _("Making preview..."),
                                       -1);
     g_object_unref(pixbuf);
+
+    chooser->full_preview_id
+        = g_timeout_add_full(G_PRIORITY_LOW, 250,
+                             gwy_app_file_chooser_do_full_preview, chooser,
+                             NULL);
+}
+
+static void
+add_channel_id(gpointer hkey,
+               gpointer hvalue,
+               gpointer user_data)
+{
+    GValue *value = (GValue*)hvalue;
+    GSList **list = (GSList**)user_data;
+    const gchar *strkey;
+    gchar *end;
+    gint id;
+
+    strkey = g_quark_to_string(GPOINTER_TO_UINT(hkey));
+    if (!strkey)
+        return;
+
+    if (strkey[0] != '/'
+        || (id = strtol(strkey + 1, &end, 10)) < 0
+        || !gwy_strequal(end, "/data")
+        || !G_VALUE_HOLDS_OBJECT(value)
+        || !GWY_IS_DATA_FIELD(g_value_get_object(value)))
+        return;
+
+    *list = g_slist_prepend(*list, GINT_TO_POINTER(id));
+}
+
+static gint
+compare_ids(gconstpointer a, gconstpointer b)
+{
+    if (a < b)
+        return -1;
+    if (a > b)
+        return 1;
+    return 0;
+}
+
+static void
+gwy_app_file_chooser_describe_channel(GwyContainer *container,
+                                      gint id,
+                                      GString *str)
+{
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    GwySIValueFormat *vf;
+    GQuark quark;
+    gint xres, yres;
+    gdouble xreal, yreal;
+    gchar *s;
+
+    g_string_truncate(str, 0);
+
+    s = gwy_app_get_data_field_title(container, id);
+    g_string_append(str, s);
+    g_free(s);
+    g_string_append_c(str, '\n');
+
+    quark = gwy_app_get_data_key_for_id(id);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object(container, quark));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    g_string_append_printf(str, "%d×%d px\n", xres, yres);
+
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                sqrt(xreal*yreal), NULL);
+    g_string_append_printf(str, "%.*f×%.*f%s%s",
+                          vf->precision, xreal/vf->magnitude,
+                          vf->precision, yreal/vf->magnitude,
+                          (vf->units && *vf->units) ? " " : "", vf->units);
+    gwy_si_unit_value_format_free(vf);
+}
+
+static gboolean
+gwy_app_file_chooser_do_full_preview(gpointer user_data)
+{
+    GtkFileChooser *fchooser;
+    GtkTreeModel *model;
+    GtkListStore *store;
+    GwyAppFileChooser *chooser;
+    GwyContainer *container;
+    GSList *channel_ids, *l;
+    gchar *filename_sys;
+    GdkPixbuf *pixbuf;
+    GtkTreeIter iter;
+    GString *str;
+    gint id;
+
+    chooser = GWY_APP_FILE_CHOOSER(user_data);
+    chooser->full_preview_id = 0;
+
+    fchooser = GTK_FILE_CHOOSER(chooser);
+    filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    /* We should not be called when gtk_file_chooser_get_preview_filename()
+     * returns NULL preview file name */
+    if (!filename_sys) {
+        g_warning("Full preview invoked with NULL preview file name");
+        return FALSE;
+    }
+
+    model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
+    store = GTK_LIST_STORE(model);
+
+    container = gwy_file_load(filename_sys, GWY_RUN_NONINTERACTIVE, NULL);
+    g_free(filename_sys);
+    if (!container) {
+        gtk_tree_model_get_iter_first(model, &iter);
+        gtk_list_store_set(store, &iter, COLUMN_FILEINFO, "", -1);
+        return FALSE;
+    }
+
+    channel_ids = NULL;
+    gwy_container_foreach(container, NULL, add_channel_id, &channel_ids);
+    channel_ids = g_slist_sort(channel_ids, compare_ids);
+    if (!channel_ids) {
+        g_object_unref(container);
+        return FALSE;
+    }
+
+    gtk_list_store_clear(store);
+    str = g_string_new(NULL);
+    for (l = channel_ids; l; l = g_slist_next(l)) {
+        id = GPOINTER_TO_INT(l->data);
+        pixbuf = gwy_app_get_channel_thumbnail(container, id,
+                                               TMS_NORMAL_THUMB_SIZE,
+                                               TMS_NORMAL_THUMB_SIZE);
+        if (!pixbuf) {
+            g_warning("Cannot make a pixbuf of channel %d", id);
+            continue;
+        }
+
+        gwy_app_file_chooser_describe_channel(container, id, str);
+        gtk_list_store_insert_with_values(store, &iter, -1,
+                                          COLUMN_PIXBUF, pixbuf,
+                                          COLUMN_FILEINFO, str->str,
+                                          -1);
+        g_object_unref(pixbuf);
+    }
+    g_string_free(str, TRUE);
+
+    g_object_unref(container);
+
+    return FALSE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

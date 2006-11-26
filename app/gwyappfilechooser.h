@@ -50,6 +50,8 @@ struct _GwyAppFileChooser {
     GtkWidget *type_list;
     GtkWidget *expander;
     GtkWidget *preview;
+
+    guint full_preview_id;
 };
 
 struct _GwyAppFileChooserClass {
