@@ -208,7 +208,7 @@ cell_translate_func(G_GNUC_UNUSED GtkCellLayout *cell_layout,
     const GwyEnum *enum_item;
 
     gtk_tree_model_get(tree_model, iter, 0, &enum_item, -1);
-    g_object_set(renderer, "text", method(enum_item->name), NULL);
+    g_object_set(renderer, "markup", method(enum_item->name), NULL);
 }
 
 /**
