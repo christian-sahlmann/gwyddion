@@ -173,7 +173,8 @@ static GwyRecentFile* gwy_app_recent_file_new         (gchar *filename_utf8,
 static gboolean gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf);
 static void     gwy_recent_file_update_thumbnail      (GwyRecentFile *rf,
                                                        GwyContainer *data,
-                                                       gint hint);
+                                                       gint hint,
+                                                       GdkPixbuf *use_this_pixbuf);
 static void     gwy_app_recent_file_free              (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name          (const gchar *uri);
 static const gchar* gwy_recent_file_thumbnail_dir     (void);
@@ -743,7 +744,7 @@ gwy_app_recent_file_list_update(GwyContainer *data,
         }
 
         if (data)
-            gwy_recent_file_update_thumbnail(rf, data, hint);
+            gwy_recent_file_update_thumbnail(rf, data, hint, NULL);
     }
 
     gwy_app_recent_file_list_update_menu(&gcontrols);
@@ -867,6 +868,19 @@ _gwy_app_recent_file_try_thumbnail(const gchar *filename_sys)
     g_free(thumb);
 
     return pixbuf;
+}
+
+void
+_gwy_app_recent_file_write_thumbnail(const gchar *filename_sys,
+                                     GwyContainer *data,
+                                     gint id,
+                                     GdkPixbuf *pixbuf)
+{
+    GwyRecentFile *rf;
+
+    rf = gwy_app_recent_file_new(NULL, gwy_canonicalize_path(filename_sys));
+    gwy_recent_file_update_thumbnail(rf, data, id, pixbuf);
+    gwy_app_recent_file_free(rf);
 }
 
 static void
@@ -1016,10 +1030,35 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
     return TRUE;
 }
 
+static gint
+gwy_recent_file_find_some_channel(GwyContainer *data,
+                                  gint hint)
+{
+    gint *ids;
+    gint i, id;
+
+    ids = gwy_app_data_browser_get_data_ids(data);
+    for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
+        if (ids[i] >= hint && ids[i] < id)
+            id = ids[i];
+    }
+    /* On failure simply find the channel with lowest id */
+    if (id == G_MAXINT) {
+        for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
+            if (ids[i] < id)
+                id = ids[i];
+        }
+    }
+    g_free(ids);
+
+    return id;
+}
+
 static void
 gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                  GwyContainer *data,
-                                 gint hint)
+                                 gint hint,
+                                 GdkPixbuf *use_this_pixbuf)
 {
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
@@ -1034,25 +1073,22 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     gchar str_height[22];
     GError *err = NULL;
     GQuark quark;
-    gint *ids;
-    gint i, id;
+    gint id;
 
     g_return_if_fail(GWY_CONTAINER(data));
 
+    if (use_this_pixbuf) {
+        /* If we are given a pixbuf, hint must be the ultimate channel id */
+        g_return_if_fail(GDK_IS_PIXBUF(use_this_pixbuf));
+        id = hint;
+        pixbuf = g_object_ref(use_this_pixbuf);
+    }
+    else {
+        pixbuf = NULL;
+        id = gwy_recent_file_find_some_channel(data, hint);
+    }
+
     /* Find channel with the lowest id not smaller than hint */
-    ids = gwy_app_data_browser_get_data_ids(data);
-    for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
-        if (ids[i] >= hint && ids[i] < id)
-            id = ids[i];
-    }
-    /* On failure simply find the channel with lowest id */
-    if (id == G_MAXINT) {
-        for (i = 0, id = G_MAXINT; ids[i] != -1; i++) {
-            if (ids[i] < id)
-                id = ids[i];
-        }
-    }
-    g_free(ids);
     if (id == G_MAXINT) {
         g_warning("There is no channel in the file, cannot make thumbnail.");
         return;
@@ -1094,9 +1130,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
     }
 
-    pixbuf = gwy_app_get_channel_thumbnail(data, id,
-                                           TMS_NORMAL_THUMB_SIZE,
-                                           TMS_NORMAL_THUMB_SIZE);
+    if (!pixbuf)
+        pixbuf = gwy_app_get_channel_thumbnail(data, id,
+                                               TMS_NORMAL_THUMB_SIZE,
+                                               TMS_NORMAL_THUMB_SIZE);
 
     g_snprintf(str_mtime, sizeof(str_mtime), "%lu", rf->file_mtime);
     g_snprintf(str_size, sizeof(str_size), "%lu", rf->file_size);

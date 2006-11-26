@@ -53,6 +53,7 @@ struct _GwyAppFileChooser {
     GObject *renderer_fileinfo;
 
     guint full_preview_id;
+    gboolean make_thumbnail;
 };
 
 struct _GwyAppFileChooserClass {

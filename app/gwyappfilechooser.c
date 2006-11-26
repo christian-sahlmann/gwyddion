@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -637,7 +637,10 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     if (!pixbuf) {
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
         gdk_pixbuf_fill(pixbuf, 0x00000000);
+        chooser->make_thumbnail = TRUE;
     }
+    else
+        chooser->make_thumbnail = FALSE;
 
     g_object_set(chooser->renderer_fileinfo,
                  "ellipsize", PANGO_ELLIPSIZE_NONE,
@@ -766,8 +769,8 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     store = GTK_LIST_STORE(model);
 
     container = gwy_file_load(filename_sys, GWY_RUN_NONINTERACTIVE, NULL);
-    g_free(filename_sys);
     if (!container) {
+        g_free(filename_sys);
         gtk_tree_model_get_iter_first(model, &iter);
         gtk_list_store_set(store, &iter,
                            COLUMN_FILEINFO, _("Cannot preview"),
@@ -780,6 +783,7 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     gwy_container_foreach(container, NULL, add_channel_id, &channel_ids);
     channel_ids = g_slist_sort(channel_ids, compare_ids);
     if (!channel_ids) {
+        g_free(filename_sys);
         g_object_unref(container);
         return FALSE;
     }
@@ -801,6 +805,12 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
             continue;
         }
 
+        if (chooser->make_thumbnail) {
+            _gwy_app_recent_file_write_thumbnail(filename_sys, container, id,
+                                                 pixbuf);
+            chooser->make_thumbnail = FALSE;
+        }
+
         gwy_app_file_chooser_describe_channel(container, id, str);
         gtk_list_store_insert_with_values(store, &iter, -1,
                                           COLUMN_PIXBUF, pixbuf,
@@ -808,8 +818,9 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
                                           -1);
         g_object_unref(pixbuf);
     }
-    g_string_free(str, TRUE);
 
+    g_string_free(str, TRUE);
+    g_free(filename_sys);
     g_object_unref(container);
 
     return FALSE;

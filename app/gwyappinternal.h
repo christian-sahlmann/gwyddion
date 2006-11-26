@@ -48,7 +48,12 @@ G_GNUC_INTERNAL
 void     _gwy_app_graph_set_current           (GwyGraph *graph);
 
 G_GNUC_INTERNAL
-GdkPixbuf* _gwy_app_recent_file_try_thumbnail (const gchar *filename_sys);
+GdkPixbuf* _gwy_app_recent_file_try_thumbnail  (const gchar *filename_sys);
+G_GNUC_INTERNAL
+void       _gwy_app_recent_file_write_thumbnail(const gchar *filename_sys,
+                                                GwyContainer *data,
+                                                gint id,
+                                                GdkPixbuf *pixbuf);
 
 /* XXX */
 void     gwy_app_main_window_set              (GtkWidget *window);
