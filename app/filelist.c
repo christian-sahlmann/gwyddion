@@ -850,6 +850,25 @@ gwy_app_recent_file_get_thumbnail(const gchar *filename_utf8)
     return pixbuf;
 }
 
+/* Get raw, unscaled thumbnail, also get NULL when there's none. */
+GdkPixbuf*
+_gwy_app_recent_file_try_thumbnail(const gchar *filename_sys)
+{
+    GdkPixbuf *pixbuf;
+    gchar *uri, *thumb;
+
+    if (!(uri = g_filename_to_uri(filename_sys, NULL, NULL)))
+        return NULL;
+
+    thumb = gwy_recent_file_thumbnail_name(uri);
+    g_free(uri);
+
+    pixbuf = gdk_pixbuf_new_from_file(thumb, NULL);
+    g_free(thumb);
+
+    return pixbuf;
+}
+
 static void
 gwy_app_recent_file_create_dirs(void)
 {

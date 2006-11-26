@@ -27,7 +27,7 @@
 #include <app/app.h>
 #include <app/settings.h>
 #include <app/filelist.h>
-#include "gwyappfilechooser.h"
+#include "gwyappinternal.h"
 
 enum {
     COLUMN_FILETYPE,
@@ -544,7 +544,7 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
     gtk_icon_view_set_pixbuf_column(preview, COLUMN_PIXBUF);
     gtk_icon_view_set_selection_mode(preview, GTK_SELECTION_NONE);
     gtk_icon_view_set_item_width(preview,
-                                 160 - gtk_icon_view_get_margin(preview));
+                                 160 - 2*gtk_icon_view_get_margin(preview));
     gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(chooser),
                                         chooser->preview);
     g_signal_connect(chooser, "update-preview",
@@ -558,7 +558,7 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     GtkTreeModel *model;
     GdkPixbuf *pixbuf;
     GtkTreeIter iter;
-    gchar *filename_sys = NULL, *filename_utf8 = NULL;
+    gchar *filename_sys;
 
     gwy_debug(" ");
 
@@ -566,16 +566,18 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     gtk_list_store_clear(GTK_LIST_STORE(model));
 
     fchooser = GTK_FILE_CHOOSER(chooser);
-    if ((filename_sys = gtk_file_chooser_get_preview_filename(fchooser)))
-        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-
-    g_free(filename_sys);
-    if (!filename_utf8) {
-        gtk_file_chooser_set_preview_widget_active(fchooser, FALSE);
+    filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    if (!filename_sys)
         return;
+
+    pixbuf = _gwy_app_recent_file_try_thumbnail(filename_sys);
+    g_free(filename_sys);
+
+    if (!pixbuf) {
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
+        gdk_pixbuf_fill(pixbuf, 0x00000000);
     }
 
-    pixbuf = gwy_app_recent_file_get_thumbnail(filename_utf8);
     gtk_list_store_insert_with_values(GTK_LIST_STORE(model), &iter, -1,
                                       COLUMN_PIXBUF, pixbuf,
                                       -1);

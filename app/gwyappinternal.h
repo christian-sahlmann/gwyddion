@@ -23,6 +23,7 @@
 #ifndef __GWY_APP_INTERNAL_H__
 #define __GWY_APP_INTERNAL_H__
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwygraphwindow.h>
@@ -46,6 +47,10 @@ void     _gwy_app_data_view_set_current       (GwyDataView *data_view);
 G_GNUC_INTERNAL
 void     _gwy_app_graph_set_current           (GwyGraph *graph);
 
+G_GNUC_INTERNAL
+GdkPixbuf* _gwy_app_recent_file_try_thumbnail (const gchar *filename_sys);
+
+/* XXX */
 void     gwy_app_main_window_set              (GtkWidget *window);
 
 G_END_DECLS
