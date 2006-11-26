@@ -497,6 +497,18 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
 
+    if (tool->args.output_type == GWY_LINE_STAT_LENGTH) {
+        GwySIUnit *xyunit, *zunit;
+
+        xyunit = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+        zunit = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+        if (!gwy_si_unit_equal(xyunit, zunit)) {
+            gwy_graph_model_remove_all_curves(tool->gmodel);
+            gtk_widget_set_sensitive(tool->apply, FALSE);
+            return;
+        }
+    }
+
     n = gwy_graph_model_get_n_curves(tool->gmodel);
     nsel = 0;
     if (plain_tool->data_field) {
