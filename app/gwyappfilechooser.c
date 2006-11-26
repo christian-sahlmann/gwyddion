@@ -581,12 +581,14 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
+                 "wrap-mode", PANGO_WRAP_WORD_CHAR,
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
                  NULL);
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(preview), renderer, FALSE);
     gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(preview), renderer,
                                   "markup", COLUMN_FILEINFO);
+    chooser->renderer_fileinfo = G_OBJECT(renderer);
 
     gtk_icon_view_set_selection_mode(preview, GTK_SELECTION_NONE);
     gtk_icon_view_set_item_width(preview, TMS_NORMAL_THUMB_SIZE);
@@ -620,6 +622,11 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
 
     fchooser = GTK_FILE_CHOOSER(chooser);
     filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    /* Make directories fail gracefully */
+    if (g_file_test(filename_sys, G_FILE_TEST_IS_DIR)) {
+        g_free(filename_sys);
+        filename_sys = NULL;
+    }
     /* Never set the preview inactive.  Gtk behaviour can be quite silly. */
     if (!filename_sys)
         return;
@@ -632,6 +639,10 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
         gdk_pixbuf_fill(pixbuf, 0x00000000);
     }
 
+    g_object_set(chooser->renderer_fileinfo,
+                 "ellipsize", PANGO_ELLIPSIZE_NONE,
+                 "wrap-width", TMS_NORMAL_THUMB_SIZE,
+                 NULL);
     gtk_list_store_insert_with_values(GTK_LIST_STORE(model), &iter, -1,
                                       COLUMN_PIXBUF, pixbuf,
                                       COLUMN_FILEINFO,
@@ -640,7 +651,7 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     g_object_unref(pixbuf);
 
     chooser->full_preview_id
-        = g_timeout_add_full(G_PRIORITY_LOW, 250,
+        = g_timeout_add_full(G_PRIORITY_LOW, 200,
                              gwy_app_file_chooser_do_full_preview, chooser,
                              NULL);
 }
@@ -695,14 +706,18 @@ gwy_app_file_chooser_describe_channel(GwyContainer *container,
 
     g_string_truncate(str, 0);
 
-    s = gwy_app_get_data_field_title(container, id);
-    g_string_append(str, s);
-    g_free(s);
-    g_string_append_c(str, '\n');
-
     quark = gwy_app_get_data_key_for_id(id);
     dfield = GWY_DATA_FIELD(gwy_container_get_object(container, quark));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+
+    s = gwy_app_get_data_field_title(container, id);
+    g_string_append(str, s);
+    g_free(s);
+
+    siunit = gwy_data_field_get_si_unit_z(dfield);
+    s = gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_MARKUP);
+    g_string_append_printf(str, " [%s]\n", s);
+    g_free(s);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -754,7 +769,10 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     g_free(filename_sys);
     if (!container) {
         gtk_tree_model_get_iter_first(model, &iter);
-        gtk_list_store_set(store, &iter, COLUMN_FILEINFO, "", -1);
+        gtk_list_store_set(store, &iter,
+                           COLUMN_FILEINFO, _("Cannot preview"),
+                           -1);
+
         return FALSE;
     }
 
@@ -765,6 +783,11 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
         g_object_unref(container);
         return FALSE;
     }
+
+    g_object_set(chooser->renderer_fileinfo,
+                 "ellipsize", PANGO_ELLIPSIZE_END,
+                 "wrap-width", -1,
+                 NULL);
 
     gtk_list_store_clear(store);
     str = g_string_new(NULL);
