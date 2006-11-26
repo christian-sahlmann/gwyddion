@@ -498,7 +498,8 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
 
-    if (tool->args.output_type == GWY_LINE_STAT_LENGTH) {
+    if (plain_tool->data_field
+        && tool->args.output_type == GWY_LINE_STAT_LENGTH) {
         GwySIUnit *xyunit, *zunit;
 
         xyunit = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
