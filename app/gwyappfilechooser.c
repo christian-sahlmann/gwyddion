@@ -648,8 +648,7 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
                  NULL);
     gtk_list_store_insert_with_values(GTK_LIST_STORE(model), &iter, -1,
                                       COLUMN_PIXBUF, pixbuf,
-                                      COLUMN_FILEINFO,
-                                      _("Making preview..."),
+                                      COLUMN_FILEINFO, _("…"),
                                       -1);
     g_object_unref(pixbuf);
 
