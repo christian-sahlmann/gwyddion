@@ -1,7 +1,8 @@
-2.1.20061124
+2.1.20061127
 
 2.2 (0000-00-00)
 Application:
+- File open dialogs have a preview (showing all channels in the file).
 - Translations updated: Italian.
 
 Libraries:
@@ -13,11 +14,16 @@ Libraries:
 - libgwyprocess: Cubic Schaum interpolation was added.
 - libgwyapp: Menu construction hang when two identical items occured was
   fixed.
+- libgwyprocess: New functions to get row/column statistics.
+- libgwyprocess: New functions to get mean root square of derivatives of data
+  lines.
 
 Modules:
 - DME file (new): DME Rasterscope data file import.
 - Convolution filter (new): General convolution filter with user-defined
   matrix.
+- Row/column statistics tool (new): Calculates characteristics of each row
+  or column in selected area.
 - Mask operations: It is possible to copy mask from one channel to another.
 - PNI file: Missing value endian conversion was added (affected big-endian
   machines).
