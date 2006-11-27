@@ -55,6 +55,13 @@ static const GwyEnum style_type[] = {
    { N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN,  },
 };
 
+static const ExportParameters load_defaults = {
+    TRUE,
+    TRUE,
+    TRUE,
+    GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN,
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -86,6 +93,7 @@ export(GwyGraph *graph)
     ExportParameters params;
     GwyContainer *settings;
 
+    
     settings = gwy_app_settings_get();
     load_args(settings, &params);
     export_dialog(graph, &params);
@@ -151,7 +159,6 @@ export_dialog(GwyGraph *graph,
         break;
     }
 }
-
 static void
 export_dialog_choose_file(GwyGraph *graph,
                           ExportParameters *params)
@@ -222,11 +229,14 @@ static void
 load_args(GwyContainer *settings,
           ExportParameters *params)
 {
+    *params = load_defaults;
     gwy_container_gis_boolean_by_name(settings, labels_key, &params->labels);
     gwy_container_gis_boolean_by_name(settings, units_key, &params->units);
     gwy_container_gis_boolean_by_name(settings, metadata_key, &params->metadata);
     gwy_container_gis_enum_by_name(settings, style_key, &params->style);
 
+    params->style = MIN(params->style,
+                        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN);
 }
 
 static void
