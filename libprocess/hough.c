@@ -578,8 +578,9 @@ get_local_maximum(GwyDataField *dfield,
         zp = data[mrow*xres + mcol+1];
         if ((zm + zp - 2*z0) == 0)
             *xval = (gdouble)mcol;
-        else
+        else {
             *xval = (gdouble)mcol + (zm - zp)/(zm + zp - 2*z0)/2.0;
+        }
     }
     else
         *xval = (gdouble)mcol;
