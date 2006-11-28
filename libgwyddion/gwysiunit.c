@@ -893,9 +893,13 @@ gwy_si_unit_parse(GwySIUnit *siunit,
             g_warning("Unit string is not valid UTF-8");
             g_string_truncate(buf, p - buf->str);
         }
-        if (!buf->len)
-            g_warning("Base unit cannot be empty: %s", string);
-        if (!g_ascii_isalpha(buf->str[0]) && (guchar)buf->str[0] < 128)
+        if (!buf->len) {
+            /* maybe it's just percentage.  cross fingers and proceed. */
+            if (dividing)
+                unit.power = -unit.power;
+            siunit->power10 += unit.power * pfpower;
+        }
+        else if (!g_ascii_isalpha(buf->str[0]) && (guchar)buf->str[0] < 128)
             g_warning("Invalid base unit: %s", buf->str);
         else {
             /* append it */
