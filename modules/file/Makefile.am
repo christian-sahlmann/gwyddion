@@ -43,6 +43,7 @@ file_LTLIBRARIES = \
 	nanoscope.la \
 	nanonis.la \
 	nanotop.la \
+	netcdf.la \
 	nt-mdt.la \
 	omicron.la \
 	pixmap.la \
@@ -156,6 +157,9 @@ nanonis_la_LIBADD = $(module_libadd)
 
 nanotop_la_SOURCES = nanotop.c
 nanotop_la_LIBADD = $(module_libadd)
+
+netcdf_la_SOURCES = netcdf.c
+netcdf_la_LIBADD = $(module_libadd)
 
 nt_mdt_la_SOURCES = nt-mdt.c
 nt_mdt_la_LIBADD = $(module_libadd)
