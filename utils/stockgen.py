@@ -57,7 +57,7 @@ def update_macros(images):
     defines = ['#define GWY_STOCK_%s "gwy_%s"\n' % (x.upper(), x)
             for x in images.keys()]
     defines.sort()
-    i, o = popen2.popen2('align-declarations.py')
+    i, o = popen2.popen2('./utils/align-declarations.py')
     o.write(''.join(defines))
     o.close()
     defines = i.read()
