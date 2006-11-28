@@ -23,7 +23,7 @@
 static inline gulong
 get_WORD_LE(const guchar **p)
 {
-    gulong z = (gulong)(*p)[0] + ((gulong)(*p)[1] << 8);
+    gulong z = (gulong)(*p)[0] | ((gulong)(*p)[1] << 8);
     *p += 2;
     return z;
 }
@@ -31,7 +31,7 @@ get_WORD_LE(const guchar **p)
 static inline gulong
 get_WORD_BE(const guchar **p)
 {
-    gulong z = (gulong)((*p)[0] << 8) + (gulong)(*p)[1];
+    gulong z = (gulong)((*p)[0] << 8) | (gulong)(*p)[1];
     *p += 2;
     return z;
 }
@@ -39,8 +39,8 @@ get_WORD_BE(const guchar **p)
 static inline gulong
 get_DWORD_LE(const guchar **p)
 {
-    gulong z = (gulong)(*p)[0] + ((gulong)(*p)[1] << 8)
-              + ((gulong)(*p)[2] << 16) + ((gulong)(*p)[3] << 24);
+    gulong z = (gulong)(*p)[0] | ((gulong)(*p)[1] << 8)
+               | ((gulong)(*p)[2] << 16) | ((gulong)(*p)[3] << 24);
     *p += 4;
     return z;
 }
@@ -48,9 +48,31 @@ get_DWORD_LE(const guchar **p)
 static inline gulong
 get_DWORD_BE(const guchar **p)
 {
-    gulong z = ((gulong)(*p)[0] << 24) + ((gulong)(*p)[1] << 16)
-              + ((gulong)(*p)[2] << 8) + (gulong)(*p)[3];
+    gulong z = ((gulong)(*p)[0] << 24) | ((gulong)(*p)[1] << 16)
+               | ((gulong)(*p)[2] << 8) | (gulong)(*p)[3];
     *p += 4;
+    return z;
+}
+
+static inline guint64
+get_QWORD_LE(const guchar **p)
+{
+    guint64 z = (guint64)(*p)[0] | ((guint64)(*p)[1] << 8)
+                | ((guint64)(*p)[2] << 16) | ((guint64)(*p)[3] << 24)
+                | ((guint64)(*p)[4] << 32) | ((guint64)(*p)[5] << 40)
+                | ((guint64)(*p)[4] << 48) | ((guint64)(*p)[5] << 56);
+    *p += 8;
+    return z;
+}
+
+static inline guint64
+get_QWORD_BE(const guchar **p)
+{
+    guint64 z = ((guint64)(*p)[0] << 56) | ((guint64)(*p)[1] << 48)
+                | ((guint64)(*p)[2] << 40) | ((guint64)(*p)[3] << 32)
+                | ((guint64)(*p)[2] << 24) | ((guint64)(*p)[3] << 16)
+                | ((guint64)(*p)[2] << 8) | (guint64)(*p)[3];
+    *p += 8;
     return z;
 }
 
