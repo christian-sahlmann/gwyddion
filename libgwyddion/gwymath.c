@@ -106,8 +106,8 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
     gint i, m;
     gdouble vx, vy, d, d2m = G_MAXDOUBLE;
 
-    g_return_val_if_fail(n > 0, d2m);
-    g_return_val_if_fail(coords, d2m);
+    g_return_val_if_fail(n > 0, -1);
+    g_return_val_if_fail(coords, -1);
 
     m = -1;
     if (metric) {
@@ -194,8 +194,8 @@ gwy_math_find_nearest_point(gdouble x, gdouble y,
     gint i, m;
     gdouble d, xd, yd, d2m = G_MAXDOUBLE;
 
-    g_return_val_if_fail(n > 0, d2m);
-    g_return_val_if_fail(coords, d2m);
+    g_return_val_if_fail(n > 0, -1);
+    g_return_val_if_fail(coords, -1);
 
     m = 0;
     if (metric) {
