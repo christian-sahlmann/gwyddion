@@ -30,7 +30,7 @@ static void gwy_data_field_fractal_fit(GwyDataLine *xresult,
                                        gdouble *a,
                                        gdouble *b);
 
-/*
+/**
  * gwy_data_field_fractal_partitioning:
  * @data_field: A data field.
  * @xresult: Data line to store x-values for log-log plot to.
