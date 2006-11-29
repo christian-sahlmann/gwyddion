@@ -18,16 +18,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <stdio.h>
+#include "config.h"
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libprocess/linestats.h>
+#include <libprocess/stats.h>
 #include <libprocess/correct.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwycombobox.h>
 #include <app/gwyapp.h>
 
-#define DRIFT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define DRIFT_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
     PREVIEW_SIZE = 320
@@ -35,15 +43,14 @@ enum {
 
 
 typedef enum {
-    GWY_DRIFT_CORRELATION = 0,
-    GWY_DRIFT_ISOTROPY    = 1,
-    GWY_DRIFT_SAMPLE      = 2
+    GWY_DRIFT_CORRELATION = 0
+  /*  GWY_DRIFT_ISOTROPY    = 1*/
 } GwyDriftMethod;
 
 /* Data for this function. */
 typedef struct {
     GwyDriftMethod method;
-    gdouble sensitivity;
+    gdouble averaging;
     gdouble smoothing;
     gboolean is_graph;
     gboolean is_crop;
@@ -57,27 +64,31 @@ typedef struct {
     GtkWidget *is_graph;
     GtkWidget *is_correct;
     GtkWidget *is_crop;
-    GtkObject *sensitivity;
+    GtkWidget *message;
+    GtkObject *averaging;
     GtkObject *smoothing;
     GtkWidget *interpolation;
     GtkWidget *method;
     GtkWidget *color_button;
-    GwyContainer *viewdata;
+    GwyContainer *mydata;
     GwyDataLine *result;
     gboolean computed;
+    DriftArgs *args;
 } DriftControls;
 
 static gboolean    module_register            (void);
 static void        drift                      (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    drift_dialog                (DriftArgs *args,
-                                               GwyContainer *data);
+static void        drift_dialog                (DriftArgs *args,
+                                               GwyContainer *data,
+					                           GwyDataField *dfield,
+                                               gint id);
 static void        mask_color_change_cb       (GtkWidget *color_button,
                                                DriftControls *controls);
 static void        load_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
-static void        save_mask_color            (GtkWidget *color_button,
-                                               GwyContainer *data);
+static GwyDataField* create_mask_field        (GwyDataField *dfield);
+
 static void        drift_dialog_update_controls(DriftControls *controls,
                                                DriftArgs *args);
 static void        drift_dialog_update_values  (DriftControls *controls,
@@ -89,7 +100,9 @@ static void        preview                    (DriftControls *controls,
 static void        reset                    (DriftControls *controls,
                                                DriftArgs *args);
 static void        drift_ok                    (DriftControls *controls,
-                                               DriftArgs *args, GwyContainer *data);
+                                               DriftArgs *args, 
+                                                GwyContainer *data,
+                                                GwyDataField *data_field);
 static void        drift_load_args              (GwyContainer *container,
                                                DriftArgs *args);
 static void        drift_save_args              (GwyContainer *container,
@@ -98,15 +111,26 @@ static void        drift_sanitize_args         (DriftArgs *args);
 static void         mask_process               (GwyDataField *dfield,
                                                 GwyDataField *maskfield,
                                                 DriftArgs *args,
-                                                DriftControls *controls);
+                                                DriftControls *controls,
+                                                GtkWindow *wait_window);
 
+static GwyDataField* gwy_data_field_correct_drift(GwyDataField *data_field,
+                                                GwyDataField *corrected_field,
+                                                GwyDataLine *drift,
+                                                gboolean crop);
 
-static const GwyEnum methods[] = {
-    { N_("Scan lines correlation"), GWY_DRIFT_CORRELATION, },
-    { N_("Local isotropy"),         GWY_DRIFT_ISOTROPY,    },
-    { N_("Calibration sample"),     GWY_DRIFT_SAMPLE,      },
-};
+static gint        gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
+                                                             GwyDataLine *drift_result,
+                                                             gint skip_tolerance,
+                                                             gint polynom_degree,
+                                                             gdouble threshold);
 
+static gdouble     gwy_data_field_get_row_correlation_score(GwyDataField *data_field,
+                                                            gint line1_index,
+                                                            gint line1_start,
+                                                            gint line2_index,
+                                                            gint line2_start,
+                                                            gint area_length);
 
 
 static const DriftArgs drift_defaults = {
@@ -150,63 +174,28 @@ static void
 drift(GwyContainer *data, GwyRunType run)
 {
     DriftArgs args;
-    gboolean ok = TRUE;
+    GwyDataField *dfield;
+    gint id;
+
 
     g_return_if_fail(run & DRIFT_RUN_MODES);
-    drift_load_args(gwy_app_settings_get(), &args);
-    if (run == GWY_RUN_INTERACTIVE) {
-        ok = drift_dialog(&args, data);
-        drift_save_args(gwy_app_settings_get(), &args);
-    }
-    else
-        /* FIXME: This crashes.  What it was supposed to do? */
-        drift_ok(NULL, &args, data);
-}
-
-static GwyContainer*
-create_preview_data(GwyContainer *data)
-{
-    GwyContainer *preview_container;
-    GwyDataField *dfield, *dfield_show;
-    gint oldid;
-    gint xres, yres;
-    gdouble zoomval;
-
-    preview_container = gwy_container_new();
-
+    drift_load_args(gwy_app_settings_get(), &args);    
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &oldid,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
 
-    dfield = gwy_data_field_duplicate(dfield);
-    dfield_show = gwy_data_field_duplicate(dfield);
+    g_return_if_fail(dfield);
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
-    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
-                            GWY_INTERPOLATION_BILINEAR);
-    dfield_show = gwy_data_field_duplicate(dfield);
-
-    gwy_container_set_object_by_name(preview_container, "/0/data", dfield);
-    g_object_unref(dfield);
-    gwy_container_set_object_by_name(preview_container, "/0/show", dfield_show);
-    g_object_unref(dfield_show);
-
-    gwy_app_copy_data_items(data, preview_container, oldid, 0,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
-    return preview_container;
+    drift_dialog(&args, data, dfield, id);
+    drift_save_args(gwy_app_settings_get(), &args);
 }
 
 
-
-/* FIXME: What is the return value good for when drift_dialog() does all the
- * work itself? */
-static gboolean
-drift_dialog(DriftArgs *args, GwyContainer *data)
+static void
+drift_dialog(DriftArgs *args, 
+             GwyContainer *data, 
+             GwyDataField *dfield,
+             gint id)
 {
     GtkWidget *dialog, *table, *label, *hbox, *spin;
     DriftControls controls;
@@ -217,8 +206,14 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
-    gint xres, yres,row;
+    gint yres, row;
+
+    static const GwyEnum methods[] = {
+        { N_("Line correlation"),  GWY_DRIFT_CORRELATION,  },
+      /*  { N_("Local isotropy"),    GWY_DRIFT_ISOTROPY, },*/
+    };
+
+    controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Correct drift"), NULL, 0,
                                          _("_Update Result"), RESPONSE_PREVIEW,
@@ -235,28 +230,28 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.viewdata = create_preview_data(data);
-    controls.view = gwy_data_view_new(controls.viewdata);
-    g_object_unref(controls.viewdata);
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
+    controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
-
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 layer);
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                        0);
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    controls.result
-        = gwy_data_line_new(yres, gwy_data_field_get_yreal(dfield), TRUE);
-
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(xres, yres);
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+
+
+    yres = gwy_data_field_get_yres(dfield);
+    controls.result
+        = gwy_data_line_new(yres, gwy_data_field_get_yreal(dfield), TRUE);
 
     table = gtk_table_new(10, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
@@ -296,19 +291,19 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     row++;
 
 
-    controls.sensitivity = gtk_adjustment_new(args->sensitivity, 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_hscale(table, row, "sensitivity:", "", controls.sensitivity,
+    controls.averaging = gtk_adjustment_new(args->averaging, 1.0, 100.0, 1, 5, 0);
+    spin = gwy_table_attach_hscale(table, row, "averaging number:", "rows", controls.averaging,
                                                GWY_HSCALE_DEFAULT);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
-    g_signal_connect(controls.sensitivity, "value_changed",
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    g_signal_connect(controls.averaging, "value_changed",
                      G_CALLBACK(drift_invalidate), &controls);
 
     row++;
 
-    controls.smoothing = gtk_adjustment_new(args->smoothing, 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_hscale(table, row, "smoothing:", "%", controls.smoothing,
+    controls.smoothing = gtk_adjustment_new(args->smoothing, 1.0, 20.0, 1, 2, 0);
+    spin = gwy_table_attach_hscale(table, row, "smoothing degree:", "", controls.smoothing,
                                                GWY_HSCALE_DEFAULT);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls.smoothing, "value_changed",
                      G_CALLBACK(drift_invalidate), &controls);
 
@@ -354,6 +349,18 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                      G_CALLBACK(drift_invalidate), &controls);
     row++;
 
+    label = gtk_label_new_with_mnemonic(_("Result:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                                GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    row++;
+
+    controls.message = gtk_label_new("Nothing computed");
+    gtk_misc_set_alignment(GTK_MISC(controls.message), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.message,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls.computed = FALSE;
 
@@ -371,10 +378,11 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             drift_dialog_update_values(&controls, args);
-            g_object_unref(controls.viewdata);
+            gwy_object_unref(controls.mydata);
+            gwy_object_unref(controls.result);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+            return;
             break;
 
             case GTK_RESPONSE_OK:
@@ -382,6 +390,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
 
             case RESPONSE_RESET:
             *args = drift_defaults;
+            reset(&controls, args);
             drift_dialog_update_controls(&controls, args);
             break;
 
@@ -396,12 +405,12 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    save_mask_color(controls.color_button, data);
     drift_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
-    drift_ok(&controls, args, data);
+    drift_ok(&controls, args, data, dfield);
 
-    return TRUE;
+    gwy_object_unref(controls.mydata);
+    gwy_object_unref(controls.result);
 }
 
 static void
@@ -410,8 +419,8 @@ drift_dialog_update_controls(DriftControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->smoothing),
                              args->smoothing);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->sensitivity),
-                             args->sensitivity);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->averaging),
+                             args->averaging);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_graph),
                                  args->is_graph);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_correct),
@@ -426,8 +435,8 @@ drift_dialog_update_values(DriftControls *controls,
 {
     args->smoothing
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->smoothing));
-    args->sensitivity
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->sensitivity));
+    args->averaging
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->averaging));
     args->is_graph
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_graph));
     args->is_crop
@@ -440,18 +449,20 @@ static void
 drift_invalidate(G_GNUC_UNUSED GObject *obj,
                 DriftControls *controls)
 {
-    controls->computed = FALSE;
+    reset(controls, controls->args);
 }
 
 static void
 mask_color_change_cb(GtkWidget *color_button,
                      DriftControls *controls)
 {
+    GwyContainer *data;
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
     gwy_mask_color_selector_run(NULL, GTK_WINDOW(controls->dialog),
                                 GWY_COLOR_BUTTON(color_button),
-                                NULL, "/0/mask");
-    load_mask_color(color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
+                                data, "/0/mask");
+    load_mask_color(color_button, data);
 }
 
 static void
@@ -467,80 +478,76 @@ load_mask_color(GtkWidget *color_button,
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
-/* FIXME: This is wrong. Look at grain_mark.c */
-static void
-save_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
-{
-    GwyRGBA rgba;
 
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
-    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
 }
+
 
 static void
 preview(DriftControls *controls,
         DriftArgs *args)
 {
-    GwyDataField *dfield, *maskfield;
-    GwyPixmapLayer *layer = NULL;
+    GwyDataField *mask, *dfield;
+    GwyPixmapLayer *layer;
 
-    dfield = gwy_container_get_object_by_name(controls->viewdata, "/0/data");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/0/data"));
 
-    if (gwy_container_gis_object_by_name(controls->viewdata, "/0/mask",
-                                         &maskfield)) {
-        gwy_data_field_copy(dfield, maskfield, FALSE);
-    }
-    else {
-        maskfield = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(controls->viewdata, "/0/mask",
-                                         maskfield);
-        g_object_unref(maskfield);
-    }
+    /* Set up the mask */
+    if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
+        mask = create_mask_field(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
+        g_object_unref(mask);
 
-    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
+    gwy_data_field_copy(dfield, mask, FALSE);
 
-    mask_process(dfield, maskfield, args, controls);
+    mask_process(dfield, mask, args, controls, GTK_WINDOW(controls->dialog));
     controls->computed = TRUE;
-
-    gwy_data_field_data_changed(maskfield);
 }
 
 static void
 reset(DriftControls *controls,
-      DriftArgs *args)
+      G_GNUC_UNUSED DriftArgs *args)
 {
     GwyDataField *maskfield;
 
-    if (gwy_container_gis_object_by_name(controls->viewdata, "/0/mask",
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
                                          &maskfield)) {
         gwy_data_field_clear(maskfield);
         gwy_data_field_data_changed(maskfield);
     }
+    gtk_label_set_text(GTK_LABEL(controls->message), "Nothing computed");
     controls->computed = FALSE;
 }
 
 static void
 drift_ok(DriftControls *controls,
          DriftArgs *args,
-         GwyContainer *data)
+         GwyContainer *data,
+         GwyDataField *data_field)
 {
 
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
-    GwyDataField *data_field, *newdata_field;
-    gint newid, oldid;
+    GwyDataField *newdata_field;
+    gint newid;
 
-    /* FIXME: too late */
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &data_field,
-                                     GWY_APP_DATA_FIELD_ID, &oldid,
-                                     0);
-    g_return_if_fail(data_field);
 
     if (!controls->computed)
         return;
@@ -555,12 +562,6 @@ drift_ok(DriftControls *controls,
     if (args->is_correct) {
         newid = gwy_app_data_browser_add_data_field(newdata_field, data, TRUE);
 
-        gwy_app_copy_data_items(data, data, oldid, newid,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
-
         gwy_app_set_data_field_title(data, newid, _("Drift corrected data"));
 
     }
@@ -571,17 +572,17 @@ drift_ok(DriftControls *controls,
         cmodel = gwy_graph_curve_model_new();
         gwy_graph_model_add_curve(gmodel, cmodel);
 
-        gwy_graph_model_set_title(gmodel, _("Drift graph"));
+        g_object_set(gmodel, "title", _("Drift graph"), 
+                             "axis-label-left", _("drift"),
+                             NULL);
         gwy_graph_model_set_units_from_data_line(gmodel, controls->result);
-        gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
+        g_object_set(cmodel, "description", _("x-axis drift"), NULL);
         gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result,
                                                      0, 0);
 
         newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         gwy_object_unref(cmodel);
         gwy_object_unref(gmodel);
-        gwy_object_unref(controls->result);
-        gwy_app_set_data_field_title(data, newid, _("X axis Drift"));
     }
 }
 
@@ -589,10 +590,13 @@ static void
 mask_process(GwyDataField *dfield,
              GwyDataField *maskfield,
              DriftArgs *args,
-             DriftControls *controls)
+             DriftControls *controls,
+             GtkWindow *wait_window)
 {
     gint i, j, step, pos, xres, yres;
+    gint npoints = 0;
     gdouble *mdata, *rdata;
+    gchar message[50];
 
     gwy_data_field_clear(maskfield);
     gwy_data_line_clear(controls->result);
@@ -600,32 +604,46 @@ mask_process(GwyDataField *dfield,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
-    if (args->method == GWY_DRIFT_CORRELATION)
-        gwy_data_field_get_drift_from_correlation
-            (dfield, controls->result,
-             MAX(1, (gint)(args->sensitivity/10)),
-             100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
-             1 - args->sensitivity/500.0);
+    if (args->method == GWY_DRIFT_CORRELATION) {
+        gwy_app_wait_start(wait_window,
+                           _("Correlating..."));
 
-    step = yres/10;
-    mdata = gwy_data_field_get_data(maskfield);
-    rdata = gwy_data_line_get_data(controls->result);
-    for (i = 0; i < yres; i++) {
-        for (j = -step; j < xres + step; j += step) {
-            pos = j + gwy_data_field_rtoi(dfield, rdata[i]);
-            if (pos > 1 && pos < xres) {
-                mdata[(gint)(pos + i*xres)] = 1;
+        npoints = gwy_data_field_get_drift_from_correlation
+            (dfield, controls->result,
+             MAX(1, (gint)(args->averaging)),
+             args->smoothing,
+             0.9);
+        gwy_app_wait_finish();
+    }
+    g_snprintf(message, sizeof(message), "%d points fitted", npoints);
+    gtk_label_set_text(GTK_LABEL(controls->message), message);
+
+    if (npoints)
+    {
+        controls->computed = TRUE;
+        step = yres/10;
+        mdata = gwy_data_field_get_data(maskfield);
+        rdata = gwy_data_line_get_data(controls->result);
+        for (i = 0; i < yres; i++) {
+            for (j = -step; j < xres + step; j += step) {
+                pos = j + gwy_data_field_rtoi(dfield, rdata[i]);
+                if (pos > 1 && pos < xres) {
+                    mdata[(gint)(pos + i*xres)] = 1;
                 if (xres >= 300)
                     mdata[(gint)(pos - 1 + i*xres)] = 1;
+                }
             }
         }
     }
+    else
+        controls->computed = FALSE;
+    gwy_data_field_data_changed(maskfield);
 }
 
 static const gchar iscorrect_key[]     = "/module/drift/iscorrect";
 static const gchar isgraph_key[]       = "/module/drift/isgraph";
 static const gchar iscrop_key[]        = "/module/drift/iscrop";
-static const gchar sensitivity_key[]   = "/module/drift/sensitivity";
+static const gchar averaging_key[]   = "/module/drift/averaging";
 static const gchar smoothing_key[]     = "/module/drift/smoothing";
 static const gchar method_key[]        = "/module/drift/method";
 static const gchar interpolation_key[] = "/module/drift/interpolation";
@@ -636,9 +654,10 @@ drift_sanitize_args(DriftArgs *args)
     args->is_correct = !!args->is_correct;
     args->is_crop = !!args->is_crop;
     args->is_graph = !!args->is_graph;
-    args->sensitivity = CLAMP(args->sensitivity, 0.0, 100.0);
-    args->smoothing = CLAMP(args->smoothing, 0.0, 100.0);
-    args->method = MIN(args->method, GWY_DRIFT_SAMPLE);
+    args->averaging = CLAMP(args->averaging, 1.0, 100.0);
+    args->smoothing = CLAMP(args->smoothing, 1.0, 20.0);
+    args->method = GWY_DRIFT_CORRELATION;
+    /*args->method = MIN(args->method, GWY_DRIFT_CORRELATION);*/
     args->interpolation = gwy_enum_sanitize_value(args->interpolation,
                                                   GWY_TYPE_INTERPOLATION_TYPE);
 }
@@ -654,8 +673,8 @@ drift_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, iscrop_key,
                                       &args->is_crop);
     gwy_container_gis_boolean_by_name(container, isgraph_key, &args->is_graph);
-    gwy_container_gis_double_by_name(container, sensitivity_key,
-                                     &args->sensitivity);
+    gwy_container_gis_double_by_name(container, averaging_key,
+                                     &args->averaging);
     gwy_container_gis_double_by_name(container, smoothing_key,
                                      &args->smoothing);
     gwy_container_gis_enum_by_name(container, method_key,
@@ -673,12 +692,213 @@ drift_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, iscorrect_key,
                                       args->is_correct);
     gwy_container_set_boolean_by_name(container, iscrop_key, args->is_crop);
-    gwy_container_set_double_by_name(container, sensitivity_key,
-                                     args->sensitivity);
+    gwy_container_set_double_by_name(container, averaging_key,
+                                     args->averaging);
     gwy_container_set_double_by_name(container, smoothing_key, args->smoothing);
     gwy_container_set_enum_by_name(container, interpolation_key,
                                    args->interpolation);
     gwy_container_set_enum_by_name(container, method_key, args->method);
 }
 
-/* VIM: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
+
+
+static gdouble
+gwy_data_field_get_row_correlation_score(GwyDataField *data_field,
+                                            gint line1_index,
+                                            gint line1_start,
+                                            gint line2_index,
+                                            gint line2_start,
+                                            gint area_length)
+{
+    gint i;
+    gdouble score = 0, avg1 = 0, avg2 = 0, rms1 = 0, rms2 = 0;
+
+    g_return_val_if_fail(line1_index >= 0 && line1_index < data_field->yres, -1);
+    g_return_val_if_fail(line2_index >= 0 && line2_index < data_field->yres, -1);
+
+    for (i = 0; i < area_length; i++)
+    {
+        avg1 += data_field->data[i + line1_start + data_field->xres*line1_index];
+        avg2 += data_field->data[i + line2_start + data_field->xres*line2_index];
+    }
+    avg1 /= area_length;
+    avg2 /= area_length;
+
+    for (i = 0; i < area_length; i++)
+    {
+        score += (data_field->data[i + line1_start + data_field->xres*line1_index]-avg1)
+            *(data_field->data[i + line2_start + data_field->xres*line2_index]-avg2);
+
+        rms1 += (data_field->data[i + line1_start + data_field->xres*line1_index]-avg1)
+            *(data_field->data[i + line1_start + data_field->xres*line1_index]-avg1);
+        rms2 += (data_field->data[i + line2_start + data_field->xres*line2_index]-avg2)
+            *(data_field->data[i + line2_start + data_field->xres*line2_index]-avg2);
+    }
+    rms1 = sqrt(rms1/area_length);
+    rms2 = sqrt(rms2/area_length);
+
+    score /= rms1 * rms2 * area_length;
+
+    return score;
+}
+
+static gint
+gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
+                                          GwyDataLine *drift_result,
+                                          gint skip_tolerance,
+                                          gint polynom_degree,
+                                          gdouble threshold)
+{
+    gint col, row, nextrow, colmax, i;
+    gint maxshift = 10;
+    gdouble val;
+    gdouble maxscore, coefs[3];
+    GwyDataLine *score;
+    gdouble *shift_rows, *shift_cols, shift_coefs[20];
+    gint shift_ndata, neighbourhood_start, neighbourhood_end;
+    gdouble glob_maxscore, glob_colmax, fit_score, fit_colmax, avg_score;
+    
+    fit_score = glob_colmax = colmax = 0;
+
+    if (gwy_data_line_get_res(drift_result) != (data_field->yres))
+        gwy_data_line_resample(drift_result, data_field->yres, GWY_INTERPOLATION_NONE);
+
+    gwy_data_line_set_si_unit_x(drift_result, gwy_data_field_get_si_unit_xy(data_field));
+    gwy_data_line_set_si_unit_y(drift_result, gwy_data_field_get_si_unit_z(data_field));
+
+    score = (GwyDataLine *) gwy_data_line_new(2*maxshift, 2*maxshift, FALSE);
+    shift_cols = (gdouble *)g_malloc((data_field->yres - 1)*sizeof(gdouble));
+    shift_rows = (gdouble *)g_malloc((data_field->yres - 1)*sizeof(gdouble));
+    shift_ndata= 0;
+
+    for (row=0; row < (data_field->yres - 1); row++)
+        shift_rows[row] = 0;
+
+    for (row=0; row < (data_field->yres - 1); row++)
+    {
+        glob_maxscore = -G_MAXDOUBLE;
+
+        neighbourhood_start = MAX(0, row -  skip_tolerance);
+        neighbourhood_end = MIN(data_field->yres - 1, row + skip_tolerance);
+
+        for (nextrow=neighbourhood_start; nextrow <= neighbourhood_end; nextrow++)
+        {
+            if (nextrow == row) continue;
+
+            maxscore = -G_MAXDOUBLE;
+
+            avg_score = 0;
+            for (col = -maxshift; col < maxshift; col++)
+            {
+                score->data[col+maxshift] = gwy_data_field_get_row_correlation_score(data_field,
+                                                            row,
+                                                            maxshift,
+                                                            nextrow,
+                                                            maxshift + col,
+                                                            data_field->xres - 2*maxshift);
+                avg_score += score->data[col+maxshift]/2/maxshift;
+                if (score->data[col+maxshift] > maxscore) {
+                    maxscore = score->data[col+maxshift];
+                    colmax = col;
+                }
+/*                printf("%g at (%d)  ", score->data[col+maxshift], col);*/
+            }
+/*            printf("\n"); */
+            if (colmax <= (-maxshift + 2) || colmax >= (maxshift - 3) || (fabs(maxscore/avg_score)<1.01))
+            {
+                fit_score = fit_colmax = 0;
+            }
+            else
+            {
+                gwy_data_line_part_fit_polynom(score, 2, coefs, colmax + maxshift - 2, colmax + maxshift + 2);
+                fit_colmax = -coefs[1]/2/coefs[2];
+                fit_score = coefs[2]*fit_colmax*fit_colmax + coefs[1]*fit_colmax + coefs[0];
+            }
+
+            if (fit_score > glob_maxscore)
+            {
+                glob_maxscore = fit_score;
+                glob_colmax = (fit_colmax - maxshift)/(nextrow - row);
+            }
+
+/*            printf("nextrow: %d, fscore %g  fc  %g\n", nextrow, fit_score, (fit_colmax - maxshift)/(nextrow - row)); */
+        }
+/*        printf("glob: %g  (%g)\n", glob_colmax, glob_maxscore); */
+        if (fit_score>threshold) {
+            shift_rows[shift_ndata] = row;
+            if (shift_ndata)
+                shift_cols[shift_ndata] = shift_cols[shift_ndata - 1] + glob_colmax;
+            else shift_cols[shift_ndata] = glob_colmax;
+             /*printf("row %g shift: %g\n", shift_rows[shift_ndata], shift_cols[shift_ndata]);*/
+            shift_ndata++;
+        }
+/*        else printf("fit score %g did not pass the threshold %g\n", fit_score, threshold);*/
+    }
+    gwy_math_fit_polynom(shift_ndata, shift_rows, shift_cols, polynom_degree, shift_coefs);
+
+/*    for (i = 0; i <= polynom_degree; i++) printf("%g\n", shift_coefs[i]);*/
+/*    printf("\n(result of the polymonial fit (degree %d)\n", polynom_degree); */
+    
+    for (row=0; row < (data_field->yres); row++)
+    {
+        val = 0;
+        for (i = (polynom_degree); i; i--) {
+            val += shift_coefs[i];
+            val *= row;
+        }
+        val += shift_coefs[0];
+        drift_result->data[row] = gwy_data_field_itor(data_field, val);
+        /*printf("%g, ", val);*/
+    }
+/*    printf("\nxxxxxxx\n");*/
+
+    g_object_unref(score);
+    g_free(shift_cols);
+    g_free(shift_rows);
+
+    return shift_ndata;
+}
+
+static GwyDataField*
+gwy_data_field_correct_drift(GwyDataField *data_field,
+                             GwyDataField *corrected_field,
+                             GwyDataLine *measured_drift,
+                             gboolean crop)
+{
+    gint min, max, newxres, col, row;
+    gdouble *newdata, dx, dy;
+
+    min = (gint)gwy_data_field_rtoi(data_field, gwy_data_line_get_min(measured_drift));
+    max = (gint)gwy_data_field_rtoi(data_field, gwy_data_line_get_max(measured_drift));
+    newxres = gwy_data_field_get_xres(data_field) + MIN(0, min) + MAX(0, max);
+
+    gwy_data_field_resample(corrected_field, newxres, gwy_data_field_get_yres(data_field),
+                            GWY_INTERPOLATION_NONE);
+    gwy_data_field_fill(corrected_field, gwy_data_field_get_min(data_field));
+    newdata = gwy_data_field_get_data(corrected_field);
+
+    for (col = 0; col < newxres; col++)
+        for (row = 0; row < gwy_data_field_get_yres(data_field); row++)
+        {
+            dy = row;
+            dx = col + gwy_data_field_rtoi(data_field, measured_drift->data[row]);
+
+            if (dx > 0 && dx <= (gwy_data_field_get_xres(data_field) - 1))
+                newdata[col + row*newxres] =
+                    gwy_data_field_get_dval(data_field, dx, dy, GWY_INTERPOLATION_BILINEAR);
+        }
+    if (crop)
+        gwy_data_field_resize(corrected_field, 
+                              MAX(0, -min), 0,
+                              MIN(newxres, 
+                                  gwy_data_field_get_xres(data_field) - max), 
+                                  gwy_data_field_get_yres(data_field));
+
+    return corrected_field;
+}
+
+
+
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
