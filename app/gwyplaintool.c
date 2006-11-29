@@ -84,6 +84,8 @@ static void gwy_plain_tool_response              (GwyTool *tool,
 
 static void gwy_rect_selection_labels_spinned (GtkSpinButton *spin,
                                                GwyRectSelectionLabels *rlabels);
+static void gwy_rect_selection_labels_set_sensitive(GwyRectSelectionLabels *rlabels,
+                                                    gboolean sensitive);
 
 G_DEFINE_ABSTRACT_TYPE(GwyPlainTool, gwy_plain_tool, GWY_TYPE_TOOL)
 
@@ -974,6 +976,7 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
                          G_CALLBACK(gwy_rect_selection_labels_spinned),
                          rlabels);
     }
+    gwy_rect_selection_labels_set_sensitive(rlabels, FALSE);
 
     rlabels->in_update = FALSE;
 
@@ -1127,11 +1130,10 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
 
     is_selected = selection && gwy_selection_get_object(selection, 0, sel);
     if (!selection || !dfield || (!is_selected && !rlabels->none_is_full)) {
+        gwy_rect_selection_labels_set_sensitive(rlabels, FALSE);
         for (i = 0; i < NRLABELS; i++) {
             gtk_label_set_text(rlabels->real[i], "");
             gtk_spin_button_set_value(rlabels->pix[i], 0.0);
-            gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), FALSE);
-            gtk_widget_set_sensitive(rlabels->px[i], FALSE);
         }
 
         rlabels->in_update = FALSE;
@@ -1192,8 +1194,7 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
     gtk_spin_button_set_range(rlabels->pix[RLABEL_H], 2.0, yres - isel[1]);
 
     for (i = 0; i < NRLABELS; i++) {
-        gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), TRUE);
-        gtk_widget_set_sensitive(rlabels->px[i], TRUE);
+        gwy_rect_selection_labels_set_sensitive(rlabels, TRUE);
         adj = gtk_spin_button_get_adjustment(rlabels->pix[i]);
         gtk_adjustment_set_value(adj, isel[i]);
     }
@@ -1201,6 +1202,18 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
     rlabels->in_update = FALSE;
 
     return is_selected;
+}
+
+static void
+gwy_rect_selection_labels_set_sensitive(GwyRectSelectionLabels *rlabels,
+                                        gboolean sensitive)
+{
+    guint i;
+
+    for (i = 0; i < NRLABELS; i++) {
+        gtk_widget_set_sensitive(GTK_WIDGET(rlabels->pix[i]), sensitive);
+        gtk_widget_set_sensitive(rlabels->px[i], sensitive);
+    }
 }
 
 /************************** Documentation ****************************/
