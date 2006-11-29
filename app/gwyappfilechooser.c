@@ -623,7 +623,7 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     fchooser = GTK_FILE_CHOOSER(chooser);
     filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
     /* Make directories fail gracefully */
-    if (g_file_test(filename_sys, G_FILE_TEST_IS_DIR)) {
+    if (filename_sys && g_file_test(filename_sys, G_FILE_TEST_IS_DIR)) {
         g_free(filename_sys);
         filename_sys = NULL;
     }
