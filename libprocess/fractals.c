@@ -31,15 +31,17 @@ static void gwy_data_field_fractal_fit(GwyDataLine *xresult,
                                        gdouble *b);
 
 /*
+ * gwy_data_field_fractal_partitioning:
  * @data_field: A data field.
- * @xresult: X-values for log-log plot.
- * @yresult: Y-values for log-log plot.
+ * @xresult: Data line to store x-values for log-log plot to.
+ * @yresult: Data line to store y-values for log-log plot to.
  * @interpolation: Interpolation type.
  *
  * Computes data for log-log plot by partitioning.
  *
- * Resamples @xresult and @yresult to the same size.
- */
+ * Data lines @xresult and @yresult will be resized to the output size and
+ * they will contain corresponding values at each position.
+ **/
 void
 gwy_data_field_fractal_partitioning(GwyDataField *data_field,
                                     GwyDataLine *xresult,
@@ -125,18 +127,18 @@ fractal_partitioning_nomask(GwyDataField *data_field,
     g_object_unref(maskbuffer);
 }
 
-/*
+/**
+ * gwy_data_field_fractal_cubecounting:
  * @data_field: A data field.
- * @xresult: X-values for log-log plot.
- * @yresult: Y-values for log-log plot.
+ * @xresult: Data line to store x-values for log-log plot to.
+ * @yresult: Data line to store y-values for log-log plot to.
  * @interpolation: Interpolation type.
  *
  * Computes data for log-log plot by cube counting.
  *
- * Returns two #GwyDataLines with same size.
- *
- * Returns: data for log-log plot obtained by partitioning
- */
+ * Data lines @xresult and @yresult will be resized to the output size and
+ * they will contain corresponding values at each position.
+ **/
 void
 gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
                                     GwyDataLine *xresult,
@@ -190,18 +192,18 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
-/*
+/**
+ * gwy_data_field_fractal_triangulation:
  * @data_field: A data field.
- * @xresult: X-values for log-log plot.
- * @yresult: Y-values for log-log plot.
+ * @xresult: Data line to store x-values for log-log plot to.
+ * @yresult: Data line to store y-values for log-log plot to.
  * @interpolation: Interpolation type.
  *
  * Computes data for log-log plot by triangulation.
  *
- * Returns two #GwyDataLines with same size.
- *
- * Returns: data for log-log plot obtained by partitioning
- */
+ * Data lines @xresult and @yresult will be resized to the output size and
+ * they will contain corresponding values at each position.
+ **/
 void
 gwy_data_field_fractal_triangulation(GwyDataField *data_field,
                                      GwyDataLine *xresult,
@@ -258,18 +260,18 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
-/*
+/**
+ * gwy_data_field_fractal_psdf:
  * @data_field: A data field.
- * @xresult: X-values for log-log plot.
- * @yresult: Y-values for log-log plot.
+ * @xresult: Data line to store x-values for log-log plot to.
+ * @yresult: Data line to store y-values for log-log plot to.
  * @interpolation: Interpolation type.
  *
  * Computes data for log-log plot by spectral density method.
  *
- * Returns two #GwyDataLines with same size.
- *
- * Returns: data for log-log plot obtained by partitioning
- */
+ * Data lines @xresult and @yresult will be resized to the output size and
+ * they will contain corresponding values at each position.
+ **/
 void
 gwy_data_field_fractal_psdf(GwyDataField *data_field,
                             GwyDataLine *xresult,
@@ -295,17 +297,20 @@ gwy_data_field_fractal_psdf(GwyDataField *data_field,
  * gwy_data_field_fractal_cubecounting_dim:
  * @xresult: Log-log fractal data (x values).
  * @yresult: Log-log fractal data (y values).
- * @a: Linear fit shift.
- * @b: Linear fit direction.
+ * @a: Location to store linear fit constant to.
+ * @b: Location to store linear fit slope to.
  *
- * Computes fractal dimension by cube counting
- * method using preprocessed data.
+ * Computes fractal dimension by cube counting method from log-log plot data.
  *
- * Returns: Fractal dimension.
+ * The @xresult and @yresult data lines are usually calculated by
+ * gwy_data_field_fractal_cubecounting().
+ *
+ * Returns: The fractal dimension.
  **/
 gdouble
 gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult,
-                                        GwyDataLine *yresult, gdouble *a,
+                                        GwyDataLine *yresult,
+                                        gdouble *a,
                                         gdouble *b)
 {
     gwy_data_field_fractal_fit(xresult, yresult, a, b);
@@ -314,60 +319,69 @@ gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult,
 }
 
 /**
- * gwy_data_field_fractal_cubecounting_dim:
+ * gwy_data_field_fractal_triangulation_dim:
  * @xresult: Log-log fractal data (x values).
  * @yresult: Log-log fractal data (y values).
- * @a: Linear fit shift.
- * @b: Linear fit direction.
+ * @a: Location to store linear fit constant to.
+ * @b: Location to store linear fit slope to.
  *
- * Computes fractal dimension by triangulation
- * method using preprocessed data.
+ * Computes fractal dimension by triangulation method from log-log plot data.
  *
- * Returns: Fractal dimension.
+ * The @xresult and @yresult data lines are usually calculated by
+ * gwy_data_field_fractal_triangulation().
+ *
+ * Returns: The fractal dimension.
  **/
 gdouble
 gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult,
-                                         GwyDataLine *yresult, gdouble *a,
+                                         GwyDataLine *yresult,
+                                         gdouble *a,
                                          gdouble *b)
 {
     gwy_data_field_fractal_fit(xresult, yresult, a, b);
 
-    return 2 + (*a);
+    return 2.0 + (*a);
 }
 
 /**
  * gwy_data_field_fractal_partitioning_dim:
  * @xresult: Log-log fractal data (x values).
  * @yresult: Log-log fractal data (y values).
- * @a: Linear fit shift.
- * @b: Linear fit direction.
+ * @a: Location to store linear fit constant to.
+ * @b: Location to store linear fit slope to.
  *
- * Computes fractal dimension by cube counting
- * method using preprocessed data.
+ * Computes fractal dimension by partitioning method from log-log plot data.
  *
- * Returns: Fractal dimension.
+ * The @xresult and @yresult data lines are usually calculated by
+ * gwy_data_field_fractal_partitioning().
+ *
+ * Returns: The fractal dimension.
  **/
 gdouble
 gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult,
-                                        GwyDataLine *yresult, gdouble *a,
+                                        GwyDataLine *yresult,
+                                        gdouble *a,
                                         gdouble *b)
 {
     gwy_data_field_fractal_fit(xresult, yresult, a, b);
 
-    return 3 - (*a)/2;
+    return 3.0 - (*a)/2.0;
 }
 
 /**
- * gwy_data_field_fractal_cubecounting_dim:
- * @xresult: Log-log fractal data (x values)
- * @yresult: Log-log fractal data (y values)
- * @a: Linear fit shift
- * @b: Linear fit direction
+ * gwy_data_field_fractal_psdf_dim:
+ * @xresult: Log-log fractal data (x values).
+ * @yresult: Log-log fractal data (y values).
+ * @a: Location to store linear fit constant to.
+ * @b: Location to store linear fit slope to.
  *
- * Computes fractal dimension by spectral density
- * method using preprocessed data.
+ * Computes fractal dimension by spectral density function method from
+ * log-log plot data.
  *
- * Returns: fractal dimension
+ * The @xresult and @yresult data lines are usually calculated by
+ * gwy_data_field_fractal_psdf().
+ *
+ * Returns: The fractal dimension.
  **/
 gdouble
 gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult,
@@ -375,7 +389,7 @@ gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult,
 {
     gwy_data_field_fractal_fit(xresult, yresult, a, b);
 
-    return 3.5 + (*a)/2;
+    return 3.5 + (*a)/2.0;
 }
 
 /**
