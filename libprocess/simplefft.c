@@ -198,6 +198,15 @@ gwy_fft_window(gint n,
     }
 }
 
+/**
+ * gwy_fft_window_data_field:
+ * @dfield: A data field.
+ * @orientation: Windowing orientation (the same as corresponding FFT
+ *               orientation).
+ * @windowing: The windowing type to use.
+ *
+ * Performs windowing of a data field in given direction.
+ **/
 void
 gwy_fft_window_data_field(GwyDataField *dfield,
                           GwyOrientation orientation,
@@ -205,7 +214,7 @@ gwy_fft_window_data_field(GwyDataField *dfield,
 {
     GwyFFTWindowingFunc window;
     gint xres, yres, col, row;
-    gdouble *data, q;
+    gdouble *data, *w, q;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
@@ -218,12 +227,15 @@ gwy_fft_window_data_field(GwyDataField *dfield,
     yres = dfield->yres;
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        for (col = 0; col < xres; col++) {
-            q = window(col, xres);
-            data = dfield->data + col;
-            for (row = 0; row < yres; row++)
-                data[row*xres] *= q;
+        w = g_new(gdouble, xres);
+        for (col = 0; col < xres; col++)
+            w[col] = window(col, xres);
+        for (row = 0; row < yres; row++) {
+            data = dfield->data + row*xres;
+            for (col = 0; col < xres; col++)
+                data[col] *= w[col];
         }
+        g_free(w);
         break;
 
         case GWY_ORIENTATION_VERTICAL:
