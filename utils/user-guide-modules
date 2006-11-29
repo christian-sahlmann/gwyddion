@@ -8,11 +8,14 @@ basicops data-analysis.html#features-basic
 bcrfile managing-files.html
 burleigh managing-files.html
 calibrate data-analysis.html#features-basic
+convolution_filter
 createc managing-files.html
-crop data-analysis.html#features-basic
+crop modules-tools.html
 crosscor
 cwt features-inttrans.html
-distance features-basic.html
+distance modules-tools.html
+dmefile managing-files.html
+drift
 dwt features-inttrans.html
 dwtanisotropy features-inttrans.html
 ecsfile managing-files.html
@@ -44,7 +47,6 @@ gwyfile managing-files.html
 hdf4file managing-files.html
 hitachi-afm managing-files.html
 hough features-inttrans.html
-icolorange features-basic.html
 immerse
 jpkscan managing-files.html
 laplace features-edit.html
@@ -52,6 +54,7 @@ level features-leveling.html
 level3 features-leveling.html
 line selections.html
 linecorrect features-line-correction.html
+linestats
 local_contrast features-filters.html
 maskcor
 maskedit presentations-masks.html
@@ -60,9 +63,12 @@ median-bg features-leveling.html
 merge
 metropro managing-files.html
 mifile managing-files.html
+modules-tools features-basic.html
+modules-tools features-basic.html
 nanonis managing-files.html
 nanoscope managing-files.html
 nanotop managing-files.html
+netcdf managing-files.html
 nt-mdt managing-files.html
 omicron managing-files.html
 outliers features-filters.html
@@ -70,13 +76,12 @@ pixmap managing-files.html
 plugin-proxy plugins.html
 pnifile managing-files.html
 point selections.html
-psia managing-files.html
 polylevel features-leveling.html
 polynom features-leveling.html
 presentationops presentations-masks.html
 profile data-analysis.html#features-basic
+psia managing-files.html
 rawfile raw-file-import.html
-readvalue features-basic.html
 rectangle selections.html
 rhk-sm3 managing-files.html
 rhk-spm32 managing-files.html
