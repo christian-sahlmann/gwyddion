@@ -244,7 +244,7 @@ cdffile_load(NetCDF *cdffile,
         gwy_file_abandon_contents(cdffile->buffer, cdffile->size, NULL);
         return FALSE;
     }
-    gwy_debug("Header: CDF v%d", (gint)cdffile.version);
+    gwy_debug("Header: CDF v%d", (gint)cdffile->version);
     p += MAGIC_SIZE;
 
     /* N Records */
