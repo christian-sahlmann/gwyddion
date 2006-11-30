@@ -598,6 +598,8 @@ gwy_resource_data_changed(GwyResource *resource)
 static void
 gwy_resource_modified(GwyResource *resource)
 {
+    if (resource->is_const)
+        g_warning("Constant resource was modified");
     resource->is_modified = TRUE;
 }
 
