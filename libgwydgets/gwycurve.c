@@ -229,7 +229,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                               "Snap Mode",
                               "Snap to control points mode",
                               TRUE,
-                              G_PARAM_READABLE));
+                              G_PARAM_READWRITE));
 
     curve_type_changed_signal
         = g_signal_new("curve-type-changed",
@@ -319,7 +319,7 @@ gwy_curve_set_property(GObject *object, guint prop_id,
         break;
 
         case PROP_SNAP:
-            curve->snap = g_value_get_boolean(value);
+        curve->snap = g_value_get_boolean(value);
         break;
 
         default:
