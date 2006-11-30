@@ -135,7 +135,7 @@ static const GwyEnum symmetries[] = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Generic convolution filter with user-defined matrix."),
+    N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -634,7 +634,9 @@ convolution_filter_switch_preset(GtkTreeSelection *selection,
     gtk_tree_model_get(model, &iter, 0, &preset, -1);
     controls->args->preset = preset;
 
+    controls->in_update = TRUE;
     gwy_radio_buttons_set_current(controls->sizes, preset->data.size);
+    controls->in_update = FALSE;
     convolution_filter_resize_matrix(controls);
     convolution_filter_update_matrix(controls);
     convolution_filter_update_symmetry(controls);
