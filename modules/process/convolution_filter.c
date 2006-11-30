@@ -160,11 +160,11 @@ module_register(void)
 
     gwy_process_func_register("convolution_filter",
                               (GwyProcessFunc)&convolution_filter,
-                              N_("/_Basic Operations/Convolution _Filter..."),
+                              N_("/_Integral Transforms/Convolution _Filter..."),
                               NULL,
                               CONVOLUTION_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Generic convolution filter"));
+                              N_("General convolution filter"));
 
     return TRUE;
 }
