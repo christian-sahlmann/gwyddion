@@ -74,7 +74,7 @@ typedef struct {
 
 typedef struct {
     gchar *name;
-    gint ndimids;
+    gint ndims;
     gint *dimids;
     gint nattrs;
     NetCDFAttr *attrs;
@@ -96,6 +96,7 @@ typedef struct {
     /* our stuff to easily pass around the raw data */
     guchar *buffer;
     gsize size;
+    gsize data_start;
 } NetCDF;
 
 static gboolean      module_register        (void);
@@ -107,6 +108,10 @@ static GwyContainer* gxsm_load              (const gchar *filename,
 static gboolean      cdffile_load           (NetCDF *cdffile,
                                              const gchar *filename,
                                              GError **error);
+static GwyDataField* read_data_field        (const guchar *buffer,
+                                             gint xres,
+                                             gint yres,
+                                             NetCDFType type);
 static gboolean      cdffile_read_dim_array (NetCDFDim **pdims,
                                              gint *pndims,
                                              const guchar *buf,
@@ -125,6 +130,12 @@ static gboolean      cdffile_read_var_array (NetCDFVar **pvars,
                                              const guchar *buf,
                                              gsize size,
                                              const guchar **p,
+                                             GError **error);
+static NetCDFDim*    cdffile_get_dim        (const NetCDF *cdffile,
+                                             const gchar *name);
+static NetCDFVar*    cdffile_get_var        (const NetCDF *cdffile,
+                                             const gchar *name);
+static gboolean      cdffile_validate_vars  (const NetCDF *cdffile,
                                              GError **error);
 static void          cdffile_free           (NetCDF *cdffile);
 
@@ -177,17 +188,8 @@ gxsm_detect(const GwyFileDetectInfo *fileinfo,
     if (cdffile_read_dim_array(&cdffile.dims, &cdffile.ndims,
                                fileinfo->head, fileinfo->buffer_len-1, &p,
                                NULL)) {
-        gboolean has_dimx = FALSE, has_dimy = FALSE;
-        gint i;
-
-        for (i = 0; i < cdffile.ndims; i++) {
-            if (gwy_strequal(cdffile.dims[i].name, "dimx"))
-                has_dimx = TRUE;
-            else if (gwy_strequal(cdffile.dims[i].name, "dimy"))
-                has_dimy = TRUE;
-        }
-
-        if (has_dimx && has_dimy)
+        if (cdffile_get_dim(&cdffile, "dimx")
+            && cdffile_get_dim(&cdffile, "dimy"))
             score = 80;
     }
     cdffile_free(&cdffile);
@@ -195,19 +197,128 @@ gxsm_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
+static inline void
+err_CDF_INTEGRITY(GError **error, const gchar *field_name)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Variable `%s' refers to invalid or nonexistent data."),
+                field_name);
+}
+
 static GwyContainer*
 gxsm_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
+    static const gchar *dimensions[] = { "time", "value", "dimy", "dimx" };
+    GwyContainer *data = NULL;
+    GwyDataField *dfield;
+    GwySIUnit *unit;
     NetCDF cdffile;
+    NetCDFDim *dim;
+    NetCDFVar *var;
+    gint i;
 
     if (!cdffile_load(&cdffile, filename, error))
         return NULL;
 
-    err_NO_DATA(error);
+    if (cdffile.nrecs) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("NetCDF records are not supported."));
+        goto gxsm_load_fail;
+    }
 
-    return NULL;
+    /* Look for variable "H".  This seems to be how GXSM calls data. */
+    if (!(var = cdffile_get_var(&cdffile, "H"))) {
+        err_NO_DATA(error);
+        goto gxsm_load_fail;
+    }
+
+    /* Check the dimensions.  We only know how to handle time=1 and value=1. */
+    for (i = 0; i < var->ndims; i++) {
+        dim = cdffile.dims + var->dimids[i];
+        if (!gwy_strequal(dim->name, dimensions[i])
+            || (i < 2 && dim->length != 1)) {
+            /* XXX */
+            err_NO_DATA(error);
+            goto gxsm_load_fail;
+        }
+    }
+
+    dfield = read_data_field((const guchar*)(cdffile.buffer + var->begin),
+                             cdffile.dims[var->dimids[3]].length,
+                             cdffile.dims[var->dimids[2]].length,
+                             var->type);
+
+    data = gwy_container_new();
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    g_object_unref(dfield);
+
+gxsm_load_fail:
+    gwy_file_abandon_contents(cdffile.buffer, cdffile.size, NULL);
+    cdffile_free(&cdffile);
+
+    return data;
+}
+
+static GwyDataField*
+read_data_field(const guchar *buffer,
+                gint xres,
+                gint yres,
+                NetCDFType type)
+{
+    GwyDataField *dfield;
+    gdouble *data;
+    gint i;
+
+    dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+    data = gwy_data_field_get_data(dfield);
+
+    switch (type) {
+        case NC_BYTE:
+        case NC_CHAR:
+        {
+            const gint8 *d8 = (const gint8*)buffer;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = d8[i];
+        }
+        break;
+
+        case NC_SHORT:
+        {
+            const gint16 *d16 = (const gint16*)buffer;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT16_FROM_BE(d16[i]);
+        }
+        break;
+
+        case NC_INT:
+        {
+            const gint32 *d32 = (const gint32*)buffer;
+
+            for (i = 0; i < xres*yres; i++)
+                data[i] = GINT32_FROM_BE(d32[i]);
+        }
+        break;
+
+        case NC_FLOAT:
+        for (i = 0; i < xres*yres; i++)
+            data[i] = get_FLOAT_BE(&buffer);
+        break;
+
+        case NC_DOUBLE:
+        for (i = 0; i < xres*yres; i++)
+            data[i] = get_DOUBLE_BE(&buffer);
+        break;
+
+        default:
+        g_return_val_if_reached(dfield);
+        break;
+    }
+
+    return dfield;
 }
 
 static gboolean
@@ -271,6 +382,15 @@ cdffile_load(NetCDF *cdffile,
     if (!cdffile_read_var_array(&cdffile->vars, &cdffile->nvars,
                                 cdffile->version,
                                 cdffile->buffer, cdffile->size, &p, error)) {
+        cdffile_free(cdffile);
+        gwy_file_abandon_contents(cdffile->buffer, cdffile->size, NULL);
+        return FALSE;
+    }
+
+    cdffile->data_start = (gsize)(p - cdffile->buffer);
+
+    /* Sanity check */
+    if (!cdffile_validate_vars(cdffile, error)) {
         cdffile_free(cdffile);
         gwy_file_abandon_contents(cdffile->buffer, cdffile->size, NULL);
         return FALSE;
@@ -340,6 +460,14 @@ err_CDF_ZELEMENTS(GError **error,
                   "of being absent."), field_name);
 }
 
+static inline void
+err_CDF_DATA_TYPE(GError **error,
+                  NetCDFType type)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Data type %d is invalid or unsupported."), type);
+}
+
 static gboolean
 cdffile_read_dim_array(NetCDFDim **pdims,
                        gint *pndims,
@@ -355,7 +483,7 @@ cdffile_read_dim_array(NetCDFDim **pdims,
         return FALSE;
 
     n = get_DWORD_BE(p);
-    gwy_debug("dims %d", n);
+    gwy_debug("dims (%d)", n);
     if (n != 0 && n != NC_DIMENSION) {
         err_CDF_EXPECTED(error, "NC_DIMENSION");
         return FALSE;
@@ -365,6 +493,7 @@ cdffile_read_dim_array(NetCDFDim **pdims,
         err_CDF_ZELEMENTS(error, "dim_array");
         return FALSE;
     }
+    gwy_debug("ndims: %d", ndims);
 
     if (!ndims)
         return TRUE;
@@ -419,7 +548,7 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
         return FALSE;
 
     n = get_DWORD_BE(p);
-    gwy_debug("attrs %d", n);
+    gwy_debug("attrs (%d)", n);
     if (n != 0 && n != NC_ATTRIBUTE) {
         err_CDF_EXPECTED(error, "NC_ATTRIBUTE");
         return FALSE;
@@ -429,6 +558,7 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
         err_CDF_ZELEMENTS(error, "attr_array");
         return FALSE;
     }
+    gwy_debug("nattrs: %d", nattrs);
 
     if (!nattrs)
         return TRUE;
@@ -451,7 +581,7 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
                   i, attrs[i].name, attrs[i].nelems, attrs[i].type);
         ts = cdffile_type_size(attrs[i].type);
         if (!ts) {
-            g_warning("bad element type %d", attrs[i].type);
+            err_CDF_DATA_TYPE(error, attrs[i].type);
             return FALSE;
         }
         n = ts*attrs[i].nelems;
@@ -474,13 +604,13 @@ cdffile_read_var_array(NetCDFVar **pvars,
                        GError **error)
 {
     NetCDFVar *vars;
-    gint nvars, n, i, offset_size;
+    gint nvars, n, i, ts, offset_size;
 
     if (!cdffile_check_size(error, "var_array", buf, size, *p, 8))
         return FALSE;
 
     n = get_DWORD_BE(p);
-    gwy_debug("vars %d", n);
+    gwy_debug("vars (%d)", n);
     if (n != 0 && n != NC_VARIABLE) {
         err_CDF_EXPECTED(error, "NC_VARIABLE");
         return FALSE;
@@ -490,6 +620,7 @@ cdffile_read_var_array(NetCDFVar **pvars,
         err_CDF_ZELEMENTS(error, "var_array");
         return FALSE;
     }
+    gwy_debug("nvars: %d", nvars);
 
     if (!nvars)
         return TRUE;
@@ -520,15 +651,15 @@ cdffile_read_var_array(NetCDFVar **pvars,
             return FALSE;
         vars[i].name = g_strndup((const gchar*)*p, n);
         *p += n;
-        vars[i].ndimids = get_DWORD_BE(p);
-        gwy_debug("var_array[%d]: <%s> %d", i, vars[i].name, vars[i].ndimids);
+        vars[i].ndims = get_DWORD_BE(p);
+        gwy_debug("var_array[%d]: <%s> %d", i, vars[i].name, vars[i].ndims);
         if (!cdffile_check_size(error, "var_array", buf, size, *p,
-                                4*vars[i].ndimids))
+                                4*vars[i].ndims))
             return FALSE;
-        vars[i].dimids = g_new(gint, vars[i].ndimids);
-        for (n = 0; n < vars[i].ndimids; n++) {
+        vars[i].dimids = g_new(gint, vars[i].ndims);
+        for (n = 0; n < vars[i].ndims; n++) {
             vars[i].dimids[n] = get_DWORD_BE(p);
-            gwy_debug("var_array[%d][%d]: %d", vars[i].dimids[n]);
+            gwy_debug("var_array[%d][%d]: %d", i, n, vars[i].dimids[n]);
         }
         if (!cdffile_read_attr_array(&vars[i].attrs, &vars[i].nattrs,
                                      buf, size, p, error))
@@ -537,6 +668,11 @@ cdffile_read_var_array(NetCDFVar **pvars,
                                 8 + offset_size))
             return FALSE;
         vars[i].type = get_DWORD_BE(p);
+        ts = cdffile_type_size(vars[i].type);
+        if (!ts) {
+            err_CDF_DATA_TYPE(error, vars[i].type);
+            return FALSE;
+        }
         vars[i].vsize = get_DWORD_BE(p);
         switch (version) {
             case NETCDF_CLASSIC:
@@ -546,6 +682,81 @@ cdffile_read_var_array(NetCDFVar **pvars,
             case NETCDF_64BIT:
             vars[i].begin = get_QWORD_BE(p);
             break;
+        }
+    }
+
+    return TRUE;
+}
+
+static NetCDFDim*
+cdffile_get_dim(const NetCDF *cdffile,
+                const gchar *name)
+{
+    gint i;
+
+    for (i = 0; i < cdffile->ndims; i++) {
+        if (gwy_strequal(cdffile->dims[i].name, name))
+            return cdffile->dims + i;
+    }
+
+    return NULL;
+}
+
+static NetCDFVar*
+cdffile_get_var(const NetCDF *cdffile,
+                const gchar *name)
+{
+    gint i;
+
+    for (i = 0; i < cdffile->nvars; i++) {
+        if (gwy_strequal(cdffile->vars[i].name, name))
+            return cdffile->vars + i;
+    }
+
+    return NULL;
+}
+
+static gboolean
+cdffile_validate_vars(const NetCDF *cdffile,
+                      GError **error)
+{
+    NetCDFDim *dim;
+    NetCDFVar *var;
+    gint i, j, size;
+
+    for (i = 0; i < cdffile->nvars; i++) {
+        var = cdffile->vars + i;
+        size = cdffile_type_size(var->type);
+        for (j = 0; j < var->ndims; j++) {
+            /* Bogus dimension id */
+            if (var->dimids[j] >= cdffile->ndims) {
+                err_CDF_INTEGRITY(error, var->name);
+                return FALSE;
+            }
+            dim = cdffile->dims + var->dimids[j];
+            /* XXX: record vars have length == 0 for the first dimension, but
+             * frankly, we don not care. */
+            if (dim->length <= 0) {
+                err_CDF_INTEGRITY(error, var->name);
+                return FALSE;
+            }
+            size *= dim->length;
+            if (size <= 0) {
+                err_CDF_INTEGRITY(error, var->name);
+                return FALSE;
+            }
+        }
+        ALIGN4(size);
+        /* Sizes do not match */
+        if (size != var->vsize) {
+            err_CDF_INTEGRITY(error, var->name);
+            return FALSE;
+        }
+        /* Data sticks out */
+        if (var->begin < (guint64)cdffile->data_start
+            || var->begin + var->vsize > (guint64)cdffile->size) {
+            err_CDF_INTEGRITY(error, var->name);
+            return FALSE;
         }
     }
 
@@ -562,10 +773,16 @@ cdffile_free(NetCDF *cdffile)
         g_free(cdffile->dims[i].name);
     g_free(cdffile->dims);
 
+    cdffile->ndims = 0;
+    cdffile->dims = 0;
+
     /* Global attributes */
     for (i = 0; i < cdffile->nattrs; i++)
         g_free(cdffile->attrs[i].name);
     g_free(cdffile->attrs);
+
+    cdffile->nattrs = 0;
+    cdffile->attrs = 0;
 
     /* Variables */
     for (i = 0; i < cdffile->nvars; i++) {
@@ -574,8 +791,14 @@ cdffile_free(NetCDF *cdffile)
         for (j = 0; j < cdffile->vars[i].nattrs; j++)
             g_free(cdffile->vars[i].attrs[j].name);
         g_free(cdffile->vars[i].attrs);
+
+        cdffile->vars[i].nattrs = 0;
+        cdffile->vars[i].attrs = 0;
     }
     g_free(cdffile->vars);
+
+    cdffile->nvars = 0;
+    cdffile->vars = 0;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
