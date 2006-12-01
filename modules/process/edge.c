@@ -141,10 +141,25 @@ module_register(void)
 static void
 edge(GwyContainer *data, GwyRunType run, const gchar *name)
 {
+    static const struct {
+        const gchar *name;
+        void (*func)(GwyDataField *dfield, GwyDataField *show);
+    }
+    functions[] = {
+        { "edge_canny",        canny_do,        },
+        { "edge_harris",       harris_do,       },
+        { "edge_hough_lines",  hough_lines_do,  },
+        { "edge_inclination",  inclination_do,  },
+        { "edge_laplacian",    laplacian_do,    },
+        { "edge_nonlinearity", nonlinearity_do, },
+        { "edge_rms",          rms_do,          },
+        { "edge_rms_edge",     rms_edge_do,     },
+    };
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
     GwySIUnit *siunit;
     gint id;
+    guint i;
 
     g_return_if_fail(run & EDGE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
@@ -158,30 +173,20 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     gwy_app_undo_qcheckpointv(data, 1, &squark);
     if (!showfield) {
         showfield = gwy_data_field_new_alike(dfield, FALSE);
-        siunit = gwy_si_unit_new("");
+        siunit = gwy_si_unit_new(NULL);
         gwy_data_field_set_si_unit_z(showfield, siunit);
         g_object_unref(siunit);
         gwy_container_set_object(data, squark, showfield);
         g_object_unref(showfield);
     }
 
-    if (gwy_strequal(name, "edge_laplacian"))
-        laplacian_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_canny"))
-        canny_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_rms"))
-        rms_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_rms_edge"))
-        rms_edge_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_nonlinearity"))
-        nonlinearity_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_hough_lines"))
-        hough_lines_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_harris"))
-        harris_do(dfield, showfield);
-    else if (gwy_strequal(name, "edge_inclination"))
-        inclination_do(dfield, showfield);
-    else {
+    for (i = 0; i < G_N_ELEMENTS(functions); i++) {
+        if (gwy_strequal(name, functions[i].name)) {
+            functions[i].func(dfield, showfield);
+            break;
+        }
+    }
+    if (i == G_N_ELEMENTS(functions)) {
         g_warning("edge does not provide function `%s'", name);
         gwy_data_field_copy(dfield, showfield, FALSE);
     }
