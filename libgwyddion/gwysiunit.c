@@ -814,6 +814,8 @@ gwy_si_unit_parse(GwySIUnit *siunit,
             g_string_assign(buf, "Å");
         else if (gwy_strequal(buf->str, "Å"))
             g_string_assign(buf, "Å");
+        else if (gwy_strequal(buf->str, "AA"))
+            g_string_assign(buf, "Å");
 
         /* get prefix, but be careful not to split mol to mili-ol */
         pfpower = 0;
