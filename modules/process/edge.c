@@ -52,23 +52,20 @@ static void        hough_lines_do               (GwyDataField *dfield,
                                                  GwyDataField *show);
 static void        harris_do                    (GwyDataField *dfield,
                                                  GwyDataField *show);
+static void        inclination_do               (GwyDataField *dfield,
+                                                 GwyDataField *show);
 
-
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-/* This is the ONLY exported symbol.  The argument is the module info.
- * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
 static gboolean
@@ -129,7 +126,14 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               /* FIXME */
                               N_("Harris corner presentation"));
-
+    gwy_process_func_register("edge_inclination",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Inclination"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Local inclination based edge detection "
+                                 "presentation"));
 
     return TRUE;
 }
@@ -175,6 +179,8 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         hough_lines_do(dfield, showfield);
     else if (gwy_strequal(name, "edge_harris"))
         harris_do(dfield, showfield);
+    else if (gwy_strequal(name, "edge_inclination"))
+        inclination_do(dfield, showfield);
     else {
         g_warning("edge does not provide function `%s'", name);
         gwy_data_field_copy(dfield, showfield, FALSE);
@@ -272,6 +278,34 @@ nonlinearity_do(GwyDataField *dfield, GwyDataField *show)
     data = gwy_data_field_get_data(show);
     for (i = 0; i < xres*yres; i++)
         data[i] = sqrt(data[i]);
+}
+
+static void
+inclination_do(GwyDataField *dfield, GwyDataField *show)
+{
+    GwyPlaneFitQuantity quantites[] = {
+        GWY_PLANE_FIT_BX, GWY_PLANE_FIT_BY
+    };
+    GwyDataField *fields[2];
+    gint xres, yres, i;
+    gdouble *data, *xdata;
+    gdouble qx, qy;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    qx = gwy_data_field_get_xmeasure(dfield);
+    qy = gwy_data_field_get_ymeasure(dfield);
+
+    fields[0] = gwy_data_field_new_alike(dfield, FALSE);
+    fields[1] = show;
+    gwy_data_field_fit_local_planes(dfield, 3, 2, quantites, fields);
+
+    data = gwy_data_field_get_data(show);
+    xdata = gwy_data_field_get_data(fields[0]);
+    for (i = 0; i < xres*yres; i++)
+        data[i] = atan(hypot(xdata[i]/qx, data[i]/qy));
+
+    g_object_unref(fields[0]);
 }
 
 static void
