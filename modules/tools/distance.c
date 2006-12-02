@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.3",
+    "2.4",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -365,7 +365,7 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
 
         case COLUMN_PHI:
         vf = tool->angle_format;
-        val = atan2(line[3] - line[1], line[2] - line[0]) * 180.0/G_PI;
+        val = atan2(line[1] - line[3], line[2] - line[0]) * 180.0/G_PI;
         break;
 
         case COLUMN_DZ:
