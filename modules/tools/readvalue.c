@@ -19,13 +19,17 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
-#include <libprocess/datafield.h>
+#include <libprocess/elliptic.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
+
+enum { RADIUS_MAX = 16 };
 
 #define GWY_TYPE_TOOL_READ_VALUE            (gwy_tool_read_value_get_type())
 #define GWY_TOOL_READ_VALUE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_READ_VALUE, GwyToolReadValue))
@@ -43,6 +47,14 @@ struct _GwyToolReadValue {
     GwyPlainTool parent_instance;
 
     ToolArgs args;
+
+    gdouble avg;
+    gdouble bx;
+    gdouble by;
+
+    gdouble *values;
+    gint *xpos;
+    gint *ypos;
 
     GtkLabel *x;
     GtkLabel *y;
@@ -73,6 +85,8 @@ static void   gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
 static void   gwy_tool_read_value_radius_changed   (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_update_headers   (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_update_values    (GwyToolReadValue *tool);
+static void   gwy_tool_read_value_calculate        (GwyToolReadValue *tool,
+                                                    const gdouble *point);
 
 static const gchar radius_key[] = "/module/readvalue/radius";
 
@@ -81,7 +95,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -128,6 +142,10 @@ gwy_tool_read_value_finalize(GObject *object)
     GwyContainer *settings;
 
     tool = GWY_TOOL_READ_VALUE(object);
+
+    g_free(tool->values);
+    g_free(tool->xpos);
+    g_free(tool->ypos);
 
     settings = gwy_app_settings_get();
     gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
@@ -208,7 +226,8 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table2, TRUE, TRUE, 0);
 
-    tool->radius = gtk_adjustment_new(tool->args.radius, 1, 16, 1, 5, 0);
+    tool->radius = gtk_adjustment_new(tool->args.radius,
+                                      1, RADIUS_MAX, 1, 5, 0);
     gwy_table_attach_spinbutton(table2, 9, _("_Averaging radius:"), "px",
                                 tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",
@@ -318,7 +337,7 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool)
     GwyPlainTool *plain_tool;
     gboolean is_selected = FALSE;
     gdouble point[2];
-    gdouble xoff, yoff, value;
+    gdouble xoff, yoff;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (plain_tool->data_field && plain_tool->selection)
@@ -332,16 +351,76 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool)
                                          point[0] + xoff);
         gwy_tool_read_value_update_value(tool->y, plain_tool->coord_format,
                                          point[1] + yoff);
-        value = gwy_plain_tool_get_z_average(plain_tool->data_field, point,
-                                             tool->args.radius);
+        gwy_tool_read_value_calculate(tool, point);
         gwy_tool_read_value_update_value(tool->val, plain_tool->value_format,
-                                         value);
+                                         tool->avg);
     }
     else {
         gtk_label_set_text(tool->x, "");
         gtk_label_set_text(tool->y, "");
         gtk_label_set_text(tool->val, "");
     }
+}
+
+static void
+gwy_tool_read_value_calculate(GwyToolReadValue *tool,
+                              const gdouble *point)
+{
+    GwyPlainTool *plain_tool;
+    GwyDataField *dfield;
+    gint col, row, n, i;
+    gdouble m[6], z[3];
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    dfield = plain_tool->data_field;
+
+    col = gwy_data_field_rtoj(dfield, point[0]);
+    row = gwy_data_field_rtoi(dfield, point[1]);
+
+    if (tool->args.radius == 1) {
+        tool->avg = gwy_data_field_get_val(dfield, col, row);
+        tool->bx = gwy_data_field_get_xder(dfield, col, row);
+        tool->by = gwy_data_field_get_yder(dfield, col, row);
+        return;
+    }
+
+    /* Create the arrays the first time radius > 1 is requested */
+    if (!tool->values) {
+        n = gwy_data_field_get_circular_area_size(RADIUS_MAX - 0.5);
+        tool->values = g_new(gdouble, n);
+        tool->xpos = g_new(gint, n);
+        tool->ypos = g_new(gint, n);
+    }
+
+    n = gwy_data_field_circular_area_extract_with_pos(dfield, col, row,
+                                                      tool->args.radius - 0.5,
+                                                      tool->values,
+                                                      tool->xpos, tool->ypos);
+    tool->avg = 0.0;
+    if (!n) {
+        g_warning("Z average calculated from an empty area");
+        return;
+    }
+
+    /* Fit plane through extracted data */
+    memset(m, 0, 6*sizeof(gdouble));
+    memset(z, 0, 3*sizeof(gdouble));
+    for (i = 0; i < n; i++) {
+        m[0] += 1.0;
+        m[1] += tool->xpos[i];
+        m[2] += tool->ypos[i];
+        m[3] += tool->xpos[i] * tool->xpos[i];
+        m[4] += tool->xpos[i] * tool->ypos[i];
+        m[5] += tool->ypos[i] * tool->ypos[i];
+        z[0] += tool->values[i];
+        z[1] += tool->values[i] * tool->xpos[i];
+        z[2] += tool->values[i] * tool->ypos[i];
+    }
+    tool->avg = z[0]/n;
+    gwy_math_choleski_decompose(3, m);
+    gwy_math_choleski_solve(3, m, z);
+    tool->bx = z[1]/gwy_data_field_get_xmeasure(dfield);
+    tool->by = z[2]/gwy_data_field_get_ymeasure(dfield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
