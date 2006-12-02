@@ -56,15 +56,20 @@ struct _GwyToolReadValue {
     gint *xpos;
     gint *ypos;
 
-    GtkLabel *x;
-    GtkLabel *y;
-    GtkLabel *xunits;
-    GtkLabel *yunits;
-    GtkLabel *val;
-    GtkLabel *zunits;
+    GtkWidget *x;
+    GtkWidget *xpx;
+    GtkWidget *y;
+    GtkWidget *ypx;
+    GtkWidget *z;
+    GtkWidget *theta;
+    GtkWidget *phi;
     GtkObject *radius;
 
+    gboolean same_units;
+
     /* potential class data */
+    GwySIValueFormat *pixel_format;
+    GwySIValueFormat *angle_format;
     GType layer_type_point;
 };
 
@@ -79,14 +84,15 @@ static void   gwy_tool_read_value_finalize         (GObject *object);
 static void   gwy_tool_read_value_init_dialog      (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_data_switched    (GwyTool *gwytool,
                                                     GwyDataView *data_view);
+static void   gwy_tool_read_value_update_units     (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_data_changed     (GwyPlainTool *plain_tool);
 static void   gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
                                                     gint hint);
 static void   gwy_tool_read_value_radius_changed   (GwyToolReadValue *tool);
-static void   gwy_tool_read_value_update_headers   (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_update_values    (GwyToolReadValue *tool);
 static void   gwy_tool_read_value_calculate        (GwyToolReadValue *tool,
-                                                    const gdouble *point);
+                                                    gint col,
+                                                    gint row);
 
 static const gchar radius_key[] = "/module/readvalue/radius";
 
@@ -150,6 +156,11 @@ gwy_tool_read_value_finalize(GObject *object)
     settings = gwy_app_settings_get();
     gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
 
+    if (tool->pixel_format)
+        gwy_si_unit_value_format_free(tool->pixel_format);
+    if (tool->angle_format)
+        gwy_si_unit_value_format_free(tool->angle_format);
+
     G_OBJECT_CLASS(gwy_tool_read_value_parent_class)->finalize(object);
 }
 
@@ -165,12 +176,22 @@ gwy_tool_read_value_init(GwyToolReadValue *tool)
     if (!tool->layer_type_point)
         return;
 
-    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_VFMARKUP;
+    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
     plain_tool->lazy_updates = TRUE;
 
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_gis_int32_by_name(settings, radius_key, &tool->args.radius);
+
+    tool->pixel_format = g_new0(GwySIValueFormat, 1);
+    tool->pixel_format->magnitude = 1.0;
+    tool->pixel_format->precision = 0;
+    gwy_si_unit_value_format_set_units(tool->pixel_format, "px");
+
+    tool->angle_format = g_new0(GwySIValueFormat, 1);
+    tool->angle_format->magnitude = 1.0;
+    tool->angle_format->precision = 1;
+    gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "pointer");
@@ -183,59 +204,121 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
 {
     GtkDialog *dialog;
     GtkTable *table;
-    GtkWidget *table2;
+    GtkWidget *label;
+    GtkRequisition req;
+    gint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    table = GTK_TABLE(gtk_table_new(2, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(9, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table), TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
+    row = 0;
 
-    tool->xunits = GTK_LABEL(gtk_label_new(NULL));
-    gtk_table_attach(table, GTK_WIDGET(tool->xunits),
-                     0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gwy_label_new_header(_("Position")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
-    tool->yunits = GTK_LABEL(gtk_label_new(NULL));
-    gtk_table_attach(table, GTK_WIDGET(tool->yunits),
-                     1, 2, 0, 1, GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("X");
+    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-    tool->zunits = GTK_LABEL(gtk_label_new(NULL));
-    gtk_table_attach(table, GTK_WIDGET(tool->zunits),
-                     2, 3, 0, 1, GTK_FILL, 0, 0, 0);
+    tool->xpx = gtk_label_new("123456 px");
+    gtk_widget_size_request(tool->xpx, &req);
+    gtk_widget_set_size_request(tool->xpx, req.width, -1);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->xpx), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(tool->xpx), 1.0, 0.5);
+    gtk_table_attach(table, tool->xpx, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
-    tool->x = GTK_LABEL(gtk_label_new(NULL));
+    tool->x = gtk_label_new(NULL);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->x), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->x), 1.0, 0.5);
-    gtk_table_attach(table, GTK_WIDGET(tool->x),
-                     0, 1, 1, 2, 0, 0, 0, 0);
+    gtk_table_attach(table, tool->x, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
-    tool->y = GTK_LABEL(gtk_label_new(NULL));
+    label = gtk_label_new("Y");
+    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->ypx = gtk_label_new(NULL);
+    gtk_widget_set_size_request(tool->xpx, req.width, -1);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->ypx), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(tool->ypx), 1.0, 0.5);
+    gtk_table_attach(table, tool->ypx, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->y = gtk_label_new(NULL);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->y), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->y), 1.0, 0.5);
-    gtk_table_attach(table, GTK_WIDGET(tool->y),
-                     1, 2, 1, 2, 0, 0, 0, 0);
+    gtk_table_attach(table, tool->y, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
 
-    tool->val = GTK_LABEL(gtk_label_new(NULL));
-    gtk_misc_set_alignment(GTK_MISC(tool->val), 1.0, 0.5);
-    gtk_table_attach(table, GTK_WIDGET(tool->val),
-                     2, 3, 1, 2, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gwy_label_new_header(_("Value")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
-    table2 = gtk_table_new(1, 4, FALSE);
+    label = gtk_label_new("Z");
+    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->z = gtk_label_new(NULL);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->z), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(tool->z), 1.0, 0.5);
+    gtk_table_attach(table, tool->z,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Facet")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Inclination ϑ"));
+    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->theta = gtk_label_new(NULL);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->theta), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(tool->theta), 1.0, 0.5);
+    gtk_table_attach(table, tool->theta,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Inclination φ"));
+    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->phi = gtk_label_new(NULL);
+    gtk_label_set_single_line_mode(GTK_LABEL(tool->phi), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(tool->phi), 1.0, 0.5);
+    gtk_table_attach(table, tool->phi,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    table = GTK_TABLE(gtk_table_new(1, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
-    gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), table2, TRUE, TRUE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
 
     tool->radius = gtk_adjustment_new(tool->args.radius,
                                       1, RADIUS_MAX, 1, 5, 0);
-    gwy_table_attach_spinbutton(table2, 9, _("_Averaging radius:"), "px",
-                                tool->radius);
+    gwy_table_attach_spinbutton(GTK_WIDGET(table), 9,
+                                _("_Averaging radius:"), "px", tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",
                              G_CALLBACK(gwy_tool_read_value_radius_changed),
                              tool);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
-    gwy_tool_read_value_update_headers(tool);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -262,14 +345,26 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
+        gwy_tool_read_value_update_units(tool);
     }
-    gwy_tool_read_value_update_headers(tool);
+}
+
+static void
+gwy_tool_read_value_update_units(GwyToolReadValue *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwySIUnit *siunitxy, *siunitz;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+    siunitz = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+    tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
 }
 
 static void
 gwy_tool_read_value_data_changed(GwyPlainTool *plain_tool)
 {
-    gwy_tool_read_value_update_headers(GWY_TOOL_READ_VALUE(plain_tool));
     gwy_tool_read_value_update_values(GWY_TOOL_READ_VALUE(plain_tool));
 }
 
@@ -290,45 +385,19 @@ gwy_tool_read_value_radius_changed(GwyToolReadValue *tool)
 }
 
 static void
-gwy_tool_read_value_update_headers(GwyToolReadValue *tool)
+update_label(GwySIValueFormat *units,
+             GtkWidget *label,
+             gdouble value)
 {
-    GwyPlainTool *plain_tool;
-    GString *str;
+    static gchar buffer[64];
 
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    str = g_string_new("");
+    g_return_if_fail(units);
+    g_return_if_fail(GTK_IS_LABEL(label));
 
-    g_string_assign(str, "<b>x</b>");
-    if (plain_tool->coord_format)
-        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
-    gtk_label_set_markup(tool->xunits, str->str);
-
-    g_string_assign(str, "<b>y</b>");
-    if (plain_tool->coord_format)
-        g_string_append_printf(str, " [%s]", plain_tool->coord_format->units);
-    gtk_label_set_markup(tool->yunits, str->str);
-
-    g_string_assign(str, _("<b>Value</b>"));
-    if (plain_tool->value_format)
-        g_string_append_printf(str, " [%s]", plain_tool->value_format->units);
-    gtk_label_set_markup(tool->zunits, str->str);
-
-    g_string_free(str, TRUE);
-}
-
-static void
-gwy_tool_read_value_update_value(GtkLabel *label,
-                                 GwySIValueFormat *vf,
-                                 gdouble val)
-{
-    gchar buf[32];
-
-    if (vf)
-        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
-    else
-        g_snprintf(buf, sizeof(buf), "%.3g", val);
-
-    gtk_label_set_markup(label, buf);
+    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
+               units->precision, value/units->magnitude,
+               *units->units ? " " : "", units->units);
+    gtk_label_set_markup(GTK_LABEL(label), buffer);
 }
 
 static void
@@ -338,44 +407,60 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool)
     gboolean is_selected = FALSE;
     gdouble point[2];
     gdouble xoff, yoff;
+    gint col, row;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (plain_tool->data_field && plain_tool->selection)
         is_selected = gwy_selection_get_object(plain_tool->selection, 0, point);
 
-    if (is_selected) {
-        xoff = gwy_data_field_get_xoffset(plain_tool->data_field);
-        yoff = gwy_data_field_get_yoffset(plain_tool->data_field);
+    if (!is_selected) {
+        gtk_label_set_text(GTK_LABEL(tool->x), NULL);
+        gtk_label_set_text(GTK_LABEL(tool->xpx), NULL);
+        gtk_label_set_text(GTK_LABEL(tool->y), NULL);
+        gtk_label_set_text(GTK_LABEL(tool->ypx), NULL);
+        gtk_label_set_text(GTK_LABEL(tool->z), NULL);
+        gtk_label_set_text(GTK_LABEL(tool->theta), NULL);
+        gtk_label_set_text(GTK_LABEL(tool->phi), NULL);
+        return;
+    }
 
-        gwy_tool_read_value_update_value(tool->x, plain_tool->coord_format,
-                                         point[0] + xoff);
-        gwy_tool_read_value_update_value(tool->y, plain_tool->coord_format,
-                                         point[1] + yoff);
-        gwy_tool_read_value_calculate(tool, point);
-        gwy_tool_read_value_update_value(tool->val, plain_tool->value_format,
-                                         tool->avg);
+    xoff = gwy_data_field_get_xoffset(plain_tool->data_field);
+    yoff = gwy_data_field_get_yoffset(plain_tool->data_field);
+
+    col = gwy_data_field_rtoj(plain_tool->data_field, point[0]);
+    row = gwy_data_field_rtoi(plain_tool->data_field, point[1]);
+
+    update_label(plain_tool->coord_format, tool->x, point[0] + xoff);
+    update_label(tool->pixel_format, tool->xpx, col);
+    update_label(plain_tool->coord_format, tool->y, point[1] + yoff);
+    update_label(tool->pixel_format, tool->ypx, row);
+    gwy_tool_read_value_calculate(tool, col, row);
+    update_label(plain_tool->value_format, tool->z, tool->avg);
+
+    if (tool->same_units) {
+        update_label(tool->angle_format, tool->theta,
+                     180.0/G_PI*atan(hypot(tool->bx, tool->by)));
+        update_label(tool->angle_format, tool->phi,
+                     180.0/G_PI*atan2(tool->by, tool->bx));
     }
     else {
-        gtk_label_set_text(tool->x, "");
-        gtk_label_set_text(tool->y, "");
-        gtk_label_set_text(tool->val, "");
+        gtk_label_set_text(GTK_LABEL(tool->theta), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(tool->phi), _("N.A."));
     }
 }
 
 static void
 gwy_tool_read_value_calculate(GwyToolReadValue *tool,
-                              const gdouble *point)
+                              gint col,
+                              gint row)
 {
     GwyPlainTool *plain_tool;
     GwyDataField *dfield;
-    gint col, row, n, i;
+    gint n, i;
     gdouble m[6], z[3];
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     dfield = plain_tool->data_field;
-
-    col = gwy_data_field_rtoj(dfield, point[0]);
-    row = gwy_data_field_rtoi(dfield, point[1]);
 
     if (tool->args.radius == 1) {
         tool->avg = gwy_data_field_get_val(dfield, col, row);
@@ -408,8 +493,8 @@ gwy_tool_read_value_calculate(GwyToolReadValue *tool,
     for (i = 0; i < n; i++) {
         m[0] += 1.0;
         m[1] += tool->xpos[i];
-        m[2] += tool->ypos[i];
-        m[3] += tool->xpos[i] * tool->xpos[i];
+        m[2] += tool->xpos[i] * tool->xpos[i];
+        m[3] += tool->ypos[i];
         m[4] += tool->xpos[i] * tool->ypos[i];
         m[5] += tool->ypos[i] * tool->ypos[i];
         z[0] += tool->values[i];
@@ -419,7 +504,9 @@ gwy_tool_read_value_calculate(GwyToolReadValue *tool,
     tool->avg = z[0]/n;
     gwy_math_choleski_decompose(3, m);
     gwy_math_choleski_solve(3, m, z);
-    tool->bx = z[1]/gwy_data_field_get_xmeasure(dfield);
+    /* The signs may seem odd.  We have to invert y due to coordinate system
+     * and then invert both for downward slopes.  As a result x is inverted. */
+    tool->bx = -z[1]/gwy_data_field_get_xmeasure(dfield);
     tool->by = z[2]/gwy_data_field_get_ymeasure(dfield);
 }
 
