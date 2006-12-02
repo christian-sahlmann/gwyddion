@@ -96,11 +96,11 @@ struct _GwyToolStats {
 
     GwySIValueFormat *area_format;
 
+    gboolean same_units;
+
     /* potential class data */
     GwySIValueFormat *angle_format;
     GType layer_type_rect;
-
-    gboolean same_units;
 };
 
 struct _GwyToolStatsClass {
@@ -375,9 +375,10 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
     GwyToolStats *tool;
 
     tool = GWY_TOOL_STATS(gwytool);
-    if (tool->area_format)
+    if (tool->area_format) {
         gwy_si_unit_value_format_free(tool->area_format);
-    tool->area_format = NULL;
+        tool->area_format = NULL;
+    }
 
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->data_switched(gwytool,
                                                                data_view);
