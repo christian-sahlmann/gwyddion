@@ -25,42 +25,49 @@
 
 G_BEGIN_DECLS
 
-gint gwy_data_field_elliptic_area_fill     (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gint width,
-                                            gint height,
-                                            gdouble value);
-gint gwy_data_field_elliptic_area_extract  (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gint width,
-                                            gint height,
-                                            gdouble *data);
-void gwy_data_field_elliptic_area_unextract(GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gint width,
-                                            gint height,
-                                            const gdouble *data);
-gint gwy_data_field_get_elliptic_area_size (gint width,
-                                            gint height);
-gint gwy_data_field_circular_area_fill     (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gdouble radius,
-                                            gdouble value);
-gint gwy_data_field_circular_area_extract  (GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gdouble radius,
-                                            gdouble *data);
-void gwy_data_field_circular_area_unextract(GwyDataField *data_field,
-                                            gint col,
-                                            gint row,
-                                            gdouble radius,
-                                            const gdouble *data);
-gint gwy_data_field_get_circular_area_size (gdouble radius);
+gint gwy_data_field_elliptic_area_fill            (GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gint width,
+                                                   gint height,
+                                                   gdouble value);
+gint gwy_data_field_elliptic_area_extract         (GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gint width,
+                                                   gint height,
+                                                   gdouble *data);
+void gwy_data_field_elliptic_area_unextract       (GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gint width,
+                                                   gint height,
+                                                   const gdouble *data);
+gint gwy_data_field_get_elliptic_area_size        (gint width,
+                                                   gint height);
+gint gwy_data_field_circular_area_fill            (GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gdouble radius,
+                                                   gdouble value);
+gint gwy_data_field_circular_area_extract         (GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gdouble radius,
+                                                   gdouble *data);
+gint gwy_data_field_circular_area_extract_with_pos(GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gdouble radius,
+                                                   gdouble *data,
+                                                   gint *xpos,
+                                                   gint *ypos);
+void gwy_data_field_circular_area_unextract       (GwyDataField *data_field,
+                                                   gint col,
+                                                   gint row,
+                                                   gdouble radius,
+                                                   const gdouble *data);
+gint gwy_data_field_get_circular_area_size        (gdouble radius);
 
 G_END_DECLS
 

@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -255,8 +254,8 @@ gwy_data_field_get_elliptic_area_size(gint width,
 /**
  * gwy_data_field_circular_area_fill:
  * @data_field: A data field.
- * @col: Row index of circular area center.
- * @row: Column index of circular area center.
+ * @col: Row index of circular area centre.
+ * @row: Column index of circular area centre.
  * @radius: Circular area radius (in pixels).  Any value is allowed, although
  *          to get areas that do not deviate from true circles after
  *          pixelization too much, half-integer values are recommended,
@@ -312,16 +311,12 @@ gwy_data_field_circular_area_fill(GwyDataField *data_field,
 /**
  * gwy_data_field_circular_area_extract:
  * @data_field: A data field.
- * @col: Row index of circular area center.
- * @row: Column index of circular area center.
- * @radius: Circular area radius (in pixels).  Any value is allowed, although
- *          to get areas that do not deviate from true circles after
- *          pixelization too much, half-integer values are recommended,
- *          integer radii are NOT recommended.
- * @data: Location to store the extracted values to.  Its size has to be
- *        sufficient to contain all the extracted values.  As a conservative
- *        estimate (2*floor(@radius)+1)^2 can be used, or the size can be
- *        calculated with gwy_data_field_get_circular_area_size().
+ * @col: Row index of circular area centre.
+ * @row: Column index of circular area centre.
+ * @radius: Circular area radius (in pixels).  See
+ *          gwy_data_field_circular_area_extract_with_pos() for caveats.
+ * @data: Location to store the extracted values to.  See
+ *        gwy_data_field_circular_area_extract_with_pos().
  *
  * Extracts values from a circular region of a data field.
  *
@@ -374,10 +369,90 @@ gwy_data_field_circular_area_extract(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_circular_area_extract_with_pos:
+ * @data_field: A data field.
+ * @col: Row index of circular area centre.
+ * @row: Column index of circular area centre.
+ * @radius: Circular area radius (in pixels).  Any value is allowed, although
+ *          to get areas that do not deviate from true circles after
+ *          pixelization too much, half-integer values are recommended,
+ *          integer radii are NOT recommended.
+ * @data: Location to store the extracted values to.  Its size has to be
+ *        sufficient to contain all the extracted values.  As a conservative
+ *        estimate (2*floor(@radius)+1)^2 can be used, or the size can be
+ *        calculated with gwy_data_field_get_circular_area_size().
+ * @xpos: Location to store relative column indices of values in @data to,
+ *        the size requirements are the same as for @data.
+ * @ypos: Location to store relative tow indices of values in @data to,
+ *        the size requirements are the same as for @data.
+ *
+ * Extracts values with positions from a circular region of a data field.
+ *
+ * The row and column indices stored to @xpos and @ypos are relative to the
+ * area centre, i.e. to (@col, @row).  The central pixel will therefore have
+ * 0 at the corresponding position in both @xpos and @ypos.
+ *
+ * Returns: The number of extracted values.  It can be zero when the inside of
+ *          the circle does not intersect with the data field.
+ *
+ * Since: 2.2
+ **/
+gint
+gwy_data_field_circular_area_extract_with_pos(GwyDataField *data_field,
+                                              gint col, gint row,
+                                              gdouble radius,
+                                              gdouble *data,
+                                              gint *xpos,
+                                              gint *ypos)
+{
+    gint i, j, r, r2, count, xres;
+    gint ifrom, jfrom, ito, jto;
+    const gdouble *d;
+    gdouble s;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
+    g_return_val_if_fail(data, 0);
+
+    if (radius < 0.0)
+        return 0;
+
+    r2 = floor(radius*radius + 1e-12);
+    r = floor(radius + 1e-12);
+    xres = data_field->xres;
+    d = data_field->data;
+    count = 0;
+
+    /* Clip */
+    ifrom = MAX(row - r, 0) - row;
+    ito = MIN(row + r, data_field->yres-1) - row;
+
+    for (i = ifrom; i <= ito; i++) {
+        s = sqrt(r2 - i*i);
+        jfrom = ceil(-s);
+        jto = floor(s);
+        if (jfrom + col < 0)
+            jfrom = -col;
+        if (jto + col >= xres)
+            jto = xres-1 - col;
+        if (jto >= jfrom) {
+            memcpy(data + count, d + (row + i)*xres + col + jfrom,
+                   (jto - jfrom + 1)*sizeof(gdouble));
+            for (j = jfrom; j <= jto; j++) {
+                xpos[count] = j - col;
+                ypos[count] = i - row;
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
+/**
  * gwy_data_field_circular_area_unextract:
  * @data_field: A data field.
- * @col: Row index of circular area center.
- * @row: Column index of circular area center.
+ * @col: Row index of circular area centre.
+ * @row: Column index of circular area centre.
  * @radius: Circular area radius (in pixels).
  * @data: The values to put back.  It must be the same array as in previous
  *        gwy_data_field_circular_area_unextract().
