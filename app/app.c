@@ -730,19 +730,22 @@ gwy_app_switch_tool(const gchar *toolname)
 }
 
 static void
-gwy_app_save_3d_export(GtkWidget *button, Gwy3DWindow *gwy3dwindow)
+gwy_app_save_3d_export(GtkWidget *dialog,
+                       gint response,
+                       Gwy3DWindow *gwy3dwindow)
 {
-    const gchar *filename;
     gchar *filename_sys, *filename_utf8;
     GdkPixbuf *pixbuf;
-    GtkWidget *dialog, *gwy3dview;
+    GtkWidget *gwy3dview;
     GError *err = NULL;
 
-    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
+    if (response != GTK_RESPONSE_OK) {
+        gtk_widget_destroy(dialog);
+        return;
+    }
 
-    dialog = gtk_widget_get_toplevel(button);
-    filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
-    filename_sys = g_strdup(filename);
+    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
+    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
     gtk_widget_destroy(dialog);
 
     pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview));
@@ -752,9 +755,10 @@ gwy_app_save_3d_export(GtkWidget *button, Gwy3DWindow *gwy3dwindow)
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_ERROR,
                                         GTK_BUTTONS_OK,
-                                        "Cannot save report to %s.\n%s\n",
-                                        filename_utf8,
-                                        err->message);
+                                        _("Saving of 3D view to `%s' failed"),
+                                        filename_utf8);
+        gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+                                                 "%s", err->message);
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         g_clear_error(&err);
@@ -794,16 +798,20 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
     if (need_free_utf)
         g_free((gpointer)filename_utf8);
 
-    dialog = gtk_file_selection_new(_("Export 3D View"));
-    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog), filename_sys);
+    dialog = gtk_file_chooser_dialog_new(_("Export 3D View"),
+                                         GTK_WINDOW(gwy3dwindow),
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
+    gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), filename_sys);
     g_free(filename_sys);
 
-    g_signal_connect(GTK_FILE_SELECTION(dialog)->ok_button, "clicked",
+    g_signal_connect(dialog, "response",
                      G_CALLBACK(gwy_app_save_3d_export), gwy3dwindow);
-    g_signal_connect_swapped(GTK_FILE_SELECTION(dialog)->cancel_button,
-                             "clicked",
-                             G_CALLBACK(gtk_widget_destroy), dialog);
-    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(gwy3dwindow));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_widget_show_all(dialog);
 }
