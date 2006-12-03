@@ -37,6 +37,7 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	hdf4file.la \
 	hitachi-afm.la \
+	jeol.la \
 	$(jpkscan_module) \
 	metropro.la \
 	mifile.la \
@@ -137,6 +138,9 @@ hdf4file_la_LIBADD = $(module_libadd)
 
 hitachi_afm_la_SOURCES = hitachi-afm.c
 hitachi_afm_la_LIBADD = $(module_libadd)
+
+jeol_la_SOURCES = jeol.c
+jeol_la_LIBADD = $(module_libadd)
 
 if HAVE_TIFF
 jpkscan_la_SOURCES = jpk.h jpkscan.c
