@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  Loosely based on jpkscan.c:
@@ -187,8 +187,8 @@ psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
 static GwyContainer*
 psia_load(const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode,
-             GError **error)
+          G_GNUC_UNUSED GwyRunType mode,
+          GError **error)
 {
     TIFFErrorHandler old_error, old_warning;
     TIFF *tiff;
