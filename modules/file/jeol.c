@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -35,10 +35,14 @@
 #define MAGIC      "II\x2a\x00\xd4\x17\x00\x00\x00\x04"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
+#define Nanometer (1e-9)
+#define Nanoampere (1e-9)
+
 enum {
+    TIFF_HEADER_SIZE = 0x000a,
     JEOL_DICT_START  = 0x17d4,
     JEOL_DICT_SIZE   = 0x0400,
-    JEOL_MIN_SIZE    = JEOL_DICT_START + JEOL_DICT_SIZE + 2
+    JEOL_DATA_START  = JEOL_DICT_START + JEOL_DICT_SIZE
 };
 
 typedef enum {
@@ -79,42 +83,42 @@ typedef enum {
 } JEOLDisplayModeType;
 
 typedef enum {
-    JEOL_MODE_LINE_1024 = 1,
-    JEOL_MODE_TOPO_MIRROR = 2,
-    JEOL_MODE_TOPO_512 = 3,
-    JEOL_MODE_TOPO_256 = 4,
-    JEOL_MODE_TOPO_128 = 5,
-    JEOL_MODE_LINE_512 = 6,
-    JEOL_MODE_LINE_256 = 7,
-    JEOL_MODE_LINE_128 = 8,
-    JEOL_MODE_TOPO_X2 = 9,
-    JEOL_MODE_TOPO_X4 = 10,
-    JEOL_MODE_CITS = 11,
-    JEOL_MODE_I_V = 12,
-    JEOL_MODE_S_V = 13,
-    JEOL_MODE_I_S = 14,
-    JEOL_MODE_F_C = 15,
-    JEOL_MODE_FFC = 16,
-    JEOL_MODE_MONTAGE_128 = 17,
-    JEOL_MODE_MONTAGE_256 = 18,
-    JEOL_MODE_LSTS = 19,
-    JEOL_MODE_TOPO_SPS = 20,
-    JEOL_MODE_VCO = 21,
-    JEOL_MODE_TOPO_IMAGE = 22,
+    JEOL_MODE_LINE_1024    = 1,
+    JEOL_MODE_TOPO_MIRROR  = 2,
+    JEOL_MODE_TOPO_512     = 3,
+    JEOL_MODE_TOPO_256     = 4,
+    JEOL_MODE_TOPO_128     = 5,
+    JEOL_MODE_LINE_512     = 6,
+    JEOL_MODE_LINE_256     = 7,
+    JEOL_MODE_LINE_128     = 8,
+    JEOL_MODE_TOPO_X2      = 9,
+    JEOL_MODE_TOPO_X4      = 10,
+    JEOL_MODE_CITS         = 11,
+    JEOL_MODE_I_V          = 12,
+    JEOL_MODE_S_V          = 13,
+    JEOL_MODE_I_S          = 14,
+    JEOL_MODE_F_C          = 15,
+    JEOL_MODE_FFC          = 16,
+    JEOL_MODE_MONTAGE_128  = 17,
+    JEOL_MODE_MONTAGE_256  = 18,
+    JEOL_MODE_LSTS         = 19,
+    JEOL_MODE_TOPO_SPS     = 20,
+    JEOL_MODE_VCO          = 21,
+    JEOL_MODE_TOPO_IMAGE   = 22,
     JEOL_MODE_TOPO3_VE_AFM = 23,
-    JEOL_MODE_TOPO4_MFM = 24,
+    JEOL_MODE_TOPO4_MFM    = 24,
     JEOL_MODE_TOPO3_LM_FFM = 25,
-    JEOL_MODE_TOPO2_FKM = 26,
-    JEOL_MODE_TOPO2_FFM = 27,
-    JEOL_MODE_TOPO_1204 = 28,
-    JEOL_MODE_TOPO_2X512 = 29,
-    JEOL_MODE_TOPO2_SCFM = 30,
-    JEOL_MODE_TOPO2_MFM_1 = 31,
-    JEOL_MODE_TOPO64 = 32,
-    JEOL_MODE_PHASE_SHIFT = 40,
+    JEOL_MODE_TOPO2_FKM    = 26,
+    JEOL_MODE_TOPO2_FFM    = 27,
+    JEOL_MODE_TOPO_1204    = 28,
+    JEOL_MODE_TOPO_2X512   = 29,
+    JEOL_MODE_TOPO2_SCFM   = 30,
+    JEOL_MODE_TOPO2_MFM_1  = 31,
+    JEOL_MODE_TOPO64       = 32,
+    JEOL_MODE_PHASE_SHIFT  = 40,
     JEOL_MODE_MANIPULATION = 40,
-    JEOL_MODE_CS3D_SCAN = 50,
-    JEOL_MODE_F_V = 60,
+    JEOL_MODE_CS3D_SCAN    = 50,
+    JEOL_MODE_F_V          = 60,
     JEOL_MODE_SOFTWARE_GEN = 70
 } JEOLModeType;
 
@@ -185,7 +189,6 @@ typedef struct {
     JEOLDate save_date;
     JEOLTime measurement_time;
     JEOLTime save_time;
-    guchar lookup_table[0x00];
     guint32 fft_offset;
     guint32 transform_off;
     /* JEOLExtraType extra; union of JEOLSelectionRange and JEOLCITSParam */
@@ -234,8 +237,33 @@ static gint          jeol_detect           (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* jeol_load             (const gchar *filename,
                                             GwyRunType mode,
                                             GError **error);
-static void          jeol_free_image_header(JEOLImageHeader *header);
-static GwyContainer* jeol_get_metadata     (JEOLImageHeader *header);
+static void          jeol_read_image_header(const guchar *p,
+                                            JEOLImageHeader *header);
+static GwyDataField* jeol_read_data_field   (const guchar *buffer,
+                                             const JEOLImageHeader *header);
+
+static const GwyEnum data_sources[] = {
+    { "Topography",        JEOL_DATA_SOURCE_Z,                 },
+    { "Log current",       JEOL_DATA_SOURCE_LOG_I,             },
+    { "Current",           JEOL_DATA_SOURCE_LIN_I,             },
+    { "Aux1",              JEOL_DATA_SOURCE_AUX1,              },
+    { "Aux2",              JEOL_DATA_SOURCE_AUX2,              },
+    { "Aux3",              JEOL_DATA_SOURCE_AUX3,              },
+    { "Ext. voltage",      JEOL_DATA_SOURCE_EXT_VOLTAGE,       },
+    { "Force",             JEOL_DATA_SOURCE_FORCE,             },
+    { "AFM",               JEOL_DATA_SOURCE_AFM,               },
+    { "Friction",          JEOL_DATA_SOURCE_FRICTION,          },
+    { "Phase",             JEOL_DATA_SOURCE_PHASE,             },
+    { "MFM",               JEOL_DATA_SOURCE_MFM,               },
+    { "Elasticity",        JEOL_DATA_SOURCE_ELASTICITY,        },
+    { "Viscosity",         JEOL_DATA_SOURCE_VISCOSITY,         },
+    { "FFM friction",      JEOL_DATA_SOURCE_FFM_FRICTION,      },
+    { "Surface V",         JEOL_DATA_SOURCE_SURFACE_V,         },
+    { "Prescan",           JEOL_DATA_SOURCE_PRESCAN,           },
+    { "RMS",               JEOL_DATA_SOURCE_RMS,               },
+    { "FMD",               JEOL_DATA_SOURCE_FMD,               },
+    { "Capacitance force", JEOL_DATA_SOURCE_CAPACITANCE_FORCE, },
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -270,7 +298,7 @@ jeol_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
     if (fileinfo->buffer_len <= MAGIC_SIZE
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0
-        || fileinfo->file_size < JEOL_MIN_SIZE)
+        || fileinfo->file_size < JEOL_DATA_START)
         return 0;
 
     /* TODO: check it better, some TIFFs can have the same dictionary start
@@ -284,240 +312,207 @@ jeol_load(const gchar *filename,
           GError **error)
 {
     JEOLImageHeader image_header;
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *container = NULL;
     guchar *buffer = NULL;
-    const guchar *p;
-    gsize size = 0;
+    gsize expected_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    const gchar *title;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    p = buffer;
-    if (size < JEOL_MIN_SIZE) {
+    if (size < JEOL_DATA_START) {
         err_TOO_SHORT(error);
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
+    }
+    if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
+        err_FILE_TYPE(error, "JEOL");
+        goto fail;
     }
 
-    err_NO_DATA(error);
+    jeol_read_image_header(buffer, &image_header);
+    /* Elementrary sanity */
+    if (image_header.bpp != 16) {
+        err_BPP(error, image_header.bpp);
+        goto fail;
+    }
+    expected_size = image_header.bpp/8 * image_header.xres*image_header.yres;
+    if (size < JEOL_DATA_START + expected_size) {
+        err_SIZE_MISMATCH(error, expected_size, size);
+        goto fail;
+    }
 
+    /* FIXME: the world is cruel, this is what we know we can read, ditch the
+     * rest. */
+    if (image_header.image_type != JEOL_IMAGE
+        || image_header.data_source != JEOL_DATA_SOURCE_Z
+        || image_header.compressed) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    container = gwy_container_new();
+
+    dfield = jeol_read_data_field(buffer + JEOL_DATA_START, &image_header);
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    g_object_unref(dfield);
+
+    title = gwy_enum_to_string(image_header.data_source,
+                               data_sources, G_N_ELEMENTS(data_sources));
+    if (title && *title)
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup(title));
+
+fail:
+    gwy_file_abandon_contents(buffer, size, NULL);
     return container;
 }
 
-#if 0
-static GwyContainer*
-jeol_load_tiff(TIFF *tiff, GError **error)
+static void
+jeol_read_image_header(const guchar *p,
+                       JEOLImageHeader *header)
 {
-    JEOLImageHeader header;
-    GwyContainer *container = NULL;
-    GwyContainer *meta = NULL;
+    const guchar *q = p;
+
+    p += TIFF_HEADER_SIZE;
+
+    header->winspm_version = get_WORD_LE(&p);
+    p += 80;  /* there isn't anything interesting in internal_filename_old */
+    header->xres = get_WORD_LE(&p);
+    header->yres = get_WORD_LE(&p);
+    header->xreal = get_FLOAT_LE(&p);
+    header->yreal = get_FLOAT_LE(&p);
+    gwy_debug("res: (%d,%d), real: (%g,%g)",
+              header->xres, header->yres, header->xreal, header->yreal);
+    header->z0 = get_FLOAT_LE(&p);
+    header->z255 = get_FLOAT_LE(&p);
+    header->adc_min = get_WORD_LE(&p);
+    header->adc_max = get_WORD_LE(&p);
+    header->initial_scan_scale = get_FLOAT_LE(&p);
+    get_CHARARRAY0(header->internal_filename, &p);
+    get_CHARARRAY0(header->info[0], &p);
+    get_CHARARRAY0(header->info[1], &p);
+    get_CHARARRAY0(header->info[2], &p);
+    get_CHARARRAY0(header->info[3], &p);
+    get_CHARARRAY0(header->info[4], &p);
+    get_CHARARRAY(header->history, &p);
+    header->has_current_info = get_WORD_LE(&p);
+    header->bias = get_FLOAT_LE(&p);
+    header->reference_value = get_FLOAT_LE(&p);
+    p += 2;  /* reserved */
+    header->measurement_date.day = *(p++);
+    header->measurement_date.month = *(p++);
+    header->measurement_date.year_1980 = get_WORD_LE(&p);
+    header->measurement_date.weekday_sun = *(p++);
+    header->save_date.day = *(p++);
+    header->save_date.month = *(p++);
+    header->save_date.year_1980 = get_WORD_LE(&p);
+    header->save_date.weekday_sun = *(p++);
+    header->measurement_time.hour = *(p++);
+    header->measurement_time.minute = *(p++);
+    header->measurement_time.second= *(p++);
+    header->measurement_time.second_100 = *(p++);
+    header->save_time.hour = *(p++);
+    header->save_time.minute = *(p++);
+    header->save_time.second= *(p++);
+    header->save_time.second_100 = *(p++);
+    p += 0x100;  /* lookup table */
+    header->fft_offset = get_DWORD_LE(&p);
+    header->transform_off = get_WORD_LE(&p);
+    p += 8;  /* extra */
+    header->compressed = get_BBOOLEAN(&p);
+    header->bpp = *(p++);
+    gwy_debug("bpp: %d", header->bpp);
+    header->cits_offset = get_DWORD_LE(&p);
+    header->backscan_tip_voltage = get_FLOAT_LE(&p);
+    header->sts_point_x = get_WORD_LE(&p);
+    header->sts_point_y = get_WORD_LE(&p);
+    p += 20;  /* reserved */
+    header->tip_speed_x = get_FLOAT_LE(&p);
+    header->tip_speed_y = get_FLOAT_LE(&p);
+    p += 42;  /* piezo_sensitivity */
+    header->spm_param.clock = get_FLOAT_LE(&p);
+    header->spm_param.rotation = get_FLOAT_LE(&p);
+    header->spm_param.feedback_filter = get_FLOAT_LE(&p);
+    header->spm_param.present_filter = get_FLOAT_LE(&p);
+    header->spm_param.head_amp_gain = get_FLOAT_LE(&p);
+    header->spm_param.loop_gain = get_WORD_LE(&p);
+    header->spm_param.x_off = get_FLOAT_LE(&p);
+    header->spm_param.y_off = get_FLOAT_LE(&p);
+    header->spm_param.z_gain = get_FLOAT_LE(&p);
+    header->spm_param.z_off = get_FLOAT_LE(&p);
+    header->spm_param.o_gain = get_FLOAT_LE(&p);
+    header->spm_param.o_off = get_FLOAT_LE(&p);
+    header->spm_param.back_scan_bias = get_FLOAT_LE(&p);
+    header->spm_param.mode = get_DWORD_LE(&p);
+    p += 2;  /* reserved */
+    p += 4;  /* reserved, XXX: size of JEOLSPMParam1 does not match the space
+                alloted for it in the header, it's 4 bytes shorter and this
+                is the compensation of the 4 bytes */
+    header->montage_offset = get_DWORD_LE(&p);
+    get_CHARARRAY0(header->image_location, &p);
+    p += 118;  /* spm_misc_param */
+    p += 0x300;  /* RGB lookup table */
+    header->sub_revision_no = get_DWORD_LE(&p);
+    header->image_type = get_DWORD_LE(&p);
+    header->data_source = get_DWORD_LE(&p);
+    header->display_mode = get_DWORD_LE(&p);
+    gwy_debug("image_type: %d, data_source %d",
+              header->image_type, header->data_source);
+    p += 2*8;  /* measurement_start_time, measurement_end_time */
+    p += 254;  /* profile_roughness */
+    p += 446;  /* settings_3d */
+    header->lut_brightness = get_FLOAT_LE(&p);
+    header->lut_contrast = get_FLOAT_LE(&p);
+    header->software_version = get_WORD_LE(&p);
+    header->software_subversion = get_DWORD_LE(&p);
+    p += 20;  /* extracted_region */
+    header->lut_gamma = get_FLOAT_LE(&p);
+    header->n_of_sps = get_WORD_LE(&p);
+    header->sps_offset = get_DWORD_LE(&p);
+    header->line_trace_end_x = get_WORD_LE(&p);
+    header->line_trace_end_y = get_WORD_LE(&p);
+    gwy_debug("0x%x", (guint)(p - q));
+    header->forward = get_WORD_LE(&p);
+    gwy_debug("forward: %d", header->forward);
+    header->lift_signal = get_WORD_LE(&p);
+    /* stuff... */
+}
+
+static GwyDataField*
+jeol_read_data_field(const guchar *buffer,
+                     const JEOLImageHeader *header)
+{
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    guint magic, version, i, j;
-    const guchar *p;
-    const guint16 *data;
-    const gchar *comment = NULL;
-    gint count, data_len, power10;
+    const guint16 *d16;
+    gdouble *data;
     gdouble q, z0;
-    gdouble *d;
+    gint i;
 
-    if (!tiff_get_custom_uint(tiff, JEOL_TIFFTAG_MagicNumber, &magic)
-        || magic != JEOL_MAGIC_NUMBER
-        || !tiff_get_custom_uint(tiff, JEOL_TIFFTAG_Version, &version)
-        || version < 0x01000001) {
-        err_FILE_TYPE(error, _("JEOL"));
-        return NULL;
-    }
-
-    if (!TIFFGetField(tiff, JEOL_TIFFTAG_Header, &count, &p)) {
-        err_FILE_TYPE(error, _("JEOL"));
-        return NULL;
-    }
-    gwy_debug("[Header] count: %d", count);
-
-    if (count < 356) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Header is too short (only %d bytes)."),
-                    count);
-        return NULL;
-    }
-
-    memset(&header, 0, sizeof(JEOLImageHeader));
-    header.image_type = get_DWORD_LE(&p);
-    gwy_debug("image_type: %d", header.image_type);
-    if (header.image_type != JEOL_2D_MAPPED) {
-        err_NO_DATA(error);
-        return NULL;
-    }
-    header.source_name = jeol_wchar_to_utf8(&p, 32);
-    header.image_mode = jeol_wchar_to_utf8(&p, 8);
-    gwy_debug("source_name: <%s>, image_mode: <%s>",
-              header.source_name, header.image_mode);
-    header.lpf_strength = get_DOUBLE_LE(&p);
-    header.auto_flatten = get_DWORD_LE(&p);
-    header.ac_track = get_DWORD_LE(&p);
-    header.xres = get_DWORD_LE(&p);
-    header.yres = get_DWORD_LE(&p);
-    gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
-    header.angle = get_DOUBLE_LE(&p);
-    header.sine_scan = get_DWORD_LE(&p);
-    header.overscan_rate = get_DOUBLE_LE(&p);
-    header.forward = get_DWORD_LE(&p);
-    header.scan_up = get_DWORD_LE(&p);
-    header.swap_xy = get_DWORD_LE(&p);
-    header.xreal = get_DOUBLE_LE(&p) * 1e-6;
-    header.yreal = get_DOUBLE_LE(&p) * 1e-6;
-    gwy_debug("xreal: %g, yreal: %g", header.xreal, header.yreal);
-    header.xoff = get_DOUBLE_LE(&p) * 1e-6;
-    header.yoff = get_DOUBLE_LE(&p) * 1e-6;
-    gwy_debug("xoff: %g, yoff: %g", header.xoff, header.yoff);
-    header.scan_rate = get_DOUBLE_LE(&p);
-    header.set_point = get_DOUBLE_LE(&p);
-    header.set_point_unit = jeol_wchar_to_utf8(&p, 8);
-    if (!header.set_point_unit)
-        header.set_point_unit = g_strdup("V");
-    header.tip_bias = get_DOUBLE_LE(&p);
-    header.sample_bias = get_DOUBLE_LE(&p);
-    header.data_gain = get_DOUBLE_LE(&p);
-    header.z_scale = get_DOUBLE_LE(&p);
-    header.z_offset = get_DOUBLE_LE(&p);
-    gwy_debug("data_gain: %g, z_scale: %g", header.data_gain, header.z_scale);
-    header.z_unit = jeol_wchar_to_utf8(&p, 8);
-    gwy_debug("z_unit: <%s>", header.z_unit);
-    header.data_min = get_DWORD_LE(&p);
-    header.data_max = get_DWORD_LE(&p);
-    header.data_avg = get_DWORD_LE(&p);
-    header.compression = get_DWORD_LE(&p);
-
-    tiff_get_custom_string(tiff, JEOL_TIFFTAG_Comments, &comment);
-    if (comment) {
-        gwy_debug("comment: <%s>", comment);
-    }
-
-    if (!TIFFGetField(tiff, JEOL_TIFFTAG_Data, &data_len, &data)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Data tag is missing."));
-        jeol_free_image_header(&header);
-        return NULL;
-    }
-    /* FIXME: This is always a totally bogus value, although tiffdump(1) can
-     * print the right size. Why? */
-    gwy_debug("data_len: %d", data_len);
-
-    dfield = gwy_data_field_new(header.xres, header.yres,
-                                header.xreal, header.yreal,
+    dfield = gwy_data_field_new(header->xres, header->yres,
+                                Nanometer*header->xreal,
+                                Nanometer*header->yreal,
                                 FALSE);
+    z0 = Nanometer*header->z0;
+    q = (header->z255 - header->z0)/65535.0*Nanometer;  /* FIXME */
+
+    data = gwy_data_field_get_data(dfield);
+    d16 = (const guint16*)buffer;
+    for (i = 0; i < header->xres*header->yres; i++)
+        data[i] = q*GUINT16_FROM_LE(d16[i]) + z0;
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
 
-    if (header.z_unit)
-        siunit = gwy_si_unit_new_parse(header.z_unit, &power10);
-    else {
-        g_warning("Z units are missing");
-        siunit = gwy_si_unit_new_parse("um", &power10);
-    }
+    siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
-    if (header.z_scale == 0.0)
-        header.z_scale = 1.0;
-    z0 = header.z_offset;
-    q = pow10(power10)*header.data_gain;
-    for (i = 0; i < header.yres; i++) {
-        d = gwy_data_field_get_data(dfield) + (header.yres-1 - i)*header.xres;
-        for (j = 0; j < header.xres; j++)
-            d[j] = q*(GINT16_FROM_LE(data[i*header.xres + j])*header.z_scale
-                      + z0);
-    }
-
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    g_object_unref(dfield);
-
-    if (header.source_name && *header.source_name)
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup(header.source_name));
-
-    meta = jeol_get_metadata(&header);
-    if (comment && *comment) {
-        /* FIXME: Charset conversion. But from what? */
-        gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
-        comment = NULL;
-    }
-    gwy_container_set_string_by_name(meta, "Version",
-                                     g_strdup_printf("%08x", version));
-
-    gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-
-    jeol_free_image_header(&header);
-
-    return container;
+    return dfield;
 }
-
-static void
-jeol_free_image_header(JEOLImageHeader *header)
-{
-    g_free(header->source_name);
-    g_free(header->image_mode);
-    g_free(header->set_point_unit);
-    g_free(header->z_unit);
-}
-
-static GwyContainer*
-jeol_get_metadata(JEOLImageHeader *header)
-{
-    GwyContainer *meta;
-
-    meta = gwy_container_new();
-
-    if (header->source_name && *header->source_name) {
-        gwy_container_set_string_by_name(meta, "Source name",
-                                         header->source_name);
-        header->source_name = NULL;
-    }
-    if (header->image_mode && *header->image_mode) {
-        gwy_container_set_string_by_name(meta, "Image mode",
-                                         header->image_mode);
-        header->image_mode = NULL;
-    }
-
-    gwy_container_set_string_by_name(meta, "Fast direction",
-                                     g_strdup(header->swap_xy ? "Y" : "X"));
-    gwy_container_set_string_by_name(meta, "Angle",
-                                     g_strdup_printf("%g°", header->angle));
-    gwy_container_set_string_by_name(meta, "Scanning direction",
-                                     g_strdup(header->scan_up
-                                              ? "Bottom to top"
-                                              : "Top to bottom"));
-    gwy_container_set_string_by_name(meta, "Line direction",
-                                     g_strdup(header->forward
-                                              ? "Forward"
-                                              : "Backward"));
-    gwy_container_set_string_by_name(meta, "Sine scan",
-                                     g_strdup(header->sine_scan
-                                              ? "Yes"
-                                              : "No"));
-    gwy_container_set_string_by_name(meta, "Scan rate",
-                                     g_strdup_printf("%g s<sup>-1</sup>",
-                                                     header->scan_rate));
-    gwy_container_set_string_by_name(meta, "Set point",
-                                     g_strdup_printf("%g %s",
-                                                     header->set_point,
-                                                     header->set_point_unit));
-    gwy_container_set_string_by_name(meta, "Tip bias",
-                                     g_strdup_printf("%g V", header->tip_bias));
-    gwy_container_set_string_by_name(meta, "Sample bias",
-                                     g_strdup_printf("%g V",
-                                                     header->sample_bias));
-
-    return meta;
-}
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
