@@ -395,6 +395,7 @@ jeol_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     const gchar *title;
+    gchar *s;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -438,11 +439,20 @@ jeol_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    title = gwy_enum_to_string(image_header.data_source,
-                               data_sources, G_N_ELEMENTS(data_sources));
-    if (title && *title)
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup(title));
+    /* Title */
+    s = g_convert(image_header.internal_filename, -1,
+                  "iso-8859-1", "utf-8", NULL, NULL, NULL);
+    if (s)
+        g_strstrip(s);
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/0/data/title", s);
+    else {
+        title = gwy_enum_to_string(image_header.data_source,
+                                   data_sources, G_N_ELEMENTS(data_sources));
+        if (title && *title)
+            gwy_container_set_string_by_name(container, "/0/data/title",
+                                             g_strdup(title));
+    }
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
