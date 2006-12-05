@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -122,6 +122,50 @@ typedef enum {
     JEOL_MODE_SOFTWARE_GEN = 70
 } JEOLModeType;
 
+typedef enum {
+    JEOL_AFM_MODE_CONTACT = 1 << 0,
+    JEOL_AFM_MODE_SLOPE   = 1 << 1,
+    JEOL_AFM_MODE_FM      = 1 << 2,
+    JEOL_AFM_MODE_FMS     = 1 << 3,
+    JEOL_AFM_MODE_PHASE   = 1 << 4
+} JEOLAFMMode;
+
+typedef enum {
+    JEOL_SPM_MODE_NORMAL   = 1 << 0,
+    JEOL_SPM_MODE_VE_AFM   = 1 << 1,
+    JEOL_SPM_MODE_LM_AFM   = 1 << 2,
+    JEOL_SPM_MODE_KFM      = 1 << 3,
+    JEOL_SPM_MODE_MFM      = 1 << 4,
+    JEOL_SPM_MODE_MFM_LINE = 1 << 5,
+    JEOL_SPM_MODE_P_LIFT   = 1 << 6,
+    JEOL_SPM_MODE_L_LIFT   = 1 << 7,
+    JEOL_SPM_MODE_SCFM     = 1 << 8
+} JEOLSPMMode;
+
+typedef enum {
+    JEOL_MEASUREMENT_SIGNAL_TOPOGRAPHY     = 1 << 0,
+    JEOL_MEASUREMENT_SIGNAL_BIAS           = 1 << 1,
+    JEOL_MEASUREMENT_SIGNAL_LINEAR_CURRENT = 1 << 2,
+    JEOL_MEASUREMENT_SIGNAL_LOG_CURRENT    = 1 << 3,
+    JEOL_MEASUREMENT_SIGNAL_FORCE          = 1 << 4,
+    JEOL_MEASUREMENT_SIGNAL_FRICTION_FORCE = 1 << 5,
+    JEOL_MEASUREMENT_SIGNAL_SUM            = 1 << 6,
+    JEOL_MEASUREMENT_SIGNAL_RMS            = 1 << 7,
+    JEOL_MEASUREMENT_SIGNAL_FMD            = 1 << 8,
+    JEOL_MEASUREMENT_SIGNAL_PHASE          = 1 << 9,
+    JEOL_MEASUREMENT_SIGNAL_AUX1           = 1 << 10,
+    JEOL_MEASUREMENT_SIGNAL_AUX2           = 1 << 11,
+    JEOL_MEASUREMENT_SIGNAL_AFM_CONTACT    = 1 << 12,
+    JEOL_MEASUREMENT_SIGNAL_MOTOR_X_20     = 1 << 13,
+    JEOL_MEASUREMENT_SIGNAL_MOTOR_Y_20     = 1 << 14,
+    JEOL_MEASUREMENT_SIGNAL_MOTOR_Z_20     = 1 << 15,
+    JEOL_MEASUREMENT_SIGNAL_AMB_APB        = 1 << 16,
+    JEOL_MEASUREMENT_SIGNAL_AFM            = 1 << 17,
+    JEOL_MEASUREMENT_SIGNAL_PRESCAN        = 1 << 18,
+    JEOL_MEASUREMENT_SIGNAL_LATERAL_FORCE  = 1 << 19,
+    JEOL_MEASUREMENT_SIGNAL_CMD_CPD        = 1 << 20
+} JEOLMeasurementSignal;
+
 typedef struct {
     guint day;
     guint month;
@@ -168,6 +212,39 @@ typedef struct {
 } JEOLSPMParam;
 
 typedef struct {
+    gdouble dds_frequency;
+    guint32 dds_low_filter;
+    guint32 dds_high_filter;
+    guint32 dds_center_filter;
+    gboolean dds_enable;
+    guint32 scan_filter;
+    JEOLAFMMode afm_mode;
+    guint32 slope_gain;
+    guint32 x_addition_signal;
+    guint32 y_addition_signal;
+    guint32 z_addition_signal;
+    guint32 bias_addition_signal;
+    guint32 active_dialog;  /* actually an enum */
+    JEOLSPMMode spm_mode;
+    JEOLMeasurementSignal measurement_signal;
+    guint32 phase_vco_scan;
+    guint32 sps_mode;  /* actually an enum */
+    gdouble dds_amplitude;
+    gdouble dds_center_locked_freq;
+    gdouble dds_phase_shift;
+    guint32 dds_high_gain;
+    guint32 dds_phase_polarity;
+    guint32 dds_pll_excitation;
+    guint32 dds_external;
+    guint32 dds_rms_filter;
+    guint32 dds_pll_loop_gain;
+    guint32 dds_beat_noise;
+    guint32 dds_dynamic_range;  /* actually an enum */
+    gdouble cantilever_peak_freq;
+    gdouble cantilever_q_factor;
+} JEOLSPMParam1;
+
+typedef struct {
     guint32 winspm_version;
     gchar internal_filename_old[80];
     guint32 xres;
@@ -204,7 +281,7 @@ typedef struct {
     JEOLSPMParam spm_param;
     guint32 montage_offset;
     gchar image_location[260];
-    /* JEOLSPMParam1 spm_misc_param; */
+    JEOLSPMParam1 spm_misc_param;
     guint32 sub_revision_no;
     JEOLImageType image_type;
     JEOLDataSourceType data_source;
@@ -402,7 +479,9 @@ jeol_read_image_header(const guchar *p,
     get_CHARARRAY(header->history, &p);
     header->has_current_info = get_WORD_LE(&p);
     header->bias = get_FLOAT_LE(&p);
+    gwy_debug("bias: %g", header->bias);
     header->reference_value = get_FLOAT_LE(&p);
+    gwy_debug("reference_value: %g", header->reference_value);
     p += 2;  /* reserved */
     header->measurement_date.day = *(p++);
     header->measurement_date.month = *(p++);
@@ -457,7 +536,41 @@ jeol_read_image_header(const guchar *p,
                 is the compensation of the 4 bytes */
     header->montage_offset = get_DWORD_LE(&p);
     get_CHARARRAY0(header->image_location, &p);
-    p += 118;  /* spm_misc_param */
+    p += 2*4;  /* reserved */
+    header->spm_misc_param.dds_frequency = get_FLOAT_LE(&p);
+    header->spm_misc_param.dds_low_filter = get_WORD_LE(&p);
+    header->spm_misc_param.dds_high_filter = get_WORD_LE(&p);
+    header->spm_misc_param.dds_center_filter = get_WORD_LE(&p);
+    header->spm_misc_param.dds_enable = get_WORD_LE(&p);
+    header->spm_misc_param.scan_filter = get_WORD_LE(&p);
+    header->spm_misc_param.afm_mode = get_DWORD_LE(&p);
+    gwy_debug("afm_mode: 0x%x", header->spm_misc_param.afm_mode);
+    header->spm_misc_param.slope_gain = get_DWORD_LE(&p);
+    header->spm_misc_param.x_addition_signal = get_WORD_LE(&p);
+    header->spm_misc_param.y_addition_signal = get_WORD_LE(&p);
+    header->spm_misc_param.z_addition_signal = get_WORD_LE(&p);
+    header->spm_misc_param.bias_addition_signal = get_WORD_LE(&p);
+    header->spm_misc_param.active_dialog = get_DWORD_LE(&p);
+    header->spm_misc_param.spm_mode = get_DWORD_LE(&p);
+    gwy_debug("spm_mode: 0x%x", header->spm_misc_param.spm_mode);
+    header->spm_misc_param.measurement_signal = get_DWORD_LE(&p);
+    gwy_debug("signal: 0x%x", header->spm_misc_param.measurement_signal);
+    header->spm_misc_param.phase_vco_scan = get_WORD_LE(&p);
+    header->spm_misc_param.sps_mode = get_DWORD_LE(&p);
+    header->spm_misc_param.dds_amplitude = get_DOUBLE_LE(&p);
+    header->spm_misc_param.dds_center_locked_freq = get_DOUBLE_LE(&p);
+    header->spm_misc_param.dds_phase_shift = get_FLOAT_LE(&p);
+    header->spm_misc_param.dds_high_gain = get_WORD_LE(&p);
+    header->spm_misc_param.dds_phase_polarity = get_WORD_LE(&p);
+    header->spm_misc_param.dds_pll_excitation = get_WORD_LE(&p);
+    header->spm_misc_param.dds_external = get_WORD_LE(&p);
+    header->spm_misc_param.dds_rms_filter = get_DWORD_LE(&p);
+    header->spm_misc_param.dds_pll_loop_gain = get_DWORD_LE(&p);
+    header->spm_misc_param.dds_beat_noise = get_DWORD_LE(&p);
+    header->spm_misc_param.dds_dynamic_range = get_DWORD_LE(&p);
+    header->spm_misc_param.cantilever_peak_freq = get_DWORD_LE(&p);
+    header->spm_misc_param.cantilever_q_factor = get_DWORD_LE(&p);
+    p += 10;  /* reserved */
     p += 0x300;  /* RGB lookup table */
     header->sub_revision_no = get_DWORD_LE(&p);
     header->image_type = get_DWORD_LE(&p);
