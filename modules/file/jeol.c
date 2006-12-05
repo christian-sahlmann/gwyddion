@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -347,7 +347,9 @@ jeol_load(const gchar *filename,
     /* FIXME: the world is cruel, this is what we know we can read, ditch the
      * rest. */
     if (image_header.image_type != JEOL_IMAGE
-        || image_header.data_source != JEOL_DATA_SOURCE_Z
+        || (image_header.data_source != JEOL_DATA_SOURCE_Z
+            && image_header.data_source != JEOL_DATA_SOURCE_LIN_I
+            && image_header.data_source != JEOL_DATA_SOURCE_LOG_I)
         || image_header.compressed) {
         err_NO_DATA(error);
         goto fail;
@@ -447,6 +449,8 @@ jeol_read_image_header(const guchar *p,
     header->spm_param.o_off = get_FLOAT_LE(&p);
     header->spm_param.back_scan_bias = get_FLOAT_LE(&p);
     header->spm_param.mode = get_DWORD_LE(&p);
+    gwy_debug("z_gain: %g o_gain: %g",
+              header->spm_param.z_gain, header->spm_param.o_gain);
     p += 2;  /* reserved */
     p += 4;  /* reserved, XXX: size of JEOLSPMParam1 does not match the space
                 alloted for it in the header, it's 4 bytes shorter and this
@@ -496,21 +500,37 @@ jeol_read_data_field(const guchar *buffer,
                                 Nanometer*header->xreal,
                                 Nanometer*header->yreal,
                                 FALSE);
-    z0 = Nanometer*header->z0;
-    q = (header->z255 - header->z0)/65535.0*Nanometer;  /* FIXME */
 
-    data = gwy_data_field_get_data(dfield);
-    d16 = (const guint16*)buffer;
-    for (i = 0; i < header->xres*header->yres; i++)
-        data[i] = q*GUINT16_FROM_LE(d16[i]) + z0;
+    switch (header->data_source) {
+        case JEOL_DATA_SOURCE_Z:
+        z0 = Nanometer*header->z0;
+        q = (header->z255 - header->z0)/65535.0*Nanometer;
+        siunit = gwy_si_unit_new("m");
+        break;
+
+        case JEOL_DATA_SOURCE_LIN_I:
+        case JEOL_DATA_SOURCE_LOG_I:
+        z0 = Nanoampere*header->z0;
+        q = (header->z255 - header->z0)/65535.0*Nanoampere;
+        siunit = gwy_si_unit_new("A");
+        break;
+
+        default:
+        g_return_val_if_reached(dfield);
+        break;
+    }
+
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
 
-    siunit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    g_object_unref(siunit);
+    data = gwy_data_field_get_data(dfield);
+    d16 = (const guint16*)buffer;
+    for (i = 0; i < header->xres*header->yres; i++)
+        data[i] = q*GUINT16_FROM_LE(d16[i]) + z0;
 
     return dfield;
 }
