@@ -13,6 +13,8 @@ LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
 AUTOMAKE=${AUTOMAKE:-automake}
 ACLOCAL=${ACLOCAL:-aclocal}
 AUTOHEADER=${AUTOHEADER:-autoheader}
+gettextize=`which gettextize`
+GETTEXTIZE=${GETTEXTIZE:-$gettextize}
 
 echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 
@@ -45,6 +47,16 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
   echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/."
   DIE=1
   NO_AUTOMAKE=yes
+}
+
+(${GETTEXTIZE:-gettextize} --version) < /dev/null > /dev/null 2>&1 || {
+  echo
+  echo "**ERROR**: You must have \`gettextize' installed to re-generate"
+  echo "all the $PROJECT Makefiles."
+  echo "Download the appropriate package for your distribution,"
+  echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/gettext/."
+  DIE=1
+  NO_GETTEXTIZE=yes
 }
 
 # The world is cruel.
@@ -108,6 +120,41 @@ case $CC in
 *xlc | *xlc\ * | *lcc | *lcc\ * )
   am_opt=--include-deps;;
 esac
+
+if test -z "$NO_GETTEXTIZE"; then
+  GT_VERSION=`$GETTEXTIZE --version | grep gettextize | sed 's/.* \([0-9.]*\)[-a-z0-9]*$/\1/'`
+  if test "$GT_VERSION" '<' "0.12"; then
+    echo
+    echo "**ERROR**: You need at least gettext-0.12 installed to re-generate"
+    echo "all the $PROJECT Makefiles."
+    echo "Download the appropriate package for your distribution,"
+    echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/gettext/."
+    NO_GETTEXTIZE=1
+    DIE=1
+  else
+    test -z "$QUIET" && echo "Gettext $GT_VERSION: OK"
+  fi
+fi
+
+# We don't want gettextize to mess with our files, but we want its config.rpath
+if test -z "$NO_GETTEXTIZE"; then
+  if test -f config.rpath; then
+    # Nothing to do
+    :
+  else
+    eval `grep '^prefix=' $GETTEXTIZE`
+    eval `grep '^gettext_dir=' $GETTEXTIZE`
+    if cp "$gettext_dir/config.rpath" config.rpath; then
+      # OK
+      :
+    else
+      echo
+      echo "**ERROR**: Cannot find config.rpath in $gettext_dir."
+      echo "Make sure you gettext installation is complete."
+      DIE=1
+    fi
+  fi
+fi
 
 sh utils/update-potfiles.sh
 
