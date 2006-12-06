@@ -102,7 +102,7 @@ static void          dme_read_header(const guchar *p,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Pacific Nanotechnology DME data files."),
+    N_("Imports Danish Micro Engineering (DME) data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
