@@ -93,7 +93,7 @@ module_register(void)
                               NULL,
                               MASK_ATTACH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Attach another data field as mask"));
+                              N_("Attach mask from another data field"));
 
     return TRUE;
 }
