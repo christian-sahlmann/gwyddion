@@ -53,5 +53,7 @@ plugin_proxy_la_LIBADD = $(module_libadd)
 endif
 
 
+MAINTAINERCLEANFILES = makefile.msc
+
 clean-local:
 	rm -f core.* *~

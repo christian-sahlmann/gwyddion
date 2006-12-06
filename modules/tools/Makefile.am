@@ -96,5 +96,7 @@ spotremove_la_SOURCES = spotremove.c
 spotremove_la_LIBADD = $(module_libadd)
 
 
+MAINTAINERCLEANFILES = makefile.msc
+
 clean-local:
 	rm -f core.* *~

@@ -57,5 +57,7 @@ point_la_SOURCES = point.c
 point_la_LIBADD = $(module_libadd)
 
 
+MAINTAINERCLEANFILES = makefile.msc
+
 clean-local:
 	rm -f core.* *~

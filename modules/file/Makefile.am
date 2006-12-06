@@ -227,5 +227,8 @@ witfile_la_LIBADD = $(module_libadd)
 wsxmfile_la_SOURCES = wsxmfile.c
 wsxmfile_la_LIBADD = $(module_libadd)
 
+
+MAINTAINERCLEANFILES = makefile.msc
+
 clean-local:
 	rm -f core.* *~

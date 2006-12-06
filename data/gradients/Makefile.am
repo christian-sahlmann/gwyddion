@@ -53,3 +53,6 @@ EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt \
 	$(gradientdata_DATA)
+
+MAINTAINERCLEANFILES = \
+	makefile.msc

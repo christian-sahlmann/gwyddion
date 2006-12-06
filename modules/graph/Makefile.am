@@ -59,5 +59,8 @@ graph_level_la_LIBADD = $(module_libadd)
 #graph_stats_la_SOURCES = graph_stats.c
 #graph_stats_la_LIBADD = $(module_libadd)
 
+
+MAINTAINERCLEANFILES = makefile.msc
+
 clean-local:
 	rm -f core.* *~

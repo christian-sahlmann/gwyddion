@@ -242,6 +242,8 @@ unrotate_la_SOURCES = unrotate.c
 unrotate_la_LIBADD = $(module_libadd)
 
 
+MAINTAINERCLEANFILES = makefile.msc
+
 clean-local:
 	rm -f core.* *~
 

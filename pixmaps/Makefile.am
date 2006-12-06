@@ -165,3 +165,7 @@ EXTRA_DIST = \
 	$(icondata_DATA) \
 	$(pixmapdata_DATA) \
 	$(xcf_sources)
+
+MAINTAINERCLEANFILES = \
+	makefile.msc
+

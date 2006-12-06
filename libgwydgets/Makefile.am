@@ -73,7 +73,9 @@ EXTRA_DIST = \
 
 # Must init
 CLEANFILES =
-MAINTAINERCLEANFILES =
+MAINTAINERCLEANFILES = \
+	makefile.msc \
+	libgwydgets2.def
 BUILT_SOURCES =
 
 MKENUM_NAME = gwydgettypes

@@ -48,6 +48,8 @@ BUILT_SOURCES = \
 # Must init
 CLEANFILES =
 MAINTAINERCLEANFILES = \
+	makefile.msc \
+	libgwyapp2.def \
 	authors.h
 
 MKENUM_NAME = gwyapptypes

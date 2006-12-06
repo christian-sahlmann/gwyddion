@@ -44,5 +44,9 @@ libgwymodule2_la_SOURCES = \
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyModule\"
 
+MAINTAINERCLEANFILES = \
+	makefile.msc \
+	libgwymodule2.def
+
 clean-local:
 	rm -f core.* *~

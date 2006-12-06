@@ -44,6 +44,10 @@ libgwydraw2_la_SOURCES = \
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"
 
+MAINTAINERCLEANFILES = \
+	makefile.msc \
+	libgwydraw2.def
+
 clean-local:
 	rm -f core.* *~
 

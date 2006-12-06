@@ -40,7 +40,9 @@ EXTRA_DIST = \
 
 # Must init
 CLEANFILES =
-MAINTAINERCLEANFILES =
+MAINTAINERCLEANFILES = \
+	makefile.msc \
+	libgwyddion2.def
 BUILT_SOURCES =
 
 MKENUM_NAME = gwyddiontypes
