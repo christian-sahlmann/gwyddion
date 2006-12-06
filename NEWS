@@ -1,8 +1,9 @@
-2.1.20061127
+2.1.20061206
 
 2.2 (0000-00-00)
 Application:
 - File open dialogs have a preview (showing all channels in the file).
+- 3D view export uses the new Gtk+ file dialog (as everything else).
 - Translations updated: Italian.
 
 Libraries:
@@ -17,9 +18,14 @@ Libraries:
 - libgwyprocess: New functions to get row/column statistics.
 - libgwyprocess: New functions to get mean root square of derivatives of data
   lines.
+- libgwyapp: Crash in tools using rectangular selection when no data was
+  present and the selection was modified manually was fixed (it is not
+  possible to modify the selection when there's no data now).
 
 Modules:
 - DME file (new): DME Rasterscope data file import.
+- JEOL file (new): JEOL SPM data import.
+- NetCDF (new): NetCDF file import, currently only GXSM files.
 - Convolution filter (new): General convolution filter with user-defined
   matrix.
 - Row/column statistics tool (new): Calculates characteristics of each row
@@ -28,6 +34,11 @@ Modules:
 - PNI file: Missing value endian conversion was added (affected big-endian
   machines).
 - Rotate: Units lost with enabled expansion were fixed.
+- Read value tool: Displays local plane inclination angles too.
+- Edge: New method Inclination visualizes local slope angle.
+- Distance: Phi value convention matches other tools and functions now.
+- 2D FFT: Transform output has the origin of coordinates in the centre, as
+  it should be.
 
 Other:
 - Build errors on big-endian systems (from 2.1) were fixed.
