@@ -1,3 +1,16 @@
+- Modules:
+  - claculate grain volumes, but before that probably
+  - implement sparse laplacian data interpolation
+  - gaussian smoothening filter (+hconvolve, vconvolve)
+  - fore/back detection, connected area splitting
+  - polynomial leveling with disjoint z0
+  - profiles along arbitrary curves
+  - zero-crossing edge detection
+  - graph curve editing
+  - explicit range in color range
+  - nanoindentation (but do grain volume first)
+  - 2D autocorrelation
+  - isotropic autocorrelation, PSDF
 - Graph minor and major ticks are misaligned
 - Common functions in file modules, try to reduce duplication:
   highly-nonsquare test
