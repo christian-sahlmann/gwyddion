@@ -1437,8 +1437,10 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
         for (j = 0; j <= i; j++)
             row[j] = sumx[i+j];
     }
-    if (!gwy_math_choleski_decompose(n+1, m))
+    if (!gwy_math_choleski_decompose(n+1, m)) {
+        g_warning("Line polynomial fit failed");
         memset(coeffs, 0, (n+1)*sizeof(gdouble));
+    }
     else
         gwy_math_choleski_solve(n+1, m, coeffs);
 
