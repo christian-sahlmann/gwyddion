@@ -77,7 +77,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.6",
+    "0.7",
     "Rok Zitko",
     "2004",
 };
