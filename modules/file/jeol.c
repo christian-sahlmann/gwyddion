@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -163,7 +163,8 @@ typedef enum {
     JEOL_MEASUREMENT_SIGNAL_AFM            = 1 << 17,
     JEOL_MEASUREMENT_SIGNAL_PRESCAN        = 1 << 18,
     JEOL_MEASUREMENT_SIGNAL_LATERAL_FORCE  = 1 << 19,
-    JEOL_MEASUREMENT_SIGNAL_CMD_CPD        = 1 << 20
+    JEOL_MEASUREMENT_SIGNAL_CMD_CPD        = 1 << 20,
+    JEOL_MEASUREMENT_SIGNAL_NONE           = 1 << 21
 } JEOLMeasurementSignal;
 
 typedef struct {
@@ -316,8 +317,9 @@ static GwyContainer* jeol_load             (const gchar *filename,
                                             GError **error);
 static void          jeol_read_image_header(const guchar *p,
                                             JEOLImageHeader *header);
-static GwyDataField* jeol_read_data_field   (const guchar *buffer,
-                                             const JEOLImageHeader *header);
+static GwyDataField* jeol_read_data_field  (const guchar *buffer,
+                                            const JEOLImageHeader *header);
+static GwyContainer* jeol_get_metadata     (const JEOLImageHeader *header);
 
 static const GwyEnum data_sources[] = {
     { "Topography",        JEOL_DATA_SOURCE_Z,                 },
@@ -340,6 +342,71 @@ static const GwyEnum data_sources[] = {
     { "RMS",               JEOL_DATA_SOURCE_RMS,               },
     { "FMD",               JEOL_DATA_SOURCE_FMD,               },
     { "Capacitance force", JEOL_DATA_SOURCE_CAPACITANCE_FORCE, },
+};
+
+static const GwyEnum modes[] = {
+    { "Line1024",     JEOL_MODE_LINE_1024,    },
+    { "Topo Mirror",  JEOL_MODE_TOPO_MIRROR,  },
+    { "Topo512",      JEOL_MODE_TOPO_512,     },
+    { "Topo256",      JEOL_MODE_TOPO_256,     },
+    { "Topo128",      JEOL_MODE_TOPO_128,     },
+    { "Line512",      JEOL_MODE_LINE_512,     },
+    { "Line256",      JEOL_MODE_LINE_256,     },
+    { "Line128",      JEOL_MODE_LINE_128,     },
+    { "Topo ×2",      JEOL_MODE_TOPO_X2,      },
+    { "Topo ×4",      JEOL_MODE_TOPO_X4,      },
+    { "CITS",         JEOL_MODE_CITS,         },
+    { "I-V",          JEOL_MODE_I_V,          },
+    { "S-V",          JEOL_MODE_S_V,          },
+    { "I-S",          JEOL_MODE_I_S,          },
+    { "F-C",          JEOL_MODE_F_C,          },
+    { "FFC",          JEOL_MODE_FFC,          },
+    { "Montage128",   JEOL_MODE_MONTAGE_128,  },
+    { "Montage256",   JEOL_MODE_MONTAGE_256,  },
+    { "LSTS",         JEOL_MODE_LSTS,         },
+    { "Topo SPS",     JEOL_MODE_TOPO_SPS,     },
+    { "VCO",          JEOL_MODE_VCO,          },
+    { "Topo Image",   JEOL_MODE_TOPO_IMAGE,   },
+    { "Topo3 VE AFM", JEOL_MODE_TOPO3_VE_AFM, },
+    { "Topo4 MFM",    JEOL_MODE_TOPO4_MFM,    },
+    { "Topo3 LM FFM", JEOL_MODE_TOPO3_LM_FFM, },
+    { "Topo2 FKM",    JEOL_MODE_TOPO2_FKM,    },
+    { "Topo2 FFM",    JEOL_MODE_TOPO2_FFM,    },
+    { "Topo1204",     JEOL_MODE_TOPO_1204,    },
+    { "Topo 2×512",   JEOL_MODE_TOPO_2X512,   },
+    { "Topo2 SCFM",   JEOL_MODE_TOPO2_SCFM,   },
+    { "Topo2 MFM-1",  JEOL_MODE_TOPO2_MFM_1,  },
+    { "Topo64",       JEOL_MODE_TOPO64,       },
+    { "Phaseshift",   JEOL_MODE_PHASE_SHIFT,  },
+    { "Manipulation", JEOL_MODE_MANIPULATION, },
+    { "CS3D Scan",    JEOL_MODE_CS3D_SCAN,    },
+    { "F-V",          JEOL_MODE_F_V,          },
+    { "SoftwareGen",  JEOL_MODE_SOFTWARE_GEN, },
+};
+
+static const GwyEnum measurement_signals[] = {
+    { "Topography",     JEOL_MEASUREMENT_SIGNAL_TOPOGRAPHY,     },
+    { "Bias",           JEOL_MEASUREMENT_SIGNAL_BIAS,           },
+    { "Linear Current", JEOL_MEASUREMENT_SIGNAL_LINEAR_CURRENT, },
+    { "Log Current",    JEOL_MEASUREMENT_SIGNAL_LOG_CURRENT,    },
+    { "Force",          JEOL_MEASUREMENT_SIGNAL_FORCE,          },
+    { "Friction Force", JEOL_MEASUREMENT_SIGNAL_FRICTION_FORCE, },
+    { "A+B (SUM)",      JEOL_MEASUREMENT_SIGNAL_SUM,            },
+    { "RMS",            JEOL_MEASUREMENT_SIGNAL_RMS,            },
+    { "FMD",            JEOL_MEASUREMENT_SIGNAL_FMD,            },
+    { "Phase",          JEOL_MEASUREMENT_SIGNAL_PHASE,          },
+    { "AUX1",           JEOL_MEASUREMENT_SIGNAL_AUX1,           },
+    { "AUX2",           JEOL_MEASUREMENT_SIGNAL_AUX2,           },
+    { "AFM Contact",    JEOL_MEASUREMENT_SIGNAL_AFM_CONTACT,    },
+    { "Motor x/20",     JEOL_MEASUREMENT_SIGNAL_MOTOR_X_20,     },
+    { "Motor y/20",     JEOL_MEASUREMENT_SIGNAL_MOTOR_Y_20,     },
+    { "Motor z/20",     JEOL_MEASUREMENT_SIGNAL_MOTOR_Z_20,     },
+    { "(A-B)/(A+B)",    JEOL_MEASUREMENT_SIGNAL_AMB_APB,        },
+    { "AFM",            JEOL_MEASUREMENT_SIGNAL_AFM,            },
+    { "Prescan",        JEOL_MEASUREMENT_SIGNAL_PRESCAN,        },
+    { "Lateral Force",  JEOL_MEASUREMENT_SIGNAL_LATERAL_FORCE,  },
+    { "(C-D)/(C+D)",    JEOL_MEASUREMENT_SIGNAL_CMD_CPD,        },
+    { "None",           JEOL_MEASUREMENT_SIGNAL_NONE,           },
 };
 
 static GwyModuleInfo module_info = {
@@ -389,7 +456,7 @@ jeol_load(const gchar *filename,
           GError **error)
 {
     JEOLImageHeader image_header;
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gsize expected_size, size = 0;
     GError *err = NULL;
@@ -454,6 +521,11 @@ jeol_load(const gchar *filename,
                                              g_strdup(title));
     }
 
+    /* Meta */
+    meta = jeol_get_metadata(&image_header);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
+
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     return container;
@@ -463,7 +535,9 @@ static void
 jeol_read_image_header(const guchar *p,
                        JEOLImageHeader *header)
 {
+#ifdef DEBUG
     const guchar *q = p;
+#endif
 
     p += TIFF_HEADER_SIZE;
 
@@ -536,14 +610,17 @@ jeol_read_image_header(const guchar *p,
     header->spm_param.z_off = get_FLOAT_LE(&p);
     header->spm_param.o_gain = get_FLOAT_LE(&p);
     header->spm_param.o_off = get_FLOAT_LE(&p);
-    header->spm_param.back_scan_bias = get_FLOAT_LE(&p);
-    header->spm_param.mode = get_DWORD_LE(&p);
     gwy_debug("z_gain: %g o_gain: %g",
               header->spm_param.z_gain, header->spm_param.o_gain);
+    header->spm_param.back_scan_bias = get_FLOAT_LE(&p);
+    /* XXX: This does not match what the documentation says, there seems to be
+     * a four-byte quantity missing between back_scan_bias and mode (the size
+     * of SPM params struct is also 4 bytes shorter than the space alloted for
+     * it). */
+    p += 4;  /* whatever */
+    header->spm_param.mode = get_DWORD_LE(&p);
+    gwy_debug("mode: %d", header->spm_param.mode);
     p += 2;  /* reserved */
-    p += 4;  /* reserved, XXX: size of JEOLSPMParam1 does not match the space
-                alloted for it in the header, it's 4 bytes shorter and this
-                is the compensation of the 4 bytes */
     header->montage_offset = get_DWORD_LE(&p);
     get_CHARARRAY0(header->image_location, &p);
     p += 2*4;  /* reserved */
@@ -656,6 +733,83 @@ jeol_read_data_field(const guchar *buffer,
         data[i] = q*GUINT16_FROM_LE(d16[i]) + z0;
 
     return dfield;
+}
+
+static void
+format_meta(GwyContainer *meta,
+            const gchar *name,
+            const gchar *format,
+            ...)
+{
+    gchar *s;
+    va_list ap;
+
+    va_start(ap, format);
+    s = g_strdup_vprintf(format, ap);
+    va_end(ap);
+    gwy_container_set_string_by_name(meta, name, s);
+}
+
+static GwyContainer*
+jeol_get_metadata(const JEOLImageHeader *header)
+{
+    const JEOLSPMParam *spm_param;
+    const JEOLSPMParam1 *spm_param1;
+    const JEOLDate *date;
+    const JEOLTime *time_;
+    GwyContainer *meta;
+    gchar *t;
+
+    meta = gwy_container_new();
+
+    spm_param = &header->spm_param;
+    format_meta(meta, "Clock", "%g ms", spm_param->clock);
+    format_meta(meta, "Rotation", "%g deg", spm_param->rotation);
+    format_meta(meta, "Feedback filter", "%g Hz", spm_param->feedback_filter);
+    format_meta(meta, "Present filter", "%g Hz", spm_param->present_filter);
+    format_meta(meta, "Head amp gain", "%g V/nA", spm_param->head_amp_gain);
+    format_meta(meta, "Measurement mode",
+                gwy_enum_to_string(spm_param->mode,
+                                   modes, G_N_ELEMENTS(modes)));
+
+    format_meta(meta, "Bias", "%g V", header->bias);
+    /* FIXME: It's called `reference value' and it can be in V or nA.
+     * What it means when it's V and how one can tell when it's what? */
+    format_meta(meta, "Tunnel current", "%g nA", header->reference_value);
+
+    date = &header->measurement_date;
+    time_ = &header->measurement_time;
+    format_meta(meta, "Date and time of measurement",
+                "%04d-%02d-%02d %02d:%02d:%02d.%02d",
+                date->year_1980, date->month, date->day,
+                time_->hour, time_->minute, time_->second, time_->second_100);
+
+    date = &header->save_date;
+    time_ = &header->save_time;
+    format_meta(meta, "Date and time of file save",
+                "%04d-%02d-%02d %02d:%02d:%02d.%02d",
+                date->year_1980, date->month, date->day,
+                time_->hour, time_->minute, time_->second, time_->second_100);
+
+    format_meta(meta, "Tip speed X", "%g nm/s", header->tip_speed_x);
+    format_meta(meta, "Tip speed Y", "%g nm/s", header->tip_speed_y);
+    format_meta(meta, "Data source",
+                gwy_enum_to_string(header->data_source,
+                                   data_sources, G_N_ELEMENTS(data_sources)));
+    format_meta(meta, "Direction",
+                header->forward ? "Forward" : "Backward");
+
+    spm_param1 = &header->spm_misc_param;
+    t = gwy_flags_to_string(spm_param1->measurement_signal,
+                            measurement_signals,
+                            G_N_ELEMENTS(measurement_signals),
+                            NULL);
+    if (t)
+        gwy_container_set_string_by_name(meta, "Measurement signal", t);
+    else
+        g_free(t);
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
