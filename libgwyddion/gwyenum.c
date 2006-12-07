@@ -176,6 +176,9 @@ gwy_flags_to_string(gint enumval,
             }
         }
     }
+    if (!str)
+        return g_strdup("");
+
     result = str->str;
     g_string_free(str, FALSE);
 
