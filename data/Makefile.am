@@ -44,7 +44,6 @@ gwyddion_vim_sources = \
 	$(docsrc)/libgwyprocess/libgwyprocess-decl.txt
 
 MAINTAINERCLEANFILES = \
-	makefile.msc \
 	gwyddion.vim
 
 # FIXME: this breaks VPATH build
