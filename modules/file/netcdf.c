@@ -24,7 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 
 #include "get.h"
 #include "err.h"
@@ -108,6 +108,10 @@ static GwyContainer* gxsm_load              (const gchar *filename,
 static gboolean      cdffile_load           (NetCDF *cdffile,
                                              const gchar *filename,
                                              GError **error);
+static GwySIUnit*    read_real_size         (const NetCDF *cdffile,
+                                             const gchar *name,
+                                             gdouble *real,
+                                             gint *power10);
 static GwyDataField* read_data_field        (const guchar *buffer,
                                              gint xres,
                                              gint yres,
@@ -134,6 +138,9 @@ static gboolean      cdffile_read_var_array (NetCDFVar **pvars,
 static NetCDFDim*    cdffile_get_dim        (const NetCDF *cdffile,
                                              const gchar *name);
 static NetCDFVar*    cdffile_get_var        (const NetCDF *cdffile,
+                                             const gchar *name);
+static const NetCDFAttr* cdffile_get_attr   (const NetCDFAttr *attrs,
+                                             gint nattrs,
                                              const gchar *name);
 static gboolean      cdffile_validate_vars  (const NetCDF *cdffile,
                                              GError **error);
@@ -213,11 +220,12 @@ gxsm_load(const gchar *filename,
     static const gchar *dimensions[] = { "time", "value", "dimy", "dimx" };
     GwyContainer *data = NULL;
     GwyDataField *dfield;
-    GwySIUnit *unit;
+    GwySIUnit *siunit;
     NetCDF cdffile;
-    NetCDFDim *dim;
-    NetCDFVar *var;
-    gint i;
+    const NetCDFDim *dim;
+    const NetCDFVar *var;
+    gdouble real;
+    gint i, power10;
 
     if (!cdffile_load(&cdffile, filename, error))
         return NULL;
@@ -250,6 +258,30 @@ gxsm_load(const gchar *filename,
                              cdffile.dims[var->dimids[2]].length,
                              var->type);
 
+    if ((siunit = read_real_size(&cdffile, "rangex", &real, &power10))) {
+        gwy_data_field_set_xreal(dfield, real*pow10(power10));
+        gwy_data_field_set_si_unit_xy(dfield, siunit);
+        g_object_unref(siunit);
+    }
+
+    if ((siunit = read_real_size(&cdffile, "rangey", &real, &power10))) {
+        gwy_data_field_set_yreal(dfield, real*pow10(power10));
+        /* must be the same gwy_data_field_set_si_unit_xy(dfield, siunit); */
+        g_object_unref(siunit);
+    }
+
+    if ((siunit = read_real_size(&cdffile, "rangez", &real, &power10))) {
+        /* rangez seems to be some bogus value, take only units */
+        gwy_data_field_set_si_unit_z(dfield, siunit);
+        gwy_data_field_multiply(dfield, pow10(power10));
+        g_object_unref(siunit);
+    }
+    if ((siunit = read_real_size(&cdffile, "dz", &real, &power10))) {
+        /* on the other hand the units seem to be bogues here, take the range */
+        gwy_data_field_multiply(dfield, real);
+        g_object_unref(siunit);
+    }
+
     data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
@@ -259,6 +291,47 @@ gxsm_load_fail:
     cdffile_free(&cdffile);
 
     return data;
+}
+
+static GwySIUnit*
+read_real_size(const NetCDF *cdffile,
+               const gchar *name,
+               gdouble *real,
+               gint *power10)
+{
+    const NetCDFVar *var;
+    const NetCDFAttr *attr;
+    GwySIUnit *siunit;
+    const guchar *p;
+    gchar *s;
+
+    *real = 1.0;
+    *power10 = 0;
+
+    if (!(var = cdffile_get_var(cdffile, name)))
+        return NULL;
+
+    attr = cdffile_get_attr(var->attrs, var->nattrs, "unit");
+    if (!attr || attr->type != NC_CHAR)
+        return NULL;
+
+    if (!attr->nelems)
+        s = NULL;
+    else
+        s = g_strndup(attr->values, attr->nelems);
+
+    siunit = gwy_si_unit_new_parse(s, power10);
+    g_free(s);
+
+    p = (const guchar*)(cdffile->buffer + var->begin);
+    if (var->type == NC_DOUBLE)
+        *real = get_DOUBLE_BE(&p);
+    else if (var->type == NC_FLOAT)
+        *real = get_FLOAT_BE(&p);
+    else
+        g_warning("Size is not a floating point number");
+
+    return siunit;
 }
 
 static GwyDataField*
@@ -588,6 +661,7 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
         ALIGN4(n);
         if (!cdffile_check_size(error, "attr_array", buf, size, *p, n))
             return FALSE;
+        attrs[i].values = *p;
         *p += n;
     }
 
@@ -711,6 +785,21 @@ cdffile_get_var(const NetCDF *cdffile,
     for (i = 0; i < cdffile->nvars; i++) {
         if (gwy_strequal(cdffile->vars[i].name, name))
             return cdffile->vars + i;
+    }
+
+    return NULL;
+}
+
+static const NetCDFAttr*
+cdffile_get_attr(const NetCDFAttr *attrs,
+                 gint nattrs,
+                 const gchar *name)
+{
+    gint i;
+
+    for (i = 0; i < nattrs; i++) {
+        if (gwy_strequal(attrs[i].name, name))
+            return attrs + i;
     }
 
     return NULL;
