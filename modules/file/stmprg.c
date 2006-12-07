@@ -31,6 +31,8 @@
  *
  * (Yeti):
  * FIXME: I do not have the specs.
+ * XXX Fix the dependency on struct field alignment. XXX
+ * Eliminate global variables.
  */
 
 #include "config.h"
@@ -395,14 +397,14 @@ byteswap_and_dump_parameters()
 #define HASH_STORE(format, keystr, val) \
     value = g_strdup_printf(format, val); \
     gwy_debug("key = %s, val = %s\n", keystr, value); \
-    gwy_container_set_string_by_name(data, keystr, value);
+    gwy_container_set_string_by_name(meta, keystr, value);
 
 #define HASH_STORE_F(keystr, valf) HASH_STORE("%f", keystr, valf)
 #define HASH_STORE_S(keystr, vals) HASH_STORE("%s", keystr, vals)
 #define HASH_STORE_I(keystr, vali) HASH_STORE("%i", keystr, vali)
 
 static GwyContainer*
-stmprg_get_metadata(GwyContainer *data)
+stmprg_get_metadata(void)
 {
     GwyContainer *meta;
     gchar *value;
@@ -477,7 +479,7 @@ stmprg_load(const gchar *filename,
     /* FIXME: with documentation, we could perhaps do better */
     guess_channel_type(container, "/0/data");
 
-    meta = stmprg_get_metadata(container);
+    meta = stmprg_get_metadata();
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
