@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[1])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20061208])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -262,8 +262,8 @@ if test "x$enable_fftw3" != "xno"; then
   if test "x$arch_32bit" != "xyes"; then
     PKG_CHECK_MODULES(FFTW3_DUMMY,[fftw3 >= 3.1],[:],
       AC_MSG_WARN([FFTW3 older than 3.1 may cause crashes on 64bit systems.
-                    Consider installation of FFTW3 at least 3.1.  Alternatively
-                    you can disable FFTW3 with --without-fftw3.])
+        Consider installation of FFTW3 at least 3.1.  Alternatively you can
+        disable FFTW3 with --without-fftw3.])
       FFTW3_WARN=" (with warnings)")
   fi
   FFTW3_DEPENDENCY=fftw3
