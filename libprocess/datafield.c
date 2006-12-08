@@ -849,7 +849,7 @@ gwy_data_field_get_dval(GwyDataField *a,
  *
  * Gets the raw data buffer of a data field.
  *
- * The returned buffer is not quaranteed to be valid through whole data
+ * The returned buffer is not guaranteed to be valid through whole data
  * field life time.  Some function may change it, most notably
  * gwy_data_field_resize() and gwy_data_field_resample().
  *
@@ -877,7 +877,7 @@ gwy_data_field_get_data(GwyDataField *data_field)
  *
  * Gets the raw data buffer of a data field, read-only.
  *
- * The returned buffer is not quaranteed to be valid through whole data
+ * The returned buffer is not guaranteed to be valid through whole data
  * field life time.  Some function may change it, most notably
  * gwy_data_field_resize() and gwy_data_field_resample().
  *

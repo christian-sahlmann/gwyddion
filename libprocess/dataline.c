@@ -584,7 +584,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
  *
  * Gets the raw data buffer of a data line.
  *
- * The returned buffer is not quaranteed to be valid through whole data
+ * The returned buffer is not guaranteed to be valid through whole data
  * line life time.  Some function may change it, most notably
  * gwy_data_line_resize() and gwy_data_line_resample().
  *
@@ -606,7 +606,7 @@ gwy_data_line_get_data(GwyDataLine *data_line)
  *
  * Gets the raw data buffer of a data line, read-only.
  *
- * The returned buffer is not quaranteed to be valid through whole data
+ * The returned buffer is not guaranteed to be valid through whole data
  * line life time.  Some function may change it, most notably
  * gwy_data_line_resize() and gwy_data_line_resample().
  *
