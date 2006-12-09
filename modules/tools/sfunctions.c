@@ -135,7 +135,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -230,6 +230,7 @@ gwy_tool_sfunctions_finalize(GObject *object)
                                    tool->args.direction);
 
     gwy_object_unref(tool->line);
+    gwy_object_unref(tool->gmodel);
 
     G_OBJECT_CLASS(gwy_tool_sfunctions_parent_class)->finalize(object);
 }

@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -214,6 +214,7 @@ gwy_tool_line_stats_finalize(GObject *object)
                                    tool->args.direction);
 
     gwy_object_unref(tool->line);
+    gwy_object_unref(tool->gmodel);
 
     G_OBJECT_CLASS(gwy_tool_line_stats_parent_class)->finalize(object);
 }
