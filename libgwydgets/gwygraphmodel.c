@@ -628,8 +628,10 @@ gwy_graph_model_deserialize(const guchar *buffer,
         if (curves) {
             guint i;
 
-            for (i = 0; i < ncurves; i++)
+            for (i = 0; i < ncurves; i++) {
                 gwy_graph_model_add_curve(gmodel, curves[i]);
+                g_object_unref(curves[i]);
+            }
             g_free(curves);
         }
     }
