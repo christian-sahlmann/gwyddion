@@ -27,6 +27,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
+#include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-file.h>
 #include "gwymoduleinternal.h"
 
@@ -78,6 +79,8 @@ static FileTypeInfo* gwy_file_type_info_get(GwyContainer *data,
                                             gboolean do_create);
 static void    gwy_file_container_finalized(gpointer userdata,
                                             GObject *deceased_data);
+static void gwy_file_load_check_container_refs(GwyContainer *container,
+                                               GSList **stack);
 
 static GHashTable *file_funcs = NULL;
 static GList *container_list = NULL;
@@ -227,8 +230,12 @@ gwy_file_func_run_load(const gchar *name,
     g_return_val_if_fail(func_info->load, NULL);
 
     data = func_info->load(filename, mode, error, name);
-    if (data)
+    if (data) {
+        GSList *stack = NULL;
+
+        gwy_file_load_check_container_refs(data, &stack);
         gwy_file_type_info_set(data, name, filename);
+    }
 
     return data;
 }
@@ -816,6 +823,112 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
     container_list = g_list_delete_link(container_list, container_list);
     g_free(fti->filename_sys);
     g_free(fti);
+}
+
+static void
+gwy_file_load_check_object(GObject *object,
+                           GSList *stack)
+{
+    GString *str;
+
+    if (object->ref_count == 1)
+        return;
+
+    str = g_string_new(NULL);
+    g_string_printf(str, "ref_count=%d for %s",
+                    object->ref_count, G_OBJECT_TYPE_NAME(object));
+    while (stack) {
+        g_string_append(str, " <- ");
+        g_string_append(str, (const gchar*)(stack->data));
+        stack = stack->next;
+    }
+    g_warning("%s", str->str);
+    g_string_free(str, TRUE);
+}
+
+#define PUSH(s, x) *(s) = g_slist_prepend(*(s), (gpointer)(x))
+#define POP(s) *(s) = g_slist_delete_link(*(s), *(s));
+
+static void
+gwy_file_load_check_refs(gpointer hkey,
+                         gpointer hvalue,
+                         gpointer user_data)
+{
+    GValue *value = (GValue*)hvalue;
+    GQuark quark = GPOINTER_TO_UINT(hkey);
+    GSList **stack = (GSList**)user_data;
+    GObject *object, *child;
+    const gchar *typename, *path;
+    gint n, i;
+
+    if (!G_VALUE_HOLDS_OBJECT(value))
+        return;
+
+    object = g_value_get_object(value);
+    typename = G_OBJECT_TYPE_NAME(object);
+    path = g_quark_to_string(quark);
+
+    PUSH(stack, path);
+    gwy_file_load_check_object(object, *stack);
+
+    PUSH(stack, typename);
+    if (gwy_strequal(typename, "GwyContainer"))
+        gwy_file_load_check_container_refs((GwyContainer*)object, stack);
+    else if (gwy_strequal(typename, "GwyDataField")) {
+        if ((child = (GObject*)((struct _GwyDataField*)object)->si_unit_xy)) {
+            PUSH(stack, "si-unit-xy");
+            gwy_file_load_check_object(child, *stack);
+            POP(stack);
+        }
+        if ((child = (GObject*)((struct _GwyDataField*)object)->si_unit_z)) {
+            PUSH(stack, "si-unit-z");
+            gwy_file_load_check_object(child, *stack);
+            POP(stack);
+        }
+    }
+    else if (gwy_strequal(typename, "GwyDataLine")) {
+        if ((child = (GObject*)((struct _GwyDataLine*)object)->si_unit_x)) {
+            PUSH(stack, "si-unit-x");
+            gwy_file_load_check_object(child, *stack);
+            POP(stack);
+        }
+        if ((child = (GObject*)((struct _GwyDataLine*)object)->si_unit_y)) {
+            PUSH(stack, "si-unit-y");
+            gwy_file_load_check_object(child, *stack);
+            POP(stack);
+        }
+    }
+    else if (gwy_strequal(typename, "GwyGraphModel")) {
+        if ((child = (GObject*)((struct _GwyGraphModel*)object)->x_unit)) {
+            PUSH(stack, "si-unit-x");
+            gwy_file_load_check_object(child, *stack);
+            POP(stack);
+        }
+        if ((child = (GObject*)((struct _GwyGraphModel*)object)->y_unit)) {
+            PUSH(stack, "si-unit-y");
+            gwy_file_load_check_object(child, *stack);
+            POP(stack);
+        }
+
+        PUSH(stack, "curve");
+        n = gwy_graph_model_get_n_curves((GwyGraphModel*)object);
+        for (i = 0; i < n; i++) {
+            child = (GObject*)gwy_graph_model_get_curve((GwyGraphModel*)object,
+                                                        i);
+            gwy_file_load_check_object(child, *stack);
+        }
+        POP(stack);
+    }
+
+    POP(stack);
+    POP(stack);
+}
+
+static void
+gwy_file_load_check_container_refs(GwyContainer *container,
+                                   GSList **stack)
+{
+    gwy_container_foreach(container, NULL, gwy_file_load_check_refs, stack);
 }
 
 /************************** Documentation ****************************/
