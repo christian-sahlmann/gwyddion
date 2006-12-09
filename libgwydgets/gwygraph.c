@@ -54,7 +54,6 @@ gwy_graph_class_init(GwyGraphClass *klass)
     widget_class = (GtkWidgetClass*)klass;
 
     gobject_class->finalize = gwy_graph_finalize;
-
 }
 
 static void
@@ -75,6 +74,8 @@ gwy_graph_finalize(GObject *object)
                                   graph->curve_data_changed_id);
     gwy_object_unref(graph->graph_model);
     gwy_object_unref(graph->zoom_selection);
+
+    G_OBJECT_CLASS(gwy_graph_parent_class)->finalize(object);
 }
 
 /**

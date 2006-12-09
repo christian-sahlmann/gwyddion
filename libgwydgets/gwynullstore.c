@@ -114,6 +114,8 @@ gwy_null_store_finalize(GObject *object)
     store->model_destroy = NULL;
     if (d)
         d(store->model);
+
+    G_OBJECT_CLASS(gwy_null_store_parent_class)->finalize(object);
 }
 
 static GtkTreeModelFlags

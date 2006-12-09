@@ -353,8 +353,7 @@ gwy_data_view_destroy(GtkObject *object)
                             &data_view->base_hid, NULL,
                             GWY_DATA_VIEW_LAYER_BASE);
 
-    if (GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)
-        (*GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)(object);
+    GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy(object);
 }
 
 static void

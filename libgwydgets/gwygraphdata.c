@@ -83,6 +83,8 @@ gwy_graph_data_finalize(GObject *object)
     graph_data = GWY_GRAPH_DATA(object);
 
     g_array_free(graph_data->curves, TRUE);
+
+    G_OBJECT_CLASS(gwy_graph_data_parent_class)->finalize(object);
 }
 
 static void
@@ -94,6 +96,8 @@ gwy_graph_data_destroy(GtkObject *object)
 
     gwy_graph_data_set_model(graph_data, NULL);
     gwy_object_unref(graph_data->store);
+
+    GTK_OBJECT_CLASS(gwy_graph_data_parent_class)->destroy(object);
 }
 
 /**
