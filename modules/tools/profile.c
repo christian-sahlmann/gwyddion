@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -215,6 +215,7 @@ gwy_tool_profile_finalize(GObject *object)
         gtk_tree_view_set_model(tool->treeview, NULL);
         gwy_object_unref(tool->model);
     }
+    gwy_object_unref(tool->gmodel);
     if (tool->pixel_format)
         gwy_si_unit_value_format_free(tool->pixel_format);
 
