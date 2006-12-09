@@ -1629,8 +1629,11 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                        MODEL_OBJECT, &object,
                        MODEL_ID, &id,
                        -1);
-    if (visible == (widget != 0))
+    if (visible == (widget != NULL)) {
+        g_object_unref(object);
+        gwy_object_unref(widget);
         return FALSE;
+    }
 
     if (visible) {
         widget = gwy_app_data_browser_create_channel(proxy->parent, proxy, id);
@@ -2154,8 +2157,11 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
                        MODEL_OBJECT, &object,
                        MODEL_ID, &id,
                        -1);
-    if (visible == (widget != 0))
+    if (visible == (widget != NULL)) {
+        g_object_unref(object);
+        gwy_object_unref(widget);
         return FALSE;
+    }
 
     if (visible) {
         widget = gwy_app_data_browser_create_graph(proxy->parent, proxy, id);
