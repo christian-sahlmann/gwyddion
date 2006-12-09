@@ -171,6 +171,14 @@ gwy_graph_area_finalize(GObject *object)
     gwy_signal_handler_disconnect(area->graph_model, area->model_notify_id);
     gwy_signal_handler_disconnect(area->graph_model,
                                   area->curve_data_changed_id);
+    gwy_object_unref(area->graph_model);
+
+    gwy_object_unref(area->pointsdata);
+    gwy_object_unref(area->xseldata);
+    gwy_object_unref(area->yseldata);
+    gwy_object_unref(area->xlinesdata);
+    gwy_object_unref(area->ylinesdata);
+    gwy_object_unref(area->zoomdata);
 
     G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
 }
@@ -366,6 +374,25 @@ gwy_graph_area_destroy(GtkObject *object)
         gtk_widget_destroy(area->label_dialog);
         area->label_dialog = NULL;
     }
+
+    if (area->pointsdata)
+        g_signal_handlers_disconnect_by_func(area->pointsdata,
+                                             selection_changed_cb, area);
+    if (area->xseldata)
+        g_signal_handlers_disconnect_by_func(area->xseldata,
+                                             selection_changed_cb, area);
+    if (area->yseldata)
+        g_signal_handlers_disconnect_by_func(area->yseldata,
+                                             selection_changed_cb, area);
+    if (area->xlinesdata)
+        g_signal_handlers_disconnect_by_func(area->xlinesdata,
+                                             selection_changed_cb, area);
+    if (area->ylinesdata)
+        g_signal_handlers_disconnect_by_func(area->ylinesdata,
+                                             selection_changed_cb, area);
+    if (area->zoomdata)
+        g_signal_handlers_disconnect_by_func(area->zoomdata,
+                                             selection_changed_cb, area);
 
     GTK_OBJECT_CLASS(gwy_graph_area_parent_class)->destroy(object);
 }
