@@ -1,4 +1,4 @@
-2.1.20061206
+2.1.20061211
 
 2.2 (0000-00-00)
 Application:
@@ -21,6 +21,8 @@ Libraries:
 - libgwyapp: Crash in tools using rectangular selection when no data was
   present and the selection was modified manually was fixed (it is not
   possible to modify the selection when there's no data now).
+- libgwydgets: Several reference leaks, namely in graph widgets, were fixed
+  and proper chaining of destroy() and finalize() method added.
 
 Modules:
 - DME file (new): DME Rasterscope data file import.
@@ -30,6 +32,8 @@ Modules:
   matrix.
 - Row/column statistics tool (new): Calculates characteristics of each row
   or column in selected area.
+- Drift correction (new): module for simple correction of drift seen in the
+  slow scanning axis.
 - Mask operations: It is possible to copy mask from one channel to another.
 - PNI file: Missing value endian conversion was added (affected big-endian
   machines).
@@ -39,8 +43,7 @@ Modules:
 - Distance: Phi value convention matches other tools and functions now.
 - 2D FFT: Transform output has the origin of coordinates in the centre, as
   it should be.
-- Drift correction (new): module for simple correction of drift seen in the
-  slow scanning axis.
+- STMPRG: Import of metadata was fixed.
 - Graph export ASCII: export crash bug fixed
 
 Other:
