@@ -380,6 +380,34 @@ gwy_correlation_type_get_enum(void)
  **/
 
 /**
+ * GwyExteriorType;
+ * @GWY_EXTERIOR_UNDEFINED: The values corresponding to or calculated from
+ *                          exterior data values are undefined, they may be
+ *                          left unset or set to bogus values.  The caller
+ *                          must handle them itself afterwards, for instance
+ *                          by resizing the result to consist of valid data
+ *                          only.
+ * @GWY_EXTERIOR_BORDER_EXTEND: Values of exterior pixels are considered to be
+ *                              equal to the values of the nearest interior
+ *                              pixels.
+ * @GWY_EXTERIOR_MIRROR_EXTEND: The data is considered to be perodically
+ *                              repeated in all directions, with odd instances
+ *                              inverted (about the appropriate axes the odd
+ *                              refers to).
+ * @GWY_EXTERIOR_FIXED_VALUE: Values of exterior pixels are considered to
+ *                            be all equal to a user-specified value.
+ *
+ * Methods to handle pixels outside data.
+ *
+ * Many methods currently use a fixed metod of handling of exterior pixels,
+ * for example area calculation uses extension (border and mirror coincide),
+ * convolution uses mirror extension, rotation fills exterior with
+ * a fixed value.
+ *
+ * Since: 2.2
+ **/
+
+/**
  * GwyComputationStateType:
  * @GWY_COMPUTATION_STATE_INIT: Iterator was set up, the next step will
  *                              actually create temporary data structures

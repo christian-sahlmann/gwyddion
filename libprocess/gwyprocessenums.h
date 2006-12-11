@@ -180,6 +180,13 @@ typedef enum {
     GWY_LINE_STAT_TAN_BETA0
 } GwyLineStatQuantity;
 
+typedef enum {
+    GWY_EXTERIOR_UNDEFINED,
+    GWY_EXTERIOR_BORDER_EXTEND,
+    GWY_EXTERIOR_MIRROR_EXTEND,
+    GWY_EXTERIOR_FIXED_VALUE
+} GwyExteriorType;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;
