@@ -39,6 +39,9 @@ Modules:
 - Distance: Phi value convention matches other tools and functions now.
 - 2D FFT: Transform output has the origin of coordinates in the centre, as
   it should be.
+- Drift correction (new): module for simple correction of drift seen in the
+  slow scanning axis.
+- Graph export ASCII: export crash bug fixed
 
 Other:
 - Build errors on big-endian systems (from 2.1) were fixed.
