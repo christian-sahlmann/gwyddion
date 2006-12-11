@@ -908,7 +908,7 @@ gwy_interpolation_shift_block_1d(gint length,
     gint oldi, newi, i, ii, off;
     gint suplen, sf, st;
     gdouble d0, dn, v;
-    gdouble *w, *c, *coeffs = NULL;
+    gdouble *w, *coeffs = NULL;
 
     if (interpolation == GWY_INTERPOLATION_NONE)
         return;
@@ -918,7 +918,6 @@ gwy_interpolation_shift_block_1d(gint length,
     sf = -((suplen - 1)/2);
     st = suplen/2;
     w = g_newa(gdouble, suplen);
-    c = g_newa(gdouble, suplen);
 
     d0 = data[0];
     dn = data[length-1];
@@ -938,7 +937,7 @@ gwy_interpolation_shift_block_1d(gint length,
             /* The fast path, we are safely inside, directly use coeffs */
             v = 0.0;
             for (i = sf; i <= st; i++)
-                v += w[i - sf]*coeffs[oldi + i];
+                v += w[i - sf]*data[oldi + i];
             newdata[newi] = v;
         }
         else {
@@ -947,15 +946,13 @@ gwy_interpolation_shift_block_1d(gint length,
             if (exterior == GWY_EXTERIOR_MIRROR_EXTEND
                 || (oldi >= 0 && oldi + 1 < length)
                 || (oldi == length-1 && off == offset)) {
+                v = 0.0;
                 for (i = sf; i <= st; i++) {
                     ii = (oldi + i + 2*st*length) % (2*length);
                     if (ii >= length)
                         ii = 2*length-1 - ii;
-                    c[i - sf] = coeffs[ii];
+                    v += w[i - sf]*data[ii];
                 }
-                v = 0.0;
-                for (i = sf; i <= st; i++)
-                    v += w[i - sf]*c[i - sf];
                 newdata[newi] = v;
             }
             else if (exterior == GWY_EXTERIOR_FIXED_VALUE)
