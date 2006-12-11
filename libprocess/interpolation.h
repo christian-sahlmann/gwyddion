@@ -88,6 +88,16 @@ gwy_interpolation_resample_block_2d(gint width,
                                     GwyInterpolationType interpolation,
                                     gboolean preserve);
 
+void
+gwy_interpolation_shift_block_1d(gint length,
+                                 gdouble *data,
+                                 gdouble offset,
+                                 gdouble *newdata,
+                                 GwyInterpolationType interpolation,
+                                 GwyExteriorType exterior,
+                                 gdouble fill_value,
+                                 gboolean preserve);
+
 G_END_DECLS
 
 #endif /* __GWY_PROCESS_INTERPOLATION_H__ */

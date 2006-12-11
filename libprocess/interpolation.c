@@ -715,8 +715,8 @@ gwy_interpolation_resample_block_1d(gint length,
 {
     gdouble *w, *coeffs = NULL;
     gdouble q, x0, x, v;
-    gint i, ii, oldi, newi, suplen;
-    gint sf, st;
+    gint i, ii, oldi, newi;
+    gint suplen, sf, st;
 
     if (interpolation == GWY_INTERPOLATION_NONE)
         return;
@@ -811,8 +811,8 @@ gwy_interpolation_resample_block_2d(gint width,
     gdouble *xw, *yw, *coeffs = NULL;
     gint *xp, *yp;
     gdouble v, vx;
-    gint i, ii, oldi, newi, j, jj, oldj, newj, suplen;
-    gint sf, st;
+    gint i, ii, oldi, newi, j, jj, oldj, newj;
+    gint suplen, sf, st;
 
     if (interpolation == GWY_INTERPOLATION_NONE)
         return;
@@ -876,6 +876,107 @@ gwy_interpolation_resample_block_2d(gint width,
     g_free(coeffs);
 }
 
+/**
+ * gwy_interpolation_shift_block_1d:
+ * @length: Data block length.
+ * @data: Data block to shift.
+ * @offset: The shift, in corrective sense.  Shift value of 1.0 means the
+ *          zeroth value of @newdata will be set to the first value of @data.
+ * @newdata: Array to put the shifted data to.
+ * @interpolation: Interpolation type to use.
+ * @exterior: Exterior pixels handling.  Supported values are:
+ *            @GWY_EXTERIOR_NONE, @GWY_EXTERIOR_MIRROR_EXTEND,
+ *            @GWY_EXTERIOR_BORDER_EXTEND, @GWY_EXTERIOR_FIXED_VALUE.
+ * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
+ * @preserve: %TRUE to preserve the content of @data, %FALSE to permit its
+ *            overwriting with temporary data.
+ *
+ * Shifts a one-dimensional data block by a possibly non-integer offset.
+ *
+ * Since: 2.2
+ **/
+void
+gwy_interpolation_shift_block_1d(gint length,
+                                 gdouble *data,
+                                 gdouble offset,
+                                 gdouble *newdata,
+                                 GwyInterpolationType interpolation,
+                                 GwyExteriorType exterior,
+                                 gdouble fill_value,
+                                 gboolean preserve)
+{
+    gint oldi, newi, i, ii, off;
+    gint suplen, sf, st;
+    gdouble d0, dn, v;
+    gdouble *w, *c, *coeffs = NULL;
+
+    if (interpolation == GWY_INTERPOLATION_NONE)
+        return;
+
+    suplen = gwy_interpolation_get_support_size(interpolation);
+    g_return_if_fail(suplen > 0);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+    w = g_newa(gdouble, suplen);
+    c = g_newa(gdouble, suplen);
+
+    d0 = data[0];
+    dn = data[length-1];
+
+    if (!gwy_interpolation_has_interpolating_basis(interpolation)) {
+        if (preserve)
+            data = coeffs = g_memdup(data, length*sizeof(gdouble));
+        gwy_interpolation_resolve_coeffs_1d(length, data, interpolation);
+    }
+
+    off = (gint)floor(offset);
+    gwy_interpolation_get_weights(offset - off, interpolation, w);
+
+    for (newi = 0; newi < length; newi++) {
+        oldi = newi + off;
+        if (G_LIKELY(oldi + sf >= 0 && oldi + st < length)) {
+            /* The fast path, we are safely inside, directly use coeffs */
+            v = 0.0;
+            for (i = sf; i <= st; i++)
+                v += w[i - sf]*coeffs[oldi + i];
+            newdata[newi] = v;
+        }
+        else {
+            /* Exterior or too near to the border to feel the mirroring.
+             * Use mirror extend for all points not really outside. */
+            if (exterior == GWY_EXTERIOR_MIRROR_EXTEND
+                || (oldi >= 0 && oldi + 1 < length)
+                || (oldi == length-1 && off == offset)) {
+                for (i = sf; i <= st; i++) {
+                    ii = (oldi + i + 2*st*length) % (2*length);
+                    if (ii >= length)
+                        ii = 2*length-1 - ii;
+                    c[i - sf] = coeffs[ii];
+                }
+                v = 0.0;
+                for (i = sf; i <= st; i++)
+                    v += w[i - sf]*c[i - sf];
+                newdata[newi] = v;
+            }
+            else if (exterior == GWY_EXTERIOR_FIXED_VALUE)
+                newdata[newi] = fill_value;
+            else if (exterior == GWY_EXTERIOR_BORDER_EXTEND) {
+                if (oldi < 0)
+                    newdata[newi] = d0;
+                else
+                    newdata[newi] = dn;
+            }
+            else if (exterior == GWY_EXTERIOR_UNDEFINED) {
+                /* Do nothing */
+            }
+            else
+                g_warning("Unsupported exterior type");
+        }
+    }
+
+    g_free(coeffs);
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -887,6 +988,9 @@ gwy_interpolation_resample_block_2d(gint width,
  * That means the contribution of individual data saples is preserved on
  * scaling (the area that <quote>belongs</quote> to all values is the same,
  * it is not reduced to half for edge pixels).
+ *
+ * Most of the functions listed here are quite low-level and typically one
+ * would use #GwyDataField or #GwyDataLine methods instead of these functions.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

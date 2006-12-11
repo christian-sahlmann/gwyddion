@@ -390,10 +390,11 @@ gwy_correlation_type_get_enum(void)
  * @GWY_EXTERIOR_BORDER_EXTEND: Values of exterior pixels are considered to be
  *                              equal to the values of the nearest interior
  *                              pixels.
- * @GWY_EXTERIOR_MIRROR_EXTEND: The data is considered to be perodically
- *                              repeated in all directions, with odd instances
- *                              inverted (about the appropriate axes the odd
- *                              refers to).
+ * @GWY_EXTERIOR_MIRROR_EXTEND: The data is considered to be periodically
+ *                              repeated, with odd instances reflected
+ *                              (the total period is thus twice the size of
+ *                              the data).
+ * @GWY_EXTERIOR_PERIODIC: The data is considered to be periodically repeated.
  * @GWY_EXTERIOR_FIXED_VALUE: Values of exterior pixels are considered to
  *                            be all equal to a user-specified value.
  *
