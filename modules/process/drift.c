@@ -102,7 +102,8 @@ static void        reset                    (DriftControls *controls,
 static void        drift_ok                    (DriftControls *controls,
                                                DriftArgs *args, 
                                                 GwyContainer *data,
-                                                GwyDataField *data_field);
+                                                GwyDataField *data_field,
+                                                gint id);
 static void        drift_load_args              (GwyContainer *container,
                                                DriftArgs *args);
 static void        drift_save_args              (GwyContainer *container,
@@ -300,7 +301,7 @@ drift_dialog(DriftArgs *args,
 
     row++;
 
-    controls.smoothing = gtk_adjustment_new(args->smoothing, 1.0, 20.0, 1, 2, 0);
+    controls.smoothing = gtk_adjustment_new(args->smoothing, 1.0, 10.0, 1, 2, 0);
     spin = gwy_table_attach_hscale(table, row, "smoothing degree:", "", controls.smoothing,
                                                GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
@@ -407,7 +408,7 @@ drift_dialog(DriftArgs *args,
 
     drift_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
-    drift_ok(&controls, args, data, dfield);
+    drift_ok(&controls, args, data, dfield, id);
 
     gwy_object_unref(controls.mydata);
     gwy_object_unref(controls.result);
@@ -449,7 +450,7 @@ static void
 drift_invalidate(G_GNUC_UNUSED GObject *obj,
                 DriftControls *controls)
 {
-    reset(controls, controls->args);
+    controls->computed = FALSE;
 }
 
 static void
@@ -503,7 +504,6 @@ preview(DriftControls *controls,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
-
     /* Set up the mask */
     if (!gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
         mask = create_mask_field(dfield);
@@ -517,7 +517,8 @@ preview(DriftControls *controls,
     }
     gwy_data_field_copy(dfield, mask, FALSE);
 
-    mask_process(dfield, mask, args, controls, GTK_WINDOW(controls->dialog));
+
+    mask_process(dfield, mask, args, controls, GDK_WINDOW(controls->dialog->window));
     controls->computed = TRUE;
 }
 
@@ -540,7 +541,8 @@ static void
 drift_ok(DriftControls *controls,
          DriftArgs *args,
          GwyContainer *data,
-         GwyDataField *data_field)
+         GwyDataField *data_field,
+         gint id)
 {
 
     GwyGraphCurveModel *cmodel;
@@ -549,8 +551,11 @@ drift_ok(DriftControls *controls,
     gint newid;
 
 
-    if (!controls->computed)
-        return;
+    if (!controls->computed) {
+        mask_process(data_field, NULL, args, controls,
+                     GDK_WINDOW(
+                          GTK_WIDGET(gwy_app_find_window_for_channel(data, id))->window));
+    }
 
     newdata_field = gwy_data_field_duplicate(data_field);
 
@@ -597,47 +602,59 @@ mask_process(GwyDataField *dfield,
     gint npoints = 0;
     gdouble *mdata, *rdata;
     gchar message[50];
+    GdkCursor *wait_cursor;
 
-    gwy_data_field_clear(maskfield);
+    g_assert(GWY_IS_DATA_FIELD(dfield));
+
+    if (maskfield)
+        gwy_data_field_clear(maskfield);
     gwy_data_line_clear(controls->result);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
     if (args->method == GWY_DRIFT_CORRELATION) {
-        gwy_app_wait_start(wait_window,
-                           _("Correlating..."));
+        wait_cursor = gdk_cursor_new(GDK_WATCH);
+        gdk_window_set_cursor(wait_window, wait_cursor);
+        while (gtk_events_pending())
+            gtk_main_iteration_do(FALSE);
 
         npoints = gwy_data_field_get_drift_from_correlation
             (dfield, controls->result,
              MAX(1, (gint)(args->averaging)),
              args->smoothing,
              0.9);
-        gwy_app_wait_finish();
+
+        gdk_window_set_cursor(wait_window, NULL);
+        gdk_cursor_unref(wait_cursor);
     }
-    g_snprintf(message, sizeof(message), "%d points fitted", npoints);
-    gtk_label_set_text(GTK_LABEL(controls->message), message);
+    if (maskfield) {
+        g_snprintf(message, sizeof(message), "%d points fitted", npoints);
+        gtk_label_set_text(GTK_LABEL(controls->message), message);
+    }
 
     if (npoints)
     {
         controls->computed = TRUE;
         step = yres/10;
-        mdata = gwy_data_field_get_data(maskfield);
         rdata = gwy_data_line_get_data(controls->result);
-        for (i = 0; i < yres; i++) {
-            for (j = -step; j < xres + step; j += step) {
-                pos = j + gwy_data_field_rtoi(dfield, rdata[i]);
-                if (pos > 1 && pos < xres) {
-                    mdata[(gint)(pos + i*xres)] = 1;
-                if (xres >= 300)
-                    mdata[(gint)(pos - 1 + i*xres)] = 1;
+        if (maskfield) {
+            mdata = gwy_data_field_get_data(maskfield);
+            for (i = 0; i < yres; i++) {
+                for (j = -step; j < xres + step; j += step) {
+                    pos = j + gwy_data_field_rtoi(dfield, rdata[i]);
+                    if (pos > 1 && pos < xres) {
+                        mdata[(gint)(pos + i*xres)] = 1;
+                    if (xres >= 300)
+                        mdata[(gint)(pos - 1 + i*xres)] = 1;
+                    }
                 }
             }
         }
     }
     else
         controls->computed = FALSE;
-    gwy_data_field_data_changed(maskfield);
+    if (maskfield)  gwy_data_field_data_changed(maskfield);
 }
 
 static const gchar iscorrect_key[]     = "/module/drift/iscorrect";
@@ -655,7 +672,7 @@ drift_sanitize_args(DriftArgs *args)
     args->is_crop = !!args->is_crop;
     args->is_graph = !!args->is_graph;
     args->averaging = CLAMP(args->averaging, 1.0, 100.0);
-    args->smoothing = CLAMP(args->smoothing, 1.0, 20.0);
+    args->smoothing = CLAMP(args->smoothing, 1.0, 10.0);
     args->method = GWY_DRIFT_CORRELATION;
     /*args->method = MIN(args->method, GWY_DRIFT_CORRELATION);*/
     args->interpolation = gwy_enum_sanitize_value(args->interpolation,
@@ -761,11 +778,11 @@ gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
     
     fit_score = glob_colmax = colmax = 0;
 
+    g_assert(GWY_IS_DATA_FIELD(data_field));
     if (gwy_data_line_get_res(drift_result) != (data_field->yres))
         gwy_data_line_resample(drift_result, data_field->yres, GWY_INTERPOLATION_NONE);
 
-    gwy_data_line_set_si_unit_x(drift_result, gwy_data_field_get_si_unit_xy(data_field));
-    gwy_data_line_set_si_unit_y(drift_result, gwy_data_field_get_si_unit_z(data_field));
+    gwy_data_field_copy_units_to_data_line(data_field, drift_result);
 
     score = (GwyDataLine *) gwy_data_line_new(2*maxshift, 2*maxshift, FALSE);
     shift_cols = (gdouble *)g_malloc((data_field->yres - 1)*sizeof(gdouble));
@@ -802,9 +819,7 @@ gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
                     maxscore = score->data[col+maxshift];
                     colmax = col;
                 }
-/*                printf("%g at (%d)  ", score->data[col+maxshift], col);*/
             }
-/*            printf("\n"); */
             if (colmax <= (-maxshift + 2) || colmax >= (maxshift - 3) || (fabs(maxscore/avg_score)<1.01))
             {
                 fit_score = fit_colmax = 0;
@@ -822,24 +837,17 @@ gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
                 glob_colmax = (fit_colmax - maxshift)/(nextrow - row);
             }
 
-/*            printf("nextrow: %d, fscore %g  fc  %g\n", nextrow, fit_score, (fit_colmax - maxshift)/(nextrow - row)); */
         }
-/*        printf("glob: %g  (%g)\n", glob_colmax, glob_maxscore); */
         if (fit_score>threshold) {
             shift_rows[shift_ndata] = row;
             if (shift_ndata)
                 shift_cols[shift_ndata] = shift_cols[shift_ndata - 1] + glob_colmax;
             else shift_cols[shift_ndata] = glob_colmax;
-             /*printf("row %g shift: %g\n", shift_rows[shift_ndata], shift_cols[shift_ndata]);*/
             shift_ndata++;
         }
-/*        else printf("fit score %g did not pass the threshold %g\n", fit_score, threshold);*/
     }
     gwy_math_fit_polynom(shift_ndata, shift_rows, shift_cols, polynom_degree, shift_coefs);
 
-/*    for (i = 0; i <= polynom_degree; i++) printf("%g\n", shift_coefs[i]);*/
-/*    printf("\n(result of the polymonial fit (degree %d)\n", polynom_degree); */
-    
     for (row=0; row < (data_field->yres); row++)
     {
         val = 0;
@@ -849,9 +857,7 @@ gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
         }
         val += shift_coefs[0];
         drift_result->data[row] = gwy_data_field_itor(data_field, val);
-        /*printf("%g, ", val);*/
     }
-/*    printf("\nxxxxxxx\n");*/
 
     g_object_unref(score);
     g_free(shift_cols);
@@ -890,7 +896,7 @@ gwy_data_field_correct_drift(GwyDataField *data_field,
         }
     if (crop)
         gwy_data_field_resize(corrected_field, 
-                              MAX(0, -min), 0,
+                              MAX(0, -(min - 1)), 0,
                               MIN(newxres, 
                                   gwy_data_field_get_xres(data_field) - max), 
                                   gwy_data_field_get_yres(data_field));
