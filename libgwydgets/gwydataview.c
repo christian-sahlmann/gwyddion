@@ -1364,7 +1364,7 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
 
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
     g_return_val_if_fail(GTK_WIDGET_REALIZED(data_view), NULL);
-    g_return_val_if_fail(zoom >= 0.0626 && zoom <= 16.0, NULL);
+    g_return_val_if_fail(zoom > 0.0, NULL);
     g_return_val_if_fail(data_view->base_layer, NULL);
 
     width = MAX(data_view->xres * zoom, 2);
