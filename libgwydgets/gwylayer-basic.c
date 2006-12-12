@@ -669,7 +669,7 @@ gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
     }
 
     presentation_switched = !!basic_layer->show_field;
-    gwy_signal_handler_disconnect(layer->data, basic_layer->show_id);
+    gwy_signal_handler_disconnect(layer->data, basic_layer->show_item_id);
     gwy_layer_basic_show_field_disconnect(basic_layer);
     basic_layer->show_key = quark;
     gwy_layer_basic_show_field_connect(basic_layer);
