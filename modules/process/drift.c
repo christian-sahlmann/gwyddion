@@ -25,11 +25,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/linestats.h>
-#include <libprocess/stats.h>
-#include <libprocess/correct.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/interpolation.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
@@ -66,6 +65,7 @@ typedef struct {
     GtkWidget *exclude_linear;
     GtkObject *range;
     GtkWidget *interp;
+    GSList *preview_type;
     GtkWidget *color_button;
     GwyContainer *mydata;
     GwyDataField *result;
@@ -97,6 +97,8 @@ static void          drift_dialog_update_controls (DriftControls *controls,
 static void          drift_dialog_update_values   (DriftControls *controls,
                                                    DriftArgs *args);
 static void          drift_invalidate             (GObject *obj,
+                                                   DriftControls *controls);
+static void          preview_type_changed         (GtkWidget *button,
                                                    DriftControls *controls);
 static void          preview                      (DriftControls *controls,
                                                    DriftArgs *args);
@@ -201,7 +203,12 @@ drift_dialog(DriftArgs *args,
         RESPONSE_PREVIEW = 2
     };
 
-    GtkWidget *dialog, *table, *hbox, *spin;
+    static const GwyEnum preview_types[] = {
+        { N_("Correc_ted data"), PREVIEW_CORRECTED, },
+        { N_("Drift _lines"),    PREVIEW_MASK,      },
+    };
+
+    GtkWidget *dialog, *table, *hbox, *spin, *label;
     DriftControls controls;
     gint response;
     gdouble zoomval;
@@ -211,12 +218,16 @@ drift_dialog(DriftArgs *args,
     memset(&controls, 0, sizeof(DriftControls));
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Correct Drift"), NULL, 0,
-                                         _("_Update Result"), RESPONSE_PREVIEW,
-                                         _("_Reset"), RESPONSE_RESET,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Compensate Drift"), NULL, 0, NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
@@ -235,18 +246,23 @@ drift_dialog(DriftArgs *args,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+
+    layer = gwy_layer_mask_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
+
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-
-    table = gtk_table_new(10, 4, FALSE);
+    table = gtk_table_new(9, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -301,6 +317,20 @@ drift_dialog(DriftArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    label = gtk_label_new(_("Preview type"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.preview_type
+        = gwy_radio_buttons_create(preview_types, G_N_ELEMENTS(preview_types),
+                                   G_CALLBACK(preview_type_changed), &controls,
+                                   args->preview_type);
+    row = gwy_radio_buttons_attach_to_table(controls.preview_type,
+                                            GTK_TABLE(table), 3, row);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                                     TRUE);
@@ -314,6 +344,8 @@ drift_dialog(DriftArgs *args,
     row++;
 
     controls.computed = FALSE;
+    /* Set up initial layer keys properly */
+    preview_type_changed(NULL, &controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -454,6 +486,35 @@ drift_invalidate(G_GNUC_UNUSED GObject *obj,
 }
 
 static void
+preview_type_changed(G_GNUC_UNUSED GtkWidget *button,
+                     DriftControls *controls)
+{
+    GwyPixmapLayer *blayer, *mlayer;
+
+    controls->args->preview_type
+        = gwy_radio_buttons_get_current(controls->preview_type);
+
+    blayer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+    mlayer = gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view));
+    switch (controls->args->preview_type) {
+        case PREVIEW_CORRECTED:
+        gwy_layer_basic_set_presentation_key(GWY_LAYER_BASIC(blayer),
+                                             "/1/data");
+        gwy_pixmap_layer_set_data_key(mlayer, "");
+        break;
+
+        case PREVIEW_MASK:
+        gwy_layer_basic_set_presentation_key(GWY_LAYER_BASIC(blayer), NULL);
+        gwy_pixmap_layer_set_data_key(mlayer, "/0/mask");
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+static void
 mask_color_change_cb(GtkWidget *color_button,
                      DriftControls *controls)
 {
@@ -487,7 +548,7 @@ create_mask_field(GwyDataField *dfield)
     GwySIUnit *siunit;
 
     mfield = gwy_data_field_new_alike(dfield, FALSE);
-    siunit = gwy_si_unit_new("");
+    siunit = gwy_si_unit_new(NULL);
     gwy_data_field_set_si_unit_z(mfield, siunit);
     g_object_unref(siunit);
 
@@ -499,7 +560,6 @@ preview(DriftControls *controls,
         DriftArgs *args)
 {
     GwyDataField *mask, *dfield;
-    GwyPixmapLayer *layer;
     GdkCursor *wait_cursor;
     GdkWindow *wait_window;
 
@@ -510,11 +570,6 @@ preview(DriftControls *controls,
         mask = create_mask_field(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
     }
 
     wait_window = controls->dialog->window;
@@ -525,6 +580,8 @@ preview(DriftControls *controls,
 
     if (!controls->result) {
         controls->result = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/1/data",
+                                         controls->result);
         controls->drift = gwy_data_line_new(1, 1.0, FALSE);
     }
     else
