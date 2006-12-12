@@ -512,6 +512,9 @@ preview(DriftControls *controls,
     wait_window = controls->dialog->window;
     wait_cursor = gdk_cursor_new(GDK_WATCH);
     gdk_window_set_cursor(wait_window, wait_cursor);
+    while (gtk_events_pending())
+        gtk_main_iteration_do(FALSE);
+
     if (!controls->result) {
         controls->result = gwy_data_field_duplicate(dfield);
         controls->drift = gwy_data_line_new(1, 1.0, FALSE);
