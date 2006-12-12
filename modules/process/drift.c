@@ -234,6 +234,7 @@ drift_dialog(DriftArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
+    g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
@@ -321,9 +322,9 @@ drift_dialog(DriftArgs *args,
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             drift_dialog_update_values(&controls, args);
-            gwy_object_unref(controls.mydata);
-            gwy_object_unref(controls.result);
             gtk_widget_destroy(dialog);
+            gwy_object_unref(controls.result);
+            gwy_object_unref(controls.drift);
             case GTK_RESPONSE_NONE:
             return;
             break;
@@ -355,12 +356,13 @@ drift_dialog(DriftArgs *args,
                            controls.result, controls.drift,
                            id);
     else {
-        gwy_object_unref(controls.mydata);
         gwy_object_unref(controls.result);
+        gwy_object_unref(controls.drift);
         run_noninteractive(args, data, dfield, NULL, NULL, id);
     }
 }
 
+/* XXX: Eats result and drift */
 static void
 run_noninteractive(DriftArgs *args,
                    GwyContainer *data,
@@ -369,6 +371,12 @@ run_noninteractive(DriftArgs *args,
                    GwyDataLine *drift,
                    gint id)
 {
+    if (!args->do_correct && !args->do_graph) {
+        gwy_object_unref(result);
+        gwy_object_unref(drift);
+        return;
+    }
+
     if (!drift) {
         g_assert(!result);
         result = gwy_data_field_duplicate(dfield);
