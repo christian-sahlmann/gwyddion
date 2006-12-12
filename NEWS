@@ -42,7 +42,8 @@ Modules:
 - Edge: New method Inclination visualizes local slope angle.
 - Distance: Phi value convention matches other tools and functions now.
 - 2D FFT: Transform output has the origin of coordinates in the centre, as
-  it should be.
+  it should be. Transform input is no more normalized and output has proper
+  normalization with respect to input.
 - STMPRG: Import of metadata was fixed.
 - Graph export ASCII: export crash bug fixed
 
