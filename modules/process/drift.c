@@ -588,7 +588,6 @@ preview(DriftControls *controls,
         gwy_data_field_copy(dfield, controls->result, FALSE);
     drift_do(args, dfield, controls->result, controls->drift);
     gwy_data_field_data_changed(controls->result);
-    /* TODO: different preview types */
     mask_process(mask, controls->drift);
     gdk_window_set_cursor(wait_window, NULL);
     gdk_cursor_unref(wait_cursor);
@@ -600,24 +599,25 @@ static void
 mask_process(GwyDataField *maskfield,
              GwyDataLine *drift)
 {
-    gint i, j, step, pos, xres, yres;
+    gint i, j, k, step, pos, xres, yres, w, from, to;
     gdouble *mdata, *rdata;
 
     gwy_data_field_clear(maskfield);
     xres = gwy_data_field_get_xres(maskfield);
     yres = gwy_data_field_get_yres(maskfield);
 
-    step = yres/10;
+    step = xres/10;
+    w = (xres + 3*PREVIEW_SIZE/4)/PREVIEW_SIZE;
+    w = MAX(w, 1);
     rdata = gwy_data_line_get_data(drift);
     mdata = gwy_data_field_get_data(maskfield);
     for (i = 0; i < yres; i++) {
-        for (j = -step; j < xres + step; j += step) {
-            pos = j + gwy_data_line_rtoi(drift, rdata[i]);
-            if (pos > 1 && pos < xres) {
-                mdata[(gint)(pos + i*xres)] = 1;
-                if (xres >= 300)
-                    mdata[(gint)(pos - 1 + i*xres)] = 1;
-            }
+        for (j = -2*step - step/2; j <= xres + 2*step + step/2; j += step) {
+            pos = j + ROUND(gwy_data_line_rtoi(drift, rdata[i]));
+            from = MAX(0, pos - w/2);
+            to = MIN(pos + (w - w/2) - 1, xres-1);
+            for (k = from; k <= to; k++)
+                mdata[i*xres + k] = 1.0;
         }
     }
     gwy_data_field_data_changed(maskfield);
