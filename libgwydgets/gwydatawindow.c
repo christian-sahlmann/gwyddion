@@ -19,12 +19,10 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
-
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydatawindow.h>
@@ -44,7 +42,6 @@ enum {
     PROP_COLOR_AXIS,
     PROP_LAST
 };
-
 
 static void     gwy_data_window_finalize          (GObject *object);
 static void     gwy_data_window_set_property      (GObject *object,
@@ -461,6 +458,8 @@ gwy_data_window_size_allocate(GtkWidget *widget,
                         NULL, NULL, &pos, NULL);
     gwy_ruler_set_range(GWY_RULER(data_window->vruler),
                         offset - excess, real + offset + excess, pos, real);
+
+    gwy_data_window_update_title(data_window);
 }
 
 static void
@@ -481,7 +480,6 @@ gwy_data_window_fit_to_screen(GwyDataWindow *data_window,
     z = MAX(request.width/(gdouble)scrwidth, request.height/(gdouble)scrheight);
     if (z > 0.85) {
         zoom *= 0.85/z;
-        /* TODO: honour zoom mode */
         gwy_data_view_set_zoom(data_view, zoom);
     }
 }
