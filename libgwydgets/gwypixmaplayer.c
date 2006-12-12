@@ -342,7 +342,11 @@ gwy_pixmap_layer_container_connect(GwyPixmapLayer *pixmap_layer,
     GwyDataViewLayer *layer;
     gchar *detailed_signal;
 
-    g_return_if_fail(data_key_string);
+    if (!data_key_string) {
+        pixmap_layer->item_changed_id = 0;
+        return;
+    }
+
     layer = GWY_DATA_VIEW_LAYER(pixmap_layer);
     detailed_signal = g_newa(gchar, sizeof("item-changed::")
                                     + strlen(data_key_string));
