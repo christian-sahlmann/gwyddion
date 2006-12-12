@@ -182,7 +182,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -321,7 +321,7 @@ immerse_dialog(ImmerseArgs *args)
     g_signal_connect(chooser, "changed",
                      G_CALLBACK(immerse_detail_cb), &controls);
     gwy_table_attach_hscale(table, row, _("_Detail image:"), NULL,
-                            GTK_OBJECT(chooser), GWY_HSCALE_WIDGET);
+                            GTK_OBJECT(chooser), GWY_HSCALE_WIDGET_NO_EXPAND);
     row++;
 
     /* Detail position */
