@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -173,8 +173,8 @@ fftf_1d_dialog(Fftf1dArgs *args,
                gint id)
 {
     enum {
-        RESPONSE_RUN = 1,
-        RESPONSE_CLEAR = 2
+        RESPONSE_PREVIEW = 1,
+        RESPONSE_CLEAR   = 2
     };
 
     static const GwyEnum view_types[] = {
@@ -195,12 +195,16 @@ fftf_1d_dialog(Fftf1dArgs *args,
     gdouble zoomval;
     gint response, row;
 
-    dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0,
-                                         _("_Update"), RESPONSE_RUN,
-                                         GTK_STOCK_CLEAR, RESPONSE_CLEAR,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
+    dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0, NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CLEAR, RESPONSE_CLEAR);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
@@ -349,7 +353,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
             fftf_1d_do(&controls);
             break;
 
-            case RESPONSE_RUN:
+            case RESPONSE_PREVIEW:
             fftf_1d_run(&controls, args);
             break;
 

@@ -44,6 +44,11 @@ enum {
     MARK_LAP    = 2
 };
 
+enum {
+    RESPONSE_RESET   = 1,
+    RESPONSE_PREVIEW = 2
+};
+
 typedef struct {
     gboolean inverted;
     gdouble height;
@@ -130,7 +135,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.10",
+    "1.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -230,10 +235,6 @@ mark_dialog(MarkArgs *args,
             gint id,
             GQuark mquark)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_PREVIEW = 2
-    };
     GtkWidget *dialog, *table, *hbox;
     MarkControls controls;
     gint response;
@@ -246,11 +247,16 @@ mark_dialog(MarkArgs *args,
     controls.args = args;
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Threshold"), NULL, 0,
-                                         _("_Update Preview"), RESPONSE_PREVIEW,
-                                         _("_Reset"), RESPONSE_RESET,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
@@ -363,8 +369,11 @@ mark_dialog(MarkArgs *args,
     args->init = TRUE;
 
     /* show initial preview if instant updates are on */
-    if (args->update)
+    if (args->update) {
+        gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
+                                          RESPONSE_PREVIEW, FALSE);
         preview(&controls, args);
+    }
 
     gtk_widget_show_all(dialog);
     do {
@@ -473,6 +482,10 @@ update_change_cb(MarkControls *controls)
 {
     controls->args->update
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
 
     if (controls->args->update)
         mark_invalidate(controls);
