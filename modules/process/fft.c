@@ -169,10 +169,6 @@ fft(GwyContainer *data, GwyRunType run)
     raout = gwy_data_field_new_alike(dfield, FALSE);
     ipout = gwy_data_field_new_alike(dfield, FALSE);
 
-    gwy_data_field_multiply(dfield, 1.0
-                            /(gwy_data_field_get_max(dfield)
-                              - gwy_data_field_get_min(dfield)));
-
     gwy_data_field_2dfft(dfield, NULL,
                          raout, ipout,
                          args.window,
