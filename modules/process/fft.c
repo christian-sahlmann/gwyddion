@@ -111,7 +111,7 @@ module_register(void)
 {
     gwy_process_func_register("fft",
                               (GwyProcessFunc)&fft,
-                              N_("/_Integral Transforms/_2D FFT..."),
+                              N_("/_Integral Transforms/2D _FFT..."),
                               GWY_STOCK_FFT,
                               FFT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

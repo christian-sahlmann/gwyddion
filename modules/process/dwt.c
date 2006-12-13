@@ -84,7 +84,7 @@ module_register(void)
 {
     gwy_process_func_register("dwt",
                               (GwyProcessFunc)&dwt,
-                              N_("/_Integral Transforms/_2D DWT..."),
+                              N_("/_Integral Transforms/2D _DWT..."),
                               NULL,
                               DWT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

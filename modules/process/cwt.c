@@ -83,7 +83,7 @@ module_register(void)
 {
     gwy_process_func_register("cwt",
                               (GwyProcessFunc)&cwt,
-                              N_("/_Integral Transforms/_2D CWT..."),
+                              N_("/_Integral Transforms/2D _CWT..."),
                               GWY_STOCK_CWT,
                               CWT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
