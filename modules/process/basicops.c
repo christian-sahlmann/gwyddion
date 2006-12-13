@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -345,16 +345,16 @@ square_samples(GwyContainer *data, GwyRunType run)
             yres = MAX(ROUND(yreal*qx), 1);
 
         dfields[0] = gwy_data_field_new_resampled(dfields[0], xres, yres,
-                                                  GWY_INTERPOLATION_LINEAR);
+                                                  GWY_INTERPOLATION_BSPLINE);
         if (dfields[1]) {
             dfields[1]
                 = gwy_data_field_new_resampled(dfields[1], xres, yres,
-                                               GWY_INTERPOLATION_LINEAR);
+                                               GWY_INTERPOLATION_BSPLINE);
         }
         if (dfields[2]) {
             dfields[2]
                 = gwy_data_field_new_resampled(dfields[2], xres, yres,
-                                               GWY_INTERPOLATION_LINEAR);
+                                               GWY_INTERPOLATION_BSPLINE);
         }
     }
     else {
