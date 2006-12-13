@@ -535,7 +535,8 @@ static void
 jeol_read_image_header(const guchar *p,
                        JEOLImageHeader *header)
 {
-#ifdef DEBUG
+    /* MSVC refuses to expand macros to nothing. */
+#if (defined(DEBUG) || defined(_MSC_VER))
     const guchar *q = p;
 #endif
 
