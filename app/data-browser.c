@@ -1456,6 +1456,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     quark = g_quark_from_string(key);
     gwy_app_data_browser_sync_mask(proxy->container, quark,
                                    GWY_DATA_VIEW(data_view));
+    gwy_app_update_data_range_type(GWY_DATA_VIEW(data_view), id);
 
     /* FIXME: A silly place for this? */
     if (browser->sensgroup)
