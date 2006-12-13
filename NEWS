@@ -1,4 +1,4 @@
-2.1.20061211
+2.1.20061213
 
 2.2 (0000-00-00)
 Application:
@@ -23,6 +23,12 @@ Libraries:
   possible to modify the selection when there's no data now).
 - libgwydgets: Several reference leaks, namely in graph widgets, were fixed
   and proper chaining of destroy() and finalize() method added.
+- libgwydgets: GwyLayerBasic disconnects from previous container item
+  properly when presentation key is changed.
+- libgwydgets: Artifical limitations on possible data view zooms were
+  removed.
+- libgwydgets: GwyDataWindow title displays initial zoom correctly when the
+  window is autosized to fit to the screen.
 
 Modules:
 - DME file (new): DME Rasterscope data file import.
@@ -32,8 +38,8 @@ Modules:
   matrix.
 - Row/column statistics tool (new): Calculates characteristics of each row
   or column in selected area.
-- Drift correction (new): module for simple correction of drift seen in the
-  slow scanning axis.
+- Drift compensation (new): Simple correction of drift seen in the slow
+  scanning axis.
 - Mask operations: It is possible to copy mask from one channel to another.
 - PNI file: Missing value endian conversion was added (affected big-endian
   machines).
@@ -45,7 +51,10 @@ Modules:
   it should be. Transform input is no more normalized and output has proper
   normalization with respect to input.
 - STMPRG: Import of metadata was fixed.
-- Graph export ASCII: export crash bug fixed
+- Graph export ASCII: Export crash bug was fixed.
+- Miscellaneous process modules: The look and labels of preview updating
+  buttons were unified.
+- Pixmap: Export honours data field coordinate origin offsets.
 
 Other:
 - Build errors on big-endian systems (from 2.1) were fixed.
