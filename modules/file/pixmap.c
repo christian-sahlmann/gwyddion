@@ -199,11 +199,13 @@ static GdkPixbuf*        hruler                    (gint size,
                                                     gint extra,
                                                     gdouble real,
                                                     gdouble zoom,
+                                                    gdouble offset,
                                                     GwySIUnit *siunit);
 static GdkPixbuf*        vruler                    (gint size,
                                                     gint extra,
                                                     gdouble real,
                                                     gdouble zoom,
+                                                    gdouble offset,
                                                     GwySIUnit *siunit);
 static GdkPixbuf*        fmscale                   (gint size,
                                                     gdouble bot,
@@ -299,7 +301,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "5.2.2",
+    "5.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1510,10 +1512,12 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     lw = ZOOM2LW(args->zoom);
 
     hrpixbuf = hruler(zwidth + 2*lw, border, gwy_data_field_get_xreal(dfield),
-                      args->zoom, siunit_xy);
+                      args->zoom, gwy_data_field_get_xoffset(dfield),
+                      siunit_xy);
     hrh = gdk_pixbuf_get_height(hrpixbuf);
     vrpixbuf = vruler(zheight + 2*lw, border, gwy_data_field_get_yreal(dfield),
-                      args->zoom, siunit_xy);
+                      args->zoom, gwy_data_field_get_yoffset(dfield),
+                      siunit_xy);
     vrw = gdk_pixbuf_get_width(vrpixbuf);
     if (args->otype == PIXMAP_EVERYTHING) {
         if (has_presentation)
@@ -1835,7 +1839,13 @@ format_layout(PangoLayout *layout,
     g_string_append_len(string, buffer, length);
     g_free(buffer);
 
-    pango_layout_set_markup(layout, string->str, length);
+    /* Replace ASCII with proper minus */
+    if (string->str[0] == '-') {
+        g_string_erase(string, 0, 1);
+        g_string_prepend_unichar(string, 0x2212);
+    }
+
+    pango_layout_set_markup(layout, string->str, string->len);
     pango_layout_get_extents(layout, NULL, logical);
 }
 
@@ -1844,6 +1854,7 @@ hruler(gint size,
        gint extra,
        gdouble real,
        gdouble zoom,
+       gdouble offset,
        GwySIUnit *siunit)
 {
     PangoRectangle logical1, logical2;
@@ -1852,12 +1863,12 @@ hruler(gint size,
     GdkPixbuf *pixbuf;
     GdkGC *gc;
     GwySIValueFormat *format;
-    gdouble base, step, x;
+    gdouble base, step, x, from, to;
     GString *s;
     gint l, n, ix;
     gint tick, height, lw;
 
-    s = g_string_new("");
+    s = g_string_new(NULL);
     layout = prepare_layout(zoom);
 
     format = gwy_si_unit_get_format_with_resolution(siunit,
@@ -1865,13 +1876,16 @@ hruler(gint size,
                                                     real, real/12,
                                                     NULL);
     format_layout(layout, &logical1, s, "%.*f",
-                  format->precision, real/format->magnitude);
+                  format->precision, -real/format->magnitude);
     format_layout(layout, &logical2, s, "%.*f %s",
                   format->precision, 0.0, format->units);
 
+    offset /= format->magnitude;
+    real /= format->magnitude;
+
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
-    step = real/format->magnitude/n;
+    step = real/n;
     base = pow10(floor(log10(step)));
     step = step/base;
     if (step <= 2.0)
@@ -1890,14 +1904,23 @@ hruler(gint size,
     height = l + 2*zoom + tick + 2;
     drawable = prepare_drawable(size + extra, height, lw, &gc);
 
-    for (x = 0.0; x <= real/format->magnitude; x += base*step) {
+    from = offset;
+    from = ceil(from/(base*step) - 1e-15)*(base*step);
+    to = real + offset;
+    to = floor(to/(base*step) + 1e-15)*(base*step);
+
+    for (x = from; x <= to; x += base*step) {
+        if (fabs(x) < 1e-15*base*step)
+            x = 0.0;
         format_layout(layout, &logical1, s, "%.*f%s%s",
                       format->precision, x,
                       x ? "" : " ",
                       x ? "" : format->units);
-        ix = x/(real/format->magnitude)*size + lw/2;
+        ix = (x - offset)/real*size + lw/2;
         if (ix + PANGO_PIXELS(logical1.width) <= size + extra/4)
-            gdk_draw_layout(drawable, gc, ix+1, 1, layout);
+            gdk_draw_layout(drawable, gc,
+                            ix+1, 1 + l - PANGO_PIXELS(logical1.height),
+                            layout);
         gdk_draw_line(drawable, gc, ix, height-1, ix, height-1-tick);
     }
 
@@ -1918,6 +1941,7 @@ vruler(gint size,
        gint extra,
        gdouble real,
        gdouble zoom,
+       gdouble offset,
        GwySIUnit *siunit)
 {
     PangoRectangle logical1, logical2;
@@ -1926,12 +1950,12 @@ vruler(gint size,
     GdkPixbuf *pixbuf;
     GdkGC *gc;
     GwySIValueFormat *format;
-    gdouble base, step, x;
+    gdouble base, step, x, from, to;
     GString *s;
     gint l, n, ix;
     gint tick, width, lw;
 
-    s = g_string_new("");
+    s = g_string_new(NULL);
     layout = prepare_layout(zoom);
 
     format = gwy_si_unit_get_format_with_resolution(siunit,
@@ -1942,13 +1966,16 @@ vruler(gint size,
     /* note the algorithm is the same to force consistency between axes,
      * even though the vertical one could be filled with tick more densely */
     format_layout(layout, &logical1, s, "%.*f",
-                  format->precision, real/format->magnitude);
+                  format->precision, -real/format->magnitude);
     format_layout(layout, &logical2, s, "%.*f %s",
                   format->precision, 0.0, format->units);
 
+    offset /= format->magnitude;
+    real /= format->magnitude;
+
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
-    step = real/format->magnitude/n;
+    step = real/n;
     base = pow10(floor(log10(step)));
     step = step/base;
     if (step <= 2.0)
@@ -1961,8 +1988,7 @@ vruler(gint size,
         format->precision = MAX(format->precision - 1, 0);
     }
 
-    format_layout(layout, &logical1, s, "%.*f",
-                  format->precision, real/format->magnitude);
+    format_layout(layout, &logical1, s, "%.*f", format->precision, -real);
     l = PANGO_PIXELS(logical1.width);
 
     tick = zoom*TICK_LENGTH;
@@ -1970,9 +1996,16 @@ vruler(gint size,
     width = l + 2*zoom + tick + 2;
     drawable = prepare_drawable(width, size + extra, lw, &gc);
 
-    for (x = 0.0; x <= real/format->magnitude; x += base*step) {
+    from = offset;
+    from = ceil(from/(base*step) - 1e-15)*(base*step);
+    to = real + offset;
+    to = floor(to/(base*step) + 1e-15)*(base*step);
+
+    for (x = from; x <= to; x += base*step) {
+        if (fabs(x) < 1e-15*base*step)
+            x = 0.0;
         format_layout(layout, &logical1, s, "%.*f", format->precision, x);
-        ix = x/(real/format->magnitude)*size + lw/2;
+        ix = (x - offset)/real*size + lw/2;
         if (ix + PANGO_PIXELS(logical1.height) <= size + extra/4)
             gdk_draw_layout(drawable, gc,
                             l - PANGO_PIXELS(logical1.width) + 1, ix+1, layout);
