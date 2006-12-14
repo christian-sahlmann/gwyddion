@@ -46,8 +46,7 @@ process_LTLIBRARIES = \
 	shade.la \
 	slope_dist.la \
 	sphere-revolve.la \
-	superresolution.la \
-        tip_blind.la \
+	tip_blind.la \
 	tip_model.la \
 	tipops.la \
 	unrotate.la
@@ -226,8 +225,8 @@ slope_dist_la_LIBADD = $(module_libadd)
 sphere_revolve_la_SOURCES = sphere-revolve.c
 sphere_revolve_la_LIBADD = $(module_libadd)
 
-superresolution_la_SOURCES = superresolution.c
-superresolution_la_LIBADD = $(module_libadd)
+#superresolution_la_SOURCES = superresolution.c
+#superresolution_la_LIBADD = $(module_libadd)
 
 tip_blind_la_SOURCES = tip_blind.c
 tip_blind_la_LIBADD = $(module_libadd)
