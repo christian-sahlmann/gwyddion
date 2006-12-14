@@ -79,8 +79,10 @@ static FileTypeInfo* gwy_file_type_info_get(GwyContainer *data,
                                             gboolean do_create);
 static void    gwy_file_container_finalized(gpointer userdata,
                                             GObject *deceased_data);
+#ifdef CHECK_REFERENCES
 static void gwy_file_load_check_container_refs(GwyContainer *container,
                                                GSList **stack);
+#endif  /* CHECK_REFERENCES */
 
 static GHashTable *file_funcs = NULL;
 static GList *container_list = NULL;
@@ -231,9 +233,11 @@ gwy_file_func_run_load(const gchar *name,
 
     data = func_info->load(filename, mode, error, name);
     if (data) {
+#ifdef CHECK_REFERENCES
         GSList *stack = NULL;
 
         gwy_file_load_check_container_refs(data, &stack);
+#endif  /* CHECK_REFERENCES */
         gwy_file_type_info_set(data, name, filename);
     }
 
@@ -825,6 +829,7 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
     g_free(fti);
 }
 
+#ifdef CHECK_REFERENCES
 static void
 gwy_file_load_check_object(GObject *object,
                            GSList *stack)
@@ -930,6 +935,7 @@ gwy_file_load_check_container_refs(GwyContainer *container,
 {
     gwy_container_foreach(container, NULL, gwy_file_load_check_refs, stack);
 }
+#endif  /* CHECK_REFERENCES */
 
 /************************** Documentation ****************************/
 
