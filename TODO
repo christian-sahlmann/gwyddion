@@ -28,7 +28,6 @@ Release checklist:
 - make sure global library headers (libfoo.h) include all other public
   headers
 - update library versions, if something changed
-- make sure devel-docs/libfoo/libfoo.types loads all new types
 - make sure gwyddion.iss.in contains all translations (XXX: automate this)
 - update version in configure.ac
 - update version in gwyddion-night-build
@@ -36,7 +35,8 @@ Release checklist:
 - check and update NEWS, generate HTML version
 - generate on-line module list
 - generate stable API docs for gwyddion.net and upload them
-- tag CVS
+- tag SVN:
+  svn copy https://gwyddion.svn.sourceforge.net/svnroot/gwyddion/trunk/gwyddion https://gwyddion.svn.sourceforge.net/svnroot/gwyddion/tags/gwyddion-0.0
 - build and upload packages
 - sign packages and upload signatures
 - update gwyddion main page

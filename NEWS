@@ -1,6 +1,5 @@
-2.1.20061213
 
-2.2 (0000-00-00)
+2.2 (2006-12-15)
 Application:
 - File open dialogs have a preview (showing all channels in the file).
 - 3D view export uses the new Gtk+ file dialog (as everything else).
