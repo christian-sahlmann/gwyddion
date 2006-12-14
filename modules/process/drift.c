@@ -280,7 +280,7 @@ drift_dialog(DriftArgs *args,
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->interp, args->interp, TRUE);
-    gwy_table_attach_hscale(table, row, _("_Interpolation:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -437,7 +437,7 @@ run_noninteractive(DriftArgs *args,
         g_object_set(gmodel,
                      "title", _("Drift"),
                      "axis-label-left", _("drift"),
-                     "axis-label-bottom", _("y"),
+                     "axis-label-bottom", "y",
                      NULL);
 
         gcmodel = gwy_graph_curve_model_new();

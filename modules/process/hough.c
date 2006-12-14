@@ -171,7 +171,7 @@ hough_dialog(HoughArgs *args)
     HoughControls controls;
     gint response, row;
 
-    dialog = gtk_dialog_new_with_buttons(_("Hough transform"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Hough Transform"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
