@@ -16,16 +16,19 @@ if test "x$1" = "x-f"; then
 fi
 
 mimetype=$(file -Lbi "$1" 2>/dev/null)
-test "$mimetype" == "application/x-bzip2" \
-  || die "Usage: $0 GWYDDION-TARBALL.tar.bz2"
+case "$mimetype" in
+  application/x-bzip2) dec=j;;
+  application/x-gzip) dec=z;;
+  *) die "Usage: $0 GWYDDION-TARBALL";;
+esac
 
-toplevel=$(tar -jtf "$1" | cut -d/ -f1 | uniq)
+toplevel=$(tar -$dec -tf "$1" | cut -d/ -f1 | uniq)
 test $(echo $toplevel | wc -w) == 1 \
   || die "Multiple toplevels: $toplevel"
 out=$toplevel.symbols
 test ! -e "$out"  -o -n "$force" \
   || die "Refusing to overwrite existing $out"
 
-tar -Ojxvf "$1" "$toplevel/devel-docs/libgwy*/html/libgwy*.devhelp2" \
+tar -$dec -Oxvf "$1" "$toplevel/devel-docs/libgwy*/html/libgwy*.devhelp2" \
   | sed -e 's/^ *<keyword /<keyword /;t;d' \
   >$out
