@@ -31,6 +31,8 @@
 #include <libgwymodule/gwymodule-file.h>
 #include "gwymoduleinternal.h"
 
+#define CHECK_REFERENCES 1
+
 /* The file function information. */
 typedef struct {
     const gchar *name;
