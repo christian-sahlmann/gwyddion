@@ -3,7 +3,7 @@
 Application:
 - File open dialogs have a preview (showing all channels in the file).
 - 3D view export uses the new Gtk+ file dialog (as everything else).
-- Translations updated: Italian.
+- Translations updated: Italian, Czech.
 
 Libraries:
 - libgwyprocess: Broken B-spline and Omoms interpolations were made identical
