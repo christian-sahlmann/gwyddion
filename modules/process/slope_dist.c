@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -439,10 +439,12 @@ compute_slopes(GwyDataField *dfield,
                 gwy_data_field_area_fit_plane(dfield, NULL, col, row,
                                               kernel_size, kernel_size,
                                               NULL, &dx, &dy);
+                dx *= qx;
                 *(xder++) = dx;
                 dx = fabs(dx);
                 max = MAX(dx, max);
 
+                dy *= qy;
                 *(yder++) = dy;
                 dy = fabs(dy);
                 max = MAX(dy, max);
@@ -450,6 +452,8 @@ compute_slopes(GwyDataField *dfield,
         }
     }
     else {
+        qx /= 2.0;
+        qy /= 2.0;
         for (row = 1; row + 1 < yres; row++) {
             for (col = 1; col + 1 < xres; col++) {
                 d = data[row*xres + col + 1] - data[row*xres + col - 1];
@@ -481,8 +485,8 @@ make_datafield(GwyDataField *old,
     gint i;
 
     dfield = gwy_data_field_new(res, res, real, real, FALSE);
-    gwy_data_field_set_xoffset(dfield, -gwy_data_field_get_xreal(dfield)/2);
-    gwy_data_field_set_yoffset(dfield, -gwy_data_field_get_yreal(dfield)/2);
+    gwy_data_field_set_xoffset(dfield, -real/2);
+    gwy_data_field_set_yoffset(dfield, -real/2);
 
     unit = gwy_si_unit_new("");
     gwy_data_field_set_si_unit_z(dfield, unit);
