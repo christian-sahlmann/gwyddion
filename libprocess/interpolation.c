@@ -792,7 +792,7 @@ calculate_weights_for_rescale(gint oldn,
  * Resamples a two-dimensional data array.
  *
  * This is a primitive operation, in most cases methods such as
- * gwy_data_filed_new_resampled() provide more convenient interface.
+ * gwy_data_field_new_resampled() provide more convenient interface.
  *
  * Since: 2.2
  **/
