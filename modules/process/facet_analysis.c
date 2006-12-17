@@ -153,7 +153,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -455,8 +455,8 @@ static inline void
 slopes_to_angles(gdouble xder, gdouble yder,
                  gdouble *theta, gdouble *phi)
 {
-    *phi = atan2(yder, xder);
-    *theta = acos(1.0/sqrt(1.0 + xder*xder + yder*yder));
+    *phi = atan2(yder, -xder);
+    *theta = atan(hypot(xder, yder));
 }
 
 static inline void
@@ -465,7 +465,7 @@ angles_to_xy(gdouble theta, gdouble phi,
 {
     gdouble s = 2.0*sin(theta/2.0);
 
-    *x = s*cos(phi);
+    *x = -s*cos(phi);
     *y = s*sin(phi);
 }
 
@@ -473,7 +473,7 @@ static inline void
 xy_to_angles(gdouble x, gdouble y,
              gdouble *theta, gdouble *phi)
 {
-    *phi = atan2(y, x);
+    *phi = atan2(y, -x);
     *theta = 2.0*asin(hypot(x, y)/2.0);
 }
 
@@ -509,11 +509,11 @@ facet_view_select_angle(FacetsControls *controls,
     GwySelection *selection;
     const gchar *key;
 
-    angles_to_xy(theta, -phi, &x, &y);
+    angles_to_xy(theta, phi, &x, &y);
     controls->in_update = TRUE;
     q = gwy_container_get_double_by_name(controls->fdata, "/q");
     xy[0] = x + G_SQRT2/q;
-    xy[1] = G_SQRT2/q - y;
+    xy[1] = y + G_SQRT2/q;
     layer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->fview));
     key = gwy_vector_layer_get_selection_key(layer);
     selection = gwy_container_get_object_by_name(controls->fdata, key);
@@ -534,7 +534,7 @@ facet_view_selection_updated(GwySelection *selection,
     q = gwy_container_get_double_by_name(controls->fdata, "/q");
     gwy_selection_get_object(selection, 0, xy);
     x = xy[0] - G_SQRT2/q;
-    y = G_SQRT2/q - xy[1];
+    y = xy[1] - G_SQRT2/q;
     xy_to_angles(x, y, &theta, &phi);
 
     g_snprintf(s, sizeof(s), "%.2f deg", 180.0/G_PI*theta);
@@ -543,7 +543,7 @@ facet_view_selection_updated(GwySelection *selection,
 
     g_snprintf(s, sizeof(s), "%.2f deg", 180.0/G_PI*phi);
     gtk_label_set_text(GTK_LABEL(controls->phi_label), s);
-    controls->args->phi0 = -phi;
+    controls->args->phi0 = phi;
 
     if (!controls->in_update) {
         layer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
@@ -680,23 +680,23 @@ calculate_average_angle(GwyDataField *dtheta,
                         gdouble *phi)
 {
     gdouble sx, sy, sz;
-    const gdouble *xd, *yd, *md;
+    const gdouble *td, *pd, *md;
     gint i, n;
 
-    xd = gwy_data_field_get_data_const(dtheta);
-    yd = gwy_data_field_get_data_const(dphi);
+    td = gwy_data_field_get_data_const(dtheta);
+    pd = gwy_data_field_get_data_const(dphi);
     md = gwy_data_field_get_data_const(mask);
     n = 0;
     sx = sy = sz = 0.0;
     for (i = gwy_data_field_get_xres(dtheta)*gwy_data_field_get_yres(dtheta);
          i;
-         i--, xd++, yd++, md++) {
+         i--, td++, pd++, md++) {
         if (!*md)
             continue;
 
-        sx += sin(*xd)*cos(*yd);
-        sy += sin(*xd)*sin(*yd);
-        sz += cos(*xd);
+        sx += sin(*td)*cos(*pd);
+        sy += sin(*td)*sin(*pd);
+        sz += cos(*td);
         n++;
     }
 
@@ -992,7 +992,7 @@ facets_mark_fdata(FacetsArgs *args,
         gdouble y = G_SQRT2/(q*hres)*(i - hres);
 
         for (j = 0; j < FDATA_RES; j++) {
-            gdouble x = G_SQRT2/(q*hres)*(j - hres);
+            gdouble x = -G_SQRT2/(q*hres)*(j - hres);
 
             /**
              * Orthodromic distance computed directly from x, y:
