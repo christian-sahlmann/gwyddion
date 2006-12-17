@@ -1608,7 +1608,7 @@ resolve_grain_map(gint *m, gint i, gint j)
  *          grain will be set to grain number.  Grains are numbered
  *          sequentially 1, 2, 3, ...
  *
- * Numbers grains in a mask data field:.
+ * Numbers grains in a mask data field.
  *
  * Returns: The number of last grain (note they are numbered from 1).
  **/
@@ -1620,9 +1620,9 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
     gint xres, yres, i, j, grain_id, max_id, id;
     gint *m, *mm;
 
-    xres = gwy_data_field_get_xres(mask_field);
-    yres = gwy_data_field_get_yres(mask_field);
-    data = gwy_data_field_get_data_const(mask_field);
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    data = mask_field->data;
 
     /* The max number of grains, reached with checkerboard pattern */
     m = g_new0(gint, (xres*yres + 1)/2 + 1);
@@ -1694,6 +1694,74 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
     g_free(m);
 
     return id;
+}
+
+/**
+ * gwy_data_field_get_grain_bounding_boxes:
+ * @mask_field: Data field containing positive values in grains, nonpositive
+ *              in free space.  However its contents is ignored as all
+ *              grain information is taken from @grains (its dimensions
+ *              determine the dimensions of @grains).
+ * @ngrains: The number of grains as returned by
+ *           gwy_data_field_number_grains().
+ * @grains: Grain numbers filled with gwy_data_field_number_grains().
+ * @bboxes: Array of size at least 4@ngrains to fill with grain bounding
+ *          boxes.  The bounding boxes are stored as quadruples of indices:
+ *          (xmin, ymin, width, height).  It can be %NULL to allocate a new
+ *          array.
+ *
+ * Find bounding boxes of all grains.
+ *
+ * Returns: Either %bboxes (if it was not %NULL), or a newly allocated array
+ *          of size 4@ngrains.
+ *
+ * Since: 2.3
+ **/
+gint*
+gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
+                                        gint ngrains,
+                                        const gint *grains,
+                                        gint *bboxes)
+{
+    gint xres, yres, i, j, id;
+    const gdouble *data;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
+    g_return_val_if_fail(grains, NULL);
+
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    data = mask_field->data;
+    if (!bboxes)
+        bboxes = g_new(gint, 4*ngrains);
+
+    for (i = 0; i < ngrains; i++) {
+        bboxes[4*i] = bboxes[4*i + 1] = G_MAXINT;
+        bboxes[4*i + 2] = bboxes[4*i + 3] = -1;
+    }
+
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            if ((id = grains[i*xres + j])) {
+                id *= 4;
+                if (j < bboxes[id])
+                    bboxes[id] = j;
+                if (i < bboxes[id + 1])
+                    bboxes[id + 1] = i;
+                if (j > bboxes[id + 2])
+                    bboxes[id + 2] = j;
+                if (i > bboxes[id + 3])
+                    bboxes[id + 3] = i;
+            }
+        }
+    }
+
+    for (i = 0; i < ngrains; i++) {
+        bboxes[4*i + 2] = bboxes[4*i + 2] - bboxes[4*i]     + 1;
+        bboxes[4*i + 3] = bboxes[4*i + 3] - bboxes[4*i + 1] + 1;
+    }
+
+    return bboxes;
 }
 
 /**
