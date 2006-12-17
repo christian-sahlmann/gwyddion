@@ -26,6 +26,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -77,8 +78,8 @@ static GwyGraphModel* slope_do_graph              (GwyDataField *dfield,
                                                    SlopeArgs *args);
 static gdouble        compute_slopes              (GwyDataField *dfield,
                                                    gint kernel_size,
-                                                   gdouble *xder,
-                                                   gdouble *yder);
+                                                   GwyDataField *xder,
+                                                   GwyDataField *yder);
 static GwyDataField*  make_datafield              (GwyDataField *old,
                                                    gint res,
                                                    gulong *count,
@@ -327,7 +328,8 @@ static GwyDataField*
 slope_do(GwyDataField *dfield,
          SlopeArgs *args)
 {
-    gdouble *xder, *yder;
+    GwyDataField *xder, *yder;
+    const gdouble *xd, *yd;
     gdouble max;
     gint xres, yres, n;
     gint xider, yider, i;
@@ -338,21 +340,23 @@ slope_do(GwyDataField *dfield,
 
     n = args->fit_plane ? args->kernel_size : 2;
     n = (xres - n)*(yres - n);
-    xder = g_new(gdouble, n);
-    yder = g_new(gdouble, n);
+    xder = gwy_data_field_new_alike(dfield, FALSE);
+    yder = gwy_data_field_new_alike(dfield, FALSE);
     max = compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0,
                          xder, yder);
     count = g_new0(gulong, args->size*args->size);
+    xd = gwy_data_field_get_data_const(xder);
+    yd = gwy_data_field_get_data_const(yder);
     for (i = 0; i < n; i++) {
-        xider = args->size*(xder[i]/(2.0*max) + 0.5);
+        xider = args->size*(xd[i]/(2.0*max) + 0.5);
         xider = CLAMP(xider, 0, args->size-1);
-        yider = args->size*(yder[i]/(2.0*max) + 0.5);
+        yider = args->size*(yd[i]/(2.0*max) + 0.5);
         yider = CLAMP(yider, 0, args->size-1);
 
         count[yider*args->size + xider]++;
     }
-    g_free(yder);
-    g_free(xder);
+    g_object_unref(yder);
+    g_object_unref(xder);
 
     return make_datafield(dfield, args->size, count, 2.0*max, args->logscale);
 }
@@ -365,7 +369,9 @@ slope_do_graph(GwyDataField *dfield,
     GwyGraphCurveModel *cmodel;
     GwyDataLine *dataline;
     GwySIUnit *siunit;
-    gdouble *xder, *yder, *data;
+    GwyDataField *xder, *yder;
+    const gdouble *xd, *yd;
+    gdouble *data;
     gint xres, yres, n, i, iphi;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -373,22 +379,24 @@ slope_do_graph(GwyDataField *dfield,
 
     n = args->fit_plane ? args->kernel_size : 2;
     n = (xres - n)*(yres - n);
-    xder = g_new(gdouble, n);
-    yder = g_new(gdouble, n);
+    xder = gwy_data_field_new_alike(dfield, FALSE);
+    yder = gwy_data_field_new_alike(dfield, FALSE);
     compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0, xder, yder);
 
     dataline = GWY_DATA_LINE(gwy_data_line_new(args->size, 360, TRUE));
     data = gwy_data_line_get_data(dataline);
+    xd = gwy_data_field_get_data_const(xder);
+    yd = gwy_data_field_get_data_const(yder);
     for (i = 0; i < n; i++) {
-        gdouble phi = fmod(atan2(-yder[i], -xder[i]) + 2*G_PI, 2*G_PI);
-        gdouble d = (xder[i]*xder[i] + yder[i]*yder[i]);
+        gdouble phi = fmod(atan2(yd[i], -xd[i]) + 2*G_PI, 2*G_PI);
+        gdouble d = (xd[i]*xd[i] + yd[i]*yd[i]);
 
         iphi = floor(args->size*phi/2/G_PI);
         iphi = CLAMP(iphi, 0, args->size-1);
         data[iphi] += d;
     }
-    g_free(yder);
-    g_free(xder);
+    g_object_unref(yder);
+    g_object_unref(xder);
 
     gmodel = gwy_graph_model_new();
     /* This is actualy (z/x)^2, but for users it's in arbitrary units */
@@ -416,62 +424,65 @@ slope_do_graph(GwyDataField *dfield,
 static gdouble
 compute_slopes(GwyDataField *dfield,
                gint kernel_size,
-               gdouble *xder,
-               gdouble *yder)
+               GwyDataField *xder,
+               GwyDataField *yder)
 {
-    const gdouble *data;
-    gdouble qx, qy;
-    gdouble d, max;
     gint xres, yres;
-    gint col, row;
+    gdouble minxd, maxxd, minyd, maxyd;
 
-    data = gwy_data_field_get_data_const(dfield);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    qx = xres/gwy_data_field_get_xreal(dfield);
-    qy = yres/gwy_data_field_get_yreal(dfield);
-    max = 0.0;
     if (kernel_size) {
-        for (row = 0; row + kernel_size < yres; row++) {
-            for (col = 0; col + kernel_size < xres; col++) {
-                gdouble dx, dy;
+        GwyPlaneFitQuantity quantites[] = {
+            GWY_PLANE_FIT_BX, GWY_PLANE_FIT_BY
+        };
+        GwyDataField *fields[2];
 
-                gwy_data_field_area_fit_plane(dfield, NULL, col, row,
-                                              kernel_size, kernel_size,
-                                              NULL, &dx, &dy);
-                dx *= qx;
-                *(xder++) = dx;
-                dx = fabs(dx);
-                max = MAX(dx, max);
-
-                dy *= qy;
-                *(yder++) = dy;
-                dy = fabs(dy);
-                max = MAX(dy, max);
-            }
-        }
+        fields[0] = xder;
+        fields[1] = yder;
+        gwy_data_field_fit_local_planes(dfield, kernel_size,
+                                        2, quantites, fields);
     }
     else {
-        qx /= 2.0;
-        qy /= 2.0;
-        for (row = 1; row + 1 < yres; row++) {
-            for (col = 1; col + 1 < xres; col++) {
-                d = data[row*xres + col + 1] - data[row*xres + col - 1];
-                d *= qx;
-                *(xder++) = d;
-                d = fabs(d);
-                max = MAX(d, max);
+        gint col, row;
+        gdouble *xd, *yd;
+        const gdouble *data;
+        gdouble d;
 
-                d = data[row*xres + xres + col] - data[row*xres - xres + col];
-                d *= qy;
-                *(yder++) = d;
-                d = fabs(d);
-                max = MAX(d, max);
+        data = gwy_data_field_get_data_const(dfield);
+        xd = gwy_data_field_get_data(xder);
+        yd = gwy_data_field_get_data(yder);
+        for (row = 0; row < yres; row++) {
+            for (col = 0; col < xres; col++) {
+                if (!col)
+                    d = data[row*xres + col + 1] - data[row*xres + col];
+                else if (col == xres-1)
+                    d = data[row*xres + col] - data[row*xres + col - 1];
+                else
+                    d = (data[row*xres + col + 1]
+                         - data[row*xres + col - 1])/2;
+                *(xd++) = d;
+
+                if (!row)
+                    d = data[row*xres + xres + col] - data[row*xres + col];
+                else if (row == yres-1)
+                    d = data[row*xres + col] - data[row*xres - xres + col];
+                else
+                    d = (data[row*xres + xres + col]
+                         - data[row*xres - xres + col])/2;
+                *(yd++) = d;
             }
         }
     }
 
-    return max;
+    gwy_data_field_multiply(xder, xres/gwy_data_field_get_xreal(dfield));
+    gwy_data_field_get_min_max(xder, &minxd, &maxxd);
+    maxxd = MAX(fabs(minxd), fabs(maxxd));
+    gwy_data_field_multiply(yder, yres/gwy_data_field_get_yreal(dfield));
+    gwy_data_field_get_min_max(yder, &minyd, &maxyd);
+    maxyd = MAX(fabs(minyd), fabs(maxyd));
+
+    return MAX(maxxd, maxyd);
 }
 
 static GwyDataField*
