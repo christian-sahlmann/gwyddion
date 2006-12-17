@@ -1,3 +1,10 @@
+2.2.20061216
+
+2.3 (2000-00-00)
+Modules:
+- Slope distribution: Coordinates of output were corrected to be really the
+  derivatives, not just propertional to them.
+
 
 2.2 (2006-12-15)
 Application:
