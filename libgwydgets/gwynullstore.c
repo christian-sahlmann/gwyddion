@@ -262,7 +262,7 @@ gwy_null_store_iter_nth_child(GtkTreeModel *model,
 
     iter->stamp = store->stamp;
     iter->user_data = GUINT_TO_POINTER((guint)n);
-    iter->user_data = NULL;
+    iter->user_data2 = NULL;
 
     return TRUE;
 }
