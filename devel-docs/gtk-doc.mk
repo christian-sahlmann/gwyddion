@@ -139,7 +139,6 @@ endif
 
 clean-local:
 	rm -f *~ *.bak
-	rm -rf .libs
 
 distclean-local:
 	cd $(srcdir) && rm -rf xml template
