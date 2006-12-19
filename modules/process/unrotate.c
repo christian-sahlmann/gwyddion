@@ -37,7 +37,7 @@
 #define UNROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 120
+    PREVIEW_SIZE = 160
 };
 
 typedef struct {
@@ -89,7 +89,7 @@ static GwyModuleInfo module_info = {
     N_("Rotates data to make characteristic directions parallel "
        "with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

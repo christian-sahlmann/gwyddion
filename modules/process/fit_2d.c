@@ -40,7 +40,7 @@
 #define MAX_PARAMS 4
 
 enum {
-    PREVIEW_SIZE = 320
+    PREVIEW_SIZE = 400
 };
 
 typedef enum {

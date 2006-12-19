@@ -43,9 +43,9 @@
 #define FVIEW_GRADIENT "DFit"
 
 enum {
-    PREVIEW_SIZE = 320,
+    PREVIEW_SIZE = 400,
     /* XXX: don't change */
-    FDATA_RES = 189,
+    FDATA_RES = 241,
 };
 
 typedef struct {

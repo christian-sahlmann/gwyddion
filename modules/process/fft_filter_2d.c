@@ -39,7 +39,9 @@
 
 #define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-#define PREVIEW_SIZE 400.0
+enum {
+    PREVIEW_SIZE = 400
+};
 
 /* Convenience macros */
 #define get_toggled(obj) \
@@ -149,7 +151,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.2",
+    "1.3",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };

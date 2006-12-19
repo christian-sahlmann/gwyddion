@@ -49,7 +49,7 @@
 #define downsample_limit 20
 
 enum {
-    PREVIEW_SIZE = 320
+    PREVIEW_SIZE = 400
 };
 
 typedef enum {
@@ -182,7 +182,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };

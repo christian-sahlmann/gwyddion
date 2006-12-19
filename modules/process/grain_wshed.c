@@ -35,7 +35,7 @@
 #define WSHED_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 320
+    PREVIEW_SIZE = 400
 };
 
 typedef struct {
@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.13",
+    "1.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

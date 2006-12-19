@@ -48,8 +48,8 @@ typedef enum {
 } GwyFftf1dViewType;
 
 enum {
-    PREVIEW_SIZE = 200,
-    MAX_PREV = 200
+    PREVIEW_SIZE = 240,
+    MAX_PREV = 240
 };
 
 typedef struct {

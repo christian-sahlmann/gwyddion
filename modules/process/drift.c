@@ -38,7 +38,7 @@
 #define DRIFT_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
 
 enum {
-    PREVIEW_SIZE = 320
+    PREVIEW_SIZE = 400
 };
 
 typedef enum {
@@ -148,7 +148,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates and/or correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };

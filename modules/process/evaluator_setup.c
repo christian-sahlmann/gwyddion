@@ -49,7 +49,7 @@ enum {
 
 enum {
     TEXT_COLUMN = 1,
-    PREVIEW_SIZE = 320,
+    PREVIEW_SIZE = 400,
     DEFAULT_POINT_SIZE = 50,
     DEFAULT_RHO_SIZE = 10,
     DEFAULT_THETA_SIZE = 10

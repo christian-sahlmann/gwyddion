@@ -43,7 +43,7 @@ typedef enum {
 } GwyFeaturesType;
 
 enum {
-    PREVIEW_SIZE = 320,
+    PREVIEW_SIZE = 400,
     MAX_LENGTH = 1024
 };
 
@@ -114,7 +114,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
