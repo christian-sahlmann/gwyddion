@@ -776,6 +776,7 @@ gwy_data_view_update(GwyDataView *data_view)
     data_view->yres = gwy_data_field_get_yres(data_field);
     data_view->xreal = gwy_data_field_get_xreal(data_field);
     data_view->yreal = gwy_data_field_get_yreal(data_field);
+
     widget = GTK_WIDGET(data_view);
     if (!widget->window)
         return;
@@ -787,6 +788,10 @@ gwy_data_view_update(GwyDataView *data_view)
                   data_view->xres, data_view->yres, pxres, pyres);
         if (pxres != data_view->xres || pyres != data_view->yres)
             need_resize = TRUE;
+        else {
+            data_view->xmeasure = data_view->xreal/pxres;
+            data_view->ymeasure = data_view->yreal/pyres;
+        }
     }
 
     if (need_resize) {
