@@ -208,7 +208,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0.1",
+    "2.0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1957,6 +1957,7 @@ rawfile_read_ascii(RawFileArgs *args,
                                 n, buffer);
                     return FALSE;
                 }
+                buffer += j;
             }
             break;
 
