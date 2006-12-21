@@ -788,10 +788,6 @@ gwy_data_view_update(GwyDataView *data_view)
                   data_view->xres, data_view->yres, pxres, pyres);
         if (pxres != data_view->xres || pyres != data_view->yres)
             need_resize = TRUE;
-        else {
-            data_view->xmeasure = data_view->xreal/pxres;
-            data_view->ymeasure = data_view->yreal/pyres;
-        }
     }
 
     if (need_resize) {
@@ -799,8 +795,15 @@ gwy_data_view_update(GwyDataView *data_view)
         gtk_widget_queue_resize(widget);
         g_signal_emit(widget, data_view_signals[RESIZED], 0);
     }
-    else
+    else {
+        if (data_view->pixbuf) {
+            pxres = gdk_pixbuf_get_width(data_view->pixbuf);
+            pyres = gdk_pixbuf_get_height(data_view->pixbuf);
+            data_view->xmeasure = data_view->xreal/pxres;
+            data_view->ymeasure = data_view->yreal/pyres;
+        }
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
+    }
 }
 
 /**
