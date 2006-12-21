@@ -115,7 +115,7 @@ microprof_load(const gchar *filename,
     guchar *p, *buffer = NULL;
     GHashTable *meta;
     GwySIUnit *siunit;
-    gchar *header, *s;
+    gchar *header, *s, *prev;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
@@ -205,12 +205,28 @@ microprof_load(const gchar *filename,
     s = (gchar*)p;
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
+            prev = s;
             /* Skip x */
             v = strtol(s, &s, 10);
+            if (v != j)
+                g_warning("Column number mismatch");
             /* Skip y */
             v = strtol(s, &s, 10);
+            if (v != i)
+                g_warning("Row number mismatch");
             /* Read value */
-            d[i*xres + j] = strtol(s, &s, 10)*zscale;
+            d[(yres-1 - i)*xres + j] = strtol(s, &s, 10)*zscale;
+
+            /* Check whether we moved in the file */
+            if (s == prev) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("File contains less than XSize*YSize data "
+                              "points."));
+                gwy_file_abandon_contents(buffer, size, NULL);
+                g_hash_table_destroy(meta);
+                return NULL;
+            }
         }
     }
     gwy_file_abandon_contents(buffer, size, NULL);
