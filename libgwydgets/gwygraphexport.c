@@ -55,9 +55,13 @@ gwy_graph_export_pixmap(GwyGraph *graph,
     labelh = (GWY_GRAPH_LABEL(graph->area->lab))->reqheight;
 
     visual = gdk_visual_get_best();
-    pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
-    gc = gdk_gc_new(pixmap);
     cmap = gdk_colormap_new(visual, FALSE);
+
+    pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
+    gdk_drawable_set_colormap(pixmap, cmap);
+
+    gc = gdk_gc_new(pixmap);
+    gdk_gc_set_colormap(gc, cmap);
 
     gdk_gc_set_rgb_fg_color(gc, &color);
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
