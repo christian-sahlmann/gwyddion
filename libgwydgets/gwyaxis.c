@@ -617,7 +617,7 @@ gwy_axis_size_request(GtkWidget *widget,
         pango_layout_set_font_description(layout, axis->par.major_font);
         for (i = 0; i < axis->mjticks->len; i++) {
             pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
-            pango_layout_set_text(layout, pmjt->ttext->str, pmjt->ttext->len);
+            pango_layout_set_markup(layout, pmjt->ttext->str, pmjt->ttext->len);
             pango_layout_get_pixel_extents(layout, NULL, &rect);
             rect_label.width = MAX(rect_label.width, rect.width);
         }
@@ -1003,7 +1003,7 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable,
 
     for (i = 0; i < axis->mjticks->len; i++) {
         pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
-        pango_layout_set_text(layout,  pmjt->ttext->str, pmjt->ttext->len);
+        pango_layout_set_markup(layout, pmjt->ttext->str, pmjt->ttext->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
         switch (axis->orientation) {
@@ -1409,7 +1409,7 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
     if (a->is_logarithmic) range = log10(a->max)-log10(a->min);
 
     for (i = 0; i < a->mjticks->len; i++) {
-        pmjt = &g_array_index (a->mjticks, GwyAxisLabeledTick, i);
+        pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
         if (a->is_logarithmic)
             pmjt->t.scrpos = ROUND(scrmin + (pmjt->t.value
                                              - log10(a->min))/range*dist);
@@ -1419,7 +1419,7 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
     }
 
     for (i = 0; i < a->miticks->len; i++) {
-        pmit = &g_array_index (a->miticks, GwyAxisTick, i);
+        pmit = &g_array_index(a->miticks, GwyAxisTick, i);
         if (a->is_logarithmic)
             pmit->scrpos = ROUND(scrmin + (pmit->value
                                            - log10(a->min))/range*dist);
@@ -1436,10 +1436,11 @@ gwy_axis_formatticks(GwyAxis *a)
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
-    gint totalwidth=0, totalheight=0;
+    gint totalwidth = 0, totalheight = 0;
     gdouble range;
     GwySIValueFormat *format = NULL;
     GwyAxisLabeledTick mji, mjx, *pmjt;
+    gboolean human_fmt = TRUE;
     guint i;
 
     /* Determine range */
@@ -1482,42 +1483,45 @@ gwy_axis_formatticks(GwyAxis *a)
     layout = pango_layout_new(context);
     pango_layout_set_font_description(layout, a->par.major_font);
 
-    for (i = 0; i < a->mjticks->len; i++)
-    {
+    if (a->is_logarithmic) {
+        pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, 0);
+        if (pmjt->t.value < -4 || pmjt->t.value > 3)
+            human_fmt = FALSE;
+        pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick,
+                              a->mjticks->len-1);
+        if (pmjt->t.value < -4 || pmjt->t.value > 3)
+            human_fmt = FALSE;
+    }
+
+    for (i = 0; i < a->mjticks->len; i++) {
         /* Find the value we want to put in string */
         pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
-        if (a->is_logarithmic)
-            value = pow(10, pmjt->t.value);
-        else
-            value = pmjt->t.value;
-
+        value = pmjt->t.value;
         if (format)
             value /= format->magnitude;
 
         /* Fill tick labels dependent to mode */
         if (a->is_logarithmic) {
-            if (value >= 1 && value <= 1000)
-                g_string_printf(pmjt->ttext,"%d", (int)value);
-            else if (value < 1 && value > 1e-4)
-                g_string_printf(pmjt->ttext,"%.*f", (int)fabs(log10(value)), value);
+            if (human_fmt)
+                g_string_printf(pmjt->ttext, "%g", pow10(value));
             else
-                g_string_printf(pmjt->ttext,"%.1e", value);
+                g_string_printf(pmjt->ttext, "10<sup>%d</sup>", ROUND(value));
         }
         else {
             if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
                 g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
             }
             else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
-                g_string_printf(pmjt->ttext,"%.1e", value);
+                g_string_printf(pmjt->ttext, "%.1e", value);
                 if (value == 0)
-                g_string_printf(pmjt->ttext,"0");
+                g_string_printf(pmjt->ttext, "0");
             }
             else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_INT) {
-                g_string_printf(pmjt->ttext,"%d", (int)(value+0.5));
+                g_string_printf(pmjt->ttext, "%d", (int)(value+0.5));
             }
         }
 
-        pango_layout_set_text(layout,  pmjt->ttext->str, pmjt->ttext->len);
+        pango_layout_set_markup(layout, pmjt->ttext->str, pmjt->ttext->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         totalwidth += rect.width;
         totalheight += rect.height;
