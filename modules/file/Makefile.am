@@ -40,6 +40,7 @@ file_LTLIBRARIES = \
 	jeol.la \
 	$(jpkscan_module) \
 	metropro.la \
+	microprof.la \
 	mifile.la \
 	nanoscope.la \
 	nanonis.la \
@@ -149,6 +150,9 @@ endif
 
 metropro_la_SOURCES = metropro.c
 metropro_la_LIBADD = $(module_libadd)
+
+microprof_la_SOURCES = microprof.c
+microprof_la_LIBADD = $(module_libadd)
 
 mifile_la_SOURCES = mifile.c
 mifile_la_LIBADD = $(module_libadd)
