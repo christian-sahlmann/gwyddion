@@ -1,9 +1,25 @@
-2.2.20061216
+2.2.20061221
 
 2.3 (2000-00-00)
+Application:
+- Translations updated: Italian.
+
+Libraries:
+- libgwydgets: Data view check xreal, yreal changes when updating and
+  recalculates measures.
+- libgwydgets: GwyNullStore iter_nth_child() method sets the iter properly,
+  fixing use in as a combo box model.
+- libgwydgets: Ctrl-C to copy graph image to clipboard actually works.
+- libgwyprocess: Function gwy_data_field_get_grain_bounding_boxes() finds
+  bounding boxes of all grains.
+
 Modules:
+- MicroProf (new): MicroProf FRT data file import.
 - Slope distribution: Coordinates of output were corrected to be really the
   derivatives, not just propertional to them.
+- Facet analysis: Phi calculation was unified with other modules.
+- Rawfile: Skipping fields works when delimiter is `any whitespace'.
+- Grain watershed: Initial mask drawing artefacts were fixed.
 
 
 2.2 (2006-12-15)
