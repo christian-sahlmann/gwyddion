@@ -358,7 +358,6 @@ merge_do(MergeArgs *args)
     yres1 = gwy_data_field_get_yres(dfield1);
     yres2 = gwy_data_field_get_yres(dfield2);
 
-
     /*cut data for correlation*/
     switch (args->direction) {
         case GWY_MERGE_DIRECTION_UP:
@@ -396,10 +395,10 @@ merge_do(MergeArgs *args)
                                                    cdata.width,
                                                    cdata.height);
     correlation_kernel = gwy_data_field_area_extract(dfield2,
-                                                   kdata.x,
-                                                   kdata.y,
-                                                   kdata.width,
-                                                   kdata.height);
+                                                     kdata.x,
+                                                     kdata.y,
+                                                     kdata.width,
+                                                     kdata.height);
     correlation_score = gwy_data_field_new_alike(correlation_data, FALSE);
 
     /* get appropriate correlation score */
@@ -578,6 +577,12 @@ merge_do(MergeArgs *args)
         gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
         newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
         gwy_app_set_data_field_title(data, newid, _("Merged images"));
+        gwy_app_sync_data_items(args->op1.data, data, args->op1.id, newid,
+                                FALSE,
+                                GWY_DATA_ITEM_PALETTE,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_RANGE,
+                                0);
         g_object_unref(result);
     }
 
