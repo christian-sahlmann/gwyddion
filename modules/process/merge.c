@@ -146,7 +146,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -347,18 +347,21 @@ merge_do(MergeArgs *args)
     quark = gwy_app_get_data_key_for_id(args->op2.id);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
 
+    result = gwy_data_field_new_alike(dfield1, FALSE);
+
+    if (args->direction == GWY_MERGE_DIRECTION_UP
+        || args->direction == GWY_MERGE_DIRECTION_LEFT)
+        GWY_SWAP(GwyDataField*, dfield1, dfield2);
+
     xres1 = gwy_data_field_get_xres(dfield1);
     xres2 = gwy_data_field_get_xres(dfield2);
     yres1 = gwy_data_field_get_yres(dfield1);
     yres2 = gwy_data_field_get_yres(dfield2);
 
-    result = gwy_data_field_new_alike(dfield1, FALSE);
 
     /*cut data for correlation*/
     switch (args->direction) {
         case GWY_MERGE_DIRECTION_UP:
-        gwy_data_field_invert(dfield1, TRUE, FALSE, FALSE);
-        gwy_data_field_invert(dfield2, TRUE, FALSE, FALSE);
         case GWY_MERGE_DIRECTION_DOWN:
         cdata.x = 0;
         cdata.y = yres1 - (yres1/3);
@@ -370,9 +373,7 @@ merge_do(MergeArgs *args)
         kdata.y = 0;
         break;
 
-        case GWY_MERGE_DIRECTION_LEFT: /*TODO rewrite this really ugly hack*/
-        gwy_data_field_invert(dfield1, FALSE, TRUE, FALSE);
-        gwy_data_field_invert(dfield2, FALSE, TRUE, FALSE);
+        case GWY_MERGE_DIRECTION_LEFT:
         case GWY_MERGE_DIRECTION_RIGHT:
         cdata.x = xres1 - (xres1/3);
         cdata.y = 0;
@@ -488,12 +489,6 @@ merge_do(MergeArgs *args)
                            res_rect, f1_pos, f2_pos,
                            args->direction, zshift);
         }
-        if (args->direction == GWY_MERGE_DIRECTION_UP) {
-            gwy_data_field_invert(dfield1, TRUE, FALSE, FALSE);
-            gwy_data_field_invert(dfield2, TRUE, FALSE, FALSE);
-            gwy_data_field_invert(result, TRUE, FALSE, FALSE);
-
-        }
         break;
 
         case GWY_MERGE_DIRECTION_LEFT:
@@ -570,12 +565,6 @@ merge_do(MergeArgs *args)
             merge_boundary(dfield1, dfield2, result,
                            res_rect, f1_pos, f2_pos,
                            args->direction, zshift);
-        }
-        if (args->direction == GWY_MERGE_DIRECTION_LEFT) {
-            gwy_data_field_invert(dfield1, FALSE, TRUE, FALSE);
-            gwy_data_field_invert(dfield2, FALSE, TRUE, FALSE);
-            gwy_data_field_invert(result, FALSE, TRUE, FALSE);
-
         }
         break;
 
