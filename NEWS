@@ -1,4 +1,4 @@
-2.2.20061221
+2.2.20061224
 
 2.3 (2000-00-00)
 Application:
@@ -12,12 +12,18 @@ Libraries:
 - libgwydgets: Ctrl-C to copy graph image to clipboard actually works.
 - libgwyprocess: Function gwy_data_field_get_grain_bounding_boxes() finds
   bounding boxes of all grains.
+- libgwydgets: Truncated logarithmic axes were fixed and the formatting of
+  logarithmic axes improved.
 
 Modules:
 - MicroProf (new): MicroProf FRT data file import.
 - Slope distribution: Coordinates of output were corrected to be really the
   derivatives, not just propertional to them.
-- Facet analysis: Phi calculation was unified with other modules.
+- Pixmap: Crash with fixed gdk-pixbuf which properly closes pixbuf loaders
+  on failure was fixed.
+- Facet analysis: Phi calculation was unified with other modules, the size of
+  neighbourhood used to calculate local inclinations can be controlled.
+- Mark scars: Instant updates option is available.
 - Rawfile: Skipping fields works when delimiter is `any whitespace'.
 - Grain watershed: Initial mask drawing artefacts were fixed.
 
