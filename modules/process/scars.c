@@ -47,12 +47,18 @@ enum {
     MAX_LENGTH = 1024
 };
 
+enum {
+    RESPONSE_RESET   = 1,
+    RESPONSE_PREVIEW = 2
+};
+
 typedef struct {
     GwyFeaturesType type;
     gdouble threshold_high;
     gdouble threshold_low;
     gint min_len;
     gint max_width;
+    gboolean update;
 } ScarsArgs;
 
 typedef struct {
@@ -65,8 +71,10 @@ typedef struct {
     GtkObject *min_len;
     GtkObject *max_width;
     GtkWidget *color_button;
+    GtkWidget *update;
     GwyContainer *mydata;
     gboolean computed;
+    gboolean in_init;
 } ScarsControls;
 
 static gboolean module_register                    (void);
@@ -92,6 +100,7 @@ static void     scars_mark_dialog_update_values    (ScarsControls *controls,
 static void     scars_mark_dialog_update_thresholds(GtkObject *adj,
                                                     ScarsControls *controls);
 static void     scars_invalidate                   (ScarsControls *controls);
+static void     update_change_cb                   (ScarsControls *controls);
 static void     mask_color_change_cb               (GtkWidget *color_button,
                                                     ScarsControls *controls);
 static void     preview                            (ScarsControls *controls,
@@ -106,7 +115,8 @@ static const ScarsArgs scars_defaults = {
     0.666,
     0.25,
     16,
-    4
+    4,
+    TRUE,
 };
 
 static GwyModuleInfo module_info = {
@@ -114,7 +124,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.9",
+    "1.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -435,10 +445,6 @@ scars_mark_dialog(ScarsArgs *args,
                   gint id,
                   GQuark mquark)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_PREVIEW = 2
-    };
     static const GwyEnum types[] = {
         { N_("Positive"), FEATURES_POSITIVE, },
         { N_("Negative"), FEATURES_NEGATIVE, },
@@ -451,8 +457,10 @@ scars_mark_dialog(ScarsArgs *args,
     gdouble zoomval;
     GwyPixmapLayer *layer;
     GSList *group;
+    gboolean temp;
     gint row;
 
+    controls.in_init = TRUE;
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Mark Scars"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
@@ -490,7 +498,7 @@ scars_mark_dialog(ScarsArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(10, 4, FALSE);
+    table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -557,8 +565,26 @@ scars_mark_dialog(ScarsArgs *args,
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
+    row++;
+
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.update, "toggled",
+                             G_CALLBACK(update_change_cb), &controls);
+    row++;
 
     scars_invalidate(&controls);
+    controls.in_init = FALSE;
+
+    /* show initial preview if instant updates are on */
+    if (args->update) {
+        gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
+                                          RESPONSE_PREVIEW, FALSE);
+        preview(&controls, args);
+    }
 
     gtk_widget_show_all(dialog);
     do {
@@ -577,8 +603,13 @@ scars_mark_dialog(ScarsArgs *args,
             break;
 
             case RESPONSE_RESET:
+            temp = args->update;
             *args = scars_defaults;
+            args->update = temp;
+            controls.in_init = TRUE;
             scars_mark_dialog_update_controls(&controls, args);
+            controls.in_init = FALSE;
+            preview(&controls, args);
             break;
 
             case RESPONSE_PREVIEW:
@@ -655,6 +686,8 @@ scars_mark_dialog_update_controls(ScarsControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_width),
                              args->max_width);
     gwy_radio_buttons_set_current(controls->type, args->type);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
+                                 args->update);
 }
 
 static void
@@ -668,12 +701,34 @@ scars_mark_dialog_update_values(ScarsControls *controls,
     args->min_len = gwy_adjustment_get_int(controls->min_len);
     args->max_width = gwy_adjustment_get_int(controls->max_width);
     args->type = gwy_radio_buttons_get_current(controls->type);
+    args->update
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
 }
 
 static void
 scars_invalidate(ScarsControls *controls)
 {
     controls->computed = FALSE;
+
+    /* create preview if instant updates are on */
+    if (controls->args->update && !controls->in_init) {
+        scars_mark_dialog_update_values(controls, controls->args);
+        preview(controls, controls->args);
+    }
+}
+
+static void
+update_change_cb(ScarsControls *controls)
+{
+    controls->args->update
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
+
+    if (controls->args->update)
+        scars_invalidate(controls);
 }
 
 static void
@@ -735,6 +790,7 @@ static const gchar threshold_low_key[]  = "/module/scars/threshold_low";
 static const gchar threshold_high_key[] = "/module/scars/threshold_high";
 static const gchar min_len_key[]        = "/module/scars/min_len";
 static const gchar max_width_key[]      = "/module/scars/max_width";
+static const gchar update_key[]         = "/module/scars/update";
 
 static void
 scars_mark_sanitize_args(ScarsArgs *args)
@@ -744,6 +800,7 @@ scars_mark_sanitize_args(ScarsArgs *args)
     args->threshold_high = MAX(args->threshold_low, args->threshold_high);
     args->min_len = CLAMP(args->min_len, 1, MAX_LENGTH);
     args->max_width = CLAMP(args->max_width, 1, 16);
+    args->update = !!args->update;
 }
 
 static void
@@ -759,6 +816,7 @@ scars_mark_load_args(GwyContainer *container,
                                      &args->threshold_low);
     gwy_container_gis_int32_by_name(container, min_len_key, &args->min_len);
     gwy_container_gis_int32_by_name(container, max_width_key, &args->max_width);
+    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     scars_mark_sanitize_args(args);
 }
 
@@ -773,6 +831,7 @@ scars_mark_save_args(GwyContainer *container,
                                      args->threshold_low);
     gwy_container_set_int32_by_name(container, min_len_key, args->min_len);
     gwy_container_set_int32_by_name(container, max_width_key, args->max_width);
+    gwy_container_set_boolean_by_name(container, update_key, args->update);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
