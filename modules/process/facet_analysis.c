@@ -1098,7 +1098,7 @@ static void
 facets_sanitize_args(FacetsArgs *args)
 {
     args->tolerance = CLAMP(args->tolerance, 0.0, 15.0*G_PI/180.0);
-    args->kernel_size = CLAMP(args->kernel_size, 1, MAX_PLANE_SIZE);
+    args->kernel_size = CLAMP(args->kernel_size, 0, MAX_PLANE_SIZE);
 }
 
 static void
