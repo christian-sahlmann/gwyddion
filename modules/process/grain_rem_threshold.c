@@ -50,7 +50,6 @@ typedef struct {
     gboolean is_height;
     gboolean is_area;
     gboolean update;
-    gboolean init;
     gboolean computed;
     GwyMergeType merge_type;
 } RemoveArgs;
@@ -69,6 +68,7 @@ typedef struct {
     GwyContainer *mydata;
     RemoveArgs *args;
     GwyDataField *mask;
+    gboolean in_init;
 } RemoveControls;
 
 static gboolean    module_register               (void);
@@ -120,7 +120,6 @@ static const RemoveArgs remove_defaults = {
     FALSE,
     TRUE,
     FALSE,
-    FALSE,
     GWY_MERGE_UNION,
 };
 
@@ -129,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.11",
+    "1.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -206,6 +205,7 @@ remove_dialog(RemoveArgs *args,
 
     controls.args = args;
     controls.mask = mfield;
+    controls.in_init = TRUE;
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0, NULL);
@@ -341,7 +341,7 @@ remove_dialog(RemoveArgs *args,
                                  args->is_area);
 
     /* finished initializing, allow instant updates */
-    args->init = TRUE;
+    controls.in_init = FALSE;
 
     /* show initial preview if instant updates are on */
     if (args->update) {
@@ -370,9 +370,10 @@ remove_dialog(RemoveArgs *args,
             temp = args->update;
             *args = remove_defaults;
             args->update = temp;
+            controls.in_init = TRUE;
             remove_dialog_update_controls(&controls, args);
+            controls.in_init = FALSE;
             preview(&controls, args, mfield);
-            args->init = TRUE;
             break;
 
             case RESPONSE_PREVIEW:
@@ -464,7 +465,7 @@ remove_invalidate(RemoveControls *controls)
     controls->args->computed = FALSE;
 
     /* create preview if instant updates are on */
-    if (controls->args->update && controls->args->init) {
+    if (controls->args->update && !controls->in_init) {
         remove_dialog_update_values(controls, controls->args);
         preview(controls, controls->args, controls->mask);
     }

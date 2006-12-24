@@ -60,7 +60,6 @@ typedef struct {
     gboolean update;
     GwyMergeType merge_type;
     gboolean computed;
-    gboolean init;
 } MarkArgs;
 
 typedef struct {
@@ -78,6 +77,7 @@ typedef struct {
     GtkWidget *update;
     GwyContainer *mydata;
     MarkArgs *args;
+    gboolean in_init;
 } MarkControls;
 
 static gboolean    module_register            (void);
@@ -127,7 +127,6 @@ static const MarkArgs mark_defaults = {
     TRUE,
     GWY_MERGE_UNION,
     FALSE,
-    FALSE,
 };
 
 static GwyModuleInfo module_info = {
@@ -135,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.12",
+    "1.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -245,6 +244,7 @@ mark_dialog(MarkArgs *args,
     gboolean temp;
 
     controls.args = args;
+    controls.in_init = TRUE;
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Threshold"), NULL, 0,
                                          NULL);
@@ -366,7 +366,7 @@ mark_dialog(MarkArgs *args,
                                  args->is_lap);
 
     /* finished initializing, allow instant updates */
-    args->init = TRUE;
+    controls.in_init = FALSE;
 
     /* show initial preview if instant updates are on */
     if (args->update) {
@@ -396,8 +396,9 @@ mark_dialog(MarkArgs *args,
             *args = mark_defaults;
             args->update = temp;
             mark_dialog_update_controls(&controls, args);
+            controls.in_init = TRUE;
             preview(&controls, args);
-            args->init = TRUE;
+            controls.in_init = FALSE;
             break;
 
             case RESPONSE_PREVIEW:
@@ -478,6 +479,18 @@ mark_dialog_update_values(MarkControls *controls,
 }
 
 static void
+mark_invalidate(MarkControls *controls)
+{
+    controls->args->computed = FALSE;
+
+    /* create preview if instant updates are on */
+    if (controls->args->update && !controls->in_init) {
+        mark_dialog_update_values(controls, controls->args);
+        preview(controls, controls->args);
+    }
+}
+
+static void
 update_change_cb(MarkControls *controls)
 {
     controls->args->update
@@ -489,18 +502,6 @@ update_change_cb(MarkControls *controls)
 
     if (controls->args->update)
         mark_invalidate(controls);
-}
-
-static void
-mark_invalidate(MarkControls *controls)
-{
-    controls->args->computed = FALSE;
-
-    /* create preview if instant updates are on */
-    if (controls->args->update && controls->args->init) {
-        mark_dialog_update_values(controls, controls->args);
-        preview(controls, controls->args);
-    }
 }
 
 static void
