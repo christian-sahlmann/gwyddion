@@ -6,12 +6,10 @@ basever=2.2
 dont_update_version=
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
-docdir=$HOME/Projects/Gwyddion/devel-docs
 installprefix=$HOME/opt/gwyddion
 gtkdocdir="/share/gtk-doc/html/*"
-gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix)
+gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $home)
 gnainsindex=$HOME/lib/gtk.gnains
-host=$($HOME/bin/Ftpcp)
 
 source $HOME/.bashrc
 source $HOME/.ssh/current-ssh-agent
