@@ -90,8 +90,11 @@ function extract_build_documentation() {
   if test -s $tmplog; then
       h=1
   fi
-  grep -P "^(WARNING|ERROR)\\b.*(\\n\\s+.*)*" \
-    $logfile | grep -v -f build_documentation.ignore >$tmplog
+  python -c \
+"import re, sys
+x = re.findall(r'(?m)^(?:WARNING|ERROR)\\b.*(?:\\n\s+.*)*', sys.stdin.read())
+if x: print '\\n'.join(x)" \
+    <$logfile | grep -v -f build_documentation.ignore >$tmplog
   if test -s $tmplog -a -z "$h"; then
     echo "=====[ build_documentation ]====="
   fi
