@@ -66,10 +66,8 @@ function autostuff() {
 
 function build_project() {
   make -k clean
-  make -k
-  # Use ctags to build tags
-  # Prevent automake from exporting CTAGS some garbage in CTAGS
-  make -k tags ETAGS=ctags CTAGS="$CTAGS"
+  make -k all
+  make -k ctags
   pushd po
   make -k update-gmo
   for x in $(sed '/^POFILES/s/\(.*=\|\.po\)//g;t;d' Makefile); do
