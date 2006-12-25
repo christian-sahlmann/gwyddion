@@ -143,8 +143,13 @@ function make_dists() {
 
   make dist
   if test -s $pkgname-$version.tar.bz2; then
-    TAR_OPTIONS=--wildcards rpmbuild -ta --clean $pkgname-$version.tar.bz2 \
-      && touch .releaseme
+    if which rpmbuild >&/dev/null; then
+      TAR_OPTIONS=--wildcards rpmbuild -ta --clean $pkgname-$version.tar.bz2 \
+        && touch .releaseme
+    else
+      echo "rpmbuild not available" 1>&2
+      touch .releaseme
+    fi
     mv $pkgname-$version.tar.bz2 $pkgname-head.tar.bz2
     mv $pkgname-$version.tar.gz $pkgname-head.tar.gz
   fi
@@ -152,10 +157,13 @@ function make_dists() {
 
 
 function gnains_index() {
-  which gnains-mkindex || return
-  for d in ${gtkdocdirs[@]/%/$gtkdocdir}; do
-    test -f "$d/index.sgml" && echo $d
-  done | xargs gnains-mkindex -f $gnainsindex
+  if which gnains-mkindex >&/dev/null; then
+    for d in ${gtkdocdirs[@]/%/$gtkdocdir}; do
+      test -f "$d/index.sgml" && echo $d
+    done | xargs gnains-mkindex -f $gnainsindex
+  else
+    echo "gnains-mkindex not available" 1>&2
+  fi
 }
 
 
