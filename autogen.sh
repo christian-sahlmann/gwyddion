@@ -142,8 +142,9 @@ if test -z "$NO_GETTEXTIZE"; then
     # Nothing to do
     :
   else
-    eval `grep '^prefix=' $GETTEXTIZE`
-    eval `grep '^gettext_dir=' $GETTEXTIZE`
+    for x in prefix datarootdir gettext_dir; do
+      eval `grep "^$x=" $GETTEXTIZE`
+    done
     if cp "$gettext_dir/config.rpath" config.rpath; then
       # OK
       :
