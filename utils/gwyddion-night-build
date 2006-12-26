@@ -11,6 +11,11 @@ gtkdocdir="/share/gtk-doc/html/*"
 gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $home)
 gnainsindex=$HOME/lib/gtk.gnains
 
+# With /bin/sh, exported variables set in both user environment and Makefile
+# get the Makefile's variable, which is wrong.  For instance CTAGS in Makefile
+# contains the command name, while in the shell it contains ctags options.
+bash=$(which bash)
+
 source $HOME/.bashrc
 source $HOME/.ssh/current-ssh-agent
 export CFLAGS="-ggdb -O"
@@ -55,7 +60,7 @@ function update_version() {
 
 function autostuff() {
   make -j 1 -k maintainer-clean
-  ./autogen.sh \
+  CONFIG_SHELL="$bash" ./autogen.sh \
     --config-cache \
     --disable-desktop-file-update \
     --enable-gtk-doc \
