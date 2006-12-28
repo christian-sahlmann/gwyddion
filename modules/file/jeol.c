@@ -37,6 +37,7 @@
 
 #define Nanometer (1e-9)
 #define Nanoampere (1e-9)
+#define Nanovolt (1e-9)
 
 enum {
     TIFF_HEADER_SIZE = 0x000a,
@@ -409,12 +410,32 @@ static const GwyEnum measurement_signals[] = {
     { "None",           JEOL_MEASUREMENT_SIGNAL_NONE,           },
 };
 
+static const GwyEnum afm_modes[] = {
+    { "Contact", JEOL_AFM_MODE_CONTACT, },
+    { "Slope",   JEOL_AFM_MODE_SLOPE,   },
+    { "FM",      JEOL_AFM_MODE_FM,      },
+    { "FMS",     JEOL_AFM_MODE_FMS,     },
+    { "Phase",   JEOL_AFM_MODE_PHASE,   },
+};
+
+static const GwyEnum spm_modes[] = {
+    { "Normal",   JEOL_SPM_MODE_NORMAL,   },
+    { "VE-AFM",   JEOL_SPM_MODE_VE_AFM,   },
+    { "LM-AFM",   JEOL_SPM_MODE_LM_AFM,   },
+    { "KFM",      JEOL_SPM_MODE_KFM,      },
+    { "MFM",      JEOL_SPM_MODE_MFM,      },
+    { "MFM-line", JEOL_SPM_MODE_MFM_LINE, },
+    { "P-lift",   JEOL_SPM_MODE_P_LIFT,   },
+    { "L-lift",   JEOL_SPM_MODE_L_LIFT,   },
+    { "SCFM",     JEOL_SPM_MODE_SCFM,     },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports JEOL data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -489,20 +510,20 @@ jeol_load(const gchar *filename,
         goto fail;
     }
 
-    /* FIXME: the world is cruel, this is what we know we can read, ditch the
-     * rest. */
-    if (image_header.image_type != JEOL_IMAGE
-        || (image_header.data_source != JEOL_DATA_SOURCE_Z
-            && image_header.data_source != JEOL_DATA_SOURCE_LIN_I
-            && image_header.data_source != JEOL_DATA_SOURCE_LOG_I)
-        || image_header.compressed) {
+    if (image_header.image_type != JEOL_IMAGE || image_header.compressed) {
         err_NO_DATA(error);
         goto fail;
     }
 
-    container = gwy_container_new();
-
     dfield = jeol_read_data_field(buffer + JEOL_DATA_START, &image_header);
+    if (!dfield) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("The type of data is unknown.  "
+                      "Please report it to the developers."));
+        goto fail;
+    }
+
+    container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
@@ -535,11 +556,6 @@ static void
 jeol_read_image_header(const guchar *p,
                        JEOLImageHeader *header)
 {
-    /* MSVC refuses to expand macros to nothing. */
-#if (defined(DEBUG) || defined(_MSC_VER))
-    const guchar *q = p;
-#endif
-
     p += TIFF_HEADER_SIZE;
 
     header->winspm_version = get_WORD_LE(&p);
@@ -662,10 +678,10 @@ jeol_read_image_header(const guchar *p,
     p += 0x300;  /* RGB lookup table */
     header->sub_revision_no = get_DWORD_LE(&p);
     header->image_type = get_DWORD_LE(&p);
+    gwy_debug("image_type: %d", header->image_type);
     header->data_source = get_DWORD_LE(&p);
+    gwy_debug("data_source: %d", header->data_source);
     header->display_mode = get_DWORD_LE(&p);
-    gwy_debug("image_type: %d, data_source %d",
-              header->image_type, header->data_source);
     p += 2*8;  /* measurement_start_time, measurement_end_time */
     p += 254;  /* profile_roughness */
     p += 446;  /* settings_3d */
@@ -679,7 +695,6 @@ jeol_read_image_header(const guchar *p,
     header->sps_offset = get_DWORD_LE(&p);
     header->line_trace_end_x = get_WORD_LE(&p);
     header->line_trace_end_y = get_WORD_LE(&p);
-    gwy_debug("0x%x", (guint)(p - q));
     header->forward = get_WORD_LE(&p);
     gwy_debug("forward: %d", header->forward);
     header->lift_signal = get_WORD_LE(&p);
@@ -697,29 +712,36 @@ jeol_read_data_field(const guchar *buffer,
     gdouble q, z0;
     gint i;
 
-    dfield = gwy_data_field_new(header->xres, header->yres,
-                                Nanometer*header->xreal,
-                                Nanometer*header->yreal,
-                                FALSE);
-
-    switch (header->data_source) {
-        case JEOL_DATA_SOURCE_Z:
+    switch (header->spm_misc_param.measurement_signal) {
+        case JEOL_MEASUREMENT_SIGNAL_TOPOGRAPHY:
         z0 = Nanometer*header->z0;
         q = (header->z255 - header->z0)/65535.0*Nanometer;
         siunit = gwy_si_unit_new("m");
         break;
 
-        case JEOL_DATA_SOURCE_LIN_I:
-        case JEOL_DATA_SOURCE_LOG_I:
+        case JEOL_MEASUREMENT_SIGNAL_LINEAR_CURRENT:
         z0 = Nanoampere*header->z0;
         q = (header->z255 - header->z0)/65535.0*Nanoampere;
         siunit = gwy_si_unit_new("A");
         break;
 
+        /* We just guess it's always voltage.  At least sometimes it is. */
+        case JEOL_MEASUREMENT_SIGNAL_AUX1:
+        case JEOL_MEASUREMENT_SIGNAL_AUX2:
+        z0 = header->z0;
+        q = (header->z255 - header->z0)/65535.0;
+        siunit = gwy_si_unit_new("V");
+        break;
+
         default:
-        g_return_val_if_reached(dfield);
+        return NULL;
         break;
     }
+
+    dfield = gwy_data_field_new(header->xres, header->yres,
+                                Nanometer*header->xreal,
+                                Nanometer*header->yreal,
+                                FALSE);
 
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
@@ -751,15 +773,29 @@ format_meta(GwyContainer *meta,
     gwy_container_set_string_by_name(meta, name, s);
 }
 
+static void
+format_bit(GwyContainer *meta,
+           const gchar *name,
+           guint n,
+           const GwyEnum *table,
+           guint value)
+{
+    gchar *t;
+
+    t = gwy_flags_to_string(value, table, n, NULL);
+    if (t && *t)
+        gwy_container_set_string_by_name(meta, name, t);
+    else
+        g_free(t);
+}
+
 static GwyContainer*
 jeol_get_metadata(const JEOLImageHeader *header)
 {
     const JEOLSPMParam *spm_param;
-    const JEOLSPMParam1 *spm_param1;
     const JEOLDate *date;
     const JEOLTime *time_;
     GwyContainer *meta;
-    gchar *t;
 
     meta = gwy_container_new();
 
@@ -800,15 +836,15 @@ jeol_get_metadata(const JEOLImageHeader *header)
     format_meta(meta, "Direction",
                 header->forward ? "Forward" : "Backward");
 
-    spm_param1 = &header->spm_misc_param;
-    t = gwy_flags_to_string(spm_param1->measurement_signal,
-                            measurement_signals,
-                            G_N_ELEMENTS(measurement_signals),
-                            NULL);
-    if (t)
-        gwy_container_set_string_by_name(meta, "Measurement signal", t);
-    else
-        g_free(t);
+    format_bit(meta, "Measurement signal",
+               G_N_ELEMENTS(measurement_signals), measurement_signals,
+               header->spm_misc_param.measurement_signal);
+    format_bit(meta, "SPM mode",
+               G_N_ELEMENTS(spm_modes), spm_modes,
+               header->spm_misc_param.spm_mode);
+    format_bit(meta, "AFM mode",
+               G_N_ELEMENTS(afm_modes), afm_modes,
+               header->spm_misc_param.afm_mode);
 
     return meta;
 }
