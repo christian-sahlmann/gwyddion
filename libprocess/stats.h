@@ -85,6 +85,13 @@ gdouble gwy_data_field_area_get_surface_area(GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+gdouble gwy_data_field_area_get_volume      (GwyDataField *data_field,
+                                             GwyDataField *basis,
+                                             GwyDataField *mask,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height);
 void    gwy_data_field_get_autorange        (GwyDataField *data_field,
                                              gdouble *from,
                                              gdouble *to);
