@@ -968,7 +968,11 @@ void
 gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    data_field->xreal = xreal;
+    g_return_if_fail(xreal > 0.0);
+    if (xreal != data_field->xreal) {
+        data_field->cached &= ~CBIT(ARE);
+        data_field->xreal = xreal;
+    }
 }
 
 /**
@@ -982,7 +986,11 @@ void
 gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    data_field->yreal = yreal;
+    g_return_if_fail(yreal > 0.0);
+    if (yreal != data_field->yreal) {
+        data_field->cached &= ~CBIT(ARE);
+        data_field->yreal = yreal;
+    }
 }
 /**
  * gwy_data_field_get_xoffset:
