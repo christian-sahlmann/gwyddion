@@ -772,6 +772,14 @@ square_area2w_1c(gdouble z1, gdouble z2, gdouble z4, gdouble c,
             + sqrt(1.0 + (z1 - z4)*(z1 - z4)/y + (z1 + z4 - c)*(z1 + z4 - c)/x);
 }
 
+/* See stats.c for description, this function calculates 24x `contribution
+ * of one corner' (the 24x is to move multiplications from inner loops) */
+static inline gdouble
+square_volumew_1c(gdouble z1, gdouble z2, gdouble z4, gdouble c)
+{
+    return 3.0*z1 + z2 + z4 + c;
+}
+
 /**
  * find_grain_convex_hull:
  * @xres: The number of columns in @grains.
@@ -1266,6 +1274,61 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         /* Finalize */
         g_array_free(vertices, TRUE);
         g_free(pos);
+        break;
+
+        case GWY_GRAIN_VALUE_VOLUME_0:
+        case GWY_GRAIN_VALUE_VOLUME_MIN:
+        /* Yay! We can recurse to calculate the minima! */
+        if (quantity == GWY_GRAIN_VALUE_VOLUME_MIN) {
+            tmp = g_new(gdouble, ngrains + 1);
+            gwy_data_field_grains_get_values(data_field, tmp, ngrains, grains,
+                                             GWY_GRAIN_VALUE_MINIMUM);
+        }
+        else
+            tmp = NULL;
+
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gint ix, ipx, imx, jp, jm, gno;
+                gdouble c;
+
+                ix = i*xres;
+                if (!(gno = grains[ix + j]))
+                    continue;
+
+                imx = (i > 0) ? ix-xres : ix;
+                ipx = (i < yres-1) ? ix+xres : ix;
+                jm = (j > 0) ? j-1 : j;
+                jp = (j < yres-1) ? j+1 : j;
+
+                c = (data[ix + j] + data[ix + jm]
+                     + data[imx + jm] + data[imx + j])/4.0;
+
+                values[gno] = 0.0;
+                values[gno] += square_volumew_1c(data[ix + j], data[ix + jm],
+                                                 data[imx + j], c);
+                values[gno] += square_volumew_1c(data[ix + j], data[ix + jp],
+                                                 data[imx + j], c);
+                values[gno] += square_volumew_1c(data[ix + j], data[ix + jm],
+                                                 data[ipx + j], c);
+                values[gno] += square_volumew_1c(data[ix + j], data[ix + jp],
+                                                 data[ipx + j], c);
+
+                /* We know the basis would appear with total weight -24 so
+                 * don't bother subtracting it from individual heights */
+                if (tmp)
+                    values[gno] -= 24.0*tmp[gno];
+            }
+        }
+        q = qh*qv/24.0;
+        for (i = 1; i <= ngrains; i++)
+            values[i] *= q;
+        /* Finalize */
+        g_free(tmp);
+        break;
+
+        case GWY_GRAIN_VALUE_VOLUME_LAPLACE:
+        g_warning("Implement me!");
         break;
 
         default:

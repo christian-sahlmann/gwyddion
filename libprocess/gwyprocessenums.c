@@ -327,6 +327,15 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE: Direction of the maximum lateral
  *                                       bounding size (arbitrary one if the
  *                                       maximum is not unique).
+ * @GWY_GRAIN_VALUE_VOLUME_0: Grain volume calculated with grain basis at
+ *                            z=0 (therefore it is just an integral it can be
+ *                            negative).
+ * @GWY_GRAIN_VALUE_VOLUME_MIN: Grain volume calculated with grain basis at
+ *                              grain minimum value.  This value is always
+ *                              non-negative, it is however a lower bound.
+ * @GWY_GRAIN_VALUE_VOLUME_LAPLACE: Grain volume calculated with grain basis
+ *                                  calculated by laplacian interpolation of
+ *                                  surrounding values.
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.
