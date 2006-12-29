@@ -752,6 +752,13 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
         gwy_si_unit_set_from_string(lineunit, NULL);
         break;
 
+        case GWY_GRAIN_VALUE_VOLUME_0:
+        case GWY_GRAIN_VALUE_VOLUME_MIN:
+        case GWY_GRAIN_VALUE_VOLUME_LAPLACE:
+        gwy_si_unit_power(xyunit, 2, lineunit);
+        gwy_si_unit_multiply(lineunit, zunit, lineunit);
+        break;
+
         default:
         g_warning("Wrong grain quantity %d", (gint)quantity);
         break;
@@ -1329,6 +1336,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
 
         case GWY_GRAIN_VALUE_VOLUME_LAPLACE:
         g_warning("Implement me!");
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         break;
 
         default:
