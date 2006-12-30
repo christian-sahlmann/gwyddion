@@ -1324,13 +1324,12 @@ gwy_axis_logscale(GwyAxis *a)
     else
         logmin = logmax - 1.0;
 
-    /*ticks will be linearly distributed again*/
-    /*major ticks - will be equally ditributed in the log domain 1,10,100*/
-    tickstep = (ceil(logmax) - floor(logmin))/a->par.major_maxticks; /*step*/
+    /* Ticks will be linearly distributed again */
+    /* Major ticks - will be equally ditributed in the log domain 1,10,100 */
+    tickstep = (ceil(logmax) - floor(logmin))/a->par.major_maxticks; /* step */
     tickstep = ceil(tickstep);
-    base = ceil(logmin/tickstep)*tickstep - 1; /*starting value*/
+    base = ceil(logmin/tickstep)*tickstep - 1; /* starting value */
     logmin = base;
-    /*printf("MJ base %g, tickstep %g\n", base, tickstep);*/
     i = 0;
     do {
         mjt.t.value = base;
@@ -1344,18 +1343,33 @@ gwy_axis_logscale(GwyAxis *a)
     min = gwy_axis_dbl_raise(10.0, logmin);
     max = gwy_axis_dbl_raise(10.0, logmax);
 
-    /*minor ticks - will be equally distributed in the normal domain 1,2,3...*/
-    tickstep = min;
-    base = tickstep;
-    i = 0;
-    do {
-         /*here, tickstep must be adapted do scale*/
-         tickstep = gwy_axis_dbl_raise(10.0, (gint)floor(log10(base*1.01)));
-             mit.value = log10(base);
-         g_array_append_val(a->miticks, mit);
-         base += tickstep;
-         i++;
-    } while (base <= max && i < a->par.major_maxticks*20);
+    /* Minor ticks - will be equally distributed in the normal domain 1,2,3...
+     * if the major tick step is only one order, otherwise distribute them in
+     * the log domain too */
+    if (tickstep == 1) {
+        tickstep = min;
+        base = tickstep;
+        i = 0;
+        do {
+            /* Here, tickstep must be adapted do scale */
+            tickstep = gwy_axis_dbl_raise(10.0, (gint)floor(log10(base*1.001)));
+            mit.value = log10(base);
+            g_array_append_val(a->miticks, mit);
+            base += tickstep;
+            i++;
+        } while (base <= max && i < a->par.major_maxticks*20);
+    }
+    else {
+        i = 0;
+        tickstep = 1;
+        base = logmin;
+        do {
+            mit.value = base;
+            g_array_append_val(a->miticks, mit);
+            base += tickstep;
+            i++;
+        } while ((base - tickstep) < logmax && i < a->par.major_maxticks*20);
+    }
 
     a->max = max;
     a->min = min;
