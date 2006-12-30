@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2006",
 };
@@ -244,6 +244,11 @@ grain_dist_dialog(GrainDistArgs *args,
         { N_("Maximum bounding direction"),
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
     };
+    static const GwyEnum quantities_volume[] = {
+        { N_("Zero basis"),                 GWY_GRAIN_VALUE_VOLUME_0,       },
+        { N_("Grain minimum basis"),        GWY_GRAIN_VALUE_VOLUME_MIN,     },
+        { N_("Laplacian background basis"), GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
+    };
     static const GwyEnum modes[] = {
         { N_("_Export raw data"), MODE_RAW,   },
         { N_("Plot _graphs"),     MODE_GRAPH, },
@@ -264,7 +269,7 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(15, 4, FALSE);
+    table = gtk_table_new(19, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -287,6 +292,12 @@ grain_dist_dialog(GrainDistArgs *args,
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_boundary),
                                           quantities_boundary,
+                                          args->selected,
+                                          args->bitmask);
+    controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Volume"),
+                                          controls.qlist,
+                                          G_N_ELEMENTS(quantities_volume),
+                                          quantities_volume,
                                           args->selected,
                                           args->bitmask);
     for (l = controls.qlist; l; l = g_slist_next(l))
@@ -444,6 +455,12 @@ add_one_distribution(GwyContainer *container,
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
         { N_("Grain Maximum Bounding Direction Histogram"),
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
+        { N_("Grain Volume (Zero) Histogram"),
+            GWY_GRAIN_VALUE_VOLUME_0, },
+        { N_("Grain Volume (Minimum) Histogram"),
+            GWY_GRAIN_VALUE_VOLUME_MIN, },
+        { N_("Grain Volume (Laplacian) Histogram"),
+            GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
     };
     static const GwyEnum descriptions[] = {
         { N_("Grain proj. areas"),
@@ -472,6 +489,12 @@ add_one_distribution(GwyContainer *container,
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
         { N_("Grain max. bound. directions"),
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
+        { N_("Grain volumes (zero)"),
+            GWY_GRAIN_VALUE_VOLUME_0, },
+        { N_("Grain volumes (minimum)"),
+            GWY_GRAIN_VALUE_VOLUME_MIN, },
+        { N_("Grain volumes (laplacian)"),
+            GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
     };
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
@@ -487,7 +510,10 @@ add_one_distribution(GwyContainer *container,
     g_object_unref(cmodel);
 
     s = gwy_enum_to_string(quantity, titles, G_N_ELEMENTS(titles));
-    g_object_set(gmodel, "title", _(s), NULL);
+    g_object_set(gmodel,
+                 "title", _(s),
+                 "axis-label-left", _("count"),
+                 NULL);
     gwy_graph_model_set_units_from_data_line(gmodel, dataline);
     s = gwy_enum_to_string(quantity, descriptions, G_N_ELEMENTS(descriptions));
     g_object_set(cmodel, "description", s, NULL);
