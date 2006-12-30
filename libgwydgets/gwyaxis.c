@@ -1326,7 +1326,7 @@ gwy_axis_logscale(GwyAxis *a)
 
     /* Ticks will be linearly distributed again */
     /* Major ticks - will be equally ditributed in the log domain 1,10,100 */
-    tickstep = (ceil(logmax) - floor(logmin))/a->par.major_maxticks; /* step */
+    tickstep = (ceil(logmax) - floor(logmin))/MAX(a->par.major_maxticks - 1, 1);
     tickstep = ceil(tickstep);
     base = ceil(logmin/tickstep)*tickstep - 1; /* starting value */
     logmin = base;
