@@ -1174,7 +1174,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                                  const gint *grains,
                                  GwyGrainQuantity quantity)
 {
-    const gdouble *data;
+    const gdouble *d;
     gdouble *tmp;
     gint *sizes, *pos;
     gdouble q, qh, qv;
@@ -1194,7 +1194,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
     qh = gwy_data_field_get_xmeasure(data_field);
     qv = gwy_data_field_get_ymeasure(data_field);
 
-    data = data_field->data;
+    d = data_field->data;
     switch (quantity) {
         case GWY_GRAIN_VALUE_PROJECTED_AREA:
         case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
@@ -1229,8 +1229,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         for (i = 0; i <= ngrains; i++)
             values[i] = G_MAXDOUBLE;
         for (i = 0; i < nn; i++) {
-            if (data[i] < values[grains[i]])
-                values[grains[i]] = data[i];
+            if (d[i] < values[grains[i]])
+                values[grains[i]] = d[i];
         }
         break;
 
@@ -1238,8 +1238,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         for (i = 0; i <= ngrains; i++)
             values[i] = -G_MAXDOUBLE;
         for (i = 0; i < nn; i++) {
-            if (data[i] > values[grains[i]])
-                values[grains[i]] = data[i];
+            if (d[i] > values[grains[i]])
+                values[grains[i]] = d[i];
         }
         break;
 
@@ -1247,7 +1247,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         sizes = g_new0(gint, ngrains + 1);
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < nn; i++) {
-            values[grains[i]] += data[i];
+            values[grains[i]] += d[i];
             sizes[grains[i]]++;
         }
         for (i = 0; i <= ngrains; i++)
@@ -1273,7 +1273,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         /* Sort values by grain # to tmp */
         for (i = 0; i < nn; i++) {
             if ((j = grains[i])) {
-                tmp[pos[j]] = data[i];
+                tmp[pos[j]] = d[i];
                 pos[j]++;
             }
         }
@@ -1349,17 +1349,21 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 jm = (j > 0) ? j-1 : j;
                 jp = (j < yres-1) ? j+1 : j;
 
-                c = (data[ix + j] + data[ix + jm]
-                     + data[imx + jm] + data[imx + j])/2.0;
+                c = (d[ix + j] + d[ix + jm] + d[imx + jm] + d[imx + j])/2.0;
+                values[gno] += square_area2w_1c(d[ix + j], d[ix + jm],
+                                                d[imx + j], c, qh, qv);
 
-                values[gno] += square_area2w_1c(data[ix + j], data[ix + jm],
-                                                data[imx + j], c, qh, qv);
-                values[gno] += square_area2w_1c(data[ix + j], data[ix + jp],
-                                                data[imx + j], c, qh, qv);
-                values[gno] += square_area2w_1c(data[ix + j], data[ix + jm],
-                                                data[ipx + j], c, qh, qv);
-                values[gno] += square_area2w_1c(data[ix + j], data[ix + jp],
-                                                data[ipx + j], c, qh, qv);
+                c = (d[ix + j] + d[ix + jp] + d[imx + jp] + d[imx + j])/2.0;
+                values[gno] += square_area2w_1c(d[ix + j], d[ix + jp],
+                                                d[imx + j], c, qh, qv);
+
+                c = (d[ix + j] + d[ix + jm] + d[ipx + jm] + d[ipx + j])/2.0;
+                values[gno] += square_area2w_1c(d[ix + j], d[ix + jm],
+                                                d[ipx + j], c, qh, qv);
+
+                c = (d[ix + j] + d[ix + jp] + d[ipx + jp] + d[ipx + j])/2.0;
+                values[gno] += square_area2w_1c(d[ix + j], d[ix + jp],
+                                                d[ipx + j], c, qh, qv);
             }
         }
         for (i = 1; i <= ngrains; i++)
@@ -1449,14 +1453,14 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 jm = (j > 0) ? j-1 : j;
                 jp = (j < yres-1) ? j+1 : j;
 
-                values[gno] += square_volumew_1c(data[ix + j], data[ix + jm],
-                                                 data[imx + j], data[imx + jm]);
-                values[gno] += square_volumew_1c(data[ix + j], data[ix + jp],
-                                                 data[imx + j], data[imx + jp]);
-                values[gno] += square_volumew_1c(data[ix + j], data[ix + jm],
-                                                 data[ipx + j], data[ipx + jm]);
-                values[gno] += square_volumew_1c(data[ix + j], data[ix + jp],
-                                                 data[ipx + j], data[ipx + jp]);
+                values[gno] += square_volumew_1c(d[ix + j], d[ix + jm],
+                                                 d[imx + j], d[imx + jm]);
+                values[gno] += square_volumew_1c(d[ix + j], d[ix + jp],
+                                                 d[imx + j], d[imx + jp]);
+                values[gno] += square_volumew_1c(d[ix + j], d[ix + jm],
+                                                 d[ipx + j], d[ipx + jm]);
+                values[gno] += square_volumew_1c(d[ix + j], d[ix + jp],
+                                                 d[ipx + j], d[ipx + jp]);
 
                 /* We know the basis would appear with total weight -96 so
                  * don't bother subtracting it from individual heights */
