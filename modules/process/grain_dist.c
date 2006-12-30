@@ -173,7 +173,8 @@ grain_dist(GwyContainer *data, GwyRunType run)
 
 static GSList*
 append_checkbox_list(GtkTable *table,
-                     gint *row,
+                     gint row,
+                     gint col,
                      const gchar *title,
                      GSList *list,
                      guint nchoices,
@@ -182,20 +183,15 @@ append_checkbox_list(GtkTable *table,
                      guint bitmask)
 {
     GtkWidget *label, *check;
-    gchar *s;
+    GtkBox *vbox;
     guint i, bit;
 
-    if (*row > 0)
-        gtk_table_set_row_spacing(table, *row - 1, 8);
+    vbox = GTK_BOX(gtk_vbox_new(FALSE, 2));
+    gtk_table_attach(table, GTK_WIDGET(vbox),
+                     col, col + 1, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
 
-    label = gtk_label_new(NULL);
-    s = g_strconcat("<b>", title, "</b>", NULL);
-    gtk_label_set_markup(GTK_LABEL(label), s);
-    g_free(s);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label,
-                     0, 3, *row, *row + 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    (*row)++;
+    label = gwy_label_new_header(title);
+    gtk_box_pack_start(vbox, label, FALSE, FALSE, 0);
 
     for (i = 0; i < nchoices; i++) {
         bit = 1 << choices[i].value;
@@ -205,10 +201,8 @@ append_checkbox_list(GtkTable *table,
         check = gtk_check_button_new_with_mnemonic(_(choices[i].name));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), state & bit);
         g_object_set_data(G_OBJECT(check), "bit", GUINT_TO_POINTER(bit));
-        gtk_table_attach(table, check,
-                         0, 4, *row, *row + 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
         list = g_slist_prepend(list, check);
-        (*row)++;
     }
 
     return list;
@@ -245,9 +239,9 @@ grain_dist_dialog(GrainDistArgs *args,
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
     };
     static const GwyEnum quantities_volume[] = {
-        { N_("Zero basis"),                 GWY_GRAIN_VALUE_VOLUME_0,       },
-        { N_("Grain minimum basis"),        GWY_GRAIN_VALUE_VOLUME_MIN,     },
-        { N_("Laplacian background basis"), GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
+        { N_("_Zero basis"),                 GWY_GRAIN_VALUE_VOLUME_0,       },
+        { N_("_Grain minimum basis"),        GWY_GRAIN_VALUE_VOLUME_MIN,     },
+        { N_("_Laplacian background basis"), GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
     };
     static const GwyEnum modes[] = {
         { N_("_Export raw data"), MODE_RAW,   },
@@ -255,7 +249,8 @@ grain_dist_dialog(GrainDistArgs *args,
     };
 
     GrainDistControls controls;
-    GtkWidget *dialog, *table;
+    GtkWidget *dialog;
+    GtkTable *table;
     gint row, response;
     GSList *l;
 
@@ -269,58 +264,67 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(19, 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    /* Output type */
+    table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
+    gtk_table_set_row_spacings(table, 8);
+    gtk_table_set_col_spacings(table, 12);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
-    row = 0;
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
 
-    controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Value"),
+    controls.qlist = append_checkbox_list(table, 0, 0, _("Value"),
                                           NULL,
                                           G_N_ELEMENTS(quantities_value),
                                           quantities_value,
                                           args->selected,
                                           args->bitmask);
-    controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Area"),
+    controls.qlist = append_checkbox_list(table, 1, 0, _("Area"),
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_area),
                                           quantities_area,
                                           args->selected,
                                           args->bitmask);
-    controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Boundary"),
+    controls.qlist = append_checkbox_list(table, 0, 1, _("Boundary"),
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_boundary),
                                           quantities_boundary,
                                           args->selected,
                                           args->bitmask);
-    controls.qlist = append_checkbox_list(GTK_TABLE(table), &row, _("Volume"),
+    controls.qlist = append_checkbox_list(table, 1, 1, _("Volume"),
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_volume),
                                           quantities_volume,
                                           args->selected,
                                           args->bitmask);
+
     for (l = controls.qlist; l; l = g_slist_next(l))
         g_signal_connect_swapped(l->data, "toggled",
                                  G_CALLBACK(selected_changed_cb), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    /* Options */
+    table = GTK_TABLE(gtk_table_new(4, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
+    row = 0;
 
     controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
                                              G_CALLBACK(mode_changed_cb),
                                              &controls,
                                              args->mode);
 
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Options")),
+    gtk_table_attach(table, gwy_label_new_header(_("Options")),
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    row = gwy_radio_buttons_attach_to_table(controls.mode, GTK_TABLE(table),
-                                            4, row);
+    row = gwy_radio_buttons_attach_to_table(controls.mode, table, 4, row);
 
     controls.resolution = gtk_adjustment_new(args->resolution,
                                              MIN_RESOLUTION, MAX_RESOLUTION,
                                              1, 10, 0);
-    gwy_table_attach_hscale(table, row, _("_Fix res.:"), NULL,
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Fix res.:"), NULL,
                             controls.resolution, GWY_HSCALE_CHECK);
     controls.fixres = gwy_table_hscale_get_check(controls.resolution);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fixres),
