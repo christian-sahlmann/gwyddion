@@ -331,8 +331,8 @@ gwy_correlation_type_get_enum(void)
  *                            z=0 (therefore it is just an integral it can be
  *                            negative).
  * @GWY_GRAIN_VALUE_VOLUME_MIN: Grain volume calculated with grain basis at
- *                              grain minimum value.  This value is always
- *                              non-negative, it is however a lower bound.
+ *                              grain minimum value.  This value is a lower
+ *                              bound.
  * @GWY_GRAIN_VALUE_VOLUME_LAPLACE: Grain volume calculated with grain basis
  *                                  calculated by laplacian interpolation of
  *                                  surrounding values.

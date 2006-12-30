@@ -1016,7 +1016,7 @@ grain_minimum_bound(GArray *vertices,
  *
  * The array @values will be filled with the requested grain value for each
  * individual grain (0th item of @values which do not correspond to any grain
- * is overwritten with an arbitrary value and should be ignored).
+ * will be overwritten with an arbitrary value and should be ignored).
  *
  * The grain numbers serve as indices in @values.  Therefore as long as the
  * same @grains is used, the same position in @values corresponds to the same
@@ -1294,6 +1294,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         else
             tmp = NULL;
 
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 gint ix, ipx, imx, jp, jm, gno;
@@ -1311,7 +1312,6 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 c = (data[ix + j] + data[ix + jm]
                      + data[imx + jm] + data[imx + j])/4.0;
 
-                values[gno] = 0.0;
                 values[gno] += square_volumew_1c(data[ix + j], data[ix + jm],
                                                  data[imx + j], c);
                 values[gno] += square_volumew_1c(data[ix + j], data[ix + jp],
