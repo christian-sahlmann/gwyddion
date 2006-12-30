@@ -329,13 +329,13 @@ gwy_correlation_type_get_enum(void)
  *                                       maximum is not unique).
  * @GWY_GRAIN_VALUE_VOLUME_0: Grain volume calculated with grain basis at
  *                            z=0 (therefore it is just an integral it can be
- *                            negative).
+ *                            negative).  (Since: 2.3)
  * @GWY_GRAIN_VALUE_VOLUME_MIN: Grain volume calculated with grain basis at
  *                              grain minimum value.  This value is a lower
- *                              bound.
+ *                              bound.  (Since: 2.3)
  * @GWY_GRAIN_VALUE_VOLUME_LAPLACE: Grain volume calculated with grain basis
  *                                  calculated by laplacian interpolation of
- *                                  surrounding values.
+ *                                  surrounding values.  (Since: 2.3)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.
