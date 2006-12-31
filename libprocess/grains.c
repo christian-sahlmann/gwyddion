@@ -1012,7 +1012,7 @@ grain_volume_laplace(GwyDataField *data_field,
         col--;
         w++;
     }
-    if (col + w <= xres)
+    if (col + w < xres)
         w++;
 
     h = bound[3];
@@ -1021,7 +1021,7 @@ grain_volume_laplace(GwyDataField *data_field,
         row--;
         h++;
     }
-    if (row + h <= yres)
+    if (row + h < yres)
         h++;
 
     /* Create the mask for laplace iteration and calculate a suitable starting
