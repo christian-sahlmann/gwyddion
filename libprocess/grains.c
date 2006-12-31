@@ -780,14 +780,6 @@ square_area2w_1c(gdouble z1, gdouble z2, gdouble z4, gdouble c,
             + sqrt(1.0 + (z1 - z4)*(z1 - z4)/y + (z1 + z4 - c)*(z1 + z4 - c)/x);
 }
 
-/* See stats.c for description, this function calculates 96x `contribution
- * of one corner' (the 96x is to move multiplications from inner loops) */
-static inline gdouble
-square_volumew_1c(gdouble z1, gdouble z2, gdouble z4, gdouble z3)
-{
-    return 13.0*z1 + 5.0*(z2 + z4) + z3;
-}
-
 /**
  * find_grain_convex_hull:
  * @xres: The number of columns in @grains.
@@ -1114,22 +1106,15 @@ grain_volume_laplace(GwyDataField *data_field,
                 jm = (j > 0) ? j-1 : j;
                 jp = (j < w-1) ? j+1 : j;
 
-                vol += square_volumew_1c(d[i*xres + j] - g[i*w + j],
-                                         d[i*xres + jm] - g[i*w + jm],
-                                         d[im*xres + j] - g[im*w + j],
-                                         d[im*xres + jm] - g[im*w + jm]);
-                vol += square_volumew_1c(d[i*xres + j] - g[i*w + j],
-                                         d[i*xres + jp] - g[i*w + jp],
-                                         d[im*xres + j] - g[im*w + j],
-                                         d[im*xres + jp] - g[im*w + jp]);
-                vol += square_volumew_1c(d[i*xres + j] - g[i*w + j],
-                                         d[i*xres + jm] - g[i*w + jm],
-                                         d[ip*xres + j] - g[ip*w + j],
-                                         d[ip*xres + jm] - g[ip*w + jm]);
-                vol += square_volumew_1c(d[i*xres + j] - g[i*w + j],
-                                         d[i*xres + jp] - g[i*w + jp],
-                                         d[ip*xres + j] - g[ip*w + j],
-                                         d[ip*xres + jp] - g[ip*w + jp]);
+                vol += 52.0*(d[i*xres + j] - g[i*w + j])
+                       + 10.0*(d[im*xres + j] - g[im*w + j]
+                               + d[i*xres + jm] - g[i*w + jm]
+                               + d[i*xres + jp] - g[i*w + jp]
+                               + d[ip*xres + j] - g[ip*w + j])
+                       + (d[im*xres + jm] - g[im*w + jm]
+                          + d[im*xres + jp] - g[im*w + jp]
+                          + d[ip*xres + jm] - g[ip*w + jm]
+                          + d[ip*xres + jp] - g[ip*w + jp]);
             }
         }
     }
@@ -1453,14 +1438,11 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 jm = (j > 0) ? j-1 : j;
                 jp = (j < yres-1) ? j+1 : j;
 
-                values[gno] += square_volumew_1c(d[ix + j], d[ix + jm],
-                                                 d[imx + j], d[imx + jm]);
-                values[gno] += square_volumew_1c(d[ix + j], d[ix + jp],
-                                                 d[imx + j], d[imx + jp]);
-                values[gno] += square_volumew_1c(d[ix + j], d[ix + jm],
-                                                 d[ipx + j], d[ipx + jm]);
-                values[gno] += square_volumew_1c(d[ix + j], d[ix + jp],
-                                                 d[ipx + j], d[ipx + jp]);
+                values[gno] += 52.0*d[ix + j]
+                               + 10.0*(d[imx + j] + d[ix + jm]
+                                       + d[ix + jp] + d[ipx + j])
+                               + (d[imx + jm] + d[imx + jp]
+                                  + d[ipx + jm] + d[ipx + jp]);
 
                 /* We know the basis would appear with total weight -96 so
                  * don't bother subtracting it from individual heights */
