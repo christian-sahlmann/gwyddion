@@ -302,6 +302,13 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_ARITHMETIC
+ *
+ * The "Arithmetic" stock icon.
+ * <inlinegraphic fileref="../gwy_arithmetic-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_BOLD
  *
  * The "Bold" stock icon.
@@ -337,10 +344,24 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_DATA_MEASURE
+ *
+ * The "Data-Measure" stock icon.
+ * <inlinegraphic fileref="../gwy_data_measure-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_DISTANCE
  *
  * The "Distance" stock icon.
  * <inlinegraphic fileref="../gwy_distance-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_DRIFT
+ *
+ * The "Drift" stock icon.
+ * <inlinegraphic fileref="../gwy_drift-24.png" format="PNG"/>
  **/
 
 /**
@@ -540,6 +561,13 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_IMMERSE
+ *
+ * The "Immerse" stock icon.
+ * <inlinegraphic fileref="../gwy_immerse-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_ITALIC
  *
  * The "Italic" stock icon.
@@ -705,6 +733,13 @@ free_the_icon_factory(void)
  *
  * The "Mask-Subtract" stock icon.
  * <inlinegraphic fileref="../gwy_mask_subtract-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MERGE
+ *
+ * The "Merge" stock icon.
+ * <inlinegraphic fileref="../gwy_merge-24.png" format="PNG"/>
  **/
 
 /**
