@@ -118,13 +118,14 @@ icondata_DATA = \
 	gwyddion.png
 
 # Note: splash screen source is too big to distribute in every tarball,
-# check it out from CVS
+# check it out from Subversion
 xcf_sources = \
 	cd_line.xcf \
 	cd_rline.xcf \
 	cd_rstep.xcf \
 	cd_step.xcf \
 	gwy_3d_base-24.xcf \
+	gwy_arithmetic-24.xcf \
 	gwy_cantilever-24.xcf \
 	gwy_crop-24.xcf \
 	gwy_direction-24.xcf \
