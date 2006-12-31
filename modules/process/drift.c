@@ -33,6 +33,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define DRIFT_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
@@ -161,7 +162,7 @@ module_register(void)
     gwy_process_func_register("drift",
                               (GwyProcessFunc)&compensate_drift,
                               N_("/_Correct Data/Compensate _Drift..."),
-                              NULL,
+                              GWY_STOCK_DRIFT,
                               DRIFT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Evaluate/correct thermal drift in fast "

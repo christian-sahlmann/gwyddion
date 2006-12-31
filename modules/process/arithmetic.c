@@ -27,6 +27,7 @@
 #include <libgwyddion/gwyexpr.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -102,7 +103,7 @@ module_register(void)
     gwy_process_func_register("arithmetic",
                               (GwyProcessFunc)&arithmetic,
                               N_("/M_ultidata/_Arithmetic..."),
-                              NULL,
+                              GWY_STOCK_ARITHMETIC,
                               ARITH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Arithmetic operations on data"));

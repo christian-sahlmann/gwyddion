@@ -31,6 +31,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -195,7 +196,7 @@ module_register(void)
     gwy_process_func_register("immerse",
                               (GwyProcessFunc)&immerse,
                               N_("/M_ultidata/_Immerse Detail..."),
-                              NULL,
+                              GWY_STOCK_IMMERSE,
                               IMMERSE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Immerse a detail into image"));

@@ -27,6 +27,7 @@
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -159,7 +160,7 @@ module_register(void)
     gwy_process_func_register("merge",
                               (GwyProcessFunc)&merge,
                               N_("/M_ultidata/_Merge..."),
-                              NULL,
+                              GWY_STOCK_MERGE,
                               MERGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Merge two images"));

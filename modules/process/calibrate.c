@@ -25,6 +25,7 @@
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -137,7 +138,7 @@ module_register(void)
     gwy_process_func_register("calibrate",
                               (GwyProcessFunc)&calibrate,
                               N_("/_Basic Operations/_Recalibrate..."),
-                              NULL,
+                              GWY_STOCK_DATA_MEASURE,
                               CALIBRATE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Recalibrate data"));
