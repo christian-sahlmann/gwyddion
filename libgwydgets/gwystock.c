@@ -306,6 +306,8 @@ free_the_icon_factory(void)
  *
  * The "Arithmetic" stock icon.
  * <inlinegraphic fileref="../gwy_arithmetic-24.png" format="PNG"/>
+
+* Since: 2.3
  **/
 
 /**
@@ -348,6 +350,8 @@ free_the_icon_factory(void)
  *
  * The "Data-Measure" stock icon.
  * <inlinegraphic fileref="../gwy_data_measure-24.png" format="PNG"/>
+
+* Since: 2.3
  **/
 
 /**
@@ -362,6 +366,8 @@ free_the_icon_factory(void)
  *
  * The "Drift" stock icon.
  * <inlinegraphic fileref="../gwy_drift-24.png" format="PNG"/>
+
+* Since: 2.3
  **/
 
 /**
@@ -565,6 +571,8 @@ free_the_icon_factory(void)
  *
  * The "Immerse" stock icon.
  * <inlinegraphic fileref="../gwy_immerse-24.png" format="PNG"/>
+
+* Since: 2.3
  **/
 
 /**
@@ -740,6 +748,8 @@ free_the_icon_factory(void)
  *
  * The "Merge" stock icon.
  * <inlinegraphic fileref="../gwy_merge-24.png" format="PNG"/>
+
+* Since: 2.3
  **/
 
 /**

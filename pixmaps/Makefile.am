@@ -14,6 +14,8 @@ icondatadir = $(datadir)/pixmaps
 #   polynom_remove (but see polynom)
 #   slope_mask
 
+# Since 2.3: arithmetic data_measure drift immerse merge
+
 # If you add new stock icons here, run ./utils/stockgen.py from the top-level
 # directory to update source code declarations.
 pixmapdata_DATA = \

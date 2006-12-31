@@ -3,6 +3,7 @@
 import re, os, sys, popen2
 
 base = 'libgwydgets/gwystock'
+makefile = 'pixmaps/Makefile.am'
 
 def read_images(f):
     """Read image list from Makefile"""
@@ -26,6 +27,18 @@ def read_images(f):
     assert not in_data
     return images
 
+def read_since(f):
+    """Read `Since' notes from Makefile"""
+    sinces = {}
+    for line in file(f):
+        m = re.match(r'^\s*#\s+Since\s+(?P<version>[0-9.]+):\s*(?P<list>[-a-z0-9_. ]+)', line)
+        if not m:
+            continue
+        for i in m.group('list').split():
+            assert i not in sinces
+            sinces[i] = m.group('version')
+    return sinces
+
 def replace_file(f, replacement):
     oldcontent = file(f).read()
     newcontent = re.sub(r'(?s)'
@@ -34,7 +47,7 @@ def replace_file(f, replacement):
                         r'(/\* @@@ GENERATED STOCK LIST END @@@ \*/\n)',
                         r'\1' + replacement + r'\3',
                         oldcontent)
-    # Don't waste time running diff in trivial case
+    # Don't waste time running diff in the trivial case
     if oldcontent == newcontent:
         return
 
@@ -64,7 +77,7 @@ def update_macros(images):
     i.close()
     replace_file(hfile, defines)
 
-def update_documentation(images):
+def update_documentation(images, sinces):
     """Update `documentation' in C source to list all stock icons."""
 
     # Format documentation entries
@@ -78,6 +91,7 @@ def update_documentation(images):
                 ' *\n'
                 ' * The "%s" stock icon.\n'
                 ' * <inlinegraphic fileref="../gwy_%s-%d.png" format="PNG"/>\n'
+                '%s'
                 ' **/\n'
                 '\n')
     docs = []
@@ -96,11 +110,20 @@ def update_documentation(images):
         else:
             size = max(v)
 
-        docs.append(template % (k.upper(), human_name, k, size))
+        if sinces.has_key(k):
+            s = '\n* Since: %s\n' % sinces[k]
+            del sinces[k]
+        else:
+            s = ''
+
+        docs.append(template % (k.upper(), human_name, k, size, s))
     docs.sort()
     docs = ''.join(docs)
     replace_file(cfile, docs)
 
-imgs = read_images('pixmaps/Makefile.am')
+imgs = read_images(makefile)
+sincs = read_since(makefile)
 update_macros(imgs)
-update_documentation(imgs)
+update_documentation(imgs, sincs)
+# Check for unused since declarations, they are typos
+assert not sincs
