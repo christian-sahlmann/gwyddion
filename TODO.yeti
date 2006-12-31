@@ -1,5 +1,6 @@
+- Don't immediately destroy preview containers and recycle them for real file
+  open
 - Modules:
-  - claculate grain volumes, but before that probably
   - implement sparse laplacian data interpolation
   - gaussian smoothening filter (+hconvolve, vconvolve)
   - fore/back detection, connected area splitting
