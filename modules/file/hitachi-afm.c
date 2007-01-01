@@ -35,14 +35,13 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define MAGIC "AFM/Ver. "
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 #define EXTENSION ".afm"
 
-#define Nanometer 1e-9
+#define Nanometer (1e-9)
 
 enum {
     HEADER_SIZE   = 0x280,
@@ -144,8 +143,8 @@ hitachi_old_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     p = fileinfo->head + RES_OFFSET_OLD;
-    xres = get_WORD_LE(&p);
-    yres = get_WORD_LE(&p);
+    xres = gwy_get_guint16_le(&p);
+    yres = gwy_get_guint16_le(&p);
 
     if (fileinfo->file_size == 2*xres*yres + HEADER_SIZE_OLD)
         return 100;
@@ -223,8 +222,8 @@ read_data_field(const guchar *buffer,
     const guchar *p;
 
     p = buffer + RES_OFFSET;
-    xres = get_DWORD_LE(&p);
-    yres = get_DWORD_LE(&p);
+    xres = gwy_get_guint32_le(&p);
+    yres = gwy_get_guint32_le(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
 
     n = xres*yres;
@@ -234,11 +233,11 @@ read_data_field(const guchar *buffer,
     }
 
     p = buffer + XREAL_OFFSET;
-    xreal = get_DOUBLE_LE(&p) * Nanometer;
+    xreal = gwy_get_gdouble_le(&p) * Nanometer;
     p = buffer + YREAL_OFFSET;
-    yreal = get_DOUBLE_LE(&p) * Nanometer;
+    yreal = gwy_get_gdouble_le(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
-    q = get_DOUBLE_LE(&p) * Nanometer;
+    q = gwy_get_gdouble_le(&p) * Nanometer;
     gwy_debug("xreal: %g, yreal: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
     /* XXX: I don't know where the factor of 0.5 comes from.  But it makes
@@ -280,8 +279,8 @@ read_data_field_old(const guchar *buffer,
     const guchar *p;
 
     p = buffer + RES_OFFSET_OLD;
-    xres = get_WORD_LE(&p);
-    yres = get_WORD_LE(&p);
+    xres = gwy_get_guint16_le(&p);
+    yres = gwy_get_guint16_le(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
 
     n = xres*yres;
@@ -291,17 +290,17 @@ read_data_field_old(const guchar *buffer,
     }
 
     p = buffer + SCALE_OFFSET_OLD;
-    xscale = get_DOUBLE_LE(&p);
-    yscale = get_DOUBLE_LE(&p);
-    zscale = get_DOUBLE_LE(&p);
+    xscale = gwy_get_gdouble_le(&p);
+    yscale = gwy_get_gdouble_le(&p);
+    zscale = gwy_get_gdouble_le(&p);
     p = buffer + UNIT_OFFSET_OLD;
-    xunit = get_DOUBLE_LE(&p);
-    yunit = get_DOUBLE_LE(&p);
-    zunit = get_DOUBLE_LE(&p);
+    xunit = gwy_get_gdouble_le(&p);
+    yunit = gwy_get_gdouble_le(&p);
+    zunit = gwy_get_gdouble_le(&p);
     p = buffer + SPEED_OFFSET_OLD;
-    vx = get_DWORD_LE(&p);
-    vy = get_DWORD_LE(&p);
-    vz = get_DWORD_LE(&p);
+    vx = gwy_get_guint32_le(&p);
+    vy = gwy_get_guint32_le(&p);
+    vz = gwy_get_guint32_le(&p);
 
     xreal = xscale * vx;
     yreal = yscale * vy;
@@ -329,4 +328,3 @@ read_data_field_old(const guchar *buffer,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

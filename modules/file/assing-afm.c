@@ -31,12 +31,12 @@
 
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define EXTENSION ".afm"
 
@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -132,8 +132,8 @@ aafm_load(const gchar *filename,
     }
 
     p = buffer;
-    afmfile.res = get_WORD_LE(&p);
-    afmfile.real = Angstrom*get_FLOAT_LE(&p);
+    afmfile.res = gwy_get_guint16_le(&p);
+    afmfile.real = Angstrom*gwy_get_gfloat_le(&p);
     if (size < afmfile.res * afmfile.res + 10) {
         err_SIZE_MISMATCH(error, afmfile.res * afmfile.res + 10, size);
         gwy_file_abandon_contents(buffer, size, NULL);
@@ -145,7 +145,7 @@ aafm_load(const gchar *filename,
                                 FALSE);
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
     p += 2*afmfile.res*afmfile.res;
-    afmfile.range = get_FLOAT_LE(&p);
+    afmfile.range = gwy_get_gfloat_le(&p);
     gwy_data_field_get_min_max(dfield, &min, &max);
     if (min == max)
         gwy_data_field_clear(dfield);
