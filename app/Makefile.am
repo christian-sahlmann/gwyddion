@@ -19,6 +19,7 @@ libgwyapp2include_HEADERS = \
 	gradient-editor.h \
 	gwyapp.h \
 	gwyapptypes.h \
+	gwymoduleutils-file.h \
 	gwyplaintool.h \
 	gwytool.h \
 	menu.h \
@@ -75,6 +76,7 @@ libgwyapp2_la_SOURCES = \
 	gradient-editor.c \
 	gwyappfilechooser.c \
 	gwyapptypes.c \
+	gwymoduleutils-file.c \
 	gwyplaintool.c \
 	gwytool.c \
 	menu.c \
