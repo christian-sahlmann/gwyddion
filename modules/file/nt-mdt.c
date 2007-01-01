@@ -20,15 +20,14 @@
 /* TODO: some metadata, MDA, ... */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-
 #include <string.h>
 #include <stdlib.h>
-
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -222,8 +221,6 @@ static gboolean       mdt_real_load       (const guchar *buffer,
                                            MDTFile *mdtfile,
                                            GError **error);
 static GwyDataField*  extract_scanned_data(MDTScannedDataFrame *dataframe);
-static void           guess_channel_type  (GwyContainer *data,
-                                           const gchar *key);
 
 static const GwyEnum frame_types[] = {
     { "Scanned",      MDT_FRAME_SCANNED },
@@ -292,7 +289,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -365,7 +362,7 @@ mdt_load(const gchar *filename,
             g_string_printf(key, "/%d/data", n);
             gwy_container_set_object_by_name(data, key->str, dfield);
             g_object_unref(dfield);
-            guess_channel_type(data, key->str);
+            gwy_app_channel_title_fall_back(data, n);
 
             meta = mdt_get_metadata(&mdtfile, n);
             g_string_printf(key, "/%d/meta", n);
@@ -720,60 +717,6 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return dfield;
-}
-
-/**
- * guess_channel_type:
- * @data: A data container.
- * @key: Data channel key.
- *
- * Adds a channel title based on data field units.
- *
- * The guess is very simple, but probably better than `Unknown channel' in
- * most cases.  If there already is a title it is left intact, making use of
- * this function as a fallback easier.
- **/
-static void
-guess_channel_type(GwyContainer *data,
-                   const gchar *key)
-{
-    GwySIUnit *siunit, *test;
-    GwyDataField *dfield;
-    const gchar *title;
-    GQuark quark;
-    gchar *s;
-
-    s = g_strconcat(key, "/title", NULL);
-    quark = g_quark_from_string(s);
-    g_free(s);
-    if (gwy_container_contains(data, quark))
-        return;
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
-    siunit = gwy_data_field_get_si_unit_z(dfield);
-    test = gwy_si_unit_new(NULL);
-    title = NULL;
-
-    if (!title) {
-        gwy_si_unit_set_from_string(test, "m");
-        if (gwy_si_unit_equal(siunit, test))
-            title = "Topography";
-    }
-    if (!title) {
-        gwy_si_unit_set_from_string(test, "A");
-        if (gwy_si_unit_equal(siunit, test))
-            title = "Current";
-    }
-    if (!title) {
-        gwy_si_unit_set_from_string(test, "deg");
-        if (gwy_si_unit_equal(siunit, test))
-            title = "Phase";
-    }
-
-    g_object_unref(test);
-    if (title)
-        gwy_container_set_string(data, quark, g_strdup(title));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

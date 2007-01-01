@@ -34,8 +34,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -62,8 +63,6 @@ static gboolean      read_binary_data     (gint n,
                                            gint bpp,
                                            GError **error);
 static GwyContainer* createc_get_metadata (GHashTable *hash);
-static void          guess_channel_type   (GwyContainer *data,
-                                           const gchar *key);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -137,7 +136,7 @@ createc_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         g_object_unref(dfield);
 
-        guess_channel_type(container, "/0/data");
+        gwy_app_channel_title_fall_back(container, 0);
 
         meta = createc_get_metadata(hash);
         if (meta)
@@ -350,60 +349,6 @@ createc_get_metadata(GHashTable *hash)
     }
 
     return meta;
-}
-
-/**
- * guess_channel_type:
- * @data: A data container.
- * @key: Data channel key.
- *
- * Adds a channel title based on data field units.
- *
- * The guess is very simple, but probably better than `Unknown channel' in
- * most cases.  If there already is a title it is left intact, making use of
- * this function as a fallback easier.
- **/
-static void
-guess_channel_type(GwyContainer *data,
-                   const gchar *key)
-{
-    GwySIUnit *siunit, *test;
-    GwyDataField *dfield;
-    const gchar *title;
-    GQuark quark;
-    gchar *s;
-
-    s = g_strconcat(key, "/title", NULL);
-    quark = g_quark_from_string(s);
-    g_free(s);
-    if (gwy_container_contains(data, quark))
-        return;
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
-    siunit = gwy_data_field_get_si_unit_z(dfield);
-    test = gwy_si_unit_new(NULL);
-    title = NULL;
-
-    if (!title) {
-        gwy_si_unit_set_from_string(test, "m");
-        if (gwy_si_unit_equal(siunit, test))
-            title = "Topography";
-    }
-    if (!title) {
-        gwy_si_unit_set_from_string(test, "A");
-        if (gwy_si_unit_equal(siunit, test))
-            title = "Current";
-    }
-    if (!title) {
-        gwy_si_unit_set_from_string(test, "deg");
-        if (gwy_si_unit_equal(siunit, test))
-            title = "Phase";
-    }
-
-    g_object_unref(test);
-    if (title)
-        gwy_container_set_string(data, quark, g_strdup(title));
 }
 
 static gboolean

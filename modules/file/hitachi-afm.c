@@ -24,15 +24,15 @@
  * Hitachi. */
 
 #include "config.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2005",
 };
@@ -153,24 +153,6 @@ hitachi_old_detect(const GwyFileDetectInfo *fileinfo,
     return 0;
 }
 
-static gboolean
-data_field_has_highly_nosquare_samples(GwyDataField *dfield)
-{
-    gint xres, yres;
-    gdouble xreal, yreal, q;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-
-    q = (xreal/xres)/(yreal/yres);
-
-    /* The threshold is somewhat arbitrary.  Fortunately, most files encoutered
-     * in practice have either q very close to 1, or 2 or more */
-    return q > G_SQRT2 || q < 1.0/G_SQRT2;
-}
-
 static GwyContainer*
 hitachi_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
@@ -222,10 +204,7 @@ hitachi_load(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
 
-    /* FIXME: this can be generally useful, move it to gwyddion */
-    if (data_field_has_highly_nosquare_samples(dfield))
-        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
-                                          TRUE);
+    gwy_app_channel_check_nonsquare(container, 0);
 
     return container;
 }

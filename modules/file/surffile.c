@@ -26,9 +26,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
-#include <app/gwyapp.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "get.h"
 #include "err.h"
@@ -143,12 +143,6 @@ typedef struct {
     GwyDataField *dfield;
 } SurfFile;
 
-typedef struct {
-    SurfFile *file;
-    GwyContainer *data;
-    GtkWidget *data_view;
-} SurfControls;
-
 static gboolean      module_register      (void);
 static gint          surffile_detect      (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
@@ -159,8 +153,6 @@ static gboolean      fill_data_fields     (SurfFile *surffile,
                                            const guchar *buffer,
                                            GError **error);
 static GwyContainer* surffile_get_metadata(SurfFile *surffile);
-static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
-
 
 static const GwyEnum acq_modes[] = {
    { "Unknown",                     SURF_ACQ_UNKNOWN,        },
@@ -181,7 +173,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surf data files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -395,10 +387,7 @@ surffile_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    /* FIXME: this can be generally useful, move it to gwyddion */
-    if (data_field_has_highly_nosquare_samples(surffile.dfield))
-        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
-                                          TRUE);
+    gwy_app_channel_check_nonsquare(container, 0);
 
     return container;
 }
@@ -488,24 +477,4 @@ surffile_get_metadata(SurfFile *surffile)
     return meta;
 }
 
-static gboolean
-data_field_has_highly_nosquare_samples(GwyDataField *dfield)
-{
-    gint xres, yres;
-    gdouble xreal, yreal, q;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-
-    q = (xreal/xres)/(yreal/yres);
-
-    /* The threshold is somewhat arbitrary.  Fortunately, most files encoutered
-     * in practice have either q very close to 1, or 2 or more */
-    return q > G_SQRT2 || q < 1.0/G_SQRT2;
-}
-
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

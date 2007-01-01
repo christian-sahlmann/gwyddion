@@ -33,8 +33,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
 
 #include "err.h"
 #include "get.h"

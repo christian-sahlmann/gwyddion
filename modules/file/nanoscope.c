@@ -34,6 +34,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 
@@ -123,14 +124,13 @@ static NanoscopeValue* parse_value           (const gchar *key,
 static gboolean        require_keys          (GHashTable *hash,
                                               GError **error,
                                               ...);
-static gboolean    data_field_has_highly_nosquare_samples(GwyDataField *dfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Veeco (Digital Instruments) Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.15",
+    "0.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -279,11 +279,7 @@ nanoscope_load(const gchar *filename,
                 gwy_container_set_object_by_name(container, key, meta);
                 g_object_unref(meta);
 
-                if (data_field_has_highly_nosquare_samples(ndata->data_field)) {
-                    g_snprintf(key, sizeof(key), "/%d/data/realsquare", i);
-                    gwy_container_set_boolean_by_name(container, key, TRUE);
-                }
-
+                gwy_app_channel_check_nonsquare(container, i);
                 i++;
             }
         }
@@ -920,24 +916,6 @@ require_keys(GHashTable *hash,
     va_end(ap);
 
     return TRUE;
-}
-
-static gboolean
-data_field_has_highly_nosquare_samples(GwyDataField *dfield)
-{
-    gint xres, yres;
-    gdouble xreal, yreal, q;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-
-    q = (xreal/xres)/(yreal/yres);
-
-    /* The threshold is somewhat arbitrary.  Fortunately, most files encoutered
-     * in practice have either q very close to 1, or 2 or more */
-    return q > G_SQRT2 || q < 1.0/G_SQRT2;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
