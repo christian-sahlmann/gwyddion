@@ -25,6 +25,35 @@
 
 G_BEGIN_DECLS
 
+#define GWY_DEFINE_BUFFER_GETTER(lt, ut, mt, lb, ub) \
+    static inline lt \
+    gwy_get_ ## lt ## _ ## lb(const guchar **ppv) \
+    { \
+        const mt *pv = *(const mt**)ppv; \
+        mt v = ut ## _FROM_ ## ub(*pv); \
+        *ppv += sizeof(mt); \
+        return *(lt*)&v; \
+    }
+
+GWY_DEFINE_BUFFER_GETTER(gint16,  GINT16,  gint16,  le, LE)
+GWY_DEFINE_BUFFER_GETTER(gint16,  GINT16,  gint16,  be, BE)
+GWY_DEFINE_BUFFER_GETTER(guint16, GUINT16, guint16, le, LE)
+GWY_DEFINE_BUFFER_GETTER(guint16, GUINT16, guint16, be, BE)
+GWY_DEFINE_BUFFER_GETTER(gint32,  GINT32,  gint32,  le, LE)
+GWY_DEFINE_BUFFER_GETTER(gint32,  GINT32,  gint32,  be, BE)
+GWY_DEFINE_BUFFER_GETTER(guint32, GUINT32, guint32, le, LE)
+GWY_DEFINE_BUFFER_GETTER(guint32, GUINT32, guint32, be, BE)
+GWY_DEFINE_BUFFER_GETTER(gint64,  GINT64,  gint64,  le, LE)
+GWY_DEFINE_BUFFER_GETTER(gint64,  GINT64,  gint64,  be, BE)
+GWY_DEFINE_BUFFER_GETTER(guint64, GUINT64, guint64, le, LE)
+GWY_DEFINE_BUFFER_GETTER(guint64, GUINT64, guint64, be, BE)
+GWY_DEFINE_BUFFER_GETTER(gfloat,  GUINT32, guint32, le, LE)
+GWY_DEFINE_BUFFER_GETTER(gfloat,  GUINT32, guint32, be, BE)
+GWY_DEFINE_BUFFER_GETTER(gdouble, GUINT64, guint64, le, LE)
+GWY_DEFINE_BUFFER_GETTER(gdouble, GUINT64, guint64, be, BE)
+
+#undef GWY_DEFINE_BUFFER_GETTER
+
 gboolean gwy_app_channel_check_nonsquare(GwyContainer *data,
                                          gint id);
 gboolean gwy_app_channel_title_fall_back(GwyContainer *data,
