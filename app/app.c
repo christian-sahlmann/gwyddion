@@ -61,6 +61,7 @@ static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
 static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                                     GtkWidget *data_window);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
+static void       gwy_app_3d_view_set_defaults     (Gwy3DView *gwy3dview);
 static void       gwy_app_data_window_reset_zoom   (void);
 static void       gwy_app_change_mask_color_cb     (void);
 
@@ -389,9 +390,11 @@ _gwy_app_graph_set_current(GwyGraph *graph)
 void
 _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
 {
+    Gwy3DView *view3d;
     GtkWidget *button;
 
     gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
+    view3d = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window3d));
 
     button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
@@ -400,9 +403,194 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
                                            _("Export 3D view to PNG image"),
                                            G_CALLBACK(gwy_app_3d_window_export),
                                            window3d);
-
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), window3d);
+
+    button = gtk_button_new_with_mnemonic(_("Set Defaults"));
+    gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_3d_view_set_defaults), view3d);
+}
+
+static void
+gwy_app_save_3d_export(GtkWidget *dialog,
+                       gint response,
+                       Gwy3DWindow *gwy3dwindow)
+{
+    gchar *filename_sys, *filename_utf8;
+    GdkPixbuf *pixbuf;
+    GtkWidget *gwy3dview;
+    GError *err = NULL;
+
+    if (response != GTK_RESPONSE_OK) {
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
+    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
+    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    gtk_widget_destroy(dialog);
+
+    pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview));
+    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+    if (!gdk_pixbuf_save(pixbuf, filename_sys, "png", &err, NULL)) {
+        dialog = gtk_message_dialog_new(NULL,
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_OK,
+                                        _("Saving of 3D view to `%s' failed"),
+                                        filename_utf8);
+        gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+                                                 "%s", err->message);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        g_clear_error(&err);
+    }
+    g_free(filename_sys);
+    g_object_unref(pixbuf);
+    g_free(g_object_get_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename"));
+    g_object_set_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename",
+                      filename_utf8);
+}
+
+static void
+gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
+{
+    GwyContainer *data;
+    GtkWidget *dialog, *gwy3dview;
+    const guchar *filename_utf8;
+    gchar *filename_sys;
+    gboolean need_free_utf = FALSE;
+
+    gwy3dview = gwy_3d_window_get_3d_view(gwy3dwindow);
+    data = gwy_3d_view_get_data(GWY_3D_VIEW(gwy3dview));
+
+    filename_utf8 = g_object_get_data(G_OBJECT(gwy3dwindow),
+                                      "gwy-app-export-filename");
+    if (!filename_utf8) {
+        if (gwy_container_gis_string_by_name(data, "/filename",
+                                             &filename_utf8)) {
+            /* FIXME: this is ugly, invent a better filename */
+            filename_utf8 = g_strconcat(filename_utf8, ".png", NULL);
+            need_free_utf = TRUE;
+        }
+        else
+            filename_utf8 = "3d.png";
+    }
+    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
+    if (need_free_utf)
+        g_free((gpointer)filename_utf8);
+
+    dialog = gtk_file_chooser_dialog_new(_("Export 3D View"),
+                                         GTK_WINDOW(gwy3dwindow),
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
+    gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), filename_sys);
+    g_free(filename_sys);
+
+    g_signal_connect(dialog, "response",
+                     G_CALLBACK(gwy_app_save_3d_export), gwy3dwindow);
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_widget_show_all(dialog);
+}
+
+static void
+gwy_app_3d_view_set_defaults(Gwy3DView *gwy3dview)
+{
+    Gwy3DSetup *setup;
+    GwyContainer *settings;
+
+    setup = gwy_3d_view_get_setup(gwy3dview);
+    g_return_if_fail(GWY_IS_3D_SETUP(setup));
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, "/app/3d/axes-visible",
+                                      setup->axes_visible);
+    gwy_container_set_boolean_by_name(settings, "/app/3d/labels-visible",
+                                      setup->labels_visible);
+    gwy_container_set_double_by_name(settings, "/app/3d/rotation-x",
+                                     setup->rotation_x);
+    gwy_container_set_double_by_name(settings, "/app/3d/rotation-y",
+                                     setup->rotation_y);
+    gwy_container_set_double_by_name(settings, "/app/3d/scale",
+                                     setup->scale);
+    gwy_container_set_double_by_name(settings, "/app/3d/z-scale",
+                                     setup->z_scale);
+    gwy_container_set_double_by_name(settings, "/app/3d/light-phi",
+                                     setup->light_phi);
+    gwy_container_set_double_by_name(settings, "/app/3d/light-theta",
+                                     setup->light_theta);
+    gwy_container_set_enum_by_name(settings, "/app/3d/visualization",
+                                   setup->visualization);
+    gwy_container_set_enum_by_name(settings, "/app/3d/projection",
+                                   setup->projection);
+}
+
+gboolean
+_gwy_app_3d_view_init_setup(GwyContainer *container,
+                            const gchar *setup_prefix)
+{
+    GwyContainer *settings;
+    Gwy3DSetup *setup;
+    Gwy3DProjection projection;
+    Gwy3DVisualization visualization;
+    gdouble dblvalue;
+    gboolean boolvalue;
+    gchar *key;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(setup_prefix, FALSE);
+
+    key = g_strconcat(setup_prefix, "/setup", NULL);
+    if (gwy_container_gis_object_by_name(container, key, &setup)
+        && GWY_IS_3D_SETUP(setup)) {
+        g_free(key);
+        return FALSE;
+    }
+
+    setup = gwy_3d_setup_new();
+    settings = gwy_app_settings_get();
+    if (gwy_container_gis_boolean_by_name(settings, "/app/3d/axes-visible",
+                                          &boolvalue))
+        g_object_set(setup, "axes-visible", boolvalue, NULL);
+    if (gwy_container_gis_boolean_by_name(settings, "/app/3d/labels-visible",
+                                          &boolvalue))
+        g_object_set(setup, "labels-visible", boolvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/rotation-x",
+                                         &dblvalue))
+        g_object_set(setup, "rotation-x", dblvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/rotation-y",
+                                         &dblvalue))
+        g_object_set(setup, "rotation-y", dblvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/scale",
+                                         &dblvalue))
+        g_object_set(setup, "scale", dblvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/z-scale",
+                                         &dblvalue))
+        g_object_set(setup, "z-scale", dblvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/light-phi",
+                                         &dblvalue))
+        g_object_set(setup, "light-phi", dblvalue, NULL);
+    if (gwy_container_gis_double_by_name(settings, "/app/3d/light-theta",
+                                         &dblvalue))
+        g_object_set(setup, "light-theta", dblvalue, NULL);
+    if (gwy_container_gis_enum_by_name(settings, "/app/3d/visualization",
+                                       &visualization))
+        g_object_set(setup, "visualization", visualization, NULL);
+    if (gwy_container_gis_enum_by_name(settings, "/app/3d/projection",
+                                       &projection))
+        g_object_set(setup, "projection", projection, NULL);
+
+    gwy_container_set_object_by_name(container, key, setup);
+    g_object_unref(setup);
+    g_free(key);
+
+    return TRUE;
 }
 
 /*****************************************************************************
@@ -727,93 +915,6 @@ gwy_app_switch_tool(const gchar *toolname)
         gwy_tool_data_switched(current_tool, data_view);
         gwy_tool_show(current_tool);
     }
-}
-
-static void
-gwy_app_save_3d_export(GtkWidget *dialog,
-                       gint response,
-                       Gwy3DWindow *gwy3dwindow)
-{
-    gchar *filename_sys, *filename_utf8;
-    GdkPixbuf *pixbuf;
-    GtkWidget *gwy3dview;
-    GError *err = NULL;
-
-    if (response != GTK_RESPONSE_OK) {
-        gtk_widget_destroy(dialog);
-        return;
-    }
-
-    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
-    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-    gtk_widget_destroy(dialog);
-
-    pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview));
-    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-    if (!gdk_pixbuf_save(pixbuf, filename_sys, "png", &err, NULL)) {
-        dialog = gtk_message_dialog_new(NULL,
-                                        GTK_DIALOG_DESTROY_WITH_PARENT,
-                                        GTK_MESSAGE_ERROR,
-                                        GTK_BUTTONS_OK,
-                                        _("Saving of 3D view to `%s' failed"),
-                                        filename_utf8);
-        gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-                                                 "%s", err->message);
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        g_clear_error(&err);
-    }
-    g_free(filename_sys);
-    g_object_unref(pixbuf);
-    g_free(g_object_get_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename"));
-    g_object_set_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename",
-                      filename_utf8);
-}
-
-static void
-gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
-{
-    GwyContainer *data;
-    GtkWidget *dialog, *gwy3dview;
-    const guchar *filename_utf8;
-    gchar *filename_sys;
-    gboolean need_free_utf = FALSE;
-
-    gwy3dview = gwy_3d_window_get_3d_view(gwy3dwindow);
-    data = gwy_3d_view_get_data(GWY_3D_VIEW(gwy3dview));
-
-    filename_utf8 = g_object_get_data(G_OBJECT(gwy3dwindow),
-                                      "gwy-app-export-filename");
-    if (!filename_utf8) {
-        if (gwy_container_gis_string_by_name(data, "/filename",
-                                             &filename_utf8)) {
-            /* FIXME: this is ugly, invent a better filename */
-            filename_utf8 = g_strconcat(filename_utf8, ".png", NULL);
-            need_free_utf = TRUE;
-        }
-        else
-            filename_utf8 = "3d.png";
-    }
-    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
-    if (need_free_utf)
-        g_free((gpointer)filename_utf8);
-
-    dialog = gtk_file_chooser_dialog_new(_("Export 3D View"),
-                                         GTK_WINDOW(gwy3dwindow),
-                                         GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-                                        gwy_app_get_current_directory());
-    gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), filename_sys);
-    g_free(filename_sys);
-
-    g_signal_connect(dialog, "response",
-                     G_CALLBACK(gwy_app_save_3d_export), gwy3dwindow);
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
-    gtk_widget_show_all(dialog);
 }
 
 static void

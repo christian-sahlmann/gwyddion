@@ -40,6 +40,9 @@ void     _gwy_app_data_window_setup           (GwyDataWindow *data_window);
 G_GNUC_INTERNAL
 void     _gwy_app_3d_window_setup             (Gwy3DWindow *window3d);
 G_GNUC_INTERNAL
+gboolean _gwy_app_3d_view_init_setup          (GwyContainer *container,
+                                               const gchar *setup_prefix);
+G_GNUC_INTERNAL
 void     _gwy_app_graph_window_setup          (GwyGraphWindow *graph_window);
 
 G_GNUC_INTERNAL

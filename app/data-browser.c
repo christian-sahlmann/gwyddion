@@ -1839,6 +1839,12 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     len = strlen(key);
 
     g_strlcat(key, "3d", sizeof(key));
+    /* Since gwy_3d_view_set_setup_prefix() instantiates a new 3d setup if none
+     * is present, we have to check whether any is present and create a new
+     * one with user's defaults before calling this method.  After that we
+     * cannot tell whether the 3d setup was in the container from previous
+     * 3d views or it has been just created. */
+    _gwy_app_3d_view_init_setup(proxy->container, key);
     gwy_3d_view_set_setup_prefix(GWY_3D_VIEW(view3d), key);
 
     key[len] = '\0';
