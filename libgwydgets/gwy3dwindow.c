@@ -1001,7 +1001,7 @@ gwy_3d_window_build_label_tab(Gwy3DWindow *window)
                              window);
     gtk_table_attach(GTK_TABLE(table), button,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-    window->actions = gtk_hbox_new(FALSE, 4);
+    window->actions = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(window->vbox_large), window->actions,
                        FALSE, FALSE, 0);
 
