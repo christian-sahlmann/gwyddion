@@ -227,7 +227,7 @@ gwy_layer_mask_unplugged(GwyDataViewLayer *layer)
  *          "/blue", and "/alpha" is appended to it to get the individual
  *          keys.
  *
- * Sets color components of a mask layer.
+ * Sets the container key of colour components of a mask layer.
  **/
 void
 gwy_layer_mask_set_color_key(GwyLayerMask *mask_layer,

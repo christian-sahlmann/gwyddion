@@ -408,7 +408,7 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
  * @basic_layer: A basic data view layer.
  * @key: Container string key identifying the color gradient to use.
  *
- * Sets the gradient to use to visualize data.
+ * Sets the container key of the colour gradient to use to visualize data.
  **/
 void
 gwy_layer_basic_set_gradient_key(GwyLayerBasic *basic_layer,
@@ -459,7 +459,8 @@ gwy_layer_basic_get_gradient_key(GwyLayerBasic *basic_layer)
  * @basic_layer: A basic data view layer.
  * @key: Container string key identifying the range type to use.
  *
- * Sets the color range mapping type to use to visualize data.
+ * Sets the container key of the color range mapping type to use to visualize
+ * data.
  **/
 void
 gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
@@ -641,7 +642,8 @@ gwy_layer_basic_get_fixed_range(GwyLayerBasic *basic_layer,
  * @basic_layer: A basic data view layer.
  * @key: Container string key identifying the data field to actually display.
  *
- * Sets the data field to actually display by a basic layer.
+ * Sets the container key of the data field to actually display by a basic
+ * layer.
  *
  * The data field set with gwy_pixmap_layer_get_data_key() is used to obtain
  * values, it determines physical dimensions, etc.  When a data field is set

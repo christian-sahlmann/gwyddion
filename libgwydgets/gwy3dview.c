@@ -564,6 +564,13 @@ gwy_3d_view_container_connect(Gwy3DView *gwy3dview,
                                 callback, gwy3dview);
 }
 
+/**
+ * gwy_3d_view_set_data_key:
+ * @gwy3dview: A 3D data view widget.
+ * @key: Container string key identifying the data field to visualize.
+ *
+ * Sets the container key identifying the data field to visualize in a 3D view.
+ **/
 void
 gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
                          const gchar *key)
@@ -588,6 +595,14 @@ gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
     gwy_3d_view_data_field_changed(gwy3dview);
 }
 
+/**
+ * gwy_3d_view_get_data_key:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Gets the container key identifying the data field to visualize in a 3D view.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
 const gchar*
 gwy_3d_view_get_data_key(Gwy3DView *gwy3dview)
 {
@@ -637,13 +652,31 @@ gwy_3d_view_data_field_changed(Gwy3DView *gwy3dview)
     gwy_3d_view_update_lists(gwy3dview);
 }
 
+/**
+ * gwy_3d_view_get_setup_prefix:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Gets prefix identifying 3D view setup in the container.
+ *
+ * Returns: The setup key prefix.
+ **/
 const gchar*
 gwy_3d_view_get_setup_prefix(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return g_quark_to_string(gwy3dview->gradient_key);
+    return g_quark_to_string(gwy3dview->setup_key);
 }
 
+/**
+ * gwy_3d_view_set_setup_prefix:
+ * @gwy3dview: A 3D data view widget.
+ * @key: Container string prefix for keys identifying the view setup
+ *       parameters.  The #Gwy3DSetup is stored at key
+ *       <literal>"/setup"</literal> under this prefix.  Label objects are
+ *       also stored under this prefix.
+ *
+ * Sets the prefix of 3D view parameters in the container.
+ **/
 void
 gwy_3d_view_set_setup_prefix(Gwy3DView *gwy3dview,
                              const gchar *key)
@@ -798,7 +831,8 @@ gwy_3d_view_setup_changed(Gwy3DView *gwy3dview,
  * gwy_3d_view_get_gradient_key:
  * @gwy3dview: A 3D data view widget.
  *
- * Gets key identifying color gradient.
+ * Gets the container key identifying the colour gradient used to visualize
+ * data in a 3D view.
  *
  * Returns: The string key, or %NULL if it isn't set.
  **/
@@ -815,7 +849,8 @@ gwy_3d_view_get_gradient_key(Gwy3DView *gwy3dview)
  * @key: Container string key identifying the color gradient to use for
  *       gradient visualization mode.
  *
- * Sets the color gradient to use to visualize data in a 3D view.
+ * Sets the container key identifying the color gradient to use to visualize
+ * data in a 3D view.
  **/
 void
 gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
@@ -889,7 +924,8 @@ gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_material_key:
  * @gwy3dview: A 3D data view widget.
  *
- * Gets key identifying GL material.
+ * Gets the key identifying the GL material used to visualize data in a 3D
+ * view.
  *
  * Returns: The string key, or %NULL if it isn't set.
  **/
@@ -906,7 +942,8 @@ gwy_3d_view_get_material_key(Gwy3DView *gwy3dview)
  * @key: Container string key identifying the color material to use for
  *       material visualization mode.
  *
- * Sets the GL material to use to visualize data in a 3D view.
+ * Sets the container key of the GL material used to visualize data in a 3D
+ * view.
  **/
 void
 gwy_3d_view_set_material_key(Gwy3DView *gwy3dview,
@@ -996,7 +1033,7 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
  * Returns a movement type describing actual type of response on
  * the mouse motion event.
  *
- * Returns: actual type of response on the mouse motion event
+ * Returns: Actual type of response on the mouse motion event
  **/
 Gwy3DMovement
 gwy_3d_view_get_movement_type(Gwy3DView *gwy3dview)
@@ -1113,6 +1150,18 @@ gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
                                        rx, ry, GWY_INTERPOLATION_BILINEAR);
 }
 
+/**
+ * gwy_3d_view_get_label:
+ * @gwy3dview: A 3D data view widget.
+ * @label: Label type to obtain.
+ *
+ * Gets requested 3D label object of a 3D view.
+ *
+ * This is a convenience method that can be used instead of fetching the label
+ * object from the data container.
+ *
+ * Returns: The 3D label object representing @label in @gwy3dview.
+ **/
 Gwy3DLabel*
 gwy_3d_view_get_label(Gwy3DView *gwy3dview,
                       Gwy3DViewLabel label)
@@ -1123,6 +1172,17 @@ gwy_3d_view_get_label(Gwy3DView *gwy3dview,
     return gwy3dview->labels[label];
 }
 
+/**
+ * gwy_3d_view_get_setup:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Gets the 3D setup object of a 3D view.
+ *
+ * This is a convenience method that can be used instead of fetching the setup
+ * object from the data container.
+ *
+ * Returns:
+ **/
 Gwy3DSetup*
 gwy_3d_view_get_setup(Gwy3DView *gwy3dview)
 {
@@ -2522,7 +2582,7 @@ gwy_3d_view_set_scale_range(G_GNUC_UNUSED Gwy3DView *gwy3dview,
  * You have initialize GtkGLExt with gtk_gl_init_check() and then Gwyddion's
  * OpenGL with gwy_widgets_gl_init() before you can use #Gwy3DView.  These
  * functions may not always succeed, see their description for more.  If
- * OpenGL initialization fails (possible because its support was not compiled
+ * OpenGL initialization fails (possibly because its support was not compiled
  * in) #Gwy3DView cannot be even instantiated.
  **/
 
