@@ -2182,7 +2182,7 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
         if (succ)
             gwy_app_data_browser_select_graph(GWY_GRAPH(succ));
         else
-            _gwy_app_data_view_set_current(NULL);
+            _gwy_app_graph_set_current(NULL);
     }
     g_object_unref(object);
 
