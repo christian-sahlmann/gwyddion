@@ -1,10 +1,12 @@
-2.2.20061224
+2.2.20070102
 
 2.3 (2000-00-00)
 Application:
 - Translations updated: Italian.
 
 Libraries:
+- libgwyapp: Wrong graph and data process toolbox sensitivity after closing
+  a graph was fixed.
 - libgwydgets: Data view check xreal, yreal changes when updating and
   recalculates measures.
 - libgwydgets: GwyNullStore iter_nth_child() method sets the iter properly,
@@ -14,6 +16,11 @@ Libraries:
   bounding boxes of all grains.
 - libgwydgets: Truncated logarithmic axes were fixed and the formatting of
   logarithmic axes improved.
+- libgwyprocess: Volume and grain volue calculation functions were added.
+- libgwyapp: Application 3D windows have `Set Defaults' button that makes
+  the current view parameters defaults for new views.
+- libgwyprocess: Slightly wrong grain surface area estimate calculation was
+  fixed.
 
 Modules:
 - MicroProf (new): MicroProf FRT data file import.
@@ -24,8 +31,13 @@ Modules:
 - Facet analysis: Phi calculation was unified with other modules, the size of
   neighbourhood used to calculate local inclinations can be controlled.
 - Mark scars: Instant updates option is available.
+- JEOL: Support for more data subtypes was added.
 - Rawfile: Skipping fields works when delimiter is `any whitespace'.
+- Mark scars, Mark grains by threshold, Mark grains by watershed, Remove
+  grains by threshold, Drift, Facet analysis, Immerse: Colour mapping settings
+  from the data window are honoured in the preview.
 - Grain watershed: Initial mask drawing artefacts were fixed.
+- Grain distributions: Grain volumes were added.
 
 
 2.2 (2006-12-15)
