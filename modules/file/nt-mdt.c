@@ -183,6 +183,10 @@ typedef struct {
     /* Data */
     const guchar *dots;
     const guchar *image;
+
+    /* Stuff after data */
+    guint title_len;
+    const guchar *title;
 } MDTScannedDataFrame;
 
 typedef struct {
@@ -289,7 +293,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -352,7 +356,7 @@ mdt_load(const gchar *filename,
 
     n = 0;
     data = gwy_container_new();
-    key = g_string_new("");
+    key = g_string_new(NULL);
     for (i = 0; i <= mdtfile.last_frame; i++) {
         if (mdtfile.frames[i].type == MDT_FRAME_SCANNED) {
             MDTScannedDataFrame *sdframe;
@@ -362,7 +366,15 @@ mdt_load(const gchar *filename,
             g_string_printf(key, "/%d/data", n);
             gwy_container_set_object_by_name(data, key->str, dfield);
             g_object_unref(dfield);
-            gwy_app_channel_title_fall_back(data, n);
+
+            if (sdframe->title) {
+                g_string_append(key, "/title");
+                gwy_container_set_string_by_name(data, key->str,
+                                                 g_strndup(sdframe->title,
+                                                           sdframe->title_len));
+            }
+            else
+                gwy_app_channel_title_fall_back(data, n);
 
             meta = mdt_get_metadata(&mdtfile, n);
             g_string_printf(key, "/%d/meta", n);
@@ -403,7 +415,7 @@ mdt_get_metadata(MDTFile *mdtfile,
     g_return_val_if_fail(frame->type == MDT_FRAME_SCANNED, meta);
     sdframe = (MDTScannedDataFrame*)frame->frame_data;
 
-    s = g_string_new("");
+    s = g_string_new(NULL);
     g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
                     frame->year, frame->month, frame->day,
                     frame->hour, frame->min, frame->sec);
@@ -540,7 +552,37 @@ mdt_scanned_data_vars(const guchar *p,
     }
     if (frame->fm_xres * frame->fm_yres) {
         frame->image = p;
+        p += sizeof(gint16)*frame->fm_xres*frame->fm_yres;
     }
+
+    gwy_debug("remaining stuff size: %u", (guint)(frame_size - (p - fstart)));
+
+    /* Title */
+    if ((frame_size - (p - fstart)) > 4) {
+        frame->title_len = get_DWORD_LE(&p);
+        if (frame->title_len
+            && (guint)(frame_size - (p - fstart)) >= frame->title_len) {
+            frame->title = p;
+            p += frame->title_len;
+        }
+    }
+
+#ifdef DEBUG
+    {
+        GString *str;
+        guint i;
+
+        str = g_string_new(NULL);
+        for (i = 0; i < (guint)(frame_size - (p -fstart)); i++) {
+            if (g_ascii_isprint(p[i]))
+                g_string_append_c(str, p[i]);
+            else
+                g_string_append_printf(str, ".", p[i]);
+        }
+        gwy_debug("stuff: %s", str->str);
+        g_string_free(str, TRUE);
+    }
+#endif
 
     return TRUE;
 }
