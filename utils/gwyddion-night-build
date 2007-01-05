@@ -8,7 +8,7 @@ projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 installprefix=$HOME/opt/gwyddion
 gtkdocdir="/share/gtk-doc/html/*"
-gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $home)
+gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $HOME)
 gnainsindex=$HOME/lib/gtk.gnains
 
 source $HOME/.bashrc
