@@ -119,6 +119,42 @@ typedef enum {
     MDT_TUNE_SLOPE = 2
 } MDTLiftMode;
 
+typedef enum {
+    MDT_SPM_TECHNIQUE_CONTACT_MODE     = 0,
+    MDT_SPM_TECHNIQUE_SEMICONTACT_MODE = 1,
+    MDT_SPM_TECHNIQUE_TUNNEL_CURRENT   = 2,
+    MDT_SPM_TECHNIQUE_SNOM             = 3
+} MDTSPMTechnique;
+
+typedef enum {
+    MDT_SPM_MODE_CONSTANT_FORCE               = 0,
+    MDT_SPM_MODE_CONTACT_CONSTANT_HEIGHT      = 1,
+    MDT_SPM_MODE_CONTACT_ERROR                = 2,
+    MDT_SPM_MODE_LATERAL_FORCE                = 3,
+    MDT_SPM_MODE_FORCE_MODULATION             = 4,
+    MDT_SPM_MODE_SPREADING_RESISTANCE_IMAGING = 5,
+    MDT_SPM_MODE_SEMICONTACT_TOPOGRAPHY       = 6,
+    MDT_SPM_MODE_SEMICONTACT_ERROR            = 7,
+    MDT_SPM_MODE_PHASE_CONTRAST               = 8,
+    MDT_SPM_MODE_AC_MAGNETIC_FORCE            = 9,
+    MDT_SPM_MODE_DC_MAGNETIC_FORCE            = 10,
+    MDT_SPM_MODE_ELECTROSTATIC_FORCE          = 11,
+    MDT_SPM_MODE_CAPACITANCE_CONTRAST         = 12,
+    MDT_SPM_MODE_KELVIN_PROBE                 = 13,
+    MDT_SPM_MODE_CONSTANT_CURRENT             = 14,
+    MDT_SPM_MODE_BARRIER_HEIGHT               = 15,
+    MDT_SPM_MODE_CONSTANT_HEIGHT              = 16,
+    MDT_SPM_MODE_AFAM                         = 17,
+    MDT_SPM_MODE_CONTACT_EFM                  = 18,
+    MDT_SPM_MODE_SHEAR_FORCE_TOPOGRAPHY       = 19,
+    MDT_SPM_MODE_SFOM                         = 20,
+    MDT_SPM_MODE_CONTACT_CAPACITANCE          = 21,
+    MDT_SPM_MODE_SNOM_TRANSMISSION            = 22,
+    MDT_SPM_MODE_SNOM_REFLECTION              = 23,
+    MDT_SPM_MODE_SNOM_ALL                     = 24,
+    MDT_SPM_MODE_SNOM                         = 25
+} MDTSPMMode;
+
 enum {
     FILE_HEADER_SIZE      = 32,
     FRAME_HEADER_SIZE     = 22,
@@ -187,6 +223,7 @@ typedef struct {
     /* Stuff after data */
     guint title_len;
     const guchar *title;
+    gchar *xmlstuff;
 } MDTScannedDataFrame;
 
 typedef struct {
@@ -212,19 +249,21 @@ typedef struct {
     MDTFrame *frames;
 } MDTFile;
 
-static gboolean       module_register     (void);
-static gint           mdt_detect          (const GwyFileDetectInfo *fileinfo,
-                                           gboolean only_name);
-static GwyContainer*  mdt_load            (const gchar *filename,
-                                           GwyRunType mode,
-                                           GError **error);
-static GwyContainer*  mdt_get_metadata    (MDTFile *mdtfile,
-                                           guint i);
-static gboolean       mdt_real_load       (const guchar *buffer,
-                                           guint size,
-                                           MDTFile *mdtfile,
-                                           GError **error);
-static GwyDataField*  extract_scanned_data(MDTScannedDataFrame *dataframe);
+static gboolean      module_register       (void);
+static gint          mdt_detect            (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* mdt_load              (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static GwyContainer* mdt_get_metadata      (MDTFile *mdtfile,
+                                            guint i);
+static void          mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
+                                            GwyContainer *meta);
+static gboolean      mdt_real_load         (const guchar *buffer,
+                                            guint size,
+                                            MDTFile *mdtfile,
+                                            GError **error);
+static GwyDataField* extract_scanned_data  (MDTScannedDataFrame *dataframe);
 
 static const GwyEnum frame_types[] = {
     { "Scanned",      MDT_FRAME_SCANNED },
@@ -286,6 +325,42 @@ static const GwyEnum mdt_units[] = {
     { "",     MDT_UNIT_RESERVED_DOS2 },
     { "",     MDT_UNIT_RESERVED_DOS3 },
     { "",     MDT_UNIT_RESERVED_DOS4 },
+};
+
+static const GwyEnum mdt_spm_techniques[] = {
+    { "Contact Mode",     MDT_SPM_TECHNIQUE_CONTACT_MODE,     },
+    { "Semicontact Mode", MDT_SPM_TECHNIQUE_SEMICONTACT_MODE, },
+    { "Tunnel Current",   MDT_SPM_TECHNIQUE_TUNNEL_CURRENT,   },
+    { "SNOM",             MDT_SPM_TECHNIQUE_SNOM,             },
+};
+
+static const GwyEnum mdt_spm_modes[] = {
+    { "Constant Force",               MDT_SPM_MODE_CONSTANT_FORCE,           },
+    { "Contact Constant Height",      MDT_SPM_MODE_CONTACT_CONSTANT_HEIGHT,  },
+    { "Contact Error",                MDT_SPM_MODE_CONTACT_ERROR,            },
+    { "Lateral Force",                MDT_SPM_MODE_LATERAL_FORCE,            },
+    { "Force Modulation",             MDT_SPM_MODE_FORCE_MODULATION,         },
+    { "Spreading Resistance Imaging", MDT_SPM_MODE_SPREADING_RESISTANCE_IMAGING, },
+    { "Semicontact Topography",       MDT_SPM_MODE_SEMICONTACT_TOPOGRAPHY,   },
+    { "Semicontact Error",            MDT_SPM_MODE_SEMICONTACT_ERROR,        },
+    { "Phase Contrast",               MDT_SPM_MODE_PHASE_CONTRAST,           },
+    { "AC Magnetic Force",            MDT_SPM_MODE_AC_MAGNETIC_FORCE,        },
+    { "DC Magnetic Force",            MDT_SPM_MODE_DC_MAGNETIC_FORCE,        },
+    { "Electrostatic Force",          MDT_SPM_MODE_ELECTROSTATIC_FORCE,      },
+    { "Capacitance Contrast",         MDT_SPM_MODE_CAPACITANCE_CONTRAST,     },
+    { "Kelvin Probe",                 MDT_SPM_MODE_KELVIN_PROBE,             },
+    { "Constant Current",             MDT_SPM_MODE_CONSTANT_CURRENT,         },
+    { "Barrier Height",               MDT_SPM_MODE_BARRIER_HEIGHT,           },
+    { "Constant Height",              MDT_SPM_MODE_CONSTANT_HEIGHT,          },
+    { "AFAM",                         MDT_SPM_MODE_AFAM,                     },
+    { "Contact EFM",                  MDT_SPM_MODE_CONTACT_EFM,              },
+    { "Shear Force Topography",       MDT_SPM_MODE_SHEAR_FORCE_TOPOGRAPHY,   },
+    { "SFOM",                         MDT_SPM_MODE_SFOM,                     },
+    { "Contact Capacitance",          MDT_SPM_MODE_CONTACT_CAPACITANCE,      },
+    { "SNOM Transmission",            MDT_SPM_MODE_SNOM_TRANSMISSION,        },
+    { "SNOM Reflection",              MDT_SPM_MODE_SNOM_REFLECTION,          },
+    { "SNOM All",                     MDT_SPM_MODE_SNOM_ALL,                 },
+    { "SNOM",                         MDT_SPM_MODE_SNOM,                     },
 };
 
 static GwyModuleInfo module_info = {
@@ -377,6 +452,7 @@ mdt_load(const gchar *filename,
                 gwy_app_channel_title_fall_back(data, n);
 
             meta = mdt_get_metadata(&mdtfile, n);
+            mdt_add_frame_metadata(sdframe, meta);
             g_string_printf(key, "/%d/meta", n);
             gwy_container_set_object_by_name(data, key->str, meta);
             g_object_unref(meta);
@@ -443,6 +519,25 @@ mdt_get_metadata(MDTFile *mdtfile,
     g_string_free(s, TRUE);
 
     return meta;
+}
+
+static void
+mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
+                       GwyContainer *meta)
+{
+    GMarkupParseContext *context;
+    GMarkupParser parser;
+
+    if (!sdframe->xmlstuff)
+        return;
+
+    memset(&parser, 0, sizeof(GMarkupParser));
+    context = g_markup_parse_context_new(&parser, 0, NULL, NULL);
+    g_markup_parse_context_parse(context, sdframe->xmlstuff, -1, NULL);
+    g_markup_parse_context_free(context);
+
+    g_free(sdframe->xmlstuff);
+    sdframe->xmlstuff = NULL;
 }
 
 static void
@@ -521,8 +616,8 @@ mdt_scanned_data_vars(const guchar *p,
     frame->bias_voltage = gwy_get_gfloat_le(&p);
     frame->draw = (gboolean)(*p++);
     p++;
-    frame->xoff = gwy_get_gint32_le(&p);  /* FIXME: sign? */
-    frame->yoff = gwy_get_gint32_le(&p);  /* FIXME: sign? */
+    frame->xoff = gwy_get_gint32_le(&p);
+    frame->yoff = gwy_get_gint32_le(&p);
     frame->nl_corr = (gboolean)(*p++);
 
     p = fstart + FRAME_HEADER_SIZE + vars_size;
@@ -564,6 +659,18 @@ mdt_scanned_data_vars(const guchar *p,
             && (guint)(frame_size - (p - fstart)) >= frame->title_len) {
             frame->title = p;
             p += frame->title_len;
+            gwy_debug("title = <%.*s>", frame->title_len, frame->title);
+        }
+    }
+
+    /* XML stuff */
+    if ((frame_size - (p - fstart)) > 4) {
+        guint len = gwy_get_guint32_le(&p);
+
+        if (len && (guint)(frame_size - (p - fstart)) >= len) {
+            frame->xmlstuff = g_convert((const gchar*)p, len, "UTF-16", "UTF-8",
+                                        NULL, NULL, NULL);
+            p += len;
         }
     }
 
@@ -577,7 +684,7 @@ mdt_scanned_data_vars(const guchar *p,
             if (g_ascii_isprint(p[i]))
                 g_string_append_c(str, p[i]);
             else
-                g_string_append_printf(str, ".", p[i]);
+                g_string_append_printf(str, "." /*, p[i] */);
         }
         gwy_debug("stuff: %s", str->str);
         g_string_free(str, TRUE);
@@ -762,4 +869,3 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
