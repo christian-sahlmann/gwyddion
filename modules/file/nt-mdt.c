@@ -522,6 +522,53 @@ mdt_get_metadata(MDTFile *mdtfile,
 }
 
 static void
+mdt_frame_xml_text(GMarkupParseContext *context,
+                   const gchar *text,
+                   gsize text_len,
+                   gpointer user_data,
+                   G_GNUC_UNUSED GError **error)
+{
+    static const struct {
+        const gchar *elem;
+        const gchar *name;
+        const GwyEnum *table;
+        guint len;
+    }
+    metas[] = {
+        {
+            "Technique", "SPM Technique",
+            mdt_spm_techniques, G_N_ELEMENTS(mdt_spm_techniques),
+        },
+        {
+            "SPMMode", "SPM Mode",
+            mdt_spm_modes, G_N_ELEMENTS(mdt_spm_modes),
+        },
+    };
+    GwyContainer *meta = (GwyContainer*)user_data;
+    gchar *t, *end;
+    const gchar *elem, *value;
+    guint i, v;
+
+    elem = g_markup_parse_context_get_element(context);
+    for (i = 0; i < G_N_ELEMENTS(metas); i++) {
+        if (!gwy_strequal(elem, metas[i].elem))
+            continue;
+
+        t = g_strndup(text, text_len);
+        v = strtol(t, &end, 10);
+        if (end != t) {
+            value = gwy_enum_to_string(v, metas[i].table, metas[i].len);
+            if (value && *value)
+                gwy_container_set_string_by_name(meta, metas[i].name,
+                                                 g_strdup(value));
+        }
+        g_free(t);
+
+        break;
+    }
+}
+
+static void
 mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
                        GwyContainer *meta)
 {
@@ -532,7 +579,9 @@ mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
         return;
 
     memset(&parser, 0, sizeof(GMarkupParser));
-    context = g_markup_parse_context_new(&parser, 0, NULL, NULL);
+    parser.text = &mdt_frame_xml_text;
+
+    context = g_markup_parse_context_new(&parser, 0, meta, NULL);
     g_markup_parse_context_parse(context, sdframe->xmlstuff, -1, NULL);
     g_markup_parse_context_free(context);
 
@@ -668,7 +717,7 @@ mdt_scanned_data_vars(const guchar *p,
         guint len = gwy_get_guint32_le(&p);
 
         if (len && (guint)(frame_size - (p - fstart)) >= len) {
-            frame->xmlstuff = g_convert((const gchar*)p, len, "UTF-16", "UTF-8",
+            frame->xmlstuff = g_convert((const gchar*)p, len, "UTF-8", "UTF-16",
                                         NULL, NULL, NULL);
             p += len;
         }
