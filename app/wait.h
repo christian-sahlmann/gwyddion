@@ -32,6 +32,9 @@ gboolean gwy_app_wait_set_fraction       (gdouble fraction);
 gboolean gwy_app_wait_set_message        (const gchar *message);
 gboolean gwy_app_wait_set_message_prefix (const gchar *prefix);
 
+void     gwy_app_wait_cursor_start       (GtkWindow *window);
+void     gwy_app_wait_cursor_finish      (GtkWindow *window);
+
 G_END_DECLS
 
 #endif /* __GWY_APP_WAIT_H__ */

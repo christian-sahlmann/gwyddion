@@ -237,6 +237,79 @@ gwy_app_wait_cancelled(void)
     cancelled = TRUE;
 }
 
+/**
+ * gwy_app_wait_cursor_start:
+ * @window: A window.
+ *
+ * Changes the cursor for a window to indicate work.
+ *
+ * This function lets the Gtk+ main loop to run.
+ *
+ * Since: 2.3
+ **/
+void
+gwy_app_wait_cursor_start(GtkWindow *window)
+{
+    GdkDisplay *display;
+    GdkCursor *wait_cursor;
+    GdkWindow *wait_window;
+    GtkWidget *widget;
+
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    widget = GTK_WIDGET(window);
+
+    if (!GTK_WIDGET_REALIZED(widget)) {
+        g_warning("Window must be realized to change the cursor");
+        return;
+    }
+
+    wait_window = widget->window;
+
+    display = gtk_widget_get_display(widget);
+    wait_cursor = gdk_cursor_new_for_display(display, GDK_WATCH);
+    gdk_window_set_cursor(wait_window, wait_cursor);
+    gdk_cursor_unref(wait_cursor);
+
+    while (gtk_events_pending())
+        gtk_main_iteration_do(FALSE);
+}
+
+/**
+ * gwy_app_wait_cursor_finish:
+ * @window: A window.
+ *
+ * Resets the cursor for a window.
+ *
+ * This function lets the Gtk+ main loop to run.
+ *
+ * If the window cursor was non-default before gwy_app_wait_cursor_start(),
+ * it is not restored and has to be set manually.  This limitation is due to
+ * the nonexistence of a method to obtain the current cursor.
+ *
+ * Since: 2.3
+ **/
+void
+gwy_app_wait_cursor_finish(GtkWindow *window)
+{
+    GdkWindow *wait_window;
+    GtkWidget *widget;
+
+    g_return_if_fail(GTK_IS_WINDOW(window));
+    widget = GTK_WIDGET(window);
+
+    if (!GTK_WIDGET_REALIZED(widget)) {
+        g_warning("Window must be realized to change the cursor");
+        return;
+    }
+
+    wait_window = widget->window;
+
+    gdk_window_set_cursor(wait_window, NULL);
+
+    while (gtk_events_pending())
+        gtk_main_iteration_do(FALSE);
+}
+
 /************************** Documentation ****************************/
 
 /**
