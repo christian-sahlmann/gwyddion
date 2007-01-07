@@ -25,6 +25,15 @@
 
 G_BEGIN_DECLS
 
+static inline gboolean
+gwy_get_gboolean8(const guchar **ppv)
+{
+    const guint8 *pv = *(const guint8**)ppv;
+    guint8 v = *pv;
+    *ppv += sizeof(guint8);
+    return !!v;
+}
+
 static inline gint16
 gwy_get_gint16_le(const guchar **ppv)
 {
