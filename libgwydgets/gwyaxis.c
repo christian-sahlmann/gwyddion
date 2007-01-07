@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <pango/pango.h>
@@ -98,6 +98,9 @@ static gboolean gwy_axis_normalscale         (GwyAxis *a);
 static gboolean gwy_axis_logscale           (GwyAxis *a);
 static gint    gwy_axis_scale               (GwyAxis *a);
 static gint    gwy_axis_formatticks         (GwyAxis *a);
+static GwySIValueFormat* gwy_axis_calculate_format(GwyAxis *axis,
+                                                   gdouble range,
+                                                   GwySIValueFormat *format);
 static gint    gwy_axis_precompute          (GwyAxis *a,
                                              gint scrmin,
                                              gint scrmax);
@@ -1478,12 +1481,9 @@ gwy_axis_formatticks(GwyAxis *a)
         range = fabs(mjx.t.value - mji.t.value);
     }
 
-    /*move exponents to axis label*/
+    /* move exponents to axis label */
     if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
-        format = gwy_si_unit_get_format_with_resolution
-                          (a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                           MAX(average, range), range/(double)a->mjticks->len,
-                           format);
+        format = gwy_axis_calculate_format(a, MAX(average, range), format);
         if (a->magnification_string)
             g_string_assign(a->magnification_string, format->units);
         else
@@ -1530,9 +1530,10 @@ gwy_axis_formatticks(GwyAxis *a)
                 g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
             }
             else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
-                g_string_printf(pmjt->ttext, "%.1e", value);
                 if (value == 0)
-                g_string_printf(pmjt->ttext, "0");
+                    g_string_printf(pmjt->ttext, "0");
+                else
+                    g_string_printf(pmjt->ttext, "%.1e", value);
             }
             else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_INT) {
                 g_string_printf(pmjt->ttext, "%d", (int)(value+0.5));
@@ -1566,6 +1567,50 @@ gwy_axis_formatticks(GwyAxis *a)
     }
 
     return 0;
+}
+
+static GwySIValueFormat*
+gwy_axis_calculate_format(GwyAxis *axis,
+                          gdouble range,
+                          GwySIValueFormat *format)
+{
+    GwyAxisLabeledTick *pmjt;
+    GString *u1, *u2;
+    gboolean ok;
+    guint i;
+
+    format = gwy_si_unit_get_format_with_resolution
+                                        (axis->unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                         range, range/axis->mjticks->len,
+                                         format);
+
+    /* Ensure the format is not too precise */
+    u1 = g_string_new(NULL);
+    u2 = g_string_new(NULL);
+    ok = TRUE;
+    while (ok && format->precision > 0 && axis->mjticks->len > 1) {
+        format->precision--;
+        ok = TRUE;
+        pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, 0);
+        g_string_printf(u1, "%.*f",
+                        format->precision, pmjt->t.value/format->magnitude);
+        for (i = 1; i < MIN(axis->mjticks->len, 6); i++) {
+            pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
+            g_string_printf(u2, "%.*f",
+                            format->precision, pmjt->t.value/format->magnitude);
+            if (gwy_strequal(u2->str, u1->str)) {
+                format->precision++;
+                ok = FALSE;
+                break;
+            }
+            GWY_SWAP(GString*, u2, u1);
+        }
+    }
+
+    g_string_free(u1, TRUE);
+    g_string_free(u2, TRUE);
+
+    return format;
 }
 
 /**
@@ -1838,7 +1883,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
     g_string_append_printf(out, "%%MajorTicks\n");
     g_string_append_printf(out, "%d setlinewidth\n", ticklinewidth);
     for (i = 0; i < axis->mjticks->len; i++) {
-        pmjt = &g_array_index (axis->mjticks, GwyAxisLabeledTick, i);
+        pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
 
         switch (axis->orientation) {
             case GTK_POS_TOP:
