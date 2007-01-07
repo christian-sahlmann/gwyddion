@@ -526,12 +526,12 @@ merge_do(MergeArgs *args)
                                      cdata.x + (max_col - kdata.width/2),
                                      yshift + ((max_row - kdata.height/2)
                                                - kdata.y));
-            gwy_data_field_area_add(result,
+            /*gwy_data_field_area_add(result,
                                     cdata.x + (max_col - kdata.width/2),
                                     yshift + ((max_row - kdata.height/2)
                                               - kdata.y),
                                     xres2, yres2,
-                                    zshift);
+                                    zshift);*/
         }
         else {
             gwy_data_field_area_copy(dfield2, result,
@@ -539,12 +539,13 @@ merge_do(MergeArgs *args)
                                      cdata.x + (max_col - kdata.width/2),
                                      yshift + ((max_row - kdata.height/2)
                                                - kdata.y));
-            gwy_data_field_area_add(result,
+            /*gwy_data_field_area_add(result,
                                 cdata.x + (max_col - kdata.width/2),
                                 yshift + ((max_row - kdata.height/2)
                                           - kdata.y),
                                 xres2, yres2,
                                 zshift);
+                                */
             gwy_data_field_area_copy(dfield1, result,
                                      0, 0, xres1, yres1,
                                      0, yshift);
