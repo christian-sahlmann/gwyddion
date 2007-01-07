@@ -74,8 +74,10 @@ gwy_math_humanize_numbers(gdouble unit,
     while (q > mag)
         mag += 3.0;
 
-    if (precision)
+    if (precision) {
         *precision = MAX(0, ceil(mag - lu));
+        *precision = MIN(*precision, 16);
+    }
 
     return pow10(mag);
 }
