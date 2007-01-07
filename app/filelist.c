@@ -27,10 +27,6 @@
  * We try not to break other TMS aware applications though.
  */
 
-/* TODO:
- * - Do NOT store thumbnails for anything in ~/.thumbnails
- */
-
 #include "config.h"
 
 #include <string.h>
@@ -1125,9 +1121,12 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     rf->file_state = FILE_STATE_OK;
     gwy_si_unit_value_format_free(vf);
 
-    /* FIXME: bad test, must end with / or nothing! */
     if (g_str_has_prefix(rf->file_sys, gwy_recent_file_thumbnail_dir())) {
-        return;
+        gchar c;
+
+        c = rf->file_sys[strlen(gwy_recent_file_thumbnail_dir())];
+        if (!c || G_IS_DIR_SEPARATOR(c))
+            return;
     }
 
     if (!pixbuf)
