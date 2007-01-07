@@ -23,7 +23,7 @@
  * hemisphere normal.  Coordinates on hemisphere are labeled (theta, phi),
  * coordinates on the projection (x, y)
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -510,18 +510,10 @@ facet_view_recompute(GtkAdjustment *adj,
     GwyVectorLayer *layer;
     GwyDataField *dfield;
     GwySelection *selection;
-    GdkCursor *wait_cursor;
-    GdkWindow *wait_window;
     const gchar *key;
 
     controls->args->kernel_size = gwy_adjustment_get_int(adj);
-
-    wait_window = controls->dialog->window;
-    wait_cursor = gdk_cursor_new(GDK_WATCH);
-    gdk_window_set_cursor(wait_window, wait_cursor);
-    while (gtk_events_pending())
-        gtk_main_iteration_do(FALSE);
-
+    gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialog));
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     gwy_data_field_facet_distribution(dfield, 2*controls->args->kernel_size + 1,
                                       controls->fdata);
@@ -537,10 +529,7 @@ facet_view_recompute(GtkAdjustment *adj,
     key = gwy_vector_layer_get_selection_key(layer);
     selection = gwy_container_get_object_by_name(controls->fdata, key);
     gwy_selection_clear(selection);
-
-    gdk_window_set_cursor(wait_window, NULL);
-    gdk_cursor_unref(wait_cursor);
-
+    gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialog));
     facets_invalidate(controls);
 }
 

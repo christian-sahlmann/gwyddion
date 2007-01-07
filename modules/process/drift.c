@@ -565,8 +565,6 @@ preview(DriftControls *controls,
         DriftArgs *args)
 {
     GwyDataField *mask, *dfield;
-    GdkCursor *wait_cursor;
-    GdkWindow *wait_window;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -577,12 +575,7 @@ preview(DriftControls *controls,
         g_object_unref(mask);
     }
 
-    wait_window = controls->dialog->window;
-    wait_cursor = gdk_cursor_new(GDK_WATCH);
-    gdk_window_set_cursor(wait_window, wait_cursor);
-    while (gtk_events_pending())
-        gtk_main_iteration_do(FALSE);
-
+    gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialog));
     if (!controls->result) {
         controls->result = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/1/data",
@@ -594,8 +587,7 @@ preview(DriftControls *controls,
     drift_do(args, dfield, controls->result, controls->drift);
     gwy_data_field_data_changed(controls->result);
     mask_process(mask, controls->drift);
-    gdk_window_set_cursor(wait_window, NULL);
-    gdk_cursor_unref(wait_cursor);
+    gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialog));
 
     controls->computed = TRUE;
 }
