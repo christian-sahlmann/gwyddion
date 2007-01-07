@@ -1198,6 +1198,8 @@ gwy_data_field_area_dh(GwyDataField *data_field,
                     /* Fix rounding errors */
                     if (G_UNLIKELY(k >= nstats))
                         k = nstats-1;
+                    else if (G_UNLIKELY(k < 0))
+                        k = 0;
 
                     target_line->data[k] += 1;
                 }
@@ -1213,6 +1215,8 @@ gwy_data_field_area_dh(GwyDataField *data_field,
                 /* Fix rounding errors */
                 if (G_UNLIKELY(k >= nstats))
                     k = nstats-1;
+                else if (G_UNLIKELY(k < 0))
+                    k = 0;
 
                 target_line->data[k] += 1;
             }
