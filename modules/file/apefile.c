@@ -20,6 +20,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* TODO: channel types */
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,9 +37,9 @@
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 /* Just guessing, format has no real magic header */
 #define HEADER_SIZE 240
@@ -112,7 +114,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -149,7 +151,7 @@ apefile_detect(const GwyFileDetectInfo *fileinfo,
     buffer = fileinfo->head;
     version = *(buffer++);
     mode = *(buffer++);
-    vbtype = get_WORD_LE(&buffer);
+    vbtype = gwy_get_guint16_le(&buffer);
     if (version >= 1 && version <= 2
         && mode < SPM_MODE_LAST+2  /* reserve */
         && vbtype == 7) {
@@ -190,44 +192,44 @@ apefile_load(const gchar *filename,
 
     apefile.spm_mode = *(p++);
     p += 2;   /* Skip VisualBasic VARIANT type type */
-    apefile.scan_date = get_DOUBLE_LE(&p);
-    apefile.maxr_x = get_FLOAT_LE(&p);
-    apefile.maxr_y = get_FLOAT_LE(&p);
-    apefile.x_offset = get_DWORD_LE(&p);
-    apefile.y_offset = get_DWORD_LE(&p);
-    apefile.size_flag = get_WORD_LE(&p);
+    apefile.scan_date = gwy_get_gdouble_le(&p);
+    apefile.maxr_x = gwy_get_gfloat_le(&p);
+    apefile.maxr_y = gwy_get_gfloat_le(&p);
+    apefile.x_offset = gwy_get_guint32_le(&p);
+    apefile.y_offset = gwy_get_guint32_le(&p);
+    apefile.size_flag = gwy_get_guint16_le(&p);
     apefile.res = 16 << apefile.size_flag;
-    apefile.acquire_delay = get_FLOAT_LE(&p);
-    apefile.raster_delay = get_FLOAT_LE(&p);
-    apefile.tip_dist = get_FLOAT_LE(&p);
-    apefile.v_ref = get_FLOAT_LE(&p);
+    apefile.acquire_delay = gwy_get_gfloat_le(&p);
+    apefile.raster_delay = gwy_get_gfloat_le(&p);
+    apefile.tip_dist = gwy_get_gfloat_le(&p);
+    apefile.v_ref = gwy_get_gfloat_le(&p);
     if (apefile.version == 1) {
-        apefile.vpmt1 = get_WORD_LE(&p);
-        apefile.vpmt2 = get_WORD_LE(&p);
+        apefile.vpmt1 = gwy_get_guint16_le(&p);
+        apefile.vpmt2 = gwy_get_guint16_le(&p);
     }
     else {
-        apefile.vpmt1 = get_FLOAT_LE(&p);
-        apefile.vpmt2 = get_FLOAT_LE(&p);
+        apefile.vpmt1 = gwy_get_gfloat_le(&p);
+        apefile.vpmt2 = gwy_get_gfloat_le(&p);
     }
     apefile.remark = g_strndup(p, 120);
     p += 120;
-    apefile.x_piezo_factor = get_DWORD_LE(&p);
-    apefile.y_piezo_factor = get_DWORD_LE(&p);
-    apefile.z_piezo_factor = get_DWORD_LE(&p);
-    apefile.hv_gain = get_FLOAT_LE(&p);
-    apefile.freq_osc_tip = get_DOUBLE_LE(&p);
-    apefile.rotate = get_FLOAT_LE(&p);
-    apefile.slope_x = get_FLOAT_LE(&p);
-    apefile.slope_y = get_FLOAT_LE(&p);
-    apefile.topo_means = get_WORD_LE(&p);
-    apefile.optical_means = get_WORD_LE(&p);
-    apefile.error_means = get_WORD_LE(&p);
-    apefile.channels = get_DWORD_LE(&p);
+    apefile.x_piezo_factor = gwy_get_guint32_le(&p);
+    apefile.y_piezo_factor = gwy_get_guint32_le(&p);
+    apefile.z_piezo_factor = gwy_get_guint32_le(&p);
+    apefile.hv_gain = gwy_get_gfloat_le(&p);
+    apefile.freq_osc_tip = gwy_get_gdouble_le(&p);
+    apefile.rotate = gwy_get_gfloat_le(&p);
+    apefile.slope_x = gwy_get_gfloat_le(&p);
+    apefile.slope_y = gwy_get_gfloat_le(&p);
+    apefile.topo_means = gwy_get_guint16_le(&p);
+    apefile.optical_means = gwy_get_guint16_le(&p);
+    apefile.error_means = gwy_get_guint16_le(&p);
+    apefile.channels = gwy_get_guint32_le(&p);
     apefile.ndata = 0;
     for (b = apefile.channels; b; b = b >> 1)
         apefile.ndata += (b & 1);
-    apefile.range_x = get_FLOAT_LE(&p);
-    apefile.range_y = get_FLOAT_LE(&p);
+    apefile.range_x = gwy_get_gfloat_le(&p);
+    apefile.range_y = gwy_get_gfloat_le(&p);
     apefile.xreal = apefile.maxr_x * apefile.x_piezo_factor * apefile.range_x
                     * apefile.hv_gain/65535.0 * 1e-9;
     apefile.yreal = apefile.maxr_y * apefile.y_piezo_factor * apefile.range_y
@@ -320,7 +322,7 @@ fill_data_fields(APEFile *apefile,
         for (i = 0; i < apefile->res; i++) {
             buffer += sizeof(float);
             for (j = 0; j < apefile->res; j++) {
-                *(data++) = get_FLOAT_LE(&buffer);
+                *(data++) = gwy_get_gfloat_le(&buffer);
             }
         }
         apefile->data[n] = dfield;
@@ -617,7 +619,7 @@ format_vt_date(gdouble vt_date)
     tm.tm_yday = udate.wDayOfYear;
     tm.tm_isdst = -1;
 
-    return g_strdup(asctime(&tm));
+    return g_strstrip(g_strdup(asctime(&tm)));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
