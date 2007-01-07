@@ -104,6 +104,7 @@ enum {
 typedef struct {
     FileState file_state;
     gchar *file_utf8;
+    gchar *file_utf8_lc;
     gchar *file_sys;
     gchar *file_uri;
     gulong file_mtime;
@@ -123,11 +124,18 @@ typedef struct {
 
 typedef struct {
     GtkListStore *store;
+    GString *glob;
+    gboolean casesens;
+    GPatternSpec *pattern;
+
+    GtkTreeModel *filter;
     GList *recent_file_list;
     GtkWidget *window;
     GtkWidget *list;
     GtkWidget *open;
     GtkWidget *prune;
+    GtkWidget *filter_glob;
+    GtkWidget *filter_case;
 } Controls;
 
 static GtkWidget* gwy_app_recent_file_list_construct (Controls *controls);
@@ -142,15 +150,7 @@ static void  cell_renderer_thumb                     (GtkTreeViewColumn *column,
                                                       GtkTreeModel *model,
                                                       GtkTreeIter *iter,
                                                       gpointer userdata);
-static void  gwy_app_recent_file_list_row_inserted   (GtkTreeModel *store,
-                                                      GtkTreePath *path,
-                                                      GtkTreeIter *iter,
-                                                      Controls *controls);
-static void  gwy_app_recent_file_list_row_deleted    (GtkTreeModel *store,
-                                                      GtkTreePath *path,
-                                                      Controls *controls);
-static void  gwy_app_recent_file_list_selection_changed(GtkTreeSelection *selection,
-                                                        Controls *controls);
+static void  gwy_app_recent_file_list_update_sensitivity(Controls *controls);
 static void  gwy_app_recent_file_list_row_activated  (GtkTreeView *treeview,
                                                       GtkTreePath *path,
                                                       GtkTreeViewColumn *column,
@@ -158,6 +158,14 @@ static void  gwy_app_recent_file_list_row_activated  (GtkTreeView *treeview,
 static void  gwy_app_recent_file_list_destroyed      (Controls *controls);
 static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
+static GtkWidget* gwy_app_recent_file_list_filter_construct(Controls *controls);
+static void  gwy_app_recent_file_list_filter_apply   (GtkEntry *entry,
+                                                      Controls *controls);
+static void gwy_app_recent_file_list_filter_case_changed(GtkToggleButton *check,
+                                                         Controls *controls);
+static gboolean gwy_app_recent_file_list_filter      (GtkTreeModel *model,
+                                                      GtkTreeIter *iter,
+                                                      gpointer data);
 static gboolean gwy_app_recent_file_find            (const gchar *filename_utf8,
                                                      GtkTreeIter *piter,
                                                      GwyRecentFile **prf);
@@ -177,9 +185,8 @@ static const gchar* gwy_recent_file_thumbnail_dir     (void);
 
 static guint remember_recent_files = 512;
 
-static Controls gcontrols = {
-    NULL, NULL, NULL, NULL, NULL, NULL,
-};
+/* Note we assert initialization to zeroes */
+static Controls gcontrols;
 
 static GdkPixbuf*
 gwy_app_recent_file_list_get_failed_pixbuf(void)
@@ -209,11 +216,20 @@ gwy_app_recent_file_list_get_failed_pixbuf(void)
 GtkWidget*
 gwy_app_recent_file_list_new(void)
 {
-    GtkWidget *vbox, *buttonbox, *list, *scroll, *button;
+    GtkWidget *vbox, *filterbox, *buttonbox, *list, *scroll, *button;
+    GtkTreeModelFilter *filter;
     GtkTreeSelection *selection;
 
     g_return_val_if_fail(gcontrols.store, gcontrols.window);
     g_return_val_if_fail(gcontrols.window == NULL, gcontrols.window);
+
+    gcontrols.filter
+        = gtk_tree_model_filter_new(GTK_TREE_MODEL(gcontrols.store),
+                                    NULL);
+    filter = GTK_TREE_MODEL_FILTER(gcontrols.filter);
+    gtk_tree_model_filter_set_visible_func(filter,
+                                           gwy_app_recent_file_list_filter,
+                                           &gcontrols, NULL);
 
     gcontrols.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(gcontrols.window), _("Document History"));
@@ -234,6 +250,10 @@ gwy_app_recent_file_list_new(void)
 
     list = gwy_app_recent_file_list_construct(&gcontrols);
     gtk_container_add(GTK_CONTAINER(scroll), list);
+    g_object_unref(gcontrols.filter);
+
+    filterbox = gwy_app_recent_file_list_filter_construct(&gcontrols);
+    gtk_box_pack_start(GTK_BOX(vbox), filterbox, FALSE, FALSE, 0);
 
     buttonbox = gtk_hbox_new(TRUE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
@@ -271,6 +291,8 @@ gwy_app_recent_file_list_new(void)
                              G_CALLBACK(gwy_app_recent_file_list_destroyed),
                              &gcontrols);
 
+    gwy_app_recent_file_list_filter_apply(GTK_ENTRY(gcontrols.filter_glob),
+                                          &gcontrols);
     gtk_widget_show_all(vbox);
 
     return gcontrols.window;
@@ -281,6 +303,7 @@ gwy_app_recent_file_list_unmapped(GtkWindow *window)
 {
     gwy_app_save_window_position(window, "/app/document-history", FALSE, TRUE);
 }
+
 
 static GtkWidget*
 gwy_app_recent_file_list_construct(Controls *controls)
@@ -301,7 +324,7 @@ gwy_app_recent_file_list_construct(Controls *controls)
 
     g_return_val_if_fail(controls->store, NULL);
 
-    list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls->store));
+    list = gtk_tree_view_new_with_model(controls->filter);
     controls->list = list;
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(list), FALSE);
 
@@ -331,15 +354,16 @@ gwy_app_recent_file_list_construct(Controls *controls)
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
-    g_signal_connect(selection, "changed",
-                     G_CALLBACK(gwy_app_recent_file_list_selection_changed),
-                     controls);
-    g_signal_connect(controls->store, "row-deleted",
-                     G_CALLBACK(gwy_app_recent_file_list_row_deleted),
-                     controls);
-    g_signal_connect(controls->store, "row-inserted",
-                     G_CALLBACK(gwy_app_recent_file_list_row_inserted),
-                     controls);
+    g_signal_connect_swapped
+        (selection, "changed",
+         G_CALLBACK(gwy_app_recent_file_list_update_sensitivity), controls);
+    g_signal_connect_swapped
+        (controls->store, "row-deleted",
+         G_CALLBACK(gwy_app_recent_file_list_update_sensitivity), controls);
+    g_signal_connect_swapped
+        (controls->store, "row-inserted",
+         G_CALLBACK(gwy_app_recent_file_list_update_sensitivity), controls);
+
     g_signal_connect(controls->list, "row-activated",
                      G_CALLBACK(gwy_app_recent_file_list_row_activated),
                      controls);
@@ -348,27 +372,7 @@ gwy_app_recent_file_list_construct(Controls *controls)
 }
 
 static void
-gwy_app_recent_file_list_row_inserted(G_GNUC_UNUSED GtkTreeModel *store,
-                                      G_GNUC_UNUSED GtkTreePath *path,
-                                      G_GNUC_UNUSED GtkTreeIter *iter,
-                                      Controls *controls)
-{
-    GtkTreeSelection *selection;
-
-    if (!controls->window)
-        return;
-
-    gtk_widget_set_sensitive(controls->prune, TRUE);
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->list));
-    gtk_widget_set_sensitive(controls->open,
-                             gtk_tree_selection_get_selected(selection,
-                                                             NULL, NULL));
-}
-
-static void
-gwy_app_recent_file_list_row_deleted(GtkTreeModel *store,
-                                     G_GNUC_UNUSED GtkTreePath *path,
-                                     Controls *controls)
+gwy_app_recent_file_list_update_sensitivity(Controls *controls)
 {
     GtkTreeSelection *selection;
     GtkTreeIter iter;
@@ -377,8 +381,13 @@ gwy_app_recent_file_list_row_deleted(GtkTreeModel *store,
     if (!controls->window)
         return;
 
-    has_rows = gtk_tree_model_get_iter_first(store, &iter);
+    /* Prune sensitivity depends on absolute row availability */
+    has_rows = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->store),
+                                             &iter);
     gtk_widget_set_sensitive(controls->prune, has_rows);
+
+    /* Open sensitivity depends on visible row availability */
+    has_rows = gtk_tree_model_get_iter_first(controls->filter, &iter);
     if (has_rows) {
         selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->list));
         gtk_widget_set_sensitive(controls->open,
@@ -390,21 +399,18 @@ gwy_app_recent_file_list_row_deleted(GtkTreeModel *store,
 }
 
 static void
-gwy_app_recent_file_list_selection_changed(GtkTreeSelection *selection,
-                                           Controls *controls)
-{
-    gtk_widget_set_sensitive(controls->open,
-                             gtk_tree_selection_get_selected(selection,
-                                                             NULL, NULL));
-}
-
-static void
 gwy_app_recent_file_list_destroyed(Controls *controls)
 {
+    if (controls->pattern)
+        g_pattern_spec_free(controls->pattern);
+    controls->pattern = NULL;
     controls->window = NULL;
     controls->open = NULL;
     controls->prune = NULL;
     controls->list = NULL;
+    controls->filter = NULL;
+    controls->filter_glob = NULL;
+    controls->filter_case = NULL;
 }
 
 static void
@@ -412,7 +418,6 @@ gwy_app_recent_file_list_prune(Controls *controls)
 {
     GtkTreeIter iter;
     GtkTreeModel *model;
-    GdkCursor *wait_cursor;
     GwyRecentFile *rf;
     gboolean ok;
 
@@ -422,11 +427,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
     if (!gtk_tree_model_get_iter_first(model, &iter))
         return;
 
-    wait_cursor = gdk_cursor_new(GDK_WATCH);
-    gdk_window_set_cursor(controls->window->window, wait_cursor);
-    while (gtk_events_pending())
-        gtk_main_iteration_do(FALSE);
-
+    gwy_app_wait_cursor_start(GTK_WINDOW(controls->window));
     g_object_ref(model);
     gtk_tree_view_set_model(GTK_TREE_VIEW(controls->list), NULL);
 
@@ -447,9 +448,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
     g_object_unref(model);
 
     gwy_app_recent_file_list_update_menu(controls);
-
-    gdk_window_set_cursor(controls->window->window, NULL);
-    gdk_cursor_unref(wait_cursor);
+    gwy_app_wait_cursor_finish(GTK_WINDOW(controls->window));
 }
 
 static void
@@ -551,6 +550,138 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
         default:
         g_assert_not_reached();
         break;
+    }
+}
+
+static GtkWidget*
+gwy_app_recent_file_list_filter_construct(Controls *controls)
+{
+    GwyContainer *settings;
+    GtkWidget *hbox, *label, *entry, *check;
+    const guchar *glob;
+
+    settings = gwy_app_settings_get();
+
+    hbox = gtk_hbox_new(FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Filter:"));
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 4);
+
+    if (!controls->glob)
+        controls->glob = g_string_new(NULL);
+    if (gwy_container_gis_string_by_name(settings, "/app/file/recent/glob",
+                                         &glob))
+        g_string_assign(controls->glob, glob);
+
+    entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(entry), controls->glob->str);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
+    controls->filter_glob = entry;
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(gwy_app_recent_file_list_filter_apply),
+                     controls);
+
+#ifdef G_OS_WIN32
+    controls->casesens = FALSE;
+#else
+    controls->casesens = TRUE;
+#endif
+    gwy_container_gis_boolean_by_name(settings,
+                                      "/app/file/recent/case-sensitive",
+                                      &controls->casesens);
+
+    check = gtk_check_button_new_with_mnemonic(_("Case _sensitive"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), controls->casesens);
+    gtk_box_pack_start(GTK_BOX(hbox), check, FALSE, FALSE, 4);
+    controls->filter_case = check;
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(gwy_app_recent_file_list_filter_case_changed),
+                     controls);
+
+    return hbox;
+}
+
+static void
+gwy_app_recent_file_list_filter_apply(GtkEntry *entry,
+                                      Controls *controls)
+{
+    GPatternSpec *oldpattern;
+    GwyContainer *settings;
+    gchar *s, *t;
+
+    settings = gwy_app_settings_get();
+    g_string_assign(controls->glob, gtk_entry_get_text(entry));
+    gwy_container_set_string_by_name(settings, "/app/file/recent/glob",
+                                     g_strdup(controls->glob->str));
+
+    oldpattern = controls->pattern;
+
+    if (controls->casesens) {
+        if (!strchr(controls->glob->str, '*')
+            && !strchr(controls->glob->str, '?'))
+            s = g_strconcat("*", controls->glob->str, "*", NULL);
+        else
+            s = g_strdup(controls->glob->str);
+    }
+    else {
+        /* FIXME: This is crude. */
+        s = g_utf8_strdown(controls->glob->str, controls->glob->len);
+        if (!strchr(s, '*') && !strchr(s, '?')) {
+            t = s;
+            s = g_strconcat("*", t, "*", NULL);
+            g_free(t);
+        }
+    }
+    controls->pattern = g_pattern_spec_new(s);
+    g_free(s);
+
+    if (oldpattern)
+        g_pattern_spec_free(oldpattern);
+
+    if (GTK_WIDGET_REALIZED(controls->window))
+        gwy_app_wait_cursor_start(GTK_WINDOW(controls->window));
+    gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(controls->filter));
+    if (GTK_WIDGET_REALIZED(controls->window))
+        gwy_app_wait_cursor_finish(GTK_WINDOW(controls->window));
+}
+
+static void
+gwy_app_recent_file_list_filter_case_changed(GtkToggleButton *check,
+                                             Controls *controls)
+{
+    GwyContainer *settings;
+
+    settings = gwy_app_settings_get();
+    controls->casesens = gtk_toggle_button_get_active(check);
+    gwy_container_set_boolean_by_name(settings,
+                                      "/app/file/recent/case-sensitive",
+                                      controls->casesens);
+
+    gwy_app_recent_file_list_filter_apply(GTK_ENTRY(controls->filter_glob),
+                                          controls);
+}
+
+static gboolean
+gwy_app_recent_file_list_filter(GtkTreeModel *model,
+                                GtkTreeIter *iter,
+                                gpointer data)
+{
+    Controls *controls = (Controls*)data;
+    GwyRecentFile *rf;
+
+    if (!controls->pattern)
+        return TRUE;
+
+    gtk_tree_model_get(model, iter, 0, &rf, -1);
+
+    if (controls->casesens)
+        return g_pattern_match_string(controls->pattern, rf->file_utf8);
+    else {
+        if (!rf->file_utf8_lc)
+            rf->file_utf8_lc = g_utf8_strdown(rf->file_utf8, -1);
+
+        return g_pattern_match_string(controls->pattern, rf->file_utf8_lc);
     }
 }
 
@@ -687,6 +818,11 @@ gwy_app_recent_file_list_free(void)
         } while (gtk_list_store_remove(gcontrols.store, &iter));
     }
     gwy_object_unref(gcontrols.store);
+
+    if (gcontrols.glob) {
+        g_string_free(gcontrols.glob, TRUE);
+        gcontrols.glob = NULL;
+    }
 
     g_list_free(gcontrols.recent_file_list);
     gcontrols.recent_file_list = NULL;
@@ -934,6 +1070,7 @@ static void
 gwy_app_recent_file_free(GwyRecentFile *rf)
 {
     gwy_object_unref(rf->pixbuf);
+    g_free(rf->file_utf8_lc);
     g_free(rf->file_utf8);
     g_free(rf->file_sys);
     g_free(rf->file_uri);
