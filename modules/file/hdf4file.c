@@ -75,8 +75,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "get.h"
 #include "err.h"
@@ -314,7 +315,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hierarchical Data Format (HDF) files, version 4."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -516,47 +517,47 @@ psi_read_header(const guchar *buffer,
     }
     p = buffer;
 
-    header->unknown1 = get_DWORD_LE(&p);
+    header->unknown1 = gwy_get_guint32_le(&p);
     get_CHARARRAY0(header->title, &p);
     gwy_debug("     title: <%s>", header->title);
     get_CHARARRAY0(header->instrument, &p);
     gwy_debug("     instrument: <%s>", header->instrument);
-    header->x_dir = get_WORD_LE(&p);
-    header->y_dir = get_WORD_LE(&p);
+    header->x_dir = gwy_get_guint16_le(&p);
+    header->y_dir = gwy_get_guint16_le(&p);
     gwy_debug("     x_dir: %d, y_dir: %d", header->x_dir, header->y_dir);
-    header->show_offset = get_BBOOLEAN(&p);
-    header->no_units = get_BBOOLEAN(&p);
+    header->show_offset = gwy_get_gboolean8(&p);
+    header->no_units = gwy_get_gboolean8(&p);
     gwy_debug("     show_offset: %d, no_units: %d",
             header->show_offset, header->no_units);
-    header->xres = get_WORD_LE(&p);
-    header->yres = get_WORD_LE(&p);
+    header->xres = gwy_get_guint16_le(&p);
+    header->yres = gwy_get_guint16_le(&p);
     gwy_debug("     xres: %u, yres: %u", header->xres, header->yres);
     get_CHARARRAY(header->unknown2, &p);
-    header->xscale = get_FLOAT_LE(&p);
-    header->yscale = get_FLOAT_LE(&p);
+    header->xscale = gwy_get_gfloat_le(&p);
+    header->yscale = gwy_get_gfloat_le(&p);
     gwy_debug("     xscale: %g, yscale: %g", header->xscale, header->yscale);
-    header->xoff = get_FLOAT_LE(&p);
-    header->yoff = get_FLOAT_LE(&p);
+    header->xoff = gwy_get_gfloat_le(&p);
+    header->yoff = gwy_get_gfloat_le(&p);
     gwy_debug("     xoff: %g, yoff: %g", header->xoff, header->yoff);
-    header->rotation = get_FLOAT_LE(&p);
-    header->unknown3 = get_FLOAT_LE(&p);
-    header->lines_per_sec = get_FLOAT_LE(&p);
+    header->rotation = gwy_get_gfloat_le(&p);
+    header->unknown3 = gwy_get_gfloat_le(&p);
+    header->lines_per_sec = gwy_get_gfloat_le(&p);
     gwy_debug("     rotation: %g, lines/s: %g",
             header->rotation, header->lines_per_sec);
-    header->set_point = get_FLOAT_LE(&p);
+    header->set_point = gwy_get_gfloat_le(&p);
     get_CHARARRAY0(header->set_point_unit, &p);
     gwy_debug("     set_point: %g [%s]",
             header->set_point, header->set_point_unit);
-    header->sample_bias = get_FLOAT_LE(&p);
-    header->tip_bias = get_FLOAT_LE(&p);
+    header->sample_bias = gwy_get_gfloat_le(&p);
+    header->tip_bias = gwy_get_gfloat_le(&p);
     gwy_debug("     sample_bias: %g [V], tip_bias %g [V]",
             header->sample_bias, header->tip_bias);
-    header->zgain = get_FLOAT_LE(&p);
+    header->zgain = gwy_get_gfloat_le(&p);
     get_CHARARRAY0(header->zgain_unit, &p);
     gwy_debug("     zgain: %g [%s]",
             header->zgain, header->zgain_unit);
-    header->min = get_WORD_LE(&p);
-    header->max = get_WORD_LE(&p);
+    header->min = gwy_get_gint16_le(&p);
+    header->max = gwy_get_gint16_le(&p);
 
     return TRUE;
 }
@@ -614,8 +615,8 @@ hdf4_read_tags(const guchar *buffer,
             g_array_free(tags, TRUE);
             return NULL;
         }
-        ddb_size = get_WORD_BE(&p);
-        ddb_offset = get_DWORD_BE(&p);
+        ddb_size = gwy_get_guint16_be(&p);
+        ddb_offset = gwy_get_guint32_be(&p);
         gwy_debug("DDB size: %u, next offset: 0x%x", ddb_size, ddb_offset);
         if ((gulong)(p - buffer) + ddb_size * HDF4_DD_SIZE > size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -628,10 +629,10 @@ hdf4_read_tags(const guchar *buffer,
         for (i = 0; i < ddb_size; i++) {
             HDF4DataDescriptor desc;
 
-            desc.tag = get_WORD_BE(&p);
-            desc.ref = get_WORD_BE(&p);
-            desc.offset = get_DWORD_BE(&p);
-            desc.length = get_DWORD_BE(&p);
+            desc.tag = gwy_get_guint16_be(&p);
+            desc.ref = gwy_get_guint16_be(&p);
+            desc.offset = gwy_get_guint32_be(&p);
+            desc.length = gwy_get_guint32_be(&p);
             desc.data = buffer + desc.offset;
             /* Ignore NULL and invalid tags */
             if (desc.tag == HDF4_NULL
@@ -914,8 +915,8 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
         for (i = 0; i < desc->length/HDF4_TAGREF_SIZE; i++) {
             guint tag, ref;
 
-            tag = get_WORD_BE(&p);
-            ref = get_WORD_BE(&p);
+            tag = gwy_get_guint16_be(&p);
+            ref = gwy_get_guint16_be(&p);
             g_string_append_printf(str, " (%u, %u)", tag, ref);
         }
         break;
@@ -924,9 +925,9 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
         if (desc->length >= 3*4 + 1) {
             guint major, minor, micro;
 
-            major = get_DWORD_BE(&p);
-            minor = get_DWORD_BE(&p);
-            micro = get_DWORD_BE(&p);
+            major = gwy_get_guint32_be(&p);
+            minor = gwy_get_guint32_be(&p);
+            micro = gwy_get_guint32_be(&p);
             g_string_append_printf(str, " %u.%u.%u \"%s\"",
                                    major, minor, micro, p);
         }
@@ -936,7 +937,7 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
         if (desc->length == 4) {
             HDF4TypeInfo id;
 
-            id = get_DWORD_BE(&p);
+            id = gwy_get_guint32_be(&p);
             id = map_number_type(id);
             s = hdf4_describe_data_type(id);
             g_string_append_c(str, ' ');
@@ -950,8 +951,8 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
             /* XXX: depends on data type */
             guint min, max;
 
-            min = get_WORD_BE(&p);
-            max = get_WORD_BE(&p);
+            min = gwy_get_guint16_be(&p);
+            max = gwy_get_guint16_be(&p);
             g_string_append_printf(str, " %u %u", min, max);
         }
         break;
@@ -964,7 +965,7 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
         if (desc->length == 4) {
             guint32 version;
 
-            version = get_DWORD_BE(&p);
+            version = gwy_get_guint32_be(&p);
             g_string_append_printf(str, " %x", version);
         }
         break;
