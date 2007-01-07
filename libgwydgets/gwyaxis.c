@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <pango/pango.h>
@@ -1263,7 +1263,8 @@ gwy_axis_normalscale(GwyAxis *a)
         return TRUE;
     }
 
-    tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
+    /*step*/
+    tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks);
     majorbase = ceil(reqmin/tickstep)*tickstep; /*starting value*/
     minortickstep = tickstep/(gdouble)a->par.minor_division;
     minorbase = ceil(reqmin/minortickstep)*minortickstep;
@@ -1281,7 +1282,7 @@ gwy_axis_normalscale(GwyAxis *a)
     i = 0;
     do {
         mjt.t.value = majorbase;
-        mjt.ttext = g_string_new(" ");
+        mjt.ttext = g_string_new(NULL);
         a->mjticks = g_array_append_val(a->mjticks, mjt);
         majorbase += tickstep;
         i++;
@@ -1333,7 +1334,7 @@ gwy_axis_logscale(GwyAxis *a)
     i = 0;
     do {
         mjt.t.value = base;
-        mjt.ttext = g_string_new(" ");
+        mjt.ttext = g_string_new(NULL);
         g_array_append_val(a->mjticks, mjt);
         base += tickstep;
         i++;
@@ -1378,7 +1379,10 @@ gwy_axis_logscale(GwyAxis *a)
 }
 
 
-/* returns 0 if everything went OK, <0 if there are not enough major ticks, >0 if there area too many ticks */
+/* returns
+ * 0 if everything went OK,
+ * < 0 if there are not enough major ticks,
+ * > 0 if there area too many ticks */
 static gint
 gwy_axis_scale(GwyAxis *a)
 {
@@ -1405,11 +1409,12 @@ gwy_axis_scale(GwyAxis *a)
         gwy_axis_normalscale(a);
     /*label ticks*/
     ret = gwy_axis_formatticks(a);
-    /*precompute screen coordinates of ticks (must be done after each geometry change)*/
 
     return ret;
 }
 
+/* precompute screen coordinates of ticks
+ * (must be done after each geometry change) */
 static gint
 gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 {
@@ -1466,7 +1471,6 @@ gwy_axis_formatticks(GwyAxis *a)
     mjx = g_array_index(a->mjticks, GwyAxisLabeledTick, a->mjticks->len - 1);
     if (a->is_logarithmic) {
         average = 0;
-        /*range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));*/
         range = 1;
     }
     else {
@@ -1541,11 +1545,8 @@ gwy_axis_formatticks(GwyAxis *a)
         totalheight += rect.height;
     }
 
-    if (format) {
-        g_free(format->units);
-        g_free(format);
-    }
-
+    if (format)
+        gwy_si_unit_value_format_free(format);
     g_object_unref(layout);
     g_object_unref(context);
 
