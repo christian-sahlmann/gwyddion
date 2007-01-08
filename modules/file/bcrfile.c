@@ -31,7 +31,6 @@
 #include <stdio.h>
 
 #include "err.h"
-#include "get.h"
 
 /* in characters, not bytes */
 #define HEADER_SIZE 2048
@@ -419,11 +418,11 @@ read_data_field(const guchar *buffer,
         case BCR_FILE_FLOAT:
         if (little_endian) {
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_FLOAT_LE(&buffer);
+                data[i] = gwy_get_gfloat_le(&buffer);
         }
         else {
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_FLOAT_BE(&buffer);
+                data[i] = gwy_get_gfloat_be(&buffer);
         }
         gwy_data_field_multiply(dfield, 1e-9);
         break;
@@ -485,7 +484,7 @@ read_data_field_with_voids(const guchar *buffer,
         case BCR_FILE_FLOAT:
         if (little_endian) {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = get_FLOAT_LE(&buffer);
+                data[i] = gwy_get_gfloat_le(&buffer);
                 if (data[i] > 1.7e38)
                     voids[i] = 1.0;
                 else {
@@ -496,7 +495,7 @@ read_data_field_with_voids(const guchar *buffer,
         }
         else {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = get_FLOAT_BE(&buffer);
+                data[i] = gwy_get_gfloat_be(&buffer);
                 if (data[i] > 1.7e38)
                     voids[i] = 1.0;
                 else {

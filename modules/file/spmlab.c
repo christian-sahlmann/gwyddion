@@ -21,18 +21,17 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libprocess/datafield.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
+#include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 static gboolean      module_register    (void);
 static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
@@ -68,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R4, R5, and R6 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -187,6 +186,12 @@ spmlab_load(const gchar *filename,
     return container;
 }
 
+static gdouble
+get_gfloat_le_as_double(const guchar **p)
+{
+    return gwy_get_gfloat_le(p);
+}
+
 static GwyDataField*
 read_data_field(const guchar *buffer,
                 guint size,
@@ -235,21 +240,21 @@ read_data_field(const guchar *buffer,
         }
         offset = &offsets56[0];
         buffer = last;
-        getflt = &get_DOUBLE_LE;
+        getflt = &gwy_get_gdouble_le;
     }
     else {
         offset = &offsets34[0];
-        getflt = &get_FLOAT_LE;
+        getflt = &get_gfloat_le_as_double;
     }
 
     p = buffer + *(offset++);
-    doffset = get_DWORD_LE(&p);    /* this appears to be the same number as in
-                                    * the ASCII miniheader -- so get it here
-                                    * since it's easier */
+    doffset = gwy_get_guint32_le(&p);  /* this appears to be the same number
+                                          as in the ASCII miniheader -- so get
+                                          it here since it's easier */
     gwy_debug("data offset = %u", doffset);
     p = buffer + *(offset++);
-    xres = get_DWORD_LE(&p);
-    yres = get_DWORD_LE(&p);
+    xres = gwy_get_guint32_le(&p);
+    yres = gwy_get_guint32_le(&p);
     p = buffer + *(offset++);
     xreal = -getflt(&p);
     xreal += getflt(&p);
@@ -272,8 +277,8 @@ read_data_field(const guchar *buffer,
     gwy_debug("unitxy = %s, unitz = %s", p, p + 10);
 
     p = buffer + *(offset++);
-    *type = get_WORD_LE(&p);
-    dir = get_WORD_LE(&p);
+    *type = gwy_get_guint16_le(&p);
+    dir = gwy_get_guint16_le(&p);
     gwy_debug("type = %d, dir = %d", *type, dir);
 
     p = buffer + doffset;

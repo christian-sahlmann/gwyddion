@@ -30,7 +30,6 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define MAGIC "WSxM file copyright Nanotec Electronica\r\n" \
               "SxM Image file\r\n"
@@ -351,7 +350,7 @@ read_data_field(const guchar *buffer,
 
         case WSXM_DATA_DOUBLE: {
             for (i = 0; i < xres*yres; i++)
-                data[i] = get_DOUBLE_LE(&buffer);
+                data[i] = gwy_get_gdouble_le(&buffer);
         }
         break;
 

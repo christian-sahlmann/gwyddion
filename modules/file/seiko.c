@@ -24,8 +24,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -157,11 +158,11 @@ read_data_field(const guchar *buffer,
     const guchar *p;
 
     p = buffer + VERSION_OFFSET;
-    version = get_DWORD_LE(&p);
+    version = gwy_get_guint32_le(&p);
     p = buffer + ENDFILE_OFFSET;
-    endfile = get_DWORD_LE(&p);
+    endfile = gwy_get_guint32_le(&p);
     p = buffer + DATASTART_OFFSET;
-    datastart = get_DWORD_LE(&p);
+    datastart = gwy_get_guint32_le(&p);
     gwy_debug("version: %u, endfile: %u, datastart: %u",
               version, endfile, datastart);
 
@@ -176,11 +177,11 @@ read_data_field(const guchar *buffer,
               xres, 2*xres*xres == endfile - datastart ? "OK" : "Not square!");
 
     p = buffer + XSCALE_OFFSET;
-    xreal = get_DOUBLE_LE(&p) * xres * Nanometer;
+    xreal = gwy_get_gdouble_le(&p) * xres * Nanometer;
     p = buffer + YSCALE_OFFSET;
-    yreal = get_DOUBLE_LE(&p) * yres * Nanometer;
+    yreal = gwy_get_gdouble_le(&p) * yres * Nanometer;
     p = buffer + ZSCALE_OFFSET;
-    q = get_DOUBLE_LE(&p) * Nanometer;
+    q = gwy_get_gdouble_le(&p) * Nanometer;
     gwy_debug("xreal: %g, yreal: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
 

@@ -25,13 +25,13 @@
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include <string.h>
 
 #include "err.h"
-#include "get.h"
 
 #define MAGIC ":NANONIS_VERSION:"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
@@ -349,7 +349,7 @@ read_data_field(GwyContainer *container,
     data = gwy_data_field_get_data(dfield);
 
     for (j = 0; j < sxmfile->xres*sxmfile->yres; j++)
-        *(data++) = get_FLOAT_BE(p);
+        *(data++) = gwy_get_gfloat_be(p);
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);

@@ -24,8 +24,9 @@
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -60,7 +61,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports ECS IMG files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -97,8 +98,8 @@ ecs_detect(const GwyFileDetectInfo *fileinfo,
 
     /* Check if file size matches */
     p = fileinfo->head + ECS_RESOLUTION;
-    xres = get_WORD_LE(&p);
-    yres = get_WORD_LE(&p);
+    xres = gwy_get_guint16_le(&p);
+    yres = gwy_get_guint16_le(&p);
 
     if (fileinfo->file_size != 2*xres*yres + HEADER_SIZE)
         return 0;
@@ -136,8 +137,8 @@ ecs_load(const gchar *filename,
     }
 
     p = buffer + ECS_RESOLUTION;
-    xres = get_WORD_LE(&p);
-    yres = get_WORD_LE(&p);
+    xres = gwy_get_guint16_le(&p);
+    yres = gwy_get_guint16_le(&p);
     gwy_debug("xres: %u, yres: %u", xres, yres);
     if (size != HEADER_SIZE + 2*xres*yres) {
         err_SIZE_MISMATCH(error, HEADER_SIZE + 2*xres*yres, size);

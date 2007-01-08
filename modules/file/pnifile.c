@@ -22,17 +22,17 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "err.h"
-#include "get.h"
 
-#define EXTENSION ".wit"
+#define EXTENSION ".pni"
 
 #define MAGIC "\0\0\0\0" "1.0"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -93,7 +93,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Pacific Nanotechnology PNI data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -127,8 +127,8 @@ pni_detect(const GwyFileDetectInfo *fileinfo,
         && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0) {
         const guchar *p = fileinfo->head + 0x90;
 
-        xres = get_DWORD_LE(&p);
-        yres = get_DWORD_LE(&p);
+        xres = gwy_get_guint32_le(&p);
+        yres = gwy_get_guint32_le(&p);
         gwy_debug("%u %u", xres, yres);
         if (fileinfo->file_size == DATA_START + 2*xres*yres)
             score = 95;
@@ -178,8 +178,8 @@ pni_load(const gchar *filename,
     }
 
     p = buffer + DATA_HEADER_START + RESOLUTION_OFFSET;
-    xres = get_DWORD_LE(&p);
-    yres = get_DWORD_LE(&p);
+    xres = gwy_get_guint32_le(&p);
+    yres = gwy_get_guint32_le(&p);
     gwy_debug("%d %d", xres, yres);
     if (size != DATA_START + 2*xres*yres) {
         err_SIZE_MISMATCH(error, DATA_START + 2*xres*yres, size);
@@ -193,11 +193,11 @@ pni_load(const gchar *filename,
     direction = p[DIRECTION_OFFSET];
 
     p = buffer + DATA_HEADER_START + REAL_SIZE_OFFSET;
-    xreal = get_FLOAT_LE(&p) * Micrometer;
-    yreal = get_FLOAT_LE(&p) * Micrometer;
+    xreal = gwy_get_gfloat_le(&p) * Micrometer;
+    yreal = gwy_get_gfloat_le(&p) * Micrometer;
 
     p = buffer + DATA_HEADER_START + VALUE_SCALE_OFFSET;
-    zscale = get_FLOAT_LE(&p);
+    zscale = gwy_get_gfloat_le(&p);
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);

@@ -34,11 +34,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
-#include <app/gwyapp.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define EXTENSION ".img"
 
@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Burleigh IMG data files version 2.1."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek & Hans-Peter Doerr",
     "2006",
 };
@@ -136,7 +136,7 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     buffer = fileinfo->head;
-    version = get_FLOAT_LE(&buffer);
+    version = gwy_get_gfloat_le(&buffer);
     version_int = ROUND(10*version);
     gwy_debug("Version: %g", version);
 
@@ -144,8 +144,8 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
         if (fileinfo->file_size < TOTAL_SIZE_V21 + 2)
             return 0;
 
-        xres = get_WORD_LE(&buffer);
-        yres = get_WORD_LE(&buffer);
+        xres = gwy_get_guint16_le(&buffer);
+        yres = gwy_get_guint16_le(&buffer);
         if (fileinfo->file_size == TOTAL_SIZE_V21 + 2*xres*yres)
             return 100;
         return 0;
@@ -185,7 +185,7 @@ burleigh_load(const gchar *filename,
 
     memset(&imgfile, 0, sizeof(imgfile));
     p = buffer;
-    imgfile.version = get_FLOAT_LE(&p);
+    imgfile.version = gwy_get_gfloat_le(&p);
     imgfile.version_int = ROUND(10*imgfile.version);
     if (imgfile.version_int == 21) {
         d = burleigh_load_v21(&imgfile, buffer, size, error);
@@ -256,8 +256,8 @@ burleigh_load_v21(IMGFile *imgfile,
     guint32 n;
 
     /* Header */
-    imgfile->xres = get_WORD_LE(&p);
-    imgfile->yres = get_WORD_LE(&p);
+    imgfile->xres = gwy_get_guint16_le(&p);
+    imgfile->yres = gwy_get_guint16_le(&p);
     n = imgfile->xres * imgfile->yres;
     if (size != 2*n + TOTAL_SIZE_V21) {
         err_SIZE_MISMATCH(error, 2*n + TOTAL_SIZE_V21, size);
@@ -265,22 +265,22 @@ burleigh_load_v21(IMGFile *imgfile,
     }
     /* Skip to footer */
     p += 2*n;
-    imgfile->xrangemax = get_DWORD_LE(&p);
-    imgfile->yrangemax = get_DWORD_LE(&p);
-    imgfile->zrangemax = get_DWORD_LE(&p);
-    imgfile->xrange = get_DWORD_LE(&p);
-    imgfile->yrange = get_DWORD_LE(&p);
+    imgfile->xrangemax = gwy_get_guint32_le(&p);
+    imgfile->yrangemax = gwy_get_guint32_le(&p);
+    imgfile->zrangemax = gwy_get_guint32_le(&p);
+    imgfile->xrange = gwy_get_guint32_le(&p);
+    imgfile->yrange = gwy_get_guint32_le(&p);
     gwy_debug("xrange: %u, yrange: %u", imgfile->xrange, imgfile->yrange);
-    imgfile->zrange = get_DWORD_LE(&p);
+    imgfile->zrange = gwy_get_guint32_le(&p);
     gwy_debug("zrange: %u", imgfile->zrange);
-    imgfile->scan_speed = get_WORD_LE(&p);
-    imgfile->zoom_level = get_WORD_LE(&p);
+    imgfile->scan_speed = gwy_get_guint16_le(&p);
+    imgfile->zoom_level = gwy_get_guint16_le(&p);
     gwy_debug("zoom_level: %u", imgfile->zoom_level);
-    imgfile->data_type = get_WORD_LE(&p);
+    imgfile->data_type = gwy_get_guint16_le(&p);
     gwy_debug("data_type: %u", imgfile->data_type);
-    imgfile->z_gain = get_WORD_LE(&p);
-    imgfile->bias_volts = get_FLOAT_LE(&p);
-    imgfile->tunneling_current = get_FLOAT_LE(&p);
+    imgfile->z_gain = gwy_get_guint16_le(&p);
+    imgfile->bias_volts = gwy_get_gfloat_le(&p);
+    imgfile->tunneling_current = gwy_get_gfloat_le(&p);
 
     return (const gint16*)(buffer + HEADER_SIZE_V21);
 }

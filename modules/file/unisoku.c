@@ -31,7 +31,6 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define MAGIC ":STM data\r\n"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -457,7 +456,7 @@ unisoku_read_data_field(const guchar *buffer,
 
         case UNISOKU_FLOAT:
         for (i = 0; i < n; i++)
-            data[i] = get_FLOAT_LE(&buffer);
+            data[i] = gwy_get_gfloat_le(&buffer);
         break;
 
         default:

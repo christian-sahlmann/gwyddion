@@ -24,8 +24,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -435,7 +436,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JEOL data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -558,19 +559,19 @@ jeol_read_image_header(const guchar *p,
 {
     p += TIFF_HEADER_SIZE;
 
-    header->winspm_version = get_WORD_LE(&p);
+    header->winspm_version = gwy_get_guint16_le(&p);
     p += 80;  /* there isn't anything interesting in internal_filename_old */
-    header->xres = get_WORD_LE(&p);
-    header->yres = get_WORD_LE(&p);
-    header->xreal = get_FLOAT_LE(&p);
-    header->yreal = get_FLOAT_LE(&p);
+    header->xres = gwy_get_guint16_le(&p);
+    header->yres = gwy_get_guint16_le(&p);
+    header->xreal = gwy_get_gfloat_le(&p);
+    header->yreal = gwy_get_gfloat_le(&p);
     gwy_debug("res: (%d,%d), real: (%g,%g)",
               header->xres, header->yres, header->xreal, header->yreal);
-    header->z0 = get_FLOAT_LE(&p);
-    header->z255 = get_FLOAT_LE(&p);
-    header->adc_min = get_WORD_LE(&p);
-    header->adc_max = get_WORD_LE(&p);
-    header->initial_scan_scale = get_FLOAT_LE(&p);
+    header->z0 = gwy_get_gfloat_le(&p);
+    header->z255 = gwy_get_gfloat_le(&p);
+    header->adc_min = gwy_get_guint16_le(&p);
+    header->adc_max = gwy_get_guint16_le(&p);
+    header->initial_scan_scale = gwy_get_gfloat_le(&p);
     get_CHARARRAY0(header->internal_filename, &p);
     get_CHARARRAY0(header->info[0], &p);
     get_CHARARRAY0(header->info[1], &p);
@@ -578,19 +579,19 @@ jeol_read_image_header(const guchar *p,
     get_CHARARRAY0(header->info[3], &p);
     get_CHARARRAY0(header->info[4], &p);
     get_CHARARRAY(header->history, &p);
-    header->has_current_info = get_WORD_LE(&p);
-    header->bias = get_FLOAT_LE(&p);
+    header->has_current_info = gwy_get_guint16_le(&p);
+    header->bias = gwy_get_gfloat_le(&p);
     gwy_debug("bias: %g", header->bias);
-    header->reference_value = get_FLOAT_LE(&p);
+    header->reference_value = gwy_get_gfloat_le(&p);
     gwy_debug("reference_value: %g", header->reference_value);
     p += 2;  /* reserved */
     header->measurement_date.day = *(p++);
     header->measurement_date.month = *(p++);
-    header->measurement_date.year_1980 = get_WORD_LE(&p);
+    header->measurement_date.year_1980 = gwy_get_guint16_le(&p);
     header->measurement_date.weekday_sun = *(p++);
     header->save_date.day = *(p++);
     header->save_date.month = *(p++);
-    header->save_date.year_1980 = get_WORD_LE(&p);
+    header->save_date.year_1980 = gwy_get_guint16_le(&p);
     header->save_date.weekday_sun = *(p++);
     header->measurement_time.hour = *(p++);
     header->measurement_time.minute = *(p++);
@@ -601,103 +602,103 @@ jeol_read_image_header(const guchar *p,
     header->save_time.second= *(p++);
     header->save_time.second_100 = *(p++);
     p += 0x100;  /* lookup table */
-    header->fft_offset = get_DWORD_LE(&p);
-    header->transform_off = get_WORD_LE(&p);
+    header->fft_offset = gwy_get_guint32_le(&p);
+    header->transform_off = gwy_get_guint16_le(&p);
     p += 8;  /* extra */
-    header->compressed = get_BBOOLEAN(&p);
+    header->compressed = gwy_get_gboolean8(&p);
     header->bpp = *(p++);
     gwy_debug("bpp: %d", header->bpp);
-    header->cits_offset = get_DWORD_LE(&p);
-    header->backscan_tip_voltage = get_FLOAT_LE(&p);
-    header->sts_point_x = get_WORD_LE(&p);
-    header->sts_point_y = get_WORD_LE(&p);
+    header->cits_offset = gwy_get_guint32_le(&p);
+    header->backscan_tip_voltage = gwy_get_gfloat_le(&p);
+    header->sts_point_x = gwy_get_guint16_le(&p);
+    header->sts_point_y = gwy_get_guint16_le(&p);
     p += 20;  /* reserved */
-    header->tip_speed_x = get_FLOAT_LE(&p);
-    header->tip_speed_y = get_FLOAT_LE(&p);
+    header->tip_speed_x = gwy_get_gfloat_le(&p);
+    header->tip_speed_y = gwy_get_gfloat_le(&p);
     p += 42;  /* piezo_sensitivity */
-    header->spm_param.clock = get_FLOAT_LE(&p);
-    header->spm_param.rotation = get_FLOAT_LE(&p);
-    header->spm_param.feedback_filter = get_FLOAT_LE(&p);
-    header->spm_param.present_filter = get_FLOAT_LE(&p);
-    header->spm_param.head_amp_gain = get_FLOAT_LE(&p);
-    header->spm_param.loop_gain = get_WORD_LE(&p);
-    header->spm_param.x_off = get_FLOAT_LE(&p);
-    header->spm_param.y_off = get_FLOAT_LE(&p);
-    header->spm_param.z_gain = get_FLOAT_LE(&p);
-    header->spm_param.z_off = get_FLOAT_LE(&p);
-    header->spm_param.o_gain = get_FLOAT_LE(&p);
-    header->spm_param.o_off = get_FLOAT_LE(&p);
+    header->spm_param.clock = gwy_get_gfloat_le(&p);
+    header->spm_param.rotation = gwy_get_gfloat_le(&p);
+    header->spm_param.feedback_filter = gwy_get_gfloat_le(&p);
+    header->spm_param.present_filter = gwy_get_gfloat_le(&p);
+    header->spm_param.head_amp_gain = gwy_get_gfloat_le(&p);
+    header->spm_param.loop_gain = gwy_get_guint16_le(&p);
+    header->spm_param.x_off = gwy_get_gfloat_le(&p);
+    header->spm_param.y_off = gwy_get_gfloat_le(&p);
+    header->spm_param.z_gain = gwy_get_gfloat_le(&p);
+    header->spm_param.z_off = gwy_get_gfloat_le(&p);
+    header->spm_param.o_gain = gwy_get_gfloat_le(&p);
+    header->spm_param.o_off = gwy_get_gfloat_le(&p);
     gwy_debug("z_gain: %g o_gain: %g",
               header->spm_param.z_gain, header->spm_param.o_gain);
-    header->spm_param.back_scan_bias = get_FLOAT_LE(&p);
+    header->spm_param.back_scan_bias = gwy_get_gfloat_le(&p);
     /* XXX: This does not match what the documentation says, there seems to be
      * a four-byte quantity missing between back_scan_bias and mode (the size
      * of SPM params struct is also 4 bytes shorter than the space alloted for
      * it). */
     p += 4;  /* whatever */
-    header->spm_param.mode = get_DWORD_LE(&p);
+    header->spm_param.mode = gwy_get_guint32_le(&p);
     gwy_debug("mode: %d", header->spm_param.mode);
     p += 2;  /* reserved */
-    header->montage_offset = get_DWORD_LE(&p);
+    header->montage_offset = gwy_get_guint32_le(&p);
     get_CHARARRAY0(header->image_location, &p);
     p += 2*4;  /* reserved */
-    header->spm_misc_param.dds_frequency = get_FLOAT_LE(&p);
-    header->spm_misc_param.dds_low_filter = get_WORD_LE(&p);
-    header->spm_misc_param.dds_high_filter = get_WORD_LE(&p);
-    header->spm_misc_param.dds_center_filter = get_WORD_LE(&p);
-    header->spm_misc_param.dds_enable = get_WORD_LE(&p);
-    header->spm_misc_param.scan_filter = get_WORD_LE(&p);
-    header->spm_misc_param.afm_mode = get_DWORD_LE(&p);
+    header->spm_misc_param.dds_frequency = gwy_get_gfloat_le(&p);
+    header->spm_misc_param.dds_low_filter = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_high_filter = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_center_filter = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_enable = gwy_get_guint16_le(&p);
+    header->spm_misc_param.scan_filter = gwy_get_guint16_le(&p);
+    header->spm_misc_param.afm_mode = gwy_get_guint32_le(&p);
     gwy_debug("afm_mode: 0x%x", header->spm_misc_param.afm_mode);
-    header->spm_misc_param.slope_gain = get_DWORD_LE(&p);
-    header->spm_misc_param.x_addition_signal = get_WORD_LE(&p);
-    header->spm_misc_param.y_addition_signal = get_WORD_LE(&p);
-    header->spm_misc_param.z_addition_signal = get_WORD_LE(&p);
-    header->spm_misc_param.bias_addition_signal = get_WORD_LE(&p);
-    header->spm_misc_param.active_dialog = get_DWORD_LE(&p);
-    header->spm_misc_param.spm_mode = get_DWORD_LE(&p);
+    header->spm_misc_param.slope_gain = gwy_get_guint32_le(&p);
+    header->spm_misc_param.x_addition_signal = gwy_get_guint16_le(&p);
+    header->spm_misc_param.y_addition_signal = gwy_get_guint16_le(&p);
+    header->spm_misc_param.z_addition_signal = gwy_get_guint16_le(&p);
+    header->spm_misc_param.bias_addition_signal = gwy_get_guint16_le(&p);
+    header->spm_misc_param.active_dialog = gwy_get_guint32_le(&p);
+    header->spm_misc_param.spm_mode = gwy_get_guint32_le(&p);
     gwy_debug("spm_mode: 0x%x", header->spm_misc_param.spm_mode);
-    header->spm_misc_param.measurement_signal = get_DWORD_LE(&p);
+    header->spm_misc_param.measurement_signal = gwy_get_guint32_le(&p);
     gwy_debug("signal: 0x%x", header->spm_misc_param.measurement_signal);
-    header->spm_misc_param.phase_vco_scan = get_WORD_LE(&p);
-    header->spm_misc_param.sps_mode = get_DWORD_LE(&p);
-    header->spm_misc_param.dds_amplitude = get_DOUBLE_LE(&p);
-    header->spm_misc_param.dds_center_locked_freq = get_DOUBLE_LE(&p);
-    header->spm_misc_param.dds_phase_shift = get_FLOAT_LE(&p);
-    header->spm_misc_param.dds_high_gain = get_WORD_LE(&p);
-    header->spm_misc_param.dds_phase_polarity = get_WORD_LE(&p);
-    header->spm_misc_param.dds_pll_excitation = get_WORD_LE(&p);
-    header->spm_misc_param.dds_external = get_WORD_LE(&p);
-    header->spm_misc_param.dds_rms_filter = get_DWORD_LE(&p);
-    header->spm_misc_param.dds_pll_loop_gain = get_DWORD_LE(&p);
-    header->spm_misc_param.dds_beat_noise = get_DWORD_LE(&p);
-    header->spm_misc_param.dds_dynamic_range = get_DWORD_LE(&p);
-    header->spm_misc_param.cantilever_peak_freq = get_DWORD_LE(&p);
-    header->spm_misc_param.cantilever_q_factor = get_DWORD_LE(&p);
+    header->spm_misc_param.phase_vco_scan = gwy_get_guint16_le(&p);
+    header->spm_misc_param.sps_mode = gwy_get_guint32_le(&p);
+    header->spm_misc_param.dds_amplitude = gwy_get_gdouble_le(&p);
+    header->spm_misc_param.dds_center_locked_freq = gwy_get_gdouble_le(&p);
+    header->spm_misc_param.dds_phase_shift = gwy_get_gfloat_le(&p);
+    header->spm_misc_param.dds_high_gain = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_phase_polarity = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_pll_excitation = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_external = gwy_get_guint16_le(&p);
+    header->spm_misc_param.dds_rms_filter = gwy_get_guint32_le(&p);
+    header->spm_misc_param.dds_pll_loop_gain = gwy_get_guint32_le(&p);
+    header->spm_misc_param.dds_beat_noise = gwy_get_guint32_le(&p);
+    header->spm_misc_param.dds_dynamic_range = gwy_get_guint32_le(&p);
+    header->spm_misc_param.cantilever_peak_freq = gwy_get_guint32_le(&p);
+    header->spm_misc_param.cantilever_q_factor = gwy_get_guint32_le(&p);
     p += 10;  /* reserved */
     p += 0x300;  /* RGB lookup table */
-    header->sub_revision_no = get_DWORD_LE(&p);
-    header->image_type = get_DWORD_LE(&p);
+    header->sub_revision_no = gwy_get_guint32_le(&p);
+    header->image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type: %d", header->image_type);
-    header->data_source = get_DWORD_LE(&p);
+    header->data_source = gwy_get_guint32_le(&p);
     gwy_debug("data_source: %d", header->data_source);
-    header->display_mode = get_DWORD_LE(&p);
+    header->display_mode = gwy_get_guint32_le(&p);
     p += 2*8;  /* measurement_start_time, measurement_end_time */
     p += 254;  /* profile_roughness */
     p += 446;  /* settings_3d */
-    header->lut_brightness = get_FLOAT_LE(&p);
-    header->lut_contrast = get_FLOAT_LE(&p);
-    header->software_version = get_WORD_LE(&p);
-    header->software_subversion = get_DWORD_LE(&p);
+    header->lut_brightness = gwy_get_gfloat_le(&p);
+    header->lut_contrast = gwy_get_gfloat_le(&p);
+    header->software_version = gwy_get_guint16_le(&p);
+    header->software_subversion = gwy_get_guint32_le(&p);
     p += 20;  /* extracted_region */
-    header->lut_gamma = get_FLOAT_LE(&p);
-    header->n_of_sps = get_WORD_LE(&p);
-    header->sps_offset = get_DWORD_LE(&p);
-    header->line_trace_end_x = get_WORD_LE(&p);
-    header->line_trace_end_y = get_WORD_LE(&p);
-    header->forward = get_WORD_LE(&p);
+    header->lut_gamma = gwy_get_gfloat_le(&p);
+    header->n_of_sps = gwy_get_guint16_le(&p);
+    header->sps_offset = gwy_get_guint32_le(&p);
+    header->line_trace_end_x = gwy_get_guint16_le(&p);
+    header->line_trace_end_y = gwy_get_guint16_le(&p);
+    header->forward = gwy_get_guint16_le(&p);
     gwy_debug("forward: %d", header->forward);
-    header->lift_signal = get_WORD_LE(&p);
+    header->lift_signal = gwy_get_guint16_le(&p);
     /* stuff... */
 }
 
