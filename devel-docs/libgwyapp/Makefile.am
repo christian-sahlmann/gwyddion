@@ -24,7 +24,9 @@ SCANGOBJ_OPTIONS =
 
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED" 
-SCAN_OPTIONS = --deprecated-guards="GWY_DISABLE_DEPRECATED"
+SCAN_OPTIONS = \
+	--deprecated-guards="GWY_DISABLE_DEPRECATED" \
+	--ignore-decorators="_GWY_STATIC_INLINE"
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml
