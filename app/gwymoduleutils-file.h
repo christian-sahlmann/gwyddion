@@ -25,6 +25,29 @@
 
 G_BEGIN_DECLS
 
+/* This is necessary to fool gtk-doc that ignores static inline functions */
+#define _GWY_STATIC_INLINE static inline
+
+_GWY_STATIC_INLINE gboolean gwy_get_gboolean8 (const guchar **ppv);
+_GWY_STATIC_INLINE gint16   gwy_get_gint16_le (const guchar **ppv);
+_GWY_STATIC_INLINE gint16   gwy_get_gint16_be (const guchar **ppv);
+_GWY_STATIC_INLINE guint16  gwy_get_guint16_le(const guchar **ppv);
+_GWY_STATIC_INLINE guint16  gwy_get_guint16_be(const guchar **ppv);
+_GWY_STATIC_INLINE gint32   gwy_get_gint32_le (const guchar **ppv);
+_GWY_STATIC_INLINE gint32   gwy_get_gint32_be (const guchar **ppv);
+_GWY_STATIC_INLINE guint32  gwy_get_guint32_le(const guchar **ppv);
+_GWY_STATIC_INLINE guint32  gwy_get_guint32_be(const guchar **ppv);
+_GWY_STATIC_INLINE gint64   gwy_get_gint64_le (const guchar **ppv);
+_GWY_STATIC_INLINE gint64   gwy_get_gint64_be (const guchar **ppv);
+_GWY_STATIC_INLINE guint64  gwy_get_guint64_le(const guchar **ppv);
+_GWY_STATIC_INLINE guint64  gwy_get_guint64_be(const guchar **ppv);
+_GWY_STATIC_INLINE gfloat   gwy_get_gfloat_le (const guchar **ppv);
+_GWY_STATIC_INLINE gfloat   gwy_get_gfloat_be (const guchar **ppv);
+_GWY_STATIC_INLINE gdouble  gwy_get_gdouble_le(const guchar **ppv);
+_GWY_STATIC_INLINE gdouble  gwy_get_gdouble_be(const guchar **ppv);
+
+#undef _GWY_STATIC_INLINE
+
 static inline gboolean
 gwy_get_gboolean8(const guchar **ppv)
 {
