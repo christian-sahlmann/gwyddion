@@ -146,6 +146,53 @@ gwy_app_channel_title_fall_back(GwyContainer *data,
  * SECTION:gwymoduleutils-file
  * @title: file module utils
  * @short_description: Utility functions for file modules
+ *
+ * Functions gwy_app_channel_check_nonsquare() and
+ * gwy_app_channel_title_fall_back() perform common tasks improving the
+ * imported of channels from foreign data files.  Typically one calls them on
+ * all imported channel ids after storing the data fields the the container,
+ * if they are useful for a given file type.
+ *
+ * The group of functions gwy_get_gint16_le(), gwy_get_gint16_be(), etc.
+ * is intended to portably read packed binary data structures that are commonly
+ * found in SPM files.  They all work identically: the binary data value is
+ * read from the buffer, converted if necessary, and the provided
+ * buffer pointer is moved to point after the value to faciliate sequential
+ * reading.
+ *
+ * As no buffer size is passed, obviously no buffer size checking is performed.
+ * The caller has to ensure the buffer is large enough -- it is expected the
+ * caller checks the total buffer size before starting to parse it.
+ *
+ * For example to portably read the following packed struct stored
+ * in big-endian byte order:
+ * <informalexample><programlisting>
+ * struct {
+ *     guint16 xres;
+ *     guint16 yres;
+ *     gfloat measure;
+ * } header;
+ * </programlisting></informalexample>
+ * one can do (after checking the buffer size):
+ * <informalexample><programlisting>
+ * const guchar *p = buffer;
+ * header.xres    = gwy_get_guint16_be(&amp;p);
+ * header.yres    = gwy_get_guint16_be(&amp;p);
+ * header.measure = gwy_get_gfloat_be(&amp;p);
+ * </programlisting></informalexample>
+ * and @p will point after @measure in @buffer after this snippet is finished.
+ *
+ * The data types used in @header do not matter (provided they are large
+ * enough to hold the values), the exact types are determined by the functions
+ * used.  Therefore the reading would work identically if @header was defined
+ * using common types:
+ * <informalexample><programlisting>
+ * struct {
+ *     gint xres;
+ *     gint yres;
+ *     gdouble measure;
+ * } header;
+ * </programlisting></informalexample>
  **/
 
 /**
