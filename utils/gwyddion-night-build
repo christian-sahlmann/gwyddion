@@ -103,9 +103,11 @@ function check_coding_style() {
     d=${d%%/*}
     l=$(basename $lib .so)
     l=${l%2}
-    nm $lib \
-      | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
-      | grep -v '^_' \
+    { nm $lib \
+        | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
+        | grep -v '^_'; \
+      sed -re 's/^_GWY_STATIC_INLINE +[A-Za-z0-9_* ]+ ([A-Za-z0-9_]+) *\(.*/\1/;t;d' $d/*.h; \
+    } \
       | sort -u -o evil-symbols-defined.tmp
     sed -n '/<FUNCTION>/,/<\/FUNCTION>/{s/<\/\?NAME>//g;t1;d;:1;p}' \
       devel-docs/$l/$l-decl.txt \
