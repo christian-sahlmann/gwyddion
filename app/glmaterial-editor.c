@@ -473,6 +473,10 @@ gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
  * SECTION:glmaterial-editor
  * @title: GwyGLMaterialEditor
  * @short_description: OpenGL material editor
+ *
+ * #GwyGradientEditor is the application OpenGL material editor.  The interface
+ * is currently extremely simple: gwy_app_gl_material_editor() invokes
+ * the editor (or brings it forward) and then it's user-controlled.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
