@@ -19,7 +19,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -153,6 +152,8 @@ static gboolean      fill_data_fields     (SurfFile *surffile,
                                            const guchar *buffer,
                                            GError **error);
 static GwyContainer* surffile_get_metadata(SurfFile *surffile);
+static gchar*        get_surf_unit        (gchar *unit,
+                                           gdouble *mult);
 
 static const GwyEnum acq_modes[] = {
    { "Unknown",                     SURF_ACQ_UNKNOWN,        },
@@ -223,6 +224,7 @@ surffile_load(const gchar *filename,
     GError *err = NULL;
     gchar signature[12];
     gdouble max, min;
+    gint add = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -303,6 +305,7 @@ surffile_load(const gchar *filename,
     surffile.YOffset = get_FLOAT_LE(&p);
     surffile.ZOffset = get_FLOAT_LE(&p);
 
+
     gwy_debug("fileformat: %d,  n_of_objects: %d, "
               "version: %d, object_type: %d",
               surffile.format, surffile.nobjects,
@@ -338,16 +341,22 @@ surffile_load(const gchar *filename,
     gwy_debug("Time: %d:%d:%d, Date: %d.%d.%d",
               surffile.hours, surffile.minutes, surffile.seconds,
               surffile.day, surffile.month, surffile.year);
+    gwy_debug("private zone size: %d, comment size %d",
+              surffile.private_size, surffile.comment_size);
 
     expected_size = (SURF_HEADER_SIZE
                      + surffile.pointsize/8*surffile.xres*surffile.yres);
     if (expected_size != size) {
-        err_SIZE_MISMATCH(error, expected_size, size);
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        gwy_debug("Size mismatch!");
+        if (size > expected_size) add = size - expected_size; /*TODO  correct this !*/
+        else {
+          err_SIZE_MISMATCH(error, expected_size, size);
+          gwy_file_abandon_contents(buffer, size, NULL);
+          return NULL;
+        }
     }
 
-    p = buffer + SURF_HEADER_SIZE;
+    p = buffer + SURF_HEADER_SIZE + add;
     if (!fill_data_fields(&surffile, p, error)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -476,5 +485,12 @@ surffile_get_metadata(SurfFile *surffile)
 
     return meta;
 }
+
+static gchar*        
+get_surf_unit(gchar *unit, gdouble *mult)
+{
+
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
