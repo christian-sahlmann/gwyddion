@@ -367,8 +367,8 @@ merge_do(MergeArgs *args)
         cdata.y = yres1 - (yres1/3);
         cdata.width = xres1;
         cdata.height = yres1/3;
-        kdata.width = cdata.width/2;
-        kdata.height = cdata.height/3;
+        kdata.width = MIN(xres2, cdata.width/2);
+        kdata.height = MIN(yres2, cdata.height/3);
         kdata.x = xres2/2 - kdata.width/2;
         kdata.y = 0;
         break;
@@ -379,8 +379,8 @@ merge_do(MergeArgs *args)
         cdata.y = 0;
         cdata.width = xres1/3;
         cdata.height = yres1;
-        kdata.width = cdata.width/3;
-        kdata.height = cdata.height/2;
+        kdata.width = MIN(xres2, cdata.width/3);
+        kdata.height = MIN(yres2, cdata.height/2);
         kdata.x = 0;
         kdata.y = yres2/2 - kdata.height/2;
         break;
