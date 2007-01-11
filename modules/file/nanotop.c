@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NANOTOP AFM files"),
     "Alexander Kovalev <av_kov@tut.by>",
-    "1.6",
+    "1.7",
     "Alexander Kovalev, Metal-Polymer Research Institute",
     "2006",
 };
@@ -124,10 +124,10 @@ nanotop_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     p = fileinfo->head;
-    get_WORD_LE(&p);
-    xres = get_WORD_LE(&p);
-    get_WORD_LE(&p);
-    yres = get_WORD_LE(&p);
+    gwy_get_guint16_le(&p);
+    xres = gwy_get_guint16_le(&p);
+    gwy_get_guint16_le(&p);
+    yres = gwy_get_guint16_le(&p);
 
     expected = 2*xres*yres + HEADER_SIZE; /* expected file size */
     if (expected == fileinfo->file_size)
@@ -163,10 +163,10 @@ nanotop_load(const gchar *filename,
     }
 
     p = buffer;
-    spmfile.tx = get_WORD_LE(&p);
-    spmfile.mx = get_WORD_LE(&p);
-    spmfile.ty = get_WORD_LE(&p);
-    spmfile.my = get_WORD_LE(&p);
+    spmfile.tx = gwy_get_guint16_le(&p);
+    spmfile.mx = gwy_get_guint16_le(&p);
+    spmfile.ty = gwy_get_guint16_le(&p);
+    spmfile.my = gwy_get_guint16_le(&p);
 
     if (size != HEADER_SIZE + 2*spmfile.mx*spmfile.my) {
         err_SIZE_MISMATCH(error, HEADER_SIZE + 2*spmfile.mx*spmfile.my, size);
@@ -174,14 +174,14 @@ nanotop_load(const gchar *filename,
         return NULL;
     }
 
-    spmfile.Kx = get_FLOAT_LE(&p);
-    spmfile.Ky = get_FLOAT_LE(&p);
-    spmfile.Kz = get_FLOAT_LE(&p);
+    spmfile.Kx = gwy_get_gfloat_le(&p);
+    spmfile.Ky = gwy_get_gfloat_le(&p);
+    spmfile.Kz = gwy_get_gfloat_le(&p);
     get_CHARARRAY0(spmfile.ZUnit, &p);
     get_CHARARRAY0(spmfile.XYUnit, &p);
-    spmfile.min = get_WORD_LE(&p);
-    spmfile.max = get_WORD_LE(&p);
-    spmfile.timeline = get_WORD_LE(&p);
+    spmfile.min = gwy_get_guint16_le(&p);
+    spmfile.max = gwy_get_guint16_le(&p);
+    spmfile.timeline = gwy_get_guint16_le(&p);
     get_CHARARRAY(spmfile.date, &p);
     get_CHARARRAY(spmfile.time, &p);
     get_CHARARRAY(spmfile.note, &p);

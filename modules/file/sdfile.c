@@ -19,15 +19,15 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libprocess/datafield.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
+#include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -116,7 +116,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -445,12 +445,12 @@ sdfile_read_header_bin(const guchar **p,
     get_CHARARRAY(sdfile->manufacturer, p);
     get_CHARARRAY(sdfile->creation, p);
     get_CHARARRAY(sdfile->modification, p);
-    sdfile->xres = get_WORD_LE(p);
-    sdfile->yres = get_WORD_LE(p);
-    sdfile->xscale = get_DOUBLE_LE(p);
-    sdfile->yscale = get_DOUBLE_LE(p);
-    sdfile->zscale = get_DOUBLE_LE(p);
-    sdfile->zres = get_DOUBLE_LE(p);
+    sdfile->xres = gwy_get_guint16_le(p);
+    sdfile->yres = gwy_get_guint16_le(p);
+    sdfile->xscale = gwy_get_gdouble_le(p);
+    sdfile->yscale = gwy_get_gdouble_le(p);
+    sdfile->zscale = gwy_get_gdouble_le(p);
+    sdfile->zres = gwy_get_gdouble_le(p);
     sdfile->compression = **p;
     (*p)++;
     sdfile->data_type = **p;
@@ -663,13 +663,13 @@ sdfile_read_data_bin(SDFile *sdfile)
         case SDF_FLOAT:
         p = sdfile->data;
         for (i = 0; i < n; i++)
-            data[i] = get_FLOAT_LE(&p);
+            data[i] = gwy_get_gfloat_le(&p);
         break;
 
         case SDF_DOUBLE:
         p = sdfile->data;
         for (i = 0; i < n; i++)
-            data[i] = get_DOUBLE_LE(&p);
+            data[i] = gwy_get_gdouble_le(&p);
         break;
 
         default:
