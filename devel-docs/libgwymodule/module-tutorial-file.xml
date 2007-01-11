@@ -99,10 +99,9 @@
 &num;include &lt;libgwyddion/gwymath.h&gt;
 &num;include &lt;libprocess/stats.h&gt;
 &num;include &lt;libgwymodule/gwymodule-file.h&gt;
-&num;include &lt;app/gwyapp.h&gt;
+&num;include &lt;app/gwymoduleutils-file.h&gt;
 
 &num;include "err.h"
-&num;include "get.h"
 
 &num;define EXTENSION ".ssd"
 
@@ -200,11 +199,11 @@ simple_load(const gchar *filename,
     }
 
     p = buffer + MAGIC_SIZE;
-    simple.xres = get_WORD_LE(&amp;p);
-    simple.yres = get_WORD_LE(&amp;p);
-    simple.measure = get_FLOAT_LE(&amp;p);
-    simple.z0 = get_FLOAT_LE(&amp;p);
-    simple.gain = get_FLOAT_LE(&amp;p);
+    simple.xres = gwy_get_guint16_le(&amp;p);
+    simple.yres = gwy_get_guint16_le(&amp;p);
+    simple.measure = gwy_get_gfloat_le(&amp;p);
+    simple.z0 = gwy_get_gfloat_le(&amp;p);
+    simple.gain = gwy_get_gfloat_le(&amp;p);
 
     expected_size = 2*simple.xres*simple.yres + HEADER_SIZE;
     if (size != expected_size) {
@@ -249,17 +248,16 @@ simple_load(const gchar *filename,
   <refsect1>
     <title>Administrative and Conventions</title>
     <para>
-      Beside standard headers our module includes two special headers that
-      provide some common inline functions
+      Beside standard headers our module includes a special header that
+      provides some common inline functions
     </para>
     <informalexample><programlisting>
 &num;include "err.h"
-&num;include "get.h"
     </programlisting></informalexample>
     <para>
-      They are located in <filename>modules/file</filename> for the use by
-      in-tree modules.  External modules can copy the headers or the
-      actually used functions to their source code.
+      It is located in <filename>modules/file</filename> for the use by
+      in-tree modules.  External modules can copy it (or only the
+      actually used functions) to their source code.
     </para>
     <para>
       Header <filename>err.h</filename> contains common error reporting
@@ -267,26 +265,6 @@ simple_load(const gchar *filename,
       Its primary purpose it to ensure consistency of error
       messages between file modules and to ease translators' work.
     </para>
-    <para id="module-tutorial-file-get-h">
-      Header <filename>get.h</filename> provides
-      <link linkend="module-tutorial-file-portability">portable</link>
-      functions for obtaining miscellaneous data types from byte buffers.  They
-      take a pointer to a byte buffer, read and return the value stored there
-      and advance the pointer to point after the value to faciliate sequential
-      reading.  For instance to obtain two 16bit big-endian integers and
-      a big-endian single-precission float number from a byte buffer at given
-      position one does
-    </para>
-    <informalexample><programlisting><![CDATA[
-guint i, j;
-gdouble f;
-const guchar *p;
-
-p = ...;
-i = get_WORD_BE(&p);
-j = get_WORD_BE(&p);
-f = get_FLOAT_BE(&p);
-]]></programlisting></informalexample>
     <para>
       Next we define a few convenience symbols: the file extension, the magic
       header and its size, and header size
@@ -439,11 +417,11 @@ if (size <= HEADER_SIZE) {
     </para>
     <informalexample><programlisting><![CDATA[
 p = buffer + MAGIC_SIZE;
-simple.xres = get_WORD_LE(&p);
-simple.yres = get_WORD_LE(&p);
-simple.measure = get_FLOAT_LE(&p);
-simple.z0 = get_FLOAT_LE(&p);
-simple.gain = get_FLOAT_LE(&p);
+simple.xres = gwy_get_guint16_le(&p);
+simple.yres = gwy_get_guint16_le(&p);
+simple.measure = gwy_get_gfloat_le(&p);
+simple.z0 = gwy_get_gfloat_le(&p);
+simple.gain = gwy_get_gfloat_le(&p);
 ]]></programlisting></informalexample>
     <para>
       Then we can create the data field and read the data into it.  Since
@@ -636,9 +614,9 @@ fread(&header, sizeof(header), 1, filehandle);
       <para>
         The answer to (almost) all the problems above is: Don't do that then.
         Avoid direct reading of structures, read the data into a flat byte
-        buffer instead and use
-        <link linkend="module-tutorial-file-get-h"><filename>get.h</filename></link>
-        functions to get individual values.
+        buffer instead and use the
+        <link linkend="libgwyapp-gwymoduleutils-file">file module utils</link>
+        functions to obtain individual values.
       </para>
     </refsect2>
   </refsect1>
