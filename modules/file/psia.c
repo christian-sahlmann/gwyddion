@@ -30,11 +30,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports PSIA data files."),
     "Sven Neumann <neumann@jpk.com>, Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "JPK Instruments AG, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -252,7 +252,7 @@ psia_load_tiff(TIFF *tiff, GError **error)
     }
 
     memset(&header, 0, sizeof(PSIAImageHeader));
-    header.image_type = get_DWORD_LE(&p);
+    header.image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type: %d", header.image_type);
     if (header.image_type != PSIA_2D_MAPPED) {
         err_NO_DATA(error);
@@ -262,41 +262,41 @@ psia_load_tiff(TIFF *tiff, GError **error)
     header.image_mode = psia_wchar_to_utf8(&p, 8);
     gwy_debug("source_name: <%s>, image_mode: <%s>",
               header.source_name, header.image_mode);
-    header.lpf_strength = get_DOUBLE_LE(&p);
-    header.auto_flatten = get_DWORD_LE(&p);
-    header.ac_track = get_DWORD_LE(&p);
-    header.xres = get_DWORD_LE(&p);
-    header.yres = get_DWORD_LE(&p);
+    header.lpf_strength = gwy_get_gdouble_le(&p);
+    header.auto_flatten = gwy_get_guint32_le(&p);
+    header.ac_track = gwy_get_guint32_le(&p);
+    header.xres = gwy_get_guint32_le(&p);
+    header.yres = gwy_get_guint32_le(&p);
     gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
-    header.angle = get_DOUBLE_LE(&p);
-    header.sine_scan = get_DWORD_LE(&p);
-    header.overscan_rate = get_DOUBLE_LE(&p);
-    header.forward = get_DWORD_LE(&p);
-    header.scan_up = get_DWORD_LE(&p);
-    header.swap_xy = get_DWORD_LE(&p);
-    header.xreal = get_DOUBLE_LE(&p) * 1e-6;
-    header.yreal = get_DOUBLE_LE(&p) * 1e-6;
+    header.angle = gwy_get_gdouble_le(&p);
+    header.sine_scan = gwy_get_guint32_le(&p);
+    header.overscan_rate = gwy_get_gdouble_le(&p);
+    header.forward = gwy_get_guint32_le(&p);
+    header.scan_up = gwy_get_guint32_le(&p);
+    header.swap_xy = gwy_get_guint32_le(&p);
+    header.xreal = gwy_get_gdouble_le(&p) * 1e-6;
+    header.yreal = gwy_get_gdouble_le(&p) * 1e-6;
     gwy_debug("xreal: %g, yreal: %g", header.xreal, header.yreal);
-    header.xoff = get_DOUBLE_LE(&p) * 1e-6;
-    header.yoff = get_DOUBLE_LE(&p) * 1e-6;
+    header.xoff = gwy_get_gdouble_le(&p) * 1e-6;
+    header.yoff = gwy_get_gdouble_le(&p) * 1e-6;
     gwy_debug("xoff: %g, yoff: %g", header.xoff, header.yoff);
-    header.scan_rate = get_DOUBLE_LE(&p);
-    header.set_point = get_DOUBLE_LE(&p);
+    header.scan_rate = gwy_get_gdouble_le(&p);
+    header.set_point = gwy_get_gdouble_le(&p);
     header.set_point_unit = psia_wchar_to_utf8(&p, 8);
     if (!header.set_point_unit)
         header.set_point_unit = g_strdup("V");
-    header.tip_bias = get_DOUBLE_LE(&p);
-    header.sample_bias = get_DOUBLE_LE(&p);
-    header.data_gain = get_DOUBLE_LE(&p);
-    header.z_scale = get_DOUBLE_LE(&p);
-    header.z_offset = get_DOUBLE_LE(&p);
+    header.tip_bias = gwy_get_gdouble_le(&p);
+    header.sample_bias = gwy_get_gdouble_le(&p);
+    header.data_gain = gwy_get_gdouble_le(&p);
+    header.z_scale = gwy_get_gdouble_le(&p);
+    header.z_offset = gwy_get_gdouble_le(&p);
     gwy_debug("data_gain: %g, z_scale: %g", header.data_gain, header.z_scale);
     header.z_unit = psia_wchar_to_utf8(&p, 8);
     gwy_debug("z_unit: <%s>", header.z_unit);
-    header.data_min = get_DWORD_LE(&p);
-    header.data_max = get_DWORD_LE(&p);
-    header.data_avg = get_DWORD_LE(&p);
-    header.compression = get_DWORD_LE(&p);
+    header.data_min = gwy_get_gint32_le(&p);
+    header.data_max = gwy_get_gint32_le(&p);
+    header.data_avg = gwy_get_gint32_le(&p);
+    header.compression = gwy_get_guint32_le(&p);
 
     tiff_get_custom_string(tiff, PSIA_TIFFTAG_Comments, &comment);
     if (comment) {
