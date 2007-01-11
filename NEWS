@@ -1,4 +1,4 @@
-2.2.20070102
+2.2.20070111
 
 2.3 (2000-00-00)
 Application:
@@ -7,20 +7,31 @@ Application:
 Libraries:
 - libgwyapp: Wrong graph and data process toolbox sensitivity after closing
   a graph was fixed.
-- libgwydgets: Data view check xreal, yreal changes when updating and
+- libgwyapp: File previews were disabled for Gtk+ 2.6 because GtkIconView
+  implements GtkCellLayout only since 2.8.  The version check is run-time,
+  an executable compiled with Gtk+ 2.6 will display previews when run with
+  a newer Gtk+.
+- libgwydgets: Data view checks xreal, yreal changes when updating and
   recalculates measures.
 - libgwydgets: GwyNullStore iter_nth_child() method sets the iter properly,
   fixing use in as a combo box model.
 - libgwydgets: Ctrl-C to copy graph image to clipboard actually works.
 - libgwyprocess: Function gwy_data_field_get_grain_bounding_boxes() finds
   bounding boxes of all grains.
-- libgwydgets: Truncated logarithmic axes were fixed and the formatting of
-  logarithmic axes improved.
+- libgwydgets: Truncated logarithmic axes were fixed.
+- libgwydgets: Formatting of both logarithmic and linear axis ticks was
+  improved.
 - libgwyprocess: Volume and grain volue calculation functions were added.
 - libgwyapp: Application 3D windows have `Set Defaults' button that makes
   the current view parameters defaults for new views.
 - libgwyprocess: Slightly wrong grain surface area estimate calculation was
   fixed.
+- libgwyprocess: Possible write out of array borders due to rounding errors
+  in gwy_data_field_area_dh() was fixed.
+- libgwyapp: Document history view can be filtered by name.
+- libgwyapp: A set of utility functions for file modules was added.
+- libgwyapp: Convenience functions to set `waiting' cursor on windows were
+  added.
 
 Modules:
 - MicroProf (new): MicroProf FRT data file import.
@@ -38,6 +49,8 @@ Modules:
   from the data window are honoured in the preview.
 - Grain watershed: Initial mask drawing artefacts were fixed.
 - Grain distributions: Grain volumes were added.
+- NT-MDT: Frame title is used for channel title (if present), some more
+  metadata was added.
 
 
 2.2 (2006-12-15)
