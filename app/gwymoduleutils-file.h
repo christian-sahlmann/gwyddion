@@ -28,23 +28,25 @@ G_BEGIN_DECLS
 /* This is necessary to fool gtk-doc that ignores static inline functions */
 #define _GWY_STATIC_INLINE static inline
 
-_GWY_STATIC_INLINE gboolean gwy_get_gboolean8 (const guchar **ppv);
-_GWY_STATIC_INLINE gint16   gwy_get_gint16_le (const guchar **ppv);
-_GWY_STATIC_INLINE gint16   gwy_get_gint16_be (const guchar **ppv);
-_GWY_STATIC_INLINE guint16  gwy_get_guint16_le(const guchar **ppv);
-_GWY_STATIC_INLINE guint16  gwy_get_guint16_be(const guchar **ppv);
-_GWY_STATIC_INLINE gint32   gwy_get_gint32_le (const guchar **ppv);
-_GWY_STATIC_INLINE gint32   gwy_get_gint32_be (const guchar **ppv);
-_GWY_STATIC_INLINE guint32  gwy_get_guint32_le(const guchar **ppv);
-_GWY_STATIC_INLINE guint32  gwy_get_guint32_be(const guchar **ppv);
-_GWY_STATIC_INLINE gint64   gwy_get_gint64_le (const guchar **ppv);
-_GWY_STATIC_INLINE gint64   gwy_get_gint64_be (const guchar **ppv);
-_GWY_STATIC_INLINE guint64  gwy_get_guint64_le(const guchar **ppv);
-_GWY_STATIC_INLINE guint64  gwy_get_guint64_be(const guchar **ppv);
-_GWY_STATIC_INLINE gfloat   gwy_get_gfloat_le (const guchar **ppv);
-_GWY_STATIC_INLINE gfloat   gwy_get_gfloat_be (const guchar **ppv);
-_GWY_STATIC_INLINE gdouble  gwy_get_gdouble_le(const guchar **ppv);
-_GWY_STATIC_INLINE gdouble  gwy_get_gdouble_be(const guchar **ppv);
+_GWY_STATIC_INLINE gboolean gwy_get_gboolean8     (const guchar **ppv);
+_GWY_STATIC_INLINE gint16   gwy_get_gint16_le     (const guchar **ppv);
+_GWY_STATIC_INLINE gint16   gwy_get_gint16_be     (const guchar **ppv);
+_GWY_STATIC_INLINE guint16  gwy_get_guint16_le    (const guchar **ppv);
+_GWY_STATIC_INLINE guint16  gwy_get_guint16_be    (const guchar **ppv);
+_GWY_STATIC_INLINE gint32   gwy_get_gint32_le     (const guchar **ppv);
+_GWY_STATIC_INLINE gint32   gwy_get_gint32_be     (const guchar **ppv);
+_GWY_STATIC_INLINE guint32  gwy_get_guint32_le    (const guchar **ppv);
+_GWY_STATIC_INLINE guint32  gwy_get_guint32_be    (const guchar **ppv);
+_GWY_STATIC_INLINE gint64   gwy_get_gint64_le     (const guchar **ppv);
+_GWY_STATIC_INLINE gint64   gwy_get_gint64_be     (const guchar **ppv);
+_GWY_STATIC_INLINE guint64  gwy_get_guint64_le    (const guchar **ppv);
+_GWY_STATIC_INLINE guint64  gwy_get_guint64_be    (const guchar **ppv);
+_GWY_STATIC_INLINE gfloat   gwy_get_gfloat_le     (const guchar **ppv);
+_GWY_STATIC_INLINE gfloat   gwy_get_gfloat_be     (const guchar **ppv);
+_GWY_STATIC_INLINE gdouble  gwy_get_gdouble_le    (const guchar **ppv);
+_GWY_STATIC_INLINE gdouble  gwy_get_gdouble_be    (const guchar **ppv);
+_GWY_STATIC_INLINE gdouble  gwy_get_pascal_real_le(const guchar **ppv);
+_GWY_STATIC_INLINE gdouble  gwy_get_pascal_real_be(const guchar **ppv);
 
 #undef _GWY_STATIC_INLINE
 
@@ -199,6 +201,66 @@ gwy_get_gdouble_be(const guchar **ppv)
     guint64 v = GUINT64_FROM_BE(*pv);
     *ppv += sizeof(guint64);
     return *(gdouble*)&v;
+}
+
+static inline gdouble
+gwy_get_pascal_real_le(const guchar **ppv)
+{
+    gint power;
+    gdouble x;
+
+    if (!(*ppv)[0]) {
+        *ppv += 6;
+        return 0.0;
+    }
+    x = 1.0 + (((((*ppv)[1]/256.0 + (*ppv)[2])/256.0 + (*ppv)[3])/256.0
+                + (*ppv)[4])/256.0 + ((*ppv)[5] & 0x7f))/128.0;
+    if ((*ppv)[5] & 0x80)
+        x = -x;
+
+    power = (gint)(*ppv)[0] - 129;
+    while (power > 0) {
+        x *= 2.0;
+        power--;
+    }
+    while (power < 0) {
+        x /= 2.0;
+        power++;
+    }
+
+    *ppv += 6;
+
+    return x;
+}
+
+static inline gdouble
+gwy_get_pascal_real_be(const guchar **ppv)
+{
+    gint power;
+    gdouble x;
+
+    if (!(*ppv)[5]) {
+        *ppv += 6;
+        return 0.0;
+    }
+    x = 1.0 + (((((*ppv)[4]/256.0 + (*ppv)[3])/256.0 + (*ppv)[2])/256.0
+                + (*ppv)[1])/256.0 + ((*ppv)[0] & 0x7f))/128.0;
+    if ((*ppv)[0] & 0x80)
+        x = -x;
+
+    power = (gint)(*ppv)[5] - 129;
+    while (power > 0) {
+        x *= 2.0;
+        power--;
+    }
+    while (power < 0) {
+        x /= 2.0;
+        power++;
+    }
+
+    *ppv += 6;
+
+    return x;
 }
 
 gboolean gwy_app_channel_check_nonsquare(GwyContainer *data,

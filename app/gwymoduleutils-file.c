@@ -416,4 +416,30 @@ gwy_app_channel_title_fall_back(GwyContainer *data,
  * Since: 2.3
  **/
 
+/**
+ * gwy_get_pascal_real_le:
+ * @ppv: Pointer to a pointer to a little-endian six-byte Pascal Real
+ *       in a memory buffer.
+ *
+ * Reads a six-byte Pascale Real value from a little-endian
+ * binary data buffer, moving the buffer pointer to point just after the value.
+ *
+ * Returns: The floating point value read from the buffer as a #gdouble.
+ *
+ * Since: 2.3
+ **/
+
+/**
+ * gwy_get_pascal_real_be:
+ * @ppv: Pointer to a pointer to a big-endian six-byte Pascal Real
+ *       in a memory buffer.
+ *
+ * Reads a six-byte Pascale Real value from a big-endian
+ * binary data buffer, moving the buffer pointer to point just after the value.
+ *
+ * Returns: The floating point value read from the buffer as a #gdouble.
+ *
+ * Since: 2.3
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
