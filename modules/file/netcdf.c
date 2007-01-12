@@ -23,10 +23,10 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
-#include "get.h"
 #include "err.h"
 
 #define MAGIC1 "CDF\x01"
@@ -151,7 +151,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -191,7 +191,7 @@ gxsm_detect(const GwyFileDetectInfo *fileinfo,
     score = 0;
     memset(&cdffile, 0, sizeof(NetCDF));
     p = fileinfo->head + MAGIC_SIZE;
-    cdffile.nrecs = get_DWORD_BE(&p);
+    cdffile.nrecs = gwy_get_guint32_be(&p);
     if (cdffile_read_dim_array(&cdffile.dims, &cdffile.ndims,
                                fileinfo->head, fileinfo->buffer_len-1, &p,
                                NULL)) {
@@ -224,6 +224,7 @@ gxsm_load(const gchar *filename,
     NetCDF cdffile;
     const NetCDFDim *dim;
     const NetCDFVar *var;
+    const NetCDFAttr *attr;
     gdouble real;
     gint i, power10;
 
@@ -286,6 +287,13 @@ gxsm_load(const gchar *filename,
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
 
+    if ((attr = cdffile_get_attr(var->attrs, var->nattrs, "long_name"))
+        && attr->type == NC_CHAR
+        && attr->nelems) {
+        gwy_container_set_string_by_name(data, "/0/data/title",
+                                         g_strndup(attr->values, attr->nelems));
+    }
+
 gxsm_load_fail:
     gwy_file_abandon_contents(cdffile.buffer, cdffile.size, NULL);
     cdffile_free(&cdffile);
@@ -325,9 +333,9 @@ read_real_size(const NetCDF *cdffile,
 
     p = (const guchar*)(cdffile->buffer + var->begin);
     if (var->type == NC_DOUBLE)
-        *real = get_DOUBLE_BE(&p);
+        *real = gwy_get_gdouble_be(&p);
     else if (var->type == NC_FLOAT)
-        *real = get_FLOAT_BE(&p);
+        *real = gwy_get_gfloat_be(&p);
     else
         g_warning("Size is not a floating point number");
 
@@ -378,12 +386,12 @@ read_data_field(const guchar *buffer,
 
         case NC_FLOAT:
         for (i = 0; i < xres*yres; i++)
-            data[i] = get_FLOAT_BE(&buffer);
+            data[i] = gwy_get_gfloat_be(&buffer);
         break;
 
         case NC_DOUBLE:
         for (i = 0; i < xres*yres; i++)
-            data[i] = get_DOUBLE_BE(&buffer);
+            data[i] = gwy_get_gdouble_be(&buffer);
         break;
 
         default:
@@ -432,7 +440,7 @@ cdffile_load(NetCDF *cdffile,
     p += MAGIC_SIZE;
 
     /* N Records */
-    cdffile->nrecs = get_DWORD_BE(&p);
+    cdffile->nrecs = gwy_get_guint32_be(&p);
     gwy_debug("nrecs %d", cdffile->nrecs);
 
     /* Dimensions */
@@ -555,13 +563,13 @@ cdffile_read_dim_array(NetCDFDim **pdims,
     if (!cdffile_check_size(error, "dim_array", buf, size, *p, 8))
         return FALSE;
 
-    n = get_DWORD_BE(p);
+    n = gwy_get_guint32_be(p);
     gwy_debug("dims (%d)", n);
     if (n != 0 && n != NC_DIMENSION) {
         err_CDF_EXPECTED(error, "NC_DIMENSION");
         return FALSE;
     }
-    ndims = get_DWORD_BE(p);
+    ndims = gwy_get_guint32_be(p);
     if (ndims && !n) {
         err_CDF_ZELEMENTS(error, "dim_array");
         return FALSE;
@@ -577,13 +585,13 @@ cdffile_read_dim_array(NetCDFDim **pdims,
     for (i = 0; i < ndims; i++) {
         if (!cdffile_check_size(error, "dim_array", buf, size, *p, 4))
             return FALSE;
-        n = get_DWORD_BE(p);
+        n = gwy_get_guint32_be(p);
         ALIGN4(n);
         if (!cdffile_check_size(error, "dim_array", buf, size, *p, n + 4))
             return FALSE;
         dims[i].name = g_strndup((const gchar*)*p, n);
         *p += n;
-        dims[i].length = get_DWORD_BE(p);
+        dims[i].length = gwy_get_guint32_be(p);
         gwy_debug("dim_array[%d]: <%s> %d%s",
                   i, dims[i].name, dims[i].length,
                   dims[i].length ? "" : "(record)");
@@ -620,13 +628,13 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
     if (!cdffile_check_size(error, "attr_array", buf, size, *p, 8))
         return FALSE;
 
-    n = get_DWORD_BE(p);
+    n = gwy_get_guint32_be(p);
     gwy_debug("attrs (%d)", n);
     if (n != 0 && n != NC_ATTRIBUTE) {
         err_CDF_EXPECTED(error, "NC_ATTRIBUTE");
         return FALSE;
     }
-    nattrs = get_DWORD_BE(p);
+    nattrs = gwy_get_guint32_be(p);
     if (nattrs && !n) {
         err_CDF_ZELEMENTS(error, "attr_array");
         return FALSE;
@@ -642,14 +650,14 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
     for (i = 0; i < nattrs; i++) {
         if (!cdffile_check_size(error, "attr_array", buf, size, *p, 4))
             return FALSE;
-        n = get_DWORD_BE(p);
+        n = gwy_get_guint32_be(p);
         n += (4 - n % 4) % 4;
         if (!cdffile_check_size(error, "attr_array", buf, size, *p, n + 8))
             return FALSE;
         attrs[i].name = g_strndup((const gchar*)*p, n);
         *p += n;
-        attrs[i].type = get_DWORD_BE(p);
-        attrs[i].nelems = get_DWORD_BE(p);
+        attrs[i].type = gwy_get_guint32_be(p);
+        attrs[i].nelems = gwy_get_guint32_be(p);
         gwy_debug("attr_array[%d]: <%s> %d of %d",
                   i, attrs[i].name, attrs[i].nelems, attrs[i].type);
         ts = cdffile_type_size(attrs[i].type);
@@ -683,13 +691,13 @@ cdffile_read_var_array(NetCDFVar **pvars,
     if (!cdffile_check_size(error, "var_array", buf, size, *p, 8))
         return FALSE;
 
-    n = get_DWORD_BE(p);
+    n = gwy_get_guint32_be(p);
     gwy_debug("vars (%d)", n);
     if (n != 0 && n != NC_VARIABLE) {
         err_CDF_EXPECTED(error, "NC_VARIABLE");
         return FALSE;
     }
-    nvars = get_DWORD_BE(p);
+    nvars = gwy_get_guint32_be(p);
     if (nvars && !n) {
         err_CDF_ZELEMENTS(error, "var_array");
         return FALSE;
@@ -719,20 +727,20 @@ cdffile_read_var_array(NetCDFVar **pvars,
     for (i = 0; i < nvars; i++) {
         if (!cdffile_check_size(error, "var_array", buf, size, *p, 4))
             return FALSE;
-        n = get_DWORD_BE(p);
+        n = gwy_get_guint32_be(p);
         ALIGN4(n);
         if (!cdffile_check_size(error, "var_array", buf, size, *p, n + 4))
             return FALSE;
         vars[i].name = g_strndup((const gchar*)*p, n);
         *p += n;
-        vars[i].ndims = get_DWORD_BE(p);
+        vars[i].ndims = gwy_get_guint32_be(p);
         gwy_debug("var_array[%d]: <%s> %d", i, vars[i].name, vars[i].ndims);
         if (!cdffile_check_size(error, "var_array", buf, size, *p,
                                 4*vars[i].ndims))
             return FALSE;
         vars[i].dimids = g_new(gint, vars[i].ndims);
         for (n = 0; n < vars[i].ndims; n++) {
-            vars[i].dimids[n] = get_DWORD_BE(p);
+            vars[i].dimids[n] = gwy_get_guint32_be(p);
             gwy_debug("var_array[%d][%d]: %d", i, n, vars[i].dimids[n]);
         }
         if (!cdffile_read_attr_array(&vars[i].attrs, &vars[i].nattrs,
@@ -741,20 +749,20 @@ cdffile_read_var_array(NetCDFVar **pvars,
         if (!cdffile_check_size(error, "var_array", buf, size, *p,
                                 8 + offset_size))
             return FALSE;
-        vars[i].type = get_DWORD_BE(p);
+        vars[i].type = gwy_get_guint32_be(p);
         ts = cdffile_type_size(vars[i].type);
         if (!ts) {
             err_CDF_DATA_TYPE(error, vars[i].type);
             return FALSE;
         }
-        vars[i].vsize = get_DWORD_BE(p);
+        vars[i].vsize = gwy_get_guint32_be(p);
         switch (version) {
             case NETCDF_CLASSIC:
-            vars[i].begin = get_DWORD_BE(p);
+            vars[i].begin = gwy_get_guint32_be(p);
             break;
 
             case NETCDF_64BIT:
-            vars[i].begin = get_QWORD_BE(p);
+            vars[i].begin = gwy_get_guint64_be(p);
             break;
         }
     }
