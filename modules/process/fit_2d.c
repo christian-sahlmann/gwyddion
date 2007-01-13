@@ -927,13 +927,15 @@ results_window_response_cb(GtkWidget *window,
                            gint response,
                            GString *report)
 {
-    gtk_widget_destroy(window);
     if (response == RESPONSE_SAVE) {
         g_return_if_fail(report);
         gwy_save_auxiliary_data(_("Save Fit Report"), GTK_WINDOW(window),
                                 -1, report->str);
     }
-    g_string_free(report, TRUE);
+    else {
+        gtk_widget_destroy(window);
+        g_string_free(report, TRUE);
+    }
 }
 
 static gchar*
