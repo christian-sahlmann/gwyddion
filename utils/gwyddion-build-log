@@ -135,9 +135,11 @@ extract_translation_stats
 printerr build_documentation
 extract_build_documentation
 extract_documentation_stats
-printerr check_coding_style
 coding_style_report
 printerr install_to_tmp grep -vFf build_project.err
+printerr check_headers
+printerr check_symbols
+printerr check_coding_style
 printerr make_dists grep -vFf build_project.err
 printerr gnains_index
 

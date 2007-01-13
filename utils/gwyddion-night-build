@@ -90,12 +90,16 @@ function build_documentation() {
 
 
 function check_coding_style() {
-  # Note this need build_documentation() to pass
   # Source coding style
   grep -r --include '*.[ch]' -L ' This is a GENERATED file ' . \
     | grep -Ev '^\./gwyddion-|/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
+}
+
+
+function check_symbols() {
+  # Note this need build_documentation() to pass
 
   # Libraries
   find . -path \*.libs/libgwy\*.so | grep -v '[0-9]\.[0-9]' | while read lib; do
@@ -128,6 +132,27 @@ function check_coding_style() {
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/Evil symbol ('$m'): \1/;t;d' \
       | grep -Ev ' _(fini|init|gwy_module_query)$' 1>&2
   done
+}
+
+
+function check_headers() {
+  # Check whether headers included everything they depend on
+  exceptions=_check_header.exceptions
+  cat >$exceptions <<EOF
+EOF
+  incl=$installprefix/include/$pkgname
+  for f in $(find $incl -type f -name '*.h' | sed "s#$incl/##"); do
+    if grep -F $f $exceptions; then
+      continue
+    fi
+    tmp=_check_header_$(sed 's#[^-a-zA-Z0-9]#_#g' <<<$f)
+    echo "#include <$f>" >$tmp.c
+    if ! gcc $(pkg-config --cflags $pkgname) -c -o $tmp.o $tmp.c; then
+      echo 1>&2
+    fi
+    rm -f $tmp.c $tmp.o
+  done
+  rm -f $exceptions
 }
 
 
@@ -192,8 +217,10 @@ else
   call autostuff
   call build_project
   call build_documentation
-  call check_coding_style
   call install_to_tmp
+  call check_headers
+  call check_symbols
+  call check_coding_style
   call make_dists
   call gnains_index
   # LIST-END
