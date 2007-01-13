@@ -26,6 +26,7 @@
 #include <gtk/gtklayout.h>
 #include <libgwydgets/gwygraphselections.h>
 #include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphlabel.h>
 
 G_BEGIN_DECLS
 

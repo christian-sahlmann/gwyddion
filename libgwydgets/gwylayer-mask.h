@@ -21,6 +21,7 @@
 #ifndef __GWY_LAYER_MASK_H__
 #define __GWY_LAYER_MASK_H__
 
+#include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwypixmaplayer.h>
 
 G_BEGIN_DECLS

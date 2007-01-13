@@ -22,6 +22,8 @@
 #define __GWY_PLAIN_TOOL_H__
 
 #include <app/gwytool.h>
+#include <libgwyddion/gwysiunit.h>
+#include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
 

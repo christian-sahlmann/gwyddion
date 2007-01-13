@@ -21,6 +21,8 @@
 #ifndef __GWY_STOCK_H__
 #define __GWY_STOCK_H__
 
+#include <glib/gmacros.h>
+
 G_BEGIN_DECLS
 
 /* The following generated part is updated by running utils/stockgen.py */

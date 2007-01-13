@@ -22,6 +22,7 @@
 #define __GWY_APP_FILE_LIST_H__
 
 #include <gtk/gtkwidget.h>
+#include <libgwyddion/gwycontainer.h>
 
 G_BEGIN_DECLS
 

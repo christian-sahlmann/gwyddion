@@ -21,6 +21,8 @@
 #ifndef __GWY_APP_GRADIENT_EDITOR_H__
 #define __GWY_APP_GRADIENT_EDITOR_H__
 
+#include <glib/gmacros.h>
+
 G_BEGIN_DECLS
 
 void gwy_app_gradient_editor(void);

@@ -24,6 +24,8 @@
 #ifndef __GWY_MD5_H__
 #define __GWY_MD5_H__
 
+#include <glib/gtypes.h>
+
 G_BEGIN_DECLS
 
 /* For information look into the C source or the html documentation */

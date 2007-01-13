@@ -21,7 +21,7 @@
 #ifndef __GWY_RADIO_BUTTONS_H__
 #define __GWY_RADIO_BUTTONS_H__
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtktable.h>
 #include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS
