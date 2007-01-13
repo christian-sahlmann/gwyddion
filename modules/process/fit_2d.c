@@ -593,13 +593,12 @@ fit_2d_run(Fit2DControls *controls,
     memcpy(param, args->par_init, nparams*sizeof(gdouble));
 
     if (param[0] <= 0) {
-        dialog = gtk_message_dialog_new
-            (gwy_app_find_window_for_channel(controls->data,
-                                             controls->original_id),
-             GTK_DIALOG_DESTROY_WITH_PARENT,
-             GTK_MESSAGE_ERROR,
-             GTK_BUTTONS_OK,
-             _("%s: Radius cannot be null or negative."), "Fit");
+        dialog = gtk_message_dialog_new(GTK_WINDOW(controls->dialog),
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_OK,
+                                        _("%s: Radius cannot be "
+                                          "null or negative."), "Fit");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return;
@@ -659,6 +658,13 @@ fit_2d_do(Fit2DControls *controls)
 
     newid = gwy_app_data_browser_add_data_field(controls->fit_field,
                                                 controls->data, TRUE);
+    gwy_app_sync_data_items(controls->data, controls->data,
+                            controls->original_id, newid, FALSE,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            GWY_DATA_ITEM_SELECTIONS,
+                            0);
     gwy_app_set_data_field_title(controls->data, newid, _("Fitted sphere"));
 }
 
