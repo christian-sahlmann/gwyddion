@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -206,12 +206,16 @@ calibrate(GwyContainer *data, GwyRunType run)
         dfields[1] = gwy_data_field_duplicate(dfields[1]);
         gwy_data_field_set_xreal(dfields[1], args.xreal);
         gwy_data_field_set_yreal(dfields[1], args.yreal);
+        gwy_data_field_set_xoffset(dfields[1], args.x0);
+        gwy_data_field_set_xoffset(dfields[1], args.y0);
     }
 
     if (dfields[2]) {
         dfields[2] = gwy_data_field_duplicate(dfields[2]);
-        gwy_data_field_set_xreal(dfields[1], args.xreal);
-        gwy_data_field_set_yreal(dfields[1], args.yreal);
+        gwy_data_field_set_xreal(dfields[2], args.xreal);
+        gwy_data_field_set_yreal(dfields[2], args.yreal);
+        gwy_data_field_set_xoffset(dfields[2], args.x0);
+        gwy_data_field_set_xoffset(dfields[2], args.y0);
     }
 
     newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
