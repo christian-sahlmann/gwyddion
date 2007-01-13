@@ -157,7 +157,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D fitting"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -225,7 +225,7 @@ fit_2d_dialog(Fit2DArgs *args,
     controls.original_id = id;
     dialog = gtk_dialog_new_with_buttons(_("Fit sphere"), NULL, 0,
                                          _("_Fit"), RESPONSE_FIT,
-                                         _("_Estimage"), RESPONSE_GUESS,
+                                         _("_Estimate"), RESPONSE_GUESS,
                                          _("_Plot Inits"), RESPONSE_INITS,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -950,43 +950,13 @@ attach_label(GtkWidget *table, const gchar *text,
 }
 
 static void
-save_report_cb(GtkWidget *button, GString *report)
-{
-    const gchar *filename;
-    gchar *filename_sys, *filename_utf8;
-    GtkWidget *dialog;
-    FILE *fh;
-
-    dialog = gtk_widget_get_toplevel(button);
-    filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
-    filename_sys = g_strdup(filename);
-    gtk_widget_destroy(dialog);
-
-    fh = g_fopen(filename_sys, "a");
-    if (fh) {
-        fputs(report->str, fh);
-        fclose(fh);
-        return;
-    }
-
-    filename_utf8 = g_filename_to_utf8(filename_sys, -1, 0, 0, NULL);
-    dialog = gtk_message_dialog_new(NULL,
-                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_ERROR,
-                                    GTK_BUTTONS_OK,
-                                    _("Cannot save report to %s.\n%s\n"),
-                                    filename_utf8,
-                                    g_strerror(errno));
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-}
-
-static void
 results_window_response_cb(GtkWidget *window,
                            gint response,
                            GString *report)
 {
     GtkWidget *dialog;
+    gchar *filename_sys;
+    FILE *fh;
 
     if (response == GTK_RESPONSE_CLOSE
         || response == GTK_RESPONSE_DELETE_EVENT
@@ -997,17 +967,52 @@ results_window_response_cb(GtkWidget *window,
         return;
     }
 
-    g_assert(report);
-    dialog = gtk_file_selection_new(_("Save Fit Report"));
+    g_return_if_fail(report);
+    dialog = gtk_file_chooser_dialog_new(_("Save Fit Report"),
+                                         GTK_WINDOW(window),
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    gtk_widget_destroy(dialog);
 
-    g_signal_connect(GTK_FILE_SELECTION(dialog)->ok_button, "clicked",
-                     G_CALLBACK(save_report_cb), report);
-    g_signal_connect_swapped(GTK_FILE_SELECTION(dialog)->cancel_button,
-                             "clicked",
-                             G_CALLBACK(gtk_widget_destroy), dialog);
-    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
-    gtk_widget_show_all(dialog);
+    if (!filename_sys || response != GTK_RESPONSE_OK) {
+        g_free(filename_sys);
+        return;
+    }
+
+    fh = g_fopen(filename_sys, "w");
+    if (!fh) {
+        gint myerrno;
+        gchar *filename_utf8;
+
+        myerrno = errno;
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+        dialog = gtk_message_dialog_new(GTK_WINDOW(window), 0,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_OK,
+                                        _("Saving of `%s' failed"),
+                                        filename_utf8);
+        g_free(filename_sys);
+        g_free(filename_utf8);
+        gtk_message_dialog_format_secondary_text
+                                       (GTK_MESSAGE_DIALOG(dialog),
+                                        _("Cannot open file for writing: %s."),
+                                        g_strerror(myerrno));
+        gtk_widget_show_all(dialog);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
+    g_free(filename_sys);
+    fputs(report->str, fh);
+    fclose(fh);
 }
 
 static gchar*
