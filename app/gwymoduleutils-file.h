@@ -171,36 +171,40 @@ static inline gfloat
 gwy_get_gfloat_le(const guchar **ppv)
 {
     const guint32 *pv = *(const guint32**)ppv;
-    guint32 v = GUINT32_FROM_LE(*pv);
+    union { guint32 i; gfloat f; } v;
+    v.i = GUINT32_FROM_LE(*pv);
     *ppv += sizeof(guint32);
-    return *(gfloat*)&v;
+    return v.f;
 }
 
 static inline gfloat
 gwy_get_gfloat_be(const guchar **ppv)
 {
     const guint32 *pv = *(const guint32**)ppv;
-    guint32 v = GUINT32_FROM_BE(*pv);
+    union { guint32 i; gfloat f; } v;
+    v.i = GUINT32_FROM_BE(*pv);
     *ppv += sizeof(guint32);
-    return *(gfloat*)&v;
+    return v.f;
 }
 
 static inline gdouble
 gwy_get_gdouble_le(const guchar **ppv)
 {
     const guint64 *pv = *(const guint64**)ppv;
-    guint64 v = GUINT64_FROM_LE(*pv);
+    union { guint64 i; gdouble f; } v;
+    v.i = GUINT64_FROM_LE(*pv);
     *ppv += sizeof(guint64);
-    return *(gdouble*)&v;
+    return v.f;
 }
 
 static inline gdouble
 gwy_get_gdouble_be(const guchar **ppv)
 {
     const guint64 *pv = *(const guint64**)ppv;
-    guint64 v = GUINT64_FROM_BE(*pv);
+    union { guint64 i; gdouble f; } v;
+    v.i = GUINT64_FROM_BE(*pv);
     *ppv += sizeof(guint64);
-    return *(gdouble*)&v;
+    return v.f;
 }
 
 static inline gdouble
