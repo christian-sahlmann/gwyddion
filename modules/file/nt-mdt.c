@@ -155,6 +155,29 @@ typedef enum {
     MDT_SPM_MODE_SNOM                         = 25
 } MDTSPMMode;
 
+typedef enum {
+    MDT_ADC_MODE_OFF       = -1,
+    MDT_ADC_MODE_HEIGHT    = 0,
+    MDT_ADC_MODE_DFL       = 1,
+    MDT_ADC_MODE_LATERAL_F = 2,
+    MDT_ADC_MODE_BIAS_V    = 3,
+    MDT_ADC_MODE_CURRENT   = 4,
+    MDT_ADC_MODE_FB_OUT    = 5,
+    MDT_ADC_MODE_MAG       = 6,
+    MDT_ADC_MODE_MAG_SIN   = 7,
+    MDT_ADC_MODE_MAG_COS   = 8,
+    MDT_ADC_MODE_RMS       = 9,
+    MDT_ADC_MODE_CALCMAG   = 10,
+    MDT_ADC_MODE_PHASE1    = 11,
+    MDT_ADC_MODE_PHASE2    = 12,
+    MDT_ADC_MODE_CALCPHASE = 13,
+    MDT_ADC_MODE_EX1       = 14,
+    MDT_ADC_MODE_EX2       = 15,
+    MDT_ADC_MODE_HVX       = 16,
+    MDT_ADC_MODE_HVY       = 17,
+    MDT_ADC_MODE_SNAP_BACK = 18
+} MDTADCMode;
+
 enum {
     FILE_HEADER_SIZE      = 32,
     FRAME_HEADER_SIZE     = 22,
@@ -174,7 +197,7 @@ typedef struct {
     MDTAxisScale x_scale;
     MDTAxisScale y_scale;
     MDTAxisScale z_scale;
-    gint channel_index;    /* s_mode */
+    MDTADCMode channel_index;    /* s_mode */
     MDTMode mode;    /* s_dev */
     gint xres;    /* s_nx */
     gint yres;    /* s_ny */
@@ -363,6 +386,29 @@ static const GwyEnum mdt_spm_modes[] = {
     { "SNOM",                         MDT_SPM_MODE_SNOM,                     },
 };
 
+static const GwyEnum mdt_adc_modes[] = {
+    { "Off",       MDT_ADC_MODE_OFF,       },
+    { "Height",    MDT_ADC_MODE_HEIGHT,    },
+    { "DFL",       MDT_ADC_MODE_DFL,       },
+    { "Lateral F", MDT_ADC_MODE_LATERAL_F, },
+    { "Bias V",    MDT_ADC_MODE_BIAS_V,    },
+    { "Current",   MDT_ADC_MODE_CURRENT,   },
+    { "FB-Out",    MDT_ADC_MODE_FB_OUT,    },
+    { "MAG",       MDT_ADC_MODE_MAG,       },
+    { "MAG*Sin",   MDT_ADC_MODE_MAG_SIN,   },
+    { "MAG*Cos",   MDT_ADC_MODE_MAG_COS,   },
+    { "RMS",       MDT_ADC_MODE_RMS,       },
+    { "CalcMag",   MDT_ADC_MODE_CALCMAG,   },
+    { "Phase1",    MDT_ADC_MODE_PHASE1,    },
+    { "Phase2",    MDT_ADC_MODE_PHASE2,    },
+    { "CalcPhase", MDT_ADC_MODE_CALCPHASE, },
+    { "Ex1",       MDT_ADC_MODE_EX1,       },
+    { "Ex2",       MDT_ADC_MODE_EX2,       },
+    { "HvX",       MDT_ADC_MODE_HVX,       },
+    { "HvY",       MDT_ADC_MODE_HVY,       },
+    { "Snap Back", MDT_ADC_MODE_SNAP_BACK, },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -482,6 +528,7 @@ mdt_get_metadata(MDTFile *mdtfile,
     GwyContainer *meta;
     MDTFrame *frame;
     MDTScannedDataFrame *sdframe;
+    const gchar *v;
     GString *s;
 
     meta = gwy_container_new();
@@ -501,14 +548,14 @@ mdt_get_metadata(MDTFile *mdtfile,
                     frame->version/0x100, frame->version % 0x100);
     gwy_container_set_string_by_name(meta, "Version", g_strdup(s->str));
 
-    g_string_printf(s, "%c%c%c%s",
-                    (sdframe->scan_dir & 0x02) ? '-' : '+',
-                    (sdframe->scan_dir & 0x01) ? 'X' : 'Y',
-                    (sdframe->scan_dir & 0x04) ? '-' : '+',
+    g_string_printf(s, "%s, %s %s %s",
+                    (sdframe->scan_dir & 0x01) ? "Horizontal" : "Vertical",
+                    (sdframe->scan_dir & 0x02) ? "Left" : "Right",
+                    (sdframe->scan_dir & 0x04) ? "Bottom" : "Top",
                     (sdframe->scan_dir & 0x80) ? " (double pass)" : "");
     gwy_container_set_string_by_name(meta, "Scan direction", g_strdup(s->str));
 
-    HASH_SET_META("%d", sdframe->channel_index, "Channel index");
+    HASH_SET_META("%d", sdframe->adc_index + 1, "ADC index");
     HASH_SET_META("%d", sdframe->mode, "Mode");
     HASH_SET_META("%d", sdframe->ndacq, "Step (DAC)");
     HASH_SET_META("%.2f nm", sdframe->step_length/Nano, "Step length");
@@ -517,6 +564,11 @@ mdt_get_metadata(MDTFile *mdtfile,
     HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
 
     g_string_free(s, TRUE);
+
+    v = gwy_enum_to_string(sdframe->channel_index,
+                           mdt_adc_modes, G_N_ELEMENTS(mdt_adc_modes));
+    if (v)
+        gwy_container_set_string_by_name(meta, "ADC Mode", g_strdup(v));
 
     return meta;
 }
