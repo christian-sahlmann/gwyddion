@@ -137,6 +137,7 @@ gwy_save_auxiliary_with_callback(const gchar *title,
     if (fh) {
         /* Everything went all right. */
         fclose(fh);
+        gwy_app_set_current_directory(filename_sys);
         g_free(filename_sys);
         return TRUE;
     }
