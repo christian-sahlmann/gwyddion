@@ -1,4 +1,4 @@
-2.2.20070111
+2.2.20070113
 
 2.3 (2000-00-00)
 Application:
@@ -30,6 +30,8 @@ Libraries:
   in gwy_data_field_area_dh() was fixed.
 - libgwyapp: Document history view can be filtered by name.
 - libgwyapp: A set of utility functions for file modules was added.
+- libgwyapp: A set of utility functions for saving reports and other auxiliary
+  data was added.
 - libgwyapp: Convenience functions to set `waiting' cursor on windows were
   added.
 
@@ -39,9 +41,13 @@ Modules:
   derivatives, not just propertional to them.
 - Pixmap: Crash with fixed gdk-pixbuf which properly closes pixbuf loaders
   on failure was fixed.
+- Calibrate: Crash when presentation is present on data was fixed.
 - Facet analysis: Phi calculation was unified with other modules, the size of
   neighbourhood used to calculate local inclinations can be controlled.
 - Mark scars: Instant updates option is available.
+- Fit Sphere: Swapped x and y was fixed, radii smaller than data size work,
+  data offsets are honoured, palette and other attribudes are copied to the
+  result
 - JEOL: Support for more data subtypes was added.
 - Rawfile: Skipping fields works when delimiter is `any whitespace'.
 - Mark scars, Mark grains by threshold, Mark grains by watershed, Remove
@@ -51,6 +57,9 @@ Modules:
 - Grain distributions: Grain volumes were added.
 - NT-MDT: Frame title is used for channel title (if present), some more
   metadata was added.
+- NetCDF: Attribute long_name is used for channel title of GXSM files.
+- Fit Sphere, Graph Fit, Graph CD: Use the new Gtk+ file chooser dialogs
+  instead of GtkFileSelection.
 
 
 2.2 (2006-12-15)
