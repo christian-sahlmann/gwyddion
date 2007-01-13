@@ -77,24 +77,24 @@ struct STMPRG_CONTROL
    float spec_lstart; /* V 3.0: for all spectroscopy modes! */
    float spec_lend;
    float spec_linc;
-   long spec_lsteps;
+   guint32 spec_lsteps;
    float spec_rstart;
    float spec_rend;
    float spec_rinc;
-   long spec_rsteps;
+   guint32 spec_rsteps;
    float version; /* height offstes used in version 3.0 */
    float free_lend;
    float free_linc;
-   long free_lsteps;
+   guint32 free_lsteps;
    float free_rstart;
    float free_rend;
    float free_rinc;
-   long free_rsteps;
-   long timer1; /* timers */
-   long timer2;
-   long timer3;
-   long timer4;
-   long m_time; /* time of measurement */
+   guint32 free_rsteps;
+   guint32 timer1; /* timers */
+   guint32 timer2;
+   guint32 timer3;
+   guint32 timer4;
+   guint32 m_time; /* time of measurement */
    float u_divider; /* divider for gap voltage */
    gint32 fb_control;
    gint32 fb_delay;

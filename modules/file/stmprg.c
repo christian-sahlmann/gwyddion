@@ -36,16 +36,15 @@
  */
 
 #include "config.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include "get.h"
 #include "err.h"
@@ -117,7 +116,7 @@ read_parameters(gchar *buffer, guint size)
 {
     gchar *ptr = buffer + 4;    /* 4 for MPAR */
 
-    gwy_debug("tp file size = %i, should be %i\n", size, L_SIZE);
+    gwy_debug("tp file size = %i, should be %i\n", size, (guint)L_SIZE);
     if (size < L_SIZE)
         return FALSE;
 
@@ -211,7 +210,7 @@ FLOAT_FROM_BE(float f)
 {
     const guchar *p = (const guchar*)&f;
 
-    return get_FLOAT_BE(&p);
+    return gwy_get_gfloat_be(&p);
 }
 
 static void
@@ -295,7 +294,7 @@ byteswap_and_dump_parameters()
     gwy_debug("spec_lend=%f\n", control.spec_lend);
     control.spec_linc = FLOAT_FROM_BE(control.spec_linc);
     gwy_debug("spec_linc=%f\n", control.spec_linc);
-    control.spec_lsteps = GLONG_FROM_BE(control.spec_lsteps);
+    control.spec_lsteps = GUINT32_FROM_BE(control.spec_lsteps);
     gwy_debug("spec_lsteps=%li\n", control.spec_lsteps);
     control.spec_rstart = FLOAT_FROM_BE(control.spec_rstart);
     gwy_debug("spec_rstart=%f\n", control.spec_rstart);
@@ -303,7 +302,7 @@ byteswap_and_dump_parameters()
     gwy_debug("spec_rend=%f\n", control.spec_rend);
     control.spec_rinc = FLOAT_FROM_BE(control.spec_rinc);
     gwy_debug("spec_rinc=%f\n", control.spec_rinc);
-    control.spec_rsteps = GLONG_FROM_BE(control.spec_rsteps);
+    control.spec_rsteps = GUINT32_FROM_BE(control.spec_rsteps);
     gwy_debug("spec_rsteps=%li\n", control.spec_rsteps);
     control.version = FLOAT_FROM_BE(control.version);
     gwy_debug("version=%f\n", control.version);
@@ -311,7 +310,7 @@ byteswap_and_dump_parameters()
     gwy_debug("free_lend=%f\n", control.free_lend);
     control.free_linc = FLOAT_FROM_BE(control.free_linc);
     gwy_debug("free_linc=%f\n", control.free_linc);
-    control.free_lsteps = GLONG_FROM_BE(control.free_lsteps);
+    control.free_lsteps = GUINT32_FROM_BE(control.free_lsteps);
     gwy_debug("free_lsteps=%li\n", control.free_lsteps);
     control.free_rstart = FLOAT_FROM_BE(control.free_rstart);
     gwy_debug("free_rstart=%f\n", control.free_rstart);
@@ -319,17 +318,17 @@ byteswap_and_dump_parameters()
     gwy_debug("free_rend=%f\n", control.free_rend);
     control.free_rinc = FLOAT_FROM_BE(control.free_rinc);
     gwy_debug("free_rinc=%f\n", control.free_rinc);
-    control.free_rsteps = GLONG_FROM_BE(control.free_rsteps);
+    control.free_rsteps = GUINT32_FROM_BE(control.free_rsteps);
     gwy_debug("free_rsteps=%li\n", control.free_rsteps);
-    control.timer1 = GLONG_FROM_BE(control.timer1);
+    control.timer1 = GUINT32_FROM_BE(control.timer1);
     gwy_debug("timer1=%li\n", control.timer1);
-    control.timer2 = GLONG_FROM_BE(control.timer2);
+    control.timer2 = GUINT32_FROM_BE(control.timer2);
     gwy_debug("timer2=%li\n", control.timer2);
-    control.timer3 = GLONG_FROM_BE(control.timer3);
+    control.timer3 = GUINT32_FROM_BE(control.timer3);
     gwy_debug("timer3=%li\n", control.timer3);
-    control.timer4 = GLONG_FROM_BE(control.timer4);
+    control.timer4 = GUINT32_FROM_BE(control.timer4);
     gwy_debug("timer4=%li\n", control.timer4);
-    control.m_time = GLONG_FROM_BE(control.m_time);
+    control.m_time = GUINT32_FROM_BE(control.m_time);
     gwy_debug("m_time=%li\n", control.m_time);
     control.u_divider = FLOAT_FROM_BE(control.u_divider);
     gwy_debug("u_divider=%f\n", control.u_divider);
