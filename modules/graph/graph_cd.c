@@ -19,10 +19,8 @@
  */
 
 #include "config.h"
-#include <errno.h>
 #include <stdlib.h>
 #include <math.h>
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -33,8 +31,10 @@
 #include <libgwydgets/gwyinventorystore.h>
 #include <libprocess/cdline.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 
-#define MAX_PARAMS 5
+enum { MAX_PARAMS = 5 };
+enum { RESPONSE_SAVE = 1 };
 
 typedef struct {
     gint function_type;
@@ -66,8 +66,6 @@ typedef struct {
     GtkWidget *criterium;
     GtkWidget *image;
 } FitControls;
-
-
 
 static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
@@ -105,13 +103,12 @@ static GString*    create_fit_report         (FitArgs *args);
 static void        destroy                   (FitArgs *args,
                                               FitControls *controls);
 
-
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Critical dimension measurements"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -754,65 +751,19 @@ attach_label(GtkWidget *table, const gchar *text,
 }
 
 static void
-save_report_cb(GtkWidget *button, GString *report)
-{
-    const gchar *filename;
-    gchar *filename_sys, *filename_utf8;
-    GtkWidget *dialog;
-    FILE *fh;
-
-    dialog = gtk_widget_get_toplevel(button);
-    filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
-    filename_sys = g_strdup(filename);
-    gtk_widget_destroy(dialog);
-
-    fh = g_fopen(filename_sys, "a");
-    if (fh) {
-        fputs(report->str, fh);
-        fclose(fh);
-        return;
-    }
-
-    filename_utf8 = g_filename_to_utf8(filename_sys, -1, 0, 0, NULL);
-    dialog = gtk_message_dialog_new(NULL, 0,
-                                    GTK_MESSAGE_ERROR,
-                                    GTK_BUTTONS_OK,
-                                    N_("Cannot save report to %s.\n%s\n"),
-                                    filename_utf8,
-                                    g_strerror(errno));
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-}
-
-static void
 results_window_response_cb(GtkWidget *window,
                            gint response,
                            GString *report)
 {
-    GtkWidget *dialog;
-
-    if (response == GTK_RESPONSE_CLOSE
-        || response == GTK_RESPONSE_DELETE_EVENT
-        || response == GTK_RESPONSE_NONE) {
-        if (report)
-            g_string_free(report, TRUE);
-        gtk_widget_destroy(window);
-        return;
+    if (response == RESPONSE_SAVE) {
+        g_return_if_fail(report);
+        gwy_save_auxiliary_data(_("Save Fit Report"), GTK_WINDOW(window),
+                                -1, report->str);
     }
-
-    g_assert(report);
-    dialog = gtk_file_selection_new(_("Save Fit Report"));
-    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog),
-                                    gwy_app_get_current_directory());
-
-    g_signal_connect(GTK_FILE_SELECTION(dialog)->ok_button, "clicked",
-                     G_CALLBACK(save_report_cb), report);
-    g_signal_connect_swapped(GTK_FILE_SELECTION(dialog)->cancel_button,
-                             "clicked",
-                             G_CALLBACK(gtk_widget_destroy), dialog);
-    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
-    gtk_widget_show_all(dialog);
+    else {
+        gtk_widget_destroy(window);
+        g_string_free(report, TRUE);
+    }
 }
 
 static gchar*
@@ -855,7 +806,6 @@ count_really_fitted_points(FitArgs *args)
 static void
 create_results_window(FitArgs *args)
 {
-    enum { RESPONSE_SAVE = 1 };
     GtkWidget *window, *tab, *table, *label;
     GwyGraphCurveModel *gcmodel;
     gdouble mag, value, sigma;
