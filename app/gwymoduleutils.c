@@ -43,6 +43,27 @@ gwy_save_auxiliary_data_create(gpointer user_data,
     return (gchar*)savedata->data;
 }
 
+/**
+ * gwy_save_auxiliary_data:
+ * @title: File chooser dialog title.
+ * @parent: Parent window for the file chooser dialog (may be %NULL).
+ * @data_len: The length of @data in bytes.  Pass -1 if @data is text, it must
+ *            be nul-terminated then and it will be saved in text mode (this
+ *            matters if the operating system distinguishes between text and
+ *            binary).  A non-negative value causes the data to be saved as
+ *            binary.
+ * @data: The data to save.
+ *
+ * Saves a report or other auxiliary data to a user specified file.
+ *
+ * This is actually a simple gwy_save_auxiliary_with_callback() wrapper, see
+ * its description for details.
+ *
+ * Returns: %TRUE if the data was save, %FALSE if it was not saved for any
+ *          reason.
+ *
+ * Since: 2.3
+ **/
 gboolean
 gwy_save_auxiliary_data(const gchar *title,
                         GtkWindow *parent,
@@ -61,6 +82,23 @@ gwy_save_auxiliary_data(const gchar *title,
                                             &savedata);
 }
 
+/**
+ * gwy_save_auxiliary_with_callback:
+ * @title: File chooser dialog title.
+ * @parent: Parent window for the file chooser dialog (may be %NULL).
+ * @create: Function to create the data (it will not be called if the user
+ *          cancels the saving).
+ * @destroy: Function to destroy the data (if will be called iff @create will
+ *           be called), it may be %NULL.
+ * @user_data: User data passed to @create and @destroy.
+ *
+ * Saves a report or other auxiliary data to a user specified file.
+ *
+ * Returns: %TRUE if the data was save, %FALSE if it was not saved for any
+ *          reason (I/O error, cancellation, overwrite cancellation, etc.).
+ *
+ * Since: 2.3
+ **/
 gboolean
 gwy_save_auxiliary_with_callback(const gchar *title,
                                  GtkWindow *parent,
@@ -80,10 +118,10 @@ gwy_save_auxiliary_with_callback(const gchar *title,
     g_return_val_if_fail(create, FALSE);
 
     chooser = gtk_file_chooser_dialog_new(title, parent,
-                                         GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                         NULL);
+                                          GTK_FILE_CHOOSER_ACTION_SAVE,
+                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                          GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(chooser), GTK_RESPONSE_OK);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(chooser),
                                         gwy_app_get_current_directory());
@@ -165,6 +203,33 @@ gwy_save_auxiliary_with_callback(const gchar *title,
  * SECTION:gwymoduleutils
  * @title: module utils
  * @short_description: Module utility functions
+ **/
+
+/**
+ * GwySaveAuxiliaryCreate:
+ * @user_data: The data passed to gwy_save_auxiliary_with_callback() as
+ *             @user_data.
+ * @data_len: The length of the returned data in bytes.  Leaving it unset has
+ *            the same effect as setting it to a negative value.  See
+ *            gwy_save_auxiliary_data() for details.
+ *
+ * The type of auxiliary saved data creation function.
+ *
+ * Returns: The data to save.  It must not return %NULL.
+ *
+ * Since: 2.3
+ **/
+
+/**
+ * GwySaveAuxiliaryDestroy:
+ * @data: The data returned by the corresponding #GwySaveAuxiliaryCreate
+ *        function.
+ * @user_data: The data passed to gwy_save_auxiliary_with_callback() as
+ *             @user_data.
+ *
+ * The type of auxiliary saved data destruction function.
+ *
+ * Since: 2.3
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
