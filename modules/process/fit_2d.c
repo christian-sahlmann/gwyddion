@@ -34,15 +34,16 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define FIT_2D_RUN_MODES GWY_RUN_INTERACTIVE
 
 #define MAX_PARAMS 4
 
-enum {
-    PREVIEW_SIZE = 400
-};
+enum { PREVIEW_SIZE = 400 };
+
+enum { RESPONSE_SAVE = 1 };
 
 typedef enum {
     GWY_FIT_2D_DISPLAY_DATA   = 0,
@@ -926,65 +927,13 @@ results_window_response_cb(GtkWidget *window,
                            gint response,
                            GString *report)
 {
-    GtkWidget *dialog;
-    gchar *filename_sys;
-    FILE *fh;
-
-    if (response == GTK_RESPONSE_CLOSE
-        || response == GTK_RESPONSE_DELETE_EVENT
-        || response == GTK_RESPONSE_NONE) {
-        if (report)
-            g_string_free(report, TRUE);
-        gtk_widget_destroy(window);
-        return;
+    gtk_widget_destroy(window);
+    if (response == RESPONSE_SAVE) {
+        g_return_if_fail(report);
+        gwy_save_auxiliary_data(_("Save Fit Report"), GTK_WINDOW(window),
+                                -1, report->str);
     }
-
-    g_return_if_fail(report);
-    dialog = gtk_file_chooser_dialog_new(_("Save Fit Report"),
-                                         GTK_WINDOW(window),
-                                         GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-                                        gwy_app_get_current_directory());
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-    gtk_widget_destroy(dialog);
-
-    if (!filename_sys || response != GTK_RESPONSE_OK) {
-        g_free(filename_sys);
-        return;
-    }
-
-    fh = g_fopen(filename_sys, "w");
-    if (!fh) {
-        gint myerrno;
-        gchar *filename_utf8;
-
-        myerrno = errno;
-        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-        dialog = gtk_message_dialog_new(GTK_WINDOW(window), 0,
-                                        GTK_MESSAGE_ERROR,
-                                        GTK_BUTTONS_OK,
-                                        _("Saving of `%s' failed"),
-                                        filename_utf8);
-        g_free(filename_sys);
-        g_free(filename_utf8);
-        gtk_message_dialog_format_secondary_text
-                                       (GTK_MESSAGE_DIALOG(dialog),
-                                        _("Cannot open file for writing: %s."),
-                                        g_strerror(myerrno));
-        gtk_widget_show_all(dialog);
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return;
-    }
-
-    g_free(filename_sys);
-    fputs(report->str, fh);
-    fclose(fh);
+    g_string_free(report, TRUE);
 }
 
 static gchar*
@@ -1004,7 +953,6 @@ format_magnitude(GString *str,
 static void
 create_results_window(Fit2DControls *controls, Fit2DArgs *args)
 {
-    enum { RESPONSE_SAVE = 1 };
     GwyNLFitter *fitter = controls->fitter;
     GtkWidget *window, *tab, *table;
     gdouble mag, value, sigma;

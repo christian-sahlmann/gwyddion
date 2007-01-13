@@ -20,10 +20,7 @@
 
 #include "config.h"
 #include <math.h>
-#include <stdio.h>
-#include <errno.h>
 #include <string.h>
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/grains.h>
@@ -32,6 +29,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 
 #define DIST_RUN_MODES GWY_RUN_INTERACTIVE
 #define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -66,6 +64,13 @@ typedef struct {
     GtkWidget *ok;
 } GrainDistControls;
 
+typedef struct {
+    GrainDistArgs *args;
+    GwyDataField *dfield;
+    gint ngrains;
+    gint *grains;
+} GrainDistExportData;
+
 static gboolean module_register                 (void);
 static void grain_dist                          (GwyContainer *data,
                                                  GwyRunType run);
@@ -86,12 +91,8 @@ static void grain_dist_run                      (GrainDistArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  GwyDataField *mfield);
-static gboolean grain_dist_export_raw           (GrainDistArgs *args,
-                                                 GwyDataField *dfield,
-                                                 gint ngrains,
-                                                 const gint *grains,
-                                                 const gchar *filename_sys,
-                                                 GtkWidget *parent);
+static gchar*   grain_dist_export_create        (gpointer user_data,
+                                                 gssize *data_len);
 static void grain_dist_load_args                (GwyContainer *container,
                                                  GrainDistArgs *args);
 static void grain_dist_save_args                (GwyContainer *container,
@@ -112,7 +113,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2006",
 };
@@ -534,11 +535,10 @@ grain_dist_run(GrainDistArgs *args,
                GwyDataField *dfield,
                GwyDataField *mfield)
 {
-    GtkWidget *dialog;
+    GrainDistExportData expdata;
     gint *grains;
     guint i, bits;
-    gint res, ngrains, response;
-    gchar *filename;
+    gint res, ngrains;
 
     grains = g_new0(gint, gwy_data_field_get_xres(mfield)
                           *gwy_data_field_get_yres(mfield));
@@ -555,32 +555,14 @@ grain_dist_run(GrainDistArgs *args,
         break;
 
         case MODE_RAW:
-        dialog = gtk_file_chooser_dialog_new(_("Export Raw Grain Values"), NULL,
-                                             GTK_FILE_CHOOSER_ACTION_SAVE,
-                                             GTK_STOCK_CANCEL,
-                                             GTK_RESPONSE_CANCEL,
-                                             GTK_STOCK_SAVE,
-                                             GTK_RESPONSE_OK,
-                                             NULL);
-        gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-        gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-                                            gwy_app_get_current_directory());
-        while (TRUE) {
-            filename = NULL;
-            response = gtk_dialog_run(GTK_DIALOG(dialog));
-            if (response != GTK_RESPONSE_OK)
-                break;
-
-            filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-            if (filename
-                && gwy_app_file_confirm_overwrite(dialog)
-                && grain_dist_export_raw(args, dfield, ngrains, grains,
-                                         filename, dialog))
-                break;
-            g_free(filename);
-        }
-        gtk_widget_destroy(dialog);
+        expdata.args = args;
+        expdata.dfield = dfield;
+        expdata.ngrains = ngrains;
+        expdata.grains = grains;
+        gwy_save_auxiliary_with_callback(_("Export Raw Grain Values"), NULL,
+                                         grain_dist_export_create,
+                                         (GwySaveAuxiliaryDestroy)g_free,
+                                         &expdata);
         break;
 
         default:
@@ -591,63 +573,44 @@ grain_dist_run(GrainDistArgs *args,
     g_free(grains);
 }
 
-static gboolean
-grain_dist_export_raw(GrainDistArgs *args,
-                      GwyDataField *dfield,
-                      gint ngrains,
-                      const gint *grains,
-                      const gchar *filename_sys,
-                      GtkWidget *parent)
+static gchar*
+grain_dist_export_create(gpointer user_data,
+                         gssize *data_len)
 {
+    const GrainDistExportData *expdata = (const GrainDistExportData*)user_data;
+    const GrainDistArgs *args;
+    GString *report;
     gdouble *values[32];
     gchar buffer[32];
-    GtkWidget *dialog;
-    gchar *filename_utf8;
-    gint myerrno, res, gno;
+    gint res, gno, ncols;
     guint i, bits;
-    FILE *fh;
-
-    fh = g_fopen(filename_sys, "w");
-    if (!fh) {
-        myerrno = errno;
-        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-        dialog = gtk_message_dialog_new(GTK_WINDOW(parent), 0,
-                                        GTK_MESSAGE_ERROR,
-                                        GTK_BUTTONS_OK,
-                                        _("Saving of `%s' failed"),
-                                        filename_utf8);
-        g_free(filename_utf8);
-        gtk_message_dialog_format_secondary_text
-                                       (GTK_MESSAGE_DIALOG(dialog),
-                                        _("Cannot open file for writing: %s."),
-                                        g_strerror(myerrno));
-        gtk_widget_show_all(dialog);
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return FALSE;
-    }
+    gchar *retval;
 
     memset(values, 0, sizeof(values));
+    args = expdata->args;
     res = args->fixres ? args->resolution : 0;
     bits = args->selected;
+    ncols = 0;
     for (i = 0; bits; i++, bits /= 2) {
-        if (bits & 1)
-            values[i] = gwy_data_field_grains_get_values(dfield, NULL,
-                                                         ngrains, grains, i);
+        if (bits & 1) {
+            values[i] = gwy_data_field_grains_get_values(expdata->dfield, NULL,
+                                                         expdata->ngrains,
+                                                         expdata->grains, i);
+            ncols++;
+        }
     }
 
-    for (gno = 1; gno <= ngrains; gno++) {
+    report = g_string_new_len(NULL, 12*expdata->ngrains*ncols);
+    for (gno = 1; gno <= expdata->ngrains; gno++) {
         bits = args->selected;
         for (i = 0; bits; i++, bits /= 2) {
             if (bits & 1) {
                 g_ascii_formatd(buffer, sizeof(buffer), "%g", values[i][gno]);
-                fputs(buffer, fh);
-                fputc(bits == 1 ? '\n' : '\t', fh);
+                g_string_append(report, buffer);
+                g_string_append_c(report, bits == 1 ? '\n' : '\t');
             }
         }
     }
-
-    fclose(fh);
 
     bits = args->selected;
     for (i = 0; bits; i++, bits /= 2) {
@@ -655,7 +618,11 @@ grain_dist_export_raw(GrainDistArgs *args,
             g_free(values[i]);
     }
 
-    return TRUE;
+    retval = report->str;
+    g_string_free(report, FALSE);
+    *data_len = -1;
+
+    return retval;
 }
 
 static void
@@ -823,4 +790,5 @@ grain_dist_save_args(GwyContainer *container,
                                     args->resolution);
     gwy_container_set_enum_by_name(container, mode_key, args->mode);
 }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
