@@ -19,15 +19,15 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libprocess/datafield.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyutils.h>
+#include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -195,7 +195,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WITec WIT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -452,8 +452,8 @@ witec_read_scale(const guchar **p,
         return FALSE;
     }
 
-    scale->scale = get_FLOAT_LE(p);
-    scale->offset = get_FLOAT_LE(p);
+    scale->scale = gwy_get_gfloat_le(p);
+    scale->offset = gwy_get_gfloat_le(p);
     get_CHARARRAY0(scale->measure, p);
     get_CHARARRAY0(scale->name, p);
     gwy_debug("scale: %g %g <%s> [%s]",
@@ -473,12 +473,12 @@ witec_read_header(const guchar **p,
         return FALSE;
     }
 
-    header->rows = get_WORD_LE(p);
-    header->pixels = get_WORD_LE(p);
-    header->channels = get_WORD_LE(p);
+    header->rows = gwy_get_guint16_le(p);
+    header->pixels = gwy_get_guint16_le(p);
+    header->channels = gwy_get_guint16_le(p);
     gwy_debug("rows = %d, pixels = %d, channels = %d",
               header->rows, header->pixels, header->channels);
-    header->area = get_WORD_LE(p);
+    header->area = gwy_get_guint16_le(p);
     get_CHARARRAY0(header->date, p);
     gwy_debug("date = <%s>", header->date);
 
@@ -499,16 +499,16 @@ witec_read_footer(const guchar **p,
     }
 
     get_CHARARRAY0(footer->title, p);
-    footer->year = get_WORD_LE(p);
-    footer->month = get_WORD_LE(p);
-    footer->day = get_WORD_LE(p);
-    footer->hour = get_WORD_LE(p);
-    footer->minute = get_WORD_LE(p);
-    footer->second = get_WORD_LE(p);
+    footer->year = gwy_get_guint16_le(p);
+    footer->month = gwy_get_guint16_le(p);
+    footer->day = gwy_get_guint16_le(p);
+    footer->hour = gwy_get_guint16_le(p);
+    footer->minute = gwy_get_guint16_le(p);
+    footer->second = gwy_get_guint16_le(p);
     gwy_debug("time: %d-%02d-%02d %02d:%02d:%02d",
               footer->year, footer->month, footer->day,
               footer->hour, footer->minute, footer->second);
-    footer->timeline = get_FLOAT_LE(p);
+    footer->timeline = gwy_get_gfloat_le(p);
 
     for (i = 0; i < G_N_ELEMENTS(footer->notebook_header); i++)
         get_CHARARRAY0(footer->notebook_header[i], p);
@@ -534,27 +534,27 @@ witec_read_range_options(const guchar **p,
         return FALSE;
     }
 
-    options->act_scan_range.from = get_FLOAT_LE(p);
-    options->act_scan_range.to = get_FLOAT_LE(p);
-    options->scan_origin.x = get_FLOAT_LE(p);
-    options->scan_origin.y = get_FLOAT_LE(p);
-    options->total_scan_range.x = get_FLOAT_LE(p);
-    options->total_scan_range.y = get_FLOAT_LE(p);
+    options->act_scan_range.from = gwy_get_gfloat_le(p);
+    options->act_scan_range.to = gwy_get_gfloat_le(p);
+    options->scan_origin.x = gwy_get_gfloat_le(p);
+    options->scan_origin.y = gwy_get_gfloat_le(p);
+    options->total_scan_range.x = gwy_get_gfloat_le(p);
+    options->total_scan_range.y = gwy_get_gfloat_le(p);
     get_CHARARRAY0(options->unit_x, p);
     get_CHARARRAY0(options->unit_y, p);
     gwy_debug("unit x: <%s>, y: <%s>", options->unit_x, options->unit_y);
-    options->da_nsamples = get_WORD_LE(p);
-    options->zoom_in = get_BBOOLEAN(p);
-    options->overscan_range = get_FLOAT_LE(p);
-    options->is_overscan = get_BBOOLEAN(p);
-    options->fast_scan_dir.x = get_FLOAT_LE(p);
-    options->fast_scan_dir.y = get_FLOAT_LE(p);
-    options->smooth_turn_around = get_BBOOLEAN(p);
-    options->flip_ud = get_WORD_LE(p);
-    options->flip_lr = get_WORD_LE(p);
-    options->total_scan_range_unused = get_FLOAT_LE(p);
-    options->exchange_xz = get_BBOOLEAN(p);
-    options->exchange_yz = get_BBOOLEAN(p);
+    options->da_nsamples = gwy_get_guint16_le(p);
+    options->zoom_in = gwy_get_gboolean8(p);
+    options->overscan_range = gwy_get_gfloat_le(p);
+    options->is_overscan = gwy_get_gboolean8(p);
+    options->fast_scan_dir.x = gwy_get_gfloat_le(p);
+    options->fast_scan_dir.y = gwy_get_gfloat_le(p);
+    options->smooth_turn_around = gwy_get_gboolean8(p);
+    options->flip_ud = gwy_get_guint16_le(p);
+    options->flip_lr = gwy_get_guint16_le(p);
+    options->total_scan_range_unused = gwy_get_gfloat_le(p);
+    options->exchange_xz = gwy_get_gboolean8(p);
+    options->exchange_yz = gwy_get_gboolean8(p);
     get_CHARARRAY0(options->reserved, p);
 
     *len -= WITEC_SIZE_RANGE_OPTIONS;
@@ -573,40 +573,40 @@ witec_read_image_options(const guchar **p,
         return FALSE;
     }
 
-    options->scan_time[WITEC_FORWARD] = get_FLOAT_LE(p);
-    options->scan_time[WITEC_BACKWARD] = get_FLOAT_LE(p);
-    options->prestart_delay[WITEC_FORWARD] = get_FLOAT_LE(p);
-    options->prestart_delay[WITEC_BACKWARD] = get_FLOAT_LE(p);
-    options->points_per_line = get_WORD_LE(p);
-    options->averages = get_WORD_LE(p);
-    options->lines_per_image = get_WORD_LE(p);
+    options->scan_time[WITEC_FORWARD] = gwy_get_gfloat_le(p);
+    options->scan_time[WITEC_BACKWARD] = gwy_get_gfloat_le(p);
+    options->prestart_delay[WITEC_FORWARD] = gwy_get_gfloat_le(p);
+    options->prestart_delay[WITEC_BACKWARD] = gwy_get_gfloat_le(p);
+    options->points_per_line = gwy_get_guint16_le(p);
+    options->averages = gwy_get_guint16_le(p);
+    options->lines_per_image = gwy_get_guint16_le(p);
     gwy_debug("lines_per_image: %d, points_per_line = %d",
               options->lines_per_image, options->points_per_line);
-    options->cruise_time = get_FLOAT_LE(p);
-    options->settling_time = get_FLOAT_LE(p);
-    options->continuous_scan = get_BBOOLEAN(p);
-    options->open_new_file = get_BBOOLEAN(p);
-    options->save_without_asking = get_BBOOLEAN(p);
+    options->cruise_time = gwy_get_gfloat_le(p);
+    options->settling_time = gwy_get_gfloat_le(p);
+    options->continuous_scan = gwy_get_gboolean8(p);
+    options->open_new_file = gwy_get_gboolean8(p);
+    options->save_without_asking = gwy_get_gboolean8(p);
     options->scan_mode = **p;
     (*p)++;
-    options->create_pixel_trigger[WITEC_FORWARD] = get_BBOOLEAN(p);
-    options->create_pixel_trigger[WITEC_BACKWARD] = get_BBOOLEAN(p);
-    options->create_line_trigger[WITEC_FORWARD] = get_BBOOLEAN(p);
-    options->create_line_trigger[WITEC_BACKWARD] = get_BBOOLEAN(p);
-    options->create_image_trigger = get_BBOOLEAN(p);
-    options->dummy_lines = get_WORD_LE(p);
-    options->line_trigger_delay = get_FLOAT_LE(p);
-    options->line_trigger_duration = get_FLOAT_LE(p);
-    options->image_trigger_delay = get_FLOAT_LE(p);
-    options->image_trigger_duration = get_FLOAT_LE(p);
-    options->wait_for_device_ready = get_BBOOLEAN(p);
-    options->ct1_pulse_type = get_BBOOLEAN(p);
-    options->ct3_pulse_type = get_BBOOLEAN(p);
-    options->max_averages = get_BBOOLEAN(p);
+    options->create_pixel_trigger[WITEC_FORWARD] = gwy_get_gboolean8(p);
+    options->create_pixel_trigger[WITEC_BACKWARD] = gwy_get_gboolean8(p);
+    options->create_line_trigger[WITEC_FORWARD] = gwy_get_gboolean8(p);
+    options->create_line_trigger[WITEC_BACKWARD] = gwy_get_gboolean8(p);
+    options->create_image_trigger = gwy_get_gboolean8(p);
+    options->dummy_lines = gwy_get_guint16_le(p);
+    options->line_trigger_delay = gwy_get_gfloat_le(p);
+    options->line_trigger_duration = gwy_get_gfloat_le(p);
+    options->image_trigger_delay = gwy_get_gfloat_le(p);
+    options->image_trigger_duration = gwy_get_gfloat_le(p);
+    options->wait_for_device_ready = gwy_get_gboolean8(p);
+    options->ct1_pulse_type = gwy_get_gboolean8(p);
+    options->ct3_pulse_type = gwy_get_gboolean8(p);
+    options->max_averages = gwy_get_gboolean8(p);
     for (i = 0; i < G_N_ELEMENTS(options->subtract_cal_surf); i++)
-        options->subtract_cal_surf[i] = get_BBOOLEAN(p);
+        options->subtract_cal_surf[i] = gwy_get_gboolean8(p);
     get_CHARARRAY(options->reserved, p);
-    options->drive_counter_clockrate = get_FLOAT_LE(p);
+    options->drive_counter_clockrate = gwy_get_gfloat_le(p);
 
     *len -= WITEC_SIZE_IMAGE_OPTIONS;
     return TRUE;

@@ -25,8 +25,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -104,7 +105,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Danish Micro Engineering (DME) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -233,10 +234,10 @@ dme_read_header(const guchar *p,
                 DMEFile *dmefile)
 {
     get_CHARARRAY(dmefile->program_name, &p);
-    dmefile->file_version = get_WORD_LE(&p);
-    dmefile->program_version = get_WORD_LE(&p);
-    dmefile->header_size = get_WORD_LE(&p);
-    dmefile->data_size = get_DWORD_LE(&p);
+    dmefile->file_version = gwy_get_guint16_le(&p);
+    dmefile->program_version = gwy_get_guint16_le(&p);
+    dmefile->header_size = gwy_get_guint16_le(&p);
+    dmefile->data_size = gwy_get_guint32_le(&p);
     gwy_debug("header_size: %u data_size: %u",
               dmefile->header_size, dmefile->data_size);
     get_CHARARRAY(dmefile->time, &p);
@@ -245,57 +246,57 @@ dme_read_header(const guchar *p,
     dmefile->data_type = *(p++);
     gwy_debug("data_type: %u", dmefile->data_type);
     p += 123;  /* reserved */
-    dmefile->xres = get_DWORD_LE(&p);
-    dmefile->yres = get_DWORD_LE(&p);
+    dmefile->xres = gwy_get_guint32_le(&p);
+    dmefile->yres = gwy_get_guint32_le(&p);
     gwy_debug("xres: %u, yres: %u", dmefile->xres, dmefile->yres);
-    dmefile->xreal = get_PASCAL_REAL_LE(&p);
-    dmefile->yreal = get_PASCAL_REAL_LE(&p);
+    dmefile->xreal = gwy_get_pascal_real_le(&p);
+    dmefile->yreal = gwy_get_pascal_real_le(&p);
     gwy_debug("xreal: %g, yreal: %g", dmefile->xreal, dmefile->yreal);
-    dmefile->xoff = get_PASCAL_REAL_LE(&p);
-    dmefile->yoff = get_PASCAL_REAL_LE(&p);
+    dmefile->xoff = gwy_get_pascal_real_le(&p);
+    dmefile->yoff = gwy_get_pascal_real_le(&p);
     get_PASCAL_CHARARRAY0(dmefile->title, &p);
     g_strstrip(dmefile->title);
-    dmefile->sample_pause = get_PASCAL_REAL_LE(&p);
-    dmefile->sample_speed = get_PASCAL_REAL_LE(&p);
+    dmefile->sample_pause = gwy_get_pascal_real_le(&p);
+    dmefile->sample_speed = gwy_get_pascal_real_le(&p);
     gwy_debug("sample_pause: %g, sample_speed: %g",
               dmefile->sample_pause, dmefile->sample_speed);
-    dmefile->tunnel_current = get_PASCAL_REAL_LE(&p);
-    dmefile->bias = get_PASCAL_REAL_LE(&p);
-    dmefile->loop_gain = get_PASCAL_REAL_LE(&p);
+    dmefile->tunnel_current = gwy_get_pascal_real_le(&p);
+    dmefile->bias = gwy_get_pascal_real_le(&p);
+    dmefile->loop_gain = gwy_get_pascal_real_le(&p);
     gwy_debug("tunnel_current: %g, bias: %g, loop_gain: %g",
               dmefile->tunnel_current, dmefile->bias, dmefile->loop_gain);
-    dmefile->direction = get_WORD_LE(&p);
+    dmefile->direction = gwy_get_guint16_le(&p);
     dmefile->head_type = *(p++);
     gwy_debug("direction: %u, head_type: %u",
               dmefile->direction, dmefile->head_type);
     p += 291;  /* reserved */
-    dmefile->x_calibration = get_PASCAL_REAL_LE(&p);
-    dmefile->y_calibration = get_PASCAL_REAL_LE(&p);
-    dmefile->z_calibration = get_PASCAL_REAL_LE(&p);
+    dmefile->x_calibration = gwy_get_pascal_real_le(&p);
+    dmefile->y_calibration = gwy_get_pascal_real_le(&p);
+    dmefile->z_calibration = gwy_get_pascal_real_le(&p);
     p += 120;  /* reserved */
-    dmefile->min = get_PASCAL_REAL_LE(&p);
-    dmefile->max = get_PASCAL_REAL_LE(&p);
-    dmefile->mean = get_PASCAL_REAL_LE(&p);
-    dmefile->full_scale = get_PASCAL_REAL_LE(&p);
-    dmefile->scale_offset = get_PASCAL_REAL_LE(&p);
-    dmefile->x_slope_corr = get_PASCAL_REAL_LE(&p);
-    dmefile->y_slope_corr = get_PASCAL_REAL_LE(&p);
-    dmefile->offset_corr = get_PASCAL_REAL_LE(&p);
-    dmefile->slope_calculated = get_BBOOLEAN(&p);
-    dmefile->roughness_valid = get_BBOOLEAN(&p);
-    dmefile->ra = get_PASCAL_REAL_LE(&p);
-    dmefile->rms = get_PASCAL_REAL_LE(&p);
-    dmefile->ry = get_PASCAL_REAL_LE(&p);
+    dmefile->min = gwy_get_pascal_real_le(&p);
+    dmefile->max = gwy_get_pascal_real_le(&p);
+    dmefile->mean = gwy_get_pascal_real_le(&p);
+    dmefile->full_scale = gwy_get_pascal_real_le(&p);
+    dmefile->scale_offset = gwy_get_pascal_real_le(&p);
+    dmefile->x_slope_corr = gwy_get_pascal_real_le(&p);
+    dmefile->y_slope_corr = gwy_get_pascal_real_le(&p);
+    dmefile->offset_corr = gwy_get_pascal_real_le(&p);
+    dmefile->slope_calculated = gwy_get_gboolean8(&p);
+    dmefile->roughness_valid = gwy_get_gboolean8(&p);
+    dmefile->ra = gwy_get_pascal_real_le(&p);
+    dmefile->rms = gwy_get_pascal_real_le(&p);
+    dmefile->ry = gwy_get_pascal_real_le(&p);
     p += 2017;  /* reserved */
     dmefile->display_form_mode = *(p++);
-    dmefile->display_rotated = get_WORD_LE(&p);
-    dmefile->display_angle_polar = get_WORD_LE(&p);
-    dmefile->display_angle_azimuthal = get_WORD_LE(&p);
-    dmefile->scale_fraction = get_PASCAL_REAL_LE(&p);
+    dmefile->display_rotated = gwy_get_guint16_le(&p);
+    dmefile->display_angle_polar = gwy_get_guint16_le(&p);
+    dmefile->display_angle_azimuthal = gwy_get_guint16_le(&p);
+    dmefile->scale_fraction = gwy_get_pascal_real_le(&p);
     p += 334;  /* reserved */
     dmefile->slope_mode = *(p++);
     p += 38;  /* reserved */
-    dmefile->height_scale_factor = get_PASCAL_REAL_LE(&p);
+    dmefile->height_scale_factor = gwy_get_pascal_real_le(&p);
     gwy_debug("height_scale_factor: %g", dmefile->height_scale_factor);
 }
 

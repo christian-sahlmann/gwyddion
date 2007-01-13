@@ -19,14 +19,13 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-
 #include <string.h>
 #include <stdlib.h>
-
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 #include "get.h"
@@ -657,7 +656,7 @@ sis_real_load(const guchar *buffer,
     }
 
     p = buffer + start;
-    id = get_WORD_LE(&p);
+    id = gwy_get_guint16_le(&p);
     gwy_debug("block id = %u", id);
     if (id != SIS_BLOCK_DOCUMENT) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -665,7 +664,7 @@ sis_real_load(const guchar *buffer,
         return FALSE;
     }
 
-    docinfosize = get_DWORD_LE(&p);
+    docinfosize = gwy_get_guint32_le(&p);
     gwy_debug("doc info size = %u", docinfosize);
     if (size - (p - buffer) < docinfosize - 6
         || docinfosize < 8) {
@@ -674,12 +673,12 @@ sis_real_load(const guchar *buffer,
         return FALSE;
     }
 
-    sisfile->version_maj = get_WORD_LE(&p);
-    sisfile->version_min = get_WORD_LE(&p);
+    sisfile->version_maj = gwy_get_guint16_le(&p);
+    sisfile->version_min = gwy_get_guint16_le(&p);
     gwy_debug("version = %d.%d", sisfile->version_maj, sisfile->version_min);
 
-    nparams = get_WORD_LE(&p);
-    sisfile->nchannels = get_WORD_LE(&p);
+    nparams = gwy_get_guint16_le(&p);
+    sisfile->nchannels = gwy_get_guint16_le(&p);
     gwy_debug("nparams = %d, nchannels = %d", nparams, sisfile->nchannels);
     if (!sisfile->nchannels) {
         err_NO_DATA(error);
@@ -694,8 +693,8 @@ sis_real_load(const guchar *buffer,
                         _("Too short parameter info."));
             return FALSE;
         }
-        id = get_WORD_LE(&p);
-        len = get_WORD_LE(&p);
+        id = gwy_get_guint16_le(&p);
+        len = gwy_get_guint16_le(&p);
         if (!len) {
             gwy_debug("ZERO length parameter %u, ignoring", id);
             continue;
@@ -730,14 +729,14 @@ sis_real_load(const guchar *buffer,
 
             case G_TYPE_INT:
             g_assert(len == 2);
-            j = get_WORD_LE(&p);
+            j = gwy_get_guint16_le(&p);
             g_hash_table_insert(sisfile->params, idp, g_memdup(&j, sizeof(j)));
             gwy_debug("Value = %u", j);
             break;
 
             case G_TYPE_DOUBLE:
             g_assert(len == sizeof(double));
-            d = get_DOUBLE_LE(&p);
+            d = gwy_get_gdouble_le(&p);
             g_hash_table_insert(sisfile->params, idp, g_memdup(&d, sizeof(d)));
             gwy_debug("Value = %g", d);
             break;
@@ -769,8 +768,8 @@ sis_real_load(const guchar *buffer,
             return FALSE;
         }
 
-        id = get_WORD_LE(&p);
-        len = get_DWORD_LE(&p);
+        id = gwy_get_guint16_le(&p);
+        len = gwy_get_guint32_le(&p);
         gwy_debug("id = %u, len = %u", id, len);
         /* we've got out of sync, try to return what we have, if anything */
         if (!len || size - (p - buffer) < len) {
@@ -818,13 +817,13 @@ sis_real_load(const guchar *buffer,
                 g_warning("UNKNOWN processing step %.4s",
                           image->processing_step);
             }
-            image->processing_step_index = get_WORD_LE(&p);
-            image->channel_index = get_WORD_LE(&p);
+            image->processing_step_index = gwy_get_guint16_le(&p);
+            image->channel_index = gwy_get_guint16_le(&p);
             /* This is really a guchar[4], not int32 */
             memcpy(image->parent_processing_step, p, 4);
             p += 4;
-            image->parent_processing_step_index = get_WORD_LE(&p);
-            image->parent_processing_step_channel_index = get_WORD_LE(&p);
+            image->parent_processing_step_index = gwy_get_guint16_le(&p);
+            image->parent_processing_step_channel_index = gwy_get_guint16_le(&p);
             p += procstep ? procstep->data_size : 0;
             if (size - (p - buffer) < 10) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -833,11 +832,11 @@ sis_real_load(const guchar *buffer,
                 return FALSE;
             }
 
-            image->width = get_WORD_LE(&p);
-            image->height = get_WORD_LE(&p);
-            image->bpp = get_WORD_LE(&p);
-            image->priority = get_WORD_LE(&p);
-            image->image_data_saved = get_WORD_LE(&p);
+            image->width = gwy_get_guint16_le(&p);
+            image->height = gwy_get_guint16_le(&p);
+            image->bpp = gwy_get_guint16_le(&p);
+            image->priority = gwy_get_guint16_le(&p);
+            image->image_data_saved = gwy_get_guint16_le(&p);
             gwy_debug("width = %u, height = %u, bpp = %u, saved = %s",
                       image->width, image->height, image->bpp,
                       image->image_data_saved ? "NO" : "YES");
@@ -874,10 +873,10 @@ sis_real_load(const guchar *buffer,
                 return FALSE;
             }
             channel = sisfile->channels + i-1;
-            channel->data_type = get_WORD_LE(&p);
-            channel->signal_source = get_WORD_LE(&p);
-            channel->scanning_direction = get_WORD_LE(&p);
-            channel->processing_steps = get_WORD_LE(&p);
+            channel->data_type = gwy_get_guint16_le(&p);
+            channel->signal_source = gwy_get_guint16_le(&p);
+            channel->scanning_direction = gwy_get_guint16_le(&p);
+            channel->processing_steps = gwy_get_guint16_le(&p);
             gwy_debug("data type = %u, signal source = %u",
                       channel->data_type, channel->signal_source);
             gwy_debug("scanning direction = %u, processing steps = %u",
