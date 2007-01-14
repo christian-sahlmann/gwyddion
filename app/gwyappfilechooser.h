@@ -52,8 +52,11 @@ struct _GwyAppFileChooser {
     GtkWidget *preview;
     GObject *renderer_fileinfo;
 
+    /* preview */
     guint full_preview_id;
     gboolean make_thumbnail;
+    gchar *preview_name_sys;
+    GwyContainer *preview_data;
 };
 
 struct _GwyAppFileChooserClass {

@@ -219,6 +219,8 @@ gwy_app_file_open(void)
 
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     name = _gwy_app_file_chooser_get_selected_type(GWY_APP_FILE_CHOOSER(dialog));
+    /* This has to be called before hiding the dialog because hiding frees
+     * the previewed data */
     _gwy_app_file_chooser_get_previewed_data(GWY_APP_FILE_CHOOSER(dialog),
                                              &data,
                                              &filename_utf8, &filename_sys);

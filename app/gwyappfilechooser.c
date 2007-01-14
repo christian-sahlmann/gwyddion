@@ -53,6 +53,7 @@ typedef struct {
 
 static void       gwy_app_file_chooser_finalize       (GObject *object);
 static void       gwy_app_file_chooser_destroy        (GtkObject *object);
+static void       gwy_app_file_chooser_hide           (GtkWidget *widget);
 static void       gwy_app_file_chooser_setup_filter   (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_save_position  (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_add_type       (const gchar *name,
@@ -75,6 +76,7 @@ static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *
 static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
 static gboolean   gwy_app_file_chooser_do_full_preview(gpointer user_data);
+static void       gwy_app_file_chooser_free_preview   (GwyAppFileChooser *chooser);
 
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
@@ -87,10 +89,13 @@ _gwy_app_file_chooser_class_init(GwyAppFileChooserClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     gobject_class->finalize = gwy_app_file_chooser_finalize;
 
     object_class->destroy = gwy_app_file_chooser_destroy;
+
+    widget_class->hide = gwy_app_file_chooser_hide;
 }
 
 static void
@@ -113,8 +118,7 @@ gwy_app_file_chooser_finalize(GObject *object)
 
     g_object_unref(chooser->filter);
 
-    if (G_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->finalize)
-        G_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->finalize(object);
+    G_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->finalize(object);
 }
 
 static void
@@ -122,13 +126,19 @@ gwy_app_file_chooser_destroy(GtkObject *object)
 {
     GwyAppFileChooser *chooser = GWY_APP_FILE_CHOOSER(object);
 
-    if (chooser->full_preview_id) {
-        g_source_remove(chooser->full_preview_id);
-        chooser->full_preview_id = 0;
-    }
+    gwy_app_file_chooser_free_preview(chooser);
 
-    if (GTK_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->destroy)
-        GTK_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->destroy(object);
+}
+
+static void
+gwy_app_file_chooser_hide(GtkWidget *widget)
+{
+    GwyAppFileChooser *chooser = GWY_APP_FILE_CHOOSER(widget);
+
+    gwy_app_file_chooser_free_preview(chooser);
+
+    GTK_WIDGET_CLASS(_gwy_app_file_chooser_parent_class)->hide(widget);
 }
 
 static void
@@ -555,6 +565,7 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
 }
 
 /***** Preview *************************************************************/
+
 gboolean
 _gwy_app_file_chooser_get_previewed_data(GwyAppFileChooser *chooser,
                                          GwyContainer **data,
@@ -566,7 +577,15 @@ _gwy_app_file_chooser_get_previewed_data(GwyAppFileChooser *chooser,
     *data = NULL;
     *filename_utf8 = NULL;
     *filename_sys = NULL;
-    return FALSE;
+    if (!chooser->preview_data || !chooser->preview_name_sys)
+        return FALSE;
+
+    *data = chooser->preview_data;
+    *filename_sys = g_strdup(chooser->preview_name_sys);
+    *filename_utf8 = g_filename_to_utf8(chooser->preview_name_sys, -1,
+                                        NULL, NULL, NULL);
+
+    return TRUE;
 }
 
 static void
@@ -630,10 +649,7 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     GtkTreeIter iter;
     gchar *filename_sys;
 
-    if (chooser->full_preview_id) {
-        g_source_remove(chooser->full_preview_id);
-        chooser->full_preview_id = 0;
-    }
+    gwy_app_file_chooser_free_preview(chooser);
 
     model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
     gtk_list_store_clear(GTK_LIST_STORE(model));
@@ -675,7 +691,7 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     g_object_unref(pixbuf);
 
     chooser->full_preview_id
-        = g_timeout_add_full(G_PRIORITY_LOW, 200,
+        = g_timeout_add_full(G_PRIORITY_LOW, 250,
                              gwy_app_file_chooser_do_full_preview, chooser,
                              NULL);
 }
@@ -766,9 +782,7 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     GtkTreeModel *model;
     GtkListStore *store;
     GwyAppFileChooser *chooser;
-    GwyContainer *container;
     GSList *channel_ids, *l;
-    gchar *filename_sys;
     GdkPixbuf *pixbuf;
     GtkTreeIter iter;
     GString *str;
@@ -777,11 +791,14 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     chooser = GWY_APP_FILE_CHOOSER(user_data);
     chooser->full_preview_id = 0;
 
+    /* Always no-op here? */
+    gwy_app_file_chooser_free_preview(chooser);
+
     fchooser = GTK_FILE_CHOOSER(chooser);
-    filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    chooser->preview_name_sys = gtk_file_chooser_get_preview_filename(fchooser);
     /* We should not be called when gtk_file_chooser_get_preview_filename()
      * returns NULL preview file name */
-    if (!filename_sys) {
+    if (!chooser->preview_name_sys) {
         g_warning("Full preview invoked with NULL preview file name");
         return FALSE;
     }
@@ -789,9 +806,10 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
     store = GTK_LIST_STORE(model);
 
-    container = gwy_file_load(filename_sys, GWY_RUN_NONINTERACTIVE, NULL);
-    if (!container) {
-        g_free(filename_sys);
+    chooser->preview_data = gwy_file_load(chooser->preview_name_sys,
+                                          GWY_RUN_NONINTERACTIVE, NULL);
+    if (!chooser->preview_data) {
+        gwy_app_file_chooser_free_preview(chooser);
         gtk_tree_model_get_iter_first(model, &iter);
         gtk_list_store_set(store, &iter,
                            COLUMN_FILEINFO, _("Cannot preview"),
@@ -801,11 +819,11 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     }
 
     channel_ids = NULL;
-    gwy_container_foreach(container, NULL, add_channel_id, &channel_ids);
+    gwy_container_foreach(chooser->preview_data, NULL,
+                          add_channel_id, &channel_ids);
     channel_ids = g_slist_sort(channel_ids, compare_ids);
     if (!channel_ids) {
-        g_free(filename_sys);
-        g_object_unref(container);
+        gwy_app_file_chooser_free_preview(chooser);
         return FALSE;
     }
 
@@ -818,7 +836,7 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     str = g_string_new(NULL);
     for (l = channel_ids; l; l = g_slist_next(l)) {
         id = GPOINTER_TO_INT(l->data);
-        pixbuf = gwy_app_get_channel_thumbnail(container, id,
+        pixbuf = gwy_app_get_channel_thumbnail(chooser->preview_data, id,
                                                TMS_NORMAL_THUMB_SIZE,
                                                TMS_NORMAL_THUMB_SIZE);
         if (!pixbuf) {
@@ -827,12 +845,13 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
         }
 
         if (chooser->make_thumbnail) {
-            _gwy_app_recent_file_write_thumbnail(filename_sys, container, id,
-                                                 pixbuf);
+            _gwy_app_recent_file_write_thumbnail(chooser->preview_name_sys,
+                                                 chooser->preview_data,
+                                                 id, pixbuf);
             chooser->make_thumbnail = FALSE;
         }
 
-        gwy_app_file_chooser_describe_channel(container, id, str);
+        gwy_app_file_chooser_describe_channel(chooser->preview_data, id, str);
         gtk_list_store_insert_with_values(store, &iter, -1,
                                           COLUMN_PIXBUF, pixbuf,
                                           COLUMN_FILEINFO, str->str,
@@ -841,10 +860,25 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     }
 
     g_string_free(str, TRUE);
-    g_free(filename_sys);
-    g_object_unref(container);
 
     return FALSE;
+}
+
+static void
+gwy_app_file_chooser_free_preview(GwyAppFileChooser *chooser)
+{
+    if (chooser->full_preview_id) {
+        g_source_remove(chooser->full_preview_id);
+        chooser->full_preview_id = 0;
+    }
+
+    if (chooser->preview_name_sys) {
+        gwy_debug("freeing preview of <%s>", chooser->preview_name_sys);
+    }
+    g_free(chooser->preview_name_sys);
+    chooser->preview_name_sys = NULL;
+
+    gwy_object_unref(chooser->preview_data);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
