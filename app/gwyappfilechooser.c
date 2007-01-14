@@ -554,6 +554,21 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
     return name != NULL && score >= 5;
 }
 
+/***** Preview *************************************************************/
+gboolean
+_gwy_app_file_chooser_get_previewed_data(GwyAppFileChooser *chooser,
+                                         GwyContainer **data,
+                                         gchar **filename_utf8,
+                                         gchar **filename_sys)
+{
+    g_return_val_if_fail(GWY_IS_APP_FILE_CHOOSER(chooser), FALSE);
+
+    *data = NULL;
+    *filename_utf8 = NULL;
+    *filename_sys = NULL;
+    return FALSE;
+}
+
 static void
 gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
 {
@@ -615,8 +630,6 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
     GtkTreeIter iter;
     gchar *filename_sys;
 
-    gwy_debug(" ");
-
     if (chooser->full_preview_id) {
         g_source_remove(chooser->full_preview_id);
         chooser->full_preview_id = 0;
@@ -627,12 +640,16 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
 
     fchooser = GTK_FILE_CHOOSER(chooser);
     filename_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    /* It should be UTF-8, but don't convert it just for gwy_debug() */
+    gwy_debug("%s", filename_sys);
+
     /* Make directories fail gracefully */
     if (filename_sys && g_file_test(filename_sys, G_FILE_TEST_IS_DIR)) {
         g_free(filename_sys);
         filename_sys = NULL;
     }
-    /* Never set the preview inactive.  Gtk behaviour can be quite silly. */
+    /* Never set the preview inactive.  Gtk+ can do all kinds of silly things
+     * if you do. */
     if (!filename_sys)
         return;
 
