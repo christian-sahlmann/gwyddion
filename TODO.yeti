@@ -1,5 +1,3 @@
-- Don't immediately destroy preview containers and recycle them for real file
-  open
 - Modules:
   - implement sparse laplacian data interpolation
   - gaussian smoothening filter (+hconvolve, vconvolve)
@@ -13,9 +11,6 @@
   - 2D autocorrelation
   - isotropic autocorrelation, PSDF
 - Graph minor and major ticks are misaligned
-- Common functions in file modules, try to reduce duplication:
-  highly-nonsquare test
-  channel title guess from units
 - Fix facet level to do nothing instead of dumping NaNs on bad data.
 - Add more supported files to MIME types (gwyddion.xml)
 - Ruler:
