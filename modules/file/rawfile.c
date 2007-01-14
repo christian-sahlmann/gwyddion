@@ -208,7 +208,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0.2",
+    "2.0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
