@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
