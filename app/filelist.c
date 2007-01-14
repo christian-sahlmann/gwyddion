@@ -850,17 +850,22 @@ gwy_app_recent_file_list_update(GwyContainer *data,
                                 const gchar *filename_sys,
                                 gint hint)
 {
+    gboolean free_utf8 = FALSE, free_sys = FALSE;;
+
     g_return_if_fail(!data || GWY_IS_CONTAINER(data));
     g_return_if_fail(gcontrols.store);
 
-    /* Prepare argument to be eaten */
-    if (!filename_utf8 && filename_sys)
-        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-    else
-        filename_utf8 = g_strdup(filename_utf8);
+    if (!filename_utf8 && filename_sys) {
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1,
+                                           NULL, NULL, NULL);
+        free_utf8 = TRUE;
+    }
 
-    if (filename_sys)
-        filename_sys = g_strdup(filename_sys);
+    if (!filename_sys && filename_utf8) {
+        filename_sys = g_filename_from_utf8(filename_utf8, -1,
+                                            NULL, NULL, NULL);
+        free_sys = TRUE;
+    }
 
     if (filename_utf8) {
         GtkTreeIter iter;
@@ -878,6 +883,11 @@ gwy_app_recent_file_list_update(GwyContainer *data,
         if (data)
             gwy_recent_file_update_thumbnail(rf, data, hint, NULL);
     }
+
+    if (free_utf8)
+        g_free((gpointer)filename_utf8);
+    if (free_sys)
+        g_free((gpointer)filename_sys);
 
     gwy_app_recent_file_list_update_menu(&gcontrols);
 }
