@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.14.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -321,7 +321,8 @@ hash_data_index_map_func(gpointer key,
 
     strkey = g_quark_to_string(quark);
     i = key_get_int_prefix(strkey, &len);
-    copy = g_new0(GValue, 1);
+    copy = g_newa(GValue, 1);
+    memset(copy, 0, sizeof(GValue));
     g_value_init(copy, G_VALUE_TYPE(gvalue));
     g_value_copy(gvalue, copy);
     if (G_VALUE_HOLDS_OBJECT(gvalue))
