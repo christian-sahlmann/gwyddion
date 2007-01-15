@@ -600,7 +600,7 @@ grain_dist_export_create(gpointer user_data,
         }
     }
 
-    report = g_string_new_len(NULL, 12*expdata->ngrains*ncols);
+    report = g_string_sized_new(12*expdata->ngrains*ncols);
     for (gno = 1; gno <= expdata->ngrains; gno++) {
         bits = args->selected;
         for (i = 0; bits; i++, bits /= 2) {
