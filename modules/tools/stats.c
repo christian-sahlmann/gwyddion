@@ -31,6 +31,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 
 #define GWY_TYPE_TOOL_STATS            (gwy_tool_stats_get_type())
 #define GWY_TOOL_STATS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_STATS, GwyToolStats))
@@ -66,6 +67,16 @@ typedef struct {
     gdouble theta;
     gdouble phi;
 } ToolResults;
+
+typedef struct {
+    ToolResults results;
+    gboolean mask_in_use;
+    gboolean same_units;
+    GwyContainer *container;
+    GwyDataField *data_field;
+    GwySIValueFormat *angle_format;
+    gint id;
+} ToolReportData;
 
 struct _GwyToolStats {
     GwyPlainTool parent_instance;
@@ -131,13 +142,15 @@ static void  gwy_tool_stats_use_mask_changed      (GtkToggleButton *toggle,
 static void  gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
                                                    GwyToolStats *tool);
 static void  gwy_tool_stats_save                  (GwyToolStats *tool);
+static gchar* gwy_tool_stats_report_create        (gpointer user_data,
+                                                   gssize *data_len);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -668,30 +681,11 @@ gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
         gwy_tool_stats_selection_changed(GWY_PLAIN_TOOL(tool), -1);
 }
 
-#define fmt_val(v) \
-    g_strdup_printf("%.*f%s%s", \
-                    vf->precision, res.v/vf->magnitude, \
-                    *vf->units ? " " : "", vf->units)
-
 static void
 gwy_tool_stats_save(GwyToolStats *tool)
 {
-    GwyContainer *container;
-    GwyDataField *data_field;
-    GtkWidget *dialog;
-    GwySIUnit *siunitxy, *siunitarea;
-    gdouble xreal, yreal, q;
     GwyPlainTool *plain_tool;
-    GwySIValueFormat *vf = NULL;
-    const guchar *title;
-    gboolean mask_in_use;
-    gint response, id;
-    ToolResults res;
-    gchar *key, *filename_sys;
-    gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
-    gchar *avg, *min, *max, *median, *rms, *ra, *skew, *kurtosis;
-    gchar *area, *projarea, *theta, *phi;
-    FILE *fh;
+    ToolReportData report_data;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->container);
@@ -700,85 +694,79 @@ gwy_tool_stats_save(GwyToolStats *tool)
 
     /* Copy everything as user can switch data during the Save dialog (though
      * he cannot destroy them, so references are not necessary) */
-    mask_in_use = tool->args.use_mask && plain_tool->mask_field;
-    res = tool->results;
-    container = plain_tool->container;
-    data_field = plain_tool->data_field;
-    id = plain_tool->id;
+    report_data.results = tool->results;
+    report_data.mask_in_use = tool->args.use_mask && plain_tool->mask_field;
+    report_data.same_units = tool->same_units;
+    report_data.angle_format = tool->angle_format;
+    report_data.container = plain_tool->container;
+    report_data.data_field = plain_tool->data_field;
+    report_data.id = plain_tool->id;
 
-    dialog = gtk_file_chooser_dialog_new(_("Save Statistical Quantities"),
-                                         GTK_WINDOW(GWY_TOOL(tool)->dialog),
-                                         GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-                                        gwy_app_get_current_directory());
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-    gtk_widget_destroy(dialog);
+    gwy_save_auxiliary_with_callback(_("Save Statistical Quantities"),
+                                     GTK_WINDOW(GWY_TOOL(tool)->dialog),
+                                     &gwy_tool_stats_report_create,
+                                     (GwySaveAuxiliaryDestroy)g_free,
+                                     &report_data);
+}
 
-    if (!filename_sys || response != GTK_RESPONSE_OK) {
-        g_free(filename_sys);
-        return;
-    }
+#define fmt_val(v) \
+    g_strdup_printf("%.*f%s%s", \
+                    vf->precision, report_data->results.v/vf->magnitude, \
+                    *vf->units ? " " : "", vf->units)
 
-    fh = g_fopen(filename_sys, "w");
-    if (!fh) {
-        gint myerrno;
-        gchar *filename_utf8;
+static gchar*
+gwy_tool_stats_report_create(gpointer user_data,
+                             gssize *data_len)
+{
+    const ToolReportData *report_data = (const ToolReportData*)user_data;
+    GwySIUnit *siunitxy, *siunitarea;
+    gdouble xreal, yreal, q;
+    GwySIValueFormat *vf = NULL;
+    const guchar *title;
+    GString *report;
+    gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
+    gchar *avg, *min, *max, *median, *rms, *ra, *skew, *kurtosis;
+    gchar *area, *projarea, *theta, *phi;
+    gchar *key, *retval;
 
-        myerrno = errno;
-        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-        dialog = gtk_message_dialog_new(GTK_WINDOW(GWY_TOOL(tool)->dialog), 0,
-                                        GTK_MESSAGE_ERROR,
-                                        GTK_BUTTONS_OK,
-                                        _("Saving of `%s' failed"),
-                                        filename_utf8);
-        g_free(filename_sys);
-        g_free(filename_utf8);
-        gtk_message_dialog_format_secondary_text
-                                       (GTK_MESSAGE_DIALOG(dialog),
-                                        _("Cannot open file for writing: %s."),
-                                        g_strerror(myerrno));
-        gtk_widget_show_all(dialog);
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return;
-    }
-    g_free(filename_sys);
+    *data_len = -1;
+    report = g_string_sized_new(4096);
 
-    fputs(_("Statistical Quantities"), fh);
-    fputs("\n\n", fh);
+    g_string_append(report, _("Statistical Quantities"));
+    g_string_append(report, "\n\n");
 
     /* Channel information */
-    if (gwy_container_gis_string_by_name(container, "/filename", &title))
-        fprintf(fh, _("File:              %s\n"), title);
+    if (gwy_container_gis_string_by_name(report_data->container,
+                                         "/filename", &title))
+        g_string_append_printf(report, _("File:              %s\n"), title);
 
-    key = g_strdup_printf("/%d/data/title", id);
-    if (gwy_container_gis_string_by_name(container, key, &title))
-        fprintf(fh, _("Data channel:      %s\n"), title);
+    key = g_strdup_printf("/%d/data/title", report_data->id);
+    if (gwy_container_gis_string_by_name(report_data->container, key, &title))
+        g_string_append_printf(report, _("Data channel:      %s\n"), title);
     g_free(key);
 
-    fputs("\n", fh);
+    g_string_append_c(report, '\n');
 
-    iw = g_strdup_printf("%d", res.isel[2]);
-    ih = g_strdup_printf("%d", res.isel[3]);
-    ix = g_strdup_printf("%d", res.isel[0]);
-    iy = g_strdup_printf("%d", res.isel[1]);
+    iw = g_strdup_printf("%d", report_data->results.isel[2]);
+    ih = g_strdup_printf("%d", report_data->results.isel[3]);
+    ix = g_strdup_printf("%d", report_data->results.isel[0]);
+    iy = g_strdup_printf("%d", report_data->results.isel[1]);
 
-    vf = gwy_data_field_get_value_format_xy(data_field,
+    vf = gwy_data_field_get_value_format_xy(report_data->data_field,
                                             GWY_SI_UNIT_FORMAT_PLAIN, vf);
-    rw = g_strdup_printf("%.*f", vf->precision, res.sel[2]/vf->magnitude);
-    rh = g_strdup_printf("%.*f", vf->precision, res.sel[3]/vf->magnitude);
-    rx = g_strdup_printf("%.*f", vf->precision, res.sel[0]/vf->magnitude);
-    ry = g_strdup_printf("%.*f", vf->precision, res.sel[1]/vf->magnitude);
+    rw = g_strdup_printf("%.*f", vf->precision,
+                         report_data->results.sel[2]/vf->magnitude);
+    rh = g_strdup_printf("%.*f", vf->precision,
+                         report_data->results.sel[3]/vf->magnitude);
+    rx = g_strdup_printf("%.*f", vf->precision,
+                         report_data->results.sel[0]/vf->magnitude);
+    ry = g_strdup_printf("%.*f", vf->precision,
+                         report_data->results.sel[1]/vf->magnitude);
     uni = g_strdup(vf->units);
 
-    muse = g_strdup(mask_in_use ? _("Yes") : _("No"));
+    muse = g_strdup(report_data->mask_in_use ? _("Yes") : _("No"));
 
-    vf = gwy_data_field_get_value_format_z(data_field,
+    vf = gwy_data_field_get_value_format_z(report_data->data_field,
                                            GWY_SI_UNIT_FORMAT_PLAIN, vf);
     avg = fmt_val(avg);
     min = fmt_val(min);
@@ -787,55 +775,53 @@ gwy_tool_stats_save(GwyToolStats *tool)
     ra = fmt_val(ra);
     rms = fmt_val(rms);
 
-    skew = g_strdup_printf("%2.3g", res.skew);
-    kurtosis = g_strdup_printf("%2.3g", res.kurtosis);
+    skew = g_strdup_printf("%2.3g", report_data->results.skew);
+    kurtosis = g_strdup_printf("%2.3g", report_data->results.kurtosis);
 
-    siunitxy = gwy_data_field_get_si_unit_xy(data_field);
+    siunitxy = gwy_data_field_get_si_unit_xy(report_data->data_field);
     siunitarea = gwy_si_unit_power(siunitxy, 2, NULL);
-    xreal = gwy_data_field_get_xreal(data_field);
-    yreal = gwy_data_field_get_xreal(data_field);
-    q = xreal/gwy_data_field_get_xres(data_field)
-        *yreal/gwy_data_field_get_yres(data_field);
+    xreal = gwy_data_field_get_xreal(report_data->data_field);
+    yreal = gwy_data_field_get_xreal(report_data->data_field);
+    q = xreal/gwy_data_field_get_xres(report_data->data_field)
+        *yreal/gwy_data_field_get_yres(report_data->data_field);
     vf = gwy_si_unit_get_format_with_resolution(siunitarea,
                                                 GWY_SI_UNIT_FORMAT_PLAIN,
                                                 xreal*yreal, q, vf);
     g_object_unref(siunitarea);
 
-    area = tool->same_units ? fmt_val(area) : g_strdup(_("N.A."));
+    area = report_data->same_units ? fmt_val(area) : g_strdup(_("N.A."));
     projarea = fmt_val(projarea);
 
     gwy_si_unit_value_format_free(vf);
-    vf = tool->angle_format;
+    vf = report_data->angle_format;
 
-    theta = ((tool->same_units && !mask_in_use)
+    theta = ((report_data->same_units && !report_data->mask_in_use)
              ? fmt_val(theta) : g_strdup(_("N.A.")));
-    phi = ((tool->same_units && !mask_in_use)
+    phi = ((report_data->same_units && !report_data->mask_in_use)
            ? fmt_val(phi) : g_strdup(_("N.A.")));
 
-    fprintf(fh,
-            _("Selected area:     %s × %s at (%s, %s) px\n"
-              "                   %s × %s at (%s, %s) %s\n"
-              "Mask in use:       %s\n"
-              "\n"
-              "Average value:     %s\n"
-              "Minimum:           %s\n"
-              "Maximum:           %s\n"
-              "Median:            %s\n"
-              "Ra:                %s\n"
-              "Rms:               %s\n"
-              "Skew:              %s\n"
-              "Kurtosis:          %s\n"
-              "Surface area:      %s\n"
-              "Projected area:    %s\n"
-              "Inclination theta: %s\n"
-              "Inclination phi:   %s\n"),
-            iw, ih, ix, iy,
-            rw, rh, rx, ry, uni,
-            muse,
-            avg, min, max, median, ra, rms, skew, kurtosis,
-            area, projarea, theta, phi);
-
-    fclose(fh);
+    g_string_append_printf(report,
+                           _("Selected area:     %s × %s at (%s, %s) px\n"
+                             "                   %s × %s at (%s, %s) %s\n"
+                             "Mask in use:       %s\n"
+                             "\n"
+                             "Average value:     %s\n"
+                             "Minimum:           %s\n"
+                             "Maximum:           %s\n"
+                             "Median:            %s\n"
+                             "Ra:                %s\n"
+                             "Rms:               %s\n"
+                             "Skew:              %s\n"
+                             "Kurtosis:          %s\n"
+                             "Surface area:      %s\n"
+                             "Projected area:    %s\n"
+                             "Inclination theta: %s\n"
+                             "Inclination phi:   %s\n"),
+                           iw, ih, ix, iy,
+                           rw, rh, rx, ry, uni,
+                           muse,
+                           avg, min, max, median, ra, rms, skew, kurtosis,
+                           area, projarea, theta, phi);
 
     g_free(ix);
     g_free(iy);
@@ -857,6 +843,11 @@ gwy_tool_stats_save(GwyToolStats *tool)
     g_free(projarea);
     g_free(theta);
     g_free(phi);
+
+    retval = report->str;
+    g_string_free(report, FALSE);
+
+    return retval;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
