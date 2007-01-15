@@ -19,15 +19,15 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libprocess/stats.h>
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyutils.h>
+#include <libprocess/stats.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 
@@ -141,7 +141,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -260,11 +260,15 @@ rhkspm32_load(const gchar *filename,
         g_string_append(key, "/title");
         cs = gwy_enum_to_string(rhkpage->scan,
                                 scan_directions, G_N_ELEMENTS(scan_directions));
-        if (cs)
-            s = g_strdup_printf("%s [%s]", rhkpage->label, cs);
+        if (rhkpage->label) {
+            if (cs)
+                s = g_strdup_printf("%s [%s]", rhkpage->label, cs);
+            else
+                s = g_strdup(rhkpage->label);
+            gwy_container_set_string_by_name(container, key->str, s);
+        }
         else
-            s = g_strdup(rhkpage->label);
-        gwy_container_set_string_by_name(container, key->str, s);
+            gwy_app_channel_title_fall_back(container, i);
 
         meta = rhkspm32_get_metadata(rhkpage);
         g_string_printf(key, "/%d/meta", i);
@@ -340,11 +344,8 @@ rhkspm32_read_header(RHKPage *rhkpage,
         return FALSE;
     }
     pos = (end - buffer) + 2;
+    /* Don't check failure, it seems the value is optional */
     rhkpage->alpha = g_ascii_strtod(buffer + pos, &end);
-    if (end == buffer + pos) {
-        err_INVALID(error, "alpha");
-        return FALSE;
-    }
 
     if (!rhkspm32_read_range(buffer + 0xc0, "IV", &rhkpage->iv)) {
         err_INVALID(error, "IV");
@@ -367,8 +368,11 @@ rhkspm32_read_header(RHKPage *rhkpage,
 
     if (sscanf(buffer + 0x100, "id %u %u",
                &rhkpage->id, &rhkpage->data_offset) != 2) {
-        err_INVALID(error, "id");
-        return FALSE;
+        /* XXX: Some braindamaged files encountered in practice do not contain
+         * the data offset.  Cross fingers and substitute HEADER_SIZE.  */
+        g_warning("Data offset is missing, just guessing from now...");
+        rhkpage->id = 0;
+        rhkpage->data_offset = HEADER_SIZE;
     }
     gwy_debug("data_offset = %u", rhkpage->data_offset);
     if (rhkpage->data_offset < HEADER_SIZE) {
@@ -376,9 +380,13 @@ rhkspm32_read_header(RHKPage *rhkpage,
         return FALSE;
     }
 
-    rhkpage->label = g_strstrip(g_strndup(buffer + 0x140, 0x20));
-    rhkpage->comment = g_strstrip(g_strndup(buffer + 0x160,
-                                           HEADER_SIZE - 0x160));
+    /* XXX: The same braindamaged files overwrite the label and comment part
+     * with some XML mumbo jumbo.  Sigh and ignore it.  */
+    if (strncmp(buffer + 0x140, "\x0d\x0a<?", 4) != 0) {
+        rhkpage->label = g_strstrip(g_strndup(buffer + 0x140, 0x20));
+        rhkpage->comment = g_strstrip(g_strndup(buffer + 0x160,
+                                                HEADER_SIZE - 0x160));
+    }
 
     return TRUE;
 }
@@ -438,8 +446,9 @@ rhkspm32_get_metadata(RHKPage *rhkpage)
     gwy_container_set_string_by_name(meta, "Current",
                                      g_strdup_printf("%g nA",
                                                      1e9*rhkpage->iv.scale));
-    gwy_container_set_string_by_name(meta, "Id",
-                                     g_strdup_printf("%u", rhkpage->id));
+    if (rhkpage->id)
+        gwy_container_set_string_by_name(meta, "Id",
+                                         g_strdup_printf("%u", rhkpage->id));
     if (rhkpage->date && *rhkpage->date)
         gwy_container_set_string_by_name(meta, "Date", g_strdup(rhkpage->date));
     if (rhkpage->comment && *rhkpage->comment)
@@ -466,6 +475,8 @@ rhkspm32_read_data(RHKPage *rhkpage)
     GwySIUnit *siunit;
     gdouble *data;
     const gchar *s;
+    gdouble q;
+    gint power10;
     guint i;
 
     p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
@@ -478,18 +489,24 @@ rhkspm32_read_data(RHKPage *rhkpage)
     for (i = 0; i < rhkpage->xres*rhkpage->yres; i++)
         data[i] = GINT16_FROM_LE(p[i]);
 
-    gwy_data_field_multiply(dfield, rhkpage->z.scale);
-    gwy_data_field_add(dfield, rhkpage->z.offset);
-
     siunit = gwy_data_field_get_si_unit_xy(dfield);
-    gwy_si_unit_set_from_string(siunit, rhkpage->x.units);
+    gwy_si_unit_set_from_string_parse(siunit, rhkpage->x.units, &power10);
+    if (power10) {
+        q = pow10(power10);
+        gwy_data_field_set_xreal(dfield, q*gwy_data_field_get_xreal(dfield));
+        gwy_data_field_set_yreal(dfield, q*gwy_data_field_get_yreal(dfield));
+    }
 
     siunit = gwy_data_field_get_si_unit_z(dfield);
     s = rhkpage->z.units;
     /* Fix some silly units */
     if (gwy_strequal(s, "N/sec"))
         s = "s^-1";
-    gwy_si_unit_set_from_string(siunit, s);
+    gwy_si_unit_set_from_string_parse(siunit, s, &power10);
+    q = pow10(power10);
+
+    gwy_data_field_multiply(dfield, q*rhkpage->z.scale);
+    gwy_data_field_add(dfield, q*rhkpage->z.offset);
 
     return dfield;
 }
