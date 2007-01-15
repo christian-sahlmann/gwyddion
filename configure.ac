@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[2])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070115])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -84,19 +84,17 @@ AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 GTK_DOC_CHECK(1.4)
 
 #############################################################################
-# Host sytstem.
-AC_MSG_CHECKING([for 32bit])
-case "$host_cpu" in
-  # Highly incomplete
-  i@<:@3456@:>@86)
-    arch_32bit=yes
-    ;;
-  *)
-    # We cannot reliably detect things like CFLAGS=-m32
-    arch_32bit="maybe-not"
-    ;;
-esac
-AC_MSG_RESULT([$arch_32bit])
+# 64bit (for FFTW 3.0 warning)
+# Unfortunately, AC_CHECK_SIZEOF() is capable only of preprocessor symbol
+# production while we need to know the size now.  We don't care much about
+# the exact model: if pointers are larger than 32bit it can possibly break,
+# and so we will warn.
+AC_CHECK_SIZEOF([void*])
+if test $ac_cv_sizeof_voidp = 4; then
+  arch_32bit=yes
+else
+  arch_32bit=no
+fi
 
 #############################################################################
 # Win32.
