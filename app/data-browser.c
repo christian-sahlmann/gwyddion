@@ -3010,7 +3010,6 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy = NULL;
     GwyAppDataList *list;
-    GtkTreeIter iter;
     gboolean visible;
     gint i;
 
@@ -3038,12 +3037,15 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
 
         /* Attempt to show something. FIXME: Crude. */
         for (i = 0; i < NPAGES; i++) {
+            GtkTreeModel *model;
+            GtkTreeIter iter;
+
             list = &proxy->lists[i];
-            if (gwy_app_data_proxy_find_object(proxy->lists[i].store,
-                                               0, &iter)) {
-                set_visible[i](proxy, &iter, TRUE);
-                return TRUE;
-            }
+            model = GTK_TREE_MODEL(list->store);
+            if (!gtk_tree_model_get_iter_first(model, &iter))
+                continue;
+
+            set_visible[i](proxy, &iter, TRUE);
         }
 
         return FALSE;
