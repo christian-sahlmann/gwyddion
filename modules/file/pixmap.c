@@ -301,7 +301,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "5.3",
+    "5.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1884,7 +1884,7 @@ hruler(gint size,
     real /= format->magnitude;
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
-    n = MIN(10, size/l);
+    n = CLAMP(size/l, 1, 10);
     step = real/n;
     base = pow10(floor(log10(step)));
     step = step/base;
@@ -1974,7 +1974,7 @@ vruler(gint size,
     real /= format->magnitude;
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
-    n = MIN(10, size/l);
+    n = CLAMP(size/l, 1, 10);
     step = real/n;
     base = pow10(floor(log10(step)));
     step = step/base;
