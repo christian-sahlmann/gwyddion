@@ -1,4 +1,4 @@
-2.2.20070113
+2.2.20070115
 
 2.3 (2000-00-00)
 Application:
@@ -34,6 +34,8 @@ Libraries:
   data was added.
 - libgwyapp: Convenience functions to set `waiting' cursor on windows were
   added.
+- libgwyapp: File is loaded for preview is reused for the real load instead
+  of throwing it away and loading again.
 
 Modules:
 - MicroProf (new): MicroProf FRT data file import.
@@ -48,6 +50,8 @@ Modules:
 - Fit Sphere: Swapped x and y was fixed, radii smaller than data size work,
   data offsets are honoured, palette and other attribudes are copied to the
   result
+- RHK SPM32 (SM2): Support for semi-broken files probably written by Nova
+  software was added.
 - JEOL: Support for more data subtypes was added.
 - Rawfile: Skipping fields works when delimiter is `any whitespace'.
 - Mark scars, Mark grains by threshold, Mark grains by watershed, Remove
@@ -60,6 +64,10 @@ Modules:
 - NetCDF: Attribute long_name is used for channel title of GXSM files.
 - Fit Sphere, Graph Fit, Graph CD: Use the new Gtk+ file chooser dialogs
   instead of GtkFileSelection.
+
+Other:
+- ./configure warning about too old FFTW3 version should be printed only on
+  really 64bit systems.
 
 
 2.2 (2006-12-15)
