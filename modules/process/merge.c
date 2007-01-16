@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <stdio.h>
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -341,6 +342,7 @@ merge_do(MergeArgs *args)
     gint xshift, yshift;
     GQuark quark;
     gint newid;
+    GwyMergeDirectionType real_dir;
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
@@ -353,6 +355,15 @@ merge_do(MergeArgs *args)
     if (args->direction == GWY_MERGE_DIRECTION_UP
         || args->direction == GWY_MERGE_DIRECTION_LEFT)
         GWY_SWAP(GwyDataField*, dfield1, dfield2);
+
+    /*FIXME: this and previous block is contradictory*/
+    if (dfield1->xres*dfield1->yres < dfield1->xres*dfield1->yres) {
+        GWY_SWAP(GwyDataField*, dfield1, dfield2);
+        if (args->direction == GWY_MERGE_DIRECTION_UP) args->direction = GWY_MERGE_DIRECTION_DOWN;
+        else if (args->direction == GWY_MERGE_DIRECTION_DOWN) args->direction = GWY_MERGE_DIRECTION_UP;
+        else if (args->direction == GWY_MERGE_DIRECTION_LEFT) args->direction = GWY_MERGE_DIRECTION_RIGHT;
+        else if (args->direction == GWY_MERGE_DIRECTION_RIGHT) args->direction = GWY_MERGE_DIRECTION_LEFT;
+    }
 
     xres1 = gwy_data_field_get_xres(dfield1);
     xres2 = gwy_data_field_get_xres(dfield2);
@@ -493,9 +504,14 @@ merge_do(MergeArgs *args)
 
         case GWY_MERGE_DIRECTION_LEFT:
         case GWY_MERGE_DIRECTION_RIGHT:
+        yshift = MAX(0,  -(max_row - cdata.height/2) - (yres1 - yres2)/2);
+        
         newxres = cdata.x + (max_col - kdata.width/2) + xres2;
-        newyres = fabs((max_row - kdata.height/2) - kdata.y)
-                  + MAX(yres1, yres2);
+        /*printf("%d %d\n", MAX(0, (max_row - cdata.height/2)) + yres2/2,
+            MIN(0, (max_row - cdata.height/2)) - yres2/2);*/
+        newyres = MAX(MAX(yres1, yres2),
+                      (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
+                      (MIN(0, (max_row - cdata.height/2)) - yres2/2));
 
         gwy_data_field_resample(result, newxres, newyres,
                                 GWY_INTERPOLATION_NONE);
@@ -515,7 +531,6 @@ merge_do(MergeArgs *args)
                   - gwy_data_field_get_avg(correlation_kernel));
 
         /* fill the result with both data fields */
-        yshift = MAX(0, -(max_row - cdata.height/2));
         if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH
             || args->boundary == GWY_MERGE_BOUNDARY_FIRST) {
             gwy_data_field_area_copy(dfield1, result,
