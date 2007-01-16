@@ -115,6 +115,7 @@ gwy_plain_tool_finalize(GObject *object)
     gwy_object_unref(plain_tool->layer);
     gwy_plain_tool_reconnect_container(plain_tool, NULL);
 
+    g_free(plain_tool->selection_bname);
     if (plain_tool->coord_format)
         gwy_si_unit_value_format_free(plain_tool->coord_format);
     if (plain_tool->value_format)
