@@ -41,6 +41,7 @@ typedef struct _GwyToolReadValueClass GwyToolReadValueClass;
 
 typedef struct {
     gint radius;
+    gboolean show_selection;
 } ToolArgs;
 
 struct _GwyToolReadValue {
@@ -64,6 +65,7 @@ struct _GwyToolReadValue {
     GtkWidget *theta;
     GtkWidget *phi;
     GtkObject *radius;
+    GtkWidget *show_selection;
 
     gboolean same_units;
 
@@ -79,35 +81,38 @@ struct _GwyToolReadValueClass {
 
 static gboolean module_register(void);
 
-static GType  gwy_tool_read_value_get_type         (void) G_GNUC_CONST;
-static void   gwy_tool_read_value_finalize         (GObject *object);
-static void   gwy_tool_read_value_init_dialog      (GwyToolReadValue *tool);
-static void   gwy_tool_read_value_data_switched    (GwyTool *gwytool,
-                                                    GwyDataView *data_view);
-static void   gwy_tool_read_value_update_units     (GwyToolReadValue *tool);
-static void   gwy_tool_read_value_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
-                                                    gint hint);
-static void   gwy_tool_read_value_radius_changed   (GwyToolReadValue *tool);
-static void   gwy_tool_read_value_update_values    (GwyToolReadValue *tool);
-static void   gwy_tool_read_value_calculate        (GwyToolReadValue *tool,
-                                                    gint col,
-                                                    gint row);
+static GType gwy_tool_read_value_get_type             (void) G_GNUC_CONST;
+static void gwy_tool_read_value_finalize              (GObject *object);
+static void gwy_tool_read_value_init_dialog           (GwyToolReadValue *tool);
+static void gwy_tool_read_value_data_switched         (GwyTool *gwytool,
+                                                       GwyDataView *data_view);
+static void gwy_tool_read_value_update_units          (GwyToolReadValue *tool);
+static void gwy_tool_read_value_data_changed         (GwyPlainTool *plain_tool);
+static void gwy_tool_read_value_selection_changed     (GwyPlainTool *plain_tool,
+                                                       gint hint);
+static void gwy_tool_read_value_radius_changed        (GwyToolReadValue *tool);
+static void gwy_tool_read_value_show_selection_changed(GtkToggleButton *check,
+                                                       GwyToolReadValue *tool);
+static void gwy_tool_read_value_update_values         (GwyToolReadValue *tool);
+static void gwy_tool_read_value_calculate             (GwyToolReadValue *tool,
+                                                       gint col,
+                                                       gint row);
 
-static const gchar radius_key[] = "/module/readvalue/radius";
+static const gchar radius_key[]         = "/module/readvalue/radius";
+static const gchar show_selection_key[] = "/module/readvalue/show-selection";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
 static const ToolArgs default_args = {
-    1,
+    1, FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -155,6 +160,8 @@ gwy_tool_read_value_finalize(GObject *object)
 
     settings = gwy_app_settings_get();
     gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
+    gwy_container_set_boolean_by_name(settings, show_selection_key,
+                                      tool->args.show_selection);
 
     if (tool->pixel_format)
         gwy_si_unit_value_format_free(tool->pixel_format);
@@ -182,6 +189,8 @@ gwy_tool_read_value_init(GwyToolReadValue *tool)
     settings = gwy_app_settings_get();
     tool->args = default_args;
     gwy_container_gis_int32_by_name(settings, radius_key, &tool->args.radius);
+    gwy_container_gis_boolean_by_name(settings, show_selection_key,
+                                      &tool->args.show_selection);
 
     tool->pixel_format = g_new0(GwySIValueFormat, 1);
     tool->pixel_format->magnitude = 1.0;
@@ -303,20 +312,31 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    table = GTK_TABLE(gtk_table_new(1, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(2, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
+    row = 0;
 
     tool->radius = gtk_adjustment_new(tool->args.radius,
                                       1, RADIUS_MAX, 1, 5, 0);
-    gwy_table_attach_spinbutton(GTK_WIDGET(table), 9,
+    gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                 _("_Averaging radius:"), "px", tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",
                              G_CALLBACK(gwy_tool_read_value_radius_changed),
                              tool);
+    row++;
+
+    tool->show_selection
+        = gtk_check_button_new_with_mnemonic(_("Show _selection"));
+    gtk_table_attach(GTK_TABLE(table), tool->show_selection,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(tool->show_selection, "toggled",
+                     G_CALLBACK(gwy_tool_read_value_show_selection_changed),
+                             tool);
+    row++;
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
@@ -340,7 +360,8 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_point,
-                                "draw-marker", FALSE,
+                                "draw-marker", tool->args.show_selection,
+                                "marker-radius", tool->args.radius,
                                 "editable", TRUE,
                                 "focus", -1,
                                 NULL);
@@ -379,9 +400,30 @@ gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
 static void
 gwy_tool_read_value_radius_changed(GwyToolReadValue *tool)
 {
+    GwyPlainTool *plain_tool;
+
     tool->args.radius = gwy_adjustment_get_int(tool->radius);
-    if (GWY_PLAIN_TOOL(tool)->selection)
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (plain_tool->layer)
+        g_object_set(plain_tool->layer,
+                     "marker-radius", tool->args.radius,
+                     NULL);
+    if (plain_tool->selection)
         gwy_tool_read_value_update_values(tool);
+}
+
+static void
+gwy_tool_read_value_show_selection_changed(GtkToggleButton *check,
+                                           GwyToolReadValue *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    tool->args.show_selection = gtk_toggle_button_get_active(check);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (plain_tool->layer)
+        g_object_set(plain_tool->layer,
+                     "draw-marker", tool->args.show_selection,
+                     NULL);
 }
 
 static void
