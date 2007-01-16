@@ -298,8 +298,10 @@ gwy_sensitivity_group_release_widget(GwySensitivityGroup *sensgroup,
                                          item);
     senslist->widgets = g_list_delete_link(senslist->widgets, item);
     /* Destroy whole list when there are no widgets in it */
-    if (!senslist->widgets)
+    if (!senslist->widgets) {
         sensgroup->lists = g_list_remove(sensgroup->lists, senslist);
+        g_free(senslist);
+    }
 
     /* Self-dereference (pretend the widget has dereferenced us) */
     g_object_unref(sensgroup);
@@ -468,8 +470,10 @@ gwy_sensitivity_group_widget_gone(GObject *object,
     sensgroup = senslist->parent;
 
     /* Destroy whole list when there are no widgets in it */
-    if (!senslist->widgets)
+    if (!senslist->widgets) {
         sensgroup->lists = g_list_remove(sensgroup->lists, senslist);
+        g_free(senslist);
+    }
 
     /* Self-dereference (pretend the widget has dereferenced us) */
     g_object_unref(sensgroup);
