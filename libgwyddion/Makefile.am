@@ -54,7 +54,7 @@ include $(top_srcdir)/utils/mkenum.mk
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -version-info 0:1:0
+libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -version-info 0:2:0
 #libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyddion2_la_SOURCES = \
 	gwycontainer.c \
