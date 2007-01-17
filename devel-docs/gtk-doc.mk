@@ -138,7 +138,7 @@ endif
 ##############
 
 clean-local:
-	rm -f *~ *.bak
+	rm -f *~ *.bak $(DOC_MODULE)-scan.*
 
 distclean-local:
 	cd $(srcdir) && rm -rf xml template
