@@ -150,8 +150,6 @@ static gboolean      fill_data_fields     (SurfFile *surffile,
                                            const guchar *buffer,
                                            GError **error);
 static GwyContainer* surffile_get_metadata(SurfFile *surffile);
-static gchar*        get_surf_unit        (gchar *unit,
-                                           gdouble *mult);
 
 static const GwyEnum acq_modes[] = {
    { "Unknown",                     SURF_ACQ_UNKNOWN,        },
@@ -482,12 +480,6 @@ surffile_get_metadata(SurfFile *surffile)
                                               G_N_ELEMENTS(acq_modes))));
 
     return meta;
-}
-
-static gchar*
-get_surf_unit(gchar *unit, gdouble *mult)
-{
-    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
