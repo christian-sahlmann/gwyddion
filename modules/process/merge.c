@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -447,7 +446,7 @@ merge_do(MergeArgs *args)
     }
     
     find_score_maximum(correlation_score, &max_col, &max_row);
-    printf("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
+    /*printf("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
            cdata.x,
            cdata.y,
            cdata.width,
@@ -457,7 +456,7 @@ merge_do(MergeArgs *args)
            kdata.width,
            kdata.height,
            max_col, max_row
-            );
+            );*/
     /* enlarge result field to fit the new data */
     switch (args->direction) {
         case GWY_MERGE_DIRECTION_UP:
