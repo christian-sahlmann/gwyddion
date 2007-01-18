@@ -117,6 +117,15 @@ static void     merge_boundary       (GwyDataField *dfield1,
                                       GwyMergeDirectionType direction,
                                       gdouble zshift);
 
+static void     put_fields           (GwyDataField *dfield1, 
+                                      GwyDataField *dfield2, 
+                                      GwyDataField *result, 
+                                      GwyMergeBoundaryType boundary,
+                                      gint px1, 
+                                      gint py1,
+                                      gint px2, 
+                                      gint py2);
+
 static const GwyEnum directions[] = {
     { N_("Up"),            GWY_MERGE_DIRECTION_UP },
     { N_("Down"),          GWY_MERGE_DIRECTION_DOWN },
@@ -333,16 +342,15 @@ merge_do(MergeArgs *args)
     GwyDataField *dfield1, *dfield2;
     GwyDataField *correlation_data, *correlation_kernel, *correlation_score;
     GwyDataField *result;
-    GwyRectangle cdata, kdata, res_rect;
-    GwyCoord f1_pos, f2_pos;
+    GwyRectangle cdata, kdata;
     gint max_col, max_row;
     gint newxres, newyres;
     gint xres1, xres2, yres1, yres2;
-    gdouble zshift;
     gint xshift, yshift;
     GQuark quark;
     gint newid;
     GwyMergeDirectionType real_dir;
+    gint x1, y1, w1, h1, px1, py1, x2, y2, w2, h2, px2, py2;
 
     quark = gwy_app_get_data_key_for_id(args->op1.id);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object(args->op1.data, quark));
@@ -352,11 +360,6 @@ merge_do(MergeArgs *args)
 
     result = gwy_data_field_new_alike(dfield1, FALSE);
 
-    if (args->direction == GWY_MERGE_DIRECTION_UP
-        || args->direction == GWY_MERGE_DIRECTION_LEFT)
-        GWY_SWAP(GwyDataField*, dfield1, dfield2);
-
-    /*FIXME: this and previous block is contradictory*/
     if (dfield1->xres*dfield1->yres < dfield1->xres*dfield1->yres) {
         GWY_SWAP(GwyDataField*, dfield1, dfield2);
         if (args->direction == GWY_MERGE_DIRECTION_UP) args->direction = GWY_MERGE_DIRECTION_DOWN;
@@ -373,6 +376,16 @@ merge_do(MergeArgs *args)
     /*cut data for correlation*/
     switch (args->direction) {
         case GWY_MERGE_DIRECTION_UP:
+        cdata.x = 0;
+        cdata.y = 0;
+        cdata.width = xres1;
+        cdata.height = yres1/3;
+        kdata.width = MIN(xres2, cdata.width/2);
+        kdata.height = MIN(yres2, cdata.height/3);
+        kdata.x = MAX(0, xres2/2 - kdata.width/2);
+        kdata.y = MAX(0, yres2  - cdata.height/2);
+        break;
+
         case GWY_MERGE_DIRECTION_DOWN:
         cdata.x = 0;
         cdata.y = yres1 - (yres1/3);
@@ -380,11 +393,10 @@ merge_do(MergeArgs *args)
         cdata.height = yres1/3;
         kdata.width = MIN(xres2, cdata.width/2);
         kdata.height = MIN(yres2, cdata.height/3);
-        kdata.x = xres2/2 - kdata.width/2;
+        kdata.x = MAX(0, xres2/2 - kdata.width/2);
         kdata.y = 0;
         break;
 
-        case GWY_MERGE_DIRECTION_LEFT:
         case GWY_MERGE_DIRECTION_RIGHT:
         cdata.x = xres1 - (xres1/3);
         cdata.y = 0;
@@ -393,7 +405,18 @@ merge_do(MergeArgs *args)
         kdata.width = MIN(xres2, cdata.width/3);
         kdata.height = MIN(yres2, cdata.height/2);
         kdata.x = 0;
-        kdata.y = yres2/2 - kdata.height/2;
+        kdata.y = MAX(0, yres2/2 - kdata.height/2);
+        break;
+
+        case GWY_MERGE_DIRECTION_LEFT:
+        cdata.x = 0;
+        cdata.y = 0;
+        cdata.width = xres1/3;
+        cdata.height = yres1;
+        kdata.width = MIN(xres2, cdata.width/3);
+        kdata.height = MIN(yres2, cdata.height/2);
+        kdata.x = MAX(0, xres2 - cdata.width/3);
+        kdata.y = MAX(0, yres2/2 - kdata.height/2);
         break;
 
         default:
@@ -422,172 +445,86 @@ merge_do(MergeArgs *args)
         g_object_unref(result);
         return FALSE;
     }
+    
     find_score_maximum(correlation_score, &max_col, &max_row);
-
+    printf("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
+           cdata.x,
+           cdata.y,
+           cdata.width,
+           cdata.height,
+           kdata.x,
+           kdata.y,
+           kdata.width,
+           kdata.height,
+           max_col, max_row
+            );
     /* enlarge result field to fit the new data */
     switch (args->direction) {
         case GWY_MERGE_DIRECTION_UP:
+        xshift = MAX(0,  -(max_col - cdata.width/2) - (xres1 - xres2)/2);
+        newxres =  MAX(MAX(xres1, xres2),
+                      (MAX(0, (max_col - cdata.width/2)) + xres2/2) -
+                      (MIN(0, (max_col - cdata.width/2)) - xres2/2));
+        newyres = yres1 + yres2 - max_row - kdata.height/2;
+
+        px2 = xshift;
+        py2 = 0;
+        px1 = xshift + ((max_col - kdata.width/2) - kdata.x);
+        py1 = yres2 - max_row - kdata.height/2;
+        break;
+
         case GWY_MERGE_DIRECTION_DOWN:
-        newxres = fabs((max_col - kdata.width/2) - kdata.x) + MAX(xres1, xres2);
-        newyres = cdata.y + (max_row - kdata.height/2) + yres2;
+        xshift = MAX(0,  -(max_col - cdata.width/2) - (xres1 - xres2)/2);
+        newxres =  MAX(MAX(xres1, xres2),
+                      (MAX(0, (max_col - cdata.width/2)) + xres2/2) -
+                      (MIN(0, (max_col - cdata.width/2)) - xres2/2));
+        newyres = cdata.y + (max_row - kdata.height/2) + yres2;;
 
-        gwy_data_field_resample(result, newxres, newyres,
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_set_xreal(result,
-                                 gwy_data_field_get_xreal(result)*newxres/xres2);
-        gwy_data_field_set_yreal(result,
-                                 gwy_data_field_get_yreal(result)*newyres/yres2);
-
-        gwy_data_field_fill(result,
-                            MIN(gwy_data_field_get_min(dfield1),
-                                gwy_data_field_get_min(dfield2)));
-        zshift = (gwy_data_field_area_get_avg(correlation_data, NULL,
-                                              max_col - kdata.width/2,
-                                              max_row - kdata.height/2,
-                                              kdata.width,
-                                              kdata.height)
-                  - gwy_data_field_get_avg(correlation_kernel));
-
-        /* fill the result with both data fields */
-        xshift = MAX(0, -(max_col - cdata.width/2));
-        if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH
-            || args->boundary == GWY_MERGE_BOUNDARY_FIRST) {
-            gwy_data_field_area_copy(dfield1, result,
-                                     0, 0, xres1, yres1,
-                                     xshift, 0);
-            gwy_data_field_area_copy(dfield2, result,
-                                     0, 0, xres2, yres2,
-                                     xshift + ((max_col - kdata.width/2)
-                                               - kdata.x),
-                                     cdata.y + (max_row - kdata.height/2));
-            gwy_data_field_area_add(result,
-                                    xshift + ((max_col - kdata.width/2)
-                                              - kdata.x),
-                                    cdata.y + (max_row - kdata.height/2),
-                                    xres2, yres2,
-                                    zshift);
-        }
-        else {
-            gwy_data_field_area_copy(dfield2, result,
-                                     0, 0, xres2, yres2,
-                                     xshift + ((max_col - kdata.width/2)
-                                               - kdata.x),
-                                     cdata.y + (max_row - kdata.height/2));
-            gwy_data_field_area_add(result,
-                                    xshift + ((max_col - kdata.width/2)
-                                              - kdata.x),
-                                    cdata.y + (max_row - kdata.height/2),
-                                    xres2, yres2,
-                                    zshift);
-            gwy_data_field_area_copy(dfield1, result,
-                                     0, 0, xres1, yres1,
-                                     xshift, 0);
-          }
-
-
-        /*adjust boundary to be as smooth as possible*/
-        if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH) {
-            res_rect.x = 0;
-            res_rect.width = gwy_data_field_get_xres(result);
-            res_rect.y = cdata.y;
-            res_rect.height = yres1 - res_rect.y;
-            f1_pos.x = -xshift;
-            f1_pos.y = res_rect.y;
-            f2_pos.x = -(xshift + ((max_col - kdata.width/2) - kdata.x));
-            f2_pos.y = kdata.y - (max_row - kdata.height/2);
-
-            merge_boundary(dfield1, dfield2, result,
-                           res_rect, f1_pos, f2_pos,
-                           args->direction, zshift);
-        }
+        px1 = xshift;
+        py1 = 0;
+        px2 = xshift + ((max_col - kdata.width/2) - kdata.x);
+        py2 = cdata.y + (max_row - kdata.height/2);
         break;
 
         case GWY_MERGE_DIRECTION_LEFT:
-        case GWY_MERGE_DIRECTION_RIGHT:
         yshift = MAX(0,  -(max_row - cdata.height/2) - (yres1 - yres2)/2);
-        
-        newxres = cdata.x + (max_col - kdata.width/2) + xres2;
-        /*printf("%d %d\n", MAX(0, (max_row - cdata.height/2)) + yres2/2,
-            MIN(0, (max_row - cdata.height/2)) - yres2/2);*/
+        newxres = xres1 + xres2 - max_col - kdata.width/2;
         newyres = MAX(MAX(yres1, yres2),
                       (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
                       (MIN(0, (max_row - cdata.height/2)) - yres2/2));
 
-        gwy_data_field_resample(result, newxres, newyres,
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_set_xreal(result,
-                                 gwy_data_field_get_xreal(result)*newxres/xres2);
-        gwy_data_field_set_yreal(result,
-                                 gwy_data_field_get_yreal(result)*newyres/yres2);
+        px2 = 0;
+        py2 = yshift;
+        px1 = xres2 - max_col - kdata.width/2;
+        py1 = yshift + ((max_row - kdata.height/2) - kdata.y);
+        break;
 
-        gwy_data_field_fill(result,
-                            MIN(gwy_data_field_get_min(dfield1),
-                                gwy_data_field_get_min(dfield2)));
-        zshift = (gwy_data_field_area_get_avg(correlation_data, NULL,
-                                              max_col - kdata.width/2,
-                                              max_row - kdata.height/2,
-                                              kdata.width,
-                                              kdata.height)
-                  - gwy_data_field_get_avg(correlation_kernel));
+        case GWY_MERGE_DIRECTION_RIGHT:
+        yshift = MAX(0,  -(max_row - cdata.height/2) - (yres1 - yres2)/2);
+        newxres = cdata.x + (max_col - kdata.width/2) + xres2;
+        newyres = MAX(MAX(yres1, yres2),
+                      (MAX(0, (max_row - cdata.height/2)) + yres2/2) -
+                      (MIN(0, (max_row - cdata.height/2)) - yres2/2));
 
-        /* fill the result with both data fields */
-        if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH
-            || args->boundary == GWY_MERGE_BOUNDARY_FIRST) {
-            gwy_data_field_area_copy(dfield1, result,
-                                     0, 0, xres1, yres1,
-                                     0, yshift);
-            gwy_data_field_area_copy(dfield2, result,
-                                     0, 0, xres2, yres2,
-                                     cdata.x + (max_col - kdata.width/2),
-                                     yshift + ((max_row - kdata.height/2)
-                                               - kdata.y));
-            /*gwy_data_field_area_add(result,
-                                    cdata.x + (max_col - kdata.width/2),
-                                    yshift + ((max_row - kdata.height/2)
-                                              - kdata.y),
-                                    xres2, yres2,
-                                    zshift);*/
-        }
-        else {
-            gwy_data_field_area_copy(dfield2, result,
-                                     0, 0, xres2, yres2,
-                                     cdata.x + (max_col - kdata.width/2),
-                                     yshift + ((max_row - kdata.height/2)
-                                               - kdata.y));
-            /*gwy_data_field_area_add(result,
-                                cdata.x + (max_col - kdata.width/2),
-                                yshift + ((max_row - kdata.height/2)
-                                          - kdata.y),
-                                xres2, yres2,
-                                zshift);
-                                */
-            gwy_data_field_area_copy(dfield1, result,
-                                     0, 0, xres1, yres1,
-                                     0, yshift);
-         }
-
-
-        /* adjust boundary to be as smooth as possible */
-        if (args->boundary == GWY_MERGE_BOUNDARY_SMOOTH) {
-            res_rect.x = cdata.x;
-            res_rect.width = xres1 - res_rect.x;
-            res_rect.y = 0;
-            res_rect.height = gwy_data_field_get_yres(result);
-            f1_pos.x = res_rect.x;
-            f1_pos.y = -yshift;
-            f2_pos.x = kdata.x - (max_col - kdata.width/2);
-            f2_pos.y = -(yshift + ((max_row - kdata.height/2) - kdata.y));
-
-            merge_boundary(dfield1, dfield2, result,
-                           res_rect, f1_pos, f2_pos,
-                           args->direction, zshift);
-        }
+        px1 = 0;
+        py1 = yshift;
+        px2 = cdata.x + (max_col - kdata.width/2);
+        py2 = yshift + ((max_row - kdata.height/2) - kdata.y);
         break;
 
         default:
         g_assert_not_reached();
         break;
     }
+
+
+    gwy_data_field_resample(result, newxres, newyres,
+                            GWY_INTERPOLATION_NONE);
+
+    put_fields(dfield1, dfield2, result, args->boundary, 
+               px1, py1, 
+               px2, py2);
+ 
 
     /* set right output */
     if (result) {
@@ -609,6 +546,87 @@ merge_do(MergeArgs *args)
 
     return TRUE;
 }
+
+
+static void
+put_fields(GwyDataField *dfield1, GwyDataField *dfield2, 
+           GwyDataField *result, 
+           GwyMergeBoundaryType boundary,
+           gint px1, gint py1,
+           gint px2, gint py2)
+{
+
+    GwyRectangle res_rect;
+    GwyCoord f1_pos, f2_pos;
+    gint x1, x2, y1, y2, w1, w2, h1, h2;
+
+    gwy_data_field_set_xreal(result,
+                             gwy_data_field_get_xreal(result)
+                             *gwy_data_field_get_xres(result)
+                             /gwy_data_field_get_xres(dfield2));
+    gwy_data_field_set_yreal(result,
+                             gwy_data_field_get_yreal(result)
+                             *gwy_data_field_get_yres(result)
+                             /gwy_data_field_get_yres(dfield2));
+
+    gwy_data_field_fill(result,
+                        MIN(gwy_data_field_get_min(dfield1),
+                            gwy_data_field_get_min(dfield2)));
+    /*
+    zshift = (gwy_data_field_area_get_avg(correlation_data, NULL,
+                                              max_col - kdata.width/2,
+                                              max_row - kdata.height/2,
+                                              kdata.width,
+                                              kdata.height)
+                  - gwy_data_field_get_avg(correlation_kernel));
+    */
+    x1 = y1 = x2 = y2 = 0;
+    w1 = gwy_data_field_get_xres(dfield1);
+    h1 = gwy_data_field_get_yres(dfield1);
+    w2 = gwy_data_field_get_xres(dfield2);
+    h2 = gwy_data_field_get_yres(dfield2);
+
+
+    if (boundary == GWY_MERGE_BOUNDARY_SMOOTH
+        || boundary == GWY_MERGE_BOUNDARY_FIRST) {
+        gwy_data_field_area_copy(dfield1, result,
+                                 x1, y1, w1, h1,
+                                 px1, py1);
+        gwy_data_field_area_copy(dfield2, result,
+                                 x2, y2, w2, h2,
+                                 px2, py2);
+    }
+    else {
+        gwy_data_field_area_copy(dfield2, result,
+                                 x2, y2, w2, h2,
+                                 px2, py2);
+
+        gwy_data_field_area_copy(dfield1, result,
+                                 x1, y1, w1, h1,
+                                 px1, py1);
+     }
+
+
+    /* adjust boundary to be as smooth as possible */
+    if (boundary == GWY_MERGE_BOUNDARY_SMOOTH) {
+        /*
+        res_rect.x = cdata.x;
+        res_rect.width = xres1 - res_rect.x;
+        res_rect.y = 0;
+        res_rect.height = gwy_data_field_get_yres(result);
+        f1_pos.x = res_rect.x;
+        f1_pos.y = -yshift;
+        f2_pos.x = kdata.x - (max_col - kdata.width/2);
+        f2_pos.y = -(yshift + ((max_row - kdata.height/2) - kdata.y));
+
+        merge_boundary(dfield1, dfield2, result,
+                       res_rect, f1_pos, f2_pos,
+                       args->direction, zshift);
+                       */
+    }
+
+}
+
 
 /* compute corelation */
 static gboolean
