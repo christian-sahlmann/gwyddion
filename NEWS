@@ -1,8 +1,8 @@
-2.2.20070115
+2.2.20070118
 
 2.3 (2000-00-00)
 Application:
-- Translations updated: Italian.
+- Translations updated: Italian, Czech.
 
 Libraries:
 - libgwyapp: Wrong graph and data process toolbox sensitivity after closing
@@ -36,6 +36,7 @@ Libraries:
   added.
 - libgwyapp: File is loaded for preview is reused for the real load instead
   of throwing it away and loading again.
+- libgwydgets, libgwyapp: Miscellaneous small memory leaks were fixed.
 
 Modules:
 - MicroProf (new): MicroProf FRT data file import.
@@ -53,6 +54,7 @@ Modules:
 - RHK SPM32 (SM2): Support for semi-broken files probably written by Nova
   software was added.
 - JEOL: Support for more data subtypes was added.
+- Read value tool: Can display the selection marker with averaging radius.
 - Rawfile: Skipping fields works when delimiter is `any whitespace'.
 - Mark scars, Mark grains by threshold, Mark grains by watershed, Remove
   grains by threshold, Drift, Facet analysis, Immerse: Colour mapping settings
@@ -64,6 +66,10 @@ Modules:
 - NetCDF: Attribute long_name is used for channel title of GXSM files.
 - Fit Sphere, Graph Fit, Graph CD: Use the new Gtk+ file chooser dialogs
   instead of GtkFileSelection.
+- Statistical quantities: Export that could become confused over whether
+  lateral and value units are identical by data window switch during the
+  export dialog was fixed.
+- Pixmap: Possible hang in preview was fixed.
 
 Other:
 - ./configure warning about too old FFTW3 version should be printed only on
