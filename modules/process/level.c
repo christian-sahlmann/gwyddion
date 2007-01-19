@@ -32,19 +32,19 @@
 
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
+typedef enum {
     LEVEL_EXCLUDE,
     LEVEL_INCLUDE,
     LEVEL_NORMAL,
-};
+} LevelMaskingType;
 
-enum {
+typedef enum {
     LEVEL_SUBTRACT,
     LEVEL_ROTATE,
-};
+} LevelMethod;
 
 typedef struct {
-    guint level_mode;
+    LevelMaskingType level_mode;
 } LevelArgs;
 
 typedef struct {
@@ -59,14 +59,16 @@ static void      level_rotate        (GwyContainer *data,
                                       GwyRunType run);
 static void      do_level            (GwyContainer *data,
                                       GwyRunType run,
-                                      guint level_type);
+                                      LevelMethod level_type,
+                                      const gchar *dialog_title);
 
 static void      fix_zero            (GwyContainer *data,
                                       GwyRunType run);
 static void      zero_mean           (GwyContainer *data,
                                       GwyRunType run);
 
-static gboolean  level_dialog        (LevelArgs *args);
+static gboolean  level_dialog        (LevelArgs *args,
+                                      const gchar *title);
 static void      mode_changed_cb     (G_GNUC_UNUSED GObject *unused,
                                       LevelControls *controls);
 static void      level_load_args     (GwyContainer *container, LevelArgs *args);
@@ -82,7 +84,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -94,7 +96,7 @@ module_register(void)
 {
     gwy_process_func_register("level",
                               (GwyProcessFunc)&level,
-                              N_("/_Level/_Level"),
+                              N_("/_Level/Plane _Level"),
                               GWY_STOCK_LEVEL,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -127,17 +129,20 @@ module_register(void)
 static void
 level(GwyContainer *data, GwyRunType run)
 {
-    do_level(data, run, LEVEL_SUBTRACT);
+    do_level(data, run, LEVEL_SUBTRACT, _("Plane Level"));
 }
 
 static void
 level_rotate(GwyContainer *data, GwyRunType run)
 {
-    do_level(data, run, LEVEL_ROTATE);
+    do_level(data, run, LEVEL_ROTATE, _("Level Rotate"));
 }
 
 static void
-do_level(GwyContainer *data, GwyRunType run, guint level_type)
+do_level(GwyContainer *data,
+         GwyRunType run,
+         LevelMethod level_type,
+         const gchar *dialog_title)
 {
     GwyDataField *dfield;
     GwyDataField *mfield;
@@ -155,7 +160,7 @@ do_level(GwyContainer *data, GwyRunType run, guint level_type)
 
     if (run != GWY_RUN_IMMEDIATE && mfield) {
         level_load_args(gwy_app_settings_get(), &args);
-        ok = level_dialog(&args);
+        ok = level_dialog(&args, dialog_title);
         level_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
@@ -239,7 +244,8 @@ zero_mean(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-level_dialog(LevelArgs *args)
+level_dialog(LevelArgs *args,
+             const gchar *title)
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum modes[] = {
@@ -254,7 +260,7 @@ level_dialog(LevelArgs *args)
 
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Level"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -324,15 +330,15 @@ level_load_args(GwyContainer *container, LevelArgs *args)
 {
     *args = level_defaults;
 
-    gwy_container_gis_int32_by_name(container, level_mode_key,
-                                    &args->level_mode);
+    gwy_container_gis_enum_by_name(container, level_mode_key,
+                                   &args->level_mode);
 }
 
 static void
 level_save_args(GwyContainer *container, LevelArgs *args)
 {
-    gwy_container_set_int32_by_name(container, level_mode_key,
-                                    args->level_mode);
+    gwy_container_set_enum_by_name(container, level_mode_key,
+                                   args->level_mode);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
