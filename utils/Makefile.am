@@ -37,6 +37,7 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 	$(libgwyddion)
 
 CLEANFILES = \
+	$(GUIDE_MAP).tmp \
 	modules.xml \
 	module-list.html \
 	module-list-nocss.html
@@ -47,7 +48,12 @@ DISTCLEANFILES = \
 INCLUDES = -I$(top_srcdir)
 
 modules.xml: dump-modules $(GUIDE_MAP) $(moduledir)/*.c $(moduledir)/*/*.c
-	./dump-modules $(GUIDE_MAP) >modules.xml
+	@sed -e '/^#/d' \
+	  -e 's/^\([^\t]\+\)\t\([^\t]\+\)$$/\1 \2.html/' \
+	  -e 's/^\([^\t]\+\)\t\([^\t]\+\)\t\([^\t]\+\)$$/\1 \2.html#\3/' \
+	  $(GUIDE_MAP) >$(GUIDE_MAP).tmp
+	./dump-modules $(GUIDE_MAP).tmp >modules.xml
+	rm -f $(GUIDE_MAP).tmp
 
 module-list.html: modules.xml modules-web.xsl
 	$(XSLTPROC) modules-web.xsl modules.xml >module-list.html
