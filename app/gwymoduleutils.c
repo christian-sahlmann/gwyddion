@@ -151,6 +151,8 @@ gwy_save_auxiliary_with_callback(const gchar *title,
                 g_unlink(filename_sys);
                 fh = NULL;
             }
+            else
+                myerrno = 0;  /* GCC */
         }
         else
             myerrno = errno;
@@ -164,6 +166,8 @@ gwy_save_auxiliary_with_callback(const gchar *title,
                 g_unlink(filename_sys);
                 fh = NULL;
             }
+            else
+                myerrno = 0;  /* GCC */
         }
         else
             myerrno = errno;
