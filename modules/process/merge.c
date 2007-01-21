@@ -114,13 +114,13 @@ static void     merge_boundary       (GwyDataField *dfield1,
                                       GwyCoord f1_pos,
                                       GwyCoord f2_pos);
 
-static void     put_fields           (GwyDataField *dfield1, 
-                                      GwyDataField *dfield2, 
-                                      GwyDataField *result, 
+static void     put_fields           (GwyDataField *dfield1,
+                                      GwyDataField *dfield2,
+                                      GwyDataField *result,
                                       GwyMergeBoundaryType boundary,
-                                      gint px1, 
+                                      gint px1,
                                       gint py1,
-                                      gint px2, 
+                                      gint px2,
                                       gint py2);
 
 static const GwyEnum directions[] = {
@@ -356,21 +356,29 @@ merge_do(MergeArgs *args)
     quark = gwy_app_get_data_key_for_id(args->op2.id);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object(args->op2.data, quark));
 
-    result = gwy_data_field_new_alike(dfield1, FALSE);
-
     if ((dfield1->xres*dfield1->yres) < (dfield2->xres*dfield2->yres)) {
         GWY_SWAP(GwyDataField*, dfield1, dfield2);
-        if (args->direction == GWY_MERGE_DIRECTION_UP) real_dir = GWY_MERGE_DIRECTION_DOWN;
-        else if (args->direction == GWY_MERGE_DIRECTION_DOWN) real_dir = GWY_MERGE_DIRECTION_UP;
-        else if (args->direction == GWY_MERGE_DIRECTION_LEFT) real_dir = GWY_MERGE_DIRECTION_RIGHT;
-        else if (args->direction == GWY_MERGE_DIRECTION_RIGHT) real_dir = GWY_MERGE_DIRECTION_LEFT;
-       
-        if (args->boundary == GWY_MERGE_BOUNDARY_FIRST) real_boundary = GWY_MERGE_BOUNDARY_SECOND;   
-        if (args->boundary == GWY_MERGE_BOUNDARY_SECOND) real_boundary = GWY_MERGE_BOUNDARY_FIRST;        
+        if (args->direction == GWY_MERGE_DIRECTION_UP)
+            real_dir = GWY_MERGE_DIRECTION_DOWN;
+        else if (args->direction == GWY_MERGE_DIRECTION_DOWN)
+            real_dir = GWY_MERGE_DIRECTION_UP;
+        else if (args->direction == GWY_MERGE_DIRECTION_LEFT)
+            real_dir = GWY_MERGE_DIRECTION_RIGHT;
+        else if (args->direction == GWY_MERGE_DIRECTION_RIGHT)
+            real_dir = GWY_MERGE_DIRECTION_LEFT;
+        else
+            g_return_val_if_reached(FALSE);
+
+        if (args->boundary == GWY_MERGE_BOUNDARY_FIRST)
+            real_boundary = GWY_MERGE_BOUNDARY_SECOND;
+        if (args->boundary == GWY_MERGE_BOUNDARY_SECOND)
+            real_boundary = GWY_MERGE_BOUNDARY_FIRST;
     } else {
         real_dir = args->direction;
         real_boundary = args->boundary;
     }
+
+    result = gwy_data_field_new_alike(dfield1, FALSE);
 
     xres1 = gwy_data_field_get_xres(dfield1);
     xres2 = gwy_data_field_get_xres(dfield2);
@@ -449,7 +457,7 @@ merge_do(MergeArgs *args)
         g_object_unref(result);
         return FALSE;
     }
-    
+
     find_score_maximum(correlation_score, &max_col, &max_row);
     gwy_debug("c: %d %d %dx%d  k: %d %d %dx%d res: %d %d\n",
            cdata.x,
@@ -536,10 +544,10 @@ merge_do(MergeArgs *args)
     gwy_data_field_resample(result, newxres, newyres,
                             GWY_INTERPOLATION_NONE);
 
-    put_fields(dfield1, dfield2, result, args->boundary, 
-               px1, py1, 
+    put_fields(dfield1, dfield2, result, args->boundary,
+               px1, py1,
                px2, py2);
- 
+
 
     /* set right output */
     if (result) {
@@ -564,16 +572,14 @@ merge_do(MergeArgs *args)
 
 
 static void
-put_fields(GwyDataField *dfield1, GwyDataField *dfield2, 
-           GwyDataField *result, 
+put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
+           GwyDataField *result,
            GwyMergeBoundaryType boundary,
            gint px1, gint py1,
            gint px2, gint py2)
 {
-
     GwyRectangle res_rect;
-    GwyCoord f1_pos, f2_pos;
-    gint x1, x2, y1, y2, w1, w2, h1, h2;
+    gint x1, x2, y1_, y2, w1, w2, h1, h2;
     gint xres1, xres2, yres1, yres2;
 
     xres1 = gwy_data_field_get_xres(dfield1);
@@ -593,8 +599,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     gwy_data_field_fill(result,
                         MIN(gwy_data_field_get_min(dfield1),
                             gwy_data_field_get_min(dfield2)));
-    
-    x1 = y1 = x2 = y2 = 0;
+
+    x1 = y1_ = x2 = y2 = 0;
     w1 = gwy_data_field_get_xres(dfield1);
     h1 = gwy_data_field_get_yres(dfield1);
     w2 = gwy_data_field_get_xres(dfield2);
@@ -604,7 +610,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     if (boundary == GWY_MERGE_BOUNDARY_SMOOTH
         || boundary == GWY_MERGE_BOUNDARY_FIRST) {
         gwy_data_field_area_copy(dfield1, result,
-                                 x1, y1, w1, h1,
+                                 x1, y1_, w1, h1,
                                  px1, py1);
         gwy_data_field_area_copy(dfield2, result,
                                  x2, y2, w2, h2,
@@ -616,7 +622,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
                                  px2, py2);
 
         gwy_data_field_area_copy(dfield1, result,
-                                 x1, y1, w1, h1,
+                                 x1, y1_, w1, h1,
                                  px1, py1);
      }
 
@@ -624,7 +630,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     /* adjust boundary to be as smooth as possible */
     if (boundary == GWY_MERGE_BOUNDARY_SMOOTH) {
         if (px1 < px2) {
-            res_rect.x = px2; 
+            res_rect.x = px2;
             res_rect.width = px1 + xres1 - px2;
         } else {
             res_rect.x = px1;
@@ -633,7 +639,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
 
         if (py1 < py2) {
             res_rect.y = py2;
-            res_rect.height = MAX(MIN(yres1, yres2), py1 + yres1 - py2 - (yres1 - yres2));
+            res_rect.height = MAX(MIN(yres1, yres2),
+                                  py1 + yres1 - py2 - (yres1 - yres2));
         } else {
             res_rect.y = py1;
             res_rect.height = py2 + yres2 - py1;
@@ -645,10 +652,11 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
         f2_pos.y = -(yshift + ((max_row - kdata.height/2) - kdata.y));
 */
 
-        gwy_data_field_area_multiply(result, res_rect.x, res_rect.y, res_rect.width, res_rect.height, 1.5);
+        gwy_data_field_area_multiply(result, res_rect.x, res_rect.y,
+                                     res_rect.width, res_rect.height, 1.5);
         /*merge_boundary(dfield1, dfield2, result,
                        res_rect, f1_pos, f2_pos);*/
-                       
+
     }
 
 }
@@ -736,14 +744,16 @@ static void
 merge_boundary(GwyDataField *dfield1,
                GwyDataField *dfield2,
                GwyDataField *result,
-               GwyRectangle res_rect, GwyCoord f1_pos, GwyCoord f2_pos)
+               GwyRectangle res_rect,
+               GwyCoord f1_pos,
+               GwyCoord f2_pos)
 {
     gint col, row;
     gdouble weight, val1, val2;
 
     for (col = 0; col < res_rect.width; col++) {
         for (row = 0; row < res_rect.height; row++) {
-                
+
             weight = 0.5; /*FIXME adapt weight to direction*/
 
             val1 = gwy_data_field_get_val(dfield1,
