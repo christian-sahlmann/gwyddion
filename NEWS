@@ -1,6 +1,5 @@
-2.2.20070118
 
-2.3 (2000-00-00)
+2.3 (2007-01-21)
 Application:
 - Translations updated: Italian, Czech.
 
@@ -45,6 +44,8 @@ Modules:
 - Pixmap: Crash with fixed gdk-pixbuf which properly closes pixbuf loaders
   on failure was fixed.
 - Calibrate: Crash when presentation is present on data was fixed.
+- Merge: Possible crashes and wrong output size on certain input data sizes
+  were fixed.
 - Facet analysis: Phi calculation was unified with other modules, the size of
   neighbourhood used to calculate local inclinations can be controlled.
 - Mark scars: Instant updates option is available.
