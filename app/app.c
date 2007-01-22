@@ -390,13 +390,17 @@ _gwy_app_graph_set_current(GwyGraph *graph)
 void
 _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
 {
+    GtkTooltips *tooltips;
     Gwy3DView *view3d;
     GtkWidget *button;
 
     gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
     view3d = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window3d));
+    tooltips = gwy_3d_window_class_get_tooltips();
 
     button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
+    gtk_tooltips_set_tip(tooltips, button,
+                         _("Export 3D view to PNG image"), NULL);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
     gwy_3d_window_add_small_toolbar_button(GWY_3D_WINDOW(window3d),
                                            GTK_STOCK_SAVE,
@@ -406,7 +410,9 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), window3d);
 
-    button = gtk_button_new_with_mnemonic(_("Set Defaults"));
+    button = gtk_button_new_with_mnemonic(_("Set as Default"));
+    gtk_tooltips_set_tip(tooltips, button,
+                         _("Set the current view setup as the default"), NULL);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_view_set_defaults), view3d);
