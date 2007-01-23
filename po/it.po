@@ -4,13 +4,13 @@
 #
 # hyperlink <hyperlink@katamail.com>, 2005, 2006.
 # Livia_lab <livia.dellaseta@casaccia.enea.it>, 2005.
-# Livia Della Seta <livia.dellaseta@casaccia.enea.it>, 2006.
+# Livia Della Seta <livia.dellaseta@casaccia.enea.it>, 2006, 2007.
 msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-01-21 12:02+0100\n"
-"PO-Revision-Date: 2006-12-18 14:45+0100\n"
+"POT-Creation-Date: 2007-01-23 03:54+0100\n"
+"PO-Revision-Date: 2007-01-23 11:32+0100\n"
 "Last-Translator: Livia Della Seta <livia.dellaseta@casaccia.enea.it>\n"
 "Language-Team:  <it@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -748,40 +748,44 @@ msgstr ""
 "%s\n"
 "Uscire ugualmente?"
 
-#: app/app.c:399
+#: app/app.c:401
 msgid "Export"
 msgstr "Esporta"
 
-#: app/app.c:403
+#: app/app.c:403 app/app.c:407
 msgid "Export 3D view to PNG image"
 msgstr "Esporta veduta 3D come immagine PNG"
 
-#: app/app.c:409
-msgid "Set Defaults"
+#: app/app.c:413
+msgid "Set as Default"
 msgstr ""
 
-#: app/app.c:441
+#: app/app.c:415
+msgid "Set the current view setup as the default"
+msgstr ""
+
+#: app/app.c:447
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Salvataggio di vista 3D come `%s' fallito"
 
-#: app/app.c:484
+#: app/app.c:490
 msgid "Export 3D View"
 msgstr "Esporta vista 3D"
 
-#: app/app.c:618
+#: app/app.c:624
 msgid "Mask _Color..."
 msgstr "Colore_Maschera..."
 
-#: app/app.c:634
+#: app/app.c:640
 msgid "Zoom _1:1"
 msgstr "Ingrandimento _1:1"
 
-#: app/app.c:831
+#: app/app.c:837
 msgid "Pi_xelwise Square"
 msgstr "Dimensioni pixel quadrati"
 
-#: app/app.c:841
+#: app/app.c:847
 msgid "_Physically Square"
 msgstr "Dimensioni reali quadrate"
 
@@ -823,7 +827,7 @@ msgstr "Canale sconosciuto %d"
 msgid "Opening of `%s' failed"
 msgstr "Apertura di `%s' fallita"
 
-#: app/file.c:348 app/gwymoduleutils.c:190
+#: app/file.c:348 app/gwymoduleutils.c:195
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Salvataggio di `%s' fallito"
@@ -867,7 +871,7 @@ msgstr "Apri file selezionato"
 
 #: app/filelist.c:567
 msgid "_Filter:"
-msgstr ""
+msgstr "_Filtro:"
 
 #: app/filelist.c:594
 msgid "Case _sensitive"
@@ -1006,7 +1010,7 @@ msgstr ""
 "Per evitare la perdita di preferenze salvate non verrà fatto alcun tentativo "
 "di aggiornamento fino a che il file non sarà riparato o rimosso."
 
-#: app/gwymoduleutils.c:195 app/settings.c:128 app/settings.c:139
+#: app/gwymoduleutils.c:200 app/settings.c:128 app/settings.c:139
 #: modules/file/err.h:46
 #, c-format
 msgid "Cannot write to file: %s."
@@ -1524,7 +1528,7 @@ msgstr "File dati JEOL (.tif)"
 
 #: modules/file/jeol.c:522
 msgid "The type of data is unknown.  Please report it to the developers."
-msgstr ""
+msgstr "Tipo di dati sconosciuto. Da segnalare agli sviluppatori."
 
 #: modules/file/jpkscan.c:92
 msgid "Imports JPK image scans."
@@ -1571,15 +1575,16 @@ msgstr "Intestazione del file maggiore del file"
 
 #: modules/file/microprof.c:54
 msgid "Imports MicroProf FRT profilometer data files."
-msgstr ""
+msgstr "Importafile dati del profilometro  MicroProf FRT."
 
 #: modules/file/microprof.c:67
 msgid "MicroProf FRT files (.txt)"
-msgstr ""
+msgstr "File MicroProf FRT (.txt)"
 
 #: modules/file/microprof.c:224
 msgid "File contains less than XSize*YSize data points."
 msgstr ""
+"Il file contiene un numero di punti dati minore di dimensioneX*dimensioneY"
 
 #: modules/file/mifile.c:126
 msgid "Imports Molecular Imaging MI data files."
@@ -4212,7 +4217,7 @@ msgstr "Fit sfera"
 
 #: modules/process/fit_2d.c:241
 msgid "_Estimate"
-msgstr ""
+msgstr "_Stima"
 
 #: modules/process/fit_2d.c:290
 msgid "Function type:"
@@ -4297,7 +4302,7 @@ msgstr "Partizionamento"
 
 #: modules/process/fractal.c:124
 msgid "Cube counting"
-msgstr ""
+msgstr "Conteggio cubico"
 
 #: modules/process/fractal.c:125
 msgid "Triangulation"
@@ -4467,15 +4472,15 @@ msgstr "Direzione legame massimo"
 
 #: modules/process/grain_dist.c:243
 msgid "_Zero basis"
-msgstr ""
+msgstr "_Base zero"
 
 #: modules/process/grain_dist.c:244
 msgid "_Grain minimum basis"
-msgstr ""
+msgstr "Base minima grani"
 
 #: modules/process/grain_dist.c:245
 msgid "_Laplacian background basis"
-msgstr ""
+msgstr "Base sottofondo Laplaciano"
 
 #: modules/process/grain_dist.c:248
 msgid "_Export raw data"
@@ -4499,7 +4504,7 @@ msgstr "Confine"
 
 #: modules/process/grain_dist.c:294
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
 #: modules/process/grain_dist.c:328 modules/tools/linestats.c:349
 #: modules/tools/profile.c:357 modules/tools/sfunctions.c:365
@@ -4560,15 +4565,15 @@ msgstr ""
 
 #: modules/process/grain_dist.c:463
 msgid "Grain Volume (Zero) Histogram"
-msgstr ""
+msgstr "Istogramma Volume Grani (zero)"
 
 #: modules/process/grain_dist.c:465
 msgid "Grain Volume (Minimum) Histogram"
-msgstr ""
+msgstr "Istogramma Volume Grani (Minimo)"
 
 #: modules/process/grain_dist.c:467
 msgid "Grain Volume (Laplacian) Histogram"
-msgstr ""
+msgstr "Istogramma Volume Grani (Laplaciano)"
 
 #: modules/process/grain_dist.c:471
 msgid "Grain proj. areas"
@@ -4624,15 +4629,15 @@ msgstr "Grain max. bound. directions"
 
 #: modules/process/grain_dist.c:497
 msgid "Grain volumes (zero)"
-msgstr ""
+msgstr "Volume Grani (zero)"
 
 #: modules/process/grain_dist.c:499
 msgid "Grain volumes (minimum)"
-msgstr ""
+msgstr "Volume Grani (minimo)"
 
 #: modules/process/grain_dist.c:501
 msgid "Grain volumes (laplacian)"
-msgstr ""
+msgstr "Volume Grani (Laplaciano)"
 
 #: modules/process/grain_dist.c:520
 msgid "count"
@@ -4913,7 +4918,7 @@ msgstr ""
 
 #: modules/process/level.c:99
 msgid "/_Level/Plane _Level"
-msgstr ""
+msgstr "/Livello/Livello piano"
 
 #: modules/process/level.c:103
 msgid "Level data by mean plane subtraction"
@@ -4945,11 +4950,11 @@ msgstr "Fissa valore medio dati zero"
 
 #: modules/process/level.c:132
 msgid "Plane Level"
-msgstr ""
+msgstr "Livello Piano"
 
 #: modules/process/level.c:138
 msgid "Level Rotate"
-msgstr ""
+msgstr "Ruota Livello"
 
 #: modules/process/level.c:252
 msgid "_Exclude region under mask"
@@ -5588,11 +5593,11 @@ msgstr ""
 
 #: modules/process/superresolution.c:104
 msgid "/M_ultidata/_Super-resolution..."
-msgstr ""
+msgstr "/Multidati/Super-risoluzione"
 
 #: modules/process/superresolution.c:108
 msgid "Super resolution of multiple images of same object"
-msgstr ""
+msgstr "Super-risoluzione di immagini multiple dello stesso oggetto"
 
 #: modules/process/superresolution.c:146
 msgid "Supres"
@@ -6217,7 +6222,7 @@ msgstr "Inclinazione φ"
 
 #: modules/tools/readvalue.c:333
 msgid "Show _selection"
-msgstr ""
+msgstr "Mostra selezione"
 
 #: modules/tools/sfunctions.c:134
 msgid ""
@@ -6420,281 +6425,284 @@ msgstr ""
 "Inclinazione theta: %s\n"
 "Inclinazione phi:   %s\n"
 
-#~ msgid "Smooth"
-#~ msgstr "Smooth"
+msgid "Smooth"
+msgstr "Smooth"
 
-#~ msgid "/_Level/_Level"
-#~ msgstr "/_Livella/_Livella"
+msgid "/_Level/_Level"
+msgstr "/_Livella/_Livella"
 
-#~ msgid "Level"
-#~ msgstr "Livella"
+msgid "Level"
+msgstr "Livella"
 
-#~ msgid "_Estimage"
-#~ msgstr "_Stima"
+msgid "_Estimage"
+msgstr "_Stima"
 
-#~ msgid "Fitting"
-#~ msgstr "Fitting"
+msgid "Fitting"
+msgstr "Fitting"
 
-#~ msgid "_Interpolation:"
-#~ msgstr "_Interpolazione:"
+msgid "_Interpolation:"
+msgstr "_Interpolazione:"
 
-#~ msgid "Hough transform"
-#~ msgstr "Trasformata di Hough"
+msgid "Hough transform"
+msgstr "Trasformata di Hough"
 
-#~ msgid "/_Integral Transforms/_2D CWT..."
-#~ msgstr "/Trasformate _Integrali/_2D CWT..."
+msgid "/_Integral Transforms/_2D CWT..."
+msgstr "/Trasformate _Integrali/_2D CWT..."
 
-#~ msgid "/_Integral Transforms/_2D DWT..."
-#~ msgstr "/Trasformate _Integrali/_2D DWT..."
+msgid "/_Integral Transforms/_2D DWT..."
+msgstr "/Trasformate _Integrali/_2D DWT..."
 
-#~ msgid "/_Integral Transforms/_2D FFT..."
-#~ msgstr "/Trasformate _Integrali/_2D FFT..."
+msgid "/_Integral Transforms/_2D FFT..."
+msgstr "/Trasformate _Integrali/_2D FFT..."
 
-#~ msgid "/_Tip/_Blind estimation..."
-#~ msgstr "/Punta/Stima cieca..."
+msgid "/_Tip/_Blind estimation..."
+msgstr "/Punta/Stima cieca..."
 
-#~ msgid "_Update Result"
-#~ msgstr "_Aggiorna Risultato"
+msgid "_Update Result"
+msgstr "_Aggiorna Risultato"
 
-#~ msgid "_Update Preview"
-#~ msgstr "Aggiorna Anteprima"
+msgid "_Update Preview"
+msgstr "Aggiorna Anteprima"
 
-#~ msgid "_Update preview"
-#~ msgstr "Aggiorna anteprima"
+msgid "_Update preview"
+msgstr "Aggiorna anteprima"
 
-#~ msgid "Evaluate/correct thermal drift in fast scan axis."
-#~ msgstr "Valutazione/correzione deriva termica in scansioni asse veloce."
+msgid "Evaluate/correct thermal drift in fast scan axis."
+msgstr "Valutazione/correzione deriva termica in scansioni asse veloce."
 
-#~ msgid "/_Correct Data/_Compensate drift..."
-#~ msgstr "/_Correzione Dati/_Compensazione deriva..."
+msgid "/_Correct Data/_Compensate drift..."
+msgstr "/_Correzione Dati/_Compensazione deriva..."
 
-#~ msgid "Correct drift"
-#~ msgstr "Correggi deriva"
+msgid "Correct drift"
+msgstr "Correggi deriva"
 
-#~ msgid "_Extract drift graph"
-#~ msgstr "_Estrai grafico deriva"
+msgid "_Extract drift graph"
+msgstr "_Estrai grafico deriva"
 
-#~ msgid "_Correct data"
-#~ msgstr "_Correzione dati"
+msgid "_Correct data"
+msgstr "_Correzione dati"
 
-#~ msgid "_Crop out unknown data"
-#~ msgstr "_Elimina dati sconosciuti"
+msgid "_Crop out unknown data"
+msgstr "_Elimina dati sconosciuti"
 
-#~ msgid "Drift corrected data"
-#~ msgstr "Dati corretti dalla deriva"
+msgid "Drift corrected data"
+msgstr "Dati corretti dalla deriva"
 
-#~ msgid "Drift graph"
-#~ msgstr "Grafico deriva"
-
-#, fuzzy
-#~ msgid "Imports Pacific Nanotechnology DME data files."
-#~ msgstr "Importa file dati PNI Pacific Nanotechnology."
-
-#~ msgid "<b>Value</b>"
-#~ msgstr "<b>Valore</b>"
+msgid "Drift graph"
+msgstr "Grafico deriva"
 
 #, fuzzy
-#~ msgid "/_Basic Operations/Convolution _Filter..."
-#~ msgstr "/Operazioni _Base/Ruota di _Angolo..."
+msgid "Imports Pacific Nanotechnology DME data files."
+msgstr "Importa file dati PNI Pacific Nanotechnology."
 
-#~ msgid "Scan lines correlation"
-#~ msgstr "Correlazione linee scansione"
-
-#~ msgid "Local isotropy"
-#~ msgstr "Isotropia locale"
-
-#~ msgid "Calibration sample"
-#~ msgstr "Campione di calibrazione"
-
-#~ msgid "X axis Drift"
-#~ msgstr "Deriva asse X"
-
-#~ msgid "Bilinear"
-#~ msgstr "Bilineare"
-
-#~ msgid "Attaches another data field as presentation"
-#~ msgstr "Allega un altro campo dati come presentazione"
+msgid "<b>Value</b>"
+msgstr "<b>Valore</b>"
 
 #, fuzzy
-#~ msgid "_Run"
-#~ msgstr "Esatta"
+msgid "/_Basic Operations/Convolution _Filter..."
+msgstr "/Operazioni _Base/Ruota di _Angolo..."
 
-#~ msgid "_Restore PS"
-#~ msgstr "_Ripristina PS"
+msgid "Scan lines correlation"
+msgstr "Correlazione linee scansione"
 
-#, fuzzy
-#~ msgid "Power Spectrum"
-#~ msgstr "Spettro di potenza"
+msgid "Local isotropy"
+msgstr "Isotropia locale"
 
-#, fuzzy
-#~ msgid "_Preview type:"
-#~ msgstr "Tipo Anteprima:"
+msgid "Calibration sample"
+msgstr "Campione di calibrazione"
 
-#~ msgid "_Update dynamically"
-#~ msgstr "Aggiorna dinamicamente"
+msgid "X axis Drift"
+msgstr "Deriva asse X"
 
-#~ msgid "Graph ASCII export."
-#~ msgstr "Esporta Grafico ASCII"
+msgid "Bilinear"
+msgstr "Bilineare"
 
-#, fuzzy
-#~ msgid "/Export _ASCII"
-#~ msgstr "Esporta"
+msgid "Attaches another data field as presentation"
+msgstr "Allega un altro campo dati come presentazione"
 
 #, fuzzy
-#~ msgid "Export ASCII"
-#~ msgstr "Esporta"
+msgid "_Run"
+msgstr "Esatta"
+
+msgid "_Restore PS"
+msgstr "_Ripristina PS"
 
 #, fuzzy
-#~ msgid "Large image"
-#~ msgstr "Immagini unite"
+msgid "Power Spectrum"
+msgstr "Spettro di potenza"
 
 #, fuzzy
-#~ msgid "Detail image"
-#~ msgstr "_Dettaglio immagine:"
+msgid "_Preview type:"
+msgstr "Tipo Anteprima:"
+
+msgid "_Update dynamically"
+msgstr "Aggiorna dinamicamente"
+
+msgid "Graph ASCII export."
+msgstr "Esporta Grafico ASCII"
 
 #, fuzzy
-#~ msgid "Upsample large image"
-#~ msgstr "_Sovracampionamento immagine grande"
+msgid "/Export _ASCII"
+msgstr "Esporta"
 
 #, fuzzy
-#~ msgid "Downsample detail"
-#~ msgstr "_Sottocampionamento detail"
+msgid "Export ASCII"
+msgstr "Esporta"
 
 #, fuzzy
-#~ msgid "_Align detail:"
-#~ msgstr "_Allinea secondo operando:"
+msgid "Large image"
+msgstr "Immagini unite"
 
 #, fuzzy
-#~ msgid "_Result sampling:"
-#~ msgstr "Campionamento risultante"
+msgid "Detail image"
+msgstr "_Dettaglio immagine:"
 
 #, fuzzy
-#~ msgid "File _type:"
-#~ msgstr "Tipo _File: %s"
+msgid "Upsample large image"
+msgstr "_Sovracampionamento immagine grande"
 
 #, fuzzy
-#~ msgid "<b>Axis settings:</b>"
-#~ msgstr "<b>Opzioni</b>"
+msgid "Downsample detail"
+msgstr "_Sottocampionamento detail"
 
 #, fuzzy
-#~ msgid "_Autoscale"
-#~ msgstr "_Valore scala:"
-
-#~ msgid "Major division:"
-#~ msgstr "Divisione maggiore:"
+msgid "_Align detail:"
+msgstr "_Allinea secondo operando:"
 
 #, fuzzy
-#~ msgid "Major thickness:"
-#~ msgstr "Spessore cornice:"
+msgid "_Result sampling:"
+msgstr "Campionamento risultante"
 
 #, fuzzy
-#~ msgid "Major length:"
-#~ msgstr "Lunghezza minima:"
-
-#~ msgid "Minor division:"
-#~ msgstr "Divisione minore:"
+msgid "File _type:"
+msgstr "Tipo _File: %s"
 
 #, fuzzy
-#~ msgid "Minor thickness:"
-#~ msgstr "Spessore linea:"
+msgid "<b>Axis settings:</b>"
+msgstr "<b>Opzioni</b>"
 
 #, fuzzy
-#~ msgid "Minor length:"
-#~ msgstr "Lunghezza minima:"
+msgid "_Autoscale"
+msgstr "_Valore scala:"
+
+msgid "Major division:"
+msgstr "Divisione maggiore:"
 
 #, fuzzy
-#~ msgid "<b>Points</b>"
-#~ msgstr "<b>Opzioni</b>"
+msgid "Major thickness:"
+msgstr "Spessore cornice:"
 
 #, fuzzy
-#~ msgid "<b>Size</b>"
-#~ msgstr "<b>File</b>"
+msgid "Major length:"
+msgstr "Lunghezza minima:"
+
+msgid "Minor division:"
+msgstr "Divisione minore:"
 
 #, fuzzy
-#~ msgid "verb|_Edit"
-#~ msgstr "_Modifica"
+msgid "Minor thickness:"
+msgstr "Spessore linea:"
 
 #, fuzzy
-#~ msgid "_Copy"
-#~ msgstr "Taglia"
+msgid "Minor length:"
+msgstr "Lunghezza minima:"
 
 #, fuzzy
-#~ msgid "De_fault"
-#~ msgstr "Scelte predefinite"
+msgid "<b>Points</b>"
+msgstr "<b>Opzioni</b>"
 
 #, fuzzy
-#~ msgid "/Open Recent/---"
-#~ msgstr "/Apri _Recenti"
+msgid "<b>Size</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "/Mask _Color..."
-#~ msgstr "Colore_Maschera..."
-
-#~ msgid "noun|Copy"
-#~ msgstr "nome|Copia"
+msgid "verb|_Edit"
+msgstr "_Modifica"
 
 #, fuzzy
-#~ msgid "<b>Resolution</b>"
-#~ msgstr "<b>Risultati</b>"
+msgid "_Copy"
+msgstr "Taglia"
 
 #, fuzzy
-#~ msgid "<b>Fitting parameters:</b>"
-#~ msgstr "Adattamento parametri"
+msgid "De_fault"
+msgstr "Scelte predefinite"
 
 #, fuzzy
-#~ msgid "<b>Initial</b>"
-#~ msgstr "<b>File</b>"
+msgid "/Open Recent/---"
+msgstr "/Apri _Recenti"
 
 #, fuzzy
-#~ msgid "<b>Result</b>"
-#~ msgstr "<b>Risultati</b>"
+msgid "/Mask _Color..."
+msgstr "Colore_Maschera..."
+
+msgid "noun|Copy"
+msgstr "nome|Copia"
 
 #, fuzzy
-#~ msgid "<b>Error</b>"
-#~ msgstr "<b>Traduttori</b>\n"
+msgid "<b>Resolution</b>"
+msgstr "<b>Risultati</b>"
 
 #, fuzzy
-#~ msgid "<b>Fix</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Fitting parameters:</b>"
+msgstr "Adattamento parametri"
 
 #, fuzzy
-#~ msgid "<b>Correlation matrix:</b>"
-#~ msgstr "<b>Matrice di Correlazione</b>"
+msgid "<b>Initial</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "<b>Chi-square result:</b>"
-#~ msgstr "<b>Risultati</b>"
+msgid "<b>Result</b>"
+msgstr "<b>Risultati</b>"
 
 #, fuzzy
-#~ msgid "<b>Fit area</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Error</b>"
+msgstr "<b>Traduttori</b>\n"
 
 #, fuzzy
-#~ msgid "<b>Normal</b>"
-#~ msgstr "<b>Valore</b>"
-
-#~ msgid "<b>Power spectrum (select areas by mouse):</b>"
-#~ msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
+msgid "<b>Fix</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "<b>Settings:</b>"
-#~ msgstr "<b>Opzioni</b>"
-
-#~ msgid "_Guess"
-#~ msgstr "Indovina"
+msgid "<b>Correlation matrix:</b>"
+msgstr "<b>Matrice di Correlazione</b>"
 
 #, fuzzy
-#~ msgid "<b>Threshold By</b>"
-#~ msgstr "Soglia:"
+msgid "<b>Chi-square result:</b>"
+msgstr "<b>Risultati</b>"
 
 #, fuzzy
-#~ msgid "<b>Filter</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Fit area</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "<b>Editor</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Normal</b>"
+msgstr "<b>Valore</b>"
+
+msgid "<b>Power spectrum (select areas by mouse):</b>"
+msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
 
 #, fuzzy
-#~ msgid "N.A"
-#~ msgstr "N.A."
+msgid "<b>Settings:</b>"
+msgstr "<b>Opzioni</b>"
+
+msgid "_Guess"
+msgstr "Indovina"
+
+#, fuzzy
+msgid "<b>Threshold By</b>"
+msgstr "Soglia:"
+
+#, fuzzy
+msgid "<b>Filter</b>"
+msgstr "<b>File</b>"
+
+#, fuzzy
+msgid "<b>Editor</b>"
+msgstr "<b>File</b>"
+
+#, fuzzy
+msgid "N.A"
+msgstr "N.A."
+
+#~ msgid "Set Defaults"
+#~ msgstr "Fissa valori predefiniti"
