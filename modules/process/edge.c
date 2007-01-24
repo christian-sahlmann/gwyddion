@@ -19,10 +19,10 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
 #include <libprocess/hough.h>
@@ -54,6 +54,8 @@ static void        harris_do                    (GwyDataField *dfield,
                                                  GwyDataField *show);
 static void        inclination_do               (GwyDataField *dfield,
                                                  GwyDataField *show);
+static void        zero_crossing_do             (GwyDataField *dfield,
+                                                 GwyDataField *show);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -61,7 +63,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -134,6 +136,13 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Local inclination based edge detection "
                                  "presentation"));
+    gwy_process_func_register("edge_zero_crossing",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Zero Crossing"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Zero crossing edge detection presentation"));
 
     return TRUE;
 }
@@ -146,14 +155,15 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         void (*func)(GwyDataField *dfield, GwyDataField *show);
     }
     functions[] = {
-        { "edge_canny",        canny_do,        },
-        { "edge_harris",       harris_do,       },
-        { "edge_hough_lines",  hough_lines_do,  },
-        { "edge_inclination",  inclination_do,  },
-        { "edge_laplacian",    laplacian_do,    },
-        { "edge_nonlinearity", nonlinearity_do, },
-        { "edge_rms",          rms_do,          },
-        { "edge_rms_edge",     rms_edge_do,     },
+        { "edge_canny",         canny_do,         },
+        { "edge_harris",        harris_do,        },
+        { "edge_hough_lines",   hough_lines_do,   },
+        { "edge_inclination",   inclination_do,   },
+        { "edge_laplacian",     laplacian_do,     },
+        { "edge_nonlinearity",  nonlinearity_do,  },
+        { "edge_rms",           rms_do,           },
+        { "edge_rms_edge",      rms_edge_do,      },
+        { "edge_zero_crossing", zero_crossing_do, },
     };
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
@@ -195,6 +205,8 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     gwy_data_field_data_changed(showfield);
 }
 
+/* Note this is the limiting case when LoG reduces for discrete data just to
+ * Laplacian */
 static void
 laplacian_do(GwyDataField *dfield, GwyDataField *show)
 {
@@ -314,6 +326,89 @@ inclination_do(GwyDataField *dfield, GwyDataField *show)
 }
 
 static void
+zero_crossing_do(GwyDataField *dfield, GwyDataField *show)
+{
+    static const gdouble sigma = 1.6;
+
+    GwyDataField *kernel, *buf;
+    gdouble *data;
+    const gdouble *bdata;
+    gdouble x, dm, dp, threshold;
+    gint n, size, xres, yres, i, j;
+
+    n = (gint)ceil(5*sigma);
+    size = 2*n + 1,
+    kernel = gwy_data_field_new(size, size, 1.0, 1.0, FALSE);
+    data = gwy_data_field_get_data(kernel);
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            x = ((i - n)*(i - n) + (j - n)*(j - n))/(2.0*sigma*sigma);
+            data[i*size + j] = (1.0 - x)*exp(-x);
+        }
+    }
+
+    buf = gwy_data_field_new_alike(show, FALSE);
+    gwy_data_field_copy(dfield, buf, FALSE);
+    gwy_data_field_convolve(buf, kernel);
+    g_object_unref(kernel);
+    gwy_data_field_clear(show);
+    threshold = 0.25*gwy_data_field_get_rms(buf);
+
+    xres = gwy_data_field_get_xres(show);
+    yres = gwy_data_field_get_yres(show);
+    data = gwy_data_field_get_data(show);
+    bdata = gwy_data_field_get_data_const(buf);
+
+    /* Vertical pass */
+    for (i = 1; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            n = i*xres + j;
+            dm = bdata[n - xres];
+            dp = bdata[n];
+            if (dm*dp <= 0.0) {
+                dm = fabs(dm);
+                dp = fabs(dp);
+                if (dm >= threshold || dp >= threshold) {
+                    if (dm < dp)
+                        data[n - xres] = 1.0;
+                    else if (dp < dm)
+                        data[n] = 1.0;
+                    /* If they are equal and different from zero, sigh and
+                     * choose an arbitrary one */
+                    else if (dm > 0.0)
+                        data[n] = 1.0;
+                }
+            }
+        }
+    }
+
+    /* Horizontal pass */
+    for (i = 0; i < yres; i++) {
+        for (j = 1; j < xres; j++) {
+            n = i*xres + j;
+            dm = bdata[n - 1];
+            dp = bdata[n];
+            if (dm*dp <= 0.0) {
+                dm = fabs(dm);
+                dp = fabs(dp);
+                if (dm >= threshold || dp >= threshold) {
+                    if (dm < dp)
+                        data[n - 1] = 1.0;
+                    else if (dp < dm)
+                        data[n] = 1.0;
+                    /* If they are equal and different from zero, sigh and
+                     * choose an arbitrary one */
+                    else if (dm > 0.0)
+                        data[n] = 1.0;
+                }
+            }
+        }
+    }
+
+    g_object_unref(buf);
+}
+
+static void
 hough_lines_do(GwyDataField *dfield, GwyDataField *show)
 {
     GwyDataField *x_gradient, *y_gradient;
@@ -327,7 +422,7 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
     gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
 
     gwy_data_field_hough_line_strenghten(show, x_gradient, y_gradient,
-                                           1, 0.2);
+                                         1, 0.2);
 }
 static void
 harris_do(GwyDataField *dfield, GwyDataField *show)
