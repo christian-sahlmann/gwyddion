@@ -1585,6 +1585,7 @@ gwy_axis_calculate_format(GwyAxis *axis,
                                          format);
 
     /* Ensure the format is not too precise */
+    format->precision++;
     u1 = g_string_new(NULL);
     u2 = g_string_new(NULL);
     ok = TRUE;
