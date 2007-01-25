@@ -492,9 +492,7 @@ sxm_load(const gchar *filename,
     /* Pixel sizes */
     if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_PIXELS"))) {
-            if (sscanf(s, "%d %d", &sxmfile.xres, &sxmfile.yres) == 2) {
-                if (rotated)
-                    GWY_SWAP(gint, sxmfile.xres, sxmfile.yres);
+            if (sscanf(s, "%d %d", &sxmfile.yres, &sxmfile.xres) == 2) {
                 size1 *= sxmfile.xres * sxmfile.yres;
                 gwy_debug("xres: %d, yres: %d", sxmfile.xres, sxmfile.yres);
                 gwy_debug("size1: %u", (guint)size1);
