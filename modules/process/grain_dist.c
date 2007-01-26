@@ -113,7 +113,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2006",
 };
@@ -625,16 +625,53 @@ grain_dist_export_create(gpointer user_data,
     return retval;
 }
 
+static gdouble
+grains_get_total_value(GwyDataField *dfield,
+                       gint ngrains,
+                       const gint *grains,
+                       gdouble **values,
+                       GwyGrainQuantity quantity)
+{
+    gint i;
+    gdouble sum;
+
+    *values = gwy_data_field_grains_get_values(dfield, *values, ngrains, grains,
+                                               quantity);
+    sum = 0.0;
+    for (i = 1; i <= ngrains; i++)
+        sum += (*values)[i];
+
+    return sum;
+}
+
+static void
+add_report_row(GtkTable *table,
+               gint *row,
+               const gchar *name,
+               const gchar *value)
+{
+    GtkWidget *label;
+
+    label = gtk_label_new(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+    gtk_table_attach(table, label, 0, 1, *row, *row+1, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), value);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(table, label, 1, 2, *row, *row+1, GTK_FILL, 0, 2, 2);
+    (*row)++;
+}
+
 static void
 grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table;
     GwyDataField *dfield, *mfield;
     GwySIUnit *siunit, *siunit2;
     GwySIValueFormat *vf;
-    gint i, xres, yres, ngrains;
-    gdouble total_area, area, v, size;
-    gdouble *sizes;
+    gint xres, yres, ngrains;
+    gdouble total_area, area, size, vol_0, vol_min, vol_laplace, v;
+    gdouble *values = NULL;
     gint *grains;
     GString *str;
     gint row;
@@ -653,96 +690,76 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 
     grains = g_new0(gint, xres*yres);
     ngrains = gwy_data_field_number_grains(mfield, grains);
-    sizes = gwy_data_field_grains_get_values(dfield, NULL, ngrains, grains,
-                                             GWY_GRAIN_VALUE_PROJECTED_AREA);
+    area = grains_get_total_value(dfield, ngrains, grains, &values,
+                                  GWY_GRAIN_VALUE_PROJECTED_AREA);
+    size = grains_get_total_value(dfield, ngrains, grains, &values,
+                                  GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE);
+    vol_0 = grains_get_total_value(dfield, ngrains, grains, &values,
+                                   GWY_GRAIN_VALUE_VOLUME_0);
+    vol_min = grains_get_total_value(dfield, ngrains, grains, &values,
+                                     GWY_GRAIN_VALUE_VOLUME_MIN);
+    vol_laplace = grains_get_total_value(dfield, ngrains, grains, &values,
+                                         GWY_GRAIN_VALUE_VOLUME_LAPLACE);
+    g_free(values);
     g_free(grains);
-    size = area = 0.0;
-    for (i = 1; i <= ngrains; i++) {
-        area += sizes[i];
-        size += sqrt(sizes[i]);
-    }
-    g_free(sizes);
 
     dialog = gtk_dialog_new_with_buttons(_("Grain Statistics"), NULL, 0,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
-    table = gtk_table_new(4, 2, FALSE);
+    table = gtk_table_new(7, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
-    str = g_string_new("");
+    str = g_string_new(NULL);
 
-    label = gtk_label_new(_("Number of grains:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
     g_string_printf(str, "%d", ngrains);
-    label = gtk_label_new(str->str);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
-    row++;
+    add_report_row(GTK_TABLE(table), &row, _("Number of grains:"), str->str);
 
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     siunit2 = gwy_si_unit_power(siunit, 2, NULL);
 
-    label = gtk_label_new(_("Total projected area (abs.):"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
     v = area;
     vf = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, NULL);
-    g_string_printf(str, "%.*f %s",
-                    vf->precision, v/vf->magnitude, vf->units);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), str->str);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
-    row++;
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Total projected area (abs.):"),
+                   str->str);
 
-    label = gtk_label_new(_("Total projected area (rel.):"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
     g_string_printf(str, "%.2f %%", 100.0*area/total_area);
-    label = gtk_label_new(str->str);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
-    row++;
+    add_report_row(GTK_TABLE(table), &row, _("Total projected area (rel.):"),
+                   str->str);
 
-    label = gtk_label_new(_("Mean grain area:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
     v = area/ngrains;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    g_string_printf(str, "%.*f %s",
-                    vf->precision, v/vf->magnitude, vf->units);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), str->str);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
-    row++;
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Mean grain area:"), str->str);
 
-    label = gtk_label_new(_("Mean grain size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
     v = size/ngrains;
     gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    g_string_printf(str, "%.*f %s",
-                    vf->precision, v/vf->magnitude, vf->units);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), str->str);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
-    row++;
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Mean grain size:"), str->str);
+
+    siunit = gwy_data_field_get_si_unit_z(dfield);
+    gwy_si_unit_multiply(siunit2, siunit, siunit2);
+
+    v = vol_0;
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Total grain volume (zero):"),
+                   str->str);
+
+    v = vol_min;
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Total grain volume (minimum):"),
+                   str->str);
+
+    v = vol_laplace;
+    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Total grain volume (laplacian):"),
+                   str->str);
 
     gwy_si_unit_value_format_free(vf);
     g_string_free(str, TRUE);
