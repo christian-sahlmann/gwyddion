@@ -73,11 +73,6 @@ static gboolean     gwy_si_unit_parse             (GwySIUnit *siunit,
 static GwySIUnit*   gwy_si_unit_power_real        (GwySIUnit *siunit,
                                                    gint power,
                                                    GwySIUnit *result);
-static GwySIUnit*   gwy_si_unit_power_multiply    (GwySIUnit *siunit1,
-                                                   gint power1,
-                                                   GwySIUnit *siunit2,
-                                                   gint power2,
-                                                   GwySIUnit *result);
 static GwySIUnit*   gwy_si_unit_canonicalize      (GwySIUnit *siunit);
 static const gchar* gwy_si_unit_prefix            (gint power);
 static GString*     gwy_si_unit_format            (GwySIUnit *siunit,
@@ -954,13 +949,6 @@ gwy_si_unit_multiply(GwySIUnit *siunit1,
                      GwySIUnit *siunit2,
                      GwySIUnit *result)
 {
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
-    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
-
-    if (!result)
-        result = gwy_si_unit_new(NULL);
-
     return gwy_si_unit_power_multiply(siunit1, 1, siunit2, 1, result);
 }
 
@@ -983,20 +971,13 @@ gwy_si_unit_divide(GwySIUnit *siunit1,
                    GwySIUnit *siunit2,
                    GwySIUnit *result)
 {
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
-    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
-
-    if (!result)
-        result = gwy_si_unit_new(NULL);
-
     return gwy_si_unit_power_multiply(siunit1, 1, siunit2, -1, result);
 }
 
 /**
  * gwy_si_unit_power:
  * @siunit: An SI unit.
- * @power: Power to power @siunit to.
+ * @power: Power to raise @siunit to.
  * @result:  An SI unit to set to power of @siunit.  It is safe to pass
  *           @siunit itself.  It can be %NULL too, a new SI unit is created
  *           then and returned.
@@ -1051,17 +1032,49 @@ gwy_si_unit_power_real(GwySIUnit *siunit,
     return result;
 }
 
-static GwySIUnit*
+/**
+ * gwy_si_unit_power_multiply:
+ * @siunit1: An SI unit.
+ * @power1: Power to raise @siunit1 to.
+ * @siunit2: An SI unit.
+ * @power2: Power to raise @siunit2 to.
+ * @result:  An SI unit to set to @siunit1^@power1*@siunit2^@power2.
+ *           It is safe to pass @siunit1 or @siunit2.  It can be %NULL too,
+ *           a new SI unit is created then and returned.
+ *
+ * Computes the product of two SI units raised to arbitrary powers.
+ *
+ * This is the most complex SI unit arithmetic function.  It can be easily
+ * chanied when more than two units are to be multiplied.
+ *
+ * Returns: When @result is %NULL, a newly created SI unit that has to be
+ *          dereferenced when no longer used later.  Otherwise @result itself
+ *          is simply returned, its reference count is NOT increased.
+ *
+ * Since: 2.4
+ **/
+GwySIUnit*
 gwy_si_unit_power_multiply(GwySIUnit *siunit1,
                            gint power1,
                            GwySIUnit *siunit2,
                            gint power2,
                            GwySIUnit *result)
 {
+    GwySIUnit *op2 = NULL;
     GwySimpleUnit *unit, *unit2;
     gint i, j;
 
-    if (siunit1->units->len < siunit2->units->len || !power1) {
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
+    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
+
+    if (!result)
+        result = gwy_si_unit_new(NULL);
+
+    /* Try to avoid hard work by making siunit2 the simplier one */
+    if (siunit1->units->len < siunit2->units->len
+        || (power2 && !power1)
+        || (siunit2 == result && siunit1 != result)) {
         GWY_SWAP(GwySIUnit*, siunit1, siunit2);
         GWY_SWAP(gint, power1, power2);
     }
@@ -1069,6 +1082,13 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
     if (!power2) {
         gwy_si_unit_canonicalize(result);
         return result;
+    }
+
+    /* When the second operand is the same object as the result, we have to
+     * operate on a temporary copy */
+    if (siunit2 == result) {
+        op2 = gwy_si_unit_duplicate(siunit2);
+        siunit2 = op2;
     }
 
     result->power10 += power2*siunit2->power10;
@@ -1092,6 +1112,7 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
         }
     }
     gwy_si_unit_canonicalize(result);
+    gwy_object_unref(op2);
     g_signal_emit(result, si_unit_signals[VALUE_CHANGED], 0);
 
     return result;

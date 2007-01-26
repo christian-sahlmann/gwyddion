@@ -88,6 +88,11 @@ GwySIUnit*        gwy_si_unit_divide               (GwySIUnit *siunit1,
 GwySIUnit*        gwy_si_unit_power                (GwySIUnit *siunit,
                                                     gint power,
                                                     GwySIUnit *result);
+GwySIUnit*        gwy_si_unit_power_multiply       (GwySIUnit *siunit1,
+                                                    gint power1,
+                                                    GwySIUnit *siunit2,
+                                                    gint power2,
+                                                    GwySIUnit *result);
 gboolean          gwy_si_unit_equal                (GwySIUnit *siunit1,
                                                     GwySIUnit *siunit2);
 
