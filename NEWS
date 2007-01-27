@@ -1,4 +1,4 @@
-2.3.20070124
+2.3.20070127
 
 2.4 (0000-00-00)
 Application:
@@ -8,9 +8,14 @@ Application:
 
 Libraries:
 - libgwydgets: GwyAxis sometimes using too low precision was fixed.
+- libprocess: 1D convolution and Gaussian filters were added.
+- libgwyddion: New unit arithmetic function gwy_si_unit_power_multiply().
 
 Modules:
 - Edge: Zero crossing edge detector was added.
+- Grain statistics: Can calculate total grain volumes.
+- Filters tool: Gaussian filter was added.
+- Nanonis: Import of non-square images was hopefully fixed.
 
 
 2.3 (2007-01-21)
