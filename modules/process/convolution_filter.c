@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.1",
+    "1.1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -650,6 +650,7 @@ convolution_filter_switch_preset(GtkTreeSelection *selection,
     gwy_radio_buttons_set_current(controls->vsym, preset->vsym);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->divisor_auto),
                                  preset->data.auto_divisor);
+    gtk_widget_set_sensitive(controls->divisor, !preset->data.auto_divisor);
     controls->in_update = FALSE;
     convolution_filter_update_divisor(controls);
     controls->computed = FALSE;
@@ -725,6 +726,7 @@ convolution_filter_preset_copy(ConvolutionControls *controls,
     gwy_inventory_store_get_iter(controls->presets,
                                  gwy_resource_get_name(resource), &iter);
     gtk_tree_selection_select_iter(controls->selection, &iter);
+    convolution_filter_preset_save(GWY_CONVOLUTION_FILTER_PRESET(resource));
 }
 
 static gboolean
