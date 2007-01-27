@@ -1,10 +1,8 @@
 - Modules:
   - implement sparse laplacian data interpolation
-  - gaussian smoothening filter (+hconvolve, vconvolve)
   - fore/back detection, connected area splitting
   - polynomial leveling with disjoint z0
   - profiles along arbitrary curves
-  - zero-crossing edge detection
   - graph curve editing
   - explicit range in color range
   - nanoindentation (but do grain volume first)
@@ -24,8 +22,7 @@
 - Fix enum documentation after rename, write missing
   libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType, GwyDWTDenoiseType,
               GwyTipType
-  libgwydgets: GwyAxisScaleFormat, GwyGraphStatusType,
-               GwyGraphPointType, GwyGraphLabelPosition
+  libgwydgets: GwyGraphStatusType, GwyGraphPointType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
 - Add preview to: artithmetic
 - It should be possible to export measurement from Distance tool
