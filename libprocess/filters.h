@@ -69,6 +69,16 @@ void gwy_data_field_area_convolve              (GwyDataField *data_field,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_convolve_1d                (GwyDataField *data_field,
+                                                GwyDataLine *kernel_line,
+                                                GwyOrientation orientation);
+void gwy_data_field_area_convolve_1d           (GwyDataField *data_field,
+                                                GwyDataLine *kernel_line,
+                                                GwyOrientation orientation,
+                                                gint col,
+                                                gint row,
+                                                gint width,
+                                                gint height);
 void gwy_data_field_filter_median              (GwyDataField *data_field,
                                                 gint size);
 void gwy_data_field_area_filter_median         (GwyDataField *data_field,
