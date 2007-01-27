@@ -21,8 +21,10 @@
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/filters.h>
+#include <libprocess/linestats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -33,6 +35,7 @@
 #define GWY_IS_TOOL_FILTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_FILTER))
 #define GWY_TOOL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_FILTER, GwyToolFilterClass))
 
+/* Keep numbering for settings */
 typedef enum {
     GWY_FILTER_MEAN          = 0,
     GWY_FILTER_MEDIAN        = 1,
@@ -40,7 +43,8 @@ typedef enum {
     GWY_FILTER_MINIMUM       = 3,
     GWY_FILTER_MAXIMUM       = 4,
     GWY_FILTER_KUWAHARA      = 5,
-    GWY_FILTER_DECHECKER     = 6
+    GWY_FILTER_DECHECKER     = 6,
+    GWY_FILTER_GAUSSIAN      = 7
 } GwyFilterType;
 
 typedef struct _GwyToolFilter      GwyToolFilter;
@@ -94,7 +98,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.3",
+    "3.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -205,6 +209,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
         { N_("Maximum"),              GWY_FILTER_MAXIMUM,      },
         { N_("Kuwahara"),             GWY_FILTER_KUWAHARA,     },
         { N_("Dechecker"),            GWY_FILTER_DECHECKER,    },
+        { N_("Gaussian"),             GWY_FILTER_GAUSSIAN,     },
     };
     GtkDialog *dialog;
     GtkTable *table;
@@ -350,7 +355,8 @@ gwy_tool_filter_type_changed(GtkComboBox *combo,
 static gboolean
 gwy_tool_filter_is_sized(GwyFilterType type)
 {
-    return (type != GWY_FILTER_KUWAHARA && type != GWY_FILTER_DECHECKER);
+    return (type != GWY_FILTER_KUWAHARA
+            && type != GWY_FILTER_DECHECKER);
 }
 
 static void
@@ -433,6 +439,13 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
                                              isel[2], isel[3]);
         break;
 
+        case GWY_FILTER_GAUSSIAN:
+        gwy_data_field_area_filter_gaussian(plain_tool->data_field,
+                                            tool->args.size/(2.0*sqrt(2*G_LN2)),
+                                            isel[0], isel[1],
+                                            isel[2], isel[3]);
+        break;
+
         default:
         g_assert_not_reached();
         break;
@@ -442,4 +455,3 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
