@@ -23,9 +23,9 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/datafield.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
@@ -1258,6 +1258,80 @@ gwy_data_field_filter_dechecker(GwyDataField *data_field)
 }
 
 /**
+ * gwy_data_field_area_filter_gaussian:
+ * @data_field: A data field to apply the filter to.
+ * @sigma: The sigma parameter of the Gaussian.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with a Gaussian filter.
+ *
+ * The Gausian is normalized, i.e. it is sum-preserving.
+ *
+ * Since: 2.4
+ **/
+void
+gwy_data_field_area_filter_gaussian(GwyDataField *data_field,
+                                    gdouble sigma,
+                                    gint col, gint row,
+                                    gint width, gint height)
+{
+    GwyDataLine *kernel;
+    gdouble x;
+    gint res, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(sigma >= 0.0);
+    if (sigma == 0.0)
+        return;
+
+    res = (gint)ceil(5.0*sigma);
+    res = 2*res + 1;
+    /* FIXME */
+    i = 3*MIN(data_field->xres, data_field->yres);
+    if (res > i) {
+        res = i;
+        if (res % 2 == 0)
+            res--;
+    }
+
+    kernel = gwy_data_line_new(res, 1.0, FALSE);
+    for (i = 0; i < res; i++) {
+        x = i - (res - 1)/2.0;
+        x /= sigma;
+        kernel->data[i] = exp(-x*x/2.0);
+    }
+    gwy_data_line_multiply(kernel, 1.0/gwy_data_line_get_sum(kernel));
+    gwy_data_field_area_convolve_1d(data_field, kernel,
+                                    GWY_ORIENTATION_HORIZONTAL,
+                                    col, row, width, height);
+    gwy_data_field_area_convolve_1d(data_field, kernel,
+                                    GWY_ORIENTATION_VERTICAL,
+                                    col, row, width, height);
+    g_object_unref(kernel);
+}
+
+/**
+ * gwy_data_field_filter_gaussian:
+ * @data_field: A data field to apply the filter to.
+ * @sigma: The sigma parameter of the Gaussian.
+ *
+ * Filters a data field with a Gaussian filter.
+ *
+ * Since: 2.4
+ **/
+void
+gwy_data_field_filter_gaussian(GwyDataField *data_field,
+                               gdouble sigma)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_gaussian(data_field, sigma, 0, 0,
+                                         data_field->xres, data_field->yres);
+}
+
+/**
  * gwy_data_field_area_filter_median:
  * @data_field: A data field to apply the filter to.
  * @size: Size of area to take median of.
@@ -1280,7 +1354,6 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
     gint xfrom, xto, yfrom, yto;
     gdouble *buffer, *data, *kernel;
 
-    gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(size > 0);
     g_return_if_fail(col >= 0 && row >= 0
@@ -1427,8 +1500,6 @@ gwy_data_field_filter_conservative(GwyDataField *data_field,
                                             data_field->xres, data_field->yres);
 }
 
-
-
 static inline gint
 pixel_status(GwyDataField *data_field, gint i, gint j)
 {
@@ -1437,7 +1508,6 @@ pixel_status(GwyDataField *data_field, gint i, gint j)
     else
         return 1;
 }
-
 
 static gint
 znzt_val(GwyDataField *data_field, gint i, gint j)
