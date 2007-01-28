@@ -9,7 +9,7 @@ dump_SOURCES = \
 	dump.c
 
 EXTRA_DIST = makefile.msc
-AM_CPPFLAGS = -$(top_buildir) -DDEBUG -DG_LOG_DOMAIN=\"Plug-in\"
+AM_CPPFLAGS = -I$(top_buildir) -DDEBUG -DG_LOG_DOMAIN=\"Plug-in\"
 
 clean-local:
 	rm -f core.* *~
