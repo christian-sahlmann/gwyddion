@@ -59,6 +59,8 @@ typedef struct {
     gboolean is_lap;
     gboolean update;
     GwyMergeType merge_type;
+
+    /* interface only */
     gboolean computed;
 } MarkArgs;
 
@@ -205,7 +207,7 @@ create_mask_field(GwyDataField *dfield)
     GwySIUnit *siunit;
 
     mfield = gwy_data_field_new_alike(dfield, FALSE);
-    siunit = gwy_si_unit_new("");
+    siunit = gwy_si_unit_new(NULL);
     gwy_data_field_set_si_unit_z(mfield, siunit);
     g_object_unref(siunit);
 

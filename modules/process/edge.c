@@ -28,34 +28,115 @@
 #include <libprocess/hough.h>
 #include <libprocess/level.h>
 #include <libprocess/grains.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
 #define EDGE_RUN_MODES GWY_RUN_IMMEDIATE
+#define EDGE_UI_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-static gboolean    module_register              (void);
-static void        edge                         (GwyContainer *data,
-                                                 GwyRunType run,
-                                                 const gchar *name);
-static void        laplacian_do                 (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        canny_do                     (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        rms_do                       (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        rms_edge_do                  (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        nonlinearity_do              (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        hough_lines_do               (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        harris_do                    (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        inclination_do               (GwyDataField *dfield,
-                                                 GwyDataField *show);
-static void        zero_crossing_do             (GwyDataField *dfield,
-                                                 GwyDataField *show);
+enum {
+    PREVIEW_SIZE = 400
+};
+
+enum {
+    RESPONSE_RESET   = 1,
+    RESPONSE_PREVIEW = 2
+};
+
+typedef enum {
+    DISPLAY_DATA,
+    DISPLAY_LOG,
+    DISPLAY_SHOW
+} ZeroCrossingDisplayType;
+
+typedef struct {
+    gdouble gaussian_fwhm;
+    gdouble threshold;
+    gboolean update;
+} ZeroCrossingArgs;
+
+typedef struct {
+    GtkWidget *dialog;
+    GtkWidget *view;
+    GwyPixmapLayer *layer;
+    GtkObject *gaussian_fwhm;
+    GtkObject *threshold;
+    GSList *display_group;
+    GtkWidget *update;
+    GwyContainer *mydata;
+    ZeroCrossingArgs *args;
+    ZeroCrossingDisplayType display;
+    gboolean in_init;
+    gboolean computed;
+    gboolean gauss_computed;
+} ZeroCrossingControls;
+
+static gboolean module_register(void);
+static void     edge           (GwyContainer *data,
+                                GwyRunType run,
+                                const gchar *name);
+static void     laplacian_do   (GwyDataField *dfield,
+                                GwyDataField *show);
+static void     canny_do       (GwyDataField *dfield,
+                                GwyDataField *show);
+static void     rms_do         (GwyDataField *dfield,
+                                GwyDataField *show);
+static void     rms_edge_do    (GwyDataField *dfield,
+                                GwyDataField *show);
+static void     nonlinearity_do(GwyDataField *dfield,
+                                GwyDataField *show);
+static void     hough_lines_do (GwyDataField *dfield,
+                                GwyDataField *show);
+static void     harris_do      (GwyDataField *dfield,
+                                GwyDataField *show);
+static void     inclination_do (GwyDataField *dfield,
+                                GwyDataField *show);
+
+static void zero_crossing                      (GwyContainer *data,
+                                                GwyRunType run);
+static void zero_crossing_dialog               (ZeroCrossingArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                gint id,
+                                                GQuark squark);
+static void zero_crossing_gaussian_fwhm_changed(GtkAdjustment *adj,
+                                                ZeroCrossingControls *controls);
+static void zero_crossing_threshold_changed    (GtkAdjustment *adj,
+                                                ZeroCrossingControls *controls);
+static void zero_crossing_display_changed      (GtkToggleButton *radio,
+                                                ZeroCrossingControls *controls);
+static void zero_crossing_update_changed       (GtkToggleButton *check,
+                                                ZeroCrossingControls *controls);
+static void zero_crossing_invalidate           (ZeroCrossingControls *controls);
+static void zero_crossing_update_controls      (ZeroCrossingControls *controls,
+                                                ZeroCrossingArgs *args);
+static void zero_crossing_preview              (ZeroCrossingControls *controls,
+                                                ZeroCrossingArgs *args);
+static void zero_crossing_run                  (const ZeroCrossingArgs *args,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                GQuark squark);
+static void zero_crossing_do_log               (GwyDataField *dfield,
+                                                GwyDataField *gauss,
+                                                gdouble gaussian_fwhm);
+static void zero_crossing_do_edge              (GwyDataField *show,
+                                                GwyDataField *gauss,
+                                                gdouble theshold);
+static void zero_crossing_load_args            (GwyContainer *container,
+                                                ZeroCrossingArgs *args);
+static void zero_crossing_save_args            (GwyContainer *container,
+                                                ZeroCrossingArgs *args);
+
+static const ZeroCrossingArgs zero_crossing_defaults = {
+    1.6,
+    0.0,
+    FALSE,
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -137,10 +218,10 @@ module_register(void)
                               N_("Local inclination based edge detection "
                                  "presentation"));
     gwy_process_func_register("edge_zero_crossing",
-                              (GwyProcessFunc)&edge,
-                              N_("/_Presentation/_Edge Detection/_Zero Crossing"),
+                              (GwyProcessFunc)&zero_crossing,
+                              N_("/_Presentation/_Edge Detection/_Zero Crossing..."),
                               NULL,
-                              EDGE_RUN_MODES,
+                              EDGE_UI_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Zero crossing edge detection presentation"));
 
@@ -163,7 +244,6 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         { "edge_nonlinearity",  nonlinearity_do,  },
         { "edge_rms",           rms_do,           },
         { "edge_rms_edge",      rms_edge_do,      },
-        { "edge_zero_crossing", zero_crossing_do, },
     };
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
@@ -310,38 +390,402 @@ inclination_do(GwyDataField *dfield, GwyDataField *show)
 }
 
 static void
-zero_crossing_do(GwyDataField *dfield, GwyDataField *show)
+hough_lines_do(GwyDataField *dfield, GwyDataField *show)
 {
-    static const gdouble sigma = 1.6;
+    GwyDataField *x_gradient, *y_gradient;
 
-    GwyDataField *kernel, *buf;
-    gdouble *data;
-    const gdouble *bdata;
-    gdouble x, dm, dp, threshold;
-    gint n, size, xres, yres, i, j;
+    gwy_data_field_copy(dfield, show, FALSE);
+    gwy_data_field_filter_canny(show, 0.1);
 
-    n = (gint)ceil(5*sigma);
-    size = 2*n + 1,
-    kernel = gwy_data_field_new(size, size, 1.0, 1.0, FALSE);
-    data = gwy_data_field_get_data(kernel);
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < size; j++) {
-            x = ((i - n)*(i - n) + (j - n)*(j - n))/(2.0*sigma*sigma);
-            data[i*size + j] = (1.0 - x)*exp(-x);
-        }
+    x_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
+    y_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
+
+    gwy_data_field_hough_line_strenghten(show, x_gradient, y_gradient,
+                                         1, 0.2);
+}
+static void
+harris_do(GwyDataField *dfield, GwyDataField *show)
+{
+    GwyDataField *x_gradient, *y_gradient;
+
+    gwy_data_field_copy(dfield, show, FALSE);
+    x_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
+    y_gradient = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
+
+    gwy_data_field_filter_harris(x_gradient, y_gradient, show, 20, 0.1);
+    /*gwy_data_field_clear(show);
+    gwy_data_field_grains_mark_watershed_minima(ble, show, 1, 0, 5,
+                       0.05*(gwy_data_field_get_max(ble) - gwy_data_field_get_min(ble)));
+*/
+}
+
+static void
+zero_crossing(GwyContainer *data, GwyRunType run)
+{
+    ZeroCrossingArgs args;
+    GwyDataField *dfield;
+    GQuark squark;
+    gint id;
+
+    g_return_if_fail(run & EDGE_UI_RUN_MODES);
+    zero_crossing_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_SHOW_FIELD_KEY, &squark,
+                                     0);
+    g_return_if_fail(dfield && squark);
+
+    if (run == GWY_RUN_IMMEDIATE)
+        zero_crossing_run(&args, data, dfield, squark);
+    else {
+        zero_crossing_dialog(&args, data, dfield, id, squark);
+        zero_crossing_save_args(gwy_app_settings_get(), &args);
+    }
+}
+
+static void
+zero_crossing_dialog(ZeroCrossingArgs *args,
+                     GwyContainer *data,
+                     GwyDataField *dfield,
+                     gint id,
+                     GQuark squark)
+{
+    static const GwyEnum displays[] = {
+        { N_("Original _image"), DISPLAY_DATA, },
+        { N_("_LoG convolved"),  DISPLAY_LOG,  },
+        { N_("Detected _edges"), DISPLAY_SHOW, },
+    };
+
+    GtkWidget *dialog, *table, *hbox, *label;
+    GtkObject *adj;
+    ZeroCrossingControls controls;
+    gint response;
+    gdouble zoomval;
+    GwyDataField *sfield;
+    gint row;
+    gboolean temp;
+
+    controls.args = args;
+    controls.in_init = TRUE;
+
+    dialog = gtk_dialog_new_with_buttons(_("Zero Crossing Edge Detection"),
+                                         NULL, 0, NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
+
+    hbox = gtk_hbox_new(FALSE, 2);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            0);
+    controls.view = gwy_data_view_new(controls.mydata);
+    controls.layer = gwy_layer_basic_new();
+    g_object_set(controls.layer,
+                 "data-key", "/0/data",
+                 "gradient-key", "/0/base/palette",
+                 NULL);
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), controls.layer);
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+
+    table = gtk_table_new(7, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
+    row = 0;
+
+    adj = gtk_adjustment_new(args->gaussian_fwhm, 0.0, 20.0, 0.1, 1.0, 0);
+    controls.gaussian_fwhm = adj;
+    gwy_table_attach_hscale(table, row, _("Gaussian FWHM:"), "px", adj,
+                            GWY_HSCALE_DEFAULT);
+    g_signal_connect(adj, "value-changed",
+                     G_CALLBACK(zero_crossing_gaussian_fwhm_changed),
+                     &controls);
+    row++;
+
+    adj = gtk_adjustment_new(args->threshold, 0.0, 2.0, 0.001, 0.1, 0);
+    controls.threshold = adj;
+    gwy_table_attach_hscale(table, row, _("Threshold:"), _("RMS"), adj,
+                            GWY_HSCALE_DEFAULT);
+    g_signal_connect(adj, "value-changed",
+                     G_CALLBACK(zero_crossing_threshold_changed), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    label = gtk_label_new(_("Display"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.display_group
+        = gwy_radio_buttons_create(displays, G_N_ELEMENTS(displays),
+                                   G_CALLBACK(zero_crossing_display_changed),
+                                   &controls,
+                                   DISPLAY_DATA);
+    row = gwy_radio_buttons_attach_to_table(controls.display_group,
+                                            GTK_TABLE(table), 3, row);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.update, "toggled",
+                     G_CALLBACK(zero_crossing_update_changed), &controls);
+
+    zero_crossing_invalidate(&controls);
+
+    /* finished initializing, allow instant updates */
+    controls.in_init = FALSE;
+
+    /* show initial preview if instant updates are on */
+    if (args->update) {
+        gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
+                                          RESPONSE_PREVIEW, FALSE);
+        zero_crossing_preview(&controls, args);
     }
 
-    buf = gwy_data_field_new_alike(show, FALSE);
-    gwy_data_field_copy(dfield, buf, FALSE);
-    gwy_data_field_convolve(buf, kernel);
-    g_object_unref(kernel);
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            g_object_unref(controls.mydata);
+            return;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_RESET:
+            temp = args->update;
+            *args = zero_crossing_defaults;
+            args->update = temp;
+            controls.in_init = TRUE;
+            zero_crossing_update_controls(&controls, args);
+            controls.in_init = FALSE;
+            zero_crossing_preview(&controls, args);
+            break;
+
+            case RESPONSE_PREVIEW:
+            zero_crossing_preview(&controls, args);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
+    gtk_widget_destroy(dialog);
+
+    if (controls.computed) {
+        sfield = gwy_container_get_object_by_name(controls.mydata, "/0/show");
+        gwy_app_undo_qcheckpointv(data, 1, &squark);
+        gwy_container_set_object(data, squark, sfield);
+        g_object_unref(controls.mydata);
+    }
+    else {
+        g_object_unref(controls.mydata);
+        zero_crossing_run(args, data, dfield, squark);
+    }
+}
+
+static void
+zero_crossing_gaussian_fwhm_changed(GtkAdjustment *adj,
+                                    ZeroCrossingControls *controls)
+{
+    controls->args->gaussian_fwhm = gtk_adjustment_get_value(adj);
+    controls->gauss_computed = FALSE;
+    zero_crossing_invalidate(controls);
+}
+
+static void
+zero_crossing_threshold_changed(GtkAdjustment *adj,
+                                ZeroCrossingControls *controls)
+{
+    controls->args->threshold = gtk_adjustment_get_value(adj);
+    zero_crossing_invalidate(controls);
+}
+
+static void
+zero_crossing_display_changed(G_GNUC_UNUSED GtkToggleButton *radio,
+                              ZeroCrossingControls *controls)
+{
+    if (!controls->computed)
+        zero_crossing_preview(controls, controls->args);
+
+    controls->display = gwy_radio_buttons_get_current(controls->display_group);
+    switch (controls->display) {
+        case DISPLAY_DATA:
+        gwy_pixmap_layer_set_data_key(controls->layer, "/0/data");
+        break;
+
+        case DISPLAY_LOG:
+        gwy_pixmap_layer_set_data_key(controls->layer, "/0/gauss");
+        break;
+
+        case DISPLAY_SHOW:
+        gwy_pixmap_layer_set_data_key(controls->layer, "/0/show");
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+static void
+zero_crossing_update_changed(GtkToggleButton *check,
+                             ZeroCrossingControls *controls)
+{
+    controls->args->update = gtk_toggle_button_get_active(check);
+    if (controls->args->update)
+        zero_crossing_preview(controls, controls->args);
+}
+
+static void
+zero_crossing_invalidate(ZeroCrossingControls *controls)
+{
+    controls->computed = FALSE;
+    if (controls->args->update && !controls->in_init)
+        zero_crossing_preview(controls, controls->args);
+}
+
+static void
+zero_crossing_update_controls(ZeroCrossingControls *controls,
+                              ZeroCrossingArgs *args)
+{
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->gaussian_fwhm),
+                             args->gaussian_fwhm);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold),
+                             args->threshold);
+}
+
+static GwyDataField*
+create_show_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new(NULL);
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
+}
+
+static void
+zero_crossing_preview(ZeroCrossingControls *controls,
+                      ZeroCrossingArgs *args)
+{
+    GwyDataField *dfield, *show, *gauss;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/0/data"));
+
+    /* Set up the show */
+    if (!gwy_container_gis_object_by_name(controls->mydata, "/0/show", &show)) {
+        show = create_show_field(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/0/show", show);
+        g_object_unref(show);
+
+        gauss = gwy_data_field_new_alike(show, FALSE);
+        gwy_container_set_object_by_name(controls->mydata, "/0/gauss", gauss);
+        g_object_unref(gauss);
+    }
+    else
+        gwy_container_gis_object_by_name(controls->mydata, "/0/gauss", &gauss);
+
+    if (!controls->gauss_computed) {
+        zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
+        gwy_data_field_data_changed(gauss);
+        controls->gauss_computed = TRUE;
+    }
+    zero_crossing_do_edge(show, gauss, args->threshold);
+    gwy_data_field_data_changed(show);
+    controls->computed = TRUE;
+}
+
+static void
+zero_crossing_run(const ZeroCrossingArgs *args,
+                  GwyContainer *data,
+                  GwyDataField *dfield,
+                  GQuark squark)
+{
+    GwyDataField *show, *gauss;
+
+    gwy_app_undo_qcheckpointv(data, 1, &squark);
+    show = create_show_field(dfield);
+    gauss = gwy_data_field_new_alike(show, FALSE);
+    zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
+    zero_crossing_do_edge(show, gauss, args->threshold);
+    g_object_unref(gauss);
+    gwy_container_set_object(data, squark, show);
+    g_object_unref(show);
+}
+
+static void
+zero_crossing_do_log(GwyDataField *dfield,
+                     GwyDataField *gauss,
+                     gdouble gaussian_fwhm)
+{
+    gwy_data_field_copy(dfield, gauss, FALSE);
+    gwy_data_field_filter_gaussian(gauss, gaussian_fwhm/(2.0*sqrt(2.0*G_LN2)));
+    gwy_data_field_filter_laplacian(gauss);
+}
+
+static void
+zero_crossing_do_edge(GwyDataField *show,
+                      GwyDataField *gauss,
+                      gdouble threshold)
+{
+    gdouble *data;
+    const gdouble *bdata;
+    gdouble dm, dp;
+    gint n, xres, yres, i, j;
+
+    threshold *= gwy_data_field_get_rms(gauss);
     gwy_data_field_clear(show);
-    threshold = 0.25*gwy_data_field_get_rms(buf);
 
     xres = gwy_data_field_get_xres(show);
     yres = gwy_data_field_get_yres(show);
     data = gwy_data_field_get_data(show);
-    bdata = gwy_data_field_get_data_const(buf);
+    bdata = gwy_data_field_get_data_const(gauss);
 
     /* Vertical pass */
     for (i = 1; i < yres; i++) {
@@ -388,42 +832,46 @@ zero_crossing_do(GwyDataField *dfield, GwyDataField *show)
             }
         }
     }
+}
 
-    g_object_unref(buf);
+static const gchar gaussian_fwhm_key[] = "/module/zero_crossing/gaussian-fwhm";
+static const gchar threshold_key[]     = "/module/zero_crossing/threshold";
+static const gchar update_key[]        = "/module/zero_crossing/update";
+
+static void
+zero_crossing_sanitize_args(ZeroCrossingArgs *args)
+{
+    args->gaussian_fwhm = CLAMP(args->gaussian_fwhm, 0.0, 20.0);
+    args->threshold = CLAMP(args->threshold, 0.0, 2.0);
+    args->update = !!args->update;
 }
 
 static void
-hough_lines_do(GwyDataField *dfield, GwyDataField *show)
+zero_crossing_load_args(GwyContainer *container,
+                        ZeroCrossingArgs *args)
 {
-    GwyDataField *x_gradient, *y_gradient;
+    *args = zero_crossing_defaults;
 
-    gwy_data_field_copy(dfield, show, FALSE);
-    gwy_data_field_filter_canny(show, 0.1);
+    gwy_container_gis_double_by_name(container, gaussian_fwhm_key,
+                                     &args->gaussian_fwhm);
+    gwy_container_gis_double_by_name(container, threshold_key,
+                                     &args->threshold);
+    gwy_container_gis_boolean_by_name(container, update_key,
+                                      &args->update);
 
-    x_gradient = gwy_data_field_duplicate(dfield);
-    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
-    y_gradient = gwy_data_field_duplicate(dfield);
-    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
-
-    gwy_data_field_hough_line_strenghten(show, x_gradient, y_gradient,
-                                         1, 0.2);
+    zero_crossing_sanitize_args(args);
 }
+
 static void
-harris_do(GwyDataField *dfield, GwyDataField *show)
+zero_crossing_save_args(GwyContainer *container,
+                        ZeroCrossingArgs *args)
 {
-    GwyDataField *x_gradient, *y_gradient;
-
-    gwy_data_field_copy(dfield, show, FALSE);
-    x_gradient = gwy_data_field_duplicate(dfield);
-    gwy_data_field_filter_sobel(x_gradient, GWY_ORIENTATION_HORIZONTAL);
-    y_gradient = gwy_data_field_duplicate(dfield);
-    gwy_data_field_filter_sobel(y_gradient, GWY_ORIENTATION_VERTICAL);
-
-    gwy_data_field_filter_harris(x_gradient, y_gradient, show, 20, 0.1);
-    /*gwy_data_field_clear(show);
-    gwy_data_field_grains_mark_watershed_minima(ble, show, 1, 0, 5,
-                       0.05*(gwy_data_field_get_max(ble) - gwy_data_field_get_min(ble)));
-*/
+    gwy_container_set_double_by_name(container, gaussian_fwhm_key,
+                                     args->gaussian_fwhm);
+    gwy_container_set_double_by_name(container, threshold_key,
+                                     args->threshold);
+    gwy_container_set_boolean_by_name(container, update_key,
+                                      args->update);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
