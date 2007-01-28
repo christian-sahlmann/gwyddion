@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -210,24 +210,8 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
 static void
 laplacian_do(GwyDataField *dfield, GwyDataField *show)
 {
-    gint xres, yres, i, j;
-    gdouble avg, *data;
-
     gwy_data_field_copy(dfield, show, FALSE);
-    xres = gwy_data_field_get_xres(show);
-    yres = gwy_data_field_get_yres(show);
     gwy_data_field_filter_laplacian(show);
-    avg = gwy_data_field_area_get_avg(show, NULL, 1, 1, xres-2, yres-2);
-    data = gwy_data_field_get_data(show);
-
-    for (i = 0; i < yres; i++) {
-        data[xres*i] = avg;
-        data[xres - 1 + xres*i] = avg;
-    }
-    for (j = 0; j < xres; j++) {
-        data[j] = avg;
-        data[j + xres*(yres - 1)] = avg;
-    }
 }
 
 static void
