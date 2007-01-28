@@ -580,6 +580,86 @@ gwy_data_field_area_gather(GwyDataField *data_field,
     }
 }
 
+static void
+gwy_data_field_area_convolve_3x3(GwyDataField *data_field,
+                                 const gdouble *kernel,
+                                 gint col, gint row,
+                                 gint width, gint height)
+{
+    gdouble *rm, *rc, *rp;
+    gdouble t, v;
+    gint xres, i, j;
+
+    xres = data_field->xres;
+    rp = data_field->data + row*xres + col;
+
+    /* Special-case width == 1 to avoid complications below.  It's silly but
+     * the API guarantees it. */
+    if (width == 1) {
+        t = rp[0];
+        for (i = 0; i < height; i++) {
+            rc = rp = data_field->data + (row + i)*xres + col;
+            if (i < height-1)
+                rp += xres;
+
+            v = (kernel[0] + kernel[1] + kernel[2])*t
+                + (kernel[3] + kernel[4] + kernel[5])*rc[0]
+                + (kernel[6] + kernel[7] + kernel[8])*rp[0];
+            t = rc[0];
+            rc[0] = v;
+        }
+        gwy_data_field_invalidate(data_field);
+
+        return;
+    }
+
+    rm = g_new(gdouble, width);
+    memcpy(rm, rp, width*sizeof(gdouble));
+
+    for (i = 0; i < height; i++) {
+        rc = rp;
+        if (i < height-1)
+            rp += xres;
+        v = (kernel[0] + kernel[1])*rm[0] + kernel[2]*rm[1]
+            + (kernel[3] + kernel[4])*rc[0] + kernel[5]*rc[1]
+            + (kernel[6] + kernel[7])*rp[0] + kernel[8]*rp[1];
+        t = rc[0];
+        rc[0] = v;
+        if (i < height-1) {
+            for (j = 1; j < width-1; j++) {
+                v = kernel[0]*rm[j-1] + kernel[1]*rm[j] + kernel[2]*rm[j+1]
+                    + kernel[3]*t + kernel[4]*rc[j] + kernel[5]*rc[j+1]
+                    + kernel[6]*rp[j-1] + kernel[7]*rp[j] + kernel[8]*rp[j+1];
+                rm[j-1] = t;
+                t = rc[j];
+                rc[j] = v;
+            }
+            v = kernel[0]*rm[j-1] + (kernel[1] + kernel[2])*rm[j]
+                + kernel[3]*t + (kernel[4] + kernel[5])*rc[j]
+                + kernel[6]*rp[j-1] + (kernel[7] + kernel[8])*rp[j];
+        }
+        else {
+            for (j = 1; j < width-1; j++) {
+                v = kernel[0]*rm[j-1] + kernel[1]*rm[j] + kernel[2]*rm[j+1]
+                    + kernel[3]*t + kernel[4]*rc[j] + kernel[5]*rc[j+1]
+                    + kernel[6]*t + kernel[7]*rc[j] + kernel[8]*rc[j+1];
+                rm[j-1] = t;
+                t = rc[j];
+                rc[j] = v;
+            }
+            v = kernel[0]*rm[j-1] + (kernel[1] + kernel[2])*rm[j]
+                + kernel[3]*t + (kernel[4] + kernel[5])*rc[j]
+                + kernel[6]*t + (kernel[7] + kernel[8])*rc[j];
+        }
+        rm[j-1] = t;
+        rm[j] = rc[j];
+        rc[j] = v;
+    }
+
+    g_free(rm);
+    gwy_data_field_invalidate(data_field);
+}
+
 /**
  * gwy_data_field_area_convolve:
  * @data_field: A data field to convolve.  It must be at least as large as
@@ -617,6 +697,12 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
         g_warning("Kernel size (%d x %d) more than 3 times larger "
                   "than field area size (%d x %d).",
                   kxres, kyres, width, height);
+        return;
+    }
+
+    if (kxres == 3 && kyres == 3) {
+        gwy_data_field_area_convolve_3x3(data_field, kernel_field->data,
+                                         col, row, width, height);
         return;
     }
 
@@ -1072,13 +1158,10 @@ gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
         1, -4, 1,
         0,  1, 0,
     };
-    GwyDataField *kernel;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    kernel = gwy_data_field_new(3, 3, 3, 3, FALSE);
-    memcpy(kernel->data, laplace, sizeof(laplace));
-    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
-    g_object_unref(kernel);
+    gwy_data_field_area_convolve_3x3(data_field, laplace,
+                                     col, row, width, height);
 }
 
 /**
@@ -1122,16 +1205,14 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
          0,     0,    0,
         -0.25, -0.5, -0.25,
     };
-    GwyDataField *kernel;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    kernel = gwy_data_field_new(3, 3, 3, 3, FALSE);
     if (orientation == GWY_ORIENTATION_HORIZONTAL)
-        memcpy(kernel->data, hsobel, sizeof(hsobel));
+        gwy_data_field_area_convolve_3x3(data_field, hsobel,
+                                         col, row, width, height);
     else
-        memcpy(kernel->data, vsobel, sizeof(vsobel));
-    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
-    g_object_unref(kernel);
+        gwy_data_field_area_convolve_3x3(data_field, vsobel,
+                                         col, row, width, height);
 }
 
 /**
@@ -1178,16 +1259,14 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
          0,        0,        0,
         -1.0/3.0, -1.0/3.0, -1.0/3.0,
     };
-    GwyDataField *kernel;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    kernel = gwy_data_field_new(3, 3, 3, 3, FALSE);
     if (orientation == GWY_ORIENTATION_HORIZONTAL)
-        memcpy(kernel->data, hprewitt, sizeof(hprewitt));
+        gwy_data_field_area_convolve_3x3(data_field, hprewitt,
+                                         col, row, width, height);
     else
-        memcpy(kernel->data, vprewitt, sizeof(vprewitt));
-    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
-    g_object_unref(kernel);
+        gwy_data_field_area_convolve_3x3(data_field, vprewitt,
+                                         col, row, width, height);
 }
 
 /**
