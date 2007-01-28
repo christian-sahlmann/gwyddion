@@ -86,6 +86,9 @@ GENMARSHAL_NAME = gwydgetmarshals
 GENMARSHAL_PREFIX = _gwydget_marshal
 include $(top_srcdir)/utils/genmarshal.mk
 
+AM_CFLAGS = @COMMON_CFLAGS@
+AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"Gwydgets\"
+
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
@@ -148,9 +151,6 @@ libgwydgets2_la_SOURCES = \
 	gwyvectorlayer.c \
 	gwyvruler.c \
 	gwycurve.c
-
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwydgets\"
 
 clean-local:
 	rm -f core.* *~

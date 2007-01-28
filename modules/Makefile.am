@@ -17,22 +17,17 @@ else
 plugin_proxy_sources = plugin-proxy.c
 endif
 
-
 EXTRA_DIST = \
 	$(plugin_proxy_sources) \
 	makefile.msc \
 	makefile.msc.gwt
 
-
-INCLUDES = -I$(top_srcdir)
-
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
-
-
 if OS_WIN32
 no_undefined = -no-undefined
 endif
 
+AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
+AM_CFLAGS = @COMMON_CFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
 if MODULE_DEPENDENCIES
@@ -46,12 +41,10 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
-
 if ENABLE_PLUGIN_PROXY
 plugin_proxy_la_SOURCES = plugin-proxy.c
 plugin_proxy_la_LIBADD = $(module_libadd)
 endif
-
 
 MAINTAINERCLEANFILES = makefile.msc
 

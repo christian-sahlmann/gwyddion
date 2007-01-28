@@ -14,16 +14,12 @@ EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt
 
-
-INCLUDES = -I$(top_srcdir)
-
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
-
-
 if OS_WIN32
 no_undefined = -no-undefined
 endif
 
+AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
+AM_CFLAGS = @COMMON_CFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
 if MODULE_DEPENDENCIES
@@ -36,7 +32,6 @@ module_libadd = \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
 	@GTK_LIBS@
 endif
-
 
 graph_export_ascii_la_SOURCES = graph_export_ascii.c
 graph_export_ascii_la_LIBADD = $(module_libadd)
@@ -58,7 +53,6 @@ graph_level_la_LIBADD = $(module_libadd)
 
 #graph_stats_la_SOURCES = graph_stats.c
 #graph_stats_la_LIBADD = $(module_libadd)
-
 
 MAINTAINERCLEANFILES = makefile.msc
 

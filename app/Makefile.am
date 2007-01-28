@@ -58,6 +58,9 @@ MKENUM_NAME = gwyapptypes
 MKENUM_HFILES = data-browser.h menu.h
 include $(top_srcdir)/utils/mkenum.mk
 
+AM_CFLAGS = @COMMON_CFLAGS@
+AM_CPPFLAGS = -I$(top_builddir)
+
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
@@ -65,7 +68,8 @@ include $(top_srcdir)/utils/mkenum.mk
 # Changing ifaces     C:   R:   0
 libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 1:0:1
 #libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
-libgwyapp2_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
+libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
+
 libgwyapp2_la_SOURCES = \
 	app.c \
 	data-browser.c \
@@ -125,8 +129,6 @@ authors.h: ${top_srcdir}/AUTHORS
 			${top_srcdir}/AUTHORS; \
 		echo '};'; \
 	} >authors.h
-
-INCLUDES = -I$(top_srcdir)
 
 clean-local:
 	rm -f core.* *~

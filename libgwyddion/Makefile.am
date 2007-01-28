@@ -27,8 +27,7 @@ libgwyddion2include_HEADERS = \
 	gwyversion.h
 
 noinst_HEADERS = \
-	gwyddioninternal.h \
-	gwytestser.h
+	gwyddioninternal.h
 
 lib_LTLIBRARIES = libgwyddion2.la
 
@@ -48,6 +47,15 @@ BUILT_SOURCES =
 MKENUM_NAME = gwyddiontypes
 MKENUM_HFILES = gwyddionenums.h
 include $(top_srcdir)/utils/mkenum.mk
+
+AM_CFLAGS = @COMMON_CFLAGS@
+AM_CPPFLAGS = \
+	-I$(top_builddir) \
+	-DG_LOG_DOMAIN=\"Gwyddion\" \
+	-DGWY_LIBDIR=\"$(libdir)\" \
+	-DGWY_LIBEXECDIR=\"$(libexecdir)\" \
+	-DGWY_DATADIR=\"$(datadir)\" \
+	-DGWY_LOCALEDIR=\"$(localedir)\"
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -76,20 +84,6 @@ libgwyddion2_la_SOURCES = \
 	gwyutils.c \
 	gwyversion.c
 
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = \
-	-DG_LOG_DOMAIN=\"Gwyddion\" \
-	-DGWY_LIBDIR=\"$(libdir)\" \
-	-DGWY_LIBEXECDIR=\"$(libexecdir)\" \
-	-DGWY_DATADIR=\"$(datadir)\" \
-	-DGWY_LOCALEDIR=\"$(localedir)\"
-
 clean-local:
 	rm -f core.* *~
 
-#noinst_PROGRAMS = main
-#main_SOURCES = \
-#	main.c \
-#	gwytestser.c
-#
-#main_LDADD = libgwyddion2.la

@@ -24,7 +24,8 @@ EXTRA_DIST = \
 noinst_HEADERS = \
 	gwydrawinternal.h
 
-#noinst_PROGRAMS = test
+AM_CFLAGS = @COMMON_CFLAGS@
+AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"GwyDraw\"
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -40,9 +41,6 @@ libgwydraw2_la_SOURCES = \
 	gwypixfield.c \
 	gwyrgba.c \
 	gwyselection.c
-
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"
 
 MAINTAINERCLEANFILES = \
 	makefile.msc \

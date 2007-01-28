@@ -9,7 +9,6 @@ layer_LTLIBRARIES = \
 	point.la \
 	rectangle.la
 
-
 noinst_HEADERS = \
 	layer.h
 
@@ -17,16 +16,12 @@ EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt
 
-
-INCLUDES = -I$(top_srcdir)
-
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
-
-
 if OS_WIN32
 no_undefined = -no-undefined
 endif
 
+AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
+AM_CFLAGS = @COMMON_CFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
 if MODULE_DEPENDENCIES
@@ -39,7 +34,6 @@ module_libadd = \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
 	@GTK_LIBS@
 endif
-
 
 axis_la_SOURCES = axis.c
 axis_la_LIBADD = $(module_libadd)
@@ -55,7 +49,6 @@ rectangle_la_LIBADD = $(module_libadd)
 
 point_la_SOURCES = point.c
 point_la_LIBADD = $(module_libadd)
-
 
 MAINTAINERCLEANFILES = makefile.msc
 

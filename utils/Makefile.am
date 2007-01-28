@@ -28,6 +28,9 @@ noinst_PROGRAMS = \
 dump_modules_SOURCES = \
 	dump-modules.c
 
+AM_CPPFLAGS = -I$(top_builddir)
+AM_CFLAGS = @COMMON_CFLAGS@
+
 dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 	$(libgwyapp) \
 	$(libgwymodule) \
@@ -44,8 +47,6 @@ CLEANFILES = \
 
 DISTCLEANFILES = \
 	gwywin32.bat
-
-INCLUDES = -I$(top_srcdir)
 
 modules.xml: dump-modules $(GUIDE_MAP) $(moduledir)/*.c $(moduledir)/*/*.c
 	@sed -e '/^#/d' \
