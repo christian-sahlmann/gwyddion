@@ -24,7 +24,7 @@ SCANGOBJ_OPTIONS =
 
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED" 
-SCAN_OPTIONS = --deprecated-guards="GWY_DISABLE_DEPRECATED"
+SCAN_OPTIONS =
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml
@@ -42,10 +42,6 @@ FIXXREF_OPTIONS = \
 	--extra-dir=$(srcdir)/../libgwydraw/html \
 	--extra-dir=$(srcdir)/../libgwymodule/html \
 	--extra-dir=$(srcdir)/../libgwyapp/html
-
-# Header files to ignore when scanning.
-# e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
-IGNORE_HFILES =
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png
@@ -67,19 +63,6 @@ content_files = standard-vector-layers.xml
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
 expand_content_files=
-
-# CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.
-# Only needed if you are using gtkdoc-scangobj to dynamically query widget
-# signals and properties.
-# e.g. INCLUDES=-I$(top_srcdir) -I$(top_builddir) $(GTK_DEBUG_FLAGS)
-# e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
-INCLUDES = -I${top_srcdir} @CFLAGS@
-GTKDOC_LIBS = \
-	${top_srcdir}/$(DOC_DIRNAME)/$(DOC_MODULE)2.la \
-	${top_srcdir}/libdraw/libgwydraw2.la \
-	${top_srcdir}/libprocess/libgwyprocess2.la \
-	${top_srcdir}/libgwyddion/libgwyddion2.la \
-	@LDFLAGS@ @GTK_LIBS@
 
 # This includes the standard gtk-doc make rules.
 include $(top_srcdir)/devel-docs/gtk-doc.mk

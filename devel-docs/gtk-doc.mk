@@ -3,13 +3,22 @@
 # Included in all API-docs Makefile.am's, if you change anything here, it's
 # affects all subdirs.
 
-if GTK_DOC_USE_LIBTOOL
-GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC) $(INCLUDES) $(AM_CFLAGS) $(CFLAGS)
-GTKDOC_LD = $(LIBTOOL) --mode=link $(CC) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS)
-else
-GTKDOC_CC = $(CC) $(INCLUDES) $(AM_CFLAGS) $(CFLAGS)
-GTKDOC_LD = $(CC) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS)
-endif
+GWY_DOC_CFLAGS = -I$(top_srcdir) -I$(top_builddir) @COMMON_CFLAGS@
+GWY_DOC_LIBS = \
+	${top_srcdir}/app/libgwyapp2.la \
+	${top_srcdir}/libgwymodule/libgwymodule2.la \
+	${top_srcdir}/libgwydgets/libgwydgets2.la \
+	${top_srcdir}/libdraw/libgwydraw2.la \
+	${top_srcdir}/libprocess/libgwyprocess2.la \
+	${top_srcdir}/libgwyddion/libgwyddion2.la \
+	@GTKGLEXT_LIBS@ @BASIC_LIBS@
+
+GWY_SCAN_OPTIONS = \
+	--deprecated-guards="GWY_DISABLE_DEPRECATED" \
+	--ignore-decorators="_GWY_STATIC_INLINE"
+
+GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC) $(GWY_DOC_CFLAGS) $(GTKDOC_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+GTKDOC_LD = $(LIBTOOL) --mode=link $(CC) $(GWY_DOC_LIBS) $(GTKDOC_LIBS) $(CFLAGS) $(LDFLAGS)
 
 # We set GPATH here; this gives us semantics for GNU make
 # which are more like other make's VPATH, when it comes to
@@ -67,13 +76,13 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	@echo 'gtk-doc: Scanning header files'
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
-	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) $(SCAN_OPTIONS) $(EXTRA_HFILES)
 	if test "x$(TYPES_INCLUDE)" != x; then \
 	    echo "$(TYPES_INCLUDE)"; \
 	    $(PYTHON) $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
 	fi >$(srcdir)/$(DOC_MODULE).types
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types >/dev/null 2>&1 ; then \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
 	else \
 	    cd $(srcdir) ; \
 	    for i in $(SCANOBJ_FILES); do \
