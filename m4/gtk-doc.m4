@@ -4,8 +4,6 @@ dnl Usage:
 dnl   GTK_DOC_CHECK([minimum-gtk-doc-version])
 AC_DEFUN([GTK_DOC_CHECK],
 [
-  AC_BEFORE([AC_PROG_LIBTOOL],[$0])dnl setup libtool first
-  AC_BEFORE([AM_PROG_LIBTOOL],[$0])dnl setup libtool first
   dnl for overriding the documentation installation directory
   AC_ARG_WITH(html-dir,
     AC_HELP_STRING([--with-html-dir=PATH], [path to installed docs]),,
@@ -47,6 +45,5 @@ ifelse([$1],[],,
   fi
 
   AM_CONDITIONAL(ENABLE_GTK_DOC, test x$enable_gtk_doc = xyes)
-  AM_CONDITIONAL(GTK_DOC_USE_LIBTOOL, test -n "$LIBTOOL")
 ])
 
