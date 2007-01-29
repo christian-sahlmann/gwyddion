@@ -167,6 +167,7 @@ gwy_get_guint64_be(const guchar **ppv)
     return v;
 }
 
+#if 0
 static inline gfloat
 gwy_get_gfloat_le(const guchar **ppv)
 {
@@ -206,6 +207,83 @@ gwy_get_gdouble_be(const guchar **ppv)
     *ppv += sizeof(guint64);
     return v.f;
 }
+#else
+static inline gfloat
+gwy_get_gfloat_le(const guchar **p)
+{
+    union { guchar pp[4]; gfloat f; } z;
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    memcpy(z.pp, *p, sizeof(gfloat));
+#else
+    z.pp[0] = (*p)[3];
+    z.pp[1] = (*p)[2];
+    z.pp[2] = (*p)[1];
+    z.pp[3] = (*p)[0];
+#endif
+    *p += sizeof(gfloat);
+    return z.f;
+}
+
+static inline gfloat
+gwy_get_gfloat_be(const guchar **p)
+{
+    union { guchar pp[4]; gfloat f; } z;
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    memcpy(z.pp, *p, sizeof(gfloat));
+#else
+    z.pp[0] = (*p)[3];
+    z.pp[1] = (*p)[2];
+    z.pp[2] = (*p)[1];
+    z.pp[3] = (*p)[0];
+#endif
+    *p += sizeof(float);
+    return z.f;
+}
+
+static inline gdouble
+gwy_get_gdouble_le(const guchar **p)
+{
+    union { guchar pp[8]; gdouble d; } z;
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    memcpy(z.pp, *p, sizeof(gdouble));
+#else
+    z.pp[0] = (*p)[7];
+    z.pp[1] = (*p)[6];
+    z.pp[2] = (*p)[5];
+    z.pp[3] = (*p)[4];
+    z.pp[4] = (*p)[3];
+    z.pp[5] = (*p)[2];
+    z.pp[6] = (*p)[1];
+    z.pp[7] = (*p)[0];
+#endif
+    *p += sizeof(gdouble);
+    return z.d;
+}
+
+static inline gdouble
+gwy_get_gdouble_be(const guchar **p)
+{
+    union { guchar pp[8]; gdouble d; } z;
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    memcpy(z.pp, *p, sizeof(gdouble));
+#else
+    z.pp[0] = (*p)[7];
+    z.pp[1] = (*p)[6];
+    z.pp[2] = (*p)[5];
+    z.pp[3] = (*p)[4];
+    z.pp[4] = (*p)[3];
+    z.pp[5] = (*p)[2];
+    z.pp[6] = (*p)[1];
+    z.pp[7] = (*p)[0];
+#endif
+    *p += sizeof(gdouble);
+    return z.d;
+}
+#endif
 
 static inline gdouble
 gwy_get_pascal_real_le(const guchar **ppv)
