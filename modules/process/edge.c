@@ -121,7 +121,7 @@ static void zero_crossing_run                  (const ZeroCrossingArgs *args,
                                                 GwyContainer *data,
                                                 GwyDataField *dfield,
                                                 GQuark squark);
-static void zero_crossing_do_log               (GwyDataField *dfield,
+static gdouble zero_crossing_do_log            (GwyDataField *dfield,
                                                 GwyDataField *gauss,
                                                 gdouble gaussian_fwhm);
 static void zero_crossing_do_edge              (GwyDataField *show,
@@ -133,8 +133,8 @@ static void zero_crossing_save_args            (GwyContainer *container,
                                                 ZeroCrossingArgs *args);
 
 static const ZeroCrossingArgs zero_crossing_defaults = {
-    1.6,
-    0.0,
+    2.0,
+    0.1,
     FALSE,
 };
 
@@ -469,6 +469,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
     gint row;
     gboolean temp;
 
+    memset(&controls, 0, sizeof(ZeroCrossingControls));
     controls.args = args;
     controls.in_init = TRUE;
 
@@ -528,9 +529,9 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
                      &controls);
     row++;
 
-    adj = gtk_adjustment_new(args->threshold, 0.0, 2.0, 0.001, 0.1, 0);
+    adj = gtk_adjustment_new(args->threshold, 0.0, 3.0, 0.01, 0.1, 0);
     controls.threshold = adj;
-    gwy_table_attach_hscale(table, row, _("Threshold:"), _("RMS"), adj,
+    gwy_table_attach_hscale(table, row, _("Threshold:"), _("NRMS"), adj,
                             GWY_HSCALE_DEFAULT);
     g_signal_connect(adj, "value-changed",
                      G_CALLBACK(zero_crossing_threshold_changed), &controls);
@@ -560,17 +561,13 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
     g_signal_connect(controls.update, "toggled",
                      G_CALLBACK(zero_crossing_update_changed), &controls);
 
-    zero_crossing_invalidate(&controls);
-
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
 
     /* show initial preview if instant updates are on */
-    if (args->update) {
+    if (args->update)
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
                                           RESPONSE_PREVIEW, FALSE);
-        zero_crossing_preview(&controls, args);
-    }
 
     gtk_widget_show_all(dialog);
     do {
@@ -607,9 +604,6 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            0);
     gtk_widget_destroy(dialog);
 
     if (controls.computed) {
@@ -645,10 +639,8 @@ static void
 zero_crossing_display_changed(G_GNUC_UNUSED GtkToggleButton *radio,
                               ZeroCrossingControls *controls)
 {
-    if (!controls->computed)
-        zero_crossing_preview(controls, controls->args);
-
     controls->display = gwy_radio_buttons_get_current(controls->display_group);
+    zero_crossing_preview(controls, controls->args);
     switch (controls->display) {
         case DISPLAY_DATA:
         gwy_pixmap_layer_set_data_key(controls->layer, "/0/data");
@@ -673,6 +665,9 @@ zero_crossing_update_changed(GtkToggleButton *check,
                              ZeroCrossingControls *controls)
 {
     controls->args->update = gtk_toggle_button_get_active(check);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
     if (controls->args->update)
         zero_crossing_preview(controls, controls->args);
 }
@@ -714,6 +709,10 @@ zero_crossing_preview(ZeroCrossingControls *controls,
                       ZeroCrossingArgs *args)
 {
     GwyDataField *dfield, *show, *gauss;
+    gdouble nrms;
+
+    if (controls->computed)
+        return;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -731,12 +730,15 @@ zero_crossing_preview(ZeroCrossingControls *controls,
     else
         gwy_container_gis_object_by_name(controls->mydata, "/0/gauss", &gauss);
 
-    if (!controls->gauss_computed) {
-        zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
+    if (controls->gauss_computed)
+        nrms = gwy_container_get_double_by_name(controls->mydata, "/0/nrms");
+    else {
+        nrms = zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
+        gwy_container_set_double_by_name(controls->mydata, "/0/nrms", nrms);
         gwy_data_field_data_changed(gauss);
         controls->gauss_computed = TRUE;
     }
-    zero_crossing_do_edge(show, gauss, args->threshold);
+    zero_crossing_do_edge(show, gauss, nrms*args->threshold);
     gwy_data_field_data_changed(show);
     controls->computed = TRUE;
 }
@@ -748,25 +750,49 @@ zero_crossing_run(const ZeroCrossingArgs *args,
                   GQuark squark)
 {
     GwyDataField *show, *gauss;
+    gdouble nrms;
 
     gwy_app_undo_qcheckpointv(data, 1, &squark);
     show = create_show_field(dfield);
     gauss = gwy_data_field_new_alike(show, FALSE);
-    zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
-    zero_crossing_do_edge(show, gauss, args->threshold);
+    nrms = zero_crossing_do_log(dfield, gauss, args->gaussian_fwhm);
+    zero_crossing_do_edge(show, gauss, nrms*args->threshold);
     g_object_unref(gauss);
     gwy_container_set_object(data, squark, show);
     g_object_unref(show);
 }
 
-static void
+static gdouble
 zero_crossing_do_log(GwyDataField *dfield,
                      GwyDataField *gauss,
                      gdouble gaussian_fwhm)
 {
+    const gdouble *data, *row;
+    gint xres, yres, i, j;
+    gdouble nrms;
+
     gwy_data_field_copy(dfield, gauss, FALSE);
     gwy_data_field_filter_gaussian(gauss, gaussian_fwhm/(2.0*sqrt(2.0*G_LN2)));
     gwy_data_field_filter_laplacian(gauss);
+
+    xres = gwy_data_field_get_xres(gauss);
+    yres = gwy_data_field_get_yres(gauss);
+    data = gwy_data_field_get_data_const(gauss);
+    nrms = 0.0;
+
+    for (i = 0; i < yres-1; i++) {
+        row = data + i*xres;
+        for (j = 0; j < xres; j++)
+            nrms += (row[j] - row[j + xres])*(row[j] - row[j + xres]);
+    }
+    for (i = 0; i < yres; i++) {
+        row = data + i*xres;
+        for (j = 0; j < xres-1; j++)
+            nrms += (row[j] - row[j + 1])*(row[j] - row[j + 1]);
+    }
+
+    nrms /= 2*xres*yres - xres - yres;
+    return sqrt(nrms);
 }
 
 static void
@@ -779,7 +805,6 @@ zero_crossing_do_edge(GwyDataField *show,
     gdouble dm, dp;
     gint n, xres, yres, i, j;
 
-    threshold *= gwy_data_field_get_rms(gauss);
     gwy_data_field_clear(show);
 
     xres = gwy_data_field_get_xres(show);
@@ -842,7 +867,7 @@ static void
 zero_crossing_sanitize_args(ZeroCrossingArgs *args)
 {
     args->gaussian_fwhm = CLAMP(args->gaussian_fwhm, 0.0, 20.0);
-    args->threshold = CLAMP(args->threshold, 0.0, 2.0);
+    args->threshold = CLAMP(args->threshold, 0.0, 3.0);
     args->update = !!args->update;
 }
 
