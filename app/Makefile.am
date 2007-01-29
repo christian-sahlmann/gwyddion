@@ -110,6 +110,7 @@ gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 authors.h: ${top_srcdir}/AUTHORS
 	{ \
 		echo '/* This is a GENERATED file */'; \
+		echo '/*< private_header >*/'; \
 		echo 'static const gchar *core_developers[] = {'; \
 		sed -n -e '/=== Core developers ===/,/^$$/{' \
 			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
