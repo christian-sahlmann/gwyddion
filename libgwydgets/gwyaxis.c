@@ -99,7 +99,6 @@ static gboolean gwy_axis_logscale           (GwyAxis *a);
 static gint    gwy_axis_scale               (GwyAxis *a);
 static gint    gwy_axis_formatticks         (GwyAxis *a);
 static GwySIValueFormat* gwy_axis_calculate_format(GwyAxis *axis,
-                                                   gdouble range,
                                                    GwySIValueFormat *format);
 static gint    gwy_axis_precompute          (GwyAxis *a,
                                              gint scrmin,
@@ -281,8 +280,6 @@ gwy_axis_init(GwyAxis *axis)
     PangoContext *context;
     PangoFontDescription *description;
     gint size;
-
-    gwy_debug("");
 
     axis->orientation = GTK_POS_BOTTOM;
 
@@ -516,9 +513,6 @@ gwy_axis_realize(GtkWidget *widget)
     GdkWindowAttr attributes;
     gint i, attributes_mask;
     GtkStyle *style;
-
-    gwy_debug("realizing a GwyAxis (%ux%u)",
-              widget->allocation.x, widget->allocation.height);
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_AXIS(widget));
@@ -1454,14 +1448,13 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 static gint
 gwy_axis_formatticks(GwyAxis *a)
 {
-    gdouble value, average;
+    gdouble value;
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
     gint totalwidth = 0, totalheight = 0;
-    gdouble range;
     GwySIValueFormat *format = NULL;
-    GwyAxisLabeledTick mji, mjx, *pmjt;
+    GwyAxisLabeledTick *pmjt;
     gboolean human_fmt = TRUE;
     guint i;
 
@@ -1470,20 +1463,10 @@ gwy_axis_formatticks(GwyAxis *a)
         g_warning("No ticks found");
         return 1;
     }
-    mji = g_array_index(a->mjticks, GwyAxisLabeledTick, 0);
-    mjx = g_array_index(a->mjticks, GwyAxisLabeledTick, a->mjticks->len - 1);
-    if (a->is_logarithmic) {
-        average = 0;
-        range = 1;
-    }
-    else {
-        average = fabs(mjx.t.value + mji.t.value)/2;
-        range = fabs(mjx.t.value - mji.t.value);
-    }
 
     /* move exponents to axis label */
     if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
-        format = gwy_axis_calculate_format(a, MAX(average, range), format);
+        format = gwy_axis_calculate_format(a, format);
         if (a->magnification_string)
             g_string_assign(a->magnification_string, format->units);
         else
@@ -1571,18 +1554,30 @@ gwy_axis_formatticks(GwyAxis *a)
 
 static GwySIValueFormat*
 gwy_axis_calculate_format(GwyAxis *axis,
-                          gdouble range,
                           GwySIValueFormat *format)
 {
-    GwyAxisLabeledTick *pmjt;
+    GwyAxisLabeledTick *pmjt, *mji, *mjx;
+    gdouble average, step;
     GString *u1, *u2;
     gboolean ok;
     guint i;
 
+    /* FIXME: Does anyone really care? */
+    if (axis->is_logarithmic)
+        return gwy_si_unit_get_format(axis->unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                      0, format);
+
+    mji = &g_array_index(axis->mjticks, GwyAxisLabeledTick, 0);
+    mjx = &g_array_index(axis->mjticks, GwyAxisLabeledTick,
+                         axis->mjticks->len - 1);
+    average = fabs(mjx->t.value + mji->t.value)/2;
+    step = fabs(mjx->t.value - mji->t.value);
+    average = MAX(average, step);
+    step /= axis->mjticks->len - 1;
+
     format = gwy_si_unit_get_format_with_resolution
                                         (axis->unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                         range, range/axis->mjticks->len,
-                                         format);
+                                         average, step, format);
 
     /* Ensure the format is not too precise */
     format->precision++;
