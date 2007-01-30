@@ -76,7 +76,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	@echo 'gtk-doc: Scanning header files'
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
-	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS) $(EXTRA_HFILES)
 	if test "x$(TYPES_INCLUDE)" != x; then \
 	    echo "$(TYPES_INCLUDE)"; \
 	    $(PYTHON) $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
