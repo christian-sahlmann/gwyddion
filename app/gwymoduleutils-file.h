@@ -243,7 +243,6 @@ gwy_get_gdouble_be(const guchar **p)
     *p += sizeof(gdouble);
     return z.d;
 }
-#endif
 
 static inline gdouble
 gwy_get_pascal_real_le(const guchar **ppv)
