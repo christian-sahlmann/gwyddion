@@ -1,21 +1,35 @@
-2.3.20070127
+2.3.20070130
 
 2.4 (0000-00-00)
 Application:
-- Build failure due to the missing #include <unistd.h> in gwymoduleutils.c was
-  fixed.
+- Build failure due to the missing #include <unistd.h> in gwymoduleutils.c
+  (from 2.3) was fixed.
 - Translations updated: Italian.
 
 Libraries:
-- libgwydgets: GwyAxis sometimes using too low precision was fixed.
+- libgwyapp: Miscellaneous binary data file import problems caused by the
+  new floating point data getters were fixed by reverting to the old
+  implementation.
+- libgwydgets: GwyAxis sometimes using too low precision (from 2.3) was fixed.
 - libprocess: 1D convolution and Gaussian filters were added.
-- libgwyddion: New unit arithmetic function gwy_si_unit_power_multiply().
+- libgwyddion: New unit arithmetic function gwy_si_unit_power_multiply() was
+  added.
+- libprocess: 3x3 convolution filters are more efficient due to a specialized
+  implementation.
+- libgwyapp: Changing file type in file open dialog when filtering is enabled
+  updates the list of displayed files to match the new file type.
 
 Modules:
 - Edge: Zero crossing edge detector was added.
 - Grain statistics: Can calculate total grain volumes.
-- Filters tool: Gaussian filter was added.
+- Filters tool: Gaussian smoothing filter was added.
 - Nanonis: Import of non-square images was hopefully fixed.
+- Convolution filter: Minor user interface fixes.
+- Edge: Laplacian no longer clears border lines of pixels of output.
+
+Other:
+- Confusion between AM_FOO and FOO variables in makefiles was resolved, user
+  variables such as CFLAGS, LIBS can be really used for overriding now.
 
 
 2.3 (2007-01-21)
