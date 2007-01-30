@@ -21,6 +21,7 @@
 #ifndef __GWY_MODULEUTILS_FILE_H__
 #define __GWY_MODULEUTILS_FILE_H__
 
+#include <string.h>
 #include <libgwyddion/gwycontainer.h>
 
 G_BEGIN_DECLS
