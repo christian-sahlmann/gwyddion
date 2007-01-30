@@ -392,12 +392,27 @@ gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
+    gboolean active = FALSE;
+    gchar *key;
 
     if (!gtk_tree_selection_get_selected(selection, &model, &iter))
         return;
     g_free(chooser->filetype);
     gtk_tree_model_get(model, &iter, COLUMN_FILETYPE, &chooser->filetype, -1);
     gwy_app_file_chooser_update_expander(chooser);
+
+    /* XXX: Reset filter and set it again.  There is no way to notify the
+     * file chooser dialog the filter has changed. */
+    key = g_strconcat(chooser->prefix, "/filter", NULL);
+    gwy_container_gis_boolean_by_name(gwy_app_settings_get(), key, &active);
+    g_free(key);
+
+    if (active) {
+        gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
+                                    chooser->no_filter);
+        gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
+                                    chooser->filter);
+    }
 }
 
 static void
