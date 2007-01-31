@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -374,6 +374,8 @@ read_data_field(GwyContainer *container,
         gwy_container_set_string_by_name(container, key, title);
         /* Don't free title, container eats it */
     }
+
+    gwy_app_channel_check_nonsquare(container, *id);
 
     if (dir == DIR_BACKWARD)
         flip_horizontally = TRUE;
