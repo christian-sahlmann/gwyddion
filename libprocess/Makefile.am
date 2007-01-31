@@ -59,7 +59,7 @@ AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"GwyProcess\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -version-info 2:0:2
+libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -version-info 3:0:3
 #libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -release @LIBRARY_RELEASE@
 libgwyprocess2_la_SOURCES = \
 	arithmetic.c \

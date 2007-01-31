@@ -94,7 +94,7 @@ AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"Gwydgets\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 2:0:2
+libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 2:1:2
 #libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwydgets2_la_SOURCES = \
 	gwy3dlabel.c \
