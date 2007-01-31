@@ -135,7 +135,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -525,7 +525,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     gdouble sel[4];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
-    const gchar *title;
+    const gchar *title, *xlabel = "x", *ylabel = "y";
 
     plain_tool = GWY_PLAIN_TOOL(tool);
 
@@ -571,6 +571,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                tool->line,
                                isel[0], isel[1], w, h,
                                lineres);
+        xlabel = "z";
+        ylabel = "ρ";
         break;
 
         case GWY_SF_CDH:
@@ -578,6 +580,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 tool->line,
                                 isel[0], isel[1], w, h,
                                 lineres);
+        xlabel = "z";
         break;
 
         case GWY_SF_DA:
@@ -586,6 +589,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                isel[0], isel[1], w, h,
                                tool->args.direction,
                                lineres);
+        xlabel = "tan β";
+        ylabel = "ρ";
         break;
 
         case GWY_SF_CDA:
@@ -594,6 +599,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 isel[0], isel[1], w, h,
                                 tool->args.direction,
                                 lineres);
+        xlabel = "tan β";
         break;
 
         case GWY_SF_ACF:
@@ -603,6 +609,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 tool->args.direction,
                                 tool->args.interpolation,
                                 lineres);
+        xlabel = "τ";
+        ylabel = "G";
         break;
 
         case GWY_SF_HHCF:
@@ -612,6 +620,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                  tool->args.direction,
                                  tool->args.interpolation,
                                  lineres);
+        xlabel = "τ";
+        ylabel = "H";
         break;
 
         case GWY_SF_PSDF:
@@ -622,6 +632,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                  tool->args.interpolation,
                                  GWY_WINDOWING_HANN,
                                  lineres);
+        xlabel = "k";
+        ylabel = "W<sub>1</sub>";
         break;
 
         case GWY_SF_MINKOWSKI_VOLUME:
@@ -629,6 +641,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                              tool->line,
                                              isel[0], isel[1], w, h,
                                              lineres);
+        xlabel = "z";
+        ylabel = "V";
         break;
 
         case GWY_SF_MINKOWSKI_BOUNDARY:
@@ -636,6 +650,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                                tool->line,
                                                isel[0], isel[1], w, h,
                                                lineres);
+        xlabel = "z";
+        ylabel = "S";
         break;
 
         case GWY_SF_MINKOWSKI_CONNECTIVITY:
@@ -643,6 +659,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                             tool->line,
                                             isel[0], isel[1], w, h,
                                             lineres);
+        xlabel = "z";
+        ylabel = "χ";
         break;
 
         default:
@@ -663,7 +681,11 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     title = gwy_enum_to_string(tool->args.output_type,
                                sf_types, G_N_ELEMENTS(sf_types));
     g_object_set(gcmodel, "description", title, NULL);
-    g_object_set(tool->gmodel, "title", title, NULL);
+    g_object_set(tool->gmodel,
+                 "title", title,
+                 "axis-label-bottom", xlabel,
+                 "axis-label-left", ylabel,
+                 NULL);
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
 }
 
