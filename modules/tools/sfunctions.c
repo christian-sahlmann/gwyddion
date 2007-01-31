@@ -525,7 +525,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     gdouble sel[4];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
-    const gchar *title, *xlabel = "x", *ylabel = "y";
+    const gchar *title, *xlabel, *ylabel;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
 
@@ -581,6 +581,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 isel[0], isel[1], w, h,
                                 lineres);
         xlabel = "z";
+        ylabel = "D";
         break;
 
         case GWY_SF_DA:
@@ -600,6 +601,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 tool->args.direction,
                                 lineres);
         xlabel = "tan β";
+        ylabel = "D";
         break;
 
         case GWY_SF_ACF:
