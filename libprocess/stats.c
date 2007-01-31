@@ -1131,7 +1131,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
                        gint width, gint height,
                        gint nstats)
 {
-    GwySIUnit *fieldunit, *lineunit;
+    GwySIUnit *fieldunit, *lineunit, *rhounit;
     gdouble min, max;
     const gdouble *drow, *mrow;
     gint i, j, k, nn;
@@ -1174,8 +1174,8 @@ gwy_data_field_area_dh(GwyDataField *data_field,
     fieldunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(target_line);
     gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
-    lineunit = gwy_data_line_get_si_unit_y(target_line);
-    gwy_si_unit_set_from_string(lineunit, NULL);
+    rhounit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_power(lineunit, -1, rhounit);
 
     /* Handle border cases */
     if (min == max) {
@@ -1277,11 +1277,18 @@ gwy_data_field_area_cdh(GwyDataField *data_field,
                         gint width, gint height,
                         gint nstats)
 {
+    GwySIUnit *rhounit, *lineunit;
+
     gwy_data_field_area_dh(data_field, mask, target_line,
                            col, row, width, height,
                            nstats);
     gwy_data_line_cumulate(target_line);
     gwy_data_line_multiply(target_line, gwy_data_line_itor(target_line, 1));
+
+    /* Update units after integration */
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    rhounit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_multiply(rhounit, lineunit, rhounit);
 }
 
 /**
@@ -1300,11 +1307,9 @@ gwy_data_field_cdh(GwyDataField *data_field,
                    gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    gwy_data_field_area_dh(data_field, NULL, target_line,
-                           0, 0, data_field->xres, data_field->yres,
-                           nstats);
-    gwy_data_line_cumulate(target_line);
-    gwy_data_line_multiply(target_line, gwy_data_line_itor(target_line, 1));
+    gwy_data_field_area_cdh(data_field, NULL, target_line,
+                            0, 0, data_field->xres, data_field->yres,
+                            nstats);
 }
 
 /**
@@ -1330,7 +1335,7 @@ gwy_data_field_area_da(GwyDataField *data_field,
                        GwyOrientation orientation,
                        gint nstats)
 {
-    GwySIUnit *lineunit;
+    GwySIUnit *lineunit, *rhounit;
     GwyDataField *der;
     const gdouble *drow;
     gdouble *derrow;
@@ -1416,8 +1421,8 @@ gwy_data_field_area_da(GwyDataField *data_field,
     gwy_si_unit_divide(gwy_data_field_get_si_unit_z(data_field),
                        gwy_data_field_get_si_unit_xy(data_field),
                        lineunit);
-    lineunit = gwy_data_line_get_si_unit_y(target_line);
-    gwy_si_unit_set_from_string(lineunit, NULL);
+    rhounit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_power(lineunit, -1, rhounit);
 }
 
 /**
@@ -1467,11 +1472,18 @@ gwy_data_field_area_cda(GwyDataField *data_field,
                         GwyOrientation orientation,
                         gint nstats)
 {
+    GwySIUnit *lineunit, *rhounit;
+
     gwy_data_field_area_da(data_field, target_line,
                            col, row, width, height,
                            orientation, nstats);
     gwy_data_line_cumulate(target_line);
     gwy_data_line_multiply(target_line, gwy_data_line_itor(target_line, 1));
+
+    /* Update units after integration */
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    rhounit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_multiply(rhounit, lineunit, rhounit);
 }
 
 /**
@@ -1492,11 +1504,9 @@ gwy_data_field_cda(GwyDataField *data_field,
                    gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    gwy_data_field_area_da(data_field, target_line,
-                           0, 0, data_field->xres, data_field->yres,
-                           orientation, nstats);
-    gwy_data_line_cumulate(target_line);
-    gwy_data_line_multiply(target_line, gwy_data_line_itor(target_line, 1));
+    gwy_data_field_area_cda(data_field, target_line,
+                            0, 0, data_field->xres, data_field->yres,
+                            orientation, nstats);
 }
 
 #ifdef HAVE_FFTW3
