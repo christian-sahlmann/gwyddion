@@ -522,7 +522,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
 
     adj = gtk_adjustment_new(args->gaussian_fwhm, 0.0, 20.0, 0.1, 1.0, 0);
     controls.gaussian_fwhm = adj;
-    gwy_table_attach_hscale(table, row, _("Gaussian FWHM:"), "px", adj,
+    gwy_table_attach_hscale(table, row, _("_Gaussian FWHM:"), "px", adj,
                             GWY_HSCALE_DEFAULT);
     g_signal_connect(adj, "value-changed",
                      G_CALLBACK(zero_crossing_gaussian_fwhm_changed),
@@ -531,7 +531,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
 
     adj = gtk_adjustment_new(args->threshold, 0.0, 3.0, 0.01, 0.1, 0);
     controls.threshold = adj;
-    gwy_table_attach_hscale(table, row, _("Threshold:"), _("NRMS"), adj,
+    gwy_table_attach_hscale(table, row, _("_Threshold:"), _("NRMS"), adj,
                             GWY_HSCALE_DEFAULT);
     g_signal_connect(adj, "value-changed",
                      G_CALLBACK(zero_crossing_threshold_changed), &controls);

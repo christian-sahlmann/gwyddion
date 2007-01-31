@@ -385,19 +385,19 @@ run_dialog(ControlsType *controls)
     const prev_modes[] = {
         {
             PREV_FFT,
-            N_("_FFT Editor"),
+            N_("_FFT editor"),
         },
         {
             PREV_IMAGE,
-            N_("Original _Image"),
+            N_("Original _image"),
         },
         {
             PREV_FILTERED,
-            N_("Filtered _Image"),
+            N_("_Filtered image"),
         },
         {
             PREV_DIFF,
-            N_("Image _Difference"),
+            N_("Image _difference"),
         },
     };
 
@@ -553,7 +553,7 @@ run_dialog(ControlsType *controls)
     row++;
     */
 
-    label = gtk_label_new(_("Display mode:"));
+    label = gtk_label_new(_("Display"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.05);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, GTK_FILL, 0, 2);
