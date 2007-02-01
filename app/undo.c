@@ -417,15 +417,15 @@ gwy_undo_qcheckpointv(GwyContainer *data,
         return 0UL;
     }
 
-    /* create new undo level */
+    /* Create new undo level */
     undo_level_id++;
     gwy_debug("Creating a new appundo->undo level #%lu", undo_level_id);
     level = g_new(GwyAppUndoLevel, 1);
     level->nitems = j;
-    level->items = g_new0(GwyAppUndoItem, j);
+    level->items = g_new0(GwyAppUndoItem, level->nitems);
     level->id = undo_level_id;
 
-    /* fill the things to save, but don't duplicate objects yet */
+    /* Fill the things to save, but don't duplicate objects yet */
     for (i = j = 0; i < n; i++) {
         GwyAppUndoItem *item = level->items + j;
 
@@ -433,8 +433,9 @@ gwy_undo_qcheckpointv(GwyContainer *data,
             continue;
         item->key = keys[i];
         memset(&item->value, 0, sizeof(GValue));
-        /* note this call itself creates a copy for non-objects; for objects
-         * it increases reference count */
+        /* This call itself creates a copy for non-objects; for objects it
+         * increases reference count.  However, if we are saving nonexistence,
+         * item->value is left zero-filled. */
         gwy_container_gis_value(data, item->key, &item->value);
         j++;
     }
@@ -589,8 +590,9 @@ gwy_app_undo_or_redo(GwyContainer *data,
     for (i = 0; i < level->nitems; i++) {
         GwyAppUndoItem *item = level->items + i;
 
-        /* note this call itself creates a copy for non-objects; for objects
-         * it increases reference count */
+        /* This call itself creates a copy for non-objects; for objects
+         * it increases reference count.  However, if we are restoring
+         * nonexistence, item->value is left zero-filled. */
         app = gwy_container_gis_value(data, item->key, &value);
         undo = G_VALUE_TYPE(&item->value) != 0;
         if (undo && app) {
@@ -848,7 +850,8 @@ gwy_undo_container_remove_from_list(GList *list,
             if (g_str_has_prefix(key, prefix)
                 && (key[len] == '\0'
                     || key[len] == '/')) {
-                g_value_unset(&level->items[i].value);
+                if (G_VALUE_TYPE(&level->items[i].value))
+                    g_value_unset(&level->items[i].value);
             }
             else {
                 if (j != i)
@@ -884,6 +887,7 @@ gwy_undo_container_remove(GwyContainer *data,
 {
     GwyAppUndo *appundo;
 
+    gwy_debug("Removing undo for Container %p and prefix %s", data, prefix);
     appundo = gwy_undo_get_for_data(data, FALSE);
     if (!appundo)
         return;
