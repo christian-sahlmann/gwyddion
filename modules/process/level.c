@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -165,6 +165,8 @@ do_level(GwyContainer *data,
         if (!ok)
             return;
     }
+    else
+        args.level_mode = LEVEL_NORMAL;
 
     if (args.level_mode == LEVEL_NORMAL)
         mfield = NULL;
