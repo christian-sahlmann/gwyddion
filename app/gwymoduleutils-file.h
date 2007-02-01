@@ -198,7 +198,7 @@ gwy_get_gfloat_be(const guchar **p)
     z.pp[2] = (*p)[1];
     z.pp[3] = (*p)[0];
 #endif
-    *p += sizeof(float);
+    *p += sizeof(gfloat);
     return z.f;
 }
 
