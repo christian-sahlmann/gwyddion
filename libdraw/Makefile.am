@@ -1,8 +1,5 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
-
 libgwydraw2includedir = $(pkgincludedir)/libdraw
 
 libgwydraw2include_HEADERS = \

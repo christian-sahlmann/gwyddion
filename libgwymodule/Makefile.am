@@ -1,7 +1,5 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
-
 libgwymodule2includedir = $(pkgincludedir)/libgwymodule
 
 libgwymodule2include_HEADERS = \
