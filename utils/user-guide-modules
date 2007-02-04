@@ -4,16 +4,16 @@ arithmetic	multidata	arithmetic
 asciiexport	managing-files
 assing-afm	managing-files
 axis	selections
-basicops	data-analysis	features-basic
+basicops	features-basic	features-basic
 bcrfile	managing-files
 burleigh	managing-files
-calibrate	data-analysis	features-basic
-convolution_filter
+calibrate	features-basic
+convolution_filter	features-filters	convolution-filter
 createc	managing-files
 crop	modules-tools	tool-crop
 crosscor	multidata	cross-correlation
 cwt	features-inttrans	cwt
-distance	data-analysis	distance
+distance	features-basic	distance
 dmefile	managing-files
 drift	edit-extended	drift-compensation
 dwt	features-inttrans	dwt
@@ -78,14 +78,14 @@ point	selections
 polylevel	features-leveling	polynomial-level
 polynom	modules-tools	tool-polynom
 presentationops	features-filters	presentationops
-profile	data-analysis	profile
+profile	features-basic	profile
 psia	managing-files
 rawfile	raw-file-import
 rectangle	selections
 rhk-sm3	managing-files
 rhk-spm32	managing-files
-rotate	data-analysis	rotate
-scale	data-analysis	scale
+rotate	features-basic	rotate
+scale	features-basic	scale
 scars	features-edit	remove-scars
 sdfile	managing-files
 seiko	managing-files
