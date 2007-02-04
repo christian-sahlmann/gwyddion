@@ -454,12 +454,6 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
                      gint id,
                      GQuark squark)
 {
-    static const GwyEnum displays[] = {
-        { N_("Original _image"), DISPLAY_DATA, },
-        { N_("_LoG convolved"),  DISPLAY_LOG,  },
-        { N_("Detected _edges"), DISPLAY_SHOW, },
-    };
-
     GtkWidget *dialog, *table, *hbox, *label;
     GtkObject *adj;
     ZeroCrossingControls controls;
@@ -545,10 +539,12 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
     row++;
 
     controls.display_group
-        = gwy_radio_buttons_create(displays, G_N_ELEMENTS(displays),
-                                   G_CALLBACK(zero_crossing_display_changed),
-                                   &controls,
-                                   DISPLAY_DATA);
+        = gwy_radio_buttons_createl(G_CALLBACK(zero_crossing_display_changed),
+                                    &controls, DISPLAY_DATA,
+                                    _("Original _image"), DISPLAY_DATA,
+                                    _("_LoG convolved"), DISPLAY_LOG,
+                                    _("Detected _edges"), DISPLAY_SHOW,
+                                    NULL);
     row = gwy_radio_buttons_attach_to_table(controls.display_group,
                                             GTK_TABLE(table), 3, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);

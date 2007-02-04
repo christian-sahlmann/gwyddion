@@ -157,16 +157,6 @@ static void     immerse_save_args           (GwyContainer *settings,
                                              ImmerseArgs *args);
 static void     immerse_sanitize_args       (ImmerseArgs *args);
 
-static const GwyEnum samplings[] = {
-    { N_("_Upsample large image"), GWY_IMMERSE_SAMPLING_UP },
-    { N_("_Downsample detail"),    GWY_IMMERSE_SAMPLING_DOWN },
-};
-
-static const GwyEnum levelings[] = {
-    { N_("_None"),       GWY_IMMERSE_LEVEL_NONE, },
-    { N_("_Mean value"), GWY_IMMERSE_LEVEL_MEAN, },
-};
-
 static const ImmerseArgs immerse_defaults = {
     GWY_IMMERSE_SAMPLING_UP,
     GWY_IMMERSE_LEVEL_MEAN,
@@ -350,10 +340,15 @@ immerse_dialog(ImmerseArgs *args)
     row++;
 
     controls.sampling
-        = gwy_radio_buttons_create(samplings, G_N_ELEMENTS(samplings),
-                                   G_CALLBACK(immerse_sampling_changed),
-                                   &controls,
-                                   args->sampling);
+        = gwy_radio_buttons_createl(G_CALLBACK(immerse_sampling_changed),
+                                    &controls,
+                                    args->sampling,
+                                    _("_Upsample large image"),
+                                    GWY_IMMERSE_SAMPLING_UP,
+                                    _("_Downsample detail"),
+                                    GWY_IMMERSE_SAMPLING_DOWN,
+                                    NULL);
+
     row = gwy_radio_buttons_attach_to_table(controls.sampling, GTK_TABLE(table),
                                             4, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -366,10 +361,13 @@ immerse_dialog(ImmerseArgs *args)
     row++;
 
     controls.leveling
-        = gwy_radio_buttons_create(levelings, G_N_ELEMENTS(levelings),
-                                   G_CALLBACK(immerse_leveling_changed),
-                                   &controls,
-                                   args->leveling);
+        = gwy_radio_buttons_createl(G_CALLBACK(immerse_leveling_changed),
+                                    &controls,
+                                    args->leveling,
+                                    _("_None"), GWY_IMMERSE_LEVEL_NONE,
+                                    _("_Mean value"), GWY_IMMERSE_LEVEL_MEAN,
+                                    NULL);
+
     row = gwy_radio_buttons_attach_to_table(controls.leveling, GTK_TABLE(table),
                                             4, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);

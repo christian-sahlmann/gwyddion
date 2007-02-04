@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdarg.h>
 #include <gtk/gtkcelllayout.h>
 #include <gtk/gtkcellrenderertext.h>
 #include <libgwyddion/gwymacros.h>
@@ -100,6 +101,60 @@ gwy_enum_combo_box_new(const GwyEnum *entries,
         g_signal_connect(combo, "changed", callback, cbdata);
 
     return combo;
+}
+
+/**
+ * gwy_enum_combo_box_newl:
+ * @callback: A callback called when a new choice is selected (may be %NULL).
+ * @cbdata: User data passed to the callback.
+ * @active: The enum value to show as currently selected.  If it isn't equal to
+ *          any @entries value, the first item is selected.
+ * @...: First item label, first item value, second item label, second item
+ *       value, etc.  Terminated with %NULL.
+ *
+ * Creates a combo box with choices from a list of label/value pairs.
+ *
+ * The string values passed as label texts must exist through the whole
+ * lifetime of the widget.
+ *
+ * Returns: A newly created combo box as #GtkWidget.
+ *
+ * Since: 2.5
+ **/
+GtkWidget*
+gwy_enum_combo_box_newl(GCallback callback,
+                        gpointer cbdata,
+                        gint active,
+                        ...)
+{
+    GtkWidget *widget;
+    GwyEnum *entries;
+    gint i, nentries;
+    va_list ap;
+
+    va_start(ap, active);
+    nentries = 0;
+    while (va_arg(ap, const gchar*)) {
+        (void)va_arg(ap, gint);
+        nentries++;
+    }
+    va_end(ap);
+
+    entries = g_new(GwyEnum, nentries);
+
+    va_start(ap, active);
+    for (i = 0; i < nentries; i++) {
+        entries[i].name = va_arg(ap, const gchar*);
+        entries[i].value = va_arg(ap, gint);
+    }
+    va_end(ap);
+
+    widget = gwy_enum_combo_box_new(entries, nentries,
+                                    callback, cbdata, active, FALSE);
+    g_signal_connect_swapped(widget, "destroy",
+                             G_CALLBACK(g_free), entries);
+
+    return widget;
 }
 
 /**

@@ -96,13 +96,6 @@ static void     crosscor_sanitize_args(CrosscorArgs *args);
 static void     mask_changed_cb       (GtkToggleButton *button,
                                        CrosscorControls *controls);
 
-static const GwyEnum results[] = {
-    { N_("Absolute"),   GWY_CROSSCOR_ABS, },
-    { N_("X Distance"), GWY_CROSSCOR_X,   },
-    { N_("Y Distance"), GWY_CROSSCOR_Y,   },
-    { N_("Angle"),      GWY_CROSSCOR_DIR, },
-};
-
 static const CrosscorArgs crosscor_defaults = {
     GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, 1, 0.95,
     { NULL, -1 }, { NULL, -1 },
@@ -233,9 +226,13 @@ crosscor_dialog(CrosscorArgs *args)
     row++;
 
     /* Result */
-    combo = gwy_enum_combo_box_new(results, G_N_ELEMENTS(results),
-                                   G_CALLBACK(crosscor_operation_cb), args,
-                                   args->result, TRUE);
+    combo = gwy_enum_combo_box_newl(G_CALLBACK(crosscor_operation_cb), args,
+                                    args->result,
+                                    _("Absolute"), GWY_CROSSCOR_ABS,
+                                    _("X Distance"), GWY_CROSSCOR_X,
+                                    _("Y Distance"), GWY_CROSSCOR_Y,
+                                    _("Angle"), GWY_CROSSCOR_DIR,
+                                    NULL);
     gwy_table_attach_hscale(table, row, _("Output _type:"), NULL,
                             GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;

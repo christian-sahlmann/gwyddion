@@ -20,11 +20,11 @@
 
 #include "config.h"
 #include <string.h>
-#include <gtk/gtk.h>
-
+#include <stdarg.h>
+#include <gtk/gtkradiobutton.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include "gwyradiobuttons.h"
+#include <libgwydgets/gwyradiobuttons.h>
 
 static GQuark gwyrb_quark = 0;
 
@@ -35,31 +35,13 @@ setup_quark(void)
         gwyrb_quark = g_quark_from_static_string("gwy-radiobuttons-key");
 }
 
-/**
- * gwy_radio_buttons_create:
- * @entries: Radio button group items.
- * @nentries: The number of items.
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            no callback).
- * @cbdata: User data passed to the callback.
- * @current: Value to be shown as currently selected (-1 to use what happens
- *           to be first).
- *
- * Creates a radio button group for an enum.
- *
- * Try to avoid -1 as an enum value.
- *
- * Returns: The newly created radio button group (a #GSList).  Iterate over
- *          the list and pack the widgets (the order is the same as in
- *          @entries).  The group is owned by the buttons and must not be
- *          freed.
- **/
-GSList*
-gwy_radio_buttons_create(const GwyEnum *entries,
-                         gint nentries,
-                         GCallback callback,
-                         gpointer cbdata,
-                         gint current)
+static GSList*
+gwy_radio_buttons_create_real(const GwyEnum *entries,
+                              gint nentries,
+                              GCallback callback,
+                              gpointer cbdata,
+                              gint current,
+                              gboolean translate)
 {
     GtkWidget *button, *curbutton;
     GSList *group;
@@ -70,8 +52,12 @@ gwy_radio_buttons_create(const GwyEnum *entries,
     /* FIXME: this relies on undocumented GtkRadioButton behaviour;
      * we assume it puts the items into the group in reverse order */
     for (i = nentries-1; i >= 0; i--) {
-        button = gtk_radio_button_new_with_mnemonic_from_widget
-                               (GTK_RADIO_BUTTON(button), _(entries[i].name));
+        if (translate)
+            button = gtk_radio_button_new_with_mnemonic_from_widget
+                                (GTK_RADIO_BUTTON(button), _(entries[i].name));
+        else
+            button = gtk_radio_button_new_with_mnemonic_from_widget
+                                   (GTK_RADIO_BUTTON(button), entries[i].name);
         g_object_set_qdata(G_OBJECT(button), gwyrb_quark,
                            GINT_TO_POINTER(entries[i].value));
         if (entries[i].value == current)
@@ -90,6 +76,90 @@ gwy_radio_buttons_create(const GwyEnum *entries,
     }
 
     return gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+}
+
+/**
+ * gwy_radio_buttons_create:
+ * @entries: Radio button group items.
+ * @nentries: The number of items.
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            no callback).
+ * @cbdata: User data passed to the callback.
+ * @current: Value to be shown as currently selected (-1 to use what happens
+ *           to be first).
+ *
+ * Creates a radio button group from an enum.
+ *
+ * Try to avoid -1 as an enum value.
+ *
+ * Returns: The newly created radio button group (a #GSList).  Iterate over
+ *          the list and pack the widgets (the order is the same as in
+ *          @entries).  The group is owned by the buttons and must not be
+ *          freed.
+ **/
+GSList*
+gwy_radio_buttons_create(const GwyEnum *entries,
+                         gint nentries,
+                         GCallback callback,
+                         gpointer cbdata,
+                         gint current)
+{
+    return gwy_radio_buttons_create_real(entries, nentries,
+                                         callback, cbdata, current, TRUE);
+}
+
+/**
+ * gwy_radio_buttons_createl:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            no callback).
+ * @cbdata: User data passed to the callback.
+ * @current: Value to be shown as currently selected (-1 to use what happens
+ *           to be first).
+ * @...: First item label, first item value, second item label, second item
+ *       value, etc.  Terminated with %NULL.
+ *
+ * Creates a radio button group from a list of label/value pairs.
+ *
+ * Returns: The newly created radio button group (a #GSList).  Iterate over
+ *          the list and pack the widgets (the order is the same as in
+ *          @entries).  The group is owned by the buttons and must not be
+ *          freed.
+ *
+ * Since: 2.5
+ **/
+GSList*
+gwy_radio_buttons_createl(GCallback callback,
+                          gpointer cbdata,
+                          gint current,
+                          ...)
+{
+    GSList *group;
+    GwyEnum *entries;
+    gint i, nentries;
+    va_list ap;
+
+    va_start(ap, current);
+    nentries = 0;
+    while (va_arg(ap, const gchar*)) {
+        (void)va_arg(ap, gint);
+        nentries++;
+    }
+    va_end(ap);
+
+    entries = g_new(GwyEnum, nentries);
+
+    va_start(ap, current);
+    for (i = 0; i < nentries; i++) {
+        entries[i].name = va_arg(ap, const gchar*);
+        entries[i].value = va_arg(ap, gint);
+    }
+    va_end(ap);
+
+    group = gwy_radio_buttons_create_real(entries, nentries,
+                                          callback, cbdata, current, FALSE);
+    g_free(entries);
+
+    return group;
 }
 
 /**

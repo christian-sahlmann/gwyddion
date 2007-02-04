@@ -131,11 +131,6 @@ maskcor(GwyContainer *data, GwyRunType run)
 static gboolean
 maskcor_dialog(MaskcorArgs *args)
 {
-    static const GwyEnum results[] = {
-        { N_("Objects marked"),     GWY_MASKCOR_OBJECTS },
-        { N_("Correlation maxima"), GWY_MASKCOR_MAXIMA },
-        { N_("Correlation score"),  GWY_MASKCOR_SCORE },
-    };
     MaskcorControls controls;
     GtkWidget *dialog, *table, *chooser, *spin, *combo, *method;
     GtkObject *adj;
@@ -171,9 +166,12 @@ maskcor_dialog(MaskcorArgs *args)
     row++;
 
     /* Result */
-    combo = gwy_enum_combo_box_new(results, G_N_ELEMENTS(results),
-                                   G_CALLBACK(maskcor_operation_cb), &controls,
-                                   args->result, TRUE);
+    combo = gwy_enum_combo_box_newl(G_CALLBACK(maskcor_operation_cb), &controls,
+                                    args->result,
+                                    _("Objects marked"), GWY_MASKCOR_OBJECTS,
+                                    _("Correlation maxima"), GWY_MASKCOR_MAXIMA,
+                                    _("Correlation score"), GWY_MASKCOR_SCORE,
+                                    NULL);
     gwy_table_attach_row(table, row, _("Output _type:"), NULL, combo);
     row++;
 

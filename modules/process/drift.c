@@ -204,11 +204,6 @@ drift_dialog(DriftArgs *args,
         RESPONSE_PREVIEW = 2
     };
 
-    static const GwyEnum preview_types[] = {
-        { N_("Correc_ted data"), PREVIEW_CORRECTED, },
-        { N_("Drift _lines"),    PREVIEW_MASK,      },
-    };
-
     GtkWidget *dialog, *table, *hbox, *spin, *label;
     DriftControls controls;
     gint response;
@@ -329,9 +324,11 @@ drift_dialog(DriftArgs *args,
     row++;
 
     controls.preview_type
-        = gwy_radio_buttons_create(preview_types, G_N_ELEMENTS(preview_types),
-                                   G_CALLBACK(preview_type_changed), &controls,
-                                   args->preview_type);
+        = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed), &controls,
+                                    args->preview_type,
+                                    _("Correc_ted data"), PREVIEW_CORRECTED,
+                                    _("Drift _lines"), PREVIEW_MASK,
+                                    NULL);
     row = gwy_radio_buttons_attach_to_table(controls.preview_type,
                                             GTK_TABLE(table), 3, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);

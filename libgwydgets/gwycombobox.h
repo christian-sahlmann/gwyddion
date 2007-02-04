@@ -33,6 +33,10 @@ GtkWidget* gwy_enum_combo_box_new        (const GwyEnum *entries,
                                           gpointer cbdata,
                                           gint active,
                                           gboolean translate);
+GtkWidget* gwy_enum_combo_box_newl       (GCallback callback,
+                                          gpointer cbdata,
+                                          gint active,
+                                          ...);
 GtkWidget* gwy_combo_box_metric_unit_new (GCallback callback,
                                           gpointer cbdata,
                                           gint from,

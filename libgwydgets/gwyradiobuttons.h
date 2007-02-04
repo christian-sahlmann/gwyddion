@@ -31,6 +31,10 @@ GSList*    gwy_radio_buttons_create         (const GwyEnum *entries,
                                              GCallback callback,
                                              gpointer cbdata,
                                              gint current);
+GSList*    gwy_radio_buttons_createl        (GCallback callback,
+                                             gpointer cbdata,
+                                             gint current,
+                                             ...);
 gint       gwy_radio_buttons_attach_to_table(GSList *group,
                                              GtkTable *table,
                                              gint colspan,
