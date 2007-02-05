@@ -40,6 +40,8 @@ gint          gwy_string_to_enum     (const gchar *str,
 const gchar*  gwy_enum_to_string     (gint enumval,
                                       const GwyEnum *enum_table,
                                       gint n);
+gchar*        gwy_enuml_to_string    (gint enumval,
+                                      ...);
 gint          gwy_string_to_flags    (const gchar *str,
                                       const GwyEnum *enum_table,
                                       gint n,

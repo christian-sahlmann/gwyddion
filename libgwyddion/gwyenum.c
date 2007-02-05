@@ -21,7 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
-
+#include <stdarg.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyenum.h>
 
@@ -92,6 +92,39 @@ gwy_enum_to_string(gint enumval,
         if (enumval == enum_table->value)
             return enum_table->name;
     }
+
+    return "";
+}
+
+/**
+ * gwy_enuml_to_string:
+ * @enumval: Integer value to find.
+ * @...: First enum name, first value, second enum name, second value, etc.
+ *       Terminated with %NULL.
+ *
+ * Creates a string representation of an integer enum value @enumval.
+ *
+ * Returns: The corresponding enum name string argument if @enumval matches
+ *          some of them.   Otherwise %NULL is returned (this is different
+ *          from gwy_enum_to_string() which returns an empty string).
+ *
+ * Since: 2.5
+ **/
+gchar*
+gwy_enuml_to_string(gint enumval,
+                    ...)
+{
+    gchar *name;
+    va_list ap;
+
+    va_start(ap, enumval);
+    while ((name = va_arg(ap, gchar*))) {
+        if (va_arg(ap, gint) == enumval) {
+            va_end(ap);
+            return name;
+        }
+    }
+    va_end(ap);
 
     return "";
 }
