@@ -43,11 +43,6 @@ typedef enum {
 } SISBlockType;
 
 typedef enum {
-    SIS_AQUISITION_MODE_CONTACT     = 1,
-    SIS_AQUISITION_MODE_NON_CONTACT = 2,
-} SISAquisitionMode;
-
-typedef enum {
     SIS_SCANNING_DIRECTION_FORWARD  = 1,
     SIS_SCANNING_DIRECTION_BACKWARD = 2,
 } SISScanningDirection;
@@ -56,15 +51,6 @@ typedef enum {
     SIS_OFF = FALSE,
     SIS_ON  = TRUE,
 } SISOnOff;
-
-typedef enum {
-    SIS_PALETTE_GRAY    = 0,
-    SIS_PALETTE_GLOW    = 1,
-    SIS_PALETTE_RED     = 2,
-    SIS_PALETTE_GREEN   = 3,
-    SIS_PALETTE_BLUE    = 4,
-    SIS_PALETTE_RAINBOW = 5,
-} SISPaletteType;
 
 typedef enum {
     SIS_DATA_TYPE_TOPOGRAPHY       = 1,
@@ -81,38 +67,6 @@ typedef enum {
     SIS_DATA_TYPE_FORCE_MODULATION = 12,
     SIS_DATA_TYPE_USER             = 13,
 } SISDataType;
-
-typedef enum {
-    SIS_SIGNAL_SOURCE_FEEDBACK         = 1,
-    SIS_SIGNAL_SOURCE_ZSENSOR          = 2,
-    SIS_SIGNAL_SOURCE_INTERFEROMETER   = 3,
-    SIS_SIGNAL_SOURCE_FIELD            = 4,
-    SIS_SIGNAL_SOURCE_NC_AMPLITUDE     = 5,
-    SIS_SIGNAL_SOURCE_NC_PHASE         = 6,
-    SIS_SIGNAL_SOURCE_FM_FREQUENCY     = 7,
-    SIS_SIGNAL_SOURCE_LOC_AMPLITUDE    = 8,
-    SIS_SIGNAL_SOURCE_LOC_PHASE        = 9,
-    SIS_SIGNAL_SOURCE_PM_CHANNEL_1     = 10,
-    SIS_SIGNAL_SOURCE_PM_CHANNEL_2     = 11,
-    SIS_SIGNAL_SOURCE_PM_FEEDBACK      = 12,
-    SIS_SIGNAL_SOURCE_CAPACITY         = 13,
-    SIS_SIGNAL_SOURCE_LOC_SW_AMPLITUDE = 14,
-    SIS_SIGNAL_SOURCE_LOC_SW_PHASE     = 15,
-    SIS_SIGNAL_SOURCE_USER             = 16,
-} SISSignalSource;
-
-typedef struct {
-    guint idx;
-    GType type;
-    const gchar *meta;
-    const gchar *units;
-} SISParameter;
-
-typedef struct {
-    guchar symbol[4];
-    guint data_size;
-    gchar *meta;
-} SISProcessingStep;
 
 typedef struct {
     /* image info */
@@ -133,7 +87,7 @@ typedef struct {
 
 typedef struct {
     SISDataType data_type;
-    SISSignalSource signal_source;
+    guint signal_source;
     SISScanningDirection scanning_direction;
     guint processing_steps;
     /* images */
@@ -149,61 +103,8 @@ typedef struct {
     SISChannel *channels;
 } SISFile;
 
-static const GwyEnum sis_onoff[] = {
-    { "Off", SIS_OFF },
-    { "On",  SIS_ON },
-};
-
-static const GwyEnum sis_aquisitions[] = {
-    { "Contact",     SIS_AQUISITION_MODE_CONTACT     },
-    { "Non contact", SIS_AQUISITION_MODE_NON_CONTACT },
-};
-
-/* Map between SIS palettes and Gwyddion palettes */
-static const GwyEnum sis_palettes[] = {
-    { "Gray",    SIS_PALETTE_GRAY    },
-    { "Sky",     SIS_PALETTE_GLOW    },
-    { "Red",     SIS_PALETTE_RED     },
-    { "Green",   SIS_PALETTE_GREEN   },
-    { "Blue",    SIS_PALETTE_BLUE    },
-    { "Rainbow", SIS_PALETTE_RAINBOW },
-};
-
-static const GwyEnum sis_data_types[] = {
-    { "Topography",             SIS_DATA_TYPE_TOPOGRAPHY       },
-    { "Field Contrast",         SIS_DATA_TYPE_FIELD_CONTRAST   },
-    { "Error",                  SIS_DATA_TYPE_ERROR            },
-    { "Exterm",                 SIS_DATA_TYPE_EXTERM           },
-    { "Loc",                    SIS_DATA_TYPE_LOC              },
-    { "Phase",                  SIS_DATA_TYPE_PHASE            },
-    { "Capacity",               SIS_DATA_TYPE_CAPACITY         },
-    { "Amplitude",              SIS_DATA_TYPE_AMPLITUDE        },
-    { "Frequency",              SIS_DATA_TYPE_FREQUENCY        },
-    { "Potential",              SIS_DATA_TYPE_POTENTIAL        },
-    { "Friction",               SIS_DATA_TYPE_FRICTION         },
-    { "Force Modulation (FMM)", SIS_DATA_TYPE_FORCE_MODULATION },
-    { "User",                   SIS_DATA_TYPE_USER             },
-};
-
-static const GwyEnum sis_signal_sources[] = {
-    { "Feedback",               SIS_SIGNAL_SOURCE_FEEDBACK         },
-    { "ZSensor",                SIS_SIGNAL_SOURCE_ZSENSOR          },
-    { "Interferometer",         SIS_SIGNAL_SOURCE_INTERFEROMETER   },
-    { "Field",                  SIS_SIGNAL_SOURCE_FIELD            },
-    { "NC Amplitude",           SIS_SIGNAL_SOURCE_NC_AMPLITUDE     },
-    { "NC Phase",               SIS_SIGNAL_SOURCE_NC_PHASE         },
-    { "FM Frequency",           SIS_SIGNAL_SOURCE_FM_FREQUENCY     },
-    { "LOC amplitude",          SIS_SIGNAL_SOURCE_LOC_AMPLITUDE    },
-    { "LOC phase",              SIS_SIGNAL_SOURCE_LOC_PHASE        },
-    { "PM Channel 1",           SIS_SIGNAL_SOURCE_PM_CHANNEL_1     },
-    { "PM Channel 2",           SIS_SIGNAL_SOURCE_PM_CHANNEL_2     },
-    { "PM Feedback",            SIS_SIGNAL_SOURCE_PM_FEEDBACK      },
-    { "Capacity",               SIS_SIGNAL_SOURCE_CAPACITY         },
-    { "LOC Software Amplitude", SIS_SIGNAL_SOURCE_LOC_SW_AMPLITUDE },
-    { "LOC Software Phase",     SIS_SIGNAL_SOURCE_LOC_SW_PHASE     },
-    { "User",                   SIS_SIGNAL_SOURCE_USER             },
-};
-
+#ifdef GWY_RELOC_SOURCE
+/* @fields: symbol, data_size, meta */
 static const SISProcessingStep processing_steps[] = {
     { "BLOB", 2,                 "Particle count"                },
     { "3DJS", 5*2 + 2*8 + 4*2,   "3DJS"                          },
@@ -236,7 +137,68 @@ static const SISProcessingStep processing_steps[] = {
     { "TIL3", 6*2,               "Three point plane correction"  },
     { "TILT", 0,                 "Automatic plane correction"    },
 };
+#else
+/* This code block was GENERATED by flatten.py.
+   When you edit processing_steps data above,
+   re-run flatten.py SOURCE.c. */
+static const gchar processing_steps_symbol[] =
+    "BLOB\0003DJS\000ACOR\000ALNC\000BFFT\000CONT\000DIF2\000EDGE\000FFBP\000"
+    "FFLP\000FFMP\000FFT2\000FLIP\000HIST\000IFT2\000LNCT\000MEDN\000MIRR\000"
+    "PAVE\000RAWR\000RGOI\000ROTN\000SHRP\000SMTH\000STAT\000STEP\000SURF\000"
+    "TIBQ\000TIL3\000TILT";
 
+static const gchar processing_steps_meta[] =
+    "Particle count\0003DJS\000Autocorrelation\000Autocorrelation LineCut\000"
+    "Biqudratic Fourier filter fit\000Contrast histogram\000Differentiation"
+    "\000Edge detection filter\000Band pass frequency filter\000Low pass freq"
+    "uency filter\000High pass frequency filter\000Twodimensional FFT\000Y ax"
+    "is flip\000Histogram\000Fourier filter back 2D\000Line profile\000Median"
+    " filter\000X axis mirror\000Profile average\000Raw raster data\000Region"
+    " of interest\000Rotation\000Sharpening filter\000Smoothing filter\000Sta"
+    "tistics in z\000Step correction\000Surface area\000Biquadratic plane cor"
+    "rection\000Three point plane correction\000Automatic plane correction";
+
+static const struct {
+    gint symbol;
+    gint data_size;
+    gint meta;
+}
+processing_steps[] = {
+    { 0, 2, 0 },
+    { 5, 5*2 + 2*8 + 4*2, 15 },
+    { 10, 0, 20 },
+    { 15, 6*2, 36 },
+    { 20, 0, 60 },
+    { 25, 2*2, 90 },
+    { 30, 2*2, 109 },
+    { 35, 0, 125 },
+    { 40, 2*8 + 2*2, 147 },
+    { 45, 0, 174 },
+    { 50, 0, 200 },
+    { 55, 0, 227 },
+    { 60, 0, 246 },
+    { 65, 2*8 + 4*2 + 8, 258 },
+    { 70, 0, 268 },
+    { 75, 8*2, 291 },
+    { 80, 0, 304 },
+    { 85, 0, 318 },
+    { 90, 0, 332 },
+    { 95, 0, 348 },
+    { 100, 4*2, 364 },
+    { 105, 2, 383 },
+    { 110, 0, 392 },
+    { 115, 0, 410 },
+    { 120, 0, 427 },
+    { 125, 0, 443 },
+    { 130, 2*2, 459 },
+    { 135, 0, 472 },
+    { 140, 6*2, 501 },
+    { 145, 0, 530 },
+};
+#endif
+
+#ifdef GWY_RELOC_SOURCE
+/* @fields: idx, type, meta, units */
 static const SISParameter sis_parameters[] = {
     {   0, G_TYPE_STRING, "Name of the sample", NULL },
     {   1, G_TYPE_STRING, "Comment of the sample", NULL },
@@ -313,6 +275,135 @@ static const SISParameter sis_parameters[] = {
     { 143, G_TYPE_STRING, "Name of data in channel 7", NULL },
     { 144, G_TYPE_STRING, "Name of data in channel 8", NULL },
 };
+#else
+/* This code block was GENERATED by flatten.py.
+   When you edit sis_parameters data above,
+   re-run flatten.py SOURCE.c. */
+static const gchar sis_parameters_meta[] =
+    "Name of the sample\000Comment of the sample\000Scanning range in x direc"
+    "tion\000Scanning range in y direction\000Range in z direction\000Offset "
+    "in z direction\000Type of aquisition\000Number of pixels in x direction"
+    "\000Number of pixels in y direction\000Speed of scanning\000Type of tip"
+    "\000Bits per pixels\000Value of the proportional part of feedback\000Val"
+    "ue of the integral part of feedback\000Load force of the tip\000Resonanc"
+    "e frequency of the cantilever\000Date of the measurement\000Feedback\000"
+    "Scanning direction\000Spring constant\000HighVoltage in x and y directio"
+    "n\000Measurement with x and y linearisation\000Amplification of the inte"
+    "rferometer signal\000Free amplitude of the cantilever\000Damping of the "
+    "free amplitude of the cantilever during the measurement\000Voltage betwe"
+    "en the tip and the electrode under the sample\000Oscilation frequency of"
+    " the cantilever during the measurement\000Field contrast\000Type of pale"
+    "tte\000Units of data in channel 1\000Units of data in channel 2\000Units"
+    " of data in channel 3\000Units of data in channel 4\000Units of data in "
+    "channel 5\000Units of data in channel 6\000Units of data in channel 7"
+    "\000Units of data in channel 8\000Range of of data in channel 1\000Range"
+    " of of data in channel 2\000Range of of data in channel 3\000Range of of"
+    " data in channel 4\000Range of of data in channel 5\000Range of of data "
+    "in channel 6\000Range of of data in channel 7\000Range of of data in cha"
+    "nnel 8\000Number of channels\000Offset in x direction in the scanning ra"
+    "nge\000Offset in y direction in the scanning range\000Maximum scanning r"
+    "ange in x direction\000Maximum scanning range in y direction\000Minimum "
+    "range of of data in channel 1\000Minimum range of of data in channel 2"
+    "\000Minimum range of of data in channel 3\000Minimum range of of data in"
+    " channel 4\000Minimum range of of data in channel 5\000Minimum range of "
+    "of data in channel 6\000Minimum range of of data in channel 7\000Minimum"
+    " range of of data in channel 8\000Maximum range of of data in channel 1"
+    "\000Maximum range of of data in channel 2\000Maximum range of of data in"
+    " channel 3\000Maximum range of of data in channel 4\000Maximum range of "
+    "of data in channel 5\000Maximum range of of data in channel 6\000Maximum"
+    " range of of data in channel 7\000Maximum range of of data in channel 8"
+    "\000Name of data in channel 1\000Name of data in channel 2\000Name of da"
+    "ta in channel 3\000Name of data in channel 4\000Name of data in channel "
+    "5\000Name of data in channel 6\000Name of data in channel 7\000Name of d"
+    "ata in channel 8";
+
+static const gchar sis_parameters_units[] =
+    "nm\000nm\000nm\000lines/s\000µs\000nN\000kHz\000°\000N/m\000nm\000%"
+    "\000V\000kHz\000nm\000nm\000nm\000nm\000nm";
+
+static const struct {
+    gint idx;
+    gint type;
+    gint meta;
+    gint units;
+}
+sis_parameters[] = {
+    { 0, G_TYPE_STRING, 0, -1 },
+    { 1, G_TYPE_STRING, 19, -1 },
+    { 2, G_TYPE_DOUBLE, 41, 0 },
+    { 3, G_TYPE_DOUBLE, 71, 3 },
+    { 4, G_TYPE_DOUBLE, 101, 6 },
+    { 5, G_TYPE_DOUBLE, 122, -1 },
+    { 6, G_TYPE_INT, 144, -1 },
+    { 7, G_TYPE_INT, 163, -1 },
+    { 8, G_TYPE_INT, 195, -1 },
+    { 9, G_TYPE_DOUBLE, 227, 9 },
+    { 10, G_TYPE_STRING, 245, -1 },
+    { 11, G_TYPE_INT, 257, -1 },
+    { 12, G_TYPE_DOUBLE, 273, -1 },
+    { 13, G_TYPE_DOUBLE, 316, 17 },
+    { 14, G_TYPE_DOUBLE, 355, 21 },
+    { 15, G_TYPE_DOUBLE, 377, 24 },
+    { 16, G_TYPE_STRING, 415, -1 },
+    { 17, G_TYPE_DOUBLE, 439, -1 },
+    { 18, G_TYPE_DOUBLE, 448, 28 },
+    { 19, G_TYPE_DOUBLE, 467, 31 },
+    { 20, G_TYPE_STRING, 483, -1 },
+    { 21, G_TYPE_STRING, 516, -1 },
+    { 22, G_TYPE_STRING, 555, -1 },
+    { 23, G_TYPE_DOUBLE, 598, 35 },
+    { 24, G_TYPE_DOUBLE, 631, 38 },
+    { 25, G_TYPE_DOUBLE, 702, 40 },
+    { 26, G_TYPE_DOUBLE, 761, 42 },
+    { 27, G_TYPE_DOUBLE, 823, 46 },
+    { 28, G_TYPE_INT, 838, -1 },
+    { 100, G_TYPE_STRING, 854, -1 },
+    { 101, G_TYPE_STRING, 881, -1 },
+    { 102, G_TYPE_STRING, 908, -1 },
+    { 103, G_TYPE_STRING, 935, -1 },
+    { 104, G_TYPE_STRING, 962, -1 },
+    { 105, G_TYPE_STRING, 989, -1 },
+    { 106, G_TYPE_STRING, 1016, -1 },
+    { 107, G_TYPE_STRING, 1043, -1 },
+    { 108, G_TYPE_DOUBLE, 1070, -1 },
+    { 109, G_TYPE_DOUBLE, 1100, -1 },
+    { 110, G_TYPE_DOUBLE, 1130, -1 },
+    { 111, G_TYPE_DOUBLE, 1160, -1 },
+    { 112, G_TYPE_DOUBLE, 1190, -1 },
+    { 113, G_TYPE_DOUBLE, 1220, -1 },
+    { 114, G_TYPE_DOUBLE, 1250, -1 },
+    { 115, G_TYPE_DOUBLE, 1280, -1 },
+    { 116, G_TYPE_INT, 1310, -1 },
+    { 117, G_TYPE_DOUBLE, 1329, 49 },
+    { 118, G_TYPE_DOUBLE, 1373, 52 },
+    { 119, G_TYPE_DOUBLE, 1417, 55 },
+    { 120, G_TYPE_DOUBLE, 1455, 58 },
+    { 121, G_TYPE_DOUBLE, 1493, -1 },
+    { 122, G_TYPE_DOUBLE, 1531, -1 },
+    { 123, G_TYPE_DOUBLE, 1569, -1 },
+    { 124, G_TYPE_DOUBLE, 1607, -1 },
+    { 125, G_TYPE_DOUBLE, 1645, -1 },
+    { 126, G_TYPE_DOUBLE, 1683, -1 },
+    { 127, G_TYPE_DOUBLE, 1721, -1 },
+    { 128, G_TYPE_DOUBLE, 1759, -1 },
+    { 129, G_TYPE_DOUBLE, 1797, -1 },
+    { 130, G_TYPE_DOUBLE, 1835, -1 },
+    { 131, G_TYPE_DOUBLE, 1873, -1 },
+    { 132, G_TYPE_DOUBLE, 1911, -1 },
+    { 133, G_TYPE_DOUBLE, 1949, -1 },
+    { 134, G_TYPE_DOUBLE, 1987, -1 },
+    { 135, G_TYPE_DOUBLE, 2025, -1 },
+    { 136, G_TYPE_DOUBLE, 2063, -1 },
+    { 137, G_TYPE_STRING, 2101, -1 },
+    { 138, G_TYPE_STRING, 2127, -1 },
+    { 139, G_TYPE_STRING, 2153, -1 },
+    { 140, G_TYPE_STRING, 2179, -1 },
+    { 141, G_TYPE_STRING, 2205, -1 },
+    { 142, G_TYPE_STRING, 2231, -1 },
+    { 143, G_TYPE_STRING, 2257, -1 },
+    { 144, G_TYPE_STRING, 2283, -1 },
+};
+#endif
 
 typedef struct {
     GHashTable *hash;
@@ -344,7 +435,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SIS (Surface Imaging Systems) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -421,13 +512,24 @@ sis_load(const gchar *filename,
                     gwy_container_set_object_by_name(data, key->str, dfield);
                     g_object_unref(dfield);
                     g_string_append(key, "/title");
-                    s = gwy_enum_to_string(sisfile.channels[i].data_type,
-                                           sis_data_types,
-                                           G_N_ELEMENTS(sis_data_types));
-                    if (!s || !*s)
-                        s = "Unknown";
-                    gwy_container_set_string_by_name(data, key->str,
-                                                     g_strdup(s));
+                    s = gwy_enuml_to_string(sisfile.channels[i].data_type,
+                                            "Topography", 1,
+                                            "Field Contrast", 2,
+                                            "Error", 3,
+                                            "Exterm", 4,
+                                            "Loc", 5,
+                                            "Phase", 6,
+                                            "Capacity", 7,
+                                            "Amplitude", 8,
+                                            "Frequency", 9,
+                                            "Potential", 10,
+                                            "Friction", 11,
+                                            "Force Modulation (FMM)", 12,
+                                            "User", 13,
+                                            NULL);
+                    if (s)
+                        gwy_container_set_string_by_name(data, key->str,
+                                                         g_strdup(s));
                     add_metadata(&sisfile, n, i, j, data);
                     n++;
                 }
@@ -575,7 +677,9 @@ add_metadata(SISFile *sisfile,
             case G_TYPE_INT:
             if (sis_parameters[j].units)
                 value = g_strdup_printf("%d %s",
-                                        *(guint*)p, sis_parameters[j].units);
+                                        *(guint*)p,
+                                        sis_parameters_units
+                                        + sis_parameters[j].units);
             else
                 value = g_strdup_printf("%d", *(guint*)p);
             break;
@@ -583,7 +687,9 @@ add_metadata(SISFile *sisfile,
             case G_TYPE_DOUBLE:
             if (sis_parameters[j].units)
                 value = g_strdup_printf("%.5g %s",
-                                        *(gdouble*)p, sis_parameters[j].units);
+                                        *(gdouble*)p,
+                                        sis_parameters_units
+                                        + sis_parameters[j].units);
             else
                 value = g_strdup_printf("%.5g", *(gdouble*)p);
             break;
@@ -593,30 +699,58 @@ add_metadata(SISFile *sisfile,
             value = NULL;
             break;
         }
-        gwy_container_set_string_by_name(meta, sis_parameters[j].meta, value);
+        gwy_container_set_string_by_name(meta,
+                                         sis_parameters_meta
+                                         + sis_parameters[j].meta,
+                                         value);
     }
 
     /* Special metadata */
     if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(28)))) {
-        value = g_strdup(gwy_enum_to_string(*(guint*)p,
-                                            sis_palettes,
-                                            G_N_ELEMENTS(sis_palettes)));
-        key = g_strdup_printf("/%d/base/palette", id);
-        gwy_container_set_string_by_name(data, key, value);
-        g_free(key);
+        value = g_strdup(gwy_enuml_to_string(*(guint*)p,
+                                             "Gray", 0,
+                                             "Sky", 1,
+                                             "Red", 2,
+                                             "Green", 3,
+                                             "Blue", 4,
+                                             "Rainbow", 5,
+                                             NULL));
+        if (value) {
+            key = g_strdup_printf("/%d/base/palette", id);
+            gwy_container_set_string_by_name(data, key, value);
+            g_free(key);
+        }
     }
 
     if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(6)))) {
-        value = g_strdup(gwy_enum_to_string(*(guint*)p,
-                                            sis_aquisitions,
-                                            G_N_ELEMENTS(sis_aquisitions)));
-        gwy_container_set_string_by_name(meta, "Aqusition type", value);
+        value = g_strdup(gwy_enuml_to_string(*(guint*)p,
+                                             "Contact", 1,
+                                             "Non contact", 2,
+                                             NULL));
+        if (value)
+            gwy_container_set_string_by_name(meta, "Aqusition type", value);
     }
 
-    value = g_strdup(gwy_enum_to_string(channel->signal_source,
-                                        sis_signal_sources,
-                                        G_N_ELEMENTS(sis_signal_sources)));
-    gwy_container_set_string_by_name(meta, "Signal source", value);
+    value = g_strdup(gwy_enuml_to_string(channel->signal_source,
+                                         "Feedback", 1,
+                                         "ZSensor", 2,
+                                         "Interferometer", 3,
+                                         "Field", 4,
+                                         "NC Amplitude", 5,
+                                         "NC Phase", 6,
+                                         "FM Frequency", 7,
+                                         "LOC amplitude", 8,
+                                         "LOC phase", 9,
+                                         "PM Channel 1", 10,
+                                         "PM Channel 2", 11,
+                                         "PM Feedback", 12,
+                                         "Capacity", 13,
+                                         "LOC Software Amplitude", 14,
+                                         "LOC Software Phase", 15,
+                                         "User", 16,
+                                         NULL));
+    if (value)
+        gwy_container_set_string_by_name(meta, "Signal source", value);
 
     key = g_strdup_printf("/%d/meta", id);
     gwy_container_set_object_by_name(data, key, meta);
@@ -632,8 +766,7 @@ sis_real_load(const guchar *buffer,
               SISFile *sisfile,
               GError **error)
 {
-    const SISParameter *sisparam;
-    const SISProcessingStep *procstep;
+    gint procstep, sisparam;
     SISChannel *channel = NULL;
     SISImage *image;
     guint start, id, i, j, len;
@@ -704,22 +837,22 @@ sis_real_load(const guchar *buffer,
             return FALSE;
         }
 
-        sisparam = NULL;
+        sisparam = -1;
         for (j = 0; j < G_N_ELEMENTS(sis_parameters); j++) {
             if (sis_parameters[j].idx == id) {
                 gwy_debug("Parameter %s", sis_parameters[j].meta);
-                sisparam = sis_parameters + j;
+                sisparam = j;
                 break;
             }
         }
-        if (!sisparam) {
+        if (sisparam == -1) {
             g_warning("UNKNOWN parameter id %u", id);
             p += len;
             continue;
         }
 
         idp = GUINT_TO_POINTER(id);
-        switch (sisparam->type) {
+        switch (sis_parameters[sisparam].type) {
             case G_TYPE_STRING:
             g_hash_table_insert(sisfile->params, idp, g_strndup(p, len));
             gwy_debug("Value = %s",
@@ -802,18 +935,20 @@ sis_real_load(const guchar *buffer,
             }
             /* This is really a guchar[4], not int32 */
             get_CHARARRAY(image->processing_step, &p);
-            procstep = NULL;
+            procstep = -1;
             for (j = 0; j < G_N_ELEMENTS(processing_steps); j++) {
-                if (memcmp(image->processing_step, processing_steps[j].symbol,
+                if (memcmp(image->processing_step,
+                           processing_steps_symbol + processing_steps[j].symbol,
                            4) == 0) {
-                    procstep = processing_steps + j;
+                    procstep = j;
                     gwy_debug("Processing step %.4s (%s), data size = %u",
-                              image->processing_step, procstep->meta,
-                              procstep->data_size);
+                              image->processing_step,
+                              processing_steps_meta + processing_steps[j].meta,
+                              processing_steps[j].data_size);
                     break;
                 }
             }
-            if (!procstep) {
+            if (procstep == -1) {
                 g_warning("UNKNOWN processing step %.4s",
                           image->processing_step);
             }
@@ -824,7 +959,7 @@ sis_real_load(const guchar *buffer,
             p += 4;
             image->parent_processing_step_index = gwy_get_guint16_le(&p);
             image->parent_processing_step_channel_index = gwy_get_guint16_le(&p);
-            p += procstep ? procstep->data_size : 0;
+            p += procstep > -1 ? processing_steps[procstep].data_size : 0;
             if (size - (p - buffer) < 10) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
@@ -847,7 +982,7 @@ sis_real_load(const guchar *buffer,
             if (len == 26) {
                 gwy_debug("assuming no data");
                 image->image_data = NULL;
-                p += procstep ? procstep->data_size : 0;
+                p += procstep > -1 ? processing_steps[procstep].data_size : 0;
             }
             else {
                 len = image->width * image->height * image->bpp;
