@@ -68,7 +68,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.7",
+    "0.8",
     "Rok Zitko",
     "2004",
 };
@@ -289,58 +289,75 @@ hash_to_data_field(GHashTable *hash,
 static GwyContainer*
 createc_get_metadata(GHashTable *hash)
 {
-    static const gchar *tobestored[] = {
-        "Titel", "Titel / Titel",
-        "Length x[A]",
-        "Length y[A]",
-        "Z-Res. [A]: +/- ",
-        "BiasVoltage", "BiasVoltage / BiasVolt.[mV]",
-        "Current[A]",
-        "Delta X", "Delta X / Delta X [Dac]",
-        "Delta Y", "Delta Y / Delta Y [Dac]",
-        "Delay X+", "Delay X+ / Delay X+",
-        "Delay X-", "Delay X- / Delay X-",
-        "Delay Y", "Delay Y / Delay Y",
-        "D-DeltaX", "D-DeltaX / D-DeltaX",
-        "Rotation", "Rotation / Rotation",
-        "GainX", "GainX / GainX",
-        "GainY", "GainY / GainY",
-        "GainZ", "GainZ / GainZ",
-        "Gainpreamp", "Gainpreamp / GainPre 10^",
-        "Chan(1,2,4)", "Chan(1,2,4) / Chan(1,2,4)",
-        "Scancoarse", "Scancoarse / Scancoarse",
-        "Scantype", "Scantype / Scantype",
-        "FBIset",
-        "FBLogIset",
-        "FBRC",
-        "FBLingain",
-        "FBLog",
-        "FBPropGain",
-        "ZPiezoconst",
-        "Xpiezoconst",
-        "YPiezoconst",
-        "Sec/line:",
-        "Sec/Image:",
-        "Channels", "Channels / Channels",
-        "Dactonmx", "Dacto[A]xy",
-        "Dactonmz", "Dacto[A]z",
-        "memo:0",
-        "memo:1",
-        "memo:2",
-        "T_ADC2[K]",
-        "T_ADC3[K]",
-        NULL
-    };
+    /* Relocation-less storage */
+    static const gchar tobestored[] =
+        "Titel\0"
+        "Titel / Titel\0"
+        "Length x[A]\0"
+        "Length y[A]\0"
+        "Z-Res. [A]: +/- \0"
+        "BiasVoltage\0"
+        "BiasVoltage / BiasVolt.[mV]\0"
+        "Current[A]\0"
+        "Delta X\0"
+        "Delta X / Delta X [Dac]\0"
+        "Delta Y\0"
+        "Delta Y / Delta Y [Dac]\0"
+        "Delay X+\0"
+        "Delay X+ / Delay X+\0"
+        "Delay X-\0"
+        "Delay X- / Delay X-\0"
+        "Delay Y\0"
+        "Delay Y / Delay Y\0"
+        "D-DeltaX\0"
+        "D-DeltaX / D-DeltaX\0"
+        "Rotation\0"
+        "Rotation / Rotation\0"
+        "GainX\0"
+        "GainX / GainX\0"
+        "GainY\0"
+        "GainY / GainY\0"
+        "GainZ\0"
+        "GainZ / GainZ\0"
+        "Gainpreamp\0"
+        "Gainpreamp / GainPre 10^\0"
+        "Chan(1,2,4)\0"
+        "Chan(1,2,4) / Chan(1,2,4)\0"
+        "Scancoarse\0"
+        "Scancoarse / Scancoarse\0"
+        "Scantype\0"
+        "Scantype / Scantype\0"
+        "FBIset\0"
+        "FBLogIset\0"
+        "FBRC\0"
+        "FBLingain\0"
+        "FBLog\0"
+        "FBPropGain\0"
+        "ZPiezoconst\0"
+        "Xpiezoconst\0"
+        "YPiezoconst\0"
+        "Sec/line:\0"
+        "Sec/Image:\0"
+        "Channels\0"
+        "Channels / Channels\0"
+        "Dactonmx\0"
+        "Dacto[A]xy\0"
+        "Dactonmz\0"
+        "Dacto[A]z\0"
+        "memo:0\0"
+        "memo:1\0"
+        "memo:2\0"
+        "T_ADC2[K]\0"
+        "T_ADC3[K]\0"
+        "\0";
     GwyContainer *meta;
-    gint ctr = 0;
+    const gchar *ctr;
     gchar *val;
 
     meta = gwy_container_new();
 
-    while (tobestored[ctr]) {
-        HASH_STORE(tobestored[ctr]);
-        ctr++;
-    }
+    for (ctr = tobestored; *ctr; ctr += strlen(ctr) + 1)
+        HASH_STORE(ctr);
 
     if (!gwy_container_get_n_items(meta)) {
         g_object_unref(meta);
