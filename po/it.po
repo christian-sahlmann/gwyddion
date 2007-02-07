@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-02-01 03:33+0100\n"
-"PO-Revision-Date: 2007-01-23 11:32+0100\n"
+"POT-Creation-Date: 2007-02-06 03:29+0100\n"
+"PO-Revision-Date: 2007-02-01 12:04+0100\n"
 "Last-Translator: Livia Della Seta <livia.dellaseta@casaccia.enea.it>\n"
 "Language-Team:  <it@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -374,9 +374,9 @@ msgstr "pixel"
 #: libgwydgets/gwy3dwindow.c:998 modules/file/pixmap.c:762
 #: modules/file/pixmap.c:1702 modules/file/rawfile.c:372
 #: modules/process/angle_dist.c:172 modules/process/calibrate.c:253
-#: modules/process/cwt.c:169 modules/process/drift.c:227
+#: modules/process/cwt.c:169 modules/process/drift.c:222
 #: modules/process/dwt.c:167 modules/process/dwtanisotropy.c:182
-#: modules/process/dwtdenoise.c:177 modules/process/edge.c:482
+#: modules/process/dwtdenoise.c:177 modules/process/edge.c:476
 #: modules/process/facet_analysis.c:272 modules/process/fft.c:319
 #: modules/process/fft_filter_2d.c:426 modules/process/fractal.c:206
 #: modules/process/grain_mark.c:257 modules/process/grain_rem_threshold.c:216
@@ -586,7 +586,7 @@ msgid "Method:"
 msgstr "Metodo:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:443
-#: modules/process/crosscor.c:103
+#: modules/process/crosscor.c:234
 msgid "Angle"
 msgstr "Angolo"
 
@@ -758,11 +758,11 @@ msgstr "Esporta veduta 3D come immagine PNG"
 
 #: app/app.c:413
 msgid "Set as Default"
-msgstr ""
+msgstr "Salva come predefinito"
 
 #: app/app.c:415
 msgid "Set the current view setup as the default"
-msgstr ""
+msgstr "Salva la vista corrente come predefinita"
 
 #: app/app.c:447
 #, c-format
@@ -875,7 +875,7 @@ msgstr "_Filtro:"
 
 #: app/filelist.c:594
 msgid "Case _sensitive"
-msgstr ""
+msgstr "Case _sensitive (discrimina tra minuscole e maiuscole)"
 
 #: app/glmaterial-editor.c:91
 msgid "GL Material Editor"
@@ -2034,7 +2034,7 @@ msgid "Presets"
 msgstr "Predefiniti"
 
 #: modules/file/rawfile.c:503 modules/process/convolution_filter.c:245
-#: modules/process/drift.c:224 modules/process/edge.c:479
+#: modules/process/drift.c:219 modules/process/edge.c:473
 #: modules/process/fft_filter_1d.c:200 modules/process/grain_mark.c:254
 #: modules/process/grain_rem_threshold.c:213 modules/process/grain_wshed.c:179
 #: modules/process/scars.c:467 modules/process/tip_model.c:167
@@ -2055,14 +2055,14 @@ msgstr "Dati campione"
 msgid "S_quare sample"
 msgstr "Campione quadrato"
 
-#: modules/file/rawfile.c:587 modules/process/crosscor.c:204
+#: modules/file/rawfile.c:587 modules/process/crosscor.c:197
 #: modules/process/evaluator_feature_dialog.h:142
 #: modules/process/evaluator_feature_dialog.h:482
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "Larghezza:"
 
-#: modules/file/rawfile.c:609 modules/process/crosscor.c:210
+#: modules/file/rawfile.c:609 modules/process/crosscor.c:203
 msgid "H_eight:"
 msgstr "Altezza:"
 
@@ -2372,39 +2372,39 @@ msgstr "Importa file Seiko XQD."
 msgid "Seiko files (.xqd)"
 msgstr "File Seiko (.xqd)"
 
-#: modules/file/sis.c:345
+#: modules/file/sis.c:436
 msgid "Imports SIS (Surface Imaging Systems) data files."
 msgstr "Importa file dati SIS (Surface Imaging Systems)."
 
-#: modules/file/sis.c:358
+#: modules/file/sis.c:449
 msgid "SIS files (.sis)"
 msgstr "file SIS (.sis)"
 
-#: modules/file/sis.c:663
+#: modules/file/sis.c:796
 msgid "Block not a document block."
 msgstr "Il blocco non è un blocco di documento."
 
-#: modules/file/sis.c:672
+#: modules/file/sis.c:805
 msgid "Too short document info."
 msgstr "Informazioni documento troppo brevi."
 
-#: modules/file/sis.c:693
+#: modules/file/sis.c:826
 msgid "Too short parameter info."
 msgstr "Informazioni parametro troppo brevi."
 
-#: modules/file/sis.c:800
+#: modules/file/sis.c:933
 msgid "Unexpected image block."
 msgstr "Blocco immagine inaspettato."
 
-#: modules/file/sis.c:831 modules/file/sis.c:858
+#: modules/file/sis.c:966 modules/file/sis.c:993
 msgid "End of file reached in image block."
 msgstr "Termine file raggiunto in blocco immagine."
 
-#: modules/file/sis.c:872
+#: modules/file/sis.c:1007
 msgid "End of file reached in channel block."
 msgstr "Termine file raggiunto in blocco canale."
 
-#: modules/file/sis.c:896
+#: modules/file/sis.c:1031
 msgid "End of file reached when another channel was expected."
 msgstr "Termine canale raggiunto al posto di un altro canale aspettato."
 
@@ -3290,90 +3290,90 @@ msgstr "HSym"
 msgid "VSym"
 msgstr "VSym"
 
-#: modules/process/crosscor.c:100
-msgid "Absolute"
-msgstr "Assoluto"
-
-#: modules/process/crosscor.c:101
-msgid "X Distance"
-msgstr "Distanza X"
-
-#: modules/process/crosscor.c:102
-msgid "Y Distance"
-msgstr "Distanza Y"
-
-#: modules/process/crosscor.c:114
+#: modules/process/crosscor.c:107
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Calcola correlazione incrociata di due campi dati."
 
-#: modules/process/crosscor.c:128
+#: modules/process/crosscor.c:121
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/Dati _Multipli/_Correlazione Incrociata..."
 
-#: modules/process/crosscor.c:132
+#: modules/process/crosscor.c:125
 msgid "Cross-correlate two data fields"
 msgstr "Correlazione incrociata di due campi dati"
 
-#: modules/process/crosscor.c:168
+#: modules/process/crosscor.c:161
 msgid "Cross-Correlation"
 msgstr "Correlazione Incrociata"
 
-#: modules/process/crosscor.c:190
+#: modules/process/crosscor.c:183
 msgid "Co_rrelate with:"
 msgstr "Co_rrela con:"
 
-#: modules/process/crosscor.c:196
+#: modules/process/crosscor.c:189
 msgid "Search size"
 msgstr "Ricerca Dimensioni"
 
-#: modules/process/crosscor.c:216
+#: modules/process/crosscor.c:209
 msgid "Window size"
 msgstr "Dimensioni finestra"
 
-#: modules/process/crosscor.c:224
+#: modules/process/crosscor.c:217
 msgid "W_idth:"
 msgstr "Larghezza:"
 
-#: modules/process/crosscor.c:230
+#: modules/process/crosscor.c:223
 msgid "Hei_ght:"
 msgstr "Altezza:"
 
-#: modules/process/crosscor.c:239 modules/process/fft.c:354
-#: modules/process/fft_filter_2d.c:593 modules/process/maskcor.c:177
+#: modules/process/crosscor.c:231
+msgid "Absolute"
+msgstr "Assoluto"
+
+#: modules/process/crosscor.c:232
+msgid "X Distance"
+msgstr "Distanza X"
+
+#: modules/process/crosscor.c:233
+msgid "Y Distance"
+msgstr "Distanza Y"
+
+#: modules/process/crosscor.c:236 modules/process/fft.c:354
+#: modules/process/fft_filter_2d.c:593 modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Tipo Output:"
 
-#: modules/process/crosscor.c:245
+#: modules/process/crosscor.c:242
 msgid "Add _low score results mask"
 msgstr "Aggiungi maschera risultati a bassa incidenza"
 
-#: modules/process/crosscor.c:256 modules/process/dwtdenoise.c:219
-#: modules/process/grain_wshed.c:249 modules/process/maskcor.c:189
+#: modules/process/crosscor.c:253 modules/process/dwtdenoise.c:219
+#: modules/process/grain_wshed.c:249 modules/process/maskcor.c:187
 msgid "T_hreshold:"
 msgstr "Soglia:"
 
-#: modules/process/crosscor.c:413 modules/process/superresolution.c:420
+#: modules/process/crosscor.c:410 modules/process/superresolution.c:420
 #: modules/process/superresolution.c:508
 msgid "Initializing..."
 msgstr "Inizializzazione...."
 
-#: modules/process/crosscor.c:420
+#: modules/process/crosscor.c:417
 msgid "Correlating..."
 msgstr "Correlazione....."
 
-#: modules/process/crosscor.c:475
+#: modules/process/crosscor.c:472
 msgid "Absolute difference"
 msgstr "Differenza assoluta"
 
-#: modules/process/crosscor.c:479
+#: modules/process/crosscor.c:476
 msgid "X difference"
 msgstr "Differenza X"
 
-#: modules/process/crosscor.c:483
+#: modules/process/crosscor.c:480
 msgid "Y difference"
 msgstr "Differenza Y"
 
-#: modules/process/crosscor.c:487
+#: modules/process/crosscor.c:484
 msgid "Direction difference"
 msgstr "Differenza direzione"
 
@@ -3409,7 +3409,7 @@ msgstr "2D CWT"
 msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 
-#: modules/process/cwt.c:202 modules/process/drift.c:288
+#: modules/process/cwt.c:202 modules/process/drift.c:283
 #: modules/process/dwt.c:194 modules/process/dwtanisotropy.c:200
 #: modules/process/dwtdenoise.c:205 modules/process/fft.c:338
 #: modules/process/fft_filter_1d.c:324 modules/process/fractal.c:228
@@ -3437,53 +3437,53 @@ msgstr "/_Correzione dati/Compensazione Deriva..."
 msgid "Evaluate/correct thermal drift in fast scan axis"
 msgstr "Stima e/o correzione della deriva termica in scansioni veloci"
 
-#: modules/process/drift.c:208
-msgid "Correc_ted data"
-msgstr "Dati Corretti"
-
-#: modules/process/drift.c:209
-msgid "Drift _lines"
-msgstr "Linee deriva"
-
-#: modules/process/drift.c:222
+#: modules/process/drift.c:217
 msgid "Compensate Drift"
 msgstr "Compensazione deriva"
 
-#: modules/process/drift.c:295
+#: modules/process/drift.c:290
 msgid "Plot drift _graph"
 msgstr "Grafico rappresentazione deriva"
 
-#: modules/process/drift.c:305
+#: modules/process/drift.c:300
 msgid "Correct _data"
 msgstr "Correzione Dati"
 
-#: modules/process/drift.c:315
+#: modules/process/drift.c:310
 msgid "_Exclude linear skew"
 msgstr "Escludi skew lineari"
 
-#: modules/process/drift.c:325
+#: modules/process/drift.c:320
 msgid "Preview type"
 msgstr "Tipo anteprima"
 
-#: modules/process/drift.c:344 modules/process/facet_analysis.c:410
+#: modules/process/drift.c:329
+msgid "Correc_ted data"
+msgstr "Dati Corretti"
+
+#: modules/process/drift.c:330
+msgid "Drift _lines"
+msgstr "Linee deriva"
+
+#: modules/process/drift.c:341 modules/process/facet_analysis.c:410
 #: modules/process/grain_mark.c:343 modules/process/grain_rem_threshold.c:320
 #: modules/process/grain_wshed.c:296 modules/process/scars.c:567
 msgid "_Mask color:"
 msgstr "Colore _Maschera:"
 
-#: modules/process/drift.c:428
+#: modules/process/drift.c:425
 msgid "Drift-corrected"
 msgstr "Corretti per la deriva"
 
-#: modules/process/drift.c:443
+#: modules/process/drift.c:440
 msgid "Drift"
 msgstr "Deriva"
 
-#: modules/process/drift.c:444
+#: modules/process/drift.c:441
 msgid "drift"
 msgstr "Deriva"
 
-#: modules/process/drift.c:450
+#: modules/process/drift.c:447
 msgid "x-axis drift"
 msgstr "Deriva sull'asse X"
 
@@ -3634,45 +3634,45 @@ msgstr "Inclinazione "
 
 #: modules/process/edge.c:222
 msgid "/_Presentation/_Edge Detection/_Zero Crossing..."
-msgstr ""
+msgstr "/_Presentazione/_Determinazione bordi/_Zero Crossing..."
 
 #: modules/process/edge.c:226
 msgid "Zero crossing edge detection presentation"
-msgstr ""
+msgstr "Presentazione determinazione bordi zero crossing"
 
-#: modules/process/edge.c:458 modules/process/fft_filter_2d.c:392
+#: modules/process/edge.c:470
+msgid "Zero Crossing Edge Detection"
+msgstr "Determinazione Bordi Zero Crossing"
+
+#: modules/process/edge.c:519
+msgid "_Gaussian FWHM:"
+msgstr "Gaussian FWHM:"
+
+#: modules/process/edge.c:528
+msgid "_Threshold:"
+msgstr "Soglia"
+
+#: modules/process/edge.c:528
+msgid "NRMS"
+msgstr "NRMS"
+
+#: modules/process/edge.c:535 modules/process/fft_filter_2d.c:556
+msgid "Display"
+msgstr "Mostra"
+
+#: modules/process/edge.c:544 modules/process/fft_filter_2d.c:392
 msgid "Original _image"
-msgstr ""
+msgstr "Immagine originale"
 
-#: modules/process/edge.c:459
+#: modules/process/edge.c:545
 msgid "_LoG convolved"
 msgstr ""
 
-#: modules/process/edge.c:460
+#: modules/process/edge.c:546
 msgid "Detected _edges"
-msgstr ""
+msgstr "Bordi determinati"
 
-#: modules/process/edge.c:476
-msgid "Zero Crossing Edge Detection"
-msgstr ""
-
-#: modules/process/edge.c:525
-msgid "_Gaussian FWHM:"
-msgstr ""
-
-#: modules/process/edge.c:534
-msgid "_Threshold:"
-msgstr ""
-
-#: modules/process/edge.c:534
-msgid "NRMS"
-msgstr ""
-
-#: modules/process/edge.c:541 modules/process/fft_filter_2d.c:556
-msgid "Display"
-msgstr ""
-
-#: modules/process/edge.c:556 modules/process/fft_filter_1d.c:329
+#: modules/process/edge.c:552 modules/process/fft_filter_1d.c:329
 #: modules/process/grain_mark.c:350 modules/process/grain_rem_threshold.c:327
 #: modules/process/scars.c:574
 msgid "I_nstant updates"
@@ -3838,8 +3838,8 @@ msgstr "Angolo tra linee (ID linea, ID linea)"
 msgid "Point - line distance(line ID, point ID)"
 msgstr "Distanza punto-linea (ID linea, ID punto)"
 
-#: modules/process/evaluator_task_dialog.h:178 modules/process/maskcor.c:137
-#: modules/process/maskcor.c:363
+#: modules/process/evaluator_task_dialog.h:178 modules/process/maskcor.c:173
+#: modules/process/maskcor.c:361
 msgid "Correlation score"
 msgstr "Percentuale di Correlazione "
 
@@ -4158,11 +4158,11 @@ msgstr "Sottrazione rettangolo a maschera FFT"
 
 #: modules/process/fft_filter_2d.c:388
 msgid "_FFT editor"
-msgstr ""
+msgstr "Editor FFT "
 
 #: modules/process/fft_filter_2d.c:396
 msgid "_Filtered image"
-msgstr ""
+msgstr "Immagine filtrata"
 
 #: modules/process/fft_filter_2d.c:400
 msgid "Image _difference"
@@ -4675,7 +4675,7 @@ msgstr "Volume Grani (Laplaciano)"
 
 #: modules/process/grain_dist.c:520
 msgid "count"
-msgstr ""
+msgstr "conto"
 
 #: modules/process/grain_dist.c:562
 msgid "Export Raw Grain Values"
@@ -4707,15 +4707,15 @@ msgstr "Dimensioni medie grani:"
 
 #: modules/process/grain_dist.c:749
 msgid "Total grain volume (zero):"
-msgstr ""
+msgstr "Volume totale grani (zero):"
 
 #: modules/process/grain_dist.c:755
 msgid "Total grain volume (minimum):"
-msgstr ""
+msgstr "Volume totale grani (minimo):"
 
 #: modules/process/grain_dist.c:761
 msgid "Total grain volume (laplacian):"
-msgstr ""
+msgstr "Volume totale grani (laplaciano):"
 
 #: modules/process/grain_mark.c:137
 msgid "Marks grains by thresholding (height, slope, curvature)."
@@ -4814,7 +4814,7 @@ msgstr "Numero di step:"
 msgid "Dr_op size:"
 msgstr "Dimensioni Goccia:"
 
-#: modules/process/grain_wshed.c:501 modules/process/maskcor.c:329
+#: modules/process/grain_wshed.c:501 modules/process/maskcor.c:327
 #: modules/process/merge.c:684 modules/process/tip_blind.c:558
 #: modules/process/tipops.c:267
 msgid "Initializing"
@@ -4860,76 +4860,76 @@ msgstr "_Tipo Trasformata:"
 msgid "_Circle size:"
 msgstr "_Dimensioni cerchio:"
 
-#: modules/process/immerse.c:161
-msgid "_Upsample large image"
-msgstr "_Sovracampionamento immagine grande"
-
-#: modules/process/immerse.c:162
-msgid "_Downsample detail"
-msgstr "_Sottocampionamento detail"
-
-#: modules/process/immerse.c:166
-msgid "_None"
-msgstr "_Nessuno"
-
-#: modules/process/immerse.c:167
-msgid "_Mean value"
-msgstr "_Valore Medio"
-
-#: modules/process/immerse.c:184
+#: modules/process/immerse.c:174
 msgid "Immerse high resolution detail into overall image."
 msgstr "Fondi dettaglio ad alta risoluzione con l'immagine d'insieme"
 
-#: modules/process/immerse.c:198
+#: modules/process/immerse.c:188
 msgid "/M_ultidata/_Immerse Detail..."
 msgstr "/D_ati Multipli/_Fondi dettaglio..."
 
-#: modules/process/immerse.c:202
+#: modules/process/immerse.c:192
 msgid "Immerse a detail into image"
 msgstr "Fondi dettaglio con immagine"
 
-#: modules/process/immerse.c:247
+#: modules/process/immerse.c:237
 msgid "Immerse Detail"
 msgstr "Fusione dettaglio"
 
-#: modules/process/immerse.c:252
+#: modules/process/immerse.c:242
 msgid "_Locate"
 msgstr "_Localizza"
 
-#: modules/process/immerse.c:254
+#: modules/process/immerse.c:244
 msgid "Locate detail by full image correlation search"
 msgstr "Localizza dettaglio con ricerca di correlazione su intera immagine"
 
-#: modules/process/immerse.c:257
+#: modules/process/immerse.c:247
 msgid "_Improve"
 msgstr "_Migliora"
 
-#: modules/process/immerse.c:259
+#: modules/process/immerse.c:249
 msgid "Improve detail position by correlation search in neighborhood"
 msgstr ""
 "Migliora posizione dettaglio con ricerca di correlazione nelle vicinanze."
 
-#: modules/process/immerse.c:328
+#: modules/process/immerse.c:318
 msgid "_Detail image:"
 msgstr "_Dettaglio immagine:"
 
-#: modules/process/immerse.c:333
+#: modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Posizione:"
 
-#: modules/process/immerse.c:346
+#: modules/process/immerse.c:336
 msgid "Result Sampling"
 msgstr "Campionamento risultante"
 
-#: modules/process/immerse.c:362
+#: modules/process/immerse.c:346
+msgid "_Upsample large image"
+msgstr "_Sovracampionamento immagine grande"
+
+#: modules/process/immerse.c:348
+msgid "_Downsample detail"
+msgstr "_Sottocampionamento detail"
+
+#: modules/process/immerse.c:357
 msgid "Detail Leveling"
 msgstr "Livellamento dettaglio"
 
-#: modules/process/immerse.c:378
+#: modules/process/immerse.c:367
+msgid "_None"
+msgstr "_Nessuno"
+
+#: modules/process/immerse.c:368
+msgid "_Mean value"
+msgstr "_Valore Medio"
+
+#: modules/process/immerse.c:376
 msgid "Show _frame"
 msgstr "Mostra cornice"
 
-#: modules/process/immerse.c:802
+#: modules/process/immerse.c:800
 msgid "Immersed detail"
 msgstr "Dettagli immersi"
 
@@ -5094,27 +5094,27 @@ msgstr "/Dati _Multipli/_Maschera di Correlazione..."
 msgid "Create mask by correlation with another data"
 msgstr "Crea maschera da correlazione con altri dati"
 
-#: modules/process/maskcor.c:135
-msgid "Objects marked"
-msgstr "Oggetti segnati"
-
-#: modules/process/maskcor.c:136
-msgid "Correlation maxima"
-msgstr "Correlazione massima"
-
-#: modules/process/maskcor.c:147
+#: modules/process/maskcor.c:142
 msgid "Mask by Correlation"
 msgstr "Maschera di Correlazione"
 
-#: modules/process/maskcor.c:169
+#: modules/process/maskcor.c:164
 msgid "Correlation _kernel:"
 msgstr "Correlazione_Kernel:"
 
-#: modules/process/maskcor.c:184
+#: modules/process/maskcor.c:171
+msgid "Objects marked"
+msgstr "Oggetti segnati"
+
+#: modules/process/maskcor.c:172
+msgid "Correlation maxima"
+msgstr "Correlazione massima"
+
+#: modules/process/maskcor.c:182
 msgid "Correlation _method:"
 msgstr "Metodo Correlazione:"
 
-#: modules/process/maskcor.c:331 modules/process/merge.c:686
+#: modules/process/maskcor.c:329 modules/process/merge.c:686
 msgid "Correlating"
 msgstr "Correlazione"
 
@@ -6471,299 +6471,299 @@ msgstr ""
 "Inclinazione theta: %s\n"
 "Inclinazione phi:   %s\n"
 
-#~ msgid "_FFT Editor"
-#~ msgstr "_FFT Editor"
+msgid "_FFT Editor"
+msgstr "_FFT Editor"
 
-#~ msgid "Original _Image"
-#~ msgstr "Immagine originale"
+msgid "Original _Image"
+msgstr "Immagine originale"
 
-#~ msgid "Filtered _Image"
-#~ msgstr "Immagine filtrata"
+msgid "Filtered _Image"
+msgstr "Immagine filtrata"
 
-#~ msgid "Image _Difference"
-#~ msgstr "Differenza immagine "
+msgid "Image _Difference"
+msgstr "Differenza immagine "
 
-#~ msgid "Display mode:"
-#~ msgstr "Modalità visualizzazione:"
+msgid "Display mode:"
+msgstr "Modalità visualizzazione:"
 
-#~ msgid "Smooth"
-#~ msgstr "Smooth"
+msgid "Smooth"
+msgstr "Smooth"
 
-#~ msgid "/_Level/_Level"
-#~ msgstr "/_Livella/_Livella"
+msgid "/_Level/_Level"
+msgstr "/_Livella/_Livella"
 
-#~ msgid "Level"
-#~ msgstr "Livella"
+msgid "Level"
+msgstr "Livella"
 
-#~ msgid "_Estimage"
-#~ msgstr "_Stima"
+msgid "_Estimage"
+msgstr "_Stima"
 
-#~ msgid "Fitting"
-#~ msgstr "Fitting"
+msgid "Fitting"
+msgstr "Fitting"
 
-#~ msgid "_Interpolation:"
-#~ msgstr "_Interpolazione:"
+msgid "_Interpolation:"
+msgstr "_Interpolazione:"
 
-#~ msgid "Hough transform"
-#~ msgstr "Trasformata di Hough"
+msgid "Hough transform"
+msgstr "Trasformata di Hough"
 
-#~ msgid "/_Integral Transforms/_2D CWT..."
-#~ msgstr "/Trasformate _Integrali/_2D CWT..."
+msgid "/_Integral Transforms/_2D CWT..."
+msgstr "/Trasformate _Integrali/_2D CWT..."
 
-#~ msgid "/_Integral Transforms/_2D DWT..."
-#~ msgstr "/Trasformate _Integrali/_2D DWT..."
+msgid "/_Integral Transforms/_2D DWT..."
+msgstr "/Trasformate _Integrali/_2D DWT..."
 
-#~ msgid "/_Integral Transforms/_2D FFT..."
-#~ msgstr "/Trasformate _Integrali/_2D FFT..."
+msgid "/_Integral Transforms/_2D FFT..."
+msgstr "/Trasformate _Integrali/_2D FFT..."
 
-#~ msgid "/_Tip/_Blind estimation..."
-#~ msgstr "/Punta/Stima cieca..."
+msgid "/_Tip/_Blind estimation..."
+msgstr "/Punta/Stima cieca..."
 
-#~ msgid "_Update Result"
-#~ msgstr "_Aggiorna Risultato"
+msgid "_Update Result"
+msgstr "_Aggiorna Risultato"
 
-#~ msgid "_Update Preview"
-#~ msgstr "Aggiorna Anteprima"
+msgid "_Update Preview"
+msgstr "Aggiorna Anteprima"
 
-#~ msgid "_Update preview"
-#~ msgstr "Aggiorna anteprima"
+msgid "_Update preview"
+msgstr "Aggiorna anteprima"
 
-#~ msgid "Evaluate/correct thermal drift in fast scan axis."
-#~ msgstr "Valutazione/correzione deriva termica in scansioni asse veloce."
+msgid "Evaluate/correct thermal drift in fast scan axis."
+msgstr "Valutazione/correzione deriva termica in scansioni asse veloce."
 
-#~ msgid "/_Correct Data/_Compensate drift..."
-#~ msgstr "/_Correzione Dati/_Compensazione deriva..."
+msgid "/_Correct Data/_Compensate drift..."
+msgstr "/_Correzione Dati/_Compensazione deriva..."
 
-#~ msgid "Correct drift"
-#~ msgstr "Correggi deriva"
+msgid "Correct drift"
+msgstr "Correggi deriva"
 
-#~ msgid "_Extract drift graph"
-#~ msgstr "_Estrai grafico deriva"
+msgid "_Extract drift graph"
+msgstr "_Estrai grafico deriva"
 
-#~ msgid "_Correct data"
-#~ msgstr "_Correzione dati"
+msgid "_Correct data"
+msgstr "_Correzione dati"
 
-#~ msgid "_Crop out unknown data"
-#~ msgstr "_Elimina dati sconosciuti"
+msgid "_Crop out unknown data"
+msgstr "_Elimina dati sconosciuti"
 
-#~ msgid "Drift corrected data"
-#~ msgstr "Dati corretti dalla deriva"
+msgid "Drift corrected data"
+msgstr "Dati corretti dalla deriva"
 
-#~ msgid "Drift graph"
-#~ msgstr "Grafico deriva"
-
-#, fuzzy
-#~ msgid "Imports Pacific Nanotechnology DME data files."
-#~ msgstr "Importa file dati PNI Pacific Nanotechnology."
-
-#~ msgid "<b>Value</b>"
-#~ msgstr "<b>Valore</b>"
+msgid "Drift graph"
+msgstr "Grafico deriva"
 
 #, fuzzy
-#~ msgid "/_Basic Operations/Convolution _Filter..."
-#~ msgstr "/Operazioni _Base/Ruota di _Angolo..."
+msgid "Imports Pacific Nanotechnology DME data files."
+msgstr "Importa file dati PNI Pacific Nanotechnology."
 
-#~ msgid "Scan lines correlation"
-#~ msgstr "Correlazione linee scansione"
-
-#~ msgid "Local isotropy"
-#~ msgstr "Isotropia locale"
-
-#~ msgid "Calibration sample"
-#~ msgstr "Campione di calibrazione"
-
-#~ msgid "X axis Drift"
-#~ msgstr "Deriva asse X"
-
-#~ msgid "Bilinear"
-#~ msgstr "Bilineare"
-
-#~ msgid "Attaches another data field as presentation"
-#~ msgstr "Allega un altro campo dati come presentazione"
+msgid "<b>Value</b>"
+msgstr "<b>Valore</b>"
 
 #, fuzzy
-#~ msgid "_Run"
-#~ msgstr "Esatta"
+msgid "/_Basic Operations/Convolution _Filter..."
+msgstr "/Operazioni _Base/Ruota di _Angolo..."
 
-#~ msgid "_Restore PS"
-#~ msgstr "_Ripristina PS"
+msgid "Scan lines correlation"
+msgstr "Correlazione linee scansione"
 
-#, fuzzy
-#~ msgid "Power Spectrum"
-#~ msgstr "Spettro di potenza"
+msgid "Local isotropy"
+msgstr "Isotropia locale"
 
-#, fuzzy
-#~ msgid "_Preview type:"
-#~ msgstr "Tipo Anteprima:"
+msgid "Calibration sample"
+msgstr "Campione di calibrazione"
 
-#~ msgid "_Update dynamically"
-#~ msgstr "Aggiorna dinamicamente"
+msgid "X axis Drift"
+msgstr "Deriva asse X"
 
-#~ msgid "Graph ASCII export."
-#~ msgstr "Esporta Grafico ASCII"
+msgid "Bilinear"
+msgstr "Bilineare"
 
-#, fuzzy
-#~ msgid "/Export _ASCII"
-#~ msgstr "Esporta"
+msgid "Attaches another data field as presentation"
+msgstr "Allega un altro campo dati come presentazione"
 
 #, fuzzy
-#~ msgid "Export ASCII"
-#~ msgstr "Esporta"
+msgid "_Run"
+msgstr "Esatta"
+
+msgid "_Restore PS"
+msgstr "_Ripristina PS"
 
 #, fuzzy
-#~ msgid "Large image"
-#~ msgstr "Immagini unite"
+msgid "Power Spectrum"
+msgstr "Spettro di potenza"
 
 #, fuzzy
-#~ msgid "Detail image"
-#~ msgstr "_Dettaglio immagine:"
+msgid "_Preview type:"
+msgstr "Tipo Anteprima:"
+
+msgid "_Update dynamically"
+msgstr "Aggiorna dinamicamente"
+
+msgid "Graph ASCII export."
+msgstr "Esporta Grafico ASCII"
 
 #, fuzzy
-#~ msgid "Upsample large image"
-#~ msgstr "_Sovracampionamento immagine grande"
+msgid "/Export _ASCII"
+msgstr "Esporta"
 
 #, fuzzy
-#~ msgid "Downsample detail"
-#~ msgstr "_Sottocampionamento detail"
+msgid "Export ASCII"
+msgstr "Esporta"
 
 #, fuzzy
-#~ msgid "_Align detail:"
-#~ msgstr "_Allinea secondo operando:"
+msgid "Large image"
+msgstr "Immagini unite"
 
 #, fuzzy
-#~ msgid "_Result sampling:"
-#~ msgstr "Campionamento risultante"
+msgid "Detail image"
+msgstr "_Dettaglio immagine:"
 
 #, fuzzy
-#~ msgid "File _type:"
-#~ msgstr "Tipo _File: %s"
+msgid "Upsample large image"
+msgstr "_Sovracampionamento immagine grande"
 
 #, fuzzy
-#~ msgid "<b>Axis settings:</b>"
-#~ msgstr "<b>Opzioni</b>"
+msgid "Downsample detail"
+msgstr "_Sottocampionamento detail"
 
 #, fuzzy
-#~ msgid "_Autoscale"
-#~ msgstr "_Valore scala:"
-
-#~ msgid "Major division:"
-#~ msgstr "Divisione maggiore:"
+msgid "_Align detail:"
+msgstr "_Allinea secondo operando:"
 
 #, fuzzy
-#~ msgid "Major thickness:"
-#~ msgstr "Spessore cornice:"
+msgid "_Result sampling:"
+msgstr "Campionamento risultante"
 
 #, fuzzy
-#~ msgid "Major length:"
-#~ msgstr "Lunghezza minima:"
-
-#~ msgid "Minor division:"
-#~ msgstr "Divisione minore:"
+msgid "File _type:"
+msgstr "Tipo _File: %s"
 
 #, fuzzy
-#~ msgid "Minor thickness:"
-#~ msgstr "Spessore linea:"
+msgid "<b>Axis settings:</b>"
+msgstr "<b>Opzioni</b>"
 
 #, fuzzy
-#~ msgid "Minor length:"
-#~ msgstr "Lunghezza minima:"
+msgid "_Autoscale"
+msgstr "_Valore scala:"
+
+msgid "Major division:"
+msgstr "Divisione maggiore:"
 
 #, fuzzy
-#~ msgid "<b>Points</b>"
-#~ msgstr "<b>Opzioni</b>"
+msgid "Major thickness:"
+msgstr "Spessore cornice:"
 
 #, fuzzy
-#~ msgid "<b>Size</b>"
-#~ msgstr "<b>File</b>"
+msgid "Major length:"
+msgstr "Lunghezza minima:"
+
+msgid "Minor division:"
+msgstr "Divisione minore:"
 
 #, fuzzy
-#~ msgid "verb|_Edit"
-#~ msgstr "_Modifica"
+msgid "Minor thickness:"
+msgstr "Spessore linea:"
 
 #, fuzzy
-#~ msgid "_Copy"
-#~ msgstr "Taglia"
+msgid "Minor length:"
+msgstr "Lunghezza minima:"
 
 #, fuzzy
-#~ msgid "De_fault"
-#~ msgstr "Scelte predefinite"
+msgid "<b>Points</b>"
+msgstr "<b>Opzioni</b>"
 
 #, fuzzy
-#~ msgid "/Open Recent/---"
-#~ msgstr "/Apri _Recenti"
+msgid "<b>Size</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "/Mask _Color..."
-#~ msgstr "Colore_Maschera..."
-
-#~ msgid "noun|Copy"
-#~ msgstr "nome|Copia"
+msgid "verb|_Edit"
+msgstr "_Modifica"
 
 #, fuzzy
-#~ msgid "<b>Resolution</b>"
-#~ msgstr "<b>Risultati</b>"
+msgid "_Copy"
+msgstr "Taglia"
 
 #, fuzzy
-#~ msgid "<b>Fitting parameters:</b>"
-#~ msgstr "Adattamento parametri"
+msgid "De_fault"
+msgstr "Scelte predefinite"
 
 #, fuzzy
-#~ msgid "<b>Initial</b>"
-#~ msgstr "<b>File</b>"
+msgid "/Open Recent/---"
+msgstr "/Apri _Recenti"
 
 #, fuzzy
-#~ msgid "<b>Result</b>"
-#~ msgstr "<b>Risultati</b>"
+msgid "/Mask _Color..."
+msgstr "Colore_Maschera..."
+
+msgid "noun|Copy"
+msgstr "nome|Copia"
 
 #, fuzzy
-#~ msgid "<b>Error</b>"
-#~ msgstr "<b>Traduttori</b>\n"
+msgid "<b>Resolution</b>"
+msgstr "<b>Risultati</b>"
 
 #, fuzzy
-#~ msgid "<b>Fix</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Fitting parameters:</b>"
+msgstr "Adattamento parametri"
 
 #, fuzzy
-#~ msgid "<b>Correlation matrix:</b>"
-#~ msgstr "<b>Matrice di Correlazione</b>"
+msgid "<b>Initial</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "<b>Chi-square result:</b>"
-#~ msgstr "<b>Risultati</b>"
+msgid "<b>Result</b>"
+msgstr "<b>Risultati</b>"
 
 #, fuzzy
-#~ msgid "<b>Fit area</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Error</b>"
+msgstr "<b>Traduttori</b>\n"
 
 #, fuzzy
-#~ msgid "<b>Normal</b>"
-#~ msgstr "<b>Valore</b>"
-
-#~ msgid "<b>Power spectrum (select areas by mouse):</b>"
-#~ msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
+msgid "<b>Fix</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "<b>Settings:</b>"
-#~ msgstr "<b>Opzioni</b>"
-
-#~ msgid "_Guess"
-#~ msgstr "Indovina"
+msgid "<b>Correlation matrix:</b>"
+msgstr "<b>Matrice di Correlazione</b>"
 
 #, fuzzy
-#~ msgid "<b>Threshold By</b>"
-#~ msgstr "Soglia:"
+msgid "<b>Chi-square result:</b>"
+msgstr "<b>Risultati</b>"
 
 #, fuzzy
-#~ msgid "<b>Filter</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Fit area</b>"
+msgstr "<b>File</b>"
 
 #, fuzzy
-#~ msgid "<b>Editor</b>"
-#~ msgstr "<b>File</b>"
+msgid "<b>Normal</b>"
+msgstr "<b>Valore</b>"
+
+msgid "<b>Power spectrum (select areas by mouse):</b>"
+msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
 
 #, fuzzy
-#~ msgid "N.A"
-#~ msgstr "N.A."
+msgid "<b>Settings:</b>"
+msgstr "<b>Opzioni</b>"
 
-#~ msgid "Set Defaults"
-#~ msgstr "Fissa valori predefiniti"
+msgid "_Guess"
+msgstr "Indovina"
+
+#, fuzzy
+msgid "<b>Threshold By</b>"
+msgstr "Soglia:"
+
+#, fuzzy
+msgid "<b>Filter</b>"
+msgstr "<b>File</b>"
+
+#, fuzzy
+msgid "<b>Editor</b>"
+msgstr "<b>File</b>"
+
+#, fuzzy
+msgid "N.A"
+msgstr "N.A."
+
+msgid "Set Defaults"
+msgstr "Fissa valori predefiniti"
