@@ -19,15 +19,13 @@
  */
 
 #include "config.h"
-#include "gwymacros.h"
-
 #include <string.h>
 #include <stdlib.h>
-
-#include "gwymath.h"
-#include "gwydebugobjects.h"
-#include "gwyserializable.h"
-#include "gwysiunit.h"
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
+#include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwysiunit.h>
 
 #define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
 

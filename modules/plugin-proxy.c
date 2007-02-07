@@ -42,17 +42,25 @@
  */
 
 #include "config.h"
-
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <errno.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include <glib/gstdio.h>
+#if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
+#include <sys/stat.h>
+/* And now we are in a deep s... */
+#endif
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>

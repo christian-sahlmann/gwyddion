@@ -22,6 +22,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <tiffio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

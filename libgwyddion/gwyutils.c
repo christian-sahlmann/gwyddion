@@ -19,8 +19,6 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-#include <gobject/gvaluecollector.h>
 
 /* To be able to mmap() files.
  * On Linux we have all, on Win32 we have none, on others who knows */
@@ -38,7 +36,10 @@
 #endif
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
+#include <gobject/gvaluecollector.h>
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 
 /* FIXME: We do not need anything from this file, but ./configure touches it
