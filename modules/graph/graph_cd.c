@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Critical dimension measurements"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.5.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -239,8 +239,7 @@ fit_dialog(FitArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
