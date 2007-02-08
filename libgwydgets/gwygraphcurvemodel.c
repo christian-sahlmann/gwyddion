@@ -486,31 +486,35 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
 /**
  * gwy_graph_curve_model_set_data:
  * @gcmodel: A graph curve model.
- * @xdata: x data points (array of size @n)
- * @ydata: y data points (array of size @n)
- * @n: data array size (number of data points)
+ * @xdata: X data points (array of size @n).
+ * @ydata: Y data points (array of size @n).
+ * @n: Number of points, i.e. items in @xdata and @ydata.
  *
- * Sets curve model data. Curve model will make a copy of the data, so you
- * are responsible for freeing the original arrays.
+ * Sets curve model data.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                const gdouble *xdata,
                                const gdouble *ydata,
                                gint n)
 {
-    gdouble *old;
+    if (gcmodel->n == n) {
+        memcpy(gcmodel->xdata, xdata, n*sizeof(gdouble));
+        memcpy(gcmodel->ydata, ydata, n*sizeof(gdouble));
+    }
+    else {
+        gdouble *old;
 
-    old = gcmodel->xdata;
-    gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
-    g_free(old);
+        old = gcmodel->xdata;
+        gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
+        g_free(old);
 
-    old = gcmodel->ydata;
-    gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
-    g_free(old);
+        old = gcmodel->ydata;
+        gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
+        g_free(old);
 
-    gcmodel->n = n;
+        gcmodel->n = n;
+    }
     gwy_graph_curve_model_data_changed(gcmodel);
 }
 
