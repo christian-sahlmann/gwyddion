@@ -1,3 +1,12 @@
+2.4.20070210
+
+2.5 (0000-00-00)
+Libraries:
+- libgwydgets: Light source theta and phi determined by the same mouse
+  coordinate were fixed.
+- libgwyprocess: Skewed gwy_data_field_area_fit_local_planes() output for
+  even plane sizes was fixed.
+
 
 2.4 (2007-02-01)
 Application:
@@ -12,14 +21,14 @@ Libraries:
 - libgwyapp: Fixed crash when a mask or presentation was added to a channel in
   a multi-channel file and then the channel was immediately deleted.
 - libgwydgets: GwyAxis sometimes using too low precision (from 2.3) was fixed.
-- libprocess: 1D convolution and Gaussian filters were added.
+- libgwyprocess: 1D convolution and Gaussian filters were added.
 - libgwyddion: New unit arithmetic function gwy_si_unit_power_multiply() was
   added.
-- libprocess: 3x3 convolution filters are more efficient due to a specialized
-  implementation.
+- libgwyprocess: 3x3 convolution filters are more efficient due to a
+  specialized implementation.
 - libgwyapp: Changing file type in file open dialog when filtering is enabled
   updates the list of displayed files to match the new file type.
-- libprocess: Height and angle distribution y-units are x-units^-1 now,
+- libgwyprocess: Height and angle distribution y-units are x-units^-1 now,
   so that the full integral is 1 also unit-wise.
 
 Modules:
@@ -195,20 +204,20 @@ Libraries:
   constructors now.
 - libgwyapp: File name in data browser is properly updated when a file is
   saved under a different name.
-- libprocess: Correlation iterators sometimes reporting progress (slightly)
+- libgwyprocess: Correlation iterators sometimes reporting progress (slightly)
   higher than 1.0 were fixed.
-- libprocess: A set of raw FFT functions, that however still abstract the FFT
-  backend, was added.
-- libprocess: gwy_data_line_new_resampled(), similar to
+- libgwyprocess: A set of raw FFT functions, that however still abstract the
+  FFT backend, was added.
+- libgwyprocess: gwy_data_line_new_resampled(), similar to
   gwy_data_field_new_resampled() was added.
-- libprocess: gwy_data_field_fft_filter_1d() actually works.
+- libgwyprocess: gwy_data_field_fft_filter_1d() actually works.
 - libgwydgets: A convenience function to pack a radio button group to a table
   was added.
 - libgwyddion: Function gwy_memcpy_byte_swap() to copy memory swapping bytes
   along according to given pattern was added.
 - libgwymodule: It is possible to get the score corresponding to the detected
   file type with gwy_file_detect_with_score().
-- libprocess: Functions to get median of data lines added.
+- libgwyprocess: Functions to get median of data lines added.
 
 Modules:
 - PSIA (new): Imports PSIA data files.
@@ -372,7 +381,8 @@ Libraries:
   widgets were updated to use it.
 - libgwydgets: GwyVectorLayer can disable selection editability.
 - libgwydgets: GwyShader is a no-window widget now.
-- libprocess: Inclusion mask argument added to gwy_data_field_area_fit_plane().
+- libgwyprocess: Inclusion mask argument added to
+  gwy_data_field_area_fit_plane().
 - libgwydgets: GwyVectorLayer no longer automatically instantiates selections.
 - libgwydgets: GwyColorAxis ticks and label style is more controllable.
 - libgwydgets: Many more GwyAxis properties are user-controllable.
@@ -425,7 +435,7 @@ Libraries:
   deserialization was fixed (bug #73).
 - libgwyprocess: Fitting of polynomials with limited total degree was added.
 - gwy_math_humanize_numbers() behaves reasonably for zero values (bug #70).
-- libprocess: New elliptic and circular region functions.
+- libgwyprocess: New elliptic and circular region functions.
 - libgwydgets: GwyNullStore `virtual' GtkTreeModel class.
 - libgwyapp: New classes GwyTool and GwyPlainTool for tool implementation.
 - libgwyapp: Rectangular selection info table was reworked and it allows direct
@@ -438,9 +448,9 @@ Libraries:
 - libgwyapp: Miscellaneous deprecated functions were removed.
 - libgwymodule: Unification and clean-up, all module types have foreach
   functions, headers are includeable individually.
-- libprocess: Remaining data field area functions were converted to
+- libgwyprocess: Remaining data field area functions were converted to
   (col, row, width, heigh) rectangle specification.
-- libprocess: Pixelwise statistical functions and surface area gained a new
+- libgwyprocess: Pixelwise statistical functions and surface area gained a new
   argument: mask of pixels to take into account.
 - libgwydddion: New GwyStringList class (forward compatibility stub).
 - libgwydgets: GwyColorAxis draws ticks instead of just the middle marker.
@@ -1368,8 +1378,8 @@ Libraries:
   GwyProcessFuncInfo.
 - libgwyprocess, libgwyapp: Some functions with typos in names and functions
   that should have never been public were removed from API.
-- libgwydraw: GwyRGBA conversion and container helper functions, it is registers
-  as a GType type.
+- libgwydraw: GwyRGBA conversion and container helper functions, it is
+  registered as a GType type.
 - libgwydgets: GwyColorButton reduction to a simple dialogless button using
   GwyRGBA instead of Gdk colors.  Mask color selector helper
   gwy_color_selector_for_mask().
