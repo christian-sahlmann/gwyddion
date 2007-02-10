@@ -1660,7 +1660,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
             case GWY_3D_MOVEMENT_LIGHT:
             g_object_set(gwy3dview->setup,
                          "light-theta",
-                         gwy3dview->setup->light_theta + dx*DEG_2_RAD,
+                         gwy3dview->setup->light_theta + dy*DEG_2_RAD,
                          "light-phi",
                          gwy3dview->setup->light_phi + dx*DEG_2_RAD,
                          NULL);
