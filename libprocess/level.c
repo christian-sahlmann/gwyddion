@@ -1298,7 +1298,7 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
                                      GwyDataField **results)
 {
     gdouble coeffs[GWY_PLANE_FIT_S0_REDUCED + 1];
-    gdouble xreal, yreal, qx, qy;
+    gdouble xreal, yreal, qx, qy, asymshfit;
     gint xres, yres, ri, i, j, ii, jj;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
@@ -1343,6 +1343,7 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
     }
 
     /* Fit local planes */
+    asymshfit = (1 - size % 2)/2.0;
     for (i = 0; i < height; i++) {
         gint ifrom = MAX(0, i + row - (size-1)/2);
         gint ito = MIN(yres-1, i + row + size/2);
@@ -1386,13 +1387,13 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
 
             /* Move origin to pixel, including in z coordinate, remembering
              * average z value in shift */
-            shift = ifrom - (i + row);
+            shift = ifrom - (i + row + asymshfit);
             sumxy += shift*sumx;
             sumyy += shift*(2*sumy + n*shift);
             sumzy += shift*sumz;
             sumy += n*shift;
 
-            shift = jfrom - (j + col);
+            shift = jfrom - (j + col + asymshfit);
             sumxx += shift*(2*sumx + n*shift);
             sumxy += shift*sumy;
             sumzx += shift*sumz;
