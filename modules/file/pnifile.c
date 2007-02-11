@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-pni-spm">
+ *   <comment>PNI SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="\0\0\0\0001.0"/>
+ *   </magic>
+ *   <glob pattern="*.pni"/>
+ *   <glob pattern="*.PNI"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

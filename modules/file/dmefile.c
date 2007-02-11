@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-dme-spm">
+ *   <comment>DME SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="RSCOPE"/>
+ *   </magic>
+ *   <glob pattern="*.img"/>
+ *   <glob pattern="*.IMG"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -114,7 +126,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("dmefile",
-                           N_("DME files (.dme)"),
+                           N_("DME files (.img)"),
                            (GwyFileDetectFunc)&dme_detect,
                            (GwyFileLoadFunc)&dme_load,
                            NULL,

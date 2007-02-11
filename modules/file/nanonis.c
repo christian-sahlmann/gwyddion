@@ -20,6 +20,18 @@
 
 /* TODO: metadata */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-nanonis-spm">
+ *   <comment>Nanonis SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value=":NANONIS_VERSION:"/>
+ *   </magic>
+ *   <glob pattern="*.sxm"/>
+ *   <glob pattern="*.SXM"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>

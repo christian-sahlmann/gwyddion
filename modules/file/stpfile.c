@@ -24,17 +24,28 @@
  * - read split files (and accept any kind of EOL in magic)
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-stp-spm">
+ *   <comment>STP SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="UK SOFT\r\n"/>
+ *   </magic>
+ *   <glob pattern="*.stp"/>
+ *   <glob pattern="*.STP"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <glib/gprintf.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include "err.h"
 

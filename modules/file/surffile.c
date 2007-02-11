@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-surf-spm">
+ *   <comment>Surf SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="DIGITAL SURF"/>
+ *   </magic>
+ *   <glob pattern="*.sur"/>
+ *   <glob pattern="*.SUR"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

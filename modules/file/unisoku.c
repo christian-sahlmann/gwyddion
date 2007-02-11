@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-unisoku-spm">
+ *   <comment>Unisoku SPM data header</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value=":STM data\r\n"/>
+ *   </magic>
+ *   <glob pattern="*.hdr"/>
+ *   <glob pattern="*.HDR"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

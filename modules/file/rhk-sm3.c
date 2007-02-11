@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-rhk-sm3-spm">
+ *   <comment>RHK SM3 SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="S\0T\0i\0M\0a\0g\0e\0 \0"/>
+ *   </magic>
+ *   <glob pattern="*.sm3"/>
+ *   <glob pattern="*.SM3"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

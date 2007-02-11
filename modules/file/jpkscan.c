@@ -19,6 +19,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-jpk-spm">
+ *   <comment>JPK SPM data</comment>
+ *   <magic priority="10">
+ *     <match type="string" offset="0" value="MM\x00\x2a"/>
+ *   </magic>
+ *   <glob pattern="*.jpk"/>
+ *   <glob pattern="*.JPK"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

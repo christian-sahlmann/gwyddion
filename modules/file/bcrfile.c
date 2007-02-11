@@ -18,6 +18,30 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-bcr-spm">
+ *   <comment>BCR SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="fileformat = bcrstm\n"/>
+ *     <match type="string" offset="0" value="f\0i\0l\0e\0f\0o\0r\0m\0a\0t\0 \0=\0 \0b\0c\0r\0s\0t\0m\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"/>
+ *   </magic>
+ *   <glob pattern="*.bcr"/>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-bcrf-spm">
+ *   <comment>BCRF SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="fileformat = bcrf\n"/>
+ *     <match type="string" offset="0" value="f\0i\0l\0e\0f\0o\0r\0m\0a\0t\0 \0=\0 \0b\0c\0r\0f\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"/>
+ *   </magic>
+ *   <glob pattern="*.bcrf"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

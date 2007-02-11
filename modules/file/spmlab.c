@@ -28,6 +28,7 @@
  *     <match type="string" offset="0" value="#R3"/>
  *     <match type="string" offset="0" value="#R4"/>
  *     <match type="string" offset="0" value="#R5"/>
+ *     <match type="string" offset="0" value="#R6"/>
  *   </magic>
  *   <glob pattern="*.zfp"/>
  *   <glob pattern="*.zrp"/>

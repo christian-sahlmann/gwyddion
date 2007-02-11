@@ -70,6 +70,18 @@
  *  advised of the possibility of such damage.
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-hdf">
+ *   <comment>Hierarchical Data Format</comment>
+ *     <magic priority="10">
+ *     <match type="string" offset="0" value="\x0e\x03\x13\x01"/>
+ *   </magic>
+ *   <glob pattern="*.hdf"/>
+ *   <glob pattern="*.HDF"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

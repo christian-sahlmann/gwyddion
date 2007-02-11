@@ -36,6 +36,18 @@
  */
 /*#define DEBUG*/
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-spml-spm">
+ *   <comment>SPML data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="<SPML"/>
+ *   </magic>
+ *   <glob pattern="*.xml"/>
+ *   <glob pattern="*.XML"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -51,6 +63,13 @@
 #include "spml-utils.h"
 
 #define EXTENSION ".xml"
+
+typedef enum {
+    SKIP_STATE,
+    IN_DATACHANNELS,
+    IN_DATACHANNELGROUP,
+    READ_COMPLETE
+} DatachannelListParserStates;
 
 static gboolean      module_register(void);
 static gint          spml_detect    (const GwyFileDetectInfo * fileinfo,
@@ -86,10 +105,6 @@ module_register(void)
                            NULL);
     return TRUE;
 }
-
-typedef enum {
-    SKIP_STATE, IN_DATACHANNELS, IN_DATACHANNELGROUP, READ_COMPLETE
-} DatachannelListParserStates;
 
 static GList *
 get_list_of_datachannels(const gchar *filename)

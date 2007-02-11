@@ -18,6 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-witec-spm">
+ *   <comment>WITec SPM data</comment>
+ *   <glob pattern="*.wit"/>
+ *   <glob pattern="*.WIT"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

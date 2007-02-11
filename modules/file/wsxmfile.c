@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-wsxm-spm">
+ *   <comment>WSxM SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="WSxM file copyright Nanotec Electronica\r\nSxM Image file\r\n"/>
+ *   </magic>
+ *   <glob pattern="*.tom"/>
+ *   <glob pattern="*.TOM"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

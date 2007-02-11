@@ -23,6 +23,18 @@
  * different file formats, even if they were probably both invented at
  * Hitachi. */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-hitachi-spm">
+ *   <comment>Hitachi SPM data</comment>
+ *     <magic priority="50">
+ *     <match type="string" offset="0" value="AFM/Ver. "/>
+ *   </magic>
+ *   <glob pattern="*.afm"/>
+ *   <glob pattern="*.AFM"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

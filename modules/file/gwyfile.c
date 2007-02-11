@@ -21,12 +21,13 @@
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-gwyddion-spm">
- *     <comment>Gwyddion SPM data</comment>
- *     <magic priority="90">
+ *   <comment>Gwyddion SPM data</comment>
+ *   <magic priority="90">
  *     <match type="string" offset="0" value="GWYOGwyContainer"/>
  *     <match type="string" offset="0" value="GWYPGwyContainer"/>
- *     </magic>
- *     <glob pattern="*.gwy"/>
+ *   </magic>
+ *   <glob pattern="*.gwy"/>
+ *   <glob pattern="*.GWY"/>
  * </mime-type>
  **/
 

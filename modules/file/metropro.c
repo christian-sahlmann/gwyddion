@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-zygo-spm">
+ *   <comment>Zygo SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="\x88\x1b\x03\x6f"/>
+ *   </magic>
+ *   <glob pattern="*.dat"/>
+ *   <glob pattern="*.DAT"/>
+ * </mime-type>
+ **/
+
 #include <string.h>
 #include <time.h>
 #include "config.h"

@@ -24,6 +24,19 @@
  /*TODO: Make sure it can handle old beta .mi files that had "data" tag with no
 reference to BINARY or ASCII. Also, implement loading of ASCII files */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-mi-spm">
+ *   <comment>Molecular Imaging SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="fileType      Image"/>
+ *     <match type="string" offset="0" value="fileType      Spectroscopy"/>
+ *   </magic>
+ *   <glob pattern="*.mi"/>
+ *   <glob pattern="*.MI"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

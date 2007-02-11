@@ -18,6 +18,20 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-nanosurf-spm">
+ *   <comment>Nanosurf SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="[DataSet]\r\n"/>
+ *   </magic>
+ *   <glob pattern="*.ezd"/>
+ *   <glob pattern="*.EZD"/>
+ *   <glob pattern="*.nid"/>
+ *   <glob pattern="*.NID"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

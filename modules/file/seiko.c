@@ -19,6 +19,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-seiko-spm">
+ *   <comment>Seiko SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="SPIZ000DFM"/>
+ *   </magic>
+ *   <glob pattern="*.xqd"/>
+ *   <glob pattern="*.XQD"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

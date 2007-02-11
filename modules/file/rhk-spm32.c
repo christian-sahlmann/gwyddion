@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-rhk-sm2-spm">
+ *   <comment>RHK SM2 SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="STiMage 3.1"/>
+ *   </magic>
+ *   <glob pattern="*.sm2"/>
+ *   <glob pattern="*.SM2"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
