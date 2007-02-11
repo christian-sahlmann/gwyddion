@@ -854,7 +854,9 @@ gwy_app_recent_file_list_update(GwyContainer *data,
     gboolean free_utf8 = FALSE, free_sys = FALSE;;
 
     g_return_if_fail(!data || GWY_IS_CONTAINER(data));
-    g_return_if_fail(gcontrols.store);
+
+    if (!gcontrols.store)
+        return;
 
     if (!filename_utf8 && filename_sys) {
         filename_utf8 = g_filename_to_utf8(filename_sys, -1,
