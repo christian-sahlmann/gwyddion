@@ -25,16 +25,14 @@
 reference to BINARY or ASCII. Also, implement loading of ASCII files */
 
 #include "config.h"
+#include <string.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-file.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include "err.h"
 

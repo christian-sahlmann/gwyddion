@@ -23,14 +23,7 @@
 /* TODO: channel types */
 
 #include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
-
-#ifdef TM_IN_SYS_TIME
-#include <sys/time.h>
-#endif
-
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

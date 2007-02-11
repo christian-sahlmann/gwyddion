@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <string.h>
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H

@@ -19,10 +19,7 @@
  */
 
 #include "config.h"
-#include <string.h>
-
 #include <pango/pangoft2.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>

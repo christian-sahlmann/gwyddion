@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <string.h>
 #include <stdio.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>

@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <string.h>
 #include <libprocess/datafield.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>

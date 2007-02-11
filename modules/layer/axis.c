@@ -21,8 +21,6 @@
 /* TODO: Support focus */
 
 #include "config.h"
-#include <string.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocessenums.h>

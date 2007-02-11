@@ -18,7 +18,6 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/gwyprocesstypes.h>

@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>

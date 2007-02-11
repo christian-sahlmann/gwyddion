@@ -38,7 +38,6 @@
 
 #include "config.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
@@ -48,13 +47,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 
-
 #include <libxml/xmlreader.h>
 #include "spml-utils.h"
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #define EXTENSION ".xml"
 

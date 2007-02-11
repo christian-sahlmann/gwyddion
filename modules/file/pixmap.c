@@ -28,10 +28,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
-
 #ifdef HAVE_TIFF
 #  include <tiffio.h>
 #endif
