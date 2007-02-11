@@ -43,17 +43,26 @@ gwyddion_vim_sources = \
 	$(docsrc)/libgwymodule/libgwymodule-decl.txt \
 	$(docsrc)/libgwyprocess/libgwyprocess-decl.txt
 
+file_magic_sources = $(top_srcdir)/modules/file/*.c
+
 MAINTAINERCLEANFILES = \
-	gwyddion.vim
+	gwyddion.vim \
+	gwyddion.xml
 
 # FIXME: this breaks VPATH build
 if MAINTAINER_MODE
 gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg) $(vim_syn_gen)
 	cd $(top_builddir); \
 	$(PYTHON) utils/vim-syn-gen.py data/gwyddion-cfg.py >data/gwyddion.vim
-endif
 
 # Desktop files
+gwyddion.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
+	$(PYTHON) $(top_srcdir)/utils/extract-file-magic.py \
+	  FREEDESKTOP $(file_magic_sources) >gwyddion.xml
+endif
+
+# Desktop file installation
+# FIME: Maybe not according to current standards
 if DESKTOP_FILE_UPDATE
 install-data-hook:
 	$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications
