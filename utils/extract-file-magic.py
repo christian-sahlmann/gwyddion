@@ -31,6 +31,8 @@ output = []
 if magic.has_key('header'):
     output.append(magic['header'])
 
+output.append(magic['comment'] % 'This is a GENERATED file.')
+
 for filename in sys.argv[2:]:
     base = os.path.basename(filename)
     try:
