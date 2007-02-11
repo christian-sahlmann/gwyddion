@@ -98,7 +98,7 @@ gwyddion_SOURCES = \
 	splash.c \
 	toolbox.c
 
-gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
+gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) $(LIBXMU) \
 	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

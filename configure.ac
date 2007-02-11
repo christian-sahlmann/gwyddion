@@ -255,7 +255,7 @@ GWY_WITH([fftw3],,[FFTW3 library])
 if test "x$enable_fftw3" != "xno"; then
   PKG_CHECK_MODULES(FFTW3, [fftw3],
     [AC_DEFINE(HAVE_FFTW3,1,[Define if we have the FFTW3 package.])],
-    enable_fftw3=no)
+    [enable_fftw3=no; FFTW_WARN=" (needs FFTW3)"])
 fi
 if test "x$enable_fftw3" != "xno"; then
   if test "x$arch_32bit" != "xyes"; then
@@ -290,6 +290,42 @@ else
   GTKGLEXT_LIBS="$GTK_LIBS"
 fi
 AC_SUBST([GTKGLEXT_DEPENDENCY])
+
+#############################################################################
+# Xmu
+# Optional, X11 only.
+gdk_target=`$PKG_CONFIG --variable=target gtk+-2.0`
+case "$gdk_target" in
+  x11)
+    have_xmu=no
+    if test -z "$LIBXMU"; then
+      XMU_ORIG_CFLAGS="$CFLAGS"
+      XMU_ORIG_LDFLAGS="$LDFLAGS"
+      CFLAGS="$CFLAGS $X_CFLAGS"
+      LDFLAGS="$LDFLAGS $X_LIBS"
+      AC_CHECK_LIB(Xmu, XmuClientWindow,
+        [AC_CHECK_HEADER(X11/Xmu/WinUtil.h,
+          [have_xmu=yes;
+           LIBXMU="$X_LIBS $X_PRE_LIBS -lX11 -lXmu -lXt";
+           AC_DEFINE(HAVE_REMOTE_X11,1,
+                     [Define if we have X11 remote control available.])],
+          [XMU_WARN=" (needs libXmu headers)"])],
+        [XMU_WARN=" (needs libXmu)"],
+        [-lXt -lX11])
+      CFLAGS="$XMU_ORIG_CFLAGS"
+      LDFLAGS="$XMU_ORIG_LDFLAGS"
+    else
+      have_xmu=yes
+    fi
+    enable_remote="$have_xmu"
+    REMOTE_WARN="$XMU_WARN"
+    ;;
+  *)
+    enable_remote=no
+    REMOTE_WARN="(unavailable on $gdk_target)"
+    ;;
+esac
+AC_SUBST(LIBXMU)
 
 #############################################################################
 # TIFF
@@ -497,9 +533,10 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF support (including JPK, PSIA):  $enable_tiff$TIFF_WARN"
-echo "  SMPL support:                        $enable_spml$SPML_WARN"
-echo "  With FFTW3:                          $enable_fftw3$FFTW3_WARN"
-echo "  With OpenGL 3D widgets:              $enable_gl$GL_WARN"
+echo "  TIFF (including JPK, PSIA):    $enable_tiff$TIFF_WARN"
+echo "  SMPL:                          $enable_spml$SPML_WARN"
+echo "  FFTW3:                         $enable_fftw3$FFTW3_WARN"
+echo "  OpenGL 3D widgets:             $enable_gl$GL_WARN"
+echo "  Remote control:                $enable_remote$REMOTE_WARN"
 echo "================================================================="
 

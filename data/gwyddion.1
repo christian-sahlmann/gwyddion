@@ -22,6 +22,10 @@ The program accepts all standard Gtk+, Gdk, and GtkGLExt options like
 \fB--display\fR or \fB--sync\fR.  Please see documentation of these
 packages for description of toolkit options.
 .PP
+The behaviour of the \fB--remote-*\fR commands is undefined when more than
+one instance of Gwyddion is running on the display.  They can choose
+arbitrary of them to interact with.
+.PP
 Gwyddion options:
 .TP
 \fB-h\fR, \fB--help\fR
@@ -32,6 +36,18 @@ Prints version information and terminates.
 .TP
 \fB--no-splash\fR
 Disables splash screen on program startup.
+.TP
+\fB--remote-new\fR
+Opens files given on the command line in an already running instance of
+Gwyddion on the display.  Runs a new instance if none is running.
+.TP
+\fB--remote-existing\fR
+Opens files given on the command line in an already running instance of
+Gwyddion on the display.  Fails if none is running.
+.TP
+\fB--remote-query\fR
+Succeeds if an instance of Gwyddion is already running on the display and
+prints its window id.  Fails if none is running.
 .TP
 \fB--debug-objects\fR
 Prints list of objects created during run time, with creation and

@@ -46,19 +46,13 @@
  */
 
 #include "config.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
-/* TODO: Must chech Xmu or what the heck... */
-#ifdef GDK_WINDOWING_X11
-#define ENABLE_REMOTE_X11
-#endif
-
-#ifdef ENABLE_REMOTE_X11
+#ifdef HAVE_REMOTE_X11
 #include <gdk/gdkx.h>
 #include <X11/Xmu/WinUtil.h>
 #include <X11/Xatom.h>
@@ -443,7 +437,7 @@ remote(int argc,
     exit(EXIT_SUCCESS);
 }
 
-#ifdef ENABLE_REMOTE_X11
+#ifdef HAVE_REMOTE_X11
 #define GWY_REMOTE_FIND_TOOLBOX_DEFINED 1
 static GdkWindow*
 remote_find_toolbox(GdkDisplay *display,
