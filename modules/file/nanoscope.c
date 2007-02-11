@@ -18,6 +18,17 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-nanoscope-spm">
+ *   <comment>Nanoscope SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="\\*File list\r\n"/>
+ *     <match type="string" offset="0" value="?*File list\r\n"/>
+ *   </magic>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <errno.h>
 #include <string.h>

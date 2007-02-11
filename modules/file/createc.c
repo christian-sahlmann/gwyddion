@@ -30,6 +30,16 @@
  * FIXME: I do not have the specs.
 */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-createc-spm">
+ *   <comment>Createc SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="[Parameter]"/>
+ *   </magic>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

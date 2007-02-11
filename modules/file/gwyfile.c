@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-gwyddion-spm">
+ *     <comment>Gwyddion SPM data</comment>
+ *     <magic priority="90">
+ *     <match type="string" offset="0" value="GWYOGwyContainer"/>
+ *     <match type="string" offset="0" value="GWYPGwyContainer"/>
+ *     </magic>
+ *     <glob pattern="*.gwy"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <errno.h>
