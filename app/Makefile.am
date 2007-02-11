@@ -95,6 +95,7 @@ gwyddion_SOURCES = \
 	about.c \
 	gwyddion.c \
 	meta.c \
+	remote.c \
 	splash.c \
 	toolbox.c
 
