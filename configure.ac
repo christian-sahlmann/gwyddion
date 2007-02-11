@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[4])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070211])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -216,13 +216,14 @@ if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
   GWY_PROG_CC_OPTION([FNO_TRAP_MATH],[-fno-trapping-math],,)
   GWY_PROG_CC_OPTION([FNO_MATH_ERRNO],[-fno-math-errno],,)
+  GWY_PROG_CC_OPTION([FNO_STRICT_ALIAS],[-fno-strict-aliasing],,)
   # Flags we can't use:
   # -Wredundant-decls makes glib.h + gstdio.h noisy
   # -Wstrict-protoypes makes gtkitemfactory.h noisy, but they have a
   #    comment there they can't fix it due to compatibility
   # -Wwrite-strings because it makes all struct initializations very noisy
   WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL"
-  MATH_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO"
+  PREMISE_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO $PROG_CC_FNO_STRICT_ALIAS"
 fi
 
 #############################################################################
@@ -389,7 +390,7 @@ AC_SUBST(BASIC_LIBS)
 COMMON_LDFLAGS="$HOST_LDFLAGS"
 AC_SUBST(COMMON_LDFLAGS)
 
-COMMON_CFLAGS="$HOST_CFLAGS $WARNING_CFLAGS $GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $MATH_CFLAGS"
+COMMON_CFLAGS="$HOST_CFLAGS $WARNING_CFLAGS $GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $PREMISE_CFLAGS"
 AC_SUBST(COMMON_CFLAGS)
 
 #############################################################################
