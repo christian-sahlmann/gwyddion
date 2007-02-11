@@ -236,7 +236,7 @@ else
   CPPFLAGS="$CPPFLAGS -I$prefix/include"
 fi
 
-AC_PATH_X
+AC_PATH_XTRA
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
 

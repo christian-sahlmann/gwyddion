@@ -58,6 +58,7 @@ and GLib Teams, see the AUTHORS file in Gtk+ and GLib for a complete list.
 The GIMP by Spencer Kimball and Peter Mattis and other people, see the
 AUTHORS file in The GIMP for complete list.
     The splashscreen code was mostly copied from The GIMP.
+    The X11 remote control code too.
     MD5 code in gwymd5 was copied from The GIMP, which seems to use a public
     domain implementation by Colin Plumb.  See gwymd5.c for details.
 

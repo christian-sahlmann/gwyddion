@@ -231,7 +231,7 @@ gwy_app_toolbox_create(void)
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
-    gtk_window_set_role(GTK_WINDOW(toolbox), "toolbox");
+    gtk_window_set_role(GTK_WINDOW(toolbox), GWY_TOOLBOX_WM_ROLE);
     gtk_window_set_resizable(GTK_WINDOW(toolbox), FALSE);
     gwy_app_main_window_set(toolbox);
 

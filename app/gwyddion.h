@@ -28,16 +28,17 @@
 
 G_BEGIN_DECLS
 
+#define GWY_TOOLBOX_WM_ROLE "gwyddion-toolbox"
+
 GtkWidget* gwy_app_toolbox_create           (void);
 GtkWidget* gwy_app_show_data_browser        (void);
 void       gwy_app_about                    (void);
 void       gwy_app_metadata_browser         (GwyContainer *data,
                                              gint id);
-void       gwy_app_splash_create            (void);
-void       gwy_app_splash_close             (void);
+void       gwy_app_splash_start             (gboolean visible);
+void       gwy_app_splash_finish            (void);
 void       gwy_app_splash_set_message       (const gchar *message);
 void       gwy_app_splash_set_message_prefix(const gchar *prefix);
-void       gwy_app_splash_enable            (gboolean enable);
 
 G_END_DECLS
 
