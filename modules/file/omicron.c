@@ -89,7 +89,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -430,7 +430,7 @@ omicron_read_data(OmicronFile *ofile,
     const gint16 *d;
     gdouble scale;
     gsize size;
-    guint i, n;
+    guint i, j, n;
     gint power10 = 0;
 
     filename = omicron_fix_file_name(ofile->filename, channel->filename, error);
@@ -459,8 +459,11 @@ omicron_read_data(OmicronFile *ofile,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
     d = (const gint16*)buffer;
-    for (i = 0; i < n; i++)
-        data[i] = scale*GINT16_FROM_BE(d[i]);
+    for (i = 0; i < ofile->yres; i++) {
+        for (j = 0; j < ofile->xres; j++)
+            data[(ofile->yres-1 - i)*ofile->xres + j]
+                = scale*GINT16_FROM_BE(d[i*ofile->xres + j]);
+    }
     gwy_file_abandon_contents(buffer, size, NULL);
 
     siunit = gwy_si_unit_new("m");
