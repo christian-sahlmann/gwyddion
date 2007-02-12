@@ -1,11 +1,24 @@
-2.4.20070210
+2.4.20070212
 
 2.5 (0000-00-00)
+Application:
+- Options for opening files in an already running instance of Gwyddion were
+  added (currently only on X11).
+
 Libraries:
 - libgwydgets: Light source theta and phi determined by the same mouse
   coordinate were fixed.
 - libgwyprocess: Skewed gwy_data_field_area_fit_local_planes() output for
   even plane sizes was fixed.
+
+Modules:
+- Omicron: Imported images flipped upside down were fixed.
+
+Other:
+- Freedesktop file type associations were extended to many more file types.
+- Flag -fno-strict-aliasing is now automatically added to CFLAGS when
+  compiled with gcc to prevent miscompilation.
+
 
 
 2.4 (2007-02-01)
