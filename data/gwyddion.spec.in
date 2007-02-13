@@ -7,7 +7,7 @@
 
 Name:          @PACKAGE_TARNAME@
 Version:       @PACKAGE_VERSION@
-Release:       1
+Release:       2
 Summary:       An SPM data visualization and analysis tool
 
 Group:         Applications/Engineering
@@ -18,15 +18,16 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(id -un)
 Requires(pre): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
-BuildRequires: pango-devel >= 1.8
+BuildRequires: gtkglext-devel >= 1.0
 BuildRequires: gtk2-devel >= 2.6
 BuildRequires: glib2-devel >= 2.6
-BuildRequires: gtkglext-devel >= 1.0
-BuildRequires: libxml2-devel
 BuildRequires: libtiff-devel >= 3.6
+BuildRequires: pango-devel >= 1.8
+BuildRequires: libxml2-devel
 BuildRequires: python >= 2.2
 BuildRequires: ruby >= 1.8
 BuildRequires: gettext
+BuildRequires: desktop-file-utils >= 0.9
 BuildRequires: pkgconfig
 BuildRequires: findutils
 
@@ -49,6 +50,9 @@ BuildRequires: %{fftw3} >= 3.1
 # Fedora guarantees these two, other may not
 BuildRequires: perl >= 5.005
 BuildRequires: sed
+
+# The only packaged perl module is private, don't expose it.
+%define __perl_provides %{nil}
 
 
 %define pkglibdir %{_libdir}/%{name}
@@ -91,6 +95,11 @@ programming languages.
 
 %prep
 %setup -q
+# Don't install .la files
+sed -i -e '/# Install the pseudo-library/,/^$/d' ltmain.sh
+# Replace universal /usr/bin/env shbang with the real thing
+sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
+
 
 %build
 %configure --disable-pascal --disable-desktop-file-update
@@ -101,25 +110,30 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 %find_lang %{name}
-find $RPM_BUILD_ROOT%{_libdir} -type f -name \*.la -print0 | xargs -0 rm -f
 
-# I cannot express this as %%files in a readable manner, especially not when
+# I cannot express this as %%files in a sensible manner, especially not when
 # python byte-compilation kicks in.  Set permissions in the filesystem.
 find $RPM_BUILD_ROOT%{pkglibexecdir} -type f -print0 | xargs -0 chmod 755
 find $RPM_BUILD_ROOT%{pkglibexecdir} -type f -name \*.rgi -print0 | xargs -0 chmod 644
 
-# Upstream provides and installs a .desktop file.
-# Perl, Python, and Ruby modules are private, no special actions are necessary.
+# Perl, Python, and Ruby modules are private, remove the Perl man page.
+rm -f $RPM_BUILD_ROOT%{_mandir}/man3/Gwyddion::dump.*
 
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+update-mime-database %{_datadir}/mime &>/dev/null || :
+update-desktop-database &>/dev/null || :
 
 
-%postun -p /sbin/ldconfig
+%postun 
+/sbin/ldconfig
+update-mime-database %{_datadir}/mime &>/dev/null || :
+update-desktop-database &>/dev/null || :
 
 
 %files -f %{name}.lang
