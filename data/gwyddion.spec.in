@@ -215,7 +215,6 @@ update-desktop-database &>/dev/null || :
 %{pkglibdir}/ruby/gwyddion/*
 %dir %{pkglibdir}/ruby/gwyddion
 %dir %{pkglibdir}/ruby
-%doc %{_mandir}/man3/*
 # Use filesystem permissions here.
 %defattr(-,root,root,755)
 %{pkglibexecdir}/plugins/file/*
