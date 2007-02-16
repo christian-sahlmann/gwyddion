@@ -429,7 +429,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
         return;
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->window));
-    g_object_ref(model);
+    g_object_ref(controls->filter);
     gtk_tree_view_set_model(GTK_TREE_VIEW(controls->list), NULL);
 
     do {
@@ -445,10 +445,11 @@ gwy_app_recent_file_list_prune(Controls *controls)
             ok = gtk_tree_model_iter_next(model, &iter);
     } while (ok);
 
-    gtk_tree_view_set_model(GTK_TREE_VIEW(controls->list), model);
-    g_object_unref(model);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(controls->list), controls->filter);
+    g_object_unref(controls->filter);
 
     gwy_app_recent_file_list_update_menu(controls);
+    gwy_app_recent_file_list_update_sensitivity(controls);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->window));
 }
 
