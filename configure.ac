@@ -141,29 +141,29 @@ AC_ARG_ENABLE(pygwy, AC_HELP_STRING([--enable-pygwy],
 if test "x$enable_pygwy" != xno; then
   if test "$PYTHON" = : -o "x$enable_python" = no; then
     enable_pygwy=no
-    PYGWY_WARN="(needs python)"
+    PYGWY_WARN=" (needs python)"
   fi
 fi
 
 if test "x$enable_pygwy" != xno; then
   AC_CHECK_LIB(python$PYTHON_VERSION, main,
                [PYTHON_LIBS=-lpython$PYTHON_VERSION],
-               [enable_pygwy=no; PYGWY_WARN="(needs libpython$PYTHON_VERSION)"])
+               [enable_pygwy=no; PYGWY_WARN=" (needs libpython$PYTHON_VERSION)"])
   AC_SUBST(PYTHON_LIBS)
 fi
 
 if test "x$enable_pygwy" != xno; then
- AM_CHECK_PYTHON_HEADERS([],
-                         [enable_pygwy=no; PYGWY_WARN="(needs Python headers)"])
+  AM_CHECK_PYTHON_HEADERS([],
+                          [enable_pygwy=no; PYGWY_WARN=" (needs Python headers)"])
  AC_SUBST(PYTHON_INCLUDES)
 fi
 
 if test "x$enable_pygwy" != xno; then
-   PKG_CHECK_MODULES(PYGTK,[pygtk-2.0 >= 2.0.0],[],
-                     [enable_pygwy=no; PYGWY_WARN="(needs pygtk2)"])
-   AC_SUBST(PYGTK_CFLAGS)
-   PYGTK_CODEGENDIR=`$PKG_CONFIG --variable=codegendir pygtk-2.0`
-   AC_SUBST(PYGTK_CODEGENDIR)
+  PKG_CHECK_MODULES(PYGTK,[pygtk-2.0 >= 2.0.0],[],
+                    [enable_pygwy=no; PYGWY_WARN=" (needs pygtk2)"])
+  AC_SUBST(PYGTK_CFLAGS)
+  PYGTK_CODEGENDIR=`$PKG_CONFIG --variable=codegendir pygtk-2.0`
+  AC_SUBST(PYGTK_CODEGENDIR)
 fi
 AM_CONDITIONAL([ENABLE_PYGWY], [test "x$enable_pygwy" != xno])
 
