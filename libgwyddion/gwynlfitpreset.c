@@ -778,7 +778,7 @@ power_guess(gint n_dat,
         return;
     }
 
-    i = ROUND(sqrt(n_dat-1));
+    i = GWY_ROUND(sqrt(n_dat-1));
     i = CLAMP(i, 2, n_dat-2);
     la = log(x[1]/x[i]);
     lb = log(x[n_dat-1]/x[i]);

@@ -526,7 +526,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     else
         format->magnitude = gwy_math_humanize_numbers(value/36, value,
                                                       &format->precision);
-    siunit->power10 = ROUND(log10(format->magnitude));
+    siunit->power10 = GWY_ROUND(log10(format->magnitude));
     format->units_gstring = gwy_si_unit_format(siunit, spec,
                                                format->units_gstring);
     format->units = format->units_gstring->str;
@@ -577,7 +577,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     else
         format->magnitude = gwy_math_humanize_numbers(resolution, maximum,
                                                       &format->precision);
-    siunit->power10 = ROUND(log10(format->magnitude));
+    siunit->power10 = GWY_ROUND(log10(format->magnitude));
     format->units_gstring = gwy_si_unit_format(siunit, spec,
                                                format->units_gstring);
     format->units = format->units_gstring->str;
@@ -628,7 +628,7 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
         format->magnitude
             = gwy_math_humanize_numbers(maximum/pow10(sdigits),
                                         maximum, &format->precision);
-    siunit->power10 = ROUND(log10(format->magnitude));
+    siunit->power10 = GWY_ROUND(log10(format->magnitude));
     format->units_gstring = gwy_si_unit_format(siunit, spec,
                                                format->units_gstring);
     format->units = format->units_gstring->str;
@@ -745,7 +745,7 @@ gwy_si_unit_parse(GwySIUnit *siunit,
     q = g_ascii_strtod(string, (gchar**)&end);
     if (end != string) {
         string = end;
-        siunit->power10 = ROUND(log10(q));
+        siunit->power10 = GWY_ROUND(log10(q));
         if (q <= 0 || fabs(log(q/pow10(siunit->power10))) > 1e-14) {
             g_warning("Bad multiplier %g", q);
             siunit->power10 = 0;

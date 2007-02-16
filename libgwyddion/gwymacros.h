@@ -26,6 +26,7 @@
 #include <gwyconfig.h>
 
 /* FIXME: move to gwyconfig.h? or just config.h? */
+/* XXX: Most of this is available in gi18n.h */
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #else

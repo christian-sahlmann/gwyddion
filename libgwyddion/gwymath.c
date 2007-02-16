@@ -852,7 +852,16 @@ jump_over:;
  * ROUND:
  * @x: A double value.
  *
+ * Rounds a number to nearest integer.  Use %GWY_ROUND instead.
+ **/
+
+/**
+ * GWY_ROUND:
+ * @x: A double value.
+ *
  * Rounds a number to nearest integer.
+ *
+ * Since: 2.5
  **/
 
 /**
