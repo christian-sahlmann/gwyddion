@@ -1,0 +1,181 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
+%%
+headers
+#include <Python.h>
+#include <pygobject.h>
+#include <libprocess/gwyprocess.h>
+#include <libgwyddion/gwyddion.h>
+#include <libprocess/cdline.h>
+#include <libprocess/hough.h>
+#include <libprocess/tip.h>
+#include <libgwymodule/gwymodule.h>
+#include <libgwymodule/gwymodule-process.h>
+// ##include "pywrap.h"
+%%
+modulename gwyddion
+%%
+import gobject.GObject as PyGObject_Type
+// import glib.GQuark as PyGQuark_Type
+%%
+ignore-glob
+  *_get_type                            
+  gwy_data_field_get_drift_from_sample
+  gwy_data_field_get_drift_from_isotropy
+  gwy_data_field_get_data
+  gwy_data_line_get_data
+  *get_string 
+%%
+ignore-type 
+  GwyCDLine
+  
+%%
+define gwy_app_data_browser_get_current_key noargs
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_key(PyGObject *self)
+{
+   GQuark key;
+
+   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &key, NULL);
+   return PyInt_FromLong(key);
+}
+%%
+define gwy_app_data_browser_get_current_datafield noargs
+
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
+{
+   GwyDataField *dfield;
+
+   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, NULL);
+   return pygobject_new((GObject *)dfield);
+}
+%%
+define gwy_app_data_browser_get_current_mask noargs
+
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_mask(PyGObject *self)
+{
+   GwyDataField *dmask;
+
+   gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &dmask, NULL);
+   return pygobject_new((GObject *)dmask);
+}
+%%
+define gwy_app_data_browser_get_current_datafield_id noargs
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_datafield_id(PyGObject *self)
+{
+   gint id;
+
+   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, NULL);
+   return PyInt_FromLong(id);
+}
+%%
+define gwy_app_data_browser_get_current_showfield_key noargs
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_showfield_key(PyGObject *self)
+{
+   GQuark key;
+
+   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &key, NULL);
+   return PyInt_FromLong(key);
+}
+%%
+define gwy_app_data_browser_get_current_showfield noargs
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_showfield(PyGObject *self)
+{
+   GwyDataField *sfield;
+
+   gwy_app_data_browser_get_current(GWY_APP_SHOW_FIELD, &sfield, NULL);
+   return pygobject_new((GObject *)sfield);
+}
+%%
+define gwy_app_data_browser_get_current_container noargs
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_container(PyGObject *self)
+
+{
+   GwyContainer *c;
+
+   gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &c, NULL);
+   return pygobject_new((GObject *)c);
+}
+%%
+define GwyDataField.duplicate noargs
+static PyObject *
+_wrap_gwy_data_field_duplicate(PyGObject *self)
+{   
+   GwyDataField *ret;
+
+   ret = gwy_data_field_duplicate(GWY_DATA_FIELD(self->obj));
+
+   return pygobject_new((GObject *)ret); 
+}
+
+%%
+override gwy_app_undo_qcheckpointv kwargs
+static PyObject *
+_wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"datafield", "key", NULL};
+
+   PyGObject *cont;
+   GQuark key;
+
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!i:gwy_app_undo_qcheckpointv", kwlist, &PyGwyContainer_Type, &cont, &key))
+        return NULL;
+   gwy_app_undo_qcheckpointv(GWY_CONTAINER(cont->obj), 1, &key);
+   Py_INCREF(Py_None);
+   return Py_None;
+}
+%%
+define GwyDataField.get_data noargs
+static PyObject *
+_wrap_gwy_data_field_get_data(PyGObject *self)
+{   
+   gdouble *data;
+   gint len, xres, yres;
+   PyObject *tuple;
+   int i;
+
+   xres = gwy_data_field_get_xres(GWY_DATA_FIELD(self->obj));
+   yres = gwy_data_field_get_yres(GWY_DATA_FIELD(self->obj));
+   // Get size of data field
+   len = xres * yres;
+   // Create tuple by size of data field
+   tuple = PyTuple_New(len);
+   
+   data = gwy_data_field_get_data(GWY_DATA_FIELD(self->obj));
+   // fill tuple with data field values
+   for (i = 0; i < len; i++) {
+      /* get data read only, any changes to the tuple does not reflect on actual datafield */
+      PyTuple_SetItem(tuple, i, PyFloat_FromDouble(data[i]));
+   }
+
+   return tuple;
+}
+%%
+define GwyDataLine.get_data noargs
+static PyObject *
+_wrap_gwy_data_line_get_data(PyGObject *self)
+{   
+   gdouble *data;
+   gint res;
+   PyObject *tuple;
+   int i;
+
+   // Get size of data line
+   res = gwy_data_line_get_res(GWY_DATA_LINE(self->obj));
+   // Create tuple by size of data field
+   tuple = PyTuple_New(res);
+   
+   data = gwy_data_line_get_data(GWY_DATA_LINE(self->obj));
+   // fill tuple with data field values
+   for (i = 0; i < res; i++) {
+      /* get data read only, any changes to the tuple does not reflect on actual datafield */
+      PyTuple_SetItem(tuple, i, PyFloat_FromDouble(data[i]));
+   }
+
+   return tuple;
+}

@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[4])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070211])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070216])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -133,6 +133,28 @@ AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "$enable_desktop_file_update" != no])
 GWY_ENABLE([python],,[Install Python modules and plug-ins])
 AM_PATH_PYTHON(2.2,,:)
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "$enable_python" != no])
+
+AC_ARG_ENABLE(pygwy, AC_HELP_STRING([--enable-pygwy],
+                                    [build python wrapper to Gwyddion (by default enabled)]),,[enable_pygwy=no])
+
+if test "x$enable_python" != xno; then
+   AM_CHECK_PYTHON_HEADERS(,[AC_MSG_WARN(could not find Python headers)])
+   AC_SUBST(PYTHON_INCLUDES)
+   AC_CHECK_LIB(python$PYTHON_VERSION, main,
+                [PYTHON_LIBS=-lpython$PYTHON_VERSION],
+                [PYTHON_LIBS=no])
+   AC_SUBST(PYTHON_LIBS)
+
+   PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= 2.0.0)
+   AC_SUBST(PYGTK_CFLAGS)
+   PYGTK_CODEGENDIR=`$PKG_CONFIG --variable=codegendir pygtk-2.0`
+   AC_SUBST(PYGTK_CODEGENDIR)
+   PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= 2.0.0)
+   AC_SUBST(PYGOBJECT_CFLAGS)
+   AC_SUBST(PYGOBJECT_LIBS)
+fi
+AM_CONDITIONAL([ENABLE_PYGWY], [test "x$enable_pygwy" != xno])
+
 
 #############################################################################
 # Check for Perl
@@ -538,5 +560,6 @@ echo "  SMPL:                          $enable_spml$SPML_WARN"
 echo "  FFTW3:                         $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:             $enable_gl$GL_WARN"
 echo "  Remote control:                $enable_remote$REMOTE_WARN"
+echo "  Python wrapper:                $enable_pygwy$PYGWY_WARN"
 echo "================================================================="
 
