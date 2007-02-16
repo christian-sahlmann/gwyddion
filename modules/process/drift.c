@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -151,7 +151,7 @@ static GwyModuleInfo module_info = {
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
     "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2005",
+    "2007",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -465,6 +465,8 @@ drift_dialog_update_controls(DriftControls *controls,
                                  args->do_correct);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->exclude_linear),
                                  args->exclude_linear);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
 }
 
 static void

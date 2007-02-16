@@ -39,6 +39,7 @@ process_LTLIBRARIES = \
 	merge.la \
 	outliers.la \
 	polylevel.la \
+	polydistort.la \
 	presentationops.la \
 	rotate.la \
 	scale.la \
@@ -193,6 +194,9 @@ outliers_la_LIBADD = $(module_libadd)
 
 polylevel_la_SOURCES = polylevel.c
 polylevel_la_LIBADD = $(module_libadd)
+
+polydistort_la_SOURCES = polydistort.c
+polydistort_la_LIBADD = $(module_libadd)
 
 presentationops_la_SOURCES = presentationops.c
 presentationops_la_LIBADD = $(module_libadd)
