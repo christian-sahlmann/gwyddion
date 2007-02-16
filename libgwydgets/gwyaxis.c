@@ -1573,7 +1573,7 @@ gwy_axis_calculate_format(GwyAxis *axis,
     average = fabs(mjx->t.value + mji->t.value)/2;
     step = fabs(mjx->t.value - mji->t.value);
     average = MAX(average, step);
-    step /= axis->mjticks->len - 1;
+    step /= MAX(axis->mjticks->len - 1, 1);
 
     format = gwy_si_unit_get_format_with_resolution
                                         (axis->unit, GWY_SI_UNIT_FORMAT_MARKUP,
