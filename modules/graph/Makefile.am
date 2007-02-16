@@ -20,7 +20,7 @@ endif
 
 AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_LDFLAGS = -avoid-version -module $(no_undefined)
+AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
 module_libadd = \
@@ -34,25 +34,12 @@ module_libadd = \
 endif
 
 graph_export_ascii_la_SOURCES = graph_export_ascii.c
-graph_export_ascii_la_LIBADD = $(module_libadd)
-
 graph_export_bitmap_la_SOURCES = graph_export_bitmap.c
-graph_export_bitmap_la_LIBADD = $(module_libadd)
-
 graph_export_vector_la_SOURCES = graph_export_vector.c
-graph_export_vector_la_LIBADD = $(module_libadd)
-
 graph_fit_la_SOURCES = graph_fit.c
-graph_fit_la_LIBADD = $(module_libadd)
-
 graph_cd_la_SOURCES = graph_cd.c
-graph_cd_la_LIBADD = $(module_libadd)
-
 graph_level_la_SOURCES = graph_level.c
-graph_level_la_LIBADD = $(module_libadd)
-
 #graph_stats_la_SOURCES = graph_stats.c
-#graph_stats_la_LIBADD = $(module_libadd)
 
 MAINTAINERCLEANFILES = makefile.msc
 

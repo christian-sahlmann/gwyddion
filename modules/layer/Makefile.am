@@ -22,7 +22,7 @@ endif
 
 AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_LDFLAGS = -avoid-version -module $(no_undefined)
+AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
 module_libadd = \
@@ -36,19 +36,10 @@ module_libadd = \
 endif
 
 axis_la_SOURCES = axis.c
-axis_la_LIBADD = $(module_libadd)
-
 ellipse_la_SOURCES = ellipse.c
-ellipse_la_LIBADD = $(module_libadd)
-
 line_la_SOURCES = line.c
-line_la_LIBADD = $(module_libadd)
-
 rectangle_la_SOURCES = rectangle.c
-rectangle_la_LIBADD = $(module_libadd)
-
 point_la_SOURCES = point.c
-point_la_LIBADD = $(module_libadd)
 
 MAINTAINERCLEANFILES = makefile.msc
 

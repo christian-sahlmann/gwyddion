@@ -1,5 +1,7 @@
 # @(#) $Id$
 
+plugin_proxy_module = plugin_proxy.la
+
 <[[:SELF:]]>
 <[[:MODULES:]]>
 SUBDIRS = file graph layer process tools

@@ -12,24 +12,24 @@ SUBDIRS = \
 moduledir = $(pkglibdir)/modules
 
 if ENABLE_PLUGIN_PROXY
-plugin_proxy_la = plugin-proxy.la
+plugin_proxy_module = plugin-proxy.la
 plugin_proxy_sources =
 else
-plugin_proxy_la =
+plugin_proxy_module =
 plugin_proxy_sources = plugin-proxy.c
 endif
 
 if ENABLE_PYGWY
-pygwy_la = pygwy.la
+pygwy_module = pygwy.la
 pygwy_sources =
 else
-pygwy_la =
+pygwy_module =
 pygwy_sources = pygwy.c
 endif
 
 module_LTLIBRARIES = \
-	$(plugin_proxy_la) \
-	$(pygwy_la)
+	$(plugin_proxy_module) \
+	$(pygwy_module)
 
 EXTRA_DIST = \
 	$(plugin_proxy_sources) \

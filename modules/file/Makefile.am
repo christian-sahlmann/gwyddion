@@ -83,7 +83,7 @@ endif
 
 AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_LDFLAGS = -avoid-version -module $(no_undefined)
+AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
 MODULE_LIBTIFF = $(LIBTIFF)
@@ -100,131 +100,59 @@ MODULE_LIBTIFF =
 endif
 
 asciiexport_la_SOURCES = asciiexport.c
-asciiexport_la_LIBADD = $(module_libadd)
-
 apefile_la_SOURCES = apefile.c
-apefile_la_LIBADD = $(module_libadd)
-
 assing_afm_la_SOURCES = assing-afm.c
-assing_afm_la_LIBADD = $(module_libadd)
-
 bcrfile_la_SOURCES = bcrfile.c
-bcrfile_la_LIBADD = $(module_libadd)
-
 burleigh_la_SOURCES = burleigh.c
-burleigh_la_LIBADD = $(module_libadd)
-
 createc_la_SOURCES = createc.c
-createc_la_LIBADD = $(module_libadd)
-
 dmefile_la_SOURCES = dmefile.c
-dmefile_la_LIBADD = $(module_libadd)
-
 ecsfile_la_SOURCES = ecsfile.c
-ecsfile_la_LIBADD = $(module_libadd)
-
 ezdfile_la_SOURCES = ezdfile.c
-ezdfile_la_LIBADD = $(module_libadd)
-
 gwyfile_la_SOURCES = gwyfile.c
-gwyfile_la_LIBADD = $(module_libadd)
-
 hdf4file_la_SOURCES = hdf4file.c
-hdf4file_la_LIBADD = $(module_libadd)
-
 hitachi_afm_la_SOURCES = hitachi-afm.c
-hitachi_afm_la_LIBADD = $(module_libadd)
-
 jeol_la_SOURCES = jeol.c
-jeol_la_LIBADD = $(module_libadd)
-
-if HAVE_TIFF
-jpkscan_la_SOURCES = jpk.h jpkscan.c
-jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
-endif
-
 metropro_la_SOURCES = metropro.c
-metropro_la_LIBADD = $(module_libadd)
-
 microprof_la_SOURCES = microprof.c
-microprof_la_LIBADD = $(module_libadd)
-
 mifile_la_SOURCES = mifile.c
-mifile_la_LIBADD = $(module_libadd)
-
 nanoscope_la_SOURCES = nanoscope.c
-nanoscope_la_LIBADD = $(module_libadd)
-
 nanonis_la_SOURCES = nanonis.c
-nanonis_la_LIBADD = $(module_libadd)
-
 nanotop_la_SOURCES = nanotop.c
-nanotop_la_LIBADD = $(module_libadd)
-
 netcdf_la_SOURCES = netcdf.c
-netcdf_la_LIBADD = $(module_libadd)
-
 nt_mdt_la_SOURCES = nt-mdt.c
-nt_mdt_la_LIBADD = $(module_libadd)
-
 omicron_la_SOURCES = omicron.c
-omicron_la_LIBADD = $(module_libadd)
-
-pixmap_la_SOURCES = pixmap.c
-pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
-
 pnifile_la_SOURCES = pnifile.c
-pnifile_la_LIBADD = $(module_libadd)
+rawfile_la_SOURCES = rawfile.c rawfilepreset.h
+rhk_sm3_la_SOURCES = rhk-sm3.c
+rhk_spm32_la_SOURCES = rhk-spm32.c
+sdfile_la_SOURCES = sdfile.c
+seiko_la_SOURCES = seiko.c
+sis_la_SOURCES = sis.c
+spmlab_la_SOURCES = spmlab.c
+stmprg_la_SOURCES = stmprg.c stmprg.h
+stpfile_la_SOURCES = stpfile.c
+surffile_la_SOURCES = surffile.c
+unisoku_la_SOURCES = unisoku.c
+witfile_la_SOURCES = witfile.c
+wsxmfile_la_SOURCES = wsxmfile.c
+
+# pixmap is built always, the source code branches on TIFF availability
+pixmap_la_SOURCES = pixmap.c
+pixmap_la_LIBADD = $(MODULE_LIBTIFF)
 
 if HAVE_TIFF
+jpkscan_la_SOURCES = jpkscan.c jpk.h
+jpkscan_la_LIBADD = $(MODULE_LIBTIFF)
+
 psia_la_SOURCES = psia.c
-psia_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
+psia_la_LIBADD = $(MODULE_LIBTIFF)
 endif
-
-rawfile_la_SOURCES = rawfile.c rawfilepreset.h
-rawfile_la_LIBADD = $(module_libadd)
-
-rhk_sm3_la_SOURCES = rhk-sm3.c
-rhk_sm3_la_LIBADD = $(module_libadd)
-
-rhk_spm32_la_SOURCES = rhk-spm32.c
-rhk_spm32_la_LIBADD = $(module_libadd)
-
-sdfile_la_SOURCES = sdfile.c
-sdfile_la_LIBADD = $(module_libadd)
-
-seiko_la_SOURCES = seiko.c
-seiko_la_LIBADD = $(module_libadd)
-
-sis_la_SOURCES = sis.c
-sis_la_LIBADD = $(module_libadd)
 
 if HAVE_XML2
 spml_la_SOURCES = spml.c spml-utils.h
 spml_la_CFLAGS = $(AM_CFLAGS) @XML2_CFLAGS@
-spml_la_LIBADD = $(module_libadd) @XML2_LIBS@
+spml_la_LIBADD = @XML2_LIBS@
 endif
-
-spmlab_la_SOURCES = spmlab.c
-spmlab_la_LIBADD = $(module_libadd)
-
-stmprg_la_SOURCES = stmprg.c stmprg.h
-stmprg_la_LIBADD = $(module_libadd)
-
-stpfile_la_SOURCES = stpfile.c
-stpfile_la_LIBADD = $(module_libadd)
-
-surffile_la_SOURCES = surffile.c
-surffile_la_LIBADD = $(module_libadd)
-
-unisoku_la_SOURCES = unisoku.c
-unisoku_la_LIBADD = $(module_libadd)
-
-witfile_la_SOURCES = witfile.c
-witfile_la_LIBADD = $(module_libadd)
-
-wsxmfile_la_SOURCES = wsxmfile.c
-wsxmfile_la_LIBADD = $(module_libadd)
 
 MAINTAINERCLEANFILES = makefile.msc
 
