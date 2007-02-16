@@ -66,8 +66,8 @@ endif
 if ENABLE_PYGWY
 BUILT_SOURCES = pygwywrap.c
 pygwy_la_SOURCES = pygwy.c
-pygwy_la_CFLAGS = @COMMON_CFLAGS@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS) $(PYGOBJECT_CFLAGS)
-pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGOBJECT_LIBS)
+pygwy_la_CFLAGS = @COMMON_CFLAGS@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
+pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS)
 
 pygwy.defs: $(PYGWY_H_FILES)
 	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) > pygwy.defs
