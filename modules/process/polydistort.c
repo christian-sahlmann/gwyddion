@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/gwyprocesstypes.h>
+#include <libprocess/stats.h>
 #include <libprocess/interpolation.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -78,6 +79,7 @@ static void       distort_dialog                (DistortArgs *args,
 static GtkWidget* coeff_table_new               (GtkWidget **entry,
                                                  gpointer id,
                                                  DistortControls *controls);
+static void       distort_fetch_coeff           (DistortControls *controls);
 static void       run_noninteractive            (DistortArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
@@ -290,6 +292,7 @@ distort_dialog(DistortArgs *args,
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
+        distort_fetch_coeff(&controls);
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
@@ -305,7 +308,9 @@ distort_dialog(DistortArgs *args,
             case RESPONSE_RESET:
             args->interp = distort_defaults.interp;
             memset(args->xcoeff, 0, NCOEFF*sizeof(gdouble));
+            args->xcoeff[1] = 1.0;
             memset(args->ycoeff, 0, NCOEFF*sizeof(gdouble));
+            args->ycoeff[4] = 1.0;
             distort_dialog_update_controls(&controls, args);
             break;
 
@@ -346,7 +351,7 @@ coeff_table_new(GtkWidget **entry,
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i + j > MAX_DEGREE || i + j == 0)
+            if (i + j > MAX_DEGREE)
                 continue;
 
             k = i*(MAX_DEGREE + 1) + j;
@@ -390,6 +395,18 @@ coeff_table_new(GtkWidget **entry,
     return widget;
 }
 
+static void
+distort_fetch_coeff(DistortControls *controls)
+{
+    GtkWidget *entry;
+
+    entry = gtk_window_get_focus(GTK_WINDOW(controls->dialog));
+    if (entry
+        && GTK_IS_ENTRY(entry)
+        && g_object_get_data(G_OBJECT(entry), "id"))
+        distort_coeff_changed(GTK_ENTRY(entry), controls);
+}
+
 /* XXX: Eats result */
 static void
 run_noninteractive(DistortArgs *args,
@@ -400,8 +417,13 @@ run_noninteractive(DistortArgs *args,
 {
     gint newid;
 
+    if (!result) {
+        result = gwy_data_field_new_alike(dfield, FALSE);
+        distort_do(args, dfield, result);
+    }
+
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-    gwy_app_set_data_field_title(data, newid, _("Distort-corrected"));
+    gwy_app_set_data_field_title(data, newid, _("Distorted"));
     gwy_app_sync_data_items(data, data, id, newid, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_RANGE,
@@ -422,7 +444,7 @@ distort_dialog_update_controls(DistortControls *controls,
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i + j > MAX_DEGREE || i + j == 0)
+            if (i + j > MAX_DEGREE)
                 continue;
 
             k = i*(MAX_DEGREE + 1) + j;
@@ -528,11 +550,85 @@ preview(DistortControls *controls,
     controls->computed = TRUE;
 }
 
+static inline gdouble
+distort_coord(gdouble x,
+              gdouble y,
+              const gdouble *a)
+{
+    /* XXX: Degree hardcoded here to avoid cycles and if-elses. */
+    g_assert(MAX_DEGREE == 3);
+
+    return (a[0]
+            + x*(a[1] + x*(a[2] + x*a[3]))
+            + y*(a[4] + x*(a[5] + x*a[6])
+                 + y*(a[8] + x*a[9] + y*a[12])));
+}
+
 static void
 distort_do(DistortArgs *args,
            GwyDataField *dfield,
            GwyDataField *result)
 {
+    GwyDataField *coeffield;
+    gdouble *rdata, *coeff;
+    const gdouble *cdata;
+    gint xres, yres, newi, newj, oldi, oldj, i, j, ii, jj, suplen, sf, st;
+    gdouble x, y, val, v;
+
+    suplen = gwy_interpolation_get_support_size(args->interp);
+    g_return_if_fail(suplen > 0);
+    coeff = g_newa(gdouble, suplen*suplen);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    if (gwy_interpolation_has_interpolating_basis(args->interp))
+        coeffield = g_object_ref(dfield);
+    else {
+        coeffield = gwy_data_field_duplicate(dfield);
+        gwy_interpolation_resolve_coeffs_2d(xres, yres, xres,
+                                            gwy_data_field_get_data(coeffield),
+                                            args->interp);
+    }
+
+    val = gwy_data_field_get_min(dfield);
+    rdata = gwy_data_field_get_data(result);
+    cdata = gwy_data_field_get_data_const(coeffield);
+
+    for (newi = 0; newi < yres; newi++) {
+        for (newj = 0; newj < xres; newj++) {
+            x = distort_coord((newj + 0.5)/xres, (newi + 0.5)/yres,
+                              args->xcoeff)*xres;
+            y = distort_coord((newj + 0.5)/xres, (newi + 0.5)/yres,
+                              args->ycoeff)*yres;
+            if (y > yres || x > xres || y < 0.0 || x < 0.0)
+                v = val;
+            else {
+                oldi = (gint)floor(y);
+                y -= oldi;
+                oldj = (gint)floor(x);
+                x -= oldj;
+                for (i = sf; i <= st; i++) {
+                    ii = (oldi + i + 2*st*yres) % (2*yres);
+                    if (G_UNLIKELY(ii >= yres))
+                        ii = 2*yres-1 - ii;
+                    for (j = sf; j <= st; j++) {
+                        jj = (oldj + j + 2*st*xres) % (2*xres);
+                        if (G_UNLIKELY(jj >= xres))
+                            jj = 2*xres-1 - jj;
+                        coeff[(i - sf)*suplen + j - sf] = cdata[ii*xres + jj];
+                    }
+                }
+                v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
+                                                     args->interp);
+            }
+            rdata[newj + xres*newi] = v;
+        }
+    }
+
+    g_object_unref(coeffield);
 }
 
 static const gchar interp_key[] = "/module/polydistort/interp";
@@ -556,9 +652,14 @@ load_coeffs(gdouble *coeff,
     if (!coeff)
         coeff = g_new0(gdouble, NCOEFF);
 
+    if (type == 'x')
+        coeff[1] = 1.0;
+    if (type == 'y')
+        coeff[4] = 1.0;
+
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i + j > MAX_DEGREE || i + j == 0)
+            if (i + j > MAX_DEGREE)
                 continue;
 
             k = i*(MAX_DEGREE + 1) + j;
@@ -594,7 +695,7 @@ save_coeffs(const gdouble *coeff,
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i + j > MAX_DEGREE || i + j == 0)
+            if (i + j > MAX_DEGREE)
                 continue;
 
             k = i*(MAX_DEGREE + 1) + j;
