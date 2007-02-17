@@ -35,6 +35,7 @@ EXTRA_DIST = \
 	$(plugin_proxy_sources) \
 	$(pygwy_sources) \
 	pygwy.override \
+	pygwy-codegen.py \
 	makefile.msc \
 	makefile.msc.gwt
 
@@ -70,10 +71,11 @@ pygwy_la_CFLAGS = @COMMON_CFLAGS@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
 pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS)
 
 pygwy.defs: $(PYGWY_H_FILES)
-	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) > pygwy.defs
+	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) >pygwy.defs
 
-pygwywrap.c: pygwy.defs pygwy.override
-	pygtk-codegen-2.0 --override pygwy.override --prefix pygwy pygwy.defs > pygwywrap.c
+pygwywrap.c: pygwy-codegen.py pygwy.defs pygwy.override
+	$(PYTHON) ./pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
+	  --override pygwy.override --prefix pygwy pygwy.defs >pygwywrap.c
 endif
 
 MAINTAINERCLEANFILES = makefile.msc
