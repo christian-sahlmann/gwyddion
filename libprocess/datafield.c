@@ -2083,7 +2083,7 @@ gwy_data_field_get_profile(GwyDataField *data_field,
     size = hypot(scol - ecol, srow - erow);
     size = MAX(size, 1.0);
     if (res <= 0)
-        res = ROUND(size);
+        res = GWY_ROUND(size);
 
     cosa = (ecol - scol)/(res - 1.0);
     sina = (erow - srow)/(res - 1.0);

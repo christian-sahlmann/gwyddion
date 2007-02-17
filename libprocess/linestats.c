@@ -423,7 +423,7 @@ gwy_data_line_psdf(GwyDataLine *data_line,
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
 
     oldres = data_line->res;
-    order = ROUND(log(data_line->res)/G_LN2);
+    order = GWY_ROUND(log(data_line->res)/G_LN2);
     newres = (gint)pow(2, order);
 
     iin = gwy_data_line_new(newres, data_line->real, TRUE);

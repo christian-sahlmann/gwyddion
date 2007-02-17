@@ -63,7 +63,7 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     gwy_data_line_clear(yresult);
 
     for (l = 1; l < dimexp; l++) {
-        rp = ROUND(pow(2, l));
+        rp = GWY_ROUND(pow(2, l));
         for (i = 0; i < (buffer->xres - 1)/rp - 1; i++) {
             for (j = 0; j < (buffer->yres - 1)/rp - 1; j++) {
                 rms = gwy_data_field_area_get_rms(buffer, NULL,
@@ -104,7 +104,7 @@ fractal_partitioning_nomask(GwyDataField *data_field,
     gwy_data_line_clear(yresult);
 
     for (l = 0; l < dimexp; l++) {
-        rp = ROUND(pow(2, l));
+        rp = GWY_ROUND(pow(2, l));
         for (i = 0; i < (buffer->xres - 1)/rp - 1; i++) {
             for (j = 0; j < (buffer->yres - 1)/rp - 1; j++) {
                 /*
@@ -163,8 +163,8 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
     height -= imin;
 
     for (l = 0; l < dimexp; l++) {
-        rp = ROUND(pow(2, l + 1));
-        rp2 = ROUND(pow(2, dimexp)/rp);
+        rp = GWY_ROUND(pow(2, l + 1));
+        rp2 = GWY_ROUND(pow(2, dimexp)/rp);
         a = height/rp;
         for (i = 0; i < rp; i++) {
             for (j = 0; j < rp; j++) {
@@ -228,8 +228,8 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
     dil = pow(2, dimexp) * pow(2, dimexp)/height/height;
 
     for (l = 0; l <= dimexp; l++) {
-        rp = ROUND(pow(2, l));
-        rp2 = ROUND(pow(2, dimexp)/rp);
+        rp = GWY_ROUND(pow(2, l));
+        rp2 = GWY_ROUND(pow(2, dimexp)/rp);
         for (i = 0; i < rp; i++) {
             for (j = 0; j < rp; j++) {
                 z1 = buffer->data[(i * rp2) + buffer->xres * (j * rp2)];
