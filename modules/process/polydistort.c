@@ -24,7 +24,6 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
-#include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/interpolation.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -32,7 +31,6 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwycombobox.h>
-#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 
 #define DISTORT_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
@@ -77,8 +75,7 @@ static void       distort_dialog                (DistortArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  gint id);
-static GtkWidget* coeff_table_new               (gdouble *coeff,
-                                                 GtkWidget **entry,
+static GtkWidget* coeff_table_new               (GtkWidget **entry,
                                                  gpointer id,
                                                  DistortControls *controls);
 static void       run_noninteractive            (DistortArgs *args,
@@ -87,8 +84,6 @@ static void       run_noninteractive            (DistortArgs *args,
                                                  GwyDataField *result,
                                                  gint id);
 static void       distort_dialog_update_controls(DistortControls *controls,
-                                                 DistortArgs *args);
-static void       distort_dialog_update_values  (DistortControls *controls,
                                                  DistortArgs *args);
 static gboolean   distort_coeff_unfocus         (GtkEntry *entry,
                                                  GdkEventFocus *event,
@@ -271,8 +266,7 @@ distort_dialog(DistortArgs *args,
 
     controls.xcoeff = g_new0(GtkWidget*, NCOEFF);
     gtk_table_attach(GTK_TABLE(table),
-                     coeff_table_new(args->xcoeff, controls.xcoeff,
-                                     (gpointer)"x", &controls),
+                     coeff_table_new(controls.xcoeff, (gpointer)"x", &controls),
                      0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
@@ -284,12 +278,12 @@ distort_dialog(DistortArgs *args,
 
     controls.ycoeff = g_new0(GtkWidget*, NCOEFF);
     gtk_table_attach(GTK_TABLE(table),
-                     coeff_table_new(args->ycoeff, controls.ycoeff,
-                                     (gpointer)"y", &controls),
+                     coeff_table_new(controls.ycoeff, (gpointer)"y", &controls),
                      0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.computed = FALSE;
+    distort_dialog_update_controls(&controls, args);
     /* Set up initial layer keys properly */
     preview_type_changed(NULL, &controls);
 
@@ -299,7 +293,6 @@ distort_dialog(DistortArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            distort_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             gwy_object_unref(controls.result);
             case GTK_RESPONSE_NONE:
@@ -317,7 +310,6 @@ distort_dialog(DistortArgs *args,
             break;
 
             case RESPONSE_PREVIEW:
-            distort_dialog_update_values(&controls, args);
             preview(&controls, args);
             break;
 
@@ -327,7 +319,6 @@ distort_dialog(DistortArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    distort_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
 
     if (controls.computed)
@@ -339,8 +330,7 @@ distort_dialog(DistortArgs *args,
 }
 
 static GtkWidget*
-coeff_table_new(gdouble *coeff,
-                GtkWidget **entry,
+coeff_table_new(GtkWidget **entry,
                 gpointer id,
                 DistortControls *controls)
 {
@@ -356,9 +346,7 @@ coeff_table_new(gdouble *coeff,
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i == 0 && j == 0)
-                continue;
-            if (i + j > MAX_DEGREE)
+            if (i + j > MAX_DEGREE || i + j == 0)
                 continue;
 
             k = i*(MAX_DEGREE + 1) + j;
@@ -426,18 +414,24 @@ static void
 distort_dialog_update_controls(DistortControls *controls,
                                DistortArgs *args)
 {
-    guint i, j;
+    gchar buf[24];
+    guint i, j, k;
 
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
 
-    /* TODO: Update coeff */
-}
+    for (i = 0; i < MAX_DEGREE + 1; i++) {
+        for (j = 0; j < MAX_DEGREE + 1; j++) {
+            if (i + j > MAX_DEGREE || i + j == 0)
+                continue;
 
-static void
-distort_dialog_update_values(DistortControls *controls,
-                             DistortArgs *args)
-{
+            k = i*(MAX_DEGREE + 1) + j;
+            g_snprintf(buf, sizeof(buf), "%g", args->xcoeff[k]);
+            gtk_entry_set_text(GTK_ENTRY(controls->xcoeff[k]), buf);
+            g_snprintf(buf, sizeof(buf), "%g", args->ycoeff[k]);
+            gtk_entry_set_text(GTK_ENTRY(controls->ycoeff[k]), buf);
+        }
+    }
 }
 
 static gboolean
@@ -453,16 +447,11 @@ static void
 distort_coeff_changed(GtkEntry *entry,
                       DistortControls *controls)
 {
-    gint i, j;
+    gint i, j, k;
     const gchar *id;
     gchar *end;
     gdouble val;
     gdouble *coeff;
-
-    /*
-       if (controls->in_update)
-       return;
-     */
 
     i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "y"));
     j = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "x"));
@@ -475,10 +464,11 @@ distort_coeff_changed(GtkEntry *entry,
         g_return_if_reached();
 
     val = g_strtod(gtk_entry_get_text(entry), &end);
-    if (val == coeff[i*(MAX_DEGREE + 1) + j])
+    k = i*(MAX_DEGREE + 1) + j;
+    if (val == coeff[k])
         return;
 
-    coeff[i*(MAX_DEGREE + 1) + j] = val;
+    coeff[k] = val;
     distort_invalidate(NULL, controls);
 }
 
@@ -561,19 +551,19 @@ load_coeffs(gdouble *coeff,
             GwyContainer *settings)
 {
     gchar buf[40];
-    gint i, j;
+    gint i, j, k;
 
     if (!coeff)
         coeff = g_new0(gdouble, NCOEFF);
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i + j > MAX_DEGREE)
+            if (i + j > MAX_DEGREE || i + j == 0)
                 continue;
 
+            k = i*(MAX_DEGREE + 1) + j;
             g_snprintf(buf, sizeof(buf), coeff_key, type, i, j);
-            gwy_container_gis_double_by_name(settings, coeff_key,
-                                             coeff + i*(MAX_DEGREE + 1) + j);
+            gwy_container_gis_double_by_name(settings, buf, coeff + k);
         }
     }
 
@@ -600,20 +590,19 @@ save_coeffs(const gdouble *coeff,
             GwyContainer *settings)
 {
     gchar buf[40];
-    gdouble v;
-    gint i, j;
+    gint i, j, k;
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
-            if (i + j > MAX_DEGREE)
+            if (i + j > MAX_DEGREE || i + j == 0)
                 continue;
 
+            k = i*(MAX_DEGREE + 1) + j;
             g_snprintf(buf, sizeof(buf), coeff_key, type, i, j);
-            v = coeff[i*(MAX_DEGREE + 1) + j];
-            if (!v)
-                gwy_container_remove_by_name(settings, coeff_key);
+            if (coeff[k])
+                gwy_container_set_double_by_name(settings, buf, coeff[k]);
             else
-                gwy_container_set_double_by_name(settings, coeff_key, v);
+                gwy_container_remove_by_name(settings, buf);
         }
     }
 }
