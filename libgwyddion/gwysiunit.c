@@ -932,9 +932,9 @@ gwy_si_unit_parse(GwySIUnit *siunit,
  * gwy_si_unit_multiply:
  * @siunit1: An SI unit.
  * @siunit2: An SI unit.
- * @result:  An SI unit to set to product of @siunit1 and @siunit2.  It is
- *           safe to pass one of @siunit1, @siunit2. It can be %NULL
- *           too, a new SI unit is created then and returned.
+ * @result: An SI unit to set to product of @siunit1 and @siunit2.  It is
+ *          safe to pass one of @siunit1, @siunit2. It can be %NULL
+ *          too, a new SI unit is created then and returned.
  *
  * Multiplies two SI units.
  *
@@ -954,9 +954,9 @@ gwy_si_unit_multiply(GwySIUnit *siunit1,
  * gwy_si_unit_divide:
  * @siunit1: An SI unit.
  * @siunit2: An SI unit.
- * @result:  An SI unit to set to quotient of @siunit1 and @siunit2.  It is
- *           safe to pass one of @siunit1, @siunit2. It can be %NULL
- *           too, a new SI unit is created then and returned.
+ * @result: An SI unit to set to quotient of @siunit1 and @siunit2.  It is
+ *          safe to pass one of @siunit1, @siunit2. It can be %NULL
+ *          too, a new SI unit is created then and returned.
  *
  * Divides two SI units.
  *
@@ -976,9 +976,9 @@ gwy_si_unit_divide(GwySIUnit *siunit1,
  * gwy_si_unit_power:
  * @siunit: An SI unit.
  * @power: Power to raise @siunit to.
- * @result:  An SI unit to set to power of @siunit.  It is safe to pass
- *           @siunit itself.  It can be %NULL too, a new SI unit is created
- *           then and returned.
+ * @result: An SI unit to set to power of @siunit.  It is safe to pass
+ *          @siunit itself.  It can be %NULL too, a new SI unit is created
+ *          then and returned.
  *
  * Computes a power of an SI unit.
  *
@@ -1031,19 +1031,82 @@ gwy_si_unit_power_real(GwySIUnit *siunit,
 }
 
 /**
+ * gwy_si_unit_nth_root:
+ * @siunit: An SI unit.
+ * @ipower: The root to take: 2 means a quadratic root, 3 means cubic root,
+ *          etc.
+ * @result: An SI unit to set to power of @siunit.  It is safe to pass
+ *          @siunit itself.  It can be %NULL too, a new SI unit is created
+ *          then and returned.
+ *
+ * Calulates n-th root of an SI unit.
+ *
+ * This operation fails if the result would have fractional powers that
+ * are not representable by #GwySIUnit.
+ *
+ * Returns: On success: When @result is %NULL, a newly created SI unit that
+ *          has to be dereferenced when no longer used later, otherwise
+ *          @result itself is simply returned, its reference count is NOT
+ *          increased. On failure %NULL is always returned.
+ *
+ * Since: 2.5
+ **/
+GwySIUnit*
+gwy_si_unit_nth_root(GwySIUnit *siunit,
+                     gint ipower,
+                     GwySIUnit *result)
+{
+    GArray *units;
+    GwySimpleUnit *unit;
+    gint j;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
+    g_return_val_if_fail(ipower > 0, NULL);
+
+    /* Check applicability */
+    for (j = 0; j < siunit->units->len; j++) {
+        unit = &g_array_index(siunit->units, GwySimpleUnit, j);
+        if (unit->power % ipower != 0)
+            return NULL;
+    }
+
+    units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
+    /* XXX: Applicability not required */
+    result->power10 = siunit->power10/ipower;
+
+    if (!result)
+        result = gwy_si_unit_new(NULL);
+
+    g_array_append_vals(units, siunit->units->data, siunit->units->len);
+    for (j = 0; j < units->len; j++) {
+        unit = &g_array_index(units, GwySimpleUnit, j);
+        unit->power /= ipower;
+    }
+
+    g_array_set_size(result->units, 0);
+    g_array_append_vals(result->units, units->data, units->len);
+    g_array_free(units, TRUE);
+
+    g_signal_emit(result, si_unit_signals[VALUE_CHANGED], 0);
+
+    return result;
+}
+
+/**
  * gwy_si_unit_power_multiply:
  * @siunit1: An SI unit.
  * @power1: Power to raise @siunit1 to.
  * @siunit2: An SI unit.
  * @power2: Power to raise @siunit2 to.
- * @result:  An SI unit to set to @siunit1^@power1*@siunit2^@power2.
- *           It is safe to pass @siunit1 or @siunit2.  It can be %NULL too,
- *           a new SI unit is created then and returned.
+ * @result: An SI unit to set to @siunit1^@power1*@siunit2^@power2.
+ *          It is safe to pass @siunit1 or @siunit2.  It can be %NULL too,
+ *          a new SI unit is created then and returned.
  *
  * Computes the product of two SI units raised to arbitrary powers.
  *
  * This is the most complex SI unit arithmetic function.  It can be easily
- * chanied when more than two units are to be multiplied.
+ * chained when more than two units are to be multiplied.
  *
  * Returns: When @result is %NULL, a newly created SI unit that has to be
  *          dereferenced when no longer used later.  Otherwise @result itself

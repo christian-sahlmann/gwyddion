@@ -88,6 +88,9 @@ GwySIUnit*        gwy_si_unit_divide               (GwySIUnit *siunit1,
 GwySIUnit*        gwy_si_unit_power                (GwySIUnit *siunit,
                                                     gint power,
                                                     GwySIUnit *result);
+GwySIUnit*        gwy_si_unit_nth_root             (GwySIUnit *siunit,
+                                                    gint ipower,
+                                                    GwySIUnit *result);
 GwySIUnit*        gwy_si_unit_power_multiply       (GwySIUnit *siunit1,
                                                     gint power1,
                                                     GwySIUnit *siunit2,
