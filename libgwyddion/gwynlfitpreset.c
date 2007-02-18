@@ -105,7 +105,7 @@ gauss_guess(gint n_dat,
     param[1] = G_MAXDOUBLE;
     param[2] = -G_MAXDOUBLE;
     for (i = 0; i < n_dat; i++) {
-        param[0] += x[i]/(gdouble)n_dat;
+        param[0] += x[i]/n_dat;
         if (param[1] > y[i])
             param[1] = y[i];
         if (param[2] < y[i])
@@ -323,16 +323,13 @@ exp_func(gdouble x,
          G_GNUC_UNUSED gpointer user_data,
          gboolean *fres)
 {
-    gdouble c;
-
-    if (b[3] == 0) {
+    if (b[2] == 0) {
         *fres = FALSE;
         return 0;
     }
     *fres = TRUE;
-    c = (x - b[0])/b[3];
 
-    return b[2] * exp(-c/2) + b[1];
+    return b[1]*exp(x/b[2]) + b[0];
 }
 
 static void
@@ -342,21 +339,37 @@ exp_guess(gint n_dat,
           gdouble *param,
           gboolean *fres)
 {
-    gint i;
+    gint i, imin, imax;
+    gdouble s;
 
-    param[0] = 0;
-    param[1] = G_MAXDOUBLE;
-    param[2] = -G_MAXDOUBLE;
-    for (i = 0; i < n_dat; i++) {
-        param[0] += x[i]/(gdouble)n_dat;
-        if (param[1] > y[i])
-            param[1] = y[i];
-        if (param[2] < y[i])
-            param[2] = y[i];
+    imin = imax = 0;
+    s = y[0];
+    for (i = 1; i < n_dat; i++) {
+        if (y[i] > y[imax])
+            imax = i;
+        if (y[i] < y[imin])
+            imin = i;
+        s += y[i];
     }
-    param[2] -= param[1];
 
-    param[3] = (x[n_dat-1] - x[0])/4;
+    if (y[imax] == y[imin]) {
+        param[0] = 0.0;
+        param[1] = y[imin];
+        param[2] = 10*(x[n_dat-1] - x[0]);
+        return;
+    }
+
+    s /= n_dat;
+    if (2.0*s < y[imax] + y[imin])
+        s -= y[imin];
+    else
+        s -= y[imax];
+    s *= x[imax] - x[imin];
+
+    param[2] = s/(y[imax] - y[imin]);
+    param[1] = (y[imax] - y[imin])/(exp(x[imax]/param[2])
+                                    - exp(x[imin]/param[2]));
+    param[0] = y[imin] - param[1]*exp(x[imin]/param[2]);
 
     *fres = TRUE;
 }
@@ -670,6 +683,49 @@ power_guess(gint n_dat,
     *fres = TRUE;
 }
 
+static void
+power_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
+            gdouble *param,
+            gdouble xscale,
+            gdouble yscale,
+            gint dir)
+{
+    if (dir == 1) {
+        param[0] /= yscale;
+        param[1] /= yscale/pow(xscale, param[2]);
+    }
+    else {
+        param[0] *= yscale;
+        param[1] *= yscale/pow(xscale, param[2]);
+    }
+}
+
+static GwySIUnit*
+power_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
+                gint param,
+                G_GNUC_UNUSED GwySIUnit *siunit_x,
+                GwySIUnit *siunit_y)
+{
+    switch (param) {
+        case 0:
+        return gwy_si_unit_duplicate(siunit_y);
+        break;
+
+        case 1:
+        /* XXX: Ugly, arbitrary real power */
+        return gwy_si_unit_new(NULL);
+        break;
+
+        case 2:
+        return gwy_si_unit_new(NULL);
+        break;
+
+        default:
+        g_return_val_if_reached(NULL);
+        break;
+    }
+}
+
 /******************* lorentzian ********************************/
 static gdouble
 lorentz_func(gdouble x,
@@ -739,7 +795,7 @@ sinc_func(gdouble x,
           gboolean *fres)
 {
     *fres = TRUE;
-    x *= b[1];
+    x /= b[1];
     if (x == 0.0)
         return b[0];
     return b[0]*sin(x)/x;
@@ -766,7 +822,7 @@ sinc_guess(gint n_dat,
         }
     }
 
-    param[1] = 4.493409457909064175307880927276/xmin;
+    param[1] = xmin/4.493409457909064175307880927276;
     param[0] = max;
     *fres = TRUE;
 }
@@ -840,6 +896,12 @@ static const GwyNLFitParam gauss_params[] = {
    { "b",             1, 0, },
 };
 
+static const GwyNLFitParam exp_params[] = {
+   { "y<sub>0</sub>", 0, 1, },
+   { "a",             0, 1, },
+   { "b",             1, 0, },
+};
+
 static const GwyNLFitParam gauss_two_params[] = {
    { "σ", 0, 0, },   /* XXX: Fractional, attempted to fix case-by-case */
    { "T", 1, 0, },
@@ -861,7 +923,7 @@ static const GwyNLFitParam square_params[] = {
 
 static const GwyNLFitParam power_params[] = {
     { "a", 0, 1, },
-    { "b", 1, 0, },
+    { "b", 0, 1, },
     { "c", 0, 0, },
 };
 
@@ -938,16 +1000,15 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential",
         "<i>f</i>(<i>x</i>) "
-            "= <i>y</i><sub>0</sub> "
-            "+ <i>a</i> exp[−(<i>x</i> − <i>x</i><sub>0</sub>)/<i>b</i>]",
+            "= <i>y</i><sub>0</sub> + <i>a</i> exp(<i>x</i>/<i>b</i>)",
         &exp_func,
         NULL,
         &exp_guess,
         NULL,
         NULL,
         NULL,
-        G_N_ELEMENTS(gauss_params),
-        gauss_params,
+        G_N_ELEMENTS(exp_params),
+        exp_params,
     },
     {
         "Exponential (PSDF)",
@@ -1061,12 +1122,12 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Power",
         "<i>f</i>(<i>x</i>) "
-            "= <i>a</i> + (<i>x</i>/<i>b</i>)<sup><i>c</i></sup>",
+            "= <i>a</i> + <i>b</i><i>x</i><sup><i>c</i></sup>",
         &power_func,
         NULL,
         &power_guess,
-        NULL,
-        NULL,
+        &power_scale,
+        &power_get_units,
         NULL,
         G_N_ELEMENTS(power_params),
         power_params,
