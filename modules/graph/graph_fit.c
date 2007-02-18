@@ -28,6 +28,7 @@
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyinventorystore.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
@@ -55,6 +56,7 @@ typedef struct {
     GwyNLFitter *fitter;
     gboolean is_fitted;
     GwyGraphModel *graph_model;
+    GwyRGBA fitcolor;
 } FitArgs;
 
 typedef struct {
@@ -68,7 +70,6 @@ typedef struct {
     GtkWidget *error_unit;
     GtkWidget *copy;
     GtkWidget *init;
-    GtkWidget *init_unit;
 } FitParamControl;
 
 typedef struct {
@@ -77,7 +78,7 @@ typedef struct {
     GtkWidget *graph;
     GtkWidget *from;
     GtkWidget *to;
-    GtkObject *data;
+    GtkWidget *curve;
     GtkWidget *chisq;
     GtkWidget *function;
     GtkWidget *equation;
@@ -101,7 +102,7 @@ static void        reset                     (FitArgs *args,
                                               FitControls *controls);
 static void        plot_inits                (FitArgs *args,
                                               FitControls *controls);
-static void        curve_changed_cb          (GtkAdjustment *adj,
+static void        curve_changed             (GtkComboBox *combo,
                                               FitControls *controls);
 static void        type_changed_cb           (GtkWidget *combo,
                                               FitControls *controls);
@@ -127,10 +128,13 @@ static void        graph_selected            (GwySelection* selection,
                                               FitControls *controls);
 static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
-                                              GwyDataLine *ydata,
-                                              gint curve);
-static GtkWidget*  create_preset_menu        (GCallback callback,
+                                              GwyDataLine *ydata);
+static GtkWidget*  function_selector_new     (GCallback callback,
                                               gpointer cbdata,
+                                              gint current);
+static GtkWidget*  curve_selector_new        (GwyGraphModel *gmodel,
+                                              GCallback callback,
+                                              FitControls *controls,
                                               gint current);
 static void        load_args                 (GwyContainer *container,
                                               FitArgs *args);
@@ -228,31 +232,33 @@ fit_dialog(FitArgs *args)
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
-    table = gtk_table_new(6, 1, FALSE);
+    table = gtk_table_new(6, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
 
     /* Fitted function */
-    gtk_table_attach(GTK_TABLE(table),
-                     gwy_label_new_header(_("Function Definition")),
+    label = gtk_label_new_with_mnemonic(_("F_unction:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
 
-    controls.function = create_preset_menu(G_CALLBACK(type_changed_cb),
-                                           &controls, args->function_type);
+    controls.function = function_selector_new(G_CALLBACK(type_changed_cb),
+                                              &controls, args->function_type);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.function);
     gtk_table_attach(GTK_TABLE(table), controls.function,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.equation = gtk_label_new("f(x) =");
     gtk_table_attach(GTK_TABLE(table), controls.equation,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 8);
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 8);
     row++;
 
     /* Parameters sought */
-    table2 = GTK_TABLE(gtk_table_new(MAX_PARAMS + 1, 11, FALSE));
+    table2 = GTK_TABLE(gtk_table_new(MAX_PARAMS + 1, 10, FALSE));
     gtk_table_set_row_spacings(table2, 2);
     gtk_table_set_col_spacings(table2, 2);
     gtk_table_set_col_spacing(table2, 0, 6);
@@ -261,7 +267,7 @@ fit_dialog(FitArgs *args)
     gtk_table_set_col_spacing(table2, 7, 6);
     gtk_table_set_col_spacing(table2, 8, 6);
     gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(table2),
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -272,39 +278,36 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(table2, gwy_label_new_header(_("Error")),
                      6, 8, 0, 1, GTK_FILL, 0, 0, 0);
     gtk_table_attach(table2, gwy_label_new_header(_("Initial")),
-                     9, 11, 0, 1, GTK_FILL, 0, 0, 0);
+                     9, 10, 0, 1, GTK_FILL, 0, 0, 0);
 
     for (i = 0; i < MAX_PARAMS; i++)
         fit_param_row_create(&controls, i, table2, i+1);
 
     /* Chi^2 */
-    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-    gtk_table_attach(GTK_TABLE(table), align,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    row++;
-
-    hbox2 = gtk_hbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(align), hbox2);
-
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("χ<sup>2</sup> result:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(hbox2), label);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     controls.chisq = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.chisq), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(hbox2), controls.chisq);
+    gtk_table_attach(GTK_TABLE(table), controls.chisq,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     /* Correlation matrix */
     gtk_table_attach(GTK_TABLE(table),
                      gwy_label_new_header(_("Correlation Matrix")),
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
     gtk_table_attach(GTK_TABLE(table), align,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
@@ -320,29 +323,29 @@ fit_dialog(FitArgs *args)
         }
     }
 
-    /* Fit area */
+    /* Curve */
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Fit Area")),
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    table2 = GTK_TABLE(gtk_table_new(2, 2, FALSE));
-    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(table2),
+    label = gtk_label_new_with_mnemonic(_("_Graph curve:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
 
     gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
-    controls.data = gtk_adjustment_new(args->curve, 1,
-                                       gwy_graph_model_get_n_curves(gmodel),
-                                       1, 5, 0);
-    gwy_table_attach_spinbutton(GTK_WIDGET(table2), 1, _("Graph data curve:"),
-                                NULL, controls.data);
-    g_signal_connect(controls.data, "changed",
-                     G_CALLBACK(curve_changed_cb), &controls);
+    controls.curve = curve_selector_new(gmodel,
+                                        G_CALLBACK(curve_changed), &controls,
+                                        args->curve);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
+    gtk_table_attach(GTK_TABLE(table), controls.curve,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
-    hbox2 = gtk_hbox_new(FALSE, 0);
-    gtk_box_set_spacing(GTK_BOX(hbox2), 4);
+    /* Fit area */
+    hbox2 = gtk_hbox_new(FALSE, 4);
     gtk_table_attach(GTK_TABLE(table), hbox2,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new(_("From"));
@@ -366,7 +369,7 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(to_changed_cb), &controls);
 
     /* Graph */
-    args->graph_model = gwy_graph_model_duplicate(gmodel);
+    args->graph_model = gwy_graph_model_new_alike(gmodel);
     controls.graph = gwy_graph_new(args->graph_model);
     g_object_unref(args->graph_model);
     gtk_widget_set_size_request(controls.graph, 400, 300);
@@ -385,6 +388,8 @@ fit_dialog(FitArgs *args)
     args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                                args->function_type);
 
+    /* FIXME: Simplify */
+    curve_changed(GTK_COMBO_BOX(controls.curve), &controls);
     reset(args, &controls);
     dialog_update(&controls, args);
 
@@ -495,11 +500,6 @@ fit_param_row_create(FitControls *controls,
                      9, 10, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(cntrl->init, "changed",
                      G_CALLBACK(double_entry_changed_cb), &arg->init);
-
-    cntrl->init_unit = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(cntrl->init_unit), 0.0, 0.5);
-    gtk_table_attach(table, cntrl->init_unit,
-                     10, 11, row, row+1, GTK_FILL, 0, 0, 0);
 }
 
 static void
@@ -515,8 +515,9 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i, j;
 
-    gwy_graph_model_remove_curve_by_description(args->graph_model,
-                                                "Fitted curve");
+    if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
+        gwy_graph_model_remove_curve(args->graph_model, 1);
+
     args->is_fitted = FALSE;
 
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -526,24 +527,45 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
         gtk_label_set_text(GTK_LABEL(controls->param[i].error_unit), "");
         for (j = 0; j <= i; j++)
             gtk_label_set_markup(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
-                                 " ");
+                                 "");
     }
 
     gtk_label_set_markup(GTK_LABEL(controls->chisq), NULL);
 }
 
+static void
+fix_minus(gchar *buf, guint size)
+{
+    guint len;
+
+    if (buf[0] != '-')
+        return;
+
+    len = strlen(buf);
+    if (len+2 >= size)
+        return;
+
+    g_memmove(buf+3, buf+1, len-1);
+    buf[len+2] = '\0';
+    buf[0] = '\xe2';
+    buf[1] = '\x88';
+    buf[2] = '\x92';
+}
+
 static GwyGraphCurveModel*
-update_fitted_curve(GwyGraphModel *gmodel,
+update_fitted_curve(FitArgs *args,
                     GwyNLFitPreset *function,
                     const gdouble *param,
                     GwyDataLine *xdata,
                     GwyDataLine *ydata)
 {
+    GwyGraphModel *gmodel;
     GwyGraphCurveModel *cmodel;
     gdouble *xd, *yd;
     gboolean ok;   /* XXX: ignored */
     gint i, n;
-    const gchar *desc = _("Fitted curve");
+
+    gmodel = args->graph_model;
 
     n = gwy_data_line_get_res(xdata);
     g_return_val_if_fail(n == gwy_data_line_get_res(ydata), NULL);
@@ -553,12 +575,14 @@ update_fitted_curve(GwyGraphModel *gmodel,
     for (i = 0; i < n; i++)
         yd[i] = gwy_nlfit_preset_get_value(function, xd[i], param, &ok);
 
-    cmodel = gwy_graph_model_get_curve_by_description(gmodel, desc);
-    if (!cmodel) {
+    if (gwy_graph_model_get_n_curves(gmodel) == 2)
+        cmodel = gwy_graph_model_get_curve(gmodel, 1);
+    else {
         cmodel = gwy_graph_curve_model_new();
         g_object_set(cmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
-                     "description", desc,
+                     "description", _("Fitted curve"),
+                     "color", &args->fitcolor,
                      NULL);
         gwy_graph_model_add_curve(gmodel, cmodel);
         g_object_unref(cmodel);
@@ -575,10 +599,10 @@ plot_inits(FitArgs *args, FitControls *controls)
     GwyDataLine *ydata;
     GwyNLFitPreset *function;
 
-    xdata = gwy_data_line_new(10, 10, FALSE);
-    ydata = gwy_data_line_new(10, 10, FALSE);
+    xdata = gwy_data_line_new(1, 1, FALSE);
+    ydata = gwy_data_line_new(1, 1, FALSE);
 
-    if (normalize_data(args, xdata, ydata, args->curve)) {
+    if (normalize_data(args, xdata, ydata)) {
         gdouble *param;
         guint nparams, i;
 
@@ -588,7 +612,7 @@ plot_inits(FitArgs *args, FitControls *controls)
         param = g_newa(gdouble, nparams);
         for (i = 0; i < nparams; i++)
             param[i] = args->param[i].init;
-        update_fitted_curve(args->graph_model, function, param, xdata, ydata);
+        update_fitted_curve(args, function, param, xdata, ydata);
     }
     g_object_unref(xdata);
     g_object_unref(ydata);
@@ -604,7 +628,6 @@ recompute(FitArgs *args, FitControls *controls)
     GwyNLFitPreset *function;
     gdouble *param, *error;
     gboolean *fixed;
-    gchar buffer[64];
     gint i, j, nparams, nfree = 0;
     gboolean allfixed, errorknown;
 
@@ -624,10 +647,10 @@ recompute(FitArgs *args, FitControls *controls)
     if (allfixed)
         return;
 
-    xdata = gwy_data_line_new(10, 10, FALSE);
-    ydata = gwy_data_line_new(10, 10, FALSE);
+    xdata = gwy_data_line_new(1, 1, FALSE);
+    ydata = gwy_data_line_new(1, 1, FALSE);
 
-    if (!normalize_data(args, xdata, ydata, args->curve)) {
+    if (!normalize_data(args, xdata, ydata)) {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
@@ -667,24 +690,27 @@ recompute(FitArgs *args, FitControls *controls)
     }
 
     if (errorknown) {
+        gchar buf[16];
+
         /* FIXME: this is _scaled_ dispersion */
-        g_snprintf(buffer, sizeof(buffer), "%2.3g",
+        g_snprintf(buf, sizeof(buf), "%2.3g",
                    gwy_math_nlfit_get_dispersion(args->fitter));
-        gtk_label_set_markup(GTK_LABEL(controls->chisq), buffer);
+        gtk_label_set_markup(GTK_LABEL(controls->chisq), buf);
 
         for (i = 0; i < nparams; i++) {
             for (j = 0; j <= i; j++) {
-                g_snprintf(buffer, sizeof(buffer), "% 0.3f",
+                g_snprintf(buf, sizeof(buf), "%0.3f",
                            gwy_math_nlfit_get_correlations(args->fitter, i, j));
+                fix_minus(buf, sizeof(buf));
                 gtk_label_set_markup
-                    (GTK_LABEL(controls->covar[i*MAX_PARAMS + j]), buffer);
+                           (GTK_LABEL(controls->covar[i*MAX_PARAMS + j]), buf);
             }
          }
     }
     else
         gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N.A."));
 
-    update_fitted_curve(args->graph_model, function, param, xdata, ydata);
+    update_fitted_curve(args, function, param, xdata, ydata);
 
     g_object_unref(xdata);
     g_object_unref(ydata);
@@ -699,10 +725,19 @@ reset(FitArgs *args, FitControls *controls)
 }
 
 static void
-curve_changed_cb(GtkAdjustment *adj,
-                 FitControls *controls)
+curve_changed(GtkComboBox *combo,
+              FitControls *controls)
 {
-    controls->args->curve = gwy_adjustment_get_int(adj) - 1;
+    GwyGraphModel *parent_gmodel, *graph_model;
+
+    controls->args->curve = gwy_enum_combo_box_get_active(combo);
+    graph_model = controls->args->graph_model;
+    parent_gmodel = gwy_graph_get_model(controls->args->parent_graph);
+
+    gwy_graph_model_remove_all_curves(graph_model);
+    gwy_graph_model_add_curve(graph_model,
+                              gwy_graph_model_get_curve(parent_gmodel,
+                                                        controls->args->curve));
 }
 
 static void
@@ -773,8 +808,7 @@ fit_param_row_update_value(FitControls *controls,
     GwySIUnit *unitx, *unity, *unitp;
     char buf[16];
 
-    cmodel = gwy_graph_model_get_curve(controls->args->graph_model,
-                                       controls->args->curve);
+    cmodel = gwy_graph_model_get_curve(controls->args->graph_model, 0);
     cntrl = &controls->param[i];
     arg = &controls->args->param[i];
 
@@ -799,17 +833,7 @@ fit_param_row_update_value(FitControls *controls,
 
     g_snprintf(buf, sizeof(buf), "%.*f",
                vf->precision, arg->value/vf->magnitude);
-    /* Fix minus */
-    if (buf[0] == '-') {
-        guint len;
-
-        len = strlen(buf);
-        g_memmove(buf+2, buf, len-3);
-        buf[len-1] = '\0';
-        buf[0] = '\xe2';
-        buf[1] = '\x88';
-        buf[2] = '\x92';
-    }
+    fix_minus(buf, sizeof(buf));
     gtk_label_set_text(GTK_LABEL(cntrl->value), buf);
     gtk_label_set_markup(GTK_LABEL(cntrl->value_unit), vf->units);
 
@@ -843,14 +867,14 @@ guess(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
                                           args->function_type);
     nparams = gwy_nlfit_preset_get_nparams(function);
 
-    xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    xdata = gwy_data_line_new(1, 1, FALSE);
+    ydata = gwy_data_line_new(1, 1, FALSE);
 
     param = g_newa(gdouble, nparams);
     for (i = 0; i < nparams; i++)
         param[i] = args->param[i].init;
 
-    if (!normalize_data(args, xdata, ydata, args->curve)) {
+    if (!normalize_data(args, xdata, ydata)) {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
@@ -885,7 +909,7 @@ graph_selected(GwySelection* selection, gint i, FitControls *controls)
 
     if (nselections <= 0 || area_selection[0] == area_selection[1]) {
         gmodel = gwy_graph_get_model(graph);
-        gcmodel = gwy_graph_model_get_curve(gmodel, controls->args->curve);
+        gcmodel = gwy_graph_model_get_curve(gmodel, 0);
         data = gwy_graph_curve_model_get_xdata(gcmodel);
         args->from = data[0];
         args->to = data[gwy_graph_curve_model_get_ndata(gcmodel) - 1];
@@ -943,9 +967,9 @@ copy_param(GObject *button,
 }
 
 static GtkWidget*
-create_preset_menu(GCallback callback,
-                   gpointer cbdata,
-                   gint current)
+function_selector_new(GCallback callback,
+                      gpointer cbdata,
+                      gint current)
 {
     GtkCellRenderer *renderer;
     GtkWidget *combo;
@@ -967,12 +991,40 @@ create_preset_menu(GCallback callback,
     return combo;
 }
 
+static GtkWidget*
+curve_selector_new(GwyGraphModel *gmodel,
+                   GCallback callback,
+                   FitControls *controls,
+                   gint current)
+{
+    GwyGraphCurveModel *curve;
+    GtkWidget *combo;
+    GwyEnum *curves;
+    gint ncurves, i;
+
+    ncurves = gwy_graph_model_get_n_curves(gmodel);
+    controls->args->fitcolor = *gwy_graph_get_preset_color(ncurves);
+
+    curves = g_new(GwyEnum, ncurves + 1);
+    for (i = 0; i < ncurves; i++) {
+        curve = gwy_graph_model_get_curve(gmodel, i);
+        g_object_get(curve, "description", &curves[i].name, NULL);
+        curves[i].value = i;
+    }
+    curves[ncurves].name = NULL;
+    combo = gwy_enum_combo_box_new(curves, ncurves, callback, controls, current,
+                                   FALSE);
+    g_signal_connect_swapped(combo, "destroy",
+                             G_CALLBACK(gwy_enum_freev), curves);
+
+    return combo;
+}
+
 /*extract relevant part of data and normalize it to be fitable*/
 static gint
 normalize_data(FitArgs *args,
                GwyDataLine *xdata,
-               GwyDataLine *ydata,
-               gint curve)
+               GwyDataLine *ydata)
 {
     gint i, j, ns, res;
     gboolean skip_first_point = FALSE;
@@ -981,10 +1033,7 @@ normalize_data(FitArgs *args,
     const gchar *func_name;
     gdouble *datax, *datay;
 
-    if (curve >= gwy_graph_model_get_n_curves(args->graph_model))
-        return 0;
-
-    cmodel = gwy_graph_model_get_curve(args->graph_model, curve);
+    cmodel = gwy_graph_model_get_curve(args->graph_model, 0);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
@@ -1105,7 +1154,7 @@ count_really_fitted_points(FitArgs *args)
     gint ns;
 
     n = 0;
-    cmodel = gwy_graph_model_get_curve(args->graph_model, args->curve);
+    cmodel = gwy_graph_model_get_curve(args->graph_model, 0);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
@@ -1148,7 +1197,7 @@ create_results_window(FitArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
                        FALSE, FALSE, 0);
     row = 0;
-    gcmodel = gwy_graph_model_get_curve(args->graph_model, args->curve);
+    gcmodel = gwy_graph_model_get_curve(args->graph_model, 0);
 
     attach_label(table, _(_("<b>Data:</b>")), row, 0, 0.0);
     g_object_get(gcmodel, "description", &p, NULL);
@@ -1256,7 +1305,7 @@ create_fit_report(FitArgs *args)
     g_assert(args->fitter->covar);
     report = g_string_new("");
 
-    gcmodel = gwy_graph_model_get_curve(args->graph_model, args->curve);
+    gcmodel = gwy_graph_model_get_curve(args->graph_model, 0);
     g_string_append_printf(report, _("\n===== Fit Results =====\n"));
 
     g_object_get(gcmodel, "description", &s, NULL);
