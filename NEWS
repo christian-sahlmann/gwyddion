@@ -1,4 +1,4 @@
-2.4.20070212
+2.4.20070218
 
 2.5 (0000-00-00)
 Application:
@@ -10,8 +10,17 @@ Libraries:
   coordinate were fixed.
 - libgwyprocess: Skewed gwy_data_field_area_fit_local_planes() output for
   even plane sizes was fixed.
+- libgwyapp: Document history Prune button bug causing Critical Gtk+ messages
+  was fixed.
+- libgwyddion: NL fitter presets can derive parameter units from the units
+  of fitted curves.
+- libgwyddion: New SI Unit function to take root of a unit.
 
 Modules:
+- Polynomial Distortion (new): Distorts (or corrects distortion) in xy plane.
+- Pygwy (new): Direct python scripting support.  Currently highly experimental
+  (disabled by default) and Unix-only.
+- Graph fit: User interface improved, support for parameter units.
 - Omicron: Imported images flipped upside down were fixed.
 
 Other:
