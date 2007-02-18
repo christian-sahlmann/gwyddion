@@ -1052,7 +1052,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Polynom (order 0)",
+        "Polynomial (order 0)",
         "<i>f</i>(<i>x</i>) = <i>a</i>",
         &poly_0_func,
         NULL,
@@ -1064,7 +1064,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Polynom (order 1)",
+        "Polynomial (order 1)",
         "<i>f</i>(<i>x</i>) = <i>a</i> + <i>b</i><i>x</i>",
         &poly_1_func,
         NULL,
@@ -1076,7 +1076,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Polynom (order 2)",
+        "Polynomial (order 2)",
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i> + <i>b</i><i>x</i> + <i>c</i><i>x</i><sup>2</sup>",
         &poly_2_func,
@@ -1089,7 +1089,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Polynom (order 3)",
+        "Polynomial (order 3)",
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i> + <i>b</i><i>x</i> + <i>c</i><i>x</i><sup>2</sup> "
             "+ <i>d</i><i>x</i><sup>3</sup>",
