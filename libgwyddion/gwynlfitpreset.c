@@ -33,10 +33,16 @@ typedef void (*GwyNLFitGuessFunc)(gint n_dat,
                                   gdouble *param,
                                   gboolean *fres);
 
-typedef void (*GwyNLFitParamScaleFunc)(gdouble *param,
+typedef void (*GwyNLFitParamScaleFunc)(GwyNLFitPreset *preset,
+                                       gdouble *param,
                                        gdouble xscale,
                                        gdouble yscale,
                                        gint dir);
+
+typedef GwySIUnit* (*GwyNLFitGetUnitFunc)(GwyNLFitPreset *preset,
+                                          guint param,
+                                          GwySIUnit *siunit_x,
+                                          GwySIUnit *siunit_y);
 
 typedef void (*GwyNLFitWeightFunc)(gint n_dat,
                                    const gdouble *x,
@@ -45,6 +51,8 @@ typedef void (*GwyNLFitWeightFunc)(gint n_dat,
 
 typedef struct {
     const char *name;
+    gint power_x;
+    gint power_y;
 } GwyNLFitParam;
 
 struct _GwyNLFitPresetBuiltin {
@@ -54,8 +62,9 @@ struct _GwyNLFitPresetBuiltin {
     GwyNLFitDerFunc derive;
     GwyNLFitGuessFunc guess;
     GwyNLFitParamScaleFunc scale_params;
+    GwyNLFitGetUnitFunc get_unit;
     GwyNLFitWeightFunc set_default_weights;
-    gint nparams;
+    guint nparams;
     const GwyNLFitParam *param;
 };
 
@@ -109,28 +118,6 @@ gauss_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-gauss_scale(gdouble *param,
-            gdouble xscale,
-            gdouble yscale,
-            gint dir)
-{
-    if (dir == 1) {
-        param[0] /= xscale;
-        param[1] /= yscale;
-        param[2] /= yscale;
-        param[3] /= xscale;
-
-    }
-    else {
-        param[0] *= xscale;
-        param[1] *= yscale;
-        param[2] *= yscale;
-        param[3] *= xscale;
-    }
-
-}
-
 /******************** gaussian PSDF ***************************/
 static gdouble
 gauss_psdf_func(gdouble x,
@@ -152,22 +139,6 @@ gauss_psdf_func(gdouble x,
 }
 
 static void
-gauss_psdf_scale(gdouble *param,
-                 gdouble xscale,
-                 gdouble yscale,
-                 gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale*xscale);
-        param[1] *= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale*xscale);
-        param[1] /= xscale;
-    }
-}
-
-static void
 gauss_psdf_guess(gint n_dat,
                  const gdouble *x,
                  const gdouble *y,
@@ -186,6 +157,48 @@ gauss_psdf_guess(gint n_dat,
     param[0] = sqrt(param[0]);
 }
 
+static void
+psdf_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
+           gdouble *param,
+           gdouble xscale,
+           gdouble yscale,
+           gint dir)
+{
+    if (dir == 1) {
+        param[0] /= sqrt(yscale*xscale);
+        param[1] *= xscale;
+    }
+    else {
+        param[0] *= sqrt(yscale*xscale);
+        param[1] /= xscale;
+    }
+}
+
+static GwySIUnit*
+psdf_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
+               guint param,
+               GwySIUnit *siunit_x,
+               GwySIUnit *siunit_y)
+{
+    GwySIUnit *result;
+
+    switch (param) {
+        case 0:
+        result = gwy_si_unit_multiply(siunit_x, siunit_y, NULL);
+        if (!gwy_si_unit_nth_root(result, 2, result))
+            gwy_si_unit_set_from_string(result, NULL);
+        return result;
+        break;
+
+        case 1:
+        return gwy_si_unit_power(siunit_x, -1, NULL);
+        break;
+
+        default:
+        g_return_val_if_reached(NULL);
+        break;
+    }
+}
 
 /******************* gaussian HHCF ********************************/
 static gdouble
@@ -227,10 +240,11 @@ gauss_hhcf_guess(gint n_dat,
 }
 
 static void
-gauss_hhcf_scale(gdouble *param,
-                 gdouble xscale,
-                 gdouble yscale,
-                 gint dir)
+cf_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
+         gdouble *param,
+         gdouble xscale,
+         gdouble yscale,
+         gint dir)
 {
     if (dir == 1) {
         param[0] /= sqrt(yscale);
@@ -239,6 +253,32 @@ gauss_hhcf_scale(gdouble *param,
     else {
         param[0] *= sqrt(yscale);
         param[1] *= xscale;
+    }
+}
+
+static GwySIUnit*
+cf_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
+             guint param,
+             GwySIUnit *siunit_x,
+             GwySIUnit *siunit_y)
+{
+    GwySIUnit *result;
+
+    switch (param) {
+        case 0:
+        result = gwy_si_unit_duplicate(siunit_y);
+        if (!gwy_si_unit_nth_root(result, 2, result))
+            gwy_si_unit_set_from_string(result, NULL);
+        return result;
+        break;
+
+        case 1:
+        return gwy_si_unit_duplicate(siunit_x);
+        break;
+
+        default:
+        g_return_val_if_reached(NULL);
+        break;
     }
 }
 
@@ -274,23 +314,6 @@ gauss_acf_guess(gint n_dat,
 
     *fres = y[1] >= 0;
 }
-
-static void
-gauss_acf_scale(gdouble *param,
-                gdouble xscale,
-                gdouble yscale,
-                gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale);
-        param[1] /= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale);
-        param[1] *= xscale;
-    }
-}
-
 
 /**************** exponential ************************************/
 static gdouble
@@ -338,28 +361,6 @@ exp_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-exp_scale(gdouble *param,
-          gdouble xscale,
-          gdouble yscale,
-          gint dir)
-{
-    if (dir == 1) {
-        param[0] /= xscale;
-        param[1] /= yscale;
-        param[2] /= yscale;
-        param[3] /= xscale;
-
-    }
-    else {
-        param[0] *= xscale;
-        param[1] *= yscale;
-        param[2] *= yscale;
-        param[3] *= xscale;
-    }
-
-}
-
 /**************** exponential PSDF **************************/
 static gdouble
 exp_psdf_func(gdouble x,
@@ -397,22 +398,6 @@ exp_psdf_guess(gint n_dat,
 
     *fres = param[0] >= 0;
     param[0] = sqrt(param[0]);
-}
-
-static void
-exp_psdf_scale(gdouble *param,
-               gdouble xscale,
-               gdouble yscale,
-               gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale*xscale);
-        param[1] *= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale*xscale);
-        param[1] /= xscale;
-    }
 }
 
 /***************** exponential HHCF ********************************/
@@ -453,23 +438,6 @@ exp_hhcf_guess(gint n_dat,
     param[1] = x[n_dat-1]/50;
 }
 
-static void
-exp_hhcf_scale(gdouble *param,
-               gdouble xscale,
-               gdouble yscale,
-               gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale);
-        param[1] /= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale);
-        param[1] *= xscale;
-    }
-}
-
-
 /*************** exponential ACF ************************************/
 static gdouble
 exp_acf_func(gdouble x,
@@ -503,23 +471,6 @@ exp_acf_guess(gint n_dat,
     *fres = y[1] >= 0;
 }
 
-static void
-exp_acf_scale(gdouble *param,
-              gdouble xscale,
-              gdouble yscale,
-              gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale);
-        param[1] /= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale);
-        param[1] *= xscale;
-    }
-}
-
-
 /**************   polynomial 0th order ********************************/
 static gdouble
 poly_0_func(G_GNUC_UNUSED gdouble x,
@@ -544,19 +495,6 @@ poly_0_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-poly_0_scale(gdouble *param,
-             G_GNUC_UNUSED gdouble xscale,
-             gdouble yscale,
-             gint dir)
-{
-    if (dir == 1)
-        param[0] /= yscale;
-    else
-        param[0] *= yscale;
-}
-
-
 /*************** polynomial 1st order ********************************/
 static gdouble
 poly_1_func(gdouble x,
@@ -579,22 +517,6 @@ poly_1_guess(gint n_dat,
 {
     gwy_math_fit_polynom(n_dat, x, y, 1, param);
     *fres = TRUE;
-}
-
-static void
-poly_1_scale(gdouble *param,
-             gdouble xscale,
-             gdouble yscale,
-             gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale;
-        param[1] /= yscale/xscale;
-    }
-    else {
-        param[0] *= yscale;
-        param[1] *= yscale/xscale;
-    }
 }
 
 /************* polynomial 2nd order **********************************/
@@ -621,24 +543,6 @@ poly_2_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-poly_2_scale(gdouble *param,
-             gdouble xscale,
-             gdouble yscale,
-             gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale;
-        param[1] /= yscale/xscale;
-        param[2] /= yscale/xscale/xscale;
-    }
-    else {
-        param[0] *= yscale;
-        param[1] *= yscale/xscale;
-        param[2] *= yscale/xscale/xscale;
-    }
-}
-
 /************** polynomial 3rd order *****************************/
 static gdouble
 poly_3_func(gdouble x,
@@ -661,26 +565,6 @@ poly_3_guess(gint n_dat,
 {
     gwy_math_fit_polynom(n_dat, x, y, 3, param);
     *fres = TRUE;
-}
-
-static void
-poly_3_scale(gdouble *param,
-             gdouble xscale,
-             gdouble yscale,
-             gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale;
-        param[1] /= yscale/xscale;
-        param[2] /= yscale/xscale/xscale;
-        param[3] /= yscale/xscale/xscale/xscale;
-    }
-    else {
-        param[0] *= yscale;
-        param[1] *= yscale/xscale;
-        param[2] *= yscale/xscale/xscale;
-        param[3] *= yscale/xscale/xscale/xscale;
-    }
 }
 
 /******************* square signal ********************************/
@@ -720,26 +604,6 @@ square_guess(gint n_dat,
     param[3] = max;
 
     *fres = TRUE;
-}
-
-static void
-square_scale(gdouble *param,
-             gdouble xscale,
-             gdouble yscale,
-             gint dir)
-{
-    if (dir == 1) {
-        param[0] /= xscale;
-        param[1] /= xscale;
-        param[2] /= yscale;
-        param[3] /= yscale;
-    }
-    else {
-        param[0] *= xscale;
-        param[1] *= xscale;
-        param[2] *= yscale;
-        param[3] *= yscale;
-    }
 }
 
 /******************* power function ********************************/
@@ -806,22 +670,6 @@ power_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-power_scale(gdouble *param,
-            gdouble xscale,
-            gdouble yscale,
-            gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale;
-        param[1] /= yscale/pow(xscale, param[2]);
-    }
-    else {
-        param[0] *= yscale;
-        param[1] *= yscale/pow(xscale, param[2]);
-    }
-}
-
 /******************* lorentzian ********************************/
 static gdouble
 lorentz_func(gdouble x,
@@ -882,24 +730,6 @@ lorentz_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-lorentz_scale(gdouble *param,
-              gdouble xscale,
-              gdouble yscale,
-              gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale*xscale*xscale;
-        param[1] /= xscale;
-        param[2] /= xscale;
-    }
-    else {
-        param[0] *= yscale*xscale*xscale;
-        param[1] *= xscale;
-        param[2] *= xscale;
-    }
-}
-
 /******************* sinc ********************************/
 static gdouble
 sinc_func(gdouble x,
@@ -941,22 +771,6 @@ sinc_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-sinc_scale(gdouble *param,
-           gdouble xscale,
-           gdouble yscale,
-           gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale;
-        param[1] *= xscale;
-    }
-    else {
-        param[0] *= yscale;
-        param[1] /= xscale;
-    }
-}
-
 /******************** preset default weights *************************/
 static void
 weights_linear_decrease(gint n_dat,
@@ -970,48 +784,96 @@ weights_linear_decrease(gint n_dat,
         weight[i] = 1 - (gdouble)i/(gdouble)n_dat;
 }
 
+/************************** generic scalers ****************************/
+
+static void
+builtin_scale(GwyNLFitPreset *preset,
+              gdouble *param,
+              gdouble xscale,
+              gdouble yscale,
+              gint dir)
+{
+    guint i;
+
+    g_return_if_fail(preset->builtin);
+
+    if (preset->builtin->scale_params) {
+        preset->builtin->scale_params(preset, param, xscale, yscale, dir);
+        return;
+    }
+
+    /* Generic parameter scaling when there are no peculiarities */
+    for (i = 0; i < preset->builtin->nparams; i++) {
+        const GwyNLFitParam *p = preset->builtin->param + i;
+
+        param[i] *= pow(xscale, -dir*p->power_x)*pow(yscale, -dir*p->power_y);
+    }
+}
+
+static GwySIUnit*
+builtin_get_unit(GwyNLFitPreset *preset,
+                 guint param,
+                 GwySIUnit *siunit_x,
+                 GwySIUnit *siunit_y)
+{
+    const GwyNLFitParam *p;
+
+    g_return_val_if_fail(preset->builtin, NULL);
+    g_return_val_if_fail(param < preset->builtin->nparams, NULL);
+
+    if (preset->builtin->get_unit)
+        return preset->builtin->get_unit(preset, param, siunit_x, siunit_y);
+
+    /* Generic unit construction when there are no peculiarities */
+    p = preset->builtin->param + param;
+    return gwy_si_unit_power_multiply(siunit_x, p->power_x,
+                                      siunit_y, p->power_y,
+                                      NULL);
+}
+
 /************************** presets ****************************/
 
-static const GwyNLFitParam gaussexp_params[] = {
-   { "x<sub>0</sub>" },
-   { "y<sub>0</sub>" },
-   { "a" },
-   { "b" },
+static const GwyNLFitParam gauss_params[] = {
+   { "x<sub>0</sub>", 1, 0, },
+   { "y<sub>0</sub>", 0, 1, },
+   { "a",             0, 1, },
+   { "b",             1, 0, },
 };
 
-static const GwyNLFitParam gaussexp_two_params[] = {
-   { "σ" },
-   { "T" },
-};
-
-
-static const GwyNLFitParam poly0_params[] = {
-   { "a" },
-};
-
-static const GwyNLFitParam poly1_params[] = {
-   { "a" },
-   { "b" },
-};
-
-static const GwyNLFitParam poly2_params[] = {
-   { "a" },
-   { "b" },
-   { "c" },
+static const GwyNLFitParam gauss_two_params[] = {
+   { "σ", 0, 0, },   /* XXX: Fractional, attempted to fix case-by-case */
+   { "T", 1, 0, },
 };
 
 static const GwyNLFitParam poly3_params[] = {
-   { "a" },
-   { "b" },
-   { "c" },
-   { "d" },
+   { "a",  0, 1, },
+   { "b", -1, 1, },
+   { "c", -2, 1, },
+   { "d", -3, 1, },
 };
 
 static const GwyNLFitParam square_params[] = {
-    { "T" },
-    { "s" },
-    { "t" },
-    { "b" },
+    { "T", 1, 0, },
+    { "s", 1, 0, },
+    { "t", 0, 1, },
+    { "b", 0, 1, },
+};
+
+static const GwyNLFitParam power_params[] = {
+    { "a", 0, 1, },
+    { "b", 1, 0, },
+    { "c", 0, 0, },
+};
+
+static const GwyNLFitParam lorentz_params[] = {
+    { "a", 2, 1, },
+    { "b", 1, 0, },
+    { "c", 1, 0, },
+};
+
+static const GwyNLFitParam sinc_params[] = {
+    { "a", 0, 1, },
+    { "b", 1, 0, },
 };
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
@@ -1025,10 +887,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_func,
         NULL,
         &gauss_guess,
-        &gauss_scale,
         NULL,
-        G_N_ELEMENTS(gaussexp_params),
-        gaussexp_params,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(gauss_params),
+        gauss_params,
     },
     {
         "Gaussian (PSDF)",
@@ -1038,10 +901,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_psdf_func,
         NULL,
         &gauss_psdf_guess,
-        &gauss_psdf_scale,
+        &psdf_scale,
+        &psdf_get_units,
         NULL,
-        G_N_ELEMENTS(gaussexp_two_params),
-        gaussexp_two_params,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
     },
     {
         "Gaussian (ACF)",
@@ -1051,10 +915,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_acf_func,
         NULL,
         &gauss_acf_guess,
-        &gauss_acf_scale,
+        &cf_scale,
+        &cf_get_units,
         &weights_linear_decrease,
-        G_N_ELEMENTS(gaussexp_two_params),
-        gaussexp_two_params,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
     },
     {
         "Gaussian (HHCF)",
@@ -1064,24 +929,25 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_hhcf_func,
         NULL,
         &gauss_hhcf_guess,
-        &gauss_hhcf_scale,
+        &cf_scale,
+        &cf_get_units,
         &weights_linear_decrease,
-        G_N_ELEMENTS(gaussexp_two_params),
-        gaussexp_two_params,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
     },
     {
         "Exponential",
         "<i>f</i>(<i>x</i>) "
             "= <i>y</i><sub>0</sub> "
-            "+ <i>a</i> exp[−<i>b</i>(<i>x</i> "
-            "− <i>x</i><sub>0</sub>)]",
+            "+ <i>a</i> exp[−(<i>x</i> − <i>x</i><sub>0</sub>)/<i>b</i>]",
         &exp_func,
         NULL,
         &exp_guess,
-        &exp_scale,
         NULL,
-        G_N_ELEMENTS(gaussexp_params),
-        gaussexp_params,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(gauss_params),
+        gauss_params,
     },
     {
         "Exponential (PSDF)",
@@ -1091,10 +957,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
-        &exp_psdf_scale,
+        &psdf_scale,
+        &psdf_get_units,
         NULL,
-        G_N_ELEMENTS(gaussexp_two_params),
-        gaussexp_two_params,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
     },
     {
         "Exponential (ACF)",
@@ -1103,10 +970,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_acf_func,
         NULL,
         &exp_acf_guess,
-        &exp_acf_scale,
+        &cf_scale,
+        &cf_get_units,
         &weights_linear_decrease,
-        G_N_ELEMENTS(gaussexp_two_params),
-        gaussexp_two_params,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
     },
     {
         "Exponential (HHCF)",
@@ -1116,10 +984,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_hhcf_func,
         NULL,
         &exp_hhcf_guess,
-        &exp_hhcf_scale,
+        &cf_scale,
+        &cf_get_units,
         &weights_linear_decrease,
-        G_N_ELEMENTS(gaussexp_two_params),
-        gaussexp_two_params,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
     },
     {
         "Polynom (order 0)",
@@ -1127,10 +996,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_0_func,
         NULL,
         &poly_0_guess,
-        &poly_0_scale,
         NULL,
-        G_N_ELEMENTS(poly0_params),
-        poly0_params,
+        NULL,
+        NULL,
+        1,
+        poly3_params,
     },
     {
         "Polynom (order 1)",
@@ -1138,10 +1008,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_1_func,
         NULL,
         &poly_1_guess,
-        &poly_1_scale,
         NULL,
-        G_N_ELEMENTS(poly1_params),
-        poly1_params,
+        NULL,
+        NULL,
+        2,
+        poly3_params,
     },
     {
         "Polynom (order 2)",
@@ -1150,10 +1021,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_2_func,
         NULL,
         &poly_2_guess,
-        &poly_2_scale,
         NULL,
-        G_N_ELEMENTS(poly2_params),
-        poly2_params,
+        NULL,
+        NULL,
+        3,
+        poly3_params,
     },
     {
         "Polynom (order 3)",
@@ -1163,9 +1035,10 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_3_func,
         NULL,
         &poly_3_guess,
-        &poly_3_scale,
         NULL,
-        G_N_ELEMENTS(poly3_params),
+        NULL,
+        NULL,
+        4,
         poly3_params,
     },
     {
@@ -1179,7 +1052,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &square_func,
         NULL,
         &square_guess,
-        &square_scale,
+        NULL,
+        NULL,
         NULL,
         G_N_ELEMENTS(square_params),
         square_params,
@@ -1187,14 +1061,15 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Power",
         "<i>f</i>(<i>x</i>) "
-            "= <i>a</i> + <i>b</i><i>x</i><sup><i>c</i></sup>",
+            "= <i>a</i> + (<i>x</i>/<i>b</i>)<sup><i>c</i></sup>",
         &power_func,
         NULL,
         &power_guess,
-        &power_scale,
         NULL,
-        G_N_ELEMENTS(poly2_params),
-        poly2_params,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(power_params),
+        power_params,
     },
     {
         "Lorentzian",
@@ -1204,22 +1079,24 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &lorentz_func,
         NULL,
         &lorentz_guess,
-        &lorentz_scale,
         NULL,
-        G_N_ELEMENTS(poly2_params),
-        poly2_params,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(lorentz_params),
+        lorentz_params,
     },
     {
         "Sinc",
         "<i>f</i>(<i>x</i>) "
-            "= <i>a</i> sinc(<i>b</i><i>x</i>)",
+            "= <i>a</i> sinc(<i>x</i>/<i>b</i>)",
         &sinc_func,
         NULL,
         &sinc_guess,
-        &sinc_scale,
         NULL,
-        G_N_ELEMENTS(poly1_params),
-        poly1_params,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(sinc_params),
+        sinc_params,
     },
 };
 
@@ -1292,7 +1169,7 @@ _gwy_nlfit_preset_class_setup_presets(void)
  * @params: Preset parameter values.
  * @fres: Set to %TRUE if succeeds, %FALSE on failure.
  *
- * Return preset function value in point @x with parameters @params.
+ * Calculates preset function value in point @x with parameters @params.
  *
  * Returns: The function value.
  **/
@@ -1311,7 +1188,7 @@ gwy_nlfit_preset_get_value(GwyNLFitPreset *preset,
  * gwy_nlfit_preset_get_formula:
  * @preset: A NL fitter function preset.
  *
- * Returns function formula of @preset (with Pango markup).
+ * Gets function formula of @preset (with Pango markup).
  *
  * Returns: The preset function formula.
  **/
@@ -1327,7 +1204,7 @@ gwy_nlfit_preset_get_formula(GwyNLFitPreset* preset)
  * @preset: A NL fitter function preset.
  * @param: A parameter number.
  *
- * Returns the name of parameter number @param of preset @preset.
+ * Gets the name of a fitting parameter of a fitter preset.
  *
  * The name may contain Pango markup.
  *
@@ -1344,6 +1221,33 @@ gwy_nlfit_preset_get_param_name(GwyNLFitPreset* preset,
     par = preset->builtin->param + param;
 
     return par->name;
+}
+
+/**
+ * gwy_nlfit_preset_get_param_units:
+ * @preset: A NL fitter function preset.
+ * @param: A parameter number.
+ * @siunit_x: SI unit of abscissa.
+ * @siunit_y: SI unit of ordinate.
+ *
+ * Derives the SI unit of a fitting parameter from the units of abscissa and
+ * ordinate.
+ *
+ * Returns: A newly created #GwySIUnit with the units of the parameter @param.
+ *          If the units of @param are not representable as #GwySIUnit,
+ *          the result is unitless (i.e. it will be presented as a mere
+ *          number).
+ *
+ * Since: 2.5
+ **/
+GwySIUnit*
+gwy_nlfit_preset_get_param_units(GwyNLFitPreset *preset,
+                                 gint param,
+                                 GwySIUnit *siunit_x,
+                                 GwySIUnit *siunit_y)
+{
+    /* FIXME: builtin */
+    return builtin_get_unit(preset, param, siunit_x, siunit_y);
 }
 
 /**
@@ -1457,7 +1361,7 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
 
     }
     /* FIXME: builtin */
-    preset->builtin->scale_params(param, xscale, yscale, 1);
+    builtin_scale(preset, param, xscale, yscale, 1);
 
     /*load default weights for given function type*/
     if (preset->builtin->set_default_weights) {
@@ -1477,9 +1381,9 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
     }
     /*recompute parameters to be scaled as original data*/
     /* FIXME: builtin */
-    preset->builtin->scale_params(param, xscale, yscale, -1);
+    builtin_scale(preset, param, xscale, yscale, -1);
     if (ok)
-        preset->builtin->scale_params(err, xscale, yscale, -1);
+        builtin_scale(preset, err, xscale, yscale, -1);
 
     g_free(ysc);
     g_free(xsc);
