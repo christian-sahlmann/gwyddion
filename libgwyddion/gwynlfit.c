@@ -369,6 +369,13 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                                        x, y, weight,
                                        n_param, param,
                                        user_data, resid);
+        /* Catch failed evaluation even if it's not reported.
+         * FIXME: isfinite() is C99, finite() is BSD, make a wrapper? */
+        if (!(sumr1 == sumr1)) {
+            nlfit->eval = FALSE;
+            break;
+        }
+
         /* Good, we've finished */
         if ((sumr1 == 0)
             || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
