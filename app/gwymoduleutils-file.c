@@ -146,6 +146,7 @@ gwy_app_channel_title_fall_back(GwyContainer *data,
  * SECTION:gwymoduleutils-file
  * @title: file module utils
  * @short_description: Utility functions for file modules
+ * @include: app/gwymoduleutils-file.h
  *
  * Functions gwy_app_channel_check_nonsquare() and
  * gwy_app_channel_title_fall_back() perform common tasks improving the

@@ -212,6 +212,7 @@ gwy_save_auxiliary_with_callback(const gchar *title,
  * SECTION:gwymoduleutils
  * @title: module utils
  * @short_description: Module utility functions
+ * @include: app/gwymoduleutils.h
  **/
 
 /**
