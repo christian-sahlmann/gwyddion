@@ -28,7 +28,7 @@ SCAN_OPTIONS =
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml
-MKDB_OPTIONS =
+MKDB_OPTIONS = --default-includes=libgwydgets/gwydgets.h
 
 # Extra options to supply to gtkdoc-mktmpl
 # e.g. MKTMPL_OPTIONS=--only-section-tmpl
@@ -51,9 +51,6 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/cd_rline.png \
 	$(top_srcdir)/pixmaps/cd_step.png \
 	$(top_srcdir)/pixmaps/cd_rstep.png
-
-# Includes required for types compilation
-TYPES_INCLUDE = \#include \"$(DOC_DIRNAME)/gwydgets.h\"
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml

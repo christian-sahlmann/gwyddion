@@ -13,8 +13,7 @@ EXTRA_DIST = \
 	README \
 	README.QA \
 	makefile.msc \
-	add-objects.py \
-	extract-types.py
+	add-objects.py
 
 if ENABLE_GTK_DOC
 docs:

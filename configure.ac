@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[4])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070216])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070219])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -81,7 +81,7 @@ AC_PROG_LIBTOOL
 AM_PROG_CC_STDC
 AC_PROG_INSTALL
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
-GTK_DOC_CHECK(1.4)
+GTK_DOC_CHECK(1.8)
 
 #############################################################################
 # 64bit (for FFTW 3.0 warning)

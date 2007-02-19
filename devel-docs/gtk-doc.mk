@@ -14,6 +14,7 @@ GWY_DOC_LIBS = \
 	@GTKGLEXT_LIBS@ @BASIC_LIBS@
 
 GWY_SCAN_OPTIONS = \
+	--rebuild-sections --rebuild-types \
 	--deprecated-guards="GWY_DISABLE_DEPRECATED" \
 	--ignore-decorators="_GWY_STATIC_INLINE"
 
@@ -77,10 +78,6 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
 	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS) $(EXTRA_HFILES)
-	if test "x$(TYPES_INCLUDE)" != x; then \
-	    echo "$(TYPES_INCLUDE)"; \
-	    $(PYTHON) $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
-	fi >$(srcdir)/$(DOC_MODULE).types
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types >/dev/null 2>&1 ; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
 	else \
@@ -92,8 +89,6 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
 	    $(PYTHON) ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-decl-list.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
 	fi
-	diff $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-sections.txt >/dev/null 2>&1 || \
-	    cat $(DOC_MODULE)-decl-list.txt >$(DOC_MODULE)-sections.txt
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp

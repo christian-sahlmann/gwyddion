@@ -44,17 +44,6 @@ only enabled, not executed.  Change to the appropriate dir and run
 
 if you want to update the API documentation.
 
-This may invoke only a partial update however.  To rebuild the documentation
-fully you can issue make maintainer-clean first, but this removes also
-Makefile and Makefile.in.  So instead the following scriptlet can be used:
-
-  make clean
-  rm -f libgwy*/*-sections.txt libgwy*/*-decl-list.txt libgwy*/template/*
-  make docs
-
-See build_documentation() in utils/gwyddion-night-build for discussion (note
-this script is not distributed, fetch it from CVS).
-
 
 ===[ 2. Custom scripts ]=====================================================
 
@@ -69,13 +58,9 @@ files are:
 
 The rest is generated:
 
-- libgwy*.types
-  rationale: its purpose is to instantiate all type classes a library defines,
-             such a task is better automated
-  tools: extract-types.py extracts type names from lines
-         #define GWY_FOO_GET_(CLASS|IFACE)
+- libgwy*.types (supported by gtk-doc since 1.8)
 
-- libgwy*-sections.txt
+- libgwy*-sections.txt (supported by gtk-doc since 1.8)
   rationale: if header files are organized reasonably they naturaly form
              sections, therefore sections created by gtkdoc-scan are directly
              used
