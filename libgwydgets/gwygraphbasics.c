@@ -50,6 +50,9 @@ static const GwyRGBA nice_colors[] = {
     { 0.681, 0.000, 1.000, 1.000 },    /* Light violet */
 };
 
+/* FIXME: use Gtk+ theme */
+static const GwyRGBA selection_color = { 0.82, 0.6, 0.75, 1.0 };
+
 static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
@@ -374,8 +377,7 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
                                 GwyGraphActiveAreaSpecs *specs,
                                 GwySelectionGraphPoint *selection)
 {
-    /* FIXME: use Gtk+ theme */
-    static const GwyRGBA color = { 0.4, 0.4, 0.4, 1.0 };
+    static const GwyRGBA grid_color = { 0.4, 0.4, 0.4, 1.0 };
     gint i, size, n_points;
     gdouble selection_data[2];
     GwySelection *sel;
@@ -392,7 +394,7 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
         gwy_graph_draw_point(drawable, gc,
                              x_data_to_pixel(specs, selection_data[0]),
                              y_data_to_pixel(specs, selection_data[1]),
-                             GWY_GRAPH_POINT_CROSS, size, &color);
+                             GWY_GRAPH_POINT_CROSS, size, &grid_color);
     }
 }
 
@@ -411,8 +413,6 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
                                GwyGraphActiveAreaSpecs *specs,
                                GwySelectionGraphArea *selection)
 {
-    /* FIXME: use Gtk+ theme */
-    static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
     gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
@@ -423,7 +423,7 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
     if (n_of_areas == 0)
         return;
 
-    gwy_rgba_set_gdk_gc_fg(&color, gc);
+    gwy_rgba_set_gdk_gc_fg(&selection_color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
         gwy_selection_get_object(sel, i, selection_areadata);
@@ -451,8 +451,6 @@ gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
                                GwyGraphActiveAreaSpecs *specs,
                                GwySelectionGraph1DArea *selection)
 {
-    /* FIXME: use Gtk+ theme */
-    static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
     gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
@@ -463,7 +461,7 @@ gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
     if (n_of_areas == 0)
         return;
 
-    gwy_rgba_set_gdk_gc_fg(&color, gc);
+    gwy_rgba_set_gdk_gc_fg(&selection_color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
         gwy_selection_get_object(sel, i, selection_areadata);
@@ -493,8 +491,6 @@ gwy_graph_draw_selection_yareas(GdkDrawable *drawable,
                                 GwyGraphActiveAreaSpecs *specs,
                                 GwySelectionGraph1DArea *selection)
 {
-    /* FIXME: use Gtk+ theme */
-    static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
     gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
     gdouble selection_areadata[4];
@@ -505,7 +501,7 @@ gwy_graph_draw_selection_yareas(GdkDrawable *drawable,
     if (n_of_areas == 0)
         return;
 
-    gwy_rgba_set_gdk_gc_fg(&color, gc);
+    gwy_rgba_set_gdk_gc_fg(&selection_color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
         gwy_selection_get_object(sel, i, selection_areadata);
@@ -537,8 +533,6 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
                                GwySelectionGraphLine *selection,
                                GtkOrientation orientation)
 {
-    /* FIXME: use Gtk+ theme */
-    static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
     gint i, n_of_lines;
     gdouble selection_linedata;
     GwySelection *sel;
@@ -548,7 +542,7 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     if (n_of_lines == 0)
         return;
 
-    gwy_rgba_set_gdk_gc_fg(&color, gc);
+    gwy_rgba_set_gdk_gc_fg(&selection_color, gc);
 
     for (i = 0; i < n_of_lines; i++) {
         gwy_selection_get_object(sel, i, &selection_linedata);
@@ -558,14 +552,14 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
                                 y_data_to_pixel(specs, selection_linedata),
                                 specs->xmin + specs->width,
                                 y_data_to_pixel(specs, selection_linedata),
-                                GDK_LINE_SOLID, 1, &color);
+                                GDK_LINE_SOLID, 1, &selection_color);
         else
             gwy_graph_draw_line(drawable, gc,
                                 x_data_to_pixel(specs, selection_linedata),
                                 specs->ymin,
                                 x_data_to_pixel(specs, selection_linedata),
                                 specs->ymin + specs->height,
-                                GDK_LINE_SOLID, 1, &color);
+                                GDK_LINE_SOLID, 1, &selection_color);
     }
 }
 
