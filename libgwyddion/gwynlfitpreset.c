@@ -702,7 +702,7 @@ power_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
 
 static GwySIUnit*
 power_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
-                gint param,
+                guint param,
                 G_GNUC_UNUSED GwySIUnit *siunit_x,
                 GwySIUnit *siunit_y)
 {
@@ -735,7 +735,7 @@ lorentz_func(gdouble x,
              gboolean *fres)
 {
     *fres = TRUE;
-    return b[0]/(b[1]*b[1] + (x - b[2])*(x - b[2]));
+    return b[0] + b[2]/(b[3]*b[3] + (x - b[1])*(x - b[1]));
 }
 
 static void
@@ -750,9 +750,9 @@ lorentz_guess(gint n_dat,
 
     imin = imax = 0;
     for (i = 1; i < n_dat; i++) {
-        if (G_UNLIKELY(y[imax] < y[i]))
+        if (y[imax] < y[i])
             imax = i;
-        if (G_UNLIKELY(y[imin] < y[i]))
+        if (y[imin] > y[i])
             imin = i;
     }
 
@@ -766,22 +766,26 @@ lorentz_guess(gint n_dat,
     c2p *= (x[n_dat-1] - x[0])/n_dat;
     c2m *= (x[n_dat-1] - x[0])/n_dat;
 
-    param[0] = c2p/(c0/y[imax] + x[n_dat-1] - x[0]);
-    if (param[0]*y[imax] > 0.0) {
-        param[1] = sqrt(param[0]/y[imax]);
-        param[2] = x[imax];
+    param[2] = c2p/(c0/y[imax] + x[n_dat-1] - x[0]);
+    if (param[2]*y[imax] > 0.0) {
+        param[3] = sqrt(param[2]/y[imax]);
+        param[1] = x[imax];
     }
     else {
-        param[0] = c2m/(c0/y[imin] + x[n_dat-1] - x[0]);
-        if (param[0]*y[imin] > 0.0) {
-            param[1] = sqrt(param[0]/y[imin]);
-            param[2] = x[imin];
+        param[2] = c2m/(c0/y[imin] + x[n_dat-1] - x[0]);
+        if (param[2]*y[imin] > 0.0) {
+            param[3] = sqrt(param[2]/y[imin]);
+            param[1] = x[imin];
         }
         else {
             *fres = FALSE;
             return;
         }
     }
+    if (param[2] > 0.0)
+        param[0] = y[imin];
+    else
+        param[0] = y[imax];
 
     *fres = TRUE;
 }
@@ -928,9 +932,10 @@ static const GwyNLFitParam power_params[] = {
 };
 
 static const GwyNLFitParam lorentz_params[] = {
-    { "a", 2, 1, },
-    { "b", 1, 0, },
-    { "c", 1, 0, },
+    { "y<sub>0</sub>", 0, 1, },
+    { "x<sub>0</sub>", 1, 0, },
+    { "a",             2, 1, },
+    { "b",             1, 0, },
 };
 
 static const GwyNLFitParam sinc_params[] = {
@@ -1135,8 +1140,9 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Lorentzian",
         "<i>f</i>(<i>x</i>) "
-            "= <i>a</i>/[<i>b</i><sup>2</sup> "
-            "+ (<i>x</i> − <i>c</i>)<sup>2</sup>]",
+            "= <i>y</i><sub>0</sub> "
+            "+ <i>a</i>/[<i>b</i><sup>2</sup> "
+            "+ (<i>x</i> − <i>x</i><sub>0</sub>)<sup>2</sup>]",
         &lorentz_func,
         NULL,
         &lorentz_guess,
