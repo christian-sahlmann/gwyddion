@@ -41,7 +41,7 @@
  * <mime-type type="application/x-spml-spm">
  *   <comment>SPML data</comment>
  *   <magic priority="50">
- *     <match type="string" offset="0" value="<SPML"/>
+ *     <match type="string" offset="0" value="&lt;SPML"/>
  *   </magic>
  *   <glob pattern="*.xml"/>
  *   <glob pattern="*.XML"/>
