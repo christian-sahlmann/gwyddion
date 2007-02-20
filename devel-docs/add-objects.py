@@ -2,6 +2,8 @@
 from __future__ import generators
 import sys, re
 
+debug = False
+
 # Compatibility with Pyhton-2.2
 if not __builtins__.__dict__.has_key('enumerate'):
     def enumerate(collection):
@@ -23,6 +25,9 @@ fh = file(object_file, 'r')
 objects = dict([(s.strip(), 1) for s in fh.readlines()])
 fh.close()
 
+if debug:
+    print 'Objects from %s:' % object_file, objects
+
 fh = file(section_file, 'r')
 lines = fh.readlines()
 fh.close()
@@ -32,8 +37,12 @@ addme = ''
 added = False
 for i, l in enumerate(lines):
     if l.strip() == addme or l.strip() == addme + 'Class':
+        if debug:
+            print 'Skipping matching %s' % l.strip()
         l = ''
     if addme and not added:
+        if debug:
+            print 'Adding %s, %sClass' % (addme, addme)
         fh.write(addme + '\n')
         fh.write(addme + 'Class\n')
         added = True
@@ -41,7 +50,11 @@ for i, l in enumerate(lines):
     if m:
         added = False
         addme = m.group('object')
+        if debug:
+            print 'Object-like declaration %s' % addme
         if not objects.has_key(addme):
+            if debug:
+                print 'Type %s is not in objects' % addme
             addme = ''
     fh.write(l)
 fh.close()

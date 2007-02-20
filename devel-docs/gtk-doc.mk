@@ -73,7 +73,7 @@ docs: html-build.stamp
 
 #### scan ####
 
-scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
+scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) ${top_srcdir}/devel-docs/add-objects.py
 	@echo 'gtk-doc: Scanning header files'
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
@@ -87,7 +87,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	    done \
 	fi
 	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
-	    $(PYTHON) ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-decl-list.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	    $(PYTHON) ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
 	fi
 	touch scan-build.stamp
 
