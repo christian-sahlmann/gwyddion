@@ -56,10 +56,12 @@ typedef struct {
     GwyNLFitter *fitter;
     gboolean is_fitted;
     gboolean auto_estimate;
+    gboolean auto_plot;
     GwyGraphModel *graph_model;
     GwyDataLine *xdata;
     GwyDataLine *ydata;
     GwyRGBA fitcolor;
+    GwySIValueFormat *abscissa_vf;
 } FitArgs;
 
 typedef struct {
@@ -88,6 +90,8 @@ typedef struct {
     GtkWidget **covar;
     FitParamControl param[MAX_PARAMS];
     GtkWidget *auto_estimate;
+    GtkWidget *auto_plot;
+    gboolean in_update;
 } FitControls;
 
 static gboolean    module_register           (void);
@@ -104,15 +108,18 @@ static void        curve_changed             (GtkComboBox *combo,
                                               FitControls *controls);
 static void        auto_estimate_changed     (GtkToggleButton *check,
                                               FitControls *controls);
+static void        auto_plot_changed         (GtkToggleButton *check,
+                                              FitControls *controls);
 static void        function_changed          (GtkComboBox *combo,
                                               FitControls *controls);
-static void        from_changed_cb           (GtkWidget *entry,
+static void        range_changed             (GtkWidget *entry,
                                               FitControls *controls);
-static void        to_changed_cb             (GtkWidget *entry,
+static gboolean    range_unfocus             (GtkWidget *entry,
+                                              GdkEventFocus *event,
                                               FitControls *controls);
 static void        param_initial_activate    (GtkWidget *entry,
                                               gpointer user_data);
-static void        param_initial_focus_out   (GtkWidget *entry,
+static gboolean    param_initial_unfocus     (GtkWidget *entry,
                                               GdkEventFocus *event,
                                               gpointer user_data);
 static void        toggle_changed            (GtkToggleButton *button,
@@ -180,6 +187,7 @@ fit(GwyGraph *graph)
     memset(&args, 0, sizeof(FitArgs));
 
     args.auto_estimate = TRUE;
+    args.auto_plot = TRUE;
     args.parent_graph = graph;
     args.xdata = gwy_data_line_new(1, 1.0, FALSE);
     args.ydata = gwy_data_line_new(1, 1.0, FALSE);
@@ -195,6 +203,8 @@ fit(GwyGraph *graph)
     g_object_unref(args.ydata);
     if (args.fitter)
         gwy_math_nlfit_free(args.fitter);
+    if (args.abscissa_vf)
+        gwy_si_unit_value_format_free(args.abscissa_vf);
 }
 
 static void
@@ -211,12 +221,25 @@ fit_dialog(FitArgs *args)
     GwyGraphModel *gmodel;
     GwyGraphArea *area;
     GwySelection *selection;
+    GwySIUnit *siunit;
     FitControls controls;
     gint response, i, j, row;
+    gdouble xmin, xmax;
 
     controls.args = args;
+    controls.in_update = TRUE;
 
-    dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
+    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
+    gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
+    g_object_get(gmodel, "si-unit-x", &siunit, NULL);
+    args->abscissa_vf
+        = gwy_si_unit_get_format_with_digits(siunit,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                             MAX(fabs(xmin), fabs(xmax)), 4,
+                                             NULL);
+    g_object_unref(siunit);
+
+    dialog = gtk_dialog_new_with_buttons(_("Fit Graph"), NULL, 0, NULL);
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
@@ -243,6 +266,20 @@ fit_dialog(FitArgs *args)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
 
+    /* Curve to fit */
+    label = gtk_label_new_with_mnemonic(_("_Graph curve:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.curve = curve_selector_new(gmodel,
+                                        G_CALLBACK(curve_changed), &controls,
+                                        args->curve);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
+    gtk_table_attach(GTK_TABLE(table), controls.curve,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
     /* Fitted function */
     label = gtk_label_new_with_mnemonic(_("F_unction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -265,7 +302,7 @@ fit_dialog(FitArgs *args)
 
     /* Parameters sought */
     table2 = GTK_TABLE(gtk_table_new(MAX_PARAMS + 1, 10, FALSE));
-    gtk_table_set_row_spacings(table2, 2);
+    gtk_table_set_row_spacing(table2, 0, 2);
     gtk_table_set_col_spacings(table2, 2);
     gtk_table_set_col_spacing(table2, 0, 6);
     gtk_table_set_col_spacing(table2, 4, 6);
@@ -332,62 +369,62 @@ fit_dialog(FitArgs *args)
         }
     }
 
-    /* Curve */
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Fit Area")),
-                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Graph curve:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-
-    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
-    controls.curve = curve_selector_new(gmodel,
-                                        G_CALLBACK(curve_changed), &controls,
-                                        args->curve);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
-    gtk_table_attach(GTK_TABLE(table), controls.curve,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
     /* Fit area */
-    hbox2 = gtk_hbox_new(FALSE, 0);
+    hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(GTK_TABLE(table), hbox2,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new(_("From:"));
-    gtk_container_add(GTK_CONTAINER(hbox2), label);
+    label = gtk_label_new(_("Range:"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.from = gtk_entry_new();
-    gtk_entry_set_max_length(GTK_ENTRY(controls.from), 12);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.from), 12);
-    gtk_container_add(GTK_CONTAINER(hbox2), controls.from);
-    g_signal_connect(controls.from, "changed",
-                     G_CALLBACK(from_changed_cb), &controls);
+    g_object_set_data(G_OBJECT(controls.from), "id", (gpointer)"from");
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.from), 8);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.from, FALSE, FALSE, 0);
+    g_signal_connect(controls.from, "activate",
+                     G_CALLBACK(range_changed), &controls);
+    g_signal_connect(controls.from, "focus-out-event",
+                     G_CALLBACK(range_unfocus), &controls);
 
-    label = gtk_label_new(_("To:"));
-    gtk_container_add(GTK_CONTAINER(hbox2), label);
+    label = gtk_label_new(_("to"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.to = gtk_entry_new();
-    gtk_entry_set_max_length(GTK_ENTRY(controls.to), 12);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.to), 12);
-    gtk_container_add(GTK_CONTAINER(hbox2), controls.to);
-    g_signal_connect(controls.to, "changed",
-                     G_CALLBACK(to_changed_cb), &controls);
+    g_object_set_data(G_OBJECT(controls.to), "id", (gpointer)"to");
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.to), 8);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.to, FALSE, FALSE, 0);
+    g_signal_connect(controls.to, "activate",
+                     G_CALLBACK(range_changed), &controls);
+    g_signal_connect(controls.to, "focus-out-event",
+                     G_CALLBACK(range_unfocus), &controls);
 
-    /* Auto-estimate */
-    controls.auto_estimate
-        = gtk_check_button_new_with_mnemonic("_Instant estimate");
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_estimate),
-                                 args->auto_estimate);
-    gtk_table_attach(GTK_TABLE(table), controls.auto_estimate,
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), args->abscissa_vf->units);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    /* Auto-update */
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
+    label = gtk_label_new(_("Instant:"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.auto_estimate = gtk_check_button_new_with_mnemonic("e_stimate");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_estimate),
+                                 args->auto_estimate);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_estimate, FALSE, FALSE, 0);
     g_signal_connect(controls.auto_estimate, "toggled",
                      G_CALLBACK(auto_estimate_changed), &controls);
+
+    controls.auto_plot = gtk_check_button_new_with_mnemonic("_plot");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_plot),
+                                 args->auto_plot);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_plot, FALSE, FALSE, 0);
+    g_signal_connect(controls.auto_plot, "toggled",
+                     G_CALLBACK(auto_plot_changed), &controls);
 
     /* Graph */
     args->graph_model = gwy_graph_model_new_alike(gmodel);
@@ -401,7 +438,6 @@ fit_dialog(FitArgs *args)
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
-
     gwy_selection_set_max_objects(selection, 1);
     g_signal_connect(selection, "changed",
                      G_CALLBACK(graph_selected), &controls);
@@ -410,6 +446,7 @@ fit_dialog(FitArgs *args)
                               gwy_graph_model_get_curve(gmodel, args->curve));
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
 
+    controls.in_update = FALSE;
     gtk_widget_show_all(dialog);
 
     do {
@@ -517,7 +554,7 @@ fit_param_row_create(FitControls *controls,
     g_signal_connect(cntrl->init, "activate",
                      G_CALLBACK(param_initial_activate), controls);
     g_signal_connect(cntrl->init, "focus-out-event",
-                     G_CALLBACK(param_initial_focus_out), controls);
+                     G_CALLBACK(param_initial_unfocus), controls);
 }
 
 static void
@@ -597,12 +634,15 @@ fit_plot_curve(FitArgs *args,
         cmodel = gwy_graph_curve_model_new();
         g_object_set(cmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
-                     "description", _("Fitted curve"),
                      "color", &args->fitcolor,
                      NULL);
         gwy_graph_model_add_curve(args->graph_model, cmodel);
         g_object_unref(cmodel);
     }
+    g_object_set(cmodel,
+                 "description",
+                 initial ? _("Estimate") : gwy_sgettext("noun|Fit"),
+                 NULL);
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
 }
 
@@ -715,8 +755,17 @@ auto_estimate_changed(GtkToggleButton *check,
                       FitControls *controls)
 {
     controls->args->auto_estimate = gtk_toggle_button_get_active(check);
-    if (controls->args->auto_estimate)
+    if (controls->args->auto_estimate && !controls->args->is_fitted)
         dialog_update(controls, TRUE);
+}
+
+static void
+auto_plot_changed(GtkToggleButton *check,
+                  FitControls *controls)
+{
+    controls->args->auto_plot = gtk_toggle_button_get_active(check);
+    if (controls->args->auto_plot && !controls->args->is_fitted)
+        fit_plot_curve(controls->args, TRUE);
 }
 
 static void
@@ -774,6 +823,8 @@ dialog_update(FitControls *controls,
                        controls->args->param[i].init);
             gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buf);
         }
+        if (controls->args->auto_plot)
+            fit_plot_curve(controls->args, TRUE);
     }
 }
 
@@ -863,37 +914,48 @@ fit_guess(FitArgs *args)
 
 
 static void
-graph_selected(GwySelection* selection, gint i, FitControls *controls)
+graph_selected(GwySelection* selection,
+               gint i,
+               FitControls *controls)
 {
-    FitArgs *args = controls->args;
+    FitArgs *args;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
-    GwyGraph *graph = GWY_GRAPH(controls->graph);
     gchar buffer[24];
-    gdouble area_selection[2];
+    gdouble range[2];
     gint nselections;
     const gdouble *data;
 
-    nselections = gwy_selection_get_data(selection, NULL);
-    gwy_selection_get_object(selection, i, area_selection);
+    g_return_if_fail(i <= 0);
 
-    if (nselections <= 0 || area_selection[0] == area_selection[1]) {
-        gmodel = gwy_graph_get_model(graph);
+    args = controls->args;
+    nselections = gwy_selection_get_data(selection, NULL);
+    gwy_selection_get_object(selection, 0, range);
+
+    if (nselections <= 0 || range[0] >= range[1]) {
+        gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
         gcmodel = gwy_graph_model_get_curve(gmodel, 0);
         data = gwy_graph_curve_model_get_xdata(gcmodel);
         args->from = data[0];
         args->to = data[gwy_graph_curve_model_get_ndata(gcmodel) - 1];
     }
     else {
-        args->from = area_selection[0];
-        args->to = area_selection[1];
+        args->from = range[0];
+        args->to = range[1];
         if (args->from > args->to)
             GWY_SWAP(gdouble, args->from, args->to);
     }
-    g_snprintf(buffer, sizeof(buffer), "%.3g", args->from);
+    controls->in_update = TRUE;
+    g_snprintf(buffer, sizeof(buffer), "%.*f",
+               args->abscissa_vf->precision,
+               args->from/args->abscissa_vf->magnitude);
     gtk_entry_set_text(GTK_ENTRY(controls->from), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%.3g", args->to);
+    g_snprintf(buffer, sizeof(buffer), "%.*f",
+               args->abscissa_vf->precision,
+               args->to/args->abscissa_vf->magnitude);
     gtk_entry_set_text(GTK_ENTRY(controls->to), buffer);
+    controls->in_update = FALSE;
+
     dialog_update(controls, FALSE);
 }
 
@@ -906,28 +968,55 @@ param_initial_activate(GtkWidget *entry,
 
     i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "id"));
     controls->args->param[i].init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
+    if (controls->args->auto_plot)
+        fit_plot_curve(controls->args, TRUE);
 }
 
-static void
-param_initial_focus_out(GtkWidget *entry,
-                        G_GNUC_UNUSED GdkEventFocus *event,
-                        gpointer user_data)
+static gboolean
+param_initial_unfocus(GtkWidget *entry,
+                      G_GNUC_UNUSED GdkEventFocus *event,
+                      gpointer user_data)
 {
     param_initial_activate(entry, user_data);
+    return FALSE;
 }
 
 static void
-from_changed_cb(GtkWidget *entry, FitControls *controls)
+range_changed(GtkWidget *entry,
+              FitControls *controls)
 {
-    controls->args->from = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
-    dialog_update(controls, FALSE);
+    GwySelection *selection;
+    GwyGraphArea *area;
+    gdouble range[2];
+    const gchar *id;
+    gdouble *x;
+
+    id = g_object_get_data(G_OBJECT(entry), "id");
+    if (gwy_strequal(id, "from"))
+        x = &controls->args->from;
+    else
+        x = &controls->args->to;
+
+    *x = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
+    *x *= controls->args->abscissa_vf->magnitude;
+
+    if (controls->in_update)
+        return;
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
+    selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
+    range[0] = controls->args->from;
+    range[1] = controls->args->to;
+    gwy_selection_set_object(selection, 0, range);
 }
 
-static void
-to_changed_cb(GtkWidget *entry, FitControls *controls)
+static gboolean
+range_unfocus(GtkWidget *entry,
+              G_GNUC_UNUSED GdkEventFocus *event,
+              FitControls *controls)
 {
-    controls->args->to = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
-    dialog_update(controls, FALSE);
+    range_changed(entry, controls);
+    return FALSE;
 }
 
 static void
@@ -946,6 +1035,9 @@ copy_param(GObject *button,
     i = GPOINTER_TO_INT(g_object_get_data(button, "id"));
     g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->param[i].value);
     gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buffer);
+
+    if (controls->args->auto_plot)
+        fit_plot_curve(controls->args, TRUE);
 }
 
 static GtkWidget*
@@ -1053,6 +1145,7 @@ normalize_data(FitArgs *args)
 
 static const gchar preset_key[]        = "/module/graph_fit/preset";
 static const gchar auto_estimate_key[] = "/module/graph_fit/auto_estimate";
+static const gchar auto_plot_key[]     = "/module/graph_fit/auto_plot";
 
 static void
 load_args(GwyContainer *container,
@@ -1066,6 +1159,8 @@ load_args(GwyContainer *container,
                                               (const gchar*)preset);
     gwy_container_gis_boolean_by_name(container, auto_estimate_key,
                                       &args->auto_estimate);
+    gwy_container_gis_boolean_by_name(container, auto_plot_key,
+                                      &args->auto_plot);
 }
 
 static void
@@ -1080,6 +1175,8 @@ save_args(GwyContainer *container,
     gwy_container_set_string_by_name(container, preset_key, g_strdup(name));
     gwy_container_set_boolean_by_name(container, auto_estimate_key,
                                       args->auto_estimate);
+    gwy_container_set_boolean_by_name(container, auto_plot_key,
+                                      args->auto_plot);
 }
 
 /************************* fit report *****************************/
