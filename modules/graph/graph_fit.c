@@ -104,7 +104,7 @@ static void        curve_changed             (GtkComboBox *combo,
                                               FitControls *controls);
 static void        auto_estimate_changed     (GtkToggleButton *check,
                                               FitControls *controls);
-static void        type_changed_cb           (GtkWidget *combo,
+static void        function_changed          (GtkComboBox *combo,
                                               FitControls *controls);
 static void        from_changed_cb           (GtkWidget *entry,
                                               FitControls *controls);
@@ -249,7 +249,7 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-    controls.function = function_selector_new(G_CALLBACK(type_changed_cb),
+    controls.function = function_selector_new(G_CALLBACK(function_changed),
                                               &controls, args->function_type);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.function);
     gtk_table_attach(GTK_TABLE(table), controls.function,
@@ -257,7 +257,7 @@ fit_dialog(FitArgs *args)
     row++;
 
     controls.equation = gtk_label_new("f(x) =");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls.equation), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.equation), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.equation,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 8);
@@ -380,6 +380,8 @@ fit_dialog(FitArgs *args)
     /* Auto-estimate */
     controls.auto_estimate
         = gtk_check_button_new_with_mnemonic("_Instant estimate");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_estimate),
+                                 args->auto_estimate);
     gtk_table_attach(GTK_TABLE(table), controls.auto_estimate,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -404,9 +406,9 @@ fit_dialog(FitArgs *args)
     g_signal_connect(selection, "changed",
                      G_CALLBACK(graph_selected), &controls);
 
-    args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
-                                               args->function_type);
-    curve_changed(GTK_COMBO_BOX(controls.curve), &controls);
+    gwy_graph_model_add_curve(controls.args->graph_model,
+                              gwy_graph_model_get_curve(gmodel, args->curve));
+    function_changed(GTK_COMBO_BOX(controls.function), &controls);
 
     gtk_widget_show_all(dialog);
 
@@ -525,14 +527,14 @@ destroy(FitControls *controls)
 }
 
 static void
-clear(FitArgs *args, FitControls *controls)
+clear_values(FitControls *controls)
 {
     gint i, j;
 
-    if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
-        gwy_graph_model_remove_curve(args->graph_model, 1);
+    if (gwy_graph_model_get_n_curves(controls->args->graph_model) == 2)
+        gwy_graph_model_remove_curve(controls->args->graph_model, 1);
 
-    args->is_fitted = FALSE;
+    controls->args->is_fitted = FALSE;
 
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_text(GTK_LABEL(controls->param[i].value), "");
@@ -540,8 +542,8 @@ clear(FitArgs *args, FitControls *controls)
         gtk_label_set_text(GTK_LABEL(controls->param[i].error), "");
         gtk_label_set_text(GTK_LABEL(controls->param[i].error_unit), "");
         for (j = 0; j <= i; j++)
-            gtk_label_set_markup(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
-                                 "");
+            gtk_label_set_text(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
+                               "");
     }
 
     gtk_label_set_markup(GTK_LABEL(controls->chisq), NULL);
@@ -704,6 +706,7 @@ curve_changed(GtkComboBox *combo,
     gwy_graph_model_add_curve(graph_model,
                               gwy_graph_model_get_curve(parent_gmodel,
                                                         controls->args->curve));
+    clear_values(controls);
     dialog_update(controls, TRUE);
 }
 
@@ -717,64 +720,60 @@ auto_estimate_changed(GtkToggleButton *check,
 }
 
 static void
-type_changed_cb(GtkWidget *combo, FitControls *controls)
+function_changed(GtkComboBox *combo, FitControls *controls)
 {
     FitArgs *args = controls->args;
-    gint active, i;
+    gint nparams, i;
+    gboolean sens;
 
-    active = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
-    if (active == args->function_type)
-        return;
-
-    args->function_type = active;
+    args->function_type = gtk_combo_box_get_active(combo);
     args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                                args->function_type);
-    for (i = 0; i < MAX_PARAMS; i++)
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->param[i].fix),
-                                     FALSE);
-
-    dialog_update(controls, TRUE);
-}
-
-static void
-dialog_update(FitControls *controls,
-              gboolean do_guess)
-{
-    FitArgs *args;
-    char buffer[20];
-    gboolean sens;
-    gint i;
-
-    args = controls->args;
-
-    if (do_guess || args->auto_estimate) {
-        clear(args, controls);
-        fit_guess(args);
-    }
-
+    nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
     gtk_label_set_markup(GTK_LABEL(controls->equation),
                          gwy_nlfit_preset_get_formula(args->fitfunc));
 
     for (i = 0; i < MAX_PARAMS; i++) {
-        sens = (i < gwy_nlfit_preset_get_nparams(args->fitfunc));
-        if (sens) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->param[i].fix),
+                                     FALSE);
+        if ((sens = (i < nparams))) {
             gtk_label_set_markup(GTK_LABEL(controls->param[i].name),
                                  gwy_nlfit_preset_get_param_name(args->fitfunc,
                                                                  i));
-
-            g_snprintf(buffer, sizeof(buffer), "%.4g", args->param[i].init);
-            gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buffer);
         }
         else {
-            gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), "");
             gtk_label_set_text(GTK_LABEL(controls->param[i].name), "");
         }
+        gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), "");
         gtk_widget_set_sensitive(controls->param[i].name, sens);
         gtk_widget_set_sensitive(controls->param[i].equals, sens);
         gtk_widget_set_sensitive(controls->param[i].init, sens);
         gtk_widget_set_sensitive(controls->param[i].pm, sens);
         gtk_widget_set_sensitive(controls->param[i].fix, sens);
         gtk_widget_set_sensitive(controls->param[i].copy, sens);
+    }
+
+    clear_values(controls);
+    dialog_update(controls, TRUE);
+}
+
+/* Get rid of completely? */
+static void
+dialog_update(FitControls *controls,
+              gboolean do_guess)
+{
+    guint nparams, i;
+    gchar buf[24];
+
+    if (do_guess || controls->args->auto_estimate) {
+        fit_guess(controls->args);
+
+        nparams = gwy_nlfit_preset_get_nparams(controls->args->fitfunc);
+        for (i = 0; i < nparams; i++) {
+            g_snprintf(buf, sizeof(buf), "%0.6g",
+                       controls->args->param[i].init);
+            gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buf);
+        }
     }
 }
 
