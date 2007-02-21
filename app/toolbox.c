@@ -72,8 +72,9 @@ static void gwy_app_change_default_mask_color_cb(void);
 static void       gwy_app_gl_view_maybe_cb     (void);
 
 static GtkTargetEntry dnd_target_table[] = {
-    { "STRING",     0, DND_TARGET_STRING },
-    { "text/plain", 0, DND_TARGET_STRING },
+    { "STRING",        0, DND_TARGET_STRING, },
+    { "text/plain",    0, DND_TARGET_STRING, },
+    { "text/uri-list", 0, DND_TARGET_STRING, },
 };
 
 /* Toolbox contents.  To certain degree ready to externalize */
