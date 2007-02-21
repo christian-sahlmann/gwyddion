@@ -35,7 +35,6 @@
 #include <app/gwymoduleutils.h>
 
 enum { MAX_PARAMS = 4 };
-enum { RESPONSE_SAVE = 1 };
 
 typedef struct {
     gboolean fix;
@@ -101,7 +100,6 @@ static void        fit_param_row_create      (FitControls *controls,
                                               gint i,
                                               GtkTable *table,
                                               gint row);
-static void        destroy                   (FitControls *controls);
 static void        recompute                 (FitArgs *args,
                                               FitControls *controls);
 static void        curve_changed             (GtkComboBox *combo,
@@ -149,7 +147,6 @@ static void        load_args                 (GwyContainer *container,
                                               FitArgs *args);
 static void        save_args                 (GwyContainer *container,
                                               FitArgs *args);
-static void        create_results_window     (FitArgs *args);
 static GString*    create_fit_report         (FitArgs *args);
 
 static GwyModuleInfo module_info = {
@@ -211,9 +208,10 @@ static void
 fit_dialog(FitArgs *args)
 {
     enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_FIT = 2,
-        RESPONSE_PLOT = 3
+        RESPONSE_ESTIMATE = 1,
+        RESPONSE_FIT,
+        RESPONSE_PLOT,
+        RESPONSE_SAVE,
     };
 
     GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander;
@@ -224,6 +222,7 @@ fit_dialog(FitArgs *args)
     GwySIUnit *siunit;
     FitControls controls;
     gint response, i, j, row;
+    GString *report;
     gdouble xmin, xmax;
 
     controls.args = args;
@@ -247,9 +246,11 @@ fit_dialog(FitArgs *args)
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          _("_Estimate"), RESPONSE_RESET);
+                          _("_Estimate"), RESPONSE_ESTIMATE);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Plot Inits"), RESPONSE_PLOT);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_SAVE, RESPONSE_SAVE);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -355,6 +356,8 @@ fit_dialog(FitArgs *args)
     row++;
 
     controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
+    g_signal_connect_swapped(dialog, "destroy",
+                             G_CALLBACK(g_free), controls.covar);
     table2 = GTK_TABLE(gtk_table_new(MAX_PARAMS, MAX_PARAMS, TRUE));
     gtk_table_set_col_spacings(table2, 6);
     gtk_table_set_row_spacings(table2, 2);
@@ -445,6 +448,7 @@ fit_dialog(FitArgs *args)
     gwy_graph_model_add_curve(controls.args->graph_model,
                               gwy_graph_model_get_curve(gmodel, args->curve));
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
+    graph_selected(selection, -1, &controls);
 
     controls.in_update = FALSE;
     gtk_widget_show_all(dialog);
@@ -454,18 +458,28 @@ fit_dialog(FitArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            destroy(&controls);
             gtk_widget_destroy(dialog);
             return;
             break;
 
             case GTK_RESPONSE_OK:
-            if (args->is_fitted && args->fitter->covar)
-                create_results_window(args);
+            if (args->is_fitted && args->fitter->covar) {
+                GwyGraphCurveModel *cmodel;
+
+                cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
+                gwy_graph_model_add_curve(gmodel, cmodel);
+            }
             gtk_widget_destroy(dialog);
             break;
 
-            case RESPONSE_RESET:
+            case RESPONSE_SAVE:
+            report = create_fit_report(args);
+            gwy_save_auxiliary_data(_("Save Fit Report"), GTK_WINDOW(dialog),
+                                    -1, report->str);
+            g_string_free(report, TRUE);
+            break;
+
+            case RESPONSE_ESTIMATE:
             dialog_update(&controls, TRUE);
             break;
 
@@ -555,12 +569,6 @@ fit_param_row_create(FitControls *controls,
                      G_CALLBACK(param_initial_activate), controls);
     g_signal_connect(cntrl->init, "focus-out-event",
                      G_CALLBACK(param_initial_unfocus), controls);
-}
-
-static void
-destroy(FitControls *controls)
-{
-    g_free(controls->covar);
 }
 
 static void
@@ -1180,49 +1188,6 @@ save_args(GwyContainer *container,
 }
 
 /************************* fit report *****************************/
-static void
-attach_label(GtkWidget *table, const gchar *text,
-             gint row, gint col, gdouble halign)
-{
-    GtkWidget *label;
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), text);
-    gtk_misc_set_alignment(GTK_MISC(label), halign, 0.5);
-
-    gtk_table_attach(GTK_TABLE(table), label,
-                     col, col+1, row, row+1, GTK_FILL, 0, 2, 2);
-}
-
-static void
-results_window_response_cb(GtkWidget *window,
-                           gint response,
-                           GString *report)
-{
-    if (response == RESPONSE_SAVE) {
-        g_return_if_fail(report);
-        gwy_save_auxiliary_data(_("Save Fit Report"), GTK_WINDOW(window),
-                                -1, report->str);
-    }
-    else {
-        gtk_widget_destroy(window);
-        g_string_free(report, TRUE);
-    }
-}
-
-static gchar*
-format_magnitude(GString *str,
-                 gdouble magnitude)
-{
-    if (magnitude)
-        g_string_printf(str, "× 10<sup>%d</sup>",
-                        (gint)floor(log10(magnitude) + 0.5));
-    else
-        g_string_assign(str, "");
-
-    return str->str;
-}
-
 static gint
 count_really_fitted_points(FitArgs *args)
 {
@@ -1247,175 +1212,71 @@ count_really_fitted_points(FitArgs *args)
     return n;
 }
 
-static void
-create_results_window(FitArgs *args)
-{
-    GwyNLFitter *fitter = args->fitter;
-    GtkWidget *window, *tab, *table, *label;
-    GwyGraphCurveModel *gcmodel;
-    gdouble mag, value, sigma;
-    gint row, n, i, j;
-    gint precision;
-    GString *str, *su;
-    const gchar *s;
-    gchar *p;
-
-    g_return_if_fail(args->is_fitted);
-    g_return_if_fail(fitter->covar);
-
-    window = gtk_dialog_new_with_buttons(_("Fit Results"), NULL, 0,
-                                         GTK_STOCK_SAVE, RESPONSE_SAVE,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(window), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
-
-    table = gtk_table_new(9, 2, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
-                       FALSE, FALSE, 0);
-    row = 0;
-    gcmodel = gwy_graph_model_get_curve(args->graph_model, 0);
-
-    attach_label(table, _(_("<b>Data:</b>")), row, 0, 0.0);
-    g_object_get(gcmodel, "description", &p, NULL);
-    str = g_string_new(p);
-    g_free(p);
-
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    g_string_assign(str, "");
-    su = g_string_new("");
-    attach_label(table, _("Num of points:"), row, 0, 0.0);
-    g_string_printf(str, "%d of %d",
-                    count_really_fitted_points(args),
-                    gwy_graph_curve_model_get_ndata(gcmodel));
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    attach_label(table, _("X range:"), row, 0, 0.0);
-    mag = gwy_math_humanize_numbers((args->to - args->from)/120,
-                                    MAX(fabs(args->from), fabs(args->to)),
-                                    &precision);
-    g_string_printf(str, "[%.*f, %.*f] %s",
-                    precision, args->from/mag,
-                    precision, args->to/mag,
-                    format_magnitude(su, mag));
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, gwy_resource_get_name(GWY_RESOURCE(args->fitfunc)),
-                 row, 1, 0.0);
-    row++;
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label),
-                         gwy_nlfit_preset_get_formula(args->fitfunc));
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
-    row++;
-
-    n = gwy_nlfit_preset_get_nparams(args->fitfunc);
-    tab = gtk_table_new(n, 6, FALSE);
-    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    for (i = 0; i < n; i++) {
-        attach_label(tab, "=", i, 1, 0.5);
-        attach_label(tab, "±", i, 3, 0.5);
-        s = gwy_nlfit_preset_get_param_name(args->fitfunc, i);
-        attach_label(tab, s, i, 0, 0.0);
-        value = args->param[i].value;
-        sigma = args->param[i].error;
-        mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
-        g_string_printf(str, "%.*f", precision, value/mag);
-        attach_label(tab, str->str, i, 2, 1.0);
-        g_string_printf(str, "%.*f", precision, sigma/mag);
-        attach_label(tab, str->str, i, 4, 1.0);
-        attach_label(tab, format_magnitude(su, mag), i, 5, 0.0);
-    }
-    row++;
-
-    attach_label(table, _("Residual sum:"), row, 0, 0.0);
-    sigma = gwy_math_nlfit_get_dispersion(fitter);
-    mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
-    g_string_printf(str, "%.*f %s",
-                    precision, sigma/mag, format_magnitude(su, mag));
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    attach_label(table, _("<b>Correlation Matrix</b>"), row, 0, 0.0);
-    row++;
-
-    tab = gtk_table_new(n, n, TRUE);
-    for (i = 0; i < n; i++) {
-        for (j = 0; j <= i; j++) {
-            g_string_printf(str, "% .03f",
-                            gwy_math_nlfit_get_correlations(fitter, i, j));
-            attach_label(tab, str->str, i, j, 1.0);
-        }
-    }
-    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    g_string_free(str, TRUE);
-    g_string_free(su, TRUE);
-    str = create_fit_report(args);
-
-    g_signal_connect(window, "response",
-                     G_CALLBACK(results_window_response_cb), str);
-    gtk_widget_show_all(window);
-}
-
 static GString*
 create_fit_report(FitArgs *args)
 {
-    GString *report, *str;
+    GString *report;
     GwyGraphCurveModel *gcmodel;
-    gchar *s, *s2;
+    GwySIUnit *unitx, *unity, *unitp;
+    gchar *s, *unitstr;
     gint i, j, n;
 
-    g_assert(args->fitter->covar);
-    report = g_string_new("");
+    report = g_string_new(NULL);
+    g_return_val_if_fail(args->fitter->covar, report);
 
     gcmodel = gwy_graph_model_get_curve(args->graph_model, 0);
-    g_string_append_printf(report, _("\n===== Fit Results =====\n"));
+    g_string_append(report, _("===== Fit Results ====="));
+    g_string_append_c(report, '\n');
 
     g_object_get(gcmodel, "description", &s, NULL);
-    str = g_string_new(s);
+    g_string_append_printf(report, _("Data:             %s\n"), s);
     g_free(s);
 
-    g_string_append_printf(report, _("Data: %s\n"), str->str);
-    str = g_string_new("");
     g_string_append_printf(report, _("Number of points: %d of %d\n"),
                            count_really_fitted_points(args),
                            gwy_graph_curve_model_get_ndata(gcmodel));
 
-    g_string_append_printf(report, _("X range:          %g to %g\n"),
-                           args->from, args->to);
+    g_string_append_printf(report, _("X range:          %.*f to %.*f %s\n"),
+                           args->abscissa_vf->precision,
+                           args->from/args->abscissa_vf->magnitude,
+                           args->abscissa_vf->precision,
+                           args->to/args->abscissa_vf->magnitude,
+                           args->abscissa_vf->units);
     g_string_append_printf(report, _("Fitted function:  %s\n"),
                            gwy_resource_get_name(GWY_RESOURCE(args->fitfunc)));
-    g_string_append_printf(report, _("\nResults\n"));
+    g_string_append_c(report, '\n');
+    g_string_append_printf(report, _("Results\n"));
     n = gwy_nlfit_preset_get_nparams(args->fitfunc);
+    g_object_get(args->graph_model,
+                 "si-unit-x", &unitx,
+                 "si-unit-y", &unity,
+                 NULL);
     for (i = 0; i < n; i++) {
-        /* FIXME: how to do this better? use pango_parse_markup()? */
-        s = gwy_strreplace(gwy_nlfit_preset_get_param_name(args->fitfunc, i),
-                           "<sub>", "", (gsize)-1);
-        s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
-        g_string_append_printf(report, "%s = %g ± %g\n",
-                               s2, args->param[i].value, args->param[i].error);
-        g_free(s2);
+        const gchar *name;
+
+        name = gwy_nlfit_preset_get_param_name(args->fitfunc, i);
+        if (!pango_parse_markup(name, -1, 0, NULL, &s, NULL, NULL)) {
+            g_warning("Parameter name is not valid Pango markup");
+            s = g_strdup(name);
+        }
+        unitp = gwy_nlfit_preset_get_param_units(args->fitfunc, i,
+                                                 unitx, unity);
+        unitstr = gwy_si_unit_get_string(unitp, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_object_unref(unitp);
+        g_string_append_printf(report, "%4s = %g ± %g %s\n",
+                               s, args->param[i].value, args->param[i].error,
+                               unitstr);
         g_free(s);
     }
-    g_string_append_printf(report, _("\nResidual sum:   %g\n"),
+    g_object_unref(unitx);
+    g_object_unref(unity);
+    g_string_append_c(report, '\n');
+    g_string_append_printf(report, _("Residual sum:   %g\n"),
                            gwy_math_nlfit_get_dispersion(args->fitter));
-    g_string_append_printf(report, _("\nCorrelation matrix\n"));
+    g_string_append_c(report, '\n');
+    g_string_append_printf(report, _("Correlation matrix\n"));
     for (i = 0; i < n; i++) {
+        g_string_append(report, "  ");
         for (j = 0; j <= i; j++) {
             g_string_append_printf
                 (report, "% .03f",
@@ -1425,8 +1286,6 @@ create_fit_report(FitArgs *args)
         }
         g_string_append_c(report, '\n');
     }
-
-    g_string_free(str, TRUE);
 
     return report;
 }
