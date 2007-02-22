@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 pixmapdatadir = $(pkgdatadir)/pixmaps
-icondatadir = $(datadir)/pixmaps
+icondatadir = $(datadir)/icons/hicolor/48x48
 
 # Removed/missing:
 #   graph_export_ascii
@@ -16,8 +16,9 @@ icondatadir = $(datadir)/pixmaps
 
 # Since 2.3: arithmetic data_measure drift immerse merge
 
-# If you add new stock icons here, run ./utils/stockgen.py from the top-level
-# directory to update source code declarations.
+# If you add new stock icons here, add them to a `Since' line above and run
+# ./utils/stockgen.py from the top-level directory to update source code
+# declarations.
 pixmapdata_DATA = \
 	cd_line.png \
 	cd_rline.png \

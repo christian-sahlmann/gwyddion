@@ -150,7 +150,7 @@ update-desktop-database &>/dev/null || :
 %dir %{pkgdatadir}/glmaterials
 %dir %{pkgdatadir}
 %{_mandir}/man1/%{name}.1*
-%{_datadir}/pixmaps/%{name}.png
+%{_datadir}/icons/hicolor/48x48/%{name}.png
 %{pkglibdir}/modules/file/*.so
 %{pkglibdir}/modules/graph/*.so
 %{pkglibdir}/modules/layer/*.so
