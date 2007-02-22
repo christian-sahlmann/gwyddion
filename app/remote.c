@@ -110,7 +110,7 @@ gwy_app_do_remote(GwyAppRemoteType type,
 
     display = gdk_display_get_default();
     toolbox = remote_find_toolbox(display, &xid);
-    gwy_debug("Toolbox: %p", toolbox);
+    gwy_debug("Toolbox: %p, xid: 0x%08x", toolbox, xid);
 
     switch (type) {
         case GWY_APP_REMOTE_EXISTING:
@@ -121,7 +121,8 @@ gwy_app_do_remote(GwyAppRemoteType type,
         break;
 
         case GWY_APP_REMOTE_NEW:
-        /* Returning simply continues execution of Gwyddion. */
+        /* Returning simply continues the execution of Gwyddion with the
+         * file arguments we've got. */
         if (!toolbox)
             return;
         if (!argc)
@@ -141,9 +142,20 @@ gwy_app_do_remote(GwyAppRemoteType type,
         break;
     }
 
-    /* Now we have the toolbox and have some files to send to it. */
+    /* Query the DnD protocol. */
+    xid = gdk_drag_get_protocol_for_display(display, xid, &protocol);
+    /* FIXME: Here we may need some platform-dependent protocol check.
+     * protocol should be GDK_DRAG_PROTO_XDND on X11, but what it is on Win32?
+     * I suppose GDK_DRAG_PROTO_WIN32_DROPFILES. */
+    if (!xid) {
+        g_printerr("Gwyddion window doesn't support DnD.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Now we have the toolbox, it seems to support DnD and we have some files
+     * to send to it.  So build the list. */
     cwd = g_get_current_dir();
-    file_list = g_string_new(NULL);
+    file_list = g_string_sized_new(32*argc);
     for (i = 0; i < argc; i++) {
         gchar *s, *t;
 
@@ -161,18 +173,13 @@ gwy_app_do_remote(GwyAppRemoteType type,
         g_free(s);
     }
 
-    xid = gdk_drag_get_protocol_for_display (display, xid, &protocol);
-    if (!xid) {
-        g_printerr("Gwyddion window doesn't support DnD.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    /* This may not be necessary in Gwyddion.  Fixes non-responsive toolbox. */
+    /* Don't hang when the toolbox is non-responsive.
+     * This may not be necessary in Gwyddion, but it does not hurt either. */
     g_timeout_add(2000, toolbox_timeout, NULL);
 
-    /* Set up an DND-source. */
+    /* Set up an DnD-source. */
     source = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    g_signal_connect(source, "selection_get",
+    g_signal_connect(source, "selection-get",
                      G_CALLBACK(source_selection_get), file_list->str);
     gtk_widget_realize (source);
 
