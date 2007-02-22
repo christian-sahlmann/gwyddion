@@ -36,6 +36,13 @@
 
 enum { MAX_PARAMS = 4 };
 
+enum {
+    RESPONSE_ESTIMATE = 1,
+    RESPONSE_FIT,
+    RESPONSE_PLOT,
+    RESPONSE_SAVE,
+};
+
 typedef struct {
     gboolean fix;
     gdouble init;
@@ -53,6 +60,7 @@ typedef struct {
     GwyNLFitPreset *fitfunc;
     GwyGraph *parent_graph;
     GwyNLFitter *fitter;
+    gboolean is_estimated;
     gboolean is_fitted;
     gboolean auto_estimate;
     gboolean auto_plot;
@@ -100,8 +108,7 @@ static void        fit_param_row_create      (FitControls *controls,
                                               gint i,
                                               GtkTable *table,
                                               gint row);
-static void        recompute                 (FitArgs *args,
-                                              FitControls *controls);
+static void        fit_do                    (FitControls *controls);
 static void        curve_changed             (GtkComboBox *combo,
                                               FitControls *controls);
 static void        auto_estimate_changed     (GtkToggleButton *check,
@@ -124,14 +131,14 @@ static void        toggle_changed            (GtkToggleButton *button,
                                               gboolean *value);
 static void        copy_param                (GObject *button,
                                               FitControls *controls);
-static void        fit_plot_curve            (FitArgs *args,
-                                              gboolean initial);
-static void        dialog_update             (FitControls *controls,
-                                              gboolean do_guess);
+static void        fit_plot_curve            (FitArgs *args);
+static void        fit_set_state             (FitControls *controls,
+                                              gboolean is_fitted,
+                                              gboolean is_estimated);
+static void        fit_estimate              (FitControls *controls);
 static void        fit_param_row_update_value(FitControls *controls,
                                               gint i,
                                               gboolean errorknown);
-static void        fit_guess                 (FitArgs *args);
 static void        graph_selected            (GwySelection* selection,
                                               gint i,
                                               FitControls *controls);
@@ -207,13 +214,6 @@ fit(GwyGraph *graph)
 static void
 fit_dialog(FitArgs *args)
 {
-    enum {
-        RESPONSE_ESTIMATE = 1,
-        RESPONSE_FIT,
-        RESPONSE_PLOT,
-        RESPONSE_SAVE,
-    };
-
     GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander;
     GtkTable *table2;
     GwyGraphModel *gmodel;
@@ -480,15 +480,16 @@ fit_dialog(FitArgs *args)
             break;
 
             case RESPONSE_ESTIMATE:
-            dialog_update(&controls, TRUE);
+            fit_estimate(&controls);
             break;
 
             case RESPONSE_PLOT:
-            fit_plot_curve(args, TRUE);
+            fit_set_state(&controls, FALSE, TRUE);
+            fit_plot_curve(args);
             break;
 
             case RESPONSE_FIT:
-            recompute(args, &controls);
+            fit_do(&controls);
             break;
 
             default:
@@ -572,29 +573,6 @@ fit_param_row_create(FitControls *controls,
 }
 
 static void
-clear_values(FitControls *controls)
-{
-    gint i, j;
-
-    if (gwy_graph_model_get_n_curves(controls->args->graph_model) == 2)
-        gwy_graph_model_remove_curve(controls->args->graph_model, 1);
-
-    controls->args->is_fitted = FALSE;
-
-    for (i = 0; i < MAX_PARAMS; i++) {
-        gtk_label_set_text(GTK_LABEL(controls->param[i].value), "");
-        gtk_label_set_text(GTK_LABEL(controls->param[i].value_unit), "");
-        gtk_label_set_text(GTK_LABEL(controls->param[i].error), "");
-        gtk_label_set_text(GTK_LABEL(controls->param[i].error_unit), "");
-        for (j = 0; j <= i; j++)
-            gtk_label_set_text(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
-                               "");
-    }
-
-    gtk_label_set_markup(GTK_LABEL(controls->chisq), NULL);
-}
-
-static void
 fix_minus(gchar *buf, guint size)
 {
     guint len;
@@ -614,15 +592,18 @@ fix_minus(gchar *buf, guint size)
 }
 
 static void
-fit_plot_curve(FitArgs *args,
-               gboolean initial)
+fit_plot_curve(FitArgs *args)
 {
     GwyGraphCurveModel *cmodel;
     gdouble *xd, *yd;
-    gboolean ok;   /* XXX: ignored */
+    gboolean initial, ok;   /* XXX: ignored */
     gint i, n;
     gdouble *param;
 
+    if (!args->is_fitted && !args->is_estimated)
+        return;
+
+    initial = !args->is_fitted;
     n = gwy_nlfit_preset_get_nparams(args->fitfunc);
     param = g_newa(gdouble, n);
     for (i = 0; i < n; i++)
@@ -654,16 +635,17 @@ fit_plot_curve(FitArgs *args,
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
 }
 
-/*recompute fit and update everything*/
 static void
-recompute(FitArgs *args, FitControls *controls)
+fit_do(FitControls *controls)
 {
+    FitArgs *args;
     GtkWidget *dialog;
     gdouble *param, *error;
     gboolean *fixed;
     gint i, j, nparams, nfree = 0;
     gboolean allfixed, errorknown;
 
+    args = controls->args;
     nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
     fixed = g_newa(gboolean, nparams);
 
@@ -736,8 +718,8 @@ recompute(FitArgs *args, FitControls *controls)
     else
         gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N.A."));
 
-    fit_plot_curve(args, FALSE);
-    args->is_fitted = TRUE;
+    fit_set_state(controls, TRUE, TRUE);
+    fit_plot_curve(args);
 }
 
 static void
@@ -754,8 +736,7 @@ curve_changed(GtkComboBox *combo,
     gwy_graph_model_add_curve(graph_model,
                               gwy_graph_model_get_curve(parent_gmodel,
                                                         controls->args->curve));
-    clear_values(controls);
-    dialog_update(controls, TRUE);
+    fit_set_state(controls, FALSE, FALSE);
 }
 
 static void
@@ -763,8 +744,10 @@ auto_estimate_changed(GtkToggleButton *check,
                       FitControls *controls)
 {
     controls->args->auto_estimate = gtk_toggle_button_get_active(check);
-    if (controls->args->auto_estimate && !controls->args->is_fitted)
-        dialog_update(controls, TRUE);
+    if (controls->args->auto_estimate
+        && !controls->args->is_fitted
+        && !controls->args->is_estimated)
+        fit_estimate(controls);
 }
 
 static void
@@ -772,8 +755,11 @@ auto_plot_changed(GtkToggleButton *check,
                   FitControls *controls)
 {
     controls->args->auto_plot = gtk_toggle_button_get_active(check);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PLOT,
+                                      !controls->args->auto_plot);
     if (controls->args->auto_plot && !controls->args->is_fitted)
-        fit_plot_curve(controls->args, TRUE);
+        fit_plot_curve(controls->args);
 }
 
 static void
@@ -810,30 +796,86 @@ function_changed(GtkComboBox *combo, FitControls *controls)
         gtk_widget_set_sensitive(controls->param[i].copy, sens);
     }
 
-    clear_values(controls);
-    dialog_update(controls, TRUE);
+    fit_set_state(controls, FALSE, FALSE);
 }
 
-/* Get rid of completely? */
 static void
-dialog_update(FitControls *controls,
-              gboolean do_guess)
+fit_set_state(FitControls *controls,
+              gboolean is_fitted,
+              gboolean is_estimated)
 {
-    guint nparams, i;
-    gchar buf[24];
+    FitArgs *args;
+    gint i, j;
 
-    if (do_guess || controls->args->auto_estimate) {
-        fit_guess(controls->args);
+    args = controls->args;
+    if (!args->is_fitted == !is_fitted
+        && !args->is_estimated == !is_estimated
+        && !args->auto_estimate)
+        return;
 
-        nparams = gwy_nlfit_preset_get_nparams(controls->args->fitfunc);
-        for (i = 0; i < nparams; i++) {
-            g_snprintf(buf, sizeof(buf), "%0.6g",
-                       controls->args->param[i].init);
-            gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buf);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_SAVE, is_fitted);
+    /* XXX: This is excessive, but it shows nicely whether we got the state
+     * right. */
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_FIT, !is_fitted);
+
+    if (args->is_fitted && !is_fitted) {
+        if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
+            gwy_graph_model_remove_curve(args->graph_model, 1);
+
+        for (i = 0; i < MAX_PARAMS; i++) {
+            gtk_label_set_text(GTK_LABEL(controls->param[i].value), "");
+            gtk_label_set_text(GTK_LABEL(controls->param[i].value_unit), "");
+            gtk_label_set_text(GTK_LABEL(controls->param[i].error), "");
+            gtk_label_set_text(GTK_LABEL(controls->param[i].error_unit), "");
+            for (j = 0; j <= i; j++)
+                gtk_label_set_text(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
+                                   "");
         }
-        if (controls->args->auto_plot)
-            fit_plot_curve(controls->args, TRUE);
+        gtk_label_set_markup(GTK_LABEL(controls->chisq), NULL);
     }
+    args->is_fitted = is_fitted;
+    args->is_estimated = is_estimated;
+
+    if (!is_estimated && args->auto_estimate)
+        fit_estimate(controls);
+}
+
+static void
+fit_estimate(FitControls *controls)
+{
+    FitArgs *args;
+    guint nparams, i;
+    gdouble *param;
+    gchar buf[24];
+    gboolean ok;
+
+    args = controls->args;
+    nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
+
+    param = g_newa(gdouble, nparams);
+    for (i = 0; i < nparams; i++)
+        param[i] = args->param[i].init;
+
+    if (!normalize_data(args))
+        return;
+
+    gwy_nlfit_preset_guess(args->fitfunc,
+                           gwy_data_line_get_res(args->xdata),
+                           gwy_data_line_get_data_const(args->xdata),
+                           gwy_data_line_get_data_const(args->ydata),
+                           param, &ok);
+
+    for (i = 0; i < nparams; i++) {
+        args->param[i].value = args->param[i].init = param[i];
+        g_snprintf(buf, sizeof(buf), "%0.6g", param[i]);
+        gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buf);
+    }
+
+    fit_set_state(controls, FALSE, TRUE);
+    if (args->auto_plot)
+        fit_plot_curve(controls->args);
 }
 
 static void
@@ -895,33 +937,6 @@ fit_param_row_update_value(FitControls *controls,
 }
 
 static void
-fit_guess(FitArgs *args)
-{
-    gdouble *param;
-    gint nparams, i;
-    gboolean ok;
-
-    nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
-
-    param = g_newa(gdouble, nparams);
-    for (i = 0; i < nparams; i++)
-        param[i] = args->param[i].init;
-
-    if (!normalize_data(args))
-        return;
-
-    gwy_nlfit_preset_guess(args->fitfunc,
-                           gwy_data_line_get_res(args->xdata),
-                           gwy_data_line_get_data_const(args->xdata),
-                           gwy_data_line_get_data_const(args->ydata),
-                           param, &ok);
-
-    for (i = 0; i < nparams; i++)
-        args->param[i].value = args->param[i].init = param[i];
-}
-
-
-static void
 graph_selected(GwySelection* selection,
                gint i,
                FitControls *controls)
@@ -940,7 +955,7 @@ graph_selected(GwySelection* selection,
     nselections = gwy_selection_get_data(selection, NULL);
     gwy_selection_get_object(selection, 0, range);
 
-    if (nselections <= 0 || range[0] >= range[1]) {
+    if (nselections <= 0 || range[0] == range[1]) {
         gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
         gcmodel = gwy_graph_model_get_curve(gmodel, 0);
         data = gwy_graph_curve_model_get_xdata(gcmodel);
@@ -948,10 +963,8 @@ graph_selected(GwySelection* selection,
         args->to = data[gwy_graph_curve_model_get_ndata(gcmodel) - 1];
     }
     else {
-        args->from = range[0];
-        args->to = range[1];
-        if (args->from > args->to)
-            GWY_SWAP(gdouble, args->from, args->to);
+        args->from = MIN(range[0], range[1]);
+        args->to = MAX(range[0], range[1]);
     }
     controls->in_update = TRUE;
     g_snprintf(buffer, sizeof(buffer), "%.*f",
@@ -964,7 +977,7 @@ graph_selected(GwySelection* selection,
     gtk_entry_set_text(GTK_ENTRY(controls->to), buffer);
     controls->in_update = FALSE;
 
-    dialog_update(controls, FALSE);
+    fit_set_state(controls, FALSE, FALSE);
 }
 
 static void
@@ -976,8 +989,9 @@ param_initial_activate(GtkWidget *entry,
 
     i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "id"));
     controls->args->param[i].init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
+    fit_set_state(controls, FALSE, TRUE);
     if (controls->args->auto_plot)
-        fit_plot_curve(controls->args, TRUE);
+        fit_plot_curve(controls->args);
 }
 
 static gboolean
@@ -1043,9 +1057,7 @@ copy_param(GObject *button,
     i = GPOINTER_TO_INT(g_object_get_data(button, "id"));
     g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->param[i].value);
     gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buffer);
-
-    if (controls->args->auto_plot)
-        fit_plot_curve(controls->args, TRUE);
+    gtk_widget_activate(controls->param[i].init);
 }
 
 static GtkWidget*
