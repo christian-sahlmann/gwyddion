@@ -755,9 +755,6 @@ auto_plot_changed(GtkToggleButton *check,
                   FitControls *controls)
 {
     controls->args->auto_plot = gtk_toggle_button_get_active(check);
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
-                                      RESPONSE_PLOT,
-                                      !controls->args->auto_plot);
     if (controls->args->auto_plot && !controls->args->is_fitted)
         fit_plot_curve(controls->args);
 }
