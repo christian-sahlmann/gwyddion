@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 pixmapdatadir = $(pkgdatadir)/pixmaps
-icondatadir = $(datadir)/icons/hicolor/48x48
+icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Removed/missing:
 #   graph_export_ascii
