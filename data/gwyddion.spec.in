@@ -2,8 +2,6 @@
 %{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
 %{expand:%global distro_is_mdk %(test ! -f /etc/mandriva-release; echo $?)}
-# Untested
-%{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
 Name:          @PACKAGE_TARNAME@
 Version:       @PACKAGE_VERSION@
@@ -31,15 +29,18 @@ BuildRequires: desktop-file-utils >= 0.9
 BuildRequires: pkgconfig
 BuildRequires: findutils
 
+%if %{distro_is_fedora}
+BuildRequires: libXmu-devel
+%define fftw3 fftw
+%endif
+
 %if %{distro_is_suse}
 BuildRequires: xorg-x11-Mesa-devel
 %define fftw3 fftw3
-%else
+%endif
+
 %if %{distro_is_mdk}
 %define fftw3 libfftw3
-%else
-%define fftw3 fftw
-%endif
 %endif
 
 %ifarch %ix86
