@@ -42,6 +42,7 @@ file_LTLIBRARIES = \
 	metropro.la \
 	microprof.la \
 	mifile.la \
+	nanoscope-ii.la \
 	nanoscope.la \
 	nanonis.la \
 	nanotop.la \
@@ -115,6 +116,7 @@ jeol_la_SOURCES = jeol.c
 metropro_la_SOURCES = metropro.c
 microprof_la_SOURCES = microprof.c
 mifile_la_SOURCES = mifile.c
+nanoscope_ii_la_SOURCES = nanoscope-ii.c
 nanoscope_la_SOURCES = nanoscope.c
 nanonis_la_SOURCES = nanonis.c
 nanotop_la_SOURCES = nanotop.c

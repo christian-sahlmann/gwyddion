@@ -20,8 +20,8 @@
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
- * <mime-type type="application/x-nanoscope-spm">
- *   <comment>Nanoscope SPM data</comment>
+ * <mime-type type="application/x-nanoscope-iii-spm">
+ *   <comment>Nanoscope III SPM data</comment>
  *   <magic priority="50">
  *     <match type="string" offset="0" value="\\*File list\r\n"/>
  *     <match type="string" offset="0" value="?*File list\r\n"/>
@@ -134,7 +134,8 @@ static gboolean        require_keys          (GHashTable *hash,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Veeco (Digital Instruments) Nanoscope data files."),
+    N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
+       "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
     "0.16",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -147,7 +148,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("nanoscope",
-                           N_("Nanoscope files"),
+                           N_("Nanoscope III files"),
                            (GwyFileDetectFunc)&nanoscope_detect,
                            (GwyFileLoadFunc)&nanoscope_load,
                            NULL,
