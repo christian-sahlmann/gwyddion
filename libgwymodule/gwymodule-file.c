@@ -445,6 +445,7 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
 
     g_return_val_if_fail(fileinfo && fileinfo->name, FALSE);
 
+    /* FIXME: What if it isn't ASCII-compatible? */
     fileinfo->name_lowercase = g_ascii_strdown(fileinfo->name, -1);
     fileinfo->file_size = 0;
     fileinfo->buffer_len = 0;
@@ -1030,7 +1031,7 @@ gwy_file_load_check_container_refs(GwyContainer *container,
 
 /**
  * GwyFileDetectInfo:
- * @name: File name.
+ * @name: File name, in GLib filename encoding.
  * @name_lowercase: File name in lowercase (for eventual case-insensitive
  *                  name check).
  * @file_size: File size in bytes.  Undefined if @only_name.
@@ -1042,10 +1043,10 @@ gwy_file_load_check_container_refs(GwyContainer *container,
  *
  * File detection data for #GwyFileDetectFunc.
  *
- * It contains common information file type detection routines need to obtain.
- * It is shared between file detection functions and they must not modify its
- * contents.  Some fields are set only when detection routines are to
- * check file contents, these are marked `Undefined if @only_name'.
+ * It contains the common information file type detection routines need to
+ * obtain.  It is shared between file detection functions and they must not
+ * modify its contents.  Some fields are set only when the detection routines
+ * are to check the file contents, these are marked `Undefined if @only_name'.
  *
  * The @head and @tail buffers are always nul-terminated and thus safely usable
  * with string functions.  When file is shorter than
@@ -1053,7 +1054,7 @@ gwy_file_load_check_container_refs(GwyContainer *container,
  * to the end (therefore @buffer_len = @file_size + 1), otherwise the last
  * byte is overwritten with <literal>'\0'</literal>.  In either case the
  * last byte of @head and @tail cannot be assumed to be identical as in
- * the file (or being part of the file at all).
+ * the file (or being a part of the file at all).
  **/
 
 /**
