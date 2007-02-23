@@ -104,6 +104,8 @@ typedef struct {
 static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
 static void        fit_dialog                (FitArgs *args);
+static void        fit_fetch_entry           (FitControls *controls);
+static gboolean    activate_on_unfocus       (GtkWidget *widget);
 static void        fit_param_row_create      (FitControls *controls,
                                               gint i,
                                               GtkTable *table,
@@ -119,13 +121,7 @@ static void        function_changed          (GtkComboBox *combo,
                                               FitControls *controls);
 static void        range_changed             (GtkWidget *entry,
                                               FitControls *controls);
-static gboolean    range_unfocus             (GtkWidget *entry,
-                                              GdkEventFocus *event,
-                                              FitControls *controls);
 static void        param_initial_activate    (GtkWidget *entry,
-                                              gpointer user_data);
-static gboolean    param_initial_unfocus     (GtkWidget *entry,
-                                              GdkEventFocus *event,
                                               gpointer user_data);
 static void        toggle_changed            (GtkToggleButton *button,
                                               gboolean *value);
@@ -217,6 +213,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *label, *dialog, *hbox, *hbox2, *table, *align, *expander;
     GtkTable *table2;
     GwyGraphModel *gmodel;
+    GwyGraphCurveModel *cmodel;
     GwyGraphArea *area;
     GwySelection *selection;
     GwySIUnit *siunit;
@@ -388,7 +385,7 @@ fit_dialog(FitArgs *args)
     g_signal_connect(controls.from, "activate",
                      G_CALLBACK(range_changed), &controls);
     g_signal_connect(controls.from, "focus-out-event",
-                     G_CALLBACK(range_unfocus), &controls);
+                     G_CALLBACK(activate_on_unfocus), NULL);
 
     label = gtk_label_new(_("to"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
@@ -400,7 +397,7 @@ fit_dialog(FitArgs *args)
     g_signal_connect(controls.to, "activate",
                      G_CALLBACK(range_changed), &controls);
     g_signal_connect(controls.to, "focus-out-event",
-                     G_CALLBACK(range_unfocus), &controls);
+                     G_CALLBACK(activate_on_unfocus), NULL);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), args->abscissa_vf->units);
@@ -422,7 +419,7 @@ fit_dialog(FitArgs *args)
     g_signal_connect(controls.auto_estimate, "toggled",
                      G_CALLBACK(auto_estimate_changed), &controls);
 
-    controls.auto_plot = gtk_check_button_new_with_mnemonic("_plot");
+    controls.auto_plot = gtk_check_button_new_with_mnemonic("p_lot");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_plot),
                                  args->auto_plot);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_plot, FALSE, FALSE, 0);
@@ -455,6 +452,7 @@ fit_dialog(FitArgs *args)
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
+        fit_fetch_entry(&controls);
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
@@ -464,8 +462,6 @@ fit_dialog(FitArgs *args)
 
             case GTK_RESPONSE_OK:
             if (args->is_fitted && args->fitter->covar) {
-                GwyGraphCurveModel *cmodel;
-
                 cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
                 gwy_graph_model_add_curve(gmodel, cmodel);
             }
@@ -497,6 +493,25 @@ fit_dialog(FitArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
+}
+
+static void
+fit_fetch_entry(FitControls *controls)
+{
+    GtkWidget *entry;
+
+    entry = gtk_window_get_focus(GTK_WINDOW(controls->dialog));
+    if (entry
+        && GTK_IS_ENTRY(entry)
+        && g_object_get_data(G_OBJECT(entry), "id"))
+        gtk_widget_activate(entry);
+}
+
+static gboolean
+activate_on_unfocus(GtkWidget *widget)
+{
+    gtk_widget_activate(widget);
+    return FALSE;
 }
 
 static void
@@ -557,7 +572,7 @@ fit_param_row_create(FitControls *controls,
     cntrl->copy = gtk_button_new_with_label("→");
     gtk_button_set_relief(GTK_BUTTON(cntrl->copy), GTK_RELIEF_NONE);
     gtk_table_attach(table, cntrl->copy, 8, 9, row, row+1, 0, 0, 0, 0);
-    g_object_set_data(G_OBJECT(cntrl->copy), "id", GINT_TO_POINTER(i));
+    g_object_set_data(G_OBJECT(cntrl->copy), "id", GINT_TO_POINTER(i + 1));
     g_signal_connect(cntrl->copy, "clicked", G_CALLBACK(copy_param), controls);
 
     /* Initial */
@@ -565,11 +580,11 @@ fit_param_row_create(FitControls *controls,
     gtk_entry_set_width_chars(GTK_ENTRY(cntrl->init), 12);
     gtk_table_attach(table, cntrl->init,
                      9, 10, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_object_set_data(G_OBJECT(cntrl->init), "id", GINT_TO_POINTER(i));
+    g_object_set_data(G_OBJECT(cntrl->init), "id", GINT_TO_POINTER(i + 1));
     g_signal_connect(cntrl->init, "activate",
                      G_CALLBACK(param_initial_activate), controls);
     g_signal_connect(cntrl->init, "focus-out-event",
-                     G_CALLBACK(param_initial_unfocus), controls);
+                     G_CALLBACK(activate_on_unfocus), NULL);
 }
 
 static void
@@ -812,10 +827,6 @@ fit_set_state(FitControls *controls,
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       RESPONSE_SAVE, is_fitted);
-    /* XXX: This is excessive, but it shows nicely whether we got the state
-     * right. */
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
-                                      RESPONSE_FIT, !is_fitted);
 
     if (args->is_fitted && !is_fitted) {
         if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
@@ -984,20 +995,11 @@ param_initial_activate(GtkWidget *entry,
     FitControls *controls = (FitControls*)user_data;
     gint i;
 
-    i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "id"));
+    i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "id")) - 1;
     controls->args->param[i].init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
     fit_set_state(controls, FALSE, TRUE);
     if (controls->args->auto_plot)
         fit_plot_curve(controls->args);
-}
-
-static gboolean
-param_initial_unfocus(GtkWidget *entry,
-                      G_GNUC_UNUSED GdkEventFocus *event,
-                      gpointer user_data)
-{
-    param_initial_activate(entry, user_data);
-    return FALSE;
 }
 
 static void
@@ -1029,15 +1031,6 @@ range_changed(GtkWidget *entry,
     gwy_selection_set_object(selection, 0, range);
 }
 
-static gboolean
-range_unfocus(GtkWidget *entry,
-              G_GNUC_UNUSED GdkEventFocus *event,
-              FitControls *controls)
-{
-    range_changed(entry, controls);
-    return FALSE;
-}
-
 static void
 toggle_changed(GtkToggleButton *button, gboolean *value)
 {
@@ -1051,7 +1044,7 @@ copy_param(GObject *button,
     gchar buffer[20];
     gint i;
 
-    i = GPOINTER_TO_INT(g_object_get_data(button, "id"));
+    i = GPOINTER_TO_INT(g_object_get_data(button, "id")) - 1;
     g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->param[i].value);
     gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buffer);
     gtk_widget_activate(controls->param[i].init);
