@@ -78,14 +78,17 @@ void         gwy_list_store_row_changed     (GtkListStore *store,
                                              GtkTreePath *path,
                                              gint row);
 #ifndef GWY_DISABLE_DEPRECATED
-gboolean     gwy_dialog_prevent_delete_cb   (void);
+gboolean      gwy_dialog_prevent_delete_cb      (void);
 #endif
-GtkWidget*   gwy_label_new_header           (const gchar *text);
-GtkWidget*   gwy_stock_like_button_new      (const gchar *label_text,
-                                             const gchar *stock_id);
-GtkWidget*   gwy_tool_like_button_new       (const gchar *label_text,
-                                             const gchar *stock_id);
-PangoFontMap* gwy_get_pango_ft2_font_map    (gboolean unref);
+GtkWidget*    gwy_label_new_header              (const gchar *text);
+GtkWidget*    gwy_stock_like_button_new         (const gchar *label_text,
+                                                 const gchar *stock_id);
+GtkWidget*    gwy_tool_like_button_new          (const gchar *label_text,
+                                                 const gchar *stock_id);
+gboolean      gwy_widget_get_activate_on_unfocus(GtkWidget *widget);
+void          gwy_widget_set_activate_on_unfocus(GtkWidget *widget,
+                                                 gboolean activate);
+PangoFontMap* gwy_get_pango_ft2_font_map        (gboolean unref);
 
 G_END_DECLS
 

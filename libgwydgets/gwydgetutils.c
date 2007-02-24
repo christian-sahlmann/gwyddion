@@ -770,6 +770,61 @@ gwy_tool_like_button_new(const gchar *label_text,
     return button;
 }
 
+static gboolean
+activate_on_unfocus(GtkWidget *widget)
+{
+    gtk_widget_activate(widget);
+    return FALSE;
+}
+
+/**
+ * gwy_widget_get_activate_on_unfocus:
+ * @widget: A widget.
+ *
+ * Obtains the activate-on-unfocus state of a widget.
+ *
+ * Returns: %TRUE if signal "GtkWidget::activate" is emitted when focus leaves
+ *          the widget.
+ *
+ * Since: 2.5
+ **/
+gboolean
+gwy_widget_get_activate_on_unfocus(GtkWidget *widget)
+{
+    g_return_val_if_fail(GTK_IS_WIDGET(widget), FALSE);
+    return !!g_signal_handler_find(widget, G_SIGNAL_MATCH_FUNC,
+                                   0, 0, NULL, activate_on_unfocus, NULL);
+}
+
+/**
+ * gwy_widget_set_activate_on_unfocus:
+ * @widget: A widget.
+ * @activate: %TRUE to enable activate-on-unfocus, %FALSE disable it.
+ *
+ * Sets the activate-on-unfocus state of a widget.
+ *
+ * When it is enabled, signal "GtkWidget::activate" is emited whenever focus
+ * leaves the widget.
+ *
+ * Since: 2.5
+ **/
+void
+gwy_widget_set_activate_on_unfocus(GtkWidget *widget,
+                                   gboolean activate)
+{
+    gulong id;
+
+    g_return_if_fail(GTK_IS_WIDGET(widget));
+    g_return_if_fail(GTK_WIDGET_GET_CLASS(widget)->activate_signal);
+    id = g_signal_handler_find(widget, G_SIGNAL_MATCH_FUNC,
+                               0, 0, NULL, activate_on_unfocus, NULL);
+    if (id && !activate)
+        g_signal_handler_disconnect(widget, id);
+    if (!id && activate)
+        g_signal_connect(widget, "focus-out-event",
+                         G_CALLBACK(activate_on_unfocus), NULL);
+}
+
 /**
  * gwy_get_pango_ft2_font_map:
  * @unref: If %TRUE, function removes the font map reference and returns %NULL.
