@@ -105,7 +105,6 @@ static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
 static void        fit_dialog                (FitArgs *args);
 static void        fit_fetch_entry           (FitControls *controls);
-static gboolean    activate_on_unfocus       (GtkWidget *widget);
 static void        fit_param_row_create      (FitControls *controls,
                                               gint i,
                                               GtkTable *table,
@@ -384,8 +383,7 @@ fit_dialog(FitArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox2), controls.from, FALSE, FALSE, 0);
     g_signal_connect(controls.from, "activate",
                      G_CALLBACK(range_changed), &controls);
-    g_signal_connect(controls.from, "focus-out-event",
-                     G_CALLBACK(activate_on_unfocus), NULL);
+    gwy_widget_set_activate_on_unfocus(controls.from, TRUE);
 
     label = gtk_label_new(_("to"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
@@ -396,8 +394,7 @@ fit_dialog(FitArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox2), controls.to, FALSE, FALSE, 0);
     g_signal_connect(controls.to, "activate",
                      G_CALLBACK(range_changed), &controls);
-    g_signal_connect(controls.to, "focus-out-event",
-                     G_CALLBACK(activate_on_unfocus), NULL);
+    gwy_widget_set_activate_on_unfocus(controls.to, TRUE);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), args->abscissa_vf->units);
@@ -507,13 +504,6 @@ fit_fetch_entry(FitControls *controls)
         gtk_widget_activate(entry);
 }
 
-static gboolean
-activate_on_unfocus(GtkWidget *widget)
-{
-    gtk_widget_activate(widget);
-    return FALSE;
-}
-
 static void
 fit_param_row_create(FitControls *controls,
                      gint i,
@@ -583,8 +573,7 @@ fit_param_row_create(FitControls *controls,
     g_object_set_data(G_OBJECT(cntrl->init), "id", GINT_TO_POINTER(i + 1));
     g_signal_connect(cntrl->init, "activate",
                      G_CALLBACK(param_initial_activate), controls);
-    g_signal_connect(cntrl->init, "focus-out-event",
-                     G_CALLBACK(activate_on_unfocus), NULL);
+    gwy_widget_set_activate_on_unfocus(cntrl->init, TRUE);
 }
 
 static void

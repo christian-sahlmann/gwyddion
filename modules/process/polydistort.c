@@ -87,9 +87,6 @@ static void       run_noninteractive            (DistortArgs *args,
                                                  gint id);
 static void       distort_dialog_update_controls(DistortControls *controls,
                                                  DistortArgs *args);
-static gboolean   distort_coeff_unfocus         (GtkEntry *entry,
-                                                 GdkEventFocus *event,
-                                                 DistortControls *controls);
 static void       distort_coeff_changed         (GtkEntry *entry,
                                                  DistortControls *controls);
 static void       distort_invalidate            (GObject *obj,
@@ -363,8 +360,7 @@ coeff_table_new(GtkWidget **entry,
             g_object_set_data(G_OBJECT(entry[k]), "id", id);
             g_signal_connect(entry[k], "activate",
                              G_CALLBACK(distort_coeff_changed), controls);
-            g_signal_connect(entry[k], "focus-out-event",
-                             G_CALLBACK(distort_coeff_unfocus), controls);
+            gwy_widget_set_activate_on_unfocus(entry[k], TRUE);
         }
     }
 
@@ -454,15 +450,6 @@ distort_dialog_update_controls(DistortControls *controls,
             gtk_entry_set_text(GTK_ENTRY(controls->ycoeff[k]), buf);
         }
     }
-}
-
-static gboolean
-distort_coeff_unfocus(GtkEntry *entry,
-                      G_GNUC_UNUSED GdkEventFocus *event,
-                      DistortControls *controls)
-{
-    distort_coeff_changed(entry, controls);
-    return FALSE;
 }
 
 static void

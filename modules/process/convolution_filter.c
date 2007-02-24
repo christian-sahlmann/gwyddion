@@ -112,9 +112,6 @@ static void convolution_filter_update_divisor   (ConvolutionControls *controls);
 static void convolution_filter_resize_matrix    (ConvolutionControls *controls);
 static void convolution_filter_update_symmetry  (ConvolutionControls *controls);
 static void convolution_filter_update_matrix    (ConvolutionControls *controls);
-static gboolean convolution_filter_coeff_unfocus(GtkEntry *entry,
-                                                 GdkEventFocus *event,
-                                                 ConvolutionControls *controls);
 static void convolution_filter_coeff_changed    (GtkEntry *entry,
                                                  ConvolutionControls *controls);
 static void convolution_filter_symmetrize       (ConvolutionControls *controls);
@@ -138,7 +135,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.2",
+    "1.1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -1006,9 +1003,7 @@ convolution_filter_resize_matrix(ConvolutionControls *controls)
         g_signal_connect(controls->coeff[i], "activate",
                          G_CALLBACK(convolution_filter_coeff_changed),
                          controls);
-        g_signal_connect(controls->coeff[i], "focus-out-event",
-                         G_CALLBACK(convolution_filter_coeff_unfocus),
-                         controls);
+        gwy_widget_set_activate_on_unfocus(controls->coeff[i], TRUE);
     }
     gtk_box_pack_start(GTK_BOX(controls->matrix_parent), controls->matrix,
                        TRUE, TRUE, 0);
@@ -1037,15 +1032,6 @@ convolution_filter_update_symmetry(ConvolutionControls *controls)
                 && (args->preset->hsym != CONVOLUTION_FILTER_SYMMETRY_ODD);
     gtk_widget_set_sensitive(controls->coeff[(size/2)*size + size/2],
                              sensitive);
-}
-
-static gboolean
-convolution_filter_coeff_unfocus(GtkEntry *entry,
-                                 G_GNUC_UNUSED GdkEventFocus *event,
-                                 ConvolutionControls *controls)
-{
-    convolution_filter_coeff_changed(entry, controls);
-    return FALSE;
 }
 
 static void
