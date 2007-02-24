@@ -909,6 +909,7 @@ gwy_interpolation_shift_block_1d(gint length,
     gint suplen, sf, st;
     gdouble d0, dn, v;
     gdouble *w, *coeffs = NULL;
+    gboolean warned = FALSE;
 
     if (interpolation == GWY_INTERPOLATION_NONE)
         return;
@@ -966,8 +967,12 @@ gwy_interpolation_shift_block_1d(gint length,
             else if (exterior == GWY_EXTERIOR_UNDEFINED) {
                 /* Do nothing */
             }
-            else
-                g_warning("Unsupported exterior type");
+            else {
+                if (!warned) {
+                    g_warning("Unsupported exterior type, assuming undefined");
+                    warned = TRUE;
+                }
+            }
         }
     }
 
