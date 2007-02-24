@@ -77,7 +77,9 @@ void         gwy_list_store_row_changed     (GtkListStore *store,
                                              GtkTreeIter *iter,
                                              GtkTreePath *path,
                                              gint row);
+#ifndef GWY_DISABLE_DEPRECATED
 gboolean     gwy_dialog_prevent_delete_cb   (void);
+#endif
 GtkWidget*   gwy_label_new_header           (const gchar *text);
 GtkWidget*   gwy_stock_like_button_new      (const gchar *label_text,
                                              const gchar *stock_id);

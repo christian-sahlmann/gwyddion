@@ -662,12 +662,7 @@ gwy_list_store_row_changed(GtkListStore *store,
  *
  * Returns %TRUE.
  *
- * The purpose of this function is to be used as a callback connected to the
- * "delete_event" of non-modal dialogs so that they can hide instead of
- * being destroyed.  This is achieved by returning %TRUE from the
- * "delete_event" callback.
- *
- * See #GtkDialog source code for the gory details...
+ * Use gtk_true() instead.
  *
  * Returns: %TRUE.
  **/
