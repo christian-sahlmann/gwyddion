@@ -231,6 +231,27 @@ gwy_app_data_proxy_compare(gconstpointer a,
     return g_utf8_collate(fa, fb);
 }
 
+static void
+gwy_app_data_browser_set_file_present(GwyAppDataBrowser *browser,
+                                      gboolean present)
+{
+    GwySensitivityGroup *sensgroup;
+
+    if (browser->sensgroup) {
+        if (present)
+            gwy_sensitivity_group_set_state(browser->sensgroup,
+                                            SENS_FILE, SENS_FILE);
+        else
+            gwy_sensitivity_group_set_state(browser->sensgroup,
+                                            SENS_FILE | SENS_OBJECT, 0);
+    }
+
+    if ((sensgroup = _gwy_app_sensitivity_get_group()))
+        gwy_sensitivity_group_set_state(sensgroup,
+                                        GWY_MENU_FLAG_FILE,
+                                        present ? GWY_MENU_FLAG_FILE : 0);
+}
+
 /**
  * emit_row_changed:
  * @store: A list store.
@@ -1460,10 +1481,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     gwy_app_update_data_range_type(GWY_DATA_VIEW(data_view), id);
 
     /* FIXME: A silly place for this? */
-    if (browser->sensgroup)
-        gwy_sensitivity_group_set_state(browser->sensgroup,
-                                        SENS_FILE, SENS_FILE);
-
+    gwy_app_data_browser_set_file_present(browser, TRUE);
     gtk_widget_show_all(data_window);
     _gwy_app_data_view_set_current(GWY_DATA_VIEW(data_view));
 
@@ -2136,10 +2154,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_window_dnd_data_received), browser);
 
     /* FIXME: A silly place for this? */
-    if (browser->sensgroup)
-        gwy_sensitivity_group_set_state(browser->sensgroup,
-                                        SENS_FILE, SENS_FILE);
-
+    gwy_app_data_browser_set_file_present(browser, TRUE);
     gtk_widget_show_all(graph_window);
     _gwy_app_graph_set_current(GWY_GRAPH(graph));
 
@@ -2745,8 +2760,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
             for (i = 0; i < NPAGES; i++)
                 gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
             gtk_label_set_text(GTK_LABEL(browser->filename), NULL);
-            gwy_sensitivity_group_set_state(browser->sensgroup,
-                                            SENS_FILE | SENS_OBJECT, 0);
+            gwy_app_data_browser_set_file_present(browser, FALSE);
         }
         browser->current = NULL;
         return;
@@ -2767,9 +2781,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
         for (i = 0; i < NPAGES; i++)
             gwy_app_data_browser_restore_active
                           (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
-
-        gwy_sensitivity_group_set_state(browser->sensgroup,
-                                        SENS_FILE, SENS_FILE);
+        gwy_app_data_browser_set_file_present(browser, TRUE);
     }
 }
 

@@ -1237,7 +1237,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
 
     /* Find channel with the lowest id not smaller than hint */
     if (id == G_MAXINT) {
-        g_warning("There is no channel in the file, cannot make thumbnail.");
+        gwy_debug("There is no channel in the file, cannot make thumbnail.");
         return;
     }
 

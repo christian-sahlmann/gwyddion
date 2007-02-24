@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwygraphwindow.h>
+#include <libgwydgets/gwysensitivitygroup.h>
 
 #include <app/gwyappfilechooser.h>
 
@@ -49,6 +50,9 @@ G_GNUC_INTERNAL
 void     _gwy_app_data_view_set_current       (GwyDataView *data_view);
 G_GNUC_INTERNAL
 void     _gwy_app_graph_set_current           (GwyGraph *graph);
+
+G_GNUC_INTERNAL
+GwySensitivityGroup* _gwy_app_sensitivity_get_group(void);
 
 G_GNUC_INTERNAL
 GdkPixbuf* _gwy_app_recent_file_try_thumbnail  (const gchar *filename_sys);

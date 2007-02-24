@@ -676,6 +676,7 @@ static void
 gwy_app_update_last_process_func(const gchar *name)
 {
     GtkWidget *repeat_item, *reshow_item, *label;
+    GwySensitivityGroup *sensgroup;
     GwyMenuSensFlags sens;
     const gchar *menu_path;
     gchar *s, *lab;
@@ -700,19 +701,20 @@ gwy_app_update_last_process_func(const gchar *name)
     menu_path++;
     lab = g_strdup(menu_path);
     gwy_app_menu_canonicalize_label(lab);
+    sensgroup = gwy_app_sensitivity_get_group();
     sens = (gwy_process_func_get_sensitivity_mask(name)
             | GWY_MENU_FLAG_LAST_PROC);
 
     label = GTK_BIN(repeat_item)->child;
     s = g_strconcat(_("Repeat"), " (", lab, ")", NULL);
     gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
-    gwy_sensitivity_group_set_widget_mask(app_sensgroup, repeat_item, sens);
+    gwy_sensitivity_group_set_widget_mask(sensgroup, repeat_item, sens);
     g_free(s);
 
     label = GTK_BIN(reshow_item)->child;
     s = g_strconcat(_("Re-show"), " (", lab, ")", NULL);
     gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
-    gwy_sensitivity_group_set_widget_mask(app_sensgroup, reshow_item, sens);
+    gwy_sensitivity_group_set_widget_mask(sensgroup, reshow_item, sens);
     g_free(s);
 
     g_free(lab);
@@ -974,6 +976,13 @@ gwy_app_sensitivity_get_group(void)
     return app_sensgroup;
 }
 
+/* Get app sensitivity group, but don't create it if it doesn't exist. */
+GwySensitivityGroup*
+_gwy_app_sensitivity_get_group(void)
+{
+    return app_sensgroup;
+}
+
 /**
  * gwy_app_sensitivity_add_widget:
  * @widget: Widget to add.
@@ -989,11 +998,8 @@ void
 gwy_app_sensitivity_add_widget(GtkWidget *widget,
                                GwyMenuSensFlags mask)
 {
-    /* This reference is never released. */
-    if (!app_sensgroup)
-        app_sensgroup = gwy_sensitivity_group_new();
-
-    gwy_sensitivity_group_add_widget(app_sensgroup, widget, mask);
+    gwy_sensitivity_group_add_widget(gwy_app_sensitivity_get_group(),
+                                     widget, mask);
 }
 
 /**
@@ -1011,11 +1017,8 @@ void
 gwy_app_sensitivity_set_state(GwyMenuSensFlags affected_mask,
                               GwyMenuSensFlags state)
 {
-    /* This reference is never released. */
-    if (!app_sensgroup)
-        app_sensgroup = gwy_sensitivity_group_new();
-
-    gwy_sensitivity_group_set_state(app_sensgroup, affected_mask, state);
+    gwy_sensitivity_group_set_state(gwy_app_sensitivity_get_group(),
+                                    affected_mask, state);
 }
 
 /**
@@ -1064,6 +1067,7 @@ gwy_app_get_tooltips(void)
  * @GWY_MENU_FLAG_DATA_MASK: There is a mask on the data.
  * @GWY_MENU_FLAG_DATA_SHOW: There is a presentation on the data.
  * @GWY_MENU_FLAG_3D: A 3D view is present.
+ * @GWY_MENU_FLAG_FILE: A file is open, with any type of data (Since: 2.5).
  * @GWY_MENU_FLAG_MASK: All the bits combined.
  *
  * Global application sensitivity flags.

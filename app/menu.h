@@ -39,7 +39,8 @@ typedef enum {
     GWY_MENU_FLAG_DATA_MASK  = 1 << 6,
     GWY_MENU_FLAG_DATA_SHOW  = 1 << 7,
     GWY_MENU_FLAG_3D         = 1 << 8,
-    GWY_MENU_FLAG_MASK       = 0xff
+    GWY_MENU_FLAG_FILE       = 1 << 9,
+    GWY_MENU_FLAG_MASK       = 0x1ff
 } GwyMenuSensFlags;
 
 GtkWidget* gwy_app_build_process_menu       (GtkAccelGroup *accel_group);
