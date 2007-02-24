@@ -26,7 +26,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
-#include <libprocess/interpolation.h>
+#include <libprocess/correct.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydataview.h>
@@ -184,7 +184,7 @@ distort_dialog(DistortArgs *args,
     memset(&controls, 0, sizeof(DistortControls));
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Distort by Polynom"),
+    dialog = gtk_dialog_new_with_buttons(_("Distort by Polynomial"),
                                          NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Update"),
@@ -555,9 +555,6 @@ distort_coord(gdouble x,
               gdouble y,
               const gdouble *a)
 {
-    /* XXX: Degree hardcoded here to avoid cycles and if-elses. */
-    g_assert(MAX_DEGREE == 3);
-
     return (a[0]
             + x*(a[1] + x*(a[2] + x*a[3]))
             + y*(a[4] + x*(a[5] + x*a[6])
@@ -565,70 +562,38 @@ distort_coord(gdouble x,
 }
 
 static void
+distort_transform(gdouble x, gdouble y,
+                  gdouble *px, gdouble *py,
+                  gpointer user_data)
+{
+    const gdouble *param = (const gdouble*)user_data;
+
+    x /= param[2*NCOEFF + 0];
+    y /= param[2*NCOEFF + 1];
+    *px = param[2*NCOEFF + 0]*distort_coord(x, y, param);
+    *py = param[2*NCOEFF + 1]*distort_coord(x, y, param + NCOEFF);
+}
+
+static void
 distort_do(DistortArgs *args,
            GwyDataField *dfield,
            GwyDataField *result)
 {
-    GwyDataField *coeffield;
-    gdouble *rdata, *coeff;
-    const gdouble *cdata;
-    gint xres, yres, newi, newj, oldi, oldj, i, j, ii, jj, suplen, sf, st;
-    gdouble x, y, val, v;
+    gdouble *param;
+    gdouble val;
 
-    suplen = gwy_interpolation_get_support_size(args->interp);
-    g_return_if_fail(suplen > 0);
-    coeff = g_newa(gdouble, suplen*suplen);
-    sf = -((suplen - 1)/2);
-    st = suplen/2;
+    /* XXX: Degree hardcoded in distort_coord() to avoid cycles and if-elses. */
+    g_assert(MAX_DEGREE == 3);
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-
-    if (gwy_interpolation_has_interpolating_basis(args->interp))
-        coeffield = g_object_ref(dfield);
-    else {
-        coeffield = gwy_data_field_duplicate(dfield);
-        gwy_interpolation_resolve_coeffs_2d(xres, yres, xres,
-                                            gwy_data_field_get_data(coeffield),
-                                            args->interp);
-    }
+    param = g_new(gdouble, 2*(NCOEFF + 1));
+    memcpy(param, args->xcoeff, NCOEFF*sizeof(gdouble));
+    memcpy(param + NCOEFF, args->ycoeff, NCOEFF*sizeof(gdouble));
+    param[2*NCOEFF + 0] = gwy_data_field_get_xres(result);
+    param[2*NCOEFF + 1] = gwy_data_field_get_yres(result);
 
     val = gwy_data_field_get_min(dfield);
-    rdata = gwy_data_field_get_data(result);
-    cdata = gwy_data_field_get_data_const(coeffield);
-
-    for (newi = 0; newi < yres; newi++) {
-        for (newj = 0; newj < xres; newj++) {
-            x = distort_coord((newj + 0.5)/xres, (newi + 0.5)/yres,
-                              args->xcoeff)*xres;
-            y = distort_coord((newj + 0.5)/xres, (newi + 0.5)/yres,
-                              args->ycoeff)*yres;
-            if (y > yres || x > xres || y < 0.0 || x < 0.0)
-                v = val;
-            else {
-                oldi = (gint)floor(y);
-                y -= oldi;
-                oldj = (gint)floor(x);
-                x -= oldj;
-                for (i = sf; i <= st; i++) {
-                    ii = (oldi + i + 2*st*yres) % (2*yres);
-                    if (G_UNLIKELY(ii >= yres))
-                        ii = 2*yres-1 - ii;
-                    for (j = sf; j <= st; j++) {
-                        jj = (oldj + j + 2*st*xres) % (2*xres);
-                        if (G_UNLIKELY(jj >= xres))
-                            jj = 2*xres-1 - jj;
-                        coeff[(i - sf)*suplen + j - sf] = cdata[ii*xres + jj];
-                    }
-                }
-                v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
-                                                     args->interp);
-            }
-            rdata[newj + xres*newi] = v;
-        }
-    }
-
-    g_object_unref(coeffield);
+    gwy_data_field_distort(dfield, result, distort_transform, param,
+                           args->interp, GWY_EXTERIOR_FIXED_VALUE, val);
 }
 
 static const gchar interp_key[] = "/module/polydistort/interp";
