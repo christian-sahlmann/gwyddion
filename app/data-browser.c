@@ -253,25 +253,6 @@ gwy_app_data_browser_set_file_present(GwyAppDataBrowser *browser,
 }
 
 /**
- * emit_row_changed:
- * @store: A list store.
- * @iter: A tree model iterator that belongs to @store.
- *
- * Auxiliary function to emit "row-changed" signal on a list store.
- **/
-static void
-emit_row_changed(GtkListStore *store,
-                 GtkTreeIter *iter)
-{
-    GtkTreeModel *model = GTK_TREE_MODEL(store);
-    GtkTreePath *path;
-
-    path = gtk_tree_model_get_path(model, iter);
-    gtk_tree_model_row_changed(model, path, iter);
-    gtk_tree_path_free(path);
-}
-
-/**
  * gwy_app_widget_queue_manage:
  * @widget: Widget to add or remove.
  * @remv: %TRUE to remove, %FALSE to add.
@@ -760,7 +741,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_disconnect_channel(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_channel(proxy, &iter, object);
-            emit_row_changed(list->store, &iter);
+            gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
         break;
 
@@ -779,7 +760,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_disconnect_graph(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_graph(proxy, &iter, object);
-            emit_row_changed(list->store, &iter);
+            gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
         break;
 
@@ -788,7 +769,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         list = &proxy->lists[PAGE_CHANNELS];
         found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         if (found) {
-            emit_row_changed(proxy->lists[PAGE_CHANNELS].store, &iter);
+            gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
+                                       &iter, NULL, -1);
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
@@ -806,7 +788,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         list = &proxy->lists[PAGE_CHANNELS];
         found = gwy_app_data_proxy_find_object(list->store, i, &iter);
         if (found) {
-            emit_row_changed(proxy->lists[PAGE_CHANNELS].store, &iter);
+            gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
+                                       &iter, NULL, -1);
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
