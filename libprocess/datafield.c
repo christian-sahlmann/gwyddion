@@ -1420,6 +1420,8 @@ gwy_data_field_rotate(GwyDataField *a,
     sf = -((suplen - 1)/2);
     st = suplen/2;
 
+    /* FIXME: Shouldn't we implement this in terms of
+     * gwy_data_field_distort()? */
     val = gwy_data_field_get_min(a);
     b = gwy_data_field_duplicate(a);
     gwy_interpolation_resolve_coeffs_2d(xres, yres, xres, b->data,

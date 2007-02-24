@@ -25,6 +25,7 @@
 #include <libprocess/linestats.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
+#include <libprocess/interpolation.h>
 
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
@@ -384,12 +385,162 @@ unrotate_refine_correction(GwyDataLine *derdist,
     return phi;
 }
 
+/**
+ * gwy_data_field_distort:
+ * @source: Source data field.
+ * @dest: Destination data field.
+ * @invtrans: Inverse transform function, that is the transformation from
+ *            new coordinates to old coordinates.   It gets
+ *            (@j+0.5, @i+0.5), where @i and @j are the new row and column
+ *            indices, passed as the input coordinates.  The output coordinates
+ *            should follow the same convention.  Unless a special exterior
+ *            handling is requires, the transform function does not need to
+ *            concern itself with coordinates being outside of the data.
+ * @user_data: Pointer passed as @user_data to @invtrans.
+ * @interp: Interpolation type to use.
+ * @exterior: Exterior pixels handling.  Supported values are:
+ *            @GWY_EXTERIOR_UNDEFINED, @GWY_EXTERIOR_MIRROR_EXTEND,
+ *            @GWY_EXTERIOR_BORDER_EXTEND, @GWY_EXTERIOR_PERIODIC,
+ *            @GWY_EXTERIOR_FIXED_VALUE.
+ * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
+ *
+ * Distorts a data field in the horizontal plane.
+ *
+ * Note the transform function @invtrans is the inverse transform, in other
+ * words it calculates the old coordinates from tne new coordinates (the
+ * transform would not be uniquely defined the other way round).
+ *
+ * Since: 2.5
+ **/
+void
+gwy_data_field_distort(GwyDataField *source,
+                       GwyDataField *dest,
+                       GwyCoordTransform2DFunc invtrans,
+                       gpointer user_data,
+                       GwyInterpolationType interp,
+                       GwyExteriorType exterior,
+                       gdouble fill_value)
+{
+    GwyDataField *coeffield;
+    gdouble *data, *coeff;
+    const gdouble *cdata;
+    gint xres, yres, newxres, newyres;
+    gint newi, newj, oldi, oldj, i, j, ii, jj, suplen, sf, st;
+    gdouble x, y, v;
+    gboolean vset, warned = FALSE;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(source));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dest));
+    g_return_if_fail(invtrans);
+
+    suplen = gwy_interpolation_get_support_size(interp);
+    g_return_if_fail(suplen > 0);
+    coeff = g_newa(gdouble, suplen*suplen);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    newxres = gwy_data_field_get_xres(dest);
+    newyres = gwy_data_field_get_yres(dest);
+
+    if (gwy_interpolation_has_interpolating_basis(interp))
+        coeffield = g_object_ref(source);
+    else {
+        coeffield = gwy_data_field_duplicate(source);
+        gwy_interpolation_resolve_coeffs_2d(xres, yres, xres,
+                                            gwy_data_field_get_data(coeffield),
+                                            interp);
+    }
+
+    data = gwy_data_field_get_data(dest);
+    cdata = gwy_data_field_get_data_const(coeffield);
+
+    for (newi = 0; newi < newyres; newi++) {
+        for (newj = 0; newj < newxres; newj++) {
+            invtrans(newj + 0.5, newi + 0.5, &x, &y, user_data);
+            vset = FALSE;
+            if (y > yres || x > xres || y < 0.0 || x < 0.0) {
+                switch (exterior) {
+                    case GWY_EXTERIOR_BORDER_EXTEND:
+                    x = CLAMP(x, 0, xres);
+                    y = CLAMP(y, 0, yres);
+                    break;
+
+                    case GWY_EXTERIOR_MIRROR_EXTEND:
+                    /* Mirror extension is what the interpolation code does
+                     * by default */
+                    break;
+
+                    case GWY_EXTERIOR_PERIODIC:
+                    x = (x > 0) ? fmod(x, xres) : fmod(x, xres) + xres;
+                    y = (y > 0) ? fmod(y, yres) : fmod(y, yres) + yres;
+                    break;
+
+                    case GWY_EXTERIOR_FIXED_VALUE:
+                    v = fill_value;
+                    vset = TRUE;
+                    break;
+
+                    case GWY_EXTERIOR_UNDEFINED:
+                    continue;
+                    break;
+
+                    default:
+                    if (!warned) {
+                        g_warning("Unsupported exterior type, "
+                                  "assuming undefined");
+                        warned = TRUE;
+                    }
+                    continue;
+                    break;
+                }
+            }
+            if (!vset) {
+                oldi = (gint)floor(y);
+                y -= oldi;
+                oldj = (gint)floor(x);
+                x -= oldj;
+                for (i = sf; i <= st; i++) {
+                    ii = (oldi + i + 2*st*yres) % (2*yres);
+                    if (G_UNLIKELY(ii >= yres))
+                        ii = 2*yres-1 - ii;
+                    for (j = sf; j <= st; j++) {
+                        jj = (oldj + j + 2*st*xres) % (2*xres);
+                        if (G_UNLIKELY(jj >= xres))
+                            jj = 2*xres-1 - jj;
+                        coeff[(i - sf)*suplen + j - sf] = cdata[ii*xres + jj];
+                    }
+                }
+                v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
+                                                     interp);
+            }
+            data[newj + xres*newi] = v;
+        }
+    }
+
+    g_object_unref(coeffield);
+}
+
 /************************** Documentation ****************************/
 
 /**
  * SECTION:correct
  * @title: correct
  * @short_description: Data correction
+ **/
+
+/**
+ * GwyCoordTransform2DFunc:
+ * @x: Old x coordinate.
+ * @y: Old y coordinate.
+ * @px: Location to store new x coordinate.
+ * @py: Location to store new y coordinate.
+ * @user_data: User data passed to the caller function.
+ *
+ * The type of two-dimensional coordinate transform function.
+ *
+ * Since: 2.5
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -885,7 +885,7 @@ gwy_interpolation_resample_block_2d(gint width,
  * @newdata: Array to put the shifted data to.
  * @interpolation: Interpolation type to use.
  * @exterior: Exterior pixels handling.  Supported values are:
- *            @GWY_EXTERIOR_NONE, @GWY_EXTERIOR_MIRROR_EXTEND,
+ *            @GWY_EXTERIOR_UNDEFINED, @GWY_EXTERIOR_MIRROR_EXTEND,
  *            @GWY_EXTERIOR_BORDER_EXTEND, @GWY_EXTERIOR_FIXED_VALUE.
  * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
  * @preserve: %TRUE to preserve the content of @data, %FALSE to permit its
