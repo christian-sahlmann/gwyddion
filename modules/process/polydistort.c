@@ -43,7 +43,7 @@ enum {
 };
 
 typedef enum {
-    PREVIEW_CORRECTED = 0,
+    PREVIEW_TRANSFORMED = 0,
     PREVIEW_ORIGINAL  = 1,
     PREVIEW_LAST
 } DistortPreviewType;
@@ -52,6 +52,7 @@ typedef enum {
 typedef struct {
     DistortPreviewType preview_type;
     GwyInterpolationType interp;
+    GwyExteriorType exterior;
     gdouble *xcoeff;
     gdouble *ycoeff;
 } DistortArgs;
@@ -60,6 +61,7 @@ typedef struct {
     GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *interp;
+    GtkWidget *exterior;
     GtkWidget **xcoeff;
     GtkWidget **ycoeff;
     GSList *preview_type;
@@ -105,8 +107,9 @@ static void       distort_do                    (DistortArgs *args,
                                                  GwyDataField *result);
 
 static const DistortArgs distort_defaults = {
-    PREVIEW_ORIGINAL,
+    PREVIEW_TRANSFORMED,
     GWY_INTERPOLATION_BSPLINE,
+    GWY_EXTERIOR_FIXED_VALUE,
     NULL,
     NULL
 };
@@ -176,6 +179,7 @@ distort_dialog(DistortArgs *args,
     gint response;
     gdouble zoomval;
     GwyPixmapLayer *layer;
+    GSList *l;
     gint row;
 
     memset(&controls, 0, sizeof(DistortControls));
@@ -225,7 +229,7 @@ distort_dialog(DistortArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(7, 4, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -239,24 +243,40 @@ distort_dialog(DistortArgs *args,
     gwy_table_attach_hscale(table, row, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
+    row++;
+
+    controls.exterior
+        = gwy_enum_combo_box_newl(G_CALLBACK(gwy_enum_combo_box_update_int),
+                                  &args->exterior, args->exterior,
+                                  _("Minimum"), GWY_EXTERIOR_FIXED_VALUE,
+                                  _("Border"), GWY_EXTERIOR_BORDER_EXTEND,
+                                  _("Mirror"), GWY_EXTERIOR_MIRROR_EXTEND,
+                                  _("Periodic"), GWY_EXTERIOR_PERIODIC,
+                                  NULL);
+    gwy_table_attach_hscale(table, row, _("_Exteriror type:"), NULL,
+                            GTK_OBJECT(controls.exterior),
+                            GWY_HSCALE_WIDGET_NO_EXPAND);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new(_("Preview type"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    hbox = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox,
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
+
+    label = gtk_label_new(_("Preview:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
     controls.preview_type
         = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed), &controls,
                                     args->preview_type,
                                     _("Or_iginal"), PREVIEW_ORIGINAL,
-                                    _("Correc_ted data"), PREVIEW_CORRECTED,
+                                    _("_Transformed"), PREVIEW_TRANSFORMED,
                                     NULL);
-    row = gwy_radio_buttons_attach_to_table(controls.preview_type,
-                                            GTK_TABLE(table), 3, row);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    for (l = controls.preview_type; l; l = g_slist_next(l))
+        gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(l->data), FALSE, FALSE, 0);
 
     gtk_table_attach(GTK_TABLE(table),
                      gwy_label_new_header(_("X Coefficients")),
@@ -499,7 +519,7 @@ preview_type_changed(G_GNUC_UNUSED GtkWidget *button,
 
     blayer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
     switch (controls->args->preview_type) {
-        case PREVIEW_CORRECTED:
+        case PREVIEW_TRANSFORMED:
         gwy_layer_basic_set_presentation_key(GWY_LAYER_BASIC(blayer),
                                              "/1/data");
         break;
@@ -580,7 +600,7 @@ distort_do(DistortArgs *args,
 
     val = gwy_data_field_get_min(dfield);
     gwy_data_field_distort(dfield, result, distort_transform, param,
-                           args->interp, GWY_EXTERIOR_FIXED_VALUE, val);
+                           args->interp, args->exterior, val);
 }
 
 static const gchar interp_key[] = "/module/polydistort/interp";
