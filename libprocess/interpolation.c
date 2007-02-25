@@ -884,9 +884,7 @@ gwy_interpolation_resample_block_2d(gint width,
  *          zeroth value of @newdata will be set to the first value of @data.
  * @newdata: Array to put the shifted data to.
  * @interpolation: Interpolation type to use.
- * @exterior: Exterior pixels handling.  Supported values are:
- *            @GWY_EXTERIOR_UNDEFINED, @GWY_EXTERIOR_MIRROR_EXTEND,
- *            @GWY_EXTERIOR_BORDER_EXTEND, @GWY_EXTERIOR_FIXED_VALUE.
+ * @exterior: Exterior pixels handling.
  * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
  * @preserve: %TRUE to preserve the content of @data, %FALSE to permit its
  *            overwriting with temporary data.
@@ -945,8 +943,11 @@ gwy_interpolation_shift_block_1d(gint length,
             /* Exterior or too near to the border to feel the mirroring.
              * Use mirror extend for all points not really outside. */
             if (exterior == GWY_EXTERIOR_MIRROR_EXTEND
+                || exterior == GWY_EXTERIOR_PERIODIC
                 || (oldi >= 0 && oldi + 1 < length)
                 || (oldi == length-1 && off == offset)) {
+                if (exterior == GWY_EXTERIOR_PERIODIC)
+                    oldi = oldi % length + (oldi >= 0 ? 0 : length);
                 v = 0.0;
                 for (i = sf; i <= st; i++) {
                     ii = (oldi + i + 2*st*length) % (2*length);

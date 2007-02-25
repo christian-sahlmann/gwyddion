@@ -398,10 +398,7 @@ unrotate_refine_correction(GwyDataLine *derdist,
  *            concern itself with coordinates being outside of the data.
  * @user_data: Pointer passed as @user_data to @invtrans.
  * @interp: Interpolation type to use.
- * @exterior: Exterior pixels handling.  Supported values are:
- *            @GWY_EXTERIOR_UNDEFINED, @GWY_EXTERIOR_MIRROR_EXTEND,
- *            @GWY_EXTERIOR_BORDER_EXTEND, @GWY_EXTERIOR_PERIODIC,
- *            @GWY_EXTERIOR_FIXED_VALUE.
+ * @exterior: Exterior pixels handling.
  * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
  *
  * Distorts a data field in the horizontal plane.
