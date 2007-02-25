@@ -457,6 +457,8 @@ gwy_data_field_distort(GwyDataField *source,
         for (newj = 0; newj < newxres; newj++) {
             invtrans(newj + 0.5, newi + 0.5, &x, &y, user_data);
             vset = FALSE;
+            x -= 0.5;
+            y -= 0.5;
             if (y > yres || x > xres || y < 0.0 || x < 0.0) {
                 switch (exterior) {
                     case GWY_EXTERIOR_BORDER_EXTEND:
