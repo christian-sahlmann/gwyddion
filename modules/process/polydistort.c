@@ -53,6 +53,7 @@ typedef struct {
     DistortPreviewType preview_type;
     GwyInterpolationType interp;
     GwyExteriorType exterior;
+    gboolean update;
     gdouble *xcoeff;
     gdouble *ycoeff;
 } DistortArgs;
@@ -62,6 +63,7 @@ typedef struct {
     GtkWidget *view;
     GtkWidget *interp;
     GtkWidget *exterior;
+    GtkWidget *update;
     GtkWidget **xcoeff;
     GtkWidget **ycoeff;
     GSList *preview_type;
@@ -82,6 +84,12 @@ static GtkWidget* coeff_table_new               (GtkWidget **entry,
                                                  gpointer id,
                                                  DistortControls *controls);
 static void       distort_fetch_coeff           (DistortControls *controls);
+static void       interp_changed                (GtkComboBox *combo,
+                                                 DistortControls *controls);
+static void       exterior_changed              (GtkComboBox *combo,
+                                                 DistortControls *controls);
+static void       update_changed                (GtkToggleButton *check,
+                                                 DistortControls *controls);
 static void       run_noninteractive            (DistortArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
@@ -91,25 +99,26 @@ static void       distort_dialog_update_controls(DistortControls *controls,
                                                  DistortArgs *args);
 static void       distort_coeff_changed         (GtkEntry *entry,
                                                  DistortControls *controls);
-static void       distort_invalidate            (GObject *obj,
-                                                 DistortControls *controls);
+static void       distort_invalidate            (DistortControls *controls);
 static void       preview_type_changed          (GtkWidget *button,
                                                  DistortControls *controls);
 static void       preview                       (DistortControls *controls,
                                                  DistortArgs *args);
+static void       distort_do                    (DistortArgs *args,
+                                                 GwyDataField *dfield,
+                                                 GwyDataField *result);
 static void       distort_load_args             (GwyContainer *container,
                                                  DistortArgs *args);
 static void       distort_save_args             (GwyContainer *container,
                                                  DistortArgs *args);
 static void       distort_sanitize_args         (DistortArgs *args);
-static void       distort_do                    (DistortArgs *args,
-                                                 GwyDataField *dfield,
-                                                 GwyDataField *result);
+static void       reset_coeffs                  (DistortArgs *args);
 
 static const DistortArgs distort_defaults = {
     PREVIEW_TRANSFORMED,
     GWY_INTERPOLATION_BSPLINE,
     GWY_EXTERIOR_FIXED_VALUE,
+    TRUE,
     NULL,
     NULL
 };
@@ -149,6 +158,8 @@ polydistort(GwyContainer *data, GwyRunType run)
     gint id;
 
     g_return_if_fail(run & DISTORT_RUN_MODES);
+    args.xcoeff = g_new(gdouble, NCOEFF);
+    args.ycoeff = g_new(gdouble, NCOEFF);
     distort_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
@@ -161,6 +172,9 @@ polydistort(GwyContainer *data, GwyRunType run)
         distort_dialog(&args, data, dfield, id);
         distort_save_args(gwy_app_settings_get(), &args);
     }
+
+    g_free(args.xcoeff);
+    g_free(args.ycoeff);
 }
 
 static void
@@ -229,7 +243,7 @@ distort_dialog(DistortArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(6, 4, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -238,16 +252,16 @@ distort_dialog(DistortArgs *args,
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(gwy_enum_combo_box_update_int),
-                                 &args->interp, args->interp, TRUE);
+                                 G_CALLBACK(interp_changed), &controls,
+                                 args->interp, TRUE);
     gwy_table_attach_hscale(table, row, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     row++;
 
     controls.exterior
-        = gwy_enum_combo_box_newl(G_CALLBACK(gwy_enum_combo_box_update_int),
-                                  &args->exterior, args->exterior,
+        = gwy_enum_combo_box_newl(G_CALLBACK(exterior_changed), &controls,
+                                  args->exterior,
                                   _("Minimum"), GWY_EXTERIOR_FIXED_VALUE,
                                   _("Border"), GWY_EXTERIOR_BORDER_EXTEND,
                                   _("Mirror"), GWY_EXTERIOR_MIRROR_EXTEND,
@@ -272,7 +286,7 @@ distort_dialog(DistortArgs *args,
     controls.preview_type
         = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed), &controls,
                                     args->preview_type,
-                                    _("Or_iginal"), PREVIEW_ORIGINAL,
+                                    _("Ori_ginal"), PREVIEW_ORIGINAL,
                                     _("_Transformed"), PREVIEW_TRANSFORMED,
                                     NULL);
     for (l = controls.preview_type; l; l = g_slist_next(l))
@@ -284,6 +298,8 @@ distort_dialog(DistortArgs *args,
     row++;
 
     controls.xcoeff = g_new0(GtkWidget*, NCOEFF);
+    g_signal_connect_swapped(dialog, "destroy",
+                             G_CALLBACK(g_free), controls.xcoeff);
     gtk_table_attach(GTK_TABLE(table),
                      coeff_table_new(controls.xcoeff, (gpointer)"x", &controls),
                      0, 4, row, row+1, GTK_FILL, 0, 0, 0);
@@ -296,15 +312,27 @@ distort_dialog(DistortArgs *args,
     row++;
 
     controls.ycoeff = g_new0(GtkWidget*, NCOEFF);
+    g_signal_connect_swapped(dialog, "destroy",
+                             G_CALLBACK(g_free), controls.ycoeff);
     gtk_table_attach(GTK_TABLE(table),
                      coeff_table_new(controls.ycoeff, (gpointer)"y", &controls),
                      0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    controls.computed = FALSE;
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.update, "toggled",
+                     G_CALLBACK(update_changed), &controls);
+    row++;
+
     distort_dialog_update_controls(&controls, args);
     /* Set up initial layer keys properly */
     preview_type_changed(NULL, &controls);
+    distort_invalidate(&controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -324,11 +352,10 @@ distort_dialog(DistortArgs *args,
 
             case RESPONSE_RESET:
             args->interp = distort_defaults.interp;
-            memset(args->xcoeff, 0, NCOEFF*sizeof(gdouble));
-            args->xcoeff[1] = 1.0;
-            memset(args->ycoeff, 0, NCOEFF*sizeof(gdouble));
-            args->ycoeff[4] = 1.0;
+            args->exterior = distort_defaults.exterior;
+            reset_coeffs(args);
             distort_dialog_update_controls(&controls, args);
+            distort_invalidate(&controls);
             break;
 
             case RESPONSE_PREVIEW:
@@ -423,6 +450,31 @@ distort_fetch_coeff(DistortControls *controls)
         distort_coeff_changed(GTK_ENTRY(entry), controls);
 }
 
+static void
+interp_changed(GtkComboBox *combo,
+               DistortControls *controls)
+{
+    controls->args->interp = gwy_enum_combo_box_get_active(combo);
+    distort_invalidate(controls);
+}
+
+static void
+exterior_changed(GtkComboBox *combo,
+                 DistortControls *controls)
+{
+    controls->args->exterior = gwy_enum_combo_box_get_active(combo);
+    distort_invalidate(controls);
+}
+
+static void
+update_changed(GtkToggleButton *check,
+               DistortControls *controls)
+{
+    controls->args->update = gtk_toggle_button_get_active(check);
+    if (controls->args->update)
+        preview(controls, controls->args);
+}
+
 /* XXX: Eats result */
 static void
 run_noninteractive(DistortArgs *args,
@@ -498,14 +550,15 @@ distort_coeff_changed(GtkEntry *entry,
         return;
 
     coeff[k] = val;
-    distort_invalidate(NULL, controls);
+    distort_invalidate(controls);
 }
 
 static void
-distort_invalidate(G_GNUC_UNUSED GObject *obj,
-                   DistortControls *controls)
+distort_invalidate(DistortControls *controls)
 {
     controls->computed = FALSE;
+    if (controls->args->update)
+        preview(controls, controls->args);
 }
 
 static void
@@ -542,7 +595,8 @@ preview(DistortControls *controls,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
-    gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialog));
+    if (GTK_WIDGET_REALIZED(controls->dialog))
+        gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialog));
     if (!controls->result) {
         controls->result = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/1/data",
@@ -552,7 +606,8 @@ preview(DistortControls *controls,
         gwy_data_field_copy(dfield, controls->result, FALSE);
     distort_do(args, dfield, controls->result);
     gwy_data_field_data_changed(controls->result);
-    gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialog));
+    if (GTK_WIDGET_REALIZED(controls->dialog))
+        gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialog));
 
     controls->computed = TRUE;
 }
@@ -601,33 +656,42 @@ distort_do(DistortArgs *args,
     val = gwy_data_field_get_min(dfield);
     gwy_data_field_distort(dfield, result, distort_transform, param,
                            args->interp, args->exterior, val);
+    g_free(param);
 }
 
-static const gchar interp_key[] = "/module/polydistort/interp";
-static const gchar coeff_key[]  = "/module/polydistort/%ccoeff-%d-%d";
+static const gchar interp_key[]   = "/module/polydistort/interp";
+static const gchar exterior_key[] = "/module/polydistort/exterior";
+static const gchar update_key[]   = "/module/polydistort/update";
+static const gchar coeff_key[]    = "/module/polydistort/%ccoeff-%d-%d";
 
 static void
 distort_sanitize_args(DistortArgs *args)
 {
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
+    args->exterior = CLAMP(args->exterior,
+                           GWY_EXTERIOR_BORDER_EXTEND,
+                           GWY_EXTERIOR_FIXED_VALUE);
+    args->update = !!args->update;
 }
 
-static gdouble*
+static void
+reset_coeffs(DistortArgs *args)
+{
+    memset(args->xcoeff, 0, NCOEFF*sizeof(gdouble));
+    args->xcoeff[1] = 1.0;
+
+    memset(args->ycoeff, 0, NCOEFF*sizeof(gdouble));
+    args->ycoeff[4] = 1.0;
+}
+
+static void
 load_coeffs(gdouble *coeff,
             gchar type,
             GwyContainer *settings)
 {
     gchar buf[40];
     gint i, j, k;
-
-    if (!coeff)
-        coeff = g_new0(gdouble, NCOEFF);
-
-    if (type == 'x')
-        coeff[1] = 1.0;
-    if (type == 'y')
-        coeff[4] = 1.0;
 
     for (i = 0; i < MAX_DEGREE + 1; i++) {
         for (j = 0; j < MAX_DEGREE + 1; j++) {
@@ -639,20 +703,22 @@ load_coeffs(gdouble *coeff,
             gwy_container_gis_double_by_name(settings, buf, coeff + k);
         }
     }
-
-    return coeff;
 }
 
 static void
 distort_load_args(GwyContainer *container,
                   DistortArgs *args)
 {
+    args->interp = distort_defaults.interp;
+    args->exterior = distort_defaults.exterior;
+    args->update = distort_defaults.update;
 
-    *args = distort_defaults;
-
+    reset_coeffs(args);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
-    args->xcoeff = load_coeffs(args->xcoeff, 'x', container);
-    args->ycoeff = load_coeffs(args->ycoeff, 'y', container);
+    gwy_container_gis_enum_by_name(container, exterior_key, &args->exterior);
+    gwy_container_gis_boolean_by_name(container, update_key, &args->update);
+    load_coeffs(args->xcoeff, 'x', container);
+    load_coeffs(args->ycoeff, 'y', container);
 
     distort_sanitize_args(args);
 }
@@ -685,6 +751,8 @@ distort_save_args(GwyContainer *container,
                   DistortArgs *args)
 {
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_enum_by_name(container, exterior_key, args->exterior);
+    gwy_container_set_boolean_by_name(container, update_key, args->update);
     save_coeffs(args->xcoeff, 'x', container);
     save_coeffs(args->ycoeff, 'y', container);
 }
