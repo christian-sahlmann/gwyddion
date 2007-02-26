@@ -45,7 +45,7 @@ struct _GwyGraphAreaDialog {
     GtkWidget *curvetype_menu;
     GtkWidget *color_button;
     GtkWidget *pointtype_menu;
-    GtkWidget *linetype_menu;
+    GtkWidget *linestyle_menu;
     GtkObject *pointsize;
     GtkObject *thickness;
 
@@ -70,6 +70,13 @@ GtkWidget*  _gwy_graph_area_dialog_new     (void);
 G_GNUC_INTERNAL
 void        _gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog,
                                                   GwyGraphCurveModel *cmodel);
+
+/* Helpers */
+G_GNUC_INTERNAL
+GtkTreeModel* _gwy_graph_get_point_type_store(GtkWidget *widget);
+
+G_GNUC_INTERNAL
+GtkTreeModel* _gwy_graph_get_line_style_store(GtkWidget *widget);
 
 G_END_DECLS
 

@@ -43,21 +43,11 @@ static gboolean   gwy_graph_area_dialog_delete     (GtkWidget *widget,
                                                     GdkEventAny *event);
 static void       gwy_graph_area_dialog_response   (GtkDialog *gtkdialog,
                                                     gint response_id);
-static GtkWidget* gwy_graph_combo_box_new          (GtkWidget *parent,
-                                                    GCallback callback,
-                                                    gpointer cbdata,
-                                                    gint last,
-                                                    const gchar **labels,
-                                                    GCallback realize_cb,
+static GtkWidget* gwy_graph_combo_box_new          (GwyGraphAreaDialog *dialog,
+                                                    const gchar *property,
+                                                    gboolean labels,
+                                                    GCallback model_creator,
                                                     gint current);
-static void       gwy_graph_point_combo_box_realize(GtkWidget *parent,
-                                                    GtkWidget *combo);
-static void       gwy_graph_line_combo_box_realize (GtkWidget *parent,
-                                                    GtkWidget *combo);
-static void       pointtype_cb                     (GtkWidget *combo,
-                                                    GwyGraphAreaDialog *dialog);
-static void       linetype_cb                      (GtkWidget *combo,
-                                                    GwyGraphAreaDialog *dialog);
 static void       color_change_cb                  (GtkWidget *color_button,
                                                     GwyGraphAreaDialog *dialog);
 static void       colorsel_response_cb             (GtkWidget *selector,
@@ -67,6 +57,8 @@ static void       colorsel_changed_cb              (GtkColorSelection *colorsel,
                                                     GwyGraphAreaDialog *dialog);
 static void       label_change_cb                  (GwySciText *sci_text,
                                                     GwyGraphAreaDialog *dialog);
+static void       combo_realized                   (GtkWidget *parent,
+                                                    GtkWidget *combo);
 static void       refresh                          (GwyGraphAreaDialog *dialog);
 static void       curvetype_changed_cb             (GtkWidget *combo,
                                                     GwyGraphAreaDialog *dialog);
@@ -92,12 +84,6 @@ _gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
 static void
 _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 {
-    static const gchar *point_types[] = {
-        N_("Square"), N_("Cross"), N_("Circle"), N_("Star"),
-        N_("Diagonal cross"), N_("Triangle up"), N_("Triangle down"),
-        N_("Diamond"), N_("Full square"), N_("Disc"),
-        N_("Full triangle up"), N_("Full triangle down"), N_("Full diamond"),
-    };
     GtkWidget *table;
     gint row;
 
@@ -136,12 +122,9 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     row++;
 
     dialog->pointtype_menu
-        = gwy_graph_combo_box_new(GTK_WIDGET(dialog),
-                                  G_CALLBACK(pointtype_cb), dialog,
-                                  GWY_GRAPH_POINT_FILLED_DIAMOND,
-                                  point_types,
-                                  G_CALLBACK(gwy_graph_point_combo_box_realize),
-                                  0);
+        = gwy_graph_combo_box_new(dialog, "point-type", TRUE,
+                                  G_CALLBACK(_gwy_graph_get_point_type_store),
+                                  GWY_GRAPH_POINT_SQUARE);
     gwy_table_attach_hscale(table, row, _("Point _type:"), NULL,
                             GTK_OBJECT(dialog->pointtype_menu),
                             GWY_HSCALE_WIDGET);
@@ -154,15 +137,12 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                      G_CALLBACK(pointsize_changed_cb), dialog);
     row++;
 
-    dialog->linetype_menu
-        = gwy_graph_combo_box_new(GTK_WIDGET(dialog),
-                                  G_CALLBACK(linetype_cb), dialog,
-                                  GDK_LINE_DOUBLE_DASH,
-                                  NULL,
-                                  G_CALLBACK(gwy_graph_line_combo_box_realize),
-                                  0);
+    dialog->linestyle_menu
+        = gwy_graph_combo_box_new(dialog, "line-style", FALSE,
+                                  G_CALLBACK(_gwy_graph_get_line_style_store),
+                                  GDK_LINE_SOLID);
     gwy_table_attach_hscale(table, row, _("_Line type:"), NULL,
-                            GTK_OBJECT(dialog->linetype_menu),
+                            GTK_OBJECT(dialog->linestyle_menu),
                             GWY_HSCALE_WIDGET);
     row++;
 
@@ -213,44 +193,6 @@ gwy_graph_area_dialog_response(GtkDialog *gtkdialog,
         gtk_widget_hide(dialog->color_dialog);
 }
 
-static void
-pointtype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
-{
-    GwyGraphCurveModel *cmodel;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gint active;
-
-    if (dialog->curve_model == NULL)
-        return;
-    if (!gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter))
-        return;
-
-    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
-    cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
-    g_object_set(cmodel, "point-type", active, NULL);
-}
-
-static void
-linetype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
-{
-    GwyGraphCurveModel *cmodel;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gint active;
-
-    if (dialog->curve_model == NULL)
-        return;
-    if (!gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter))
-        return;
-
-    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
-    cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
-    g_object_set(cmodel, "line-style", active, NULL);
-}
-
 GtkWidget*
 _gwy_graph_area_dialog_new()
 {
@@ -274,37 +216,42 @@ gwy_graph_area_dialog_destroy(GtkObject *object)
     GTK_OBJECT_CLASS(_gwy_graph_area_dialog_parent_class)->destroy(object);
 }
 
+static void
+combo_changed(GtkWidget *combo,
+              GwyGraphAreaDialog *dialog)
+{
+    const gchar *property;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gint active;
+
+    if (!dialog->curve_model
+        || !gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter))
+        return;
+
+    property = g_object_get_data(G_OBJECT(combo), "property-name");
+    g_return_if_fail(property);
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
+    gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
+    g_object_set(dialog->curve_model, property, active, NULL);
+}
+
 static GtkWidget*
-gwy_graph_combo_box_new(GtkWidget *parent,
-                        GCallback callback,
-                        gpointer cbdata,
-                        gint last,
-                        const gchar **labels,
-                        GCallback realize_cb,
+gwy_graph_combo_box_new(GwyGraphAreaDialog *dialog,
+                        const gchar *property,
+                        gboolean labels,
+                        GCallback model_creator,
                         gint current)
 {
-    GtkListStore *store;
     GtkWidget *combo;
     GtkCellRenderer *renderer;
-    GtkTreeIter iter;
-    gint i;
 
-    store = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, GDK_TYPE_PIXBUF);
-    for (i = 0; i <= last; i++) {
-        if (labels)
-            gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
-                                              COLUMN_VALUE, i,
-                                              COLUMN_NAME, _(labels[i]),
-                                              -1);
-        else
-            gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
-                                              COLUMN_VALUE, i,
-                                              -1);
-    }
-
-    combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    combo = gtk_combo_box_new();
     gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 1);
-    g_object_unref(store);
+    g_object_set_data(G_OBJECT(combo), "initial-value",
+                      GINT_TO_POINTER(current));
+    g_object_set_data(G_OBJECT(combo), "model-creator", model_creator);
+    g_object_set_data(G_OBJECT(combo), "property-name", (gpointer)property);
 
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, FALSE);
@@ -317,94 +264,39 @@ gwy_graph_combo_box_new(GtkWidget *parent,
                                       "text", COLUMN_NAME);
     }
 
-    if (current <= GWY_GRAPH_POINT_DIAMOND)
-        gtk_combo_box_set_active(GTK_COMBO_BOX(combo), current);
-
-    if (realize_cb)
-        g_signal_connect(parent, "realize", G_CALLBACK(realize_cb), combo);
-    if (callback)
-        g_signal_connect(combo, "changed", callback, cbdata);
+    g_signal_connect(dialog, "realize", G_CALLBACK(combo_realized), combo);
+    g_signal_connect(combo, "changed", G_CALLBACK(combo_changed), dialog);
 
     return combo;
 }
 
 static void
-gwy_graph_point_combo_box_realize(GtkWidget *parent,
-                                  GtkWidget *combo)
+combo_realized(GtkWidget *parent,
+               GtkWidget *combo)
 {
-    static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1 };
-    GdkColor bg = { -1, 0xffff, 0xffff, 0xffff };
-    GdkPixbuf *pixbuf;
-    GdkPixmap *pixmap;
+    GtkTreeModel* (*model_creator)(GtkWidget *widget);
     GtkTreeModel *model;
     GtkTreeIter iter;
-    GdkGC *gc;
-    gint width, height, i, size;
+    gint value, v;
 
-    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
-    width |= 1;
-    height |= 1;
-    gc = gdk_gc_new(parent->window);
-    pixmap = gdk_pixmap_new(parent->window, width, height, -1);
+    model_creator = g_object_get_data(G_OBJECT(combo), "model-creator");
+    g_return_if_fail(model_creator);
+    model = model_creator(parent);
+    g_return_if_fail(GTK_IS_TREE_MODEL(model));
 
-    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
-    gtk_tree_model_get_iter_first(model, &iter);
-    size = (3*height/4 - 1) | 1;
-    do {
-        gtk_tree_model_get(model, &iter, COLUMN_VALUE, &i, -1);
+    gtk_combo_box_set_model(GTK_COMBO_BOX(combo), model);
+    value = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(combo),
+                                              "initial-value"));
 
-        gdk_gc_set_rgb_fg_color(gc, &bg);
-        gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
-        gwy_graph_draw_point(pixmap, gc, width/2, height/2, i, size, &fg);
-
-        pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
-                                              0, 0, 0, 0, width, height);
-        gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-                           COLUMN_PIXBUF, pixbuf, -1);
-        g_object_unref(pixbuf);
-    } while (gtk_tree_model_iter_next(model, &iter));
-
-    g_object_unref(pixmap);
-    g_object_unref(gc);
-}
-
-static void
-gwy_graph_line_combo_box_realize(GtkWidget *parent,
-                                 GtkWidget *combo)
-{
-    static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1 };
-    GdkColor bg = { -1, 0xffff, 0xffff, 0xffff };
-    GdkPixbuf *pixbuf;
-    GdkPixmap *pixmap;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    GdkGC *gc;
-    gint width, height, i;
-
-    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
-    width = 5*height;
-    gc = gdk_gc_new(parent->window);
-    pixmap = gdk_pixmap_new(parent->window, width, height, -1);
-
-    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
-    gtk_tree_model_get_iter_first(model, &iter);
-    do {
-        gtk_tree_model_get(model, &iter, COLUMN_VALUE, &i, -1);
-
-        gdk_gc_set_rgb_fg_color(gc, &bg);
-        gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
-        gwy_graph_draw_line(pixmap, gc, 1, height/2, width - 1, height/2,
-                            i, /*XXX line width*/ 3, &fg);
-
-        pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
-                                              0, 0, 0, 0, width, height);
-        gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-                           COLUMN_PIXBUF, pixbuf, -1);
-        g_object_unref(pixbuf);
-    } while (gtk_tree_model_iter_next(model, &iter));
-
-    g_object_unref(pixmap);
-    g_object_unref(gc);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, COLUMN_VALUE, &v, -1);
+            if (v == value) {
+                gtk_combo_box_set_active_iter(GTK_COMBO_BOX(combo), &iter);
+                break;
+            }
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
 }
 
 static void
@@ -421,10 +313,21 @@ refresh(GwyGraphAreaDialog *dialog)
                                &cmodel->color);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(dialog->curvetype_menu),
                                   cmodel->mode);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->pointtype_menu),
-                             cmodel->point_type);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->linetype_menu),
-                             cmodel->line_style);
+
+    if (gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->pointtype_menu)))
+        gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->pointtype_menu),
+                                 cmodel->point_type);
+    else
+        g_object_set_data(G_OBJECT(dialog->pointtype_menu), "initial-value",
+                          GINT_TO_POINTER(cmodel->point_type));
+
+    if (gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->linestyle_menu)))
+        gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->linestyle_menu),
+                                 cmodel->line_style);
+    else
+        g_object_set_data(G_OBJECT(dialog->linestyle_menu), "initial-value",
+                          GINT_TO_POINTER(cmodel->line_style));
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->pointsize),
                              cmodel->point_size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->thickness),
@@ -580,5 +483,137 @@ pointsize_changed_cb(GtkAdjustment *adj, GwyGraphAreaDialog *dialog)
     g_object_set(cmodel, "point-size", gwy_adjustment_get_int(adj), NULL);
 }
 
+GtkTreeModel*
+_gwy_graph_get_point_type_store(GtkWidget *widget)
+{
+    static const GwyEnum point_types[] = {
+        { N_("Square"),              GWY_GRAPH_POINT_SQUARE,                },
+        { N_("Circle"),              GWY_GRAPH_POINT_CIRCLE,                },
+        { N_("Diamond"),             GWY_GRAPH_POINT_DIAMOND,               },
+        { N_("Cross"),               GWY_GRAPH_POINT_CROSS,                 },
+        { N_("Diagonal cross"),      GWY_GRAPH_POINT_TIMES,                 },
+        { N_("Asterisk"),            GWY_GRAPH_POINT_ASTERISK,              },
+        { N_("Star"),                GWY_GRAPH_POINT_STAR,                  },
+        { N_("Triangle up"),         GWY_GRAPH_POINT_TRIANGLE_UP,           },
+        { N_("Triangle down"),       GWY_GRAPH_POINT_TRIANGLE_DOWN,         },
+        { N_("Triangle left"),       GWY_GRAPH_POINT_TRIANGLE_LEFT,         },
+        { N_("Triangle right"),      GWY_GRAPH_POINT_TRIANGLE_RIGHT,        },
+        { N_("Full square"),         GWY_GRAPH_POINT_FILLED_SQUARE,         },
+        { N_("Disc"),                GWY_GRAPH_POINT_FILLED_CIRCLE,         },
+        { N_("Full diamond"),        GWY_GRAPH_POINT_FILLED_DIAMOND,        },
+        { N_("Full triangle up"),    GWY_GRAPH_POINT_FILLED_TRIANGLE_UP,    },
+        { N_("Full triangle down"),  GWY_GRAPH_POINT_FILLED_TRIANGLE_DOWN,  },
+        { N_("Full triangle left"),  GWY_GRAPH_POINT_FILLED_TRIANGLE_LEFT,  },
+        { N_("Full triangle right"), GWY_GRAPH_POINT_FILLED_TRIANGLE_RIGHT, },
+    };
+    static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1.0 };
+    static GtkListStore *store = NULL;
+
+    GdkColor bg = { -1, 0xffff, 0xffff, 0xffff };
+    GdkPixbuf *pixbuf, *tmpixbuf;
+    GtkTreeIter iter;
+    GdkPixmap *pixmap;
+    GdkGC *gc;
+    gint width, height, size;
+    guint i;
+
+    if (store)
+        return GTK_TREE_MODEL(store);
+
+    g_return_val_if_fail(GTK_IS_WIDGET(widget) && GTK_WIDGET_REALIZED(widget),
+                         NULL);
+
+    store = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, GDK_TYPE_PIXBUF);
+    g_object_add_weak_pointer(G_OBJECT(store), (gpointer*)&store);
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width |= 1;
+    height |= 1;
+    size = 3*height | 1;
+    gc = gdk_gc_new(widget->window);
+    pixmap = gdk_pixmap_new(widget->window, 4*width + 1, 4*height + 1, -1);
+
+    pixbuf = NULL;
+    for (i = 0; i < G_N_ELEMENTS(point_types); i++) {
+        gdk_gc_set_rgb_fg_color(gc, &bg);
+        gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, 4*width + 1, 4*height + 1);
+        gwy_graph_draw_point(pixmap, gc, 2*width, 2*height,
+                             point_types[i].value, size, &fg);
+
+        pixbuf = gdk_pixbuf_get_from_drawable(pixbuf, GDK_DRAWABLE(pixmap),
+                                              NULL,
+                                              0, 0, 0, 0,
+                                              4*width + 1, 4*height + 1);
+        tmpixbuf = gdk_pixbuf_scale_simple(pixbuf, width, height,
+                                           GDK_INTERP_HYPER);
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                          COLUMN_VALUE, point_types[i].value,
+                                          COLUMN_PIXBUF, tmpixbuf,
+                                          COLUMN_NAME, _(point_types[i].name),
+                                          -1);
+        g_object_unref(tmpixbuf);
+    }
+    g_object_unref(pixbuf);
+
+    g_object_unref(pixmap);
+    g_object_unref(gc);
+
+    return GTK_TREE_MODEL(store);
+}
+
+GtkTreeModel*
+_gwy_graph_get_line_style_store(GtkWidget *widget)
+{
+    static const GwyEnum line_styles[] = {
+        { N_("Solid"), GDK_LINE_SOLID,       },
+        { N_("Dash"),  GDK_LINE_ON_OFF_DASH, },
+    };
+    static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1.0 };
+    static GtkListStore *store = NULL;
+
+    GdkColor bg = { -1, 0xffff, 0xffff, 0xffff };
+    GdkPixbuf *pixbuf;
+    GdkPixmap *pixmap;
+    GtkTreeIter iter;
+    GdkGC *gc;
+    gint width, height;
+    guint i;
+
+    if (store)
+        return GTK_TREE_MODEL(store);
+
+    g_return_val_if_fail(GTK_IS_WIDGET(widget) && GTK_WIDGET_REALIZED(widget),
+                         NULL);
+
+    store = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, GDK_TYPE_PIXBUF);
+    g_object_add_weak_pointer(G_OBJECT(store), (gpointer*)&store);
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width = 5*height;
+    height |= 1;
+    gc = gdk_gc_new(widget->window);
+    pixmap = gdk_pixmap_new(widget->window, width, height, -1);
+
+    for (i = 0; i < G_N_ELEMENTS(line_styles); i++) {
+        gdk_gc_set_rgb_fg_color(gc, &bg);
+        gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
+        gwy_graph_draw_line(pixmap, gc, 1, height/2, width - 1, height/2,
+                            line_styles[i].value, /* line width */ 3, &fg);
+
+        pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
+                                              0, 0, 0, 0, width, height);
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                          COLUMN_VALUE, line_styles[i].value,
+                                          COLUMN_PIXBUF, pixbuf,
+                                          COLUMN_NAME, _(line_styles[i].name),
+                                          -1);
+        g_object_unref(pixbuf);
+    }
+
+    g_object_unref(pixmap);
+    g_object_unref(gc);
+
+    return GTK_TREE_MODEL(store);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

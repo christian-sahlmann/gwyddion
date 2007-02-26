@@ -171,9 +171,9 @@ gwy_graph_draw_points(GdkDrawable *drawable,
         case GWY_GRAPH_POINT_TRIANGLE_UP:
         for (i = 0; i < n; i++) {
             GdkPoint vertices[] = {
-                { points[i].x, points[i].y - size/GWY_SQRT3 },
-                { points[i].x - size_half, points[i].y + size/GWY_SQRT3/2.0 },
-                { points[i].x + size_half, points[i].y + size/GWY_SQRT3/2.0 },
+                { points[i].x,             points[i].y - size_half },
+                { points[i].x - size_half, points[i].y + size_half },
+                { points[i].x + size_half, points[i].y + size_half },
             };
             gdk_draw_polygon(drawable, gc, filled,
                              vertices, G_N_ELEMENTS(vertices));
@@ -185,9 +185,9 @@ gwy_graph_draw_points(GdkDrawable *drawable,
         case GWY_GRAPH_POINT_TRIANGLE_DOWN:
         for (i = 0; i < n; i++) {
             GdkPoint vertices[] = {
-                { points[i].x, points[i].y + size/GWY_SQRT3 },
-                { points[i].x - size_half, points[i].y - size/GWY_SQRT3/2.0 },
-                { points[i].x + size_half, points[i].y - size/GWY_SQRT3/2.0 },
+                { points[i].x,             points[i].y + size_half },
+                { points[i].x - size_half, points[i].y - size_half },
+                { points[i].x + size_half, points[i].y - size_half },
             };
             gdk_draw_polygon(drawable, gc, filled,
                              vertices, G_N_ELEMENTS(vertices));
@@ -206,6 +206,48 @@ gwy_graph_draw_points(GdkDrawable *drawable,
             };
             gdk_draw_polygon(drawable, gc, filled,
                              vertices, G_N_ELEMENTS(vertices));
+        }
+        break;
+
+        case GWY_GRAPH_POINT_FILLED_TRIANGLE_LEFT:
+        filled = TRUE;
+        case GWY_GRAPH_POINT_TRIANGLE_LEFT:
+        for (i = 0; i < n; i++) {
+            GdkPoint vertices[] = {
+                { points[i].x - size_half, points[i].y             },
+                { points[i].x + size_half, points[i].y - size_half },
+                { points[i].x + size_half, points[i].y + size_half },
+            };
+            gdk_draw_polygon(drawable, gc, filled,
+                             vertices, G_N_ELEMENTS(vertices));
+        }
+        break;
+
+        case GWY_GRAPH_POINT_FILLED_TRIANGLE_RIGHT:
+        filled = TRUE;
+        case GWY_GRAPH_POINT_TRIANGLE_RIGHT:
+        for (i = 0; i < n; i++) {
+            GdkPoint vertices[] = {
+                { points[i].x + size_half, points[i].y             },
+                { points[i].x - size_half, points[i].y - size_half },
+                { points[i].x - size_half, points[i].y + size_half },
+            };
+            gdk_draw_polygon(drawable, gc, filled,
+                             vertices, G_N_ELEMENTS(vertices));
+        }
+        break;
+
+        case GWY_GRAPH_POINT_ASTERISK:
+        for (i = 0; i < n; i++) {
+            x = points[i].x;
+            y = points[i].y;
+            gdk_draw_line(drawable, gc, x, y - size_half, x, y + size_half);
+            gdk_draw_line(drawable, gc,
+                          x + size*GWY_SQRT3/4, y + size/4,
+                          x - size*GWY_SQRT3/4, y - size/4);
+            gdk_draw_line(drawable, gc,
+                          x - size*GWY_SQRT3/4, y + size/4,
+                          x + size*GWY_SQRT3/4, y - size/4);
         }
         break;
 
