@@ -48,7 +48,7 @@ struct _GwyGraphData {
     GwySIValueFormat *vformatx;
     GwySIValueFormat *vformaty;
 
-    gpointer reserved1;
+    gulong *handler_ids;
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;

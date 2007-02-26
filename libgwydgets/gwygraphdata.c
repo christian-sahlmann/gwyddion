@@ -31,9 +31,13 @@ enum {
     COL_WIDTH = sizeof("-0.12345e+308")
 };
 
+enum {
+    HANDLER_CURVE_DATA,
+    NHANDLERS
+};
+
 typedef struct {
     GwyGraphCurveModel *gcmodel;
-    gulong changed_id;
 } GwyGraphDataCurve;
 
 static void gwy_graph_data_destroy       (GtkObject *object);
@@ -69,6 +73,7 @@ gwy_graph_data_init(GwyGraphData *graph_data)
 
     graph_data->store = gwy_null_store_new(0);
     graph_data->curves = g_array_new(FALSE, FALSE, sizeof(GwyGraphDataCurve));
+    graph_data->handler_ids = g_new0(gulong, NHANDLERS);
 
     treeview = GTK_TREE_VIEW(graph_data);
     gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(graph_data->store));
@@ -82,6 +87,7 @@ gwy_graph_data_finalize(GObject *object)
 
     graph_data = GWY_GRAPH_DATA(object);
 
+    g_free(graph_data->handler_ids);
     g_array_free(graph_data->curves, TRUE);
 
     G_OBJECT_CLASS(gwy_graph_data_parent_class)->finalize(object);
@@ -140,8 +146,14 @@ gwy_graph_data_set_model(GwyGraphData *graph_data,
     g_return_if_fail(GWY_IS_GRAPH_DATA(graph_data));
     g_return_if_fail(!gmodel || GWY_IS_GRAPH_MODEL(gmodel));
 
+    if (gmodel == graph_data->graph_model)
+        return;
+
     gwy_signal_handler_disconnect(graph_data->graph_model,
                                   graph_data->notify_id);
+    gwy_signal_handler_disconnect(graph_data->graph_model,
+                                  graph_data->handler_ids[HANDLER_CURVE_DATA]);
+
     gwy_object_unref(graph_data->graph_model);
     gwy_debug("setting model to: %p", gmodel);
     graph_data->graph_model = gmodel;
@@ -150,6 +162,10 @@ gwy_graph_data_set_model(GwyGraphData *graph_data,
         graph_data->notify_id
             = g_signal_connect_swapped(gmodel, "notify",
                                        G_CALLBACK(gwy_graph_data_model_notify),
+                                       graph_data);
+        graph_data->handler_ids[HANDLER_CURVE_DATA]
+            = g_signal_connect_swapped(gmodel, "curve-data-changed",
+                                       G_CALLBACK(gwy_graph_data_update_nrows),
                                        graph_data);
     }
     gwy_graph_data_update_ncurves(graph_data);
@@ -267,11 +283,9 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
     ncolumns = graph_data->curves->len;
     gwy_debug("old ncurves: %d", ncolumns);
 
-    /* Reconnect all signals just to be sure.
-     * GraphModel is a bit cagey when changes in its curves are regarded */
+    /* Rebuild the array */
     for (i = 0; i < graph_data->curves->len; i++) {
         curve = &g_array_index(graph_data->curves, GwyGraphDataCurve, i);
-        gwy_signal_handler_disconnect(curve->gcmodel, curve->changed_id);
         gwy_object_unref(curve->gcmodel);
     }
     g_array_set_size(graph_data->curves, 0);
@@ -284,10 +298,6 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
             newcurve.gcmodel
                 = gwy_graph_model_get_curve(graph_data->graph_model, i);
             g_object_ref(newcurve.gcmodel);
-            newcurve.changed_id = g_signal_connect_swapped
-                                      (newcurve.gcmodel, "data-changed",
-                                       G_CALLBACK(gwy_graph_data_update_nrows),
-                                       graph_data);
             g_array_append_val(graph_data->curves, newcurve);
         }
     }
