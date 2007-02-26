@@ -71,8 +71,17 @@ gwy_math_humanize_numbers(gdouble unit,
     q = 3.0*ceil(lu/3.0);
     if (q > mag)
         q = 3.0*ceil((lu - 1.0)/3.0);
-    while (q > mag)
-        mag += 3.0;
+    if (lu > -0.5 && lm < 3.1) {
+        while (lu > mag+2)
+            mag += 3.0;
+    }
+    else if (lm <= 0.5 && lm > -1.5) {
+        mag = 0.0;
+    }
+    else {
+        while (q > mag)
+            mag += 3.0;
+    }
 
     if (precision) {
         *precision = MAX(0, ceil(mag - lu));
