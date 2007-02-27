@@ -138,7 +138,7 @@ static const GwyEnum modes[] = {
 static const GwyEnum boundaries[] = {
     { N_("First operand"),   GWY_MERGE_BOUNDARY_FIRST  },
     { N_("Second operand"),  GWY_MERGE_BOUNDARY_SECOND },
-/*    { N_("Smooth"),          GWY_MERGE_BOUNDARY_SMOOTH },*/
+    { N_("Smooth"),          GWY_MERGE_BOUNDARY_SMOOTH },
 };
 
 static const MergeArgs merge_defaults = {
@@ -579,6 +579,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
            gint px2, gint py2)
 {
     GwyRectangle res_rect;
+    GwyCoord f1_pos;
+    GwyCoord f2_pos;
     gint x1, x2, y1_, y2, w1, w2, h1, h2;
     gint xres1, xres2, yres1, yres2;
 
@@ -646,16 +648,16 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
             res_rect.height = py2 + yres2 - py1;
         }
 
-        /*f1_pos.x = res_rect.x;
-        f1_pos.y = -yshift;
-        f2_pos.x = kdata.x - (max_col - kdata.width/2);
-        f2_pos.y = -(yshift + ((max_row - kdata.height/2) - kdata.y));
-*/
+        f1_pos.x = res_rect.x - px1;
+        f1_pos.y = res_rect.y - py1;
+        f2_pos.x = res_rect.x - px2;
+        f2_pos.y = res_rect.y - py2;
 
-        gwy_data_field_area_multiply(result, res_rect.x, res_rect.y,
-                                     res_rect.width, res_rect.height, 1.5);
-        /*merge_boundary(dfield1, dfield2, result,
-                       res_rect, f1_pos, f2_pos);*/
+
+        /*gwy_data_field_area_multiply(result, res_rect.x, res_rect.y,
+                                     res_rect.width, res_rect.height, 1.5);*/
+        merge_boundary(dfield1, dfield2, result,
+                       res_rect, f1_pos, f2_pos);
 
     }
 
