@@ -741,6 +741,23 @@ gwy_app_toolbox_focus_first(GtkWidget *toolbar)
         gtk_widget_grab_focus(child);
 }
 
+static gboolean
+toolbox_dnd_open_files(gpointer user_data)
+{
+    GPtrArray *files = (GPtrArray*)user_data;
+    gchar *filename;
+    guint i;
+
+    for (i = 0; i < files->len; i++) {
+        filename = (gchar*)g_ptr_array_index(files, i);
+        gwy_app_file_load(filename, NULL, NULL);
+        g_free(filename);
+    }
+    g_ptr_array_free(files, TRUE);
+
+    return FALSE;
+}
+
 static void
 toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
                           GdkDragContext *context,
@@ -751,42 +768,50 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
                           guint time_,
                           G_GNUC_UNUSED gpointer user_data)
 {
-    gchar *filename;
+    gchar *filename, *text;
     gchar **file_list;
     gboolean ok = FALSE;
-    gint i, n;
+    GPtrArray *files;
+    guint i;
 
     if (data->length <= 0 || data->format != 8) {
         gtk_drag_finish(context, FALSE, FALSE, time_);
         return;
     }
 
-    file_list = g_strsplit((gchar*)data->data, "\n", 0);
+    text = g_strdelimit(g_strdup((gchar*)data->data), "\r\n", '\n');
+    file_list = g_strsplit(text, "\n", 0);
+    g_free(text);
     if (!file_list) {
         gtk_drag_finish(context, FALSE, FALSE, time_);
         return;
     }
 
-    /* Stop on an empty line too.
-     * This (1) kills the last empty line (2) prevents some cases of total
-     * bogus to be processed any further */
-    for (n = 0; file_list[n] && file_list[n][0]; n++)
-        ;
-
-    for (i = 0; i < n; i++) {
+    files = g_ptr_array_new();
+    for (i = 0; file_list[i]; i++) {
         filename = g_strstrip(file_list[i]);
+        if (!*filename)
+            continue;
         if (g_str_has_prefix(filename, "file://"))
             filename += sizeof("file://") - 1;
+#ifdef G_OS_WIN32
+        if (filename[0] == '/')
+            filename++;
+#endif
         gwy_debug("filename = %s", filename);
-        if (g_file_test(filename, G_FILE_TEST_IS_REGULAR
-                                  | G_FILE_TEST_IS_SYMLINK)) {
+        if (gwy_file_detect(filename, FALSE, GWY_FILE_OPERATION_LOAD)) {
             /* FIXME: what about charset conversion? */
-            if (gwy_app_file_load(filename, NULL, NULL))
-                ok = TRUE;    /* FIXME: what if we accept only some? */
+            g_ptr_array_add(files, g_strdup(filename));
+            ok = TRUE;    /* FIXME: what if we accept only some? */
         }
     }
     g_strfreev(file_list);
     gtk_drag_finish(context, ok, FALSE, time_);
+
+    if (files->len)
+        g_idle_add(toolbox_dnd_open_files, files);
+    else
+        g_ptr_array_free(files, TRUE);
 }
 
 static void
