@@ -487,10 +487,10 @@ GtkTreeModel*
 _gwy_graph_get_point_type_store(GtkWidget *widget)
 {
     static const GwyEnum point_types[] = {
-        { N_("Square"),              GWY_GRAPH_POINT_SQUARE,                },
+        { N_("noun|Square"),         GWY_GRAPH_POINT_SQUARE,                },
         { N_("Circle"),              GWY_GRAPH_POINT_CIRCLE,                },
         { N_("Diamond"),             GWY_GRAPH_POINT_DIAMOND,               },
-        { N_("Cross"),               GWY_GRAPH_POINT_CROSS,                 },
+        { N_("noun|Cross"),          GWY_GRAPH_POINT_CROSS,                 },
         { N_("Diagonal cross"),      GWY_GRAPH_POINT_TIMES,                 },
         { N_("Asterisk"),            GWY_GRAPH_POINT_ASTERISK,              },
         { N_("Star"),                GWY_GRAPH_POINT_STAR,                  },
@@ -549,7 +549,8 @@ _gwy_graph_get_point_type_store(GtkWidget *widget)
         gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
                                           COLUMN_VALUE, point_types[i].value,
                                           COLUMN_PIXBUF, tmpixbuf,
-                                          COLUMN_NAME, _(point_types[i].name),
+                                          COLUMN_NAME,
+                                          gwy_sgettext(point_types[i].name),
                                           -1);
         g_object_unref(tmpixbuf);
     }
@@ -605,7 +606,8 @@ _gwy_graph_get_line_style_store(GtkWidget *widget)
         gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
                                           COLUMN_VALUE, line_styles[i].value,
                                           COLUMN_PIXBUF, pixbuf,
-                                          COLUMN_NAME, _(line_styles[i].name),
+                                          COLUMN_NAME,
+                                          gettext(line_styles[i].name),
                                           -1);
         g_object_unref(pixbuf);
     }
