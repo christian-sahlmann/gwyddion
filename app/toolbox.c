@@ -750,7 +750,7 @@ toolbox_dnd_open_files(gpointer user_data)
 
     for (i = 0; i < files->len; i++) {
         filename = (gchar*)g_ptr_array_index(files, i);
-        gwy_app_file_load(filename, NULL, NULL);
+        gwy_app_file_load(NULL, filename, NULL);
         g_free(filename);
     }
     g_ptr_array_free(files, TRUE);
@@ -768,7 +768,7 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
                           guint time_,
                           G_GNUC_UNUSED gpointer user_data)
 {
-    gchar *filename, *text;
+    gchar *uri, *filename, *text;
     gchar **file_list;
     gboolean ok = FALSE;
     GPtrArray *files;
@@ -789,21 +789,20 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
 
     files = g_ptr_array_new();
     for (i = 0; file_list[i]; i++) {
-        filename = g_strstrip(file_list[i]);
-        if (!*filename)
+        uri = g_strstrip(file_list[i]);
+        if (!*uri)
             continue;
-        if (g_str_has_prefix(filename, "file://"))
-            filename += sizeof("file://") - 1;
-#ifdef G_OS_WIN32
-        if (filename[0] == '/')
-            filename++;
-#endif
+        filename = g_filename_from_uri(uri, NULL, NULL);
+        if (!filename)
+            continue;
         gwy_debug("filename = %s", filename);
         if (gwy_file_detect(filename, FALSE, GWY_FILE_OPERATION_LOAD)) {
             /* FIXME: what about charset conversion? */
-            g_ptr_array_add(files, g_strdup(filename));
+            g_ptr_array_add(files, filename);
             ok = TRUE;    /* FIXME: what if we accept only some? */
         }
+        else
+            g_free(filename);
     }
     g_strfreev(file_list);
     gtk_drag_finish(context, ok, FALSE, time_);
