@@ -2261,6 +2261,8 @@ gwy_app_data_browser_graph_name_edited(GtkCellRenderer *renderer,
 static GtkWidget*
 gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 {
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
     GtkTreeView *treeview;
     GtkWidget *retval;
     GtkCellRenderer *renderer;
@@ -2330,6 +2332,13 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
+
+    /* DnD */
+    gtk_tree_view_enable_model_drag_source(treeview,
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
 
     return retval;
 }
