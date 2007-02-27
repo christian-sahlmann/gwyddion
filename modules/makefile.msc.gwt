@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-plugin_proxy_module = plugin_proxy.la
+plugin_proxy_module = plugin-proxy.la
 
 <[[:SELF:]]>
 <[[:MODULES:]]>
