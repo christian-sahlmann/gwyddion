@@ -1637,7 +1637,6 @@ gwy_graph_area_leave_notify(GtkWidget *widget,
     return FALSE;
 }
 
-
 /**
  * gwy_graph_area_get_label:
  * @area: A graph area.
@@ -1903,12 +1902,25 @@ gwy_graph_area_edit_curve_real(GwyGraphArea *area,
         g_signal_connect(area->area_dialog, "response",
                          G_CALLBACK(gwy_graph_area_entry_cb), area);
     }
+    g_return_if_fail(area->graph_model);
     cmodel = gwy_graph_model_get_curve(area->graph_model, id);
+    g_return_if_fail(cmodel);
     _gwy_graph_area_dialog_set_curve_data(area->area_dialog, cmodel);
     gtk_widget_show_all(area->area_dialog);
     gtk_window_present(GTK_WINDOW(area->area_dialog));
 }
 
+/**
+ * gwy_graph_area_edit_curve:
+ * @area: A graph area.
+ * @id: The index of the curve to edit properties of.
+ *
+ * Invokes the curve property dialog for a curve.
+ *
+ * If the dialog is already displayed, it is switched to the requested curve.
+ *
+ * Since: 2.5
+ **/
 void
 gwy_graph_area_edit_curve(GwyGraphArea *area,
                           gint id)
@@ -2078,7 +2090,6 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
 
     return out;
 }
-
 
 /************************** Documentation ****************************/
 
