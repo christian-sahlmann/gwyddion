@@ -11,23 +11,25 @@ libgwydgets2include_HEADERS = \
 	gwycoloraxis.h \
 	gwycolorbutton.h \
 	gwycombobox.h \
+	gwycurve.h \
 	gwydataview.h \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
-	gwydgets.h \
 	gwydgetenums.h \
+	gwydgets.h \
 	gwydgettypes.h \
 	gwydgetutils.h \
-	gwygraphcurvemodel.h \
-	gwygraphdata.h \
-	gwygraphmodel.h \
-	gwygraphwindow.h \
+	gwygraph.h \
 	gwygrapharea.h \
 	gwygraphbasics.h \
 	gwygraphcorner.h \
-	gwygraph.h \
+	gwygraphcurvemodel.h \
+	gwygraphcurves.h \
+	gwygraphdata.h \
 	gwygraphlabel.h \
+	gwygraphmodel.h \
 	gwygraphselections.h \
+	gwygraphwindow.h \
 	gwyhmarkerbox.h \
 	gwyhruler.h \
 	gwyinventorystore.h \
@@ -50,8 +52,7 @@ libgwydgets2include_HEADERS = \
 	gwystatusbar.h \
 	gwystock.h \
 	gwyvectorlayer.h \
-	gwyvruler.h \
-	gwycurve.h
+	gwyvruler.h
 
 noinst_HEADERS = \
 	gwyaxisdialog.h \
@@ -102,27 +103,29 @@ libgwydgets2_la_SOURCES = \
 	gwycoloraxis.c \
 	gwycolorbutton.c \
 	gwycombobox.c \
+	gwycurve.c \
 	gwydataview.c \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
-	gwydgets.c \
 	gwydgetenums.c \
 	gwydgetmarshals.c \
+	gwydgets.c \
 	gwydgettypes.c \
 	gwydgetutils.c \
+	gwygraph.c \
+	gwygrapharea.c \
+	gwygraphareadialog.c \
+	gwygraphbasics.c \
+	gwygraphcorner.c \
 	gwygraphcurvemodel.c \
+	gwygraphcurves.c \
 	gwygraphdata.c \
+	gwygraphexport.c \
+	gwygraphlabel.c \
+	gwygraphlabeldialog.c \
 	gwygraphmodel.c \
 	gwygraphwindow.c \
 	gwygraphwindowmeasuredialog.c \
-	gwygraphareadialog.c \
-	gwygrapharea.c \
-	gwygraphbasics.c \
-	gwygraphcorner.c \
-	gwygraph.c \
-	gwygraphexport.c \
-	gwygraphlabeldialog.c \
-	gwygraphlabel.c \
 	gwyhmarkerbox.c \
 	gwyhruler.c \
 	gwyinventorystore.c \
@@ -145,8 +148,7 @@ libgwydgets2_la_SOURCES = \
 	gwystatusbar.c \
 	gwystock.c \
 	gwyvectorlayer.c \
-	gwyvruler.c \
-	gwycurve.c
+	gwyvruler.c
 
 clean-local:
 	rm -f core.* *~

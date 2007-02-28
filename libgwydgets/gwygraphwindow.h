@@ -60,7 +60,7 @@ struct _GwyGraphWindow {
 
     GwyGraphStatusType last_status;
 
-    GtkWidget *widget1;
+    GtkWidget *curves;
     GtkWidget *widget2;
     GtkWidget *widget3;
     GtkWidget *widget4;

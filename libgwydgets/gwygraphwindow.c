@@ -27,6 +27,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphwindow.h>
+#include <libgwydgets/gwygraphcurves.h>
 #include <libgwydgets/gwygraphdata.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwystatusbar.h>
@@ -48,6 +49,9 @@ static void     gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow,
 static void     gwy_graph_window_set_tooltip     (GtkWidget *widget,
                                                   const gchar *tip_text);
 static void     graph_title_changed              (GwyGraphWindow *graphwindow);
+static void   gwy_graph_window_curves_row_activated(GwyGraphWindow *graphwindow,
+                                                    GtkTreePath *path,
+                                                    GtkTreeViewColumn *column);
 
 /* These are actually class data.  To put them to Class struct someone would
  * have to do class_ref() and live with this reference to the end of time. */
@@ -106,11 +110,11 @@ GtkWidget*
 gwy_graph_window_new(GwyGraph *graph)
 {
     GwyGraphWindow *graphwindow;
+    GwyGraphModel *gmodel;
     GwyGraphArea *area;
     GwySelection *selection;
     GtkScrolledWindow *swindow;
     GtkWidget *vbox, *hbox;
-    GtkWidget *label;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
@@ -126,30 +130,39 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow->graph = GTK_WIDGET(graph);
     graphwindow->last_status = gwy_graph_get_status(graph);
 
-    /*add notebook with graph and text matrix*/
+    /* Add notebook with graph and text matrix */
     graphwindow->notebook = gtk_notebook_new();
 
     graph_title_changed(graphwindow);
+    gmodel = gwy_graph_get_model(graph);
 
-    label = gtk_label_new(_("Graph"));
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(graph),
-                             label);
-
+                             gtk_label_new(_("Graph")));
 
     swindow = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(NULL, NULL));
-    graphwindow->data = gwy_graph_data_new(gwy_graph_get_model(graph));
+    graphwindow->data = gwy_graph_data_new(gmodel);
     gtk_container_add(GTK_CONTAINER(swindow), graphwindow->data);
-
-    label = gtk_label_new(_("Data"));
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(swindow),
-                             label);
+                             gtk_label_new(_("Data")));
 
+    swindow = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(NULL, NULL));
+    gtk_scrolled_window_set_policy(swindow,
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    graphwindow->curves = gwy_graph_curves_new(gmodel);
+    g_signal_connect_swapped(graphwindow->curves, "row-activated",
+                             G_CALLBACK(gwy_graph_window_curves_row_activated),
+                             graphwindow);
+
+    gtk_container_add(GTK_CONTAINER(swindow), graphwindow->curves);
+    gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
+                             GTK_WIDGET(swindow),
+                             gtk_label_new(_("Curves")));
 
     gtk_container_add(GTK_CONTAINER(vbox), graphwindow->notebook);
-    /*add buttons*/
 
+    /* Add buttons */
     hbox = gtk_hbox_new(FALSE, 0);
 
     graphwindow->button_measure_points = gtk_toggle_button_new();
@@ -239,9 +252,9 @@ gwy_graph_window_new(GwyGraph *graph)
                              G_CALLBACK(gwy_graph_window_zoom_finished),
                              graphwindow);
 
-
-    if (gwy_graph_get_model(GWY_GRAPH(graphwindow->graph)))
-        g_signal_connect_swapped(gwy_graph_get_model(graph), "notify::title",
+    /* FIXME: What if model set later? */
+    if (gmodel)
+        g_signal_connect_swapped(gmodel, "notify::title",
                                  G_CALLBACK(graph_title_changed), graphwindow);
 
     return GTK_WIDGET(graphwindow);
@@ -512,6 +525,18 @@ graph_title_changed(GwyGraphWindow *graphwindow)
     g_free(title);
 }
 
+static void
+gwy_graph_window_curves_row_activated(GwyGraphWindow *graphwindow,
+                                      GtkTreePath *path,
+                                      G_GNUC_UNUSED GtkTreeViewColumn *column)
+{
+    GwyGraphArea *area;
+    const gint *indices;
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)));
+    indices = gtk_tree_path_get_indices(path);
+    gwy_graph_area_edit_curve(area, indices[0]);
+}
 
 /************************** Documentation ****************************/
 

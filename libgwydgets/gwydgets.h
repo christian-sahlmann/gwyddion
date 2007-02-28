@@ -45,6 +45,7 @@
 #include <libgwydgets/gwygraphdata.h>
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>
+#include <libgwydgets/gwygraphcurves.h>
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
