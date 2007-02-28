@@ -238,7 +238,7 @@ aafm_export(G_GNUC_UNUSED GwyContainer *data,
     x = g_new(gint16, n);
     for (i = 0; i < res; i++) {
         for (j = 0; j < res; j++) {
-            v = ROUND(d[(res-1 - j)*res + i]*q + z0);
+            v = GWY_ROUND(d[(res-1 - j)*res + i]*q + z0);
             x[i*res + j] = GINT16_TO_LE(v);
         }
     }

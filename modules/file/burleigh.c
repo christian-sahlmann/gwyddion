@@ -137,7 +137,7 @@ burleigh_detect(const GwyFileDetectInfo *fileinfo,
 
     buffer = fileinfo->head;
     version = gwy_get_gfloat_le(&buffer);
-    version_int = ROUND(10*version);
+    version_int = GWY_ROUND(10*version);
     gwy_debug("Version: %g", version);
 
     if (version_int == 21) {
@@ -186,7 +186,7 @@ burleigh_load(const gchar *filename,
     memset(&imgfile, 0, sizeof(imgfile));
     p = buffer;
     imgfile.version = gwy_get_gfloat_le(&p);
-    imgfile.version_int = ROUND(10*imgfile.version);
+    imgfile.version_int = GWY_ROUND(10*imgfile.version);
     if (imgfile.version_int == 21) {
         d = burleigh_load_v21(&imgfile, buffer, size, error);
         if (!d) {

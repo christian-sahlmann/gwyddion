@@ -320,9 +320,9 @@ get_scan_list_res(GHashTable *hash,
      * a global section, sizes in `image list' sections were bogus.
      * Version: 0x05300001 */
     if ((val = g_hash_table_lookup(hash, "Samps/line")))
-        *xres = ROUND(val->hard_value);
+        *xres = GWY_ROUND(val->hard_value);
     if ((val = g_hash_table_lookup(hash, "Lines")))
-        *yres = ROUND(val->hard_value);
+        *yres = GWY_ROUND(val->hard_value);
     gwy_debug("Global xres, yres = %d, %d", *xres, *yres);
 }
 
@@ -412,13 +412,13 @@ hash_to_data_field(GHashTable *hash,
         return NULL;
 
     val = g_hash_table_lookup(hash, "Samps/line");
-    xres = ROUND(val->hard_value);
+    xres = GWY_ROUND(val->hard_value);
 
     val = g_hash_table_lookup(hash, "Number of lines");
-    yres = ROUND(val->hard_value);
+    yres = GWY_ROUND(val->hard_value);
 
     val = g_hash_table_lookup(hash, "Bytes/pixel");
-    bpp = val ? ROUND(val->hard_value) : 2;
+    bpp = val ? GWY_ROUND(val->hard_value) : 2;
 
     /* scan size */
     val = g_hash_table_lookup(hash, "Scan size");
@@ -453,10 +453,10 @@ hash_to_data_field(GHashTable *hash,
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
         val = g_hash_table_lookup(hash, "Data offset");
-        offset = ROUND(val->hard_value);
+        offset = GWY_ROUND(val->hard_value);
 
         val = g_hash_table_lookup(hash, "Data length");
-        size = ROUND(val->hard_value);
+        size = GWY_ROUND(val->hard_value);
 
         size_ok = FALSE;
         use_global = FALSE;
