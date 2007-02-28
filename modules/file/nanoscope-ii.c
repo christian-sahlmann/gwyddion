@@ -299,7 +299,7 @@ nanoscope_get_metadata(GHashTable *hash)
     }
     metadata[] = {
         { "bias_volt[0]", "Bias", " mV" },
-        { "scan_rate", "Scan rate", " mV" },
+        { "scan_rate", "Scan rate", " Hz" },
         { "time", "Date", NULL },
     };
 
