@@ -179,7 +179,7 @@ static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 
 static GQuark container_quark = 0;
 static GQuark own_key_quark   = 0;
-static GQuark page_id_quark   = 0;
+static GQuark page_id_quark   = 0;  /* NB: data is pageno+1, not pageno */
 static GQuark filename_quark  = 0;
 static GQuark column_id_quark = 0;
 
@@ -1049,8 +1049,11 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     g_signal_connect_after(data, "item-changed",
                            G_CALLBACK(gwy_app_data_proxy_item_changed), proxy);
 
-    for (i = 0; i < NPAGES; i++)
+    for (i = 0; i < NPAGES; i++) {
         gwy_app_data_proxy_list_setup(&proxy->lists[i]);
+        g_object_set_qdata(G_OBJECT(proxy->lists[i].store),
+                           page_id_quark, GUINT_TO_POINTER(i + 1));
+    }
     /* For historical reasons, graphs are numbered from 1 */
     proxy->lists[PAGE_GRAPHS].last = 0;
 
@@ -1142,7 +1145,7 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
     gboolean any;
 
     pageno = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(selection),
-                                                page_id_quark));
+                                                page_id_quark)) - 1;
     if (pageno != browser->active_page)
         return;
 
@@ -1279,10 +1282,18 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
     }
 
     srcproxy = browser->current;
-    pageno = browser->active_page;
+    if (!(pageno = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(model),
+                                                       page_id_quark)))) {
+        gtk_drag_finish(context, FALSE, FALSE, time_);
+        return;
+    }
+    pageno--;
 
-    /* FIXME: Need to check success? */
-    gtk_tree_model_get_iter(model, &iter, path);
+    if (!gtk_tree_model_get_iter(model, &iter, path)) {
+        g_warning("Received data browser drop of a nonexistent path");
+        gtk_drag_finish(context, FALSE, FALSE, time_);
+        return;
+    }
     gtk_tree_path_free(path);
 
     if (GWY_IS_DATA_WINDOW(window)) {
@@ -1989,7 +2000,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_CHANNELS));
+                       GINT_TO_POINTER(PAGE_CHANNELS + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -2330,7 +2341,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_GRAPHS));
+                       GINT_TO_POINTER(PAGE_GRAPHS + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
