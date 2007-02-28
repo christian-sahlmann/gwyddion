@@ -40,13 +40,11 @@ typedef void (*GwyCDLineCDFunc)(const gdouble *x,
                                 gpointer user_data,
                                 gboolean *fres);
 
-
 typedef struct {
     const char *name;
     const char *unit;
     double default_init;
 } GwyCDLineParam;
-
 
 struct _GwyCDLineBuiltin {
     const gchar *function_name;
@@ -58,19 +56,15 @@ struct _GwyCDLineBuiltin {
     const GwyCDLineParam *param;
 };
 
-
-
 static GwyCDLine*
 gwy_cdline_new_static(const GwyCDLineBuiltin *data);
 
 G_DEFINE_TYPE(GwyCDLine, gwy_cdline, GWY_TYPE_RESOURCE)
 
-
-
-
 static void
-get_linestatpars(const gdouble *y, gint ndat, gint from, gint to, gdouble *avg,
-                 gdouble *sigma)
+get_linestatpars(const gdouble *y, gint ndat,
+                 gint from, gint to,
+                 gdouble *avg, gdouble *sigma)
 {
     gint i, n;
 
@@ -130,11 +124,10 @@ cd_uedgeheight(const gdouble *x,
     get_linestatpars(y, n_dat, imax + iwidth/2, n_dat, param + 3, err + 3);
 
     param[0] = param[3] - param[2];
-    err[0] = sqrt(err[2] * err[2] + err[3] * err[3]);
+    err[0] = hypot(err[2], err[3]);
     err[1] = -1;
 
     *fres = TRUE;
-
 }
 
 static void
@@ -170,12 +163,11 @@ cd_ledgeheight(const gdouble *x,
     get_linestatpars(y, n_dat, 0, imin - iwidth/2, param + 2, err + 2);
     get_linestatpars(y, n_dat, imin + iwidth/2, n_dat, param + 3, err + 3);
 
-    param[0] = param[3] - param[2];
+    param[0] = param[2] - param[3];
 
-    err[0] = sqrt(err[2] * err[2] + err[3] * err[3]);
+    err[0] = hypot(err[2], err[3]);
     err[1] = -1;
     *fres = TRUE;
-
 }
 
 static gdouble
@@ -255,10 +247,9 @@ cd_rstepheight(const gdouble *x,
 
     param[0] = param[2] - param[1];
 
-    err[0] = sqrt(err[2] * err[2] + err[1] * err[1]);
+    err[0] = hypot(err[2], err[1]);
     err[3] = err[4] = -1;
     *fres = TRUE;
-
 }
 
 static void
@@ -323,11 +314,10 @@ cd_stepheight(const gdouble *x,
 
     param[0] = param[2] - param[1];
 
-    err[0] = sqrt(err[2] * err[2] + err[1] * err[1]);
+    err[0] = hypot(err[2], err[1]);
     err[3] = err[4] = -1;
 
     *fres = TRUE;
-
 }
 
 static gdouble
