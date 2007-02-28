@@ -29,15 +29,13 @@
  **/
 
 #include "config.h"
-#include <errno.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -45,6 +43,8 @@
 
 #define MAGIC "Data_File_Type 7\r\n"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
+
+#define Nanometer (1e-9)
 
 enum { HEADER_SIZE = 2048 };
 
@@ -68,6 +68,7 @@ static GHashTable*     read_hash             (gchar *buffer,
 static gboolean        require_keys          (GHashTable *hash,
                                               GError **error,
                                               ...);
+static GwyContainer*   nanoscope_get_metadata(GHashTable *hash);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -116,7 +117,7 @@ nanoscope_load(const gchar *filename,
                G_GNUC_UNUSED GwyRunType mode,
                GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     GwyDataField *dfield;
     GError *err = NULL;
     guchar *buffer = NULL;
@@ -147,17 +148,23 @@ nanoscope_load(const gchar *filename,
 
     dfield = hash_to_data_field(hash, buffer + HEADER_SIZE, size - HEADER_SIZE,
                                 &err);
+    meta = nanoscope_get_metadata(hash);
     gwy_file_abandon_contents(buffer, size, NULL);
-    if (!dfield) {
-        g_free(header);
+    g_hash_table_destroy(hash);
+    g_free(header);
+    if (!dfield)
         return NULL;
-    }
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    g_free(header);
+    if (meta) {
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
+    }
+
+    gwy_app_channel_title_fall_back(container, 0);
 
     return container;
 }
@@ -173,11 +180,11 @@ hash_to_data_field(GHashTable *hash,
     gchar *val;
     gint xres, yres, i, j;
     gsize expected;
-    gdouble xreal, yreal, q;
+    gdouble xreal, yreal, zscale, min, max;
     gdouble *data;
     const gint16 *d16;
 
-    if (!require_keys(hash, error, "num_samp", "scan_sz", NULL))
+    if (!require_keys(hash, error, "num_samp", "scan_sz", "z_scale", NULL))
         return NULL;
 
     val = g_hash_table_lookup(hash, "num_samp");
@@ -190,20 +197,30 @@ hash_to_data_field(GHashTable *hash,
     }
 
     val = g_hash_table_lookup(hash, "scan_sz");
-    /* FIXME: whatever */
-    xreal = yreal = 1e-9*g_ascii_strtod(val, NULL);
+    xreal = yreal = Nanometer*g_ascii_strtod(val, NULL);
+    if (xreal <= 0) {
+        err_INVALID(error, "scan_sz");
+        return NULL;
+    }
 
+    val = g_hash_table_lookup(hash, "z_scale");
+    zscale = Nanometer*g_ascii_strtod(val, NULL);
+    if (zscale <= 0.0) {
+        err_INVALID(error, "scan_sz");
+        return NULL;
+    }
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     d16 = (const gint16*)buffer;
 
-    /* FIXME: whatever */
-    q = 1e-10;
-
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++)
-            data[(yres-1 - i)*xres + j] = q*GINT16_FROM_LE(d16[i*xres + j]);
+            data[(yres-1 - i)*xres + j] = GINT16_FROM_LE(d16[i*xres + j]);
     }
+
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    if (min < max)
+        gwy_data_field_multiply(dfield, zscale/(max - min));
 
     unitz = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_z(dfield, unitz);
@@ -272,5 +289,36 @@ require_keys(GHashTable *hash,
     return TRUE;
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+static GwyContainer*
+nanoscope_get_metadata(GHashTable *hash)
+{
+    static const struct {
+        gchar *key;
+        gchar *name;
+        gchar *unit;
+    }
+    metadata[] = {
+        { "bias_volt[0]", "Bias", " mV" },
+        { "scan_rate", "Scan rate", " mV" },
+        { "time", "Date", NULL },
+    };
 
+    GwyContainer *meta;
+    const gchar *val;
+    guint i;
+
+    meta = gwy_container_new();
+    for (i = 0; i < G_N_ELEMENTS(metadata); i++) {
+        if ((val = g_hash_table_lookup(hash, metadata[i].key)))
+            gwy_container_set_string_by_name(meta, metadata[i].name,
+                                             g_strconcat(val, metadata[i].unit,
+                                                         NULL));
+    }
+    if (gwy_container_get_n_items(meta))
+        return meta;
+
+    g_object_unref(meta);
+    return NULL;
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
