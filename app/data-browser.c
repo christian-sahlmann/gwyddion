@@ -169,6 +169,8 @@ static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
                                                  GtkTreeModel *model,
                                                  GtkTreeIter *iter,
                                                  GwyAppDataProxy *destproxy);
+static gboolean gwy_app_data_browser_select_data_view2(GwyDataView *data_view);
+static gboolean gwy_app_data_browser_select_graph2    (GwyGraph *graph);
 static const gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
@@ -1445,7 +1447,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
 
     gwy_app_data_proxy_update_visibility(dfield, TRUE);
     g_signal_connect_swapped(data_window, "focus-in-event",
-                             G_CALLBACK(gwy_app_data_browser_select_data_view),
+                             G_CALLBACK(gwy_app_data_browser_select_data_view2),
                              data_view);
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
@@ -2123,7 +2125,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
 
     gwy_app_data_proxy_update_visibility(gmodel, TRUE);
     g_signal_connect_swapped(graph_window, "focus-in-event",
-                             G_CALLBACK(gwy_app_data_browser_select_graph),
+                             G_CALLBACK(gwy_app_data_browser_select_graph2),
                              graph);
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
@@ -2831,6 +2833,13 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     _gwy_app_data_view_set_current(data_view);
 }
 
+static gboolean
+gwy_app_data_browser_select_data_view2(GwyDataView *data_view)
+{
+    gwy_app_data_browser_select_data_view(data_view);
+    return FALSE;
+}
+
 /**
  * gwy_app_data_browser_select_graph:
  * @graph: A graph widget.
@@ -2869,6 +2878,13 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     gwy_app_data_browser_select_object(browser, proxy, PAGE_GRAPHS);
     gwy_app_widget_queue_manage(GTK_WIDGET(graph), FALSE);
     _gwy_app_graph_set_current(graph);
+}
+
+static gboolean
+gwy_app_data_browser_select_graph2(GwyGraph *graph)
+{
+    gwy_app_data_browser_select_graph(graph);
+    return FALSE;
 }
 
 static GwyAppDataProxy*
