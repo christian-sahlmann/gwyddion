@@ -128,7 +128,8 @@ struct _GwyGraphArea {
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
-    void (*reserved1)(void);
+    void (*edit_curve)(GwyGraphArea *area,
+                       gint id);
     void (*reserved2)(void);
 };
 
@@ -176,6 +177,8 @@ GString*           gwy_graph_area_export_vector    (GwyGraphArea *area,
                                                     gint height);
 void               gwy_graph_area_enable_user_input(GwyGraphArea *area,
                                                     gboolean enable);
+void               gwy_graph_area_edit_curve       (GwyGraphArea *area,
+                                                    gint id);
 
 G_END_DECLS
 
