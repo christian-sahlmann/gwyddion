@@ -154,14 +154,16 @@ gwy_graph_curves_realize(GtkWidget *widget)
 
 /**
  * gwy_graph_curves_new:
- * @gmodel: A graph_curves model.  It can be %NULL.
+ * @gmodel: A graph model.  It can be %NULL.
  *
- * Creates graph_curves widget based on information in graph model.
+ * Creates graph curve list widget based on information in graph model.
  *
  * The #GtkTreeModel and the columns follow the graph model and must not be
  * changed manually.
  *
- * Returns: A new graph_curves widget.
+ * Returns: A new graph curve list.
+ *
+ * Since: 2.5
  **/
 GtkWidget*
 gwy_graph_curves_new(GwyGraphModel *gmodel)
@@ -180,10 +182,12 @@ gwy_graph_curves_new(GwyGraphModel *gmodel)
 
 /**
  * gwy_graph_curves_set_model:
- * @graph_curves: A graph data widget.
- * @gmodel: New graph_curves model.
+ * @graph_curves: A graph curve list.
+ * @gmodel: New graph model.
  *
- * Changes the graph model a graph data table displays.
+ * Changes the graph model a graph curve list.
+ *
+ * Since: 2.5
  **/
 void
 gwy_graph_curves_set_model(GwyGraphCurves *graph_curves,
@@ -222,11 +226,13 @@ gwy_graph_curves_set_model(GwyGraphCurves *graph_curves,
 
 /**
  * gwy_graph_curves_get_model:
- * @graph_curves: A graph_curves widget.
+ * @graph_curves: A graph curve list.
  *
- * Gets the graph model a graph data table displays.
+ * Gets the graph model a graph curve list displays.
  *
  * Returns: The graph model associated with this #GwyGraphCurves widget.
+ *
+ * Since: 2.5
  **/
 GwyGraphModel*
 gwy_graph_curves_get_model(GwyGraphCurves *graph_curves)
@@ -514,8 +520,8 @@ gwy_graph_curves_setup(GwyGraphCurves *graph_curves)
  * @title: GwyGraphCurves
  * @short_description: Graph curve list
  *
- * #GwyGraphCurves displays data values from #GwyGraphModel curves in a table.
- * While it is a #GtkTreeView, it uses a dummy tree model (#GwyNullStore)
+ * #GwyGraphCurves displays the list of #GwyGraphModel curve properties in a
+ * table.  While it is a #GtkTreeView, it uses a simplistic tree model
  * and its content is determined by the graph model.
  **/
 
