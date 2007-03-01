@@ -42,7 +42,8 @@ typedef void (*GwyCDLineCDFunc)(const gdouble *x,
 
 typedef struct {
     const char *name;
-    const char *unit;
+    gint power_x;
+    gint power_y;
     double default_init;
 } GwyCDLineParam;
 
@@ -336,20 +337,19 @@ func_stepheight(gdouble x,
 /************************** cdlines ****************************/
 
 static const GwyCDLineParam stepheight_pars[] = {
-   { "h",             " ", 1, },
-   { "y<sub>1</sub>", " ", 2, },
-   { "y<sub>2</sub>", " ", 2, },
-   { "x<sub>1</sub>", " ", 3, },
-   { "x<sub>2</sub>", " ", 4, },
+   { "h",             0, 1, 1, },
+   { "y<sub>1</sub>", 0, 1, 2, },
+   { "y<sub>2</sub>", 0, 1, 2, },
+   { "x<sub>1</sub>", 1, 0, 3, },
+   { "x<sub>2</sub>", 1, 0, 4, },
 };
 
 static const GwyCDLineParam edgeheight_pars[] = {
-   { "h",             " ", 1, },
-   { "x",             " ", 2, },
-   { "y<sub>1</sub>", " ", 2, },
-   { "y<sub>2</sub>", " ", 2, },
+   { "h",             0, 1, 1, },
+   { "x",             1, 0, 2, },
+   { "y<sub>1</sub>", 0, 1, 2, },
+   { "y<sub>2</sub>", 0, 1, 2, },
 };
-
 
 static const GwyCDLineBuiltin cdlines[] = {
     {
@@ -390,10 +390,9 @@ static const GwyCDLineBuiltin cdlines[] = {
     },
 };
 
-
 /**
  * gwy_cdline_get_name:
- * @cdline: A NL fitter function cdline.
+ * @cdline: A critical dimension evaluator.
  *
  * Return cdline name (its unique identifier).
  *
@@ -407,7 +406,7 @@ gwy_cdline_get_name(GwyCDLine* cdline)
 
 /**
  * gwy_cdline_get_definition:
- * @cdline: A CD cdline.
+ * @cdline: A critical dimension evaluator.
  *
  * Returns function definition of @cdline (as pixmap).
  *
@@ -421,7 +420,7 @@ gwy_cdline_get_definition(GwyCDLine* cdline)
 
 /**
  * gwy_cdline_get_param_name:
- * @cdline: A CD cdline.
+ * @cdline: A NL evaluator function cdline.
  * @param: A parameter number.
  *
  * Returns the name of parameter number @param of cdline @cdline.
@@ -444,14 +443,13 @@ gwy_cdline_get_param_name(GwyCDLine* cdline,
 
 /**
  * gwy_cdline_get_param_default:
- * @cdline: A CD cdline.
+ * @cdline: A NL evaluator function cdline.
  * @param: A parameter number.
  *
- * Returns a suitable constant default parameter value.
+ * Returns a constant default parameter value.
  *
- * It is usually better to do an educated guess of initial parameter value.
- *
- * Returns: The default parameter value.
+ * Returns: The default parameter value, unrelated to the actual data fitted.
+ *          It is worthless.
  **/
 gdouble
 gwy_cdline_get_param_default(GwyCDLine* cdline,
@@ -467,8 +465,41 @@ gwy_cdline_get_param_default(GwyCDLine* cdline,
 }
 
 /**
+ * gwy_cdline_get_param_units:
+ * @cdline: A critical dimension evaluator.
+ * @param: A parameter number.
+ * @siunit_x: SI unit of abscissa.
+ * @siunit_y: SI unit of ordinate.
+ *
+ * Derives the SI unit of a critical dimension parameter from the units of
+ * abscissa and ordinate.
+ *
+ * Returns: A newly created #GwySIUnit with the units of the parameter @param.
+ *          If the units of @param are not representable as #GwySIUnit,
+ *          the result is unitless (i.e. it will be presented as a mere
+ *          number).
+ *
+ * Since: 2.5
+ **/
+GwySIUnit*
+gwy_cdline_get_param_units(GwyCDLine *cdline,
+                           gint param,
+                           GwySIUnit *siunit_x,
+                           GwySIUnit *siunit_y)
+{
+    const GwyCDLineParam *par;
+
+    g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams, NULL);
+    par = cdline->builtin->param + param;
+
+    return gwy_si_unit_power_multiply(siunit_x, par->power_x,
+                                      siunit_y, par->power_y,
+                                      NULL);
+}
+
+/**
  * gwy_cdline_get_nparams:
- * @cdline: A CD cdline.
+ * @cdline: A critical dimension evaluator.
  *
  * Return the number of parameters of @cdline.
  *
@@ -508,7 +539,6 @@ gwy_cdline_fit(GwyCDLine* cdline,
     fres = TRUE;
     cdline->builtin->function_fit(x, y, n_dat, param, err, user_data, &fres);
 }
-
 
 static void
 gwy_cdline_class_init(GwyCDLineClass *klass)
@@ -565,14 +595,12 @@ _gwy_cdline_class_setup_presets(void)
     g_type_class_unref(klass);
 }
 
-
-
 /**
  * gwy_cdlines:
  *
- * Gets inventory with all the CDLine cdlines.
+ * Gets inventory with all the critical dimension evaluators.
  *
- * Returns: CDLine cdline inventory.
+ * Returns: Critical dimension evaluator inventory.
  **/
 GwyInventory*
 gwy_cdlines(void)
@@ -581,7 +609,6 @@ gwy_cdlines(void)
         GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_CDLINE))->inventory;
 }
 
-
 gdouble
 gwy_cdline_get_value(GwyCDLine *cdline, gdouble x,
                      const gdouble *params, gboolean *fres)
@@ -589,8 +616,6 @@ gwy_cdline_get_value(GwyCDLine *cdline, gdouble x,
     return cdline->builtin->function(x, cdline->builtin->nparams, params,
                                      NULL, fres);
 }
-
-
 
 /************************** Documentation ****************************/
 

@@ -44,10 +44,10 @@ typedef struct _GwyCDLineClass GwyCDLineClass;
 struct _GwyCDLine {
     GwyResource parent_instance;
 
-   const GwyCDLineBuiltin *builtin;
+    const GwyCDLineBuiltin *builtin;
 
-   gpointer reserved1;
-   gpointer reserved2;
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyCDLineClass {
@@ -66,8 +66,14 @@ const gchar* gwy_cdline_get_name         (GwyCDLine* cdline);
 const gchar* gwy_cdline_get_definition   (GwyCDLine* cdline);
 const gchar* gwy_cdline_get_param_name   (GwyCDLine* cdline,
                                           gint param);
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble      gwy_cdline_get_param_default(GwyCDLine* cdline,
                                           gint param);
+#endif
+GwySIUnit*   gwy_cdline_get_param_units  (GwyCDLine *cdline,
+                                          gint param,
+                                          GwySIUnit *siunit_x,
+                                          GwySIUnit *siunit_y);
 gint         gwy_cdline_get_nparams      (GwyCDLine* cdline);
 void         gwy_cdline_fit              (GwyCDLine* cdline,
                                           gint n_dat,
