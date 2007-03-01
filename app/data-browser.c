@@ -139,6 +139,9 @@ static void gwy_app_data_browser_update_filename(GwyAppDataProxy *proxy);
 static GwyAppDataProxy* gwy_app_data_browser_get_proxy(GwyAppDataBrowser *browser,
                                                        GwyContainer *data,
                                                        gboolean do_create);
+static gboolean gwy_app_data_proxy_find_object(GtkListStore *store,
+                                               gint i,
+                                               GtkTreeIter *iter);
 static void gwy_app_data_browser_switch_data(GwyContainer *data);
 static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
                                              GQuark quark,
@@ -474,10 +477,26 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
 }
 
 static void
-gwy_app_data_proxy_graph_changed(G_GNUC_UNUSED GwyGraphModel *graph,
-                                 G_GNUC_UNUSED GwyAppDataProxy *proxy)
+gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
+                                 G_GNUC_UNUSED GParamSpec *pspec,
+                                 GwyAppDataProxy *proxy)
 {
+    GwyAppKeyType type;
+    GtkTreeIter iter;
+    GQuark quark;
+    gint id;
+
     gwy_debug("proxy=%p, graph=%p", proxy, graph);
+    if (!(quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(graph),
+                                                      own_key_quark))))
+        return;
+    id = gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    g_return_if_fail(type == KEY_IS_GRAPH);
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_GRAPHS].store, id,
+                                        &iter))
+        return;
+    gwy_list_store_row_changed(proxy->lists[PAGE_GRAPHS].store,
+                               &iter, NULL, -1);
 }
 
 static void
