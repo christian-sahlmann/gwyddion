@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -338,6 +338,8 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
                              tool);
     row++;
 
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
+    
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_show_all(dialog->vbox);
