@@ -87,6 +87,7 @@ static void     selection_changed_cb             (GwyGraphArea *area);
 static void     gwy_graph_area_model_notify      (GwyGraphArea *area,
                                                   GParamSpec *pspec,
                                                   GwyGraphModel *gmodel);
+static void     gwy_graph_area_maybe_hide_dialog (GwyGraphArea *area);
 static void     gwy_graph_area_curve_notify      (GwyGraphArea *area,
                                                   gint i,
                                                   GParamSpec *pspec);
@@ -1465,8 +1466,12 @@ gwy_graph_area_model_notify(GwyGraphArea *area,
                             GParamSpec *pspec,
                             G_GNUC_UNUSED GwyGraphModel *gmodel)
 {
-    if (gwy_strequal(pspec->name, "n-curves")
-        || gwy_strequal(pspec->name, "grid-type")) {
+    if (gwy_strequal(pspec->name, "n-curves")) {
+        gwy_graph_area_maybe_hide_dialog(area);
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
+
+    if (gwy_strequal(pspec->name, "grid-type")) {
         gtk_widget_queue_draw(GTK_WIDGET(area));
         return;
     }
@@ -1475,6 +1480,23 @@ gwy_graph_area_model_notify(GwyGraphArea *area,
         g_warning("Want to change label position, but don't know how.");
         return;
     }
+}
+
+static void
+gwy_graph_area_maybe_hide_dialog(GwyGraphArea *area)
+{
+    GwyGraphAreaDialog *dialog;
+
+    if (!area->area_dialog)
+        return;
+
+    dialog = GWY_GRAPH_AREA_DIALOG(area->area_dialog);
+    if (!GTK_WIDGET_VISIBLE(dialog) || !dialog->curve_model)
+        return;
+
+    if (gwy_graph_model_get_curve_index(area->graph_model,
+                                        dialog->curve_model) == -1)
+        gwy_graph_area_edit_curve(area, -1);
 }
 
 static void
