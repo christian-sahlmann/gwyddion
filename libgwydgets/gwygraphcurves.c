@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -61,14 +62,16 @@ enum {
     NMODEL_COLUMNS
 };
 
-static void gwy_graph_curves_destroy         (GtkObject *object);
-static void gwy_graph_curves_finalize        (GObject *object);
-static void gwy_graph_curves_realize         (GtkWidget *widget);
-static void gwy_graph_curves_n_curves_changed(GwyGraphCurves *graph_curves);
-static void gwy_graph_curves_curve_notify    (GwyGraphCurves *graph_curves,
-                                              gint id,
-                                              const GParamSpec *pspec);
-static void gwy_graph_curves_setup           (GwyGraphCurves *graph_curves);
+static void     gwy_graph_curves_destroy         (GtkObject *object);
+static void     gwy_graph_curves_finalize        (GObject *object);
+static void     gwy_graph_curves_realize         (GtkWidget *widget);
+static gboolean gwy_graph_curves_key_press       (GtkWidget *widget,
+                                                  GdkEventKey *event);
+static void     gwy_graph_curves_n_curves_changed(GwyGraphCurves *graph_curves);
+static void     gwy_graph_curves_curve_notify    (GwyGraphCurves *graph_curves,
+                                                  gint id,
+                                                  const GParamSpec *pspec);
+static void     gwy_graph_curves_setup           (GwyGraphCurves *graph_curves);
 
 static GQuark quark_id = 0;
 static GQuark quark_model = 0;
@@ -87,6 +90,7 @@ gwy_graph_curves_class_init(GwyGraphCurvesClass *klass)
     object_class->destroy = gwy_graph_curves_destroy;
 
     widget_class->realize = gwy_graph_curves_realize;
+    widget_class->key_press_event = gwy_graph_curves_key_press;
 }
 
 static void
@@ -150,6 +154,35 @@ gwy_graph_curves_realize(GtkWidget *widget)
     column = gtk_tree_view_get_column(GTK_TREE_VIEW(widget), COLUMN_LINE_STYLE);
     model = _gwy_graph_get_line_style_store(widget);
     g_object_set_qdata(G_OBJECT(column), quark_model, model);
+}
+
+static gboolean
+gwy_graph_curves_key_press(GtkWidget *widget,
+                           GdkEventKey *event)
+{
+    GwyGraphCurves *graph_curves;
+    GtkTreeSelection *selection;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gint *indices;
+
+    if (event->keyval == GDK_Delete) {
+        graph_curves = GWY_GRAPH_CURVES(widget);
+        selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+        if (graph_curves->graph_model
+            && gtk_tree_selection_get_selected(selection, NULL, &iter)) {
+            path = gtk_tree_model_get_path(GTK_TREE_MODEL(graph_curves->curves),
+                                           &iter);
+            indices = gtk_tree_path_get_indices(path);
+            gwy_graph_model_remove_curve(graph_curves->graph_model, indices[0]);
+            gtk_tree_path_free(path);
+        }
+
+        return TRUE;
+    }
+
+    return GTK_WIDGET_CLASS(gwy_graph_curves_parent_class)->key_press_event
+                                                                 (widget,event);
 }
 
 /**
