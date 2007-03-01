@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -196,7 +196,6 @@ gwy_tool_profile_finalize(GObject *object)
     tool = GWY_TOOL_PROFILE(object);
 
     settings = gwy_app_settings_get();
-    tool->args = default_args;
     gwy_container_set_boolean_by_name(settings, options_visible_key,
                                       tool->args.options_visible);
     gwy_container_set_int32_by_name(settings, thickness_key,
