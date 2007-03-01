@@ -2,9 +2,11 @@
 import re, sys, shutil, os
 
 macro_name = 'GWY_RELOC_SOURCE'
-line_length = 80
+line_length = 78
 indent_step = 4
 quiet = False
+
+match_type = type(re.match('a', 'a'))
 
 type_fields = {
     'GwyEnum': [ 'name', 'value' ],
@@ -55,7 +57,9 @@ c_unescape_map = {
 c_escape_map = dict([(v, k) for k, v in c_unescape_map.items()])
 
 def c_unescape_char(s):
-    assert x[0] == '\\'
+    if type(s) == match_type:
+        s = s.group()
+    assert s[0] == '\\'
     s = s[1:]
     if s.startswith('x') and len(s) == 3:
         return chr(int(s[1:], 16))
@@ -73,7 +77,7 @@ def c_escape_char(s):
     if s != '\0' and c_escape_map.has_key(s):
         return '\\' + c_escape_map[s]
     o = ord(s)
-    if (o >= 32 and o < 128) or o >= 160:
+    if (o >= 32 and o < 127) or o >= 128:
         return s
     return '\\%03o' % o
 
@@ -84,12 +88,12 @@ def wrap_string(s, width):
     lines = []
     l = ''
     for x in s:
-        x = c_escape_char(x)
+        ex = c_escape_char(x)
         # Require l to be nonempty to always add at least one character
-        if l and len(l + x) + 2 >= width:
+        if l and len(l + ex) + 2 >= width and ord(x) < 128:
             lines.append('"' + l + '"')
             l = ''
-        l += x
+        l += ex
     if l:
         lines.append('"' + l + '"')
     return lines
