@@ -61,7 +61,7 @@ Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName:
 Root: HKCR; Subkey: ".gwy"; ValueType: string; ValueName: ""; ValueData: "@PACKAGE_NAME@.NativeData"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData"; ValueType: string; ValueName: ""; ValueData: "@PACKAGE_NAME@ Native Data File"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
-Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\@PACKAGE_TARNAME@.exe"" ""%1"""
+Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\@PACKAGE_TARNAME@.exe"" --remote-new ""%1"""
 
 
 [Code]
