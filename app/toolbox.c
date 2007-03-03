@@ -70,9 +70,11 @@ static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
 static void gwy_app_change_default_mask_color_cb(void);
 static void       gwy_app_gl_view_maybe_cb     (void);
-static gboolean   toolbox_destroy              (GtkWidget *widget,
+#ifdef HAVE_REMOTE_WIN32
+static void       toolbox_destroy              (GtkWidget *widget,
                                                 GdkEvent *event,
                                                 gpointer user_data);
+#endif
 
 static GtkTargetEntry dnd_target_table[] = {
     { "STRING",        0, DND_TARGET_STRING, },
@@ -234,7 +236,7 @@ gwy_app_toolbox_create(void)
 #ifdef HAVE_REMOTE_WIN32
     GdkWindow *gdk_win;
     HWND hwnd = 0;
-#endif    
+#endif
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
@@ -296,7 +298,9 @@ gwy_app_toolbox_create(void)
     /***************************************************************/
     /* XXX */
     g_signal_connect(toolbox, "delete-event", G_CALLBACK(gwy_app_quit), NULL);
+#ifdef HAVE_REMOTE_WIN32
     g_signal_connect(toolbox, "destroy", G_CALLBACK(toolbox_destroy), NULL);
+#endif
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
     gtk_widget_show_all(toolbox);
@@ -306,13 +310,13 @@ gwy_app_toolbox_create(void)
 
 #ifdef HAVE_REMOTE_WIN32
     gdk_win = gtk_widget_get_root_window(toolbox);
-    // Retrieve hWnd using gdk window 
+    // Retrieve hWnd using gdk window
     hwnd = GDK_WINDOW_HWND(toolbox->window);
-    // Create property and set it to 1 
-    SetProp(hwnd, GWY_TOOLBOX_WM_ROLE, (HANDLE) 1);
+    // Create property and set it to 1
+    SetProp(hwnd, GWY_TOOLBOX_WM_ROLE, (HANDLE)1);
     gwy_debug("SetProp to hWnd %d\n", hwnd);
 #endif
-            
+
     return toolbox;
 }
 
@@ -830,22 +834,21 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         g_ptr_array_free(files, TRUE);
 }
 
-static gboolean
-toolbox_destroy(GtkWidget *widget,
-               GdkEvent *event,
-               gpointer user_data)
-{
 #ifdef HAVE_REMOTE_WIN32
-    HWND hwnd = 0;    
-    
+static void
+toolbox_destroy(GtkWidget *widget,
+                GdkEvent *event,
+                gpointer user_data)
+{
+    HWND hwnd = 0;
+
     // Retrieve hWnd
     hwnd = GDK_WINDOW_HWND(gtk_widget_get_root_window(widget));
-    // Remove properties 
-    RemoveProp(hwnd, GWY_TOOLBOX_WM_ROLE);    
+    // Remove properties
+    RemoveProp(hwnd, GWY_TOOLBOX_WM_ROLE);
     gwy_debug("RemoveProp to hWnd %d\n", hwnd);
-#endif
-    return TRUE;
 }
+#endif
 
 static void
 gwy_app_meta_browser(void)

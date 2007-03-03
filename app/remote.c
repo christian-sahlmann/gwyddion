@@ -64,14 +64,13 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyddion.h"
 
-static GdkWindow* remote_find_toolbox      (GdkDisplay *display,
-                                            guint32 *xid);
-
-static int do_remote(GdkDisplay *display, 
-                  GdkWindow *toolbox,
-                  guint32 xid,
-                  int argc,
-                  char **argv);
+static GdkWindow* remote_find_toolbox(GdkDisplay *display,
+                                      guint32 *xid);
+static gboolean   do_remote          (GdkDisplay *display,
+                                      GdkWindow *toolbox,
+                                      guint32 xid,
+                                      int argc,
+                                      char **argv);
 
 static gboolean
 toolbox_timeout(G_GNUC_UNUSED gpointer data)
@@ -101,8 +100,7 @@ gwy_app_do_remote(GwyAppRemoteType type,
 {
     GdkDisplay *display;
     GdkWindow *toolbox;
-    guint32 xid;
-
+    guint32 xid = 0;  /* Die, die, GCC! */
 
     if (type == GWY_APP_REMOTE_NONE)
         return;
@@ -146,18 +144,18 @@ gwy_app_do_remote(GwyAppRemoteType type,
     }
 
     /* Call appropriate remote handler for X11 and win32 */
-    if (do_remote(display, toolbox, xid, argc, argv) != 0) {
+    if (!do_remote(display, toolbox, xid, argc, argv)) {
         exit(EXIT_FAILURE);
-    }        
+    }
     exit(EXIT_SUCCESS);
 }
 
 #ifdef HAVE_REMOTE_WIN32
 #define GWY_REMOTE_IMPLEMENTED 1
 /* Send WM_DROPFILES message to target window
-   Return -1 when window could not be found or memory cannot be allocated 
+   Return -1 when window could not be found or memory cannot be allocated
    for DnD operation */
-static int
+static gboolean
 do_remote(GdkDisplay *display,
                   GdkWindow *toolbox,
                   guint32 xid,
@@ -165,30 +163,29 @@ do_remote(GdkDisplay *display,
                   char **argv)
 {
     char **fileNames = argv;
-    int fileCount= argc; 
-    int iCurBytePos = sizeof(DROPFILES); 
+    int fileCount= argc;
+    int iCurBytePos = sizeof(DROPFILES);
     LPDROPFILES pDropFiles;
     HGLOBAL hGlobal;
     HWND hWnd;
     gchar *fullFilename, *cwd;
     int i;
-    
+
     hWnd = GDK_WINDOW_HWND(toolbox);
     if (!hWnd) {
         g_printerr("Cannot find target toolbox.\n");
-        return -1;
-    }    
+        return FALSE;
+    }
     // May use more memory than is needed... oh well.
     hGlobal = GlobalAlloc(GHND | GMEM_SHARE,
-                          sizeof(DROPFILES) +
-                          (_MAX_PATH * fileCount) + 1);
+                          sizeof(DROPFILES) + (_MAX_PATH * fileCount) + 1);
 
     // memory failure?
     if (hGlobal == NULL) {
         g_printerr("Cannot allocate memory.\n");
-        return -1;
+        return FALSE;
     }
-    
+
     // lock the memory
     pDropFiles = (LPDROPFILES)GlobalLock(hGlobal);
 
@@ -201,12 +198,12 @@ do_remote(GdkDisplay *display,
     pDropFiles->fNC = FALSE;
 
     cwd = g_get_current_dir();
-    for(i = 0 ; i < fileCount; ++i)
-    {
+    for (i = 0; i < fileCount; ++i) {
         // file location must be absolute
         if (g_path_is_absolute(fileNames[i])) {
             fullFilename = g_strdup(fileNames[i]);
-        } else {
+        }
+        else {
             fullFilename = g_build_filename(cwd, fileNames[i], NULL);
         }
         strcpy(((LPSTR)(pDropFiles) + iCurBytePos), fullFilename);
@@ -214,25 +211,26 @@ do_remote(GdkDisplay *display,
         // +1 for including the NULL terminator
         iCurBytePos += strlen(fullFilename) +1;
         g_free(fullFilename);
-                
+
     }
     // File list ends by double NULL (\o\o)
     // Add missing NULL
-    ((LPSTR)(pDropFiles))[iCurBytePos+1] = 0; 
+    ((LPSTR)(pDropFiles))[iCurBytePos+1] = 0;
     GlobalUnlock(hGlobal);
-    // send DnD event    
+    // send DnD event
     PostMessage(hWnd, WM_DROPFILES, (WPARAM)hGlobal, 0);
-    return 0;
+
+    return TRUE;
 }
 
-static BOOL CALLBACK 
+static BOOL CALLBACK
 FindGwyddionWindow(HWND hwnd, LPARAM lParam)
-{    
+{
     if (GetProp(hwnd, GWY_TOOLBOX_WM_ROLE)) {
-	      *(HWND*)lParam = hwnd;
-	      return FALSE;
+        *(HWND*)lParam = hwnd;
+        return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -241,18 +239,20 @@ remote_find_toolbox(GdkDisplay *display,
                     guint32 *xid)
 {
     HWND hwnd = 0;
-    
-    /* Iterate thru all windows and find window with gwyddion's attribute 
-       to identify gwyddion app */     
+
+    /* Iterate thru all windows and find window with gwyddion's attribute
+       to identify gwyddion app */
     EnumWindows(FindGwyddionWindow, (LPARAM)&hwnd);
     if (hwnd != 0) {
         /* window found */
-        gwy_debug("Drop window found, hwnd: %d", hwnd);	      
+        gwy_debug("Drop window found, hwnd: %d", hwnd);
         *xid = (guint32) hwnd;
-        return gdk_window_foreign_new_for_display (display, (GdkNativeWindow) hwnd);  
-    } else {
-      *xid = 0;
-      return NULL;    
+        return gdk_window_foreign_new_for_display(display,
+                                                  (GdkNativeWindow)hwnd);
+    }
+    else {
+        *xid = 0;
+        return NULL;
     }
 }
 #endif
@@ -260,23 +260,23 @@ remote_find_toolbox(GdkDisplay *display,
 
 #ifdef HAVE_REMOTE_X11
 #define GWY_REMOTE_IMPLEMENTED 1
-static int
+static gboolean
 do_remote(GdkDisplay *display,
-                  GdkWindow *toolbox,
-                  guint32 xid,
-                  int argc,
-                  char **argv)
+          GdkWindow *toolbox,
+          guint32 xid,
+          int argc,
+          char **argv)
 {
-  
+
     GdkDragContext *context;
     GdkDragProtocol protocol;
     GtkWidget *source;
     GdkAtom sel_type, sel_id;
     GString *file_list;
-    GList *targetlist;    
+    GList *targetlist;
     gchar *cwd;
     gint i;
-    
+
     xid = gdk_drag_get_protocol_for_display(display, xid, &protocol);
     /* FIXME: Here we may need some platform-dependent protocol check.
      * protocol should be GDK_DRAG_PROTO_XDND on X11, but on win32
@@ -284,7 +284,7 @@ do_remote(GdkDisplay *display,
      * is no DnD support for target window. */
     if (!xid) {
         g_printerr("Gwyddion window doesn't support DnD.\n");
-        return -1;
+        return FALSE;
     }
 
     /* Now we have the toolbox, it seems to support DnD and we have some files
@@ -320,8 +320,6 @@ do_remote(GdkDisplay *display,
 
     /* Specify the id and the content-type of the selection used to
      * pass the URIs to Gwyddion toolbox. */
-    /* FIXME: I doubt this works on Win32 target, may need to factor out
-     * platform-dependent code also here. */
     sel_id = gdk_atom_intern("XdndSelection", FALSE);
     sel_type = gdk_atom_intern("text/plain", FALSE);
     targetlist = g_list_prepend(NULL, GUINT_TO_POINTER(sel_type));
@@ -339,7 +337,8 @@ do_remote(GdkDisplay *display,
 
     /* Finally enter the mainloop to handle the events. */
     gtk_main();
-    return 0;
+
+    return TRUE;
 }
 
 static GdkWindow*
@@ -400,15 +399,17 @@ remote_find_toolbox(GdkDisplay *display,
 #endif
 
 #ifndef GWY_REMOTE_IMPLEMENTED
-static int
-do_remote(GdkDisplay *display,
-                  GdkWindow *toolbox,
-                  guint32 xid,
-                  int argc,
-                  char **argv)
+static gboolean
+do_remote(G_GNUC_UNUSED GdkDisplay *display,
+          G_GNUC_UNUSED GdkWindow *toolbox,
+          G_GNUC_UNUSED guint32 xid,
+          G_GNUC_UNUSED int argc,
+          G_GNUC_UNUSED char **argv)
 {
+    /* We should not get here anyway, because remote_find_toolbox() returned
+     * NULL. */
     g_printerr("Remote control not implemented for this platform.\n");
-
+    return FALSE;
 }
 
 static GdkWindow*
