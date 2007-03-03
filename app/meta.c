@@ -104,8 +104,8 @@ gwy_app_metadata_browser(GwyContainer *data,
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
     gtk_widget_size_request(browser->treeview, &request);
-    request.width = MAX(request.width, 120);
-    request.height = MAX(request.height, 200);
+    request.width = MAX(request.width, 320);
+    request.height = MAX(request.height, 400);
     gtk_window_set_default_size(GTK_WINDOW(browser->window),
                                 MIN(request.width + 24, 2*gdk_screen_width()/3),
                                 MIN(request.height + 32,
