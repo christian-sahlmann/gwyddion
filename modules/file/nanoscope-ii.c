@@ -180,7 +180,7 @@ hash_to_data_field(GHashTable *hash,
     gchar *val;
     gint xres, yres, i, j;
     gsize expected;
-    gdouble xreal, yreal, zscale, min, max;
+    gdouble xreal, yreal, q;
     gdouble *data;
     const gint16 *d16;
 
@@ -204,8 +204,8 @@ hash_to_data_field(GHashTable *hash,
     }
 
     val = g_hash_table_lookup(hash, "z_scale");
-    zscale = Nanometer*g_ascii_strtod(val, NULL);
-    if (zscale <= 0.0) {
+    q = Nanometer/16384.0*g_ascii_strtod(val, NULL);
+    if (q <= 0.0) {
         err_INVALID(error, "scan_sz");
         return NULL;
     }
@@ -215,12 +215,8 @@ hash_to_data_field(GHashTable *hash,
 
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++)
-            data[(yres-1 - i)*xres + j] = GINT16_FROM_LE(d16[i*xres + j]);
+            data[(yres-1 - i)*xres + j] = q*GINT16_FROM_LE(d16[i*xres + j]);
     }
-
-    gwy_data_field_get_min_max(dfield, &min, &max);
-    if (min < max)
-        gwy_data_field_multiply(dfield, zscale/(max - min));
 
     unitz = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_z(dfield, unitz);
