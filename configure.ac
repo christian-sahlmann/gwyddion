@@ -479,7 +479,7 @@ AC_SUBST(PACKAGE_URL)
 # Generate gwyconfig
 #
 # NB: When you add definitions here, add them to data/gwyconfig.h.win32 too.
-# 
+#
 AC_CONFIG_COMMANDS([gwyconfig.h],
 [
   outfile=gwyconfig.h-tmp
@@ -487,7 +487,7 @@ AC_CONFIG_COMMANDS([gwyconfig.h],
 /*
  * gwyconfig.h
  *
- * This is a generated file.  Please modify 'configure.ac'
+ * This is a generated file.  Please modify 'configure.ac'.
  */
 
 #ifndef __GWY_CONFIG_H__
@@ -566,7 +566,7 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF (incl. JPK, PSIA, Intematix):  $enable_tiff$TIFF_WARN"
+echo "  TIFF (including JPK, PSIA):         $enable_tiff$TIFF_WARN"
 echo "  SMPL:                               $enable_spml$SPML_WARN"
 echo "  FFTW3:                              $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                  $enable_gl$GL_WARN"
