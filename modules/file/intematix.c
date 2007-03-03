@@ -18,6 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * XXX: This module implements its own TIFF loader because Intematix files
+ * do not contain tags in ascending tag number order which chokes libTIFF.
+ */
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
