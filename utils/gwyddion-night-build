@@ -59,7 +59,6 @@ function autostuff() {
     --config-cache \
     --disable-desktop-file-update \
     --enable-gtk-doc \
-    --enable-pygwy \
     --prefix=$installprefix
   make -C po gwyddion.pot
 }
