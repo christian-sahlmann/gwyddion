@@ -41,3 +41,6 @@
 
 /* GladeWin32 has GtkGLExt */
 #define HAVE_GTKGLEXT 1
+
+/* Support for --remote-* options */
+#define HAVE_REMOTE_WIN32
