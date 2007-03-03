@@ -14,6 +14,8 @@ psia_module =
 psia_sources = psia.c
 endif
 
+# When libXML2 is disabled, put the sources to EXTRA_DIST to include them in
+# make dist.
 if HAVE_XML2
 spml_module = spml.la
 spml_sources =
@@ -37,6 +39,7 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	hdf4file.la \
 	hitachi-afm.la \
+	intematix.la \
 	jeol.la \
 	$(jpkscan_module) \
 	metropro.la \
@@ -100,60 +103,61 @@ else
 MODULE_LIBTIFF =
 endif
 
-asciiexport_la_SOURCES = asciiexport.c
-apefile_la_SOURCES = apefile.c
-assing_afm_la_SOURCES = assing-afm.c
-bcrfile_la_SOURCES = bcrfile.c
-burleigh_la_SOURCES = burleigh.c
-createc_la_SOURCES = createc.c
-dmefile_la_SOURCES = dmefile.c
-ecsfile_la_SOURCES = ecsfile.c
-ezdfile_la_SOURCES = ezdfile.c
-gwyfile_la_SOURCES = gwyfile.c
-hdf4file_la_SOURCES = hdf4file.c
-hitachi_afm_la_SOURCES = hitachi-afm.c
-jeol_la_SOURCES = jeol.c
-metropro_la_SOURCES = metropro.c
-microprof_la_SOURCES = microprof.c
-mifile_la_SOURCES = mifile.c
+asciiexport_la_SOURCES  = asciiexport.c
+apefile_la_SOURCES      = apefile.c
+assing_afm_la_SOURCES   = assing-afm.c
+bcrfile_la_SOURCES      = bcrfile.c
+burleigh_la_SOURCES     = burleigh.c
+createc_la_SOURCES      = createc.c
+dmefile_la_SOURCES      = dmefile.c
+ecsfile_la_SOURCES      = ecsfile.c
+ezdfile_la_SOURCES      = ezdfile.c
+gwyfile_la_SOURCES      = gwyfile.c
+hdf4file_la_SOURCES     = hdf4file.c
+hitachi_afm_la_SOURCES  = hitachi-afm.c
+intematix_la_SOURCES    = intematix.c
+jeol_la_SOURCES         = jeol.c
+metropro_la_SOURCES     = metropro.c
+microprof_la_SOURCES    = microprof.c
+mifile_la_SOURCES       = mifile.c
 nanoscope_ii_la_SOURCES = nanoscope-ii.c
-nanoscope_la_SOURCES = nanoscope.c
-nanonis_la_SOURCES = nanonis.c
-nanotop_la_SOURCES = nanotop.c
-netcdf_la_SOURCES = netcdf.c
-nt_mdt_la_SOURCES = nt-mdt.c
-omicron_la_SOURCES = omicron.c
-pnifile_la_SOURCES = pnifile.c
-rawfile_la_SOURCES = rawfile.c rawfilepreset.h
-rhk_sm3_la_SOURCES = rhk-sm3.c
-rhk_spm32_la_SOURCES = rhk-spm32.c
-sdfile_la_SOURCES = sdfile.c
-seiko_la_SOURCES = seiko.c
-sis_la_SOURCES = sis.c
-spmlab_la_SOURCES = spmlab.c
-stmprg_la_SOURCES = stmprg.c stmprg.h
-stpfile_la_SOURCES = stpfile.c
-surffile_la_SOURCES = surffile.c
-unisoku_la_SOURCES = unisoku.c
-witfile_la_SOURCES = witfile.c
-wsxmfile_la_SOURCES = wsxmfile.c
+nanoscope_la_SOURCES    = nanoscope.c
+nanonis_la_SOURCES      = nanonis.c
+nanotop_la_SOURCES      = nanotop.c
+netcdf_la_SOURCES       = netcdf.c
+nt_mdt_la_SOURCES       = nt-mdt.c
+omicron_la_SOURCES      = omicron.c
+pnifile_la_SOURCES      = pnifile.c
+rawfile_la_SOURCES      = rawfile.c
+rhk_sm3_la_SOURCES      = rhk-sm3.c
+rhk_spm32_la_SOURCES    = rhk-spm32.c
+sdfile_la_SOURCES       = sdfile.c
+seiko_la_SOURCES        = seiko.c
+sis_la_SOURCES          = sis.c
+spmlab_la_SOURCES       = spmlab.c
+stmprg_la_SOURCES       = stmprg.c
+stpfile_la_SOURCES      = stpfile.c
+surffile_la_SOURCES     = surffile.c
+unisoku_la_SOURCES      = unisoku.c
+witfile_la_SOURCES      = witfile.c
+wsxmfile_la_SOURCES     = wsxmfile.c
 
 # pixmap is built always, the source code branches on TIFF availability
-pixmap_la_SOURCES = pixmap.c
-pixmap_la_LIBADD = $(MODULE_LIBTIFF)
+pixmap_la_SOURCES       = pixmap.c
+pixmap_la_LIBADD        = $(MODULE_LIBTIFF)
 
 if HAVE_TIFF
-jpkscan_la_SOURCES = jpkscan.c jpk.h
-jpkscan_la_LIBADD = $(MODULE_LIBTIFF)
+jpkscan_la_SOURCES      = jpkscan.c jpk.h
+jpkscan_la_LIBADD       = $(MODULE_LIBTIFF)
 
-psia_la_SOURCES = psia.c
-psia_la_LIBADD = $(MODULE_LIBTIFF)
+psia_la_SOURCES         = psia.c
+psia_la_LIBADD          = $(MODULE_LIBTIFF)
 endif
 
 if HAVE_XML2
-spml_la_SOURCES = spml.c spml-utils.h
-spml_la_CFLAGS = $(AM_CFLAGS) @XML2_CFLAGS@
-spml_la_LIBADD = @XML2_LIBS@
+spml_la_SOURCES         = spml.c spml-utils.h
+spml_la_CFLAGS          = $(AM_CFLAGS) @XML2_CFLAGS@
+spml_la_LIBADD          = @XML2_LIBS@
 endif
 
 MAINTAINERCLEANFILES = makefile.msc

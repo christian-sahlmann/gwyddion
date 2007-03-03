@@ -40,16 +40,20 @@
 #define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
+/* The value of PSIA_TIFFTAG_MagicNumber */
+#define PSIA_MAGIC_NUMBER 0x0E031301
+
 /* Custom TIFF tags */
-#define PSIA_TIFFTAG_MagicNumber       50432
-#define PSIA_TIFFTAG_Version           50433
-#define PSIA_TIFFTAG_Data              50434
-#define PSIA_TIFFTAG_Header            50435
-#define PSIA_TIFFTAG_Comments          50436
-#define PSIA_TIFFTAG_LineProfileHeader 50437
+enum {
+    PSIA_TIFFTAG_MagicNumber       = 50432,
+    PSIA_TIFFTAG_Version           = 50433,
+    PSIA_TIFFTAG_Data              = 50434,
+    PSIA_TIFFTAG_Header            = 50435,
+    PSIA_TIFFTAG_Comments          = 50436,
+    PSIA_TIFFTAG_LineProfileHeader = 50437
+};
 /* PSIA claims tag numbers 50432 to 50441, but nothing is known about the
  * remaining tags. */
-#define PSIA_MAGIC_NUMBER              0x0E031301
 
 typedef enum {
     PSIA_2D_MAPPED    = 0,
@@ -203,7 +207,7 @@ psia_load(const gchar *filename,
     tiff = TIFFOpen(filename, "r");
     if (!tiff)
         /* This can be I/O too, but it's hard to tell the difference. */
-        err_FILE_TYPE(error, _("PSIA"));
+        err_FILE_TYPE(error, "PSIA");
     else {
         container = psia_load_tiff(tiff, error);
         TIFFClose(tiff);
@@ -235,12 +239,12 @@ psia_load_tiff(TIFF *tiff, GError **error)
         || magic != PSIA_MAGIC_NUMBER
         || !tiff_get_custom_uint(tiff, PSIA_TIFFTAG_Version, &version)
         || version < 0x01000001) {
-        err_FILE_TYPE(error, _("PSIA"));
+        err_FILE_TYPE(error, "PSIA");
         return NULL;
     }
 
     if (!TIFFGetField(tiff, PSIA_TIFFTAG_Header, &count, &p)) {
-        err_FILE_TYPE(error, _("PSIA"));
+        err_FILE_TYPE(error, "PSIA");
         return NULL;
     }
     gwy_debug("[Header] count: %d", count);

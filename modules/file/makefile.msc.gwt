@@ -1,8 +1,8 @@
 # @(#) $Id$
 
 jpkscan_module = jpkscan.la
-spml_module = spml.la
 psia_module = psia.la
+spml_module = spml.la
 
 <[[:SELF:]]>
 MOD_TYPE = file
