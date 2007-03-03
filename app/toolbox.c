@@ -70,7 +70,7 @@ static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
 static void gwy_app_change_default_mask_color_cb(void);
 static void       gwy_app_gl_view_maybe_cb     (void);
-static gboolean   toolbox_delete               (GtkWidget *widget,
+static gboolean   toolbox_destroy              (GtkWidget *widget,
                                                 GdkEvent *event,
                                                 gpointer user_data);
 
@@ -295,7 +295,8 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
     /* XXX */
-    g_signal_connect(toolbox, "delete-event", G_CALLBACK(toolbox_delete), NULL);
+    g_signal_connect(toolbox, "delete-event", G_CALLBACK(gwy_app_quit), NULL);
+    g_signal_connect(toolbox, "destroy", G_CALLBACK(toolbox_destroy), NULL);
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
     gtk_widget_show_all(toolbox);
@@ -830,8 +831,7 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
 }
 
 static gboolean
-
-toolbox_delete(GtkWidget *widget,
+toolbox_destroy(GtkWidget *widget,
                GdkEvent *event,
                gpointer user_data)
 {
@@ -844,7 +844,7 @@ toolbox_delete(GtkWidget *widget,
     RemoveProp(hwnd, GWY_TOOLBOX_WM_ROLE);    
     gwy_debug("RemoveProp to hWnd %d\n", hwnd);
 #endif
-    return gwy_app_quit();
+    return TRUE;
 }
 
 static void
