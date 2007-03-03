@@ -93,56 +93,9 @@ enum {
     ISDF_TIFFTAG_ZSERVOPID
 };
 
-typedef enum {
-    ISDF_FILE_STM = 1,
-    ISDF_FILE_AFM = 2,
-    ISDF_FILE_EMP = 3
-} ISDFFileType;
-
-typedef enum {
-    ISDF_DATA_STM_TOPO        = 0x0001,
-    ISDF_DATA_STM_TOPOBK      = 0x0002,
-    ISDF_DATA_STM_TUNNEL      = 0x0003,
-    ISDF_DATA_STM_TUNNELBK    = 0x0004,
-    ISDF_DATA_STM_ADAUX       = 0x0005,
-    ISDF_DATA_STM_ADAUXBK     = 0x0006,
-    ISDF_DATA_STM_LINEIV      = 0x0010,
-    ISDF_DATA_STM_LINEDIDV    = 0x0011,
-    ISDF_DATA_STM_CITS        = 0x0012,
-    ISDF_DATA_STM_IMGDIDV     = 0x0013,
-    ISDF_DATA_STM_LNAPPRTNNL  = 0x0020,
-    ISDF_DATA_STM_LNAPPRAUX   = 0x0021,
-    ISDF_DATA_STM_IMGAPPRTNNL = 0x0022,
-    ISDF_DATA_STM_IMGAPPRAUX  = 0x0023,
-    ISDF_DATA_AFM_TOPO        = 0x0101,
-    ISDF_DATA_AFM_TOPOBK      = 0x0102,
-    ISDF_DATA_AFM_ERROR       = 0x0103,
-    ISDF_DATA_AFM_ERRORBK     = 0x0104,
-    ISDF_DATA_AFM_ADAUX       = 0x0105,
-    ISDF_DATA_AFM_ADAUXBK     = 0x0106,
-    ISDF_DATA_EMP_TOPO        = 0x0201,
-    ISDF_DATA_EMP_TOPOBK      = 0x0202,
-    ISDF_DATA_EMP_FREQ        = 0x0203,
-    ISDF_DATA_EMP_FREQBK      = 0x0204,
-    ISDF_DATA_EMP_QFCT        = 0x0205,
-    ISDF_DATA_EMP_QFCTBK      = 0x0206,
-    ISDF_DATA_EMP_ADAUX       = 0x0207,
-    ISDF_DATA_EMP_ADAUXBK     = 0x0208,
-    ISDF_DATA_EMP_LNMIXI      = 0x0210,
-    ISDF_DATA_EMP_LNMIXQ      = 0x0211,
-    ISDF_DATA_EMP_IMGMIXI     = 0x0212,
-    ISDF_DATA_EMP_IMGMIXQ     = 0x0213,
-    ISDF_DATA_EMP_LNAPPRFREQ  = 0x0220,
-    ISDF_DATA_EMP_LNAPPRQF    = 0x0221,
-    ISDF_DATA_EMP_LNAPPRAUX   = 0x0222,
-    ISDF_DATA_EMP_IMGAPPRFREQ = 0x0223,
-    ISDF_DATA_EMP_IMGAPPRQF   = 0x0224,
-    ISDF_DATA_EMP_IMGAPPRAUX  = 0x0225
-} ISDFDataType;
-
 typedef struct {
-    ISDFFileType file_type;
-    ISDFDataType data_type;
+    guint file_type;
+    guint data_type;
     guint xres;
     guint yres;
     guint zres;
@@ -185,6 +138,8 @@ static GwyContainer* isdf_load             (const gchar *filename,
 static gboolean      isdf_image_fill_info  (ISDFImage *image,
                                             const GwyTIFF *tiff,
                                             GError **error);
+static GwyContainer* isdf_get_metadata     (const GwyTIFF *tiff,
+                                            const ISDFImage *image);
 static void          isdf_image_free       (ISDFImage *image);
 
 /* Rudimentary TIFF reader */
@@ -270,7 +225,7 @@ isdf_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *meta, *container = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunitx, *siunity, *siunitz;
     GwyTIFF *tiff;
@@ -299,6 +254,11 @@ isdf_load(const gchar *filename,
 
     if (!isdf_image_fill_info(&image, tiff, error))
         goto fail;
+
+    if (image.yres < 2) {
+        err_NO_DATA(error);
+        goto fail;
+    }
 
     t = gwy_tiff_data_type_size(image.raw_data_type);
     if (image.xres*image.yres != image.raw_data_len) {
@@ -348,6 +308,15 @@ isdf_load(const gchar *filename,
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+
+    meta = isdf_get_metadata(tiff, &image);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
+
+    if (gwy_container_gis_string_by_name(meta, "Data type", &p))
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup(p));
+    gwy_app_channel_title_fall_back(container, 0);
 
 fail:
     isdf_image_free(&image);
@@ -401,6 +370,100 @@ isdf_image_fill_info(ISDFImage *image,
     }
 
     return TRUE;
+}
+
+static void
+meta_add_string(GwyContainer *meta,
+                const GwyTIFF *tiff,
+                guint tag,
+                const gchar *name)
+{
+    gchar *t;
+
+    if (!gwy_tiff_get_string(tiff, tag, &t))
+        return;
+
+    g_strstrip(t);
+    if (*t)
+        gwy_container_set_string_by_name(meta, name, t);
+    else
+        g_free(t);
+}
+
+static GwyContainer*
+isdf_get_metadata(const GwyTIFF *tiff,
+                  const ISDFImage *image)
+{
+    GwyContainer *meta;
+    const gchar *s;
+    gdouble v;
+
+    meta = gwy_container_new();
+
+    if ((s = gwy_enuml_to_string(image->file_type,
+                                 "STM", 1, "AFM", 2, "EMP", 3,
+                                 NULL)))
+        gwy_container_set_string_by_name(meta, "File type", g_strdup(s));
+
+    s = gwy_enuml_to_string
+            (image->data_type,
+             "STM Topography forward", 0x0001,
+             "STM Topography backward", 0x0002,
+             "STM Tunneling current forward", 0x0003,
+             "STM Tunneling current backward", 0x0004,
+             "STM A/D channel signal forward", 0x0005,
+             "STM A/D channel signal backward", 0x0006,
+             "STM 1D I-V spectroscopy", 0x0010,
+             "STM 1D dI/dV spectroscopy", 0x0011,
+             "STM 2D CITS spectroscopy", 0x0012,
+             "STM 2D dI/dV spectroscopy", 0x0013,
+             "STM 1D tunneling current approaching spectroscopy", 0x0020,
+             "STM 1D A/D channel signal approaching spectroscopy", 0x0021,
+             "STM 2D tunneling current approaching spectroscopy", 0x0022,
+             "STM 2D A/D channel signal approaching spectroscopy", 0x0023,
+             "AFM Topography forward", 0x0101,
+             "AFM Topography backward", 0x0102,
+             "AFM Error forward", 0x0103,
+             "AFM Error backward", 0x0104,
+             "AFM A/D channel signal forward", 0x0105,
+             "AFM A/D channel signal backward", 0x0106,
+             "EMP Topography forward", 0x0201,
+             "EMP Topography backward", 0x0202,
+             "EMP Resonnant frequency forward", 0x0203,
+             "EMP Resonnant frequency backward", 0x0204,
+             "EMP Quality factor backward", 0x0205,
+             "EMP Quality factor forward", 0x0206,
+             "EMP A/D channel signal forward", 0x0207,
+             "EMP A/D channel signal backward", 0x0208,
+             "EMP 1D frequency sweeping I-signal spectroscopy", 0x0210,
+             "EMP 1D frequency sweeping Q-signal spectroscopy", 0x0211,
+             "EMP 2D frequency sweeping I-signal spectroscopy", 0x0212,
+             "EMP 2D frequency sweeping I-signal spectroscopy", 0x0213,
+             "EMP 1D approaching resonant frequency spectroscopy", 0x0220,
+             "EMP 1D approaching quality factor spectroscopy", 0x0221,
+             "EMP 1D approaching A/D channel signal spectroscopy", 0x0222,
+             "EMP 2D approaching resonant frequency spectroscopy", 0x0223,
+             "EMP 2D approaching quality factor spectroscopy", 0x0224,
+             "EMP 2D approaching A/D channel signal spectroscopy", 0x0225,
+             NULL);
+    if (s)
+        gwy_container_set_string_by_name(meta, "Data type", g_strdup(s));
+
+    meta_add_string(meta, tiff, GWY_TIFFTAG_IMAGEDESCRIPTION, "Description");
+    meta_add_string(meta, tiff, GWY_TIFFTAG_SOFTWARE, "Software");
+    meta_add_string(meta, tiff, GWY_TIFFTAG_DATETIME, "Date");
+    meta_add_string(meta, tiff, ISDF_TIFFTAG_FILEINFO, "File information");
+    meta_add_string(meta, tiff, ISDF_TIFFTAG_USERINFO, "User information");
+    meta_add_string(meta, tiff, ISDF_TIFFTAG_SAMPLEINFO, "Sample information");
+
+    if (gwy_tiff_get_float(tiff, ISDF_TIFFTAG_SCANRATE, &v))
+        gwy_container_set_string_by_name(meta, "Scan rate",
+                                         g_strdup_printf("%g line/s", v));
+    if (gwy_tiff_get_float(tiff, ISDF_TIFFTAG_BIASVOLTS, &v))
+        gwy_container_set_string_by_name(meta, "Bias",
+                                         g_strdup_printf("%g V", v));
+
+    return meta;
 }
 
 static void
