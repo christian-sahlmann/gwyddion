@@ -1,14 +1,16 @@
-2.4.20070227
+2.4.20070303
 
 2.5 (0000-00-00)
 Application:
 - Options for opening files in an already running instance of Gwyddion were
-  added (currently only on X11).
+  added.
 - It is possible to save a file with graphs only.
 - Drag'n'drop of files onto toolbox actually works now with modern file
   managers and on Win32.
 
 Libraries:
+- libgwydgets: New GwyGraphCurves widget showing the curve list with
+  properties, it's used in GwyGraphWindow.
 - libgwydgets: Light source theta and phi determined by the same mouse
   coordinate were fixed.
 - libgwyprocess: Skewed gwy_data_field_area_fit_local_planes() output for
@@ -20,6 +22,8 @@ Libraries:
 - libgwyddion: New SI Unit function to take root of a unit.
 - libgwyprocess: New function for general xy plane transform/distortion
   gwy_data_field_distort().
+- libgwyprocess: Critical dimension evaluator can derive parameter units from
+  the units of fitted data.
 - libgwyapp: Drag'n'drop is really possible also with data browser graph list,
   not just with channels.
 - libgwyapp: Data and graph windows not getting keyboard focus were fixed.
@@ -27,18 +31,23 @@ Libraries:
   around 1 be written without 10^3/10^-3 mupltipliers.
 - libgwydgets: A few more graph symbols were added, useless `double dash'
   line style was removed (from GUI selectors, it remains in the Gdk enum).
+- libgwyddion: ROUND() was deprecated, use namespace-clean GWY_ROUND().
 
 Modules:
 - Polynomial Distortion (new): Distorts (or corrects distortion) in xy plane.
 - Nanoscope II (new): Old Nanoscope II file import.
+- Intematix (new): Intematix SDF file import.
 - Pygwy (new): Direct python scripting support.  Currently highly experimental
-  (disabled by default) and Unix-only.
+  (and disabled by default) and Unix-only.
 - Graph fit: User interface was improved, fitted parameter has units, results
   saving was integrated into the dialog.
+- Profile tool: Tool settings are remembered.
 - Omicron: Imported images flipped upside down were fixed.
 
 Other:
 - Freedesktop file type associations were extended to many more file types.
+- File associations created now run `gwyddion --remote-new' instead of just
+  `gwyddion' therefore files are opened in running instances by default.
 - Gwyddion icon is now installed to the corresponding hicolor icon theme
   directory instead to the top-level icon directory.
 - Flag -fno-strict-aliasing is now automatically added to CFLAGS when
