@@ -120,6 +120,11 @@ static void        function_changed          (GtkComboBox *combo,
                                               FitControls *controls);
 static void        range_changed             (GtkWidget *entry,
                                               FitControls *controls);
+static void        fit_limit_selection       (FitControls *controls,
+                                              gboolean curve_switch);
+static void        fit_get_full_x_range      (FitControls *controls,
+                                              gdouble *xmin,
+                                              gdouble *xmax);
 static void        param_initial_activate    (GtkWidget *entry,
                                               gpointer user_data);
 static void        toggle_changed            (GtkToggleButton *button,
@@ -740,6 +745,7 @@ curve_changed(GtkComboBox *combo,
     gwy_graph_model_add_curve(graph_model,
                               gwy_graph_model_get_curve(parent_gmodel,
                                                         controls->args->curve));
+    fit_limit_selection(controls, TRUE);
     fit_set_state(controls, FALSE, FALSE);
 }
 
@@ -939,12 +945,10 @@ graph_selected(GwySelection* selection,
                FitControls *controls)
 {
     FitArgs *args;
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *gcmodel;
     gchar buffer[24];
     gdouble range[2];
     gint nselections;
-    const gdouble *data;
+    gdouble power10;
 
     g_return_if_fail(i <= 0);
 
@@ -952,25 +956,21 @@ graph_selected(GwySelection* selection,
     nselections = gwy_selection_get_data(selection, NULL);
     gwy_selection_get_object(selection, 0, range);
 
-    if (nselections <= 0 || range[0] == range[1]) {
-        gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
-        gcmodel = gwy_graph_model_get_curve(gmodel, 0);
-        data = gwy_graph_curve_model_get_xdata(gcmodel);
-        args->from = data[0];
-        args->to = data[gwy_graph_curve_model_get_ndata(gcmodel) - 1];
-    }
+    if (nselections <= 0 || range[0] == range[1])
+        fit_get_full_x_range(controls, &args->from, &args->to);
     else {
         args->from = MIN(range[0], range[1]);
         args->to = MAX(range[0], range[1]);
     }
     controls->in_update = TRUE;
+    power10 = pow10(args->abscissa_vf->precision);
     g_snprintf(buffer, sizeof(buffer), "%.*f",
                args->abscissa_vf->precision,
-               args->from/args->abscissa_vf->magnitude);
+               floor(args->from*power10/args->abscissa_vf->magnitude)/power10);
     gtk_entry_set_text(GTK_ENTRY(controls->from), buffer);
     g_snprintf(buffer, sizeof(buffer), "%.*f",
                args->abscissa_vf->precision,
-               args->to/args->abscissa_vf->magnitude);
+               ceil(args->to*power10/args->abscissa_vf->magnitude)/power10);
     gtk_entry_set_text(GTK_ENTRY(controls->to), buffer);
     controls->in_update = FALSE;
 
@@ -995,11 +995,8 @@ static void
 range_changed(GtkWidget *entry,
               FitControls *controls)
 {
-    GwySelection *selection;
-    GwyGraphArea *area;
-    gdouble range[2];
     const gchar *id;
-    gdouble *x;
+    gdouble *x, newval;
 
     id = g_object_get_data(G_OBJECT(entry), "id");
     if (gwy_strequal(id, "from"))
@@ -1007,17 +1004,60 @@ range_changed(GtkWidget *entry,
     else
         x = &controls->args->to;
 
-    *x = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
-    *x *= controls->args->abscissa_vf->magnitude;
+    newval = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
+    newval *= controls->args->abscissa_vf->magnitude;
+    if (newval == *x)
+        return;
+    *x = newval;
 
     if (controls->in_update)
         return;
 
+    fit_limit_selection(controls, FALSE);
+}
+
+static void
+fit_limit_selection(FitControls *controls,
+                    gboolean curve_switch)
+{
+    GwySelection *selection;
+    GwyGraphArea *area;
+    gdouble xmin, xmax;
+
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
-    range[0] = controls->args->from;
-    range[1] = controls->args->to;
-    gwy_selection_set_object(selection, 0, range);
+
+    if (curve_switch && !gwy_selection_get_data(selection, NULL)) {
+        graph_selected(selection, -1, controls);
+        return;
+    }
+
+    fit_get_full_x_range(controls, &xmin, &xmax);
+    controls->args->from = CLAMP(controls->args->from, xmin, xmax);
+    controls->args->to = CLAMP(controls->args->to, xmin, xmax);
+
+    if (controls->args->from == xmin && controls->args->to == xmax)
+        gwy_selection_clear(selection);
+    else {
+        gdouble range[2];
+
+        range[0] = controls->args->from;
+        range[1] = controls->args->to;
+        gwy_selection_set_object(selection, 0, range);
+    }
+}
+
+static void
+fit_get_full_x_range(FitControls *controls,
+                     gdouble *xmin,
+                     gdouble *xmax)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+    gwy_graph_curve_model_get_x_range(gcmodel, xmin, xmax);
 }
 
 static void
