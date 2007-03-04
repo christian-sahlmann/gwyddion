@@ -358,7 +358,7 @@ static const GwyCDLineBuiltin cdlines[] = {
         "cd_step.png",
         &func_edgeheight,
         &cd_uedgeheight,
-        4,
+        G_N_ELEMENTS(edgeheight_pars),
         edgeheight_pars
     },
     {
@@ -367,16 +367,16 @@ static const GwyCDLineBuiltin cdlines[] = {
         "cd_rstep.png",
         &func_edgeheight,
         &cd_ledgeheight,
-        4,
+        G_N_ELEMENTS(edgeheight_pars),
         edgeheight_pars
     },
     {
-        "Step height (positive)", /*ISO 5436*/
+        "Step height (positive)",  /* ISO 5436 */
         "Line",
         "cd_line.png",
         &func_stepheight,
         &cd_stepheight,
-        5,
+        G_N_ELEMENTS(stepheight_pars),
         stepheight_pars
     },
     {
@@ -385,7 +385,7 @@ static const GwyCDLineBuiltin cdlines[] = {
         "cd_rline.png",
         &func_stepheight,
         &cd_rstepheight,
-        5,
+        G_N_ELEMENTS(stepheight_pars),
         stepheight_pars
     },
 };
