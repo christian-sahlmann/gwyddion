@@ -1,9 +1,9 @@
-2.4.20070303
+2.4.20070304
 
 2.5 (0000-00-00)
 Application:
 - Options for opening files in an already running instance of Gwyddion were
-  added.
+  added (--remote-new, --remote-existing).
 - It is possible to save a file with graphs only.
 - Drag'n'drop of files onto toolbox actually works now with modern file
   managers and on Win32.
@@ -39,8 +39,9 @@ Modules:
 - Intematix (new): Intematix SDF file import.
 - Pygwy (new): Direct python scripting support.  Currently highly experimental
   (and disabled by default) and Unix-only.
-- Graph fit: User interface was improved, fitted parameter has units, results
-  saving was integrated into the dialog.
+- Graph fit, Critical dimension: User interface was improved, fitted parameters
+  have units, fitted curve can be added to the original graph, results saving
+  was integrated into the dialog.
 - Profile tool: Tool settings are remembered.
 - Omicron: Imported images flipped upside down were fixed.
 
