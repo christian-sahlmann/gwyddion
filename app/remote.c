@@ -157,13 +157,11 @@ gwy_app_do_remote(GwyAppRemoteType type,
    for DnD operation */
 static gboolean
 do_remote(GdkDisplay *display,
-                  GdkWindow *toolbox,
-                  guint32 xid,
-                  int argc,
-                  char **argv)
+          GdkWindow *toolbox,
+          guint32 xid,
+          int argc,
+          char **argv)
 {
-    char **fileNames = argv;
-    int fileCount= argc;
     int iCurBytePos = sizeof(DROPFILES);
     LPDROPFILES pDropFiles;
     HGLOBAL hGlobal;
@@ -178,7 +176,7 @@ do_remote(GdkDisplay *display,
     }
     // May use more memory than is needed... oh well.
     hGlobal = GlobalAlloc(GHND | GMEM_SHARE,
-                          sizeof(DROPFILES) + (_MAX_PATH * fileCount) + 1);
+                          sizeof(DROPFILES) + (_MAX_PATH * argc) + 1);
 
     // memory failure?
     if (hGlobal == NULL) {
@@ -198,13 +196,13 @@ do_remote(GdkDisplay *display,
     pDropFiles->fNC = FALSE;
 
     cwd = g_get_current_dir();
-    for (i = 0; i < fileCount; ++i) {
+    for (i = 0; i < argc; ++i) {
         // file location must be absolute
-        if (g_path_is_absolute(fileNames[i])) {
-            fullFilename = g_strdup(fileNames[i]);
+        if (g_path_is_absolute(argv[i])) {
+            fullFilename = g_strdup(argv[i]);
         }
         else {
-            fullFilename = g_build_filename(cwd, fileNames[i], NULL);
+            fullFilename = g_build_filename(cwd, argv[i], NULL);
         }
         strcpy(((LPSTR)(pDropFiles) + iCurBytePos), fullFilename);
         // Move the current position beyond the file name copied.
@@ -246,7 +244,7 @@ remote_find_toolbox(GdkDisplay *display,
     if (hwnd != 0) {
         /* window found */
         gwy_debug("Drop window found, hwnd: %d", hwnd);
-        *xid = (guint32) hwnd;
+        *xid = (guint32)hwnd;
         return gdk_window_foreign_new_for_display(display,
                                                   (GdkNativeWindow)hwnd);
     }
@@ -316,7 +314,7 @@ do_remote(GdkDisplay *display,
     source = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     g_signal_connect(source, "selection-get",
                      G_CALLBACK(source_selection_get), file_list->str);
-    gtk_widget_realize (source);
+    gtk_widget_realize(source);
 
     /* Specify the id and the content-type of the selection used to
      * pass the URIs to Gwyddion toolbox. */
