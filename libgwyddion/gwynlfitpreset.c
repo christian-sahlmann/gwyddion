@@ -1236,7 +1236,7 @@ _gwy_nlfit_preset_class_setup_presets(void)
  * @params: Preset parameter values.
  * @fres: Set to %TRUE if succeeds, %FALSE on failure.
  *
- * Calculates preset function value in point @x with parameters @params.
+ * Calculates preset function value in a single point with given parameters.
  *
  * Returns: The function value.
  **/
@@ -1262,6 +1262,7 @@ gwy_nlfit_preset_get_value(GwyNLFitPreset *preset,
 const gchar*
 gwy_nlfit_preset_get_formula(GwyNLFitPreset* preset)
 {
+    g_return_val_if_fail(GWY_IS_NLFIT_PRESET(preset), "");
     /* FIXME: builtin */
     return preset->builtin->formula;
 }
@@ -1283,6 +1284,7 @@ gwy_nlfit_preset_get_param_name(GwyNLFitPreset* preset,
 {
     const GwyNLFitParam *par;
 
+    g_return_val_if_fail(GWY_IS_NLFIT_PRESET(preset), "");
     /* FIXME: builtin */
     g_return_val_if_fail(param >= 0 && param < preset->builtin->nparams, NULL);
     par = preset->builtin->param + param;
@@ -1313,6 +1315,7 @@ gwy_nlfit_preset_get_param_units(GwyNLFitPreset *preset,
                                  GwySIUnit *siunit_x,
                                  GwySIUnit *siunit_y)
 {
+    g_return_val_if_fail(GWY_IS_NLFIT_PRESET(preset), NULL);
     /* FIXME: builtin */
     return builtin_get_unit(preset, param, siunit_x, siunit_y);
 }
@@ -1328,6 +1331,7 @@ gwy_nlfit_preset_get_param_units(GwyNLFitPreset *preset,
 gint
 gwy_nlfit_preset_get_nparams(GwyNLFitPreset* preset)
 {
+    g_return_val_if_fail(GWY_IS_NLFIT_PRESET(preset), 0);
     /* FIXME: builtin */
     return preset->builtin->nparams;
 }
@@ -1357,6 +1361,7 @@ gwy_nlfit_preset_guess(GwyNLFitPreset *preset,
                        gdouble *params,
                        gboolean *fres)
 {
+    g_return_if_fail(GWY_IS_NLFIT_PRESET(preset));
     /* FIXME: builtin */
     preset->builtin->guess(n_dat, x, y, params, fres);
 }
@@ -1372,7 +1377,7 @@ gwy_nlfit_preset_guess(GwyNLFitPreset *preset,
  * @params: Initial parameter estimate (the number of parameters depends on
  *          the fitted preset and it can be obtained with
  *          gwy_nlfit_preset_get_nparams()).
- * @err: Array to store parameter errros, may be %NULL.
+ * @err: Array to store parameter errros to, may be %NULL.
  * @fixed_param: Which parameters should be treated as fixed (set
  *               corresponding element to %TRUE for them).  May be %NULL if
  *               all parameters are variable.
@@ -1399,6 +1404,7 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
     gboolean ok;
     gint i;
 
+    g_return_val_if_fail(GWY_IS_NLFIT_PRESET(preset), NULL);
     /* FIXME: builtin */
     /*use numerical derivation if necessary*/
     if (fitter) {
