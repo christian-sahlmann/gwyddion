@@ -401,6 +401,7 @@ static const GwyCDLineBuiltin cdlines[] = {
 const gchar*
 gwy_cdline_get_name(GwyCDLine* cdline)
 {
+    g_return_val_if_fail(GWY_IS_CDLINE(cdline), "");
     return cdline->builtin->function_name;
 }
 
@@ -415,6 +416,7 @@ gwy_cdline_get_name(GwyCDLine* cdline)
 const gchar*
 gwy_cdline_get_definition(GwyCDLine* cdline)
 {
+    g_return_val_if_fail(GWY_IS_CDLINE(cdline), "");
     return cdline->builtin->function_definition;
 }
 
@@ -435,6 +437,7 @@ gwy_cdline_get_param_name(GwyCDLine* cdline,
 {
     const GwyCDLineParam *par;
 
+    g_return_val_if_fail(GWY_IS_CDLINE(cdline), "");
     g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams, NULL);
     par = cdline->builtin->param + param;
 
@@ -457,6 +460,7 @@ gwy_cdline_get_param_default(GwyCDLine* cdline,
 {
     const GwyCDLineParam *par;
 
+    g_return_val_if_fail(GWY_IS_CDLINE(cdline), 0.0);
     g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams,
                          G_MAXDOUBLE);
     par = cdline->builtin->param + param;
@@ -489,6 +493,7 @@ gwy_cdline_get_param_units(GwyCDLine *cdline,
 {
     const GwyCDLineParam *par;
 
+    g_return_val_if_fail(GWY_IS_CDLINE(cdline), NULL);
     g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams, NULL);
     par = cdline->builtin->param + param;
 
@@ -508,7 +513,30 @@ gwy_cdline_get_param_units(GwyCDLine *cdline,
 gint
 gwy_cdline_get_nparams(GwyCDLine* cdline)
 {
+    g_return_val_if_fail(GWY_IS_CDLINE(cdline), 0);
     return cdline->builtin->nparams;
+}
+
+/**
+ * gwy_cdline_get_value:
+ * @cdline: A critical dimension evaluator.
+ * @x: The point to compute value at.
+ * @params: Evaluator parameter values.
+ * @fres: Set to %TRUE if succeeds, %FALSE on failure.
+ *
+ * Calculates critical dimension function value in a single point with given
+ * parameters.
+ *
+ * Returns: The function value.
+ **/
+gdouble
+gwy_cdline_get_value(GwyCDLine *cdline,
+                     gdouble x,
+                     const gdouble *params,
+                     gboolean *fres)
+{
+    return cdline->builtin->function(x, cdline->builtin->nparams, params,
+                                     NULL, fres);
 }
 
 /**
@@ -540,6 +568,7 @@ gwy_cdline_fit(GwyCDLine* cdline,
 {
     gboolean fres;
 
+    g_return_if_fail(GWY_IS_CDLINE(cdline));
     fres = TRUE;
     cdline->builtin->function_fit(x, y, n_dat, param, err, NULL, &fres);
 }
@@ -609,16 +638,7 @@ _gwy_cdline_class_setup_presets(void)
 GwyInventory*
 gwy_cdlines(void)
 {
-    return
-        GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_CDLINE))->inventory;
-}
-
-gdouble
-gwy_cdline_get_value(GwyCDLine *cdline, gdouble x,
-                     const gdouble *params, gboolean *fres)
-{
-    return cdline->builtin->function(x, cdline->builtin->nparams, params,
-                                     NULL, fres);
+    return GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_CDLINE))->inventory;
 }
 
 /************************** Documentation ****************************/
