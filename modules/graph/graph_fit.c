@@ -1152,10 +1152,12 @@ load_args(GwyContainer *container,
 {
     static const guchar *preset;
 
-    if (gwy_container_gis_string_by_name(container, preset_key, &preset))
+    if (gwy_container_gis_string_by_name(container, preset_key, &preset)) {
         args->function_type
             = gwy_inventory_get_item_position(gwy_nlfit_presets(),
                                               (const gchar*)preset);
+        args->function_type = MAX(args->function_type, 0);
+    }
     gwy_container_gis_boolean_by_name(container, auto_estimate_key,
                                       &args->auto_estimate);
     gwy_container_gis_boolean_by_name(container, auto_plot_key,
