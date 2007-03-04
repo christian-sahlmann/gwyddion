@@ -512,32 +512,36 @@ gwy_cdline_get_nparams(GwyCDLine* cdline)
 }
 
 /**
- * gwy_nlfit_fit:
- * @cdline:
- * @n_dat:
- * @x:
- * @y:
- * @n_param:
- * @param:
- * @err:
- * @fixed_param:
- * @user_data:
+ * gwy_cdline_fit:
+ * @cdline: A critical dimension evaluator.
+ * @n_dat: The number of data points (number of items in @x and @y).
+ * @x: Abscissa points.
+ * @y: Ordinate points.
+ * @n_param: The number of parameters.  This argument is ignored as the
+ *           evaluator knows how many parameters it has, it is safe to pass 0.
+ * @params: Array to store fitted parameter values to.
+ * @err: Array to store parameter errros to, may be %NULL.
+ * @fixed_param: Which parameters should be treated as fixed.  It is ignored,
+ *               pass %NULL.
+ * @user_data: Ignored, pas %NULL.
  *
- *
- *
- * Returns:
+ * Performs a critical dimension evaulation (fit).
  **/
 void
 gwy_cdline_fit(GwyCDLine* cdline,
-                      gint n_dat, const gdouble *x, const gdouble *y,
-                      G_GNUC_UNUSED gint n_param,
-                      gdouble *param, gdouble *err,
-                      G_GNUC_UNUSED const gboolean *fixed_param,
-                      gpointer user_data)
+               gint n_dat,
+               const gdouble *x,
+               const gdouble *y,
+               G_GNUC_UNUSED gint n_param,
+               gdouble *param,
+               gdouble *err,
+               G_GNUC_UNUSED const gboolean *fixed_param,
+               G_GNUC_UNUSED gpointer user_data)
 {
     gboolean fres;
+
     fres = TRUE;
-    cdline->builtin->function_fit(x, y, n_dat, param, err, user_data, &fres);
+    cdline->builtin->function_fit(x, y, n_dat, param, err, NULL, &fres);
 }
 
 static void
