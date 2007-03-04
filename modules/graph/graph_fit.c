@@ -93,7 +93,7 @@ typedef struct {
     GtkWidget *curve;
     GtkWidget *chisq;
     GtkWidget *function;
-    GtkWidget *equation;
+    GtkWidget *formula;
     GtkWidget **covar;
     FitParamControl param[MAX_PARAMS];
     GtkWidget *auto_estimate;
@@ -290,10 +290,10 @@ fit_dialog(FitArgs *args)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.equation = gtk_label_new("f(x) =");
-    gtk_misc_set_alignment(GTK_MISC(controls.equation), 0.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls.equation), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.equation,
+    controls.formula = gtk_label_new("f(x) =");
+    gtk_misc_set_alignment(GTK_MISC(controls.formula), 0.0, 0.5);
+    gtk_label_set_selectable(GTK_LABEL(controls.formula), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.formula,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 8);
     row++;
 
@@ -774,7 +774,7 @@ function_changed(GtkComboBox *combo, FitControls *controls)
     args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                                args->function_type);
     nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
-    gtk_label_set_markup(GTK_LABEL(controls->equation),
+    gtk_label_set_markup(GTK_LABEL(controls->formula),
                          gwy_nlfit_preset_get_formula(args->fitfunc));
 
     for (i = 0; i < MAX_PARAMS; i++) {
