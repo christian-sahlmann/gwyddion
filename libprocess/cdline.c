@@ -409,7 +409,8 @@ gwy_cdline_get_name(GwyCDLine* cdline)
  * gwy_cdline_get_definition:
  * @cdline: A critical dimension evaluator.
  *
- * Returns function definition of @cdline (as pixmap).
+ * Gets the name of the image file with critical dimension evaluator
+ * description.
  *
  * Returns: The cdline function definition.
  **/
@@ -425,7 +426,7 @@ gwy_cdline_get_definition(GwyCDLine* cdline)
  * @cdline: A NL evaluator function cdline.
  * @param: A parameter number.
  *
- * Returns the name of parameter number @param of cdline @cdline.
+ * Returns the name of a critical dimension evaluator parameter.
  *
  * The name may contain Pango markup.
  *
