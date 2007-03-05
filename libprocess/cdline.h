@@ -80,7 +80,7 @@ void         gwy_cdline_fit              (GwyCDLine* cdline,
                                           const gdouble *x,
                                           const gdouble *y,
                                           gint n_param,
-                                          gdouble *param,
+                                          gdouble *params,
                                           gdouble *err,
                                           const gboolean *fixed_param,
                                           gpointer user_data);

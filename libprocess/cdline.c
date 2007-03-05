@@ -552,7 +552,7 @@ gwy_cdline_get_value(GwyCDLine *cdline,
  * @err: Array to store parameter errros to, may be %NULL.
  * @fixed_param: Which parameters should be treated as fixed.  It is ignored,
  *               pass %NULL.
- * @user_data: Ignored, pas %NULL.
+ * @user_data: Ignored, pass %NULL.
  *
  * Performs a critical dimension evaulation (fit).
  **/
@@ -562,7 +562,7 @@ gwy_cdline_fit(GwyCDLine* cdline,
                const gdouble *x,
                const gdouble *y,
                G_GNUC_UNUSED gint n_param,
-               gdouble *param,
+               gdouble *params,
                gdouble *err,
                G_GNUC_UNUSED const gboolean *fixed_param,
                G_GNUC_UNUSED gpointer user_data)
@@ -571,7 +571,7 @@ gwy_cdline_fit(GwyCDLine* cdline,
 
     g_return_if_fail(GWY_IS_CDLINE(cdline));
     fres = TRUE;
-    cdline->builtin->function_fit(x, y, n_dat, param, err, NULL, &fres);
+    cdline->builtin->function_fit(x, y, n_dat, params, err, NULL, &fres);
 }
 
 static void
