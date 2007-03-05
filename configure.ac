@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[4])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070303])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070305])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -69,16 +69,15 @@ AC_SUBST(LIBRARY_RELEASE)
 
 #############################################################################
 # Checks for programs and systems.
-AC_DISABLE_STATIC
 # Make libtool stop checking for C++ and Fortran.
-CXX=no
-F77=no
+m4_defun([_LT_AC_LANG_CXX_CONFIG],[:])
+m4_defun([_LT_AC_LANG_F77_CONFIG],[:])
+AC_DISABLE_STATIC
 AC_PROG_CC
 AC_AIX
 AC_GNU_SOURCE
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-AM_PROG_CC_STDC
 AC_PROG_INSTALL
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 GTK_DOC_CHECK(1.8)
