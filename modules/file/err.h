@@ -81,6 +81,14 @@ err_BPP(GError **error, gint bpp)
 }
 
 static inline void
+err_DATA_TYPE(GError **error,
+              gint type)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Data type %d is invalid or unsupported."), type);
+}
+
+static inline void
 err_MISSING_FIELD(GError **error, const gchar *name)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,

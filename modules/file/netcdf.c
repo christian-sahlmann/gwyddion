@@ -554,14 +554,6 @@ err_CDF_ZELEMENTS(GError **error,
                   "of being absent."), field_name);
 }
 
-static inline void
-err_CDF_DATA_TYPE(GError **error,
-                  NetCDFType type)
-{
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Data type %d is invalid or unsupported."), type);
-}
-
 static gboolean
 cdffile_read_dim_array(NetCDFDim **pdims,
                        gint *pndims,
@@ -675,7 +667,7 @@ cdffile_read_attr_array(NetCDFAttr **pattrs,
                   i, attrs[i].name, attrs[i].nelems, attrs[i].type);
         ts = cdffile_type_size(attrs[i].type);
         if (!ts) {
-            err_CDF_DATA_TYPE(error, attrs[i].type);
+            err_DATA_TYPE(error, attrs[i].type);
             return FALSE;
         }
         n = ts*attrs[i].nelems;
@@ -765,7 +757,7 @@ cdffile_read_var_array(NetCDFVar **pvars,
         vars[i].type = gwy_get_guint32_be(p);
         ts = cdffile_type_size(vars[i].type);
         if (!ts) {
-            err_CDF_DATA_TYPE(error, vars[i].type);
+            err_DATA_TYPE(error, vars[i].type);
             return FALSE;
         }
         vars[i].vsize = gwy_get_guint32_be(p);

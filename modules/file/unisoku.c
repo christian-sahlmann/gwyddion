@@ -205,7 +205,7 @@ unisoku_load(const gchar *filename,
     if (ufile.data_type < UNISOKU_UINT8
         || ufile.data_type > UNISOKU_FLOAT
         || type_sizes[ufile.data_type] == 0) {
-        err_UNSUPPORTED(error, _("data type"));
+        err_DATA_TYPE(error, ufile.data_type);
         unisoku_file_free(&ufile);
         return NULL;
     }

@@ -370,7 +370,7 @@ isdf_image_fill_info(ISDFImage *image,
     image->raw_data_len = entry->count;
     if (image->raw_data_type != GWY_TIFF_SLONG
         && image->raw_data_type != GWY_TIFF_DOUBLE) {
-        err_UNSUPPORTED(error, _("data type"));
+        err_DATA_TYPE(error, image->raw_data_type);
         return FALSE;
     }
 

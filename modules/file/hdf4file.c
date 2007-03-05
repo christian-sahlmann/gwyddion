@@ -697,7 +697,7 @@ get_data_type_size(HDF4TypeInfo id,
         break;
 
         default:
-        err_UNSUPPORTED(error, "data_type");
+        err_DATA_TYPE(error, id);
         return 0;
         break;
     }

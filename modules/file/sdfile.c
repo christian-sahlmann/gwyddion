@@ -409,7 +409,7 @@ check_params(const SDFile *sdfile,
              GError **error)
 {
     if (sdfile->data_type >= SDF_NTYPES) {
-        err_UNSUPPORTED(error, "DataType");
+        err_DATA_TYPE(error, sdfile->data_type);
         return FALSE;
     }
     if (sdfile->expected_size > len) {
