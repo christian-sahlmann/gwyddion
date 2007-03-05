@@ -994,9 +994,14 @@ create_fit_report(FitArgs *args)
         unitp = gwy_cdline_get_param_units(args->fitfunc, i, unitx, unity);
         unitstr = gwy_si_unit_get_string(unitp, GWY_SI_UNIT_FORMAT_PLAIN);
         g_object_unref(unitp);
-        g_string_append_printf(report, "%4s = %g ± %g %s\n",
-                               s, args->param[i].value, args->param[i].error,
-                               unitstr);
+        if (args->param[i].error >= 0.0)
+            g_string_append_printf(report, "%4s = %g ± %g %s\n",
+                                   s, args->param[i].value,
+                                   args->param[i].error,
+                                   unitstr);
+        else
+            g_string_append_printf(report, "%4s = %g %s\n",
+                                   s, args->param[i].value, unitstr);
         g_free(s);
     }
     g_object_unref(unitx);
