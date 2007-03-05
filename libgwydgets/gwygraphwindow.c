@@ -262,11 +262,11 @@ gwy_graph_window_new(GwyGraph *graph)
 
 /**
  * gwy_graph_window_get_graph:
- * @graphwindow: a graph window.
+ * @graphwindow: A graph window.
  *
- * Returns the #GwyGraph widget this graph window currently shows.
+ * Gets the graph widget a graph window currently shows.
  *
- * Returns: The currently shown #GwyGraph widget. (Do not free).
+ * Returns: The currently shown #GwyGraph.
  **/
 GtkWidget*
 gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
@@ -274,6 +274,44 @@ gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
     g_return_val_if_fail(GWY_IS_GRAPH_WINDOW(graphwindow), NULL);
 
     return graphwindow->graph;
+}
+
+/**
+ * gwy_graph_window_get_graph_data:
+ * @graphwindow: A graph window.
+ *
+ * Gets the graph data widget of a graph window.
+ *
+ * Returns: The #GwyGraphData widget of this graph window.  Its model and
+ *          column layout must be considered private.
+ *
+ * Since: 2.5
+ **/
+GtkWidget*
+gwy_graph_window_get_graph_data(GwyGraphWindow *graphwindow)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_WINDOW(graphwindow), NULL);
+
+    return graphwindow->data;
+}
+
+/**
+ * gwy_graph_window_get_graph_curves:
+ * @graphwindow: A graph window.
+ *
+ * Gets the graph curves widget of a graph window.
+ *
+ * Returns: The #GwyGraphCurves widget of this graph window.  Its model and
+ *          column layout must be considered private.
+ *
+ * Since: 2.5
+ **/
+GtkWidget*
+gwy_graph_window_get_graph_curves(GwyGraphWindow *graphwindow)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_WINDOW(graphwindow), NULL);
+
+    return graphwindow->curves;
 }
 
 /*XXX: the "tips" line below is hard to understand */

@@ -84,6 +84,8 @@ struct _GwyGraphWindowClass {
 GType        gwy_graph_window_get_type          (void) G_GNUC_CONST;
 GtkWidget*   gwy_graph_window_new               (GwyGraph *graph);
 GtkWidget*   gwy_graph_window_get_graph         (GwyGraphWindow *graphwindow);
+GtkWidget*   gwy_graph_window_get_graph_data    (GwyGraphWindow *graphwindow);
+GtkWidget*   gwy_graph_window_get_graph_curves  (GwyGraphWindow *graphwindow);
 void         gwy_graph_window_class_set_tooltips(GtkTooltips *tips);
 GtkTooltips* gwy_graph_window_class_get_tooltips(void);
 
