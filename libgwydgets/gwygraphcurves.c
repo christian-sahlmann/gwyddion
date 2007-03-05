@@ -29,11 +29,6 @@
 #include <libgwydgets/gwydgetutils.h>
 #include "gwygraphareadialog.h"
 
-/* The GtkTargetEntry for tree model drags.
- * FIXME: Is it Gtk+ private or what? */
-#define GTK_TREE_MODEL_ROW \
-    { "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_APP, 0 }
-
 enum {
     HANDLER_NOTIFY_N_CURVES,
     HANDLER_CURVE_NOTIFY,
@@ -439,8 +434,6 @@ render_column(GtkCellLayout *column,
 static void
 gwy_graph_curves_setup(GwyGraphCurves *graph_curves)
 {
-    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
-
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GtkTreeView *treeview;
@@ -535,15 +528,6 @@ gwy_graph_curves_setup(GwyGraphCurves *graph_curves)
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, FALSE);
     gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
                                        render_column, graph_curves, NULL);
-
-    /* DnD */
-    /* XXX: Requires support from the model.  This is unlikely to be
-     * implemented in GwyNullStore.  */
-    gtk_tree_view_enable_model_drag_source(treeview,
-                                           GDK_BUTTON1_MASK,
-                                           dnd_target_table,
-                                           G_N_ELEMENTS(dnd_target_table),
-                                           GDK_ACTION_COPY);
 }
 
 /************************** Documentation ****************************/
