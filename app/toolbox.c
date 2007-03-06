@@ -30,6 +30,11 @@
 #include "gwyappinternal.h"
 #include "gwyddion.h"
 
+#ifdef HAVE_REMOTE_WIN32
+#include <gdk/gdkwin32.h>
+#include <shlobj.h>
+#endif
+
 enum {
     DND_TARGET_STRING = 1,
 };

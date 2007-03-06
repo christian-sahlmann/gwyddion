@@ -58,6 +58,7 @@
 #endif
 
 #ifdef HAVE_REMOTE_WIN32
+#include <gdk/gdkwin32.h>
 #include <shlobj.h>
 #endif
 
