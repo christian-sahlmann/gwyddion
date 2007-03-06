@@ -180,11 +180,12 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 
-static GQuark container_quark = 0;
-static GQuark own_key_quark   = 0;
-static GQuark page_id_quark   = 0;  /* NB: data is pageno+1, not pageno */
-static GQuark filename_quark  = 0;
-static GQuark column_id_quark = 0;
+static GQuark container_quark    = 0;
+static GQuark own_key_quark      = 0;
+static GQuark page_id_quark      = 0;  /* NB: data is pageno+1, not pageno */
+static GQuark filename_quark     = 0;
+static GQuark column_id_quark    = 0;
+static GQuark graph_window_quark = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
@@ -1424,6 +1425,59 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
     return TRUE;
 }
 
+static gboolean
+gwy_app_graph_window_dnd_curve_received(GtkWidget *destwidget,
+                                        GtkTreeModel *model,
+                                        GtkTreePath *path)
+{
+    GwyGraphWindow *destwindow, *srcwindow;
+    GwyGraphModel *destmodel, *srcmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *destunit, *srcunit;
+    const gint *indices;
+    GtkWidget *w;
+    gboolean ok;
+
+    srcwindow = GWY_GRAPH_WINDOW(g_object_get_qdata(G_OBJECT(model),
+                                                    graph_window_quark));
+    destwindow = GWY_GRAPH_WINDOW(destwidget);
+
+    w = gwy_graph_window_get_graph(srcwindow);
+    srcmodel = gwy_graph_get_model(GWY_GRAPH(w));
+    w = gwy_graph_window_get_graph(destwindow);
+    destmodel = gwy_graph_get_model(GWY_GRAPH(w));
+
+    /* Ignore drops to the same graph */
+    if (srcmodel == destmodel)
+        return FALSE;
+
+    /* Check units compatibility */
+    g_object_get(srcmodel, "si-unit-x", &srcunit, NULL);
+    g_object_get(destmodel, "si-unit-x", &destunit, NULL);
+    ok = gwy_si_unit_equal(srcunit, destunit);
+    g_object_unref(srcunit);
+    g_object_unref(destunit);
+    if (!ok)
+        return FALSE;
+
+    g_object_get(srcmodel, "si-unit-y", &srcunit, NULL);
+    g_object_get(destmodel, "si-unit-y", &destunit, NULL);
+    ok = gwy_si_unit_equal(srcunit, destunit);
+    g_object_unref(srcunit);
+    g_object_unref(destunit);
+    if (!ok)
+        return FALSE;
+
+    /* Copy curve */
+    indices = gtk_tree_path_get_indices(path);
+    gcmodel = gwy_graph_model_get_curve(srcmodel, indices[0]);
+    gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+    gwy_graph_model_add_curve(destmodel, gcmodel);
+    g_object_unref(gcmodel);
+
+    return TRUE;
+}
+
 static void
 gwy_app_window_dnd_data_received(GtkWidget *window,
                                  GdkDragContext *context,
@@ -1445,6 +1499,17 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
     if (!gtk_tree_get_row_drag_data(data, &model, &path)) {
         g_warning("Cannot get row drag data");
         gtk_drag_finish(context, FALSE, FALSE, time_);
+        return;
+    }
+
+    window = gtk_widget_get_ancestor(window, GTK_TYPE_WINDOW);
+    if (GWY_IS_GRAPH_WINDOW(window)
+        && g_object_get_qdata(G_OBJECT(model), graph_window_quark)) {
+        gboolean ok;
+
+        ok = gwy_app_graph_window_dnd_curve_received(window, model, path);
+        gtk_tree_path_free(path);
+        gtk_drag_finish(context, ok, FALSE, time_);
         return;
     }
 
@@ -1631,6 +1696,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
     _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
 
+    /* Channel DnD */
     gtk_drag_dest_set(data_window, GTK_DEST_DEFAULT_ALL,
                       dnd_target_table, G_N_ELEMENTS(dnd_target_table),
                       GDK_ACTION_COPY);
@@ -2285,7 +2351,8 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
 {
     static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
 
-    GtkWidget *graph, *graph_window;
+    GtkWidget *graph, *curves, *graph_window;
+    GtkTreeModel *model;
     gchar key[40];
     GObject *gmodel;
 
@@ -2310,11 +2377,22 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window));
     gtk_window_set_default_size(GTK_WINDOW(graph_window), 480, 360);
 
+    /* Graph DnD */
     gtk_drag_dest_set(graph_window, GTK_DEST_DEFAULT_ALL,
                       dnd_target_table, G_N_ELEMENTS(dnd_target_table),
                       GDK_ACTION_COPY);
     g_signal_connect(graph_window, "drag-data-received",
                      G_CALLBACK(gwy_app_window_dnd_data_received), browser);
+
+    /* Graph curve DnD */
+    curves = gwy_graph_window_get_graph_curves(GWY_GRAPH_WINDOW(graph_window));
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(curves));
+    g_object_set_qdata(G_OBJECT(model), graph_window_quark, graph_window);
+    gtk_tree_view_enable_model_drag_source(GTK_TREE_VIEW(curves),
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
 
     /* FIXME: A silly place for this? */
     gwy_app_data_browser_set_file_present(browser, TRUE);
@@ -2891,6 +2969,8 @@ gwy_app_get_data_browser(void)
         = g_quark_from_static_string("gwy-app-data-browser-column-id");
     filename_quark
         = g_quark_from_static_string("/filename");
+    graph_window_quark
+        = g_quark_from_static_string("gwy-app-data-browser-window-model");
 
     browser = g_new0(GwyAppDataBrowser, 1);
     gwy_app_data_browser = browser;
