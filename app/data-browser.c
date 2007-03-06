@@ -236,6 +236,13 @@ gwy_app_data_proxy_compare(gconstpointer a,
     return g_utf8_collate(fa, fb);
 }
 
+/**
+ * gwy_app_data_browser_set_file_present:
+ * @browser: A data browser.
+ * @present: %TRUE when a file is opened, %FALSE when no file is opened.
+ *
+ * Updates sensitivity groups according to file existence state.
+ **/
 static void
 gwy_app_data_browser_set_file_present(GwyAppDataBrowser *browser,
                                       gboolean present)
@@ -393,10 +400,18 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
     return i;
 }
 
+/**
+ * gwy_app_data_proxy_add_object:
+ * @list: A data proxy list.
+ * @i: Object id.
+ * @object: The object to add (data field, graph model, ...).
+ *
+ * Adds an object to data proxy list.
+ **/
 static void
-gwy_app_data_proxy_connect_object(GwyAppDataList *list,
-                                  gint i,
-                                  GObject *object)
+gwy_app_data_proxy_add_object(GwyAppDataList *list,
+                              gint i,
+                              GObject *object)
 {
     GtkTreeIter iter;
 
@@ -409,6 +424,15 @@ gwy_app_data_proxy_connect_object(GwyAppDataList *list,
         list->last = i;
 }
 
+/**
+ * gwy_app_data_proxy_channel_changed:
+ * @channel: The data field representing a channel.
+ * @proxy: Data proxy.
+ *
+ * Updates channel display in the data browser when channel data change.
+ *
+ * (Currently does not do anything.)
+ **/
 static void
 gwy_app_data_proxy_channel_changed(G_GNUC_UNUSED GwyDataField *channel,
                                    G_GNUC_UNUSED GwyAppDataProxy *proxy)
@@ -416,6 +440,15 @@ gwy_app_data_proxy_channel_changed(G_GNUC_UNUSED GwyDataField *channel,
     gwy_debug("proxy=%p channel=%p", proxy, channel);
 }
 
+/**
+ * gwy_app_data_proxy_connect_channel:
+ * @proxy: Data proxy.
+ * @i: Channel id.
+ * @object: The data field to add (passed as #GObject).
+ *
+ * Adds a data field as channel of specified id, setting qdata and connecting
+ * signals.
+ **/
 static void
 gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
                                    gint i,
@@ -424,7 +457,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_connect_object(&proxy->lists[PAGE_CHANNELS], i, object);
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], i, object);
     g_snprintf(key, sizeof(key), "/%d/data", i);
     gwy_debug("Setting keys on DataField %p (%s)", object, key);
     quark = g_quark_from_string(key);
@@ -435,6 +468,14 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
                      G_CALLBACK(gwy_app_data_proxy_channel_changed), proxy);
 }
 
+/**
+ * gwy_app_data_proxy_disconnect_channel:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the channel in @proxy's list store.
+ *
+ * Disconnects signals from a channel data field, removes qdata and finally
+ * removes it from the data proxy list store.
+ **/
 static void
 gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
                                       GtkTreeIter *iter)
@@ -451,6 +492,15 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
     gtk_list_store_remove(proxy->lists[PAGE_CHANNELS].store, iter);
 }
 
+/**
+ * gwy_app_data_proxy_reconnect_channel:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the channel in @proxy's list store.
+ * @object: The data field representing the channel (passed as #GObject).
+ *
+ * Updates data proxy's list store when the data field representing a channel
+ * is switched for another data field.
+ **/
 static void
 gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
                                      GtkTreeIter *iter,
@@ -476,6 +526,13 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
     g_object_unref(old);
 }
 
+/**
+ * gwy_app_data_proxy_graph_changed:
+ * @graph: The graph model representing a graph.
+ * @proxy: Data proxy.
+ *
+ * Updates graph display in the data browser when graph data change.
+ **/
 static void
 gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
                                  G_GNUC_UNUSED GParamSpec *pspec,
@@ -499,6 +556,15 @@ gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
                                &iter, NULL, -1);
 }
 
+/**
+ * gwy_app_data_proxy_connect_graph:
+ * @proxy: Data proxy.
+ * @i: Channel id.
+ * @object: The graph model to add (passed as #GObject).
+ *
+ * Adds a graph model as graph of specified id, setting qdata and connecting
+ * signals.
+ **/
 static void
 gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
                                  gint i,
@@ -507,7 +573,7 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
     gchar key[32];
     GQuark quark;
 
-    gwy_app_data_proxy_connect_object(&proxy->lists[PAGE_GRAPHS], i, object);
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], i, object);
     g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
     gwy_debug("Setting keys on GraphModel %p (%s)", object, key);
     quark = g_quark_from_string(key);
@@ -518,6 +584,14 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
                      G_CALLBACK(gwy_app_data_proxy_graph_changed), proxy);
 }
 
+/**
+ * gwy_app_data_proxy_disconnect_graph:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the graph in @proxy's list store.
+ *
+ * Disconnects signals from a graph graph model, removes qdata and finally
+ * removes it from the data proxy list store.
+ **/
 static void
 gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
                                     GtkTreeIter *iter)
@@ -534,6 +608,15 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
     gtk_list_store_remove(proxy->lists[PAGE_GRAPHS].store, iter);
 }
 
+/**
+ * gwy_app_data_proxy_reconnect_graph:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the graph in @proxy's list store.
+ * @object: The graph model representing the graph (passed as #GObject).
+ *
+ * Updates data proxy's list store when the graph model representing a graph
+ * is switched for another graph model.
+ **/
 static void
 gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
                                    GtkTreeIter *iter,
@@ -632,6 +715,15 @@ gwy_app_data_proxy_scan_data(gpointer key,
     }
 }
 
+/**
+ * gwy_app_data_proxy_visible_count:
+ * @proxy: Data proxy.
+ *
+ * Calculates the total number of visible objects in all data proxy object
+ * lists.
+ *
+ * Returns: The total number of visible objects.
+ **/
 static inline gint
 gwy_app_data_proxy_visible_count(GwyAppDataProxy *proxy)
 {
@@ -924,18 +1016,37 @@ gwy_app_data_proxy_queue_finalize(GwyAppDataProxy *proxy)
     proxy->finalize_id = g_idle_add(&gwy_app_data_proxy_finalize, proxy);
 }
 
+/**
+ * gwy_app_data_proxy_maybe_finalize:
+ * @proxy: Data proxy.
+ *
+ * Checks whether there are any visible objects in a data proxy.
+ *
+ * If there are none, it queues finalization.  However, if @keep_invisible
+ * flag is set on the proxy, it is not finalized.
+ **/
 static void
 gwy_app_data_proxy_maybe_finalize(GwyAppDataProxy *proxy)
 {
     gwy_debug("proxy %p", proxy);
 
-    if (gwy_app_data_proxy_visible_count(proxy) == 0
-        && !proxy->keep_invisible) {
+    if (!proxy->keep_invisible
+        && gwy_app_data_proxy_visible_count(proxy) == 0) {
         gwy_app_data_proxy_destroy_all_3d(proxy);
         gwy_app_data_proxy_queue_finalize(proxy);
     }
 }
 
+/**
+ * gwy_app_data_proxy_list_setup:
+ * @list: A data proxy list.
+ *
+ * Creates the list store of a data proxy object list and performs some basic
+ * setup.
+ *
+ * XXX: The @last field is set to -1, however for historical reasons graphs
+ * are 1-based and therefore graph lists need to set it to 0.
+ **/
 static void
 gwy_app_data_proxy_list_setup(GwyAppDataList *list)
 {
@@ -982,6 +1093,15 @@ gwy_app_data_list_update_last(GwyAppDataList *list,
     list->last = max;
 }
 
+/**
+ * gwy_app_data_list_row_activated:
+ * @treeview: Tree view representing a data browser object list.
+ * @path: Path of the activated row in the tree view.
+ * @column: Activated tree column.
+ * @user_data: Unused.
+ *
+ * Starts editing of object title when its row is activated.
+ **/
 static void
 gwy_app_data_list_row_activated(GtkTreeView *treeview,
                                 GtkTreePath *path,
