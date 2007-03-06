@@ -425,6 +425,34 @@ gwy_app_data_proxy_add_object(GwyAppDataList *list,
 }
 
 /**
+ * gwy_app_data_proxy_switch_object_data:
+ * @proxy: Data proxy (not actually used except for sanity check).
+ * @old: Old object.
+ * @object: New object.
+ *
+ * Moves qdata set on data proxy object list objects from one object to another
+ * one, unsetting them on the old object.
+ **/
+static void
+gwy_app_data_proxy_switch_object_data(G_GNUC_UNUSED GwyAppDataProxy *proxy,
+                                      GObject *old,
+                                      GObject *object)
+{
+    gpointer old_container, old_own_key;
+
+    old_container = g_object_get_qdata(old, container_quark);
+    g_return_if_fail(old_container == proxy->container);
+
+    old_own_key = g_object_get_qdata(old, own_key_quark);
+    g_return_if_fail(own_key_quark);
+
+    g_object_set_qdata(old, container_quark, NULL);
+    g_object_set_qdata(old, own_key_quark, NULL);
+    g_object_set_qdata(object, container_quark, old_container);
+    g_object_set_qdata(object, own_key_quark, old_own_key);
+}
+
+/**
  * gwy_app_data_proxy_channel_changed:
  * @channel: The data field representing a channel.
  * @proxy: Data proxy.
@@ -459,7 +487,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
 
     gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], i, object);
     g_snprintf(key, sizeof(key), "/%d/data", i);
-    gwy_debug("Setting keys on DataField %p (%s)", object, key);
+    gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
@@ -485,6 +513,9 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
+    gwy_debug("%p: from %p", object, proxy->container);
+    g_object_set_qdata(object, container_quark, NULL);
+    g_object_set_qdata(object, own_key_quark, NULL);
     g_signal_handlers_disconnect_by_func(object,
                                          gwy_app_data_proxy_channel_changed,
                                          proxy);
@@ -514,10 +545,7 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_channel_changed,
                                          proxy);
-    g_object_set_qdata(object, container_quark,
-                       g_object_get_qdata(old, container_quark));
-    g_object_set_qdata(object, own_key_quark,
-                       g_object_get_qdata(old, own_key_quark));
+    gwy_app_data_proxy_switch_object_data(proxy, old, object);
     gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
@@ -575,7 +603,7 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
 
     gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], i, object);
     g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
-    gwy_debug("Setting keys on GraphModel %p (%s)", object, key);
+    gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
@@ -601,6 +629,9 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
+    gwy_debug("%p: from %p", object, proxy->container);
+    g_object_set_qdata(object, container_quark, NULL);
+    g_object_set_qdata(object, own_key_quark, NULL);
     g_signal_handlers_disconnect_by_func(object,
                                          gwy_app_data_proxy_graph_changed,
                                          proxy);
@@ -630,10 +661,7 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_graph_changed,
                                          proxy);
-    g_object_set_qdata(object, container_quark,
-                       g_object_get_qdata(old, container_quark));
-    g_object_set_qdata(object, own_key_quark,
-                       g_object_get_qdata(old, own_key_quark));
+    gwy_app_data_proxy_switch_object_data(proxy, old, object);
     gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
