@@ -114,7 +114,7 @@ LIBXML2_CFLAGS = -I "$(LIBXML2_TOP)\include\libxml2"
 LIBXML2_LDFLAGS = /libpath:"$(LIBXML2_TOP)\lib"
 LIBXML2_LIBS = xml2.lib
 
-INSTALL = copy
+INSTALL = copy /y
 LINK32 = link.exe
 
 CCOMPILER = cl
@@ -155,8 +155,6 @@ clean::
 
 "$(TOP_SRCDIR)/inst.stamp":
 	-@mkdir "$(DEST_DIR)"
-	$(INSTALL) data\gwyddion.iss inst\gwyddion.iss
-	$(INSTALL) data\gwyddion-devel.iss inst\gwyddion-devel.iss
 	-@mkdir "$(DEST_DIR)\include"
 	-@mkdir "$(DEST_DIR)\include\libdraw"
 	-@mkdir "$(DEST_DIR)\include\app"
