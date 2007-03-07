@@ -390,7 +390,7 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(range_changed), &controls);
     gwy_widget_set_activate_on_unfocus(controls.from, TRUE);
 
-    label = gtk_label_new(_("to"));
+    label = gtk_label_new(_("range|to"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.to = gtk_entry_new();
@@ -639,7 +639,7 @@ fit_plot_curve(FitArgs *args)
     }
     g_object_set(cmodel,
                  "description",
-                 initial ? _("Estimate") : gwy_sgettext("noun|Fit"),
+                 initial ? _("noun|Estimate") : gwy_sgettext("noun|Fit"),
                  NULL);
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
 }

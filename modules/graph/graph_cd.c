@@ -298,7 +298,7 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(range_changed), &controls);
     gwy_widget_set_activate_on_unfocus(controls.from, TRUE);
 
-    label = gtk_label_new(_("to"));
+    label = gtk_label_new(_("range|to"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.to = gtk_entry_new();
