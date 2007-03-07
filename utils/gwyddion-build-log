@@ -31,6 +31,7 @@ cat >build_documentation.ignore <<':'
 ^Computing chunks\.\.\.
 ^  These can be found in [a-z]\+-unused\.txt\.
 ^  They should be added to [a-z]\+-sections\.txt in the appropriate place\.
+^ID recommended on sect2:
 ':'
 :
 
