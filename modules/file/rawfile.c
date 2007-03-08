@@ -169,6 +169,10 @@ static void          xyreseq_changed_cb            (RawFileControls *controls);
 static void          xyreal_changed_cb             (GtkAdjustment *adj,
                                                     RawFileControls *controls);
 static void          xymeasureeq_changed_cb        (RawFileControls *controls);
+static void          set_combo_from_unit           (GtkWidget *combo,
+                                                    const gchar *str);
+static void          units_change_cb               (GtkWidget *button,
+                                                    RawFileControls *controls);
 static void          bintext_changed_cb            (GtkWidget *button,
                                                     RawFileControls *controls);
 static void          preview_cb                    (RawFileControls *controls);
@@ -240,10 +244,6 @@ static const GwyEnum builtin_menu[] = {
     { N_("IEEE double"),          RAW_IEEE_DOUBLE     },
 };
 
-static const gboolean takeover_default    = FALSE;
-static const gboolean xyreseq_default     = TRUE;
-static const gboolean xymeasureeq_default = TRUE;
-
 static const gchar builtin_key[]     = "/module/rawfile/builtin";
 static const gchar byteswap_key[]    = "/module/rawfile/byteswap";
 static const gchar decomma_key[]     = "/module/rawfile/decomma";
@@ -271,6 +271,10 @@ static const gchar yres_key[]        = "/module/rawfile/yres";
 static const gchar zexponent_key[]   = "/module/rawfile/zexponent";
 static const gchar zscale_key[]      = "/module/rawfile/zscale";
 static const gchar zunit_key[]       = "/module/rawfile/zunit";
+
+static const gboolean takeover_default    = FALSE;
+static const gboolean xyreseq_default     = TRUE;
+static const gboolean xymeasureeq_default = TRUE;
 
 /* for read_ascii_data() error reporting */
 static GQuark error_domain = 0;
@@ -620,13 +624,19 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_size_group_add_widget(sizegroup, hbox);
     gtk_container_add(GTK_CONTAINER(align), hbox);
 
-    gwy_si_unit_set_from_string(unit, "m");
-    controls->xyexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
-                                                         -12, 3, unit,
-                                                         args->p.xyexponent);
+    gwy_si_unit_set_from_string(unit, args->p.xyunit);
+    controls->xyexponent
+        = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                        args->p.xyexponent - 6,
+                                        args->p.xyexponent + 6,
+                                        unit,
+                                        args->p.xyexponent);
     gtk_box_pack_start(GTK_BOX(hbox), controls->xyexponent, FALSE, FALSE, 0);
 
     controls->xyunits = gtk_button_new_with_label(_("Change"));
+    g_object_set_data(G_OBJECT(controls->xyunits), "id", (gpointer)"xy");
+    g_signal_connect(controls->xyunits, "clicked",
+                     G_CALLBACK(units_change_cb), controls);
     gtk_box_pack_end(GTK_BOX(hbox), controls->xyunits, FALSE, FALSE, 0);
     row++;
 
@@ -669,13 +679,20 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_size_group_add_widget(sizegroup, hbox);
     gtk_container_add(GTK_CONTAINER(align), hbox);
 
-    controls->zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
-                                                        -12, 3, unit,
-                                                        args->p.zexponent);
+    gwy_si_unit_set_from_string(unit, args->p.zunit);
+    controls->zexponent
+        = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                        args->p.zexponent - 6,
+                                        args->p.zexponent + 6,
+                                        unit,
+                                        args->p.zexponent);
     gtk_box_pack_start(GTK_BOX(hbox), controls->zexponent, FALSE, FALSE, 0);
     g_object_unref(unit);
 
     controls->zunits = gtk_button_new_with_label(_("Change"));
+    g_object_set_data(G_OBJECT(controls->zunits), "id", (gpointer)"z");
+    g_signal_connect(controls->zunits, "clicked",
+                     G_CALLBACK(units_change_cb), controls);
     gtk_box_pack_end(GTK_BOX(hbox), controls->zunits, FALSE, FALSE, 0);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -1263,6 +1280,79 @@ xymeasureeq_changed_cb(RawFileControls *controls)
 }
 
 static void
+set_combo_from_unit(GtkWidget *combo,
+                    const gchar *str)
+{
+    GwySIUnit *unit;
+    gint power10;
+
+    unit = gwy_si_unit_new_parse(str, &power10);
+    gwy_combo_box_metric_unit_set_unit(GTK_COMBO_BOX(combo),
+                                       power10 - 6, power10 + 6, unit);
+    g_object_unref(unit);
+}
+
+static void
+units_change_cb(GtkWidget *button,
+                RawFileControls *controls)
+{
+    GtkWidget *dialog, *hbox, *label, *entry;
+    const gchar *id, *unit;
+    gint response;
+
+    update_dialog_values(controls);
+    id = g_object_get_data(G_OBJECT(button), "id");
+    dialog = gtk_dialog_new_with_buttons(_("Change Units"),
+                                         GTK_WINDOW(controls->dialog),
+                                         GTK_DIALOG_MODAL
+                                         | GTK_DIALOG_NO_SEPARATOR,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+    hbox = gtk_hbox_new(FALSE, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(_("New _units:"));
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+    entry = gtk_entry_new();
+    if (gwy_strequal(id, "xy"))
+        gtk_entry_set_text(GTK_ENTRY(entry), controls->args->p.xyunit);
+    else if (gwy_strequal(id, "z"))
+        gtk_entry_set_text(GTK_ENTRY(entry), controls->args->p.zunit);
+    else
+        g_return_if_reached();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
+    gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+
+    gtk_widget_show_all(dialog);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (response != GTK_RESPONSE_OK) {
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
+    unit = gtk_entry_get_text(GTK_ENTRY(entry));
+    if (gwy_strequal(id, "xy")) {
+        set_combo_from_unit(controls->xyexponent, unit);
+        g_free(controls->args->p.xyunit);
+        controls->args->p.xyunit = g_strdup(unit);
+    }
+    else if (gwy_strequal(id, "z")) {
+        set_combo_from_unit(controls->zexponent, unit);
+        g_free(controls->args->p.zunit);
+        controls->args->p.zunit = g_strdup(unit);
+    }
+
+    gtk_widget_destroy(dialog);
+}
+
+static void
 bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
                    RawFileControls *controls)
 {
@@ -1539,11 +1629,13 @@ update_dialog_controls(RawFileControls *controls)
                                  args->xymeasureeq);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
                                   args->p.xyexponent);
+    set_combo_from_unit(controls->xyexponent, args->p.xyunit);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zscale));
     gtk_adjustment_set_value(adj, args->p.zscale);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
                                   args->p.zexponent);
+    set_combo_from_unit(controls->zexponent, args->p.zunit);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->takeover),
                                  args->takeover);
@@ -2276,7 +2368,7 @@ rawfile_load_args(GwyContainer *settings,
     GwyRawFilePresetData *data = &args->p;
     const guchar *s = NULL;
 
-    args->preset = g_string_new("");
+    args->preset = g_string_new(NULL);
     args->takeover = takeover_default;
     args->xyreseq = xyreseq_default;
     args->xymeasureeq = xymeasureeq_default;
@@ -2329,7 +2421,7 @@ rawfile_load_args(GwyContainer *settings,
     gwy_container_gis_int32_by_name(settings, skipfields_key,
                                     &data->skipfields);
     gwy_container_gis_string_by_name(settings, delimiter_key,
-                                    (const guchar**) &data->delimiter);
+                                    (const guchar**)&data->delimiter);
 
     data->delimiter = g_strdup(data->delimiter);
 
