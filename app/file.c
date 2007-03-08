@@ -209,6 +209,7 @@ gwy_app_file_open(void)
     GtkWidget *dialog;
     GSList *filenames = NULL, *l;
     gchar *name, *filename_utf8, *filename_sys;
+    const gchar *loaded_as = NULL;
     GwyContainer *data;
     gint response;
 
@@ -227,6 +228,10 @@ gwy_app_file_open(void)
     if (data) {
         g_object_ref(data);
         gwy_debug("got %s data from preview", filename_utf8);
+        if (!gwy_file_get_data_info(data, &loaded_as, NULL)) {
+            g_warning("Cannot obtain previewed file type.");
+            loaded_as = name;
+        }
     }
     if (response == GTK_RESPONSE_OK)
         filenames = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog));
@@ -235,8 +240,13 @@ gwy_app_file_open(void)
     for (l = filenames; l; l = g_slist_next(l)) {
         gchar *fname_sys = (gchar*)l->data;
 
-        if (data && gwy_strequal(filename_sys, fname_sys))
+        /* To force the file type the user insists on we have to avoid
+         * reusing previewed data. */
+        if (data
+            && gwy_strequal(filename_sys, fname_sys)
+            && (!name || gwy_strequal(name, loaded_as))) {
             gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
+        }
         else
             gwy_app_file_load(NULL, fname_sys, name);
         g_free(fname_sys);
