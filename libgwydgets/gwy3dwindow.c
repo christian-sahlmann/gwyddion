@@ -748,12 +748,14 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
                                        0.05, 10.0, 0.01, 0.1,
                                        FALSE);
     spin = gwy_table_attach_spinbutton(table, row++, _("_Scale:"), NULL, adj);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     adj = gwy_3d_window_make_setup_adj(window, setup, "z-scale",
                                        0.05, 10.0, 0.01, 0.1,
                                        FALSE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     check = gtk_check_button_new_with_mnemonic(_("Show _axes"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
