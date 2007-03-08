@@ -45,9 +45,13 @@
 
 /* Special-cased text data delimiters */
 enum {
-    RAW_DELIM_ANY_WHITESPACE = -1,
-    RAW_DELIM_OTHER          = -2,
-    RAW_DELIM_TAB            =  9,
+    RAW_DELIM_WHITESPACE = -1,
+    RAW_DELIM_OTHER      = -2,
+    RAW_DELIM_TAB        =  9,
+};
+
+enum {
+    PREVIEW_SIZE = 240
 };
 
 enum {
@@ -112,12 +116,15 @@ typedef struct {
     GtkWidget *yreal;
     GtkWidget *xymeasureeq;
     GtkWidget *xyexponent;
+    GtkWidget *xyunits;
     GtkWidget *zscale;
     GtkWidget *zexponent;
+    GtkWidget *zunits;
     GtkWidget *presetlist;
     GtkWidget *presetname;
     GtkWidget *preview;
     GtkWidget *do_preview;
+    GtkWidget *error;
     GtkWidget *save;
     GtkWidget *load;
     GtkWidget *delete;
@@ -142,15 +149,16 @@ static GtkWidget*    rawfile_dialog_format_page    (RawFileArgs *args,
                                                     RawFileControls *controls);
 static GtkWidget*    rawfile_dialog_preset_page    (RawFileArgs *args,
                                                     RawFileControls *controls);
-static GwyDataField* rawfile_read_data_field       (GtkWidget *parent,
+static GwyDataField* rawfile_read_data_field       (RawFileControls *controls,
                                                     RawFileArgs *args,
                                                     RawFileFile *file);
-static void          rawfile_warn_too_short_file   (GtkWidget *parent,
+static void          rawfile_warn_too_short_file   (RawFileControls *controls,
                                                     RawFileFile *file,
                                                     guint reqsize);
-static void          rawfile_warn_parse_error      (GtkWidget *parent,
+static void          rawfile_warn_parse_error      (RawFileControls *controls,
                                                     RawFileFile *file,
                                                     GError *err);
+static void          rawfile_warn_clear            (RawFileControls *controls);
 static void          builtin_changed_cb            (GtkWidget *combo,
                                                     RawFileControls *controls);
 static void          delimiter_changed_cb          (GtkWidget *combo,
@@ -203,7 +211,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0.3",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -359,7 +367,7 @@ rawfile_dialog(RawFileArgs *args,
 {
     RawFileControls controls;
     GwyDataField *dfield = NULL;
-    GtkWidget *dialog, *vbox, *label, *notebook, *hbox, *align;
+    GtkWidget *dialog, *vbox, *label, *notebook, *hbox, *table, *align, *entry;
     GtkAdjustment *adj2;
     gint response;
 
@@ -387,17 +395,17 @@ rawfile_dialog(RawFileArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 0);
 
     /* Sample info */
-    vbox = rawfile_dialog_info_page(args, file, &controls);
+    table = rawfile_dialog_info_page(args, file, &controls);
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
+    gtk_container_add(GTK_CONTAINER(align), table);
     label = gtk_label_new(_("Information"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), align, label);
 
     /* General data format */
-    vbox = rawfile_dialog_format_page(args, &controls);
+    table = rawfile_dialog_format_page(args, &controls);
     label = gtk_label_new(_("Data Format"));
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
+    gtk_container_add(GTK_CONTAINER(align), table);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), align, label);
 
     /* Presets */
@@ -442,6 +450,13 @@ rawfile_dialog(RawFileArgs *args,
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
+        /* Activate currently focused entry.  Without that we can still read the
+         * old value in update_dialog_values().
+         * XXX: Gtk+ bug? */
+        entry = gtk_window_get_focus(GTK_WINDOW(dialog));
+        if (entry && GTK_IS_ENTRY(entry))
+            gtk_widget_activate(entry);
+
         update_dialog_values(&controls);
         switch (response) {
             case GTK_RESPONSE_CANCEL:
@@ -453,7 +468,7 @@ rawfile_dialog(RawFileArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            dfield = rawfile_read_data_field(dialog, args, file);
+            dfield = rawfile_read_data_field(&controls, args, file);
             if (!dfield)
                 response = GTK_RESPONSE_NONE;
             break;
@@ -493,7 +508,8 @@ rawfile_dialog_preview_box(RawFileControls *controls)
     controls->preview = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(vbox), controls->preview, FALSE, FALSE, 0);
 
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 120, 120);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                            PREVIEW_SIZE, PREVIEW_SIZE);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gdk_pixbuf_fill(pixbuf, 0);
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
@@ -501,6 +517,12 @@ rawfile_dialog_preview_box(RawFileControls *controls)
 
     controls->do_preview = gtk_button_new_with_mnemonic(_("_Update"));
     gtk_box_pack_start(GTK_BOX(vbox), controls->do_preview, FALSE, FALSE, 4);
+
+    controls->error = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls->error), 0.0, 0.0);
+    gtk_label_set_line_wrap(GTK_LABEL(controls->error), TRUE);
+    gtk_widget_set_size_request(controls->error, PREVIEW_SIZE, -1);
+    gtk_box_pack_start(GTK_BOX(vbox), controls->error, FALSE, FALSE, 0);
 
     return align;
 }
@@ -510,20 +532,21 @@ rawfile_dialog_info_page(RawFileArgs *args,
                          RawFileFile *file,
                          RawFileControls *controls)
 {
-    GtkWidget *vbox, *label, *table, *button, *align;
+    GtkWidget *label, *table, *button, *align, *hbox;
+    GtkSizeGroup *sizegroup;
     GwySIValueFormat *format;
     GwySIUnit *unit;
     GtkObject *adj;
     gint row;
     gchar *s;
 
-    vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
+    /* To vertically align units Change buttons */
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
 
     table = gtk_table_new(16, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
     label = gtk_label_new(NULL);
@@ -589,14 +612,22 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    align = gtk_alignment_new(0.0, 0.5, 1.0, 0.0);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+
+    hbox = gtk_hbox_new(FALSE, 6);
+    gtk_size_group_add_widget(sizegroup, hbox);
+    gtk_container_add(GTK_CONTAINER(align), hbox);
+
     gwy_si_unit_set_from_string(unit, "m");
     controls->xyexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
                                                          -12, 3, unit,
                                                          args->p.xyexponent);
-    gtk_container_add(GTK_CONTAINER(align), controls->xyexponent);
-    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->xyexponent, FALSE, FALSE, 0);
+
+    controls->xyunits = gtk_button_new_with_label(_("Change"));
+    gtk_box_pack_end(GTK_BOX(hbox), controls->xyunits, FALSE, FALSE, 0);
     row++;
 
     adj = gtk_adjustment_new(args->p.yreal, 0.01, 10000, 1, 100, 100);
@@ -630,14 +661,23 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    align = gtk_alignment_new(0.0, 0.5, 1.0, 0.0);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+
+    hbox = gtk_hbox_new(FALSE, 6);
+    gtk_size_group_add_widget(sizegroup, hbox);
+    gtk_container_add(GTK_CONTAINER(align), hbox);
+
     controls->zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
                                                         -12, 3, unit,
                                                         args->p.zexponent);
-    gtk_container_add(GTK_CONTAINER(align), controls->zexponent);
-    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->zexponent, FALSE, FALSE, 0);
     g_object_unref(unit);
+
+    controls->zunits = gtk_button_new_with_label(_("Change"));
+    gtk_box_pack_end(GTK_BOX(hbox), controls->zunits, FALSE, FALSE, 0);
+
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -651,39 +691,31 @@ rawfile_dialog_info_page(RawFileArgs *args,
     controls->takeover = button;
     row++;
 
-    return vbox;
+    g_object_unref(sizegroup);
+
+    return table;
 }
 
 static GtkWidget*
 rawfile_dialog_format_page(RawFileArgs *args,
                            RawFileControls *controls)
 {
-    static const GwyEnum formats[] = {
-        { N_("_Text data"),   RAW_TEXT,   },
-        { N_("_Binary data"), RAW_BINARY, },
-    };
-    static const GwyEnum delimiter_menu[] = {
-        { N_("Any whitespace"),       RAW_DELIM_ANY_WHITESPACE  },
-        { N_("TAB character"),        RAW_DELIM_TAB             },
-        { N_("Ohter character"),      RAW_DELIM_OTHER           },
-    };
-    GtkWidget *vbox, *label, *table, *button, *entry, *omenu, *combo;
+    GtkWidget *label, *table, *button, *entry, *omenu, *combo;
     GtkObject *adj;
     gint row;
-
-    row = 0;
-    vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
 
     table = gtk_table_new(15, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = 0;
 
-    controls->format = gwy_radio_buttons_create(formats, G_N_ELEMENTS(formats),
-                                                G_CALLBACK(bintext_changed_cb),
-                                                controls,
-                                                args->p.format);
+    controls->format = gwy_radio_buttons_createl(G_CALLBACK(bintext_changed_cb),
+                                                 controls,
+                                                 args->p.format,
+                                                 _("_Text data"), RAW_TEXT,
+                                                 _("_Binary data"), RAW_BINARY,
+                                                 NULL);
     gtk_table_attach_defaults(GTK_TABLE(table),
                               GTK_WIDGET(controls->format->data),
                               0, 3, row, row+1);
@@ -709,9 +741,12 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    combo = gwy_enum_combo_box_new(delimiter_menu, G_N_ELEMENTS(delimiter_menu),
-                                   G_CALLBACK(delimiter_changed_cb), controls,
-                                   -1, TRUE);
+    combo = gwy_enum_combo_box_newl(G_CALLBACK(delimiter_changed_cb), controls,
+                                   -1,
+                                   _("Any whitespace"), RAW_DELIM_WHITESPACE,
+                                   _("TAB character"), RAW_DELIM_TAB,
+                                   _("Ohter character"), RAW_DELIM_OTHER,
+                                   NULL);
     controls->delimmenu = combo;
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
     gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
@@ -808,7 +843,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     controls->sign = button;
     row++;
 
-    return vbox;
+    return table;
 }
 
 static void
@@ -985,7 +1020,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
 }
 
 static GwyDataField*
-rawfile_read_data_field(GtkWidget *parent,
+rawfile_read_data_field(RawFileControls *controls,
                         RawFileArgs *args,
                         RawFileFile *file)
 {
@@ -997,7 +1032,7 @@ rawfile_read_data_field(GtkWidget *parent,
 
     reqsize = rawfile_compute_required_size(args);
     if (reqsize > file->filesize) {
-        rawfile_warn_too_short_file(parent, file, reqsize);
+        rawfile_warn_too_short_file(controls, file, reqsize);
         return NULL;
     }
 
@@ -1025,7 +1060,7 @@ rawfile_read_data_field(GtkWidget *parent,
         case RAW_TEXT:
         if (!rawfile_read_ascii(args, file->buffer,
                                 gwy_data_field_get_data(dfield), &err)) {
-            rawfile_warn_parse_error(parent, file, err);
+            rawfile_warn_parse_error(controls, file, err);
             g_object_unref(dfield);
             g_clear_error(&err);
             return NULL;
@@ -1042,49 +1077,39 @@ rawfile_read_data_field(GtkWidget *parent,
 }
 
 static void
-rawfile_warn_too_short_file(GtkWidget *parent,
+rawfile_warn_too_short_file(RawFileControls *controls,
                             RawFileFile *file,
                             guint32 reqsize)
 {
-    GtkWidget *dialog;
+    gchar *s;
 
-    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
-                                    GTK_DIALOG_DESTROY_WITH_PARENT
-                                    | GTK_DIALOG_MODAL,
-                                    GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_OK,
-                                    _("Too short file."));
-    gtk_message_dialog_format_secondary_text
-        (GTK_MESSAGE_DIALOG(dialog),
-         _("The format would require %u bytes long file (at least), "
-           "but the length of `%s' is only %u bytes."),
-         reqsize, file->filename, file->filesize);
-    gtk_window_set_modal(GTK_WINDOW(parent), FALSE);  /* Bug #66 workaround. */
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-    gtk_window_set_modal(GTK_WINDOW(parent), TRUE);  /* Bug #66 workaround. */
+    s = g_strdup_printf(_("<b>Too short file</b>\n"
+                          "The format would require %u bytes long file "
+                          "(at least), but the length of `%s' is "
+                          "only %u bytes."),
+                        reqsize, file->filename, file->filesize);
+    gtk_label_set_markup(GTK_LABEL(controls->error), s);
+    g_free(s);
 }
 
 static void
-rawfile_warn_parse_error(GtkWidget *parent,
+rawfile_warn_parse_error(RawFileControls *controls,
                          RawFileFile *file,
                          GError *err)
 {
-    GtkWidget *dialog;
+    gchar *s;
 
-    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
-                                    GTK_DIALOG_DESTROY_WITH_PARENT
-                                    | GTK_DIALOG_MODAL,
-                                    GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_OK,
-                                    _("Parsing of %s failed."),
-                                    file->filename);
-    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-                                             "%s.", err->message);
-    gtk_window_set_modal(GTK_WINDOW(parent), FALSE);  /* Bug #66 workaround. */
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-    gtk_window_set_modal(GTK_WINDOW(parent), TRUE);  /* Bug #66 workaround. */
+    s = g_strdup_printf(_("<b>Parsing failed</b>\n"
+                          "The contents of `%s' does not match format: %s."),
+                        file->filename, err->message);
+    gtk_label_set_markup(GTK_LABEL(controls->error), s);
+    g_free(s);
+}
+
+static void
+rawfile_warn_clear(RawFileControls *controls)
+{
+    gtk_label_set_text(GTK_LABEL(controls->error), "");
 }
 
 static void
@@ -1094,6 +1119,7 @@ builtin_changed_cb(GtkWidget *combo,
     gint builtin;
     GtkAdjustment *adj;
 
+    rawfile_warn_clear(controls);
     builtin = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     if (!controls->in_update)
         update_dialog_values(controls);
@@ -1141,7 +1167,7 @@ delimiter_changed_cb(GtkWidget *combo,
         g_free(controls->args->p.delimiter);
     if (delim == RAW_DELIM_TAB)
         controls->args->p.delimiter = g_strdup("\t");
-    else if (delim == RAW_DELIM_ANY_WHITESPACE)
+    else if (delim == RAW_DELIM_WHITESPACE)
         controls->args->p.delimiter = g_strdup("");
     gtk_entry_set_text(GTK_ENTRY(controls->delimiter),
                        controls->args->p.delimiter);
@@ -1155,6 +1181,7 @@ xyres_changed_cb(GtkAdjustment *adj,
     GtkAdjustment *radj;
     gdouble value;
 
+    rawfile_warn_clear(controls);
     value = gtk_adjustment_get_value(adj);
     radj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xres));
     if (radj == adj) {
@@ -1184,6 +1211,7 @@ xyres_changed_cb(GtkAdjustment *adj,
 static void
 xyreseq_changed_cb(RawFileControls *controls)
 {
+    rawfile_warn_clear(controls);
     controls->args->xyreseq
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xyreseq));
     if (!controls->in_update && controls->args->xyreseq) {
@@ -1200,6 +1228,7 @@ xyreal_changed_cb(GtkAdjustment *adj,
     GtkAdjustment *radj;
     gdouble value;
 
+    rawfile_warn_clear(controls);
     value = gtk_adjustment_get_value(adj);
     radj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
     if (radj == adj) {
@@ -1224,6 +1253,7 @@ xyreal_changed_cb(GtkAdjustment *adj,
 static void
 xymeasureeq_changed_cb(RawFileControls *controls)
 {
+    rawfile_warn_clear(controls);
     controls->args->xymeasureeq = gtk_toggle_button_get_active
                                     (GTK_TOGGLE_BUTTON(controls->xymeasureeq));
     if (!controls->in_update && controls->args->xymeasureeq) {
@@ -1236,6 +1266,7 @@ static void
 bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
                    RawFileControls *controls)
 {
+    rawfile_warn_clear(controls);
     if (!controls->in_update) {
         update_dialog_values(controls);
         update_dialog_controls(controls);
@@ -1250,15 +1281,21 @@ preview_cb(RawFileControls *controls)
     gint xres, yres;
     gdouble zoom, avg, rms;
 
+    rawfile_warn_clear(controls);
     update_dialog_values(controls);
-    if (!(dfield = rawfile_read_data_field(controls->dialog,
+    if (!(dfield = rawfile_read_data_field(controls,
                                            controls->args,
-                                           controls->file)))
+                                           controls->file))) {
+        pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(controls->preview));
+        gdk_pixbuf_fill(pixbuf, 0x00000000);
+        /* FIXME: Is it enough? */
+        gtk_widget_queue_draw(controls->preview);
         return;
+    }
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    zoom = 120.0/MAX(xres, yres);
+    zoom = PREVIEW_SIZE/(gdouble)MAX(xres, yres);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
     avg = gwy_data_field_get_avg(dfield);
@@ -1532,7 +1569,7 @@ update_dialog_controls(RawFileControls *controls)
 
     gtk_entry_set_text(GTK_ENTRY(controls->delimiter), args->p.delimiter);
     if (!args->p.delimiter || !*args->p.delimiter)
-        delim = RAW_DELIM_ANY_WHITESPACE;
+        delim = RAW_DELIM_WHITESPACE;
     else if (args->p.delimiter[0] == '\t' && args->p.delimiter[1] == '\0')
         delim = RAW_DELIM_TAB;
     else
