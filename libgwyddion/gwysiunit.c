@@ -746,7 +746,7 @@ gwy_si_unit_parse(GwySIUnit *siunit,
     if (end != string) {
         string = end;
         siunit->power10 = GWY_ROUND(log10(q));
-        if (q <= 0 || fabs(log(q/pow10(siunit->power10))) > 1e-14) {
+        if (q <= 0 || fabs(log(q/pow10(siunit->power10))) > 1e-13) {
             g_warning("Bad multiplier %g", q);
             siunit->power10 = 0;
         }
