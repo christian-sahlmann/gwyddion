@@ -1,12 +1,14 @@
-2.4.20070304
 
-2.5 (0000-00-00)
+2.5 (2007-03-10)
 Application:
 - Options for opening files in an already running instance of Gwyddion were
   added (--remote-new, --remote-existing).
 - It is possible to save a file with graphs only.
 - Drag'n'drop of files onto toolbox actually works now with modern file
   managers and on Win32.
+- It's possible to copy (compatible) curves among graphs by Drag'n'drop from
+  graph Curves, and delete them by pressing Delete key in Curves.
+- Translations updated: Czech, German, Italian.
 
 Libraries:
 - libgwydgets: New GwyGraphCurves widget showing the curve list with
@@ -31,6 +33,8 @@ Libraries:
   around 1 be written without 10^3/10^-3 mupltipliers.
 - libgwydgets: A few more graph symbols were added, useless `double dash'
   line style was removed (from GUI selectors, it remains in the Gdk enum).
+- libgwydgets: Numeric scale and value scale entries in GwyGraphWindow allow
+  non-integer values.
 - libgwyddion: ROUND() was deprecated, use namespace-clean GWY_ROUND().
 
 Modules:
@@ -42,6 +46,8 @@ Modules:
 - Graph fit, Critical dimension: User interface was improved, fitted parameters
   have units, fitted curve can be added to the original graph, results saving
   was integrated into the dialog.
+- Raw file import: It's possible to set arbitrary units, the preview is
+  bigger, user interface improvements.
 - Profile tool: Tool settings are remembered.
 - Omicron: Imported images flipped upside down were fixed.
 
