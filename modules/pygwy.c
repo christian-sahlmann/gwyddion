@@ -37,8 +37,6 @@
 #include "pygwywrap.c"
 #line 39 "pygwy_orig.c"
 
-#define FRACCOR_RUN_MODES GWY_RUN_IMMEDIATE
-
 typedef struct {
     gchar *name;
     gchar *filename;
@@ -99,24 +97,28 @@ pygwy_register_plugins(void)
     gchar *pygwy_plugname;
     PygwyPluginInfo *info;
     gchar *dir;
+    GError *err = NULL;
 
     dir = g_build_filename(gwy_get_user_dir(), pygwy_plugin_dir_name, NULL);
 
     gwy_debug("Plugin path: %s", dir);
 
-    pygwy_plugin_dir = g_dir_open(dir, 0, NULL);
+    pygwy_plugin_dir = g_dir_open(dir, 0, &err);
 
-    if (pygwy_plugin_dir == NULL) {
-        // pygwy plugin directory not found, creating directory
-        g_warning("Cannot open pygwy plugin directory %s", dir);
-        if (g_mkdir(dir, 0700)) {
-            g_warning("Cannot create pygwy plugin directory %s", dir);
+    if (pygwy_plugin_dir == NULL && err) {
+        if (err->code == G_FILE_ERROR_NOENT) { // directory not found/does not exist
+            g_warning("Cannot open pygwy plugin directory %s", dir);
+            if (g_mkdir(dir, 0700)) {
+                g_warning("Cannot create pygwy plugin directory %s", dir);
+            } else {
+                gwy_debug("Pygwy directory created: %s", dir);
+            }
         } else {
-            gwy_debug("Pygwy directory created: %s", dir);
+            g_warning("Cannot open pygwy directory: %s, reason: %s", dir, err->message);
         }
+        g_free(dir);
         /* Whenever the directory has been created or not, there is no reason 
            to continue by reading scripts as long as no script */
-        g_free(dir);
         return;
     }
 
@@ -140,7 +142,7 @@ pygwy_register_plugins(void)
                                   pygwy_plugin_run,
                                   menu_path,
                                   NULL,
-                                  FRACCOR_RUN_MODES,
+                                  GWY_RUN_IMMEDIATE,
                                   GWY_MENU_FLAG_DATA, // TODO: determine correct flag
                                   N_("Function written in Python")) ) { // not very descriptive
             s_pygwy_plugins = g_list_append(s_pygwy_plugins, info);
@@ -151,6 +153,7 @@ pygwy_register_plugins(void)
             g_warning("Cannot register plugin '%s'", pygwy_filename);
         }
     }
+    g_dir_close(pygwy_plugin_dir);
     g_free(dir);
 }
 
