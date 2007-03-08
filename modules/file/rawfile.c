@@ -359,7 +359,7 @@ rawfile_dialog(RawFileArgs *args,
 {
     RawFileControls controls;
     GwyDataField *dfield = NULL;
-    GtkWidget *dialog, *vbox, *label, *notebook, *hbox;
+    GtkWidget *dialog, *vbox, *label, *notebook, *hbox, *align;
     GtkAdjustment *adj2;
     gint response;
 
@@ -388,13 +388,17 @@ rawfile_dialog(RawFileArgs *args,
 
     /* Sample info */
     vbox = rawfile_dialog_info_page(args, file, &controls);
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(align), vbox);
     label = gtk_label_new(_("Information"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), align, label);
 
     /* General data format */
     vbox = rawfile_dialog_format_page(args, &controls);
     label = gtk_label_new(_("Data Format"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(align), vbox);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), align, label);
 
     /* Presets */
     vbox = rawfile_dialog_preset_page(args, &controls);
