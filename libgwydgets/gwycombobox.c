@@ -27,16 +27,22 @@
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwycombobox.h>
 
-static void     cell_translate_func              (GtkCellLayout *cell_layout,
-                                                  GtkCellRenderer *renderer,
-                                                  GtkTreeModel *tree_model,
-                                                  GtkTreeIter *iter,
-                                                  gpointer data);
-static gboolean gwy_enum_combo_box_try_set_active(GtkComboBox *combo,
-                                                  gint active);
-static gboolean gwy_enum_combo_box_find_value    (gpointer key,
-                                                  const GwyEnum *item,
-                                                  gint *i);
+static void     cell_translate_func                (GtkCellLayout *cell_layout,
+                                                    GtkCellRenderer *renderer,
+                                                    GtkTreeModel *tree_model,
+                                                    GtkTreeIter *iter,
+                                                    gpointer data);
+static gboolean gwy_enum_combo_box_try_set_active  (GtkComboBox *combo,
+                                                    gint active);
+static gboolean gwy_enum_combo_box_find_value      (gpointer key,
+                                                    const GwyEnum *item,
+                                                    gint *i);
+static GwyEnum* gwy_combo_box_metric_unit_make_enum(gint from,
+                                                    gint to,
+                                                    GwySIUnit *unit,
+                                                    gint *nentries);
+
+static GQuark enum_quark = 0;
 
 /**
  * gwy_enum_combo_box_new:
@@ -81,11 +87,11 @@ gwy_enum_combo_box_new(const GwyEnum *entries,
     combo = gtk_combo_box_new_with_model(model);
     gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 1);
     g_object_unref(store);
-    layout = GTK_CELL_LAYOUT(combo);
 
     g_assert(gwy_inventory_store_get_column_by_name(store, "name") == 1);
     g_assert(gwy_inventory_store_get_column_by_name(store, "value") == 2);
 
+    layout = GTK_CELL_LAYOUT(combo);
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(layout, renderer, FALSE);
     if (translate)
@@ -266,14 +272,48 @@ cell_translate_func(G_GNUC_UNUSED GtkCellLayout *cell_layout,
     g_object_set(renderer, "markup", method(enum_item->name), NULL);
 }
 
+static void
+gwy_enum_combo_box_set_model(GtkComboBox *combo,
+                             GwyEnum *newenum)
+{
+
+    GwyEnum *oldenum;
+    gint active = -1;
+
+    oldenum = g_object_get_qdata(G_OBJECT(combo), enum_quark);
+    if (oldenum) {
+        active = gwy_enum_combo_box_get_active(combo);
+        gwy_enum_freev(oldenum);
+        g_object_set_qdata(G_OBJECT(combo), enum_quark, NULL);
+    }
+
+    if (newenum) {
+        GwyInventoryStore *store;
+        GwyInventory *inventory;
+
+        inventory = gwy_enum_inventory_new(newenum, -1);
+        store = gwy_inventory_store_new(inventory);
+        g_object_unref(inventory);
+        gtk_combo_box_set_model(combo, GTK_TREE_MODEL(store));
+        g_object_unref(store);
+        g_object_set_qdata(G_OBJECT(combo), enum_quark, newenum);
+
+        if (!oldenum
+            || !gwy_enum_combo_box_try_set_active(combo, active))
+            gtk_combo_box_set_active(combo, 0);
+    }
+    else
+        gtk_combo_box_set_model(combo, NULL);
+}
+
 /**
  * gwy_combo_box_metric_unit_new:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
  * @from: The exponent of 10 the menu should start at (a multiple of 3, will
- *        be rounded towards zero if isn't).
+ *        be rounded downward if isn't).
  * @to: The exponent of 10 the menu should end at (a multiple of 3, will be
- *      rounded towards zero if isn't).
+ *      rounded upward if isn't).
  * @unit: The unit to be prefixed.
  * @active: The power of 10 to show as currently selected (a multiple of 3).
  *
@@ -291,14 +331,62 @@ gwy_combo_box_metric_unit_new(GCallback callback,
                               GwySIUnit *unit,
                               gint active)
 {
-    enum { min = -18, max = 18 };
     GtkWidget *combo;
+    GwyEnum *entries;
+    gint n;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(unit), NULL);
+
+    if (!enum_quark)
+        enum_quark = g_quark_from_static_string
+                                            ("gwy-metric-unit-combo-box-enum");
+
+    entries = gwy_combo_box_metric_unit_make_enum(from, to, unit, &n);
+    combo = gwy_enum_combo_box_new(entries, n, callback, cbdata, active, FALSE);
+    g_object_set_qdata(G_OBJECT(combo), enum_quark, entries);
+    g_signal_connect(combo, "destroy",
+                     G_CALLBACK(gwy_enum_combo_box_set_model), NULL);
+
+    return combo;
+}
+
+/**
+ * gwy_combo_box_metric_unit_set_unit:
+ * @combo: A combo box which was created with gwy_combo_box_metric_unit_new().
+ * @from: The exponent of 10 the menu should start at (a multiple of 3, will
+ *        be rounded downward if isn't).
+ * @to: The exponent of 10 the menu should end at (a multiple of 3, will be
+ *      rounded upward if isn't).
+ * @unit: The unit to be prefixed.
+ *
+ * Changes the unit selection displayed by a metric unit combo box.
+ *
+ * Since: 2.5
+ **/
+void
+gwy_combo_box_metric_unit_set_unit(GtkComboBox *combo,
+                                   gint from,
+                                   gint to,
+                                   GwySIUnit *unit)
+{
+    GwyEnum *entries;
+
+    entries = gwy_combo_box_metric_unit_make_enum(from, to, unit, NULL);
+    gwy_enum_combo_box_set_model(combo, entries);
+}
+
+static GwyEnum*
+gwy_combo_box_metric_unit_make_enum(gint from,
+                                    gint to,
+                                    GwySIUnit *unit,
+                                    gint *nentries)
+{
     GwyEnum *entries;
     GwySIValueFormat *format = NULL;
     gint i, n;
 
-    from = CLAMP(from/3, min, max);
-    to = CLAMP(to/3, min, max);
+    from = from/3;
+    to = (to + 2)/3;
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -317,11 +405,10 @@ gwy_combo_box_metric_unit_new(GCallback callback,
     entries[n].name = NULL;
     gwy_si_unit_value_format_free(format);
 
-    combo = gwy_enum_combo_box_new(entries, n, callback, cbdata, active, FALSE);
-    g_signal_connect_swapped(combo, "destroy",
-                             G_CALLBACK(gwy_enum_freev), entries);
+    if (nentries)
+        *nentries = n;
 
-    return combo;
+    return entries;
 }
 
 /************************** Documentation ****************************/

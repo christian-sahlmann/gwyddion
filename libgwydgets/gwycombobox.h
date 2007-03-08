@@ -27,27 +27,31 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_enum_combo_box_new        (const GwyEnum *entries,
-                                          gint nentries,
-                                          GCallback callback,
-                                          gpointer cbdata,
-                                          gint active,
-                                          gboolean translate);
-GtkWidget* gwy_enum_combo_box_newl       (GCallback callback,
-                                          gpointer cbdata,
-                                          gint active,
-                                          ...);
-GtkWidget* gwy_combo_box_metric_unit_new (GCallback callback,
-                                          gpointer cbdata,
-                                          gint from,
-                                          gint to,
-                                          GwySIUnit *unit,
-                                          gint active);
-void       gwy_enum_combo_box_set_active (GtkComboBox *combo,
-                                          gint active);
-gint       gwy_enum_combo_box_get_active (GtkComboBox *combo);
-void       gwy_enum_combo_box_update_int (GtkComboBox *combo,
-                                          gint *integer);
+GtkWidget* gwy_enum_combo_box_new            (const GwyEnum *entries,
+                                              gint nentries,
+                                              GCallback callback,
+                                              gpointer cbdata,
+                                              gint active,
+                                              gboolean translate);
+GtkWidget* gwy_enum_combo_box_newl           (GCallback callback,
+                                              gpointer cbdata,
+                                              gint active,
+                                              ...);
+GtkWidget* gwy_combo_box_metric_unit_new     (GCallback callback,
+                                              gpointer cbdata,
+                                              gint from,
+                                              gint to,
+                                              GwySIUnit *unit,
+                                              gint active);
+void       gwy_combo_box_metric_unit_set_unit(GtkComboBox *combo,
+                                              gint from,
+                                              gint to,
+                                              GwySIUnit *unit);
+void       gwy_enum_combo_box_set_active     (GtkComboBox *combo,
+                                              gint active);
+gint       gwy_enum_combo_box_get_active     (GtkComboBox *combo);
+void       gwy_enum_combo_box_update_int     (GtkComboBox *combo,
+                                              gint *integer);
 
 G_END_DECLS
 
