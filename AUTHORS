@@ -22,11 +22,11 @@ Nenad Ocelic <ocelic@biochem.mpg.de>
 Rok Zitko <rok.zitko@ijs.si>
     Createc and stmprg import modules, Kuwahara filter.
 Lukáš Chvátal <chvatal@physics.muni.cz>
-    Nanoindentation modules.
+    Nanoindentation modules (the original ones, no longer present).
 Sven Neumann <neumann@jpk.com>
     JPK file import, miscellaneous improvements.
 Jan Hořák <xhorak@gmail.com>
-    SPML import module.
+    SPML import module, Python interface, Win32 remote control.
 Александр Ковалев <av_kov@tut.by>
     Nanotop import module.
 Owain Davies <owain.davies@blueyonder.co.uk>
