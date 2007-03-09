@@ -2285,8 +2285,8 @@ msgid ""
 "s' is only %u bytes."
 msgstr ""
 "<b>Příliš krátký soubor</b>\n"
-"Formát by vyžadoval soubor dlouhý alespoň %u bajtů, ale délka „%s“ je jen "
-"%u bajtů."
+"Formát by vyžadoval soubor dlouhý alespoň %u bajtů, ale délka „%s“ je jen %u "
+"bajtů."
 
 #: modules/file/rawfile.c:1119
 #, c-format
@@ -6621,4 +6621,3 @@ msgstr ""
 "Projektovaná plocha: %s\n"
 "Théta sklonu:        %s\n"
 "Fí sklonu:           %s\n"
-
