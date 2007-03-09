@@ -1,4 +1,5 @@
 
+
 2.5 (2007-03-10)
 Application:
 - Options for opening files in an already running instance of Gwyddion were
@@ -60,7 +61,6 @@ Other:
 - Flag -fno-strict-aliasing is now automatically added to CFLAGS when
   compiled with gcc to prevent miscompilation.
 - Gtk-doc 1.8 or newer is required to rebuild the API reference.
-
 
 
 2.4 (2007-02-01)

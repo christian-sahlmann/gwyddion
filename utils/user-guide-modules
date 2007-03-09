@@ -48,6 +48,7 @@ hdf4file	managing-files
 hitachi-afm	managing-files
 hough	features-inttrans
 immerse	multidata-immerse
+intematix	managing-files
 jpkscan	managing-files
 laplace	features-edit	remove-data-under-mask
 level	features-leveling	plane-level
@@ -66,6 +67,7 @@ microprof	managing-files
 mifile	managing-files
 nanonis	managing-files
 nanoscope	managing-files
+nanoscope-ii	managing-files
 nanotop	managing-files
 netcdf	managing-files
 nt-mdt	managing-files
