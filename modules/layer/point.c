@@ -306,8 +306,8 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
         gwy_data_view_get_pixel_data_sizes(data_view, &xmax, &ymax);
         gdk_drawable_get_size(drawable, &width, &height);
         zoom = sqrt(((gdouble)(width*height))/(xmax*ymax));
-        size = ROUND(MAX(zoom*(CROSS_SIZE - 1), 1.0));
-        radius = ROUND(MAX(zoom*(radius - 1), 1.0));
+        size = GWY_ROUND(MAX(zoom*(CROSS_SIZE - 1), 1.0));
+        radius = GWY_ROUND(MAX(zoom*(radius - 1), 1.0));
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
         xc = floor(xy[0]*width/xreal);
         yc = floor(xy[1]*height/yreal);

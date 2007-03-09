@@ -436,7 +436,7 @@ gwy_layer_line_draw_label(GwyVectorLayer *layer,
     }
 
     g_snprintf(buffer, sizeof(buffer), "<span size=\"%d\">%d</span>",
-               ROUND(MAX(2048.0, zoom*12*1024)), i+1);
+               GWY_ROUND(MAX(2048.0, zoom*12*1024)), i+1);
     pango_layout_set_markup(layer->layout, buffer, -1);
     pixbuf = gwy_layer_line_layout_to_pixbuf(layer->layout);
 
@@ -928,10 +928,10 @@ gwy_layer_line_restrict_angle(GwyDataView *data_view,
     gwy_data_view_coords_real_to_xy(data_view,
                                     xy[2*(1 - ept) + 0], xy[2*(1 - ept) + 1],
                                     &xb, &yb);
-    phi = ROUND(atan2(y - yb, x - xb)*12.0/G_PI);
+    phi = GWY_ROUND(atan2(y - yb, x - xb)*12.0/G_PI);
     s = sin(phi*G_PI/12.0);
     c = cos(phi*G_PI/12.0);
-    length = ROUND(hypot(x - xb, y - yb));
+    length = GWY_ROUND(hypot(x - xb, y - yb));
     if (!length) {
         xy[2*ept + 0] = xy[2*(1 - ept) + 0];
         xy[2*ept + 1] = xy[2*(1 - ept) + 1];
