@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-03-07 03:36+0100\n"
-"PO-Revision-Date: 2007-03-07 21:14+0100\n"
+"POT-Creation-Date: 2007-03-09 03:35+0100\n"
+"PO-Revision-Date: 2007-03-09 12:05+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -257,7 +257,7 @@ msgid "_Phi:"
 msgstr "_Fí:"
 
 #: libgwydgets/gwy3dwindow.c:739 libgwydgets/gwy3dwindow.c:745
-#: libgwydgets/gwy3dwindow.c:855 libgwydgets/gwy3dwindow.c:863
+#: libgwydgets/gwy3dwindow.c:857 libgwydgets/gwy3dwindow.c:865
 #: modules/process/rotate.c:273 modules/process/tip_model.c:234
 #: modules/process/tip_model.c:240 modules/process/unrotate.c:342
 msgid "deg"
@@ -272,87 +272,87 @@ msgstr "_Théta:"
 msgid "_Scale:"
 msgstr "Š_kála:"
 
-#: libgwydgets/gwy3dwindow.c:756
+#: libgwydgets/gwy3dwindow.c:757
 msgid "_Value scale:"
 msgstr "Škála _hodnot:"
 
-#: libgwydgets/gwy3dwindow.c:758
+#: libgwydgets/gwy3dwindow.c:760
 msgid "Show _axes"
 msgstr "Zobrazuj _osy"
 
-#: libgwydgets/gwy3dwindow.c:767
+#: libgwydgets/gwy3dwindow.c:769
 msgid "Show _labels"
 msgstr "Zobrazuj _popisky"
 
-#: libgwydgets/gwy3dwindow.c:776
+#: libgwydgets/gwy3dwindow.c:778
 msgid "_Ortographic projection"
 msgstr "_Ortografická projekce"
 
-#: libgwydgets/gwy3dwindow.c:792
+#: libgwydgets/gwy3dwindow.c:794
 msgid "_Lighting"
 msgstr "_Osvětlení"
 
-#: libgwydgets/gwy3dwindow.c:793
+#: libgwydgets/gwy3dwindow.c:795
 msgid "_Gradient"
 msgstr "_Gradient"
 
-#: libgwydgets/gwy3dwindow.c:832
+#: libgwydgets/gwy3dwindow.c:834
 msgid "_Material:"
 msgstr "_Materiál:"
 
-#: libgwydgets/gwy3dwindow.c:855
+#: libgwydgets/gwy3dwindow.c:857
 msgid "Light _phi:"
 msgstr "_Fí světla:"
 
-#: libgwydgets/gwy3dwindow.c:863
+#: libgwydgets/gwy3dwindow.c:865
 msgid "Light _theta:"
 msgstr "_Théta světla:"
 
-#: libgwydgets/gwy3dwindow.c:900
+#: libgwydgets/gwy3dwindow.c:902
 msgid "X-axis"
 msgstr "X-ová osa"
 
-#: libgwydgets/gwy3dwindow.c:901
+#: libgwydgets/gwy3dwindow.c:903
 msgid "Y-axis"
 msgstr "Y-ová osa"
 
-#: libgwydgets/gwy3dwindow.c:902
+#: libgwydgets/gwy3dwindow.c:904
 msgid "Minimum z value"
 msgstr "Nejmenší hodnota z"
 
-#: libgwydgets/gwy3dwindow.c:903
+#: libgwydgets/gwy3dwindow.c:905
 msgid "Maximum z value"
 msgstr "Největší hodnota z"
 
-#: libgwydgets/gwy3dwindow.c:926
+#: libgwydgets/gwy3dwindow.c:928
 msgid "_Label:"
 msgstr "Pop_isek:"
 
-#: libgwydgets/gwy3dwindow.c:931
+#: libgwydgets/gwy3dwindow.c:933
 msgid "_Text:"
 msgstr "_Text:"
 
-#: libgwydgets/gwy3dwindow.c:951
+#: libgwydgets/gwy3dwindow.c:953
 msgid "Move label"
 msgstr "Pos_uň popisek"
 
-#: libgwydgets/gwy3dwindow.c:960
+#: libgwydgets/gwy3dwindow.c:962
 msgid "_Horizontally:"
 msgstr "_Vodorovně:"
 
-#: libgwydgets/gwy3dwindow.c:970
+#: libgwydgets/gwy3dwindow.c:972
 msgid "_Vertically:"
 msgstr "_Svisle:"
 
-#: libgwydgets/gwy3dwindow.c:978
+#: libgwydgets/gwy3dwindow.c:980
 msgid "Scale size _automatically"
 msgstr "_Automaticky uprav velikost"
 
-#: libgwydgets/gwy3dwindow.c:990 modules/tools/filter.c:252
+#: libgwydgets/gwy3dwindow.c:992 modules/tools/filter.c:252
 msgid "Si_ze:"
 msgstr "Veli_kost:"
 
-#: libgwydgets/gwy3dwindow.c:990 modules/process/cwt.c:184
+#: libgwydgets/gwy3dwindow.c:992 modules/process/cwt.c:184
 #: modules/process/evaluator_feature_dialog.h:142
 #: modules/process/evaluator_feature_dialog.h:146
 #: modules/process/evaluator_feature_dialog.h:311
@@ -364,8 +364,8 @@ msgstr "Veli_kost:"
 msgid "pixels"
 msgstr "pixelů"
 
-#: libgwydgets/gwy3dwindow.c:998 modules/file/pixmap.c:758
-#: modules/file/pixmap.c:1698 modules/file/rawfile.c:367
+#: libgwydgets/gwy3dwindow.c:1000 modules/file/pixmap.c:758
+#: modules/file/pixmap.c:1698 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:253
 #: modules/process/cwt.c:168 modules/process/drift.c:222
 #: modules/process/dwt.c:167 modules/process/dwtanisotropy.c:182
@@ -384,11 +384,11 @@ msgstr "pixelů"
 msgid "_Reset"
 msgstr "_Obnovit"
 
-#: libgwydgets/gwy3dwindow.c:1407
+#: libgwydgets/gwy3dwindow.c:1409
 msgid "S_witch to Lighting Mode"
 msgstr "_Přepni na osvětlení"
 
-#: libgwydgets/gwy3dwindow.c:1415
+#: libgwydgets/gwy3dwindow.c:1417
 msgid "S_witch to Color Gradient Mode"
 msgstr "_Přepni na barevný gradient"
 
@@ -644,7 +644,7 @@ msgstr "Úhel"
 msgid "Preferred"
 msgstr "Upřednostňovaný"
 
-#: libgwydgets/gwyoptionmenus.c:464 app/meta.c:263 modules/file/rawfile.c:882
+#: libgwydgets/gwyoptionmenus.c:464 app/meta.c:263 modules/file/rawfile.c:938
 #: modules/process/convolution_filter.c:547
 msgid "Name"
 msgstr "Jméno"
@@ -677,7 +677,7 @@ msgstr "I_ndex"
 msgid "Su_perscript"
 msgstr "_Exponent"
 
-#: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:485
+#: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:508
 msgid "Preview"
 msgstr "Náhled"
 
@@ -878,23 +878,23 @@ msgstr "Neznámý kanál %d"
 msgid "Opening of `%s' failed"
 msgstr "Načtení „%s“ se nezdařilo"
 
-#: app/file.c:348 app/gwymoduleutils.c:195
+#: app/file.c:358 app/gwymoduleutils.c:195
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Zapsání „%s“ se nezdařilo"
 
-#: app/file.c:488
+#: app/file.c:498
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Soubor „%s“ již existuje. Přepsat?"
 
-#: app/file.c:492
+#: app/file.c:502
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
 msgstr "Takový soubor již v „%s“ existuje. Přepsání nahradí jeho obsah."
 
-#: app/file.c:495
+#: app/file.c:505
 msgid "Replace File?"
 msgstr "Přepsat soubor?"
 
@@ -1082,7 +1082,7 @@ msgstr ""
 msgid "Origin"
 msgstr "Počátek"
 
-#: app/gwyplaintool.c:958 modules/file/rawfile.c:884
+#: app/gwyplaintool.c:958 modules/file/rawfile.c:940
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
 msgid "Size"
@@ -1128,7 +1128,7 @@ msgstr "_Historie dokumentů"
 msgid "_New"
 msgstr "_Nový"
 
-#: app/meta.c:135 modules/file/rawfile.c:951
+#: app/meta.c:135 modules/file/rawfile.c:1007
 msgid "_Delete"
 msgstr "_Smazat"
 
@@ -1898,11 +1898,11 @@ msgstr "Pixbuf loader odmítl data: %s."
 msgid "Import "
 msgstr "Načtení "
 
-#: modules/file/pixmap.c:780 modules/file/rawfile.c:550
+#: modules/file/pixmap.c:780 modules/file/rawfile.c:581
 msgid "Resolution"
 msgstr "Rozlišení"
 
-#: modules/file/pixmap.c:785 modules/file/rawfile.c:555
+#: modules/file/pixmap.c:785 modules/file/rawfile.c:586
 msgid "_Horizontal size:"
 msgstr "_Vodorovný rozměr:"
 
@@ -1910,11 +1910,11 @@ msgstr "_Vodorovný rozměr:"
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:792 modules/file/rawfile.c:562
+#: modules/file/pixmap.c:792 modules/file/rawfile.c:593
 msgid "_Vertical size:"
 msgstr "_Svislý rozměr:"
 
-#: modules/file/pixmap.c:822 modules/file/rawfile.c:573
+#: modules/file/pixmap.c:822 modules/file/rawfile.c:604
 msgid "Physical Dimensions"
 msgstr "Fyzické rozměry"
 
@@ -1926,11 +1926,11 @@ msgstr "Šířk_a"
 msgid "H_eight"
 msgstr "_Výška"
 
-#: modules/file/pixmap.c:859 modules/file/rawfile.c:611
+#: modules/file/pixmap.c:859 modules/file/rawfile.c:656
 msgid "Identical _measures"
 msgstr "Stejná _měřítka"
 
-#: modules/file/pixmap.c:871 modules/file/rawfile.c:623
+#: modules/file/pixmap.c:871 modules/file/rawfile.c:668
 msgid "_Z-scale (per sample unit):"
 msgstr "_Z-škála (na jednotku):"
 
@@ -2039,7 +2039,7 @@ msgstr "PSIA soubory (.tiff)"
 msgid "Data tag is missing."
 msgstr "Chybí datová značka (tag)."
 
-#: modules/file/rawfile.c:203
+#: modules/file/rawfile.c:215
 msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
@@ -2047,67 +2047,67 @@ msgstr ""
 "Načítá surové datové soubory, textové i binární, ve formátu specifikovaném "
 "uživatelem."
 
-#: modules/file/rawfile.c:224
+#: modules/file/rawfile.c:236
 msgid "User-specified"
 msgstr "Předepsán uživatelem"
 
-#: modules/file/rawfile.c:225
+#: modules/file/rawfile.c:237
 msgid "Signed byte"
 msgstr "Bajt se znaménkem"
 
-#: modules/file/rawfile.c:226
+#: modules/file/rawfile.c:238
 msgid "Unsigned byte"
 msgstr "Bajt bez znaménka"
 
-#: modules/file/rawfile.c:227
+#: modules/file/rawfile.c:239
 msgid "Signed 16bit word"
 msgstr "16bitové slovo se znaménkem"
 
-#: modules/file/rawfile.c:228
+#: modules/file/rawfile.c:240
 msgid "Unsigned 16bit word"
 msgstr "16bit slovo bez znaménka"
 
-#: modules/file/rawfile.c:229
+#: modules/file/rawfile.c:241
 msgid "Signed 32bit word"
 msgstr "32bitové slovo se znaménkem"
 
-#: modules/file/rawfile.c:230
+#: modules/file/rawfile.c:242
 msgid "Unsigned 32bit word"
 msgstr "32bitové slovo bez znaménka"
 
-#: modules/file/rawfile.c:231
+#: modules/file/rawfile.c:243
 msgid "IEEE single"
 msgstr "Reálné číslo IEEE single"
 
-#: modules/file/rawfile.c:232
+#: modules/file/rawfile.c:244
 msgid "IEEE double"
 msgstr "Reálné číslo IEEE double"
 
-#: modules/file/rawfile.c:285
+#: modules/file/rawfile.c:297
 msgid "Raw data files"
 msgstr "Surová data"
 
-#: modules/file/rawfile.c:324
+#: modules/file/rawfile.c:336
 msgid "Raw data import must be run as interactive."
 msgstr "Načítání surových dat musí být spuštěno interaktivně."
 
-#: modules/file/rawfile.c:366
+#: modules/file/rawfile.c:378
 msgid "Read Raw File"
 msgstr "Načtení surových dat"
 
-#: modules/file/rawfile.c:391
+#: modules/file/rawfile.c:405
 msgid "Information"
 msgstr "Informace"
 
-#: modules/file/rawfile.c:396
+#: modules/file/rawfile.c:410
 msgid "Data Format"
 msgstr "Formát dat"
 
-#: modules/file/rawfile.c:401 modules/process/convolution_filter.c:288
+#: modules/file/rawfile.c:417 modules/process/convolution_filter.c:288
 msgid "Presets"
 msgstr "Předvolby"
 
-#: modules/file/rawfile.c:498 modules/process/convolution_filter.c:243
+#: modules/file/rawfile.c:522 modules/process/convolution_filter.c:243
 #: modules/process/drift.c:219 modules/process/edge.c:473
 #: modules/process/fft_filter_1d.c:200 modules/process/grain_mark.c:254
 #: modules/process/grain_rem_threshold.c:213 modules/process/grain_wshed.c:179
@@ -2117,225 +2117,239 @@ msgstr "Předvolby"
 msgid "_Update"
 msgstr "_Aktualizovat"
 
-#: modules/file/rawfile.c:526
+#: modules/file/rawfile.c:557
 msgid "<b>File</b>"
 msgstr "<b>Soubor</b>"
 
-#: modules/file/rawfile.c:556 modules/file/rawfile.c:563
+#: modules/file/rawfile.c:587 modules/file/rawfile.c:594
 msgid "data samples"
 msgstr "vzorků"
 
-#: modules/file/rawfile.c:567
+#: modules/file/rawfile.c:598
 msgid "S_quare sample"
 msgstr "Č_tvercový vzorek"
 
-#: modules/file/rawfile.c:582 modules/process/crosscor.c:197
+#: modules/file/rawfile.c:613 modules/process/crosscor.c:197
 #: modules/process/evaluator_feature_dialog.h:142
 #: modules/process/evaluator_feature_dialog.h:482
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "Šířk_a:"
 
-#: modules/file/rawfile.c:604 modules/process/crosscor.c:203
+#: modules/file/rawfile.c:636 modules/file/rawfile.c:692
+msgid "Change"
+msgstr "Změnit"
+
+#: modules/file/rawfile.c:649 modules/process/crosscor.c:203
 msgid "H_eight:"
 msgstr "_Výška:"
 
-#: modules/file/rawfile.c:640 modules/process/fft_filter_1d.c:291
+#: modules/file/rawfile.c:701 modules/process/fft_filter_1d.c:291
 #: modules/process/grain_dist.c:318 modules/process/grain_mark.c:317
 #: modules/process/grain_rem_threshold.c:294 modules/process/grain_wshed.c:278
 #: modules/tools/spotremove.c:319 modules/tools/stats.c:314
 msgid "Options"
 msgstr "Volby"
 
-#: modules/file/rawfile.c:643
+#: modules/file/rawfile.c:704
 msgid "_Automatically offer raw data import of unknown files"
 msgstr "Pro neznámé soubory _automaticky nabízet načtení surových dat"
 
-#: modules/file/rawfile.c:658
+#: modules/file/rawfile.c:733
 msgid "_Text data"
 msgstr "_Textová data"
 
-#: modules/file/rawfile.c:659
+#: modules/file/rawfile.c:734
 msgid "_Binary data"
 msgstr "_Binární data"
 
-#: modules/file/rawfile.c:662
-msgid "Any whitespace"
-msgstr "Libovolné bílé znaky"
-
-#: modules/file/rawfile.c:663
-msgid "TAB character"
-msgstr "Tabelátor"
-
-#: modules/file/rawfile.c:664
-msgid "Ohter character"
-msgstr "Jiný znak"
-
-#: modules/file/rawfile.c:690
+#: modules/file/rawfile.c:743
 msgid "Start from _line:"
 msgstr "Začít od řá_dku:"
 
-#: modules/file/rawfile.c:697
+#: modules/file/rawfile.c:750
 msgid "E_ach row skip:"
 msgstr "Na každém řádku _přeskočit:"
 
-#: modules/file/rawfile.c:702
+#: modules/file/rawfile.c:755
 msgid "_Field delimiter:"
 msgstr "_Oddělovač polí:"
 
-#: modules/file/rawfile.c:717
+#: modules/file/rawfile.c:763
+msgid "Any whitespace"
+msgstr "Libovolné bílé znaky"
+
+#: modules/file/rawfile.c:764
+msgid "TAB character"
+msgstr "Tabelátor"
+
+#: modules/file/rawfile.c:765
+msgid "Ohter character"
+msgstr "Jiný znak"
+
+#: modules/file/rawfile.c:773
 msgid "_Other delimiter:"
 msgstr "_Oddělovač polí:"
 
-#: modules/file/rawfile.c:730
+#: modules/file/rawfile.c:786
 msgid "_Decimal separator is comma"
 msgstr "_Desetinný oddělovač je čárka"
 
-#: modules/file/rawfile.c:748
+#: modules/file/rawfile.c:804
 msgid "Byte s_wap pattern:"
 msgstr "Vzor pře_házení bajtů:"
 
-#: modules/file/rawfile.c:763
+#: modules/file/rawfile.c:819
 msgid "Start at _offset:"
 msgstr "_Začít na pozici:"
 
-#: modules/file/rawfile.c:770
+#: modules/file/rawfile.c:826
 msgid "_Sample size:"
 msgstr "_Velikost vzorku:"
 
-#: modules/file/rawfile.c:778
+#: modules/file/rawfile.c:834
 msgid "After each sample s_kip:"
 msgstr "Po každém vzorku přes_kočit:"
 
-#: modules/file/rawfile.c:786
+#: modules/file/rawfile.c:842
 msgid "After each _row skip:"
 msgstr "Po každém řádk_u přeskočit:"
 
-#: modules/file/rawfile.c:792
+#: modules/file/rawfile.c:848
 msgid "_Reverse bits in bytes"
 msgstr "Převrátit b_ity v bajtech"
 
-#: modules/file/rawfile.c:797
+#: modules/file/rawfile.c:853
 msgid "Reverse bi_ts in samples"
 msgstr "Převrátit bity ve vzo_rcích"
 
-#: modules/file/rawfile.c:802
+#: modules/file/rawfile.c:858
 msgid "Samples are si_gned"
 msgstr "Vzorky mají z_naménko"
 
-#: modules/file/rawfile.c:832
+#: modules/file/rawfile.c:888
 msgid "Binary"
 msgstr "Binární"
 
-#: modules/file/rawfile.c:832
+#: modules/file/rawfile.c:888
 msgid "Text"
 msgstr "Text"
 
-#: modules/file/rawfile.c:854
+#: modules/file/rawfile.c:910
 msgid "Delimiter: whitespace"
 msgstr "Oddělovač: bílé znaky"
 
-#: modules/file/rawfile.c:857
+#: modules/file/rawfile.c:913
 #, c-format
 msgid "Delimiter: 0x%02x"
 msgstr "Oddělovač: 0x%02x"
 
-#: modules/file/rawfile.c:859
+#: modules/file/rawfile.c:915
 #, c-format
 msgid "Delimiter: %s"
 msgstr "Oddělovač: %s"
 
-#: modules/file/rawfile.c:883
+#: modules/file/rawfile.c:939
 msgid "Type"
 msgstr "Typ"
 
-#: modules/file/rawfile.c:885
+#: modules/file/rawfile.c:941
 msgid "Info"
 msgstr "Info"
 
-#: modules/file/rawfile.c:899
+#: modules/file/rawfile.c:955
 msgid "Preset l_ist"
 msgstr "_Seznam předvoleb"
 
-#: modules/file/rawfile.c:933
+#: modules/file/rawfile.c:989
 msgid "_Load"
 msgstr "_Načti"
 
-#: modules/file/rawfile.c:939
+#: modules/file/rawfile.c:995
 msgid "_Store"
 msgstr "_Ulož"
 
-#: modules/file/rawfile.c:945
+#: modules/file/rawfile.c:1001
 msgid "_Rename"
 msgstr "_Přejmenuj"
 
-#: modules/file/rawfile.c:963
+#: modules/file/rawfile.c:1019
 msgid "Preset _name:"
 msgstr "_Jméno předvolby:"
 
-#: modules/file/rawfile.c:1052
-msgid "Too short file."
-msgstr "Soubor je příliš krátký."
-
-#: modules/file/rawfile.c:1055
+#: modules/file/rawfile.c:1103
 #, c-format
 msgid ""
+"<b>Too short file</b>\n"
 "The format would require %u bytes long file (at least), but the length of `%"
 "s' is only %u bytes."
 msgstr ""
-"Formát by vyžadoval soubor dlouhý alespoň %u bajtů, ale délka „%s“ je jen %u "
-"bajtů."
+"<b>Příliš krátký soubor</b>\n"
+"Formát by vyžadoval soubor dlouhý alespoň %u bajtů, ale délka „%s“ je jen "
+"%u bajtů."
 
-#: modules/file/rawfile.c:1076
+#: modules/file/rawfile.c:1119
 #, c-format
-msgid "Parsing of %s failed."
-msgstr "Analýza %s selhala."
+msgid ""
+"<b>Parsing failed</b>\n"
+"The contents of `%s' does not match format: %s."
+msgstr ""
+"<b>Čtení selhalo</b>\n"
+"Obsah souboru `%s' neodpovídá formátu: %s."
 
-#: modules/file/rawfile.c:1458
+#: modules/file/rawfile.c:1305
+msgid "Change Units"
+msgstr "Změnit jednotky"
+
+#: modules/file/rawfile.c:1319
+msgid "New _units:"
+msgstr "Nové _jednotky:"
+
+#: modules/file/rawfile.c:1589
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Jméno „%s“ je neplatné."
 
-#: modules/file/rawfile.c:1925
+#: modules/file/rawfile.c:2058
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr "Příliš málo řádků (%d), než aby šlo začít od pozice %d"
 
-#: modules/file/rawfile.c:1950
+#: modules/file/rawfile.c:2083
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem bílé znaky, abych mohl přeskočit další pole v řádku %u, ale "
 "narazil jsem na „%.16s“"
 
-#: modules/file/rawfile.c:1964
+#: modules/file/rawfile.c:2097
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem „%c“, abych mohl přeskočit další pole v řádku %u, ale narazil "
 "jsem na „%.16s“"
 
-#: modules/file/rawfile.c:1978
+#: modules/file/rawfile.c:2111
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem „%s“, abych mohl přeskočit další pole v řádku %u, ale narazil "
 "jsem na „%.16s“"
 
-#: modules/file/rawfile.c:1995 modules/file/rawfile.c:2009
-#: modules/file/rawfile.c:2035
+#: modules/file/rawfile.c:2128 modules/file/rawfile.c:2142
+#: modules/file/rawfile.c:2168
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Nesmysly „%.16s“ v řádku %u, sloupci %u"
 
-#: modules/file/rawfile.c:2021
+#: modules/file/rawfile.c:2154
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 "Čekal bych oddělovač „%c“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%c“"
 
-#: modules/file/rawfile.c:2047
+#: modules/file/rawfile.c:2180
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
@@ -2556,7 +2570,7 @@ msgstr "Tření nebo fáze"
 
 #: modules/file/stpfile.c:110
 msgid "AUX in BNC"
-msgstr ""
+msgstr "AUX v BNC"
 
 #: modules/file/stpfile.c:111
 msgid "External"
@@ -2857,8 +2871,8 @@ msgid "Instant:"
 msgstr "Okamžitě:"
 
 #: modules/graph/graph_fit.c:642
-msgid "Estimate"
-msgstr "noun|Odhad"
+msgid "noun|Estimate"
+msgstr "Odhad"
 
 #: modules/graph/graph_fit.c:1307
 #, c-format
@@ -5979,15 +5993,15 @@ msgstr "_Předpokládat:"
 msgid "Correction:"
 msgstr "Korekce:"
 
-#: modules/pygwy.c:72
+#: pygwy_orig.c:74
 msgid "Pygwy, then Gwyddion Python wrapper."
 msgstr ""
 
-#: modules/pygwy.c:122
+#: pygwy_orig.c:138
 msgid "/_Plug-Ins/"
 msgstr ""
 
-#: modules/pygwy.c:132
+#: pygwy_orig.c:147
 msgid "Function written in Python"
 msgstr ""
 
@@ -6556,20 +6570,20 @@ msgstr "Uložení statistických hodnot"
 #: modules/tools/stats.c:741
 #, c-format
 msgid "File:              %s\n"
-msgstr ""
+msgstr "Soubor:              %s\n"
 
 #: modules/tools/stats.c:745
 #, c-format
 msgid "Data channel:      %s\n"
-msgstr ""
+msgstr "Datový kanál:        %s\n"
 
 #: modules/tools/stats.c:767
 msgid "Yes"
-msgstr ""
+msgstr "Ano"
 
 #: modules/tools/stats.c:767
 msgid "No"
-msgstr ""
+msgstr "Ne"
 
 #: modules/tools/stats.c:804
 #, c-format
@@ -6591,4 +6605,20 @@ msgid ""
 "Inclination theta: %s\n"
 "Inclination phi:   %s\n"
 msgstr ""
+"Vybraná oblast:      %s × %s na (%s, %s) px\n"
+"                     %s × %s na (%s, %s) %s\n"
+"Maskována:           %s\n"
+"\n"
+"Střední hodnota:     %s\n"
+"Minimum:             %s\n"
+"Maximum:             %s\n"
+"Medián:              %s\n"
+"Ra:                  %s\n"
+"Rms:                 %s\n"
+"Šikmost:             %s\n"
+"Špičatost:           %s\n"
+"Plocha povrchu:      %s\n"
+"Projektovaná plocha: %s\n"
+"Théta sklonu:        %s\n"
+"Fí sklonu:           %s\n"
 
