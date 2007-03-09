@@ -525,7 +525,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     yl2 = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
 
     if (!tool->args.fixres) {
-        lineres = ROUND(hypot(xl1 - xl2, yl1 - yl2));
+        lineres = GWY_ROUND(hypot(xl1 - xl2, yl1 - yl2));
         lineres = MAX(lineres, MIN_RESOLUTION);
     }
     else
