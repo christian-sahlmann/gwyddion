@@ -206,12 +206,11 @@ gwy_raw_file_preset_data_copy(const GwyRawFilePresetData *src,
     g_free(dest->xyunit);
     g_free(dest->zunit);
     *dest = *src;
-    if (dest->delimiter)
-        dest->delimiter = g_strdup(dest->delimiter);
-    if (dest->xyunit)
-        dest->xyunit = g_strdup(dest->xyunit);
-    if (dest->zunit)
-        dest->zunit = g_strdup(dest->zunit);
+    dest->delimiter = g_strdup(dest->delimiter
+                               ? dest->delimiter
+                               : (const guchar*)"");
+    dest->xyunit = g_strdup(dest->xyunit ? dest->xyunit : "");
+    dest->zunit = g_strdup(dest->zunit ? dest->zunit : "");
 }
 
 static GwyRawFilePreset*
