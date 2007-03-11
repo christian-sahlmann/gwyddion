@@ -2,16 +2,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Copyright (C) 2006 "David Necas (Yeti) & Petr Klapetek".
 #
-# hyperlink <hyperlink@katamail.com>, 2005, 2006.
+# hyperlink <hyperlink@katamail.com>, 2005, 2006, 2007.
 # Livia_lab <livia.dellaseta@casaccia.enea.it>, 2005.
 # Livia Della Seta <livia.dellaseta@casaccia.enea.it>, 2006, 2007.
 msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-03-09 03:35+0100\n"
-"PO-Revision-Date: 2007-02-01 12:04+0100\n"
-"Last-Translator: Livia Della Seta <livia.dellaseta@casaccia.enea.it>\n"
+"POT-Creation-Date: 2007-03-10 03:38+0100\n"
+"PO-Revision-Date: 2007-03-10 10:23+0100\n"
+"Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -371,8 +371,8 @@ msgstr "Dimensione:"
 msgid "pixels"
 msgstr "pixel"
 
-#: libgwydgets/gwy3dwindow.c:1000 modules/file/pixmap.c:758
-#: modules/file/pixmap.c:1698 modules/file/rawfile.c:379
+#: libgwydgets/gwy3dwindow.c:1000 modules/file/pixmap.c:773
+#: modules/file/pixmap.c:1815 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:253
 #: modules/process/cwt.c:168 modules/process/drift.c:222
 #: modules/process/dwt.c:167 modules/process/dwtanisotropy.c:182
@@ -473,7 +473,7 @@ msgstr "Definisci colore curva"
 
 #: libgwydgets/gwygraphareadialog.c:490
 msgid "noun|Square"
-msgstr ""
+msgstr "nome | Quadrato"
 
 #: libgwydgets/gwygraphareadialog.c:491 modules/process/hough.c:166
 msgid "Circle"
@@ -485,7 +485,7 @@ msgstr "Rombo"
 
 #: libgwydgets/gwygraphareadialog.c:493
 msgid "noun|Cross"
-msgstr ""
+msgstr "nome |Croce"
 
 #: libgwydgets/gwygraphareadialog.c:494
 msgid "Diagonal cross"
@@ -493,7 +493,7 @@ msgstr "Croce diagonale"
 
 #: libgwydgets/gwygraphareadialog.c:495
 msgid "Asterisk"
-msgstr ""
+msgstr "Asterisco"
 
 #: libgwydgets/gwygraphareadialog.c:496
 msgid "Star"
@@ -509,11 +509,11 @@ msgstr "Triangolo vertice basso"
 
 #: libgwydgets/gwygraphareadialog.c:499
 msgid "Triangle left"
-msgstr ""
+msgstr "Triangolo vertice a sinistra"
 
 #: libgwydgets/gwygraphareadialog.c:500
 msgid "Triangle right"
-msgstr ""
+msgstr "Triangolo vertice a destra"
 
 #: libgwydgets/gwygraphareadialog.c:501
 msgid "Full square"
@@ -537,39 +537,39 @@ msgstr "Triangolo pieno vertice basso"
 
 #: libgwydgets/gwygraphareadialog.c:506
 msgid "Full triangle left"
-msgstr ""
+msgstr "Triangolo pieno vertice a sinistra"
 
 #: libgwydgets/gwygraphareadialog.c:507
 msgid "Full triangle right"
-msgstr ""
+msgstr "Triangolo pieno vertice a destra"
 
 #: libgwydgets/gwygraphareadialog.c:569
 msgid "Solid"
-msgstr ""
+msgstr "Solido"
 
 #: libgwydgets/gwygraphareadialog.c:570
 msgid "Dash"
-msgstr ""
+msgstr "Trattino"
 
 #: libgwydgets/gwygraphcurves.c:447
 msgid "Description"
-msgstr ""
+msgstr "Descrizione"
 
 #: libgwydgets/gwygraphcurves.c:459
 msgid "Mode"
-msgstr ""
+msgstr "Modo "
 
 #: libgwydgets/gwygraphcurves.c:477
 msgid "Color"
-msgstr ""
+msgstr "Colore"
 
 #: libgwydgets/gwygraphcurves.c:490
 msgid "Point Type"
-msgstr ""
+msgstr "Tipo punto"
 
 #: libgwydgets/gwygraphcurves.c:512
 msgid "Line Style"
-msgstr ""
+msgstr "Stile linea"
 
 #: libgwydgets/gwygraphlabeldialog.c:74
 msgid "Frame thickness:"
@@ -589,7 +589,7 @@ msgstr "Dati"
 
 #: libgwydgets/gwygraphwindow.c:161
 msgid "Curves"
-msgstr ""
+msgstr "Curve"
 
 #: libgwydgets/gwygraphwindow.c:175
 msgid "Measure distances in graph"
@@ -688,7 +688,7 @@ msgstr "Apice"
 msgid "Preview"
 msgstr "Anteprima"
 
-#: libgwymodule/gwymodule-file.c:526 modules/file/pixmap.c:542
+#: libgwymodule/gwymodule-file.c:526 modules/file/pixmap.c:550
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Non è possibile aprire il file in lettura: %s."
@@ -1583,11 +1583,11 @@ msgstr "Hitachi-AFM non ha un tipo file registrato `%s'."
 
 #: modules/file/intematix.c:177
 msgid "Imports Intematix SDF data files."
-msgstr ""
+msgstr "Importa file dati Intermatix SDF"
 
 #: modules/file/intematix.c:190
 msgid "Intematix SDF data files (.sdf)"
-msgstr ""
+msgstr "file dati Intermatix SDF (.sdf)"
 
 #: modules/file/intematix.c:250
 msgid "Invalid tag data positions were found."
@@ -1599,7 +1599,7 @@ msgstr ""
 
 #: modules/file/intematix.c:359
 msgid "image depth"
-msgstr ""
+msgstr "Profondità immagine"
 
 #: modules/file/jeol.c:509
 msgid "Imports JEOL data files."
@@ -1714,20 +1714,22 @@ msgstr "Indicatore inizio dati \\x1a\\x04 mancante  "
 
 #: modules/file/nanoscope-ii.c:76
 msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr ""
+msgstr "Importa file dati Digital Instruments Nanoscope II "
 
 #: modules/file/nanoscope-ii.c:89
 msgid "Nanoscope II files"
-msgstr ""
+msgstr "File Nanoscope II"
 
 #: modules/file/nanoscope.c:137
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr ""
+"Importa file dati Veeco (Digital Instruments) Nanoscope versione 3 or "
+"successive."
 
 #: modules/file/nanoscope.c:151
 msgid "Nanoscope III files"
-msgstr ""
+msgstr "File Nanoscope III"
 
 #: modules/file/nanoscope.c:209
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
@@ -1847,31 +1849,31 @@ msgstr "Informazione di canale interrotta inaspettatamente."
 msgid "No data file corresponding to `%s' was found."
 msgstr "Nessun file dati corrispondente a  `%s'  trovato"
 
-#: modules/file/pixmap.c:237
+#: modules/file/pixmap.c:245
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:243
+#: modules/file/pixmap.c:251
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:250
+#: modules/file/pixmap.c:258
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:257
+#: modules/file/pixmap.c:265
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:263
+#: modules/file/pixmap.c:271
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Windows or OS2 Bitmap (.bmp)"
 
-#: modules/file/pixmap.c:269
+#: modules/file/pixmap.c:277
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:290
+#: modules/file/pixmap.c:298
 msgid ""
 "Exports data as pixmap images and imports data from pixmap images. Supports "
 "following image formats for export: PNG, JPEG, TIFF (if available), PPM, "
@@ -1883,131 +1885,144 @@ msgstr ""
 "TARGA. L'importazione si basa su GDK per cui potrebbe dipendere dal tipo di "
 "installazione."
 
-#: modules/file/pixmap.c:528
+#: modules/file/pixmap.c:536
 msgid "Pixmap image import must be run as interactive."
 msgstr ""
 "L'importazione di immagini Pixmap deve essere lanciata in modo interattivo."
 
-#: modules/file/pixmap.c:536
+#: modules/file/pixmap.c:544
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "Pixmap non ha un file tipo registrato `%s'."
 
-#: modules/file/pixmap.c:550
+#: modules/file/pixmap.c:558
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:562 modules/file/pixmap.c:572
+#: modules/file/pixmap.c:570 modules/file/pixmap.c:580
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:755
+#: modules/file/pixmap.c:770
 msgid "Import "
 msgstr "Importa"
 
-#: modules/file/pixmap.c:780 modules/file/rawfile.c:581
+#: modules/file/pixmap.c:796 modules/file/rawfile.c:581
 msgid "Resolution"
 msgstr "Risoluzione"
 
-#: modules/file/pixmap.c:785 modules/file/rawfile.c:586
+#: modules/file/pixmap.c:803 modules/file/rawfile.c:586
 msgid "_Horizontal size:"
 msgstr "Dimensione orizzontale:"
 
-#: modules/file/pixmap.c:785 modules/file/pixmap.c:792
+#: modules/file/pixmap.c:803 modules/file/pixmap.c:810
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:792 modules/file/rawfile.c:593
+#: modules/file/pixmap.c:810 modules/file/rawfile.c:593
 msgid "_Vertical size:"
 msgstr "Dimensione verticale:"
 
-#: modules/file/pixmap.c:822 modules/file/rawfile.c:604
+#: modules/file/pixmap.c:841 modules/file/rawfile.c:604
 msgid "Physical Dimensions"
 msgstr "Dimensioni fisiche"
 
-#: modules/file/pixmap.c:830
+#: modules/file/pixmap.c:851
 msgid "_Width"
 msgstr "Larghezza"
 
-#: modules/file/pixmap.c:852
+#: modules/file/pixmap.c:873 modules/file/pixmap.c:928
+#: modules/file/rawfile.c:636 modules/file/rawfile.c:692
+msgid "Change"
+msgstr "Cambia"
+
+#: modules/file/pixmap.c:886
 msgid "H_eight"
 msgstr "Altezza"
 
-#: modules/file/pixmap.c:859 modules/file/rawfile.c:656
+#: modules/file/pixmap.c:893 modules/file/rawfile.c:656
 msgid "Identical _measures"
 msgstr "Misure Identiche"
 
-#: modules/file/pixmap.c:871 modules/file/rawfile.c:668
+#: modules/file/pixmap.c:905 modules/file/rawfile.c:668
 msgid "_Z-scale (per sample unit):"
 msgstr "_Scala Z (per unità di campione):"
 
-#: modules/file/pixmap.c:888
+#: modules/file/pixmap.c:938
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attenzione: Immagini molto colorate non possono essere convertite in modo "
 "affidabile ad una mappatura che abbia valori significativi"
 
-#: modules/file/pixmap.c:905
+#: modules/file/pixmap.c:955
 msgid "Use"
 msgstr "Uso"
 
-#: modules/file/pixmap.c:905
+#: modules/file/pixmap.c:955
 msgid "as data"
 msgstr "come dati"
 
-#: modules/file/pixmap.c:1106 modules/file/pixmap.c:1131
+#: modules/file/pixmap.c:1150 modules/file/rawfile.c:1305
+msgid "Change Units"
+msgstr "Cambia unità"
+
+#: modules/file/pixmap.c:1164 modules/file/rawfile.c:1319
+msgid "New _units:"
+msgstr "Nuove unità:"
+
+#: modules/file/pixmap.c:1223 modules/file/pixmap.c:1248
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Salvataggio pixbuf fallito: %s."
 
-#: modules/file/pixmap.c:1166
+#: modules/file/pixmap.c:1283
 msgid "TIFFOpen() function failed."
 msgstr "Funzione TIFFOpen() fallita."
 
-#: modules/file/pixmap.c:1184
+#: modules/file/pixmap.c:1301
 msgid "TIFFWriteScanline() function failed."
 msgstr "Funzione TIFFWriteScanline() fallita"
 
-#: modules/file/pixmap.c:1369
+#: modules/file/pixmap.c:1486
 msgid "Image is too large to be stored as TARGA."
 msgstr "Immagine troppo grande per essere salvata come TARGA."
 
-#: modules/file/pixmap.c:1435
+#: modules/file/pixmap.c:1552
 msgid "Pixmap image export must be run as interactive."
 msgstr "L'immagine Pixmap deve essere esportata in modo interattivo."
 
-#: modules/file/pixmap.c:1677
+#: modules/file/pixmap.c:1794
 msgid "_Data alone"
 msgstr "Solo dati"
 
-#: modules/file/pixmap.c:1678
+#: modules/file/pixmap.c:1795
 msgid "Data + _rulers"
 msgstr "Dati + scala"
 
-#: modules/file/pixmap.c:1679
+#: modules/file/pixmap.c:1796
 msgid "_Everything"
 msgstr "Tutto"
 
-#: modules/file/pixmap.c:1695
+#: modules/file/pixmap.c:1812
 msgid "Export "
 msgstr "Esporta"
 
-#: modules/file/pixmap.c:1720
+#: modules/file/pixmap.c:1837
 msgid "_Zoom:"
 msgstr "Ingrandisci:"
 
-#: modules/file/pixmap.c:1725
+#: modules/file/pixmap.c:1842
 msgid "Output:"
 msgstr ""
 
-#: modules/file/pixmap.c:1743
+#: modules/file/pixmap.c:1860
 msgid "Draw _mask"
 msgstr "Disegna _Maschera"
 
-#: modules/file/pixmap.c:1753
+#: modules/file/pixmap.c:1870
 msgid "Draw _selection"
 msgstr "Disegna _selezione"
 
@@ -2145,10 +2160,6 @@ msgstr "Campione quadrato"
 msgid "_Width:"
 msgstr "Larghezza:"
 
-#: modules/file/rawfile.c:636 modules/file/rawfile.c:692
-msgid "Change"
-msgstr ""
-
 #: modules/file/rawfile.c:649 modules/process/crosscor.c:203
 msgid "H_eight:"
 msgstr "Altezza:"
@@ -2206,7 +2217,7 @@ msgstr "Separatore decimale: virgola"
 
 #: modules/file/rawfile.c:804
 msgid "Byte s_wap pattern:"
-msgstr ""
+msgstr "Schema di scambio Byte:"
 
 #: modules/file/rawfile.c:819
 msgid "Start at _offset:"
@@ -2293,6 +2304,9 @@ msgid ""
 "The format would require %u bytes long file (at least), but the length of `%"
 "s' is only %u bytes."
 msgstr ""
+"<b>File troppo piccolo</b>\n"
+"Il formato richiederebbe un file lungo almeno %u bytes ma la lunghezza di %"
+"s'è solo %u bytes."
 
 #: modules/file/rawfile.c:1119
 #, c-format
@@ -2300,14 +2314,8 @@ msgid ""
 "<b>Parsing failed</b>\n"
 "The contents of `%s' does not match format: %s."
 msgstr ""
-
-#: modules/file/rawfile.c:1305
-msgid "Change Units"
-msgstr ""
-
-#: modules/file/rawfile.c:1319
-msgid "New _units:"
-msgstr ""
+"<b>Parsing fallito</b>\n"
+"Il contenuto di `%s'non corrisponde al formato: %s."
 
 #: modules/file/rawfile.c:1589
 #, c-format
@@ -2676,7 +2684,7 @@ msgstr "Misura dimensioni critiche"
 
 #: modules/graph/graph_cd.c:148
 msgid "/_Critical Dimension..."
-msgstr ""
+msgstr "/_Dimensioni .Critiche .."
 
 #: modules/graph/graph_cd.c:151
 msgid "Fit critical dimension"
@@ -2684,7 +2692,7 @@ msgstr "Adatta dimensione critica"
 
 #: modules/graph/graph_cd.c:207 modules/graph/graph_fit.c:242
 msgid "Fit Graph"
-msgstr ""
+msgstr "Adatta Grafico"
 
 #: modules/graph/graph_cd.c:211 modules/graph/graph_fit.c:246
 #: modules/process/fit_2d.c:240
@@ -2693,23 +2701,23 @@ msgstr "_Adatta"
 
 #: modules/graph/graph_cd.c:233 modules/graph/graph_fit.c:272
 msgid "_Graph curve:"
-msgstr ""
+msgstr "_Curva Grafico"
 
 #: modules/graph/graph_cd.c:247 modules/graph/graph_fit.c:286
 msgid "F_unction:"
-msgstr ""
+msgstr "F_unzione:"
 
 #: modules/graph/graph_cd.c:276 modules/graph/graph_fit.c:321
 msgid "Parameter"
-msgstr ""
+msgstr "Parametro"
 
 #: modules/graph/graph_cd.c:290 modules/graph/graph_fit.c:382
 msgid "Range:"
-msgstr ""
+msgstr "Intervallo:"
 
 #: modules/graph/graph_cd.c:301 modules/graph/graph_fit.c:393
 msgid "range|to"
-msgstr ""
+msgstr "intervallo|fino a"
 
 #: modules/graph/graph_cd.c:360 modules/graph/graph_fit.c:475
 #: modules/process/fit_2d.c:932
@@ -2718,7 +2726,7 @@ msgstr "Salva il Fit Report"
 
 #: modules/graph/graph_cd.c:499 modules/graph/graph_fit.c:642
 msgid "noun|Fit"
-msgstr ""
+msgstr "nome | adatta"
 
 #: modules/graph/graph_cd.c:525 modules/graph/graph_fit.c:680
 msgid "It is necessary to select more data points than free fit parameters"
@@ -2736,12 +2744,12 @@ msgstr "N.A."
 
 #: modules/graph/graph_cd.c:960 modules/graph/graph_fit.c:1261
 msgid "===== Fit Results ====="
-msgstr ""
+msgstr "===== Risultati del Fit ====="
 
 #: modules/graph/graph_cd.c:964 modules/graph/graph_fit.c:1265
 #, c-format
 msgid "Data:             %s\n"
-msgstr ""
+msgstr "Dati:             %s\n"
 
 #: modules/graph/graph_cd.c:967 modules/graph/graph_fit.c:1268
 #, c-format
@@ -2751,7 +2759,7 @@ msgstr "Numero di punti: %d di %d\n"
 #: modules/graph/graph_cd.c:971 modules/graph/graph_fit.c:1272
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
-msgstr ""
+msgstr "Intervallo X :          da %.*f a %.*f %s\n"
 
 #: modules/graph/graph_cd.c:977 modules/graph/graph_fit.c:1278
 #, c-format
@@ -2760,7 +2768,7 @@ msgstr "Funzione adattata:  %s\n"
 
 #: modules/graph/graph_cd.c:980 modules/graph/graph_fit.c:1281
 msgid "Results\n"
-msgstr ""
+msgstr "Risultati\n"
 
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
@@ -2868,20 +2876,20 @@ msgstr "Matrice di Correlazione"
 
 #: modules/graph/graph_fit.c:414
 msgid "Instant:"
-msgstr ""
+msgstr "Istante:"
 
 #: modules/graph/graph_fit.c:642
 msgid "noun|Estimate"
-msgstr ""
+msgstr "nome | Stima"
 
 #: modules/graph/graph_fit.c:1307
 #, c-format
 msgid "Residual sum:   %g\n"
-msgstr ""
+msgstr "Somma residuale:   %g\n"
 
 #: modules/graph/graph_fit.c:1310
 msgid "Correlation matrix\n"
-msgstr ""
+msgstr "Matrice di correlazione\n"
 
 #: modules/graph/graph_level.c:37
 msgid "Level graph by line."
@@ -3693,7 +3701,7 @@ msgstr "Immagine originale"
 
 #: modules/process/edge.c:545
 msgid "_LoG convolved"
-msgstr ""
+msgstr "_LoG convoluto"
 
 #: modules/process/edge.c:546
 msgid "Detected _edges"
@@ -4020,7 +4028,7 @@ msgstr "Media Normale"
 
 #: modules/process/facet_analysis.c:374
 msgid "Facet plane size:"
-msgstr ""
+msgstr "Dimensioni piano Facet"
 
 #: modules/process/facet_analysis.c:399
 msgid "_Tolerance:"
@@ -4193,7 +4201,7 @@ msgstr "Immagine filtrata"
 
 #: modules/process/fft_filter_2d.c:399
 msgid "Image _difference"
-msgstr ""
+msgstr "Immagine differenza"
 
 #: modules/process/fft_filter_2d.c:404
 msgid "Filtered Image"
@@ -5426,19 +5434,19 @@ msgstr "Segna dati più lontani di 3σ dal valore medio"
 
 #: modules/process/polydistort.c:129
 msgid "Apllies polynomial distortion in the horizontal plane."
-msgstr ""
+msgstr "Applica distorsione polinomiale nel piano orizzontale"
 
 #: modules/process/polydistort.c:143
 msgid "/_Correct Data/Pol_ynomial Distortion..."
-msgstr ""
+msgstr "/_Correzione dati/Distorsione Polinomiale..."
 
 #: modules/process/polydistort.c:147
 msgid "Apllies polynomial distortion in the horizontal plane"
-msgstr ""
+msgstr "Applica distorsione polinomiale nel piano orizzontale"
 
 #: modules/process/polydistort.c:202
 msgid "Distort by Polynomial"
-msgstr ""
+msgstr "Distorsione polinomiale"
 
 #: modules/process/polydistort.c:265 modules/tools/filter.c:208
 #: modules/tools/linestats.c:150 modules/tools/stats.c:274
@@ -5447,15 +5455,15 @@ msgstr "Minimo"
 
 #: modules/process/polydistort.c:266
 msgid "Border"
-msgstr ""
+msgstr "Limite"
 
 #: modules/process/polydistort.c:267
 msgid "Mirror"
-msgstr ""
+msgstr "Specchio"
 
 #: modules/process/polydistort.c:268
 msgid "Periodic"
-msgstr ""
+msgstr "Periodico"
 
 #: modules/process/polydistort.c:270
 msgid "_Exteriror type:"
@@ -5463,27 +5471,27 @@ msgstr ""
 
 #: modules/process/polydistort.c:282
 msgid "Preview:"
-msgstr ""
+msgstr "Anteprima"
 
 #: modules/process/polydistort.c:289
 msgid "Ori_ginal"
-msgstr ""
+msgstr "Originale"
 
 #: modules/process/polydistort.c:290
 msgid "_Transformed"
-msgstr ""
+msgstr "_Trasformato"
 
 #: modules/process/polydistort.c:296
 msgid "X Coefficients"
-msgstr ""
+msgstr "Coefficienti X "
 
 #: modules/process/polydistort.c:310
 msgid "Y Coefficients"
-msgstr ""
+msgstr "Coefficienti Y"
 
 #: modules/process/polydistort.c:494
 msgid "Distorted"
-msgstr ""
+msgstr "Distorti"
 
 #: modules/process/polylevel.c:109
 msgid "Subtracts polynomial background."
@@ -6012,11 +6020,11 @@ msgstr ""
 
 #: pygwy_orig.c:138
 msgid "/_Plug-Ins/"
-msgstr ""
+msgstr "/_Plug-Ins/"
 
 #: pygwy_orig.c:147
 msgid "Function written in Python"
-msgstr ""
+msgstr "Funzione scritta in Python"
 
 #: modules/tools/crop.c:81
 msgid "Crop tool, crops data to smaller size."
@@ -6635,367 +6643,3 @@ msgstr ""
 "Area Proiettata:    %s\n"
 "Inclinazione theta: %s\n"
 "Inclinazione phi:   %s\n"
-
-#~ msgid "Too short file."
-#~ msgstr "File troppo corto."
-
-#~ msgid ""
-#~ "The format would require %u bytes long file (at least), but the length of "
-#~ "`%s' is only %u bytes."
-#~ msgstr ""
-#~ "Il formato richiede un file lungo (almeno) %u bytes ma la lunghezza di `%"
-#~ "s' è solo  %u bytes."
-
-#~ msgid "Parsing of %s failed."
-#~ msgstr "Parsing di %s fallito."
-
-#~ msgid "data type"
-#~ msgstr "Tipo dati"
-
-#~ msgid "/_Critical dimension"
-#~ msgstr "/_Dimensione critica"
-
-#~ msgid "Critical Dimension"
-#~ msgstr "Dimensione Critica"
-
-#~ msgid "Function Definition"
-#~ msgstr "Definizione funzione"
-
-#~ msgid "Graph data curve:"
-#~ msgstr "Curva dati grafico:"
-
-#~ msgid "From"
-#~ msgstr "Da"
-
-#~ msgid "To"
-#~ msgstr "A"
-
-#~ msgid "Fit Results"
-#~ msgstr "Risultati del Fit"
-
-#~ msgid "Num of points:"
-#~ msgstr "Num punti:"
-
-#~ msgid "X range:"
-#~ msgstr "Intervallo X:"
-
-#~ msgid "X range:          %g to %g\n"
-#~ msgstr "Intervallo X: da         %g a %g\n"
-
-#~ msgid "PSIA"
-#~ msgstr "PSIA"
-
-#~ msgid "Cross"
-#~ msgstr "Croce"
-
-#~ msgid "Imports Veeco (Digital Instruments) Nanoscope data files."
-#~ msgstr "Importa file dati Veeco (Digital Instruments) Nanoscope."
-
-#~ msgid "Nanoscope files"
-#~ msgstr "File Nanoscope"
-
-#~ msgid "Fit graph"
-#~ msgstr "Adatta grafico"
-
-#~ msgid "Fitted curve"
-#~ msgstr "Curva adattata"
-
-#~ msgid "_Reset Inits"
-#~ msgstr "_Ripristina inits"
-
-#~ msgid "DME files (.dme)"
-#~ msgstr "File DME (.dme)"
-
-#~ msgid "_FFT Editor"
-#~ msgstr "_FFT Editor"
-
-#~ msgid "Original _Image"
-#~ msgstr "Immagine originale"
-
-#~ msgid "Filtered _Image"
-#~ msgstr "Immagine filtrata"
-
-#~ msgid "Image _Difference"
-#~ msgstr "Differenza immagine "
-
-#~ msgid "Display mode:"
-#~ msgstr "Modalità visualizzazione:"
-
-#~ msgid "/_Level/_Level"
-#~ msgstr "/_Livella/_Livella"
-
-#~ msgid "Level"
-#~ msgstr "Livella"
-
-#~ msgid "_Estimage"
-#~ msgstr "_Stima"
-
-#~ msgid "Fitting"
-#~ msgstr "Fitting"
-
-#~ msgid "_Interpolation:"
-#~ msgstr "_Interpolazione:"
-
-#~ msgid "Hough transform"
-#~ msgstr "Trasformata di Hough"
-
-#~ msgid "/_Integral Transforms/_2D CWT..."
-#~ msgstr "/Trasformate _Integrali/_2D CWT..."
-
-#~ msgid "/_Integral Transforms/_2D DWT..."
-#~ msgstr "/Trasformate _Integrali/_2D DWT..."
-
-#~ msgid "/_Integral Transforms/_2D FFT..."
-#~ msgstr "/Trasformate _Integrali/_2D FFT..."
-
-#~ msgid "/_Tip/_Blind estimation..."
-#~ msgstr "/Punta/Stima cieca..."
-
-#~ msgid "_Update Result"
-#~ msgstr "_Aggiorna Risultato"
-
-#~ msgid "_Update Preview"
-#~ msgstr "Aggiorna Anteprima"
-
-#~ msgid "_Update preview"
-#~ msgstr "Aggiorna anteprima"
-
-#~ msgid "Evaluate/correct thermal drift in fast scan axis."
-#~ msgstr "Valutazione/correzione deriva termica in scansioni asse veloce."
-
-#~ msgid "/_Correct Data/_Compensate drift..."
-#~ msgstr "/_Correzione Dati/_Compensazione deriva..."
-
-#~ msgid "Correct drift"
-#~ msgstr "Correggi deriva"
-
-#~ msgid "_Extract drift graph"
-#~ msgstr "_Estrai grafico deriva"
-
-#~ msgid "_Correct data"
-#~ msgstr "_Correzione dati"
-
-#~ msgid "_Crop out unknown data"
-#~ msgstr "_Elimina dati sconosciuti"
-
-#~ msgid "Drift corrected data"
-#~ msgstr "Dati corretti dalla deriva"
-
-#~ msgid "Drift graph"
-#~ msgstr "Grafico deriva"
-
-#, fuzzy
-#~ msgid "Imports Pacific Nanotechnology DME data files."
-#~ msgstr "Importa file dati PNI Pacific Nanotechnology."
-
-#~ msgid "<b>Value</b>"
-#~ msgstr "<b>Valore</b>"
-
-#, fuzzy
-#~ msgid "/_Basic Operations/Convolution _Filter..."
-#~ msgstr "/Operazioni _Base/Ruota di _Angolo..."
-
-#~ msgid "Scan lines correlation"
-#~ msgstr "Correlazione linee scansione"
-
-#~ msgid "Local isotropy"
-#~ msgstr "Isotropia locale"
-
-#~ msgid "Calibration sample"
-#~ msgstr "Campione di calibrazione"
-
-#~ msgid "X axis Drift"
-#~ msgstr "Deriva asse X"
-
-#~ msgid "Bilinear"
-#~ msgstr "Bilineare"
-
-#~ msgid "Attaches another data field as presentation"
-#~ msgstr "Allega un altro campo dati come presentazione"
-
-#, fuzzy
-#~ msgid "_Run"
-#~ msgstr "Esatta"
-
-#~ msgid "_Restore PS"
-#~ msgstr "_Ripristina PS"
-
-#, fuzzy
-#~ msgid "Power Spectrum"
-#~ msgstr "Spettro di potenza"
-
-#, fuzzy
-#~ msgid "_Preview type:"
-#~ msgstr "Tipo Anteprima:"
-
-#~ msgid "_Update dynamically"
-#~ msgstr "Aggiorna dinamicamente"
-
-#~ msgid "Graph ASCII export."
-#~ msgstr "Esporta Grafico ASCII"
-
-#, fuzzy
-#~ msgid "/Export _ASCII"
-#~ msgstr "Esporta"
-
-#, fuzzy
-#~ msgid "Export ASCII"
-#~ msgstr "Esporta"
-
-#, fuzzy
-#~ msgid "Large image"
-#~ msgstr "Immagini unite"
-
-#, fuzzy
-#~ msgid "Detail image"
-#~ msgstr "_Dettaglio immagine:"
-
-#, fuzzy
-#~ msgid "Upsample large image"
-#~ msgstr "_Sovracampionamento immagine grande"
-
-#, fuzzy
-#~ msgid "Downsample detail"
-#~ msgstr "_Sottocampionamento detail"
-
-#, fuzzy
-#~ msgid "_Align detail:"
-#~ msgstr "_Allinea secondo operando:"
-
-#, fuzzy
-#~ msgid "_Result sampling:"
-#~ msgstr "Campionamento risultante"
-
-#, fuzzy
-#~ msgid "File _type:"
-#~ msgstr "Tipo _File: %s"
-
-#, fuzzy
-#~ msgid "<b>Axis settings:</b>"
-#~ msgstr "<b>Opzioni</b>"
-
-#, fuzzy
-#~ msgid "_Autoscale"
-#~ msgstr "_Valore scala:"
-
-#~ msgid "Major division:"
-#~ msgstr "Divisione maggiore:"
-
-#, fuzzy
-#~ msgid "Major thickness:"
-#~ msgstr "Spessore cornice:"
-
-#, fuzzy
-#~ msgid "Major length:"
-#~ msgstr "Lunghezza minima:"
-
-#~ msgid "Minor division:"
-#~ msgstr "Divisione minore:"
-
-#, fuzzy
-#~ msgid "Minor thickness:"
-#~ msgstr "Spessore linea:"
-
-#, fuzzy
-#~ msgid "Minor length:"
-#~ msgstr "Lunghezza minima:"
-
-#, fuzzy
-#~ msgid "<b>Points</b>"
-#~ msgstr "<b>Opzioni</b>"
-
-#, fuzzy
-#~ msgid "<b>Size</b>"
-#~ msgstr "<b>File</b>"
-
-#, fuzzy
-#~ msgid "verb|_Edit"
-#~ msgstr "_Modifica"
-
-#, fuzzy
-#~ msgid "_Copy"
-#~ msgstr "Taglia"
-
-#, fuzzy
-#~ msgid "De_fault"
-#~ msgstr "Scelte predefinite"
-
-#, fuzzy
-#~ msgid "/Open Recent/---"
-#~ msgstr "/Apri _Recenti"
-
-#, fuzzy
-#~ msgid "/Mask _Color..."
-#~ msgstr "Colore_Maschera..."
-
-#~ msgid "noun|Copy"
-#~ msgstr "nome|Copia"
-
-#, fuzzy
-#~ msgid "<b>Resolution</b>"
-#~ msgstr "<b>Risultati</b>"
-
-#, fuzzy
-#~ msgid "<b>Fitting parameters:</b>"
-#~ msgstr "Adattamento parametri"
-
-#, fuzzy
-#~ msgid "<b>Initial</b>"
-#~ msgstr "<b>File</b>"
-
-#, fuzzy
-#~ msgid "<b>Result</b>"
-#~ msgstr "<b>Risultati</b>"
-
-#, fuzzy
-#~ msgid "<b>Error</b>"
-#~ msgstr "<b>Traduttori</b>\n"
-
-#, fuzzy
-#~ msgid "<b>Fix</b>"
-#~ msgstr "<b>File</b>"
-
-#, fuzzy
-#~ msgid "<b>Correlation matrix:</b>"
-#~ msgstr "<b>Matrice di Correlazione</b>"
-
-#, fuzzy
-#~ msgid "<b>Chi-square result:</b>"
-#~ msgstr "<b>Risultati</b>"
-
-#, fuzzy
-#~ msgid "<b>Fit area</b>"
-#~ msgstr "<b>File</b>"
-
-#, fuzzy
-#~ msgid "<b>Normal</b>"
-#~ msgstr "<b>Valore</b>"
-
-#~ msgid "<b>Power spectrum (select areas by mouse):</b>"
-#~ msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
-
-#, fuzzy
-#~ msgid "<b>Settings:</b>"
-#~ msgstr "<b>Opzioni</b>"
-
-#~ msgid "_Guess"
-#~ msgstr "Indovina"
-
-#, fuzzy
-#~ msgid "<b>Threshold By</b>"
-#~ msgstr "Soglia:"
-
-#, fuzzy
-#~ msgid "<b>Filter</b>"
-#~ msgstr "<b>File</b>"
-
-#, fuzzy
-#~ msgid "<b>Editor</b>"
-#~ msgstr "<b>File</b>"
-
-#, fuzzy
-#~ msgid "N.A"
-#~ msgstr "N.A."
-
-#~ msgid "Set Defaults"
-#~ msgstr "Fissa valori predefiniti"
