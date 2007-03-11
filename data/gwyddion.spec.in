@@ -5,7 +5,7 @@
 
 Name:          @PACKAGE_TARNAME@
 Version:       @PACKAGE_VERSION@
-Release:       2
+Release:       1
 Summary:       An SPM data visualization and analysis tool
 
 Group:         Applications/Engineering
@@ -96,9 +96,9 @@ programming languages.
 
 %prep
 %setup -q
-# Don't install .la files
+# Don't install .la files.
 sed -i -e '/# Install the pseudo-library/,/^$/d' ltmain.sh
-# Replace universal /usr/bin/env shbang with the real thing
+# Replace universal /usr/bin/env shbang with the real thing.
 sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
@@ -111,6 +111,10 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 %find_lang %{name}
+
+# Get rid of .la files if some silly distros (hello Mandriva) overwrote our
+# fixed libtool with some crap.
+find $RPM_BUILD_ROOT -name \*.la -print0 | xargs -0 rm -f
 
 # I cannot express this as %%files in a sensible manner, especially not when
 # python byte-compilation kicks in.  Set permissions in the filesystem.
@@ -131,7 +135,7 @@ update-mime-database %{_datadir}/mime &>/dev/null || :
 update-desktop-database &>/dev/null || :
 
 
-%postun 
+%postun
 /sbin/ldconfig
 update-mime-database %{_datadir}/mime &>/dev/null || :
 update-desktop-database &>/dev/null || :
