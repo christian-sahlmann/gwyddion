@@ -15,6 +15,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 #   slope_mask
 
 # Since 2.3: arithmetic data_measure drift immerse merge
+# Since 2.6: path_level
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -91,6 +92,7 @@ pixmapdata_DATA = \
 	gwy_merge-24.png \
 	gwy_more-24.png \
 	gwy_palettes-24.png \
+	gwy_path_level-24.png \
 	gwy_pointer_measure-24.png \
 	gwy_polynom-24.png \
 	gwy_profile-24.png \
