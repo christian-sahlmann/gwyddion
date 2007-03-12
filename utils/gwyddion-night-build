@@ -58,7 +58,7 @@ function autostuff() {
   CONFIG_SHELL=/bin/sh ./autogen.sh \
     --config-cache \
     --disable-desktop-file-update \
-    --enable-gtk-doc \
+    --enable-pygwy \
     --prefix=$installprefix
   make -C po gwyddion.pot
 }
