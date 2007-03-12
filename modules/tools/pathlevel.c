@@ -28,6 +28,7 @@
 #include <libprocess/datafield.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwynullstore.h>
 #include <app/gwyapp.h>
 
@@ -37,22 +38,37 @@
 #define GWY_TOOL_PATH_LEVEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_PATH_LEVEL, GwyToolPathLevelClass))
 
 enum {
-    NLINES = 18
+    NLINES = 18,
+    MAX_THICKNESS = 128
 };
 
 enum {
-    COLUMN_I, COLUMN_DX, COLUMN_DY, COLUMN_R, COLUMN_DZ, NCOLUMNS
+    COLUMN_I, COLUMN_Y0, COLUMN_Y1, NLCOLUMNS
 };
 
 typedef struct _GwyToolPathLevel      GwyToolPathLevel;
 typedef struct _GwyToolPathLevelClass GwyToolPathLevelClass;
 
+/* Line start or end. */
+typedef struct {
+    gint row;
+    gint id;
+    gboolean end;
+} ChangePoint;
+
+typedef struct {
+    gint thickness;
+} ToolArgs;
+
 struct _GwyToolPathLevel {
     GwyPlainTool parent_instance;
+
+    ToolArgs args;
 
     GtkTreeView *treeview;
     GtkTreeModel *model;
 
+    GtkObject *thickness;
     GtkWidget *apply;
 
     /* potential class data */
@@ -70,12 +86,12 @@ static void     gwy_tool_path_level_finalize         (GObject *object);
 static void     gwy_tool_path_level_init_dialog      (GwyToolPathLevel *tool);
 static void     gwy_tool_path_level_data_switched    (GwyTool *gwytool,
                                                       GwyDataView *data_view);
-static void     gwy_tool_path_level_data_changed     (GwyPlainTool *plain_tool);
 static void     gwy_tool_path_level_response         (GwyTool *gwytool,
                                                       gint response_id);
 static void     gwy_tool_path_level_selection_changed(GwyPlainTool *plain_tool,
                                                       gint hint);
-static void     gwy_tool_path_level_update_headers   (GwyToolPathLevel *tool);
+static void     gwy_tool_path_level_thickness_changed(GwyToolPathLevel *tool,
+                                                      GtkAdjustment *adj);
 static void     gwy_tool_path_level_render_cell      (GtkCellLayout *layout,
                                                       GtkCellRenderer *renderer,
                                                       GtkTreeModel *model,
@@ -84,15 +100,24 @@ static void     gwy_tool_path_level_render_cell      (GtkCellLayout *layout,
 static gboolean gwy_tool_path_level_list_key_press   (GwyToolPathLevel *tool,
                                                       GdkEventKey *event);
 static void     gwy_tool_path_level_apply            (GwyToolPathLevel *tool);
+static void     gwy_tool_path_level_sel_to_isel      (GwyToolPathLevel *tool,
+                                                      gint i,
+                                                      gint *isel);
+
+static const gchar thickness_key[] = "/module/pathlevel/thickness";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Path level tool, performs row leveling based on user-set paths."),
+    N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
     "2007",
+};
+
+static const ToolArgs default_args = {
+    1,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -124,7 +149,6 @@ gwy_tool_path_level_class_init(GwyToolPathLevelClass *klass)
     tool_class->data_switched = gwy_tool_path_level_data_switched;
     tool_class->response = gwy_tool_path_level_response;
 
-    ptool_class->data_changed = gwy_tool_path_level_data_changed;
     ptool_class->selection_changed = gwy_tool_path_level_selection_changed;
 }
 
@@ -132,8 +156,13 @@ static void
 gwy_tool_path_level_finalize(GObject *object)
 {
     GwyToolPathLevel *tool;
+    GwyContainer *settings;
 
     tool = GWY_TOOL_PATH_LEVEL(object);
+
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings, thickness_key,
+                                    tool->args.thickness);
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
@@ -147,6 +176,7 @@ static void
 gwy_tool_path_level_init(GwyToolPathLevel *tool)
 {
     GwyPlainTool *plain_tool;
+    GwyContainer *settings;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_line = gwy_plain_tool_check_layer_type(plain_tool,
@@ -157,6 +187,11 @@ gwy_tool_path_level_init(GwyToolPathLevel *tool)
     plain_tool->unit_style = GWY_SI_UNIT_FORMAT_MARKUP;
     plain_tool->lazy_updates = TRUE;
 
+    settings = gwy_app_settings_get();
+    tool->args = default_args;
+    gwy_container_gis_int32_by_name(settings, thickness_key,
+                                    &tool->args.thickness);
+
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
                                      "line");
 
@@ -166,11 +201,16 @@ gwy_tool_path_level_init(GwyToolPathLevel *tool)
 static void
 gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
 {
+    static const gchar *lcolumns[] = {
+        "<b>n</b>", "<b>y<sub>1</sub></b>", "<b>y<sub>2</sub></b>",
+    };
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GtkDialog *dialog;
     GtkWidget *scwin, *label;
+    GtkTable *table;
     GwyNullStore *store;
+    gint row;
     guint i;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
@@ -182,7 +222,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
                              G_CALLBACK(gwy_tool_path_level_list_key_press),
                              tool);
 
-    for (i = 0; i < NCOLUMNS; i++) {
+    for (i = 0; i < NLCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
         gtk_tree_view_column_set_expand(column, TRUE);
         gtk_tree_view_column_set_alignment(column, 0.5);
@@ -194,6 +234,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
                                            gwy_tool_path_level_render_cell, tool,
                                            NULL);
         label = gtk_label_new(NULL);
+        gtk_label_set_markup(GTK_LABEL(label), lcolumns[i]);
         gtk_tree_view_column_set_widget(column, label);
         gtk_widget_show(label);
         gtk_tree_view_append_column(tool->treeview, column);
@@ -205,13 +246,28 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
+    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
+                       FALSE, FALSE, 0);
+    row = 0;
+
+    tool->thickness = gtk_adjustment_new(tool->args.thickness,
+                                         1, MAX_THICKNESS, 1, 10, 0);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), NULL,
+                            tool->thickness, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(tool->thickness, "value-changed",
+                             G_CALLBACK(gwy_tool_path_level_thickness_changed),
+                             tool);
+    row++;
+
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
+    gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
     tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
                                         GTK_RESPONSE_APPLY);
-    gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
-
-    gwy_tool_path_level_update_headers(tool);
-    /* gtk_widget_set_sensitive(tool->apply, FALSE); */
+    gtk_widget_set_sensitive(tool->apply, FALSE);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -239,13 +295,6 @@ gwy_tool_path_level_data_switched(GwyTool *gwytool,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, NLINES);
     }
-    gwy_tool_path_level_update_headers(tool);
-}
-
-static void
-gwy_tool_path_level_data_changed(GwyPlainTool *plain_tool)
-{
-    gwy_tool_path_level_update_headers(GWY_TOOL_PATH_LEVEL(plain_tool));
 }
 
 static void
@@ -290,50 +339,16 @@ gwy_tool_path_level_selection_changed(GwyPlainTool *plain_tool,
         else
             gwy_null_store_set_n_rows(store, n+1);
     }
+
+    gtk_widget_set_sensitive(tool->apply, !!gwy_null_store_get_n_rows(store));
 }
 
 static void
-gwy_tool_path_level_update_header(GwyToolPathLevel *tool,
-                                  guint col,
-                                  GString *str,
-                                  const gchar *title,
-                                  GwySIValueFormat *vf)
+gwy_tool_path_level_thickness_changed(GwyToolPathLevel *tool,
+                                      GtkAdjustment *adj)
 {
-    GtkTreeViewColumn *column;
-    GtkLabel *label;
-
-    column = gtk_tree_view_get_column(tool->treeview, col);
-    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-
-    g_string_assign(str, "<b>");
-    g_string_append(str, title);
-    g_string_append(str, "</b>");
-    if (vf)
-        g_string_append_printf(str, " [%s]", vf->units);
-    gtk_label_set_markup(label, str->str);
-}
-
-static void
-gwy_tool_path_level_update_headers(GwyToolPathLevel *tool)
-{
-    GwyPlainTool *plain_tool;
-    GString *str;
-
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    str = g_string_new("");
-
-    gwy_tool_path_level_update_header(tool, COLUMN_I, str,
-                                    "n", NULL);
-    gwy_tool_path_level_update_header(tool, COLUMN_DX, str,
-                                    "Δx", plain_tool->coord_format);
-    gwy_tool_path_level_update_header(tool, COLUMN_DY, str,
-                                    "Δy", plain_tool->coord_format);
-    gwy_tool_path_level_update_header(tool, COLUMN_R, str,
-                                    "R", plain_tool->coord_format);
-    gwy_tool_path_level_update_header(tool, COLUMN_DZ, str,
-                                    "Δz", plain_tool->value_format);
-
-    g_string_free(str, TRUE);
+    tool->args.thickness = gwy_adjustment_get_int(adj);
+    /* TODO? */
 }
 
 static void
@@ -344,12 +359,9 @@ gwy_tool_path_level_render_cell(GtkCellLayout *layout,
                                 gpointer user_data)
 {
     GwyToolPathLevel *tool = (GwyToolPathLevel*)user_data;
-    GwyPlainTool *plain_tool;
-    const GwySIValueFormat *vf;
-    gchar buf[32];
-    gdouble line[4];
-    gdouble val;
-    guint idx, id;
+    gchar buf[16];
+    gint isel[4];
+    guint id, idx;
 
     id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
     gtk_tree_model_get(model, iter, 0, &idx, -1);
@@ -359,48 +371,20 @@ gwy_tool_path_level_render_cell(GtkCellLayout *layout,
         return;
     }
 
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    gwy_selection_get_object(plain_tool->selection, idx, line);
-
+    gwy_tool_path_level_sel_to_isel(tool, idx, isel);
     switch (id) {
-        case COLUMN_DX:
-        vf = plain_tool->coord_format;
-        val = line[2] - line[0];
+        case COLUMN_Y0:
+        g_snprintf(buf, sizeof(buf), "%d", isel[1]);
         break;
 
-        case COLUMN_DY:
-        vf = plain_tool->coord_format;
-        val = line[3] - line[1];
-        break;
-
-        case COLUMN_R:
-        vf = plain_tool->coord_format;
-        val = hypot(line[2] - line[0], line[3] - line[1]);
-        break;
-
-        case COLUMN_DZ:
-        {
-            gint x, y;
-
-            x = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
-            y = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
-            val = gwy_data_field_get_val(plain_tool->data_field, x, y);
-            x = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
-            y = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
-            val -= gwy_data_field_get_val(plain_tool->data_field, x, y);
-            vf = plain_tool->value_format;
-        }
+        case COLUMN_Y1:
+        g_snprintf(buf, sizeof(buf), "%d", isel[3]);
         break;
 
         default:
         g_return_if_reached();
         break;
     }
-
-    if (vf)
-        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
-    else
-        g_snprintf(buf, sizeof(buf), "%.3g", val);
 
     g_object_set(renderer, "text", buf, NULL);
 }
@@ -429,12 +413,6 @@ gwy_tool_path_level_list_key_press(GwyToolPathLevel *tool,
 
     return FALSE;
 }
-
-typedef struct {
-    gint row;
-    gint id;
-    gboolean end;
-} ChangePoint;
 
 static gint
 change_point_compare(gconstpointer a, gconstpointer b)
@@ -466,9 +444,8 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     ChangePoint *cpts;
     GwyPlainTool *plain_tool;
     GwyDataLine *corr;
-    gint n, xres, yres, row, i, j, nw;
+    gint n, xres, yres, row, i, j, nw, tp, tn;
     gboolean *wset;
-    gdouble sel[4];
     gdouble *cd, *d;
     gdouble s;
     gint *isel;
@@ -483,20 +460,7 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     xres = gwy_data_field_get_xres(plain_tool->data_field);
     yres = gwy_data_field_get_yres(plain_tool->data_field);
     for (i = 0; i < n; i++) {
-        gwy_selection_get_object(plain_tool->selection, i, sel);
-        sel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
-        sel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-        sel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
-        sel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
-        if (sel[1] > sel[3]) {
-            GWY_SWAP(gdouble, sel[0], sel[2]);
-            GWY_SWAP(gdouble, sel[1], sel[3]);
-        }
-        isel[4*i + 0] = CLAMP((gint)sel[0], 0, xres-1);
-        isel[4*i + 1] = CLAMP(floor(sel[1]), 0, yres-1);
-        isel[4*i + 2] = CLAMP((gint)sel[2], 0, xres-1);
-        isel[4*i + 3] = CLAMP(ceil(sel[3]), 0, yres-1);
-
+        gwy_tool_path_level_sel_to_isel(tool, i, isel + 4*i);
         cpts[2*i].row = isel[4*i + 1];
         cpts[2*i].id = i;
         cpts[2*i].end = FALSE;
@@ -510,8 +474,10 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     corr = gwy_data_line_new(yres, 1.0, TRUE);
     cd = gwy_data_line_get_data(corr);
     d = gwy_data_field_get_data(plain_tool->data_field);
+    tp = (tool->args.thickness - 1)/2;
+    tn = tool->args.thickness/2;
     i = 0;
-    for (row = 1; row < yres; row++) {
+    for (row = 0; row < yres; row++) {
         /* Lines participating on this row leveling are in wset now: they
          * intersect this and the previous row */
         if (row) {
@@ -524,10 +490,12 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
                     gint sg = q > 0 ? 1 : -1;
                     gint x = ((2*(row - isel[4*j + 1]) + 1)*p + sg*q)/(2*sg*q)
                              + isel[4*j + 0];
+                    gint k;
 
-                    s += d[xres*row + x] - d[xres*(row - 1) + x];
-                    /* d[xres*(row - 1) + x] = 0.0; */
-                    nw++;
+                    for (k = MAX(0, x - tp); k <= MIN(xres-1, x + tn); k++) {
+                        s += d[xres*row + k] - d[xres*(row - 1) + k];
+                        nw++;
+                    }
                 }
             }
             if (nw) {
@@ -541,10 +509,12 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
          * behaviour */
         while (i < 2*n && row == cpts[i].row) {
             if (cpts[i].end) {
+                gwy_debug("row %d, removing %d from wset", row, cpts[i].id);
                 g_assert(wset[cpts[i].id]);
                 wset[cpts[i].id] = FALSE;
             }
             else {
+                gwy_debug("row %d, adding %d to wset", row, cpts[i].id);
                 g_assert(!wset[cpts[i].id]);
                 wset[cpts[i].id] = TRUE;
             }
@@ -564,6 +534,34 @@ gwy_tool_path_level_apply(GwyToolPathLevel *tool)
     g_object_unref(corr);
 
     gwy_data_field_data_changed(plain_tool->data_field);
+}
+
+static void
+gwy_tool_path_level_sel_to_isel(GwyToolPathLevel *tool,
+                                gint i,
+                                gint *isel)
+{
+    GwyPlainTool *plain_tool;
+    gdouble sel[4];
+    gint xres, yres;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    xres = gwy_data_field_get_xres(plain_tool->data_field);
+    yres = gwy_data_field_get_yres(plain_tool->data_field);
+    gwy_selection_get_object(plain_tool->selection, i, sel);
+
+    sel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
+    sel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
+    sel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
+    sel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+    if (sel[1] > sel[3]) {
+        GWY_SWAP(gdouble, sel[0], sel[2]);
+        GWY_SWAP(gdouble, sel[1], sel[3]);
+    }
+    isel[0] = CLAMP((gint)sel[0], 0, xres-1);
+    isel[1] = CLAMP(floor(sel[1]), 0, yres-1);
+    isel[2] = CLAMP((gint)sel[2], 0, xres-1);
+    isel[3] = CLAMP(ceil(sel[3]), 0, yres-1);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
