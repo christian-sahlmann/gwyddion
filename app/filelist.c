@@ -837,11 +837,11 @@ gwy_app_recent_file_list_free(void)
  * @filename_utf8: A recent file to insert or move to the first position in
  *                 document history, in UTF-8.
  * @filename_sys: A recent file to insert or move to the first position in
- *                 document history, in system encoding.
+ *                 document history, in GLib encoding.
  * @hint: Preferred channel id to use for thumbnail, pass 0 if no channel
  *        is specificaly preferred.
  *
- * Moves @filename_utf8 to the first position in document history, eventually
+ * Moves @filename_utf8 to the first position in document history, possibly
  * adding it if not present yet.
  *
  * At least one of @filename_utf8, @filename_sys should be set.
@@ -884,6 +884,8 @@ gwy_app_recent_file_list_update(GwyContainer *data,
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
 
+        /* FIXME: Too crude, must update only when the file has changed.
+         * Add a recheck function? */
         if (data)
             gwy_recent_file_update_thumbnail(rf, data, hint, NULL);
     }
@@ -981,7 +983,8 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
  *
  * Returns: The thumbnail as a new pixbuf or a pixbuf with a new reference.
  *          The caller must unreference it but not modify it.  If not
- *          thumbnail can be obtained, a fully transparent pixbuf is returned.
+ *          thumbnail can not be obtained, a fully transparent pixbuf is
+ *          returned.
  **/
 GdkPixbuf*
 gwy_app_recent_file_get_thumbnail(const gchar *filename_utf8)
@@ -989,10 +992,18 @@ gwy_app_recent_file_get_thumbnail(const gchar *filename_utf8)
     GdkPixbuf *pixbuf;
     GwyRecentFile *rf;
 
-    rf = gwy_app_recent_file_new(gwy_canonicalize_path(filename_utf8), NULL);
-    gwy_app_recent_file_try_load_thumbnail(rf);
-    pixbuf = (GdkPixbuf*)g_object_ref(rf->pixbuf);
-    gwy_app_recent_file_free(rf);
+    if (gcontrols.store && gwy_app_recent_file_find(filename_utf8, NULL, &rf)) {
+        if (!rf->pixbuf)
+            gwy_app_recent_file_try_load_thumbnail(rf);
+        pixbuf = (GdkPixbuf*)g_object_ref(rf->pixbuf);
+    }
+    else {
+        rf = gwy_app_recent_file_new(gwy_canonicalize_path(filename_utf8),
+                                     NULL);
+        gwy_app_recent_file_try_load_thumbnail(rf);
+        pixbuf = (GdkPixbuf*)g_object_ref(rf->pixbuf);
+        gwy_app_recent_file_free(rf);
+    }
 
     return pixbuf;
 }

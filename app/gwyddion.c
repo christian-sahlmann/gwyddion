@@ -145,6 +145,7 @@ main(int argc, char *argv[])
     debug_time(timer, "create toolbox");
     gwy_app_data_browser_restore();
     debug_time(timer, "init data-browser");
+    /* A dirty trick, it constructs the recent files menu as a side effect. */
     gwy_app_recent_file_list_update(NULL, NULL, NULL, 0);
     debug_time(timer, "create recent files menu");
     gwy_app_splash_finish();
