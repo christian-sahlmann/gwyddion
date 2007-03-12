@@ -21,6 +21,7 @@
 #ifndef __GWY_PLAIN_TOOL_H__
 #define __GWY_PLAIN_TOOL_H__
 
+#include <gtk/gtktreeview.h>
 #include <app/gwytool.h>
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/datafield.h>
@@ -118,9 +119,11 @@ const gchar* gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
                                               const gchar *bname);
 GtkWidget*   gwy_plain_tool_add_clear_button (GwyPlainTool *plain_tool);
 
-gdouble gwy_plain_tool_get_z_average(GwyDataField *data_field,
-                                     const gdouble *point,
-                                     gint radius);
+gdouble gwy_plain_tool_get_z_average         (GwyDataField *data_field,
+                                              const gdouble *point,
+                                              gint radius);
+void    gwy_plain_tool_enable_object_deletion(GwyPlainTool *plain_tool,
+                                              GtkTreeView *treeview);
 
 typedef struct _GwyRectSelectionLabels GwyRectSelectionLabels;
 

@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
@@ -850,6 +851,55 @@ gwy_plain_tool_get_z_average(GwyDataField *data_field,
     g_free(values);
 
     return avg;
+}
+
+static gboolean
+gwy_plain_tool_delete_selection_object(GtkTreeView *treeview,
+                                       GdkEventKey *event,
+                                       GwyPlainTool *plain_tool)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gint *indices;
+
+    if (event->keyval != GDK_Delete)
+        return FALSE;
+
+    selection = gtk_tree_view_get_selection(treeview);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return FALSE;
+
+    path = gtk_tree_model_get_path(model, &iter);
+    indices = gtk_tree_path_get_indices(path);
+    gwy_selection_delete_object(plain_tool->selection, indices[0]);
+    gtk_tree_path_free(path);
+
+    return TRUE;
+}
+
+/**
+ * gwy_plain_tool_enable_object_deletion:
+ * @plain_tool: A plain tool.
+ * @treeview: A tree view that displays selection objects in order, each row
+ *            corresponding to one selection object.
+ *
+ * Enables deletion of selection objects by presssing Delete in a tree view
+ * diplaying them.
+ *
+ * Since: 2.6
+ **/
+void
+gwy_plain_tool_enable_object_deletion(GwyPlainTool *plain_tool,
+                                      GtkTreeView *treeview)
+{
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
+
+    g_signal_connect(treeview, "key-press-event",
+                     G_CALLBACK(gwy_plain_tool_delete_selection_object),
+                     plain_tool);
 }
 
 static GtkLabel*
