@@ -94,6 +94,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_MERGE                 "gwy_merge"
 #define GWY_STOCK_MORE                  "gwy_more"
 #define GWY_STOCK_PALETTES              "gwy_palettes"
+#define GWY_STOCK_PATH_LEVEL            "gwy_path_level"
 #define GWY_STOCK_POINTER_MEASURE       "gwy_pointer_measure"
 #define GWY_STOCK_POLYNOM               "gwy_polynom"
 #define GWY_STOCK_PROFILE               "gwy_profile"

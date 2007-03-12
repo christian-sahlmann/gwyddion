@@ -767,6 +767,15 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_PATH_LEVEL
+ *
+ * The "Path-Level" stock icon.
+ * <inlinegraphic fileref="gwy_path_level-24.png" format="PNG"/>
+
+* Since: 2.6
+ **/
+
+/**
  * GWY_STOCK_POINTER_MEASURE
  *
  * The "Pointer-Measure" stock icon.
