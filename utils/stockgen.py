@@ -81,16 +81,17 @@ def update_documentation(images, sinces):
     """Update `documentation' in C source to list all stock icons."""
 
     # Format documentation entries
-    # Note the `../' in image path.  It is here to undo the effect of content
-    # files being XIncluded from xml/ subdirectory, therefore straight paths
-    # get xml/ prepended to be relative to the driver file (as of 1.66.1
-    # stylesheets) -- which is exactly what we do NOT need.
+    # FIXME: Sometimes the image paths seem to need to `../' prepended becuase
+    # content files are XIncluded from xml/ subdirectory, therefore straight
+    # paths get xml/ prepended to be relative to the driver file.  Sometimes
+    # this causes extra `../' in the paths.  Not sure what the `right' thing
+    # is.
     cfile = base + '.c'
     template = ('/**\n'
                 ' * GWY_STOCK_%s\n'
                 ' *\n'
                 ' * The "%s" stock icon.\n'
-                ' * <inlinegraphic fileref="../gwy_%s-%d.png" format="PNG"/>\n'
+                ' * <inlinegraphic fileref="gwy_%s-%d.png" format="PNG"/>\n'
                 '%s'
                 ' **/\n'
                 '\n')
