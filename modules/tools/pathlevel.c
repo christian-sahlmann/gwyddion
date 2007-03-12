@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include <stdlib.h>
-#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -97,8 +96,6 @@ static void     gwy_tool_path_level_render_cell      (GtkCellLayout *layout,
                                                       GtkTreeModel *model,
                                                       GtkTreeIter *iter,
                                                       gpointer user_data);
-static gboolean gwy_tool_path_level_list_key_press   (GwyToolPathLevel *tool,
-                                                      GdkEventKey *event);
 static void     gwy_tool_path_level_apply            (GwyToolPathLevel *tool);
 static void     gwy_tool_path_level_sel_to_isel      (GwyToolPathLevel *tool,
                                                       gint i,
@@ -218,9 +215,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
     store = gwy_null_store_new(0);
     tool->model = GTK_TREE_MODEL(store);
     tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
-    g_signal_connect_swapped(tool->treeview, "key-press-event",
-                             G_CALLBACK(gwy_tool_path_level_list_key_press),
-                             tool);
+    gwy_plain_tool_enable_object_deletion(GWY_PLAIN_TOOL(tool), tool->treeview);
 
     for (i = 0; i < NLCOLUMNS; i++) {
         column = gtk_tree_view_column_new();
@@ -387,31 +382,6 @@ gwy_tool_path_level_render_cell(GtkCellLayout *layout,
     }
 
     g_object_set(renderer, "text", buf, NULL);
-}
-
-static gboolean
-gwy_tool_path_level_list_key_press(GwyToolPathLevel *tool,
-                                   GdkEventKey *event)
-{
-    GtkTreeSelection *selection;
-    GtkTreePath *path;
-    GtkTreeIter iter;
-    const gint *indices;
-
-    if (event->keyval == GDK_Delete) {
-        selection = gtk_tree_view_get_selection(tool->treeview);
-        if (gtk_tree_selection_get_selected(selection, NULL, &iter)) {
-            path = gtk_tree_model_get_path(tool->model, &iter);
-            indices = gtk_tree_path_get_indices(path);
-            gwy_selection_delete_object(GWY_PLAIN_TOOL(tool)->selection,
-                                        indices[0]);
-            gtk_tree_path_free(path);
-        }
-
-        return TRUE;
-    }
-
-    return FALSE;
 }
 
 static gint
