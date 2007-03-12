@@ -138,7 +138,7 @@ gwy_tool_path_level_class_init(GwyToolPathLevelClass *klass)
 
     gobject_class->finalize = gwy_tool_path_level_finalize;
 
-    tool_class->stock_id = GWY_STOCK_LINE_LEVEL;
+    tool_class->stock_id = GWY_STOCK_PATH_LEVEL;
     tool_class->title = _("Path Level");
     tool_class->tooltip = _("Level rows using intersections with given lines");
     tool_class->prefix = "/module/pathlevel";
