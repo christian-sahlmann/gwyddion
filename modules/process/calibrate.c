@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -382,7 +382,7 @@ calibrate_dialog(CalibrateArgs *args,
                                        _("_X calibration factor:"), "",
                                        controls.xratio);
     controls.xpower10 = gwy_table_get_child_widget(table, row, 2);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
 
     controls.yratio = gtk_adjustment_new(args->yratio, 0.001, 1000, 0.1, 1, 0);
@@ -390,7 +390,7 @@ calibrate_dialog(CalibrateArgs *args,
                                        _("_Y calibration factor:"), "",
                                        controls.yratio);
     controls.ypower10 = gwy_table_get_child_widget(table, row, 2);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
 
     controls.zratio = gtk_adjustment_new(args->zratio, 0.001, 1000, 0.1, 1, 0);
@@ -398,7 +398,7 @@ calibrate_dialog(CalibrateArgs *args,
                                        _("_Z calibration factor:"), "",
                                        controls.zratio);
     controls.zpower10 = gwy_table_get_child_widget(table, row, 2);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
 
     g_signal_connect(controls.xreal, "value-changed",
