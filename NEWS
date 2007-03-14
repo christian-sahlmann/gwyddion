@@ -1,3 +1,13 @@
+2.5.20070314
+
+2.6 (0000-00-00)
+Modules:
+- Path level tool (new): Levels rows along arbitrary lines.
+- Pixmap import: It's possible to set arbitrary units, the preview is bigger.
+- Rawfile: Critical messages on Reset were fixed.
+- Point layer: Radius indicator scales properly when the layer is scaled.
+- Calibrate: The precision of scale spin buttons was increased.
+- Graph fit: Initial estimated curve label saying "noun|Estimate" was fixed.
 
 
 2.5 (2007-03-10)
