@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -274,8 +274,9 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
                             gint i)
 {
     GwyDataView *data_view;
-    gint xc, yc, xmin, xmax, ymin, ymax, width, height, size, radius;
-    gdouble xy[OBJECT_SIZE], xreal, yreal, zoom;
+    gint xc, yc, xmin, xmax, ymin, ymax, size, radius;
+    gint dwidth, dheight, xsize, ysize, xr, yr;
+    gdouble xy[OBJECT_SIZE], xreal, yreal, xm, ym;
     gboolean has_object;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -291,8 +292,12 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
 
     radius = GWY_LAYER_POINT(layer)->marker_radius;
 
+    gdk_drawable_get_size(drawable, &dwidth, &dheight);
+    gwy_data_view_get_pixel_data_sizes(data_view, &xsize, &ysize);
     switch (target) {
         case GWY_RENDERING_TARGET_SCREEN:
+        xm = dwidth/(xsize*(gwy_data_view_get_hexcess(data_view) + 1.0));
+        ym = dheight/(ysize*(gwy_data_view_get_vexcess(data_view) + 1.0));
         gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xc, &yc);
         xmin = xc - CROSS_SIZE + 1;
         xmax = xc + CROSS_SIZE - 1;
@@ -303,14 +308,12 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
         break;
 
         case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
-        gwy_data_view_get_pixel_data_sizes(data_view, &xmax, &ymax);
-        gdk_drawable_get_size(drawable, &width, &height);
-        zoom = sqrt(((gdouble)(width*height))/(xmax*ymax));
-        size = GWY_ROUND(MAX(zoom*(CROSS_SIZE - 1), 1.0));
-        radius = GWY_ROUND(MAX(zoom*(radius - 1), 1.0));
+        xm = (gdouble)dwidth/xsize;
+        ym = (gdouble)dheight/ysize;
+        size = GWY_ROUND(MAX(sqrt(xm*ym)*(CROSS_SIZE - 1), 1.0));
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
-        xc = floor(xy[0]*width/xreal);
-        yc = floor(xy[1]*height/yreal);
+        xc = floor(xy[0]*dwidth/xreal);
+        yc = floor(xy[1]*dheight/yreal);
 
         xmin = xc - size;
         xmax = xc + size;
@@ -322,14 +325,15 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
         g_return_if_reached();
         break;
     }
+    xr = GWY_ROUND(MAX(xm*(radius - 1), 1.0));
+    yr = GWY_ROUND(MAX(ym*(radius - 1), 1.0));
 
     gdk_draw_line(drawable, layer->gc, xmin, yc, xmax, yc);
     gdk_draw_line(drawable, layer->gc, xc, ymin, xc, ymax);
 
     if (radius > 0)
         gdk_draw_arc(drawable, layer->gc, FALSE,
-                     xc - radius, yc - radius, radius + radius, radius + radius,
-                     0, 64*360);
+                     xc - xr, yc - yr, 2*xr, 2*yr, 0, 64*360);
 }
 
 static gboolean
