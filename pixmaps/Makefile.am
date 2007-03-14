@@ -3,17 +3,6 @@
 pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
-# Removed/missing:
-#   graph_export_ascii
-#   graph_export_bitmap
-#   graph_export_vector
-#   graph_gauss
-#   measure_scale
-#   none
-#   pointer
-#   polynom_remove (but see polynom)
-#   slope_mask
-
 # Since 2.3: arithmetic data_measure drift immerse merge
 # Since 2.6: path_level
 
