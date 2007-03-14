@@ -16,7 +16,7 @@ cat >autostuff.ignore <<':'
 ':'
 :
 
-cat >build_project.ignore <<':'
+cat >build_project_nopygwy.ignore <<':'
 ^TRANSLATION [a-z]
 ^[0-9]\+ translated messages
 ':'
@@ -85,6 +85,13 @@ function printerr() {
   cat $tmplog
 }
 
+function exclude_pygwy_from_project() {
+  # Exclude the block of lines that match pygwy build from build_project
+  difffmt='--old-line-format=%L --new-line-format=!%L --unchanged-line-format='
+  diff $difffmt build_project.err build_pygwy.err >build_project_nopygwy.err
+  diff $difffmt build_project.log build_pygwy.log >build_project_nopygwy.log
+}
+
 function extract_build_documentation() {
   logfile=build_documentation.log
   h=
@@ -131,7 +138,9 @@ function coding_style_report() {
 
 printerr update_version
 printerr autostuff
-printerr build_project
+exclude_pygwy_from_project
+printerr build_project_nopygwy
+printerr build_pygwy | tee pygwy.log
 extract_translation_stats
 printerr build_documentation
 extract_build_documentation
