@@ -2262,8 +2262,8 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
     label = gwy3dview->labels[id];
     text = gwy_3d_label_expand_text(label, gwy3dview->variables);
     size = gwy_3d_label_user_size(label, size);
-    displacement_x = ROUND(label->delta_x);
-    displacement_y = ROUND(label->delta_y);
+    displacement_x = GWY_ROUND(label->delta_x);
+    displacement_y = GWY_ROUND(label->delta_y);
 
     /* Font */
     /* FIXME: is it possible for pango to write on trasnparent background? */

@@ -230,7 +230,7 @@ gwy_hruler_draw_pos(GwyRuler *ruler)
 
             increment = (gdouble)ruler->pixelsize/(ruler->upper - ruler->lower);
 
-            x = ROUND((ruler->position - ruler->lower) * increment)
+            x = GWY_ROUND((ruler->position - ruler->lower) * increment)
                 + (ruler->hthickness - bs_width)/2 - 1;
             y = (ruler->height + bs_height)/2 + ruler->vthickness;
 

@@ -1416,32 +1416,34 @@ static gint
 gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 {
     guint i;
-    gdouble dist, range;
+    gdouble dist, range, dr;
     GwyAxisLabeledTick *pmjt;
     GwyAxisTick *pmit;
 
-    dist = (gdouble)scrmax-scrmin-1;
-    range = a->max - a->min;
-    if (a->is_logarithmic) range = log10(a->max)-log10(a->min);
+    dist = scrmax - scrmin - 1;
+    if (a->is_logarithmic)
+        range = log10(a->max/a->min);
+    else
+        range = a->max - a->min;
 
+    dr = dist/range;
     for (i = 0; i < a->mjticks->len; i++) {
         pmjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
         if (a->is_logarithmic)
-            pmjt->t.scrpos = ROUND(scrmin + (pmjt->t.value
-                                             - log10(a->min))/range*dist);
+            pmjt->t.scrpos = GWY_ROUND(scrmin
+                                       + (pmjt->t.value - log10(a->min))*dr);
         else
-            pmjt->t.scrpos = ROUND(scrmin + (pmjt->t.value
-                                             - a->min)/range*dist);
+            pmjt->t.scrpos = GWY_ROUND(scrmin + (pmjt->t.value - a->min)*dr);
     }
 
     for (i = 0; i < a->miticks->len; i++) {
         pmit = &g_array_index(a->miticks, GwyAxisTick, i);
         if (a->is_logarithmic)
-            pmit->scrpos = ROUND(scrmin + (pmit->value
-                                           - log10(a->min))/range*dist);
+            pmit->scrpos = GWY_ROUND(scrmin + (pmit->value - log10(a->min))*dr);
         else
-            pmit->scrpos = ROUND(scrmin + (pmit->value - a->min)/range*dist);
+            pmit->scrpos = GWY_ROUND(scrmin + (pmit->value - a->min)*dr);
     }
+
     return 0;
 }
 
@@ -1506,7 +1508,8 @@ gwy_axis_formatticks(GwyAxis *a)
             if (human_fmt)
                 g_string_printf(pmjt->ttext, "%g", pow10(value));
             else
-                g_string_printf(pmjt->ttext, "10<sup>%d</sup>", ROUND(value));
+                g_string_printf(pmjt->ttext, "10<sup>%d</sup>",
+                                GWY_ROUND(value));
         }
         else {
             if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {

@@ -127,8 +127,8 @@ gwy_hmarker_box_draw_marker(GwyMarkerBox *mbox,
     else
         gcstate = GTK_STATE_NORMAL;
 
-    ipos = ROUND(pos*(width - 1));
-    iw = MAX(ROUND(height/GWY_SQRT3 - 1), 1);
+    ipos = GWY_ROUND(pos*(width - 1));
+    iw = MAX(GWY_ROUND(height/GWY_SQRT3 - 1), 1);
     points[0].x = ipos - iw;
     points[1].x = ipos + iw;
     points[2].x = ipos;
@@ -188,7 +188,7 @@ gwy_hmarker_box_button_press(GtkWidget *widget,
     }
 
     pos = g_array_index(mbox->markers, gdouble, i);
-    ipos = ROUND(pos*(width - 1));
+    ipos = GWY_ROUND(pos*(width - 1));
     mbox->button = event->button;
     mbox->offset = x - ipos;
     mbox->moved = FALSE;
@@ -294,7 +294,7 @@ gwy_hmarker_box_find_nearest(GwyMarkerBox *mbox,
     mdist = G_MAXINT;
     for (i = 0; i < mbox->markers->len; i++) {
         pos = g_array_index(mbox->markers, gdouble, i);
-        ipos = ROUND(pos*(width - 1));
+        ipos = GWY_ROUND(pos*(width - 1));
         if (ipos == x)
             return i;
 
@@ -309,7 +309,7 @@ gwy_hmarker_box_find_nearest(GwyMarkerBox *mbox,
         return -1;
 
     pos = g_array_index(mbox->markers, gdouble, ii);
-    ipos = ROUND(pos*(width - 1));
+    ipos = GWY_ROUND(pos*(width - 1));
     if (mbox->flipped)
         y = height-1 - y;
 

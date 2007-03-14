@@ -443,7 +443,8 @@ gwy_marker_box_set_marker_position(GwyMarkerBox *mbox,
         return FALSE;
 
     width = GTK_WIDGET(mbox)->allocation.width;
-    needs_redraw = (ROUND(pos*(width - 1)) != ROUND(currpos*(width - 1)));
+    needs_redraw = (GWY_ROUND(pos*(width - 1))
+                    != GWY_ROUND(currpos*(width - 1)));
 
     g_array_index(mbox->markers, gdouble, i) = pos;
     if (needs_redraw && GTK_WIDGET_REALIZED(mbox))

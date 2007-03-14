@@ -804,7 +804,7 @@ gwy_ruler_is_precision_ok(const GwySIValueFormat *format,
 {
     gint m;
 
-    m = ROUND(log10(base/format->magnitude));
+    m = GWY_ROUND(log10(base/format->magnitude));
 
     return format->precision + m >= (scale == SCALE_2_5) ? 1 : 0;
 }

@@ -628,7 +628,7 @@ gwy_color_axis_draw_ticks(GwyColorAxis *axis)
         gwy_debug("tickdist: %g x: %g max: %g", tickdist, x, max);
         if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
             while (x <= max) {
-                pos = size-1 - ROUND((x - axis->min)*scale);
+                pos = size-1 - GWY_ROUND((x - axis->min)*scale);
                 if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
                     gdk_draw_line(widget->window, gc,
                                   swidth, pos, swidth + tlength/2, pos);
@@ -637,7 +637,7 @@ gwy_color_axis_draw_ticks(GwyColorAxis *axis)
         }
         else {
             while (x <= max) {
-                pos = ROUND((x - axis->min)*scale);
+                pos = GWY_ROUND((x - axis->min)*scale);
                 if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
                     gdk_draw_line(widget->window, gc,
                                   pos, swidth, pos, swidth + tlength/2);

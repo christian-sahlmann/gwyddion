@@ -350,7 +350,7 @@ gwy_vector_layer_draw(GwyVectorLayer *layer,
 
         gc = gdk_gc_new(drawable);
         gdk_gc_get_values(gc, &gcvalues);
-        gcvalues.line_width = ROUND(MAX(zoom, 1.0));
+        gcvalues.line_width = GWY_ROUND(MAX(zoom, 1.0));
         gcvalues.function = GDK_SET;
         gdk_gc_set_values(gc, &gcvalues, GDK_GC_LINE_WIDTH | GDK_GC_FUNCTION);
 

@@ -453,12 +453,12 @@ gwy_data_view_size_request(GtkWidget *widget,
         gdouble scale = MAX(data_view->xres/data_view->xreal,
                             data_view->yres/data_view->yreal);
         scale *= data_view->newzoom;
-        requisition->width = ROUND(scale * data_view->xreal);
-        requisition->height = ROUND(scale * data_view->yreal);
+        requisition->width = GWY_ROUND(scale * data_view->xreal);
+        requisition->height = GWY_ROUND(scale * data_view->yreal);
     }
     else {
-        requisition->width = ROUND(data_view->newzoom * data_view->xres);
-        requisition->height = ROUND(data_view->newzoom * data_view->yres);
+        requisition->width = GWY_ROUND(data_view->newzoom * data_view->xres);
+        requisition->height = GWY_ROUND(data_view->newzoom * data_view->yres);
     }
 
     data_view->size_requested = TRUE;
@@ -542,14 +542,14 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         data_view->zoom = MIN(alloc->width/(scale*data_view->xreal),
                               alloc->height/(scale*data_view->yreal));
         scale *= data_view->zoom;
-        scwidth = ROUND(scale * data_view->xreal);
-        scheight = ROUND(scale * data_view->yreal);
+        scwidth = GWY_ROUND(scale * data_view->xreal);
+        scheight = GWY_ROUND(scale * data_view->yreal);
     }
     else {
         data_view->zoom = MIN((gdouble)alloc->width/data_view->xres,
                               (gdouble)alloc->height/data_view->yres);
-        scwidth = ROUND(data_view->xres * data_view->zoom);
-        scheight = ROUND(data_view->yres * data_view->zoom);
+        scwidth = GWY_ROUND(data_view->xres * data_view->zoom);
+        scheight = GWY_ROUND(data_view->yres * data_view->zoom);
     }
     data_view->xmeasure = data_view->xreal/scwidth;
     data_view->ymeasure = data_view->yreal/scheight;
