@@ -161,7 +161,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -639,7 +639,9 @@ fit_plot_curve(FitArgs *args)
     }
     g_object_set(cmodel,
                  "description",
-                 initial ? _("noun|Estimate") : gwy_sgettext("noun|Fit"),
+                 initial
+                 ? gwy_sgettext("noun|Estimate")
+                 : gwy_sgettext("noun|Fit"),
                  NULL);
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
 }
