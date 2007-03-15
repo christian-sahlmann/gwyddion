@@ -40,7 +40,7 @@
 /* Some empirical factors */
 
 /* Search window of improve for kernel dimension @k and image dimension @i */
-#define improve_search_window(k, i) ROUND(1.0/(2.0/(k) + 6.0/(i)))
+#define improve_search_window(k, i) GWY_ROUND(1.0/(2.0/(k) + 6.0/(i)))
 
 /* Universal downsample factor to get approximately optimal run time in
  * two-stage search */
@@ -566,8 +566,8 @@ immerse_search(ImmerseControls *controls,
         return;
     }
 
-    w = ROUND(MAX(wr, 1.0));
-    h = ROUND(MAX(hr, 1.0));
+    w = GWY_ROUND(MAX(wr, 1.0));
+    h = GWY_ROUND(MAX(hr, 1.0));
     gwy_debug("w: %d, h: %d", w, h);
     g_assert(w <= ixres && h <= iyres);
     if (search_type == IMMERSE_RESPONSE_IMPROVE) {
@@ -621,7 +621,7 @@ immerse_search(ImmerseControls *controls,
                                         xto - xfrom, yto - yfrom);
     wr = gwy_data_field_get_xreal(iarea)/gwy_data_field_get_xmeasure(dfield);
     hr = gwy_data_field_get_yreal(iarea)/gwy_data_field_get_ymeasure(dfield);
-    gwy_data_field_resample(iarea, ROUND(wr), ROUND(hr),
+    gwy_data_field_resample(iarea, GWY_ROUND(wr), GWY_ROUND(hr),
                             GWY_INTERPOLATION_LINEAR);
     immerse_correlate(iarea, dfield, &col, &row);
     gwy_debug("[U] col: %d, row: %d", col, row);
@@ -657,10 +657,10 @@ immerse_correlate(GwyDataField *image,
     factor = MAX(downsample_factor, downsample_limit/sqrt(kxres*kyres));
     factor = MIN(factor, 1.0);
 
-    skxres = ROUND(factor*kxres);
-    skyres = ROUND(factor*kyres);
-    sixres = ROUND(factor*ixres);
-    siyres = ROUND(factor*iyres);
+    skxres = GWY_ROUND(factor*kxres);
+    skyres = GWY_ROUND(factor*kyres);
+    sixres = GWY_ROUND(factor*ixres);
+    siyres = GWY_ROUND(factor*iyres);
     gwy_debug("skernel: %dx%d, simage: %dx%d", skxres, skyres, sixres, siyres);
 
     subimage = gwy_data_field_new_resampled(image, sixres, siyres,
@@ -681,10 +681,10 @@ immerse_correlate(GwyDataField *image,
     sx -= (skxres - 1)/2;
     sy -= (skyres - 1)/2;
     /* Upscaled to original size */
-    sx = ROUND((gdouble)ixres/sixres*sx);
-    sy = ROUND((gdouble)iyres/siyres*sy);
+    sx = GWY_ROUND((gdouble)ixres/sixres*sx);
+    sy = GWY_ROUND((gdouble)iyres/siyres*sy);
     /* Uncertainty margin */
-    delta = ROUND(1.5/factor + 1);
+    delta = GWY_ROUND(1.5/factor + 1);
     /* Subarea to search */
     xfrom = MAX(sx - delta, 0);
     yfrom = MAX(sy - delta, 0);
@@ -753,10 +753,10 @@ immerse_do(ImmerseArgs *args)
         result = gwy_data_field_duplicate(image);
         x = gwy_data_field_rtoj(image, args->xpos);
         y = gwy_data_field_rtoi(image, args->ypos);
-        w = ROUND(gwy_data_field_get_xreal(detail)
-                  /gwy_data_field_get_xmeasure(image));
-        h = ROUND(gwy_data_field_get_yreal(detail)
-                  /gwy_data_field_get_ymeasure(image));
+        w = GWY_ROUND(gwy_data_field_get_xreal(detail)
+                      /gwy_data_field_get_xmeasure(image));
+        h = GWY_ROUND(gwy_data_field_get_yreal(detail)
+                      /gwy_data_field_get_ymeasure(image));
         w = MAX(w, 1);
         h = MAX(h, 1);
         gwy_debug("w: %d, h: %d", w, h);
@@ -771,10 +771,10 @@ immerse_do(ImmerseArgs *args)
         break;
 
         case GWY_IMMERSE_SAMPLING_UP:
-        w = ROUND(gwy_data_field_get_xreal(image)
-                  /gwy_data_field_get_xmeasure(detail));
-        h = ROUND(gwy_data_field_get_yreal(image)
-                  /gwy_data_field_get_ymeasure(detail));
+        w = GWY_ROUND(gwy_data_field_get_xreal(image)
+                      /gwy_data_field_get_xmeasure(detail));
+        h = GWY_ROUND(gwy_data_field_get_yreal(image)
+                      /gwy_data_field_get_ymeasure(detail));
         gwy_debug("w: %d, h: %d", w, h);
         result = gwy_data_field_new_resampled(image, w, h,
                                               GWY_INTERPOLATION_LINEAR);

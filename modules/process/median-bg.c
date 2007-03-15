@@ -141,7 +141,7 @@ median(GwyContainer *data, GwyRunType run)
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid),
                        _("Median-leveling"));
-    background = median_background(ROUND(args.size), dfield);
+    background = median_background(GWY_ROUND(args.size), dfield);
     gwy_app_wait_finish();
     if (!background)
         return;
@@ -369,7 +369,7 @@ median_make_circle(gint radius)
         if (G_UNLIKELY(u > 1.0))
             data[radius+i] = data[radius-i] = 0;
         else
-            data[radius+i] = data[radius-i] = ROUND(radius*sqrt(1.0 - u*u));
+            data[radius+i] = data[radius-i] = GWY_ROUND(radius*sqrt(1.0 - u*u));
 
     }
 

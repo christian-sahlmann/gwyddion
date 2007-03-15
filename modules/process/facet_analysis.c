@@ -834,8 +834,8 @@ gwy_data_field_facet_distribution(GwyDataField *dfield,
         gint xx, yy;
 
         angles_to_xy(*xdc, *ydc, &x, &y);
-        xx = ROUND(q*x/G_SQRT2*hres) + hres;
-        yy = ROUND(q*y/G_SQRT2*hres) + hres;
+        xx = GWY_ROUND(q*x/G_SQRT2*hres) + hres;
+        yy = GWY_ROUND(q*y/G_SQRT2*hres) + hres;
         data[yy*res + xx] += 1.0;
     }
 

@@ -398,7 +398,7 @@ width_changed_cb(GtkAdjustment *adj,
 
     args = controls->args;
     v = gtk_adjustment_get_value(adj);
-    args->xres = ROUND(v);
+    args->xres = GWY_ROUND(v);
     if (controls->in_update)
         return;
 
@@ -420,7 +420,7 @@ height_changed_cb(GtkAdjustment *adj,
 
     args = controls->args;
     v = gtk_adjustment_get_value(adj);
-    args->yres = ROUND(v);
+    args->yres = GWY_ROUND(v);
     if (controls->in_update)
         return;
 

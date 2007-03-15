@@ -131,10 +131,10 @@ scale(GwyContainer *data, GwyRunType run)
     scale_load_args(gwy_app_settings_get(), &args);
     args.org_xres = gwy_data_field_get_xres(dfields[0]);
     args.org_yres = gwy_data_field_get_yres(dfields[0]);
-    args.xres = ROUND(args.ratio*args.org_xres);
+    args.xres = GWY_ROUND(args.ratio*args.org_xres);
     if (args.proportional)
         args.aspectratio = 1.0;
-    args.yres = ROUND(args.aspectratio*args.ratio*args.org_yres);
+    args.yres = GWY_ROUND(args.aspectratio*args.ratio*args.org_yres);
 
     if (run == GWY_RUN_INTERACTIVE) {
         ok = scale_dialog(&args);
@@ -144,19 +144,19 @@ scale(GwyContainer *data, GwyRunType run)
     }
 
     dfields[0] = gwy_data_field_new_resampled(dfields[0],
-                                              ROUND(args.xres),
-                                              ROUND(args.yres),
+                                              GWY_ROUND(args.xres),
+                                              GWY_ROUND(args.yres),
                                               args.interp);
     if (dfields[1]) {
         dfields[1] = gwy_data_field_new_resampled(dfields[1],
-                                                  ROUND(args.xres),
-                                                  ROUND(args.yres),
+                                                  GWY_ROUND(args.xres),
+                                                  GWY_ROUND(args.yres),
                                                   args.interp);
     }
     if (dfields[2]) {
         dfields[2] = gwy_data_field_new_resampled(dfields[2],
-                                                  ROUND(args.xres),
-                                                  ROUND(args.yres),
+                                                  GWY_ROUND(args.xres),
+                                                  GWY_ROUND(args.yres),
                                                   args.interp);
     }
 
@@ -302,8 +302,8 @@ proportional_changed_cb(GtkToggleButton *check_button,
     controls->in_update = TRUE;
     args->proportional = gtk_toggle_button_get_active(check_button);
     if (args->proportional) {
-        args->xres = ROUND(args->ratio*args->org_xres);
-        args->yres = ROUND(args->ratio*args->org_yres);
+        args->xres = GWY_ROUND(args->ratio*args->org_xres);
+        args->yres = GWY_ROUND(args->ratio*args->org_yres);
     }
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
@@ -322,8 +322,8 @@ scale_changed_cb(GtkAdjustment *adj,
     controls->in_update = TRUE;
     args->ratio = gtk_adjustment_get_value(adj);
     /* occurs only if args->proportional */
-    args->xres = ROUND(args->ratio*args->org_xres);
-    args->yres = ROUND(args->ratio*args->org_yres);
+    args->xres = GWY_ROUND(args->ratio*args->org_xres);
+    args->yres = GWY_ROUND(args->ratio*args->org_yres);
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -343,7 +343,7 @@ width_changed_cb(GtkAdjustment *adj,
     args->xres = gtk_adjustment_get_value(adj);
     if (args->proportional) {
         args->ratio = (gdouble)args->xres/args->org_xres;
-        args->yres = ROUND(args->ratio*args->org_yres);
+        args->yres = GWY_ROUND(args->ratio*args->org_yres);
     }
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
@@ -363,7 +363,7 @@ height_changed_cb(GtkAdjustment *adj,
     args->yres = gtk_adjustment_get_value(adj);
     if (args->proportional) {
         args->ratio = (gdouble)args->yres/args->org_yres;
-        args->xres = ROUND(args->ratio*args->org_xres);
+        args->xres = GWY_ROUND(args->ratio*args->org_xres);
     }
     scale_dialog_update(controls, args);
     controls->in_update = FALSE;
@@ -376,9 +376,9 @@ scale_dialog_update(ScaleControls *controls,
     args->aspectratio = (gdouble)args->yres/args->org_yres
                         *(gdouble)args->org_xres/args->xres;
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xres),
-                             ROUND(args->xres));
+                             GWY_ROUND(args->xres));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres),
-                             ROUND(args->yres));
+                             GWY_ROUND(args->yres));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ratio),
                              args->ratio);
 

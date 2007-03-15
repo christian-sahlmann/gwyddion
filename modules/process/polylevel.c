@@ -539,7 +539,7 @@ poly_level_degree_changed(GtkObject *spin,
 
     args = controls->args;
     v = gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
-    degree = ROUND(v);
+    degree = GWY_ROUND(v);
     if (spin == controls->col_degree) {
         update = args->col_degree != degree;
         args->col_degree = degree;
@@ -589,7 +589,7 @@ poly_level_max_degree_changed(GtkObject *spin,
 
     args = controls->args;
     v = gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
-    degree = ROUND(v);
+    degree = GWY_ROUND(v);
     if (degree == args->max_degree)
         return;
 

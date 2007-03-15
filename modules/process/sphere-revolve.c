@@ -589,8 +589,8 @@ sphrev_make_sphere(gdouble radius, gint maxres)
     gdouble *data;
     gint i, size;
 
-    size = ROUND(MIN(radius, maxres));
-    dline = GWY_DATA_LINE(gwy_data_line_new(2*size+1, 1.0, FALSE));
+    size = GWY_ROUND(MIN(radius, maxres));
+    dline = gwy_data_line_new(2*size+1, 1.0, FALSE);
     data = gwy_data_line_get_data(dline);
 
     if (radius/8 > maxres) {

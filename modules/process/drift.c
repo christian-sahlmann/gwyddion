@@ -609,7 +609,7 @@ mask_process(GwyDataField *maskfield,
     mdata = gwy_data_field_get_data(maskfield);
     for (i = 0; i < yres; i++) {
         for (j = -2*step - step/2; j <= xres + 2*step + step/2; j += step) {
-            pos = j + ROUND(gwy_data_line_rtoi(drift, rdata[i]));
+            pos = j + GWY_ROUND(gwy_data_line_rtoi(drift, rdata[i]));
             from = MAX(0, pos - w/2);
             to = MIN(pos + (w - w/2) - 1, xres-1);
             for (k = from; k <= to; k++)

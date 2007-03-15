@@ -340,9 +340,9 @@ square_samples(GwyContainer *data, GwyRunType run)
     if (fabs(log(qx/qy)) > 1.0/hypot(xres, yres)) {
         /* Resample */
         if (qx < qy)
-            xres = MAX(ROUND(xreal*qy), 1);
+            xres = MAX(GWY_ROUND(xreal*qy), 1);
         else
-            yres = MAX(ROUND(yreal*qx), 1);
+            yres = MAX(GWY_ROUND(yreal*qx), 1);
 
         dfields[0] = gwy_data_field_new_resampled(dfields[0], xres, yres,
                                                   GWY_INTERPOLATION_BSPLINE);
