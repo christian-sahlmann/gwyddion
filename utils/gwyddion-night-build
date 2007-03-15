@@ -225,6 +225,7 @@ else
   call update_version
   call autostuff
   call build_project
+  call build_pygwy
   call build_documentation
   call install_to_tmp
   call check_headers
