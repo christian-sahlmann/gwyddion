@@ -71,6 +71,8 @@
  */
 
 /**
+ * XXX: Disabled, it conflicts with MIME types installed by other packages
+ * way too often.
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-hdf">
  *   <comment>Hierarchical Data Format</comment>
