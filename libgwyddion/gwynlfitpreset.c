@@ -1176,17 +1176,9 @@ gwy_nlfit_preset_class_init(GwyNLFitPresetClass *klass)
     res_class->item_type = *gwy_resource_class_get_item_type(parent_class);
 
     res_class->item_type.type = G_TYPE_FROM_CLASS(klass);
-    /* TODO: override more methods */
-
     res_class->name = "nlfitpresets";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
     gwy_inventory_forget_order(res_class->inventory);
-    /*
-    gwy_inventory_set_default_item_name(res_class->inventory,
-                                        GWY_NLFIT_PRESET_DEFAULT);
-    res_class->dump = gwy_nlfit_preset_dump;
-    res_class->parse = gwy_nlfit_preset_parse;
-                                        */
 }
 
 static void
