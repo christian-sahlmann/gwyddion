@@ -107,7 +107,6 @@ pygwy_register_plugins(void)
 
     if (pygwy_plugin_dir == NULL && err) {
         if (err->code == G_FILE_ERROR_NOENT) { // directory not found/does not exist
-            g_warning("Cannot open pygwy plugin directory %s", dir);
             if (g_mkdir(dir, 0700)) {
                 g_warning("Cannot create pygwy plugin directory %s", dir);
             } else {
