@@ -536,10 +536,10 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
                                       FALSE, format);
     format = gwy_3d_view_update_label(gwy3dview, "max",
                                       data_max, maximum, range/12.0,
-                                      FALSE, format);
+                                      TRUE, format);
     format = gwy_3d_view_update_label(gwy3dview, "min",
                                       data_min, maximum, range/12.0,
-                                      FALSE, format);
+                                      TRUE, format);
     gwy_si_unit_value_format_free(format);
 }
 
