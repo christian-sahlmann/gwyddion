@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-03-09 03:35+0100\n"
-"PO-Revision-Date: 2007-03-09 12:05+0100\n"
+"POT-Creation-Date: 2007-03-16 03:36+0100\n"
+"PO-Revision-Date: 2007-03-16 19:50+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -364,8 +364,8 @@ msgstr "Veli_kost:"
 msgid "pixels"
 msgstr "pixelů"
 
-#: libgwydgets/gwy3dwindow.c:1000 modules/file/pixmap.c:758
-#: modules/file/pixmap.c:1698 modules/file/rawfile.c:379
+#: libgwydgets/gwy3dwindow.c:1000 modules/file/pixmap.c:774
+#: modules/file/pixmap.c:1818 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:253
 #: modules/process/cwt.c:168 modules/process/drift.c:222
 #: modules/process/dwt.c:167 modules/process/dwtanisotropy.c:182
@@ -618,7 +618,7 @@ msgid "Length"
 msgstr "Délka"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:283
-#: libgwydgets/gwygraphwindowmeasuredialog.c:439 app/gwyplaintool.c:965
+#: libgwydgets/gwygraphwindowmeasuredialog.c:439 app/gwyplaintool.c:1015
 #: modules/file/pnifile.c:155
 msgid "Height"
 msgstr "Výška"
@@ -681,7 +681,7 @@ msgstr "_Exponent"
 msgid "Preview"
 msgstr "Náhled"
 
-#: libgwymodule/gwymodule-file.c:526 modules/file/pixmap.c:542
+#: libgwymodule/gwymodule-file.c:526 modules/file/pixmap.c:550
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Soubor nelze otevřít pro čtení: %s."
@@ -1042,11 +1042,11 @@ msgstr "Registruji moduly"
 msgid "Initializing GUI"
 msgstr "Inicializuji GUI"
 
-#: app/gwyddion.c:326
+#: app/gwyddion.c:327
 msgid "Could not read settings."
 msgstr "Nezdařilo se přečíst nastavení."
 
-#: app/gwyddion.c:329
+#: app/gwyddion.c:330
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1065,11 +1065,11 @@ msgstr ""
 msgid "Cannot write to file: %s."
 msgstr "Do souboru nelze zapisovat: %s."
 
-#: app/gwyplaintool.c:565
+#: app/gwyplaintool.c:566
 msgid "<big><b>Missing layer module.</b></big>"
 msgstr "<big><b>Chybí modul vrstvy.</b></big>"
 
-#: app/gwyplaintool.c:571
+#: app/gwyplaintool.c:572
 #, c-format
 msgid ""
 "This tool requires layer of type %s to work, which does not seem to be "
@@ -1078,17 +1078,17 @@ msgstr ""
 "Tento nástroj potřebuje vrstvu typu %s, které se nezdá být nainstalována. "
 "Prosím zkontroluj instalaci."
 
-#: app/gwyplaintool.c:947
+#: app/gwyplaintool.c:997
 msgid "Origin"
 msgstr "Počátek"
 
-#: app/gwyplaintool.c:958 modules/file/rawfile.c:940
+#: app/gwyplaintool.c:1008 modules/file/rawfile.c:940
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
 msgid "Size"
 msgstr "Velikost"
 
-#: app/gwyplaintool.c:961
+#: app/gwyplaintool.c:1011
 msgid "Width"
 msgstr "Šířka"
 
@@ -1531,27 +1531,27 @@ msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
 msgstr "Deserializace dat se podařila, ale výsledkem je neočekávaný objekt %s."
 
-#: modules/file/hdf4file.c:328
+#: modules/file/hdf4file.c:330
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
 msgstr "Načítá soubory v hierarchickém datovém formátu (HDF) verze 4."
 
-#: modules/file/hdf4file.c:349
+#: modules/file/hdf4file.c:351
 msgid "Psi HDF4 files (.hdf)"
 msgstr "Psi HDF4 soubory (.hdf)"
 
-#: modules/file/hdf4file.c:527
+#: modules/file/hdf4file.c:529
 msgid "PSI binary header is too short."
 msgstr "Binární hlavička PSI je příliš krátká."
 
-#: modules/file/hdf4file.c:626
+#: modules/file/hdf4file.c:628
 msgid "Data descriptor header is truncated."
 msgstr "Hlavička popisu dat je předčasně ukonečená."
 
-#: modules/file/hdf4file.c:636
+#: modules/file/hdf4file.c:638
 msgid "Data descriptor block is truncated."
 msgstr "Blok popisu dat je předčasně ukončený."
 
-#: modules/file/hdf4file.c:670
+#: modules/file/hdf4file.c:672
 msgid "HDF data with `native' type is not supported."
 msgstr "HDF data s „nativním“ typem nejsou podporována."
 
@@ -1750,39 +1750,39 @@ msgstr "Načítá AFM soubory NANOTOPu."
 msgid "Nanotop files (.spm)"
 msgstr "Nanotop soubory (.spm)"
 
-#: modules/file/netcdf.c:165
+#: modules/file/netcdf.c:167
 msgid "Imports network Common Data Form (netCDF) files."
 msgstr "Načítá soubory network Common Data Form (netCDF)."
 
-#: modules/file/netcdf.c:178
+#: modules/file/netcdf.c:180
 msgid "GSXM netCDF files (.nc)"
 msgstr "GXSM netCDF soubory (.nc)"
 
-#: modules/file/netcdf.c:224
+#: modules/file/netcdf.c:226
 #, c-format
 msgid "Variable `%s' refers to invalid or nonexistent data."
 msgstr "Proměnná „%s“ ukazuje na neplatná či neexistující data."
 
-#: modules/file/netcdf.c:249
+#: modules/file/netcdf.c:251
 msgid "NetCDF records are not supported."
 msgstr "NetCDF zásnamy nejsou podporovány."
 
-#: modules/file/netcdf.c:536
+#: modules/file/netcdf.c:538
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr "Soubor neočekávaně skončil uvnitř „%s“."
 
-#: modules/file/netcdf.c:545
+#: modules/file/netcdf.c:547
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr "Čekal bych pole „%s“ nebo „ABSENT“."
 
-#: modules/file/netcdf.c:553
+#: modules/file/netcdf.c:555
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr "Pole „%s“ má nenulový počet prvků, ačkoli není přítomno."
 
-#: modules/file/netcdf.c:612
+#: modules/file/netcdf.c:614
 msgid "More than one record dimension found."
 msgstr "Více než jedna dimenze je „record“."
 
@@ -1839,31 +1839,31 @@ msgstr "Informace o kanálu neočekávaně skončily."
 msgid "No data file corresponding to `%s' was found."
 msgstr "Nebyl nalezen datový soubor příslušící k `%s'."
 
-#: modules/file/pixmap.c:237
+#: modules/file/pixmap.c:245
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:243
+#: modules/file/pixmap.c:251
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:250
+#: modules/file/pixmap.c:258
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:257
+#: modules/file/pixmap.c:265
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:263
+#: modules/file/pixmap.c:271
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Bitmapa Windows či OS2 (.bmp)"
 
-#: modules/file/pixmap.c:269
+#: modules/file/pixmap.c:277
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:290
+#: modules/file/pixmap.c:298
 msgid ""
 "Exports data as pixmap images and imports data from pixmap images. Supports "
 "following image formats for export: PNG, JPEG, TIFF (if available), PPM, "
@@ -1875,130 +1875,143 @@ msgstr ""
 "dostupný), PPM, BPM, TARGA. Import se spoléhá na GDK a tudíž se jeho "
 "možnosti mohou u různých instalací lišit."
 
-#: modules/file/pixmap.c:528
+#: modules/file/pixmap.c:536
 msgid "Pixmap image import must be run as interactive."
 msgstr "Načítání rastrových obrázků musí být spuštěno interaktivně."
 
-#: modules/file/pixmap.c:536
+#: modules/file/pixmap.c:544
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "Pixmap si nezaregistroval typ souboru „%s“."
 
-#: modules/file/pixmap.c:550
+#: modules/file/pixmap.c:558
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Nelze získat pixbuf loader: %s."
 
-#: modules/file/pixmap.c:562 modules/file/pixmap.c:572
+#: modules/file/pixmap.c:570 modules/file/pixmap.c:580
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Pixbuf loader odmítl data: %s."
 
-#: modules/file/pixmap.c:755
+#: modules/file/pixmap.c:771
 msgid "Import "
 msgstr "Načtení "
 
-#: modules/file/pixmap.c:780 modules/file/rawfile.c:581
+#: modules/file/pixmap.c:797 modules/file/rawfile.c:581
 msgid "Resolution"
 msgstr "Rozlišení"
 
-#: modules/file/pixmap.c:785 modules/file/rawfile.c:586
+#: modules/file/pixmap.c:804 modules/file/rawfile.c:586
 msgid "_Horizontal size:"
 msgstr "_Vodorovný rozměr:"
 
-#: modules/file/pixmap.c:785 modules/file/pixmap.c:792
+#: modules/file/pixmap.c:804 modules/file/pixmap.c:811
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:792 modules/file/rawfile.c:593
+#: modules/file/pixmap.c:811 modules/file/rawfile.c:593
 msgid "_Vertical size:"
 msgstr "_Svislý rozměr:"
 
-#: modules/file/pixmap.c:822 modules/file/rawfile.c:604
+#: modules/file/pixmap.c:842 modules/file/rawfile.c:604
 msgid "Physical Dimensions"
 msgstr "Fyzické rozměry"
 
-#: modules/file/pixmap.c:830
+#: modules/file/pixmap.c:852
 msgid "_Width"
 msgstr "Šířk_a"
 
-#: modules/file/pixmap.c:852
+#: modules/file/pixmap.c:874 modules/file/pixmap.c:929
+#: modules/file/rawfile.c:636 modules/file/rawfile.c:692
+msgid "Change"
+msgstr "Změnit"
+
+#: modules/file/pixmap.c:887
 msgid "H_eight"
 msgstr "_Výška"
 
-#: modules/file/pixmap.c:859 modules/file/rawfile.c:656
+#: modules/file/pixmap.c:894 modules/file/rawfile.c:656
 msgid "Identical _measures"
 msgstr "Stejná _měřítka"
 
-#: modules/file/pixmap.c:871 modules/file/rawfile.c:668
+#: modules/file/pixmap.c:906 modules/file/rawfile.c:668
 msgid "_Z-scale (per sample unit):"
 msgstr "_Z-škála (na jednotku):"
 
-#: modules/file/pixmap.c:888
+#: modules/file/pixmap.c:939
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Varování: Barevné obrázky nemohou být bezpečně převedeny na smysluplné "
 "hodnoty."
 
-#: modules/file/pixmap.c:905
+#: modules/file/pixmap.c:957
 msgid "Use"
 msgstr "Použít"
 
-#: modules/file/pixmap.c:905
+#: modules/file/pixmap.c:957
 msgid "as data"
 msgstr "jako data"
 
-#: modules/file/pixmap.c:1106 modules/file/pixmap.c:1131
+#: modules/file/pixmap.c:1153 modules/file/rawfile.c:1305
+msgid "Change Units"
+msgstr "Změnit jednotky"
+
+#: modules/file/pixmap.c:1167 modules/file/rawfile.c:1319
+msgid "New _units:"
+msgstr "Nové _jednotky:"
+
+#: modules/file/pixmap.c:1226 modules/file/pixmap.c:1251
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Uložení pixbufu se nezdařilo: %s."
 
-#: modules/file/pixmap.c:1166
+#: modules/file/pixmap.c:1286
 msgid "TIFFOpen() function failed."
 msgstr "Funkce TIFFOpen() selhala."
 
-#: modules/file/pixmap.c:1184
+#: modules/file/pixmap.c:1304
 msgid "TIFFWriteScanline() function failed."
 msgstr "Funkce TIFFWriteScanline() selhala."
 
-#: modules/file/pixmap.c:1369
+#: modules/file/pixmap.c:1489
 msgid "Image is too large to be stored as TARGA."
 msgstr "Obrázek je příliš velký, než aby šel uložit jako TARGA."
 
-#: modules/file/pixmap.c:1435
+#: modules/file/pixmap.c:1555
 msgid "Pixmap image export must be run as interactive."
 msgstr "Export rastrových obrázků musí být spustěn interaktivně."
 
-#: modules/file/pixmap.c:1677
+#: modules/file/pixmap.c:1797
 msgid "_Data alone"
 msgstr "Jen _data"
 
-#: modules/file/pixmap.c:1678
+#: modules/file/pixmap.c:1798
 msgid "Data + _rulers"
 msgstr "Data + _pravítka"
 
-#: modules/file/pixmap.c:1679
+#: modules/file/pixmap.c:1799
 msgid "_Everything"
 msgstr "_Všechno"
 
-#: modules/file/pixmap.c:1695
+#: modules/file/pixmap.c:1815
 msgid "Export "
 msgstr "Export "
 
-#: modules/file/pixmap.c:1720
+#: modules/file/pixmap.c:1840
 msgid "_Zoom:"
 msgstr "_Zvětšení"
 
-#: modules/file/pixmap.c:1725
+#: modules/file/pixmap.c:1845
 msgid "Output:"
 msgstr "Výstup:"
 
-#: modules/file/pixmap.c:1743
+#: modules/file/pixmap.c:1863
 msgid "Draw _mask"
 msgstr "Nakreslit _masku"
 
-#: modules/file/pixmap.c:1753
+#: modules/file/pixmap.c:1873
 msgid "Draw _selection"
 msgstr "Nakreslit _výběr"
 
@@ -2135,10 +2148,6 @@ msgstr "Č_tvercový vzorek"
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "Šířk_a:"
-
-#: modules/file/rawfile.c:636 modules/file/rawfile.c:692
-msgid "Change"
-msgstr "Změnit"
 
 #: modules/file/rawfile.c:649 modules/process/crosscor.c:203
 msgid "H_eight:"
@@ -2296,14 +2305,6 @@ msgid ""
 msgstr ""
 "<b>Čtení selhalo</b>\n"
 "Obsah souboru `%s' neodpovídá formátu: %s."
-
-#: modules/file/rawfile.c:1305
-msgid "Change Units"
-msgstr "Změnit jednotky"
-
-#: modules/file/rawfile.c:1319
-msgid "New _units:"
-msgstr "Nové _jednotky:"
 
 #: modules/file/rawfile.c:1589
 #, c-format
@@ -2718,15 +2719,15 @@ msgstr "až"
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
-#: modules/graph/graph_cd.c:499 modules/graph/graph_fit.c:642
+#: modules/graph/graph_cd.c:499 modules/graph/graph_fit.c:644
 msgid "noun|Fit"
 msgstr "Proložení"
 
-#: modules/graph/graph_cd.c:525 modules/graph/graph_fit.c:680
+#: modules/graph/graph_cd.c:525 modules/graph/graph_fit.c:682
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu."
 
-#: modules/graph/graph_cd.c:669 modules/graph/graph_fit.c:728
+#: modules/graph/graph_cd.c:669 modules/graph/graph_fit.c:730
 #: modules/tools/readvalue.c:491 modules/tools/readvalue.c:492
 #: modules/tools/stats.c:543 modules/tools/stats.c:552
 #: modules/tools/stats.c:553 modules/tools/stats.c:792
@@ -2734,31 +2735,31 @@ msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu
 msgid "N.A."
 msgstr "nelze použít"
 
-#: modules/graph/graph_cd.c:960 modules/graph/graph_fit.c:1261
+#: modules/graph/graph_cd.c:960 modules/graph/graph_fit.c:1263
 msgid "===== Fit Results ====="
 msgstr "===== Výsledek proložení ====="
 
-#: modules/graph/graph_cd.c:964 modules/graph/graph_fit.c:1265
+#: modules/graph/graph_cd.c:964 modules/graph/graph_fit.c:1267
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Data:             %s\n"
 
-#: modules/graph/graph_cd.c:967 modules/graph/graph_fit.c:1268
+#: modules/graph/graph_cd.c:967 modules/graph/graph_fit.c:1270
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Počet bodů:       %d z %d\n"
 
-#: modules/graph/graph_cd.c:971 modules/graph/graph_fit.c:1272
+#: modules/graph/graph_cd.c:971 modules/graph/graph_fit.c:1274
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Rozsah x:         %.*f až %.*f %s\n"
 
-#: modules/graph/graph_cd.c:977 modules/graph/graph_fit.c:1278
+#: modules/graph/graph_cd.c:977 modules/graph/graph_fit.c:1280
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
-#: modules/graph/graph_cd.c:980 modules/graph/graph_fit.c:1281
+#: modules/graph/graph_cd.c:980 modules/graph/graph_fit.c:1283
 msgid "Results\n"
 msgstr "Výsledky\n"
 
@@ -2870,16 +2871,16 @@ msgstr "Korelační matice"
 msgid "Instant:"
 msgstr "Okamžitě:"
 
-#: modules/graph/graph_fit.c:642
+#: modules/graph/graph_fit.c:643
 msgid "noun|Estimate"
 msgstr "Odhad"
 
-#: modules/graph/graph_fit.c:1307
+#: modules/graph/graph_fit.c:1309
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Suma čtverců:   %g\n"
 
-#: modules/graph/graph_fit.c:1310
+#: modules/graph/graph_fit.c:1312
 msgid "Correlation matrix\n"
 msgstr "Korelační matice\n"
 
@@ -3443,7 +3444,7 @@ msgstr "Zachovat velikost (neškálovat na mocninu 2)"
 #: modules/process/nanoindent_adjust.c:228 modules/process/polydistort.c:257
 #: modules/process/rotate.c:282 modules/process/scale.c:248
 #: modules/process/unrotate.c:281 modules/tools/linestats.c:374
-#: modules/tools/profile.c:384 modules/tools/sfunctions.c:390
+#: modules/tools/profile.c:380 modules/tools/sfunctions.c:390
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
@@ -4212,7 +4213,7 @@ msgstr "_Zpět"
 
 #: modules/process/fft_filter_2d.c:519 modules/tools/maskedit.c:378
 msgid "_Remove"
-msgstr "_Odstranění"
+msgstr "_Odstranit"
 
 #: modules/process/fft_filter_2d.c:529
 msgid "_Snap to origin"
@@ -4633,7 +4634,7 @@ msgid "Volume"
 msgstr "Objem"
 
 #: modules/process/grain_dist.c:327 modules/tools/linestats.c:349
-#: modules/tools/profile.c:356 modules/tools/sfunctions.c:365
+#: modules/tools/profile.c:352 modules/tools/sfunctions.c:365
 msgid "_Fix res.:"
 msgstr "Ro_zliš.:"
 
@@ -6029,15 +6030,15 @@ msgstr "Vytvořit nový kanál"
 msgid "Detail"
 msgstr "Detail"
 
-#: modules/tools/distance.c:85
+#: modules/tools/distance.c:82
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Nástroj měření vzdálenosti, měří vzdálenosti a úhly."
 
-#: modules/tools/distance.c:114
+#: modules/tools/distance.c:111
 msgid "Distance"
 msgstr "Vzdálenosti"
 
-#: modules/tools/distance.c:115
+#: modules/tools/distance.c:112
 msgid "Measure distances and directions between points"
 msgstr "Měření vzdáleností a směrů mezi body"
 
@@ -6229,7 +6230,7 @@ msgstr "Řá_dky"
 msgid "Co_lumns"
 msgstr "S_loupce"
 
-#: modules/tools/linestats.c:320 modules/tools/profile.c:329
+#: modules/tools/linestats.c:320 modules/tools/profile.c:325
 #: modules/tools/sfunctions.c:336
 msgid "<b>Options</b>"
 msgstr "<b>Volby</b>"
@@ -6321,6 +6322,22 @@ msgstr "_Míra:"
 msgid "Shrink from _border"
 msgstr "Zužovat i od _krajů"
 
+#: modules/tools/pathlevel.c:109
+msgid "Path level tool, performs row leveling along on user-set lines."
+msgstr ""
+
+#: modules/tools/pathlevel.c:142
+msgid "Path Level"
+msgstr ""
+
+#: modules/tools/pathlevel.c:143
+msgid "Level rows using intersections with given lines"
+msgstr ""
+
+#: modules/tools/pathlevel.c:254 modules/tools/profile.c:342
+msgid "_Thickness:"
+msgstr "_Tloušťka:"
+
 #: modules/tools/polynom.c:92
 msgid ""
 "Polynomial fit tool, fits polynomials to X or Y profiles and subtracts them."
@@ -6364,27 +6381,23 @@ msgstr "V_yjmi vybranou oblast"
 msgid "(otherwise it will be used for fitting)"
 msgstr "(jinak bude použita pro fitování)"
 
-#: modules/tools/profile.c:133
+#: modules/tools/profile.c:130
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Nástroj profil, vytváří grafy profilů z vybraných úseček."
 
-#: modules/tools/profile.c:178 modules/tools/profile.c:398
+#: modules/tools/profile.c:175 modules/tools/profile.c:394
 msgid "Profiles"
 msgstr "Profily"
 
-#: modules/tools/profile.c:179
+#: modules/tools/profile.c:176
 msgid "Extract profiles"
 msgstr "Získat profily"
 
-#: modules/tools/profile.c:346
-msgid "_Thickness:"
-msgstr "_Tloušťka:"
-
-#: modules/tools/profile.c:371
+#: modules/tools/profile.c:367
 msgid "_Separate profiles"
 msgstr "_Oddělit profily"
 
-#: modules/tools/profile.c:547
+#: modules/tools/profile.c:543
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
