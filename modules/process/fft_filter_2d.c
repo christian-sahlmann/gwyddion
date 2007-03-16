@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.3",
+    "1.3.1",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -400,12 +400,6 @@ run_dialog(ControlsType *controls)
         },
     };
 
-    static GwyEnum output_types[] = {
-        { N_("Filtered Image"), OUTPUT_IMAGE              },
-        { N_("Filtered FFT"),   OUTPUT_FFT                },
-        { N_("Both"),           OUTPUT_IMAGE | OUTPUT_FFT },
-    };
-
     GtkWidget *dialog;
     GtkWidget *table, *hbox, *hbox2;
     GtkWidget *label;
@@ -583,8 +577,11 @@ run_dialog(ControlsType *controls)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    combo = gwy_enum_combo_box_new(output_types, G_N_ELEMENTS(output_types),
-                                   NULL, NULL, OUTPUT_IMAGE, TRUE);
+    combo = gwy_enum_combo_box_newl(NULL, NULL, OUTPUT_IMAGE,
+                                    _("Filtered Image"), OUTPUT_IMAGE,
+                                    _("Filtered FFT"), OUTPUT_FFT,
+                                    _("Both"), OUTPUT_IMAGE | OUTPUT_FFT,
+                                    NULL);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(combo), controls->out_mode);
     gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -607,7 +604,7 @@ run_dialog(ControlsType *controls)
         s = g_strdup_printf(_("<small>Resampled from %dx%d to %dx%d "
                               "for FFT</small>"),
                             controls->origxres, controls->origyres,
-                            controls->newxres, controls->newxres);
+                            controls->newxres, controls->newyres);
         gtk_label_set_markup(GTK_LABEL(label), s);
         g_free(s);
     }
