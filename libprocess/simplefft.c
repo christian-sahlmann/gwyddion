@@ -262,8 +262,9 @@ gwy_fft_window_data_field(GwyDataField *dfield,
  * @title: simplefft
  * @short_description: Simple FFT algorithm
  *
- * The simple one-dimensional FFT algorithm gwy_fft_hum() is used as a fallback
- * by other functions when better implementation (FFTW3) is not available.
+ * The simple one-dimensional FFT algorithm gwy_fft_simple() is used as
+ * a fallback by other functions when better implementation (FFTW3) is not
+ * available.
  *
  * It works only on data sizes that are powers of 2.
  **/

@@ -581,7 +581,7 @@ gwy_data_field_area_2dfft(GwyDataField *rin, GwyDataField *iin,
  * @iout: Imaginary output data field, it will be resized to @rin size.
  * @direction: FFT direction.
  *
- * Calculates 2D Fast Fourier Transform of a rectangular area of a data field.
+ * Calculates 2D Fast Fourier Transform of a data field.
  *
  * The resolutions of @rin and @iin have to be from the set
  * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
@@ -661,24 +661,26 @@ gwy_data_field_2dfft_do(GwyDataField *rin,
     gwy_data_field_multiply(iout, 1.0/sqrt(rin->xres*rin->yres));
 #else
     gdouble *ibuf, *rbuf;
-    gint j, k;
+    gint j, k, xres, yres;
 
-    for (k = 0; k < rin->yres; k++) {
-        gwy_fft_simple(direction, rin->xres,
-                       1, rin->data + k*rin->xres, iin->data + k*rin->xres,
-                       1, rout->data + k*rin->xres, iout->data + k*rin->xres);
+    xres = rin->xres;
+    yres = rin->yres;
+    for (k = 0; k < yres; k++) {
+        gwy_fft_simple(direction, xres,
+                       1, rin->data + k*xres, iin->data + k*xres,
+                       1, rout->data + k*xres, iout->data + k*xres);
     }
     /* Use a one-row temporary buffer */
-    rbuf = g_new(gdouble, 2*rin->yres);
-    ibuf = rbuf + rin->yres;
-    for (k = 0; k < rin->xres; k++) {
-        gwy_fft_simple(direction, rin->yres,
-                       rin->xres, rin->data + k, iin->data + k,
-                       1, rbuf, ibuf);
+    rbuf = g_new(gdouble, 2*yres);
+    ibuf = rbuf + 1;
+    for (k = 0; k < xres; k++) {
+        gwy_fft_simple(direction, yres,
+                       xres, rout->data + k, iout->data + k,
+                       2, rbuf, ibuf);
         /* Move the result from buffer to iout, rout columns */
-        for (j = 0; j < rin->yres; j++) {
-            rout->data[j*rin->xres + k] = rbuf[j];
-            iout->data[j*rin->xres + k] = ibuf[j];
+        for (j = 0; j < yres; j++) {
+            rout->data[j*xres + k] = rbuf[2*j];
+            iout->data[j*xres + k] = ibuf[2*j];
         }
     }
     g_free(rbuf);
@@ -2058,6 +2060,26 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
  * SECTION:inttrans
  * @title: inttrans
  * @short_description: FFT and other integral transforms
+ *
+ * There are two main groups of FFT functions.
+ *
+ * High-level functions such as gwy_data_field_2dfft(), gwy_data_line_fft()
+ * can perform windowing, leveling and other pre- and postprocessing.  They
+ * also automatically resample data to a size supported by the current FFT
+ * backend.  This makes them suitable for calculation of spectral densities
+ * and other statistical characteristics.
+ *
+ * Low-level functions have <literal>raw</literal> appended to their name:
+ * gwy_data_field_2dfft_raw(), gwy_data_line_fft_raw().  They expect data
+ * of a size returned by gwy_fft_find_nice_size() and perform no other
+ * operations on the data beside the transform itself.  This makes them
+ * suitable for applications where both forward and inverse transform is
+ * performed.
+ *
+ * Both types of functions wrap a Fourier transform backend which can be
+ * currently either gwy_fft_simple(), available always, or
+ * <ulink url="http://fftw.org/">FFTW3</ulink>, available when Gwyddion was
+ * compiled with it.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
