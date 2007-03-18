@@ -27,6 +27,11 @@
 #include <app/gwyapp.h>
 #include "gwyappfilechooser.h"
 
+typedef struct {
+    gchar *filename_utf8;
+    gulong id;
+} FolderChangeData;
+
 static void gwy_app_file_add_loaded(GwyContainer *data,
                                     const gchar *filename_utf8,
                                     const gchar *filename_sys);
@@ -410,6 +415,31 @@ gwy_app_file_save(void)
 }
 
 /**
+ * XXX: This has to be done in "current-folder-changed" signal handler.
+ * The sequence gtk_file_chooser_set_current_folder() and
+ * gtk_file_chooser_set_current_name() makes GtkFileChooser print Warning
+ *
+ *   idle activate multiple times without clearing the folder object first
+ *
+ * and then possibly Critical with failure of
+ *
+ *   strcmp (dirname, folder_unix->filename) == 0
+ *
+ * The folder is changed in some idle loop, therefore I cannot imagine how
+ * the Gtk+ people intend it to be used.
+ **/
+static void
+set_chooser_filename(GtkWidget *dialog,
+                     FolderChangeData *fdata)
+{
+    g_signal_handler_disconnect(dialog, fdata->id);
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
+                                      fdata->filename_utf8);
+    g_free(fdata->filename_utf8);
+    g_free(fdata);
+}
+
+/**
  * gwy_app_file_save_as:
  *
  * Saves current data to a user-selected file (very high-level app function).
@@ -418,7 +448,7 @@ void
 gwy_app_file_save_as(void)
 {
     GtkWidget *dialog;
-    gchar *name = NULL, *filename_sys = NULL, *filename_utf8;
+    gchar *name = NULL, *filename_sys = NULL;
     gint response;
     GwyContainer *data;
 
@@ -431,11 +461,14 @@ gwy_app_file_save_as(void)
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
     if (filename_sys) {
+        FolderChangeData *fdata;
+
+        fdata = g_new(FolderChangeData, 1);
         filename_sys = g_path_get_basename(filename_sys);
-        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
-                                          filename_utf8);
-        g_free(filename_utf8);
+        fdata->filename_utf8 = g_filename_to_utf8(filename_sys, -1,
+                                                  NULL, NULL, NULL);
+        fdata->id = g_signal_connect(dialog, "current-folder-changed",
+                                     G_CALLBACK(set_chooser_filename), fdata);
         g_free(filename_sys);
     }
 
