@@ -1375,8 +1375,18 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
     g_return_val_if_fail(zoom > 0.0, NULL);
     g_return_val_if_fail(data_view->base_layer, NULL);
 
-    width = MAX(data_view->xres * zoom, 2);
-    height = MAX(data_view->yres * zoom, 2);
+    if (data_view->realsquare) {
+        gdouble scale = zoom*MAX(data_view->xres/data_view->xreal,
+                                 data_view->yres/data_view->yreal);
+        width = GWY_ROUND(scale * data_view->xreal);
+        height = GWY_ROUND(scale * data_view->yreal);
+    }
+    else {
+        width = zoom * data_view->xres;
+        height = zoom * data_view->yres;
+    }
+    width = MAX(width, 2);
+    height = MAX(height, 2);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                             width, height);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
