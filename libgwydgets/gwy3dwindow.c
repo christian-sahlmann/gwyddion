@@ -736,13 +736,13 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     adj = gwy_3d_window_make_setup_adj(window, setup, "rotation-x",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
-    spin = gwy_table_attach_spinbutton(table, row++, _("_Phi:"), _("deg"), adj);
+    spin = gwy_table_attach_spinbutton(table, row++, _("φ:"), _("deg"), adj);
 
     adj = gwy_3d_window_make_setup_adj(window, setup, "rotation-y",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
-                                       _("_Theta:"), _("deg"), adj);
+                                       _("θ:"), _("deg"), adj);
 
     adj = gwy_3d_window_make_setup_adj(window, setup, "scale",
                                        0.05, 10.0, 0.01, 0.1,
@@ -854,7 +854,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
-                                       _("Light _phi:"), _("deg"), adj);
+                                       _("_Light φ:"), _("deg"), adj);
     window->lights_spin1 = spin;
     gtk_widget_set_sensitive(spin, is_material);
 
@@ -862,7 +862,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
                                        TRUE);
     spin = gwy_table_attach_spinbutton(table, row++,
-                                       _("Light _theta:"), _("deg"), adj);
+                                       _("L_ight θ:"), _("deg"), adj);
     window->lights_spin2 = spin;
     gtk_widget_set_sensitive(spin, is_material);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);

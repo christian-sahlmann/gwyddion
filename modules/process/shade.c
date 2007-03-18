@@ -239,7 +239,7 @@ shade_dialog(ShadeArgs *args,
 
     controls.theta = gtk_adjustment_new(args->theta*180.0/G_PI,
                                         0.0, 90.0, 1.0, 15.0, 0.0);
-    spin = gwy_table_attach_hscale(table, row, _("_Theta:"), "deg",
+    spin = gwy_table_attach_hscale(table, row, _("θ:"), "deg",
                                    controls.theta, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.theta, "value-changed",
                      G_CALLBACK(theta_changed_cb), &controls);
@@ -247,7 +247,7 @@ shade_dialog(ShadeArgs *args,
 
     controls.phi = gtk_adjustment_new(args->phi*180.0/G_PI,
                                       0.0, 360.0, 1.0, 30.0, 0.0);
-    spin = gwy_table_attach_hscale(table, row, _("_Phi:"), "deg",
+    spin = gwy_table_attach_hscale(table, row, _("φ:"), "deg",
                                    controls.phi, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.phi, "value-changed",
                      G_CALLBACK(phi_changed_cb), &controls);

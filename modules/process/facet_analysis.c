@@ -351,8 +351,8 @@ facets_dialog(FacetsArgs *args,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.theta_label = add_angle_label(table, _("Theta:"), &row);
-    controls.phi_label = add_angle_label(table, _("Phi:"), &row);
+    controls.theta_label = add_angle_label(table, _("θ:"), &row);
+    controls.phi_label = add_angle_label(table, _("φ:"), &row);
 
     button = gtk_button_new_with_mnemonic(_("_Find Maximum"));
     gtk_table_attach(GTK_TABLE(table), button,
@@ -367,8 +367,8 @@ facets_dialog(FacetsArgs *args,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.mtheta_label = add_angle_label(table, _("Theta:"), &row);
-    controls.mphi_label = add_angle_label(table, _("Phi:"), &row);
+    controls.mtheta_label = add_angle_label(table, _("θ:"), &row);
+    controls.mphi_label = add_angle_label(table, _("φ:"), &row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new_with_mnemonic(_("Facet plane size:"));

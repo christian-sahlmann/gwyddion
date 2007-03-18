@@ -308,11 +308,11 @@ gwy_evaluator_line_dialog_init(GwyEvaluatorLineDialog *dialog)
 
     row++;
     dialog->rho_adj = gtk_adjustment_new(dialog->rho, 0.0, 100.0, 1, 10, 0);
-    gwy_table_attach_spinbutton(table, row++, _("_Rho:"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row++, _("ρ:"), _("pixels"),
                                                  dialog->rho_adj);
 
     dialog->theta_adj = gtk_adjustment_new(dialog->theta, 0.0, 100.0, 1, 10, 0);
-    gwy_table_attach_spinbutton(table, row++, _("_Theta:"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row++, _("θ:"), _("pixels"),
                                                  dialog->theta_adj);
 
 

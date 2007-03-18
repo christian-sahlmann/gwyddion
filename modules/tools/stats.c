@@ -280,8 +280,8 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         { N_("Kurtosis"),          G_STRUCT_OFFSET(GwyToolStats, kurtosis), },
         { N_("Surface area"),      G_STRUCT_OFFSET(GwyToolStats, area),     },
         { N_("Projected area"),    G_STRUCT_OFFSET(GwyToolStats, projarea), },
-        { N_("Inclination theta"), G_STRUCT_OFFSET(GwyToolStats, theta),    },
-        { N_("Inclination phi"),   G_STRUCT_OFFSET(GwyToolStats, phi),      },
+        { N_("Inclination θ"), G_STRUCT_OFFSET(GwyToolStats, theta),    },
+        { N_("Inclination φ"),   G_STRUCT_OFFSET(GwyToolStats, phi),      },
     };
     GtkDialog *dialog;
     GtkWidget *hbox, *vbox, *image, *label, **plabel;
@@ -815,8 +815,8 @@ gwy_tool_stats_report_create(gpointer user_data,
                              "Kurtosis:          %s\n"
                              "Surface area:      %s\n"
                              "Projected area:    %s\n"
-                             "Inclination theta: %s\n"
-                             "Inclination phi:   %s\n"),
+                             "Inclination θ: %s\n"
+                             "Inclination φ:   %s\n"),
                            iw, ih, ix, iy,
                            rw, rh, rx, ry, uni,
                            muse,
