@@ -414,7 +414,7 @@ gwy_app_file_save(void)
     gwy_app_file_write(data, NULL, filename_sys, name);
 }
 
-/**
+/*
  * XXX: This has to be done in "current-folder-changed" signal handler.
  * The sequence gtk_file_chooser_set_current_folder() and
  * gtk_file_chooser_set_current_name() makes GtkFileChooser print Warning
@@ -427,7 +427,7 @@ gwy_app_file_save(void)
  *
  * The folder is changed in some idle loop, therefore I cannot imagine how
  * the Gtk+ people intend it to be used.
- **/
+ */
 static void
 set_chooser_filename(GtkWidget *dialog,
                      FolderChangeData *fdata)
