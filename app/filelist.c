@@ -676,6 +676,10 @@ gwy_app_recent_file_list_filter(GtkTreeModel *model,
         return TRUE;
 
     gtk_tree_model_get(model, iter, 0, &rf, -1);
+    /* This can happen when the row has been just created and rf is not set
+     * yet. */
+    if (!rf)
+        return FALSE;
 
     if (controls->casesens)
         return g_pattern_match_string(controls->pattern, rf->file_utf8);
