@@ -58,10 +58,6 @@
  * not worth to break file compatibility with 1.x. */
 #define GRAPH_PREFIX "/0/graph/graph"
 
-/* When highest data id is larger than this, disable repacking to avoid OOM
- * problems.  Either data is corrupted or someone is making fun of us. */
-enum { SANITY_LIMIT = 0x1000000 };
-
 typedef struct {
     GArray *map;   /* data numbers in container, map plain position -> id */
     gint len;   /* length of reverse map @rmap */
@@ -80,7 +76,6 @@ static gboolean      gwyfile_save            (GwyContainer *data,
                                               const gchar *filename,
                                               GwyRunType mode,
                                               GError **error);
-static GwyContainer* gwyfile_compress_ids    (GwyContainer *data);
 static void          gwyfile_pack_metadata   (GwyContainer *data);
 static void          gwyfile_remove_old_data (GObject *object);
 static GObject*      gwy_container_deserialize_old (const guchar *buffer,
@@ -93,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14.1",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -135,7 +130,6 @@ gwyfile_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    GwyContainer *data;
     GObject *object;
     GError *err = NULL;
     guchar *buffer = NULL;
@@ -177,11 +171,9 @@ gwyfile_load(const gchar *filename,
         g_object_unref(object);
         return NULL;
     }
-    data = gwyfile_compress_ids(GWY_CONTAINER(object));
-    g_object_unref(object);
-    gwyfile_pack_metadata(data);
+    gwyfile_pack_metadata(GWY_CONTAINER(object));
 
-    return data;
+    return GWY_CONTAINER(object);
 }
 
 static gboolean
@@ -190,43 +182,37 @@ gwyfile_save(GwyContainer *data,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
-    GwyContainer *compressed;
     GByteArray *buffer;
     gchar *filename_orig_utf8, *filename_utf8;
     FILE *fh;
-    gboolean restore_filename = FALSE, ok = TRUE;
+    gboolean restore_filename, ok = TRUE;
 
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
 
-    compressed = gwyfile_compress_ids(data);
-
     /* Assure the saved file contains its own name under "/filename" */
+    restore_filename = TRUE;
     filename_orig_utf8 = NULL;
-    if (compressed == data) {
-        gwy_container_gis_string_by_name(data, "/filename",
-                                         (const guchar**)&filename_orig_utf8);
-        filename_orig_utf8 = g_strdup(filename_orig_utf8);
-        restore_filename = TRUE;
-    }
+    gwy_container_gis_string_by_name(data, "/filename",
+                                     (const guchar**)&filename_orig_utf8);
+    filename_orig_utf8 = g_strdup(filename_orig_utf8);
 
     filename_utf8 = g_filename_to_utf8(filename, -1, NULL, NULL, NULL);
     if (!filename_utf8)
-        gwy_container_remove_by_name(compressed, "/filename");
+        gwy_container_remove_by_name(data, "/filename");
     else if (filename_orig_utf8
              && gwy_strequal(filename_orig_utf8, filename_utf8)) {
         restore_filename = FALSE;
     }
     else {
-        gwy_container_set_string_by_name(compressed, "/filename",
-                                         filename_utf8);
+        gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         filename_utf8 = NULL;
     }
 
     /* Serialize */
-    buffer = gwy_serializable_serialize(G_OBJECT(compressed), NULL);
+    buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         err_WRITE(error);
@@ -235,7 +221,6 @@ gwyfile_save(GwyContainer *data,
     }
     fclose(fh);
     g_byte_array_free(buffer, TRUE);
-    g_object_unref(compressed);
 
     /* Restore filename if save failed */
     if (!ok && restore_filename) {
@@ -251,372 +236,6 @@ gwyfile_save(GwyContainer *data,
 
     return ok;
 }
-
-/** Data id compression {{{ **/
-/**
- * key_get_int_prefix:
- * @strkey: String container key.
- * @len: Location to store integer prefix length if the string has an integer
- *       prefix.
- *
- * Checks whether a container key starts with "/[0-9]+/" and gets the prefix
- * number.
- *
- * Returns: The prefix number, or -1 if the key does not match.
- **/
-static gint
-key_get_int_prefix(const gchar *strkey,
-                   guint *len)
-{
-    guint i;
-
-    if (strkey[0] != GWY_CONTAINER_PATHSEP)
-        return -1;
-    /* Do not use strtol, it allows queer stuff like spaces */
-    for (i = 0; g_ascii_isdigit(strkey[i + 1]); i++)
-        ;
-    if (!i || strkey[i + 1] != GWY_CONTAINER_PATHSEP)
-        return -1;
-
-    *len = i + 2;
-    return atoi(strkey + 1);
-}
-
-/**
- * hash_data_find_func:
- * @key: Container key (quark).
- * @value: Value at @key.  When it matches, it must be an object.
- * @user_data: #GArray of gint data indices.
- *
- * Checks whether hash key matches "/[0-9]+/data".
- *
- * If it matches, the data number is added to the @user_data array.
- **/
-static void
-hash_data_find_func(gpointer key,
-                    gpointer value,
-                    gpointer user_data)
-{
-    GQuark quark = GPOINTER_TO_UINT(key);
-    GValue *gvalue = (GValue*)value;
-    GArray *array = (GArray*)user_data;
-    const gchar *strkey;
-    guint len;
-    gint i;
-
-    strkey = g_quark_to_string(quark);
-    i = key_get_int_prefix(strkey, &len);
-    if (i < 0)
-        return;
-    if (!gwy_strequal(strkey + len, "data"))
-        return;
-
-    g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
-    g_array_append_val(array, i);
-}
-
-/* Remap /N/data, /N/mask, /N/show, /N/select, /N/meta
- * trees elsewhere. copying other values to the same keys */
-static void
-hash_data_index_map_func(gpointer key,
-                         gpointer value,
-                         gpointer user_data)
-{
-    GQuark quark = GPOINTER_TO_UINT(key);
-    GValue *copy, *gvalue = (GValue*)value;
-    CompressIdData *cidd = (CompressIdData*)user_data;
-    const gchar *strkey;
-    gboolean remap = FALSE;
-    guint len;
-    gint i;
-
-    strkey = g_quark_to_string(quark);
-    i = key_get_int_prefix(strkey, &len);
-    copy = g_newa(GValue, 1);
-    memset(copy, 0, sizeof(GValue));
-    g_value_init(copy, G_VALUE_TYPE(gvalue));
-    g_value_copy(gvalue, copy);
-    if (G_VALUE_HOLDS_OBJECT(gvalue))
-        g_object_unref(g_value_get_object(gvalue));
-
-    if (i < 0) {
-        gwy_debug("<%s> -> <%s> (no number)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-        return;
-    }
-
-    if (i >= cidd->len || cidd->rmap[i] == -1) {
-        gwy_debug("<%s> -> <%s> (eccentric data id)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-        return;
-    }
-
-    if (cidd->rmap[i] == i) {
-        gwy_debug("<%s> -> <%s> (identity)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-        return;
-    }
-
-    if ((g_str_has_prefix(strkey + len, "data")
-         || g_str_has_prefix(strkey + len, "base")
-         || g_str_has_prefix(strkey + len, "mask")
-         || g_str_has_prefix(strkey + len, "show")
-         || g_str_has_prefix(strkey + len, "meta"))
-        && (strkey[len + 4] == '\0'
-            || strkey[len + 4] == GWY_CONTAINER_PATHSEP))
-        remap = TRUE;
-    else if (g_str_has_prefix(strkey + len, "select")
-        && (strkey[len + 6] == '\0'
-            || strkey[len + 6] == GWY_CONTAINER_PATHSEP))
-        remap = TRUE;
-
-    if (remap) {
-        g_string_printf(cidd->str, "/%d/%s", cidd->rmap[i], strkey + len);
-        gwy_debug("<%s> -> <%s> (REMAP)", strkey, cidd->str->str);
-        gwy_container_set_value_by_name(cidd->target, cidd->str->str, copy,
-                                        NULL);
-    }
-    else {
-        gwy_debug("<%s> -> <%s> (nothing matched)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-    }
-}
-
-/**
- * hash_graph_find_func:
- * @key: Container key (quark).
- * @value: Value at @key.  When it matches, it must be an object.
- * @user_data: #GArray of gint data indices.
- *
- * Checks whether hash key matches "/0/graph/graph/[0-9]+.
- *
- * If it matches, the data number is added to the @user_data array.
- **/
-static void
-hash_graph_find_func(gpointer key,
-                     gpointer value,
-                     gpointer user_data)
-{
-    GQuark quark = GPOINTER_TO_UINT(key);
-    GValue *gvalue = (GValue*)value;
-    GArray *array = (GArray*)user_data;
-    const gchar *strkey;
-    gint i;
-
-    strkey = g_quark_to_string(quark);
-    if (!g_str_has_prefix(strkey, GRAPH_PREFIX GWY_CONTAINER_PATHSEP_STR))
-        return;
-
-    strkey += sizeof(GRAPH_PREFIX);
-    /* Do not use strtol, it allows queer stuff like spaces */
-    for (i = 0; g_ascii_isdigit(strkey[i]); i++)
-        ;
-    if (!i || strkey[i])
-        return;
-    i = atoi(strkey);
-
-    g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
-    g_array_append_val(array, i);
-}
-
-/* Remap /0/graph/graph/N
- * trees elsewhere. copying other values to the same keys */
-static void
-hash_graph_index_map_func(gpointer key,
-                          gpointer value,
-                          gpointer user_data)
-{
-    GQuark quark = GPOINTER_TO_UINT(key);
-    GValue *copy, *gvalue = (GValue*)value;
-    CompressIdData *cidd = (CompressIdData*)user_data;
-    const gchar *strkey;
-    gint i, j = 0;
-
-    strkey = g_quark_to_string(quark);
-    if (!g_str_has_prefix(strkey, GRAPH_PREFIX GWY_CONTAINER_PATHSEP_STR))
-        i = -1;
-    else {
-        /* Do not use strtol, it allows queer stuff like spaces */
-        for (j = 0; g_ascii_isdigit(strkey[j + sizeof(GRAPH_PREFIX)]); j++)
-            ;
-        if (j && (!strkey[j + sizeof(GRAPH_PREFIX)]
-                  || strkey[j + sizeof(GRAPH_PREFIX)] == GWY_CONTAINER_PATHSEP))
-            i = atoi(strkey + sizeof(GRAPH_PREFIX));
-        else
-            i = -1;
-    }
-    copy = g_new0(GValue, 1);
-    g_value_init(copy, G_VALUE_TYPE(gvalue));
-    g_value_copy(gvalue, copy);
-    if (G_VALUE_HOLDS_OBJECT(gvalue))
-        g_object_unref(g_value_get_object(gvalue));
-
-    if (i < 0) {
-        gwy_debug("<%s> -> <%s> (no number)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-        return;
-    }
-
-    if (i >= cidd->len || cidd->rmap[i] == -1) {
-        gwy_debug("<%s> -> <%s> (eccentric data id)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-        return;
-    }
-
-    if (cidd->rmap[i] == i) {
-        gwy_debug("<%s> -> <%s> (identity)", strkey, strkey);
-        gwy_container_set_value(cidd->target, quark, copy, 0);
-        return;
-    }
-
-    g_assert(j);
-    g_string_printf(cidd->str, "%s/%d%s",
-                    GRAPH_PREFIX, cidd->rmap[i],
-                    strkey + sizeof(GRAPH_PREFIX) + j);
-    gwy_debug("<%s> -> <%s> (REMAP)", strkey, cidd->str->str);
-    gwy_container_set_value_by_name(cidd->target, cidd->str->str, copy,
-                                    NULL);
-}
-
-static gint
-compare_integers(gconstpointer a,
-                 gconstpointer b)
-{
-    gint ia = *(const gint*)a;
-    gint ib = *(const gint*)b;
-
-    return ia - ib;
-}
-
-static gboolean
-gwyfile_make_rmap(CompressIdData *cidd,
-                  gint base,
-                  const gchar *name)
-{
-    guint i;
-
-    g_array_sort(cidd->map, compare_integers);
-
-#ifdef DEBUG
-    for (i = 0; i < cidd->map->len; i++)
-        gwy_debug("%s map: %d -> %d",
-                  name, i, g_array_index(cidd->map, gint, i));
-#endif
-    /* When the data indices look like we want them, don't bother with
-     * temporary containers. */
-    for (i = 0; i < cidd->map->len; i++) {
-        if (g_array_index(cidd->map, gint, i) != i + base)
-            break;
-    }
-    if (i == cidd->map->len)
-        return FALSE;
-
-    /* Construct the reverse map */
-    cidd->len = g_array_index(cidd->map, gint, cidd->map->len - 1) + 1 + base;
-    if (cidd->len > SANITY_LIMIT) {
-        g_warning("Last %s id %u is larger than %u. "
-                  "Container is probably corrupted, disabling id compression.",
-                  name, cidd->len, SANITY_LIMIT);
-        return FALSE;
-    }
-    cidd->rmap = g_new(gint, cidd->len);
-    for (i = 0; i < cidd->len; i++)
-        cidd->rmap[i] = -1;
-    for (i = 0; i < cidd->map->len; i++)
-        cidd->rmap[g_array_index(cidd->map, gint, i)] = i + base;
-#ifdef DEBUG
-    for (i = 0; i < cidd->len; i++)
-        gwy_debug("%s rmap: %d -> %d", name, i, cidd->rmap[i]);
-#endif
-
-    return TRUE;
-}
-
-/**
- * gwyfile_compress_data_ids:
- * @data: A data container.
- *
- * Creates a container with compressed data numbers.
- *
- * Returns: A container where data numbers form simple sequence from 0 onward.
- *          It may be @data itself too, in such case a reference is added so
- *          that caller should always use g_object_unref() on the returned
- *          container to release it.
- **/
-static GwyContainer*
-gwyfile_compress_data_ids(GwyContainer *data)
-{
-    CompressIdData cidd;
-
-    cidd.map = g_array_new(FALSE, FALSE, sizeof(gint));
-    gwy_container_foreach(data, NULL, hash_data_find_func, cidd.map);
-
-    if (gwyfile_make_rmap(&cidd, 0, "data")) {
-        cidd.target = gwy_container_new();
-        cidd.str = g_string_new("");
-        gwy_container_foreach(data, NULL, hash_data_index_map_func, &cidd);
-        g_free(cidd.rmap);
-        g_string_free(cidd.str, TRUE);
-    }
-    else
-        cidd.target = g_object_ref(data);
-    g_array_free(cidd.map, TRUE);
-
-    return cidd.target;
-}
-
-/**
- * gwyfile_compress_graph_ids:
- * @data: A data container.
- *
- * Creates a container with compressed graph numbers.
- *
- * Returns: A container where graph numbers form simple sequence from 0 onward.
- *          It may be @data itself too, in such case a reference is added so
- *          that caller should always use g_object_unref() on the returned
- *          container to release it.
- **/
-static GwyContainer*
-gwyfile_compress_graph_ids(GwyContainer *data)
-{
-    CompressIdData cidd;
-
-    cidd.map = g_array_new(FALSE, FALSE, sizeof(gint));
-    gwy_container_foreach(data, GRAPH_PREFIX, hash_graph_find_func, cidd.map);
-
-    /* For historic reasons graphs start from 1.  Graph with id=0 makes
-     * 1.x crash. */
-    if (gwyfile_make_rmap(&cidd, 1, "data")) {
-        cidd.target = gwy_container_new();
-        cidd.str = g_string_new("");
-        gwy_container_foreach(data, NULL, hash_graph_index_map_func, &cidd);
-        g_free(cidd.rmap);
-        g_string_free(cidd.str, TRUE);
-    }
-    else
-        cidd.target = g_object_ref(data);
-    /* Keep 1.x compatibility */
-    gwy_container_remove_by_name(cidd.target, "/0/graph/lastid");
-    gwy_container_set_int32_by_name(cidd.target, "/0/graph/lastid",
-                                    cidd.map->len);
-
-    g_array_free(cidd.map, TRUE);
-
-    return cidd.target;
-}
-
-static GwyContainer*
-gwyfile_compress_ids(GwyContainer *data)
-{
-    GwyContainer *tmp, *result;
-
-    tmp = gwyfile_compress_data_ids(data);
-    result = gwyfile_compress_graph_ids(tmp);
-    g_object_unref(tmp);
-
-    return result;
-}
-/* }}} */
 
 /** Convert and/or remove various old-style data structures {{{ **/
 static void
