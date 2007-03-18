@@ -1,4 +1,4 @@
-2.5.20070316
+2.5.20070318
 
 2.6 (0000-00-00)
 Application:
@@ -6,10 +6,17 @@ Application:
 
 Libraries:
 - libgwydgets: 3D view shows value units in z labels (instead of lateral).
+- libgwyprocess: Bogus complex 2D FFT transform in the case of
+  gwy_fft_simple() backend was fixed.
+- libgwyapp: Possible crash in Document history when a file is saved under a
+  new name was fixed.
+- libgwydgets: gwy_data_view_export_pixbuf() honours realsquare setting.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
-- Pixmap import: It's possible to set arbitrary units, the preview is bigger.
+- Pixmap import: It is possible to set arbitrary units, the preview is bigger.
+- Pixmap export: Text size can be set independently, zoom can be specified by
+  desired width and height, cases of wrong preview scaling were fixed.
 - Rawfile: Critical messages on Reset were fixed.
 - Point layer: Radius indicator scales properly when the layer is scaled.
 - Calibrate: The precision of scale spin buttons was increased.
