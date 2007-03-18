@@ -539,9 +539,9 @@ gwy_serialize_pack_object_header(GByteArray *buffer,
  * {
  *     MyObject *my_object = MY_OBJECT(obj);
  *     GwySerializeSpec spec[] = {
- *         { 'd', "foo", &amp;my_object-&gt;foo, NULL, },
+ *         { 'd', "foo", &my_object->foo, NULL, },
  *     };
- *     <!-- Hello, gtk-doc! -->
+ *
  *     return gwy_serialize_pack_object_struct(buffer, size,
  *                                             "MyObject",
  *                                             G_N_ELEMENTS(spec), spec);
@@ -1285,10 +1285,10 @@ gwy_serialize_unpack_struct(const guchar *buffer,
  * {
  *     double foo = 1.0;
  *     GwySerializeSpec spec[] = {
- *         { 'd', "foo", &amp;foo, NULL, },
+ *         { 'd', "foo", &foo, NULL, },
  *     };
  *     MyObject *my_object;
- *     <!-- Hello, gtk-doc! -->
+ *
  *     gwy_serialize_unpack_object_struct(buffer, size, position,
  *                                        "MyObject",
  *                                        G_N_ELEMENTS(spec), spec);

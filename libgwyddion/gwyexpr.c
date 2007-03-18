@@ -1723,12 +1723,12 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * GwyExpr *expr;
  * GError *err = NULL;
  * gdouble result;
- * <!-- Hello, gtk-doc! -->
- * expr = gwy_expr_new(<!-- Hello, gtk-doc! -->);
- * if (!gwy_expr_evaluate(expr, "1+2", &amp;result, &amp;err)) {
- *     /<!-- -->* Handle compilation error *<!-- -->/
+ *
+ * expr = gwy_expr_new();
+ * if (!gwy_expr_evaluate(expr, "1+2", &result, &err)) {
+ *     /&ast; Handle compilation error &ast;/
  * }
- * g_print("The result: &percnt;g\n", result);
+ * g_print("The result: %g\n", result);
  * gwy_expr_free(expr);
  * </programlisting></informalexample>
  *
@@ -1738,18 +1738,18 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * GwyExpr *expr;
  * GError *err = NULL;
  * gdouble result;
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Create expression and define variables as constants *<!-- -->/
- * expr = gwy_expr_new(<!-- Hello, gtk-doc! -->);
+ *
+ * /&ast; Create expression and define variables as constants &ast;/
+ * expr = gwy_expr_new();
  * gwy_expr_define_constant(expr, "x", 3.0, NULL);
  * gwy_expr_define_constant(expr, "y", 4.0, NULL);
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Evaluate expression *<!-- -->/
- * if (!gwy_expr_evaluate(expr, "hypot x,y", &amp;result, &amp;err)) {
- *     /<!-- -->* Handle compilation error *<!-- -->/
+ *
+ * /&ast; Evaluate expression &ast;/
+ * if (!gwy_expr_evaluate(expr, "hypot x,y", &result, &err)) {
+ *     /&ast; Handle compilation error &ast;/
  * }
- * g_print("The result: &percnt;g\n", result);
- * <!-- Hello, gtk-doc! -->
+ * g_print("The result: %g\n", result);
+ *
  * gwy_expr_free(expr);
  * </programlisting></informalexample>
  *
@@ -1767,34 +1767,33 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * guint var_positions[G_N_ELEMENTS(var_names)];
  * gdouble vars[G_N_ELEMENTS(var_names) + 1];
  * guint i;
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Create expression and define constant pi *<!-- -->/
- * expr = gwy_expr_new(<!-- Hello, gtk-doc! -->);
+ *
+ * /&ast; Create expression and define constant pi &ast;/
+ * expr = gwy_expr_new();
  * gwy_expr_define_constant(expr, "pi", G_PI, NULL);
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Compile expression *<!-- -->/
- * if (!gwy_expr_compile(expr, "2*pi/lambda*d*sin theta", &amp;err)) {
- *     /<!-- -->* Handle compilation error *<!-- -->/
+ *
+ * /&ast; Compile expression &ast;/
+ * if (!gwy_expr_compile(expr, "2*pi/lambda*d*sin theta", &err)) {
+ *     /&ast; Handle compilation error &ast;/
  * }
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Resolve variables *<!-- -->/
+ *
+ * /&ast; Resolve variables &ast;/
  * if (gwy_expr_resolve_variables(expr, G_N_ELEMENTS(var_names),
  *                                var_names, var_positions)) {
- *     /<!-- -->* Expression contains unknown variables *<!-- -->/
+ *     /&ast; Expression contains unknown variables &ast;/
  * }
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Evaluate first set *<!-- -->/
+ *
+ * /&ast; Evaluate first set &ast;/
  * for (i = 0; i < G_N_ELEMENTS(var_names); i++) {
  *     vars[var_positions[i]] = var_values1[i];
  * }
- * g_print("First result: &percnt;g\n", gwy_expr_execute(expr, vars));
- * <!-- Hello, gtk-doc! -->
- * /<!-- -->* Evaluate second set *<!-- -->/
- * for (i = 0; i < G_N_ELEMENTS(var_names); i++) {
+ * g_print("First result: %g\n", gwy_expr_execute(expr, vars));
+ *
+ * /&ast; Evaluate second set &ast;/
+ * for (i = 0; i < G_N_ELEMENTS(var_names); i++)
  *     vars[var_positions[i]] = var_values2[i];
- * }
- * g_print("Second result: &percnt;g\n", gwy_expr_execute(expr, vars));
- * <!-- Hello, gtk-doc! -->
+ * g_print("Second result: %g\n", gwy_expr_execute(expr, vars));
+ *
  * gwy_expr_free(expr);
  * </programlisting></informalexample>
  *
