@@ -21,12 +21,12 @@
 
 #include "config.h"
 
-/* include this first, before NO_IMPORT_PYGOBJECT is defined */ 
-#include <pygtk-2.0/pygobject.h> 
+/* include this first, before NO_IMPORT_PYGOBJECT is defined */
+#include <pygtk-2.0/pygobject.h>
 
 #include <string.h>
-#include <glib.h> 
-#include <glib/gstdio.h> 
+#include <glib.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
@@ -42,33 +42,34 @@ typedef struct {
     gchar *filename;
 } PygwyPluginInfo;
 
-static gboolean module_register(void);
-static void pygwy_plugin_run(GwyContainer *data, GwyRunType run, const gchar *name);
-static void pygwy_register_plugins(void);
-static PygwyPluginInfo* pygwy_find_plugin(const gchar* name);
+static gboolean         module_register       (void);
+static void             pygwy_plugin_run      (GwyContainer *data,
+                                               GwyRunType run,
+                                               const gchar *name);
+static void             pygwy_register_plugins(void);
+static PygwyPluginInfo* pygwy_find_plugin     (const gchar* name);
 
 static GList *s_pygwy_plugins = NULL;
 
-DL_EXPORT(void) 
-initpygwy(GwyContainer *container) 
-{ 
-    PyObject *m, *d; 
+DL_EXPORT(void)
+initpygwy(GwyContainer *container)
+{
+    PyObject *m, *d;
     PyObject *py_container;
-    init_pygobject (); 
+    init_pygobject();
 
-    m = Py_InitModule ("gwy", (PyMethodDef*) pygwy_functions); 
-    d = PyModule_GetDict (m); 
- 
-    pygwy_register_classes (d);
+    m = Py_InitModule("gwy", (PyMethodDef*) pygwy_functions);
+    d = PyModule_GetDict(m);
+
+    pygwy_register_classes(d);
 /*    pyatk_add_constants(m, "ATK_");     */
 
     /* Create accessible object GwyContainer (gwy.data) */
     py_container = pygobject_new((GObject*)container);
     PyDict_SetItemString(d, "data", py_container);
-
 }
 
-static GwyModuleInfo module_info = {
+static const GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Pygwy, then Gwyddion Python wrapper."),
@@ -88,12 +89,14 @@ module_register(void)
 }
 
 static void
-pygwy_register_plugins(void) 
+pygwy_register_plugins(void)
 {
+    // FIXME: maybe place somewhere else
+    static const gchar pygwy_plugin_dir_name[] = "pygwy";
+
     GDir *pygwy_plugin_dir;
     const gchar *pygwy_filename;
     gchar *menu_path;
-    gchar pygwy_plugin_dir_name[] = "pygwy"; // FIXME: maybe place somewhere else
     gchar *pygwy_plugname;
     PygwyPluginInfo *info;
     gchar *dir;
@@ -116,14 +119,14 @@ pygwy_register_plugins(void)
             g_warning("Cannot open pygwy directory: %s, reason: %s", dir, err->message);
         }
         g_free(dir);
-        /* Whenever the directory has been created or not, there is no reason 
+        /* Whenever the directory has been created or not, there is no reason
            to continue by reading scripts as long as no script */
         return;
     }
 
-    while ( (pygwy_filename = g_dir_read_name(pygwy_plugin_dir)) ) {
-        if (g_str_has_suffix(pygwy_filename, ".py") 
-           || g_str_has_suffix(pygwy_filename, ".PY") 
+    while ((pygwy_filename = g_dir_read_name(pygwy_plugin_dir))) {
+        if (g_str_has_suffix(pygwy_filename, ".py")
+           || g_str_has_suffix(pygwy_filename, ".PY")
            || g_str_has_suffix(pygwy_filename, ".Py") ) {
             // for menu item name use filename without extension
             pygwy_plugname = g_strndup(pygwy_filename, strlen(pygwy_filename)-3);
@@ -162,7 +165,7 @@ pygwy_plugin_run(GwyContainer *data, GwyRunType run, const gchar *name)
     PygwyPluginInfo *info;
     PyThreadState* py_thread_state = NULL;
     FILE *pyfile;
-    
+
     if (!(info = pygwy_find_plugin(name))) {
         g_warning("cannot find plugin.");
         return;
@@ -186,9 +189,9 @@ pygwy_plugin_run(GwyContainer *data, GwyRunType run, const gchar *name)
     }
     /* initialize module class */
 
-    
-    gwy_debug("Running plugin '%s', filename '%s'", info->name, info->filename);    
-    py_thread_state = Py_NewInterpreter();    
+
+    gwy_debug("Running plugin '%s', filename '%s'", info->name, info->filename);
+    py_thread_state = Py_NewInterpreter();
     initpygwy(data);
     /* Run pyfile */
     PyRun_AnyFile(pyfile, info->filename);
@@ -203,9 +206,11 @@ pygwy_plugin_run(GwyContainer *data, GwyRunType run, const gchar *name)
 }
 
 static PygwyPluginInfo*
-pygwy_find_plugin(const gchar* name) {
+pygwy_find_plugin(const gchar* name)
+{
     GList *l = s_pygwy_plugins;
     PygwyPluginInfo *info;
+
     while (l) {
         info = (PygwyPluginInfo*)(l->data);
 
@@ -220,4 +225,5 @@ pygwy_find_plugin(const gchar* name) {
     }
     return (PygwyPluginInfo*)l->data;
 }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
