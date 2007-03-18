@@ -502,26 +502,26 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  *
  * A simple example to create a multiplication table with null storage:
  * <informalexample><programlisting>
- *  GtkWidget *treeview;
- *  GtkTreeViewColumn *column;
- *  GtkCellRenderer *renderer;
- *  GwyNullStore *store;
- *  gint i;
- *  <!-- Hello, gtk-doc! -->
- *  store = gwy_null_store_new(10);
- *  treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
- *  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
- *  <!-- Hello, gtk-doc! -->
- *  column = gtk_tree_view_column_new<!-- -->();
- *  for (i = 1; i <= 10; i++) {
- *      renderer = gtk_cell_renderer_text_new<!-- -->();
- *      g_object_set(renderer, "xalign", 1.0, "width-chars", 4, NULL);
- *      gtk_tree_view_column_pack_start(column, renderer, TRUE);
- *      gtk_tree_view_column_set_cell_data_func(column, renderer,
- *                                              multiply, GINT_TO_POINTER(i),
- *                                              NULL);
- *  }
- *  gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+ * GtkWidget *treeview;
+ * GtkTreeViewColumn *column;
+ * GtkCellRenderer *renderer;
+ * GwyNullStore *store;
+ * gint i;
+ *
+ * store = gwy_null_store_new(10);
+ * treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+ * gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+ *
+ * column = gtk_tree_view_column_new();
+ * for (i = 1; i <= 10; i++) {
+ *     renderer = gtk_cell_renderer_text_new();
+ *     g_object_set(renderer, "xalign", 1.0, "width-chars", 4, NULL);
+ *     gtk_tree_view_column_pack_start(column, renderer, TRUE);
+ *     gtk_tree_view_column_set_cell_data_func(column, renderer,
+ *                                             multiply, GINT_TO_POINTER(i),
+ *                                             NULL);
+ * }
+ * gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
  * </programlisting></informalexample>
  *
  * The cell data function multiply<!-- -->() just multiplies the column number
@@ -536,9 +536,9 @@ gwy_null_store_iter_is_valid(GwyNullStore *store,
  * {
  *     gchar buf[20];
  *     gint i;
- *     <!-- Hello, gtk-doc! -->
- *     gtk_tree_model_get(model, iter, 0, &amp;i, -1);
- *     g_snprintf(buf, sizeof(buf), "&percnt;d", (i + 1)*GPOINTER_TO_INT(data));
+ *
+ *     gtk_tree_model_get(model, iter, 0, &i, -1);
+ *     g_snprintf(buf, sizeof(buf), "%d", (i + 1)*GPOINTER_TO_INT(data));
  *     g_object_set(renderer, "text", buf, NULL);
  * }
  * </programlisting></informalexample>

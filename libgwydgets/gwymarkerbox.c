@@ -811,10 +811,10 @@ gwy_marker_box_get_validator(GwyMarkerBox *mbox)
  * {
  *     const gdouble *markers;
  *     gint j, n;
- *     <!-- Hello, gtk-doc! -->
+ *
  *     n = gwy_marker_box_get_nmarkers(mbox);
- *     <!-- Hello, gtk-doc! -->
- *     /<!-- -->* Insertions are sorted *<!-- -->/
+ *
+ *     /&ast; Insertions are sorted &ast;/
  *     if (optype == GWY_MARKER_OPERATION_ADD) {
  *         markers = gwy_marker_box_get_markers(mbox);
  *         for (j = 0; j < n; j++) {
@@ -826,12 +826,12 @@ gwy_marker_box_get_validator(GwyMarkerBox *mbox)
  *         *i = j;
  *         return TRUE;
  *     }
- *     <!-- Hello, gtk-doc! -->
- *     /<!-- -->* Nothing at all can be done with border markers *<!-- -->/
+ *
+ *     /&ast; Nothing at all can be done with border markers &ast;/
  *     if (*i == 0 || *i == n-1)
  *         return FALSE;
- *     <!-- Hello, gtk-doc! -->
- *     /<!-- -->* Inner markers can be moved only from previous to next *<!-- -->/
+ *
+ *     /&ast; Inner markers can be moved only from previous to next &ast;/
  *     if (optype == GWY_MARKER_OPERATION_MOVE) {
  *         markers = gwy_marker_box_get_markers(mbox);
  *         *pos = CLAMP(*pos, markers[*i - 1], markers[*i + 1]);

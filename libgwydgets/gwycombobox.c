@@ -427,27 +427,27 @@ gwy_combo_box_metric_unit_make_enum(gint from,
  * typedef enum {
  *     MY_ENUM_FOO, MY_ENUM_BAR, MY_ENUM_BAZ
  * } MyEnum;
- * <!-- Hello, gtk-doc! -->
+ *
  * static GwyEnum my_enum_fields[] = {
  *     { N_("Foo"), MY_ENUM_FOO },
  *     { N_("Bar"), MY_ENUM_BAR },
  *     { N_("Baz"), MY_ENUM_BAZ },
  * };
- * <!-- Hello, gtk-doc! -->
+ *
  * static void
  * menu_callback(GtkWidget *combo, gpointer cbdata)
  * {
  *     MyEnum value;
- *     <!-- Hello, gtk-doc! -->
+ *
  *     value = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
  *     ...
  * }
- * <!-- Hello, gtk-doc! -->
+ *
  * static void
  * function(void) {
  *     GtkWidget *combo;
  *     ...
- *     <!-- Hello, gtk-doc! -->
+ *
  *     combo = gwy_enum_combo_box_new(fields, G_N_ELEMENTS(fields),
  *                                    G_CALLBACK(menu_callback), NULL,
  *                                    MY_ENUM_FOO, TRUE);
@@ -463,7 +463,7 @@ gwy_combo_box_metric_unit_make_enum(gint from,
  * For example, a combo box with possible interpolation types can be
  * constructed:
  * <informalexample><programlisting>
- * combo = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum<!-- -->(), -1,
+ * combo = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
  *                                G_CALLBACK(menu_callback), NULL,
  *                                GWY_INTERPOLATION_BILINEAR, TRUE);
  * </programlisting></informalexample>
