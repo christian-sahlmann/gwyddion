@@ -4,7 +4,7 @@ pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Since 2.3: arithmetic data_measure drift immerse merge
-# Since 2.6: path_level
+# Since 2.6: path_level spectrum
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -95,6 +95,7 @@ pixmapdata_DATA = \
 	gwy_scale_vertically-24.png \
 	gwy_scars-24.png \
 	gwy_shader-24.png \
+	gwy_spectrum-24.png \
 	gwy_spot_remove-24.png \
 	gwy_stat_quantities-24.png \
 	gwy_subscript-20.png \
@@ -151,6 +152,7 @@ xcf_sources = \
 	gwy_scale_horizontally-24.xcf \
 	gwy_scale_vertically-24.xcf \
 	gwy_shader-24.xcf \
+	gwy_spectrum-24.xcf \
 	gwy_spot_remove-24.xcf \
 	gwy_stat_quantities-24.xcf \
 	gwy_unrotate-24.xcf \

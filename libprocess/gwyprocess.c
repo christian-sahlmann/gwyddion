@@ -47,6 +47,7 @@ gwy_process_type_init(void)
     g_type_class_peek(GWY_TYPE_DATA_LINE);
     g_type_class_peek(GWY_TYPE_DATA_FIELD);
     g_type_class_peek(GWY_TYPE_CDLINE);
+    g_type_class_peek(GWY_TYPE_SPECTRA);
     types_initialized = TRUE;
 
     _gwy_cdline_class_setup_presets();

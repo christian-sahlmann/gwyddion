@@ -108,6 +108,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_SCALE_VERTICALLY      "gwy_scale_vertically"
 #define GWY_STOCK_SCARS                 "gwy_scars"
 #define GWY_STOCK_SHADER                "gwy_shader"
+#define GWY_STOCK_SPECTRUM              "gwy_spectrum"
 #define GWY_STOCK_SPOT_REMOVE           "gwy_spot_remove"
 #define GWY_STOCK_STAT_QUANTITIES       "gwy_stat_quantities"
 #define GWY_STOCK_SUBSCRIPT             "gwy_subscript"

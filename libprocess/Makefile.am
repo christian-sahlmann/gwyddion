@@ -24,6 +24,7 @@ libgwyprocess2include_HEADERS = \
 	level.h \
 	linestats.h \
 	simplefft.h \
+	spectra.h \
 	stats.h \
 	tip.h
 
@@ -82,6 +83,7 @@ libgwyprocess2_la_SOURCES = \
 	linestats.c \
 	morph_lib.c \
 	simplefft.c \
+	spectra.c \
 	stats.c \
 	tip.c
 

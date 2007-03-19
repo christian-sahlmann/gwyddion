@@ -17,6 +17,7 @@ tools_LTLIBRARIES = \
 	readvalue.la \
 	sfunctions.la \
 	spotremove.la \
+	spectro.la \
 	stats.la
 
 EXTRA_DIST = \
@@ -56,6 +57,7 @@ profile_la_SOURCES      = profile.c
 readvalue_la_SOURCES    = readvalue.c
 stats_la_SOURCES        = stats.c
 sfunctions_la_SOURCES   = sfunctions.c
+spectro_la_SOURCES      = spectro.c
 spotremove_la_SOURCES   = spotremove.c
 
 MAINTAINERCLEANFILES = makefile.msc

@@ -92,6 +92,53 @@ gwy_math_humanize_numbers(gdouble unit,
 }
 
 /**
+ * gwy_math_is_in_poly:
+ * @x: The x coordinate of the test point.
+ * @y: The y coordinate of the test point.
+ * @poly: An array of coordinate pairs (points) that define a
+ *        polygon.
+ * @N: The number of corners of the polygon.
+ *
+ * Establishes wether the test point @x, @y is inside the polygon @poly.
+ * The polygon can be defined either clockwise or anti-clockwise and
+ * can be a concave, convex or self-intersecting polygon.
+ *
+ * Returns: TRUE if the test point is inside poly and FALSE otherwise.
+ *
+ * <warning> Result can be either TRUE or FALSE if the test point
+ * is *exactly* on an edge. </warning>
+ **/
+
+/* This neat little check algorithm  was found at
+   http://alienryderflex.com/polygon and has been adapted*/
+gboolean
+gwy_math_is_in_poly(gdouble x,
+           gdouble y,
+           const gdouble* poly,
+           guint N) {
+    guint i, j = 0;
+    gboolean inside = FALSE;
+    gdouble X, Y;
+
+    for (i = 0; i < N; i++) {
+        j++;
+        if (j == N)
+            j = 0;
+        if ((poly[2 * i + 1] < y && poly[2 * j + 1] >= y)
+            || (poly[2 * j + 1] < y && poly[2 * i + 1] >= y)) {
+            X = poly[2 * j] - poly[2 * i];
+            Y = poly[2 * j + 1] - poly[2 * i + 1];
+            if (poly[2 * i]
+                + ((y - poly[2 * i + 1]) / Y)*X
+                < x) {
+                inside = !inside;
+            }
+        }
+    }
+    return inside;
+}
+
+/**
  * gwy_math_find_nearest_line:
  * @x: X-coordinate of the point to search.
  * @y: Y-coordinate of the point to search.
@@ -730,7 +777,7 @@ gwy_math_sort(gsize n,
                 goto jump_over;
             if (*mid < *lo)
                 DSWAP(*mid, *lo);
-jump_over:;
+jump_over: ;
 
           left_ptr  = lo + 1;
           right_ptr = hi - 1;

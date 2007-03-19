@@ -38,6 +38,7 @@
 #include <libprocess/grains.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
+#include <libprocess/spectra.h>
 #include <libprocess/linestats.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
