@@ -299,7 +299,7 @@ gwy_spectra_duplicate_real(GObject *object)
     GwySpectra *spectra, *duplicate;
     GwyDataLine *data_line;
 
-    g_return_val_if_fail(GWY_IS_DATA_LINE(object), NULL);
+    g_return_val_if_fail(GWY_IS_SPECTRA(object), NULL);
     spectra = GWY_SPECTRA(object);
     duplicate = gwy_spectra_new_alike(spectra);
     /* duplicate the co-ordinates of the spectra */
