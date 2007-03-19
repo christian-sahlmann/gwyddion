@@ -52,7 +52,7 @@ struct _GwySpectra {
     GwyDataLine **data;  /* Array of GwySpectrum */
     guint       ncurves; /* Number of spectra */
     guint       nalloc;  /* Allocated space */
-    
+
     gchar       *title;
     GwySIUnit   *si_unit_xy;
 
@@ -71,52 +71,44 @@ struct _GwySpectraClass {
 #define gwy_spectra_duplicate(spectra) \
         (GWY_SPECTRA(gwy_serializable_duplicate(G_OBJECT(spectra))))
 
-GType           gwy_spectra_get_type  (void) G_GNUC_CONST;
-
-GwySpectra*     gwy_spectra_new                    ();
-GwySpectra*     gwy_spectra_new_alike              (GwySpectra *model);
-void            gwy_spectra_data_changed           (GwySpectra *spectra);
-void            gwy_spectra_copy                   (GwySpectra *a,
-                                                    GwySpectra *b);
-GwyDataLine**   gwy_spectra_get_data               (GwySpectra *spectra);
-const GwyDataLine** gwy_spectra_get_data_const     (GwySpectra *spectra);
-GwySIUnit*      gwy_spectra_get_si_unit_xy         (GwySpectra *spectra);
-void            gwy_spectra_set_si_unit_xy         (GwySpectra *spectra,
-                                                    GwySIUnit *si_unit);
-GwySIValueFormat* gwy_spectra_get_value_format_xy  (GwySpectra *spectra,
-                                                    GwySIUnitFormatStyle style,
-                                                    GwySIValueFormat *format);
-const gdouble*  gwy_spectra_itoxy                  (GwySpectra *spectra,
-                                                    guint i);
-guint           gwy_spectra_xytoi                  (GwySpectra *spectra,
-                                                    gdouble real_x,
-                                                    gdouble real_y);
-void            gwy_spectra_setpos                 (GwySpectra *spectra,
-                                                    gdouble real_x,
-                                                    gdouble real_y,
-                                                    guint i);
-GwyDataLine*    gwy_spectra_get_spectrum           (GwySpectra *spectra,
-                                                    gint i);
-void            gwy_spectra_set_spectrum           (GwySpectra *spectra,
-                                                    guint i,
-                                                    GwyDataLine *new_spectrum);
-guint           gwy_spectra_n_spectra              (GwySpectra *spectra); 
-gint            gwy_spectra_nearest                (GwySpectra *spectra,
-                                                    guint** plist,
-                                                    gdouble real_x,
-                                                    gdouble real_y);
-void            gwy_spectra_add_spectrum           (GwySpectra *spectra,
-                                                    GwyDataLine *new_spectrum,
-                                                    gdouble x,
-                                                    gdouble y);
-void            gwy_spectra_remove_spectrum        (GwySpectra *spectra,
-                                                    guint i);
-GwyDataLine*    gwy_spectra_get_spectra_interp     (GwySpectra *spectra,
-                                                    gdouble x,
-                                                    gdouble y);
-const gchar*    gwy_spectra_get_title              (GwySpectra *spectra);
-void            gwy_spectra_set_title              (GwySpectra *spectra, gchar *new_title);
-void            gwy_spectra_clear                  (GwySpectra *spectra);
+GType          gwy_spectra_get_type          (void) G_GNUC_CONST;
+GwySpectra*    gwy_spectra_new               (void);
+GwySpectra*    gwy_spectra_new_alike         (GwySpectra *model);
+void           gwy_spectra_data_changed      (GwySpectra *spectra);
+void           gwy_spectra_copy              (GwySpectra *a,
+                                              GwySpectra *b);
+GwySIUnit*     gwy_spectra_get_si_unit_xy    (GwySpectra *spectra);
+void           gwy_spectra_set_si_unit_xy    (GwySpectra *spectra,
+                                              GwySIUnit *si_unit);
+const gdouble* gwy_spectra_itoxy             (GwySpectra *spectra,
+                                              guint i);
+guint          gwy_spectra_xytoi             (GwySpectra *spectra,
+                                              gdouble real_x,
+                                              gdouble real_y);
+void           gwy_spectra_setpos            (GwySpectra *spectra,
+                                              gdouble real_x,
+                                              gdouble real_y,
+                                              guint i);
+GwyDataLine*   gwy_spectra_get_spectrum      (GwySpectra *spectra,
+                                              gint i);
+void           gwy_spectra_set_spectrum      (GwySpectra *spectra,
+                                              guint i,
+                                              GwyDataLine *new_spectrum);
+guint          gwy_spectra_n_spectra         (GwySpectra *spectra);
+gint           gwy_spectra_nearest           (GwySpectra *spectra,
+                                              guint** plist,
+                                              gdouble real_x,
+                                              gdouble real_y);
+void           gwy_spectra_add_spectrum      (GwySpectra *spectra,
+                                              GwyDataLine *new_spectrum,
+                                              gdouble x,
+                                              gdouble y);
+void           gwy_spectra_remove_spectrum   (GwySpectra *spectra,
+                                              guint i);
+const gchar*   gwy_spectra_get_title         (GwySpectra *spectra);
+void           gwy_spectra_set_title         (GwySpectra *spectra,
+                                              gchar *new_title);
+void           gwy_spectra_clear             (GwySpectra *spectra);
 
 G_END_DECLS
 
