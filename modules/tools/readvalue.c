@@ -288,7 +288,7 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new(_("Inclin. θ"));
+    label = gtk_label_new(_("Inclination θ"));
     gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
@@ -300,7 +300,7 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new(_("Inclin. φ"));
+    label = gtk_label_new(_("Inclination φ"));
     gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
