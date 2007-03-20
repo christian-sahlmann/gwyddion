@@ -97,44 +97,44 @@ gwy_math_humanize_numbers(gdouble unit,
  * @y: The y coordinate of the test point.
  * @poly: An array of coordinate pairs (points) that define a
  *        polygon.
- * @N: The number of corners of the polygon.
+ * @n: The number of corners of the polygon.
  *
  * Establishes wether the test point @x, @y is inside the polygon @poly.
  * The polygon can be defined either clockwise or anti-clockwise and
  * can be a concave, convex or self-intersecting polygon.
  *
- * Returns: TRUE if the test point is inside poly and FALSE otherwise.
- *
  * <warning> Result can be either TRUE or FALSE if the test point
  * is *exactly* on an edge. </warning>
+ *
+ * Returns: TRUE if the test point is inside poly and FALSE otherwise.
+ *
+ * Since: 2.6
  **/
-
 /* This neat little check algorithm  was found at
    http://alienryderflex.com/polygon and has been adapted*/
 gboolean
 gwy_math_is_in_poly(gdouble x,
-           gdouble y,
-           const gdouble* poly,
-           guint N) {
+                    gdouble y,
+                    const gdouble *poly,
+                    guint n)
+{
     guint i, j = 0;
     gboolean inside = FALSE;
-    gdouble X, Y;
+    gdouble xx, yy;
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         j++;
-        if (j == N)
+        if (j == n)
             j = 0;
-        if ((poly[2 * i + 1] < y && poly[2 * j + 1] >= y)
-            || (poly[2 * j + 1] < y && poly[2 * i + 1] >= y)) {
-            X = poly[2 * j] - poly[2 * i];
-            Y = poly[2 * j + 1] - poly[2 * i + 1];
-            if (poly[2 * i]
-                + ((y - poly[2 * i + 1]) / Y)*X
-                < x) {
+        if ((poly[2*i + 1] < y && poly[2*j + 1] >= y)
+            || (poly[2*j + 1] < y && poly[2*i + 1] >= y)) {
+            xx = poly[2*j] - poly[2*i];
+            yy = poly[2*j + 1] - poly[2*i + 1];
+            if (poly[2*i] + ((y - poly[2*i + 1]) / yy)*xx < x)
                 inside = !inside;
-            }
         }
     }
+
     return inside;
 }
 

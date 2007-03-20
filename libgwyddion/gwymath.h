@@ -42,7 +42,7 @@ gdouble  gwy_math_humanize_numbers     (gdouble unit,
 gboolean gwy_math_is_in_poly           (gdouble x,
                                         gdouble y,
                                         const gdouble* poly,
-                                        guint N);
+                                        guint n);
 gint     gwy_math_find_nearest_line    (gdouble x,
                                         gdouble y,
                                         gdouble *d2min,
