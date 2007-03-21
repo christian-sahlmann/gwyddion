@@ -21,8 +21,8 @@
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
- * <mime-type type="application/x-jpk-spm">
- *   <comment>JPK SPM data</comment>
+ * <mime-type type="application/x-jpk-image-scan">
+ *   <comment>JPK image scan</comment>
  *   <magic priority="10">
  *     <match type="string" offset="0" value="MM\x00\x2a"/>
  *   </magic>
@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     "Sven Neumann <neumann@jpk.com>",
     "0.6",
     "JPK Instruments AG",
-    "2005",
+    "2005-2007",
 };
 
 GWY_MODULE_QUERY(module_info)
