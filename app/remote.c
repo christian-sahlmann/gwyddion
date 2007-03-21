@@ -336,6 +336,7 @@ do_remote(GdkDisplay *display,
 
     /* Finally enter the mainloop to handle the events. */
     gtk_main();
+    gdk_notify_startup_complete();
 
     return TRUE;
 }
