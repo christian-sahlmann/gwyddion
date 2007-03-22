@@ -51,7 +51,7 @@ static PygwyPluginInfo* pygwy_find_plugin     (const gchar* name);
 
 static GList *s_pygwy_plugins = NULL;
 
-DL_EXPORT(void)
+static DL_EXPORT(void)
 initpygwy(GwyContainer *container)
 {
     PyObject *m, *d;
@@ -182,8 +182,6 @@ pygwy_plugin_run(GwyContainer *data, GwyRunType run, const gchar *name)
         gwy_debug("Initializing Python interpreter" );
         // Do not register signal handlers
         Py_InitializeEx(0);
-        gwy_debug("Initializing Pygwy classes.");
-        initpygwy(data);
      } else {
         gwy_debug("Python interpreter already initialized");
     }
@@ -192,6 +190,7 @@ pygwy_plugin_run(GwyContainer *data, GwyRunType run, const gchar *name)
 
     gwy_debug("Running plugin '%s', filename '%s'", info->name, info->filename);
     py_thread_state = Py_NewInterpreter();
+    gwy_debug("Initializing Pygwy classes.");
     initpygwy(data);
     /* Run pyfile */
     PyRun_AnyFile(pyfile, info->filename);

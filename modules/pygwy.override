@@ -179,3 +179,38 @@ _wrap_gwy_data_line_get_data(PyGObject *self)
 
    return tuple;
 }
+%%
+override gwy_app_data_browser_get_data_ids kwargs
+static PyObject *
+_wrap_gwy_app_data_browser_get_data_ids(PyObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"container", NULL};
+   PyGObject *cont;
+   gint *id_it; // id array iterator
+   gint members = 0; // members of array of ids
+   gint i, *ids;
+   PyObject *tuple;
+   
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!:gwy_app_data_browser_get_data_ids", kwlist, &PyGwyContainer_Type, &cont))
+      return NULL;
+
+   ids = gwy_app_data_browser_get_data_ids(GWY_CONTAINER(cont->obj));
+   id_it = ids;
+   // Get number of members in array
+   while (*id_it != -1) {
+      members++;
+      id_it++;
+   }
+   // Create tuple by size ids array
+   tuple = PyTuple_New(members);
+   if (!tuple)
+      return NULL;
+   // fill tuple with ids
+   for (i = 0 ; i < members; i++) { 
+      PyTuple_SetItem(tuple, i, PyInt_FromLong(ids[i]));
+   }
+   g_free(ids);
+   return tuple;
+}
+
+// vim:syntax=c
