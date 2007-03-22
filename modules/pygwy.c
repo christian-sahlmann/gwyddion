@@ -62,7 +62,7 @@ initpygwy(GwyContainer *container)
     d = PyModule_GetDict(m);
 
     pygwy_register_classes(d);
-/*    pyatk_add_constants(m, "ATK_");     */
+    pygwy_add_constants(m, "GWY_");
 
     /* Create accessible object GwyContainer (gwy.data) */
     py_container = pygobject_new((GObject*)container);
