@@ -75,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Digital Instruments Nanoscope II data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -179,7 +179,6 @@ hash_to_data_field(GHashTable *hash,
     GwySIUnit *unitz, *unitxy;
     gchar *val;
     gint xres, yres, i, j;
-    gsize expected;
     gdouble xreal, yreal, q;
     gdouble *data;
     const gint16 *d16;
@@ -190,11 +189,8 @@ hash_to_data_field(GHashTable *hash,
     val = g_hash_table_lookup(hash, "num_samp");
     xres = yres = atoi(val);
 
-    expected = xres*yres*sizeof(gint16);
-    if (expected > size) {
-        err_SIZE_MISMATCH(error, expected, size);
+    if (err_SIZE_MISMATCH(error, xres*yres*sizeof(gint16), size, FALSE))
         return NULL;
-    }
 
     val = g_hash_table_lookup(hash, "scan_sz");
     xreal = yreal = Nanometer*g_ascii_strtod(val, NULL);

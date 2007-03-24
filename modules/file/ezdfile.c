@@ -203,6 +203,10 @@ ezdfile_load(const gchar *filename,
         if (!section->data)
             continue;
 
+        if (err_DIMENSION(NULL, section->xres)
+            || err_DIMENSION(NULL, section->yres))
+            continue;
+
         dfield = gwy_data_field_new(section->xres, section->yres,
                                     1.0, 1.0, FALSE);
         read_data_field(dfield, section);
@@ -360,6 +364,15 @@ file_read_header(GPtrArray *ezdfile,
             section->zrange.range = g_ascii_strtod(p, NULL);
         else
             g_hash_table_replace(section->meta, g_strdup(line), g_strdup(p));
+    }
+
+    if (!((section->xrange.range = fabs(section->xrange.range)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        section->xrange.range = 1.0;
+    }
+    if (!((section->xrange.range = fabs(section->xrange.range)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        section->yrange.range = 1.0;
     }
 
     return TRUE;

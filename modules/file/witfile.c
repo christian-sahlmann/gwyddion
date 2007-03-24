@@ -202,7 +202,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WITec WIT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -314,7 +314,7 @@ witec_read_file(const guchar *buffer,
 {
     const guchar *p = buffer;
     gint xres, yres;
-    guint i, expected, ndata;
+    guint i, ndata;
 
     if (len < WITEC_SIZE_MIN) {
         err_TOO_SHORT(error);
@@ -325,13 +325,12 @@ witec_read_file(const guchar *buffer,
     xres = witfile->header.pixels;
     yres = witfile->header.rows;
     ndata = witfile->header.channels;
-    expected = ndata*(2*xres*yres + WITEC_SIZE_SCALE)
-               + WITEC_SIZE_FOOTER
-               + WITEC_SIZE_RANGE_OPTIONS + WITEC_SIZE_IMAGE_OPTIONS;
-    if (len != expected) {
-        err_SIZE_MISMATCH(error, expected, len);
+    if (err_SIZE_MISMATCH(error,
+                          ndata*(2*xres*yres + WITEC_SIZE_SCALE)
+                          + WITEC_SIZE_FOOTER
+                          + WITEC_SIZE_RANGE_OPTIONS + WITEC_SIZE_IMAGE_OPTIONS,
+                          len, TRUE))
         return FALSE;
-    }
 
     witfile->images = g_new0(const guchar*, ndata);
     for (i = 0; i < ndata; i++) {

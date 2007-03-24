@@ -651,8 +651,7 @@ omicron_read_data(OmicronFile *ofile,
     g_free(filename);
 
     n = ofile->xres*ofile->yres;
-    if (size != 2*n) {
-        err_SIZE_MISMATCH(error, 2*n, size);
+    if (err_SIZE_MISMATCH(error, 2*n, size, TRUE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }

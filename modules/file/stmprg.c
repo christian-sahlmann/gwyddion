@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.8",
+    "0.9",
     "Rok Zitko",
     "2004",
 };
@@ -151,10 +151,8 @@ read_datafield(gchar *buffer, guint size, GError **error)
         gwy_debug("Broken ta file. size = %i, should be %i\n", size,
                   bpp * xres * yres);
     }
-    if (size < bpp*xres*yres) {
-        err_SIZE_MISMATCH(error, bpp*xres*yres, size);
+    if (err_SIZE_MISMATCH(error, bpp*xres*yres, size, FALSE))
         return NULL;
-    }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);

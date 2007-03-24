@@ -181,7 +181,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surf data files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -355,9 +355,10 @@ surffile_load(const gchar *filename,
                      + surffile.pointsize/8*surffile.xres*surffile.yres);
     if (expected_size != size) {
         gwy_debug("Size mismatch!");
-        if (size > expected_size) add = size - expected_size; /*TODO  correct this !*/
+        if (size > expected_size)
+            add = size - expected_size; /*TODO  correct this !*/
         else {
-          err_SIZE_MISMATCH(error, expected_size, size);
+          err_SIZE_MISMATCH(error, expected_size, size, TRUE);
           gwy_file_abandon_contents(buffer, size, NULL);
           return NULL;
         }

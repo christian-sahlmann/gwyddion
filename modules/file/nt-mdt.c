@@ -532,7 +532,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -983,10 +983,8 @@ mdt_real_load(const guchar *buffer,
      * starts at 33th byte in reality */
     p++;
 
-    if (mdtfile->size + 33 != size) {
-        err_SIZE_MISMATCH(error, size, mdtfile->size + 32);
+    if (err_SIZE_MISMATCH(error, size, mdtfile->size + 33, TRUE))
         return FALSE;
-    }
 
     /* Frames */
     mdtfile->frames = g_new0(MDTFrame, mdtfile->last_frame + 1);
@@ -1029,11 +1027,9 @@ mdt_real_load(const guchar *buffer,
                   frame->hour, frame->min, frame->sec);
         frame->var_size = gwy_get_guint16_le(&p);
         gwy_debug("Frame #%u var size: %u", i, frame->var_size);
-        if (frame->var_size + FRAME_HEADER_SIZE > frame->size) {
-            err_SIZE_MISMATCH(error, frame->var_size + FRAME_HEADER_SIZE,
-                              frame->size);
+        if (err_SIZE_MISMATCH(error, frame->var_size + FRAME_HEADER_SIZE,
+                              frame->size, FALSE))
             return FALSE;
-        }
 
         switch (frame->type) {
             case MDT_FRAME_SCANNED:

@@ -234,8 +234,7 @@ mprofile_load(const gchar *filename,
     expected = mprofile.header_size
                + 2*mprofile.nbuckets*mprofile.intens_xres*mprofile.intens_yres
                + 4*mprofile.phase_xres*mprofile.phase_yres;
-    if (expected != size) {
-        err_SIZE_MISMATCH(error, (guint)expected, (guint)size);
+    if (err_SIZE_MISMATCH(error, expected, size, TRUE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }

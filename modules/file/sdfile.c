@@ -115,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -412,10 +412,8 @@ check_params(const SDFile *sdfile,
         err_DATA_TYPE(error, sdfile->data_type);
         return FALSE;
     }
-    if (sdfile->expected_size > len) {
-        err_SIZE_MISMATCH(error, sdfile->expected_size, len);
+    if (err_SIZE_MISMATCH(error, sdfile->expected_size, len, FALSE))
         return FALSE;
-    }
     if (sdfile->compression) {
         err_UNSUPPORTED(error, "Compression");
         return FALSE;

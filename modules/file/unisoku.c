@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Unisoku data files (two-part .hdr + .dat)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -424,10 +424,8 @@ unisoku_read_data_field(const guchar *buffer,
     gdouble *data;
 
     n = ufile->xres * ufile->yres;
-    if (n*type_sizes[ufile->data_type] > size) {
-        err_SIZE_MISMATCH(error, n*type_sizes[ufile->data_type], size);
+    if (err_SIZE_MISMATCH(error, n*type_sizes[ufile->data_type], size, FALSE))
         return NULL;
-    }
 
     dfield = gwy_data_field_new(ufile->xres, ufile->yres,
                                 fabs((ufile->end_x - ufile->start_x)),

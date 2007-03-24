@@ -235,12 +235,12 @@ read_data_field(const guchar *buffer,
     xres = gwy_get_guint32_le(&p);
     yres = gwy_get_guint32_le(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
 
     n = xres*yres;
-    if (size != 2*n + HEADER_SIZE) {
-        err_SIZE_MISMATCH(error, 2*n + HEADER_SIZE, size);
+    if (err_SIZE_MISMATCH(error, 2*n + HEADER_SIZE, size, TRUE))
         return NULL;
-    }
 
     p = buffer + XREAL_OFFSET;
     xreal = gwy_get_gdouble_le(&p) * Nanometer;
@@ -250,6 +250,15 @@ read_data_field(const guchar *buffer,
     q = gwy_get_gdouble_le(&p) * Nanometer;
     gwy_debug("xreal: %g, yreal: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
     /* XXX: I don't know where the factor of 0.5 comes from.  But it makes
      * the imported data match the original software. */
     q /= 2.0;
@@ -292,12 +301,12 @@ read_data_field_old(const guchar *buffer,
     xres = gwy_get_guint16_le(&p);
     yres = gwy_get_guint16_le(&p);
     gwy_debug("xres: %d, yres: %d", xres, yres);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
 
     n = xres*yres;
-    if (size != 2*n + HEADER_SIZE_OLD) {
-        err_SIZE_MISMATCH(error, 2*n + HEADER_SIZE_OLD, size);
+    if (err_SIZE_MISMATCH(error, 2*n + HEADER_SIZE_OLD, size, TRUE))
         return NULL;
-    }
 
     p = buffer + SCALE_OFFSET_OLD;
     xscale = gwy_get_gdouble_le(&p);
@@ -316,6 +325,15 @@ read_data_field_old(const guchar *buffer,
     yreal = yscale * vy;
     q = zscale;
     gwy_debug("xreal: %g, yreal: %g, zscale: %g", xreal, yreal, q);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);

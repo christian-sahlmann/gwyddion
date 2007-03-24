@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R4, R5, and R6 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -341,10 +341,8 @@ read_data_field(const guchar *buffer,
     gwy_debug("type = %d, dir = %d", *type, dir);
 
     p = buffer + doffset;
-    if (size - (p - buffer) < 2*xres*yres) {
-        err_SIZE_MISMATCH(error, 2*xres*yres, size - (p - buffer));
+    if (err_SIZE_MISMATCH(error, 2*xres*yres, size - (p - buffer), FALSE))
         return NULL;
-    }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_data_field_set_si_unit_xy(dfield, unitxy);

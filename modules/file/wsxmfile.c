@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -172,11 +172,9 @@ wsxmfile_load(const gchar *filename,
                         _("Unknown data type `%s'."), p);
     }
 
-    if (ok && (guint)size - header_size < 2*xres*yres) {
-        err_SIZE_MISMATCH(error, 2*xres*yres, (guint)size - header_size);
-        ok = FALSE;
-    }
-
+    if (ok)
+        ok = !err_SIZE_MISMATCH(error, 2*xres*yres, (guint)size - header_size,
+                                FALSE);
     if (ok)
         dfield = read_data_field(buffer + header_size, xres, yres, type);
     gwy_file_abandon_contents(buffer, size, NULL);

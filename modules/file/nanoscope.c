@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.16",
+    "0.17",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -482,7 +482,7 @@ hash_to_data_field(GHashTable *hash,
         }
 
         if (!size_ok) {
-            err_SIZE_MISMATCH(error, size, bpp*xres*yres);
+            err_SIZE_MISMATCH(error, size, bpp*xres*yres, TRUE);
             return NULL;
         }
 
@@ -497,10 +497,8 @@ hash_to_data_field(GHashTable *hash,
             }
         }
 
-        if (offset + size > (gint)bufsize) {
-            err_SIZE_MISMATCH(error, offset + size, bufsize);
+        if (err_SIZE_MISMATCH(error, offset + size, bufsize, FALSE))
             return NULL;
-        }
     }
 
     q = 1.0;

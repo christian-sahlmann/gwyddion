@@ -508,7 +508,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JEOL data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -621,10 +621,8 @@ jeol_load(const gchar *filename,
         goto fail;
     }
     expected_size = image_header.bpp/8 * image_header.xres*image_header.yres;
-    if (size < JEOL_DATA_START + expected_size) {
-        err_SIZE_MISMATCH(error, expected_size, size);
+    if (err_SIZE_MISMATCH(error, JEOL_DATA_START + expected_size, size, FALSE))
         goto fail;
-    }
 
     if (image_header.image_type != JEOL_IMAGE || image_header.compressed) {
         err_NO_DATA(error);

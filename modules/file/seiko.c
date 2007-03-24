@@ -70,7 +70,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQD files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -178,10 +178,8 @@ read_data_field(const guchar *buffer,
     gwy_debug("version: %u, endfile: %u, datastart: %u",
               version, endfile, datastart);
 
-    if (endfile != size) {
-        err_SIZE_MISMATCH(error, endfile, size);
+    if (err_SIZE_MISMATCH(error, endfile, size, TRUE))
         return NULL;
-    }
 
     xres = (int)sqrt((endfile - datastart)/2 + 0.1);
     yres = xres;

@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -289,6 +289,9 @@ file_load_real(const guchar *buffer,
     }
     yres = atol(s);
 
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
+
     if ((s = g_hash_table_lookup(meta, "intelmode")))
         intelmode = !!atol(s);
 
@@ -296,10 +299,9 @@ file_load_real(const guchar *buffer,
     if ((s = g_hash_table_lookup(meta, "voidpixels")))
         voidpixels = !!atol(s);
 
-    if (size < header_size + xres*yres*type) {
-        err_SIZE_MISMATCH(error, xres*yres*type, (guint)(size - header_size));
+    if (err_SIZE_MISMATCH(error, xres*yres*type, (guint)(size - header_size),
+                          FALSE))
         return NULL;
-    }
 
     if (voidpixels)
         dfield = read_data_field_with_voids(buffer, xres, yres,

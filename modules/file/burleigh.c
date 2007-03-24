@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Burleigh IMG data files version 2.1."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek & Hans-Peter Doerr",
     "2006",
 };
@@ -203,6 +203,12 @@ burleigh_load(const gchar *filename,
     }
 
     zoom = burleigh_get_zoom_v21(&imgfile);
+    if (err_DIMENSION(error, imgfile.xres)
+        || err_DIMENSION(error, imgfile.yres)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
     dfield = gwy_data_field_new(imgfile.xres, imgfile.yres,
                                 Angstrom*imgfile.xrange/zoom,
                                 Angstrom*imgfile.yrange/zoom,
@@ -259,10 +265,9 @@ burleigh_load_v21(IMGFile *imgfile,
     imgfile->xres = gwy_get_guint16_le(&p);
     imgfile->yres = gwy_get_guint16_le(&p);
     n = imgfile->xres * imgfile->yres;
-    if (size != 2*n + TOTAL_SIZE_V21) {
-        err_SIZE_MISMATCH(error, 2*n + TOTAL_SIZE_V21, size);
+    if (err_SIZE_MISMATCH(error, 2*n + TOTAL_SIZE_V21, size, TRUE))
         return NULL;
-    }
+
     /* Skip to footer */
     p += 2*n;
     imgfile->xrangemax = gwy_get_guint32_le(&p);
@@ -281,6 +286,16 @@ burleigh_load_v21(IMGFile *imgfile,
     imgfile->z_gain = gwy_get_guint16_le(&p);
     imgfile->bias_volts = gwy_get_gfloat_le(&p);
     imgfile->tunneling_current = gwy_get_gfloat_le(&p);
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((imgfile->xrange = fabs(imgfile->xrange)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        imgfile->xrange = 1.0;
+    }
+    if (!((imgfile->yrange = fabs(imgfile->yrange)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        imgfile->yrange = 1.0;
+    }
 
     return (const gint16*)(buffer + HEADER_SIZE_V21);
 }

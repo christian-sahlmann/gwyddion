@@ -115,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Danish Micro Engineering (DME) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -186,8 +186,8 @@ dme_load(const gchar *filename,
         return NULL;
     }
 
-    if (dmefile.header_size + dmefile.data_size != size) {
-        err_SIZE_MISMATCH(error, dmefile.header_size + dmefile.data_size, size);
+    if (err_SIZE_MISMATCH(error, dmefile.header_size + dmefile.data_size, size,
+                          TRUE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -198,6 +198,22 @@ dme_load(const gchar *filename,
                     dmefile.data_size, dmefile.xres, dmefile.yres);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
+    }
+
+    if (err_DIMENSION(error, dmefile.xres)
+        || err_DIMENSION(error, dmefile.yres)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((dmefile.xreal = fabs(dmefile.xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        dmefile.xreal = 1.0;
+    }
+    if (!((dmefile.xreal = fabs(dmefile.xreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        dmefile.yreal = 1.0;
     }
 
     dfield = gwy_data_field_new(dmefile.xres, dmefile.yres,

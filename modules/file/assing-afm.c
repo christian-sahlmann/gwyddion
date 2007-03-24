@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -131,11 +131,19 @@ aafm_load(const gchar *filename,
 
     p = buffer;
     afmfile.res = gwy_get_guint16_le(&p);
-    afmfile.real = Angstrom*gwy_get_gfloat_le(&p);
-    if (size < afmfile.res * afmfile.res + 10) {
-        err_SIZE_MISMATCH(error, afmfile.res * afmfile.res + 10, size);
+    if (err_DIMENSION(error, afmfile.res)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
+    }
+    if (err_SIZE_MISMATCH(error, afmfile.res * afmfile.res + 10, size, FALSE)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    afmfile.real = Angstrom*gwy_get_gfloat_le(&p);
+    if (!(afmfile.real = fabs(afmfile.real))) {
+        g_warning("Real size is 0.0, fixing to 1.0");
+        afmfile.real = 1.0;
     }
 
     dfield = gwy_data_field_new(afmfile.res, afmfile.res,

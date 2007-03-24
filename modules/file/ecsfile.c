@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -61,7 +62,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports ECS IMG files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -140,10 +141,10 @@ ecs_load(const gchar *filename,
     xres = gwy_get_guint16_le(&p);
     yres = gwy_get_guint16_le(&p);
     gwy_debug("xres: %u, yres: %u", xres, yres);
-    if (size != HEADER_SIZE + 2*xres*yres) {
-        err_SIZE_MISMATCH(error, HEADER_SIZE + 2*xres*yres, size);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         goto fail;
-    }
+    if (err_SIZE_MISMATCH(error, HEADER_SIZE + 2*xres*yres, size, TRUE))
+        goto fail;
 
     /* Scan size */
     p = buffer + ECS_SCAN_SIZE;
@@ -167,6 +168,12 @@ ecs_load(const gchar *filename,
     s = NULL;
     gwy_debug("xreal: %g q: %g unit: %s",
               xreal, q, c == 0x8f ? "Angstrom" : "Nanometer");
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
 
     if (c == 0x8f) {
         xreal *= 1e-10;

@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -192,6 +192,10 @@ apefile_load(const gchar *filename,
     apefile.y_offset = gwy_get_guint32_le(&p);
     apefile.size_flag = gwy_get_guint16_le(&p);
     apefile.res = 16 << apefile.size_flag;
+    if (err_DIMENSION(error, apefile.res)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
     apefile.acquire_delay = gwy_get_gfloat_le(&p);
     apefile.raster_delay = gwy_get_gfloat_le(&p);
     apefile.tip_dist = gwy_get_gfloat_le(&p);
@@ -227,6 +231,15 @@ apefile_load(const gchar *filename,
                     * apefile.hv_gain/65535.0 * 1e-9;
     apefile.yreal = apefile.maxr_y * apefile.y_piezo_factor * apefile.range_y
                     * apefile.hv_gain/65535.0 * 1e-9;
+    /* Use negated positive conditions to catch NaNs */
+    if (!((apefile.xreal = fabs(apefile.xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        apefile.xreal = 1.0;
+    }
+    if (!((apefile.xreal = fabs(apefile.xreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        apefile.yreal = 1.0;
+    }
     /* reserved */
     p += 46;
 

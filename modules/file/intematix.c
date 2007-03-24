@@ -176,7 +176,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Intematix SDF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -266,10 +266,9 @@ isdf_load(const gchar *filename,
     }
 
     t = gwy_tiff_data_type_size(image.raw_data_type);
-    if (image.xres*image.yres != image.raw_data_len) {
-        err_SIZE_MISMATCH(error, t*image.xres*image.yres, t*image.raw_data_len);
+    if (err_SIZE_MISMATCH(error, t*image.xres*image.yres, t*image.raw_data_len,
+                          TRUE))
         goto fail;
-    }
 
     siunitx = gwy_si_unit_new_parse(image.xunit, &power10x);
     siunity = gwy_si_unit_new_parse(image.yunit, &power10y);

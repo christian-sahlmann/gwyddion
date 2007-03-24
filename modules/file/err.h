@@ -62,13 +62,28 @@ err_FILE_TYPE(GError **error, const gchar *name)
                   "or it is of an unknown format version."), name);
 }
 
-static inline void
-err_SIZE_MISMATCH(GError **error, guint expected, guint real)
+static inline gboolean
+err_SIZE_MISMATCH(GError **error, guint expected, guint real, gboolean strict)
 {
+    if (expected == real || (!strict && expected < real))
+        return FALSE;
+
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                 _("Expected data size calculated from file headers "
                   "is %u bytes, but the real size is %u bytes."),
                 expected, real);
+    return TRUE;
+}
+
+static inline gboolean
+err_DIMENSION(GError **error, gint dim)
+{
+    if (dim >= 1 && dim <= 1 << 24)
+        return FALSE;
+
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Invalid field dimension: %d."), dim);
+    return TRUE;
 }
 
 static inline void

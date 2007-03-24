@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -557,10 +557,8 @@ sxm_load(const gchar *filename,
                 g_assert_not_reached();
             }
         }
-        if (size != expected_size) {
-            err_SIZE_MISMATCH(error, expected_size, size);
+        if (err_SIZE_MISMATCH(error, expected_size, size, TRUE))
             sxmfile.ok = FALSE;
-        }
     }
 
     /* Read data */

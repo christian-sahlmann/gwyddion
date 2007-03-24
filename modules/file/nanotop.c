@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NANOTOP AFM files"),
     "Alexander Kovalev <av_kov@tut.by>",
-    "1.7",
+    "1.8",
     "Alexander Kovalev, Metal-Polymer Research Institute",
     "2006",
 };
@@ -168,8 +168,8 @@ nanotop_load(const gchar *filename,
     spmfile.ty = gwy_get_guint16_le(&p);
     spmfile.my = gwy_get_guint16_le(&p);
 
-    if (size != HEADER_SIZE + 2*spmfile.mx*spmfile.my) {
-        err_SIZE_MISMATCH(error, HEADER_SIZE + 2*spmfile.mx*spmfile.my, size);
+    if (err_SIZE_MISMATCH(error, HEADER_SIZE + 2*spmfile.mx*spmfile.my, size,
+                          TRUE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }

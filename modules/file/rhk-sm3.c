@@ -216,7 +216,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -434,10 +434,8 @@ rhk_sm3_read_page(const guchar **buffer,
 
     expected = page->x_size * page->y_size * sizeof(gint32);
     gwy_debug("expecting %u bytes of page data now", expected);
-    if (*len < (p - *buffer) + expected) {
-        err_SIZE_MISMATCH(error, expected, *len - (p - *buffer));
+    if (err_SIZE_MISMATCH(error, expected, *len - (p - *buffer), FALSE))
         goto FAIL;
-    }
 
     if (page->type == RHK_TYPE_IMAGE)
         page->page_data = p;

@@ -329,7 +329,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hierarchical Data Format (HDF) files, version 4."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -546,10 +546,24 @@ psi_read_header(const guchar *buffer,
     header->xres = gwy_get_guint16_le(&p);
     header->yres = gwy_get_guint16_le(&p);
     gwy_debug("     xres: %u, yres: %u", header->xres, header->yres);
+    if (err_DIMENSION(error, header->xres)
+        || err_DIMENSION(error, header->yres))
+        return FALSE;
+
     get_CHARARRAY(header->unknown2, &p);
     header->xscale = gwy_get_gfloat_le(&p);
     header->yscale = gwy_get_gfloat_le(&p);
     gwy_debug("     xscale: %g, yscale: %g", header->xscale, header->yscale);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((header->xscale = fabs(header->xscale)) > 0)) {
+        g_warning("Real x scale is 0.0, fixing to 1.0");
+        header->xscale = 1.0;
+    }
+    if (!((header->xscale = fabs(header->xscale)) > 0)) {
+        g_warning("Real y scale is 0.0, fixing to 1.0");
+        header->yscale = 1.0;
+    }
+
     header->xoff = gwy_get_gfloat_le(&p);
     header->yoff = gwy_get_gfloat_le(&p);
     gwy_debug("     xoff: %g, yoff: %g", header->xoff, header->yoff);
