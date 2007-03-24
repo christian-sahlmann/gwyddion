@@ -681,8 +681,8 @@ gwy_spectra_n_spectra(GwySpectra *spectra)
  * gwy_spectra_add_spectrum:
  * @spectra: A spectra object.
  * @new_spectrum: A GwyDataLine containing the spectrum to append.
- * @real_x: The x coordinate of the location of the spectrum.
- * @real_y: The y coordinate of the location of the spectrum.
+ * @x: The physical x coordinate of the location of the spectrum.
+ * @y: The physical y coordinate of the location of the spectrum.
  *
  * Appends a new_spectrum to the spectra collection with a position of x, y.
  * gwy_spectra_add takes a refference to the supplied spectrum.
