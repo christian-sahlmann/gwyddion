@@ -48,10 +48,12 @@ gwy_type_init(void)
     g_type_class_peek(GWY_TYPE_INVENTORY);
     g_type_class_peek(GWY_TYPE_RESOURCE);
     g_type_class_peek(GWY_TYPE_NLFIT_PRESET);
+    g_type_class_peek(GWY_TYPE_FD_CURVE_PRESET);
     g_type_class_peek(GWY_TYPE_STRING_LIST);
     types_initialized = gwy_enum_get_type();
 
     _gwy_nlfit_preset_class_setup_presets();
+    _gwy_fd_curve_preset_class_setup_presets();
 }
 
 /************************** Documentation ****************************/

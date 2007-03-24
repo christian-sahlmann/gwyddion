@@ -29,6 +29,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwynlfit.h>
 #include <libgwyddion/gwynlfitpreset.h>
+#include <libgwyddion/gwyfdcurvepreset.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwyinventory.h>

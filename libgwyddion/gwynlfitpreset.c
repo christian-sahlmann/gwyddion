@@ -831,6 +831,7 @@ sinc_guess(gint n_dat,
     *fres = TRUE;
 }
 
+
 /******************** preset default weights *************************/
 static void
 weights_linear_decrease(gint n_dat,
@@ -942,6 +943,8 @@ static const GwyNLFitParam sinc_params[] = {
     { "a", 0, 1, },
     { "b", 1, 0, },
 };
+
+
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {

@@ -13,6 +13,7 @@ libgwyddion2include_HEADERS = \
 	gwyentities.h \
 	gwyenum.h \
 	gwyexpr.h \
+	gwyfdcurvepreset.h \
 	gwyinventory.h \
 	gwymacros.h \
 	gwymath.h \
@@ -72,6 +73,7 @@ libgwyddion2_la_SOURCES = \
 	gwyentities.c \
 	gwyenum.c \
 	gwyexpr.c \
+	gwyfdcurvepreset.c \
 	gwyinventory.c \
 	gwymath.c \
 	gwymd5.c \
