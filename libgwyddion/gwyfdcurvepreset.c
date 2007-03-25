@@ -23,7 +23,8 @@
 
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "gwyfdcurvepreset.h"
+#include <libgwyddion/gwyfdcurvepreset.h>
+#include "gwyddioninternal.h"
 
 /**************************************************************************
    Put to gwyddioninternal.h or a new private header
