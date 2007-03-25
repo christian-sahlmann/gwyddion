@@ -83,7 +83,7 @@ static void     gwy_graph_model_set_property      (GObject *object,
                                                    guint prop_id,
                                                    const GValue *value,
                                                    GParamSpec *pspec);
-static void     gwy_graph_model_get_property      (GObject*object,
+static void     gwy_graph_model_get_property      (GObject *object,
                                                    guint prop_id,
                                                    GValue *value,
                                                    GParamSpec *pspec);
@@ -661,7 +661,6 @@ gwy_graph_model_duplicate_real(GObject *object)
 
     return (GObject*)duplicate;
 }
-
 
 static void
 gwy_graph_model_set_property(GObject *object,
