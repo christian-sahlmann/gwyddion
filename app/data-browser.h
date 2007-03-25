@@ -23,6 +23,7 @@
 
 #include <gtk/gtkwindow.h>
 #include <libprocess/datafield.h>
+#include <libprocess/spectra.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraph.h>
 
@@ -41,7 +42,10 @@ typedef enum {
     GWY_APP_SHOW_FIELD_KEY,
     GWY_APP_GRAPH_MODEL,
     GWY_APP_GRAPH_MODEL_KEY,
-    GWY_APP_GRAPH_MODEL_ID
+    GWY_APP_GRAPH_MODEL_ID,
+    GWY_APP_SPECTRA,
+    GWY_APP_SPECTRA_KEY,
+    GWY_APP_SPECTRA_ID
 } GwyAppWhat;
 /* XXX: silly name */
 
@@ -80,6 +84,9 @@ gint   gwy_app_data_browser_add_data_field  (GwyDataField *dfield,
                                              GwyContainer *data,
                                              gboolean showit);
 gint   gwy_app_data_browser_add_graph_model (GwyGraphModel *gmodel,
+                                             GwyContainer *data,
+                                             gboolean showit);
+gint   gwy_app_data_browser_add_spectra     (GwySpectra *spectra,
                                              GwyContainer *data,
                                              gboolean showit);
 void   gwy_app_data_browser_get_current     (GwyAppWhat what,

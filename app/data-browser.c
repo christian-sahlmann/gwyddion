@@ -32,7 +32,6 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/stats.h>
-#include <libprocess/spectra.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwycoloraxis.h>
@@ -3011,6 +3010,10 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
             case PAGE_GRAPHS:
             gwy_app_data_proxy_graph_set_visible(proxy, iter, FALSE);
             break;
+
+            case PAGE_SPECTRA:
+            /* FIXME */
+            break;
         }
         gwy_app_data_proxy_maybe_finalize(proxy);
     }
@@ -3052,6 +3055,11 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
         g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
         break;
+
+        case PAGE_SPECTRA:
+        g_snprintf(key, sizeof(key), "%s/%d", SPECTRA_PREFIX, i);
+        gwy_container_remove_by_prefix(data, key);
+        break;
     }
     g_object_unref(object);
 
@@ -3062,6 +3070,10 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
 
         case PAGE_GRAPHS:
         gwy_app_data_list_update_last(&proxy->lists[pageno], 0);
+        break;
+
+        case PAGE_SPECTRA:
+        gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
         break;
     }
 }
@@ -3090,15 +3102,32 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
         container = destproxy->container;
     }
 
-    if (pageno == PAGE_CHANNELS)
+    switch (pageno) {
+        case PAGE_CHANNELS:
         gwy_app_data_browser_copy_channel(srcproxy->container, id, container);
-    else {
-        GwyGraphModel *gmodel, *gmodel2;
+        break;
 
-        gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
-        gmodel2 = gwy_graph_model_duplicate(gmodel);
-        gwy_app_data_browser_add_graph_model(gmodel2, container, TRUE);
-        g_object_unref(gmodel);
+        case PAGE_GRAPHS:
+        {
+            GwyGraphModel *gmodel, *gmodel2;
+
+            gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
+            gmodel2 = gwy_graph_model_duplicate(gmodel);
+            gwy_app_data_browser_add_graph_model(gmodel2, container, TRUE);
+            g_object_unref(gmodel);
+        }
+        break;
+
+        case PAGE_SPECTRA:
+        {
+            GwySpectra *spectra, *spectra2;
+
+            gtk_tree_model_get(model, iter, MODEL_OBJECT, &spectra, -1);
+            spectra2 = gwy_spectra_duplicate(spectra);
+            gwy_app_data_browser_add_spectra(spectra2, container, TRUE);
+            g_object_unref(spectra);
+        }
+        break;
     }
 
     if (!destproxy)
@@ -3673,6 +3702,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
     static const SetVisibleFunc set_visible[NPAGES] = {
         &gwy_app_data_proxy_channel_set_visible,
         &gwy_app_data_proxy_graph_set_visible,
+        NULL,
     };
 
     GwyAppDataBrowser *browser;
@@ -3693,9 +3723,12 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
 
     if (reset_type == GWY_VISIBILITY_RESET_RESTORE
         || reset_type == GWY_VISIBILITY_RESET_DEFAULT) {
-        for (i = 0; i < NPAGES; i++)
-            gwy_app_data_list_reconstruct_visibility(proxy, &proxy->lists[i],
-                                                     set_visible[i]);
+        for (i = 0; i < NPAGES; i++) {
+            if (set_visible[i])
+                gwy_app_data_list_reconstruct_visibility(proxy,
+                                                         &proxy->lists[i],
+                                                         set_visible[i]);
+        }
         if (gwy_app_data_proxy_visible_count(proxy))
             return TRUE;
 
@@ -3707,6 +3740,9 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
         for (i = 0; i < NPAGES; i++) {
             GtkTreeModel *model;
             GtkTreeIter iter;
+
+            if (!set_visible[i])
+                continue;
 
             list = &proxy->lists[i];
             model = GTK_TREE_MODEL(list->store);
@@ -3728,9 +3764,11 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
         return FALSE;
     }
 
-    for (i = 0; i < NPAGES; i++)
-        gwy_app_data_list_reset_visibility(proxy, &proxy->lists[i],
-                                           set_visible[i], visible);
+    for (i = 0; i < NPAGES; i++) {
+        if (set_visible[i])
+            gwy_app_data_list_reset_visibility(proxy, &proxy->lists[i],
+                                               set_visible[i], visible);
+    }
 
     return visible && gwy_app_data_proxy_visible_count(proxy);
 }
@@ -3820,6 +3858,55 @@ gwy_app_data_browser_get_keep_invisible(GwyContainer *data)
 }
 
 /**
+ * gwy_app_data_browser_add_data_field:
+ * @dfield: A data field to add.
+ * @data: A data container to add @dfield to.
+ *        It can be %NULL to add the data field to current data container.
+ * @showit: %TRUE to display it immediately, %FALSE to just add it.
+ *
+ * Adds a data field to a data container.
+ *
+ * Returns: The id of the data field in the container.
+ **/
+gint
+gwy_app_data_browser_add_data_field(GwyDataField *dfield,
+                                    GwyContainer *data,
+                                    gboolean showit)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GwyAppDataList *list;
+    GtkTreeIter iter;
+    gchar key[24];
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), -1);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
+
+    browser = gwy_app_get_data_browser();
+    if (data)
+        proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    else
+        proxy = browser->current;
+    if (!proxy) {
+        g_critical("Data container is unknown to data browser.");
+        return -1;
+    }
+
+    list = &proxy->lists[PAGE_CHANNELS];
+    g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
+    /* This invokes "item-changed" callback that will finish the work.
+     * Among other things, it will update proxy->lists[PAGE_CHANNELS].last. */
+    gwy_container_set_object_by_name(proxy->container, key, dfield);
+
+    if (showit) {
+        gwy_app_data_proxy_find_object(list->store, list->last, &iter);
+        gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
+    }
+
+    return list->last;
+}
+
+/**
  * gwy_app_data_browser_add_graph_model:
  * @gmodel: A graph model to add.
  * @data: A data container to add @gmodel to.
@@ -3869,28 +3956,30 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_app_data_browser_add_data_field:
- * @dfield: A data field to add.
- * @data: A data container to add @dfield to.
- *        It can be %NULL to add the data field to current data container.
+ * gwy_app_data_browser_add_graph_model:
+ * @spectra: A spectra object to add.
+ * @data: A data container to add @gmodel to.
+ *        It can be %NULL to add the graph model to current data container.
  * @showit: %TRUE to display it immediately, %FALSE to just add it.
  *
- * Adds a data field to a data container.
+ * Adds a spectra object to a data container.
  *
- * Returns: The id of the data field in the container.
+ * Returns: The id of the spectra object in the container.
+ *
+ * Since: 2.6
  **/
 gint
-gwy_app_data_browser_add_data_field(GwyDataField *dfield,
-                                    GwyContainer *data,
-                                    gboolean showit)
+gwy_app_data_browser_add_spectra(GwySpectra *spectra,
+                                 GwyContainer *data,
+                                 gboolean showit)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyAppDataList *list;
     GtkTreeIter iter;
-    gchar key[24];
+    gchar key[32];
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), -1);
+    g_return_val_if_fail(GWY_IS_SPECTRA(spectra), -1);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
 
     browser = gwy_app_get_data_browser();
@@ -3903,15 +3992,17 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
         return -1;
     }
 
-    list = &proxy->lists[PAGE_CHANNELS];
-    g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
+    list = &proxy->lists[PAGE_SPECTRA];
+    g_snprintf(key, sizeof(key), "%s/%d", SPECTRA_PREFIX, list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_CHANNELS].last. */
-    gwy_container_set_object_by_name(proxy->container, key, dfield);
+     * Among other things, it will update proxy->lists[PAGE_SPECTRA].last. */
+    gwy_container_set_object_by_name(proxy->container, key, spectra);
 
     if (showit) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
-        gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
+        /* FIXME */
+        g_warning("Cannot make spectra visible");
+        /* gwy_app_data_proxy_spectra_set_visible(proxy, &iter, TRUE); */
     }
 
     return list->last;
@@ -4113,10 +4204,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *current = NULL;
-    GwyAppDataList *channels = NULL, *graphs = NULL;
+    GwyAppDataList *channels = NULL, *graphs = NULL, *spectras = NULL;
     GtkTreeIter iter;
     GObject *object, **otarget;
-    GObject *dfield = NULL, *gmodel = NULL;  /* Cache current */
+    /* Cache the current object by type */
+    GObject *dfield = NULL, *gmodel = NULL, *spectra = NULL;
     GQuark quark, *qtarget;
     gint *itarget;
     va_list ap;
@@ -4131,6 +4223,7 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
         if (current) {
             channels = &current->lists[PAGE_CHANNELS];
             graphs = &current->lists[PAGE_GRAPHS];
+            spectras = &current->lists[PAGE_SPECTRA];
         }
     }
 
@@ -4275,6 +4368,43 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
                 case GWY_APP_GRAPH_MODEL_ID:
                 itarget = va_arg(ap, gint*);
                 *itarget = gmodel ? graphs->active : -1;
+                break;
+
+                default:
+                /* Hi, gcc */
+                break;
+            }
+            break;
+
+            case GWY_APP_SPECTRA:
+            case GWY_APP_SPECTRA_KEY:
+            case GWY_APP_SPECTRA_ID:
+            if (!spectra
+                && current
+                && gwy_app_data_proxy_find_object(spectras->store,
+                                                  spectras->active, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL(spectras->store), &iter,
+                                   MODEL_OBJECT, &object, -1);
+                spectra = object;
+                g_object_unref(object);
+            }
+            switch (what) {
+                case GWY_APP_SPECTRA:
+                otarget = va_arg(ap, GObject**);
+                *otarget = spectra;
+                break;
+
+                case GWY_APP_SPECTRA_KEY:
+                qtarget = va_arg(ap, GQuark*);
+                *qtarget = 0;
+                if (spectra)
+                    *qtarget = GPOINTER_TO_UINT(g_object_get_qdata
+                                                     (spectra, own_key_quark));
+                break;
+
+                case GWY_APP_SPECTRA_ID:
+                itarget = va_arg(ap, gint*);
+                *itarget = spectra ? spectras->active : -1;
                 break;
 
                 default:
