@@ -1,5 +1,5 @@
 /*
- *  $Id: spectra.c 6957 2006-11-08 14:44:11Z owaind $
+ *  @(#) $Id: gwygraphmodel.c 7159 2006-12-09 22:12:13Z yeti-dn $
  *  Copyright (C) 2006 Owain Davies, David Necas (Yeti), Petr Klapetek.
  *  E-mail: owain.davies@blueyonder.co.uk
  *          yeti@gwyddion.net, klapetek@gwyddion.net.
@@ -36,6 +36,12 @@
 #define DEFAULT_ALLOC_SIZE 5
 
 enum {
+    PROP_0,
+    PROP_TITLE,
+    PROP_LAST
+};
+
+enum {
     DATA_CHANGED,
     LAST_SIGNAL
 };
@@ -51,6 +57,14 @@ static GObject*    gwy_spectra_deserialize      (const guchar *buffer,
 static GObject*    gwy_spectra_duplicate_real   (GObject *object);
 static void        gwy_spectra_clone_real       (GObject *source,
                                                  GObject *copy);
+static void        gwy_spectra_set_property     (GObject *object,
+                                                 guint prop_id,
+                                                 const GValue *value,
+                                                 GParamSpec *pspec);
+static void        gwy_spectra_get_property     (GObject *object,
+                                                 guint prop_id,
+                                                 GValue *value,
+                                                 GParamSpec *pspec);
 
 static guint spectra_signals[LAST_SIGNAL] = { 0 };
 
@@ -75,6 +89,17 @@ gwy_spectra_class_init(GwySpectraClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_spectra_finalize;
+    gobject_class->get_property = gwy_spectra_get_property;
+    gobject_class->set_property = gwy_spectra_set_property;
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_TITLE,
+         g_param_spec_string("title",
+                             "Title",
+                             "The spectra title",
+                             "New spectra",
+                             G_PARAM_READWRITE));
 
     /**
      * GwySpectra::data-changed:
@@ -123,6 +148,44 @@ gwy_spectra_finalize(GObject *object)
     g_free(spectra->title);
 
     G_OBJECT_CLASS(gwy_spectra_parent_class)->finalize(object);
+}
+
+static void
+gwy_spectra_set_property(GObject *object,
+                         guint prop_id,
+                         const GValue *value,
+                         GParamSpec *pspec)
+{
+    GwySpectra *spectra = GWY_SPECTRA(object);
+
+    switch (prop_id) {
+        case PROP_TITLE:
+        gwy_spectra_set_title(spectra, g_value_get_string(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_spectra_get_property(GObject*object,
+                         guint prop_id,
+                         GValue *value,
+                         GParamSpec *pspec)
+{
+    GwySpectra *spectra = GWY_SPECTRA(object);
+
+    switch (prop_id) {
+        case PROP_TITLE:
+        g_value_set_string(value, spectra->title);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -821,7 +884,7 @@ gwy_spectra_get_spectra_interp(GwySpectra *spectra,
  *
  * Gets the title of spectra.
  *
- * Returns: A pointer to the title string.
+ * Returns: A pointer to the title string (owned by the spectra object).
  *
  * Since: 2.6
  **/
@@ -835,22 +898,25 @@ gwy_spectra_get_title(GwySpectra *spectra)
 /**
  * gwy_spectra_set_title:
  * @spectra: A spectra object.
- * @new_title: The title string
+ * @title: The new title string.
  *
- * Sets the title of the spectra collection. The object takes ownership
- * of the new string and it is freed when the object is finalised. Title
- * strings should be dynamically allocated.
+ * Sets the title of the spectra collection.
  *
  * Since: 2.6
  **/
 void
 gwy_spectra_set_title(GwySpectra *spectra,
-                      gchar *new_title)
+                      const gchar *title)
 {
+    gchar *old;
+
     g_return_if_fail(GWY_IS_SPECTRA(spectra));
 
-    g_free(spectra->title);
-    spectra->title = new_title;
+    old = spectra->title;
+    spectra->title = g_strdup(title);
+    g_free(old);
+
+    g_object_notify(G_OBJECT(spectra), "title");
 }
 
 /**
