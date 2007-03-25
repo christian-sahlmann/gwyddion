@@ -379,13 +379,11 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->xoff = xoff;
     data_field->yoff = yoff;
     if (si_unit_z) {
-        if (data_field->si_unit_z != NULL)
-            gwy_object_unref(data_field->si_unit_z);
+        gwy_object_unref(data_field->si_unit_z);
         data_field->si_unit_z = si_unit_z;
     }
     if (si_unit_xy) {
-        if (data_field->si_unit_xy != NULL)
-            gwy_object_unref(data_field->si_unit_xy);
+        gwy_object_unref(data_field->si_unit_xy);
         data_field->si_unit_xy = si_unit_xy;
     }
 

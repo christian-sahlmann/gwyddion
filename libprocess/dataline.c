@@ -321,13 +321,11 @@ gwy_data_line_deserialize(const guchar *buffer,
     data_line->off = off;
     data_line->data = data;
     if (si_unit_y) {
-        if (data_line->si_unit_y != NULL)
-            gwy_object_unref(data_line->si_unit_y);
+        gwy_object_unref(data_line->si_unit_y);
         data_line->si_unit_y = si_unit_y;
     }
     if (si_unit_x) {
-        if (data_line->si_unit_x != NULL)
-            gwy_object_unref(data_line->si_unit_x);
+        gwy_object_unref(data_line->si_unit_x);
         data_line->si_unit_x = si_unit_x;
     }
 
