@@ -497,8 +497,21 @@ hash_to_data_field(GHashTable *hash,
             }
         }
 
+        if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+            return NULL;
+
         if (err_SIZE_MISMATCH(error, offset + size, bufsize, FALSE))
             return NULL;
+
+        /* Use negated positive conditions to catch NaNs */
+        if (!((xreal = fabs(xreal)) > 0)) {
+            g_warning("Real x size is 0.0, fixing to 1.0");
+            xreal = 1.0;
+        }
+        if (!((yreal = fabs(yreal)) > 0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            yreal = 1.0;
+        }
     }
 
     q = 1.0;

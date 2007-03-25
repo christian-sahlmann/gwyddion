@@ -269,18 +269,32 @@ gxsm_load(const gchar *filename,
         }
     }
 
+    if (err_DIMENSION(error, cdffile.dims[var->dimids[3]].length)
+        || err_DIMENSION(error, cdffile.dims[var->dimids[2]].length))
+        goto gxsm_load_fail;
+
     dfield = read_data_field((const guchar*)(cdffile.buffer + var->begin),
                              cdffile.dims[var->dimids[3]].length,
                              cdffile.dims[var->dimids[2]].length,
                              var->type);
 
     if ((siunit = read_real_size(&cdffile, "rangex", &real, &power10))) {
+        /* Use negated positive conditions to catch NaNs */
+        if (!((real = fabs(real)) > 0)) {
+            g_warning("Real x size is 0.0, fixing to 1.0");
+            real = 1.0;
+        }
         gwy_data_field_set_xreal(dfield, real*pow10(power10));
         gwy_data_field_set_si_unit_xy(dfield, siunit);
         g_object_unref(siunit);
     }
 
     if ((siunit = read_real_size(&cdffile, "rangey", &real, &power10))) {
+        /* Use negated positive conditions to catch NaNs */
+        if (!((real = fabs(real)) > 0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            real = 1.0;
+        }
         gwy_data_field_set_yreal(dfield, real*pow10(power10));
         /* must be the same gwy_data_field_set_si_unit_xy(dfield, siunit); */
         g_object_unref(siunit);

@@ -188,6 +188,8 @@ hash_to_data_field(GHashTable *hash,
 
     val = g_hash_table_lookup(hash, "num_samp");
     xres = yres = atoi(val);
+    if (err_DIMENSION(error, xres))
+        return NULL;
 
     if (err_SIZE_MISMATCH(error, xres*yres*sizeof(gint16), size, FALSE))
         return NULL;

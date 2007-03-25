@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -519,6 +520,11 @@ sxm_load(const gchar *filename,
             err_MISSING_FIELD(error, "SCAN_PIXELS");
             sxmfile.ok = FALSE;
         }
+
+        if (sxmfile.ok
+            && (err_DIMENSION(error, sxmfile.xres)
+                || err_DIMENSION(error, sxmfile.yres)))
+            sxmfile.ok = FALSE;
     }
 
     /* Physical dimensions */
@@ -538,6 +544,18 @@ sxm_load(const gchar *filename,
         else {
             err_MISSING_FIELD(error, "SCAN_RANGE");
             sxmfile.ok = FALSE;
+        }
+
+        if (sxmfile.ok) {
+            /* Use negated positive conditions to catch NaNs */
+            if (!((sxmfile.xreal = fabs(sxmfile.xreal)) > 0)) {
+                g_warning("Real x size is 0.0, fixing to 1.0");
+                sxmfile.xreal = 1.0;
+            }
+            if (!((sxmfile.yreal = fabs(sxmfile.yreal)) > 0)) {
+                g_warning("Real y size is 0.0, fixing to 1.0");
+                sxmfile.yreal = 1.0;
+            }
         }
     }
 

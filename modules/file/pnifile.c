@@ -190,7 +190,9 @@ pni_load(const gchar *filename,
     xres = gwy_get_guint32_le(&p);
     yres = gwy_get_guint32_le(&p);
     gwy_debug("%d %d", xres, yres);
-    if (err_SIZE_MISMATCH(error, DATA_START + 2*xres*yres, size, TRUE)) {
+    if (err_DIMENSION(error, xres)
+        || err_DIMENSION(error, yres)
+        || err_SIZE_MISMATCH(error, DATA_START + 2*xres*yres, size, TRUE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -201,8 +203,19 @@ pni_load(const gchar *filename,
     direction = p[DIRECTION_OFFSET];
 
     p = buffer + DATA_HEADER_START + REAL_SIZE_OFFSET;
-    xreal = gwy_get_gfloat_le(&p) * Micrometer;
-    yreal = gwy_get_gfloat_le(&p) * Micrometer;
+    xreal = gwy_get_gfloat_le(&p);
+    yreal = gwy_get_gfloat_le(&p);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((yreal = fabs(yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
+    xreal *= Micrometer;
+    yreal *= Micrometer;
 
     p = buffer + DATA_HEADER_START + VALUE_SCALE_OFFSET;
     zscale = gwy_get_gfloat_le(&p);

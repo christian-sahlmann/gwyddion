@@ -388,11 +388,25 @@ omicron_read_header(gchar *buffer,
     ofile->xres = abs(atoi(val));
     GET_FIELD(ofile->meta, val, "Image Size in Y", error);
     ofile->yres = abs(atoi(val));
+    if (err_DIMENSION(error, ofile->xres)
+        || err_DIMENSION(error, ofile->yres))
+        return FALSE;
 
     GET_FIELD(ofile->meta, val, "Field X Size in nm", error);
-    ofile->xreal = fabs(g_ascii_strtod(val, NULL)) * Nanometer;
+    ofile->xreal = g_ascii_strtod(val, NULL);
     GET_FIELD(ofile->meta, val, "Field Y Size in nm", error);
-    ofile->yreal = fabs(g_ascii_strtod(val, NULL)) * Nanometer;
+    ofile->yreal = g_ascii_strtod(val, NULL);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((ofile->xreal = fabs(ofile->xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        ofile->xreal = 1.0;
+    }
+    if (!((ofile->yreal = fabs(ofile->yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        ofile->yreal = 1.0;
+    }
+    ofile->xreal *= Nanometer;
+    ofile->yreal *= Nanometer;
 
     return TRUE;
 }

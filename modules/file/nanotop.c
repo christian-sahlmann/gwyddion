@@ -25,6 +25,7 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -168,6 +169,11 @@ nanotop_load(const gchar *filename,
     spmfile.ty = gwy_get_guint16_le(&p);
     spmfile.my = gwy_get_guint16_le(&p);
 
+    if (err_DIMENSION(error, spmfile.mx) || err_DIMENSION(error, spmfile.my)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
     if (err_SIZE_MISMATCH(error, HEADER_SIZE + 2*spmfile.mx*spmfile.my, size,
                           TRUE)) {
         gwy_file_abandon_contents(buffer, size, NULL);
@@ -208,14 +214,25 @@ read_data_field(SPMFile *spmfile, const guchar *ptr)
 {
     GwyDataField *dfield;
     GwySIUnit *unit = NULL;
+    gdouble xreal, yreal;
     gdouble *data;
     gint i, n;
     const guint16 *p;
 
-    dfield = gwy_data_field_new(spmfile->mx,
-                                spmfile->my,
-                                spmfile->mx*spmfile->Kx*nanometer,
-                                spmfile->my*spmfile->Ky*nanometer,
+    xreal = spmfile->mx*spmfile->Kx;
+    yreal = spmfile->my*spmfile->Ky;
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((yreal = fabs(yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
+
+    dfield = gwy_data_field_new(spmfile->mx, spmfile->my,
+                                xreal*nanometer, yreal*nanometer,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
     p = (const guint16*)ptr;
