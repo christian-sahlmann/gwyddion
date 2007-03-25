@@ -184,7 +184,7 @@ omicron_has_extension(const gchar *filename,
 
     return (g_ascii_isdigit(filename[flen-1])
             && filename[flen-1-slen-1] == '.'
-            && g_ascii_strncasecmp(filename + (flen-1-slen), stem, slen));
+            && !g_ascii_strncasecmp(filename + (flen-1-slen), stem, slen));
 }
 
 static GwyContainer*
