@@ -555,6 +555,7 @@ gwy_graph_model_deserialize(const guchar *buffer,
         gdouble d;
         GwyGraphCurveModel **curves = NULL;
         guint32 ncurves = 0;
+        guint i;
         GwySerializeSpec spec[] = {
             /* Accept, but ignore */
             { 'b', "has_x_unit", &b, NULL },
@@ -595,12 +596,16 @@ gwy_graph_model_deserialize(const guchar *buffer,
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                                 GWY_GRAPH_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec)) {
+            gwy_object_unref(gmodel->x_unit);
+            gwy_object_unref(gmodel->y_unit);
+            for (i = 0; i < ncurves; i++)
+                gwy_object_unref(curves[i]);
+            g_free(curves);
             g_free(top_label);
             g_free(bottom_label);
             g_free(left_label);
             g_free(right_label);
             g_free(title);
-            g_free(curves);
             g_object_unref(gmodel);
             return NULL;
         }
@@ -626,8 +631,6 @@ gwy_graph_model_deserialize(const guchar *buffer,
             g_free(right_label);
         }
         if (curves) {
-            guint i;
-
             for (i = 0; i < ncurves; i++) {
                 gwy_graph_model_add_curve(gmodel, curves[i]);
                 g_object_unref(curves[i]);
