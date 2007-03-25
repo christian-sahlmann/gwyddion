@@ -588,27 +588,16 @@ gwy_spectra_itoxy(GwySpectra *spectra,
 gint
 gwy_spectra_xytoi(GwySpectra *spectra, gdouble x, gdouble y)
 {
-    gdouble *coords;
     guint i;
-    gint retval;
 
     g_return_val_if_fail(GWY_IS_SPECTRA(spectra), -1);
 
     if (!spectra->spectra->len)
         return -1;
 
-    coords = g_new(gdouble, 2*spectra->spectra->len);
-    for (i = 0; i < spectra->spectra->len; i++) {
-        GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum, i);
+    gwy_spectra_find_nearest(spectra, x, y, 1, &i);
 
-        coords[2*i + 0] = spec->x;
-        coords[2*i + 1] = spec->y;
-    }
-    retval = gwy_math_find_nearest_point(x, y, NULL,
-                                         spectra->spectra->len, coords, NULL);
-    g_free(coords);
-
-    return retval;
+    return i;
 }
 
 static gint
@@ -624,58 +613,98 @@ compare_coord_pos(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-/* FIXME: I don't like this interface. */
 /**
  * gwy_spectra_nearest:
  * @spectra: A spectra object.
- * @plist:  pointer to a NULL pointer where the list will be allocated.
- * @x: The x coordinate.
- * @y: The y coordinate.
+ * @x: Point x-coordinate.
+ * @y: Point y-coordinate.
+ * @n: Number of indices to find.  Array @ilist must have at least this
+ *     number of items.
+ * @ilist: Array to place the spectra indices to.  They will be sorted by the
+ *         distance from (@x, @y).  Positions after the number of spectra
+ *         in @spectra will be left untouched.
  *
- * Gets a list of the indices to spectra ordered by their
- * distance from x_real, y_real. A newly created array is allocated and the
- * list of indicies is stored there.The calling function must ensure
- * the memory is freed once the list is finished with.
+ * Gets the list of the indices to spectra ordered by their distance from a
+ * given point.
  *
- * Returns: The number of elements in the @plist array.
+ * List positions
  *
  * Since: 2.6
  **/
-gint
-gwy_spectra_nearest(GwySpectra *spectra,
-                    guint** plist,
-                    gdouble x,
-                    gdouble y)
+void
+gwy_spectra_find_nearest(GwySpectra *spectra,
+                         gdouble x,
+                         gdouble y,
+                         guint n,
+                         guint *ilist)
 {
+    enum { DIRECT_LIMIT = 6 };
+
     CoordPos *items;
-    guint i;
+    guint nspec, i;
 
-    g_return_val_if_fail(GWY_IS_SPECTRA(spectra), 0);
-    g_return_val_if_fail(*(plist) == NULL, 0);
+    g_return_if_fail(GWY_IS_SPECTRA(spectra));
+    g_return_if_fail(ilist || !n);
 
-    if (!spectra->spectra->len)
-        return 0;
+    nspec = spectra->spectra->len;
+    n = MIN(n, nspec);
+    if (!n)
+        return;
 
-    if (plist == NULL) {
-        g_critical("Nowhere to create array");
-        return 0;
+    if (n <= DIRECT_LIMIT) {
+        items = g_newa(CoordPos, n);
+
+        /* Initialize with sorted initial n items */
+        for (i = 0; i < n; i++) {
+            GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum,
+                                               i);
+            items[i].index = i;
+            items[i].r = ((spec->x - x)*(spec->x - x)
+                          + (spec->y - y)*(spec->y - y));
+        }
+        qsort(items, n, sizeof(CoordPos), compare_coord_pos);
+
+        /* And let the remaining items compete for positions */
+        for (i = n; i < nspec; i++) {
+            guint j, k;
+            gdouble r;
+            GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum,
+                                               i);
+
+            r = ((spec->x - x)*(spec->x - x)
+                 + (spec->y - y)*(spec->y - y));
+            if (r < items[n-1].r) {
+                for (j = 1; j < n && r < items[n-1 - j].r; j++)
+                    ;
+                for (k = 0; k < j-1; k++)
+                    items[n-k] = items[n-1 - k];
+
+                items[n-j].index = i;
+                items[n-j].r = r;
+            }
+        }
+
+        /* Move the results to ilist */
+        for (i = 0; i < n; i++)
+            ilist[i] = items[i].index;
     }
+    else {
+        /* Sort all items and take the head */
+        items = g_new(CoordPos, spectra->spectra->len);
+        for (i = 0; i < spectra->spectra->len; i++) {
+            GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum,
+                                               i);
 
-    items = g_new(CoordPos, spectra->spectra->len);
-    for (i = 0; i < spectra->spectra->len; i++) {
-        GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum, i);
+            items[i].index = i;
+            items[i].r = ((spec->x - x)*(spec->x - x)
+                          + (spec->y - y)*(spec->y - y));
+        }
+        qsort(items, nspec, sizeof(CoordPos), compare_coord_pos);
+        for (i = 0; i < n; i++)
+            ilist[i] = items[i].index;
 
-        items[i].index = i;
-        items[i].r = hypot(spec->x - x, spec->y - y);
+        g_free(items);
     }
-    qsort(items, spectra->spectra->len, sizeof(CoordPos), compare_coord_pos);
-    *(plist) = g_new(guint, spectra->spectra->len);
-    for (i = 0; i < spectra->spectra->len; i++)
-        *(*(plist)+i) = items[i].index;
-
-    g_free(index);
-
-    return spectra->spectra->len;
 }
 
 /**

@@ -86,10 +86,11 @@ void           gwy_spectra_set_spectrum      (GwySpectra *spectra,
                                               guint i,
                                               GwyDataLine *new_spectrum);
 guint          gwy_spectra_get_n_spectra     (GwySpectra *spectra);
-gint           gwy_spectra_nearest           (GwySpectra *spectra,
-                                              guint** plist,
-                                              gdouble real_x,
-                                              gdouble real_y);
+void           gwy_spectra_find_nearest      (GwySpectra *spectra,
+                                              gdouble x,
+                                              gdouble y,
+                                              guint n,
+                                              guint *ilist);
 void           gwy_spectra_add_spectrum      (GwySpectra *spectra,
                                               GwyDataLine *new_spectrum,
                                               gdouble x,
