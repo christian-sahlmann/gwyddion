@@ -265,6 +265,9 @@ isdf_load(const gchar *filename,
         goto fail;
     }
 
+    if (err_DIMENSION(error, image.xres) || err_DIMENSION(error, image.yres))
+        goto fail;
+
     t = gwy_tiff_data_type_size(image.raw_data_type);
     if (err_SIZE_MISMATCH(error, t*image.xres*image.yres, t*image.raw_data_len,
                           TRUE))
@@ -276,6 +279,15 @@ isdf_load(const gchar *filename,
     if (!gwy_si_unit_equal(siunitx, siunity))
         g_warning("Different x and y units are not representable, ignoring y.");
 
+    /* Use negated positive conditions to catch NaNs */
+    if (!((image.xreal = fabs(image.xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        image.xreal = 1.0;
+    }
+    if (!((image.yreal = fabs(image.yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        image.yreal = 1.0;
+    }
     dfield = gwy_data_field_new(image.xres, image.yres,
                                 image.xreal*pow10(power10x),
                                 image.yreal*pow10(power10y),

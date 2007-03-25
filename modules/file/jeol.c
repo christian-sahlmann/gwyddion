@@ -620,6 +620,11 @@ jeol_load(const gchar *filename,
         err_BPP(error, image_header.bpp);
         goto fail;
     }
+
+    if (err_DIMENSION(error, image_header.xres)
+        || err_DIMENSION(error, image_header.yres))
+        goto fail;
+
     expected_size = image_header.bpp/8 * image_header.xres*image_header.yres;
     if (err_SIZE_MISMATCH(error, JEOL_DATA_START + expected_size, size, FALSE))
         goto fail;
@@ -627,6 +632,16 @@ jeol_load(const gchar *filename,
     if (image_header.image_type != JEOL_IMAGE || image_header.compressed) {
         err_NO_DATA(error);
         goto fail;
+    }
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((image_header.xreal = fabs(image_header.xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        image_header.xreal = 1.0;
+    }
+    if (!((image_header.yreal = fabs(image_header.yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        image_header.yreal = 1.0;
     }
 
     dfield = jeol_read_data_field(buffer + JEOL_DATA_START, &image_header);

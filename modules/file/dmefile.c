@@ -211,7 +211,7 @@ dme_load(const gchar *filename,
         g_warning("Real x size is 0.0, fixing to 1.0");
         dmefile.xreal = 1.0;
     }
-    if (!((dmefile.xreal = fabs(dmefile.xreal)) > 0)) {
+    if (!((dmefile.yreal = fabs(dmefile.yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         dmefile.yreal = 1.0;
     }

@@ -223,6 +223,16 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
         return NULL;
     }
 
+    /* Use negated positive conditions to catch NaNs */
+    if (!((ulen = fabs(ulen)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        ulen = 1.0;
+    }
+    if (!((vlen = fabs(vlen)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        vlen = 1.0;
+    }
+
     container = gwy_container_new();
     meta = gwy_container_new();
     /* FIXME: I'm unable to meaningfully sort out the metadata to channels,
@@ -239,6 +249,11 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
 
         if (!TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &jlen)) {
             g_warning("Could not get image length, skipping");
+            continue;
+        }
+
+        if (!err_DIMENSION(NULL, ilen) || err_DIMENSION(NULL, jlen)) {
+            g_warning("Invalid dimensions, skipping");
             continue;
         }
 

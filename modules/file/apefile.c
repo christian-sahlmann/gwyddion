@@ -236,7 +236,7 @@ apefile_load(const gchar *filename,
         g_warning("Real x size is 0.0, fixing to 1.0");
         apefile.xreal = 1.0;
     }
-    if (!((apefile.xreal = fabs(apefile.xreal)) > 0)) {
+    if (!((apefile.yreal = fabs(apefile.yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         apefile.yreal = 1.0;
     }

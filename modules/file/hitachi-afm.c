@@ -255,7 +255,7 @@ read_data_field(const guchar *buffer,
         g_warning("Real x size is 0.0, fixing to 1.0");
         xreal = 1.0;
     }
-    if (!((xreal = fabs(xreal)) > 0)) {
+    if (!((yreal = fabs(yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         yreal = 1.0;
     }
@@ -330,7 +330,7 @@ read_data_field_old(const guchar *buffer,
         g_warning("Real x size is 0.0, fixing to 1.0");
         xreal = 1.0;
     }
-    if (!((xreal = fabs(xreal)) > 0)) {
+    if (!((yreal = fabs(yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         yreal = 1.0;
     }

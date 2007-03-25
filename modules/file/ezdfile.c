@@ -370,7 +370,7 @@ file_read_header(GPtrArray *ezdfile,
         g_warning("Real x size is 0.0, fixing to 1.0");
         section->xrange.range = 1.0;
     }
-    if (!((section->xrange.range = fabs(section->xrange.range)) > 0)) {
+    if (!((section->yrange.range = fabs(section->yrange.range)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         section->yrange.range = 1.0;
     }

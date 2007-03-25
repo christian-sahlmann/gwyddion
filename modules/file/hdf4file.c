@@ -559,7 +559,7 @@ psi_read_header(const guchar *buffer,
         g_warning("Real x scale is 0.0, fixing to 1.0");
         header->xscale = 1.0;
     }
-    if (!((header->xscale = fabs(header->xscale)) > 0)) {
+    if (!((header->yscale = fabs(header->yscale)) > 0)) {
         g_warning("Real y scale is 0.0, fixing to 1.0");
         header->yscale = 1.0;
     }
