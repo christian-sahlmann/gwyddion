@@ -724,7 +724,7 @@ gwy_spectra_set_spectrum(GwySpectra *spectra,
 }
 
 /**
- * gwy_spectra_n_spectra:
+ * gwy_spectra_get_n_spectra:
  * @spectra: A spectra object.
  *
  * Gets the number of spectra in a spectra object.
@@ -734,7 +734,7 @@ gwy_spectra_set_spectrum(GwySpectra *spectra,
  * Since: 2.6
  **/
 guint
-gwy_spectra_n_spectra(GwySpectra *spectra)
+gwy_spectra_get_n_spectra(GwySpectra *spectra)
 {
     g_return_val_if_fail(GWY_IS_SPECTRA(spectra), 0);
     return spectra->ncurves;

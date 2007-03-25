@@ -94,7 +94,7 @@ GwyDataLine*   gwy_spectra_get_spectrum      (GwySpectra *spectra,
 void           gwy_spectra_set_spectrum      (GwySpectra *spectra,
                                               guint i,
                                               GwyDataLine *new_spectrum);
-guint          gwy_spectra_n_spectra         (GwySpectra *spectra);
+guint          gwy_spectra_get_n_spectra     (GwySpectra *spectra);
 gint           gwy_spectra_nearest           (GwySpectra *spectra,
                                               guint** plist,
                                               gdouble real_x,
