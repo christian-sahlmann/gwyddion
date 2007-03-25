@@ -46,6 +46,7 @@ reference to BINARY or ASCII. Also, implement loading of ASCII files */
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 
@@ -120,9 +121,11 @@ static GwyContainer*    mifile_load          (const gchar *filename,
 static guint        find_data_start         (const guchar *buffer, gsize size,
                                              gboolean *isbinary);
 static guint        image_file_read_header  (MIFile *mifile,
-                                             gchar *buffer);
+                                             gchar *buffer,
+                                             GError **error);
 static guint        spect_file_read_header  (MISpectFile *mifile,
-                                             gchar *buffer);
+                                             gchar *buffer,
+                                             GError **error);
 static void         read_data_field         (GwyDataField *dfield,
                                              MIData *midata,
                                              gint xres, gint yres);
@@ -141,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.9.2",
+    "0.10",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -236,124 +239,136 @@ mifile_load(const gchar *filename,
     /* Report error if file is invalid */
     if (!ok) {
         err_FILE_TYPE(error, "MI");
-        gwy_file_abandon_contents(buffer, size, &err);
+        gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
     /* Load the header information into the appropriate structure */
     p = g_strndup(buffer, header_size);
-    ok = TRUE;
     if (isimage) {
         mifile = g_new0(MIFile, 1);
-        ok = image_file_read_header(mifile, p);
+        ok = image_file_read_header(mifile, p, error);
+        ok = ok && !(err_DIMENSION(error, mifile->xres)
+                     || err_DIMENSION(error, mifile->yres));
+        ok = ok && !err_SIZE_MISMATCH(error,
+                                      header_size
+                                      + mifile->n*2*mifile->xres*mifile->yres,
+                                      size, FALSE);
+        if (!ok)
+            image_file_free(mifile);
     }
     else {
         mifile_spect = g_new0(MISpectFile, 1);
-        ok = spect_file_read_header(mifile_spect, p);
+        ok = spect_file_read_header(mifile_spect, p, error);
+        ok = ok && !err_DIMENSION(error, mifile_spect->num_points);
+        if (!ok)
+            spect_file_free(mifile_spect);
     }
     g_free(p);
 
-    /* Load the image data or spectroscopy data */
-    if (ok) {
-        if (isimage) {
-            /* Load image data: */
-            pos = header_size;
-            for (i = 0; i < mifile->n; i++) {
-                mifile->buffers[i].data = (const gint16*)(buffer + pos);
-                pos += 2*mifile->xres * mifile->yres;
-
-                dfield = gwy_data_field_new(mifile->xres, mifile->yres,
-                                            1.0, 1.0, FALSE);
-                read_data_field(dfield, mifile->buffers + i,
-                                mifile->xres, mifile->yres);
-
-                if (!container)
-                    container = gwy_container_new();
-
-                container_key = g_strdup_printf("/%i/data", i);
-                gwy_container_set_object_by_name(container, container_key,
-                                                 dfield);
-                g_object_unref(dfield);
-                process_metadata(mifile, i, container, container_key);
-                g_free(container_key);
-            }
-
-            image_file_free(mifile);
-        }
-        else {
-            /* Load spectroscopy data: */
-
-            /* create a container */
-            container = gwy_container_new();
-
-            /* create a dummy dfield and add to container
-            XXX: This is a temporary cheap hack */
-            dfield = gwy_data_field_new(256, 256, 1.0, 1.0, TRUE);
-            container_key = g_strdup("/0/data");
-            gwy_container_set_object_by_name(container, container_key, dfield);
-            g_object_unref(dfield);
-            g_free(container_key);
-            container_key = g_strdup("/0/data/title");
-            gwy_container_set_string_by_name(container, container_key,
-                                             g_strdup("Ignore Me"));
-
-            /* get a pointer to the spectroscopy data */
-            pos = header_size;
-            mifile_spect->data = (const gfloat*)(buffer + pos);
-
-            /* load xdata */
-            buffi = mifile_spect->num_points; /* skip time data */
-            xdata = g_new0(gdouble, mifile_spect->num_points);
-            for (i = 0; i < mifile_spect->num_points; i++) {
-                xdata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
-                gwy_debug("i: %i   xdata: %f", i, xdata[i]);
-            }
-
-            /* The first buffer always represents the x axis. All
-            remaining buffers represent the corresponding Y axes of seperate
-            graphs. As a result, we need to create a num_buffers-1 graphs. */
-            for (j = 0; j < mifile_spect->num_buffers-1; j++) {
-                buffi += mifile_spect->num_points;
-
-                ydata = g_new0(gdouble, mifile_spect->num_points);
-                for (i = 0; i < mifile_spect->num_points; i++) {
-                    ydata[i] = (gdouble)(*(mifile_spect->data + buffi + i));
-                    gwy_debug("i: %i   ydata: %f", i, ydata[i]);
-                }
-
-                /* create graph model and curve model */
-                gmodel = gwy_graph_model_new();
-                cmodel = gwy_graph_curve_model_new();
-                gwy_graph_model_add_curve(gmodel, cmodel);
-                g_object_unref(cmodel);
-
-                g_object_set(gmodel, "title", _("Spectroscopy Graph"), NULL);
-                /* XXX: SET UNITS HERE gwy_graph_model_set_si_unit_x */
-                g_object_set(cmodel,
-                             "description", "Curve 1",
-                             "mode", GWY_GRAPH_CURVE_POINTS,
-                             NULL);
-                gwy_graph_curve_model_set_data(cmodel, xdata, ydata,
-                                               mifile_spect->num_points);
-                g_free(ydata);
-
-                /* add gmodel to container */
-                container_key = g_strdup_printf("%s/%d", GRAPH_PREFIX, j+1);
-                gwy_container_set_object_by_name(container, container_key,
-                                                 gmodel);
-                g_object_unref(gmodel);
-                g_free(container_key);
-            }
-            g_free(xdata);
-
-            spect_file_free(mifile_spect);
-        }
+    if (!ok) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
     }
-    else
-        container = NULL;
 
+    /* Load the image data or spectroscopy data */
+    if (isimage) {
+        /* Load image data: */
+        pos = header_size;
+        for (i = 0; i < mifile->n; i++) {
+            mifile->buffers[i].data = (const gint16*)(buffer + pos);
+            pos += 2*mifile->xres * mifile->yres;
+
+            dfield = gwy_data_field_new(mifile->xres, mifile->yres,
+                                        1.0, 1.0, FALSE);
+            read_data_field(dfield, mifile->buffers + i,
+                            mifile->xres, mifile->yres);
+
+            if (!container)
+                container = gwy_container_new();
+
+            container_key = g_strdup_printf("/%i/data", i);
+            gwy_container_set_object_by_name(container, container_key,
+                                             dfield);
+            g_object_unref(dfield);
+            process_metadata(mifile, i, container, container_key);
+            g_free(container_key);
+        }
+
+        image_file_free(mifile);
+    }
+    else {
+        const guchar *pp;
+        /* Load spectroscopy data: */
+
+        /* create a container */
+        container = gwy_container_new();
+
+        /* create a dummy dfield and add to container
+           XXX: This is a temporary cheap hack */
+        dfield = gwy_data_field_new(256, 256, 1.0, 1.0, TRUE);
+        container_key = g_strdup("/0/data");
+        gwy_container_set_object_by_name(container, container_key, dfield);
+        g_object_unref(dfield);
+        g_free(container_key);
+        container_key = g_strdup("/0/data/title");
+        gwy_container_set_string_by_name(container, container_key,
+                                         g_strdup("Ignore Me"));
+
+        /* get a pointer to the spectroscopy data */
+        pos = header_size;
+        mifile_spect->data = (const gfloat*)(buffer + pos);
+
+        /* load xdata */
+        buffi = mifile_spect->num_points; /* skip time data */
+        xdata = g_new0(gdouble, mifile_spect->num_points);
+        for (i = 0; i < mifile_spect->num_points; i++) {
+            pp = (const guchar*)(mifile_spect->data + buffi + i);
+            xdata[i] = gwy_get_gfloat_le(&pp);
+            gwy_debug("i: %i   xdata: %f", i, xdata[i]);
+        }
+
+        /* The first buffer always represents the x axis. All
+           remaining buffers represent the corresponding Y axes of seperate
+           graphs. As a result, we need to create a num_buffers-1 graphs. */
+        for (j = 0; j < mifile_spect->num_buffers-1; j++) {
+            buffi += mifile_spect->num_points;
+
+            ydata = g_new0(gdouble, mifile_spect->num_points);
+            for (i = 0; i < mifile_spect->num_points; i++) {
+                pp = (const guchar*)(mifile_spect->data + buffi + i);
+                ydata[i] = gwy_get_gfloat_le(&pp);
+                gwy_debug("i: %i   ydata: %f", i, ydata[i]);
+            }
+
+            /* create graph model and curve model */
+            gmodel = gwy_graph_model_new();
+            cmodel = gwy_graph_curve_model_new();
+            gwy_graph_model_add_curve(gmodel, cmodel);
+            g_object_unref(cmodel);
+
+            g_object_set(gmodel, "title", _("Spectroscopy Graph"), NULL);
+            /* XXX: SET UNITS HERE gwy_graph_model_set_si_unit_x */
+            g_object_set(cmodel,
+                         "description", "Curve 1",
+                         "mode", GWY_GRAPH_CURVE_POINTS,
+                         NULL);
+            gwy_graph_curve_model_set_data(cmodel, xdata, ydata,
+                                           mifile_spect->num_points);
+            g_free(ydata);
+
+            /* add gmodel to container */
+            container_key = g_strdup_printf("%s/%d", GRAPH_PREFIX, j+1);
+            gwy_container_set_object_by_name(container, container_key,
+                                             gmodel);
+            g_object_unref(gmodel);
+            g_free(container_key);
+        }
+        g_free(xdata);
+
+        spect_file_free(mifile_spect);
+    }
     gwy_file_abandon_contents(buffer, size, NULL);
-    if (container == NULL)
-        err_NO_DATA(error);
+
     return container;
 }
 
@@ -386,7 +401,7 @@ find_data_start(const guchar *buffer, gsize size, gboolean *isbinary)
 }
 
 static guint
-image_file_read_header(MIFile *mifile, gchar *buffer)
+image_file_read_header(MIFile *mifile, gchar *buffer, GError **error)
 {
     MIData *data = NULL;
     GHashTable *meta;
@@ -420,18 +435,21 @@ image_file_read_header(MIFile *mifile, gchar *buffer)
             mifile->yres = atol(value);
     }
 
+    if (!mifile->n)
+        err_NO_DATA(error);
+
     return mifile->n;
 }
 
 static guint
-spect_file_read_header(MISpectFile *mifile, gchar *buffer)
+spect_file_read_header(MISpectFile *mifile, gchar *buffer, GError **error)
 {
     MISpectData *data = NULL;
     GHashTable *meta;
     gchar *line, *key, *value = NULL;
 
     mifile->meta = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                               g_free, g_free);
+                                         g_free, g_free);
     meta = mifile->meta;
 
     while ((line = gwy_str_next_line(&buffer))) {
@@ -452,10 +470,15 @@ spect_file_read_header(MISpectFile *mifile, gchar *buffer)
             if ((line = gwy_str_next_line(&buffer))) {
                 if (!strncmp(line, "bufferUnit    ", KEY_LEN)) {
                     data->unit = g_strstrip(g_strdup(line + KEY_LEN));
-                } else
+                }
+                else {
+                    err_INVALID(error, "bufferUnit");
                     return 0;
-            } else
+                }
+            } else {
+                err_INVALID(error, "bufferLabel");
                 return 0;
+            }
         }
         if (line[0] == ' ')
             continue;
@@ -467,6 +490,9 @@ spect_file_read_header(MISpectFile *mifile, gchar *buffer)
         if (!strcmp(key, "DataPoints"))
             mifile->num_points = atol(value);
     }
+
+    if (!mifile->num_buffers)
+        err_NO_DATA(error);
 
     return mifile->num_buffers;
 }
@@ -510,11 +536,11 @@ spect_file_free(MISpectFile *mifile)
 
     guint i;
 
-   for (i = 0; i < mifile->num_buffers; i++) {
-       if (mifile->buffers[i].label)
-           g_free(mifile->buffers[i].label);
-       if (mifile->buffers[i].unit)
-           g_free(mifile->buffers[i].unit);
+    for (i = 0; i < mifile->num_buffers; i++) {
+        if (mifile->buffers[i].label)
+            g_free(mifile->buffers[i].label);
+        if (mifile->buffers[i].unit)
+            g_free(mifile->buffers[i].unit);
     }
     g_free(mifile->buffers);
     g_hash_table_destroy(mifile->meta);
@@ -745,7 +771,7 @@ process_metadata(MIFile *mifile,
 
     /* Store Metadata */
     meta = gwy_container_new();
-    str = g_string_new("");
+    str = g_string_new(NULL);
 
     /* Global */
     for (i = 0; i < G_N_ELEMENTS(global_metadata); i++) {
