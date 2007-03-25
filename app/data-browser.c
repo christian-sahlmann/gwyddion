@@ -32,6 +32,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/stats.h>
+#include <libprocess/spectra.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwycoloraxis.h>
@@ -52,6 +53,9 @@
  * not worth to break file compatibility with 1.x. */
 #define GRAPH_PREFIX "/0/graph/graph"
 
+/* Single point spectra prefix.  This one is sane and should remain so. */
+#define SPECTRA_PREFIX "/sps"
+
 /* Data types interesting keys can correspond to */
 typedef enum {
     KEY_IS_NONE = 0,
@@ -59,6 +63,7 @@ typedef enum {
     KEY_IS_MASK,
     KEY_IS_SHOW,
     KEY_IS_GRAPH,
+    KEY_IS_SPECTRA,
     KEY_IS_META,
     KEY_IS_TITLE,
     KEY_IS_SELECT,
@@ -70,6 +75,7 @@ typedef enum {
 enum {
     PAGE_CHANNELS,
     PAGE_GRAPHS,
+    PAGE_SPECTRA,
     NPAGES
 };
 
@@ -356,6 +362,22 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
             return -1;
 
         *type = KEY_IS_GRAPH;
+        if (len)
+            *len = (s + i) - strkey;
+
+        return atoi(s);
+    }
+
+    /* Spectra */
+    if (g_str_has_prefix(strkey, SPECTRA_PREFIX GWY_CONTAINER_PATHSEP_STR)) {
+        s = strkey + sizeof(SPECTRA_PREFIX);
+        /* Do not use strtol, it allows queer stuff like spaces */
+        for (i = 0; g_ascii_isdigit(s[i]); i++)
+            ;
+        if (!i || s[i])
+            return -1;
+
+        *type = KEY_IS_SPECTRA;
         if (len)
             *len = (s + i) - strkey;
 
@@ -672,6 +694,108 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
 }
 
 /**
+ * gwy_app_data_proxy_spectra_changed:
+ * @spectra: The data field representing a spectra.
+ * @proxy: Data proxy.
+ *
+ * Updates spectra display in the data browser when spectra data change.
+ *
+ * (Currently does not do anything.)
+ **/
+static void
+gwy_app_data_proxy_spectra_changed(G_GNUC_UNUSED GwySpectra *spectra,
+                                   G_GNUC_UNUSED GwyAppDataProxy *proxy)
+{
+    gwy_debug("proxy=%p spectra=%p", proxy, spectra);
+}
+
+/**
+ * gwy_app_data_proxy_connect_spectra:
+ * @proxy: Data proxy.
+ * @i: Channel id.
+ * @object: The spectra to add (passed as #GObject).
+ *
+ * Adds a spectra object of specified id, setting qdata and connecting
+ * signals.
+ **/
+static void
+gwy_app_data_proxy_connect_spectra(GwyAppDataProxy *proxy,
+                                   gint i,
+                                   GObject *object)
+{
+    gchar key[24];
+    GQuark quark;
+
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_SPECTRA], i, object);
+    g_snprintf(key, sizeof(key), "/sps/%d", i);
+    gwy_debug("%p: %d in %p", object, i, proxy->container);
+    quark = g_quark_from_string(key);
+    g_object_set_qdata(object, container_quark, proxy->container);
+    g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
+
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_spectra_changed), proxy);
+}
+
+/**
+ * gwy_app_data_proxy_disconnect_spectra:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the spectra in @proxy's list store.
+ *
+ * Disconnects signals from a spectra object, removes qdata and finally
+ * removes it from the data proxy list store.
+ **/
+static void
+gwy_app_data_proxy_disconnect_spectra(GwyAppDataProxy *proxy,
+                                      GtkTreeIter *iter)
+{
+    GObject *object;
+
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store), iter,
+                       MODEL_OBJECT, &object,
+                       -1);
+    gwy_debug("%p: from %p", object, proxy->container);
+    g_object_set_qdata(object, container_quark, NULL);
+    g_object_set_qdata(object, own_key_quark, NULL);
+    g_signal_handlers_disconnect_by_func(object,
+                                         gwy_app_data_proxy_spectra_changed,
+                                         proxy);
+    g_object_unref(object);
+    gtk_list_store_remove(proxy->lists[PAGE_SPECTRA].store, iter);
+}
+
+/**
+ * gwy_app_data_proxy_reconnect_spectra:
+ * @proxy: Data proxy.
+ * @iter: Tree iterator pointing to the spectra in @proxy's list store.
+ * @object: The spectra object (passed as #GObject).
+ *
+ * Updates data proxy's list store when the spectra object is switched for
+ * another spectra object.
+ **/
+static void
+gwy_app_data_proxy_reconnect_spectra(GwyAppDataProxy *proxy,
+                                     GtkTreeIter *iter,
+                                     GObject *object)
+{
+    GObject *old;
+
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store), iter,
+                       MODEL_OBJECT, &old,
+                       -1);
+    g_signal_handlers_disconnect_by_func(old,
+                                         gwy_app_data_proxy_spectra_changed,
+                                         proxy);
+    gwy_app_data_proxy_switch_object_data(proxy, old, object);
+    gtk_list_store_set(proxy->lists[PAGE_SPECTRA].store, iter,
+                       MODEL_OBJECT, object,
+                       -1);
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_spectra_changed), proxy);
+    g_object_unref(old);
+}
+
+/**
  * gwy_app_data_proxy_scan_data:
  * @key: Container quark key.
  * @value: Value at @key.
@@ -715,6 +839,14 @@ gwy_app_data_proxy_scan_data(gpointer key,
         object = g_value_get_object(gvalue);
         g_return_if_fail(GWY_IS_GRAPH_MODEL(object));
         gwy_app_data_proxy_connect_graph(proxy, i, object);
+        break;
+
+        case KEY_IS_SPECTRA:
+        gwy_debug("Found spectra %d (%s)", i, strkey);
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+        object = g_value_get_object(gvalue);
+        g_return_if_fail(GWY_IS_SPECTRA(object));
+        gwy_app_data_proxy_connect_spectra(proxy, i, object);
         break;
 
         case KEY_IS_MASK:
@@ -906,6 +1038,25 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         break;
 
+        case KEY_IS_SPECTRA:
+        gwy_container_gis_object(data, quark, &object);
+        list = &proxy->lists[PAGE_SPECTRA];
+        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        gwy_debug("Spectra <%s>: %s in container, %s in list store",
+                  strkey,
+                  object ? "present" : "missing",
+                  found ? "present" : "missing");
+        g_return_if_fail(object || found);
+        if (object && !found)
+            gwy_app_data_proxy_connect_spectra(proxy, i, object);
+        else if (!object && found)
+            gwy_app_data_proxy_disconnect_spectra(proxy, &iter);
+        else {
+            gwy_app_data_proxy_reconnect_spectra(proxy, &iter, object);
+            gwy_list_store_row_changed(list->store, &iter, NULL, -1);
+        }
+        break;
+
         case KEY_IS_MASK:
         gwy_container_gis_object(data, quark, &object);
         list = &proxy->lists[PAGE_CHANNELS];
@@ -1027,6 +1178,10 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store),
          MODEL_OBJECT, &gwy_app_data_proxy_graph_changed, proxy);
+    gwy_app_data_proxy_finalize_list
+        (GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store),
+         MODEL_OBJECT, &gwy_app_data_proxy_spectra_changed, proxy);
+
     g_object_unref(proxy->container);
     g_free(proxy);
 
@@ -1120,52 +1275,6 @@ gwy_app_data_list_update_last(GwyAppDataList *list,
 
     gwy_debug("new last item id: %d", max);
     list->last = max;
-}
-
-/**
- * gwy_app_data_list_row_activated:
- * @treeview: Tree view representing a data browser object list.
- * @path: Path of the activated row in the tree view.
- * @column: Activated tree column.
- * @user_data: Unused.
- *
- * Starts editing of object title when its row is activated.
- **/
-static void
-gwy_app_data_list_row_activated(GtkTreeView *treeview,
-                                GtkTreePath *path,
-                                GtkTreeViewColumn *column,
-                                G_GNUC_UNUSED gpointer user_data)
-{
-    GList *list;
-    GtkCellRenderer *renderer;
-    const gchar *col_id;
-
-    /* Only do anything if the "title" column was activated */
-    col_id = g_object_get_qdata(G_OBJECT(column), column_id_quark);
-    if (!col_id || !gwy_strequal(col_id, "title"))
-        return;
-
-    list = gtk_tree_view_column_get_cell_renderers(column);
-    if (g_list_length(list) > 1)
-        g_warning("Too many cell renderers in title column");
-
-    renderer = GTK_CELL_RENDERER(list->data);
-    g_list_free(list);
-    g_return_if_fail(GTK_IS_CELL_RENDERER_TEXT(renderer));
-
-    /* The trick to make title editable on double click is to enable edit
-     * here and disable it again in "edited" signal handler of the
-     * renderer (this is set in particular lists handlers) */
-    g_object_set(renderer, "editable", TRUE, "editable-set", TRUE, NULL);
-    gtk_tree_view_set_cursor(treeview, path, column, TRUE);
-}
-
-static void
-gwy_app_data_list_disable_edit(GtkCellRenderer *renderer)
-{
-    gwy_debug("%p", renderer);
-    g_object_set(renderer, "editable", FALSE, NULL);
 }
 
 static void
@@ -1291,6 +1400,58 @@ gwy_app_data_proxy_update_visibility(GObject *object,
         gwy_container_remove_by_name(data, key);
 }
 
+/**************************************************************************
+ *
+ * All treeviews
+ *
+ **************************************************************************/
+
+/**
+ * gwy_app_data_list_row_activated:
+ * @treeview: Tree view representing a data browser object list.
+ * @path: Path of the activated row in the tree view.
+ * @column: Activated tree column.
+ * @user_data: Unused.
+ *
+ * Starts editing of object title when its row is activated.
+ **/
+static void
+gwy_app_data_list_row_activated(GtkTreeView *treeview,
+                                GtkTreePath *path,
+                                GtkTreeViewColumn *column,
+                                G_GNUC_UNUSED gpointer user_data)
+{
+    GList *list;
+    GtkCellRenderer *renderer;
+    const gchar *col_id;
+
+    /* Only do anything if the "title" column was activated */
+    col_id = g_object_get_qdata(G_OBJECT(column), column_id_quark);
+    if (!col_id || !gwy_strequal(col_id, "title"))
+        return;
+
+    list = gtk_tree_view_column_get_cell_renderers(column);
+    if (g_list_length(list) > 1)
+        g_warning("Too many cell renderers in title column");
+
+    renderer = GTK_CELL_RENDERER(list->data);
+    g_list_free(list);
+    g_return_if_fail(GTK_IS_CELL_RENDERER_TEXT(renderer));
+
+    /* The trick to make title editable on double click is to enable edit
+     * here and disable it again in "edited" signal handler of the
+     * renderer (this is set in particular lists handlers) */
+    g_object_set(renderer, "editable", TRUE, "editable-set", TRUE, NULL);
+    gtk_tree_view_set_cursor(treeview, path, column, TRUE);
+}
+
+static void
+gwy_app_data_list_disable_edit(GtkCellRenderer *renderer)
+{
+    gwy_debug("%p", renderer);
+    g_object_set(renderer, "editable", FALSE, NULL);
+}
+
 static void
 gwy_app_data_browser_render_visible(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                     GtkCellRenderer *renderer,
@@ -1323,6 +1484,12 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
     gwy_sensitivity_group_set_state(browser->sensgroup,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
+
+/**************************************************************************
+ *
+ * Channels treeview
+ *
+ **************************************************************************/
 
 static void
 gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
@@ -1812,23 +1979,6 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
 }
 
 static void
-gwy_app_update_3d_window_title(Gwy3DWindow *window3d,
-                               gint id)
-{
-    GtkWidget *view3d;
-    GwyContainer *data;
-    const gchar *ctitle;
-    gchar *title;
-
-    view3d = gwy_3d_window_get_3d_view(window3d);
-    data = gwy_3d_view_get_data(GWY_3D_VIEW(view3d));
-    ctitle = gwy_app_data_browser_figure_out_channel_title(data, id);
-    title = g_strconcat("3D ", ctitle, NULL);
-    gtk_window_set_title(GTK_WINDOW(window3d), title);
-    g_free(title);
-}
-
-static void
 gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
 {
     GwyDataView *data_view;
@@ -1973,6 +2123,114 @@ gwy_app_data_browser_channel_name_edited(GtkCellRenderer *renderer,
     }
 
     gwy_app_data_list_disable_edit(renderer);
+}
+
+static GtkWidget*
+gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
+{
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
+    GtkWidget *retval;
+    GtkTreeView *treeview;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
+
+    /* Construct the GtkTreeView that will display data channels */
+    retval = gtk_tree_view_new();
+    treeview = GTK_TREE_VIEW(retval);
+    g_signal_connect(treeview, "row-activated",
+                     G_CALLBACK(gwy_app_data_list_row_activated), NULL);
+
+    /* Add the thumbnail column */
+    renderer = gtk_cell_renderer_pixbuf_new();
+    column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
+                                                      NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the visibility column */
+    renderer = gtk_cell_renderer_toggle_new();
+    g_object_set(renderer, "activatable", TRUE, NULL);
+    g_signal_connect(renderer, "toggled",
+                     G_CALLBACK(gwy_app_data_browser_channel_toggled), browser);
+    column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_visible, browser, NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the title column */
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+                 "ellipsize", PANGO_ELLIPSIZE_END,
+                 "ellipsize-set", TRUE,
+                 NULL);
+    g_signal_connect(renderer, "edited",
+                     G_CALLBACK(gwy_app_data_browser_channel_name_edited),
+                     browser);
+    g_signal_connect(renderer, "editing-canceled",
+                     G_CALLBACK(gwy_app_data_list_disable_edit), NULL);
+    column = gtk_tree_view_column_new_with_attributes("Title", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_channel_render_title, browser, NULL);
+    g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the flags column */
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "width-chars", 3, NULL);
+    column = gtk_tree_view_column_new_with_attributes("Flags", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_channel_render_flags, browser, NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
+
+    /* Selection */
+    selection = gtk_tree_view_get_selection(treeview);
+    g_object_set_qdata(G_OBJECT(selection), page_id_quark,
+                       GINT_TO_POINTER(PAGE_CHANNELS + 1));
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_data_browser_selection_changed),
+                     browser);
+
+    /* DnD */
+    gtk_tree_view_enable_model_drag_source(treeview,
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
+
+    return retval;
+}
+
+/**************************************************************************
+ *
+ * Channels 3D
+ *
+ **************************************************************************/
+
+static void
+gwy_app_update_3d_window_title(Gwy3DWindow *window3d,
+                               gint id)
+{
+    GtkWidget *view3d;
+    GwyContainer *data;
+    const gchar *ctitle;
+    gchar *title;
+
+    view3d = gwy_3d_window_get_3d_view(window3d);
+    data = gwy_3d_view_get_data(GWY_3D_VIEW(view3d));
+    ctitle = gwy_app_data_browser_figure_out_channel_title(data, id);
+    title = g_strconcat("3D ", ctitle, NULL);
+    gtk_window_set_title(GTK_WINDOW(window3d), title);
+    g_free(title);
 }
 
 static GList*
@@ -2163,90 +2421,11 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     gtk_window_present(GTK_WINDOW(window3d));
 }
 
-static GtkWidget*
-gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
-{
-    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
-
-    GtkWidget *retval;
-    GtkTreeView *treeview;
-    GtkCellRenderer *renderer;
-    GtkTreeViewColumn *column;
-    GtkTreeSelection *selection;
-
-    /* Construct the GtkTreeView that will display data channels */
-    retval = gtk_tree_view_new();
-    treeview = GTK_TREE_VIEW(retval);
-    g_signal_connect(treeview, "row-activated",
-                     G_CALLBACK(gwy_app_data_list_row_activated), NULL);
-
-    /* Add the thumbnail column */
-    renderer = gtk_cell_renderer_pixbuf_new();
-    column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
-                                                      NULL);
-    gtk_tree_view_append_column(treeview, column);
-
-    /* Add the visibility column */
-    renderer = gtk_cell_renderer_toggle_new();
-    g_object_set(renderer, "activatable", TRUE, NULL);
-    g_signal_connect(renderer, "toggled",
-                     G_CALLBACK(gwy_app_data_browser_channel_toggled), browser);
-    column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func
-        (column, renderer,
-         gwy_app_data_browser_render_visible, browser, NULL);
-    gtk_tree_view_append_column(treeview, column);
-
-    /* Add the title column */
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer,
-                 "ellipsize", PANGO_ELLIPSIZE_END,
-                 "ellipsize-set", TRUE,
-                 NULL);
-    g_signal_connect(renderer, "edited",
-                     G_CALLBACK(gwy_app_data_browser_channel_name_edited),
-                     browser);
-    g_signal_connect(renderer, "editing-canceled",
-                     G_CALLBACK(gwy_app_data_list_disable_edit), NULL);
-    column = gtk_tree_view_column_new_with_attributes("Title", renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_column_set_cell_data_func
-        (column, renderer,
-         gwy_app_data_browser_channel_render_title, browser, NULL);
-    g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
-    gtk_tree_view_append_column(treeview, column);
-
-    /* Add the flags column */
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "width-chars", 3, NULL);
-    column = gtk_tree_view_column_new_with_attributes("Flags", renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func
-        (column, renderer,
-         gwy_app_data_browser_channel_render_flags, browser, NULL);
-    gtk_tree_view_append_column(treeview, column);
-
-    gtk_tree_view_set_headers_visible(treeview, FALSE);
-
-    /* Selection */
-    selection = gtk_tree_view_get_selection(treeview);
-    g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_CHANNELS + 1));
-    g_signal_connect(selection, "changed",
-                     G_CALLBACK(gwy_app_data_browser_selection_changed),
-                     browser);
-
-    /* DnD */
-    gtk_tree_view_enable_model_drag_source(treeview,
-                                           GDK_BUTTON1_MASK,
-                                           dnd_target_table,
-                                           G_N_ELEMENTS(dnd_target_table),
-                                           GDK_ACTION_COPY);
-
-    return retval;
-}
+/**************************************************************************
+ *
+ * Graphs treeview
+ *
+ **************************************************************************/
 
 static void
 gwy_app_data_browser_graph_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
@@ -2255,7 +2434,7 @@ gwy_app_data_browser_graph_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                         GtkTreeIter *iter,
                                         G_GNUC_UNUSED gpointer userdata)
 {
-    GwyGraphModel *gmodel;
+    GObject *gmodel;
     gchar *title;
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
@@ -2601,6 +2780,202 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     return retval;
 }
 
+/**************************************************************************
+ *
+ * Spectra treeview
+ *
+ **************************************************************************/
+
+static void
+gwy_app_data_browser_spectra_toggled(GtkCellRendererToggle *renderer,
+                                     gchar *path_str,
+                                     GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+    GtkTreeModel *model;
+    gboolean active, toggled;
+
+    gwy_debug("Toggled spectra row %s", path_str);
+    proxy = browser->current;
+    g_return_if_fail(proxy);
+
+    path = gtk_tree_path_new_from_string(path_str);
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    active = gtk_cell_renderer_toggle_get_active(renderer);
+    g_warning("Cannot make spectra visible");
+    toggled = FALSE;
+    /*
+    toggled = gwy_app_data_proxy_graph_set_visible(proxy, &iter, !active);
+    g_assert(toggled);
+
+    gwy_app_data_proxy_maybe_finalize(proxy);
+    */
+}
+
+static void
+gwy_app_data_browser_spectra_name_edited(GtkCellRenderer *renderer,
+                                         const gchar *strpath,
+                                         const gchar *text,
+                                         GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy;
+    GtkTreeModel *model;
+    GwySpectra *spectra;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gchar *title;
+    gint id;
+
+    g_return_if_fail(browser->current);
+    proxy = browser->current;
+    model = GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store);
+
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter, MODEL_ID, &id, MODEL_OBJECT, &spectra, -1);
+    title = g_strstrip(g_strdup(text));
+    if (!*title) {
+        g_free(title);
+        title = g_strdup_printf("%s %d", _("Untitled"), id);
+    }
+    g_object_set(spectra, "title", title, NULL);
+    g_free(title);
+    g_object_unref(spectra);
+
+    gwy_app_data_list_disable_edit(renderer);
+}
+
+static void
+gwy_app_data_browser_spectra_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                          GtkCellRenderer *renderer,
+                                          GtkTreeModel *model,
+                                          GtkTreeIter *iter,
+                                          G_GNUC_UNUSED gpointer userdata)
+{
+    GObject *spectra;
+    gchar *title;
+
+    gtk_tree_model_get(model, iter, MODEL_OBJECT, &spectra, -1);
+    g_object_get(spectra, "title", &title, NULL);
+    g_object_set(renderer, "text", title, NULL);
+    g_free(title);
+    g_object_unref(spectra);
+}
+
+static void
+gwy_app_data_browser_spectra_render_npoints(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                            GtkCellRenderer *renderer,
+                                            GtkTreeModel *model,
+                                            GtkTreeIter *iter,
+                                            G_GNUC_UNUSED gpointer userdata)
+{
+    GwySpectra *spectra;
+    gchar s[8];
+
+    gtk_tree_model_get(model, iter, MODEL_OBJECT, &spectra, -1);
+    g_snprintf(s, sizeof(s), "%d", gwy_spectra_get_n_spectra(spectra));
+    g_object_set(renderer, "text", s, NULL);
+    g_object_unref(spectra);
+}
+
+static GtkWidget*
+gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
+{
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
+    GtkWidget *retval;
+    GtkTreeView *treeview;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
+
+    /* Construct the GtkTreeView that will display data channels */
+    retval = gtk_tree_view_new();
+    treeview = GTK_TREE_VIEW(retval);
+    g_signal_connect(treeview, "row-activated",
+                     G_CALLBACK(gwy_app_data_list_row_activated), NULL);
+
+    /* Add the thumbnail column */
+    renderer = gtk_cell_renderer_pixbuf_new();
+    column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
+                                                      NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the visibility column */
+    renderer = gtk_cell_renderer_toggle_new();
+    g_object_set(renderer, "activatable", TRUE, NULL);
+    g_signal_connect(renderer, "toggled",
+                     G_CALLBACK(gwy_app_data_browser_spectra_toggled), browser);
+    column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_visible, browser, NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the title column */
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+                 "ellipsize", PANGO_ELLIPSIZE_END,
+                 "ellipsize-set", TRUE,
+                 NULL);
+    g_signal_connect(renderer, "edited",
+                     G_CALLBACK(gwy_app_data_browser_spectra_name_edited),
+                     browser);
+    g_signal_connect(renderer, "editing-canceled",
+                     G_CALLBACK(gwy_app_data_list_disable_edit), NULL);
+    column = gtk_tree_view_column_new_with_attributes("Title", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_spectra_render_title, browser, NULL);
+    g_object_set_qdata(G_OBJECT(column), column_id_quark, "title");
+    gtk_tree_view_append_column(treeview, column);
+
+    /* Add the flags column */
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "width-chars", 3, NULL);
+    column = gtk_tree_view_column_new_with_attributes("Points", renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_spectra_render_npoints, browser, NULL);
+    gtk_tree_view_append_column(treeview, column);
+
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
+
+    /* Selection */
+    selection = gtk_tree_view_get_selection(treeview);
+    g_object_set_qdata(G_OBJECT(selection), page_id_quark,
+                       GINT_TO_POINTER(PAGE_SPECTRA + 1));
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_data_browser_selection_changed),
+                     browser);
+
+    /* DnD */
+    gtk_tree_view_enable_model_drag_source(treeview,
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
+
+    return retval;
+}
+
+/**************************************************************************
+ *
+ * Common GUI
+ *
+ **************************************************************************/
+
 /* GUI only */
 static void
 gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
@@ -2926,6 +3301,20 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     browser->lists[PAGE_GRAPHS]
         = gwy_app_data_browser_construct_graphs(browser);
     gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_GRAPHS]);
+
+    /* Single point spectra */
+    box_page = gtk_vbox_new(FALSE, 0);
+    label = gtk_label_new(_("Spectra"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(browser->notebook), box_page, label);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
+
+    browser->lists[PAGE_SPECTRA]
+        = gwy_app_data_browser_construct_spectra(browser);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_SPECTRA]);
 
     /* Buttons */
     hbox = gwy_app_data_browser_construct_buttons(browser);
