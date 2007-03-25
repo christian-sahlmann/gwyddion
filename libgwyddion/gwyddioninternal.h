@@ -27,6 +27,8 @@ G_BEGIN_DECLS
 
 G_GNUC_INTERNAL
 void _gwy_nlfit_preset_class_setup_presets(void);
+
+G_GNUC_INTERNAL
 void _gwy_fd_curve_preset_class_setup_presets(void);
 
 G_END_DECLS

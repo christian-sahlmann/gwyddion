@@ -80,10 +80,10 @@ G_DEFINE_TYPE(GwyFDCurvePreset, gwy_fd_curve_preset, GWY_TYPE_NLFIT_PRESET)
 /******************* argento ********************************/
 static gdouble
 argento_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+             G_GNUC_UNUSED gint n_param,
+             const gdouble *b,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
     /*xc, R, H, gamma*/
     *fres = TRUE;
@@ -95,16 +95,16 @@ argento_func(gdouble x,
 
 static void
 argento_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+              const gdouble *x,
+              const gdouble *y,
+              gdouble *param,
+              gboolean *fres)
 {
     gint i;
     gdouble xmin = x[0], xmax = x[n_dat - 1];
-    
+
     param[1] = y[0]/n_dat;
-    
+
     for (i = 1; i < n_dat; i++) {
         if (x[i] < xmin) xmin = x[i];
         if (x[i] > xmax) xmax = x[i];
@@ -113,16 +113,17 @@ argento_guess(gint n_dat,
     param[0] = xmin - (xmax-xmin)/100;
     param[2] = 20e-9;
     param[3] = 2e-20;
-    
 
+    *fres = TRUE;
 }
+
 /******************* parzanette ********************************/
 static gdouble
 parzanette_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
 {
     /*xc, R, H, gamma, h1, L*/
     *fres = TRUE;
@@ -133,27 +134,27 @@ parzanette_func(gdouble x,
 
 static void
 parzanette_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* sszanette ********************************/
 static gdouble
 sszanette_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
     /*xc, R, H */
     *fres = TRUE;
@@ -162,27 +163,27 @@ sszanette_func(gdouble x,
 
 static void
 sszanette_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                const gdouble *x,
+                const gdouble *y,
+                gdouble *param,
+                gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* pyrzanette ********************************/
 static gdouble
 pyrzanette_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
 {
     /*xc, R, H, gamma*/
     *fres = TRUE;
@@ -191,76 +192,76 @@ pyrzanette_func(gdouble x,
 
 static void
 pyrzanette_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* tpyrzanette ********************************/
 static gdouble
 tpyrzanette_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                 G_GNUC_UNUSED gint n_param,
+                 const gdouble *b,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
 {
     /*xc, R, H, gamma, L, */
     *fres = TRUE;
-    return b[1] - 2*b[3]*b[5]*b[5]/(x-b[0])*(x-b[0])*(x-b[0]) 
-           * (1 + (tan(b[4])*(x-b[0]))/b[5] + 
+    return b[1] - 2*b[3]*b[5]*b[5]/(x-b[0])*(x-b[0])*(x-b[0])
+           * (1 + (tan(b[4])*(x-b[0]))/b[5] +
            (tan(b[4])*(x-b[0])*tan(b[4])*(x-b[0]))/b[5]/b[5]);
 }
 
 static void
 tpyrzanette_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                  const gdouble *x,
+                  const gdouble *y,
+                  gdouble *param,
+                  gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* sphcapella ********************************/
 static gdouble
 sphcapella_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
 {
-    /*xc, R, H */ 
+    /*xc, R, H */
     *fres = TRUE;
     return b[1] -b[3]*b[2]/6/(x-b[0])/(x-b[0]) ;
 }
 
 static void
 sphcapella_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
 {
     gint i;
     gdouble xmin = x[0], xmax = x[n_dat - 1];
-    
+
     param[1] = y[0]/n_dat;
-    
+
     for (i = 1; i < n_dat; i++) {
         if (x[i] < xmin) xmin = x[i];
         if (x[i] > xmax) xmax = x[i];
@@ -269,43 +270,46 @@ sphcapella_guess(gint n_dat,
     param[0] = xmin - (xmax-xmin)/20;
     param[2] = 20e-9;
     param[3] = 2e-21;
+
+    *fres = TRUE;
 }
+
 /******************* sphtiptap ********************************/
 static gdouble
 sphtiptap_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
-     /*xc, R, H., xc */
+    /*xc, R, H., xc */
     *fres = TRUE;
     return b[1] - b[3]*b[2]/6/((x-b[0])-b[4])/((x-b[0])-b[4]);
 }
 
 static void
 sphtiptap_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                const gdouble *x,
+                const gdouble *y,
+                gdouble *param,
+                gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* sphxu ********************************/
 static gdouble
 sphxu_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
 {
      /*xc, R, H, sigma */
     *fres = TRUE;
@@ -314,56 +318,56 @@ sphxu_func(gdouble x,
 
 static void
 sphxu_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+            const gdouble *x,
+            const gdouble *y,
+            gdouble *param,
+            gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* sphcappakarinen ********************************/
 static gdouble
 sphcappakarinen_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                     G_GNUC_UNUSED gint n_param,
+                     const gdouble *b,
+                     G_GNUC_UNUSED gpointer user_data,
+                     gboolean *fres)
 {
     /*R, gamma, theta1, theta2*/
     *fres = TRUE;
-    return  b[1] - 2*b[2]*G_PI*b[0]*(cos(b[3]) + cos(b[4])) ;
+    return  b[1] - 2*b[2]*G_PI*b[0]*(cos(b[3]) + cos(b[4]));
 }
 
 static void
 sphcappakarinen_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                      const gdouble *x,
+                      const gdouble *y,
+                      gdouble *param,
+                      gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* spheastman ********************************/
 static gdouble
 sphcapeastman_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                   G_GNUC_UNUSED gint n_param,
+                   const gdouble *b,
+                   G_GNUC_UNUSED gpointer user_data,
+                   gboolean *fres)
 {
     /* xc, R, gamma, theta, d*/
     *fres = TRUE;
@@ -372,27 +376,29 @@ sphcapeastman_func(gdouble x,
 
 static void
 sphcapeastman_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                    const gdouble *x,
+                    const gdouble *y,
+                    gdouble *param,
+                    gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
 
+    *fres = TRUE;
 }
+
 /******************* sphcapheinz ********************************/
 static gdouble
 sphcapheinz_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                 G_GNUC_UNUSED gint n_param,
+                 const gdouble *b,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
 {
     /*R, gamma, theta*/
     *fres = TRUE;
@@ -401,27 +407,27 @@ sphcapheinz_func(gdouble x,
 
 static void
 sphcapheinz_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                  const gdouble *x,
+                  const gdouble *y,
+                  gdouble *param,
+                  gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* sphesheinz ********************************/
 static gdouble
 sphesheinz_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
 {
     /*xc, R, sigma1, sigma2, epsilon, debye, lambda*/
     *fres = TRUE;
@@ -430,27 +436,27 @@ sphesheinz_func(gdouble x,
 
 static void
 sphesheinz_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
+
 /******************* hsphhertz ********************************/
 static gdouble
 hsphhertz_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
     /*xc, yc, R, E, nu*/
     *fres = TRUE;
@@ -459,19 +465,18 @@ hsphhertz_func(gdouble x,
 
 static void
 hsphhertz_guess(gint n_dat,
-           const gdouble *x,
-           const gdouble *y,
-           gdouble *param,
-           gboolean *fres)
+                const gdouble *x,
+                const gdouble *y,
+                gdouble *param,
+                gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = 0;
-    
+
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
-
 }
 
 /************************** presets ****************************/
