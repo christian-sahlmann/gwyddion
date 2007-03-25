@@ -38,20 +38,11 @@ G_BEGIN_DECLS
 
 typedef struct _GwySpectra      GwySpectra;
 typedef struct _GwySpectraClass GwySpectraClass;
-typedef struct _coord_pos       coord_pos;
-
-struct _coord_pos {
-    guint index;
-    gdouble r;
-};
 
 struct _GwySpectra {
     GObject parent_instance;
 
-    gdouble     *coords;
-    GwyDataLine **data;  /* Array of GwySpectrum */
-    guint       ncurves; /* Number of spectra */
-    guint       nalloc;  /* Allocated space */
+    GArray      *spectra;
 
     gchar       *title;
     GwySIUnit   *si_unit_xy;
@@ -75,20 +66,20 @@ GType          gwy_spectra_get_type          (void) G_GNUC_CONST;
 GwySpectra*    gwy_spectra_new               (void);
 GwySpectra*    gwy_spectra_new_alike         (GwySpectra *model);
 void           gwy_spectra_data_changed      (GwySpectra *spectra);
-void           gwy_spectra_copy              (GwySpectra *a,
-                                              GwySpectra *b);
 GwySIUnit*     gwy_spectra_get_si_unit_xy    (GwySpectra *spectra);
 void           gwy_spectra_set_si_unit_xy    (GwySpectra *spectra,
                                               GwySIUnit *si_unit);
-const gdouble* gwy_spectra_itoxy             (GwySpectra *spectra,
-                                              guint i);
-guint          gwy_spectra_xytoi             (GwySpectra *spectra,
-                                              gdouble real_x,
-                                              gdouble real_y);
+void           gwy_spectra_itoxy             (GwySpectra *spectra,
+                                              guint i,
+                                              gdouble *x,
+                                              gdouble *y);
+gint           gwy_spectra_xytoi             (GwySpectra *spectra,
+                                              gdouble x,
+                                              gdouble y);
 void           gwy_spectra_setpos            (GwySpectra *spectra,
-                                              gdouble real_x,
-                                              gdouble real_y,
-                                              guint i);
+                                              guint i,
+                                              gdouble x,
+                                              gdouble y);
 GwyDataLine*   gwy_spectra_get_spectrum      (GwySpectra *spectra,
                                               gint i);
 void           gwy_spectra_set_spectrum      (GwySpectra *spectra,
