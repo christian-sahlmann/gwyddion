@@ -278,6 +278,8 @@ omicron_load(const gchar *filename,
                     goto fail;
                 }
 
+                /* FIXME */
+                gwy_spectra_set_title(spectra, "Spectra");
                 g_snprintf(key, sizeof(key), "/sps/%u", i);
                 gwy_container_set_object_by_name(container, key, spectra);
                 g_object_unref(spectra);
