@@ -702,10 +702,25 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
  * (Currently does not do anything.)
  **/
 static void
-gwy_app_data_proxy_spectra_changed(G_GNUC_UNUSED GwySpectra *spectra,
-                                   G_GNUC_UNUSED GwyAppDataProxy *proxy)
+gwy_app_data_proxy_spectra_changed(GwySpectra *spectra,
+                                   GwyAppDataProxy *proxy)
 {
-    gwy_debug("proxy=%p spectra=%p", proxy, spectra);
+    GwyAppKeyType type;
+    GtkTreeIter iter;
+    GQuark quark;
+    gint id;
+
+    gwy_debug("proxy=%p, spectra=%p", proxy, spectra);
+    if (!(quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(spectra),
+                                                      own_key_quark))))
+        return;
+    id = gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    g_return_if_fail(type == KEY_IS_SPECTRA);
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_SPECTRA].store, id,
+                                        &iter))
+        return;
+    gwy_list_store_row_changed(proxy->lists[PAGE_SPECTRA].store,
+                               &iter, NULL, -1);
 }
 
 /**
