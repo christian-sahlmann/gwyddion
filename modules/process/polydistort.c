@@ -70,6 +70,7 @@ typedef struct {
     GwyContainer *mydata;
     GwyDataField *result;
     gboolean computed;
+    gulong preview_id;
     DistortArgs *args;
 } DistortControls;
 
@@ -128,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Apllies polynomial distortion in the horizontal plane."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -368,6 +369,10 @@ distort_dialog(DistortArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    if (controls.preview_id) {
+        g_source_remove(controls.preview_id);
+        controls.preview_id = 0;
+    }
     gtk_widget_destroy(dialog);
 
     if (controls.computed)
@@ -553,12 +558,25 @@ distort_coeff_changed(GtkEntry *entry,
     distort_invalidate(controls);
 }
 
+static gboolean
+execute_preview(gpointer user_data)
+{
+    DistortControls *controls = (DistortControls*)user_data;
+
+    preview(controls, controls->args);
+    controls->preview_id = 0;
+
+    return FALSE;
+}
+
 static void
 distort_invalidate(DistortControls *controls)
 {
     controls->computed = FALSE;
-    if (controls->args->update)
-        preview(controls, controls->args);
+    if (controls->args->update) {
+        if (!controls->preview_id)
+            controls->preview_id = g_idle_add(execute_preview, controls);
+    }
 }
 
 static void
