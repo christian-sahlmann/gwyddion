@@ -3895,7 +3895,7 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
     gchar key[24];
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), -1);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
+    g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
@@ -3944,7 +3944,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
     gchar key[32];
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), -1);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
+    g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
@@ -3971,10 +3971,10 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_app_data_browser_add_graph_model:
+ * gwy_app_data_browser_add_spectra:
  * @spectra: A spectra object to add.
  * @data: A data container to add @gmodel to.
- *        It can be %NULL to add the graph model to current data container.
+ *        It can be %NULL to add the spectra to current data container.
  * @showit: %TRUE to display it immediately, %FALSE to just add it.
  *
  * Adds a spectra object to a data container.
@@ -3995,7 +3995,7 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
     gchar key[32];
 
     g_return_val_if_fail(GWY_IS_SPECTRA(spectra), -1);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), -1);
+    g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
 
     browser = gwy_app_get_data_browser();
     if (data)
