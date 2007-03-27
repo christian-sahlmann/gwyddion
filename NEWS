@@ -1,23 +1,39 @@
-2.5.20070318
+2.5.20070327
 
 2.6 (0000-00-00)
 Application:
+- Infinite startup notification after remote file opening was fixed.
 - Translations updated: German, Italian.
 
 Libraries:
+- libprocess: New GwySpectra object representing single point spectra.
+- libgwyddion: New class of curve fitting presets: GwyFDCurvePreset.
+- libgwyddion: New math function to test whether a point is inside a polygon.
 - libgwydgets: 3D view shows value units in z labels (instead of lateral).
 - libgwyprocess: Bogus complex 2D FFT transform in the case of
   gwy_fft_simple() backend was fixed.
 - libgwyapp: Possible crash in Document history when a file is saved under a
   new name was fixed.
 - libgwydgets: gwy_data_view_export_pixbuf() honours realsquare setting.
+- libgwyapp: Data browser acquired a Spectra tab and its API some SPS related
+  functions.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
+- Spectro tool (new): Visualize and extract single point spectra.
+- Rougness tool (new): ISO roughness parameters evaluation.
 - Pixmap import: It is possible to set arbitrary units, the preview is bigger.
 - Pixmap export: Text size can be set independently, zoom can be specified by
   desired width and height, cases of wrong preview scaling were fixed.
+- Omicron: Imports single point spectra.
+- PSIA: It does not require libTIFF any more, crashes due to PSIA files not
+  being proper TIFF files were fixed.
 - Rawfile: Critical messages on Reset were fixed.
+- Gwyfile: It does not remap channel and graph ids upon load and save.
+- ASCII export: It has options to enforce dot as the decimal separator and to
+  add a comment header with some channel information.
+- Polynomial distortion: GtkEntry errors when instant update took too long
+  were fixed.
 - Point layer: Radius indicator scales properly when the layer is scaled.
 - Calibrate: The precision of scale spin buttons was increased.
 - Graph fit: Initial estimated curve label saying "noun|Estimate" was fixed.
