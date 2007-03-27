@@ -3,11 +3,6 @@
  *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
- *  Loosely based on jpkscan.c:
- *  Loader for JPK Image Scans.
- *  Copyright (C) 2005  JPK Instruments AG.
- *  Written by Sven Neumann <neumann@jpk.com>.
- *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -27,7 +22,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <tiffio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -36,6 +30,7 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
+#include "gwytiff.h"
 
 #define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
@@ -100,35 +95,20 @@ static gint          psia_detect           (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* psia_load             (const gchar *filename,
                                             GwyRunType mode,
                                             GError **error);
-static GwyContainer* psia_load_tiff        (TIFF *tiff,
+static GwyContainer* psia_load_tiff        (GwyTIFF *tiff,
                                             GError **error);
 static void          psia_free_image_header(PSIAImageHeader *header);
 static gchar*        psia_wchar_to_utf8    (const guchar **src,
                                             guint len);
-static gboolean      tiff_check_version    (gint macro,
-                                            gint micro,
-                                            GError **error);
-static gboolean      tiff_get_custom_uint  (TIFF *tiff,
-                                            ttag_t tag,
-                                            guint *value);
-static gboolean      tiff_get_custom_string(TIFF *tiff,
-                                            ttag_t tag,
-                                            const gchar **value);
-static void          tiff_ignore           (const gchar *module,
-                                            const gchar *format,
-                                            va_list args);
-static void          tiff_error            (const gchar *module,
-                                            const gchar *format,
-                                            va_list args);
 static GwyContainer* psia_get_metadata     (PSIAImageHeader *header);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports PSIA data files."),
-    "Sven Neumann <neumann@jpk.com>, Yeti <yeti@gwyddion.net>",
-    "0.2",
-    "JPK Instruments AG, David Nečas (Yeti) & Petr Klapetek",
+    "Yeti <yeti@gwyddion.net>",
+    "0.3",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
 
@@ -137,17 +117,6 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    GError *err = NULL;
-
-    /* Handling of custom tags was introduced with LibTIFF version 3.6.0 */
-    /* FIXME: Can we do better?  Module registration should be able to return
-     * GErrors too... */
-    if (!tiff_check_version(3, 6, &err)) {
-        g_warning("%s", err->message);
-        g_clear_error(&err);
-        return FALSE;
-    }
-
     gwy_file_func_register("psia",
                            N_("PSIA data files (.tiff)"),
                            (GwyFileDetectFunc)&psia_detect,
@@ -161,31 +130,25 @@ module_register(void)
 static gint
 psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
-    TIFFErrorHandler old_error, old_warning;
-    TIFF *tiff;
+    GwyTIFF *tiff;
     gint score = 0;
     guint magic = 0;
 
     if (only_name)
         return score;
 
+    /* Weed out non-TIFFs */
     if (fileinfo->buffer_len <= MAGIC_SIZE
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
-    old_warning = TIFFSetWarningHandler(tiff_ignore);
-    old_error = TIFFSetErrorHandler(tiff_ignore);
-
-    if ((tiff = TIFFOpen(fileinfo->name, "r"))
-        && tiff_get_custom_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
+    if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
+        && gwy_tiff_get_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         && magic == PSIA_MAGIC_NUMBER)
         score = 100;
 
     if (tiff)
-        TIFFClose(tiff);
-
-    TIFFSetErrorHandler(old_error);
-    TIFFSetErrorHandler(old_warning);
+        gwy_tiff_free(tiff);
 
     return score;
 }
@@ -195,33 +158,23 @@ psia_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
-    TIFFErrorHandler old_error, old_warning;
-    TIFF *tiff;
+    GwyTIFF *tiff;
     GwyContainer *container = NULL;
 
-    gwy_debug("Loading <%s>", filename);
-
-    old_warning = TIFFSetWarningHandler(tiff_ignore);
-    old_error = TIFFSetErrorHandler(tiff_error);
-
-    tiff = TIFFOpen(filename, "r");
+    tiff = gwy_tiff_load(filename, error);
     if (!tiff)
-        /* This can be I/O too, but it's hard to tell the difference. */
-        err_FILE_TYPE(error, "PSIA");
-    else {
-        container = psia_load_tiff(tiff, error);
-        TIFFClose(tiff);
-    }
+        return NULL;
 
-    TIFFSetErrorHandler(old_error);
-    TIFFSetErrorHandler(old_warning);
+    container = psia_load_tiff(tiff, error);
+    gwy_tiff_free(tiff);
 
     return container;
 }
 
 static GwyContainer*
-psia_load_tiff(TIFF *tiff, GError **error)
+psia_load_tiff(GwyTIFF *tiff, GError **error)
 {
+    const GwyTIFFEntry *entry;
     PSIAImageHeader header;
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
@@ -230,23 +183,43 @@ psia_load_tiff(TIFF *tiff, GError **error)
     guint magic, version, i, j;
     const guchar *p;
     const guint16 *data;
-    const gchar *comment = NULL;
+    gchar *comment = NULL;
     gint count, data_len, power10;
     gdouble q, z0;
     gdouble *d;
 
-    if (!tiff_get_custom_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
+    if (!gwy_tiff_get_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         || magic != PSIA_MAGIC_NUMBER
-        || !tiff_get_custom_uint(tiff, PSIA_TIFFTAG_Version, &version)
+        || !gwy_tiff_get_uint(tiff, PSIA_TIFFTAG_Version, &version)
         || version < 0x01000001) {
         err_FILE_TYPE(error, "PSIA");
         return NULL;
     }
 
-    if (!TIFFGetField(tiff, PSIA_TIFFTAG_Header, &count, &p)) {
+    /* Data */
+    entry = gwy_tiff_find_tag(tiff, PSIA_TIFFTAG_Data);
+    if (!entry) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Data tag is missing."));
+        return NULL;
+    }
+    p = entry->value;
+    data = (const guint16*)(tiff->data + tiff->getu32(&p));
+    data_len = entry->count;
+    /* FIXME: This is always a totally bogus value, although tiffdump(1) can
+     * print the right size. Why? */
+    gwy_debug("data_len: %d", data_len);
+
+    /* Header */
+    entry = gwy_tiff_find_tag(tiff, PSIA_TIFFTAG_Header);
+    if (!entry) {
         err_FILE_TYPE(error, "PSIA");
         return NULL;
     }
+    p = entry->value;
+    i = tiff->getu32(&p);
+    p = tiff->data + i;
+    count = entry->count;
     gwy_debug("[Header] count: %d", count);
 
     if (count < 356) {
@@ -256,6 +229,7 @@ psia_load_tiff(TIFF *tiff, GError **error)
         return NULL;
     }
 
+    /* Parse header */
     memset(&header, 0, sizeof(PSIAImageHeader));
     header.image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type: %d", header.image_type);
@@ -303,20 +277,7 @@ psia_load_tiff(TIFF *tiff, GError **error)
     header.data_avg = gwy_get_gint32_le(&p);
     header.compression = gwy_get_guint32_le(&p);
 
-    tiff_get_custom_string(tiff, PSIA_TIFFTAG_Comments, &comment);
-    if (comment) {
-        gwy_debug("comment: <%s>", comment);
-    }
-
-    if (!TIFFGetField(tiff, PSIA_TIFFTAG_Data, &data_len, &data)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Data tag is missing."));
-        psia_free_image_header(&header);
-        return NULL;
-    }
-    /* FIXME: This is always a totally bogus value, although tiffdump(1) can
-     * print the right size. Why? */
-    gwy_debug("data_len: %d", data_len);
+    gwy_tiff_get_string(tiff, PSIA_TIFFTAG_Comments, &comment);
 
     dfield = gwy_data_field_new(header.xres, header.yres,
                                 header.xreal, header.yreal,
@@ -357,9 +318,10 @@ psia_load_tiff(TIFF *tiff, GError **error)
     meta = psia_get_metadata(&header);
     if (comment && *comment) {
         /* FIXME: Charset conversion. But from what? */
-        gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
+        gwy_container_set_string_by_name(meta, "Comment", comment);
         comment = NULL;
     }
+    g_free(comment);
     gwy_container_set_string_by_name(meta, "Version",
                                      g_strdup_printf("%08x", version));
 
@@ -396,92 +358,6 @@ psia_wchar_to_utf8(const guchar **src,
     *src += 2*len;
 
     return s;
-}
-
-static gboolean
-tiff_check_version(gint required_macro, gint required_micro, GError **error)
-{
-    gchar *version = g_strdup(TIFFGetVersion());
-    gchar *ptr;
-    gboolean result = TRUE;
-    gint major;
-    gint minor;
-    gint micro;
-
-    ptr = strchr(version, '\n');
-    if (ptr)
-        *ptr = '\0';
-
-    ptr = version;
-    while (*ptr && !g_ascii_isdigit(*ptr))
-        ptr++;
-
-    if (sscanf(ptr, "%d.%d.%d", &major, &minor, &micro) != 3) {
-        g_warning("Cannot parse TIFF version, proceed with fingers crossed");
-    }
-    else if ((major < required_macro)
-             || (major == required_macro && minor < required_micro)) {
-        result = FALSE;
-
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_SPECIFIC,
-                    _("LibTIFF too old!\n\n"
-                      "You are using %s. Please update to "
-                      "libtiff version %d.%d or newer."), version,
-                    required_macro, required_micro);
-    }
-
-    g_free(version);
-
-    return result;
-}
-
-/*  reads what the TIFF spec calls LONG  */
-static gboolean
-tiff_get_custom_uint(TIFF *tiff, ttag_t tag, guint *value)
-{
-    guint32 *l;
-    gint count;
-
-    if (TIFFGetField(tiff, tag, &count, &l)) {
-        *value = *l;
-        return TRUE;
-    }
-    else {
-        *value = 0;
-        return FALSE;
-    }
-}
-
-static gboolean
-tiff_get_custom_string(TIFF *tiff, ttag_t tag, const gchar **value)
-{
-    const gchar *s;
-    gint count;
-
-    if (TIFFGetField(tiff, tag, &count, &s)) {
-        *value = s;
-        return TRUE;
-    }
-    else {
-        *value = NULL;
-        return FALSE;
-    }
-}
-
-static void
-tiff_ignore(const gchar *module G_GNUC_UNUSED,
-            const gchar *format G_GNUC_UNUSED,
-            va_list args G_GNUC_UNUSED)
-{
-    /*  ignore  */
-}
-
-/* TODO: pass the error message upstream, somehow */
-static void
-tiff_error(const gchar *module G_GNUC_UNUSED, const gchar *format, va_list args)
-{
-    g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, format, args);
 }
 
 static GwyContainer*

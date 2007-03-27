@@ -269,7 +269,7 @@ gwy_tiff_find_tag(const GwyTIFF *tiff,
     return NULL;
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 gwy_tiff_get_sint(const GwyTIFF *tiff,
                   guint tag,
                   gint *retval)
@@ -305,7 +305,7 @@ gwy_tiff_get_sint(const GwyTIFF *tiff,
     return TRUE;
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 gwy_tiff_get_uint(const GwyTIFF *tiff,
                   guint tag,
                   guint *retval)
@@ -339,7 +339,7 @@ gwy_tiff_get_uint(const GwyTIFF *tiff,
     return TRUE;
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 gwy_tiff_get_float(const GwyTIFF *tiff,
                    guint tag,
                    gdouble *retval)
@@ -372,7 +372,7 @@ gwy_tiff_get_float(const GwyTIFF *tiff,
     return TRUE;
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 gwy_tiff_get_string(const GwyTIFF *tiff,
                     guint tag,
                     gchar **retval)
