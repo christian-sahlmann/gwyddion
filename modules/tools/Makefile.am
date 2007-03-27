@@ -15,7 +15,7 @@ tools_LTLIBRARIES = \
 	polynom.la \
 	profile.la \
 	readvalue.la \
-        roughness.la \
+	roughness.la \
 	sfunctions.la \
 	spotremove.la \
 	spectro.la \
@@ -55,8 +55,8 @@ maskedit_la_SOURCES     = maskedit.c
 pathlevel_la_SOURCES    = pathlevel.c
 polynom_la_SOURCES      = polynom.c
 profile_la_SOURCES      = profile.c
-readvalue_la_sources    = readvalue.c
-roughness_la_sources    = roughness.c
+readvalue_la_SOURCES    = readvalue.c
+roughness_la_SOURCES    = roughness.c
 stats_la_SOURCES        = stats.c
 sfunctions_la_SOURCES   = sfunctions.c
 spectro_la_SOURCES      = spectro.c
