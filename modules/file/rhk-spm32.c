@@ -313,8 +313,7 @@ rhkspm32_read_header(RHKPage *rhkpage,
                (gint*)&rhkpage->type, (gint*)&rhkpage->data_type,
                &rhkpage->line_type,
                &rhkpage->xres, &rhkpage->yres, &rhkpage->size,
-               (gint*)&rhkpage->page_type) != 7
-        || rhkpage->xres <= 0 || rhkpage->yres <= 0) {
+               (gint*)&rhkpage->page_type) != 7) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Invalid file header."));
         return FALSE;
@@ -323,6 +322,9 @@ rhkspm32_read_header(RHKPage *rhkpage,
               rhkpage->type, rhkpage->data_type, rhkpage->line_type,
               rhkpage->page_type);
     gwy_debug("xres = %d, yres = %d", rhkpage->xres, rhkpage->yres);
+    if (err_DIMENSION(error, rhkpage->xres)
+        || err_DIMENSION(error, rhkpage->yres))
+        return FALSE;
 
     if (rhkpage->type != RHK_TYPE_IMAGE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -343,6 +345,15 @@ rhkspm32_read_header(RHKPage *rhkpage,
         || !rhkspm32_read_range(buffer + 0x80, "Z", &rhkpage->z)) {
         err_INVALID(error, _("data ranges"));
         return FALSE;
+    }
+    /* Use negated positive conditions to catch NaNs */
+    if (!((rhkpage->x.scale = fabs(rhkpage->x.scale)) > 0)) {
+        g_warning("Real x scale is 0.0, fixing to 1.0");
+        rhkpage->x.scale = 1.0;
+    }
+    if (!((rhkpage->y.scale = fabs(rhkpage->y.scale)) > 0)) {
+        g_warning("Real y scale is 0.0, fixing to 1.0");
+        rhkpage->y.scale = 1.0;
     }
 
     if (!g_str_has_prefix(buffer + 0xa0, "XY ")) {

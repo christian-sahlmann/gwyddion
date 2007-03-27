@@ -104,23 +104,6 @@ static GwyDataField* read_data_field    (const guchar *buffer,
                                          gint *type,
                                          GError **error);
 
-static const GwyEnum spmlab_channel_types[] = {
-    { "Height",       0,  },
-    { "Current",      1,  },
-    { "FFM",          2,  },
-    { "Spect",        3,  },
-    { "SpectV",       4,  },
-    { "ADC1",         5,  },
-    { "ADC2",         6,  },
-    { "TipV",         7,  },
-    { "DAC1",         8,  },
-    { "DAC2",         9,  },
-    { "ZPiezo",       10, },
-    { "Height error", 11, },
-    { "Linearized Z", 12, },
-    { "Feedback",     13, },
-};
-
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -235,9 +218,22 @@ spmlab_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    title = gwy_enum_to_string(type,
-                               spmlab_channel_types,
-                               G_N_ELEMENTS(spmlab_channel_types));
+    title = gwy_enuml_to_string(type,
+                               "Height", 0,
+                               "Current", 1,
+                               "FFM", 2,
+                               "Spect", 3,
+                               "SpectV", 4,
+                               "ADC1", 5,
+                               "ADC2", 6,
+                               "TipV", 7,
+                               "DAC1", 8,
+                               "DAC2", 9,
+                               "ZPiezo", 10,
+                               "Height error", 11,
+                               "Linearized Z", 12,
+                               "Feedback", 13,
+                               NULL);
     if (*title)
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup(title));
@@ -314,11 +310,21 @@ read_data_field(const guchar *buffer,
     p = buffer + *(offset++);
     xres = gwy_get_guint32_le(&p);
     yres = gwy_get_guint32_le(&p);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
     p = buffer + *(offset++);
     xreal = -getflt(&p);
     xreal += getflt(&p);
     yreal = -getflt(&p);
     yreal += getflt(&p);
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((yreal = fabs(yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
     p = buffer + *(offset++);
     q = getflt(&p);
     z0 = getflt(&p);

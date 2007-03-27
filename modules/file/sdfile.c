@@ -412,6 +412,9 @@ check_params(const SDFile *sdfile,
         err_DATA_TYPE(error, sdfile->data_type);
         return FALSE;
     }
+    if (err_DIMENSION(error, sdfile->xres)
+        || err_DIMENSION(error, sdfile->yres))
+        return FALSE;
     if (err_SIZE_MISMATCH(error, sdfile->expected_size, len, FALSE))
         return FALSE;
     if (sdfile->compression) {

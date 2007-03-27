@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports MicroProf FRT profilometer data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -166,35 +166,35 @@ microprof_load(const gchar *filename,
     g_free(header);
 
     if (!(s = g_hash_table_lookup(meta, "XSize"))
-        || (xres = atoi(s)) <= 0) {
+        || !((xres = atoi(s)) > 0)) {
         err_INVALID(error, "XSize");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     if (!(s = g_hash_table_lookup(meta, "YSize"))
-        || (yres = atoi(s)) <= 0) {
+        || !((yres = atoi(s)) > 0)) {
         err_INVALID(error, "YSize");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     if (!(s = g_hash_table_lookup(meta, "XRange"))
-        || (xreal = g_ascii_strtod(s, NULL)) <= 0) {
+        || !((xreal = g_ascii_strtod(s, NULL)) > 0.0)) {
         err_INVALID(error, "YRange");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     if (!(s = g_hash_table_lookup(meta, "YRange"))
-        || (yreal = g_ascii_strtod(s, NULL)) <= 0) {
+        || !((yreal = g_ascii_strtod(s, NULL)) > 0.0)) {
         err_INVALID(error, "YRange");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     if (!(s = g_hash_table_lookup(meta, "ZScale"))
-        || (zscale = g_ascii_strtod(s, NULL)) <= 0) {
+        || !((zscale = g_ascii_strtod(s, NULL)) > 0.0)) {
         err_INVALID(error, "ZScale");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;

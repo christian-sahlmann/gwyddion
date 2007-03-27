@@ -38,6 +38,8 @@
 /* The value of PSIA_TIFFTAG_MagicNumber */
 #define PSIA_MAGIC_NUMBER 0x0E031301
 
+#define Micrometre (1e-6)
+
 /* Custom TIFF tags */
 enum {
     PSIA_TIFFTAG_MagicNumber       = 50432,
@@ -247,17 +249,35 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     header.xres = gwy_get_guint32_le(&p);
     header.yres = gwy_get_guint32_le(&p);
     gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
+    if (err_DIMENSION(error, header.xres)
+        || err_DIMENSION(error, header.yres)) {
+        psia_free_image_header(&header);
+        return NULL;
+    }
+
     header.angle = gwy_get_gdouble_le(&p);
     header.sine_scan = gwy_get_guint32_le(&p);
     header.overscan_rate = gwy_get_gdouble_le(&p);
     header.forward = gwy_get_guint32_le(&p);
     header.scan_up = gwy_get_guint32_le(&p);
     header.swap_xy = gwy_get_guint32_le(&p);
-    header.xreal = gwy_get_gdouble_le(&p) * 1e-6;
-    header.yreal = gwy_get_gdouble_le(&p) * 1e-6;
+    header.xreal = gwy_get_gdouble_le(&p);
+    header.yreal = gwy_get_gdouble_le(&p);
     gwy_debug("xreal: %g, yreal: %g", header.xreal, header.yreal);
-    header.xoff = gwy_get_gdouble_le(&p) * 1e-6;
-    header.yoff = gwy_get_gdouble_le(&p) * 1e-6;
+    /* Use negated positive conditions to catch NaNs */
+    if (!((header.xreal = fabs(header.xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        header.xreal = 1.0;
+    }
+    if (!((header.yreal = fabs(header.yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        header.yreal = 1.0;
+    }
+    header.xreal *= Micrometre;
+    header.yreal *= Micrometre;
+
+    header.xoff = gwy_get_gdouble_le(&p) * Micrometre;
+    header.yoff = gwy_get_gdouble_le(&p) * Micrometre;
     gwy_debug("xoff: %g, yoff: %g", header.xoff, header.yoff);
     header.scan_rate = gwy_get_gdouble_le(&p);
     header.set_point = gwy_get_gdouble_le(&p);

@@ -221,43 +221,6 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
-static const GwyEnum page_types[] = {
-    { "Topographic",              RHK_PAGE_TOPOGAPHIC               },
-    { "Current",                  RHK_PAGE_CURRENT                  },
-    { "Aux",                      RHK_PAGE_AUX                      },
-    { "Force",                    RHK_PAGE_FORCE                    },
-    { "Signal",                   RHK_PAGE_SIGNAL                   },
-    { "FFT transform",            RHK_PAGE_FFT                      },
-    { "Noise power spectrum",     RHK_PAGE_NOISE_POWER_SPECTRUM     },
-    { "Line test",                RHK_PAGE_LINE_TEST                },
-    { "Oscilloscope",             RHK_PAGE_OSCILLOSCOPE             },
-    { "IV spectra",               RHK_PAGE_IV_SPECTRA               },
-    { "Image IV 4x4",             RHK_PAGE_IV_4x4                   },
-    { "Image IV 8x8",             RHK_PAGE_IV_8x8                   },
-    { "Image IV 16x16",           RHK_PAGE_IV_16x16                 },
-    { "Image IV 32x32",           RHK_PAGE_IV_32x32                 },
-    { "Image IV Center",          RHK_PAGE_IV_CENTER                },
-    { "Interactive spectra",      RHK_PAGE_INTERACTIVE_SPECTRA      },
-    { "Autocorrelation",          RHK_PAGE_AUTOCORRELATION          },
-    { "IZ spectra",               RHK_PAGE_IZ_SPECTRA               },
-    { "4 gain topography",        RHK_PAGE_4_GAIN_TOPOGRAPHY        },
-    { "8 gain topography",        RHK_PAGE_8_GAIN_TOPOGRAPHY        },
-    { "4 gain current",           RHK_PAGE_4_GAIN_CURRENT           },
-    { "8 gain current",           RHK_PAGE_8_GAIN_CURRENT           },
-    { "Image IV 64x64",           RHK_PAGE_IV_64x64                 },
-    { "Autocorrelation spectrum", RHK_PAGE_AUTOCORRELATION_SPECTRUM },
-    { "Counter data",             RHK_PAGE_COUNTER                  },
-    { "Multichannel analyser",    RHK_PAGE_MULTICHANNEL_ANALYSER    },
-    { "AFM using AFM-100",        RHK_PAGE_AFM_100                  },
-};
-
-static const GwyEnum page_sources[] = {
-    { "Raw",        RHK_SOURCE_RAW_PAGE,        },
-    { "Processed",  RHK_SOURCE_PROCESSED_PAGE,  },
-    { "Calculated", RHK_SOURCE_CALCULATED_PAGE, },
-    { "Imported",   RHK_SOURCE_IMPORTED_PAGE,   },
-};
-
 static const GwyEnum scan_directions[] = {
     { "Right", RHK_SCAN_RIGHT, },
     { "Left",  RHK_SCAN_LEFT,  },
@@ -365,7 +328,7 @@ rhk_sm3_read_page(const guchar **buffer,
     if (*len < page->param_size + 4) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("End of file reached in page header."));
-        goto FAIL;
+        goto fail;
     }
     /* TODO: Convert to UTF-8, store to meta */
     memcpy(page->version, p, MAGIC_TOTAL_SIZE);
@@ -383,6 +346,10 @@ rhk_sm3_read_page(const guchar **buffer,
     page->x_size = gwy_get_guint32_le(&p);
     page->y_size = gwy_get_guint32_le(&p);
     gwy_debug("x_size = %u, y_size = %u", page->x_size, page->y_size);
+    if (err_DIMENSION(error, page->x_size)
+        || err_DIMENSION(error, page->y_size))
+        goto fail;
+
     page->source_type = gwy_get_guint32_le(&p);
     page->image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type = %u", page->image_type);
@@ -400,6 +367,15 @@ rhk_sm3_read_page(const guchar **buffer,
     page->z_scale = gwy_get_gfloat_le(&p);
     gwy_debug("x,y,z_scale = %g %g %g",
               page->x_scale, page->y_scale, page->z_scale);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((page->x_scale = fabs(page->x_scale)) > 0)) {
+        g_warning("Real x scale is 0.0, fixing to 1.0");
+        page->x_scale = 1.0;
+    }
+    if (!((page->y_scale = fabs(page->y_scale)) > 0)) {
+        g_warning("Real y scale is 0.0, fixing to 1.0");
+        page->y_scale = 1.0;
+    }
     page->xy_scale = gwy_get_gfloat_le(&p);
     page->x_offset = gwy_get_gfloat_le(&p);
     page->y_offset = gwy_get_gfloat_le(&p);
@@ -424,7 +400,7 @@ rhk_sm3_read_page(const guchar **buffer,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("End of file reached in string #%u."), i);
-            goto FAIL;
+            goto fail;
         }
         if (i < RHK_STRING_NSTRINGS)
             page->strings[i] = s;
@@ -435,7 +411,7 @@ rhk_sm3_read_page(const guchar **buffer,
     expected = page->x_size * page->y_size * sizeof(gint32);
     gwy_debug("expecting %u bytes of page data now", expected);
     if (err_SIZE_MISMATCH(error, expected, *len - (p - *buffer), FALSE))
-        goto FAIL;
+        goto fail;
 
     if (page->type == RHK_TYPE_IMAGE)
         page->page_data = p;
@@ -448,7 +424,7 @@ rhk_sm3_read_page(const guchar **buffer,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("End of file reached in color data header."));
-            goto FAIL;
+            goto fail;
         }
         /* Info size includes itself */
         page->color_info.size = gwy_get_guint32_le(&p) - 2;
@@ -456,7 +432,7 @@ rhk_sm3_read_page(const guchar **buffer,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("End of file reached in color data."));
-            goto FAIL;
+            goto fail;
         }
 
         p += page->color_info.size;
@@ -466,7 +442,7 @@ rhk_sm3_read_page(const guchar **buffer,
     *buffer = p;
     return page;
 
-FAIL:
+fail:
     rhk_sm3_page_free(page);
     return NULL;
 }
@@ -630,8 +606,38 @@ rhk_sm3_get_metadata(RHKPage *rhkpage)
 
     meta = gwy_container_new();
 
-    s = gwy_enum_to_string(rhkpage->page_type,
-                           page_types, G_N_ELEMENTS(page_types));
+    s = gwy_enuml_to_string(rhkpage->page_type,
+                            "Topographic", RHK_PAGE_TOPOGAPHIC,
+                            "Current", RHK_PAGE_CURRENT,
+                            "Aux", RHK_PAGE_AUX,
+                            "Force", RHK_PAGE_FORCE,
+                            "Signal", RHK_PAGE_SIGNAL,
+                            "FFT transform", RHK_PAGE_FFT,
+                            "Noise power spectrum",
+                            RHK_PAGE_NOISE_POWER_SPECTRUM,
+                            "Line test", RHK_PAGE_LINE_TEST,
+                            "Oscilloscope", RHK_PAGE_OSCILLOSCOPE,
+                            "IV spectra", RHK_PAGE_IV_SPECTRA,
+                            "Image IV 4x4", RHK_PAGE_IV_4x4,
+                            "Image IV 8x8", RHK_PAGE_IV_8x8,
+                            "Image IV 16x16", RHK_PAGE_IV_16x16,
+                            "Image IV 32x32", RHK_PAGE_IV_32x32,
+                            "Image IV Center", RHK_PAGE_IV_CENTER,
+                            "Interactive spectra", RHK_PAGE_INTERACTIVE_SPECTRA,
+                            "Autocorrelation", RHK_PAGE_AUTOCORRELATION,
+                            "IZ spectra", RHK_PAGE_IZ_SPECTRA,
+                            "4 gain topography", RHK_PAGE_4_GAIN_TOPOGRAPHY,
+                            "8 gain topography", RHK_PAGE_8_GAIN_TOPOGRAPHY,
+                            "4 gain current", RHK_PAGE_4_GAIN_CURRENT,
+                            "8 gain current", RHK_PAGE_8_GAIN_CURRENT,
+                            "Image IV 64x64", RHK_PAGE_IV_64x64,
+                            "Autocorrelation spectrum",
+                            RHK_PAGE_AUTOCORRELATION_SPECTRUM,
+                            "Counter data", RHK_PAGE_COUNTER,
+                            "Multichannel analyser",
+                            RHK_PAGE_MULTICHANNEL_ANALYSER,
+                            "AFM using AFM-100", RHK_PAGE_AFM_100,
+                            NULL);
     if (s && *s)
         gwy_container_set_string_by_name(meta, "Type", g_strdup(s));
 
@@ -640,8 +646,12 @@ rhk_sm3_get_metadata(RHKPage *rhkpage)
     if (s && *s)
         gwy_container_set_string_by_name(meta, "Scan Direction", g_strdup(s));
 
-    s = gwy_enum_to_string(rhkpage->source_type,
-                           page_sources, G_N_ELEMENTS(page_sources));
+    s = gwy_enuml_to_string(rhkpage->source_type,
+                            "Raw", RHK_SOURCE_RAW_PAGE,
+                            "Processed", RHK_SOURCE_PROCESSED_PAGE,
+                            "Calculated", RHK_SOURCE_CALCULATED_PAGE,
+                            "Imported", RHK_SOURCE_IMPORTED_PAGE,
+                            NULL);
     if (s && *s)
         gwy_container_set_string_by_name(meta, "Source", g_strdup(s));
 
