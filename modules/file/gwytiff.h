@@ -222,7 +222,8 @@ gwy_tiff_data_fits(const GwyTIFF *tiff,
 }
 
 static gboolean
-gwy_tiff_tags_valid(const GwyTIFF *tiff)
+gwy_tiff_tags_valid(const GwyTIFF *tiff,
+                    GError **error)
 {
     const guchar *p;
     guint i, offset, item_size;
@@ -238,8 +239,12 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff)
          * read it by definition, so let the hell take what it refers to. */
         if (item_size
             && entry->count > 4/item_size
-            && !gwy_tiff_data_fits(tiff, offset, item_size, entry->count))
+            && !gwy_tiff_data_fits(tiff, offset, item_size, entry->count)) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Invalid tag data positions were found."));
             return FALSE;
+        }
     }
 
     return TRUE;
@@ -403,7 +408,8 @@ gwy_tiff_load(const gchar *filename,
     GwyTIFF *tiff;
 
     tiff = g_new0(GwyTIFF, 1);
-    if (gwy_tiff_load_real(tiff, filename, error))
+    if (gwy_tiff_load_real(tiff, filename, error)
+        && gwy_tiff_tags_valid(tiff, error))
         return tiff;
 
     gwy_tiff_free(tiff);

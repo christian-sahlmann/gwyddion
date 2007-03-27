@@ -176,12 +176,6 @@ isdf_load(const gchar *filename,
         return NULL;
 
     memset(&image, 0, sizeof(ISDFImage));
-    if (!gwy_tiff_tags_valid(tiff)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Invalid tag data positions were found."));
-        goto fail;
-    }
-
     if (!gwy_tiff_get_sint(tiff, ISDF_TIFFTAG_FILEID, &magic)
         || magic != ISDF_MAGIC_NUMBER) {
         err_FILE_TYPE(error, "Intematix SDF");
