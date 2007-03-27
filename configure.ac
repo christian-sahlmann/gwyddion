@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[5])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070313])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070327])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -568,7 +568,7 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF (including JPK, PSIA):         $enable_tiff$TIFF_WARN"
+echo "  TIFF (including JPK):               $enable_tiff$TIFF_WARN"
 echo "  SMPL:                               $enable_spml$SPML_WARN"
 echo "  FFTW3:                              $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                  $enable_gl$GL_WARN"
