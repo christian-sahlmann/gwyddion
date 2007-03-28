@@ -351,6 +351,12 @@ surffile_load(const gchar *filename,
     gwy_debug("private zone size: %d, comment size %d",
               surffile.private_size, surffile.comment_size);
 
+    if (err_DIMENSION(error, surffile.xres)
+        || err_DIMENSION(error, surffile.yres)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
     expected_size = (SURF_HEADER_SIZE
                      + surffile.pointsize/8*surffile.xres*surffile.yres);
     if (expected_size != size) {
@@ -362,6 +368,16 @@ surffile_load(const gchar *filename,
           gwy_file_abandon_contents(buffer, size, NULL);
           return NULL;
         }
+    }
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((surffile.dx = fabs(surffile.dx)) > 0)) {
+        g_warning("Real x step is 0.0, fixing to 1.0");
+        surffile.dx = 1.0;
+    }
+    if (!((surffile.dy = fabs(surffile.dy)) > 0)) {
+        g_warning("Real y step is 0.0, fixing to 1.0");
+        surffile.dy = 1.0;
     }
 
     p = buffer + SURF_HEADER_SIZE + add;

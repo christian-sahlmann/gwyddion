@@ -299,6 +299,9 @@ unisoku_read_header(gchar *buffer,
         return FALSE;
     }
 
+    if (err_DIMENSION(error, ufile->xres) || err_DIMENSION(error, ufile->yres))
+        return FALSE;
+
     NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "ii", &type1, &type2) != 2) {
         /* FIXME */
@@ -330,6 +333,18 @@ unisoku_read_header(gchar *buffer,
                        &ufile->ineq_flag, &ufile->log_flag_y) != 4) {
         err_INVALID(error, _("y scale parameters"));
         return FALSE;
+    }
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!(ufile->end_x - ufile->start_x > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        ufile->start_x = 0.0;
+        ufile->end_x = 1.0;
+    }
+    if (!(ufile->end_y - ufile->start_y > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        ufile->start_y = 0.0;
+        ufile->end_y = 1.0;
     }
 
     NEXT(buffer, line, error);

@@ -33,6 +33,7 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -578,7 +579,7 @@ extract_data(SISFile *sisfile,
     SISImage *image;
     gdouble xreal, yreal, zreal;
     gdouble *d;
-    guint i;
+    guint n, i;
 
     channel = sisfile->channels + ch;
     image = channel->images + im;
@@ -595,38 +596,51 @@ extract_data(SISFile *sisfile,
         yreal = *d * 1e-9;
     if ((d = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(4))))
         zreal = *d * 1e-9;
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 100.0e-9;
+    }
+    if (!((yreal = fabs(yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 100.0e-9;
+    }
+
     dfield = gwy_data_field_new(image->width, image->height,
                                 xreal, yreal,
                                 FALSE);
 
     d = gwy_data_field_get_data(dfield);
+    n = image->width * image->height;
     switch (image->bpp) {
         case 1:
-        for (i = 0; i < image->width*image->height; i++)
-            d[i] = image->image_data[i]/255.0;
+        for (i = 0; i < n; i++)
+            d[i] = image->image_data[i]*zreal/255.0;
         break;
 
         case 2:
-        for (i = 0; i < image->width*image->height; i++)
-            d[i] = (image->image_data[2*i]
-                    + 256.0*image->image_data[2*i + 1])/65535.0;
+        {
+            const guint16 *d16 = (const guint16*)image->image_data;
+
+            for (i = 0; i < n; i++)
+                d[i] = GUINT16_FROM_LE(d16[i])*zreal/65535.0;
+        }
         break;
 
         case 4:
-        for (i = 0; i < image->width*image->height; i++)
-            d[i] = (image->image_data[4*i]
-                    + 256.0*(image->image_data[4*i + 1]
-                             + 256.0*(image->image_data[4*i + 2]
-                                      + 256.0*image->image_data[4*i + 3])))
-                    /4294967296.0;
+        {
+            const guint32 *d32 = (const guint32*)image->image_data;
+
+            for (i = 0; i < n; i++)
+                d[i] = GUINT32_FROM_LE(d32[i])*zreal/4294967296.0;
+        }
         break;
 
         default:
         g_assert_not_reached();
         break;
     }
-    for (i = 0; i < image->width*image->height; i++)
-        d[i] *= zreal;
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
@@ -996,6 +1010,10 @@ sis_real_load(const guchar *buffer,
                 p += procstep > -1 ? processing_steps[procstep].data_size : 0;
             }
             else {
+                if (err_DIMENSION(error, image->width)
+                    || err_DIMENSION(error, image->height))
+                    return FALSE;
+
                 len = image->width * image->height * image->bpp;
                 gwy_debug("assuming data of size %u", len);
                 if (size - (p - buffer) < len) {
