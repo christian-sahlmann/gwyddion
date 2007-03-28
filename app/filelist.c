@@ -176,13 +176,13 @@ static void  gwy_app_recent_file_create_dirs          (void);
 static GwyRecentFile* gwy_app_recent_file_new         (gchar *filename_utf8,
                                                        gchar *filename_sys);
 static gboolean gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf);
-static void     gwy_recent_file_update_thumbnail      (GwyRecentFile *rf,
-                                                       GwyContainer *data,
-                                                       gint hint,
-                                                       GdkPixbuf *use_this_pixbuf);
-static void     gwy_app_recent_file_free              (GwyRecentFile *rf);
-static gchar* gwy_recent_file_thumbnail_name          (const gchar *uri);
-static const gchar* gwy_recent_file_thumbnail_dir     (void);
+static void     gwy_recent_file_update_thumbnail   (GwyRecentFile *rf,
+                                                    GwyContainer *data,
+                                                    gint hint,
+                                                    GdkPixbuf *use_this_pixbuf);
+static void     gwy_app_recent_file_free           (GwyRecentFile *rf);
+static gchar* gwy_recent_file_thumbnail_name       (const gchar *uri);
+static const gchar* gwy_recent_file_thumbnail_dir  (void);
 
 static guint remember_recent_files = 512;
 
@@ -888,8 +888,6 @@ gwy_app_recent_file_list_update(GwyContainer *data,
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
 
-        /* FIXME: Too crude, must update only when the file has changed.
-         * Add a recheck function? */
         if (data)
             gwy_recent_file_update_thumbnail(rf, data, hint, NULL);
     }
@@ -1240,7 +1238,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     g_return_if_fail(GWY_CONTAINER(data));
 
     if (use_this_pixbuf) {
-        /* If we are given a pixbuf, hint must be the ultimate channel id */
+        /* If we are given a pixbuf, hint must be the ultimate channel id.
+         * We also ignore the thnumbnail state then. */
         g_return_if_fail(GDK_IS_PIXBUF(use_this_pixbuf));
         id = hint;
         pixbuf = g_object_ref(use_this_pixbuf);
@@ -1248,6 +1247,9 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     else {
         pixbuf = NULL;
         id = gwy_recent_file_find_some_channel(data, hint);
+
+        if (rf->file_state == FILE_STATE_UNKNOWN)
+            gwy_app_recent_file_try_load_thumbnail(rf);
     }
 
     /* Find channel with the lowest id not smaller than hint */
@@ -1263,7 +1265,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
     }
 
-    if (rf->file_mtime == (gulong)st.st_mtime)
+    if ((gulong)rf->file_mtime == (gulong)st.st_mtime)
         return;
 
     quark = gwy_app_get_data_key_for_id(id);
