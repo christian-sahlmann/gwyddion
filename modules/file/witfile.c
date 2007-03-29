@@ -324,6 +324,9 @@ witec_read_file(const guchar *buffer,
     witec_read_header(&p, &len, &witfile->header);
     xres = witfile->header.pixels;
     yres = witfile->header.rows;
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return FALSE;
+
     ndata = witfile->header.channels;
     if (err_SIZE_MISMATCH(error,
                           ndata*(2*xres*yres + WITEC_SIZE_SCALE)
@@ -525,6 +528,16 @@ witec_read_footer(const guchar **p,
     /* The len argument is a fake here, data size was already checked */
     witec_read_scale(p, len, &footer->xscale);
     witec_read_scale(p, len, &footer->yscale);
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((footer->xscale.scale = fabs(footer->xscale.scale)) > 0)) {
+        g_warning("Real x scale is 0.0, fixing to 1.0");
+        footer->xscale.scale = 1.0;
+    }
+    if (!((footer->yscale.scale = fabs(footer->yscale.scale)) > 0)) {
+        g_warning("Real y scale is 0.0, fixing to 1.0");
+        footer->yscale.scale = 1.0;
+    }
 
     *len -= WITEC_SIZE_FOOTER - 2*WITEC_SIZE_SCALE;
     return TRUE;

@@ -167,7 +167,7 @@ stpfile_load(const gchar *filename,
     guint header_size;
     gchar *p;
     gboolean ok;
-    guint i = 0, pos;
+    guint i = 0, pos, expected;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -186,7 +186,23 @@ stpfile_load(const gchar *filename,
     ok = file_read_header(stpfile, p);
     g_free(p);
 
-    /* TODO: check size */
+    if (ok) {
+        expected = header_size;
+        for (i = 0; i < stpfile->n; i++) {
+            if (err_DIMENSION(error, stpfile->buffers[i].xres)
+                || err_DIMENSION(error, stpfile->buffers[i].xres)) {
+                ok = FALSE;
+                break;
+            }
+            expected += 2*stpfile->buffers[i].xres * stpfile->buffers[i].yres;
+        }
+    }
+    if (!ok || err_SIZE_MISMATCH(error, expected, size, FALSE)) {
+        gwy_file_abandon_contents(buffer, size, &err);
+        g_free(stpfile);
+        return NULL;
+    }
+
     if (ok) {
         pos = header_size;
         for (i = 0; i < stpfile->n; i++) {
