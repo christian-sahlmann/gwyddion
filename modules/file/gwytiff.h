@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: intematix.c 7756 2007-03-25 08:10:20Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2007 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
@@ -81,7 +81,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
 {
     GError *err = NULL;
     const guchar *p;
-    guint magic, offset, ifdno;
+    guint magic, offset, ifdno, total, nentries;
 
     if (!gwy_file_get_contents(filename, &tiff->data, &tiff->size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -120,13 +120,12 @@ gwy_tiff_load_real(GwyTIFF *tiff,
         break;
     }
 
+    /* Validate and count tags */
+    p = tiff->data + 4;
     offset = tiff->getu32(&p);
-    tiff->tags = g_array_new(FALSE, FALSE, sizeof(GwyTIFFEntry));
     ifdno = 0;
+    total = 0;
     do {
-        GwyTIFFEntry entry;
-        guint nentries, i;
-
         if (offset + 2 + 4 > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
@@ -142,6 +141,22 @@ gwy_tiff_load_real(GwyTIFF *tiff,
                         "TIFF directory %u ended unexpectedly.", ifdno);
             return FALSE;
         }
+        total += nentries;
+        p += 12*nentries;
+        offset = tiff->getu32(&p);
+        ifdno++;
+    } while (offset);
+
+    /* Read the tags */
+    p = tiff->data + 4;
+    offset = tiff->getu32(&p);
+    tiff->tags = g_array_sized_new(FALSE, FALSE, sizeof(GwyTIFFEntry), total);
+    do {
+        GwyTIFFEntry entry;
+        guint i;
+
+        p = tiff->data + offset;
+        nentries = tiff->getu16(&p);
         for (i = 0; i < nentries; i++) {
             entry.tag = tiff->getu16(&p);
             entry.type = tiff->getu16(&p);
@@ -236,7 +251,9 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
         offset = tiff->getu32(&p);
         item_size = gwy_tiff_data_type_size(entry->type);
         /* Uknown types are implicitly OK.  If we cannot read it we never
-         * read it by definition, so let the hell take what it refers to. */
+         * read it by definition, so let the hell take what it refers to.
+         * This also means readers of custom types have to check the size
+         * themselves. */
         if (item_size
             && entry->count > 4/item_size
             && !gwy_tiff_data_fits(tiff, offset, item_size, entry->count)) {
@@ -250,21 +267,47 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
     return TRUE;
 }
 
+static gint
+gwy_tiff_tag_compare(gconstpointer a, gconstpointer b)
+{
+    const GwyTIFFEntry *ta = (const GwyTIFFEntry*)a;
+    const GwyTIFFEntry *tb = (const GwyTIFFEntry*)b;
+
+    if (ta->tag < tb->tag)
+        return -1;
+    if (ta->tag > tb->tag)
+        return 1;
+    return 0;
+}
+
 static const GwyTIFFEntry*
 gwy_tiff_find_tag(const GwyTIFF *tiff,
                   guint tag)
 {
-    guint i;
+    const GwyTIFFEntry *entry;
+    guint lo, hi, m;
 
     if (!tiff->tags)
         return NULL;
 
-    for (i = 0; i < tiff->tags->len; i++) {
-        const GwyTIFFEntry *entry = &g_array_index(tiff->tags, GwyTIFFEntry, i);
-
-        if (entry->tag == tag)
-            return entry;
+    lo = 0;
+    hi = tiff->tags->len-1;
+    while (hi - lo > 1) {
+        m = (lo + hi)/2;
+        entry = &g_array_index(tiff->tags, GwyTIFFEntry, m);
+        if (entry->tag > tag)
+            hi = m;
+        else
+            lo = m;
     }
+
+    entry = &g_array_index(tiff->tags, GwyTIFFEntry, lo);
+    if (entry->tag == tag)
+        return entry;
+
+    entry = &g_array_index(tiff->tags, GwyTIFFEntry, hi);
+    if (entry->tag == tag)
+        return entry;
 
     return NULL;
 }
@@ -409,8 +452,10 @@ gwy_tiff_load(const gchar *filename,
 
     tiff = g_new0(GwyTIFF, 1);
     if (gwy_tiff_load_real(tiff, filename, error)
-        && gwy_tiff_tags_valid(tiff, error))
+        && gwy_tiff_tags_valid(tiff, error)) {
+        g_array_sort(tiff->tags, gwy_tiff_tag_compare);
         return tiff;
+    }
 
     gwy_tiff_free(tiff);
     return NULL;
