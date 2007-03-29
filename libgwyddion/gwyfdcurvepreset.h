@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: gwynlfitpreset.h 7536 2007-02-18 11:16:19Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
