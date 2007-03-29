@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: spectro.c 6785 2006-10-15 22:20:49Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2003-2006 Owain Davies, David Necas (Yeti), Petr Klapetek.
  *  E-mail: owain.davies@blueyonder.co.uk, yeti@gwyddion.net,
  *          klapetek@gwyddion.net.

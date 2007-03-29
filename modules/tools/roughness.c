@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: roughness.c,v 1.0 2006/03/10 11:33:39 hason $
+ *  @(#) $Id$
  *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
