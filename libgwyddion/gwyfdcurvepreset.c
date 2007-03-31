@@ -485,68 +485,68 @@ hsphhertz_guess(gint n_dat,
 
 /*xc, R, H, gamma*/
 static const GwyNLFitParam argento_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
     { "gamma", 1, 0, },
 };
 
 /*xc, R, H, gamma, h1, L*/
 static const GwyNLFitParam parzanette_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
     { "gamma", 1, 0, },
     { "h1", 1, 0, },
     { "L", 1, 0, },
 };
 
 static const GwyNLFitParam sszanette_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
 };
 
 
 static const GwyNLFitParam pyrzanette_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
     { "gamma", 1, 0, },
 };
 
 static const GwyNLFitParam tpyrzanette_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
     { "gamma", 1, 0, },
     { "L", 1, 0, },
 };
 
 static const GwyNLFitParam sphcapella_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
 };
 
 static const GwyNLFitParam sphtiptap_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
 };
 
 static const GwyNLFitParam sphxu_params[] = {
-    { "xc", 0, 1, },
+    { "xc", 1, 0, },
     { "yc", 0, 1, },
     { "R", 1, 0, },
-    { "H", 1, 0, },
+    { "H", 1, 1, },
     { "sigma", 1, 0, },
 };
 
