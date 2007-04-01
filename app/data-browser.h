@@ -80,6 +80,7 @@ void   gwy_app_data_browser_set_keep_invisible(GwyContainer *data,
 gboolean gwy_app_data_browser_get_keep_invisible(GwyContainer *data);
 void   gwy_app_data_browser_select_data_view(GwyDataView *data_view);
 void   gwy_app_data_browser_select_graph    (GwyGraph *graph);
+void   gwy_app_data_browser_select_spectra  (GwySpectra *spectra);
 gint   gwy_app_data_browser_add_data_field  (GwyDataField *dfield,
                                              GwyContainer *data,
                                              gboolean showit);

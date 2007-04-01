@@ -318,6 +318,31 @@ gwy_tool_data_switched(GwyTool *tool,
 }
 
 /**
+ * gwy_tool_spectra_switched:
+ * @tool: A tool.
+ * @data_view: A spectra object.  It can be %NULL, too.
+ *
+ * Instructs a tool to switch to another spectra object.
+ *
+ * Bad things may happen when the spectra does not belong to the same container
+ * as the currently active channel.
+ *
+ * Since: 2.6
+ **/
+void
+gwy_tool_spectra_switched(GwyTool *tool,
+                          GwySpectra *spectra)
+{
+    GwyToolClass *klass;
+
+    g_return_if_fail(GWY_IS_TOOL(tool));
+    klass = GWY_TOOL_GET_CLASS(tool);
+    gwy_debug("%s", klass->title);
+    if (klass->spectra_switched)
+        klass->spectra_switched(tool, spectra);
+}
+
+/**
  * gwy_tool_class_get_title:
  * @klass: A tool class.
  *

@@ -22,6 +22,7 @@
 #define __GWY_TOOL_H__
 
 #include <libgwydgets/gwydataview.h>
+#include <libprocess/spectra.h>
 
 G_BEGIN_DECLS
 
@@ -70,7 +71,8 @@ struct _GwyToolClass {
     void (*response)(GwyTool *tool,
                      gint response_id);
 
-    void (*reserved1)(void);
+    void (*spectra_switched)(GwyTool *tool,
+                             GwySpectra *spectra);
     void (*reserved2)(void);
     void (*reserved3)(void);
     void (*reserved4)(void);
@@ -85,6 +87,8 @@ void         gwy_tool_hide              (GwyTool *tool);
 gboolean     gwy_tool_is_visible        (GwyTool *tool);
 void         gwy_tool_data_switched     (GwyTool *tool,
                                          GwyDataView *data_view);
+void         gwy_tool_spectra_switched  (GwyTool *tool,
+                                         GwySpectra *spectra);
 
 const gchar* gwy_tool_class_get_title   (GwyToolClass *klass);
 const gchar* gwy_tool_class_get_stock_id(GwyToolClass *klass);

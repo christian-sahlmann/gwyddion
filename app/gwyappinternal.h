@@ -50,6 +50,8 @@ G_GNUC_INTERNAL
 void     _gwy_app_data_view_set_current       (GwyDataView *data_view);
 G_GNUC_INTERNAL
 void     _gwy_app_graph_set_current           (GwyGraph *graph);
+G_GNUC_INTERNAL
+void     _gwy_app_spectra_set_current         (GwySpectra *spectra);
 
 G_GNUC_INTERNAL
 GwySensitivityGroup* _gwy_app_sensitivity_get_group(void);

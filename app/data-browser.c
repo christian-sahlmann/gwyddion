@@ -694,12 +694,10 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
 
 /**
  * gwy_app_data_proxy_spectra_changed:
- * @spectra: The data field representing a spectra.
+ * @spectra: The spectra object.
  * @proxy: Data proxy.
  *
  * Updates spectra display in the data browser when spectra data change.
- *
- * (Currently does not do anything.)
  **/
 static void
 gwy_app_data_proxy_spectra_changed(GwySpectra *spectra,
@@ -3576,6 +3574,49 @@ gwy_app_data_browser_select_graph2(GwyGraph *graph)
 {
     gwy_app_data_browser_select_graph(graph);
     return FALSE;
+}
+
+/**
+ * gwy_app_data_browser_select_spectra:
+ * @spectra: A spectra object.
+ *
+ * Switches application data browser to display container of @spectra's data
+ * and selects @spectra's data in the graph list.
+ *
+ * However, it is not actually supposed to work with spectra from a different
+ * container than those of the currently active channel, so do not try that
+ * for now.
+ *
+ * Since: 2.6
+ **/
+void
+gwy_app_data_browser_select_spectra(GwySpectra *spectra)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GwyContainer *data;
+    const gchar *strkey;
+    GwyAppKeyType type;
+    GQuark quark;
+    gint i;
+
+    data = g_object_get_qdata(G_OBJECT(spectra), container_quark);
+    g_return_if_fail(data);
+    gwy_app_data_browser_switch_data(data);
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
+    g_return_if_fail(proxy);
+
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(spectra),
+                                                own_key_quark));
+    strkey = g_quark_to_string(quark);
+    i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
+    proxy->lists[PAGE_SPECTRA].active = i;
+
+    gwy_app_data_browser_select_object(browser, proxy, PAGE_SPECTRA);
+    _gwy_app_spectra_set_current(spectra);
 }
 
 static GwyAppDataProxy*
