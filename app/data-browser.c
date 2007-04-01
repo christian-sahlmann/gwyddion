@@ -4479,7 +4479,7 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
  *
  * The container must be known to the data browser.
  *
- * Returns: A newly allocated array with channels ids, -1 terminated.
+ * Returns: A newly allocated array with channel ids, -1 terminated.
  **/
 gint*
 gwy_app_data_browser_get_data_ids(GwyContainer *data)
@@ -4501,6 +4501,24 @@ gint*
 gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 {
     return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS);
+}
+
+/**
+ * gwy_app_data_browser_get_spectra_ids:
+ * @data: A data container.
+ *
+ * Gets the list of all spectra in a data container.
+ *
+ * The container must be known to the data browser.
+ *
+ * Returns: A newly allocated array with spectrum ids, -1 terminated.
+ *
+ * Since: 2.6
+ **/
+gint*
+gwy_app_data_browser_get_spectra_ids(GwyContainer *data)
+{
+    return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA);
 }
 
 /**
