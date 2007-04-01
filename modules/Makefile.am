@@ -49,12 +49,12 @@ AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
 if MODULE_DEPENDENCIES
 module_libadd = \
-	$(top_builddir)/app/libgwyapp2.la		\
-	$(top_builddir)/libdraw/libgwydraw2.la		\
-	$(top_builddir)/libgwyddion/libgwyddion2.la	\
-	$(top_builddir)/libgwydgets/libgwydgets2.la	\
-	$(top_builddir)/libgwymodule/libgwymodule2.la	\
-	$(top_builddir)/libprocess/libgwyprocess2.la	\
+	$(top_builddir)/app/libgwyapp2.la \
+	$(top_builddir)/libdraw/libgwydraw2.la \
+	$(top_builddir)/libgwyddion/libgwyddion2.la \
+	$(top_builddir)/libgwydgets/libgwydgets2.la \
+	$(top_builddir)/libgwymodule/libgwymodule2.la \
+	$(top_builddir)/libprocess/libgwyprocess2.la \
 	@GTK_LIBS@
 endif
 
@@ -73,9 +73,12 @@ pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS)
 pygwy.defs: $(PYGWY_H_FILES)
 	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) >pygwy.defs
 
+# The sed fixes pygwy_add_constants() and pygwy_register_classes() to static
+# functions.
 pygwywrap.c: pygwy-codegen.py pygwy.defs pygwy.override
 	$(PYTHON) ./pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
-	  --override pygwy.override --prefix pygwy pygwy.defs >pygwywrap.c
+	  --override pygwy.override --prefix pygwy pygwy.defs \
+	  | sed -e 's/^void$$/static void/' >pygwywrap.c
 endif
 
 MAINTAINERCLEANFILES = makefile.msc
