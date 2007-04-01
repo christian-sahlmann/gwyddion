@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 Owain Davies, David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 Owain Davies, David Necas (Yeti), Petr Klapetek.
  *  E-mail: owain.davies@blueyonder.co.uk, yeti@gwyddion.net,
  *          klapetek@gwyddion.net.
  *
@@ -19,7 +19,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 #define DEBUG
-
 
 #include "config.h"
 #include <string.h>
@@ -59,7 +58,6 @@ typedef struct _GwyToolSpectroClass GwyToolSpectroClass;
 
 typedef struct {
     gboolean options_visible;
-    gint thickness;
     gint resolution;
     gboolean fixres;
     GwyInterpolationType interpolation;
@@ -80,7 +78,6 @@ struct _GwyToolSpectro {
     GwySpectra *spectra;
 
     GtkWidget *options;
-    GtkObject *thickness;
     GtkObject *resolution;
     GtkWidget *fixres;
     GtkWidget *interpolation;
@@ -126,8 +123,6 @@ static void   gwy_tool_spectro_render_cell          (GtkCellLayout *layout,
 static void   gwy_tool_spectro_options_expanded     (GtkExpander *expander,
                                                      GParamSpec *pspec,
                                                      GwyToolSpectro *tool);
-static void   gwy_tool_spectro_thickness_changed    (GwyToolSpectro *tool,
-                                                     GtkAdjustment *adj);
 static void   gwy_tool_spectro_resolution_changed   (GwyToolSpectro *tool,
                                                      GtkAdjustment *adj);
 static void   gwy_tool_spectro_fixres_changed       (GtkToggleButton *check,
@@ -153,11 +148,9 @@ static const gchar interpolation_key[]   = "/module/spectro/interpolation";
 static const gchar options_visible_key[] = "/module/spectro/options_visible";
 static const gchar resolution_key[]      = "/module/spectro/resolution";
 static const gchar separate_key[]        = "/module/spectro/separate";
-static const gchar thickness_key[]       = "/module/spectro/thickness";
 
 static const ToolArgs default_args = {
     FALSE,
-    1,
     120,
     FALSE,
     GWY_INTERPOLATION_BILINEAR,
@@ -187,7 +180,7 @@ gwy_tool_spectro_class_init(GwyToolSpectroClass *klass)
 
     tool_class->stock_id = GWY_STOCK_SPECTRUM;
     tool_class->title = _("Point Spectroscopy");
-    tool_class->tooltip = _("Extract and View Point Spectroscopy Data.");
+    tool_class->tooltip = _("Extract and view point spectroscopy data");
     tool_class->prefix = "/module/spectro";
     tool_class->default_width = 640;
     tool_class->default_height = 400;
@@ -212,8 +205,6 @@ gwy_tool_spectro_finalize(GObject *object)
     tool->args = default_args;
     gwy_container_set_boolean_by_name(settings, options_visible_key,
                                       tool->args.options_visible);
-    gwy_container_set_int32_by_name(settings, thickness_key,
-                                    tool->args.thickness);
     gwy_container_set_int32_by_name(settings, resolution_key,
                                     tool->args.resolution);
     gwy_container_set_boolean_by_name(settings, fixres_key,
@@ -263,8 +254,6 @@ gwy_tool_spectro_init(GwyToolSpectro *tool)
     tool->args = default_args;
     gwy_container_gis_boolean_by_name(settings, options_visible_key,
                                       &tool->args.options_visible);
-    gwy_container_gis_int32_by_name(settings, thickness_key,
-                                    &tool->args.thickness);
     gwy_container_gis_int32_by_name(settings, resolution_key,
                                     &tool->args.resolution);
     gwy_container_gis_boolean_by_name(settings, fixres_key,
@@ -366,15 +355,6 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(tool->options), GTK_WIDGET(table));
     row = 0;
-
-    tool->thickness = gtk_adjustment_new(tool->args.thickness,
-                                         1, MAX_THICKNESS, 1, 10, 0);
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), NULL,
-                            tool->thickness, GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(tool->thickness, "value-changed",
-                             G_CALLBACK(gwy_tool_spectro_thickness_changed),
-                             tool);
-    row++;
 
     tool->resolution = gtk_adjustment_new(tool->args.resolution,
                                           MIN_RESOLUTION, MAX_RESOLUTION,
@@ -822,14 +802,6 @@ gwy_tool_spectro_options_expanded(GtkExpander *expander,
                                   GwyToolSpectro *tool)
 {
     tool->args.options_visible = gtk_expander_get_expanded(expander);
-}
-
-static void
-gwy_tool_spectro_thickness_changed(GwyToolSpectro *tool,
-                                   GtkAdjustment *adj)
-{
-    tool->args.thickness = gwy_adjustment_get_int(adj);
-    gwy_tool_spectro_update_all_curves(tool);
 }
 
 static void
