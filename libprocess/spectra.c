@@ -372,7 +372,7 @@ gwy_spectra_deserialize(const guchar *buffer,
         }
     }
 
-    if (ncurves != ncoords) {
+    if (2*ncurves != ncoords) {
         g_critical("Serialized coordinate and data sizes differ");
         for (i = 0; i < ncurves; i++)
             gwy_object_unref(curves[i]);
