@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.5.1",
+    "2.5.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -503,7 +503,6 @@ static void
 gwy_tool_profile_update_curve(GwyToolProfile *tool,
                               gint i)
 {
-    const GwyRGBA *rgba;
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel;
     gdouble line[4];
@@ -541,11 +540,10 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     else {
         gcmodel = gwy_graph_curve_model_new();
         desc = g_strdup_printf(_("Profile %d"), i+1);
-        rgba = gwy_graph_get_preset_color(i);
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "description", desc,
-                     "color", rgba,
+                     "color", gwy_graph_get_preset_color(i),
                      NULL);
         g_free(desc);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
