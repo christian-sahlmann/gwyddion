@@ -54,6 +54,7 @@ typedef struct {
     gdouble x;
     gdouble y;
     GwyDataLine *ydata;
+    gboolean selected;
 } GwySpectrum;
 
 static void        gwy_spectra_finalize         (GObject *object);
@@ -244,6 +245,38 @@ gwy_spectra_new_alike(GwySpectra *model)
     return spectra;
 }
 
+static void
+separate_arrays(GArray *spectra,
+                guint *ncurves,
+                GwyDataLine ***curves,
+                guint *ncoords,
+                gdouble **coords,
+                guint *nselected,
+                guint32 **selected)
+{
+    guint isize, i;
+
+    *ncurves = spectra->len;
+    *curves = g_new(GwyDataLine*, *ncurves);
+
+    *ncoords = 2*spectra->len;
+    *coords = g_new(gdouble, *ncoords);
+
+    isize = 8*sizeof(guint32);
+    *nselected = (spectra->len + isize-1)/isize;
+    *selected = g_new0(guint32, *nselected);
+
+    for (i = 0; i < *ncurves; i++) {
+        GwySpectrum *spec = &g_array_index(spectra, GwySpectrum, i);
+
+        (*curves)[i] = spec->ydata;
+        (*coords)[2*i + 0] = spec->y;
+        (*coords)[2*i + 1] = spec->x;
+        if (spec->selected)
+            (*selected)[i/isize] |= 1 << (i % isize);
+    }
+}
+
 static GByteArray*
 gwy_spectra_serialize(GObject *obj,
                       GByteArray *buffer)
@@ -251,7 +284,9 @@ gwy_spectra_serialize(GObject *obj,
     GwySpectra *spectra;
     GwyDataLine **curves;
     gdouble *coords;
-    guint32 ncurves, ncoords, i;
+    guint32 *selected;
+    guint32 ncurves, ncoords, nselected;
+    GByteArray *retval;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SPECTRA(obj), NULL);
@@ -260,34 +295,29 @@ gwy_spectra_serialize(GObject *obj,
     if (!spectra->si_unit_xy)
         spectra->si_unit_xy = gwy_si_unit_new(NULL);
 
-    ncurves = spectra->spectra->len;
-    ncoords = 2*spectra->spectra->len;
-    curves = g_new(GwyDataLine*, ncurves);
-    coords = g_new(gdouble, ncoords);
-    for (i = 0; i < ncurves; i++) {
-        GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum, i);
-        curves[i] = spec->ydata;
-        coords[2*i + 0] = spec->y;
-        coords[2*i + 1] = spec->x;
-    }
+    separate_arrays(spectra->spectra,
+                    &ncurves, &curves,
+                    &ncoords, &coords,
+                    &nselected, &selected);
 
     {
         GwySerializeSpec spec[] = {
-            { 's', "title", &spectra->title, NULL, },
-            { 'D', "coords", &coords, &ncoords, },
-            { 'O', "data", &curves, &ncurves, },
-            { 'o', "si_unit_xy", &spectra->si_unit_xy, NULL, },
+            { 's', "title",      &spectra->title,      NULL,       },
+            { 'o', "si_unit_xy", &spectra->si_unit_xy, NULL,       },
+            { 'D', "coords",     &coords,              &ncoords,   },
+            { 'I', "selected",   &selected,            &nselected, },
+            { 'O', "data",       &curves,              &ncurves,   },
         };
-        GByteArray *retval;
 
         retval = gwy_serialize_pack_object_struct(buffer,
                                                   GWY_SPECTRA_TYPE_NAME,
                                                   G_N_ELEMENTS(spec), spec);
-        g_free(curves);
-        g_free(coords);
-
-        return retval;
     }
+    g_free(curves);
+    g_free(coords);
+    g_free(selected);
+
+    return retval;
 }
 
 static gsize
@@ -296,7 +326,9 @@ gwy_spectra_get_size(GObject *obj)
     GwySpectra *spectra;
     GwyDataLine **curves;
     gdouble *coords;
-    guint32 ncurves, ncoords, i;
+    guint32 *selected;
+    guint32 ncurves, ncoords, nselected;
+    gsize retval;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SPECTRA(obj), 0);
@@ -305,33 +337,28 @@ gwy_spectra_get_size(GObject *obj)
     if (!spectra->si_unit_xy)
         spectra->si_unit_xy = gwy_si_unit_new(NULL);
 
-    ncurves = spectra->spectra->len;
-    ncoords = 2*spectra->spectra->len;
-    curves = g_new(GwyDataLine*, ncurves);
-    coords = g_new(gdouble, ncoords);
-    for (i = 0; i < ncurves; i++) {
-        GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum, i);
-        curves[i] = spec->ydata;
-        coords[2*i + 0] = spec->y;
-        coords[2*i + 1] = spec->x;
-    }
+    separate_arrays(spectra->spectra,
+                    &ncurves, &curves,
+                    &ncoords, &coords,
+                    &nselected, &selected);
 
     {
         GwySerializeSpec spec[] = {
-            { 's', "title", &spectra->title, NULL, },
-            { 'D', "coords", &coords, &ncoords, },
-            { 'O', "data", &curves, &ncurves, },
-            { 'o', "si_unit_xy", &spectra->si_unit_xy, NULL, },
+            { 's', "title",      &spectra->title,      NULL,       },
+            { 'o', "si_unit_xy", &spectra->si_unit_xy, NULL,       },
+            { 'D', "coords",     &coords,              &ncoords,   },
+            { 'I', "selected",   &selected,            &nselected, },
+            { 'O', "data",       &curves,              &ncurves,   },
         };
-        gsize retval;
 
         retval = gwy_serialize_get_struct_size(GWY_SPECTRA_TYPE_NAME,
                                                G_N_ELEMENTS(spec), spec);
-        g_free(curves);
-        g_free(coords);
-
-        return retval;
     }
+    g_free(curves);
+    g_free(coords);
+    g_free(selected);
+
+    return retval;
 }
 
 static GObject*
@@ -339,25 +366,26 @@ gwy_spectra_deserialize(const guchar *buffer,
                         gsize size,
                         gsize *position)
 {
-    guint32 ncoords, ncurves;
+    guint32 ncoords = 0, ncurves = 0, nselected = 0;
     gdouble *coords = NULL;
+    guint32 *selected = NULL;
     GwySIUnit *si_unit_xy = NULL;
     GwyDataLine **curves = NULL;
     GwySpectra *spectra;
     gchar* title = NULL;
-    guint i;
+    guint isize, i;
 
     gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     {
         GwySerializeSpec spec[] = {
-            { 's', "title", &title, NULL, },
-            { 'D', "coords", &coords, &ncoords, },
-            { 'O', "data", &curves, &ncurves, },
-            { 'o', "si_unit_xy", &si_unit_xy, NULL, },
+            { 's', "title",      &title,      NULL,       },
+            { 'o', "si_unit_xy", &si_unit_xy, NULL,       },
+            { 'D', "coords",     &coords,     &ncoords,   },
+            { 'I', "selected",   &selected,   &nselected, },
+            { 'O', "data",       &curves,     &ncurves,   },
         };
-
 
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                                 GWY_SPECTRA_TYPE_NAME,
@@ -366,18 +394,23 @@ gwy_spectra_deserialize(const guchar *buffer,
                 gwy_object_unref(curves[i]);
             g_free(curves);
             g_free(coords);
+            g_free(selected);
             gwy_object_unref(si_unit_xy);
 
             return NULL;
         }
     }
 
-    if (2*ncurves != ncoords) {
-        g_critical("Serialized coordinate and data sizes differ");
+    isize = 8*sizeof(guint32);
+    if (2*ncurves != ncoords
+        || (nselected && (nselected + isize-1)/isize != ncurves)) {
+        g_critical("Serialized coordinate, data and selection array size "
+                   "mismatch");
         for (i = 0; i < ncurves; i++)
             gwy_object_unref(curves[i]);
         g_free(curves);
         g_free(coords);
+        g_free(selected);
         gwy_object_unref(si_unit_xy);
 
         return NULL;
@@ -396,10 +429,13 @@ gwy_spectra_deserialize(const guchar *buffer,
         spec.x = coords[2*i + 0];
         spec.y = coords[2*i + 1];
         spec.ydata = curves[i];
+        if (nselected)
+            spec.selected = !!(selected[i/isize] & (1 << (i % isize)));
         g_array_append_val(spectra->spectra, spec);
     }
     g_free(curves);
     g_free(coords);
+    g_free(selected);
 
     if (si_unit_xy) {
         gwy_object_unref(spectra->si_unit_xy);
