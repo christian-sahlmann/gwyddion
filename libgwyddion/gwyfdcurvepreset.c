@@ -20,63 +20,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyfdcurvepreset.h>
 #include "gwyddioninternal.h"
 
-/**************************************************************************
-   Put to gwyddioninternal.h or a new private header
- **************************************************************************/
-typedef void (*GwyNLFitGuessFunc)(gint n_dat,
-                                  const gdouble *x,
-                                  const gdouble *y,
-                                  gdouble *param,
-                                  gboolean *fres);
-
-typedef void (*GwyNLFitParamScaleFunc)(GwyNLFitPreset *preset,
-                                       gdouble *param,
-                                       gdouble xscale,
-                                       gdouble yscale,
-                                       gint dir);
-
-typedef GwySIUnit* (*GwyNLFitGetUnitFunc)(GwyNLFitPreset *preset,
-                                          guint param,
-                                          GwySIUnit *siunit_x,
-                                          GwySIUnit *siunit_y);
-
-typedef void (*GwyNLFitWeightFunc)(gint n_dat,
-                                   const gdouble *x,
-                                   const gdouble *y,
-                                   gdouble *weight);
-
-typedef struct {
-    const char *name;
-    gint power_x;
-    gint power_y;
-} GwyNLFitParam;
-
-struct _GwyNLFitPresetBuiltin {
-    const gchar *name;
-    const gchar *formula;
-    GwyNLFitFunc function;
-    GwyNLFitDerFunc derive;
-    GwyNLFitGuessFunc guess;
-    GwyNLFitParamScaleFunc scale_params;
-    GwyNLFitGetUnitFunc get_unit;
-    GwyNLFitWeightFunc set_default_weights;
-    guint nparams;
-    const GwyNLFitParam *param;
-};
-
-/**************************************************************************/
-
 static GwyFDCurvePreset*
 gwy_fd_curve_preset_new_static(const GwyNLFitPresetBuiltin *data);
 
 G_DEFINE_TYPE(GwyFDCurvePreset, gwy_fd_curve_preset, GWY_TYPE_NLFIT_PRESET)
-
 
 /******************* argento ********************************/
 static gdouble

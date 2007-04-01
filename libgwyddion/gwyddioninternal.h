@@ -25,6 +25,47 @@
 
 G_BEGIN_DECLS
 
+typedef void (*GwyNLFitGuessFunc)(gint n_dat,
+                                  const gdouble *x,
+                                  const gdouble *y,
+                                  gdouble *param,
+                                  gboolean *fres);
+
+typedef void (*GwyNLFitParamScaleFunc)(GwyNLFitPreset *preset,
+                                       gdouble *param,
+                                       gdouble xscale,
+                                       gdouble yscale,
+                                       gint dir);
+
+typedef GwySIUnit* (*GwyNLFitGetUnitFunc)(GwyNLFitPreset *preset,
+                                          guint param,
+                                          GwySIUnit *siunit_x,
+                                          GwySIUnit *siunit_y);
+
+typedef void (*GwyNLFitWeightFunc)(gint n_dat,
+                                   const gdouble *x,
+                                   const gdouble *y,
+                                   gdouble *weight);
+
+typedef struct {
+    const char *name;
+    gint power_x;
+    gint power_y;
+} GwyNLFitParam;
+
+struct _GwyNLFitPresetBuiltin {
+    const gchar *name;
+    const gchar *formula;
+    GwyNLFitFunc function;
+    GwyNLFitDerFunc derive;
+    GwyNLFitGuessFunc guess;
+    GwyNLFitParamScaleFunc scale_params;
+    GwyNLFitGetUnitFunc get_unit;
+    GwyNLFitWeightFunc set_default_weights;
+    guint nparams;
+    const GwyNLFitParam *param;
+};
+
 G_GNUC_INTERNAL
 void _gwy_nlfit_preset_class_setup_presets(void);
 
