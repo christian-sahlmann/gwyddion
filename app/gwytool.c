@@ -320,7 +320,7 @@ gwy_tool_data_switched(GwyTool *tool,
 /**
  * gwy_tool_spectra_switched:
  * @tool: A tool.
- * @data_view: A spectra object.  It can be %NULL, too.
+ * @spectra: A spectra object.  It can be %NULL, too.
  *
  * Instructs a tool to switch to another spectra object.
  *
