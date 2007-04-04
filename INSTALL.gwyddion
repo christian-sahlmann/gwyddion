@@ -35,6 +35,10 @@ Recommended though optional, for TIFF and JPK file support:
 Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
 
+Recommended though optional, for `remote control':
+- LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
+  development files
+
 Optional, for SPML file support:
 - LibXML2, including development files
 
