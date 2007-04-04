@@ -2864,6 +2864,47 @@ gwy_app_data_browser_spectra_name_edited(GtkCellRenderer *renderer,
     gwy_app_data_list_disable_edit(renderer);
 }
 
+/* Performs some common tasks as `select_spectra' */
+static void
+gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
+                                      GwyAppDataBrowser *browser)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GwySpectra *tspectra, *aspectra;
+
+    gwy_app_data_browser_get_current(GWY_APP_SPECTRA, &aspectra, 0);
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, MODEL_OBJECT, &tspectra, -1);
+        g_object_unref(tspectra);
+    }
+    else
+        tspectra = NULL;
+
+    gwy_debug("tspectra: %p, aspectra: %p", tspectra, aspectra);
+    if (aspectra == tspectra)
+        return;
+
+    if (tspectra) {
+        GwyContainer *data;
+        const gchar *strkey;
+        GwyAppKeyType type;
+        GQuark quark;
+        gint i;
+
+        data = g_object_get_qdata(G_OBJECT(tspectra), container_quark);
+        g_return_if_fail(data == browser->current->container);
+        quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(tspectra),
+                                                    own_key_quark));
+        strkey = g_quark_to_string(quark);
+        i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+        g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
+        browser->current->lists[PAGE_SPECTRA].active = i;
+    }
+
+    _gwy_app_spectra_set_current(tspectra);
+}
+
 static void
 gwy_app_data_browser_spectra_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                           GtkCellRenderer *renderer,
@@ -2970,6 +3011,11 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
                        GINT_TO_POINTER(PAGE_SPECTRA + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
+                     browser);
+    /* XXX: For spectra changing selection in the list actually changes the
+     * current spectra. */
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_data_browser_spectra_selected),
                      browser);
 
     /* DnD */
