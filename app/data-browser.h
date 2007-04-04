@@ -111,6 +111,8 @@ gint   gwy_app_data_browser_copy_channel    (GwyContainer *source,
 GQuark gwy_app_get_data_key_for_id          (gint id);
 GQuark gwy_app_get_mask_key_for_id          (gint id);
 GQuark gwy_app_get_show_key_for_id          (gint id);
+GQuark gwy_app_get_graph_key_for_id         (gint id);
+GQuark gwy_app_get_spectra_key_for_id       (gint id);
 void   gwy_app_set_data_field_title         (GwyContainer *data,
                                              gint id,
                                              const gchar *name);

@@ -620,13 +620,11 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
                                  gint i,
                                  GObject *object)
 {
-    gchar key[32];
     GQuark quark;
 
     gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], i, object);
-    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
-    quark = g_quark_from_string(key);
+    quark = gwy_app_get_graph_key_for_id(i);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -735,13 +733,11 @@ gwy_app_data_proxy_connect_spectra(GwyAppDataProxy *proxy,
                                    gint i,
                                    GObject *object)
 {
-    gchar key[24];
     GQuark quark;
 
     gwy_app_data_proxy_add_object(&proxy->lists[PAGE_SPECTRA], i, object);
-    g_snprintf(key, sizeof(key), "/sps/%d", i);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
-    quark = g_quark_from_string(key);
+    quark = gwy_app_get_spectra_key_for_id(i);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -2869,12 +2865,18 @@ static void
 gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
                                       GwyAppDataBrowser *browser)
 {
+    GwySpectra *tspectra, *aspectra;
     GwyContainer *data;
     GtkTreeModel *model;
     GtkTreeIter iter;
-    GwySpectra *tspectra, *aspectra;
+    const gchar *strkey;
+    GwyAppKeyType type;
+    GQuark quark;
+    gint i, id;
 
-    gwy_app_data_browser_get_current(GWY_APP_SPECTRA, &aspectra, 0);
+    gwy_app_data_browser_get_current(GWY_APP_SPECTRA, &aspectra,
+                                     GWY_APP_DATA_FIELD_ID, &i,
+                                     0);
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         gtk_tree_model_get(model, &iter, MODEL_OBJECT, &tspectra, -1);
         g_object_unref(tspectra);
@@ -2887,19 +2889,25 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
         return;
 
     if (tspectra) {
-        const gchar *strkey;
-        GwyAppKeyType type;
-        GQuark quark;
-        gint i;
-
         data = g_object_get_qdata(G_OBJECT(tspectra), container_quark);
         g_return_if_fail(data == browser->current->container);
         quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(tspectra),
                                                     own_key_quark));
         strkey = g_quark_to_string(quark);
-        i = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+        id = gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
         g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
-        browser->current->lists[PAGE_SPECTRA].active = i;
+        browser->current->lists[PAGE_SPECTRA].active = id;
+    }
+    else
+        id = -1;
+
+    /* XXX: Do not delete the reference when i == -1 because this can happen
+     * on descruction.  Must prevent it or handle it differently. */
+    if (id > -1 && i > -1) {
+        gchar key[40];
+
+        g_snprintf(key, sizeof(key), "/%d/data/sps-id", i);
+        gwy_container_set_int32_by_name(data, key, id);
     }
 
     _gwy_app_spectra_set_current(tspectra);
@@ -3566,6 +3574,25 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     gwy_app_data_browser_select_object(browser, proxy, PAGE_CHANNELS);
     gwy_app_widget_queue_manage(GTK_WIDGET(data_view), FALSE);
     _gwy_app_data_view_set_current(data_view);
+
+    /* Restore the last used spectra.  If the reference is dangling, remove
+     * it from the container. */
+    {
+        gchar key[40];
+        gint id;
+
+        g_snprintf(key, sizeof(key), "/%d/data/sps-id", i);
+        if (gwy_container_gis_int32_by_name(data, key, &id)) {
+            GwySpectra *spectra;
+            GQuark quark;
+
+            quark = gwy_app_get_spectra_key_for_id(id);
+            if (gwy_container_gis_object(data, quark, &spectra))
+                gwy_app_data_browser_select_spectra(spectra);
+            else
+                gwy_container_remove_by_name(data, key);
+        }
+    }
 }
 
 static gboolean
@@ -4028,7 +4055,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
     GwyAppDataProxy *proxy;
     GwyAppDataList *list;
     GtkTreeIter iter;
-    gchar key[32];
+    GQuark quark;
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), -1);
     g_return_val_if_fail(!data || GWY_IS_CONTAINER(data), -1);
@@ -4044,10 +4071,10 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
     }
 
     list = &proxy->lists[PAGE_GRAPHS];
-    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, list->last + 1);
+    quark = gwy_app_get_graph_key_for_id(list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
      * Among other things, it will update proxy->lists[PAGE_GRAPHS].last. */
-    gwy_container_set_object_by_name(proxy->container, key, gmodel);
+    gwy_container_set_object(proxy->container, quark, gmodel);
 
     if (showit) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
@@ -4110,6 +4137,31 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
     return list->last;
 }
 
+static GQuark
+gwy_app_get_any_key_for_id(gint id,
+                           const gchar *format,
+                           guint nquarks,
+                           GQuark *quarks)
+{
+    GQuark q;
+
+    g_return_val_if_fail(id >= 0, 0);
+    if (id < nquarks && quarks[id])
+        return quarks[id];
+
+    {
+        gchar key[48];
+
+        g_snprintf(key, sizeof(key), format, id);
+        q = g_quark_from_string(key);
+    }
+
+    if (id < nquarks)
+        quarks[id] = q;
+
+    return q;
+}
+
 /**
  * gwy_app_get_data_key_for_id:
  * @id: Data number in container.
@@ -4121,20 +4173,10 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
 GQuark
 gwy_app_get_data_key_for_id(gint id)
 {
-    static GQuark quarks[12] = { 0, };
-    gchar key[24];
+    static GQuark quarks[16] = { 0, };
 
-    g_return_val_if_fail(id >= 0, 0);
-    if (id < G_N_ELEMENTS(quarks) && quarks[id])
-        return quarks[id];
-
-    g_snprintf(key, sizeof(key), "/%d/data", id);
-
-    if (id < G_N_ELEMENTS(quarks)) {
-        quarks[id] = g_quark_from_string(key);
-        return quarks[id];
-    }
-    return g_quark_from_string(key);
+    return gwy_app_get_any_key_for_id(id, "/%d/data",
+                                      G_N_ELEMENTS(quarks), quarks);
 }
 
 /**
@@ -4148,20 +4190,10 @@ gwy_app_get_data_key_for_id(gint id)
 GQuark
 gwy_app_get_mask_key_for_id(gint id)
 {
-    static GQuark quarks[12] = { 0, };
-    gchar key[24];
+    static GQuark quarks[16] = { 0, };
 
-    g_return_val_if_fail(id >= 0, 0);
-    if (id < G_N_ELEMENTS(quarks) && quarks[id])
-        return quarks[id];
-
-    g_snprintf(key, sizeof(key), "/%d/mask", id);
-
-    if (id < G_N_ELEMENTS(quarks)) {
-        quarks[id] = g_quark_from_string(key);
-        return quarks[id];
-    }
-    return g_quark_from_string(key);
+    return gwy_app_get_any_key_for_id(id, "/%d/mask",
+                                      G_N_ELEMENTS(quarks), quarks);
 }
 
 /**
@@ -4175,20 +4207,48 @@ gwy_app_get_mask_key_for_id(gint id)
 GQuark
 gwy_app_get_show_key_for_id(gint id)
 {
-    static GQuark quarks[12] = { 0, };
-    gchar key[24];
+    static GQuark quarks[16] = { 0, };
 
-    g_return_val_if_fail(id >= 0, 0);
-    if (id < G_N_ELEMENTS(quarks) && quarks[id])
-        return quarks[id];
+    return gwy_app_get_any_key_for_id(id, "/%d/show",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
 
-    g_snprintf(key, sizeof(key), "/%d/show", id);
+/**
+ * gwy_app_get_graph_key_for_id:
+ * @id: Graph number in container.
+ *
+ * Calculates graph model quark identifier from its id.
+ *
+ * Returns: The quark key identifying graph model number @id.
+ *
+ * Since: 2.6
+ **/
+GQuark
+gwy_app_get_graph_key_for_id(gint id)
+{
+    static GQuark quarks[16] = { 0, };
 
-    if (id < G_N_ELEMENTS(quarks)) {
-        quarks[id] = g_quark_from_string(key);
-        return quarks[id];
-    }
-    return g_quark_from_string(key);
+    return gwy_app_get_any_key_for_id(id, GRAPH_PREFIX "/%d",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
+ * gwy_app_get_spectra_key_for_id:
+ * @id: Spectra number in container.
+ *
+ * Calculates spectra quark identifier from its id.
+ *
+ * Returns: The quark key identifying spectra number @id.
+ *
+ * Since: 2.6
+ **/
+GQuark
+gwy_app_get_spectra_key_for_id(gint id)
+{
+    static GQuark quarks[16] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, SPECTRA_PREFIX "/%d",
+                                      G_N_ELEMENTS(quarks), quarks);
 }
 
 /**
