@@ -29,6 +29,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -272,6 +273,8 @@ omicron_load(const gchar *filename,
 
             channel = g_ptr_array_index(ofile.spectro_channels, i);
             if (omicron_has_extension(channel->filename, "cs")) {
+                GQuark quark;
+
                 spectra = omicron_read_cs_data(&ofile, channel, error);
                 if (!spectra) {
                     gwy_object_unref(container);
@@ -280,8 +283,8 @@ omicron_load(const gchar *filename,
 
                 /* FIXME */
                 gwy_spectra_set_title(spectra, "Spectra");
-                g_snprintf(key, sizeof(key), "/sps/%u", i);
-                gwy_container_set_object_by_name(container, key, spectra);
+                quark = gwy_app_get_spectra_key_for_id(i);
+                gwy_container_set_object(container, quark, spectra);
                 g_object_unref(spectra);
             }
             else if (omicron_has_extension(channel->filename, "sf")
