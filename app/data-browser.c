@@ -2864,11 +2864,12 @@ gwy_app_data_browser_spectra_name_edited(GtkCellRenderer *renderer,
     gwy_app_data_list_disable_edit(renderer);
 }
 
-/* Performs some common tasks as `select_spectra' */
+/* XXX: Performs some common tasks as `select_spectra' */
 static void
 gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
                                       GwyAppDataBrowser *browser)
 {
+    GwyContainer *data;
     GtkTreeModel *model;
     GtkTreeIter iter;
     GwySpectra *tspectra, *aspectra;
@@ -2886,7 +2887,6 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
         return;
 
     if (tspectra) {
-        GwyContainer *data;
         const gchar *strkey;
         GwyAppKeyType type;
         GQuark quark;
@@ -4282,23 +4282,23 @@ gwy_app_get_data_field_title(GwyContainer *data,
  *
  * All output arguments are always set to some value, even if the requested
  * object does not exist.  Object arguments are set to pointer to the object if
- * it exists (no reference added), or cleared to %NULL if no such object
+ * it exists (no reference is added), or cleared to %NULL if no such object
  * exists.
  *
  * Quark arguments are set to the corresponding key even if no such object is
  * actually present (use object arguments to check for object presence) but the
- * location where it would be stored is known.  This is commond with
+ * location where it would be stored is known.  This is common with
  * presentations and masks.  They are be set to 0 if no corresponding location
- * exists -- for example, when current mask key is requested but the current
- * data contain no data field (or there is no current data at all).
+ * exists -- for example, when the current mask key is requested but the
+ * current data contains no channel (or there is no current data at all).
  *
  * The rules for id arguments are similar to quarks, except they are set to -1
  * to indicate undefined result.
  *
  * The current objects can change due to user interaction even during the
  * execution of modal dialogs (typically used by modules).  Therefore to
- * achieve consistency one has to ask for the complete set of interesting
- * current objects at once.
+ * achieve consistency one has to ask for the complete set of current objects
+ * at once.
  **/
 void
 gwy_app_data_browser_get_current(GwyAppWhat what,
