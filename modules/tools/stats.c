@@ -815,8 +815,8 @@ gwy_tool_stats_report_create(gpointer user_data,
                              "Kurtosis:          %s\n"
                              "Surface area:      %s\n"
                              "Projected area:    %s\n"
-                             "Inclination θ: %s\n"
-                             "Inclination φ:   %s\n"),
+                             "Inclination θ:     %s\n"
+                             "Inclination φ:     %s\n"),
                            iw, ih, ix, iy,
                            rw, rh, rx, ry, uni,
                            muse,
