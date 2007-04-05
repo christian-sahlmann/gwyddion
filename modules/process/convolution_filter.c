@@ -135,7 +135,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.3",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -843,6 +843,8 @@ convolution_filter_preview(ConvolutionControls *controls)
     kernel = gwy_data_field_new(pdata->size, pdata->size, 1.0, 1.0, FALSE);
     memcpy(gwy_data_field_get_data(kernel), pdata->matrix,
            pdata->size*pdata->size*sizeof(gdouble));
+    if (pdata->divisor != 0.0)
+        gwy_data_field_multiply(kernel, 1.0/pdata->divisor);
     gwy_data_field_convolve(preview, kernel);
     g_object_unref(kernel);
 
@@ -864,8 +866,11 @@ convolution_filter_run_noninteractive(ConvolutionArgs *args,
     kernel = gwy_data_field_new(pdata->size, pdata->size, 1.0, 1.0, FALSE);
     memcpy(gwy_data_field_get_data(kernel), pdata->matrix,
            pdata->size*pdata->size*sizeof(gdouble));
+    if (pdata->divisor != 0.0)
+        gwy_data_field_multiply(kernel, 1.0/pdata->divisor);
     gwy_data_field_convolve(dfield, kernel);
     g_object_unref(kernel);
+
     gwy_data_field_data_changed(dfield);
 }
 
