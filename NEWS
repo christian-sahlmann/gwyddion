@@ -37,6 +37,7 @@ Modules:
 - Point layer: Radius indicator scales properly when the layer is scaled.
 - Calibrate: The precision of scale spin buttons was increased.
 - Graph fit: Initial estimated curve label saying "noun|Estimate" was fixed.
+- Distance measurement tool: Added possibility to save the table.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
