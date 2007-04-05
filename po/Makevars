@@ -6,7 +6,5 @@ XGETTEXT_OPTIONS = --keyword=_ --keyword=N_ --keyword=gwy_sgettext --foreign-use
 COPYRIGHT_HOLDER = "David Necas (Yeti) & Petr Klapetek"
 MSGID_BUGS_ADDRESS = yeti@gwyddion.net
 EXTRA_LOCALE_CATEGORIES =
-# XXX
-MSGMERGE = msgmerge --no-fuzzy-matching
 DISTFILES.extra1 = makefile.msc makefile.msc.gwt
 # vim: set ft=make :
