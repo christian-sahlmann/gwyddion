@@ -74,6 +74,8 @@ static void   gwy_tool_distance_init_dialog      (GwyToolDistance *tool);
 static void   gwy_tool_distance_data_switched    (GwyTool *gwytool,
                                                   GwyDataView *data_view);
 static void   gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
+static void   gwy_tool_distance_response         (GwyTool *tool,
+                                                  gint response_id);
 static void   gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
                                                   gint hint);
 static void   gwy_tool_distance_update_headers   (GwyToolDistance *tool);
@@ -82,8 +84,7 @@ static void   gwy_tool_distance_render_cell      (GtkCellLayout *layout,
                                                   GtkTreeModel *model,
                                                   GtkTreeIter *iter,
                                                   gpointer user_data);
-static void   gwy_tool_distance_save_lines	 (GtkWidget *save_button,
-						  GwyPlainTool *plain_tool);
+static void   gwy_tool_distance_save_lines       (GwyToolDistance *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -122,6 +123,7 @@ gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
     tool_class->prefix = "/module/distance";
     tool_class->default_height = 240;
     tool_class->data_switched = gwy_tool_distance_data_switched;
+    tool_class->response = gwy_tool_distance_response;
 
     ptool_class->data_changed = gwy_tool_distance_data_changed;
     ptool_class->selection_changed = gwy_tool_distance_selection_changed;
@@ -214,9 +216,6 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
 
     tool->save = gtk_dialog_add_button(dialog, GTK_STOCK_SAVE,
                                        GWY_TOOL_DISTANCE_RESPONSE_SAVE);
-    g_signal_connect(tool->save, "clicked",
-                     G_CALLBACK(gwy_tool_distance_save_lines), plain_tool);
-
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
@@ -257,6 +256,16 @@ static void
 gwy_tool_distance_data_changed(GwyPlainTool *plain_tool)
 {
     gwy_tool_distance_update_headers(GWY_TOOL_DISTANCE(plain_tool));
+}
+
+static void
+gwy_tool_distance_response(GwyTool *tool,
+                           gint response_id)
+{
+    GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->response(tool, response_id);
+
+    if (response_id == GWY_TOOL_DISTANCE_RESPONSE_SAVE)
+        gwy_tool_distance_save_lines(GWY_TOOL_DISTANCE(tool));
 }
 
 static void
@@ -422,66 +431,55 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
 }
 
 static void
-gwy_tool_distance_save_lines (GtkWidget *save_button, GwyPlainTool *plain_tool)
+gwy_tool_distance_save_lines(GwyToolDistance *tool)
 {
-    GwyToolDistance *tool;
-    GwyNullStore    *store;
+    GwyPlainTool *plain_tool;
     gint            n, x, y, i;
-    GtkTreeIter     iter;
     gdouble         line[4], val_dx, val_dy, val_r, val_phi, val_dz;
-    guint           idx;
     const GwySIValueFormat *vf_dx, *vf_dy, *vf_r, *vf_phi, *vf_dz;
     GString *str_to_save;
 
-    tool = GWY_TOOL_DISTANCE(plain_tool);
+    plain_tool = GWY_PLAIN_TOOL(tool);
     str_to_save = g_string_new(NULL);
-    g_string_append_printf(str_to_save, "n Δx [%s] Δy [%s] φ [%s] R [%s] Δz [%s]\n",
+    g_string_append_printf(str_to_save,
+                           "n Δx [%s] Δy [%s] φ [%s] R [%s] Δz [%s]\n",
                            plain_tool->coord_format->units,
                            plain_tool->coord_format->units,
                            tool->angle_format->units,
                            plain_tool->coord_format->units,
                            plain_tool->value_format->units);
 
-    store = GWY_NULL_STORE(tool->model);
-    n = gwy_null_store_get_n_rows(store);
+    n = gwy_selection_get_data(plain_tool->selection, NULL);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(plain_tool->selection, i, line);
 
-    for (i=1;i<=n;i++) {
-      if (i==1)
-        gtk_tree_model_get_iter_first(tool->model, &iter);
-      else
-        gtk_tree_model_iter_next (tool->model, &iter);
+        vf_dx = plain_tool->coord_format;
+        val_dx = line[2] - line[0];
 
-      gtk_tree_model_get(tool->model, &iter, 0, &idx,-1);
+        vf_dy = plain_tool->coord_format;
+        val_dy = line[3] - line[1];
 
-      gwy_selection_get_object(plain_tool->selection, idx, line);
+        vf_r = plain_tool->coord_format;
+        val_r = hypot(line[2] - line[0], line[3] - line[1]);
 
-      vf_dx = plain_tool->coord_format;
-      val_dx = line[2] - line[0];
+        vf_phi = tool->angle_format;
+        val_phi = atan2(line[1] - line[3], line[2] - line[0]) * 180.0/G_PI;
 
-      vf_dy = plain_tool->coord_format;
-      val_dy = line[3] - line[1];
+        x = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
+        y = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
+        val_dz = gwy_data_field_get_val(plain_tool->data_field, x, y);
+        x = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
+        y = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
+        val_dz -= gwy_data_field_get_val(plain_tool->data_field, x, y);
+        vf_dz = plain_tool->value_format;
 
-      vf_r = plain_tool->coord_format;
-      val_r = hypot(line[2] - line[0], line[3] - line[1]);
-
-      vf_phi = tool->angle_format;
-      val_phi = atan2(line[1] - line[3], line[2] - line[0]) * 180.0/G_PI;
-
-      x = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
-      y = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
-      val_dz = gwy_data_field_get_val(plain_tool->data_field, x, y);
-      x = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
-      y = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
-      val_dz -= gwy_data_field_get_val(plain_tool->data_field, x, y);
-      vf_dz = plain_tool->value_format;
-
-      g_string_append_printf(str_to_save, "%d %.*f %.*f %.*f %.*f %.*f\n",
-                             idx+1,
-                             vf_dx->precision, val_dx/vf_dx->magnitude,
-                             vf_dy->precision, val_dy/vf_dy->magnitude,
-                             vf_phi->precision, val_phi/vf_phi->magnitude,
-                             vf_r->precision, val_r/vf_r->magnitude,
-                             vf_dz->precision, val_dz/vf_dz->magnitude);
+        g_string_append_printf(str_to_save, "%d %.*f %.*f %.*f %.*f %.*f\n",
+                               i+1,
+                               vf_dx->precision, val_dx/vf_dx->magnitude,
+                               vf_dy->precision, val_dy/vf_dy->magnitude,
+                               vf_phi->precision, val_phi/vf_phi->magnitude,
+                               vf_r->precision, val_r/vf_r->magnitude,
+                               vf_dz->precision, val_dz/vf_dz->magnitude);
     }
     gwy_save_auxiliary_data(_("Save Table"),
                             GTK_WINDOW(GWY_TOOL(tool)->dialog),
