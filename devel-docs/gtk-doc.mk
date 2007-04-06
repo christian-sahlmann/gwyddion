@@ -134,6 +134,7 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
 	@echo 'gtk-doc: Fixing cross-references'
 	cd $(srcdir) && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
+	cp -f $(top_srcdir)/devel-docs/style.css html/
 	touch html-build.stamp
 else
 docs:
