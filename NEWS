@@ -1,4 +1,4 @@
-2.5.20070327
+2.5.20070407
 
 2.6 (0000-00-00)
 Application:
@@ -17,6 +17,12 @@ Libraries:
 - libgwydgets: gwy_data_view_export_pixbuf() honours realsquare setting.
 - libgwyapp: Data browser acquired a Spectra tab and its API some SPS related
   functions.
+- libgwyapp: Up to date thumbnails are no longer overwritten.
+- libgwyprocess: Fractal interpolation works with Microsoft floating point
+  implementation.
+- libgwydgets: Impossibility to edit graph selection boundaries when it was
+  drawn the `wrong' direction was fixed.
+- libgwydgets: Invisible graph label (key) getting in the way was fixed.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -34,14 +40,23 @@ Modules:
   add a comment header with some channel information.
 - Polynomial distortion: GtkEntry errors when instant update took too long
   were fixed.
+- Convolution filter: Divisor value is actually used for normalization
+  instead of being ignored.
 - Point layer: Radius indicator scales properly when the layer is scaled.
 - Calibrate: The precision of scale spin buttons was increased.
 - Graph fit: Initial estimated curve label saying "noun|Estimate" was fixed.
-- Distance measurement tool: Added possibility to save the table.
+- File modules: Some sanity checks were added.
+- Distance tool: It is possibile to save the table.
+- 2D FFT filter: Resampled vertical resolution is displayed properly (instead
+  of displaying horizontal resolution again).
+- Symbol of theta which often rendered wrong on Win32 was replaced with
+  another glyph.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
   otherwise corrected.
+- RPM spec file removes .la files manually again as certain distros
+  aggressively re-generate all autotools files.
 
 
 2.5 (2007-03-10)
