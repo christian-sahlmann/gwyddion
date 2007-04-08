@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -368,6 +368,8 @@ read_data_field(const guchar *buffer,
         g_assert_not_reached();
         break;
     }
+
+    gwy_data_field_invert(dfield, TRUE, TRUE, FALSE);
 
     return dfield;
 }
