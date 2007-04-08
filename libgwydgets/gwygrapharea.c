@@ -40,12 +40,6 @@ enum {
     PROP_LAST
 };
 
-enum {
-    BORDER_NONE = 0,
-    BORDER_MIN = 1,
-    BORDER_MAX = 2
-};
-
 static void     gwy_graph_area_finalize          (GObject *object);
 static void     gwy_graph_area_set_property      (GObject *object,
                                                   guint prop_id,
@@ -71,10 +65,13 @@ static gboolean gwy_graph_area_leave_notify      (GtkWidget *widget,
 static gint     gwy_graph_area_find_curve        (GwyGraphArea *area,
                                                   gdouble x,
                                                   gdouble y);
-static gint     gwy_graph_area_find_selection    (GwyGraphArea *area,
+static gint     gwy_graph_area_find_selection_edge(GwyGraphArea *area,
                                                   gdouble x,
                                                   gdouble y,
-                                                  int *btype);
+                                                  int *eindex);
+static gint     gwy_graph_area_find_selection    (GwyGraphArea *area,
+                                                  gdouble x,
+                                                  gdouble y);
 static gint     gwy_graph_area_find_point        (GwyGraphArea *area,
                                                   gdouble x,
                                                   gdouble y);
@@ -708,8 +705,9 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     GwyGraphModel *gmodel;
     GtkAllocation *allocation;
     GtkWidget *child;
-    gint x, y, curve, selection, nc;
-    gdouble dx, dy, selection_pointdata[2], selection_areadata[2];
+    GwySelection *selection;
+    gint x, y, curve, i, nc;
+    gdouble dx, dy, selection_pointdata[2];
     gdouble selection_zoomdata[4];
     gboolean visible;
 
@@ -801,100 +799,62 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             }
         }
         else {
-            selection = gwy_graph_area_find_point(area, dx, dy);
-            if (selection >= 0)
-                gwy_selection_delete_object(area->pointsdata,
-                                            selection);
+            i = gwy_graph_area_find_point(area, dx, dy);
+            if (i >= 0)
+                gwy_selection_delete_object(area->pointsdata, i);
             gwy_selection_finished(area->pointsdata);
         }
     }
 
-    if (area->status == GWY_GRAPH_STATUS_XSEL) {
-        gwy_debug("bpress: xsel press");
+    if (area->status == GWY_GRAPH_STATUS_XSEL
+        || area->status == GWY_GRAPH_STATUS_YSEL) {
+        gdouble coords[2];
+        gdouble pos;
+
+        if (area->status == GWY_GRAPH_STATUS_XSEL) {
+            pos = dx;
+            selection = area->xseldata;
+        }
+        else {
+            pos = dy;
+            selection = area->yseldata;
+        }
+
         if (event->button == 1) {
-            gwy_debug("bpress: button 1");
-            area->selected_object_index
-                = gwy_graph_area_find_selection(area, dx, dy,
-                                                &area->selected_border);
-            if (gwy_selection_get_max_objects(area->xseldata) == 1
-                                        && (area->selected_object_index == -1)) {
-                gwy_debug("bpress: clearing");
-                gwy_selection_clear(area->xseldata);
-            }
+            i = gwy_graph_area_find_selection_edge(area, dx, dy,
+                                                   &area->selected_border);
+            area->selected_object_index = i;
+            /* Allow to start a new selection without explicitly clearing the
+             * existing one when max_objects is 1 */
+            if (gwy_selection_get_max_objects(selection) == 1 && i == -1)
+                gwy_selection_clear(selection);
 
-            if (!(gwy_selection_is_full(area->xseldata)
-                  && area->selected_object_index == -1)) {
-                if (area->selected_object_index != -1)
-                    gwy_selection_get_object(area->xseldata,
-                                             area->selected_object_index,
-                                             selection_areadata);
-                else {
-                    selection_areadata[0] = dx;
-                    selection_areadata[1] = dx;
-                }
-
-                gwy_debug("attempting to change selection: now %g %g  sb: %d",
-                          selection_areadata[0], selection_areadata[1],
-                          area->selected_border);
-                if (area->selected_border == BORDER_MIN
-                    || area->selected_object_index == -1) {
-                    if (selection_areadata[0] < selection_areadata[1])
-                        selection_areadata[0] = dx; 
-                    else
-                        selection_areadata[1] = dx;
-                    gwy_debug("bpress: changing selection min: %g, "
-                              "selection now: %g %g",
-                              dx, selection_areadata[0], selection_areadata[1]);
-                }
-                if (area->selected_border == BORDER_NONE
-                    || area->selected_border == BORDER_MAX) {
-                    if (selection_areadata[1] > selection_areadata[0])
-                        selection_areadata[1] = dx; 
-                    else
-                        selection_areadata[0] = dx;
-                    gwy_debug("bpress: changing selection max: %g", dx);
-                }
-                gwy_selection_set_object(area->xseldata,
-                                         area->selected_object_index,
-                                         selection_areadata);
+            if (i == -1 && !gwy_selection_is_full(selection)) {
+                /* Add a new selection object */
+                coords[0] = pos;
+                coords[1] = pos;
+                /* Start with the `other' border moving */
+                area->selected_border = 1;
+                area->selected_object_index
+                    = gwy_selection_set_object(selection, -1, coords);
                 area->selecting = TRUE;
-
-                if (area->selected_object_index == -1)
-                    area->selected_object_index
-                        = gwy_selection_get_data(area->xseldata, NULL) - 1;
-             }
+            }
+            else if (area->selected_object_index != -1) {
+                /* Move existing edge */
+                coords[area->selected_border] = pos;
+                gwy_selection_get_object(selection, i, coords);
+                area->selecting = TRUE;
+            }
         }
-        else /*remove selection*/
-        {
-            selection = gwy_graph_area_find_selection(area, dx, dy,
-                                                      &area->selected_border);
-            if (selection >= 0)
-                gwy_selection_delete_object(area->xseldata,
-                                            selection);
-            gwy_selection_finished(area->xseldata);
-        }
-    }
-    if (area->status == GWY_GRAPH_STATUS_YSEL) {
-        if (event->button == 1
-            && !gwy_selection_is_full(area->yseldata)) /*add selection*/
-        {
-            selection_areadata[0] = dy;
-            selection_areadata[1] = dy;
-            gwy_selection_set_object(area->yseldata,
-                                     -1, selection_areadata);
-            area->selecting = TRUE;
-        }
-        else /*remove selection*/
-        {
-            selection = gwy_graph_area_find_selection(area, dx, dy,
-                                                      &area->selected_border);
-            if (selection >= 0)
-                gwy_selection_delete_object(area->yseldata,
-                                            selection);
-            gwy_selection_finished(area->yseldata);
+        else {
+            i = gwy_graph_area_find_selection(area, dx, dy);
+            /* Remove selection */
+            if (i >= 0) {
+                gwy_selection_delete_object(selection, i);
+                gwy_selection_finished(selection);
+            }
         }
     }
-
 
     if (area->status == GWY_GRAPH_STATUS_XLINES) {
         if (event->button == 1) {
@@ -915,10 +875,9 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
         }
         else {
-            selection = gwy_graph_area_find_line(area, dx);
-            if (selection >= 0)
-                gwy_selection_delete_object(area->xlinesdata,
-                                            selection);
+            i = gwy_graph_area_find_line(area, dx);
+            if (i >= 0)
+                gwy_selection_delete_object(area->xlinesdata, i);
         }
     }
 
@@ -939,10 +898,9 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             }
         }
         else {
-            selection = gwy_graph_area_find_line(area, dy);
-            if (selection >= 0)
-                gwy_selection_delete_object(area->ylinesdata,
-                                            selection);
+            i = gwy_graph_area_find_line(area, dy);
+            if (i >= 0)
+                gwy_selection_delete_object(area->ylinesdata, i);
         }
     }
 
@@ -983,43 +941,34 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
             gwy_selection_get_object(area->xseldata,
                                      area->selected_object_index,
                                      selection_areadata)) {
-            if (area->selected_border == BORDER_MIN) {
-                   if (selection_areadata[0] < selection_areadata[1])
-                        selection_areadata[0] = dx;
-                   else 
-                        selection_areadata[1] = dx;
-            }
-            if (area->selected_border == BORDER_NONE
-                || area->selected_border == BORDER_MAX) {
-                    if (selection_areadata[1] > selection_areadata[0])
-                        selection_areadata[1] = dx; 
-                    else
-                        selection_areadata[0] = dx;
-            }
-
-            gwy_selection_set_object(area->xseldata,
-                                     area->selected_object_index,
-                                     selection_areadata);
+            selection_areadata[area->selected_border] = dx;
             if (selection_areadata[1] == selection_areadata[0])
                 gwy_selection_delete_object(area->xseldata,
                                             area->selected_object_index);
+            else
+                gwy_selection_set_object(area->xseldata,
+                                         area->selected_object_index,
+                                         selection_areadata);
             area->selecting = FALSE;
+            gwy_selection_finished(area->xseldata);
         }
         break;
 
         case GWY_GRAPH_STATUS_YSEL:
-        nselected = gwy_selection_get_data(area->yseldata, NULL);
-        if (area->selecting && nselected) {
-            gwy_selection_get_object(area->yseldata, nselected - 1,
-                                     selection_areadata);
-            selection_areadata[1] = dy;
-
-            gwy_selection_set_object(area->yseldata, nselected - 1,
-                                     selection_areadata);
-            if (selection_areadata[2] == selection_areadata[0]
-                || selection_areadata[3] == selection_areadata[1])
-                gwy_selection_delete_object(area->yseldata, nselected - 1);
+        if (area->selecting &&
+            gwy_selection_get_object(area->yseldata,
+                                     area->selected_object_index,
+                                     selection_areadata)) {
+            selection_areadata[area->selected_border] = dy;
+            if (selection_areadata[1] == selection_areadata[0])
+                gwy_selection_delete_object(area->yseldata,
+                                            area->selected_object_index);
+            else
+                gwy_selection_set_object(area->yseldata,
+                                         area->selected_object_index,
+                                         selection_areadata);
             area->selecting = FALSE;
+            gwy_selection_finished(area->yseldata);
         }
         break;
 
@@ -1105,7 +1054,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 {
     GwyGraphArea *area;
     GdkWindow *window;
-    gint x, y, ispos = 0, border, nselected;
+    gint x, y, ispos = 0, nselected;
     gdouble dx, dy, selection_pointdata[2], selection_areadata[2];
     gdouble selection_zoomdata[4], selection_linedata;
 
@@ -1130,8 +1079,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     switch (area->status) {
         case GWY_GRAPH_STATUS_XSEL:
-        gwy_graph_area_find_selection(area, dx, dy, &border);
-        if (area->selecting || border != BORDER_NONE)
+        if (area->selecting
+            || gwy_graph_area_find_selection_edge(area, dx, dy, NULL) != -1)
             gdk_window_set_cursor(window, area->harrow_cursor);
         else
             gdk_window_set_cursor(window, area->cross_cursor);
@@ -1140,25 +1089,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             && gwy_selection_get_object(area->xseldata,
                                         area->selected_object_index,
                                         selection_areadata)) {
-            area->selected_border = border;
-            if (area->selected_border == BORDER_MIN) {
-                gwy_debug("moving: changing selection minimum (sb: %d)",
-                          area->selected_border);
-                   if (selection_areadata[0] < selection_areadata[1])
-                        selection_areadata[0] = dx;
-                   else 
-                        selection_areadata[1] = dx;
-            }
-            else if (area->selected_border == BORDER_NONE
-                || area->selected_border == BORDER_MAX) {
-                gwy_debug("moving: changing selection maximum (sb: %d)",
-                          area->selected_border);
-                    if (selection_areadata[1] > selection_areadata[0])
-                        selection_areadata[1] = dx; 
-                    else
-                        selection_areadata[0] = dx;
-            }
-
+            selection_areadata[area->selected_border] = dx;
             gwy_selection_set_object(area->xseldata,
                                      area->selected_object_index,
                                      selection_areadata);
@@ -1166,12 +1097,19 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         break;
 
         case GWY_GRAPH_STATUS_YSEL:
-        nselected = gwy_selection_get_data(area->yseldata, NULL);
-        if (area->selecting && nselected) {
-            gwy_selection_get_object(area->yseldata, nselected - 1,
-                                     selection_areadata);
-            selection_areadata[1] = dy;
-            gwy_selection_set_object(area->yseldata, nselected - 1,
+        if (area->selecting
+            || gwy_graph_area_find_selection_edge(area, dx, dy, NULL) != -1)
+            gdk_window_set_cursor(window, area->varrow_cursor);
+        else
+            gdk_window_set_cursor(window, area->cross_cursor);
+
+        if (area->selecting
+            && gwy_selection_get_object(area->yseldata,
+                                        area->selected_object_index,
+                                        selection_areadata)) {
+            selection_areadata[area->selected_border] = dy;
+            gwy_selection_set_object(area->yseldata,
+                                     area->selected_object_index,
                                      selection_areadata);
         }
         break;
@@ -1307,68 +1245,143 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
         return -1;
 }
 
+/**
+ * gwy_graph_area_find_selection_edge:
+ * @area: A graph area.
+ * @x: Real x position.
+ * @y: Real y position.
+ * @eindex: Location store edge index (index of particular edge coordinate
+ *          inside the selection object).
+ *
+ * Finds range selection object nearest to given coordinates.
+ *
+ * Returns: The index of selection object found, -1 when none is found.
+ **/
 static gint
-gwy_graph_area_find_selection(GwyGraphArea *area,
-                              gdouble x,
-                              gdouble y,
-                              int *btype)
+gwy_graph_area_find_selection_edge(GwyGraphArea *area,
+                                   gdouble x,
+                                   gdouble y,
+                                   int *eindex)
 {
     GwyGraphModel *model;
-    gdouble selection_areadata[2];
-    gdouble min, max, xoff, yoff, maxxoff;
-    guint n, i;
+    GwySelection *selection;
+    gdouble coords[2], dists[2];
+    gdouble maxoff, min, pos;
+    gint n, i, mi, ei;
 
     model = area->graph_model;
-    /* FIXME: What is 50? */
-    xoff = (area->x_max - area->x_min)/50;
-    yoff = (area->y_min - area->y_min)/50;
 
     gwy_debug(" ");
 
-    *btype = BORDER_NONE;
-    if (area->status == GWY_GRAPH_STATUS_XSEL) {
-        n = gwy_selection_get_data(area->xseldata, NULL);
-        for (i = 0; i < n; i++) {
-            gwy_selection_get_object(area->xseldata, i, selection_areadata);
-            min = MIN(selection_areadata[0], selection_areadata[1]);
-            max = MAX(selection_areadata[0], selection_areadata[1]);
-
-            maxxoff = MIN(xoff, (max-min)/2);
-
-            gwy_debug("min %g, max %g, actual %g", min, max, x);
-            if (x > (min - xoff) && x <= (min + maxxoff)) {
-                *btype = BORDER_MIN;
-                gwy_debug("brmin");
-                return i;
-            }
-            else if (x > (max - maxxoff) &&  x <= (max + xoff)) {
-                *btype = BORDER_MAX;
-                gwy_debug("brmax");
-                return i;
-            }
-            else if (min < x && max > x) {
-                gwy_debug("brin");
-                return i;
-            }
-            gwy_debug("x, y: %g %g,  xarea: %g %g",
-                      x, y, selection_areadata[0], selection_areadata[1]);
+    switch (area->status) {
+        case GWY_GRAPH_STATUS_XSEL:
+        case GWY_GRAPH_STATUS_YSEL:
+        /* FIXME: What is 50? */
+        if (area->status == GWY_GRAPH_STATUS_XSEL) {
+            pos = x;
+            maxoff = (area->x_max - area->x_min)/50;
+            selection = area->xseldata;
         }
-    }
-    else if (area->status == GWY_GRAPH_STATUS_YSEL) {
-        n = gwy_selection_get_data(area->yseldata, NULL);
-        for (i = 0; i < n; i++) {
-            gwy_selection_get_object(area->yseldata, i, selection_areadata);
-            min = MIN(selection_areadata[0], selection_areadata[1]);
-            max = MAX(selection_areadata[0], selection_areadata[1]);
-
-            if (min < y && max > y)
-                return i;
+        else {
+            pos = y;
+            maxoff = (area->y_max - area->y_min)/50;
+            selection = area->yseldata;
         }
+
+        mi = -1;
+        ei = -1;
+        min = G_MAXDOUBLE;
+        n = gwy_selection_get_data(selection, NULL);
+        for (i = 0; i < n; i++) {
+            gwy_selection_get_object(selection, i, coords);
+
+            dists[0] = fabs(coords[0] - pos);
+            dists[1] = fabs(coords[1] - pos);
+            if (dists[1] <= dists[0]) {
+                if (dists[1] < min) {
+                    min = dists[1];
+                    mi = i;
+                    ei = 1;
+                }
+            }
+            else {
+                if (dists[0] < min) {
+                    min = dists[0];
+                    mi = i;
+                    ei = 0;
+                }
+            }
+        }
+
+        if (min > maxoff)
+            mi = -1;
+        else if (eindex)
+            *eindex = ei;
+        return mi;
+        break;
+
+        default:
+        /* Not implemented */
+        break;
     }
 
     return -1;
 }
 
+/**
+ * gwy_graph_area_find_selection:
+ * @area: A graph area.
+ * @x: Real x position.
+ * @y: Real y position.
+ *
+ * Finds range selection containing given coordinates.
+ *
+ * Returns: The index of selection object found, -1 when none is found.
+ **/
+static gint
+gwy_graph_area_find_selection(GwyGraphArea *area,
+                              gdouble x,
+                              gdouble y)
+{
+    GwyGraphModel *model;
+    GwySelection *selection;
+    gdouble coords[2];
+    gdouble pos;
+    gint n, i;
+
+    model = area->graph_model;
+
+    gwy_debug(" ");
+
+    switch (area->status) {
+        case GWY_GRAPH_STATUS_XSEL:
+        case GWY_GRAPH_STATUS_YSEL:
+        if (area->status == GWY_GRAPH_STATUS_XSEL) {
+            pos = x;
+            selection = area->xseldata;
+        }
+        else {
+            pos = y;
+            selection = area->yseldata;
+        }
+
+        n = gwy_selection_get_data(selection, NULL);
+        for (i = 0; i < n; i++) {
+            gwy_selection_get_object(selection, i, coords);
+            if (pos >= MIN(coords[0], coords[1])
+                && pos <= MAX(coords[0], coords[1]))
+                return i;
+        }
+        return -1;
+        break;
+
+        default:
+        /* Not implemented */
+        break;
+    }
+
+    return -1;
+}
 
 static gint
 gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
@@ -1380,7 +1393,7 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
     model = area->graph_model;
     /* FIXME: What is 50? */
     xoff = (area->x_max - area->x_min)/50;
-    yoff = (area->y_min - area->y_min)/50;
+    yoff = (area->y_min - area->y_max)/50;
 
     for (i = 0; i < gwy_selection_get_data(area->pointsdata, NULL); i++) {
         gwy_selection_get_object(area->pointsdata,
@@ -1439,8 +1452,9 @@ static GtkWidget*
 gwy_graph_area_find_child(GwyGraphArea *area, gint x, gint y)
 {
     GList *children, *l;
-    
-    if (!area->graph_model->label_visible) return NULL;
+
+    if (!area->graph_model->label_visible)
+        return NULL;
 
     children = gtk_container_get_children(GTK_CONTAINER(area));
     for (l = children; l; l = g_list_next(l)) {
