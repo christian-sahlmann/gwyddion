@@ -16,7 +16,6 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(id -un)
 Requires(pre): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
-BuildRequires: gtkglext-devel >= 1.0
 BuildRequires: gtk2-devel >= 2.6
 BuildRequires: glib2-devel >= 2.6
 BuildRequires: libtiff-devel >= 3.6
