@@ -41,7 +41,7 @@ enum {
     NLINES = 18,
     MAX_THICKNESS = 128,
     MIN_RESOLUTION = 4,
-    MAX_RESOLUTION = 1024
+    MAX_RESOLUTION = 16384
 };
 
 enum {

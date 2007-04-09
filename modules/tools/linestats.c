@@ -37,7 +37,7 @@
 
 enum {
     MIN_RESOLUTION = 4,
-    MAX_RESOLUTION = 1024
+    MAX_RESOLUTION = 16384
 };
 
 typedef struct _GwyToolLineStats      GwyToolLineStats;
