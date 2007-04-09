@@ -611,14 +611,18 @@ _gwy_app_spectra_set_current(GwySpectra *spectra)
     if (current_tool)
         gwy_tool_spectra_switched(current_tool, spectra);
 
+    /*
     if (!spectra) {
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_SPECTRA, 0);
         return;
     }
+    */
 
     g_return_if_fail(GWY_IS_SPECTRA(spectra));
 
+    /*
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_SPECTRA, GWY_MENU_FLAG_SPECTRA);
+    */
 }
 
 /*****************************************************************************
