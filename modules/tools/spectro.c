@@ -43,10 +43,8 @@
 #define GWY_TOOL_SPECTRO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SPECTRO, GwyToolSpectroClass))
 
 enum {
-    NLINES = 18,
-    MAX_THICKNESS = 128,
     MIN_RESOLUTION = 4,
-    MAX_RESOLUTION = 1024
+    MAX_RESOLUTION = 16384
 };
 
 enum {
@@ -83,12 +81,10 @@ struct _GwyToolSpectro {
     GtkWidget *interpolation;
     GtkWidget *separate;
     GtkWidget *apply;
-    GType layer_type;
     gulong layer_object_chosen_id;
 
     /* potential class data */
-    GwySIValueFormat *coord_format;
-
+    GType layer_type;
 };
 
 struct _GwyToolSpectroClass {
@@ -102,19 +98,26 @@ static void   gwy_tool_spectro_finalize             (GObject *object);
 static void   gwy_tool_spectro_init_dialog          (GwyToolSpectro *tool);
 static void   gwy_tool_spectro_data_switched        (GwyTool *gwytool,
                                                      GwyDataView *data_view);
+static void   gwy_tool_spectro_spectra_switched     (GwyTool *gwytool,
+                                                     GwySpectra *spectra);
 static void   gwy_tool_spectro_response             (GwyTool *tool,
                                                      gint response_id);
 static void   gwy_tool_spectro_data_changed         (GwyPlainTool *plain_tool);
 static void   gwy_tool_spectro_selection_changed    (GwyPlainTool *plain_tool,
                                                      gint hint);
 static void   gwy_tool_spectro_tree_sel_changed     (GtkTreeSelection *selection,
-                                                     gpointer data);
+                                                     gpointer user_data);
 static void   gwy_tool_spectro_object_chosen        (GwyVectorLayer *gwyvectorlayer,
                                                      gint i,
                                                      gpointer *data);
 static void   gwy_tool_spectro_show_curve           (GwyToolSpectro *tool,
                                                      gint i);
 static void   gwy_tool_spectro_update_all_curves    (GwyToolSpectro *tool);
+static void   gwy_tool_spectro_update_header        (GwyToolSpectro *tool,
+                                                     guint col,
+                                                     GString *str,
+                                                     const gchar *title,
+                                                     GwySIValueFormat *vf);
 static void   gwy_tool_spectro_render_cell          (GtkCellLayout *layout,
                                                      GtkCellRenderer *renderer,
                                                      GtkTreeModel *model,
@@ -185,6 +188,7 @@ gwy_tool_spectro_class_init(GwyToolSpectroClass *klass)
     tool_class->default_width = 640;
     tool_class->default_height = 400;
     tool_class->data_switched = gwy_tool_spectro_data_switched;
+    tool_class->spectra_switched = gwy_tool_spectro_spectra_switched;
     tool_class->response = gwy_tool_spectro_response;
 
     ptool_class->data_changed = gwy_tool_spectro_data_changed;
@@ -214,24 +218,14 @@ gwy_tool_spectro_finalize(GObject *object)
     gwy_container_set_boolean_by_name(settings, separate_key,
                                       tool->args.separate);
 
-    if (tool->line)
-        gwy_object_unref(tool->line);
-
-    if (tool->model) {
-        gtk_tree_view_set_model(tool->treeview, NULL);
-        gwy_object_unref(tool->model);
-    }
-    if (tool->coord_format)
-        gwy_si_unit_value_format_free(tool->coord_format);
-    if (tool->spectra)
-        g_object_unref(tool->spectra);
+    gtk_tree_view_set_model(tool->treeview, NULL);
+    gwy_object_unref(tool->model);
+    gwy_object_unref(tool->spectra);
     gwy_debug("");
     gwy_debug("id: %u", (guint)tool->layer_object_chosen_id);
-    if (tool->layer_object_chosen_id>0){
-        g_signal_handler_disconnect(plain_tool->layer,
-                                    tool->layer_object_chosen_id);
-        tool->layer_object_chosen_id=0;
-    }
+    gwy_signal_handler_disconnect(plain_tool->layer,
+                                  tool->layer_object_chosen_id);
+
     G_OBJECT_CLASS(gwy_tool_spectro_parent_class)->finalize(object);
 }
 
@@ -263,11 +257,9 @@ gwy_tool_spectro_init(GwyToolSpectro *tool)
     gwy_container_gis_boolean_by_name(settings, separate_key,
                                       &tool->args.separate);
 
-    tool->coord_format = NULL;
     tool->spectra = NULL;
 
-    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type,
-                                     "spec");
+    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type, "spec");
     gwy_tool_spectro_init_dialog(tool);
 }
 
@@ -285,7 +277,6 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
     GtkDialog *dialog;
     GtkWidget *scwin, *label, *hbox, *vbox, *hbox2;
     GtkTable *table;
-    GtkListStore *store;
     GtkTreeSelection *select;
     guint i, row;
 
@@ -299,11 +290,7 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     /* Point coordinates */
-    store = gtk_list_store_new(NCOLUMNS,
-                               G_TYPE_UINT,
-                               G_TYPE_DOUBLE,
-                               G_TYPE_DOUBLE);
-    tool->model = GTK_TREE_MODEL(store);
+    tool->model = GTK_TREE_MODEL(gwy_null_store_new(0));
     tool->treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(tool->model));
 
     for (i = 0; i < NCOLUMNS; i++) {
@@ -313,8 +300,6 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
         g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
         renderer = gtk_cell_renderer_text_new();
         g_object_set(renderer, "xalign", 1.0, NULL);
-        if (i == COLUMN_I)
-            g_object_set(renderer, "foreground-set", TRUE, NULL);
         gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
         gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
                                            gwy_tool_spectro_render_cell, tool,
@@ -425,18 +410,6 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolSpectro *tool;
-    GwyPixmapLayer *blayer;
-    GwySpectra *spectra;
-    GtkListStore *store;
-    GtkTreeViewColumn *column;
-    GtkLabel *label;
-    GwySIUnit *siunit;
-    GwySIValueFormat *vf;
-    guint len, nspec, i;
-    const gchar *data_key;
-    gchar *key, *column_title;
-    gchar ext[]="spec/0";
-    gboolean spec_found = FALSE;
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     tool = GWY_TOOL_SPECTRO(gwytool);
@@ -444,19 +417,18 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
     if (plain_tool->init_failed)
         return;
 
+    /*
     if(data_view==plain_tool->data_view) {
         GWY_TOOL_CLASS(gwy_tool_spectro_parent_class)->data_switched(gwytool,
                                                                      data_view);
         return;
     }
+    */
 
     gwy_debug("disconect obj-chosen handler: %u",
               (guint)tool->layer_object_chosen_id);
-    if (tool->layer_object_chosen_id > 0) {
-        g_signal_handler_disconnect(plain_tool->layer,
-                                    tool->layer_object_chosen_id);
-        tool->layer_object_chosen_id = 0;
-    }
+    gwy_signal_handler_disconnect(plain_tool->layer,
+                                  tool->layer_object_chosen_id);
 
     GWY_TOOL_CLASS(gwy_tool_spectro_parent_class)->data_switched(gwytool,
                                                                  data_view);
@@ -468,100 +440,64 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
                                 NULL);
     }
     if (data_view) {
-
-
         tool->layer_object_chosen_id =
-                g_signal_connect(G_OBJECT (plain_tool->layer),
+                g_signal_connect(G_OBJECT(plain_tool->layer),
                                  "object-chosen",
-                                 G_CALLBACK (gwy_tool_spectro_object_chosen),
+                                 G_CALLBACK(gwy_tool_spectro_object_chosen),
                                  tool);
-
-        blayer = gwy_data_view_get_base_layer(data_view);
-        data_key = gwy_pixmap_layer_get_data_key(blayer);
-        len=strlen(data_key);
-        /* FIXME: This is going to need to be able to deal with more than just
-                  "spec/0" */
-        len+=2; /* space to add "/0" */
-        key = g_new0(gchar, len+1);
-        strcpy(key, data_key);
-        gwy_debug("key: %s",key);
-        strcpy(key+len-6, ext);
-        gwy_debug("key: %s",key);
-        spec_found = gwy_container_gis_object_by_name(plain_tool->container,
-                                                      key,
-                                                      &spectra);
-        gwy_debug("Spectra %sfound @ %s", spec_found?"":" not", key);
-    }
-    if (spec_found) {
-        gdouble coords[2];
-
-        g_return_if_fail(GWY_IS_SPECTRA(spectra));
-        g_object_ref(spectra);
-        if (tool->spectra)
-            g_object_unref(tool->spectra);
-        tool->spectra=spectra;
-
-        nspec = gwy_spectra_get_n_spectra(spectra);
-        gwy_selection_set_max_objects(plain_tool->selection, nspec);
-        gwy_selection_clear(plain_tool->selection);
-        siunit = gwy_spectra_get_si_unit_xy(spectra);
-
-        /* XXX: Tidy this up. */
-        vf = gwy_si_unit_get_format_with_resolution(siunit,
-                                                    GWY_SI_UNIT_FORMAT_PLAIN,
-                                                    gwy_data_field_get_xreal(plain_tool->data_field),
-                                                    gwy_data_field_get_xreal(plain_tool->data_field)/gwy_data_field_get_xres(plain_tool->data_field),
-                                                    tool->coord_format);
-
-        tool->coord_format = vf;
-
-        store = GTK_LIST_STORE(tool->model);
-        gtk_tree_view_set_model(tool->treeview, NULL);
-        gtk_list_store_clear(store);
-        for (i = 0; i < nspec; i++) {
-            GtkTreeIter iter;
-
-            gwy_spectra_itoxy(spectra, i, &coords[0], &coords[1]);
-            gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
-                                              COLUMN_I, i,
-                                              COLUMN_X, coords[0],
-                                              COLUMN_Y, coords[1],
-                                              -1);
-            gwy_selection_set_object(plain_tool->selection, -1, coords);
-        }
-        gtk_tree_view_set_model(tool->treeview, tool->model);
-
-        column_title = g_strconcat("<b>x</b> [",vf->units,"]",NULL);
-        gwy_debug("%s", column_title);
-        column = gtk_tree_view_get_column(tool->treeview, COLUMN_X);
-        label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-        gtk_label_set_markup(label, column_title);
-        g_free(column_title);
-
-        column_title = g_strconcat("<b>y</b> [",vf->units,"]",NULL);
-        column = gtk_tree_view_get_column(tool->treeview, COLUMN_Y);
-        label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
-        gtk_label_set_markup(label, column_title);
-        g_free(column_title);
-
-    }
-
-    if (!spec_found) {
-        if (tool->spectra) {
-            g_object_unref(tool->spectra);
-            tool->spectra = NULL;
-        }
-        if (tool->coord_format)
-            gwy_si_unit_value_format_free(tool->coord_format);
-        tool->coord_format = NULL;
-        store = GTK_LIST_STORE(tool->model);
-        gtk_tree_view_set_model(tool->treeview, NULL);
-        gtk_list_store_clear(store);
-        gtk_tree_view_set_model(tool->treeview, tool->model);
     }
 
     gwy_graph_model_remove_all_curves(tool->gmodel);
     gwy_tool_spectro_update_all_curves(tool);
+}
+
+static void
+gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
+                                  GwySpectra *spectra)
+{
+    GwyToolSpectro *tool;
+    GwyPlainTool *plain_tool;
+    GwyNullStore *store;
+    GString *str;
+    guint nspec, i;
+    gdouble coords[2];
+
+    gwy_debug("spectra: %p");
+
+    tool = GWY_TOOL_SPECTRO(gwytool);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    if (spectra == tool->spectra)
+        return;
+
+    store = GWY_NULL_STORE(tool->model);
+    if (!spectra) {
+        gwy_null_store_set_n_rows(store, 0);
+        gwy_object_unref(tool->spectra);
+        return;
+    }
+
+    g_return_if_fail(GWY_IS_SPECTRA(spectra));
+    g_object_ref(spectra);
+    gwy_object_unref(tool->spectra);
+    tool->spectra = spectra;
+
+    nspec = gwy_spectra_get_n_spectra(spectra);
+    gwy_selection_set_max_objects(plain_tool->selection, nspec);
+
+    gwy_selection_clear(plain_tool->selection);
+    gwy_null_store_set_n_rows(store, 0);
+    for (i = 0; i < nspec; i++) {
+        gwy_spectra_itoxy(tool->spectra, i, &coords[0], &coords[1]);
+        gwy_selection_set_object(plain_tool->selection, i, coords);
+    }
+    gwy_null_store_set_n_rows(store, nspec);
+
+    str = g_string_new(NULL);
+    gwy_tool_spectro_update_header(tool, COLUMN_X, str, "x",
+                                   plain_tool->coord_format);
+    gwy_tool_spectro_update_header(tool, COLUMN_Y, str, "y",
+                                   plain_tool->coord_format);
+    g_string_free(str, TRUE);
 }
 
 static void
@@ -630,31 +566,29 @@ gwy_tool_spectro_selection_changed(GwyPlainTool *plain_tool,
 }
 
 static void
-gwy_tool_spectro_tree_sel_changed (GtkTreeSelection *selection,
-                                   gpointer data)
+gwy_tool_spectro_tree_selection_show(GtkTreeModel *model,
+                                     G_GNUC_UNUSED GtkTreePath *path,
+                                     GtkTreeIter *iter,
+                                     gpointer user_data)
 {
-    GwyToolSpectro *tool;
-    GtkTreeIter iter;
-    GtkTreeModel *model;
-    GList *selected, *item;
+    GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
     guint i;
 
-    g_return_if_fail(GWY_IS_TOOL_SPECTRO(data));
-    tool=GWY_TOOL_SPECTRO(data);
+    gtk_tree_model_get(model, iter, COLUMN_I, &i, -1);
+    gwy_tool_spectro_show_curve(tool, i);
+}
+
+static void
+gwy_tool_spectro_tree_sel_changed(GtkTreeSelection *selection,
+                                  gpointer user_data)
+{
+    GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
 
     gwy_debug("");
     gwy_graph_model_remove_all_curves(tool->gmodel);
-    selected = gtk_tree_selection_get_selected_rows(selection, &model);
-    item = selected;
-    while (item) {
-        gtk_tree_model_get_iter(model, &iter, (GtkTreePath*)item->data);
-        gtk_tree_model_get (model, &iter, COLUMN_I, &i, -1);
-        gwy_tool_spectro_show_curve(tool, i);
-        item = g_list_next(item);
-    }
-    g_list_foreach(selected, gtk_tree_path_free, NULL);
-    g_list_free(selected);
-
+    gtk_tree_selection_selected_foreach(selection,
+                                        gwy_tool_spectro_tree_selection_show,
+                                        tool);
 }
 
 static void
@@ -681,7 +615,7 @@ gwy_tool_spectro_object_chosen(GwyVectorLayer *gwyvectorlayer,
 
 static void
 gwy_tool_spectro_show_curve(GwyToolSpectro *tool,
-                              gint id)
+                            gint id)
 {
     const GwyRGBA *rgba;
     GwyPlainTool *plain_tool;
@@ -703,11 +637,11 @@ gwy_tool_spectro_show_curve(GwyToolSpectro *tool,
 
     n = gwy_graph_model_get_n_curves(tool->gmodel);
 
-    for(i = 0; i < n; i++){
+    for (i = 0; i < n; i++) {
         guint idx;
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
         idx = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(gcmodel), "sid"));
-        if (idx==id)
+        if (idx == id)
             break;
         else
             gcmodel = NULL;
@@ -733,7 +667,6 @@ gwy_tool_spectro_show_curve(GwyToolSpectro *tool,
         if (n == 0)
             gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
     }
-    g_object_unref(tool->line);
     tool->line = NULL;
 }
 
@@ -755,6 +688,27 @@ gwy_tool_spectro_update_all_curves(GwyToolSpectro *tool)
 }
 
 static void
+gwy_tool_spectro_update_header(GwyToolSpectro *tool,
+                               guint col,
+                               GString *str,
+                               const gchar *title,
+                               GwySIValueFormat *vf)
+{
+    GtkTreeViewColumn *column;
+    GtkLabel *label;
+
+    column = gtk_tree_view_get_column(tool->treeview, col);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+
+    g_string_assign(str, "<b>");
+    g_string_append(str, title);
+    g_string_append(str, "</b>");
+    if (vf)
+        g_string_append_printf(str, " [%s]", vf->units);
+    gtk_label_set_markup(label, str->str);
+}
+
+static void
 gwy_tool_spectro_render_cell(GtkCellLayout *layout,
                              GtkCellRenderer *renderer,
                              GtkTreeModel *model,
@@ -763,7 +717,7 @@ gwy_tool_spectro_render_cell(GtkCellLayout *layout,
 {
     GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
     const GwySIValueFormat *vf;
-    gchar buf[32];
+    gchar buf[48];
     gdouble val;
     guint idx, id;
 
@@ -775,11 +729,14 @@ gwy_tool_spectro_render_cell(GtkCellLayout *layout,
         return;
     }
 
-    vf = tool->coord_format;
+    vf = GWY_PLAIN_TOOL(tool)->coord_format;
     switch (id) {
         case COLUMN_X:
+        gwy_spectra_itoxy(tool->spectra, idx, &val, NULL);
+        break;
+
         case COLUMN_Y:
-        gtk_tree_model_get(model, iter, id, &val, -1);
+        gwy_spectra_itoxy(tool->spectra, idx, NULL, &val);
         break;
 
         default:
@@ -787,9 +744,8 @@ gwy_tool_spectro_render_cell(GtkCellLayout *layout,
         break;
     }
 
-    if (vf) {
-        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/(vf->magnitude));
-    }
+    if (vf)
+        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
     else
         g_snprintf(buf, sizeof(buf), "%.3g", val);
 
