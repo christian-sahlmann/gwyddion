@@ -50,6 +50,8 @@ struct _GwyAppFileChooser {
     GtkWidget *type_list;
     GtkWidget *expander;
     GtkWidget *preview;
+    GtkWidget *preview_filename;
+    GtkWidget *preview_type;
     GObject *renderer_fileinfo;
 
     /* preview */
