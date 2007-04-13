@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 /* TODO: metadata */
 
 #include "config.h"
@@ -273,6 +273,7 @@ omicron_load(const gchar *filename,
 
             channel = g_ptr_array_index(ofile.spectro_channels, i);
             if (omicron_has_extension(channel->filename, "cs")) {
+                gchar *t;
                 GQuark quark;
 
                 spectra = omicron_read_cs_data(&ofile, channel, error);
@@ -282,7 +283,9 @@ omicron_load(const gchar *filename,
                 }
 
                 /* FIXME */
-                gwy_spectra_set_title(spectra, "Spectra");
+                t = g_strconcat(channel->chan, "-", channel->param, NULL);
+                gwy_spectra_set_title(spectra, t);
+                g_free(t);
                 quark = gwy_app_get_spectra_key_for_id(i);
                 gwy_container_set_object(container, quark, spectra);
                 g_object_unref(spectra);
@@ -370,7 +373,7 @@ omicron_read_header(gchar *buffer,
         else if (gwy_strequal(line, "Spectroscopy Channel")) {
             OmicronSpectroChannel *channel;
 
-            gwy_debug("Spectroscopic Channel found (chan %s", val);
+            gwy_debug("Spectroscopic Channel found (chan %s)", val);
 
             channel = g_new0(OmicronSpectroChannel, 1);
             channel->chan = val;
