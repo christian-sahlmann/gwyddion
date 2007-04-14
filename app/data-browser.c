@@ -3553,15 +3553,17 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyPixmapLayer *layer;
-    GwyContainer *data;
+    GwyContainer *data, *olddata;
     const gchar *strkey;
     GwyAppKeyType type;
     gint i;
 
+    browser = gwy_app_get_data_browser();
+    olddata = browser->current ? browser->current->container : NULL;
+
     data = gwy_data_view_get_data(data_view);
     gwy_app_data_browser_switch_data(data);
 
-    browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
 
@@ -3578,19 +3580,47 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     /* Restore the last used spectra.  If the reference is dangling, remove
      * it from the container. */
     {
+        gboolean selected = FALSE;
+        GwySpectra *spectra;
         gchar key[40];
         gint id;
 
         g_snprintf(key, sizeof(key), "/%d/data/sps-id", i);
         if (gwy_container_gis_int32_by_name(data, key, &id)) {
-            GwySpectra *spectra;
             GQuark quark;
 
             quark = gwy_app_get_spectra_key_for_id(id);
-            if (gwy_container_gis_object(data, quark, &spectra))
+            if (gwy_container_gis_object(data, quark, &spectra)) {
                 gwy_app_data_browser_select_spectra(spectra);
+                selected = TRUE;
+            }
             else
                 gwy_container_remove_by_name(data, key);
+        }
+        /* We have to ensure NULL spectra selection is emitted when we
+         * switch to data that have no spectra.  And generally whenever we
+         * switch to another container, we make spectra from that container
+         * active (or none). */
+        if (!selected) {
+            if (data != olddata) {
+                GwyAppDataList *list = &proxy->lists[PAGE_SPECTRA];
+                GtkTreeModel *model;
+                GtkTreeIter iter;
+
+                model = GTK_TREE_MODEL(list->store);
+                if (gwy_app_data_proxy_find_object(list->store, list->active,
+                                                   &iter)
+                    || gtk_tree_model_get_iter_first(model, &iter)) {
+                    gtk_tree_model_get(model, &iter,
+                                       MODEL_OBJECT, &spectra,
+                                       -1);
+                    gwy_app_data_browser_select_spectra(spectra);
+                    g_object_unref(spectra);
+                }
+                else {
+                    _gwy_app_spectra_set_current(NULL);
+                }
+            }
         }
     }
 }
