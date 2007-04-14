@@ -944,7 +944,11 @@ gwy_app_switch_tool(const gchar *toolname)
     g_return_if_fail(GWY_IS_TOOL(newtool));
 
     if (data_view) {
+        GwySpectra *spectra;
+
         gwy_tool_data_switched(current_tool, data_view);
+        gwy_app_data_browser_get_current(GWY_APP_SPECTRA, &spectra, 0);
+        gwy_tool_spectra_switched(current_tool, spectra);
         gwy_tool_show(current_tool);
     }
 }
