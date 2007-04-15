@@ -112,9 +112,9 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
-    "2003-2006",
+    "2003-2007",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -243,6 +243,10 @@ grain_dist_dialog(GrainDistArgs *args,
         { N_("_Grain minimum basis"),        GWY_GRAIN_VALUE_VOLUME_MIN,     },
         { N_("_Laplacian background basis"), GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
     };
+    static const GwyEnum quantities_position[] = {
+        { N_("Center x _position"), GWY_GRAIN_VALUE_CENTER_X, },
+        { N_("Center _y position"), GWY_GRAIN_VALUE_CENTER_Y, },
+    };
     static const GwyEnum modes[] = {
         { N_("_Export raw data"), MODE_RAW,   },
         { N_("Plot _graphs"),     MODE_GRAPH, },
@@ -265,7 +269,7 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     /* Output type */
-    table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
+    table = GTK_TABLE(gtk_table_new(2, 3, FALSE));
     gtk_table_set_row_spacings(table, 8);
     gtk_table_set_col_spacings(table, 12);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -294,6 +298,12 @@ grain_dist_dialog(GrainDistArgs *args,
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_volume),
                                           quantities_volume,
+                                          args->selected,
+                                          args->bitmask);
+    controls.qlist = append_checkbox_list(table, 2, 1, _("Position"),
+                                          controls.qlist,
+                                          G_N_ELEMENTS(quantities_position),
+                                          quantities_position,
                                           args->selected,
                                           args->bitmask);
 
@@ -459,6 +469,10 @@ add_one_distribution(GwyContainer *container,
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
         { N_("Grain Maximum Bounding Direction Histogram"),
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
+        { N_("Grain Center X Histogram"),
+            GWY_GRAIN_VALUE_CENTER_X, },
+        { N_("Grain Center Y Histogram"),
+            GWY_GRAIN_VALUE_CENTER_Y, },
         { N_("Grain Volume (Zero) Histogram"),
             GWY_GRAIN_VALUE_VOLUME_0, },
         { N_("Grain Volume (Minimum) Histogram"),
@@ -493,6 +507,10 @@ add_one_distribution(GwyContainer *container,
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
         { N_("Grain max. bound. directions"),
             GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
+        { N_("Grain center x positions"),
+            GWY_GRAIN_VALUE_CENTER_X, },
+        { N_("Grain center y positions"),
+            GWY_GRAIN_VALUE_CENTER_Y, },
         { N_("Grain volumes (zero)"),
             GWY_GRAIN_VALUE_VOLUME_0, },
         { N_("Grain volumes (minimum)"),
