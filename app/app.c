@@ -305,6 +305,8 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
     GwyDataView *data_view;
     GtkWidget *corner, *ebox, *main_window;
     GtkAccelGroup *accel_group;
+    GwyContainer *settings;
+    GwyLayerBasicRangeType range_type;
 
     if ((!popup_menu || !corner_menu)
         && (main_window = gwy_app_main_window_get())) {
@@ -346,6 +348,15 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
     g_signal_connect_swapped(ebox, "button-press-event",
                              G_CALLBACK(gwy_app_data_corner_menu_popup_mouse),
                              corner_menu);
+
+    settings = gwy_app_settings_get();
+    if (gwy_container_gis_enum_by_name(settings, "/app/default-range-type",
+                                       &range_type)) {
+        GwyPixmapLayer *layer;
+
+        layer = gwy_data_view_get_base_layer(data_view);
+        g_object_set(layer, "default-range-type", range_type, NULL);
+    }
 }
 
 /*****************************************************************************
