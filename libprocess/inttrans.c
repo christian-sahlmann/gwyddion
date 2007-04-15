@@ -388,13 +388,16 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
 {
     gint newres;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(rsrc));
-    g_return_if_fail(!isrc || GWY_IS_DATA_FIELD(isrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(isrc));
+    /* TODO: real-to-complex does not work yet
+    g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
     if (isrc)
         g_return_if_fail(!gwy_data_line_check_compatibility
                                      (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
-    g_return_if_fail(GWY_IS_DATA_FIELD(rdest));
-    g_return_if_fail(GWY_IS_DATA_FIELD(idest));
+                                     */
+    g_return_if_fail(GWY_IS_DATA_LINE(rdest));
+    g_return_if_fail(GWY_IS_DATA_LINE(idest));
     newres = gwy_fft_find_nice_size(rsrc->res);
     g_return_if_fail(rsrc->res == newres);
 
