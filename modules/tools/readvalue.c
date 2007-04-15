@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -331,6 +331,8 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
 
     tool->show_selection
         = gtk_check_button_new_with_mnemonic(_("Show _selection"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->show_selection),
+                                 tool->args.show_selection);
     gtk_table_attach(GTK_TABLE(table), tool->show_selection,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect(tool->show_selection, "toggled",
@@ -339,7 +341,6 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     row++;
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
-    
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_show_all(dialog->vbox);
