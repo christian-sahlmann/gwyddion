@@ -650,7 +650,7 @@ compare_coord_pos(gconstpointer a, gconstpointer b)
 }
 
 /**
- * gwy_spectra_nearest:
+ * gwy_spectra_find_nearest:
  * @spectra: A spectra object.
  * @x: Point x-coordinate.
  * @y: Point y-coordinate.
