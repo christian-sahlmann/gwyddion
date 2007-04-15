@@ -327,6 +327,12 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE: Direction of the maximum lateral
  *                                       bounding size (arbitrary one if the
  *                                       maximum is not unique).
+ * @GWY_GRAIN_VALUE_CENTER_X: Grain centre horizontal position,
+ *                            i.e. the mean value of its pixel x-coordinates.
+ *                            (Since: 2.6)
+ * @GWY_GRAIN_VALUE_CENTER_X: Grain centre vertical position,
+ *                            i.e. the mean value of its pixel y-coordinates.
+ *                            (Since: 2.6)
  * @GWY_GRAIN_VALUE_VOLUME_0: Grain volume calculated with grain basis at
  *                            z=0 (therefore it is just an integral it can be
  *                            negative).  (Since: 2.3)

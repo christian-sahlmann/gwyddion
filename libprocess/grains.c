@@ -738,6 +738,8 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
         case GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH:
         case GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE:
         case GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE:
+        case GWY_GRAIN_VALUE_CENTER_X:
+        case GWY_GRAIN_VALUE_CENTER_Y:
         gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lineunit));
         break;
 
@@ -1411,6 +1413,40 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         /* Finalize */
         g_array_free(vertices, TRUE);
         g_free(pos);
+        break;
+
+        case GWY_GRAIN_VALUE_CENTER_X:
+        sizes = g_new0(gint, ngrains + 1);
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < yres; j++) {
+                gint gno = grains[i*xres + j];
+
+                values[gno] += j;
+                sizes[gno]++;
+            }
+        }
+        q = data_field->xreal/xres;
+        for (i = 0; i <= ngrains; i++)
+            values[i] = q*(values[i]/sizes[i] + 0.5);
+        g_free(sizes);
+        break;
+
+        case GWY_GRAIN_VALUE_CENTER_Y:
+        sizes = g_new0(gint, ngrains + 1);
+        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < yres; j++) {
+                gint gno = grains[i*xres + j];
+
+                values[gno] += i;
+                sizes[gno]++;
+            }
+        }
+        q = data_field->yreal/yres;
+        for (i = 0; i <= ngrains; i++)
+            values[i] = q*(values[i]/sizes[i] + 0.5);
+        g_free(sizes);
         break;
 
         case GWY_GRAIN_VALUE_VOLUME_0:

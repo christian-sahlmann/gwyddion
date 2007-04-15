@@ -143,7 +143,7 @@ typedef enum {
     GWY_CORRELATION_POC     = 2
 } GwyCorrelationType;
 
-/* The values should not grow over 31 (to be usable as bit positions) */
+/* The values should not grow over 30 (to be usable as bit positions) */
 typedef enum {
     GWY_GRAIN_VALUE_PROJECTED_AREA       = 0,
     GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE    = 1,
@@ -158,6 +158,8 @@ typedef enum {
     GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE  = 13,
     GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE   = 14,
     GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE  = 15,
+    GWY_GRAIN_VALUE_CENTER_X             = 16,
+    GWY_GRAIN_VALUE_CENTER_Y             = 17,
     GWY_GRAIN_VALUE_VOLUME_0             = 18,
     GWY_GRAIN_VALUE_VOLUME_MIN           = 19,
     GWY_GRAIN_VALUE_VOLUME_LAPLACE       = 20
