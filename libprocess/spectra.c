@@ -847,7 +847,7 @@ gwy_spectra_set_spectrum_selected(GwySpectra *spectra,
     g_return_if_fail(i < spectra->spectra->len);
 
     spec = &g_array_index(spectra->spectra, GwySpectrum, i);
-    if (spec->selected != !selected) {
+    if (spec->selected != !!selected) {
         spec->selected = selected;
         /* TODO: Emit something or whatever. */
     }
