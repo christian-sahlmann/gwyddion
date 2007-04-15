@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG
+#define DEBUG 1
 
 #include "config.h"
 #include <string.h>
@@ -82,6 +82,7 @@ struct _GwyToolSpectro {
     GtkWidget *separate;
     GtkWidget *apply;
     gulong layer_object_chosen_id;
+    gboolean ignore_tree_selection;
 
     /* potential class data */
     GType layer_type;
@@ -221,7 +222,6 @@ gwy_tool_spectro_finalize(GObject *object)
     gtk_tree_view_set_model(tool->treeview, NULL);
     gwy_object_unref(tool->model);
     gwy_object_unref(tool->spectra);
-    gwy_debug("");
     gwy_debug("id: %u", (guint)tool->layer_object_chosen_id);
     gwy_signal_handler_disconnect(plain_tool->layer,
                                   tool->layer_object_chosen_id);
@@ -311,11 +311,11 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
         gtk_tree_view_append_column(tool->treeview, column);
     }
 
-    select = gtk_tree_view_get_selection (GTK_TREE_VIEW (tool->treeview));
-    gtk_tree_selection_set_mode (select, GTK_SELECTION_MULTIPLE);
-    g_signal_connect (G_OBJECT (select), "changed",
-                      G_CALLBACK (gwy_tool_spectro_tree_sel_changed),
-                      tool);
+    select = gtk_tree_view_get_selection(GTK_TREE_VIEW (tool->treeview));
+    gtk_tree_selection_set_mode(select, GTK_SELECTION_MULTIPLE);
+    g_signal_connect(G_OBJECT(select), "changed",
+                     G_CALLBACK(gwy_tool_spectro_tree_sel_changed),
+                     tool);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -457,12 +457,13 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
 {
     GwyToolSpectro *tool;
     GwyPlainTool *plain_tool;
+    GtkTreeSelection *selection;
     GwyNullStore *store;
     GString *str;
     guint nspec, i;
     gdouble coords[2];
 
-    gwy_debug("spectra: %p");
+    gwy_debug("spectra: %p", spectra);
 
     tool = GWY_TOOL_SPECTRO(gwytool);
     plain_tool = GWY_PLAIN_TOOL(gwytool);
@@ -470,8 +471,12 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
         return;
 
     store = GWY_NULL_STORE(tool->model);
+    selection = gtk_tree_view_get_selection(tool->treeview);
     if (!spectra) {
+        tool->ignore_tree_selection = TRUE;
         gwy_null_store_set_n_rows(store, 0);
+        tool->ignore_tree_selection = FALSE;
+        gwy_tool_spectro_tree_sel_changed(selection, tool);
         gwy_object_unref(tool->spectra);
         return;
     }
@@ -484,6 +489,11 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     nspec = gwy_spectra_get_n_spectra(spectra);
     gwy_selection_set_max_objects(plain_tool->selection, nspec);
 
+    /* Prevent treeview selection updates in a for-cycle as the handler
+     * fully redraws the graph */
+    tool->ignore_tree_selection = TRUE;
+
+    /* Update point layer selection */
     gwy_selection_clear(plain_tool->selection);
     gwy_null_store_set_n_rows(store, 0);
     for (i = 0; i < nspec; i++) {
@@ -491,6 +501,22 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
         gwy_selection_set_object(plain_tool->selection, i, coords);
     }
     gwy_null_store_set_n_rows(store, nspec);
+
+    /* Update tree view selection */
+    gtk_tree_selection_unselect_all(selection);
+    for (i = 0; i < nspec; i++) {
+        if (gwy_spectra_get_spectrum_selected(tool->spectra, i)) {
+            GtkTreeIter iter;
+
+            gtk_tree_model_iter_nth_child(tool->model, &iter, NULL, i);
+            gtk_tree_selection_select_iter(selection, &iter);
+            gwy_debug("selecting %u", i);
+        }
+    }
+
+    /* Finally update the selection */
+    tool->ignore_tree_selection = FALSE;
+    gwy_tool_spectro_tree_sel_changed(selection, tool);
 
     str = g_string_new(NULL);
     gwy_tool_spectro_update_header(tool, COLUMN_X, str, "x",
@@ -566,29 +592,35 @@ gwy_tool_spectro_selection_changed(GwyPlainTool *plain_tool,
 }
 
 static void
-gwy_tool_spectro_tree_selection_show(GtkTreeModel *model,
-                                     G_GNUC_UNUSED GtkTreePath *path,
-                                     GtkTreeIter *iter,
-                                     gpointer user_data)
-{
-    GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
-    guint i;
-
-    gtk_tree_model_get(model, iter, COLUMN_I, &i, -1);
-    gwy_tool_spectro_show_curve(tool, i);
-}
-
-static void
 gwy_tool_spectro_tree_sel_changed(GtkTreeSelection *selection,
                                   gpointer user_data)
 {
     GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
+    GtkTreeIter iter;
+    guint i, n;
 
-    gwy_debug("");
+    gwy_debug("ignored: %d", tool->ignore_tree_selection);
+    if (tool->ignore_tree_selection)
+        return;
+
+    /* FIXME: Inefficient */
     gwy_graph_model_remove_all_curves(tool->gmodel);
-    gtk_tree_selection_selected_foreach(selection,
-                                        gwy_tool_spectro_tree_selection_show,
-                                        tool);
+    n = gwy_null_store_get_n_rows(GWY_NULL_STORE(tool->model));
+    if (!n)
+        return;
+
+    g_assert(tool->spectra);
+    gtk_tree_model_get_iter_first(tool->model, &iter);
+    for (i = 0; i < n; i++) {
+        gboolean sel = gtk_tree_selection_iter_is_selected(selection, &iter);
+
+        gwy_debug("i: %u selected: %d", i, sel);
+        gwy_spectra_set_spectrum_selected(tool->spectra, i, sel);
+        if (sel)
+            gwy_tool_spectro_show_curve(tool, i);
+
+        gtk_tree_model_iter_next(tool->model, &iter);
+    }
 }
 
 static void
