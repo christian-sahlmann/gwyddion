@@ -426,17 +426,22 @@ gwy_data_line_fft_do(GwyDataLine *rsrc,
     howmany_dims[0].is = rsrc->res;
     howmany_dims[0].os = rsrc->res;
     /* Backward direction is equivalent to switching real and imaginary parts */
+    /* XXX: Planner destroys input, we have to either allocate memory or
+     * use in-place transform.  In some cases caller could provide us with
+     * already allocated buffers. */
     if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        rsrc->data, isrc->data,
+                                        rdest->data, idest->data,
                                         rdest->data, idest->data,
                                         FFTW_MEASURE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        isrc->data, rsrc->data,
+                                        idest->data, rdest->data,
                                         idest->data, rdest->data,
                                         FFTW_MEASURE);
     g_return_if_fail(plan);
+    gwy_data_line_copy(rsrc, rdest);
+    gwy_data_line_copy(isrc, idest);
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 
@@ -1291,17 +1296,22 @@ gwy_data_field_xfft_do(GwyDataField *rin,
     howmany_dims[0].is = rin->xres;
     howmany_dims[0].os = rin->xres;
     /* Backward direction is equivalent to switching real and imaginary parts */
+    /* XXX: Planner destroys input, we have to either allocate memory or
+     * use in-place transform.  In some cases caller could provide us with
+     * already allocated buffers. */
     if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        rin->data, iin->data,
+                                        rout->data, iout->data,
                                         rout->data, iout->data,
                                         FFTW_MEASURE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        iin->data, rin->data,
+                                        iout->data, rout->data,
                                         iout->data, rout->data,
                                         FFTW_MEASURE);
     g_return_if_fail(plan);
+    gwy_data_field_copy(rin, rout, FALSE);
+    gwy_data_field_copy(iin, iout, FALSE);
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 
@@ -1582,17 +1592,22 @@ gwy_data_field_yfft_do(GwyDataField *rin,
     howmany_dims[0].is = 1;
     howmany_dims[0].os = 1;
     /* Backward direction is equivalent to switching real and imaginary parts */
+    /* XXX: Planner destroys input, we have to either allocate memory or
+     * use in-place transform.  In some cases caller could provide us with
+     * already allocated buffers. */
     if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        rin->data, iin->data,
+                                        rout->data, iout->data,
                                         rout->data, iout->data,
                                         FFTW_MEASURE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        iin->data, rin->data,
+                                        iout->data, rout->data,
                                         iout->data, rout->data,
                                         FFTW_MEASURE);
     g_return_if_fail(plan);
+    gwy_data_field_copy(rin, rout, FALSE);
+    gwy_data_field_copy(iin, iout, FALSE);
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 
