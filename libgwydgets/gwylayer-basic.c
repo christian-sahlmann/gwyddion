@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwydgettypes.h>
 #include <libgwydgets/gwylayer-basic.h>
 
 #define connect_swapped_after(obj, signal, cb, data) \
@@ -40,6 +41,7 @@ enum {
     PROP_GRADIENT_KEY,
     PROP_PRESENTATION_KEY,
     PROP_RANGE_TYPE_KEY,
+    PROP_DEFAULT_RANGE_TYPE,
     PROP_MIN_MAX_KEY
 };
 
@@ -77,6 +79,8 @@ static void gwy_layer_basic_show_changed         (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_range_type_changed   (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_min_max_changed      (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_changed              (GwyPixmapLayer *pixmap_layer);
+static void gwy_layer_basic_set_default_range_type(GwyLayerBasic *basic_layer,
+                                                   GwyLayerBasicRangeType range_type);
 
 static guint basic_layer_signals[LAST_SIGNAL] = { 0 };
 
@@ -141,6 +145,24 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
                              "Range type key",
                              "Key identifying color range type in container",
                              NULL, G_PARAM_READWRITE));
+
+    /**
+     * GwyLayerBasic:default-range-type:
+     *
+     * The :default-range-type-key property determines the color mapping range
+     * type used when the type is unset in the container.
+     *
+     * Since: 2.6
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DEFAULT_RANGE_TYPE,
+         g_param_spec_enum("default-range-type",
+                           "Default range type",
+                           "Default color range mapping type",
+                           GWY_TYPE_LAYER_BASIC_RANGE_TYPE,
+                           GWY_LAYER_BASIC_RANGE_FULL,
+                           G_PARAM_READWRITE));
 
     /**
      * GwyLayerBasic:min-max-key:
@@ -221,6 +243,11 @@ gwy_layer_basic_set_property(GObject *object,
                                            g_value_get_string(value));
         break;
 
+        case PROP_DEFAULT_RANGE_TYPE:
+        gwy_layer_basic_set_default_range_type(basic_layer,
+                                               g_value_get_enum(value));
+        break;
+
         case PROP_MIN_MAX_KEY:
         gwy_layer_basic_set_min_max_key(basic_layer,
                                         g_value_get_string(value));
@@ -254,6 +281,11 @@ gwy_layer_basic_get_property(GObject *object,
         case PROP_RANGE_TYPE_KEY:
         g_value_set_static_string(value,
                                   g_quark_to_string(basic_layer->range_type_key));
+        break;
+
+        case PROP_DEFAULT_RANGE_TYPE:
+        g_value_set_enum(value,
+                         GPOINTER_TO_UINT(basic_layer->default_range_type));
         break;
 
         case PROP_MIN_MAX_KEY:
@@ -301,7 +333,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
         data_field = GWY_DATA_FIELD(basic_layer->show_field);
     g_return_val_if_fail(data && data_field, NULL);
 
-    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
     if (!basic_layer->show_field && basic_layer->range_type_key)
         gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
 
@@ -578,7 +610,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
     g_return_if_fail(data && data_field);
 
-    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
     if (basic_layer->range_type_key)
         gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
 
@@ -734,7 +766,7 @@ gwy_layer_basic_reconnect_fixed(GwyLayerBasic *basic_layer)
     GwyLayerBasicRangeType range_type;
 
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
-    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
     if (layer->data && basic_layer->range_type_key)
         gwy_container_gis_enum(layer->data, basic_layer->range_type_key,
                                &range_type);
@@ -901,7 +933,7 @@ gwy_layer_basic_min_max_changed(GwyLayerBasic *basic_layer)
     GwyLayerBasicRangeType range_type;
 
     data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
-    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
     if (basic_layer->range_type_key)
         gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
 
@@ -914,6 +946,26 @@ gwy_layer_basic_changed(GwyPixmapLayer *pixmap_layer)
 {
     pixmap_layer->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
+}
+
+static void
+gwy_layer_basic_set_default_range_type(GwyLayerBasic *basic_layer,
+                                       GwyLayerBasicRangeType range_type)
+{
+    GwyContainer *data;
+    gpointer newtype = GUINT_TO_POINTER(range_type);
+
+    if (newtype == basic_layer->default_range_type)
+        return;
+
+    basic_layer->default_range_type = newtype;
+
+    data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
+    if (data
+        && !(basic_layer->range_type_key
+             && gwy_container_contains(data, basic_layer->range_type_key)))
+        gwy_layer_basic_range_type_changed(basic_layer);
+    g_object_notify(G_OBJECT(basic_layer), "default-range-type");
 }
 
 /************************** Documentation ****************************/
