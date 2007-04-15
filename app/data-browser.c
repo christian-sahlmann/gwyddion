@@ -1897,9 +1897,9 @@ gwy_app_update_data_range_type(GwyDataView *data_view,
                                gint id)
 {
     GtkWidget *data_window, *widget;
+    GwyPixmapLayer *layer;
     GwyColorAxis *color_axis;
     GwyContainer *data;
-    GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
     GwyTicksStyle ticks_style;
     gboolean show_labels;
     gchar key[40];
@@ -1922,9 +1922,8 @@ gwy_app_update_data_range_type(GwyDataView *data_view,
         show_labels = FALSE;
     }
     else {
-        g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
-        gwy_container_gis_enum_by_name(data, key, &range_type);
-        switch (range_type) {
+        layer = gwy_data_view_get_base_layer(data_view);
+        switch (gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(layer))) {
             case GWY_LAYER_BASIC_RANGE_FULL:
             case GWY_LAYER_BASIC_RANGE_FIXED:
             case GWY_LAYER_BASIC_RANGE_AUTO:
@@ -1938,7 +1937,7 @@ gwy_app_update_data_range_type(GwyDataView *data_view,
             break;
 
             default:
-            g_warning("Bad range type: %d", range_type);
+            g_warning("Unknown range type");
             ticks_style = GWY_TICKS_STYLE_NONE;
             show_labels = FALSE;
             break;
