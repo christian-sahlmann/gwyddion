@@ -1428,7 +1428,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         }
         q = data_field->xreal/xres;
         for (i = 0; i <= ngrains; i++)
-            values[i] = q*(values[i]/sizes[i] + 0.5);
+            values[i] = q*(values[i]/sizes[i] + 0.5) + data_field->xoff;
         g_free(sizes);
         break;
 
@@ -1445,7 +1445,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         }
         q = data_field->yreal/yres;
         for (i = 0; i <= ngrains; i++)
-            values[i] = q*(values[i]/sizes[i] + 0.5);
+            values[i] = q*(values[i]/sizes[i] + 0.5) + data_field->yoff;
         g_free(sizes);
         break;
 
