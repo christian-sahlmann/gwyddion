@@ -127,7 +127,10 @@ typedef enum {
     GWY_WINDOWING_BLACKMANN  = 3,
     GWY_WINDOWING_LANCZOS    = 4,
     GWY_WINDOWING_WELCH      = 5,
-    GWY_WINDOWING_RECT       = 6
+    GWY_WINDOWING_RECT       = 6,
+    GWY_WINDOWING_NUTTALL    = 7,
+    GWY_WINDOWING_FLAT_TOP   = 8,
+    GWY_WINDOWING_KAISER25   = 9
 } GwyWindowingType;
 
 typedef enum {

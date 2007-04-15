@@ -27,20 +27,26 @@ typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
 
 static gdouble gwy_fft_window_hann     (gint i, gint n);
 static gdouble gwy_fft_window_hamming  (gint i, gint n);
-static gdouble gwy_fft_window_blackmann(gint i, gint n);
+static gdouble gwy_fft_window_blackman (gint i, gint n);
 static gdouble gwy_fft_window_lanczos  (gint i, gint n);
 static gdouble gwy_fft_window_welch    (gint i, gint n);
 static gdouble gwy_fft_window_rect     (gint i, gint n);
+static gdouble gwy_fft_window_nutall   (gint i, gint n);
+static gdouble gwy_fft_window_flat_top (gint i, gint n);
+static gdouble gwy_fft_window_kaiser25 (gint i, gint n);
 
 /* The order must match GwyWindowingType enum */
 static const GwyFFTWindowingFunc windowings[] = {
     NULL,  /* none */
     &gwy_fft_window_hann,
     &gwy_fft_window_hamming,
-    &gwy_fft_window_blackmann,
+    &gwy_fft_window_blackman,
     &gwy_fft_window_lanczos,
     &gwy_fft_window_welch,
     &gwy_fft_window_rect,
+    &gwy_fft_window_nutall,
+    &gwy_fft_window_flat_top,
+    &gwy_fft_window_kaiser25,
 };
 
 /**
@@ -126,39 +132,41 @@ gwy_fft_simple(GwyTransformDirection dir,
 static gdouble
 gwy_fft_window_hann(gint i, gint n)
 {
-    return 0.5 - 0.5*(cos(2*G_PI*i/(n-1)));
+    gdouble x = 2*G_PI*i/n;
+
+    return 0.5 - 0.5*cos(x);
 }
 
 static gdouble
 gwy_fft_window_hamming(gint i, gint n)
 {
-    return 0.54 - 0.46*(cos(2*G_PI*i/(n-1)));
+    gdouble x = 2*G_PI*i/n;
+
+    return 0.54 - 0.46*cos(x);
 }
 
 static gdouble
-gwy_fft_window_blackmann(gint i, gint n)
+gwy_fft_window_blackman(gint i, gint n)
 {
-    gdouble n_2 = ((gdouble)n)/2;
+    gdouble x = 2*G_PI*i/n;
 
-    return 0.42 + 0.5*cos(G_PI*(i-n_2)/n_2) + 0.08*cos(2*G_PI*(i-n_2)/n_2);
+    return 0.42 - 0.5*cos(x) + 0.08*cos(2*x);
 }
 
 static gdouble
 gwy_fft_window_lanczos(gint i, gint n)
 {
-    gdouble n_2 = ((gdouble)n)/2;
+    gdouble x = 2*G_PI*i/n - G_PI;
 
-    if (i == n/2)
-        return 1;
-    return sin(G_PI*(i-n_2)/n_2)/(G_PI*(i-n_2)/n_2);
+    return fabs(x) < 1e-20 ? 1.0 : sin(x)/x;
 }
 
 static gdouble
 gwy_fft_window_welch(gint i, gint n)
 {
-    gdouble n_2 = ((gdouble)n)/2;
+    gdouble x = 2.0*i/n - 1.0;
 
-    return 1 - ((i-n_2)*(i-n_2)/n_2/n_2);
+    return 1 - x*x;
 }
 
 static gdouble
@@ -171,6 +179,55 @@ gwy_fft_window_rect(gint i, gint n)
     else
         par = 1.0;
     return par;
+}
+
+static gdouble
+gwy_fft_window_nutall(gint i, gint n)
+{
+    gdouble x = 2*G_PI*i/n;
+
+    return 0.355768 - 0.487396*cos(x) + 0.144232*cos(2*x) - 0.012604*cos(3*x);
+}
+
+static gdouble
+gwy_fft_window_flat_top(gint i, gint n)
+{
+    gdouble x = 2*G_PI*i/n;
+
+    return (1.0 - 1.93*cos(x) + 1.29*cos(2*x)
+            - 0.388*cos(3*x) + 0.032*cos(4*x))/2;
+}
+
+static inline gdouble
+bessel_I0(gdouble x)
+{
+    gdouble t, s;
+    gint i = 1;
+
+    t = x = x*x/4;
+    s = 1.0;
+    do {
+        s += t;
+        i++;
+        t *= x/i/i;
+    } while (t > 1e-7*s);
+
+    return s + t;
+}
+
+/* General function */
+static gdouble
+gwy_fft_window_kaiser(gint i, gint n, gdouble alpha)
+{
+    gdouble x = 2.0*i/(n - 1) - 1.0;
+
+    return bessel_I0(G_PI*alpha*sqrt(1.0 - x*x));
+}
+
+static gdouble
+gwy_fft_window_kaiser25(gint i, gint n)
+{
+    return gwy_fft_window_kaiser(i, n, 2.5)/373.0206312536293446480;
 }
 
 /**
@@ -190,7 +247,7 @@ gwy_fft_window(gint n,
     gint i;
 
     g_return_if_fail(data);
-    g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
+    g_return_if_fail(windowing <= GWY_WINDOWING_KAISER25);
     window = windowings[windowing];
     if (window) {
         for (i = 0; i < n; i++)

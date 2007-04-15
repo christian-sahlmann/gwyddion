@@ -225,6 +225,9 @@ gwy_interpolation_type_get_enum(void)
  * @GWY_WINDOWING_LANCZOS: Lanczos window.
  * @GWY_WINDOWING_WELCH: Welch window.
  * @GWY_WINDOWING_RECT: Rectangular window.
+ * @GWY_WINDOWING_NUTTALL: Nuttall window (Since: 2.6).
+ * @GWY_WINDOWING_FLAT_TOP: Flat-top window (Since: 2.6).
+ * @GWY_WINDOWING_KAISER25: Kaiser window with &beta;=2.5 (Since: 2.6).
  *
  * Frequency windowing type.
  **/
@@ -239,14 +242,17 @@ const GwyEnum*
 gwy_windowing_type_get_enum(void)
 {
     static const GwyEnum entries[] = {
-        { N_("None"),     GWY_WINDOWING_NONE,      },
-        { N_("Hann"),     GWY_WINDOWING_HANN,      },
-        { N_("Hamming"),  GWY_WINDOWING_HAMMING,   },
-        { N_("Blackman"), GWY_WINDOWING_BLACKMANN, },
-        { N_("Lanzcos"),  GWY_WINDOWING_LANCZOS,   },
-        { N_("Welch"),    GWY_WINDOWING_WELCH,     },
-        { N_("Rect"),     GWY_WINDOWING_RECT,      },
-        { NULL,           0,                       },
+        { N_("None"),       GWY_WINDOWING_NONE,      },
+        { N_("Hann"),       GWY_WINDOWING_HANN,      },
+        { N_("Hamming"),    GWY_WINDOWING_HAMMING,   },
+        { N_("Blackman"),   GWY_WINDOWING_BLACKMANN, },
+        { N_("Lanzcos"),    GWY_WINDOWING_LANCZOS,   },
+        { N_("Welch"),      GWY_WINDOWING_WELCH,     },
+        { N_("Rect"),       GWY_WINDOWING_RECT,      },
+        { N_("Nuttall"),    GWY_WINDOWING_NUTTALL,   },
+        { N_("Flat-top"),   GWY_WINDOWING_FLAT_TOP,  },
+        { N_("Kaiser 2.5"), GWY_WINDOWING_KAISER25,  },
+        { NULL,             0,                       },
     };
     return entries;
 }
