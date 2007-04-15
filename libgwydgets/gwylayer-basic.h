@@ -76,6 +76,7 @@ GwyPixmapLayer* gwy_layer_basic_new                (void);
 void            gwy_layer_basic_get_range          (GwyLayerBasic *basic_layer,
                                                     gdouble *min,
                                                     gdouble *max);
+GwyLayerBasicRangeType gwy_layer_basic_get_range_type(GwyLayerBasic *basic_layer);
 void            gwy_layer_basic_set_gradient_key   (GwyLayerBasic *basic_layer,
                                                     const gchar *key);
 const gchar*    gwy_layer_basic_get_gradient_key   (GwyLayerBasic *basic_layer);

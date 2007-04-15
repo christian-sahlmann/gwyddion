@@ -333,12 +333,9 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
         data_field = GWY_DATA_FIELD(basic_layer->show_field);
     g_return_val_if_fail(data && data_field, NULL);
 
-    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
-    if (!basic_layer->show_field && basic_layer->range_type_key)
-        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
-
     /* Special-case full range, as gwy_pixbuf_draw_data_field() is simplier,
      * it doesn't have to deal with outliers */
+    range_type = gwy_layer_basic_get_range_type(basic_layer);
     gwy_pixmap_layer_make_pixbuf(layer, FALSE);
     if (range_type == GWY_LAYER_BASIC_RANGE_FULL)
         gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
@@ -600,7 +597,6 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     GwyPixmapLayer *pixmap_layer;
     GwyContainer *data;
     GwyDataField *data_field;
-    GwyLayerBasicRangeType range_type;
     gdouble rmin, rmax;
 
     /* FIXME: Should we return something else for presentations? */
@@ -610,11 +606,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
     g_return_if_fail(data && data_field);
 
-    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
-    if (basic_layer->range_type_key)
-        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
-
-    switch (range_type) {
+    switch (gwy_layer_basic_get_range_type(basic_layer)) {
         case GWY_LAYER_BASIC_RANGE_FULL:
         case GWY_LAYER_BASIC_RANGE_ADAPT:
         gwy_data_field_get_min_max(data_field, &rmin, &rmax);
@@ -638,6 +630,32 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
         *min = rmin;
     if (max)
         *max = rmax;
+}
+
+/**
+ * gwy_layer_basic_get_range_type:
+ * @basic_layer: A basic data view layer.
+ *
+ * Gets the current color mapping mode.
+ *
+ * Returns: The current color mapping mode.
+ *
+ * Since: 2.6
+ **/
+GwyLayerBasicRangeType
+gwy_layer_basic_get_range_type(GwyLayerBasic *basic_layer)
+{
+    GwyLayerBasicRangeType range_type;
+    GwyContainer *data;
+
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), 0);
+
+    data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
+    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
+    if (data && basic_layer->range_type_key)
+        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
+
+    return range_type;
 }
 
 static void
@@ -762,17 +780,10 @@ gwy_layer_basic_get_has_presentation(GwyLayerBasic *basic_layer)
 static void
 gwy_layer_basic_reconnect_fixed(GwyLayerBasic *basic_layer)
 {
-    GwyDataViewLayer *layer;
-    GwyLayerBasicRangeType range_type;
-
-    layer = GWY_DATA_VIEW_LAYER(basic_layer);
-    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
-    if (layer->data && basic_layer->range_type_key)
-        gwy_container_gis_enum(layer->data, basic_layer->range_type_key,
-                               &range_type);
-
     gwy_layer_basic_disconnect_fixed(basic_layer);
-    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED)
+
+    if (gwy_layer_basic_get_range_type(basic_layer)
+        == GWY_LAYER_BASIC_RANGE_FIXED)
         gwy_layer_basic_connect_fixed(basic_layer);
 }
 
@@ -929,15 +940,8 @@ gwy_layer_basic_range_type_changed(GwyLayerBasic *basic_layer)
 static void
 gwy_layer_basic_min_max_changed(GwyLayerBasic *basic_layer)
 {
-    GwyContainer *data;
-    GwyLayerBasicRangeType range_type;
-
-    data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
-    range_type = GPOINTER_TO_UINT(basic_layer->default_range_type);
-    if (basic_layer->range_type_key)
-        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
-
-    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED)
+    if (gwy_layer_basic_get_range_type(basic_layer)
+        == GWY_LAYER_BASIC_RANGE_FIXED)
         gwy_layer_basic_changed(GWY_PIXMAP_LAYER(basic_layer));
 }
 
