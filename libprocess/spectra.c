@@ -431,6 +431,8 @@ gwy_spectra_deserialize(const guchar *buffer,
         spec.ydata = curves[i];
         if (nselected)
             spec.selected = !!(selected[i/isize] & (1 << (i % isize)));
+        else
+            spec.selected = FALSE;
         g_array_append_val(spectra->spectra, spec);
     }
     g_free(curves);
@@ -916,6 +918,7 @@ gwy_spectra_add_spectrum(GwySpectra *spectra,
     spec.x = x;
     spec.y = y;
     spec.ydata = new_spectrum;
+    spec.selected = FALSE;
     g_array_append_val(spectra->spectra, spec);
 }
 
