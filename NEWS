@@ -1,4 +1,4 @@
-2.5.20070407
+2.5.20070415
 
 2.6 (0000-00-00)
 Application:
@@ -23,6 +23,7 @@ Libraries:
 - libgwydgets: Impossibility to edit graph selection boundaries when it was
   drawn the `wrong' direction was fixed.
 - libgwydgets: Invisible graph label (key) getting in the way was fixed.
+- libprocess: New grain distribution quantities x and y centre position.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -38,6 +39,8 @@ Modules:
 - Gwyfile: It does not remap channel and graph ids upon load and save.
 - ASCII export: It has options to enforce dot as the decimal separator and to
   add a comment header with some channel information.
+- Nanoscope: Supports for Nanoscope III STM files.
+- WSxM: Flipped data was fixed.
 - Polynomial distortion: GtkEntry errors when instant update took too long
   were fixed.
 - Convolution filter: Divisor value is actually used for normalization
@@ -47,8 +50,11 @@ Modules:
 - Graph fit: Initial estimated curve label saying "noun|Estimate" was fixed.
 - File modules: Some sanity checks were added.
 - Distance tool: It is possibile to save the table.
+- Grain distributions: Grain positions were added.
 - 2D FFT filter: Resampled vertical resolution is displayed properly (instead
   of displaying horizontal resolution again).
+- Read Value, Level3: Show selection check button initial state is set
+  properly.
 - Symbol of theta which often rendered wrong on Win32 was replaced with
   another glyph.
 
