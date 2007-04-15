@@ -762,7 +762,7 @@ gwy_spectra_setpos(GwySpectra *spectra,
     GwySpectrum *spec;
 
     g_return_if_fail(GWY_IS_SPECTRA(spectra));
-    g_return_if_fail(i <= spectra->spectra->len);
+    g_return_if_fail(i < spectra->spectra->len);
 
     spec = &g_array_index(spectra->spectra, GwySpectrum, i);
     spec->x = x;
@@ -786,7 +786,7 @@ gwy_spectra_get_spectrum(GwySpectra *spectra, gint i)
     GwySpectrum *spec;
 
     g_return_val_if_fail(GWY_IS_SPECTRA(spectra), NULL);
-    g_return_val_if_fail(i <= spectra->spectra->len, NULL);
+    g_return_val_if_fail(i < spectra->spectra->len, NULL);
 
     spec = &g_array_index(spectra->spectra, GwySpectrum, i);
 
@@ -815,13 +815,61 @@ gwy_spectra_set_spectrum(GwySpectra *spectra,
 
     g_return_if_fail(GWY_IS_SPECTRA(spectra));
     g_return_if_fail(GWY_IS_DATA_LINE(new_spectrum));
-    g_return_if_fail(i <= spectra->spectra->len);
+    g_return_if_fail(i < spectra->spectra->len);
 
     spec = &g_array_index(spectra->spectra, GwySpectrum, i);
     data_line = spec->ydata;
     g_object_ref(new_spectrum);
     g_object_unref(spec->ydata);
     spec->ydata = new_spectrum;
+}
+
+/**
+ * gwy_spectra_set_spectrum_selected:
+ * @spectra: A spectra object.
+ * @i: Index of a spectrum.
+ * @selected: %TRUE to make the spectrum selected, %FALSE to deselect it.
+ *
+ * Sets selected state of a spectrum in a spectra object.
+ *
+ * Since: 2.6
+ **/
+void
+gwy_spectra_set_spectrum_selected(GwySpectra *spectra,
+                                  guint i,
+                                  gboolean selected)
+{
+    GwySpectrum *spec;
+
+    g_return_if_fail(GWY_IS_SPECTRA(spectra));
+    g_return_if_fail(i < spectra->spectra->len);
+
+    spec = &g_array_index(spectra->spectra, GwySpectrum, i);
+    if (spec->selected != !selected) {
+        spec->selected = selected;
+        /* TODO: Emit something or whatever. */
+    }
+}
+
+/**
+ * gwy_spectra_get_spectrum_selected:
+ * @spectra: A spectra object.
+ * @i: Index of a spectrum.
+ *
+ * Gets the selected state of a spectrum in a spectra object.
+ *
+ * Returns: %TRUE if spectrum is selected.
+ *
+ * Since: 2.6
+ **/
+gboolean
+gwy_spectra_get_spectrum_selected(GwySpectra *spectra,
+                                  guint i)
+{
+    g_return_val_if_fail(GWY_IS_SPECTRA(spectra), FALSE);
+    g_return_val_if_fail(i < spectra->spectra->len, FALSE);
+
+    return g_array_index(spectra->spectra, GwySpectrum, i).selected;
 }
 
 /**
@@ -888,7 +936,7 @@ gwy_spectra_remove_spectrum(GwySpectra *spectra,
     GwySpectrum *spec;
 
     g_return_if_fail(GWY_IS_SPECTRA(spectra));
-    g_return_if_fail(i <= spectra->spectra->len);
+    g_return_if_fail(i < spectra->spectra->len);
 
     spec = &g_array_index(spectra->spectra, GwySpectrum, i);
     g_object_unref(spec->ydata);
