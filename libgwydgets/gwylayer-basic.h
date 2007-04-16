@@ -22,6 +22,7 @@
 #define __GWY_LAYER_BASIC_H__
 
 #include <libgwydgets/gwypixmaplayer.h>
+#include <libgwydgets/gwydgetenums.h>
 #include <libdraw/gwygradient.h>
 
 G_BEGIN_DECLS
