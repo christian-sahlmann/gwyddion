@@ -274,7 +274,7 @@ gwy_fft_window_data_field(GwyDataField *dfield,
     gdouble *data, *w, q;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
-    g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
+    g_return_if_fail(windowing <= GWY_WINDOWING_KAISER25);
 
     window = windowings[windowing];
     if (!window)
