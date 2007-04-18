@@ -285,7 +285,7 @@ gwy_tool_roughness_class_init(GwyToolRoughnessClass *klass)
 
     gobject_class->finalize = gwy_tool_roughness_finalize;
 
-    tool_class->stock_id = GWY_STOCK_PROFILE;
+    tool_class->stock_id = GWY_STOCK_ISO_ROUGHNESS;
     tool_class->title = _("Roughness");
     tool_class->tooltip = _("Calculate roughness parameters.");
     tool_class->prefix = "/module/roughness";
