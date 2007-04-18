@@ -58,6 +58,7 @@ struct _GwyToolColorRange {
     GwyDataLine *heightdist;
     GwySelection *graph_selection;
 
+    GtkWidget *is_default;
     GtkLabel *min;
     GtkLabel *max;
     GtkLabel *datamin;
@@ -112,7 +113,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -192,36 +193,71 @@ gwy_tool_crop_rect_updated(GwyToolColorRange *tool)
 static void
 gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
 {
-    static const GwyEnum range_types[] = {
-        { N_("Full"),     GWY_LAYER_BASIC_RANGE_FULL,  },
-        { N_("Fixed"),    GWY_LAYER_BASIC_RANGE_FIXED, },
-        { N_("Auto"),     GWY_LAYER_BASIC_RANGE_AUTO,  },
-        { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT, },
+    static struct {
+        guint type;
+        const gchar *stock_id;
+        const gchar *text;
+    }
+    const range_types[] = {
+        {
+            GWY_LAYER_BASIC_RANGE_FULL,
+            GWY_STOCK_COLOR_RANGE_FULL,
+            N_("Full color range from minimum to maximum"),
+        },
+        {
+            GWY_LAYER_BASIC_RANGE_FIXED,
+            GWY_STOCK_COLOR_RANGE_FIXED,
+            N_("Explicitly set fixed color range"),
+        },
+        {
+            GWY_LAYER_BASIC_RANGE_AUTO,
+            GWY_STOCK_COLOR_RANGE_AUTO,
+            N_("Automatic color range with tails cut off"),
+        },
+        {
+            GWY_LAYER_BASIC_RANGE_ADAPT,
+            GWY_STOCK_COLOR_RANGE_ADAPTIVE,
+            N_("Adaptive nonlinear color mapping"),
+        },
     };
 
-    GtkWidget *label, *hbox, *button;
+    GtkWidget *label, *hbox, *button, *image;
+    GtkRadioButton *group;
     GtkTable *table;
     GtkDialog *dialog;
     GwyGraphCurveModel *cmodel;
     GwyGraphArea *garea;
-    GSList *modelist, *l;
-    gint row;
+    GtkTooltips *tips;
+    gint row, i;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
+    tips = gwy_app_get_tooltips();
 
     /* Mode switch */
-    hbox = gtk_hbox_new(TRUE, 0);
-    modelist = gwy_radio_buttons_create
-                          (range_types, G_N_ELEMENTS(range_types),
-                           G_CALLBACK(gwy_tool_color_range_type_changed), tool,
-                           GWY_LAYER_BASIC_RANGE_FULL);
-    for (l = modelist; l; l = g_slist_next(l)) {
-        button = GTK_WIDGET(l->data);
-        gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
-        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, TRUE, 0);
-    }
-    tool->modelist = modelist;
+    hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
+
+    group = NULL;
+    for (i = 0; i < G_N_ELEMENTS(range_types); i++) {
+        button = gtk_radio_button_new_from_widget(group);
+        g_object_set(button, "draw-indicator", FALSE, NULL);
+        image = gtk_image_new_from_stock(range_types[i].stock_id,
+                                         GTK_ICON_SIZE_LARGE_TOOLBAR);
+        gtk_container_add(GTK_CONTAINER(button), image);
+        gwy_radio_button_set_value(button, range_types[i].type);
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+        gtk_tooltips_set_tip(tips, button, gettext(range_types[i].text), NULL);
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(gwy_tool_color_range_type_changed), tool);
+        if (!group)
+            group = GTK_RADIO_BUTTON(button);
+    }
+    tool->modelist = gtk_radio_button_get_group(group);
+    /* FIXME: Initialize? */
+
+    /* Is default */
+    tool->is_default = gtk_check_button_new_with_mnemonic(_("_default"));
+    gtk_box_pack_start(GTK_BOX(hbox), tool->is_default, FALSE, FALSE, 4);
 
     /* Height distribution */
     tool->heightdist = gwy_data_line_new(1.0, 1.0, TRUE);
