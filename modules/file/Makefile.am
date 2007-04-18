@@ -1,4 +1,4 @@
-# @(#) $Id$ */
+# @(#) $Id$
 
 # When libTIFF is disabled, put the sources to EXTRA_DIST to include them in
 # make dist.
