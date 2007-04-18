@@ -4,7 +4,7 @@ pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Since 2.3: arithmetic data_measure drift immerse merge
-# Since 2.6: path_level spectrum
+# Since 2.6: path_level spectrum iso_roughness color_range_auto color_range_full color_range_fixed color_range_adaptive
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -19,6 +19,10 @@ pixmapdata_DATA = \
 	gwy_bold-20.png \
 	gwy_cantilever-24.png \
 	gwy_color_range-24.png \
+	gwy_color_range_adaptive-24.png \
+	gwy_color_range_auto-24.png \
+	gwy_color_range_fixed-24.png \
+	gwy_color_range_full-24.png \
 	gwy_crop-24.png \
 	gwy_cwt-24.png \
 	gwy_data_measure-24.png \
@@ -54,6 +58,7 @@ pixmapdata_DATA = \
 	gwy_gwyddion-32.png \
 	gwy_gwyddion-60.png \
 	gwy_immerse-24.png \
+	gwy_iso_roughness-24.png \
 	gwy_italic-20.png \
 	gwy_less-24.png \
 	gwy_level-24.png \
@@ -122,6 +127,7 @@ xcf_sources = \
 	gwy_3d_base-24.xcf \
 	gwy_arithmetic-24.xcf \
 	gwy_cantilever-24.xcf \
+	gwy_color_range-24.xcf \
 	gwy_crop-24.xcf \
 	gwy_direction-24.xcf \
 	gwy_edge-24.xcf \
@@ -133,6 +139,7 @@ xcf_sources = \
 	gwy_grains-24.xcf \
 	gwy_graph-24.xcf \
 	gwy_graph_zoom-24.xcf \
+	gwy_iso_roughness-24.xcf \
 	gwy_less-24.xcf \
 	gwy_level-24.xcf \
 	gwy_light_rotate-24.xcf \
