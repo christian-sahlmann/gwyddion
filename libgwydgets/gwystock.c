@@ -332,6 +332,42 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_COLOR_RANGE_ADAPTIVE
+ *
+ * The "Color-Range-Adaptive" stock icon.
+ * <inlinegraphic fileref="gwy_color_range_adaptive-24.png" format="PNG"/>
+
+* Since: 2.6
+ **/
+
+/**
+ * GWY_STOCK_COLOR_RANGE_AUTO
+ *
+ * The "Color-Range-Auto" stock icon.
+ * <inlinegraphic fileref="gwy_color_range_auto-24.png" format="PNG"/>
+
+* Since: 2.6
+ **/
+
+/**
+ * GWY_STOCK_COLOR_RANGE_FIXED
+ *
+ * The "Color-Range-Fixed" stock icon.
+ * <inlinegraphic fileref="gwy_color_range_fixed-24.png" format="PNG"/>
+
+* Since: 2.6
+ **/
+
+/**
+ * GWY_STOCK_COLOR_RANGE_FULL
+ *
+ * The "Color-Range-Full" stock icon.
+ * <inlinegraphic fileref="gwy_color_range_full-24.png" format="PNG"/>
+
+* Since: 2.6
+ **/
+
+/**
  * GWY_STOCK_CROP
  *
  * The "Crop" stock icon.
@@ -573,6 +609,15 @@ free_the_icon_factory(void)
  * <inlinegraphic fileref="gwy_immerse-24.png" format="PNG"/>
 
 * Since: 2.3
+ **/
+
+/**
+ * GWY_STOCK_ISO_ROUGHNESS
+ *
+ * The "Iso-Roughness" stock icon.
+ * <inlinegraphic fileref="gwy_iso_roughness-24.png" format="PNG"/>
+
+* Since: 2.6
  **/
 
 /**
