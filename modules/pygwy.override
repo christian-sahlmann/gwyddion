@@ -40,7 +40,6 @@ _wrap_gwy_app_data_browser_get_current_key(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_datafield noargs
-
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
 {
@@ -51,7 +50,6 @@ _wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_mask noargs
-
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_mask(PyGObject *self)
 {
@@ -118,7 +116,7 @@ override gwy_app_undo_qcheckpointv kwargs
 static PyObject *
 _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs) 
 {
-   static char *kwlist[] = {"datafield", "key", NULL};
+   static char *kwlist[] = {"container", "key", NULL};
 
    PyGObject *cont;
    GQuark key;
@@ -213,4 +211,94 @@ _wrap_gwy_app_data_browser_get_data_ids(PyObject *self, PyObject *args, PyObject
    return tuple;
 }
 
-// vim:syntax=c
+%%
+define GwyContainer.set_object_by_name kwargs
+static PyObject *
+_wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"name", "obj",  NULL};
+   GwyContainer *container;   
+   gchar *key, *class_str;
+   PyObject *obj, *type;
+
+   container = GWY_CONTAINER(self->obj);
+   if (!PyArg_ParseTupleAndKeywords(args, 
+                                    kwargs,
+                                    "sO:GwyContainer.set_object_by_name", 
+                                    kwlist, 
+                                    &key, 
+                                    &obj))
+        return NULL;
+   // convert obj into right C type
+   type = PyObject_GetAttrString(obj, "__class__");
+   if (type) {
+      PyObject *name = PyObject_GetAttrString(type, "__name__");
+      //Py_DECREF(type);
+      if (name) {
+         class_str = PyString_AsString(name);
+         if (!strcmp(class_str, "DataField")) {
+            PyGObject* d;
+
+            if (!PyArg_ParseTupleAndKeywords(args, 
+                                             kwargs,
+                                             "sO!:GwyContainer.set_object_by_name", 
+                                             kwlist, 
+                                             &key, 
+                                             &PyGwyDataField_Type, 
+                                             &d)) {
+               return NULL;
+            }            
+            gwy_container_set_object_by_name(container, key, GWY_DATA_FIELD(d->obj));
+            g_object_unref(GWY_DATA_FIELD(d->obj));
+         } else if (!strcmp(class_str, "Container")) {
+            PyGObject* d;
+
+            if (!PyArg_ParseTupleAndKeywords(args, 
+                                             kwargs,
+                                             "sO!:GwyContainer.set_object_by_name", 
+                                             kwlist, 
+                                             &key, 
+                                             &PyGwyContainer_Type, 
+                                             &d)) {
+               return NULL;
+            }
+            gwy_container_set_object_by_name(container, key, GWY_CONTAINER(d->obj));
+         }
+             
+         //Py_DECREF(name);
+      }
+   }
+   
+   Py_INCREF(Py_None);
+   return Py_None;
+
+}
+/*
+
+define gwy_load_datafield kwargs
+static PyObject *
+_wrap_gwy_load_datafield(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{    
+   static char *kwlist[] = {"data",  NULL};
+   GwyContainer *container;
+   GwyDataField *d;
+   gchar *key, *class_str;
+   PyObject *obj, *type;
+
+   if (!PyArg_ParseTupleAndKeywords(args, 
+                                    kwargs,
+                                    "O!:GwyContainer.set_object_by_name", 
+                                    kwlist, 
+                                    &PyGwyDataField_Type, 
+                                    &d))
+        return NULL;
+   // create container
+   container = gwy_container_new();
+   gwy_container_set_object_by_name(container, "/0/data", d);
+   Py_INCREF(Py_None);
+   return Py_None;
+
+}
+*/
+// TODO: use G_OBJECT_TYPE_NAME instead of string values in set_object_by_name
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
