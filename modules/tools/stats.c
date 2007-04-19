@@ -349,7 +349,6 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
 
     for (i = 0; i < G_N_ELEMENTS(values); i++) {
         label = gtk_label_new(_(values[i].name));
-        gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(table, label,
                          0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -357,7 +356,6 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         plabel = (GtkWidget**)G_STRUCT_MEMBER_P(tool, values[i].offset);
         *plabel = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(*plabel), 1.0, 0.5);
-        gtk_label_set_single_line_mode(GTK_LABEL(*plabel), TRUE);
         gtk_label_set_selectable(GTK_LABEL(*plabel), TRUE);
         gtk_table_attach(table, *plabel,
                          1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);

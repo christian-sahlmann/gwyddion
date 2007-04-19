@@ -232,36 +232,30 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     row++;
 
     label = gtk_label_new("X");
-    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->xpx = gtk_label_new("123456 px");
     gtk_widget_size_request(tool->xpx, &req);
     gtk_widget_set_size_request(tool->xpx, req.width, -1);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->xpx), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->xpx), 1.0, 0.5);
     gtk_table_attach(table, tool->xpx, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->x = gtk_label_new(NULL);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->x), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->x), 1.0, 0.5);
     gtk_table_attach(table, tool->x, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new("Y");
-    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->ypx = gtk_label_new(NULL);
     gtk_widget_set_size_request(tool->xpx, req.width, -1);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->ypx), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->ypx), 1.0, 0.5);
     gtk_table_attach(table, tool->ypx, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->y = gtk_label_new(NULL);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->y), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->y), 1.0, 0.5);
     gtk_table_attach(table, tool->y, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(table, row, 8);
@@ -272,12 +266,10 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     row++;
 
     label = gtk_label_new("Z");
-    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->z = gtk_label_new(NULL);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->z), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->z), 1.0, 0.5);
     gtk_table_attach(table, tool->z,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -289,24 +281,20 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     row++;
 
     label = gtk_label_new(_("Inclination θ"));
-    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->theta = gtk_label_new(NULL);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->theta), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->theta), 1.0, 0.5);
     gtk_table_attach(table, tool->theta,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new(_("Inclination φ"));
-    gtk_label_set_single_line_mode(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     tool->phi = gtk_label_new(NULL);
-    gtk_label_set_single_line_mode(GTK_LABEL(tool->phi), TRUE);
     gtk_misc_set_alignment(GTK_MISC(tool->phi), 1.0, 0.5);
     gtk_table_attach(table, tool->phi,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);

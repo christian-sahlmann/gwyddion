@@ -523,7 +523,6 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
            plabel = (GtkWidget**)G_STRUCT_MEMBER_P(tool, parameters[j].offset);
            *plabel = gtk_label_new(NULL);
            gtk_misc_set_alignment(GTK_MISC(*plabel), 1.0, 0.5);
-           gtk_label_set_single_line_mode(GTK_LABEL(*plabel), TRUE);
            gtk_label_set_selectable(GTK_LABEL(*plabel), TRUE);
            gtk_table_attach(GTK_TABLE(table), *plabel, 2, 3, j+1, j+2,
                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
