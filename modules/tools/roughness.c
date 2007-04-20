@@ -251,7 +251,7 @@ static gdouble  gwy_tool_roughness_l                 (GwyDataLine *data_line);
 static gdouble  gwy_tool_roughness_l0                (GwyDataLine *data_line);
 static gdouble  gwy_tool_roughness_lr                (GwyDataLine *data_line);
 
-void     gwy_tool_roughness_distribution   (GwyDataLine *data_line, GwyDataLine *distr);
+static void     gwy_tool_roughness_distribution   (GwyDataLine *data_line, GwyDataLine *distr);
 static void     gwy_tool_roughness_graph_adf         (GwyRoughnessProfiles profiles);
 static void     gwy_tool_roughness_graph_brc         (GwyRoughnessProfiles profiles);
 static void     gwy_tool_roughness_graph_pc          (GwyRoughnessProfiles profiles);
@@ -2011,7 +2011,7 @@ gwy_data_line_set_real(distr, zmax-zmin);
 return;
 }*/
 
-void
+static void
 gwy_tool_roughness_distribution(GwyDataLine *data_line, GwyDataLine *distr)
 {
     gint dz_count;
