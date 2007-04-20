@@ -2153,6 +2153,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
+    gtk_tree_view_column_set_visible(column, FALSE);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
@@ -2723,6 +2724,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
+    gtk_tree_view_column_set_visible(column, FALSE);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
@@ -2814,7 +2816,8 @@ gwy_app_data_browser_spectra_toggled(GtkCellRendererToggle *renderer,
     gtk_tree_path_free(path);
 
     active = gtk_cell_renderer_toggle_get_active(renderer);
-    g_warning("Cannot make spectra visible");
+    g_warning("Cannot make spectra visible and this column should not be "
+              "visible anyway.");
     toggled = FALSE;
     /*
     toggled = gwy_app_data_proxy_graph_set_visible(proxy, &iter, !active);
@@ -2966,6 +2969,7 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
+    gtk_tree_view_column_set_visible(column, FALSE);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
@@ -2975,6 +2979,7 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
                      G_CALLBACK(gwy_app_data_browser_spectra_toggled), browser);
     column = gtk_tree_view_column_new_with_attributes("Visible", renderer,
                                                       NULL);
+    gtk_tree_view_column_set_visible(column, FALSE);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_data_browser_render_visible, browser, NULL);
