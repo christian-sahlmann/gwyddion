@@ -103,10 +103,12 @@ static const gchar *graph_functions[] = {
  * tools differently: after adding tools from the following list we add all
  * remaining tools. */
 static const gchar *default_tools[] = {
-    "GwyToolReadValue", "GwyToolDistance", "GwyToolPolynom", "GwyToolCrop",
-    "GwyToolFilter", "GwyToolLevel3", "GwyToolStats", "GwyToolSFunctions",
-    "GwyToolProfile", "GwyToolGrainRemover", "GwyToolSpotRemover",
-    "GwyToolColorRange", "GwyToolMaskEditor", "GwyToolLineStats",
+    "GwyToolReadValue", "GwyToolDistance", "GwyToolProfile", "GwyToolSpectro",
+    "GwyToolStats", "GwyToolSFunctions", "GwyToolLineStats", "GwyToolRoughness",
+    "GwyToolLevel3", "GwyToolPathLevel", "GwyToolPolynom", "GwyToolCrop",
+    "GwyToolMaskEditor", "GwyToolGrainMeasure", "GwyToolGrainRemover",
+        "GwyToolSpotRemover",
+    "GwyToolColorRange", "GwyToolFilter",
 };
 
 /* FIXME: A temporary hack. */
