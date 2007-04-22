@@ -84,7 +84,6 @@ static gboolean module_register(void);
 static GType gwy_tool_read_value_get_type             (void) G_GNUC_CONST;
 static void gwy_tool_read_value_finalize              (GObject *object);
 static void gwy_tool_read_value_init_dialog           (GwyToolReadValue *tool);
-static void gwy_tool_read_value_show                  (GwyTool *gwytool);
 static void gwy_tool_read_value_data_switched         (GwyTool *gwytool,
                                                        GwyDataView *data_view);
 static void gwy_tool_read_value_update_units          (GwyToolReadValue *tool);
@@ -142,7 +141,6 @@ gwy_tool_read_value_class_init(GwyToolReadValueClass *klass)
     tool_class->tooltip = _("Read value under mouse cursor");
     tool_class->prefix = "/module/readvalue";
     tool_class->data_switched = gwy_tool_read_value_data_switched;
-    tool_class->show = gwy_tool_read_value_show;
 
     ptool_class->data_changed = gwy_tool_read_value_data_changed;
     ptool_class->selection_changed = gwy_tool_read_value_selection_changed;
@@ -240,6 +238,7 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     tool->xpx = gtk_label_new("123456 px");
     gtk_widget_size_request(tool->xpx, &req);
     gtk_widget_set_size_request(tool->xpx, req.width, -1);
+    gtk_label_set_text(tool->xpx, "");
     gtk_misc_set_alignment(GTK_MISC(tool->xpx), 1.0, 0.5);
     gtk_table_attach(table, tool->xpx, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
@@ -334,14 +333,6 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_show_all(dialog->vbox);
-}
-
-static void
-gwy_tool_read_value_show(GwyTool *gwytool)
-{
-    GWY_TOOL_CLASS(gwy_tool_read_value_parent_class)->show(gwytool);
-
-    gtk_label_set_text(GTK_LABEL(GWY_TOOL_READ_VALUE(gwytool)->xpx), "");
 }
 
 static void
