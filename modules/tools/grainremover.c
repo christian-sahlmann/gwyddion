@@ -83,7 +83,7 @@ static void gwy_tool_grain_remover_mode_changed     (GtkWidget *radio,
                                                      GwyToolGrainRemover *tool);
 static void gwy_tool_grain_remover_method_changed   (GtkComboBox *combo,
                                                      GwyToolGrainRemover *tool);
-static void gwy_tool_grain_remover_selection_finised(GwyPlainTool *plain_tool);
+static void gwy_tool_grain_remover_selection_finished(GwyPlainTool *plain_tool);
 
 static void laplace_interpolation                   (GwyDataField *dfield,
                                                      GwyDataField *grain);
@@ -146,7 +146,7 @@ gwy_tool_grain_remover_class_init(GwyToolGrainRemoverClass *klass)
     tool_class->prefix = "/module/grainremover";
     tool_class->data_switched = gwy_tool_grain_remover_data_switched;
 
-    ptool_class->selection_finished = gwy_tool_grain_remover_selection_finised;
+    ptool_class->selection_finished = gwy_tool_grain_remover_selection_finished;
 }
 
 static void
@@ -296,7 +296,7 @@ gwy_tool_grain_remover_method_changed(GtkComboBox *combo,
 }
 
 static void
-gwy_tool_grain_remover_selection_finised(GwyPlainTool *plain_tool)
+gwy_tool_grain_remover_selection_finished(GwyPlainTool *plain_tool)
 {
     gdouble point[2];
     GQuark quarks[2];
