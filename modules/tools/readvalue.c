@@ -238,7 +238,7 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     tool->xpx = gtk_label_new("123456 px");
     gtk_widget_size_request(tool->xpx, &req);
     gtk_widget_set_size_request(tool->xpx, req.width, -1);
-    gtk_label_set_text(tool->xpx, "");
+    gtk_label_set_text(GTK_LABEL(tool->xpx), "");
     gtk_misc_set_alignment(GTK_MISC(tool->xpx), 1.0, 0.5);
     gtk_table_attach(table, tool->xpx, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
