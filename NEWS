@@ -1,4 +1,4 @@
-2.5.20070415
+2.5.20070422
 
 2.6 (0000-00-00)
 Application:
@@ -24,10 +24,15 @@ Libraries:
   drawn the `wrong' direction was fixed.
 - libgwydgets: Invisible graph label (key) getting in the way was fixed.
 - libprocess: New grain distribution quantities x and y centre position.
+- libgwydgets: GwyLayerBasic has a new "default-range-type" property for color
+  range mapping type used when none is set in the data.
+- libgwyprocess: Wrong type assertions in gwy_data_line_fft_raw() were fixed.
+- libgwyprocess: Complex one-dimensional transforms actually work with FFTW3.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
 - Spectro tool (new): Visualize and extract single point spectra.
+- Grain measure tool (new): Calculate characteristics of individual grains.
 - Rougness tool (new): ISO roughness parameters evaluation.
 - Pixmap import: It is possible to set arbitrary units, the preview is bigger.
 - Pixmap export: Text size can be set independently, zoom can be specified by
@@ -55,8 +60,12 @@ Modules:
   of displaying horizontal resolution again).
 - Read Value, Level3: Show selection check button initial state is set
   properly.
+- Color Range tool: It is possible to set default color mapping type applied
+  when none is specifically set.
 - Symbol of theta which often rendered wrong on Win32 was replaced with
   another glyph.
+- Read Value: It no longer displays 123456 as the x pixel coordinate when no
+  data is loaded.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
@@ -353,7 +362,7 @@ Modules:
   Close button were fixed.
 - Grain and Scars: Mask color dialog hiding under the main dialog on Win32
   was fixed.
-- Color range tool: Fixed range is not lost upon switch to another data and
+- Color Range tool: Fixed range is not lost upon switch to another data and
   back.
 - Graph fit, Critical dimension: Graphs can be resized by resizing the
   dialog.
@@ -428,14 +437,14 @@ Libraries:
 
 Modules:
 - Shade: Crash on Mix checkbutton click was fixed.
-- Color range: Crash upon tool switch when there was already a selection
+- Color Range: Crash upon tool switch when there was already a selection
   was fixed.
 - Assing AFM: Crash on import introduced in 1.99.9 was fixed.
 - Revolve arc, Median background: Bugs causing subsequent application crashes
   were fixed.
 - Fit sphere: Was ported to 2.0 and reenabled.
 - SPMLab: Channel type is imported and used as the channel title.
-- Crop, Color range, Filters, Mask editor, Statistical function, Statistical
+- Crop, Color Range, Filters, Mask editor, Statistical function, Statistical
   quantities: Wrong selection boundaries when it was drawn `backwards' were
   fixed.
 - Graph exports: User interface was made more consistent, memory leaks were
