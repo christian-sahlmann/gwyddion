@@ -6,6 +6,7 @@ tools_LTLIBRARIES = \
 	crop.la \
 	distance.la \
 	filter.la \
+	grainmeasure.la \
 	grainremover.la \
 	icolorange.la \
 	level3.la \
@@ -47,6 +48,7 @@ endif
 crop_la_SOURCES         = crop.c
 distance_la_SOURCES     = distance.c
 filter_la_SOURCES       = filter.c
+grainmeasure_la_SOURCES = grainmeasure.c
 grainremover_la_SOURCES = grainremover.c
 icolorange_la_SOURCES   = icolorange.c
 level3_la_SOURCES       = level3.c
