@@ -56,6 +56,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_GRADIENT_VERTICAL     "gwy_gradient_vertical"
 #define GWY_STOCK_GRAINS                "gwy_grains"
 #define GWY_STOCK_GRAINS_GRAPH          "gwy_grains_graph"
+#define GWY_STOCK_GRAINS_MEASURE        "gwy_grains_measure"
 #define GWY_STOCK_GRAINS_REMOVE         "gwy_grains_remove"
 #define GWY_STOCK_GRAINS_WATER          "gwy_grains_water"
 #define GWY_STOCK_GRAPH                 "gwy_graph"

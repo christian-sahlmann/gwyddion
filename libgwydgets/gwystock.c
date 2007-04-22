@@ -505,6 +505,15 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_GRAINS_MEASURE
+ *
+ * The "Grains-Measure" stock icon.
+ * <inlinegraphic fileref="gwy_grains_measure-24.png" format="PNG"/>
+
+* Since: 2.6
+ **/
+
+/**
  * GWY_STOCK_GRAINS_REMOVE
  *
  * The "Grains-Remove" stock icon.

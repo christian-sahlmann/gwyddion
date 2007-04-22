@@ -4,7 +4,7 @@ pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Since 2.3: arithmetic data_measure drift immerse merge
-# Since 2.6: path_level spectrum iso_roughness color_range_auto color_range_full color_range_fixed color_range_adaptive
+# Since 2.6: path_level spectrum iso_roughness color_range_auto color_range_full color_range_fixed color_range_adaptive grains_measure
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -42,6 +42,7 @@ pixmapdata_DATA = \
 	gwy_gradient_vertical-24.png \
 	gwy_grains-24.png \
 	gwy_grains_graph-24.png \
+	gwy_grains_measure-24.png \
 	gwy_grains_remove-24.png \
 	gwy_grains_water-24.png \
 	gwy_graph-24.png \
