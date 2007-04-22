@@ -84,6 +84,7 @@ static gboolean module_register(void);
 static GType gwy_tool_read_value_get_type             (void) G_GNUC_CONST;
 static void gwy_tool_read_value_finalize              (GObject *object);
 static void gwy_tool_read_value_init_dialog           (GwyToolReadValue *tool);
+static void gwy_tool_read_value_show                  (GwyTool *gwytool);
 static void gwy_tool_read_value_data_switched         (GwyTool *gwytool,
                                                        GwyDataView *data_view);
 static void gwy_tool_read_value_update_units          (GwyToolReadValue *tool);
@@ -106,7 +107,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -141,6 +142,7 @@ gwy_tool_read_value_class_init(GwyToolReadValueClass *klass)
     tool_class->tooltip = _("Read value under mouse cursor");
     tool_class->prefix = "/module/readvalue";
     tool_class->data_switched = gwy_tool_read_value_data_switched;
+    tool_class->show = gwy_tool_read_value_show;
 
     ptool_class->data_changed = gwy_tool_read_value_data_changed;
     ptool_class->selection_changed = gwy_tool_read_value_selection_changed;
@@ -332,6 +334,14 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_show_all(dialog->vbox);
+}
+
+static void
+gwy_tool_read_value_show(GwyTool *gwytool)
+{
+    GWY_TOOL_CLASS(gwy_tool_read_value_parent_class)->show(gwytool);
+
+    gtk_label_set_text(GTK_LABEL(GWY_TOOL_READ_VALUE(gwytool)->xpx), "");
 }
 
 static void
