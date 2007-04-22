@@ -655,6 +655,187 @@ gwy_list_store_row_changed(GtkListStore *store,
     gtk_tree_path_free(path);
 }
 
+/************************** Activate on Unfocus ****************************/
+
+static gboolean
+activate_on_unfocus(GtkWidget *widget)
+{
+    gtk_widget_activate(widget);
+    return FALSE;
+}
+
+/**
+ * gwy_widget_get_activate_on_unfocus:
+ * @widget: A widget.
+ *
+ * Obtains the activate-on-unfocus state of a widget.
+ *
+ * Returns: %TRUE if signal "GtkWidget::activate" is emitted when focus leaves
+ *          the widget.
+ *
+ * Since: 2.5
+ **/
+gboolean
+gwy_widget_get_activate_on_unfocus(GtkWidget *widget)
+{
+    g_return_val_if_fail(GTK_IS_WIDGET(widget), FALSE);
+    return !!g_signal_handler_find(widget, G_SIGNAL_MATCH_FUNC,
+                                   0, 0, NULL, activate_on_unfocus, NULL);
+}
+
+/**
+ * gwy_widget_set_activate_on_unfocus:
+ * @widget: A widget.
+ * @activate: %TRUE to enable activate-on-unfocus, %FALSE disable it.
+ *
+ * Sets the activate-on-unfocus state of a widget.
+ *
+ * When it is enabled, signal "GtkWidget::activate" is emited whenever focus
+ * leaves the widget.
+ *
+ * Since: 2.5
+ **/
+void
+gwy_widget_set_activate_on_unfocus(GtkWidget *widget,
+                                   gboolean activate)
+{
+    gulong id;
+
+    g_return_if_fail(GTK_IS_WIDGET(widget));
+    g_return_if_fail(GTK_WIDGET_GET_CLASS(widget)->activate_signal);
+    id = g_signal_handler_find(widget, G_SIGNAL_MATCH_FUNC,
+                               0, 0, NULL, activate_on_unfocus, NULL);
+    if (id && !activate)
+        g_signal_handler_disconnect(widget, id);
+    if (!id && activate)
+        g_signal_connect(widget, "focus-out-event",
+                         G_CALLBACK(activate_on_unfocus), NULL);
+}
+
+#if 0
+Has odd side effect and does not actually work with some fonts for unclear
+reasons.
+/************************** Baseline Alignment ****************************/
+
+typedef struct {
+    gint ascent;
+    gint descent;
+    GList *alignments;
+} GwyBaselineAlignmentGroup;
+
+typedef struct {
+    GwyBaselineAlignmentGroup *group;
+} GwyBaselineAlignment;
+
+static void
+gwy_baseline_alignment_measure_layout(PangoLayout *layout,
+                                      gint *ascent,
+                                      gint *descent)
+{
+    PangoLayoutIter *iter;
+    PangoRectangle rect;
+
+    pango_layout_get_extents(layout, NULL, &rect);
+    iter = pango_layout_get_iter(layout);
+    rect.y -= pango_layout_iter_get_baseline(iter);
+    pango_layout_iter_free(iter);
+    *ascent = PANGO_PIXELS(PANGO_ASCENT(rect));
+    *descent = PANGO_PIXELS(PANGO_DESCENT(rect));
+}
+
+static GwyBaselineAlignmentGroup*
+gwy_baseline_alignment_label_get_group(GtkLabel *label)
+{
+    /* FIXME: Make this multihead friendly */
+    static GwyBaselineAlignmentGroup *default_group = NULL;
+
+    if (!default_group) {
+        PangoLayout *layout;
+
+        default_group = g_new0(GwyBaselineAlignmentGroup, 1);
+        layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), NULL);
+        pango_layout_set_markup(layout, "()<sup>0</sup><sub>0</sub>", -1);
+        gwy_baseline_alignment_measure_layout(layout,
+                                              &default_group->ascent,
+                                              &default_group->descent);
+        g_object_unref(layout);
+    }
+
+    return default_group;
+}
+
+static void
+gwy_baseline_alignment_label_changed(GtkLabel *label,
+                                     G_GNUC_UNUSED GParamSpec *pspec,
+                                     GList *item)
+{
+    GwyBaselineAlignmentGroup *group;
+    GwyBaselineAlignment *alignment;
+    GtkAlignment *align;
+    gint top, bottom, x, y;
+
+    alignment = (GwyBaselineAlignment*)item->data;
+    group = alignment->group;
+    gwy_baseline_alignment_measure_layout(gtk_label_get_layout(label),
+                                          &top, &bottom);
+    gtk_label_get_layout_offsets(label, &x, &y);
+    gwy_debug("%d %d vs. %d %d (at %d %d)\n",
+              top, bottom, group->ascent, group->descent, x, y);
+    top = group->ascent - top;
+    bottom = group->descent - bottom;
+    align = GTK_ALIGNMENT(gtk_widget_get_parent(GTK_WIDGET(label)));
+    gtk_alignment_set_padding(align, MAX(top, 0), MAX(bottom, 0), 0, 0);
+}
+
+static void
+gwy_baseline_alignment_label_destroyed(G_GNUC_UNUSED GtkLabel *label,
+                                       GList *item)
+{
+    GwyBaselineAlignmentGroup *group;
+    GwyBaselineAlignment *alignment;
+
+    alignment = (GwyBaselineAlignment*)item->data;
+    group = alignment->group;
+    group->alignments = g_list_delete_link(group->alignments, item);
+    /* FIXME: Whatever.  We do not destroy the default group. */
+}
+
+/**
+ * gwy_baseline_alignment_wrap_label:
+ * @label: A label to wrap.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 2.6
+ **/
+GtkWidget*
+gwy_baseline_alignment_wrap_label(GtkLabel *label)
+{
+    GwyBaselineAlignmentGroup *group;
+    GwyBaselineAlignment *alignment;
+    GList *item;
+    GtkWidget *align;
+
+    g_return_val_if_fail(GTK_IS_LABEL(label), NULL);
+    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(label));
+    alignment = g_new(GwyBaselineAlignment, 1);
+    group = gwy_baseline_alignment_label_get_group(label);
+    item = g_list_append(NULL, alignment);
+    group->alignments = g_list_concat(item, group->alignments);
+    alignment->group = group;
+    g_signal_connect(label, "notify::label",
+                     G_CALLBACK(gwy_baseline_alignment_label_changed), item);
+    g_signal_connect(label, "destroy",
+                     G_CALLBACK(gwy_baseline_alignment_label_destroyed), item);
+    gwy_baseline_alignment_label_changed(label, NULL, item);
+
+    return align;
+}
+#endif
+
 /************************** Utils ****************************/
 
 /**
@@ -768,61 +949,6 @@ gwy_tool_like_button_new(const gchar *label_text,
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), button);
 
     return button;
-}
-
-static gboolean
-activate_on_unfocus(GtkWidget *widget)
-{
-    gtk_widget_activate(widget);
-    return FALSE;
-}
-
-/**
- * gwy_widget_get_activate_on_unfocus:
- * @widget: A widget.
- *
- * Obtains the activate-on-unfocus state of a widget.
- *
- * Returns: %TRUE if signal "GtkWidget::activate" is emitted when focus leaves
- *          the widget.
- *
- * Since: 2.5
- **/
-gboolean
-gwy_widget_get_activate_on_unfocus(GtkWidget *widget)
-{
-    g_return_val_if_fail(GTK_IS_WIDGET(widget), FALSE);
-    return !!g_signal_handler_find(widget, G_SIGNAL_MATCH_FUNC,
-                                   0, 0, NULL, activate_on_unfocus, NULL);
-}
-
-/**
- * gwy_widget_set_activate_on_unfocus:
- * @widget: A widget.
- * @activate: %TRUE to enable activate-on-unfocus, %FALSE disable it.
- *
- * Sets the activate-on-unfocus state of a widget.
- *
- * When it is enabled, signal "GtkWidget::activate" is emited whenever focus
- * leaves the widget.
- *
- * Since: 2.5
- **/
-void
-gwy_widget_set_activate_on_unfocus(GtkWidget *widget,
-                                   gboolean activate)
-{
-    gulong id;
-
-    g_return_if_fail(GTK_IS_WIDGET(widget));
-    g_return_if_fail(GTK_WIDGET_GET_CLASS(widget)->activate_signal);
-    id = g_signal_handler_find(widget, G_SIGNAL_MATCH_FUNC,
-                               0, 0, NULL, activate_on_unfocus, NULL);
-    if (id && !activate)
-        g_signal_handler_disconnect(widget, id);
-    if (!id && activate)
-        g_signal_connect(widget, "focus-out-event",
-                         G_CALLBACK(activate_on_unfocus), NULL);
 }
 
 /**
