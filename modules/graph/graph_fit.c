@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -161,7 +161,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -390,7 +390,7 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(range_changed), &controls);
     gwy_widget_set_activate_on_unfocus(controls.from, TRUE);
 
-    label = gtk_label_new(_("range|to"));
+    label = gtk_label_new(gwy_sgettext("range|to"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     controls.to = gtk_entry_new();
