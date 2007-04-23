@@ -274,6 +274,75 @@ gauss_acf_guess(gint n_dat,
     *fres = y[1] >= 0;
 }
 
+/******************** gaussian PSDF ***************************/
+static gdouble
+gauss_ipsdf_func(gdouble x,
+                 G_GNUC_UNUSED gint n_param,
+                 const gdouble *b,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
+{
+    gdouble c;
+
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x*b[1];
+
+    return b[0]*b[0]*b[1]*b[1]/2.0 * x*exp(-c*c/4);
+}
+
+static void
+gauss_ipsdf_guess(gint n_dat,
+                  const gdouble *x,
+                  const gdouble *y,
+                  gdouble *param,
+                  gboolean *fres)
+{
+    gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
+    gint i;
+
+    sw = k2 = k4 = b0 = b2 = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        if (x[i] <= 0.0 || y[i] <= 0.0)
+            continue;
+
+        w = y[i]*y[i];
+        sw += w;
+        xx = x[i]*x[i];
+        k2 += w*xx;
+        k4 += w*xx*xx;
+        l = log(y[i]/x[i]);
+        b0 += w*l;
+        b2 += w*xx*l;
+    }
+    if (!sw) {
+        *fres = FALSE;
+        return;
+    }
+
+    k2 /= sw;
+    k4 /= sw;
+    b0 /= sw;
+    b2 /= sw;
+    d = k4 - k2*k2;
+    if (!d) {
+        *fres = FALSE;
+        return;
+    }
+    alpha = (b0*k4 - b2*k2)/d;
+    beta = (b2 - k2*b0)/d;
+    if (beta >= 0.0) {
+        *fres = FALSE;
+        return;
+    }
+    param[1] = 2*sqrt(-beta);
+    param[0] = exp(alpha/2)*G_SQRT2/param[1];
+    *fres = TRUE;
+}
+
 /**************** exponential ************************************/
 static gdouble
 exp_func(gdouble x,
@@ -960,6 +1029,20 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_hhcf_guess,
         &cf_scale,
         &cf_get_units,
+        &weights_linear_decrease,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
+    },
+    {
+        "Gaussian (IPSDF)",
+        "<i>f</i>(<i>x</i>) "
+            "= (σ<i>T</i>)<sup>2</sup>/2 "
+            "<i>x</i> exp[−(<i>x</i><i>T</i>/2)<sup>2</sup>]",
+        &gauss_ipsdf_func,
+        NULL,
+        &gauss_ipsdf_guess,
+        &psdf_scale,
+        &psdf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
         gauss_two_params,
