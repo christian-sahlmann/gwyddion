@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,6 +66,7 @@ struct _GwyToolReadValue {
     GtkWidget *phi;
     GtkObject *radius;
     GtkWidget *show_selection;
+    GtkWidget *set_zero;
 
     gboolean same_units;
 
@@ -97,6 +98,7 @@ static void gwy_tool_read_value_update_values         (GwyToolReadValue *tool);
 static void gwy_tool_read_value_calculate             (GwyToolReadValue *tool,
                                                        gint col,
                                                        gint row);
+static void gwy_tool_read_value_set_zero              (GwyToolReadValue *tool);
 
 static const gchar radius_key[]         = "/module/readvalue/radius";
 static const gchar show_selection_key[] = "/module/readvalue/show-selection";
@@ -106,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -213,13 +215,13 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
 {
     GtkDialog *dialog;
     GtkTable *table;
-    GtkWidget *label;
+    GtkWidget *label, *align;
     GtkRequisition req;
     gint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    table = GTK_TABLE(gtk_table_new(9, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(10, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -274,6 +276,17 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     gtk_misc_set_alignment(GTK_MISC(tool->z), 1.0, 0.5);
     gtk_table_attach(table, tool->z,
                      2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    align = gtk_alignment_new(1.0, 0.5, 0.0, 0.0);
+    gtk_table_attach(table, align,
+                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+    tool->set_zero = gtk_button_new_with_mnemonic(_("Set _Zero"));
+    gtk_container_add(GTK_CONTAINER(align), tool->set_zero);
+    gtk_widget_set_sensitive(tool->set_zero, FALSE);
+    g_signal_connect_swapped(tool->set_zero, "clicked",
+                             G_CALLBACK(gwy_tool_read_value_set_zero), tool);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
@@ -385,8 +398,15 @@ static void
 gwy_tool_read_value_selection_changed(GwyPlainTool *plain_tool,
                                       gint hint)
 {
+    GwyToolReadValue *tool;
+
+    tool = GWY_TOOL_READ_VALUE(plain_tool);
     g_return_if_fail(hint <= 0);
-    gwy_tool_read_value_update_values(GWY_TOOL_READ_VALUE(plain_tool));
+    gwy_tool_read_value_update_values(tool);
+    gtk_widget_set_sensitive(tool->set_zero,
+                             plain_tool->selection != NULL
+                             && gwy_selection_get_object(plain_tool->selection,
+                                                         0, NULL));
 }
 
 static void
@@ -542,6 +562,24 @@ gwy_tool_read_value_calculate(GwyToolReadValue *tool,
      * and then invert both for downward slopes.  As a result x is inverted. */
     tool->bx = -z[1]/gwy_data_field_get_xmeasure(dfield);
     tool->by = z[2]/gwy_data_field_get_ymeasure(dfield);
+}
+
+static void
+gwy_tool_read_value_set_zero(GwyToolReadValue *tool)
+{
+    GwyPlainTool *plain_tool;
+    GQuark quark;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (!plain_tool->data_field
+        || !gwy_selection_get_data(plain_tool->selection, NULL)
+        || !tool->avg)
+        return;
+
+    quark = gwy_app_get_data_key_for_id(plain_tool->id);
+    gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
+    gwy_data_field_add(plain_tool->data_field, -tool->avg);
+    gwy_data_field_data_changed(plain_tool->data_field);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
