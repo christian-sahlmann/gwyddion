@@ -45,6 +45,7 @@ typedef struct {
     guint radius;
     gboolean instant_apply;
     gboolean allow_undo;
+    gboolean set_zero;
 } ToolArgs;
 
 struct _GwyToolLevel3 {
@@ -56,6 +57,7 @@ struct _GwyToolLevel3 {
     GtkTreeModel *model;
     GtkObject *radius;
     GtkWidget *instant_apply;
+    GtkWidget *set_zero;
     GtkWidget *apply;
 
     /* potential class data */
@@ -82,6 +84,8 @@ static void   gyw_tool_level3_selection_finished   (GwyPlainTool *plain_tool);
 static void   gwy_tool_level3_radius_changed       (GwyToolLevel3 *tool);
 static void   gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
                                                     GwyToolLevel3 *tool);
+static void   gwy_tool_level3_set_zero_changed     (GtkToggleButton *check,
+                                                    GwyToolLevel3 *tool);
 static void   gwy_tool_level3_update_headers       (GwyToolLevel3 *tool);
 static void   gwy_tool_level3_render_cell          (GtkCellLayout *layout,
                                                     GtkCellRenderer *renderer,
@@ -90,8 +94,9 @@ static void   gwy_tool_level3_render_cell          (GtkCellLayout *layout,
                                                     gpointer user_data);
 static void   gwy_tool_level3_apply                (GwyToolLevel3 *tool);
 
-static const gchar radius_key[] = "/module/level3/radius";
+static const gchar radius_key[]        = "/module/level3/radius";
 static const gchar instant_apply_key[] = "/module/level3/instant_apply";
+static const gchar set_zero_key[]      = "/module/level3/set_zero";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -99,7 +104,7 @@ static GwyModuleInfo module_info = {
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -108,6 +113,7 @@ static const ToolArgs default_args = {
     1,
     FALSE,
     TRUE,
+    FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -161,6 +167,8 @@ gwy_tool_level3_finalize(GObject *object)
     gwy_container_set_int32_by_name(settings, radius_key, tool->args.radius);
     gwy_container_set_boolean_by_name(settings, instant_apply_key,
                                       tool->args.instant_apply);
+    gwy_container_set_boolean_by_name(settings, set_zero_key,
+                                      tool->args.set_zero);
 
     G_OBJECT_CLASS(gwy_tool_level3_parent_class)->finalize(object);
 }
@@ -184,6 +192,8 @@ gwy_tool_level3_init(GwyToolLevel3 *tool)
     gwy_container_gis_int32_by_name(settings, radius_key, &tool->args.radius);
     gwy_container_gis_boolean_by_name(settings, instant_apply_key,
                                       &tool->args.instant_apply);
+    gwy_container_gis_boolean_by_name(settings, set_zero_key,
+                                      &tool->args.set_zero);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "point");
@@ -225,7 +235,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(tool->treeview),
                        TRUE, TRUE, 0);
 
-    table = gtk_table_new(1, 3, FALSE);
+    table = gtk_table_new(3, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table, TRUE, TRUE, 0);
 
@@ -244,6 +254,15 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
                                  tool->args.instant_apply);
     g_signal_connect(tool->instant_apply, "toggled",
                      G_CALLBACK(gwy_tool_level3_instant_apply_changed), tool);
+
+    tool->set_zero
+            = gtk_check_button_new_with_mnemonic(_("Set plane to _zero"));
+    gtk_table_attach(GTK_TABLE(table), tool->set_zero, 0, 3, 3, 4,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->set_zero),
+                                 tool->args.set_zero);
+    g_signal_connect(tool->set_zero, "toggled",
+                     G_CALLBACK(gwy_tool_level3_set_zero_changed), tool);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
@@ -289,7 +308,16 @@ gwy_tool_level3_data_switched(GwyTool *gwytool,
 static void
 gwy_tool_level3_data_changed(GwyPlainTool *plain_tool)
 {
-    gwy_tool_level3_update_headers(GWY_TOOL_LEVEL3(plain_tool));
+    GwyToolLevel3 *tool;
+    GwyNullStore *store;
+    guint i, n;
+
+    tool = GWY_TOOL_LEVEL3(plain_tool);
+    gwy_tool_level3_update_headers(tool);
+    n = gwy_selection_get_data(plain_tool->selection, NULL);
+    store = GWY_NULL_STORE(tool->model);
+    for (i = 0; i < n; i++)
+        gwy_null_store_row_changed(store, i);
 }
 
 static void
@@ -308,21 +336,23 @@ gwy_tool_level3_selection_changed(GwyPlainTool *plain_tool,
 {
     GwyToolLevel3 *tool;
     GwyNullStore *store;
-    gint n = 0;
+    guint n, i;
 
     tool = GWY_TOOL_LEVEL3(plain_tool);
     store = GWY_NULL_STORE(tool->model);
     g_return_if_fail(hint <= 3);
 
+    if (plain_tool->selection)
+        n = gwy_selection_get_data(plain_tool->selection, NULL);
+    else
+        n = 0;
+
     if (hint < 0) {
-        gtk_tree_view_set_model(tool->treeview, NULL);
-        gtk_tree_view_set_model(tool->treeview, tool->model);
+        for (i = 0; i < n; i++)
+            gwy_null_store_row_changed(store, i);
     }
     else
         gwy_null_store_row_changed(store, hint);
-
-    if (plain_tool->selection)
-        n = gwy_selection_get_data(plain_tool->selection, NULL);
 
     gtk_widget_set_sensitive(tool->apply, n == 3 && !tool->args.instant_apply);
 
@@ -343,9 +373,8 @@ gyw_tool_level3_selection_finished(GwyPlainTool *plain_tool)
     if (plain_tool->selection)
         n = gwy_selection_get_data(plain_tool->selection, NULL);
 
-    if (n == 3 && tool->args.instant_apply) {
+    if (n == 3 && tool->args.instant_apply)
         tool->args.allow_undo = TRUE;
-    }
 }
 
 static void
@@ -374,7 +403,15 @@ gwy_tool_level3_instant_apply_changed(GtkToggleButton *check,
         n = gwy_selection_get_data(plain_tool->selection, NULL);
     gtk_widget_set_sensitive(tool->apply, n == 3 && !tool->args.instant_apply);
 
+    if (tool->args.instant_apply)
+        gwy_tool_level3_apply(tool);
+}
 
+static void
+gwy_tool_level3_set_zero_changed(GtkToggleButton *check,
+                                 GwyToolLevel3 *tool)
+{
+    tool->args.set_zero = gtk_toggle_button_get_active(check);
     if (tool->args.instant_apply)
         gwy_tool_level3_apply(tool);
 }
@@ -522,7 +559,8 @@ gwy_tool_level3_apply(GwyToolLevel3 *tool)
     coeffs[1] = gwy_data_field_itor(plain_tool->data_field, coeffs[1]);
     xres = gwy_data_field_get_xres(plain_tool->data_field);
     yres = gwy_data_field_get_yres(plain_tool->data_field);
-    coeffs[2] = -0.5*(coeffs[0]*xres + coeffs[1]*yres);
+    if (!tool->args.set_zero)
+        coeffs[2] = -0.5*(coeffs[0]*xres + coeffs[1]*yres);
     if (tool->args.allow_undo)
         gwy_app_undo_qcheckpoint(plain_tool->container,
                                  gwy_app_get_data_key_for_id(plain_tool->id),
