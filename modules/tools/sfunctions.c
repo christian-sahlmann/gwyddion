@@ -46,6 +46,7 @@ typedef enum {
     GWY_SF_MINKOWSKI_VOLUME       = 7,
     GWY_SF_MINKOWSKI_BOUNDARY     = 8,
     GWY_SF_MINKOWSKI_CONNECTIVITY = 9,
+    GWY_SF_IPSDF                  = 10,
 } GwySFOutputType;
 
 enum {
@@ -135,7 +136,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -166,6 +167,7 @@ static const GwyEnum sf_types[] =  {
     { N_("ACF"),                         GWY_SF_ACF,                    },
     { N_("HHCF"),                        GWY_SF_HHCF,                   },
     { N_("PSDF"),                        GWY_SF_PSDF,                   },
+    { N_("Isotropic PSDF"),              GWY_SF_IPSDF,                  },
     { N_("Minkowski volume"),            GWY_SF_MINKOWSKI_VOLUME,       },
     { N_("Minkowski boundary"),          GWY_SF_MINKOWSKI_BOUNDARY,     },
     { N_("Minkowski connectivity"),      GWY_SF_MINKOWSKI_CONNECTIVITY, },
@@ -504,7 +506,8 @@ gwy_tool_sfunctions_update_sensitivity(GwyToolSFunctions *tool)
 
     sensitive = (tool->args.output_type == GWY_SF_ACF
                  || tool->args.output_type == GWY_SF_HHCF
-                 || tool->args.output_type == GWY_SF_PSDF);
+                 || tool->args.output_type == GWY_SF_PSDF
+                 || tool->args.output_type == GWY_SF_IPSDF);
     gtk_widget_set_sensitive(tool->interpolation, sensitive);
     gtk_widget_set_sensitive(tool->interpolation_label, sensitive);
 
@@ -663,6 +666,17 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                             lineres);
         xlabel = "z";
         ylabel = "χ";
+        break;
+
+        case GWY_SF_IPSDF:
+        gwy_data_field_area_ipsdf(plain_tool->data_field,
+                                  tool->line,
+                                  isel[0], isel[1], w, h,
+                                  tool->args.interpolation,
+                                  GWY_WINDOWING_HANN,
+                                  lineres);
+        xlabel = "k";
+        ylabel = "W";
         break;
 
         default:

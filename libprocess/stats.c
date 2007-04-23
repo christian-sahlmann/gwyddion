@@ -2032,6 +2032,126 @@ gwy_data_field_psdf(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_area_ipsdf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling (and possibly in FFT too).
+ * @windowing: Windowing type to use.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, data field width (height) is used.
+ *
+ * Calculates isotropic power spectrum density function of a rectangular
+ * part of a data field.
+ *
+ * More precisely, it calculates the power spectrum density in the radial
+ * component of the frequency.
+ *
+ * Since: 2.6
+ **/
+void
+gwy_data_field_area_ipsdf(GwyDataField *data_field,
+                          GwyDataLine *target_line,
+                          gint col, gint row,
+                          gint width, gint height,
+                          GwyInterpolationType interpolation,
+                          GwyWindowingType windowing,
+                          gint nstats)
+{
+    GwyDataField *re_field, *im_field;
+    GwyDataLine *weight_line;
+    GwySIUnit *xyunit, *zunit, *lineunit;
+    gdouble *re, *im, *target, *weight;
+    gint i, j, k, xres, yres, size;
+    gdouble xreal, yreal, v, r;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= xres
+                     && row + height <= yres);
+    xreal = data_field->xreal;
+    yreal = data_field->yreal;
+
+    size = ceil(hypot(width-1, height-1)/2.0);
+    if (nstats < 0)
+        nstats = size-1;
+    gwy_data_line_resample(target_line, size, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+    gwy_data_line_set_offset(target_line, 0.0);
+    gwy_data_line_set_real(target_line, G_PI*hypot(xres/xreal, yres/yreal));
+    weight_line = gwy_data_line_duplicate(target_line);
+
+    re_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    im_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    target = target_line->data;
+    weight = weight_line->data;
+    gwy_data_field_area_2dfft(data_field, NULL, re_field, im_field,
+                              col, row, width, height,
+                              windowing,
+                              GWY_TRANSFORM_DIRECTION_FORWARD,
+                              interpolation,
+                              TRUE, 2);
+    re = re_field->data;
+    im = im_field->data;
+    for (i = 0; i < height/2; i++) {
+        for (j = 0; j < width/2; j++) {
+            v = re[i*width + j]*re[i*width + j]
+                + im[i*width + j]*im[i*width + j];
+            r = 2*G_PI*hypot(i/yreal, j/xreal)*size/target_line->real;
+            k = floor(r);
+            if (k+1 >= size)
+                continue;
+            r -= k;
+            if (r <= 0.5)
+                r = 2.0*r*r;
+            else
+                r = 1.0 - 2.0*(1.0 - r)*(1.0 - r);
+
+            target[k] += (1.0 - r)*v;
+            target[k+1] += r*v;
+            weight[k] += 1.0 - r;
+            weight[k+1] += r;
+        }
+    }
+    r = xreal*yreal/(4*G_PI*G_PI*xres*yres);  /* 2D PSDF */
+    r *= target_line->real/size;  /* target_line discretization */
+    /* Leave out the zeroth item which is always zero and prevents
+     * logarithmization */
+    for (i = 0; i < size-1; i++) {
+        if (weight[i+1])
+            target[i] = (i+1)*r*target[i+1]/weight[i+1];
+        else
+            target[i] = 0.0;
+    }
+    target_line->off = target_line->real/size;
+    target_line->real *= (size - 1.0)/size;
+    target_line->res--;
+    gwy_data_line_resample(target_line, nstats, interpolation);
+
+    g_object_unref(re_field);
+    g_object_unref(im_field);
+    g_object_unref(weight_line);
+
+    /* Set proper units */
+    xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    zunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_si_unit_power(xyunit, -1, lineunit);
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_power(zunit, 2, lineunit);
+    gwy_si_unit_multiply(lineunit, xyunit, lineunit);
+}
+
+/**
  * gwy_data_field_area_minkowski_volume:
  * @data_field: A data field.
  * @target_line: A data line to store the distribution to.  It will be
