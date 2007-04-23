@@ -91,9 +91,12 @@ static void gwy_tool_grain_measure_add_group        (GwyToolGrainMeasure *tool,
                                                      ...);
 static void gwy_tool_grain_measure_data_switched    (GwyTool *gwytool,
                                                      GwyDataView *data_view);
-static void gwy_tool_grain_measure_update_units     (GwyToolGrainMeasure *tool);
+static void gwy_tool_grain_measure_data_changed     (GwyPlainTool *plain_tool);
+static void gwy_tool_grain_measure_mask_changed     (GwyPlainTool *plain_tool);
 static void gwy_tool_grain_measure_selection_changed(GwyPlainTool *plain_tool,
                                                      gint hint);
+static void gwy_tool_grain_measure_invalidate       (GwyToolGrainMeasure *tool);
+static void gwy_tool_grain_measure_update_units     (GwyToolGrainMeasure *tool);
 static void gwy_tool_grain_measure_update_labels    (GwyToolGrainMeasure *tool);
 static void gwy_tool_grain_measure_recalculate      (GwyToolGrainMeasure *tool);
 
@@ -157,6 +160,8 @@ gwy_tool_grain_measure_class_init(GwyToolGrainMeasureClass *klass)
     tool_class->prefix = "/module/grainmeasure";
     tool_class->data_switched = gwy_tool_grain_measure_data_switched;
 
+    ptool_class->data_changed = gwy_tool_grain_measure_data_changed;
+    ptool_class->mask_changed = gwy_tool_grain_measure_mask_changed;
     ptool_class->selection_changed = gwy_tool_grain_measure_selection_changed;
 }
 
@@ -331,9 +336,7 @@ gwy_tool_grain_measure_data_switched(GwyTool *gwytool,
     GwyToolGrainMeasure *tool;
 
     tool = GWY_TOOL_GRAIN_MEASURE(gwytool);
-    g_free(tool->grains);
-    tool->grains = NULL;
-    tool->ngrains = 0;
+    gwy_tool_grain_measure_invalidate(tool);
 
     GWY_TOOL_CLASS(gwy_tool_grain_measure_parent_class)->data_switched(gwytool,
                                                                     data_view);
@@ -352,21 +355,20 @@ gwy_tool_grain_measure_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
         gwy_tool_grain_measure_update_units(tool);
     }
-    tool->gno = -1;
 }
 
 static void
-gwy_tool_grain_measure_update_units(GwyToolGrainMeasure *tool)
+gwy_tool_grain_measure_data_changed(GwyPlainTool *plain_tool)
 {
-    GwyPlainTool *plain_tool;
-    GwySIUnit *siunitxy, *siunitz;
+    gwy_tool_grain_measure_invalidate(GWY_TOOL_GRAIN_MEASURE(plain_tool));
+    gwy_tool_grain_measure_selection_changed(plain_tool, -1);
+}
 
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
-    siunitz = gwy_data_field_get_si_unit_z(plain_tool->data_field);
-    tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
-    gwy_si_unit_power(siunitxy, 2, tool->area_unit);
-    gwy_si_unit_multiply(tool->area_unit, siunitz, tool->volume_unit);
+static void
+gwy_tool_grain_measure_mask_changed(GwyPlainTool *plain_tool)
+{
+    gwy_tool_grain_measure_invalidate(GWY_TOOL_GRAIN_MEASURE(plain_tool));
+    gwy_tool_grain_measure_selection_changed(plain_tool, -1);
 }
 
 static void
@@ -401,6 +403,29 @@ gwy_tool_grain_measure_selection_changed(GwyPlainTool *plain_tool,
 
     if (tool->gno != oldgno)
         gwy_tool_grain_measure_update_labels(tool);
+}
+
+static void
+gwy_tool_grain_measure_invalidate(GwyToolGrainMeasure *tool)
+{
+    g_free(tool->grains);
+    tool->grains = NULL;
+    tool->ngrains = 0;
+    tool->gno = -1;
+}
+
+static void
+gwy_tool_grain_measure_update_units(GwyToolGrainMeasure *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwySIUnit *siunitxy, *siunitz;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+    siunitz = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+    tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
+    gwy_si_unit_power(siunitxy, 2, tool->area_unit);
+    gwy_si_unit_multiply(tool->area_unit, siunitz, tool->volume_unit);
 }
 
 static void
