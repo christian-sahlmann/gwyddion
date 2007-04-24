@@ -27,7 +27,21 @@
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphmodel.h>
 
+enum {
+    PROP_0,
+    PROP_MODEL,
+    PROP_LAST
+};
+
 static void gwy_graph_finalize          (GObject *object);
+static void gwy_graph_set_property      (GObject *object,
+                                         guint prop_id,
+                                         const GValue *value,
+                                         GParamSpec *pspec);
+static void gwy_graph_get_property      (GObject *object,
+                                         guint prop_id,
+                                         GValue *value,
+                                         GParamSpec *pspec);
 static void gwy_graph_refresh_all       (GwyGraph *graph);
 static void gwy_graph_model_notify      (GwyGraph *graph,
                                          GParamSpec *pspec,
@@ -54,6 +68,18 @@ gwy_graph_class_init(GwyGraphClass *klass)
     widget_class = (GtkWidgetClass*)klass;
 
     gobject_class->finalize = gwy_graph_finalize;
+    gobject_class->set_property = gwy_graph_set_property;
+    gobject_class->get_property = gwy_graph_get_property;
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MODEL,
+         g_param_spec_object("model",
+                             "Model",
+                             "The graph model of the graph. (Since: 2.6)",
+                             GWY_TYPE_GRAPH_MODEL,
+                             G_PARAM_READWRITE));
+
 }
 
 static void
@@ -76,6 +102,44 @@ gwy_graph_finalize(GObject *object)
     gwy_object_unref(graph->zoom_selection);
 
     G_OBJECT_CLASS(gwy_graph_parent_class)->finalize(object);
+}
+
+static void
+gwy_graph_set_property(GObject *object,
+                       guint prop_id,
+                       const GValue *value,
+                       GParamSpec *pspec)
+{
+    GwyGraph *graph = GWY_GRAPH(object);
+
+    switch (prop_id) {
+        case PROP_MODEL:
+        gwy_graph_set_model(graph, g_value_get_object(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_graph_get_property(GObject*object,
+                       guint prop_id,
+                       GValue *value,
+                       GParamSpec *pspec)
+{
+    GwyGraph *graph = GWY_GRAPH(object);
+
+    switch (prop_id) {
+        case PROP_MODEL:
+        g_value_set_object(value, graph->graph_model);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -242,6 +306,7 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 
     gwy_graph_area_set_model(graph->area, gmodel);
     gwy_graph_refresh_all(graph);
+    g_object_notify(G_OBJECT(graph), "model");
 }
 
 /**
