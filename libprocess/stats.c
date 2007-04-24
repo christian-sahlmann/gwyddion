@@ -2122,9 +2122,9 @@ gwy_data_field_area_ipsdf(GwyDataField *data_field,
             weight[k+1] += r;
         }
     }
-    r = xreal*yreal/(4*G_PI*G_PI*xres*yres);  /* 2D PSDF */
+    r = xreal*yreal/(4*G_PI*G_PI*width*height);  /* 2D PSDF */
     r *= target_line->real/size;  /* target_line discretization */
-    r *= 4.0/(size*size);  /* FIXME FIXME FIXME: random number */
+    r *= 2*G_PI/(width*height);  /* FIXME FIXME FIXME: random number */
     /* Leave out the zeroth item which is always zero and prevents
      * logarithmization */
     for (i = 0; i < size-1; i++) {
