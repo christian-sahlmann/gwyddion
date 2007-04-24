@@ -99,21 +99,51 @@ gauss_psdf_func(gdouble x,
 
 static void
 gauss_psdf_guess(gint n_dat,
-                 const gdouble *x,
-                 const gdouble *y,
-                 gdouble *param,
-                 gboolean *fres)
+                  const gdouble *x,
+                  const gdouble *y,
+                  gdouble *param,
+                  gboolean *fres)
 {
+    gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
     gint i;
 
-    param[1] = 50/x[n_dat-1];
+    sw = k2 = k4 = b0 = b2 = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        if (x[i] <= 0.0 || y[i] <= 0.0)
+            continue;
 
-    param[0] = 0;
-    for (i = 0; i < n_dat; i++)
-        param[0] += x[1]*y[i];
+        w = y[i]*y[i];
+        sw += w;
+        xx = x[i]*x[i];
+        k2 += w*xx;
+        k4 += w*xx*xx;
+        l = log(y[i]);
+        b0 += w*l;
+        b2 += w*xx*l;
+    }
+    if (!sw) {
+        *fres = FALSE;
+        return;
+    }
 
-    *fres = param[0] >= 0;
-    param[0] = sqrt(param[0]);
+    k2 /= sw;
+    k4 /= sw;
+    b0 /= sw;
+    b2 /= sw;
+    d = k4 - k2*k2;
+    if (!d) {
+        *fres = FALSE;
+        return;
+    }
+    alpha = (b0*k4 - b2*k2)/d;
+    beta = (b2 - k2*b0)/d;
+    if (beta >= 0.0) {
+        *fres = FALSE;
+        return;
+    }
+    param[1] = 2*sqrt(-beta);
+    param[0] = exp(alpha/2)*sqrt(2*GWY_SQRT_PI/param[1]);
+    *fres = TRUE;
 }
 
 static void
@@ -429,16 +459,34 @@ exp_psdf_guess(gint n_dat,
                gdouble *param,
                gboolean *fres)
 {
-    gint i;
+    gdouble s0, s1, max;
+    gint i, n;
 
-    param[1] = 50/x[n_dat-1];
+    s0 = s1 = 0.0;
+    max = -G_MAXDOUBLE;
+    n = 0;
+    for (i = 0; i < n_dat; i++) {
+        if (x[i] < 0.0)
+            continue;
 
-    param[0] = 0;
-    for (i = 0; i < n_dat; i++)
-        param[0] += x[1]*y[i];
+        n++;
+        s0 += y[i];
+        s1 += sqrt(x[i])*y[i];
+        if (x[i] > max)
+            max = x[i];
+    }
+    if (!s0 || !s1) {
+        *fres = FALSE;
+        return;
+    }
 
-    *fres = param[0] >= 0;
-    param[0] = sqrt(param[0]);
+    max /= n;
+    s0 *= max;
+    s1 *= max;
+
+    param[0] = 2.0*sqrt(s0/G_SQRT2);
+    param[1] = 2.0*s0*s0/(s1*s1);
+    *fres = TRUE;
 }
 
 /***************** exponential HHCF ********************************/
@@ -1063,8 +1111,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential (PSDF)",
         "<i>f</i>(<i>x</i>) "
-            "= σ<sup>2</sup><i>T</i>"
-            "/[2π(1 + (<i>x</i>/<i>T</i>)<sup>2</sup>)]",
+            "= σ<sup>2</sup><i>T</i>/(2√π) "
+            "1/[1 + (<i>x</i><i>T</i>)<sup>2</sup>)]",
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
