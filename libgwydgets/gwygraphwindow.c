@@ -115,6 +115,7 @@ gwy_graph_window_new(GwyGraph *graph)
     GwySelection *selection;
     GtkScrolledWindow *swindow;
     GtkWidget *vbox, *hbox;
+    gboolean logscale = FALSE;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
@@ -201,7 +202,11 @@ gwy_graph_window_new(GwyGraph *graph)
                              G_CALLBACK(gwy_graph_window_zoom_to_fit),
                              graphwindow);
 
+    if (gmodel)
+        g_object_get(gmodel, "x-logarithmic", &logscale, NULL);
     graphwindow->button_x_log = gtk_toggle_button_new();
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_x_log),
+                                 logscale);
     gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
                       gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_HORIZONTAL,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
@@ -216,7 +221,11 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_widget_set_sensitive(graphwindow->button_x_log,
                 gwy_graph_model_x_data_can_be_logarithmed(graph->graph_model));
 
+    if (gmodel)
+        g_object_get(gmodel, "y-logarithmic", &logscale, NULL);
     graphwindow->button_y_log = gtk_toggle_button_new();
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_x_log),
+                                 logscale);
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
                       gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_VERTICAL,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
@@ -230,7 +239,6 @@ gwy_graph_window_new(GwyGraph *graph)
 
     gtk_widget_set_sensitive(graphwindow->button_y_log,
                 gwy_graph_model_y_data_can_be_logarithmed(graph->graph_model));
-
 
     graphwindow->statusbar = gwy_statusbar_new();
     gtk_widget_set_name(graphwindow->statusbar, "gwyflatstatusbar");
