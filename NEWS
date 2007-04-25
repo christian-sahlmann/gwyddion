@@ -1,4 +1,4 @@
-2.5.20070422
+2.5.20070425
 
 2.6 (0000-00-00)
 Application:
@@ -28,6 +28,12 @@ Libraries:
   range mapping type used when none is set in the data.
 - libgwyprocess: Wrong type assertions in gwy_data_line_fft_raw() were fixed.
 - libgwyprocess: Complex one-dimensional transforms actually work with FFTW3.
+- libgwyddion: New NL fitter preset Gaussian IPSDF.
+- libgwyddion: Displayed formula of Exponential IPSDF was corrected to match
+  the actual formula.
+- libgwydgets: Logarithmic axes sometimes starting at values larger than the
+  minimum were fixed.
+- libgwydgets: GwyGraph's model is registered as property "model".
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -44,7 +50,7 @@ Modules:
 - Gwyfile: It does not remap channel and graph ids upon load and save.
 - ASCII export: It has options to enforce dot as the decimal separator and to
   add a comment header with some channel information.
-- Nanoscope: Supports for Nanoscope III STM files.
+- Nanoscope: Supports Nanoscope III STM files.
 - WSxM: Flipped data was fixed.
 - Polynomial distortion: GtkEntry errors when instant update took too long
   were fixed.
@@ -52,7 +58,8 @@ Modules:
   instead of being ignored.
 - Point layer: Radius indicator scales properly when the layer is scaled.
 - Calibrate: The precision of scale spin buttons was increased.
-- Graph fit: Initial estimated curve label saying "noun|Estimate" was fixed.
+- Graph fit, Critical dimensions: Disambiguating `prefixes|' left visible in
+  user interface labels were fixed.
 - File modules: Some sanity checks were added.
 - Distance tool: It is possibile to save the table.
 - Grain distributions: Grain positions were added.
@@ -62,10 +69,15 @@ Modules:
   properly.
 - Color Range tool: It is possible to set default color mapping type applied
   when none is specifically set.
+- Statistical functions tool: Isotropic (radial) PSDF was added.
+- Read Value: Can shfit data values to make the currently selected point lie
+  on the zero plane.
+- Level3: New option to make the fitted plane the zero value plane.
 - Symbol of theta which often rendered wrong on Win32 was replaced with
   another glyph.
 - Read Value: It no longer displays 123456 as the x pixel coordinate when no
   data is loaded.
+- Nanoscope: Can loads files with `Scan Size' in place of `Scan size' field.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
