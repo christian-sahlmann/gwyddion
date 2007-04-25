@@ -2014,8 +2014,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
  *
- * Calculates one-dimensional power spectrum density function of a rectangular
- * part of a data field.
+ * Calculates one-dimensional power spectrum density function of a data field.
  **/
 void
 gwy_data_field_psdf(GwyDataField *data_field,
@@ -2032,7 +2031,7 @@ gwy_data_field_psdf(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_area_ipsdf:
+ * gwy_data_field_area_rpsdf:
  * @data_field: A data field.
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to requested width.
@@ -2046,16 +2045,13 @@ gwy_data_field_psdf(GwyDataField *data_field,
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
  *
- * Calculates isotropic power spectrum density function of a rectangular
+ * Calculates radial power spectrum density function of a rectangular
  * part of a data field.
- *
- * More precisely, it calculates the power spectrum density in the radial
- * component of the frequency.
  *
  * Since: 2.6
  **/
 void
-gwy_data_field_area_ipsdf(GwyDataField *data_field,
+gwy_data_field_area_rpsdf(GwyDataField *data_field,
                           GwyDataLine *target_line,
                           gint col, gint row,
                           gint width, gint height,
@@ -2150,6 +2146,34 @@ gwy_data_field_area_ipsdf(GwyDataField *data_field,
     lineunit = gwy_data_line_get_si_unit_y(target_line);
     gwy_si_unit_power(zunit, 2, lineunit);
     gwy_si_unit_multiply(lineunit, xyunit, lineunit);
+}
+
+/**
+ * gwy_data_field_rpsdf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling (and possibly in FFT too).
+ * @windowing: Windowing type to use.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, data field width (height) is used.
+ *
+ * Calculates radial power spectrum density function of a data field.
+ *
+ * Since: 2.6
+ **/
+void
+gwy_data_field_rpsdf(GwyDataField *data_field,
+                     GwyDataLine *target_line,
+                     GwyInterpolationType interpolation,
+                     GwyWindowingType windowing,
+                     gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_rpsdf(data_field, target_line,
+                              0, 0, data_field->xres, data_field->yres,
+                              interpolation, windowing, nstats);
 }
 
 /**

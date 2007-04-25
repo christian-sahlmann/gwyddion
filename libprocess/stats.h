@@ -210,12 +210,17 @@ void    gwy_data_field_psdf                 (GwyDataField *data_field,
                                              GwyInterpolationType interpolation,
                                              GwyWindowingType windowing,
                                              gint nstats);
-void    gwy_data_field_area_ipsdf           (GwyDataField *data_field,
+void    gwy_data_field_area_rpsdf           (GwyDataField *data_field,
                                              GwyDataLine *target_line,
                                              gint col,
                                              gint row,
                                              gint width,
                                              gint height,
+                                             GwyInterpolationType interpolation,
+                                             GwyWindowingType windowing,
+                                             gint nstats);
+void    gwy_data_field_rpsdf                (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
                                              GwyInterpolationType interpolation,
                                              GwyWindowingType windowing,
                                              gint nstats);
