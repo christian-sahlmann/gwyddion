@@ -99,10 +99,10 @@ gauss_psdf_func(gdouble x,
 
 static void
 gauss_psdf_guess(gint n_dat,
-                  const gdouble *x,
-                  const gdouble *y,
-                  gdouble *param,
-                  gboolean *fres)
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
 {
     gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
     gint i;
@@ -298,10 +298,46 @@ gauss_acf_guess(gint n_dat,
                 gdouble *param,
                 gboolean *fres)
 {
-    param[0] = sqrt(y[1]);
-    param[1] = x[n_dat-1]/50;
+    gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
+    gint i;
 
-    *fres = y[1] >= 0;
+    sw = k2 = k4 = b0 = b2 = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        if (x[i] <= 0.0 || y[i] <= 0.0)
+            continue;
+
+        w = y[i]*y[i];
+        sw += w;
+        xx = x[i]*x[i];
+        k2 += w*xx;
+        k4 += w*xx*xx;
+        l = log(y[i]);
+        b0 += w*l;
+        b2 += w*xx*l;
+    }
+    if (!sw) {
+        *fres = FALSE;
+        return;
+    }
+
+    k2 /= sw;
+    k4 /= sw;
+    b0 /= sw;
+    b2 /= sw;
+    d = k4 - k2*k2;
+    if (!d) {
+        *fres = FALSE;
+        return;
+    }
+    alpha = (b0*k4 - b2*k2)/d;
+    beta = (b2 - k2*b0)/d;
+    if (beta >= 0.0) {
+        *fres = FALSE;
+        return;
+    }
+    param[0] = exp(alpha/2);
+    param[1] = sqrt(-1.0/beta);
+    *fres = TRUE;
 }
 
 /******************** gaussian PSDF ***************************/
@@ -554,10 +590,46 @@ exp_acf_guess(gint n_dat,
               gdouble *param,
               gboolean *fres)
 {
-    param[0] = sqrt(y[1]);
-    param[1] = x[n_dat-1]/50;
+    gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
+    gint i;
 
-    *fres = y[1] >= 0;
+    sw = k2 = k4 = b0 = b2 = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        if (x[i] <= 0.0 || y[i] <= 0.0)
+            continue;
+
+        w = y[i]*y[i];
+        sw += w;
+        xx = x[i];
+        k2 += w*xx;
+        k4 += w*xx*xx;
+        l = log(y[i]);
+        b0 += w*l;
+        b2 += w*xx*l;
+    }
+    if (!sw) {
+        *fres = FALSE;
+        return;
+    }
+
+    k2 /= sw;
+    k4 /= sw;
+    b0 /= sw;
+    b2 /= sw;
+    d = k4 - k2*k2;
+    if (!d) {
+        *fres = FALSE;
+        return;
+    }
+    alpha = (b0*k4 - b2*k2)/d;
+    beta = (b2 - k2*b0)/d;
+    if (beta >= 0.0) {
+        *fres = FALSE;
+        return;
+    }
+    param[0] = exp(alpha/2);
+    param[1] = -1.0/beta;
+    *fres = TRUE;
 }
 
 /**************   polynomial 0th order ********************************/
