@@ -340,9 +340,9 @@ gauss_acf_guess(gint n_dat,
     *fres = TRUE;
 }
 
-/******************** gaussian PSDF ***************************/
+/******************** gaussian IPSDF ***************************/
 static gdouble
-gauss_ipsdf_func(gdouble x,
+gauss_rpsdf_func(gdouble x,
                  G_GNUC_UNUSED gint n_param,
                  const gdouble *b,
                  G_GNUC_UNUSED gpointer user_data,
@@ -361,7 +361,7 @@ gauss_ipsdf_func(gdouble x,
 }
 
 static void
-gauss_ipsdf_guess(gint n_dat,
+gauss_rpsdf_guess(gint n_dat,
                   const gdouble *x,
                   const gdouble *y,
                   gdouble *param,
@@ -629,6 +629,65 @@ exp_acf_guess(gint n_dat,
     }
     param[0] = exp(alpha/2);
     param[1] = -1.0/beta;
+    *fres = TRUE;
+}
+
+/******************** exponential IPSDF ***************************/
+static gdouble
+exp_rpsdf_func(gdouble x,
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
+{
+    gdouble c, d;
+
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x*b[1];
+    d = 1 + c*c;
+    d *= d*d;
+
+    return b[0]*b[0]*b[1]*GWY_SQRT_PI/2.0 * c/sqrt(d);
+}
+
+static void
+exp_rpsdf_guess(gint n_dat,
+                const gdouble *x,
+                const gdouble *y,
+                gdouble *param,
+                gboolean *fres)
+{
+    gdouble s0, sm1, max;
+    gint i, n;
+
+    s0 = sm1 = 0.0;
+    max = -G_MAXDOUBLE;
+    n = 0;
+    for (i = 0; i < n_dat; i++) {
+        if (x[i] <= 0.0)
+            continue;
+
+        n++;
+        s0 += y[i];
+        sm1 += y[i]/x[i];
+        if (x[i] > max)
+            max = x[i];
+    }
+    if (!s0 || !sm1) {
+        *fres = FALSE;
+        return;
+    }
+
+    max /= n;
+    s0 *= max;
+    sm1 *= max;
+
+    param[0] = sqrt(2.0*s0/GWY_SQRT_PI);
+    param[1] = sm1/s0;
     *fres = TRUE;
 }
 
@@ -1154,13 +1213,13 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Gaussian (IPSDF)",
+        "Gaussian (RPSDF)",
         "<i>f</i>(<i>x</i>) "
             "= (σ<i>T</i>)<sup>2</sup>/2 "
             "<i>x</i> exp[−(<i>x</i><i>T</i>/2)<sup>2</sup>]",
-        &gauss_ipsdf_func,
+        &gauss_rpsdf_func,
         NULL,
-        &gauss_ipsdf_guess,
+        &gauss_rpsdf_guess,
         &psdf_scale,
         &psdf_get_units,
         &weights_linear_decrease,
@@ -1184,7 +1243,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         "Exponential (PSDF)",
         "<i>f</i>(<i>x</i>) "
             "= σ<sup>2</sup><i>T</i>/(2√π) "
-            "1/[1 + (<i>x</i><i>T</i>)<sup>2</sup>)]",
+            "1/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>)]",
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
@@ -1217,6 +1276,21 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_hhcf_guess,
         &cf_scale,
         &cf_get_units,
+        &weights_linear_decrease,
+        G_N_ELEMENTS(gauss_two_params),
+        gauss_two_params,
+    },
+    {
+        "Exponential (RPSDF)",
+        "<i>f</i>(<i>x</i>) "
+            "= √π(σ<i>T</i>)<sup>2</sup>/2 "
+            "<i>x</i>/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>]"
+            "<sup>3/2</sup>",
+        &exp_rpsdf_func,
+        NULL,
+        &exp_rpsdf_guess,
+        &psdf_scale,
+        &psdf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
         gauss_two_params,
