@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.18",
+    "0.19",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -728,8 +728,9 @@ read_hash(gchar **buffer,
         return NULL;
     }
 
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
-    g_hash_table_insert(hash, "#self", line + 2);    /* self */
+    hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                 NULL, g_free);
+    g_hash_table_insert(hash, "#self", g_strdup(line + 2));    /* self */
     gwy_debug("hash table <%s>", line + 2);
     while ((*buffer)[0] == '\\' && (*buffer)[1] && (*buffer)[1] != '*') {
         line = gwy_str_next_line(buffer) + 1;
@@ -774,7 +775,8 @@ read_hash(gchar **buffer,
     /* Fix random stuff in MultiMode V (and possibly other) files */
     if ((value = g_hash_table_lookup(hash, "Scan Size"))
         && !g_hash_table_lookup(hash, "Scan size")) {
-        g_hash_table_insert(hash, "Scan size", value);
+        g_hash_table_insert(hash, "Scan size",
+                            g_memdup(value, sizeof(NanoscopeValue)));
         g_hash_table_remove(hash, "Scan Size");
     }
 
