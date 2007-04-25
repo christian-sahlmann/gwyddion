@@ -24,6 +24,7 @@
  *   <comment>PNI SPM data</comment>
  *   <magic priority="50">
  *     <match type="string" offset="0" value="\0\0\0\0001.0"/>
+ *     <match type="string" offset="0" value="\315\315\315\3151.0"/>
  *   </magic>
  *   <glob pattern="*.pni"/>
  *   <glob pattern="*.PNI"/>
@@ -43,8 +44,9 @@
 
 #define EXTENSION ".pni"
 
-#define MAGIC "\0\0\0\0" "1.0"
-#define MAGIC_SIZE (sizeof(MAGIC)-1)
+#define MAGIC1 "\0\0\0\0" "1.0"
+#define MAGIC2 "\315\315\315\315" "1.0"
+#define MAGIC_SIZE (sizeof(MAGIC1)-1)
 
 #define Nanometer (1e-9)
 #define Micrometer (1e-6)
@@ -102,7 +104,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Pacific Nanotechnology PNI data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -133,7 +135,8 @@ pni_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
     if (fileinfo->buffer_len >= 0xa0
-        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0) {
+        && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0)) {
         const guchar *p = fileinfo->head + 0x90;
 
         xres = gwy_get_guint32_le(&p);
