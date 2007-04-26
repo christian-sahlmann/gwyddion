@@ -3,14 +3,16 @@
   - fore/back detection, connected area splitting
   - polynomial leveling with disjoint z0
   - profiles along arbitrary curves
-  - graph curve editing
   - explicit range in color range
-  - nanoindentation (but do grain volume first)
+  - nanoindentation
   - 2D autocorrelation
-  - isotropic autocorrelation, PSDF
+  - isotropic autocorrelation
 - Graph minor and major ticks are misaligned
+- Selection on logarithmic graphs doesn't work
+- When a graph is set to logscale and then a curve with negative values is
+  added to it, it gets stuck on logscale because GraphWindow makes the
+  toggle insensitive
 - Fix facet level to do nothing instead of dumping NaNs on bad data.
-- Add more supported files to MIME types (gwyddion.xml)
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Surf file: units and scales are botched
