@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.3.1",
+    "1.4",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -1024,12 +1024,9 @@ fft_filter_2d(GwyDataField *input,
               GwyDataField *mask)
 {
     GwyDataField *r_in, *i_in, *r_out, *i_out;
-    GwySIUnit *siunit;
 
     /* Run the forward FFT */
     r_in = gwy_data_field_duplicate(input);
-    siunit = gwy_data_field_get_si_unit_xy(r_in);
-    gwy_si_unit_power(siunit, -1, siunit);
 
     i_in = GWY_DATA_FIELD(gwy_data_field_new_alike(r_in, TRUE));
     r_out = GWY_DATA_FIELD(gwy_data_field_new_alike(r_in, FALSE));
@@ -1048,8 +1045,23 @@ fft_filter_2d(GwyDataField *input,
     gwy_data_field_2dfft_humanize(r_out);
     gwy_data_field_2dfft_humanize(i_out);
 
-    if (output_fft != NULL)
+    if (output_fft != NULL) {
+        GwySIUnit *siunit;
+
         set_dfield_modulus(r_out, i_out, output_fft);
+
+        siunit = gwy_data_field_get_si_unit_xy(input);
+        siunit = gwy_si_unit_power(siunit, -1, NULL);
+        gwy_data_field_set_si_unit_xy(output_fft, siunit);
+        g_object_unref(siunit);
+
+        gwy_data_field_set_xreal(output_fft,
+                                 gwy_data_field_get_xres(input)
+                                 /gwy_data_field_get_xreal(input));
+        gwy_data_field_set_yreal(output_fft,
+                                 gwy_data_field_get_yres(input)
+                                 /gwy_data_field_get_yreal(input));
+    }
 
     /* Apply mask to the fft */
     gwy_data_field_multiply_fields(r_out, r_out, mask);
