@@ -35,6 +35,7 @@
 
 static void     gwy_graph_window_destroy         (GtkObject *object);
 static void     gwy_graph_window_finalize        (GObject *object);
+static void     gwy_graph_window_model_changed   (GwyGraphWindow *graph_window);
 static gboolean gwy_graph_window_key_pressed     (GtkWidget *widget,
                                                   GdkEventKey *event);
 static gboolean gwy_graph_cursor_motion          (GwyGraphWindow *graphwindow);
@@ -110,12 +111,10 @@ GtkWidget*
 gwy_graph_window_new(GwyGraph *graph)
 {
     GwyGraphWindow *graphwindow;
-    GwyGraphModel *gmodel;
     GwyGraphArea *area;
     GwySelection *selection;
     GtkScrolledWindow *swindow;
     GtkWidget *vbox, *hbox;
-    gboolean logscale = FALSE;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
@@ -135,14 +134,13 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow->notebook = gtk_notebook_new();
 
     graph_title_changed(graphwindow);
-    gmodel = gwy_graph_get_model(graph);
 
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(graph),
                              gtk_label_new(_("Graph")));
 
     swindow = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(NULL, NULL));
-    graphwindow->data = gwy_graph_data_new(gmodel);
+    graphwindow->data = gwy_graph_data_new(NULL);
     gtk_container_add(GTK_CONTAINER(swindow), graphwindow->data);
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),
                              GTK_WIDGET(swindow),
@@ -151,7 +149,7 @@ gwy_graph_window_new(GwyGraph *graph)
     swindow = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(NULL, NULL));
     gtk_scrolled_window_set_policy(swindow,
                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    graphwindow->curves = gwy_graph_curves_new(gmodel);
+    graphwindow->curves = gwy_graph_curves_new(NULL);
     g_signal_connect_swapped(graphwindow->curves, "row-activated",
                              G_CALLBACK(gwy_graph_window_curves_row_activated),
                              graphwindow);
@@ -202,11 +200,7 @@ gwy_graph_window_new(GwyGraph *graph)
                              G_CALLBACK(gwy_graph_window_zoom_to_fit),
                              graphwindow);
 
-    if (gmodel)
-        g_object_get(gmodel, "x-logarithmic", &logscale, NULL);
     graphwindow->button_x_log = gtk_toggle_button_new();
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_x_log),
-                                 logscale);
     gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
                       gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_HORIZONTAL,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
@@ -221,11 +215,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_widget_set_sensitive(graphwindow->button_x_log,
                 gwy_graph_model_x_data_can_be_logarithmed(graph->graph_model));
 
-    if (gmodel)
-        g_object_get(gmodel, "y-logarithmic", &logscale, NULL);
     graphwindow->button_y_log = gtk_toggle_button_new();
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_x_log),
-                                 logscale);
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
                       gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_VERTICAL,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
@@ -260,10 +250,10 @@ gwy_graph_window_new(GwyGraph *graph)
                              G_CALLBACK(gwy_graph_window_zoom_finished),
                              graphwindow);
 
-    /* FIXME: What if model set later? */
-    if (gmodel)
-        g_signal_connect_swapped(gmodel, "notify::title",
-                                 G_CALLBACK(graph_title_changed), graphwindow);
+    g_signal_connect_swapped(graph, "notify::model",
+                             G_CALLBACK(gwy_graph_window_model_changed),
+                             graphwindow);
+    gwy_graph_window_model_changed(graphwindow);
 
     return GTK_WIDGET(graphwindow);
 }
@@ -364,6 +354,56 @@ GtkTooltips*
 gwy_graph_window_class_get_tooltips(void)
 {
     return tooltips;
+}
+
+static void
+gwy_graph_window_update_log_button(GwyGraphWindow *graph_window,
+                                   GtkWidget *button,
+                                   GwyGraphModel *gmodel,
+                                   const gchar *prop_name,
+                                   gpointer callback)
+{
+    gboolean logscale = FALSE;
+    guint id;
+
+    id = g_signal_handler_find(button,
+                               G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, NULL, callback, graph_window);
+    if (gmodel)
+        g_object_get(gmodel, prop_name, &logscale, NULL);
+    g_signal_handler_block(button, id);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), logscale);
+    g_signal_handler_unblock(button, id);
+}
+
+static void
+gwy_graph_window_model_changed(GwyGraphWindow *graph_window)
+{
+    GwyGraphModel *gmodel, *oldmodel;
+
+    /* Retrieve the old model. FIXME: This is dirty. */
+    oldmodel = gwy_graph_data_get_model(GWY_GRAPH_DATA(graph_window->data));
+
+    if (oldmodel)
+        g_signal_handlers_disconnect_by_func(oldmodel,
+                                             graph_title_changed, graph_window);
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(graph_window->graph));
+    gwy_graph_data_set_model(GWY_GRAPH_DATA(graph_window->data), gmodel);
+    gwy_graph_curves_set_model(GWY_GRAPH_CURVES(graph_window->curves), gmodel);
+
+    gwy_graph_window_update_log_button(graph_window, graph_window->button_x_log,
+                                       gmodel, "x-logarithmic",
+                                       gwy_graph_window_x_log);
+    gwy_graph_window_update_log_button(graph_window, graph_window->button_y_log,
+                                       gmodel, "y-logarithmic",
+                                       gwy_graph_window_y_log);
+
+    if (gmodel)
+        g_signal_connect_swapped(gmodel, "notify::title",
+                                 G_CALLBACK(graph_title_changed), graph_window);
+
+    graph_title_changed(graph_window);
 }
 
 static void
