@@ -34,7 +34,9 @@
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
 
-enum { MAX_PARAMS = 4 };
+/* Lower symmetric part indexing */
+/* i MUST be greater or equal than j */
+#define SLi(a, t, i, j) g_array_index(a, t, (i)*((i) + 1)/2 + (j))
 
 enum {
     RESPONSE_ESTIMATE = 1,
@@ -55,7 +57,7 @@ typedef struct {
     gint curve;
     gdouble from;
     gdouble to;
-    FitParamArg param[MAX_PARAMS];
+    GArray *param;
     gdouble crit;
     GwyNLFitPreset *fitfunc;
     GwyGraph *parent_graph;
@@ -94,8 +96,10 @@ typedef struct {
     GtkWidget *chisq;
     GtkWidget *function;
     GtkWidget *formula;
-    GtkWidget **covar;
-    FitParamControl param[MAX_PARAMS];
+    GtkWidget *param_table;
+    GtkWidget *covar_table;
+    GArray *covar;
+    GArray *param;
     GtkWidget *auto_estimate;
     GtkWidget *auto_plot;
     gboolean in_update;
@@ -104,11 +108,14 @@ typedef struct {
 static gboolean    module_register           (void);
 static void        fit                       (GwyGraph *graph);
 static void        fit_dialog                (FitArgs *args);
+static void        fit_controls_free         (FitControls *controls);
 static void        fit_fetch_entry           (FitControls *controls);
 static void        fit_param_row_create      (FitControls *controls,
                                               gint i,
                                               GtkTable *table,
                                               gint row);
+static void        fit_param_row_destroy     (FitControls *controls,
+                                              gint i);
 static void        fit_do                    (FitControls *controls);
 static void        curve_changed             (GtkComboBox *combo,
                                               FitControls *controls);
@@ -161,7 +168,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -185,7 +192,6 @@ static void
 fit(GwyGraph *graph)
 {
     GwyContainer *settings;
-    gint i;
     FitArgs args;
 
     memset(&args, 0, sizeof(FitArgs));
@@ -195,8 +201,7 @@ fit(GwyGraph *graph)
     args.parent_graph = graph;
     args.xdata = gwy_data_line_new(1, 1.0, FALSE);
     args.ydata = gwy_data_line_new(1, 1.0, FALSE);
-    for (i = 0; i < MAX_PARAMS; i++)
-        args.param[i].fix = FALSE;
+    args.param = g_array_new(FALSE, TRUE, sizeof(FitParamArg));
 
     settings = gwy_app_settings_get();
     load_args(settings, &args);
@@ -205,6 +210,7 @@ fit(GwyGraph *graph)
 
     g_object_unref(args.xdata);
     g_object_unref(args.ydata);
+    g_array_free(args.param, TRUE);
     if (args.fitter)
         gwy_math_nlfit_free(args.fitter);
     if (args.abscissa_vf)
@@ -222,12 +228,13 @@ fit_dialog(FitArgs *args)
     GwySelection *selection;
     GwySIUnit *siunit;
     FitControls controls;
-    gint response, i, j, row;
+    gint response, row;
     GString *report;
     gdouble xmin, xmax;
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.param = g_array_new(FALSE, TRUE, sizeof(FitParamControl));
 
     gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
     gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
@@ -303,7 +310,8 @@ fit_dialog(FitArgs *args)
     row++;
 
     /* Parameters sought */
-    table2 = GTK_TABLE(gtk_table_new(MAX_PARAMS + 1, 10, FALSE));
+    controls.param_table = gtk_table_new(1, 10, FALSE);
+    table2 = GTK_TABLE(controls.param_table);
     gtk_table_set_row_spacing(table2, 0, 2);
     gtk_table_set_col_spacings(table2, 2);
     gtk_table_set_col_spacing(table2, 0, 6);
@@ -325,8 +333,11 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(table2, gwy_label_new_header(_("Initial")),
                      9, 10, 0, 1, GTK_FILL, 0, 0, 0);
 
-    for (i = 0; i < MAX_PARAMS; i++)
+    /* Make space for 4 parameters */
+#if 0
+    for (i = 0; i < 4; i++)
         fit_param_row_create(&controls, i, table2, i+1);
+#endif
 
     /* Chi^2 */
     label = gtk_label_new(NULL);
@@ -356,22 +367,12 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(expander), align);
     row++;
 
-    controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
-    g_signal_connect_swapped(dialog, "destroy",
-                             G_CALLBACK(g_free), controls.covar);
-    table2 = GTK_TABLE(gtk_table_new(MAX_PARAMS, MAX_PARAMS, TRUE));
+    controls.covar = g_array_new(FALSE, TRUE, sizeof(GtkWidget*));
+    controls.covar_table = gtk_table_new(1, 1, TRUE);
+    table2 = GTK_TABLE(controls.covar_table);
     gtk_table_set_col_spacings(table2, 6);
     gtk_table_set_row_spacings(table2, 2);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table2));
-
-    for (i = 0; i < MAX_PARAMS; i++) {
-        for (j = 0; j <= i; j++) {
-            label = controls.covar[i*MAX_PARAMS + j] = gtk_label_new(NULL);
-            gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-            gtk_table_attach(table2, label,
-                             j, j+1, i, i+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        }
-    }
 
     /* Fit area */
     hbox2 = gtk_hbox_new(FALSE, 6);
@@ -446,6 +447,7 @@ fit_dialog(FitArgs *args)
 
     gwy_graph_model_add_curve(controls.args->graph_model,
                               gwy_graph_model_get_curve(gmodel, args->curve));
+    args->fitfunc = NULL;
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
     graph_selected(selection, -1, &controls);
 
@@ -459,6 +461,7 @@ fit_dialog(FitArgs *args)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
+            fit_controls_free(&controls);
             return;
             break;
 
@@ -495,6 +498,14 @@ fit_dialog(FitArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
+    fit_controls_free(&controls);
+}
+
+static void
+fit_controls_free(FitControls *controls)
+{
+    g_array_free(controls->param, TRUE);
+    g_array_free(controls->covar, TRUE);
 }
 
 static void
@@ -518,12 +529,13 @@ fit_param_row_create(FitControls *controls,
     FitParamControl *cntrl;
     FitParamArg *arg;
 
-    cntrl = &controls->param[i];
-    arg = &controls->args->param[i];
+    cntrl = &g_array_index(controls->param, FitParamControl, i);
+    arg = &g_array_index(controls->args->param, FitParamArg, i);
 
     /* Fix */
     cntrl->fix = gtk_check_button_new();
     gtk_table_attach(table, cntrl->fix, 0, 1, row, row+1, 0, 0, 0, 0);
+    gtk_widget_show(cntrl->fix);
     g_signal_connect(cntrl->fix, "toggled",
                      G_CALLBACK(toggle_changed), &arg->fix);
 
@@ -532,42 +544,50 @@ fit_param_row_create(FitControls *controls,
     gtk_misc_set_alignment(GTK_MISC(cntrl->name), 1.0, 0.5);
     gtk_table_attach(table, cntrl->name,
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_widget_show(cntrl->name);
 
     /* Equals */
     cntrl->equals = gtk_label_new("=");
     gtk_table_attach(table, cntrl->equals, 2, 3, row, row+1, 0, 0, 0, 0);
+    gtk_widget_show(cntrl->equals);
 
     /* Value */
     cntrl->value = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(cntrl->value), 1.0, 0.5);
     gtk_table_attach(table, cntrl->value,
                      3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_widget_show(cntrl->value);
 
     cntrl->value_unit = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(cntrl->value_unit), 0.0, 0.5);
     gtk_table_attach(table, cntrl->value_unit,
                      4, 5, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_widget_show(cntrl->value_unit);
 
     /* Plus-minus */
     cntrl->pm = gtk_label_new("±");
     gtk_table_attach(table, cntrl->pm, 5, 6, row, row+1, 0, 0, 0, 0);
+    gtk_widget_show(cntrl->pm);
 
     /* Error */
     cntrl->error = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(cntrl->error), 1.0, 0.5);
     gtk_table_attach(table, cntrl->error,
                      6, 7, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_widget_show(cntrl->error);
 
     cntrl->error_unit = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(cntrl->error_unit), 0.0, 0.5);
     gtk_table_attach(table, cntrl->error_unit,
                      7, 8, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_widget_show(cntrl->error_unit);
 
     /* Copy */
     cntrl->copy = gtk_button_new_with_label("→");
     gtk_button_set_relief(GTK_BUTTON(cntrl->copy), GTK_RELIEF_NONE);
     gtk_table_attach(table, cntrl->copy, 8, 9, row, row+1, 0, 0, 0, 0);
     g_object_set_data(G_OBJECT(cntrl->copy), "id", GINT_TO_POINTER(i + 1));
+    gtk_widget_show(cntrl->copy);
     g_signal_connect(cntrl->copy, "clicked", G_CALLBACK(copy_param), controls);
 
     /* Initial */
@@ -576,9 +596,29 @@ fit_param_row_create(FitControls *controls,
     gtk_table_attach(table, cntrl->init,
                      9, 10, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_object_set_data(G_OBJECT(cntrl->init), "id", GINT_TO_POINTER(i + 1));
+    gtk_widget_show(cntrl->init);
     g_signal_connect(cntrl->init, "activate",
                      G_CALLBACK(param_initial_activate), controls);
     gwy_widget_set_activate_on_unfocus(cntrl->init, TRUE);
+}
+
+static void
+fit_param_row_destroy(FitControls *controls,
+                      gint i)
+{
+    FitParamControl *cntrl;
+
+    cntrl = &g_array_index(controls->param, FitParamControl, i);
+    gtk_widget_destroy(cntrl->fix);
+    gtk_widget_destroy(cntrl->name);
+    gtk_widget_destroy(cntrl->equals);
+    gtk_widget_destroy(cntrl->value);
+    gtk_widget_destroy(cntrl->value_unit);
+    gtk_widget_destroy(cntrl->pm);
+    gtk_widget_destroy(cntrl->error);
+    gtk_widget_destroy(cntrl->error_unit);
+    gtk_widget_destroy(cntrl->copy);
+    gtk_widget_destroy(cntrl->init);
 }
 
 static void
@@ -615,8 +655,12 @@ fit_plot_curve(FitArgs *args)
     initial = !args->is_fitted;
     n = gwy_nlfit_preset_get_nparams(args->fitfunc);
     param = g_newa(gdouble, n);
-    for (i = 0; i < n; i++)
-        param[i] = initial ? args->param[i].init : args->param[i].value;
+    for (i = 0; i < n; i++) {
+        FitParamArg *arg;
+
+        arg = &g_array_index(args->param, FitParamArg, i);
+        param[i] = initial ? arg->init : arg->value;
+    }
 
     n = gwy_data_line_get_res(args->xdata);
     g_return_if_fail(n == gwy_data_line_get_res(args->ydata));
@@ -649,6 +693,7 @@ fit_plot_curve(FitArgs *args)
 static void
 fit_do(FitControls *controls)
 {
+    FitParamArg *arg;
     FitArgs *args;
     GtkWidget *dialog;
     gdouble *param, *error;
@@ -662,9 +707,10 @@ fit_do(FitControls *controls)
 
     allfixed = TRUE;
     for (i = 0; i < nparams; i++) {
-        fixed[i] = args->param[i].fix;
+        arg = &g_array_index(args->param, FitParamArg, i);
+        fixed[i] = arg->fix;
         allfixed &= fixed[i];
-        args->param[i].value = args->param[i].init;
+        arg->value = arg->init;
         if (!fixed[i])
             nfree++;
     }
@@ -693,7 +739,7 @@ fit_do(FitControls *controls)
     param = g_newa(gdouble, nparams);
     error = g_newa(gdouble, nparams);
     for (i = 0; i < nparams; i++)
-        param[i] = args->param[i].value;
+        param[i] =g_array_index(args->param, FitParamArg, i).value;
     args->fitter
         = gwy_nlfit_preset_fit(args->fitfunc, NULL,
                                gwy_data_line_get_res(args->xdata),
@@ -703,8 +749,9 @@ fit_do(FitControls *controls)
     errorknown = (args->fitter->covar != NULL);
 
     for (i = 0; i < nparams; i++) {
-        args->param[i].value = param[i];
-        args->param[i].error = error[i];
+        arg = &g_array_index(args->param, FitParamArg, i);
+        arg->value = param[i];
+        arg->error = error[i];
         fit_param_row_update_value(controls, i, errorknown);
     }
 
@@ -721,13 +768,13 @@ fit_do(FitControls *controls)
                 g_snprintf(buf, sizeof(buf), "%0.3f",
                            gwy_math_nlfit_get_correlations(args->fitter, i, j));
                 fix_minus(buf, sizeof(buf));
-                gtk_label_set_markup
-                           (GTK_LABEL(controls->covar[i*MAX_PARAMS + j]), buf);
+                gtk_label_set_markup(SLi(controls->covar, GtkLabel*, i, j),
+                                     buf);
             }
          }
     }
     else
-        gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N.A."));
+        gtk_label_set_markup(SLi(controls->covar, GtkLabel*, 0, 0), _("N.A."));
 
     fit_set_state(controls, TRUE, TRUE);
     fit_plot_curve(args);
@@ -775,8 +822,12 @@ static void
 function_changed(GtkComboBox *combo, FitControls *controls)
 {
     FitArgs *args = controls->args;
-    gint nparams, i;
-    gboolean sens;
+    gint nparams, oldnparams, i, j;
+
+    if (args->fitfunc)
+        oldnparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
+    else
+        oldnparams = 0;
 
     args->function_type = gtk_combo_box_get_active(combo);
     args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
@@ -785,24 +836,40 @@ function_changed(GtkComboBox *combo, FitControls *controls)
     gtk_label_set_markup(GTK_LABEL(controls->formula),
                          gwy_nlfit_preset_get_formula(args->fitfunc));
 
-    for (i = 0; i < MAX_PARAMS; i++) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->param[i].fix),
-                                     FALSE);
-        if ((sens = (i < nparams))) {
-            gtk_label_set_markup(GTK_LABEL(controls->param[i].name),
-                                 gwy_nlfit_preset_get_param_name(args->fitfunc,
-                                                                 i));
+    for (i = nparams; i < oldnparams; i++) {
+        fit_param_row_destroy(controls, i);
+        for (j = 0; j <= i; j++)
+            gtk_widget_destroy(SLi(controls->covar, GtkWidget*, i, j));
+    }
+
+    g_array_set_size(controls->args->param, nparams);
+    g_array_set_size(controls->param, nparams);
+    g_array_set_size(controls->covar, nparams*(nparams+1)/2);
+
+    gtk_table_resize(GTK_TABLE(controls->param_table), 1+nparams, 10);
+    for (i = oldnparams; i < nparams; i++) {
+        fit_param_row_create(controls, i, GTK_TABLE(controls->param_table),
+                             i+1);
+        for (j = 0; j <= i; j++) {
+            GtkWidget *label;
+
+            label = gtk_label_new(NULL);
+            SLi(controls->covar, GtkWidget*, i, j) = label;
+            gtk_widget_show(label);
+            gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+            gtk_table_attach(GTK_TABLE(controls->covar_table), label,
+                             j, j+1, i, i+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         }
-        else {
-            gtk_label_set_text(GTK_LABEL(controls->param[i].name), "");
-        }
-        gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), "");
-        gtk_widget_set_sensitive(controls->param[i].name, sens);
-        gtk_widget_set_sensitive(controls->param[i].equals, sens);
-        gtk_widget_set_sensitive(controls->param[i].init, sens);
-        gtk_widget_set_sensitive(controls->param[i].pm, sens);
-        gtk_widget_set_sensitive(controls->param[i].fix, sens);
-        gtk_widget_set_sensitive(controls->param[i].copy, sens);
+    }
+
+    for (i = 0; i < nparams; i++) {
+        FitParamControl *cntrl;
+
+        cntrl = &g_array_index(controls->param, FitParamControl, i);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cntrl->fix), FALSE);
+        gtk_label_set_markup(GTK_LABEL(cntrl->name),
+                             gwy_nlfit_preset_get_param_name(args->fitfunc, i));
+        gtk_entry_set_text(GTK_ENTRY(cntrl->init), "");
     }
 
     fit_set_state(controls, FALSE, FALSE);
@@ -814,7 +881,7 @@ fit_set_state(FitControls *controls,
               gboolean is_estimated)
 {
     FitArgs *args;
-    gint i, j;
+    gint i, j, nparams;
 
     args = controls->args;
     if (!args->is_fitted == !is_fitted
@@ -829,14 +896,17 @@ fit_set_state(FitControls *controls,
         if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
             gwy_graph_model_remove_curve(args->graph_model, 1);
 
-        for (i = 0; i < MAX_PARAMS; i++) {
-            gtk_label_set_text(GTK_LABEL(controls->param[i].value), "");
-            gtk_label_set_text(GTK_LABEL(controls->param[i].value_unit), "");
-            gtk_label_set_text(GTK_LABEL(controls->param[i].error), "");
-            gtk_label_set_text(GTK_LABEL(controls->param[i].error_unit), "");
+        nparams = gwy_nlfit_preset_get_nparams(args->fitfunc);
+        for (i = 0; i < nparams; i++) {
+            FitParamControl *cntrl;
+
+            cntrl = &g_array_index(controls->param, FitParamControl, i);
+            gtk_label_set_text(GTK_LABEL(cntrl->value), "");
+            gtk_label_set_text(GTK_LABEL(cntrl->value_unit), "");
+            gtk_label_set_text(GTK_LABEL(cntrl->error), "");
+            gtk_label_set_text(GTK_LABEL(cntrl->error_unit), "");
             for (j = 0; j <= i; j++)
-                gtk_label_set_text(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
-                                   "");
+                gtk_label_set_text(SLi(controls->covar, GtkLabel*, i, j), "");
         }
         gtk_label_set_markup(GTK_LABEL(controls->chisq), NULL);
     }
@@ -861,7 +931,7 @@ fit_estimate(FitControls *controls)
 
     param = g_newa(gdouble, nparams);
     for (i = 0; i < nparams; i++)
-        param[i] = args->param[i].init;
+        param[i] =g_array_index(args->param, FitParamArg, i).init;
 
     if (!normalize_data(args))
         return;
@@ -873,9 +943,14 @@ fit_estimate(FitControls *controls)
                            param, &ok);
 
     for (i = 0; i < nparams; i++) {
-        args->param[i].value = args->param[i].init = param[i];
+        FitParamControl *cntrl;
+        FitParamArg *arg;
+
+        cntrl = &g_array_index(controls->param, FitParamControl, i);
+        arg = &g_array_index(args->param, FitParamArg, i);
+        arg->value = arg->init = param[i];
         g_snprintf(buf, sizeof(buf), "%0.6g", param[i]);
-        gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buf);
+        gtk_entry_set_text(GTK_ENTRY(cntrl->init), buf);
     }
 
     fit_set_state(controls, FALSE, TRUE);
@@ -896,8 +971,8 @@ fit_param_row_update_value(FitControls *controls,
     char buf[16];
 
     cmodel = gwy_graph_model_get_curve(controls->args->graph_model, 0);
-    cntrl = &controls->param[i];
-    arg = &controls->args->param[i];
+    cntrl = &g_array_index(controls->param, FitParamControl, i);
+    arg = &g_array_index(controls->args->param, FitParamArg, i);
 
     if (!controls->args->fitter->eval) {
         gtk_label_set_text(GTK_LABEL(cntrl->value), "");
@@ -984,10 +1059,12 @@ param_initial_activate(GtkWidget *entry,
                        gpointer user_data)
 {
     FitControls *controls = (FitControls*)user_data;
+    FitParamArg *arg;
     gint i;
 
     i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(entry), "id")) - 1;
-    controls->args->param[i].init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
+    arg = &g_array_index(controls->args->param, FitParamArg, i);
+    arg->init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
     fit_set_state(controls, FALSE, TRUE);
     if (controls->args->auto_plot)
         fit_plot_curve(controls->args);
@@ -1072,13 +1149,17 @@ static void
 copy_param(GObject *button,
            FitControls *controls)
 {
+    FitParamControl *cntrl;
+    FitParamArg *arg;
     gchar buffer[20];
     gint i;
 
     i = GPOINTER_TO_INT(g_object_get_data(button, "id")) - 1;
-    g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->param[i].value);
-    gtk_entry_set_text(GTK_ENTRY(controls->param[i].init), buffer);
-    gtk_widget_activate(controls->param[i].init);
+    cntrl = &g_array_index(controls->param, FitParamControl, i);
+    arg = &g_array_index(controls->args->param, FitParamArg, i);
+    g_snprintf(buffer, sizeof(buffer), "%.4g", arg->value);
+    gtk_entry_set_text(GTK_ENTRY(cntrl->init), buffer);
+    gtk_widget_activate(cntrl->init);
 }
 
 static GtkWidget*
@@ -1287,8 +1368,10 @@ create_fit_report(FitArgs *args)
                  "si-unit-y", &unity,
                  NULL);
     for (i = 0; i < n; i++) {
+        FitParamArg *arg;
         const gchar *name;
 
+        arg = &g_array_index(args->param, FitParamArg, i);
         name = gwy_nlfit_preset_get_param_name(args->fitfunc, i);
         if (!pango_parse_markup(name, -1, 0, NULL, &s, NULL, NULL)) {
             g_warning("Parameter name is not valid Pango markup");
@@ -1299,8 +1382,7 @@ create_fit_report(FitArgs *args)
         unitstr = gwy_si_unit_get_string(unitp, GWY_SI_UNIT_FORMAT_PLAIN);
         g_object_unref(unitp);
         g_string_append_printf(report, "%4s = %g ± %g %s\n",
-                               s, args->param[i].value, args->param[i].error,
-                               unitstr);
+                               s, arg->value, arg->error, unitstr);
         g_free(s);
     }
     g_object_unref(unitx);
