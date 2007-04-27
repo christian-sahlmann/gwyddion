@@ -318,8 +318,6 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     tool->gmodel = gwy_graph_model_new();
-    g_object_set(tool->gmodel, "title", _("Spectroscopy"), NULL);
-
     tool->graph = gwy_graph_new(tool->gmodel);
     g_object_unref(tool->gmodel); /* The GwyGraph takes a ref */
 
@@ -419,6 +417,7 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     }
 
     if (!spectra) {
+        g_object_set(tool->gmodel, "title", _("Spectroscopy"), NULL);
         tool->ignore_tree_selection = TRUE;
         gwy_null_store_set_n_rows(store, 0);
         tool->ignore_tree_selection = FALSE;
@@ -431,6 +430,10 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
     g_object_ref(spectra);
     gwy_object_unref(tool->spectra);
     tool->spectra = spectra;
+
+    g_object_set(tool->gmodel,
+                 "title", gwy_spectra_get_title(tool->spectra),
+                 NULL);
 
     nspec = gwy_spectra_get_n_spectra(spectra);
     gwy_selection_set_max_objects(plain_tool->selection, nspec);
@@ -543,11 +546,9 @@ static void
 gwy_tool_spectro_show_curve(GwyToolSpectro *tool,
                             gint id)
 {
-    const GwyRGBA *rgba;
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel=NULL;
     gint i, n;
-    gchar *desc;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
@@ -557,6 +558,7 @@ gwy_tool_spectro_show_curve(GwyToolSpectro *tool,
 
     for (i = 0; i < n; i++) {
         guint idx;
+
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
         idx = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(gcmodel), "sid"));
         if (idx == id)
@@ -568,9 +570,13 @@ gwy_tool_spectro_show_curve(GwyToolSpectro *tool,
     if (gcmodel) {
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
     } else {
+        const GwyRGBA *rgba;
+        gchar *desc;
+
         gcmodel = gwy_graph_curve_model_new();
         g_object_set_data(G_OBJECT(gcmodel), "sid", GUINT_TO_POINTER(id));
-        desc = g_strdup_printf(_("Spectrum %d"), id+1);
+        desc = g_strdup_printf("%s %d",
+                               gwy_spectra_get_title(tool->spectra), id + 1);
         rgba = gwy_graph_get_preset_color(n);
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
