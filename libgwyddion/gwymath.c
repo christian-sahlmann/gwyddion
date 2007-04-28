@@ -66,7 +66,7 @@ gwy_math_humanize_numbers(gdouble unit,
     }
 
     lm = log10(maximum) + 1e-12;
-    lu = log10(unit) + 1e-12;
+    lu = log10(unit) - 1e-12;
     mag = 3.0*floor(lm/3.0);
     q = 3.0*ceil(lu/3.0);
     if (q > mag)
