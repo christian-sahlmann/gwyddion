@@ -1573,7 +1573,7 @@ gwy_axis_calculate_format(GwyAxis *axis,
     mji = &g_array_index(axis->mjticks, GwyAxisLabeledTick, 0);
     mjx = &g_array_index(axis->mjticks, GwyAxisLabeledTick,
                          axis->mjticks->len - 1);
-    average = fabs(mjx->t.value + mji->t.value)/2;
+    average = (fabs(mjx->t.value) + fabs(mji->t.value))/2;
     step = fabs(mjx->t.value - mji->t.value);
     average = MAX(average, step);
     step /= MAX(axis->mjticks->len - 1, 1);
