@@ -485,7 +485,7 @@ exp_psdf_func(gdouble x,
     *fres = TRUE;
     c = x*b[1];
 
-    return b[0]*b[0]*b[1]/(2.0*GWY_SQRT_PI)/(1.0 + c*c);
+    return b[0]*b[0]*b[1]/G_PI/(1.0 + c*c);
 }
 
 static void
@@ -520,7 +520,7 @@ exp_psdf_guess(gint n_dat,
     s0 *= max;
     s1 *= max;
 
-    param[0] = 2.0*sqrt(s0/G_SQRT2);
+    param[0] = sqrt(s0);
     param[1] = 2.0*s0*s0/(s1*s1);
     *fres = TRUE;
 }
@@ -651,7 +651,7 @@ exp_rpsdf_func(gdouble x,
     d = 1 + c*c;
     d *= d*d;
 
-    return b[0]*b[0]*b[1]*GWY_SQRT_PI/2.0 * c/sqrt(d);
+    return b[0]*b[0]*b[1] * c/sqrt(d);
 }
 
 static void
@@ -686,7 +686,7 @@ exp_rpsdf_guess(gint n_dat,
     s0 *= max;
     sm1 *= max;
 
-    param[0] = sqrt(2.0*s0/GWY_SQRT_PI);
+    param[0] = sqrt(s0);
     param[1] = sm1/s0;
     *fres = TRUE;
 }
@@ -1242,8 +1242,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential (PSDF)",
         "<i>f</i>(<i>x</i>) "
-            "= σ<sup>2</sup><i>T</i>/(2√π) "
-            "1/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>)]",
+            "= σ<sup>2</sup><i>T</i>/π "
+            "1/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>]",
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
@@ -1283,8 +1283,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential (RPSDF)",
         "<i>f</i>(<i>x</i>) "
-            "= √π(σ<i>T</i>)<sup>2</sup>/2 "
-            "<i>x</i>/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>]"
+            "= σ<sup>2</sup><i>T</i> "
+            "<i>xT</i>/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>]"
             "<sup>3/2</sup>",
         &exp_rpsdf_func,
         NULL,
