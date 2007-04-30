@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/data-browser.h>
+#include <app/gwymoduleutils.h>
 
 enum {
     META_KEY,
@@ -49,6 +50,7 @@ typedef struct {
     GtkWidget *new;
     GtkWidget *delete;
     GtkWidget *close;
+    GtkWidget *save;
 } MetadataBrowser;
 
 static void       gwy_meta_browser_construct    (MetadataBrowser *browser);
@@ -79,6 +81,7 @@ static void       gwy_meta_focus_iter           (MetadataBrowser *browser,
 static gboolean   gwy_meta_find_key             (MetadataBrowser *browser,
                                                  GQuark quark,
                                                  GtkTreeIter *iter);
+static void       gwy_meta_save_items           (MetadataBrowser *browser);
 
 /**
  * gwy_app_metadata_browser:
@@ -128,6 +131,12 @@ gwy_app_metadata_browser(GwyContainer *data,
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
+    browser->save = gwy_stock_like_button_new(_("_Save"), GTK_STOCK_SAVE);
+    gtk_box_pack_start(GTK_BOX(hbox), browser->save, TRUE, TRUE, 0);
+    g_signal_connect_swapped(browser->save, "clicked",
+                             G_CALLBACK(gwy_meta_save_items), browser);
+    gtk_widget_set_sensitive(browser->save, FALSE);
+
     browser->new = gwy_stock_like_button_new(_("_New"), GTK_STOCK_NEW);
     gtk_box_pack_start(GTK_BOX(hbox), browser->new, TRUE, TRUE, 0);
     g_signal_connect_swapped(browser->new, "clicked",
@@ -166,6 +175,8 @@ gwy_meta_update_title(MetadataBrowser *browser,
                       gint id)
 {
     gchar *title, *dataname;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
 
     dataname = gwy_app_get_data_field_title(data, id);
     title = g_strdup_printf(_("Metadata of %s (%s)"),
@@ -173,6 +184,12 @@ gwy_meta_update_title(MetadataBrowser *browser,
     gtk_window_set_title(GTK_WINDOW(browser->window), title);
     g_free(title);
     g_free(dataname);
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser->treeview));
+    if (gtk_tree_model_get_iter_first(model, &iter))
+         gtk_widget_set_sensitive(browser->save, TRUE);
+    else
+         gtk_widget_set_sensitive(browser->save, FALSE);
 }
 
 static MetadataBrowser*
@@ -483,6 +500,8 @@ gwy_meta_new_item(MetadataBrowser *browser)
             s = g_strdup("");
         gwy_container_set_string(browser->meta, quark, s);
     }
+
+    gtk_widget_set_sensitive(browser->save, TRUE);
 }
 
 static void
@@ -499,6 +518,9 @@ gwy_meta_delete_item(MetadataBrowser *browser)
 
     gtk_tree_model_get(model, &iter, META_KEY, &quark, -1);
     gwy_container_remove(browser->meta, quark);
+
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+         gtk_widget_set_sensitive(browser->save, FALSE);
 }
 
 static void
@@ -558,5 +580,35 @@ gwy_meta_find_key(MetadataBrowser *browser,
     return FALSE;
 }
 
+static void
+gwy_meta_save_items(MetadataBrowser *browser)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GString *str_to_save;
+    GQuark name;
+    const gchar *value;
+
+    str_to_save = g_string_new(NULL);
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser->treeview));
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, META_KEY, &name, -1);
+            value = gwy_container_get_string(browser->meta, name);
+            g_string_append_printf(str_to_save, "%s %s\n",
+                                   g_quark_to_string(name),
+                                   value);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+
+    gwy_save_auxiliary_data(_("Save Metadata"),
+                            GTK_WINDOW(browser->window),
+                            -1,
+                            str_to_save->str);
+
+    g_string_free(str_to_save, TRUE);
+
+}
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

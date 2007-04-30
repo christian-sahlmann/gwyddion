@@ -2,6 +2,7 @@
 
 2.6 (0000-00-00)
 Application:
+- Metadata browser:  It is possibile to save the metadata.
 - Infinite startup notification after remote file opening was fixed.
 - Translations updated: German, Italian.
 
