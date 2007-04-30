@@ -42,6 +42,7 @@ typedef struct {
 typedef struct {
     GwyContainer *container;
     GwyContainer *meta;
+    gulong changed_id;
     gulong destroy_id;
     GtkWidget *window;
     GtkWidget *treeview;
@@ -223,6 +224,7 @@ gwy_meta_switch_data(MetadataBrowser *browser,
         store = gtk_list_store_new(1, G_TYPE_UINT);
     }
 
+    gwy_signal_handler_disconnect(browser->meta, browser->changed_id);
     if (browser->meta) {
         g_object_set_data(G_OBJECT(browser->meta), "metadata-browser", NULL);
         g_object_weak_unref(G_OBJECT(browser->meta),
@@ -240,8 +242,9 @@ gwy_meta_switch_data(MetadataBrowser *browser,
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), META_KEY,
                                          GTK_SORT_ASCENDING);
 
-    g_signal_connect(meta, "item-changed",
-                     G_CALLBACK(gwy_meta_item_changed), browser);
+    browser->changed_id = g_signal_connect(meta, "item-changed",
+                                           G_CALLBACK(gwy_meta_item_changed),
+                                           browser);
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(browser->treeview),
                             GTK_TREE_MODEL(store));
@@ -501,6 +504,7 @@ gwy_meta_delete_item(MetadataBrowser *browser)
 static void
 gwy_meta_destroy(MetadataBrowser *browser)
 {
+    gwy_signal_handler_disconnect(browser->meta, browser->changed_id);
     g_object_set_data(G_OBJECT(browser->meta), "metadata-browser", NULL);
     g_object_weak_unref(G_OBJECT(browser->meta),
                         (GWeakNotify)&gwy_meta_data_finalized,
@@ -511,6 +515,7 @@ gwy_meta_destroy(MetadataBrowser *browser)
 static void
 gwy_meta_data_finalized(MetadataBrowser *browser)
 {
+    browser->changed_id = 0;
     g_signal_handler_disconnect(browser->window, browser->destroy_id);
     gtk_widget_destroy(browser->window);
     g_free(browser);
