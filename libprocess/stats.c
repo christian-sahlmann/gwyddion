@@ -33,11 +33,7 @@
 #include <libprocess/linestats.h>
 #include <libprocess/grains.h>
 #include <libprocess/inttrans.h>
-
-/* Cache operations */
-#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
-#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
-#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+#include "gwyprocessinternal.h"
 
 /**
  * gwy_data_field_get_max:
@@ -1623,7 +1619,7 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
     dout = gwy_data_line_new(res, 1.0, FALSE);
     in = gwy_data_line_get_data(din);
     out = gwy_data_line_get_data(dout);
-    plan = fftw_plan_r2r_1d(res, in, out, FFTW_R2HC, FFTW_MEASURE);
+    plan = fftw_plan_r2r_1d(res, in, out, FFTW_R2HC, _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
 
     switch (orientation) {

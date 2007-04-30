@@ -21,11 +21,7 @@
 #include "config.h"
 #include <math.h>
 #include <libprocess/arithmetic.h>
-
-/* Cache operations */
-#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
-#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
-#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+#include "gwyprocessinternal.h"
 
 /* for compatibility checks */
 #define EPSILON 1e-6

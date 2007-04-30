@@ -25,6 +25,14 @@
 
 G_BEGIN_DECLS
 
+/* Must include fftw3.h to get it actually defined */
+#define _GWY_FFTW_PATIENCE FFTW_MEASURE
+
+/* Cache operations */
+#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
+#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
+#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+
 G_GNUC_INTERNAL
 void _gwy_cdline_class_setup_presets(void);
 

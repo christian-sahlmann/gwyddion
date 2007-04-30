@@ -19,9 +19,25 @@
  */
 
 #include "config.h"
+
+#ifdef HAVE_FFTW3
+#include <fftw3.h>
+#endif
+
 #include <libgwyddion/gwyddion.h>
-#include "gwyprocess.h"
+#include <libprocess/gwyprocess.h>
 #include "gwyprocessinternal.h"
+
+static void
+gwy_process_import_fftw_wisdom(void)
+{
+#ifdef HAVE_FFTW3
+    gboolean ok;
+
+    ok = fftw_import_system_wisdom();
+    gwy_debug("FFTW3 system wisdom imported: %d", ok);
+#endif
+}
 
 /**
  * gwy_process_type_init:
@@ -51,6 +67,7 @@ gwy_process_type_init(void)
     types_initialized = TRUE;
 
     _gwy_cdline_class_setup_presets();
+    gwy_process_import_fftw_wisdom();
 }
 
 /************************** Documentation ****************************/

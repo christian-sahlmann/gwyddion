@@ -21,20 +21,15 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/datafield.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/stats.h>
+#include "gwyprocessinternal.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
-
-/* Cache operations */
-#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
-#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
-#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
 enum {
     DATA_CHANGED,

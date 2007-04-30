@@ -20,17 +20,12 @@
 
 #include "config.h"
 #include <string.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
-
-/* Cache operations */
-#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
-#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
-#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+#include "gwyprocessinternal.h"
 
 static gint thin_data_field(GwyDataField *data_field);
 

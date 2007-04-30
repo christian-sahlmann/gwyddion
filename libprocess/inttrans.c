@@ -33,6 +33,7 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/cwt.h>
+#include "gwyprocessinternal.h"
 
 static void  gwy_data_line_fft_do          (GwyDataLine *rsrc,
                                             GwyDataLine *isrc,
@@ -433,12 +434,12 @@ gwy_data_line_fft_do(GwyDataLine *rsrc,
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
                                         rdest->data, idest->data,
                                         rdest->data, idest->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
                                         idest->data, rdest->data,
                                         idest->data, rdest->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     gwy_data_line_copy(rsrc, rdest);
     gwy_data_line_copy(isrc, idest);
@@ -655,12 +656,12 @@ gwy_data_field_2dfft_do(GwyDataField *rin,
         plan = fftw_plan_guru_split_dft(2, dims, 1, howmany_dims,
                                         rin->data, iin->data,
                                         rout->data, iout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     else
         plan = fftw_plan_guru_split_dft(2, dims, 1, howmany_dims,
                                         iin->data, rin->data,
                                         iout->data, rout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     fftw_execute(plan);
     fftw_destroy_plan(plan);
@@ -804,7 +805,7 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
     howmany_dims[0].os = rin->xres*rin->yres;
     plan = fftw_plan_guru_split_dft_r2c(2, dims, 1, howmany_dims,
                                         ibuf->data, rout->data, iout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     /* R2C destroys input, and especially, the planner destroys input too */
     gwy_data_field_copy(rin, ibuf, FALSE);
@@ -1303,12 +1304,12 @@ gwy_data_field_xfft_do(GwyDataField *rin,
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
                                         rout->data, iout->data,
                                         rout->data, iout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
                                         iout->data, rout->data,
                                         iout->data, rout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     gwy_data_field_copy(rin, rout, FALSE);
     gwy_data_field_copy(iin, iout, FALSE);
@@ -1426,7 +1427,7 @@ gwy_data_field_xfft_real_do(GwyDataField *rin,
     howmany_dims[0].os = rin->xres;
     plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
                                         ibuf->data, rout->data, iout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     /* R2C destroys input, and especially, the planner destroys input too */
     gwy_data_field_copy(rin, ibuf, FALSE);
@@ -1599,12 +1600,12 @@ gwy_data_field_yfft_do(GwyDataField *rin,
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
                                         rout->data, iout->data,
                                         rout->data, iout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
                                         iout->data, rout->data,
                                         iout->data, rout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     gwy_data_field_copy(rin, rout, FALSE);
     gwy_data_field_copy(iin, iout, FALSE);
@@ -1722,7 +1723,7 @@ gwy_data_field_yfft_real_do(GwyDataField *rin,
     howmany_dims[0].os = 1;
     plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
                                         ibuf->data, rout->data, iout->data,
-                                        FFTW_MEASURE);
+                                        _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
     /* R2C destroys input, and especially, the planner destroys input too */
     gwy_data_field_copy(rin, ibuf, FALSE);
