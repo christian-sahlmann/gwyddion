@@ -5,12 +5,12 @@
 
 GWY_DOC_CFLAGS = -I$(top_srcdir) -I$(top_builddir) @COMMON_CFLAGS@
 GWY_DOC_LIBS = \
-	${top_srcdir}/app/libgwyapp2.la \
-	${top_srcdir}/libgwymodule/libgwymodule2.la \
-	${top_srcdir}/libgwydgets/libgwydgets2.la \
-	${top_srcdir}/libdraw/libgwydraw2.la \
-	${top_srcdir}/libprocess/libgwyprocess2.la \
-	${top_srcdir}/libgwyddion/libgwyddion2.la \
+	$(top_srcdir)/app/libgwyapp2.la \
+	$(top_srcdir)/libgwymodule/libgwymodule2.la \
+	$(top_srcdir)/libgwydgets/libgwydgets2.la \
+	$(top_srcdir)/libdraw/libgwydraw2.la \
+	$(top_srcdir)/libprocess/libgwyprocess2.la \
+	$(top_srcdir)/libgwyddion/libgwyddion2.la \
 	@GTKGLEXT_LIBS@ @BASIC_LIBS@
 
 GWY_SCAN_OPTIONS = \
@@ -87,7 +87,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) ${top_srcdir}/devel-docs/add-objec
 	    done \
 	fi
 	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
-	    $(PYTHON) ${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	    $(PYTHON) $(top_srcdir)/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
 	fi
 	touch scan-build.stamp
 
@@ -185,5 +185,6 @@ endif
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/html
 	-cp $(srcdir)/html/* $(distdir)/html
+	$(PYTHON) $(top_srcdir)/devel-docs/ncrosslinks.py $(distdir)/html/*.html </dev/null
 
 .PHONY: docs dist-hook-local
