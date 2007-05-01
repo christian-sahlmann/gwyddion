@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycolorbutton.h>
 #include <libgwydgets/gwygraphareadialog.h>
@@ -55,6 +56,8 @@ static void       colorsel_response_cb             (GtkWidget *selector,
                                                     GwyGraphAreaDialog *dialog);
 static void       colorsel_changed_cb              (GtkColorSelection *colorsel,
                                                     GwyGraphAreaDialog *dialog);
+static void       color_selected_cb                (GtkComboBox *combo,
+                                                    GwyGraphAreaDialog *dialog);
 static void       label_change_cb                  (GwySciText *sci_text,
                                                     GwyGraphAreaDialog *dialog);
 static void       combo_realized                   (GtkWidget *parent,
@@ -66,6 +69,9 @@ static void       thickness_changed_cb              (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
 static void       pointsize_changed_cb             (GtkAdjustment *adj,
                                                     GwyGraphAreaDialog *dialog);
+static GtkWidget* gwy_graph_color_combo_new        (void);
+static void       gwy_graph_color_combo_select     (GtkComboBox *combo,
+                                                    const GwyRGBA *color);
 
 G_DEFINE_TYPE(GwyGraphAreaDialog, _gwy_graph_area_dialog, GTK_TYPE_DIALOG)
 
@@ -84,7 +90,7 @@ _gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
 static void
 _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 {
-    GtkWidget *table;
+    GtkWidget *table, *label, *hbox;
     gint row;
 
     gwy_debug("");
@@ -111,14 +117,27 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                             GWY_HSCALE_WIDGET);
     row++;
 
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_table_attach(GTK_TABLE(table), hbox,
+                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
     dialog->color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(dialog->color_button),
                                    FALSE);
-    gwy_table_attach_hscale(table, row, _("Pl_ot color:"), NULL,
-                            GTK_OBJECT(dialog->color_button),
-                            GWY_HSCALE_WIDGET_NO_EXPAND);
+    gtk_box_pack_start(GTK_BOX(hbox), dialog->color_button, FALSE, FALSE, 0);
     g_signal_connect(dialog->color_button, "clicked",
                      G_CALLBACK(color_change_cb), dialog);
+
+    dialog->color_selector = gwy_graph_color_combo_new();
+    gtk_box_pack_start(GTK_BOX(hbox), dialog->color_selector, FALSE, FALSE, 0);
+    g_signal_connect(dialog->color_selector, "changed",
+                     G_CALLBACK(color_selected_cb), dialog);
+
+    label = gtk_label_new_with_mnemonic(_("Pl_ot color:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), dialog->color_button);
     row++;
 
     dialog->pointtype_menu
@@ -303,12 +322,22 @@ static void
 refresh(GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
+    GtkTreeModel *model;
+    GwyRGBA *rgba;
+
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->color_selector));
+    gwy_null_store_set_model(GWY_NULL_STORE(model), dialog->curve_model,
+                             NULL);
+    gwy_null_store_row_changed(GWY_NULL_STORE(model), 0);
 
     if (dialog->curve_model == NULL)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
 
+    g_object_get(cmodel, "color", &rgba, NULL);
+    gwy_graph_color_combo_select(GTK_COMBO_BOX(dialog->color_selector), rgba);
+    gwy_rgba_free(rgba);
     gwy_color_button_set_color(GWY_COLOR_BUTTON(dialog->color_button),
                                &cmodel->color);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(dialog->curvetype_menu),
@@ -407,6 +436,24 @@ colorsel_changed_cb(GtkColorSelection *colorsel,
     gwy_rgba_from_gdk_color(&rgba, &gcl);
     rgba.a = 1.0;
     g_object_set(cmodel, "color", &rgba, NULL);
+    refresh(dialog);
+}
+
+static void
+color_selected_cb(GtkComboBox *combo,
+                  GwyGraphAreaDialog *dialog)
+{
+    GwyGraphCurveModel *cmodel;
+    const GwyRGBA *rgba;
+    gint i;
+
+    i = gtk_combo_box_get_active(combo);
+    if (!i || !dialog->curve_model)
+        return;
+
+    cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
+    rgba = gwy_graph_get_preset_color(i-1);
+    g_object_set(cmodel, "color", rgba, NULL);
     refresh(dialog);
 }
 
@@ -616,6 +663,95 @@ _gwy_graph_get_line_style_store(GtkWidget *widget)
     g_object_unref(gc);
 
     return GTK_TREE_MODEL(store);
+}
+
+static void
+render_graph_color(G_GNUC_UNUSED GtkCellLayout *cell_layout,
+                   GtkCellRenderer *renderer,
+                   GtkTreeModel *model,
+                   GtkTreeIter *iter,
+                   gpointer user_data)
+{
+    GdkPixbuf *pixbuf = (GdkPixbuf*)user_data;
+    GwyRGBA rgba;
+    guint32 pixel = 1;
+    gint row;
+
+    gtk_tree_model_get(model, iter, 0, &row, -1);
+    if (row)
+        rgba = *gwy_graph_get_preset_color(row-1);
+    else {
+        GwyGraphCurveModel *curve_model;
+
+        curve_model = gwy_null_store_get_model(GWY_NULL_STORE(model));
+        if (curve_model) {
+            GwyRGBA *this_is_silly;
+
+            g_object_get(curve_model, "color", &this_is_silly, NULL);
+            rgba = *this_is_silly;
+            gwy_rgba_free(this_is_silly);
+        }
+        else
+            pixel = 0;
+    }
+    if (pixel)
+        pixel = 0xff
+                | ((guint32)(guchar)floor(255.99999*rgba.b) << 8)
+                | ((guint32)(guchar)floor(255.99999*rgba.g) << 16)
+                | ((guint32)(guchar)floor(255.99999*rgba.r) << 24);
+    gdk_pixbuf_fill(pixbuf, pixel);
+    g_object_set(renderer, "pixbuf", pixbuf, NULL);
+}
+
+static GtkWidget*
+gwy_graph_color_combo_new(void)
+{
+    GtkCellRenderer *renderer;
+    GwyNullStore *store;
+    GdkPixbuf *pixbuf;
+    GtkWidget *combo;
+    gint width, height;
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    height |= 1;
+    width = MAX(width, (gint)(1.618*height)) | 1;
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, height);
+
+    store = gwy_null_store_new(gwy_graph_get_n_preset_colors() + 1);
+    g_object_weak_ref(G_OBJECT(store), (GWeakNotify)g_object_unref, pixbuf);
+
+    combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(store);
+    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 4);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, FALSE);
+    gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(combo), renderer,
+                                       render_graph_color, pixbuf, NULL);
+
+    return combo;
+}
+
+static void
+gwy_graph_color_combo_select(GtkComboBox *combo,
+                             const GwyRGBA *color)
+{
+    const GwyRGBA *preset;
+    guint i, n;
+
+    n = gwy_graph_get_n_preset_colors();
+    for (i = 0; i < n; i++) {
+        preset = gwy_graph_get_preset_color(i);
+        if (fabs(color->r - preset->r)
+            + fabs(color->g - preset->g)
+            + fabs(color->b - preset->b)
+            < 1e-5)
+            break;
+    }
+    if (i < n)
+        gtk_combo_box_set_active(combo, i+1);
+    else
+        gtk_combo_box_set_active(combo, 0);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

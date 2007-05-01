@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -52,6 +52,7 @@ struct _GwyGraphAreaDialog {
     GtkWidget *sci_text;
 
     GtkWidget *color_dialog;
+    GtkWidget *color_selector;
     GwyRGBA old_color;
 
     GwyGraphCurveModel *curve_model;
