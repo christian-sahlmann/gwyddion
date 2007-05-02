@@ -34,6 +34,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <app/gwyapp.h>
+#include <libgwydgets/gwydgetutils.h>
 
 #define APP_RANGE_KEY "/app/default-range-type"
 
@@ -62,6 +63,8 @@ struct _GwyToolColorRange {
 
     GtkWidget *is_default;
     GtkLabel *min;
+    GtkWidget *spinmin;
+    GtkWidget *spinmax;
     GtkLabel *max;
     GtkLabel *datamin;
     GtkLabel *datamax;
@@ -109,6 +112,7 @@ static void   gwy_tool_color_range_get_min_max      (GwyToolColorRange *tool,
 static void   gwy_tool_color_range_set_min_max      (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_update_fullrange (GwyToolColorRange *tool);
 static void   gwy_tool_color_range_update_histogram (GwyToolColorRange *tool);
+static void   gwy_tool_color_range_spin_changed      (GwyToolColorRange *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -117,7 +121,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.5",
+    "3.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -231,7 +235,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
         },
     };
 
-    GtkWidget *label, *hbox, *button, *image;
+    GtkWidget *label, *hbox, *button, *image, *hbox_spin_min, *hbox_spin_max;
     GtkRadioButton *group;
     GtkTable *table;
     GtkDialog *dialog;
@@ -240,6 +244,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
     GtkTooltips *tips;
     gint row, i;
+    GtkObject *spin_adj;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     tips = gwy_app_get_tooltips();
@@ -314,15 +319,41 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
     row = 0;
+    
+    spin_adj = gtk_adjustment_new(1, -10000.0, 10000.0, 0.01, 0.5, 1000.0);
+    tool->spinmin = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(tool->spinmin), TRUE);
+    g_signal_connect_swapped(spin_adj, "value-changed",
+                             G_CALLBACK(gwy_tool_color_range_spin_changed),
+                             tool);
 
     tool->min = GTK_LABEL(gtk_label_new(NULL));
     gtk_misc_set_alignment(GTK_MISC(tool->min), 0.0, 0.5);
-    gtk_table_attach(table, GTK_WIDGET(tool->min),
+
+    hbox_spin_min = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox_spin_min), tool->spinmin, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox_spin_min),
+                       GTK_WIDGET(tool->min), FALSE, FALSE, 0);
+    gtk_table_attach(table, hbox_spin_min,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    spin_adj = gtk_adjustment_new(1, -10000.0, 10000.0, 0.01, 0.5, 1000.0);
+    tool->spinmax = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
+    gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), FALSE);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(tool->spinmax), TRUE);
+    g_signal_connect_swapped(spin_adj, "value-changed",
+                             G_CALLBACK(gwy_tool_color_range_spin_changed),
+                             tool);
 
     tool->max = GTK_LABEL(gtk_label_new(NULL));
     gtk_misc_set_alignment(GTK_MISC(tool->max), 1.0, 0.5);
-    gtk_table_attach(table, GTK_WIDGET(tool->max),
+
+    hbox_spin_max = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(hbox_spin_max),
+                       GTK_WIDGET(tool->max), FALSE, FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(hbox_spin_max), tool->spinmax, FALSE, FALSE, 0);
+    gtk_table_attach(table, hbox_spin_max,
                      3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("Range"));
@@ -390,6 +421,8 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     }
     else {
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), FALSE);
     }
 
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
@@ -540,6 +573,8 @@ gwy_tool_color_range_type_changed(GtkWidget *radio,
     if (plain_tool->container) {
         fixed = (range_type == GWY_LAYER_BASIC_RANGE_FIXED);
         gtk_widget_set_sensitive(GTK_WIDGET(tool->histogram), fixed);
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), fixed);
+        gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), fixed);
 
         gwy_tool_color_range_set_range_type(tool, range_type);
         if (fixed && !tool->data_switch)
@@ -693,14 +728,17 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
     }
 
     vf = plain_tool->value_format;
-    g_snprintf(buf, sizeof(buf), "%.*f%s%s",
-               vf->precision, sel[0]/vf->magnitude,
+    g_snprintf(buf, sizeof(buf), "%s%s",
                *vf->units ? " " : "", vf->units);
     gtk_label_set_markup(tool->min, buf);
-    g_snprintf(buf, sizeof(buf), "%.*f%s%s",
-               vf->precision, sel[1]/vf->magnitude,
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmin),
+                              sel[0]/vf->magnitude);
+
+    g_snprintf(buf, sizeof(buf), "%s%s",
                *vf->units ? " " : "", vf->units);
     gtk_label_set_markup(tool->max, buf);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmax),
+                              sel[1]/vf->magnitude);
 }
 
 static void
@@ -749,6 +787,29 @@ gwy_tool_color_range_update_histogram(GwyToolColorRange *tool)
     gwy_data_field_dh(plain_tool->data_field, tool->heightdist, 0);
     gwy_graph_curve_model_set_data_from_dataline(cmodel, tool->heightdist,
                                                  0, 0);
+}
+
+static void
+gwy_tool_color_range_spin_changed(GwyToolColorRange *tool)
+{
+    GwyPlainTool *plain_tool;
+    gdouble sel[2];
+    const GwySIValueFormat *vf;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    vf = plain_tool->value_format;
+    
+    sel[0] = gtk_spin_button_get_value(GTK_SPIN_BUTTON(tool->spinmin));
+    sel[0] *= vf->magnitude;
+    gwy_container_set_double(plain_tool->container,
+                             tool->key_min, sel[0]);
+
+    sel[1] = gtk_spin_button_get_value(GTK_SPIN_BUTTON(tool->spinmax));
+    sel[1] *= vf->magnitude;
+    gwy_container_set_double(plain_tool->container,
+                             tool->key_max, sel[1]);
+
+    gwy_selection_set_data(tool->graph_selection, 1, sel);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

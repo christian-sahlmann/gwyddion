@@ -69,9 +69,9 @@ Modules:
 - Read Value, Level3: Show selection check button initial state is set
   properly.
 - Color Range tool: It is possible to set default color mapping type applied
-  when none is specifically set.
+  when none is specifically set. Manual range setting was enabled.
 - Statistical functions tool: Isotropic (radial) PSDF was added.
-- Read Value: Can shfit data values to make the currently selected point lie
+- Read Value: Can shift data values to make the currently selected point lie
   on the zero plane.
 - Level3: New option to make the fitted plane the zero value plane.
 - Symbol of theta which often rendered wrong on Win32 was replaced with
