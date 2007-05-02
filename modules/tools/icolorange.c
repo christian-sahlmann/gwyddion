@@ -319,7 +319,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
     row = 0;
-    
+
     spin_adj = gtk_adjustment_new(1, -10000.0, 10000.0, 0.01, 0.5, 1000.0);
     tool->spinmin = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
     gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
@@ -598,6 +598,9 @@ gwy_tool_color_range_set_default_mode(GtkToggleButton *check,
 
     gwy_container_set_enum_by_name(gwy_app_settings_get(), APP_RANGE_KEY,
                                    gwy_tool_color_range_get_range_type(tool));
+    /* This might be a bit silly.  However unchecking the check box has not
+     * defined meaning, so just don't allow it. */
+    gtk_widget_set_sensitive(tool->is_default, FALSE);
 }
 
 static GwyLayerBasicRangeType
@@ -798,7 +801,7 @@ gwy_tool_color_range_spin_changed(GwyToolColorRange *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     vf = plain_tool->value_format;
-    
+
     sel[0] = gtk_spin_button_get_value(GTK_SPIN_BUTTON(tool->spinmin));
     sel[0] *= vf->magnitude;
     gwy_container_set_double(plain_tool->container,
