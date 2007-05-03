@@ -314,13 +314,24 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                        TRUE, TRUE, 2);
 
     /* Data ranges */
-    table = GTK_TABLE(gtk_table_new(2, 3, TRUE));
+    table = GTK_TABLE(gtk_table_new(6, 1, TRUE));
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
     row = 0;
 
-    spin_adj = gtk_adjustment_new(1, -10000.0, 10000.0, 0.01, 0.5, 1000.0);
+    label = gwy_label_new_header(_("Range"));
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    row++;
+    
+    label = gtk_label_new("min");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    spin_adj = gtk_adjustment_new(1, -1e6, 1e6, 0.01, 0.5, 1e6);
     tool->spinmin = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
     gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(tool->spinmin), TRUE);
@@ -329,16 +340,23 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                              tool);
 
     tool->min = GTK_LABEL(gtk_label_new(NULL));
-    gtk_misc_set_alignment(GTK_MISC(tool->min), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(tool->min), 1.0, 0.5);
 
     hbox_spin_min = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox_spin_min), tool->spinmin, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox_spin_min),
+    gtk_box_pack_end(GTK_BOX(hbox_spin_min),
                        GTK_WIDGET(tool->min), FALSE, FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(hbox_spin_min), tool->spinmin, FALSE, FALSE, 0);
     gtk_table_attach(table, hbox_spin_min,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    spin_adj = gtk_adjustment_new(1, -10000.0, 10000.0, 0.01, 0.5, 1000.0);
+    row++;
+    
+    label = gtk_label_new("max");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    spin_adj = gtk_adjustment_new(1, -1e6, 1e6, 0.01, 0.5, 1e6);
     tool->spinmax = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
     gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), FALSE);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(tool->spinmax), TRUE);
@@ -354,26 +372,38 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
                        GTK_WIDGET(tool->max), FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(hbox_spin_max), tool->spinmax, FALSE, FALSE, 0);
     gtk_table_attach(table, hbox_spin_max,
-                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    label = gtk_label_new(_("Range"));
-    gtk_table_attach(table, label, 1, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
+    label = gwy_label_new_header(_("Full"));
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    row++;
+
+    label = gtk_label_new("min");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
     tool->datamin = GTK_LABEL(gtk_label_new(NULL));
-    gtk_misc_set_alignment(GTK_MISC(tool->datamin), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(tool->datamin), 1.0, 0.5);
     gtk_table_attach(table, GTK_WIDGET(tool->datamin),
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    row++;
+    
+    label = gtk_label_new("max");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     tool->datamax = GTK_LABEL(gtk_label_new(NULL));
     gtk_misc_set_alignment(GTK_MISC(tool->datamax), 1.0, 0.5);
     gtk_table_attach(table, GTK_WIDGET(tool->datamax),
-                     3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    label = gtk_label_new(_("Full"));
-    gtk_table_attach(table, label, 1, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
