@@ -33,7 +33,7 @@ static GtkWidget *about = NULL;
 void
 gwy_app_about(void)
 {
-    GtkWidget *vbox, *hbox, *widget, *credits;
+    GtkWidget *vbox, *hbox, *widget, *align, *credits;
     gchar *s, *s2;
     GString *str;
     gint i, size;
@@ -73,7 +73,7 @@ gwy_app_about(void)
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
     s2 = g_strdup_printf("<big><b>%s</b> %s</big>\n",
                          g_get_application_name(), GWY_VERSION_STRING);
     s = g_strconcat(s2, _("An SPM data analysis framework."), NULL);
@@ -84,7 +84,7 @@ gwy_app_about(void)
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(widget), 2, 6);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
     s = g_strdup_printf("<i>%s</i>", PACKAGE_URL);
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
@@ -95,13 +95,16 @@ gwy_app_about(void)
 
     widget = gtk_label_new(_("Credits"));
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
 
     credits = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_widget_set_size_request(credits, -1, 160);
     gtk_box_pack_start(GTK_BOX(vbox), credits, TRUE, TRUE, 0);
+
+    align = gtk_alignment_new(0.0, 0.0, 1.0, 1.0);
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(credits), align);
 
     widget = gtk_label_new(NULL);
     str = g_string_new(_("<b>Core developers</b>\n"));
@@ -130,8 +133,7 @@ gwy_app_about(void)
     g_string_free(str, TRUE);
     gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(credits),
-                                          widget);
+    gtk_container_add(GTK_CONTAINER(align), widget);
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
@@ -153,7 +155,7 @@ gwy_app_about(void)
     gtk_widget_show_all(about);
     gtk_widget_set_size_request(widget,
                                 GTK_DIALOG(about)->vbox->allocation.width, -1);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
     gtk_widget_show(widget);
 
     g_signal_connect(about, "delete-event",
