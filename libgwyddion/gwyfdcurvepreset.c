@@ -553,10 +553,10 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "argento",
         "<i>f</i>(<i>x</i>) "
-            "= (H R<sup>2</sup>(1 - sin(gamma))(R sin(gamma)... "/* - (x-xc) sin(gamma) - R - (x-xc))) "
+            "= (H R<sup>2</sup>(1 - sin(gamma))(R sin(gamma)  - (x-xc) sin(gamma) - R - (x-xc))) "
             "/(6 (x-xc)<sup>2</sup>((x-xc) + R - R sin(gamma))<sup>2</sup>)"
             " - (H tan(gamma) ((x-xc) sin(gamma) + R sin(gamma) + R cos(2 gamma)))"
-            ".../(6*cos(gamma)*((x-xc) + R - R sin(gamma))<sup>2</sup>)*/"",
+            ".../(6*cos(gamma)*((x-xc) + R - R sin(gamma))<sup>2</sup>)",
         &argento_func,
         NULL,
         &sphcapella_guess,
@@ -569,9 +569,9 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "parzanette",
         "<i>f</i>(<i>x</i>) "
-        "=  -(H/6)((h1<sup>2</sup>(3 R (x-xc) + R*h1 ... "/*- (x-xc) h1))/((x-xc)<sup>2</sup> ((x-xc)+h1)<sup>3</sup>)"
+        "=  -(H/6)((h1<sup>2</sup>(3 R (x-xc) + R*h1 - (x-xc) h1))/((x-xc)<sup>2</sup> ((x-xc)+h1)<sup>3</sup>)"
             "+ (L*L)/(((x-xc)+h1)**3) "
-            "+ (4*tan(gamma))/(3.141593)*(L+tan(gamma)*((x-xc)+h1))/(((x-xc)+h1)**2)) */"",
+            "+ (4*tan(gamma))/(3.141593)*(L+tan(gamma)*((x-xc)+h1))/(((x-xc)+h1)**2))",
         &parzanette_func,
         NULL,
         &sphcapella_guess,
@@ -610,7 +610,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
      {
         "tpyrzanette",
         "<i>f</i>(<i>x</i>) "
-        "= -2HL<sup>2</sup>/(x-xc)<sup>3</sup> * (1 + ... ", /*(tan(gamma)(x-xc))/L + (tan(gamma)(x-xc))<sup>2</sup>)/L<sup>2</sup>)",*/
+        "= -2HL<sup>2</sup>/(x-xc)<sup>3</sup> * (1 + (tan(gamma)(x-xc))/L + (tan(gamma)(x-xc))<sup>2</sup>)/L<sup>2</sup>)",
         &tpyrzanette_func,
         NULL,
         &tpyrzanette_guess,

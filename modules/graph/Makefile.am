@@ -7,6 +7,7 @@ graph_LTLIBRARIES = \
 	graph_export_ascii.la \
 	graph_export_bitmap.la \
 	graph_export_vector.la \
+	graph_fdfit.la \
 	graph_fit.la \
 	graph_level.la
 
@@ -36,6 +37,7 @@ endif
 graph_export_ascii_la_SOURCES = graph_export_ascii.c
 graph_export_bitmap_la_SOURCES = graph_export_bitmap.c
 graph_export_vector_la_SOURCES = graph_export_vector.c
+graph_fdfit_la_SOURCES = graph_fdfit.c
 graph_fit_la_SOURCES = graph_fit.c
 graph_cd_la_SOURCES = graph_cd.c
 graph_level_la_SOURCES = graph_level.c
