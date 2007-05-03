@@ -241,7 +241,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
-    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(1, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -251,7 +251,7 @@ gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
 
     tool->thickness = gtk_adjustment_new(tool->args.thickness,
                                          1, MAX_THICKNESS, 1, 10, 0);
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), NULL,
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), "px",
                             tool->thickness, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(tool->thickness, "value-changed",
                              G_CALLBACK(gwy_tool_path_level_thickness_changed),

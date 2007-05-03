@@ -36,7 +36,7 @@
 #define GWY_TOOL_DISTANCE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistanceClass))
 
 enum {
-    GWY_TOOL_DISTANCE_RESPONSE_SAVE = 1024
+    RESPONSE_SAVE = 1024
 };
 
 enum {
@@ -55,7 +55,6 @@ struct _GwyToolDistance {
 
     GtkTreeView *treeview;
     GtkTreeModel *model;
-    GtkWidget *save;
 
     /* potential class data */
     GwySIValueFormat *angle_format;
@@ -91,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.5.1",
+    "2.6",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -214,12 +213,12 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
-    tool->save = gtk_dialog_add_button(dialog, GTK_STOCK_SAVE,
-                                       GWY_TOOL_DISTANCE_RESPONSE_SAVE);
+    gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, RESPONSE_SAVE);
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gwy_tool_distance_update_headers(tool);
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, FALSE);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -264,7 +263,7 @@ gwy_tool_distance_response(GwyTool *tool,
 {
     GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->response(tool, response_id);
 
-    if (response_id == GWY_TOOL_DISTANCE_RESPONSE_SAVE)
+    if (response_id == RESPONSE_SAVE)
         gwy_tool_distance_save_lines(GWY_TOOL_DISTANCE(tool));
 }
 
@@ -274,6 +273,7 @@ gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
 {
     GwyToolDistance *tool;
     GwyNullStore *store;
+    gboolean ok;
     gint n;
 
     tool = GWY_TOOL_DISTANCE(plain_tool);
@@ -297,11 +297,10 @@ gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
             gwy_null_store_set_n_rows(store, n+1);
     }
 
-    if (!plain_tool->selection
-        || !gwy_selection_get_data(plain_tool->selection, NULL))
-        gtk_widget_set_sensitive(tool->save, FALSE);
-    else
-        gtk_widget_set_sensitive(tool->save, TRUE);
+    ok = (plain_tool->selection
+          && gwy_selection_get_data(plain_tool->selection, NULL));
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(GWY_TOOL(tool)->dialog),
+                                      RESPONSE_SAVE, ok);
 }
 
 static void
@@ -329,6 +328,7 @@ static void
 gwy_tool_distance_update_headers(GwyToolDistance *tool)
 {
     GwyPlainTool *plain_tool;
+    gboolean ok;
     GString *str;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -349,11 +349,10 @@ gwy_tool_distance_update_headers(GwyToolDistance *tool)
 
     g_string_free(str, TRUE);
 
-    if (!plain_tool->selection
-        || !gwy_selection_get_data(plain_tool->selection, NULL))
-        gtk_widget_set_sensitive(tool->save, FALSE);
-    else
-        gtk_widget_set_sensitive(tool->save, TRUE);
+    ok = (plain_tool->selection
+          && gwy_selection_get_data(plain_tool->selection, NULL));
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(GWY_TOOL(tool)->dialog),
+                                      RESPONSE_SAVE, ok);
 }
 
 static void

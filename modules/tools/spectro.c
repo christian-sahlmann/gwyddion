@@ -181,7 +181,6 @@ gwy_tool_spectro_finalize(GObject *object)
     tool = GWY_TOOL_SPECTRO(object);
 
     settings = gwy_app_settings_get();
-    tool->args = default_args;
     gwy_container_set_boolean_by_name(settings, options_visible_key,
                                       tool->args.options_visible);
     gwy_container_set_boolean_by_name(settings, separate_key,

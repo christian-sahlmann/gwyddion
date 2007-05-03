@@ -39,7 +39,7 @@
 #define GWY_TOOL_STATS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_STATS, GwyToolStatsClass))
 
 enum {
-    GWY_TOOL_STATS_RESPONSE_SAVE = 1024
+    RESPONSE_SAVE = 1024
 };
 
 typedef struct _GwyToolStats      GwyToolStats;
@@ -87,7 +87,6 @@ struct _GwyToolStats {
 
     GwyRectSelectionLabels *rlabels;
     GtkWidget *update;
-    GtkWidget *save;
 
     GtkWidget *avg;
     GtkWidget *min;
@@ -150,7 +149,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -367,13 +366,12 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
                                          GWY_TOOL_RESPONSE_UPDATE);
     image = gtk_image_new_from_stock(GTK_STOCK_EXECUTE, GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image(GTK_BUTTON(tool->update), image);
-    tool->save = gtk_dialog_add_button(dialog, GTK_STOCK_SAVE,
-                                       GWY_TOOL_STATS_RESPONSE_SAVE);
+    gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, RESPONSE_SAVE);
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
-    gtk_widget_set_sensitive(tool->save, FALSE);
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, FALSE);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -406,7 +404,8 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 
-    gtk_widget_set_sensitive(tool->save, data_view != NULL);
+    gtk_dialog_set_response_sensitive(gwytool->dialog, RESPONSE_SAVE,
+                                      data_view != NULL);
 }
 
 static void
@@ -458,7 +457,7 @@ gwy_tool_stats_response(GwyTool *tool,
 {
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->response(tool, response_id);
 
-    if (response_id == GWY_TOOL_STATS_RESPONSE_SAVE)
+    if (response_id == RESPONSE_SAVE)
         gwy_tool_stats_save(GWY_TOOL_STATS(tool));
     else if (response_id == GWY_TOOL_RESPONSE_UPDATE)
         gwy_tool_stats_update_labels(GWY_TOOL_STATS(tool));

@@ -339,7 +339,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
 
     tool->thickness = gtk_adjustment_new(tool->args.thickness,
                                          1, MAX_THICKNESS, 1, 10, 0);
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), NULL,
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), "px",
                             tool->thickness, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(tool->thickness, "value-changed",
                              G_CALLBACK(gwy_tool_profile_thickness_changed),
