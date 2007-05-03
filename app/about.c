@@ -51,7 +51,6 @@ gwy_app_about(void)
                                         NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(about), GTK_RESPONSE_CLOSE);
     gtk_container_set_border_width(GTK_CONTAINER(about), 6);
-    gtk_window_set_resizable(GTK_WINDOW(about), FALSE);
     gtk_window_set_transient_for(GTK_WINDOW(about),
                                  GTK_WINDOW(gwy_app_main_window_get()));
     gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER);
