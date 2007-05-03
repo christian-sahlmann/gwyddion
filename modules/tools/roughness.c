@@ -30,6 +30,10 @@
 #include <libgwymodule/gwymodule-tool.h>
 #include <app/gwyapp.h>
 
+enum {
+    RESPONSE_SAVE = 1024
+};
+
 /******************************************************************************
  * Define
  *****************************************************************************/
@@ -54,7 +58,8 @@ typedef enum {
    ROUGHNESS_SET_AMPLITUDE,
    ROUGHNESS_SET_SPATIAL,
    ROUGHNESS_SET_HYBRID,
-   ROUGHNESS_SET_FUNCTIONAL
+   ROUGHNESS_SET_FUNCTIONAL,
+   ROUGHNESS_NSETS
 } GwyRoughnessSet;
 
 typedef enum {
@@ -127,22 +132,16 @@ typedef struct {
 
 typedef struct {
     gint thickness;
-    gint cutoff;
-    gint tm;
-    gint vm;
-    gint pm;
-    gdouble pc_threshold;
+    gdouble cutoff;
     GwyInterpolationType interpolation;
+    guint expanded;
 } ToolArgs;
 
 static const ToolArgs default_args = {
     1,
-    5,
-    5,
-    5,
-    5,
     0.9,
     GWY_INTERPOLATION_LINEAR,
+    0,
 };
 
 typedef struct _GwyToolRoughness      GwyToolRoughness;
@@ -156,7 +155,11 @@ struct _GwyToolRoughness {
     GtkTreeStore *store;
     gdouble *params;
 
+    gboolean same_units;
+    GwySIUnit *slope_unit;
+
     /* data */
+    gboolean have_data;
     GwyDataLine *dataline;
     GwyRoughnessProfiles profiles;
     GwyRoughnessGraph graph_type;
@@ -168,23 +171,11 @@ struct _GwyToolRoughness {
     GwyGraphModel *graphmodel_profile;
     GtkWidget *graph_profile;
 
-    GwySIValueFormat *slope_format;
-
-    //GtkWidget *save;
     GtkWidget *graph_out;
 
-    GtkWidget *options;
     GtkObject *thickness;
     GtkObject *cutoff;
-    GtkWidget *cutlength;
     GtkWidget *interpolation;
-    GtkWidget *apply;
-
-    /*  */
-    GtkWidget *pm;
-    GtkWidget *vm;
-    GtkWidget *tm;
-    GtkWidget *pc_threshold;
 
     /* potential class data */
     GwySIValueFormat *none_format;
@@ -207,6 +198,7 @@ static void     gwy_tool_roughness_response          (GwyTool *tool,
                                                       gint response_id);
 static void     gwy_tool_roughness_data_changed      (GwyPlainTool *plain_tool);
 static void     gwy_tool_roughness_update            (GwyToolRoughness *tool);
+static void     gwy_tool_roughness_update_units      (GwyToolRoughness *tool);
 static void     gwy_tool_roughness_update_parameters (GwyToolRoughness *tool);
 static void     gwy_tool_roughness_update_graphs     (GwyToolRoughness *tool);
 
@@ -215,10 +207,10 @@ static void     gwy_tool_roughness_selection_changed (GwyPlainTool *plain_tool,
 static void     gwy_tool_roughness_interpolation_changed
                                                      (GtkComboBox *combo,
                                                       GwyToolRoughness *tool);
-static void     gwy_tool_roughness_thickness_changed (GwyToolRoughness *tool,
-                                                      GtkAdjustment *adj);
-static void     gwy_tool_roughness_cutoff_changed    (GwyToolRoughness *tool,
-                                                      GtkAdjustment *adj);
+static void     gwy_tool_roughness_thickness_changed (GtkAdjustment *adj,
+                                                      GwyToolRoughness *tool);
+static void     gwy_tool_roughness_cutoff_changed    (GtkAdjustment *adj,
+                                                      GwyToolRoughness *tool);
 static void     gwy_tool_roughness_graph_changed     (GtkWidget *combo,
                                                       GwyToolRoughness *tool);
 static void     gwy_tool_roughness_apply             (GwyToolRoughness *tool);
@@ -232,10 +224,10 @@ static void     gwy_data_line_line_rotate2           (GwyDataLine *data_line,
                                                       gdouble angle,
                                                       GwyInterpolationType interpolation);
 static void     gwy_math_quicksort(gdouble *array, gint *index, gint low, gint high);
-//static void     gwy_tool_stats_save                  (GwyToolStats *tool);
+/* static void     gwy_tool_roughness_save              (GwyToolRoughness *tool); */
 static void     gwy_tool_roughness_set_data_from_profile (GwyRoughnessProfiles profiles,
                                                       GwyDataLine *a,
-                                                      gint cutoff,
+                                                      gdouble cutoff,
                                                       gint interpolation);
 static gint  gwy_tool_roughness_peaks                (GwyDataLine *data_line,
                                                       gdouble *peaks,
@@ -274,46 +266,46 @@ static void     gwy_tool_roughness_graph_brc         (GwyRoughnessProfiles profi
 static void     gwy_tool_roughness_graph_pc          (GwyRoughnessProfiles profiles);
 
 static const GwyRoughnessParameterInfo parameters[] = {
-    { -1,            ROUGHNESS_SET_AMPLITUDE,  NULL,                                   N_("Amplitude"),                                                0,            FALSE, },
-    { PARAM_RA,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>a</sub>",                 N_("Roughness average"),                                        UNITS_VALUE,  FALSE, },
-    { PARAM_RQ,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>q</sub>",                 N_("Root mean square roughness"),                               UNITS_VALUE,  FALSE, },
-    { PARAM_RT,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>t</sub>",                 N_("Maximum height of the roughness"),                          UNITS_VALUE,  FALSE, },
-    { PARAM_RV,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>v</sub>",                 N_("Maximum roughness valley depth"),                           UNITS_VALUE,  FALSE, },
-    { PARAM_RP,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>p</sub>",                 N_("Maximum roughness peak height"),                            UNITS_VALUE,  FALSE, },
-    { PARAM_RTM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>tm</sub>",                N_("Average maximum height of the roughness"),                  UNITS_VALUE,  FALSE, },
-    { PARAM_RVM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>vm</sub>",                N_("Average maximum roughness valley depth"),                   UNITS_VALUE,  FALSE, },
-    { PARAM_RPM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>pm</sub>",                N_("Average maximum roughness peak height"),                    UNITS_VALUE,  FALSE, },
-    { PARAM_R3Z,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>3z</sub>",                N_("Average third highest peak to third lowest valley height"), UNITS_VALUE,  FALSE, },
-    { PARAM_R3Z_ISO, ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>3z ISO</sub>",            N_("Average third highest peak to third lowest valley height"), UNITS_VALUE,  FALSE, },
-    { PARAM_RZ,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>z</sub>",                 N_("Average maximum height of the profile"),                    UNITS_VALUE,  FALSE, },
-    { PARAM_RZ_ISO,  ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>z ISO</sub>",             N_("Average maximum height of the roughness"),                  UNITS_VALUE,  FALSE, },
-    { PARAM_RSK,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>sk</sub>",                N_("Skewness"),                                                 UNITS_NONE,   FALSE, },
-    { PARAM_RKU,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>ku</sub>",                N_("Kurtosis"),                                                 UNITS_NONE,   FALSE, },
-    { PARAM_PT,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>a</sub>",                 N_("Waviness average"),                                         UNITS_VALUE,  FALSE, },
-    { PARAM_WA,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>q</sub>",                 N_("Root mean square waviness"),                                UNITS_VALUE,  FALSE, },
-    { PARAM_WQ,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>y</sub>=W<sub>max</sub>", N_("Waviness maximum height"),                                  UNITS_VALUE,  FALSE, },
-    { PARAM_WY,      ROUGHNESS_SET_AMPLITUDE,  "<i>P</i><sub>t</sub>",                 N_("Maximum height of the profile"),                            UNITS_VALUE,  FALSE, },
-    { -1,            ROUGHNESS_SET_SPATIAL,    NULL,                                   N_("Spatial"),                                                  0,            FALSE, },
-    { PARAM_PC,      ROUGHNESS_SET_SPATIAL,    "<i>S</i>",                             N_("Mean spacing of local peaks of the profile"),               UNITS_COORDS, FALSE, },
-    { PARAM_S,       ROUGHNESS_SET_SPATIAL,    "<i>S</i><sub>m</sub>",                 N_("Mean spacing of profile irregularities"),                   UNITS_COORDS, FALSE, },
-    { PARAM_SM,      ROUGHNESS_SET_SPATIAL,    "<i>D</i>",                             N_("Profile peak density"),                                     UNITS_COORDS, FALSE, },
-    { PARAM_LA,      ROUGHNESS_SET_SPATIAL,    "<i>P</i><sub>c</sub>",                 N_("Peak count (peak density)"),                                UNITS_NONE,   FALSE, },
-    { PARAM_LQ,      ROUGHNESS_SET_SPATIAL,    "HSC",                                  N_("Hight spot count"),                                         UNITS_NONE,   FALSE, },
-    { PARAM_HSC,     ROUGHNESS_SET_SPATIAL,    "λ<sub>a</sub>",                        N_("Average wavelength of the profile"),                        UNITS_COORDS, FALSE, },
-    { PARAM_D,       ROUGHNESS_SET_SPATIAL,    "λ<sub>q</sub>",                        N_("Root mean square (RMS) wavelength of the profile"),         UNITS_COORDS, FALSE, },
-    { -1,            ROUGHNESS_SET_HYBRID,     NULL,                                   N_("Hybrid"),                                                   0,            FALSE, },
-    { PARAM_DA,      ROUGHNESS_SET_HYBRID,     "Δ<sub>a</sub>",                        N_("Average absolute slope"),                                   UNITS_SLOPE,  FALSE, },
-    { PARAM_DQ,      ROUGHNESS_SET_HYBRID,     "Δ<sub>q</sub>",                        N_("Root mean square (RMS) slope"),                             UNITS_SLOPE,  FALSE, },
-    { PARAM_L0,      ROUGHNESS_SET_HYBRID,     "L<sub>0</sub>",                        N_("Developed profile length"),                                 UNITS_COORDS, TRUE,  },
-    { PARAM_L,       ROUGHNESS_SET_HYBRID,     "<i>l</i><sub>r</sub>",                 N_("Profile length ratio"),                                     UNITS_COORDS, TRUE,  },
-    { PARAM_LR,      ROUGHNESS_SET_HYBRID,     "<i>L</i>",                             N_("Length"),                                                   UNITS_NONE,   TRUE,  },
-    { -1,            ROUGHNESS_SET_FUNCTIONAL, NULL,                                   N_("Functional"),                                               0,            FALSE, },
-    { PARAM_HTP,     ROUGHNESS_SET_FUNCTIONAL, "<i>H</i><sub>tp</sub>",                N_("XXX"),                                                      UNITS_COORDS, FALSE, },
-    { PARAM_RK,      ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>k</sub>",                 N_("XXX"),                                                      UNITS_COORDS, FALSE, },
-    { PARAM_RKP,     ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>pk</sub>",                N_("XXX"),                                                      UNITS_COORDS, FALSE, },
-    { PARAM_RVK,     ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>vk</sub>",                N_("XXX"),                                                      UNITS_COORDS, FALSE, },
-    { PARAM_MR1,     ROUGHNESS_SET_FUNCTIONAL, "<i>M</i><sub>r1</sub>",                N_("XXX"),                                                      UNITS_COORDS, FALSE, },
-    { PARAM_MR2,     ROUGHNESS_SET_FUNCTIONAL, "<i>M</i><sub>r2</sub>",                N_("XXX"),                                                      UNITS_COORDS, FALSE, },
+    { -1,            ROUGHNESS_SET_AMPLITUDE,  NULL,                                          N_("Amplitude"),                                                0,            FALSE, },
+    { PARAM_RA,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>a</sub>",                        N_("Roughness average"),                                        UNITS_VALUE,  FALSE, },
+    { PARAM_RQ,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>q</sub>",                        N_("Root mean square roughness"),                               UNITS_VALUE,  FALSE, },
+    { PARAM_RT,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>t</sub>",                        N_("Maximum height of the roughness"),                          UNITS_VALUE,  FALSE, },
+    { PARAM_RV,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>v</sub>",                        N_("Maximum roughness valley depth"),                           UNITS_VALUE,  FALSE, },
+    { PARAM_RP,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>p</sub>",                        N_("Maximum roughness peak height"),                            UNITS_VALUE,  FALSE, },
+    { PARAM_RTM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>tm</sub>",                       N_("Average maximum height of the roughness"),                  UNITS_VALUE,  FALSE, },
+    { PARAM_RVM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>vm</sub>",                       N_("Average maximum roughness valley depth"),                   UNITS_VALUE,  FALSE, },
+    { PARAM_RPM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>pm</sub>",                       N_("Average maximum roughness peak height"),                    UNITS_VALUE,  FALSE, },
+    { PARAM_R3Z,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>3z</sub>",                       N_("Average third highest peak to third lowest valley height"), UNITS_VALUE,  FALSE, },
+    { PARAM_R3Z_ISO, ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>3z ISO</sub>",                   N_("Average third highest peak to third lowest valley height"), UNITS_VALUE,  FALSE, },
+    { PARAM_RZ,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>z</sub>",                        N_("Average maximum height of the profile"),                    UNITS_VALUE,  FALSE, },
+    { PARAM_RZ_ISO,  ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>z ISO</sub>",                    N_("Average maximum height of the roughness"),                  UNITS_VALUE,  FALSE, },
+    { PARAM_RSK,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>sk</sub>",                       N_("Skewness"),                                                 UNITS_NONE,   FALSE, },
+    { PARAM_RKU,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>ku</sub>",                       N_("Kurtosis"),                                                 UNITS_NONE,   FALSE, },
+    { PARAM_PT,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>a</sub>",                        N_("Waviness average"),                                         UNITS_VALUE,  FALSE, },
+    { PARAM_WA,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>q</sub>",                        N_("Root mean square waviness"),                                UNITS_VALUE,  FALSE, },
+    { PARAM_WQ,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>y</sub>=<i>W</i><sub>max</sub>", N_("Waviness maximum height"),                                  UNITS_VALUE,  FALSE, },
+    { PARAM_WY,      ROUGHNESS_SET_AMPLITUDE,  "<i>P</i><sub>t</sub>",                        N_("Maximum height of the profile"),                            UNITS_VALUE,  FALSE, },
+    { -1,            ROUGHNESS_SET_SPATIAL,    NULL,                                          N_("Spatial"),                                                  0,            FALSE, },
+    { PARAM_PC,      ROUGHNESS_SET_SPATIAL,    "<i>S</i>",                                    N_("Mean spacing of local peaks of the profile"),               UNITS_COORDS, FALSE, },
+    { PARAM_S,       ROUGHNESS_SET_SPATIAL,    "<i>S</i><sub>m</sub>",                        N_("Mean spacing of profile irregularities"),                   UNITS_COORDS, FALSE, },
+    { PARAM_SM,      ROUGHNESS_SET_SPATIAL,    "<i>D</i>",                                    N_("Profile peak density"),                                     UNITS_COORDS, FALSE, },
+    { PARAM_LA,      ROUGHNESS_SET_SPATIAL,    "<i>P</i><sub>c</sub>",                        N_("Peak count (peak density)"),                                UNITS_NONE,   FALSE, },
+    { PARAM_LQ,      ROUGHNESS_SET_SPATIAL,    "HSC",                                         N_("Hight spot count"),                                         UNITS_NONE,   FALSE, },
+    { PARAM_HSC,     ROUGHNESS_SET_SPATIAL,    "λ<sub>a</sub>",                               N_("Average wavelength of the profile"),                        UNITS_COORDS, FALSE, },
+    { PARAM_D,       ROUGHNESS_SET_SPATIAL,    "λ<sub>q</sub>",                               N_("Root mean square (RMS) wavelength of the profile"),         UNITS_COORDS, FALSE, },
+    { -1,            ROUGHNESS_SET_HYBRID,     NULL,                                          N_("Hybrid"),                                                   0,            FALSE, },
+    { PARAM_DA,      ROUGHNESS_SET_HYBRID,     "Δ<sub>a</sub>",                               N_("Average absolute slope"),                                   UNITS_SLOPE,  FALSE, },
+    { PARAM_DQ,      ROUGHNESS_SET_HYBRID,     "Δ<sub>q</sub>",                               N_("Root mean square (RMS) slope"),                             UNITS_SLOPE,  FALSE, },
+    { PARAM_L0,      ROUGHNESS_SET_HYBRID,     "L<sub>0</sub>",                               N_("Developed profile length"),                                 UNITS_COORDS, TRUE,  },
+    { PARAM_L,       ROUGHNESS_SET_HYBRID,     "<i>l</i><sub>r</sub>",                        N_("Profile length ratio"),                                     UNITS_COORDS, TRUE,  },
+    { PARAM_LR,      ROUGHNESS_SET_HYBRID,     "<i>L</i>",                                    N_("Length"),                                                   UNITS_NONE,   TRUE,  },
+    { -1,            ROUGHNESS_SET_FUNCTIONAL, NULL,                                          N_("Functional"),                                               0,            FALSE, },
+    { PARAM_HTP,     ROUGHNESS_SET_FUNCTIONAL, "<i>H</i><sub>tp</sub>",                       N_("XXX"),                                                      UNITS_COORDS, FALSE, },
+    { PARAM_RK,      ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>k</sub>",                        N_("XXX"),                                                      UNITS_COORDS, FALSE, },
+    { PARAM_RKP,     ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>pk</sub>",                       N_("XXX"),                                                      UNITS_COORDS, FALSE, },
+    { PARAM_RVK,     ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>vk</sub>",                       N_("XXX"),                                                      UNITS_COORDS, FALSE, },
+    { PARAM_MR1,     ROUGHNESS_SET_FUNCTIONAL, "<i>M</i><sub>r1</sub>",                       N_("XXX"),                                                      UNITS_COORDS, FALSE, },
+    { PARAM_MR2,     ROUGHNESS_SET_FUNCTIONAL, "<i>M</i><sub>r2</sub>",                       N_("XXX"),                                                      UNITS_COORDS, FALSE, },
 };
 
 static GwyModuleInfo module_info = {
@@ -329,10 +321,7 @@ static GwyModuleInfo module_info = {
 static const gchar interpolation_key[] = "/module/roughness/interpolation";
 static const gchar cutoff_key[]        = "/module/roughness/cutoff";
 static const gchar thickness_key[]     = "/module/roughness/thickness";
-static const gchar pm_key[]            = "/module/roughness/pm";
-static const gchar vm_key[]            = "/module/roughness/vm";
-static const gchar tm_key[]            = "/module/roughness/tm";
-static const gchar pc_threshold_key[]  = "/module/roughness/pc_threshold";
+static const gchar expanded_key[]      = "/module/roughness/expanded";
 
 GWY_MODULE_QUERY(module_info)
 G_DEFINE_TYPE(GwyToolRoughness, gwy_tool_roughness, GWY_TYPE_PLAIN_TOOL)
@@ -375,20 +364,21 @@ gwy_tool_roughness_finalize(GObject *object)
     tool = GWY_TOOL_ROUGHNESS(object);
 
     settings = gwy_app_settings_get();
-    tool->args = default_args;
     gwy_container_set_int32_by_name(settings, thickness_key,
                                     tool->args.thickness);
-    gwy_container_set_int32_by_name(settings, cutoff_key,
-                                    tool->args.cutoff);
+    gwy_container_set_double_by_name(settings, cutoff_key,
+                                     tool->args.cutoff);
     gwy_container_set_enum_by_name(settings, interpolation_key,
                                    tool->args.interpolation);
+    gwy_container_set_int32_by_name(settings, expanded_key,
+                                    tool->args.expanded);
 
     g_free(tool->params);
     gwy_object_unref(tool->store);
     gwy_object_unref(tool->dataline);
+    gwy_object_unref(tool->slope_unit);
     gwy_si_unit_value_format_free(tool->none_format);
-    if (tool->slope_format)
-        gwy_si_unit_value_format_free(tool->slope_format);
+    /* TODO: Free various graph models, here or elsewhere */
 
     G_OBJECT_CLASS(gwy_tool_roughness_parent_class)->finalize(object);
 }
@@ -412,21 +402,18 @@ gwy_tool_roughness_init(GwyToolRoughness *tool)
     tool->args = default_args;
     gwy_container_gis_int32_by_name(settings, thickness_key,
                                     &tool->args.thickness);
-    gwy_container_gis_int32_by_name(settings, cutoff_key,
-                                    &tool->args.cutoff);
+    gwy_container_gis_double_by_name(settings, cutoff_key,
+                                     &tool->args.cutoff);
     gwy_container_gis_enum_by_name(settings, interpolation_key,
                                    &tool->args.interpolation);
+    gwy_container_gis_int32_by_name(settings, expanded_key,
+                                    &tool->args.expanded);
 
+    tool->slope_unit = gwy_si_unit_new(NULL);
     tool->none_format = g_new0(GwySIValueFormat, 1);
     tool->none_format->magnitude = 1.0;
     tool->none_format->precision = 3;
     gwy_si_unit_value_format_set_units(tool->none_format, "");
-
-    /* FIXME: To prevent crashes. Remove here, add real format calculation. */
-    tool->slope_format = g_new0(GwySIValueFormat, 1);
-    tool->slope_format->magnitude = 1.0;
-    tool->slope_format->precision = 3;
-    gwy_si_unit_value_format_set_units(tool->slope_format, "");
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
                                      "line");
@@ -477,24 +464,24 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     */
 
     GtkDialog *dialog;
+    GtkSizeGroup *sizegroup;
     GtkWidget *dialog_vbox, *hbox, *vbox_left, *vbox_right, *table;
     GtkWidget *scwin, *treeview;
-    GtkWidget *label;
+    GwyAxis *axis;
+    gint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
     dialog_vbox = GTK_DIALOG(dialog)->vbox;
 
-    hbox = gtk_hbox_new(FALSE, 0);
-    gtk_widget_show(hbox);
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(dialog_vbox), hbox, TRUE, TRUE, 0);
 
-    vbox_left = gtk_vbox_new(FALSE, 0);
-    gtk_widget_show(vbox_left);
+    vbox_left = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox_left, TRUE, TRUE, 0);
 
     vbox_right = gtk_vbox_new(FALSE, 0);
-    gtk_widget_show(vbox_right);
     gtk_box_pack_start(GTK_BOX(hbox), vbox_right, TRUE, TRUE, 0);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
@@ -505,66 +492,45 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     treeview = gwy_tool_roughness_param_view_new(tool);
     gtk_container_add(GTK_CONTAINER(scwin), treeview);
 
-    table = gtk_table_new(1, 3, FALSE);
+    table = gtk_table_new(4, 4, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox_left), table, FALSE, FALSE, 0);
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Graph:</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row = 0;
 
     tool->graph_out
         = gwy_enum_combo_box_new(graph_types, G_N_ELEMENTS(graph_types),
-                                 G_CALLBACK(gwy_tool_roughness_graph_changed), tool,
-                                 tool->graph_type, TRUE);
-    gtk_table_attach(GTK_TABLE(table), tool->graph_out, 1, 2, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
-    table = gtk_table_new(4, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(vbox_left), table, FALSE, FALSE, 0);
-
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                                 G_CALLBACK(gwy_tool_roughness_graph_changed),
+                                 tool, tool->graph_type, TRUE);
+    gwy_table_attach_hscale(table, row, _("_Graph:"), NULL,
+                            GTK_OBJECT(tool->graph_out), GWY_HSCALE_WIDGET);
+    row++;
 
     /* cut-off */
-    tool->cutoff = gtk_adjustment_new(tool->args.cutoff, 0, 20, 1, 5, 0);
-    gwy_table_attach_hscale(GTK_WIDGET(table), 1, _("_Cut-off (%):"), NULL,
+    tool->cutoff = gtk_adjustment_new(tool->args.cutoff,
+                                      0.0, 0.2, 0.01, 0.05, 0);
+    gwy_table_attach_hscale(table, row, _("C_ut-off:"), NULL,
                             tool->cutoff, GWY_HSCALE_DEFAULT);
-    g_signal_connect_swapped(tool->cutoff, "value-changed",
-                             G_CALLBACK(gwy_tool_roughness_cutoff_changed),
-                             tool);
+    g_signal_connect(tool->cutoff, "value-changed",
+                     G_CALLBACK(gwy_tool_roughness_cutoff_changed), tool);
+    row++;
 
-    /*label = tool->cutlength = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 4, 5, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);*/
-
-    tool->thickness = gtk_adjustment_new(tool->args.thickness, 1, 128, 1, 10, 0);
-    gwy_table_attach_hscale(GTK_WIDGET(table), 2, _("_Thickness:"), NULL,
+    tool->thickness = gtk_adjustment_new(tool->args.thickness,
+                                         1, 128, 1, 10, 0);
+    gwy_table_attach_hscale(table, row, _("_Thickness:"), "px",
                             tool->thickness, GWY_HSCALE_DEFAULT);
-    g_signal_connect_swapped(tool->thickness, "value-changed",
-                             G_CALLBACK(gwy_tool_roughness_thickness_changed),
-                             tool);
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    g_signal_connect(tool->thickness, "value-changed",
+                     G_CALLBACK(gwy_tool_roughness_thickness_changed), tool);
+    row++;
 
     tool->interpolation = gwy_enum_combo_box_new
                            (gwy_interpolation_type_get_enum(), -1,
                             G_CALLBACK(gwy_tool_roughness_interpolation_changed),
                             tool, tool->args.interpolation, TRUE);
-    gtk_table_attach(GTK_TABLE(table), tool->interpolation,
-                     1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gwy_table_attach_hscale(table, row, _("_Interpolation type:"), NULL,
+                            GTK_OBJECT(tool->interpolation), GWY_HSCALE_WIDGET);
+    row++;
 
     tool->graphmodel_profile = gwy_graph_model_new();
     tool->graph_profile = gwy_graph_new(tool->graphmodel_profile);
@@ -576,16 +542,21 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     tool->graph = gwy_graph_new(tool->graphmodel);
     gtk_widget_set_size_request(tool->graph, 300, 250);
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
-    gtk_box_pack_start(GTK_BOX(vbox_right), tool->graph, TRUE, TRUE, 2);
+    gtk_box_pack_start(GTK_BOX(vbox_right), tool->graph, TRUE, TRUE, 0);
 
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+    axis = gwy_graph_get_axis(GWY_GRAPH(tool->graph_profile), GTK_POS_LEFT);
+    gtk_size_group_add_widget(sizegroup, GTK_WIDGET(axis));
+    axis = gwy_graph_get_axis(GWY_GRAPH(tool->graph), GTK_POS_LEFT);
+    gtk_size_group_add_widget(sizegroup, GTK_WIDGET(axis));
+    g_object_unref(sizegroup);
+
+    gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, RESPONSE_SAVE);
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
-    //tool->save = gtk_dialog_add_button(dialog, GTK_STOCK_SAVE,
-    //                                   GWY_TOOL_ROUGHNESS_RESPONSE_SAVE);
-    tool->apply = gtk_dialog_add_button(dialog, GTK_STOCK_APPLY,
-                                        GTK_RESPONSE_APPLY);
+    gtk_dialog_add_button(dialog, GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
-    //gtk_widget_set_sensitive(tool->save, FALSE);
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, FALSE);
 
     gtk_widget_show_all(dialog_vbox);
 }
@@ -634,18 +605,22 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
 {
     GwyToolRoughness *tool = (GwyToolRoughness*)user_data;
     const GwyRoughnessParameterInfo *pinfo;
+    GwySIValueFormat *tvf = NULL;
     const GwySIValueFormat *vf;
     gdouble value;
     gchar buf[64];
 
     gtk_tree_model_get(model, iter, 0, &pinfo, -1);
-    if (pinfo->param == -1) {
+    if (pinfo->param == -1 || !tool->have_data) {
         g_object_set(renderer, "text", "", NULL);
         return;
     }
-    /* TODO:
-    if (tool->same_units) ...
-    */
+    if (pinfo->same_units && !tool->same_units) {
+        g_object_set(renderer, "text", _("N.A."), NULL);
+        return;
+    }
+
+    value = tool->params[pinfo->param];
     switch (pinfo->units) {
         case UNITS_NONE:
         vf = tool->none_format;
@@ -660,29 +635,52 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
         break;
 
         case UNITS_SLOPE:
-        vf = tool->slope_format;
+        tvf = gwy_si_unit_get_format_with_digits(tool->slope_unit,
+                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                 value, 3, NULL);
+        vf = tvf;
         break;
 
         default:
         g_return_if_reached();
         break;
     }
-    value = tool->params[pinfo->param];
     g_snprintf(buf, sizeof(buf), "%.*f%s%s",
                vf->precision, value/vf->magnitude,
                *vf->units ? " " : "", vf->units);
-    g_object_set(renderer, "text", buf, NULL);
+    g_object_set(renderer, "markup", buf, NULL);
+
+    if (tvf)
+        gwy_si_unit_value_format_free(tvf);
+}
+
+static void
+param_row_expanded_collapsed(GtkTreeView *treeview,
+                             GtkTreeIter *iter,
+                             GtkTreePath *path,
+                             GwyToolRoughness *tool)
+{
+    const GwyRoughnessParameterInfo *pinfo;
+
+    gtk_tree_model_get(gtk_tree_view_get_model(treeview), iter, 0, &pinfo, -1);
+    if (gtk_tree_view_row_expanded(treeview, path))
+        tool->args.expanded |= 1 << pinfo->set;
+    else
+        tool->args.expanded &= ~(1 << pinfo->set);
 }
 
 static GtkWidget*
 gwy_tool_roughness_param_view_new(GwyToolRoughness *tool)
 {
     GtkWidget *treeview;
+    GtkTreeModel *model;
     GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
+    GtkTreeIter iter;
 
-    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(tool->store));
+    model = GTK_TREE_MODEL(tool->store);
+    treeview = gtk_tree_view_new_with_model(model);
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
@@ -691,11 +689,13 @@ gwy_tool_roughness_param_view_new(GwyToolRoughness *tool)
     column = gtk_tree_view_column_new();
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
     renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column_pack_start(column, renderer, FALSE);
+    g_object_set(renderer, "xalign", 0.0, NULL);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_symbol, tool, NULL);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
@@ -705,30 +705,53 @@ gwy_tool_roughness_param_view_new(GwyToolRoughness *tool)
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_name, tool, NULL);
-    /* FIXME: The column is not actually set expandable without this explicit
-     * call.  A Gtk+ bug? */
-    gtk_tree_view_column_set_expand(column, TRUE);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
     renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column_pack_start(column, renderer, FALSE);
+    g_object_set(renderer, "xalign", 0.0, NULL);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_value, tool, NULL);
+
+    /* Restore set visibility state */
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            const GwyRoughnessParameterInfo *pinfo;
+
+            gtk_tree_model_get(model, &iter, 0, &pinfo, -1);
+            if (pinfo->param == -1
+                && (tool->args.expanded & (1 << pinfo->set))) {
+                GtkTreePath *path;
+
+                path = gtk_tree_model_get_path(model, &iter);
+                gtk_tree_view_expand_row(GTK_TREE_VIEW(treeview), path, TRUE);
+                gtk_tree_path_free(path);
+            }
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+    g_signal_connect(treeview, "row-collapsed",
+                     G_CALLBACK(param_row_expanded_collapsed), tool);
+    g_signal_connect(treeview, "row-expanded",
+                     G_CALLBACK(param_row_expanded_collapsed), tool);
 
     return treeview;
 }
 
 static void
 gwy_tool_roughness_response(GwyTool *tool,
-                          gint response_id)
+                            gint response_id)
 {
-    GWY_TOOL_CLASS(gwy_tool_roughness_parent_class)->response(tool, response_id);
+    GWY_TOOL_CLASS(gwy_tool_roughness_parent_class)->response(tool,
+                                                              response_id);
 
     if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_roughness_apply(GWY_TOOL_ROUGHNESS(tool));
-    //if (response_id == GWY_TOOL_ROUGHNESS_RESPONSE_SAVE)
-    //    gwy_tool_roughness_save(GWY_TOOL_ROUGHNESS(tool));
+    /*
+    if (response_id == RESPONSE_SAVE)
+        gwy_tool_roughness_save(GWY_TOOL_ROUGHNESS(tool));
+        */
 }
 
 static void
@@ -753,6 +776,7 @@ gwy_tool_roughness_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
+        gwy_tool_roughness_update_units(tool);
     }
 
     gwy_tool_roughness_update(tool);
@@ -765,8 +789,6 @@ gwy_tool_roughness_data_changed(GwyPlainTool *plain_tool)
 
     tool = GWY_TOOL_ROUGHNESS(plain_tool);
     gwy_tool_roughness_update(tool);
-
-    //gtk_widget_set_sensitive(tool->save, data_view != NULL);
 }
 
 static void
@@ -774,43 +796,44 @@ gwy_tool_roughness_selection_changed(GwyPlainTool *plain_tool,
                                      gint hint)
 {
     GwyToolRoughness *tool;
-    gint n;
+    GtkDialog *dialog;
+    gint n = 0;
 
     tool = GWY_TOOL_ROUGHNESS(plain_tool);
     g_return_if_fail(hint <= 0);
 
-
-    if (plain_tool->selection)
-    {
+    if (plain_tool->selection) {
         n = gwy_selection_get_data(plain_tool->selection, NULL);
         g_return_if_fail(n == 0 || n == 1);
     }
 
     gwy_tool_roughness_update(tool);
-    //gtk_widget_set_sensitive(tool->apply, n > 0);*/
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, n > 0);
+    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, n > 0);
 }
 
 static void
 gwy_tool_roughness_interpolation_changed(GtkComboBox *combo,
-                                        GwyToolRoughness *tool)
+                                         GwyToolRoughness *tool)
 {
     tool->args.interpolation = gwy_enum_combo_box_get_active(combo);
     gwy_tool_roughness_update(tool);
 }
 
 static void
-gwy_tool_roughness_thickness_changed(GwyToolRoughness *tool,
-                                     GtkAdjustment *adj)
+gwy_tool_roughness_thickness_changed(GtkAdjustment *adj,
+                                     GwyToolRoughness *tool)
 {
     tool->args.thickness = gwy_adjustment_get_int(adj);
     gwy_tool_roughness_update(tool);
 }
 
 static void
-gwy_tool_roughness_cutoff_changed(GwyToolRoughness *tool,
-                                  GtkAdjustment *adj)
+gwy_tool_roughness_cutoff_changed(GtkAdjustment *adj,
+                                  GwyToolRoughness *tool)
 {
-    tool->args.cutoff = gwy_adjustment_get_int(adj);
+    tool->args.cutoff = gtk_adjustment_get_value(adj);
     gwy_tool_roughness_update(tool);
 }
 
@@ -1058,17 +1081,18 @@ gwy_tool_roughness_update(GwyToolRoughness *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     if (!plain_tool->selection
-        || !(n = gwy_selection_get_data(plain_tool->selection, NULL)))
-    {
-        gwy_graph_model_remove_all_curves(tool->graphmodel);
-        gwy_graph_model_remove_all_curves(tool->graphmodel_profile);
+        || !(n = gwy_selection_get_data(plain_tool->selection, NULL))) {
+        tool->have_data = FALSE;
+        gwy_tool_roughness_update_graphs(tool);
+        gtk_tree_model_foreach(GTK_TREE_MODEL(tool->store),
+                               emit_row_changed, NULL);
         return;
     }
-
 
     g_return_if_fail(plain_tool->selection);
     g_return_if_fail(gwy_selection_get_object(plain_tool->selection, 0, line));
 
+    tool->have_data = TRUE;
     xl1 = (gint)gwy_data_field_rtoj(plain_tool->data_field, line[0]);
     yl1 = (gint)gwy_data_field_rtoi(plain_tool->data_field, line[1]);
     xl2 = (gint)gwy_data_field_rtoj(plain_tool->data_field, line[2]);
@@ -1102,54 +1126,64 @@ gwy_tool_roughness_update(GwyToolRoughness *tool)
 }
 
 static void
+gwy_tool_roughness_update_units(GwyToolRoughness *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwySIUnit *siunitxy, *siunitz;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+    siunitz = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+    tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
+    gwy_si_unit_divide(siunitz, siunitxy, tool->slope_unit);
+}
+
+static void
 gwy_tool_roughness_update_parameters(GwyToolRoughness *tool)
 {
-    tool->params[PARAM_RA] = gwy_tool_roughness_Xa(tool->profiles.roughness);
-    tool->params[PARAM_RQ] = gwy_tool_roughness_Xq(tool->profiles.roughness);
-    tool->params[PARAM_RV] = gwy_tool_roughness_Xvm(tool->profiles.roughness,
-                                                    1, 1);
-    tool->params[PARAM_RP] = gwy_tool_roughness_Xpm(tool->profiles.roughness,
-                                                    1, 1);
-    tool->params[PARAM_RT] = tool->params[PARAM_RP] + tool->params[PARAM_RV];
-    tool->params[PARAM_RVM] = gwy_tool_roughness_Xvm(tool->profiles.roughness,
-                                                     5, 1);
-    tool->params[PARAM_RPM] = gwy_tool_roughness_Xpm(tool->profiles.roughness,
-                                                     5, 1);
-    tool->params[PARAM_RTM] = tool->params[PARAM_RPM] + tool->params[PARAM_RVM];
-    tool->params[PARAM_R3Z] = gwy_tool_roughness_Xtm(tool->profiles.roughness,
-                                                     1, 3);
-    tool->params[PARAM_R3Z_ISO] = gwy_tool_roughness_Xtm(tool->profiles.roughness,
-                                                        5, 3);
-    tool->params[PARAM_RZ] = gwy_tool_roughness_Xz(tool->profiles.roughness);
-    tool->params[PARAM_RZ_ISO] = tool->params[PARAM_RTM];
-    tool->params[PARAM_RSK] = gwy_tool_roughness_Xsk(tool->profiles.roughness);
-    tool->params[PARAM_RKU] = gwy_tool_roughness_Xku(tool->profiles.roughness);
-    tool->params[PARAM_WA] = gwy_tool_roughness_Xa(tool->profiles.waviness);
-    tool->params[PARAM_WQ] = gwy_tool_roughness_Xq(tool->profiles.waviness);
-    tool->params[PARAM_WY] = gwy_tool_roughness_Xtm(tool->profiles.waviness,
-                                                    1, 1);
-    tool->params[PARAM_PT] = gwy_tool_roughness_Xtm(tool->profiles.texture,
-                                                    1, 1);
+    GwyDataLine *roughness, *waviness, *texture;
+    gdouble *params;
 
-    tool->params[PARAM_DA] = gwy_tool_roughness_Da(tool->profiles.roughness);
-    tool->params[PARAM_DQ] = gwy_tool_roughness_Dq(tool->profiles.roughness);
-    tool->params[PARAM_L0] = gwy_tool_roughness_l0(tool->profiles.roughness);
-    tool->params[PARAM_L] = tool->profiles.roughness->real;
-    tool->params[PARAM_LR] = gwy_tool_roughness_lr(tool->profiles.texture);
+    roughness = tool->profiles.roughness;
+    waviness = tool->profiles.waviness;
+    texture = tool->profiles.texture;
+    params = tool->params;
 
-    tool->profiles.adf = gwy_data_line_new_resampled(tool->profiles.roughness,
-                                                     101,
+    params[PARAM_RA]      = gwy_tool_roughness_Xa(roughness);
+    params[PARAM_RQ]      = gwy_tool_roughness_Xq(roughness);
+    params[PARAM_RV]      = gwy_tool_roughness_Xvm(roughness, 1, 1);
+    params[PARAM_RP]      = gwy_tool_roughness_Xpm(roughness, 1, 1);
+    params[PARAM_RT]      = params[PARAM_RP] + params[PARAM_RV];
+    params[PARAM_RVM]     = gwy_tool_roughness_Xvm(roughness, 5, 1);
+    params[PARAM_RPM]     = gwy_tool_roughness_Xpm(roughness, 5, 1);
+    params[PARAM_RTM]     = params[PARAM_RPM] + params[PARAM_RVM];
+    params[PARAM_R3Z]     = gwy_tool_roughness_Xtm(roughness, 1, 3);
+    params[PARAM_R3Z_ISO] = gwy_tool_roughness_Xtm(roughness, 5, 3);
+    params[PARAM_RZ]      = gwy_tool_roughness_Xz(roughness);
+    params[PARAM_RZ_ISO]  = params[PARAM_RTM];
+    params[PARAM_RSK]     = gwy_tool_roughness_Xsk(roughness);
+    params[PARAM_RKU]     = gwy_tool_roughness_Xku(roughness);
+    params[PARAM_WA]      = gwy_tool_roughness_Xa(waviness);
+    params[PARAM_WQ]      = gwy_tool_roughness_Xq(waviness);
+    params[PARAM_WY]      = gwy_tool_roughness_Xtm(waviness, 1, 1);
+    params[PARAM_PT]      = gwy_tool_roughness_Xtm(texture, 1, 1);
+    params[PARAM_DA]      = gwy_tool_roughness_Da(roughness);
+    params[PARAM_DQ]      = gwy_tool_roughness_Dq(roughness);
+    params[PARAM_L0]      = gwy_tool_roughness_l0(roughness);
+    params[PARAM_L]       = roughness->real;
+    params[PARAM_LR]      = gwy_tool_roughness_lr(texture);
+
+    tool->profiles.adf = gwy_data_line_new_resampled(roughness, 101,
                                                      GWY_INTERPOLATION_LINEAR);
     gwy_tool_roughness_graph_adf(tool->profiles);
 
-    tool->profiles.brc = gwy_data_line_new_resampled(tool->profiles.roughness,
-                                                     101,
+    tool->profiles.brc = gwy_data_line_new_resampled(roughness, 101,
                                                      GWY_INTERPOLATION_LINEAR);
     gwy_tool_roughness_graph_brc(tool->profiles);
 
-    tool->profiles.pc = gwy_data_line_new(101, tool->params[PARAM_RT], TRUE);
+    tool->profiles.pc = gwy_data_line_new(101, params[PARAM_RT], TRUE);
     gwy_data_line_set_si_unit_x(tool->profiles.pc,
-                                gwy_data_line_get_si_unit_y(tool->profiles.roughness));
+                                gwy_data_line_get_si_unit_y(roughness));
     gwy_tool_roughness_graph_pc(tool->profiles);
 }
 
@@ -1162,6 +1196,8 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
     /* graph */
     gwy_graph_model_remove_all_curves(tool->graphmodel);
     gwy_graph_model_remove_all_curves(tool->graphmodel_profile);
+    if (!tool->have_data)
+        return;
 
     /* profile */
     g_object_set(tool->graphmodel_profile,
@@ -1457,7 +1493,7 @@ gwy_data_line_line_rotate2(GwyDataLine *a,
 static void
 gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles profiles,
                                          GwyDataLine *a,
-                                         gint cutoff,
+                                         gdouble cutoff,
                                          gint interpolation)
 {
     gint i, newres, cut;
@@ -1487,7 +1523,7 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles profiles,
     r_iin = gwy_data_line_new(newres, b->real, TRUE);
 
 
-    cut = (guint)(newres*cutoff/100.0);
+    cut = (guint)(newres*cutoff);
 
     if (cut>=4)
     {
