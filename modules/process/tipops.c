@@ -228,9 +228,9 @@ tipops_tip_filter(GwyContainer *data,
     quark = gwy_app_get_data_key_for_id(object->id);
     target = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
 
-    if (/*gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
+    if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
         && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4
-        &&*/ !gwy_data_field_check_compatibility(tip, target,
+        && !gwy_data_field_check_compatibility(tip, target,
                                                GWY_DATA_COMPATIBILITY_MEASURE
                                                | GWY_DATA_COMPATIBILITY_LATERAL
                                                | GWY_DATA_COMPATIBILITY_VALUE))
