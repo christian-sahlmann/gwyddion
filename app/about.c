@@ -26,17 +26,21 @@
 #include "app.h"
 #include "authors.h"
 
-static void about_close    (void);
+static void about_close   (void);
+static void about_allocate(GtkWidget *vbox,
+                           GtkAllocation *allocation,
+                           GtkLabel *label);
+static void fill_credits  (GtkTextBuffer *buffer);
 
 static GtkWidget *about = NULL;
 
 void
 gwy_app_about(void)
 {
-    GtkWidget *vbox, *hbox, *widget, *align, *credits;
+    GtkWidget *vbox, *hbox, *widget, *credits, *text;
+    GtkTextBuffer *buff;
     gchar *s, *s2;
-    GString *str;
-    gint i, size;
+    gint size;
 
     if (about) {
         gtk_window_present(GTK_WINDOW(about));
@@ -100,40 +104,17 @@ gwy_app_about(void)
     credits = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_widget_set_size_request(credits, -1, 160);
+    gtk_widget_set_size_request(credits, 320, 160);
     gtk_box_pack_start(GTK_BOX(vbox), credits, TRUE, TRUE, 0);
 
-    align = gtk_alignment_new(0.0, 0.0, 1.0, 1.0);
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(credits), align);
+    buff = gtk_text_buffer_new(NULL);
+    fill_credits(buff);
 
-    widget = gtk_label_new(NULL);
-    str = g_string_new(_("<b>Core developers</b>\n"));
-    for (i = 0; i < G_N_ELEMENTS(core_developers); i++) {
-        g_string_append(str, core_developers[i]);
-        g_string_append_c(str, '\n');
-    }
-    g_string_append_c(str, '\n');
-    g_string_append(str, _("<b>Developers</b>\n"));
-    for (i = 0; i < G_N_ELEMENTS(developers); i++) {
-        g_string_append(str, developers[i]);
-        g_string_append_c(str, '\n');
-    }
-    g_string_append_c(str, '\n');
-    g_string_append(str, _("<b>Translators</b>\n"));
-    for (i = 0; i < G_N_ELEMENTS(translators); i++) {
-        g_string_append(str, translators[i]);
-        g_string_append_c(str, '\n');
-    }
-    g_string_append_c(str, '\n');
-
-    g_string_append(str, _("Development is supported by "
-                          "the Czech Metrology Institute "
-                          "(<i>http://www.cmi.cz/</i>).\n"));
-    gtk_label_set_markup(GTK_LABEL(widget), str->str);
-    g_string_free(str, TRUE);
-    gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
-    gtk_container_add(GTK_CONTAINER(align), widget);
+    text = gtk_text_view_new_with_buffer(buff);
+    g_object_unref(buff);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_WORD);
+    gtk_container_add(GTK_CONTAINER(credits), text);
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
@@ -151,17 +132,26 @@ gwy_app_about(void)
     g_free(s);
     gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
+    gtk_widget_set_size_request(widget, 320, -1);
 
     gtk_widget_show_all(about);
-    gtk_widget_set_size_request(widget,
-                                GTK_DIALOG(about)->vbox->allocation.width, -1);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
-    gtk_widget_show(widget);
 
     g_signal_connect(about, "delete-event",
                      G_CALLBACK(about_close), NULL);
     g_signal_connect(about, "response",
                      G_CALLBACK(about_close), NULL);
+    g_signal_connect(GTK_DIALOG(about)->vbox, "size-allocate",
+                     G_CALLBACK(about_allocate), widget);
+}
+
+static void
+about_allocate(G_GNUC_UNUSED GtkWidget *vbox,
+               GtkAllocation *allocation,
+               GtkLabel *label)
+{
+    pango_layout_set_width(gtk_label_get_layout(label),
+                           PANGO_SCALE*allocation->width);
 }
 
 static void
@@ -169,6 +159,56 @@ about_close(void)
 {
     gtk_widget_destroy(about);
     about = NULL;
+}
+
+static void
+add_credits_block(GtkTextBuffer *buffer,
+                  const gchar *title,
+                  guint n,
+                  const gchar **list)
+{
+    GtkTextIter iter;
+    guint i;
+
+    gtk_text_buffer_get_end_iter(buffer, &iter);
+    gtk_text_buffer_insert_with_tags_by_name(buffer, &iter, title, -1,
+                                             "b", NULL);
+    gtk_text_buffer_insert(buffer, &iter, "\n", 1);
+
+    for (i = 0; i < n; i++) {
+        gtk_text_buffer_insert(buffer, &iter, list[i], -1);
+        gtk_text_buffer_insert(buffer, &iter, "\n", 1);
+    }
+    gtk_text_buffer_insert(buffer, &iter, "\n", 1);
+}
+
+static void
+fill_credits(GtkTextBuffer *buffer)
+{
+    GtkTextIter iter;
+
+    gtk_text_buffer_create_tag(buffer, "uri",
+                               "style", PANGO_STYLE_ITALIC,
+                               "wrap-mode", GTK_WRAP_NONE,
+                               NULL);
+    gtk_text_buffer_create_tag(buffer, "b",
+                               "weight", PANGO_WEIGHT_BOLD,
+                               NULL);
+
+    add_credits_block(buffer, _("Core Developers"),
+                      G_N_ELEMENTS(core_developers), core_developers);
+    add_credits_block(buffer, _("Developers"),
+                      G_N_ELEMENTS(developers), developers);
+    add_credits_block(buffer, _("Translators"),
+                      G_N_ELEMENTS(translators), translators);
+
+    gtk_text_buffer_get_end_iter(buffer, &iter);
+    gtk_text_buffer_insert(buffer, &iter,
+                           _("Development is supported by "
+                             "the Czech Metrology Institute: "), -1);
+    gtk_text_buffer_insert_with_tags_by_name(buffer, &iter,
+                                             "http://www.cmi.cz/", -1,
+                                             "uri", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
