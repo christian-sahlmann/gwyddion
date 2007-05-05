@@ -1,9 +1,14 @@
-2.5.20070425
+2.5.20070505
 
 2.6 (0000-00-00)
 Application:
 - Metadata browser:  It is possibile to save the metadata.
 - Infinite startup notification after remote file opening was fixed.
+- The Tools toolbox was reorganized from a more or less chronological tool
+  order to functionality-based groups.
+- Crash in Metadata browser upon metadata edit when it was repeatedly closed
+  and reopened was fixed.
+- It is possible to merge data from other files into a loaded file.
 - Translations updated: German, Italian.
 
 Libraries:
@@ -23,18 +28,23 @@ Libraries:
   implementation.
 - libgwydgets: Impossibility to edit graph selection boundaries when it was
   drawn the `wrong' direction was fixed.
-- libgwydgets: Invisible graph label (key) getting in the way was fixed.
+- libgwydgets: Invisible graph label (key) getting in the way of selection was
+  fixed.
 - libprocess: New grain distribution quantities x and y centre position.
 - libgwydgets: GwyLayerBasic has a new "default-range-type" property for color
   range mapping type used when none is set in the data.
 - libgwyprocess: Wrong type assertions in gwy_data_line_fft_raw() were fixed.
 - libgwyprocess: Complex one-dimensional transforms actually work with FFTW3.
-- libgwyddion: New NL fitter preset Gaussian IPSDF.
-- libgwyddion: Displayed formula of Exponential IPSDF was corrected to match
-  the actual formula.
+- libgwyddion: New NL fitter presets Gaussian and Exponential RPSDF.
+- libgwyddion: Exponential PSDF normalization factor was corrected, the
+  wrong one gave about 6% lower sigma.
+- libgwyddion: Initial parameter value estimators for ACF and PSDF functions
+  were improved.
 - libgwydgets: Logarithmic axes sometimes starting at values larger than the
   minimum were fixed.
 - libgwydgets: GwyGraph's model is registered as property "model".
+- libgwydgets: GwyGraphWindow `logarithmic scale' buttons initial state
+  is set properly and it reflects graph model changes.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -70,7 +80,7 @@ Modules:
   properly.
 - Color Range tool: It is possible to set default color mapping type applied
   when none is specifically set. Manual range setting was enabled.
-- Statistical functions tool: Isotropic (radial) PSDF was added.
+- Statistical functions tool: Radial PSDF was added.
 - Read Value: Can shift data values to make the currently selected point lie
   on the zero plane.
 - Level3: New option to make the fitted plane the zero value plane.
@@ -79,12 +89,18 @@ Modules:
 - Read Value: It no longer displays 123456 as the x pixel coordinate when no
   data is loaded.
 - Nanoscope: Can loads files with `Scan Size' in place of `Scan size' field.
+- 2D FFT filter: Exchanged lateral resolutions and units of FFT output and
+  filtered image were corrected.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
   otherwise corrected.
 - RPM spec file removes .la files manually again as certain distros
   aggressively re-generate all autotools files.
+- Distributed API documentation links to on-line versions of other
+  documentation (Gtk+, GLib, ...) instead of random local locations.
+  Packagers are recommended to rebuild the documentation to obtain local
+  links appropriate for their systems.
 
 
 2.5 (2007-03-10)
