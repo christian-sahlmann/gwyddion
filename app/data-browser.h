@@ -73,6 +73,7 @@ typedef void (*GwyAppDataForeachFunc)(GwyContainer *data,
 
 void   gwy_app_data_browser_add             (GwyContainer *data);
 void   gwy_app_data_browser_remove          (GwyContainer *data);
+void   gwy_app_data_browser_merge           (GwyContainer *data);
 gboolean gwy_app_data_browser_reset_visibility(GwyContainer *data,
                                                GwyVisibilityResetType reset_type);
 void   gwy_app_data_browser_set_keep_invisible(GwyContainer *data,

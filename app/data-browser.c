@@ -20,7 +20,7 @@
 
 /* XXX: The purpose of this file is to contain all ugliness from the rest of
  * source files.  And indeed it has managed to gather lots of it. */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -3973,6 +3973,138 @@ gwy_app_data_browser_remove(GwyContainer *data)
                                           GWY_VISIBILITY_RESET_HIDE_ALL);
     g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
     gwy_app_data_proxy_finalize(proxy);
+}
+
+static void
+gwy_app_data_merge_gather(gpointer key,
+                          G_GNUC_UNUSED gpointer value,
+                          gpointer user_data)
+{
+    GQuark quark = GPOINTER_TO_UINT(key);
+    GList **ids = (GList**)user_data;
+    GwyAppKeyType type;
+    gint id, pageno;
+
+    id = gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    switch (type) {
+        case KEY_IS_DATA:
+        pageno = PAGE_CHANNELS;
+        break;
+
+        case KEY_IS_GRAPH:
+        pageno = PAGE_GRAPHS;
+        break;
+
+        case KEY_IS_SPECTRA:
+        pageno = PAGE_SPECTRA;
+        break;
+
+        default:
+        return;
+        break;
+    }
+    gwy_debug("adding %d to page %d", id, pageno);
+    ids[pageno] = g_list_prepend(ids[pageno], GINT_TO_POINTER(id));
+}
+
+static void
+gwy_app_data_merge_copy(gpointer key,
+                        gpointer value,
+                        gpointer user_data)
+{
+    GQuark quark = GPOINTER_TO_UINT(key);
+    GValue *gvalue = (GValue*)value;
+    GHashTable **map = (GHashTable**)user_data;
+    GwyAppKeyType type;
+    gint id;
+
+    id = gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    /* FIXME: How to detect map lookup failure? */
+    switch (type) {
+        case KEY_IS_DATA:
+        id = GPOINTER_TO_INT(g_hash_table_lookup(map[PAGE_CHANNELS],
+                                                 GINT_TO_POINTER(id)));
+        quark = gwy_app_get_data_key_for_id(id);
+        break;
+
+        case KEY_IS_GRAPH:
+        id = GPOINTER_TO_INT(g_hash_table_lookup(map[PAGE_GRAPHS],
+                                                 GINT_TO_POINTER(id)));
+        quark = gwy_app_get_graph_key_for_id(id);
+        break;
+
+        case KEY_IS_SPECTRA:
+        id = GPOINTER_TO_INT(g_hash_table_lookup(map[PAGE_SPECTRA],
+                                                 GINT_TO_POINTER(id)));
+        quark = gwy_app_get_spectra_key_for_id(id);
+        break;
+
+        default:
+        return;
+        break;
+    }
+    gwy_container_set_object((GwyContainer*)map[NPAGES], quark,
+                             g_value_get_object(gvalue));
+}
+
+static gint
+compare_int(gconstpointer a,
+            gconstpointer b)
+{
+    gint ia, ib;
+
+    ia = GPOINTER_TO_INT(a);
+    ib = GPOINTER_TO_INT(b);
+    if (ia < ib)
+        return -1;
+    if (ia > ib)
+        return 1;
+    return 0;
+}
+
+void
+gwy_app_data_browser_merge(GwyContainer *container)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    GList *ids[NPAGES], *l;
+    GHashTable *map[NPAGES+1];
+    gint last, pageno;
+
+    g_return_if_fail(GWY_IS_CONTAINER(container));
+    browser = gwy_app_get_data_browser();
+
+    proxy = gwy_app_data_browser_get_proxy(browser, container, FALSE);
+    if (proxy) {
+        g_critical("Live files cannot be merged");
+        return;
+    }
+    proxy = browser->current;
+    if (!proxy) {
+        g_warning("There is no current data to merge to");
+        gwy_app_data_browser_add(container);
+        return;
+    }
+
+    /* Build a map from container ids to destination ids */
+    memset(&ids[0], 0, NPAGES*sizeof(GList*));
+    gwy_container_foreach(container, NULL, gwy_app_data_merge_gather, &ids[0]);
+    for (pageno = 0; pageno < NPAGES; pageno++) {
+        gwy_debug("page %d", pageno);
+        last = proxy->lists[pageno].last;
+        map[pageno] = g_hash_table_new(g_direct_hash, g_direct_equal);
+        ids[pageno] = g_list_sort(ids[pageno], compare_int);
+        for (l = ids[pageno]; l; l = g_list_next(l)) {
+            last++;
+            g_hash_table_insert(map[pageno], l->data, GINT_TO_POINTER(last));
+            gwy_debug("mapping %d -> %d", GPOINTER_TO_INT(l->data), last);
+        }
+        g_list_free(ids[pageno]);
+    }
+
+    /* Perform the transfer */
+    map[NPAGES] = (GHashTable*)proxy->container;
+    gwy_container_foreach(container, NULL, gwy_app_data_merge_copy, &map[0]);
 }
 
 /**

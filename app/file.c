@@ -27,9 +27,13 @@
 #include <app/gwyapp.h>
 #include "gwyappfilechooser.h"
 
-static void gwy_app_file_add_loaded(GwyContainer *data,
-                                    const gchar *filename_utf8,
-                                    const gchar *filename_sys);
+GwyContainer* gwy_app_file_load_real (const gchar *filename_utf8,
+                                      const gchar *filename_sys,
+                                      const gchar *name,
+                                      gboolean do_add_loaded);
+static void   gwy_app_file_add_loaded(GwyContainer *data,
+                                      const gchar *filename_utf8,
+                                      const gchar *filename_sys);
 
 static gchar *current_dir = NULL;
 
@@ -122,6 +126,15 @@ gwy_app_file_load(const gchar *filename_utf8,
                   const gchar *filename_sys,
                   const gchar *name)
 {
+    return gwy_app_file_load_real(filename_utf8, filename_sys, name, TRUE);
+}
+
+GwyContainer*
+gwy_app_file_load_real(const gchar *filename_utf8,
+                       const gchar *filename_sys,
+                       const gchar *name,
+                       gboolean do_add_loaded)
+{
     GtkWidget *dialog;
     gboolean free_utf8 = FALSE, free_sys = FALSE;
     GwyContainer *data;
@@ -151,7 +164,8 @@ gwy_app_file_load(const gchar *filename_utf8,
         data = gwy_file_load(filename_sys, GWY_RUN_INTERACTIVE, &err);
 
     if (data) {
-        gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
+        if (do_add_loaded)
+            gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
         g_object_unref(data);
     }
     else {
@@ -250,6 +264,68 @@ gwy_app_file_open(void)
         else
             gwy_app_file_load(NULL, fname_sys, name);
         g_free(fname_sys);
+    }
+    g_slist_free(filenames);
+    g_free(name);
+    gwy_object_unref(data);
+    g_free(filename_utf8);
+    g_free(filename_sys);
+}
+
+/**
+ * gwy_app_file_merge:
+ *
+ * Merges a user-selected file (very high-level app function).
+ **/
+void
+gwy_app_file_merge(void)
+{
+    GtkWidget *dialog;
+    GSList *filenames = NULL, *l;
+    gchar *name, *filename_utf8, *filename_sys;
+    const gchar *loaded_as = NULL;
+    GwyContainer *data, *newdata;
+    gint response;
+
+    dialog = _gwy_app_file_chooser_get(GTK_FILE_CHOOSER_ACTION_OPEN);
+    /* XXX: UTF-8 conversion missing */
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    name = _gwy_app_file_chooser_get_selected_type(GWY_APP_FILE_CHOOSER(dialog));
+    /* This has to be called before hiding the dialog because hiding frees
+     * the previewed data */
+    _gwy_app_file_chooser_get_previewed_data(GWY_APP_FILE_CHOOSER(dialog),
+                                             &data,
+                                             &filename_utf8, &filename_sys);
+    if (data) {
+        g_object_ref(data);
+        gwy_debug("got %s data from preview", filename_utf8);
+        if (!gwy_file_get_data_info(data, &loaded_as, NULL)) {
+            g_warning("Cannot obtain previewed file type.");
+            loaded_as = name;
+        }
+    }
+    if (response == GTK_RESPONSE_OK)
+        filenames = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog));
+    gtk_widget_hide(dialog);
+
+    for (l = filenames; l; l = g_slist_next(l)) {
+        gchar *fname_sys = (gchar*)l->data;
+
+        /* To force the file type the user insists on we have to avoid
+         * reusing previewed data. */
+        if (data
+            && gwy_strequal(filename_sys, fname_sys)
+            && (!name || gwy_strequal(name, loaded_as))) {
+            newdata = data;
+        }
+        else
+            newdata = gwy_app_file_load_real(NULL, filename_sys, name, FALSE);
+        g_free(fname_sys);
+        if (newdata)
+            gwy_app_data_browser_merge(newdata);
     }
     g_slist_free(filenames);
     g_free(name);
