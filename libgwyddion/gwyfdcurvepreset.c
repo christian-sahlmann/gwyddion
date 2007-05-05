@@ -71,6 +71,7 @@ argento_guess(gint n_dat,
     *fres = TRUE;
 }
 
+#if 0
 /******************* parzanette ********************************/
 static gdouble
 parzanette_func(gdouble x,
@@ -107,6 +108,8 @@ parzanette_guess(gint n_dat,
     param[2] = 20e-9;
     param[3] = 2e-21;
 }
+#endif
+
 
 /******************* sszanette ********************************/
 static gdouble
@@ -141,6 +144,7 @@ sszanette_guess(gint n_dat,
     param[0] = xmin - (xmax-xmin)/20;
     param[2] = 20e-9;
     param[3] = 2e-21;
+    *fres = TRUE;
 }
 
 /******************* pyrzanette ********************************/
@@ -177,9 +181,10 @@ pyrzanette_guess(gint n_dat,
     param[2] = 20e-9;
     param[3] = 2e-20;
     param[4] = 1;
-    
+    *fres = TRUE;
 }
 
+#if 0
 /******************* tpyrzanette ********************************/
 static gdouble
 tpyrzanette_func(gdouble x,
@@ -218,6 +223,7 @@ tpyrzanette_guess(gint n_dat,
     param[4] = 1;
     param[5] = 20e-9;
 }
+#endif
 
 /******************* sphcapella ********************************/
 static gdouble
@@ -290,6 +296,7 @@ sphtiptap_guess(gint n_dat,
     param[2] = 20e-9;
     param[3] = 2e-21;
     param[4] = 0;
+    *fres = TRUE;
 }
 
 /******************* sphxu ********************************/
@@ -326,8 +333,10 @@ sphxu_guess(gint n_dat,
     param[2] = 20e-9;
     param[3] = 2e-21;
     param[4] = 1;
+    *fres = TRUE;
 }
 
+#if 0
 /******************* sphcappakarinen ********************************/
 static gdouble
 sphcappakarinen_func(gdouble x,
@@ -474,6 +483,7 @@ hsphhertz_guess(gint n_dat,
     for (i = 0; i < n_dat; i++)
         param[1] += y[i]/n_dat;
 }
+#endif
 
 /************************** presets ****************************/
 
