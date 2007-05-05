@@ -323,9 +323,8 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     label = gwy_label_new_header(_("Range"));
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     row++;
-    
+
     label = gtk_label_new("min");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
@@ -348,9 +347,8 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_box_pack_end(GTK_BOX(hbox_spin_min), tool->spinmin, FALSE, FALSE, 0);
     gtk_table_attach(table, hbox_spin_min,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     row++;
-    
+
     label = gtk_label_new("max");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
@@ -373,13 +371,11 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_box_pack_end(GTK_BOX(hbox_spin_max), tool->spinmax, FALSE, FALSE, 0);
     gtk_table_attach(table, hbox_spin_max,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     row++;
 
     label = gwy_label_new_header(_("Full"));
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     row++;
 
     label = gtk_label_new("min");
@@ -391,9 +387,8 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_misc_set_alignment(GTK_MISC(tool->datamin), 1.0, 0.5);
     gtk_table_attach(table, GTK_WIDGET(tool->datamin),
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     row++;
-    
+
     label = gtk_label_new("max");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
