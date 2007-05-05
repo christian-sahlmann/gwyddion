@@ -404,8 +404,8 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 
-    gtk_dialog_set_response_sensitive(gwytool->dialog, RESPONSE_SAVE,
-                                      data_view != NULL);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(gwytool->dialog),
+                                      RESPONSE_SAVE, data_view != NULL);
 }
 
 static void
