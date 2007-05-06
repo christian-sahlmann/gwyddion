@@ -835,11 +835,29 @@ _gwy_fd_curve_preset_class_setup_presets(void)
     g_type_class_unref(klass);
 }
 
+/**
+ * gwy_fd_curve_presets:
+ *
+ * Gets inventory with all the FD curve presets.
+ *
+ * Returns: FD curve preset inventory.
+ *
+ * Since: 2.6
+ **/
 GwyInventory*
 gwy_fd_curve_presets(void)
 {
     return
     GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_FD_CURVE_PRESET))->inventory;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyfdcurvepreset
+ * @title: GwyFDCurvePreset
+ * @short_description: FD curve fitting presets
+ * @see_also: #GwyNLFitter
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
