@@ -20,7 +20,7 @@
 
 /* XXX: The purpose of this file is to contain all ugliness from the rest of
  * source files.  And indeed it has managed to gather lots of it. */
-#define DEBUG 1
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +67,12 @@ typedef enum {
     KEY_IS_TITLE,
     KEY_IS_SELECT,
     KEY_IS_RANGE_TYPE,
+    KEY_IS_SPS_REF,
+    KEY_IS_PALETTE,
+    KEY_IS_3D_SETUP,
+    KEY_IS_3D_PALETTE,
+    KEY_IS_3D_MATERIAL,
+    KEY_IS_3D_LABEL,
     KEY_IS_FILENAME
 } GwyAppKeyType;
 
@@ -321,7 +327,8 @@ gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
  * @len: Location to store the length of common prefix or %NULL.
  *       Usually this is up to the last digit of data number,
  *       however selections have also "/select" skipped,
- *       titles have "/data" skipped.
+ *       titles have "/data" skipped.  Note the remaining part of the key
+ *       still includes the leading "/" (if non-empty).
  *
  * Infers expected data type from container key.
  *
@@ -337,7 +344,8 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
                                guint *len)
 {
     const gchar *s;
-    guint i, n;
+    gint i;
+    guint n;
 
     *type = KEY_IS_NONE;
 
@@ -399,8 +407,13 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
         *type = KEY_IS_MASK;
     else if (gwy_strequal(s, "show"))
         *type = KEY_IS_SHOW;
-    else if (gwy_strequal(s, "meta"))
-        *type = KEY_IS_META;
+    else if (gwy_strequal(s, "base/palette"))
+        *type = KEY_IS_PALETTE;
+    else if (g_str_has_prefix(s, "select/")
+             && !strchr(s + sizeof("select/")-1, '/')) {
+        *type = KEY_IS_SELECT;
+        n += strlen("select/");
+    }
     else if (gwy_strequal(s, "base/range-type"))
         *type = KEY_IS_RANGE_TYPE;
     else if (gwy_strequal(s, "data/title")
@@ -408,10 +421,20 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
         *type = KEY_IS_TITLE;
         n += strlen("data/");
     }
-    else if (g_str_has_prefix(s, "select/")
-             && !strchr(s + sizeof("select/")-1, '/')) {
-        *type = KEY_IS_SELECT;
-        n += strlen("select/");
+    else if (gwy_strequal(s, "meta"))
+        *type = KEY_IS_META;
+    else if (gwy_strequal(s, "sps-id"))
+        *type = KEY_IS_SPS_REF;
+    else if (gwy_strequal(s, "3d/setup"))
+        *type = KEY_IS_3D_SETUP;
+    else if (gwy_strequal(s, "3d/palette"))
+        *type = KEY_IS_3D_PALETTE;
+    else if (gwy_strequal(s, "3d/material"))
+        *type = KEY_IS_3D_MATERIAL;
+    else if (gwy_strequal(s, "3d/x") || gwy_strequal(s, "3d/y")
+             || gwy_strequal(s, "3d/min") || gwy_strequal(s, "3d/max")) {
+        *type = KEY_IS_3D_LABEL;
+        n += strlen("3d/");
     }
     else
         i = -1;
@@ -1535,9 +1558,9 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
     data = browser->current->container;
 
     gtk_tree_model_get(model, iter, MODEL_ID, &channel, -1);
-    g_snprintf(key, sizeof(key), "/%i/mask", channel);
+    g_snprintf(key, sizeof(key), "/%d/mask", channel);
     has_mask = gwy_container_contains_by_name(data, key);
-    g_snprintf(key, sizeof(key), "/%i/show", channel);
+    g_snprintf(key, sizeof(key), "/%d/show", channel);
     has_show = gwy_container_contains_by_name(data, key);
 
     g_snprintf(key, sizeof(key), "%s%s",
@@ -4008,43 +4031,156 @@ gwy_app_data_merge_gather(gpointer key,
 }
 
 static void
-gwy_app_data_merge_copy(gpointer key,
-                        gpointer value,
-                        gpointer user_data)
+gwy_app_data_merge_copy_1(gpointer key,
+                          gpointer value,
+                          gpointer user_data)
 {
     GQuark quark = GPOINTER_TO_UINT(key);
     GValue *gvalue = (GValue*)value;
     GHashTable **map = (GHashTable**)user_data;
     GwyAppKeyType type;
-    gint id;
+    gpointer idp, id2p;
+    gint id, id2;
 
     id = gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
-    /* FIXME: How to detect map lookup failure? */
+    idp = GINT_TO_POINTER(id);
     switch (type) {
         case KEY_IS_DATA:
-        id = GPOINTER_TO_INT(g_hash_table_lookup(map[PAGE_CHANNELS],
-                                                 GINT_TO_POINTER(id)));
-        quark = gwy_app_get_data_key_for_id(id);
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        quark = gwy_app_get_data_key_for_id(id2);
         break;
 
         case KEY_IS_GRAPH:
-        id = GPOINTER_TO_INT(g_hash_table_lookup(map[PAGE_GRAPHS],
-                                                 GINT_TO_POINTER(id)));
-        quark = gwy_app_get_graph_key_for_id(id);
+        if (!g_hash_table_lookup_extended(map[PAGE_GRAPHS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        quark = gwy_app_get_graph_key_for_id(id2);
         break;
 
         case KEY_IS_SPECTRA:
-        id = GPOINTER_TO_INT(g_hash_table_lookup(map[PAGE_SPECTRA],
-                                                 GINT_TO_POINTER(id)));
-        quark = gwy_app_get_spectra_key_for_id(id);
+        if (!g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        quark = gwy_app_get_spectra_key_for_id(id2);
         break;
 
         default:
+        /* Handle these in gwy_app_data_merge_copy_2() */
         return;
         break;
     }
     gwy_container_set_object((GwyContainer*)map[NPAGES], quark,
                              g_value_get_object(gvalue));
+    return;
+
+fail:
+    g_warning("%s does not map to any new location", g_quark_to_string(quark));
+}
+
+static void
+gwy_app_data_merge_copy_2(gpointer key,
+                          gpointer value,
+                          gpointer user_data)
+{
+    GQuark quark = GPOINTER_TO_UINT(key);
+    GValue *gvalue = (GValue*)value;
+    GHashTable **map = (GHashTable**)user_data;
+    GwyContainer *dest;
+    const gchar *strkey;
+    GwyAppKeyType type;
+    gpointer idp, id2p;
+    gint id, id2;
+    guint len;
+    gchar buf[80];
+
+    strkey = g_quark_to_string(quark);
+    if (gwy_strequal(strkey, "/0/graph/lastid"))
+        return;
+    /* FIXME: restore visibility */
+    if (g_str_has_suffix(strkey, "/visible"))
+        return;
+
+    id = gwy_app_data_proxy_analyse_key(strkey, &type, &len);
+    idp = GINT_TO_POINTER(id);
+    dest = (GwyContainer*)map[NPAGES];
+    switch (type) {
+        case KEY_IS_DATA:
+        case KEY_IS_GRAPH:
+        case KEY_IS_SPECTRA:
+        /* These were handled in gwy_app_data_merge_copy_1() */
+        return;
+        break;
+
+        case KEY_IS_MASK:
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        quark = gwy_app_get_mask_key_for_id(id2);
+        gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_SHOW:
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        quark = gwy_app_get_show_key_for_id(id2);
+        gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_SPS_REF:
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        id = g_value_get_int(gvalue);
+        idp = GINT_TO_POINTER(id);
+        /* Ignore references to nonexistent sps ids silently */
+        if (g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL, &id2p)) {
+            g_snprintf(buf, sizeof(buf), "/%d/data/sps-is", id2);
+            id2 = GPOINTER_TO_INT(id2p);
+            gwy_container_set_int32_by_name(dest, buf, id2);
+        }
+        break;
+
+        case KEY_IS_TITLE:
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/%d/data/title", id2);
+        gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
+        break;
+
+        case KEY_IS_PALETTE:
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/%d/base/palette", id2);
+        gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
+        break;
+
+        case KEY_IS_SELECT:
+        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/%d/data/select%s", id2, strkey + len);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_FILENAME:
+        /* Ignore */
+        break;
+
+        default:
+        goto fail;
+        break;
+    }
+    return;
+
+fail:
+    g_warning("%s does not map to any new location, cannot map it "
+              "generically because the current key organization is a mess",
+              strkey);
 }
 
 static gint
@@ -4062,6 +4198,14 @@ compare_int(gconstpointer a,
     return 0;
 }
 
+/**
+ * gwy_app_data_browser_merge:
+ * @container: A data container, not managed by the data browser.
+ *
+ * Merges the data from a data container to the current one.
+ *
+ * Since: 2.6
+ **/
 void
 gwy_app_data_browser_merge(GwyContainer *container)
 {
@@ -4104,7 +4248,8 @@ gwy_app_data_browser_merge(GwyContainer *container)
 
     /* Perform the transfer */
     map[NPAGES] = (GHashTable*)proxy->container;
-    gwy_container_foreach(container, NULL, gwy_app_data_merge_copy, &map[0]);
+    gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_1, &map[0]);
+    gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_2, &map[0]);
 }
 
 /**
@@ -4447,7 +4592,7 @@ gwy_app_set_data_field_title(GwyContainer *data,
             p = name + strlen(name);
     }
     title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
-    g_snprintf(key, sizeof(key), "/%i/data/title", id);
+    g_snprintf(key, sizeof(key), "/%d/data/title", id);
     gwy_container_set_string_by_name(data, key, title);
 }
 
@@ -4461,10 +4606,10 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(channel >= 0, NULL);
 
-    g_snprintf(buf, sizeof(buf), "/%i/data/title", channel);
+    g_snprintf(buf, sizeof(buf), "/%d/data/title", channel);
     gwy_container_gis_string_by_name(data, buf, &title);
     if (!title) {
-        g_snprintf(buf, sizeof(buf), "/%i/data/untitled", channel);
+        g_snprintf(buf, sizeof(buf), "/%d/data/untitled", channel);
         gwy_container_gis_string_by_name(data, buf, &title);
     }
     /* Support 1.x titles */

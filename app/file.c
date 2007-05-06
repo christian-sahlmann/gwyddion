@@ -272,10 +272,14 @@ gwy_app_file_open(void)
     g_free(filename_sys);
 }
 
+/* TODO: Merge with gwy_app_file_open(). */
+/* TODO: Set file chooser dialog title properly. */
 /**
  * gwy_app_file_merge:
  *
  * Merges a user-selected file (very high-level app function).
+ *
+ * Since: 2.6
  **/
 void
 gwy_app_file_merge(void)
