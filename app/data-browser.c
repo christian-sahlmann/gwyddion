@@ -4122,11 +4122,12 @@ gwy_app_data_merge_copy_2(gpointer key,
         return;
 
     id = gwy_app_data_proxy_analyse_key(strkey, &type, &len);
+    if (type == KEY_IS_FILENAME)
+        return;
     if (id < 0)
         goto fail;
     if (type == KEY_IS_GRAPH
-        || type == KEY_IS_SPECTRA
-        || type == KEY_IS_FILENAME)
+        || type == KEY_IS_SPECTRA)
         return;
 
     idp = GINT_TO_POINTER(id);
@@ -4186,7 +4187,7 @@ gwy_app_data_merge_copy_2(gpointer key,
 
         case KEY_IS_RANGE_TYPE:
         g_snprintf(buf, sizeof(buf), "/%d/base/range-type", id2);
-        gwy_container_set_enum_by_name(dest, buf, g_value_get_enum(gvalue));
+        gwy_container_set_enum_by_name(dest, buf, g_value_get_int(gvalue));
         break;
 
         case KEY_IS_RANGE:
