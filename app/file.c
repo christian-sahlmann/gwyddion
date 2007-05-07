@@ -291,7 +291,7 @@ gwy_app_file_open_or_merge(gboolean merge)
         }
         else {
             if (merge)
-                newdata = gwy_app_file_load_real(NULL, filename_sys, name, FALSE);
+                newdata = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
             else
                 gwy_app_file_load(NULL, fname_sys, name);
         }
