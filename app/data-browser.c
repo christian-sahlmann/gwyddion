@@ -4200,7 +4200,7 @@ compare_int(gconstpointer a,
 
 /**
  * gwy_app_data_browser_merge:
- * @container: A data container, not managed by the data browser.
+ * @data: A data container, not managed by the data browser.
  *
  * Merges the data from a data container to the current one.
  *
