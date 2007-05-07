@@ -67,12 +67,15 @@ typedef enum {
     KEY_IS_TITLE,
     KEY_IS_SELECT,
     KEY_IS_RANGE_TYPE,
-    KEY_IS_SPS_REF,
+    KEY_IS_RANGE,
     KEY_IS_PALETTE,
+    KEY_IS_MASK_COLOR,
+    KEY_IS_REAL_SQUARE,
     KEY_IS_3D_SETUP,
     KEY_IS_3D_PALETTE,
     KEY_IS_3D_MATERIAL,
     KEY_IS_3D_LABEL,
+    KEY_IS_SPS_REF,
     KEY_IS_FILENAME
 } GwyAppKeyType;
 
@@ -414,15 +417,29 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
         *type = KEY_IS_SELECT;
         n += strlen("select/");
     }
-    else if (gwy_strequal(s, "base/range-type"))
-        *type = KEY_IS_RANGE_TYPE;
     else if (gwy_strequal(s, "data/title")
              || gwy_strequal(s, "data/untitled")) {
         *type = KEY_IS_TITLE;
         n += strlen("data/");
     }
+    else if (gwy_strequal(s, "base/range-type"))
+        *type = KEY_IS_RANGE_TYPE;
+    else if (gwy_strequal(s, "base/min")
+             || gwy_strequal(s, "base/max")) {
+        *type = KEY_IS_RANGE;
+        n += strlen("base/");
+    }
+    else if (gwy_strequal(s, "mask/red")
+             || gwy_strequal(s, "mask/blue")
+             || gwy_strequal(s, "mask/green")
+             || gwy_strequal(s, "mask/alpha")) {
+        *type = KEY_IS_MASK_COLOR;
+        n += strlen("mask/");
+    }
     else if (gwy_strequal(s, "meta"))
         *type = KEY_IS_META;
+    else if (gwy_strequal(s, "data/realsquare"))
+        *type = KEY_IS_REAL_SQUARE;
     else if (gwy_strequal(s, "sps-id"))
         *type = KEY_IS_SPS_REF;
     else if (gwy_strequal(s, "3d/setup"))
@@ -431,8 +448,10 @@ gwy_app_data_proxy_analyse_key(const gchar *strkey,
         *type = KEY_IS_3D_PALETTE;
     else if (gwy_strequal(s, "3d/material"))
         *type = KEY_IS_3D_MATERIAL;
-    else if (gwy_strequal(s, "3d/x") || gwy_strequal(s, "3d/y")
-             || gwy_strequal(s, "3d/min") || gwy_strequal(s, "3d/max")) {
+    else if (gwy_strequal(s, "3d/x")
+             || gwy_strequal(s, "3d/y")
+             || gwy_strequal(s, "3d/min")
+             || gwy_strequal(s, "3d/max")) {
         *type = KEY_IS_3D_LABEL;
         n += strlen("3d/");
     }
@@ -4103,8 +4122,19 @@ gwy_app_data_merge_copy_2(gpointer key,
         return;
 
     id = gwy_app_data_proxy_analyse_key(strkey, &type, &len);
+    if (id < 0)
+        goto fail;
+    if (type == KEY_IS_GRAPH
+        || type == KEY_IS_SPECTRA
+        || type == KEY_IS_FILENAME)
+        return;
+
     idp = GINT_TO_POINTER(id);
     dest = (GwyContainer*)map[NPAGES];
+    if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+        goto fail;
+    id2 = GPOINTER_TO_INT(id2p);
+
     switch (type) {
         case KEY_IS_DATA:
         case KEY_IS_GRAPH:
@@ -4114,25 +4144,16 @@ gwy_app_data_merge_copy_2(gpointer key,
         break;
 
         case KEY_IS_MASK:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
-            goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
         quark = gwy_app_get_mask_key_for_id(id2);
         gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_SHOW:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
-            goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
         quark = gwy_app_get_show_key_for_id(id2);
         gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_SPS_REF:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
-            goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
         id = g_value_get_int(gvalue);
         idp = GINT_TO_POINTER(id);
         /* Ignore references to nonexistent sps ids silently */
@@ -4144,31 +4165,64 @@ gwy_app_data_merge_copy_2(gpointer key,
         break;
 
         case KEY_IS_TITLE:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
-            goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/data/title", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_PALETTE:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
-            goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/base/palette", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
+        case KEY_IS_MASK_COLOR:
+        g_snprintf(buf, sizeof(buf), "/%d/mask%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
         case KEY_IS_SELECT:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
-            goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/data/select%s", id2, strkey + len);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
-        case KEY_IS_FILENAME:
-        /* Ignore */
+        case KEY_IS_RANGE_TYPE:
+        g_snprintf(buf, sizeof(buf), "/%d/base/range-type", id2);
+        gwy_container_set_enum_by_name(dest, buf, g_value_get_enum(gvalue));
+        break;
+
+        case KEY_IS_RANGE:
+        g_snprintf(buf, sizeof(buf), "/%d/base%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
+        case KEY_IS_REAL_SQUARE:
+        g_snprintf(buf, sizeof(buf), "/%d/data/realsquare", id2);
+        gwy_container_set_boolean_by_name(dest, buf,
+                                          g_value_get_boolean(gvalue));
+        break;
+
+        case KEY_IS_META:
+        g_snprintf(buf, sizeof(buf), "/%d/meta", id2);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_3D_SETUP:
+        g_snprintf(buf, sizeof(buf), "/%d/3d/setup", id2);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_3D_LABEL:
+        g_snprintf(buf, sizeof(buf), "/%d/3d%s", id2, strkey + len);
+        gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_3D_PALETTE:
+        g_snprintf(buf, sizeof(buf), "/%d/3d/palette", id2);
+        gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
+        break;
+
+        case KEY_IS_3D_MATERIAL:
+        g_snprintf(buf, sizeof(buf), "/%d/3d/material", id2);
+        gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         default:
