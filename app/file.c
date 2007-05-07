@@ -127,7 +127,14 @@ gwy_app_file_load(const gchar *filename_utf8,
                   const gchar *filename_sys,
                   const gchar *name)
 {
-    return gwy_app_file_load_real(filename_utf8, filename_sys, name, TRUE);
+    GwyContainer *data;
+
+    data = gwy_app_file_load_real(filename_utf8, filename_sys, name, TRUE);
+    /* gwy_app_file_add_loaded() takes a reference therefore we can release
+     * the initial one */
+    g_object_unref(data);
+
+    return data;
 }
 
 static GwyContainer*
@@ -167,7 +174,6 @@ gwy_app_file_load_real(const gchar *filename_utf8,
     if (data) {
         if (do_add_loaded)
             gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
-        g_object_unref(data);
     }
     else {
         if (err && !g_error_matches(err,
@@ -244,7 +250,7 @@ gwy_app_file_open_or_merge(gboolean merge)
     GSList *filenames = NULL, *l;
     gchar *name, *filename_utf8, *filename_sys;
     const gchar *loaded_as = NULL;
-    GwyContainer *data, *newdata = NULL;
+    GwyContainer *data;
     gint response;
 
     dialog = _gwy_app_file_chooser_get(GTK_FILE_CHOOSER_ACTION_OPEN);
@@ -285,19 +291,22 @@ gwy_app_file_open_or_merge(gboolean merge)
             && gwy_strequal(filename_sys, fname_sys)
             && (!name || gwy_strequal(name, loaded_as))) {
             if (merge)
-                newdata = data;
+                gwy_app_data_browser_merge(data);
             else
                 gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
         }
         else {
-            if (merge)
+            if (merge) {
+                GwyContainer *newdata;
+
                 newdata = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
+                gwy_app_data_browser_merge(newdata);
+                g_object_unref(newdata);
+            }
             else
                 gwy_app_file_load(NULL, fname_sys, name);
         }
         g_free(fname_sys);
-        if (merge && newdata)
-            gwy_app_data_browser_merge(newdata);
     }
     g_slist_free(filenames);
     g_free(name);
