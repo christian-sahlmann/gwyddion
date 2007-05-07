@@ -27,14 +27,14 @@
 #include <app/gwyapp.h>
 #include "gwyappfilechooser.h"
 
-GwyContainer* gwy_app_file_load_real    (const gchar *filename_utf8,
-                                         const gchar *filename_sys,
-                                         const gchar *name,
-                                         gboolean do_add_loaded);
-static void   gwy_app_file_add_loaded   (GwyContainer *data,
-                                         const gchar *filename_utf8,
-                                         const gchar *filename_sys);
-static void   gwy_app_file_open_or_merge(gboolean merge);
+static GwyContainer* gwy_app_file_load_real    (const gchar *filename_utf8,
+                                                const gchar *filename_sys,
+                                                const gchar *name,
+                                                gboolean do_add_loaded);
+static void          gwy_app_file_add_loaded   (GwyContainer *data,
+                                                const gchar *filename_utf8,
+                                                const gchar *filename_sys);
+static void          gwy_app_file_open_or_merge(gboolean merge);
 
 static gchar *current_dir = NULL;
 
@@ -130,7 +130,7 @@ gwy_app_file_load(const gchar *filename_utf8,
     return gwy_app_file_load_real(filename_utf8, filename_sys, name, TRUE);
 }
 
-GwyContainer*
+static GwyContainer*
 gwy_app_file_load_real(const gchar *filename_utf8,
                        const gchar *filename_sys,
                        const gchar *name,
