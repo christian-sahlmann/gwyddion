@@ -4059,7 +4059,7 @@ gwy_app_data_merge_copy_1(gpointer key,
     GHashTable **map = (GHashTable**)user_data;
     GwyAppKeyType type;
     gpointer idp, id2p;
-    gint id, id2;
+    gint id;
 
     id = gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
     idp = GINT_TO_POINTER(id);
@@ -4067,22 +4067,19 @@ gwy_app_data_merge_copy_1(gpointer key,
         case KEY_IS_DATA:
         if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
             goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
-        quark = gwy_app_get_data_key_for_id(id2);
+        quark = gwy_app_get_data_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         case KEY_IS_GRAPH:
         if (!g_hash_table_lookup_extended(map[PAGE_GRAPHS], idp, NULL, &id2p))
             goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
-        quark = gwy_app_get_graph_key_for_id(id2);
+        quark = gwy_app_get_graph_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         case KEY_IS_SPECTRA:
         if (!g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL, &id2p))
             goto fail;
-        id2 = GPOINTER_TO_INT(id2p);
-        quark = gwy_app_get_spectra_key_for_id(id2);
+        quark = gwy_app_get_spectra_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         default:
@@ -4112,38 +4109,87 @@ gwy_app_data_merge_copy_2(gpointer key,
     gpointer idp, id2p;
     gint id, id2;
     guint len;
+    gboolean visibility = FALSE;
     gchar buf[80];
 
     strkey = g_quark_to_string(quark);
     if (gwy_strequal(strkey, "/0/graph/lastid"))
         return;
-    /* FIXME: restore visibility */
-    if (g_str_has_suffix(strkey, "/visible"))
-        return;
 
-    id = gwy_app_data_proxy_analyse_key(strkey, &type, &len);
+    /* Handle visibility by stripping "/visible" from the key before analysis */
+    if (g_str_has_suffix(strkey, "/visible")) {
+        gchar *vstrkey;
+
+        vstrkey = g_strndup(strkey, strlen(strkey) - strlen("/visible"));
+        id = gwy_app_data_proxy_analyse_key(vstrkey, &type, &len);
+        g_free(vstrkey);
+        visibility = TRUE;
+    }
+    else
+        id = gwy_app_data_proxy_analyse_key(strkey, &type, &len);
+
     if (type == KEY_IS_FILENAME)
         return;
     if (id < 0)
         goto fail;
-    if (type == KEY_IS_GRAPH
-        || type == KEY_IS_SPECTRA)
-        return;
 
     idp = GINT_TO_POINTER(id);
     dest = (GwyContainer*)map[NPAGES];
+
+    /* Visibilty */
+    switch (type) {
+        case KEY_IS_DATA:
+        if (visibility) {
+            if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL,
+                                              &id2p))
+                goto fail;
+            quark = gwy_app_get_data_key_for_id(GPOINTER_TO_INT(id2p));
+            g_snprintf(buf, sizeof(buf), "%s/visible",
+                       g_quark_to_string(quark));
+            if (g_value_get_boolean(gvalue))
+                gwy_container_set_boolean_by_name(dest, buf, TRUE);
+        }
+        return;
+        break;
+
+        case KEY_IS_GRAPH:
+        if (visibility) {
+            if (!g_hash_table_lookup_extended(map[PAGE_GRAPHS], idp, NULL,
+                                              &id2p))
+                goto fail;
+            quark = gwy_app_get_graph_key_for_id(GPOINTER_TO_INT(id2p));
+            g_snprintf(buf, sizeof(buf), "%s/visible",
+                       g_quark_to_string(quark));
+            if (g_value_get_boolean(gvalue))
+                gwy_container_set_boolean_by_name(dest, buf, TRUE);
+        }
+        return;
+        break;
+
+        case KEY_IS_SPECTRA:
+        if (visibility) {
+            if (!g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL,
+                                              &id2p))
+                goto fail;
+            quark = gwy_app_get_spectra_key_for_id(GPOINTER_TO_INT(id2p));
+            g_snprintf(buf, sizeof(buf), "%s/visible",
+                       g_quark_to_string(quark));
+            if (g_value_get_boolean(gvalue))
+                gwy_container_set_boolean_by_name(dest, buf, TRUE);
+        }
+        return;
+        break;
+
+        default:
+        /* Pass */
+        break;
+    }
+
     if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
         goto fail;
     id2 = GPOINTER_TO_INT(id2p);
 
     switch (type) {
-        case KEY_IS_DATA:
-        case KEY_IS_GRAPH:
-        case KEY_IS_SPECTRA:
-        /* These were handled in gwy_app_data_merge_copy_1() */
-        return;
-        break;
-
         case KEY_IS_MASK:
         quark = gwy_app_get_mask_key_for_id(id2);
         gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
@@ -4305,6 +4351,8 @@ gwy_app_data_browser_merge(GwyContainer *container)
     map[NPAGES] = (GHashTable*)proxy->container;
     gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_1, &map[0]);
     gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_2, &map[0]);
+    gwy_app_data_browser_reset_visibility(proxy->container,
+                                          GWY_VISIBILITY_RESET_RESTORE);
 }
 
 /**
