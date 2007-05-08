@@ -306,8 +306,8 @@ free_the_icon_factory(void)
  *
  * The "Arithmetic" stock icon.
  * <inlinegraphic fileref="gwy_arithmetic-24.png" format="PNG"/>
-
-* Since: 2.3
+ *
+ * Since: 2.3
  **/
 
 /**
@@ -336,8 +336,8 @@ free_the_icon_factory(void)
  *
  * The "Color-Range-Adaptive" stock icon.
  * <inlinegraphic fileref="gwy_color_range_adaptive-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -345,8 +345,8 @@ free_the_icon_factory(void)
  *
  * The "Color-Range-Auto" stock icon.
  * <inlinegraphic fileref="gwy_color_range_auto-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -354,8 +354,8 @@ free_the_icon_factory(void)
  *
  * The "Color-Range-Fixed" stock icon.
  * <inlinegraphic fileref="gwy_color_range_fixed-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -363,8 +363,8 @@ free_the_icon_factory(void)
  *
  * The "Color-Range-Full" stock icon.
  * <inlinegraphic fileref="gwy_color_range_full-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -386,8 +386,8 @@ free_the_icon_factory(void)
  *
  * The "Data-Measure" stock icon.
  * <inlinegraphic fileref="gwy_data_measure-24.png" format="PNG"/>
-
-* Since: 2.3
+ *
+ * Since: 2.3
  **/
 
 /**
@@ -402,8 +402,8 @@ free_the_icon_factory(void)
  *
  * The "Drift" stock icon.
  * <inlinegraphic fileref="gwy_drift-24.png" format="PNG"/>
-
-* Since: 2.3
+ *
+ * Since: 2.3
  **/
 
 /**
@@ -477,6 +477,15 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_GL_MATERIAL
+ *
+ * The "GL-Material" stock icon.
+ * <inlinegraphic fileref="gwy_gl_material-16.png" format="PNG"/>
+ *
+ * Since: 2.6
+ **/
+
+/**
  * GWY_STOCK_GRADIENT_HORIZONTAL
  *
  * The "Gradient-Horizontal" stock icon.
@@ -509,8 +518,8 @@ free_the_icon_factory(void)
  *
  * The "Grains-Measure" stock icon.
  * <inlinegraphic fileref="gwy_grains_measure-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -616,8 +625,8 @@ free_the_icon_factory(void)
  *
  * The "Immerse" stock icon.
  * <inlinegraphic fileref="gwy_immerse-24.png" format="PNG"/>
-
-* Since: 2.3
+ *
+ * Since: 2.3
  **/
 
 /**
@@ -625,8 +634,8 @@ free_the_icon_factory(void)
  *
  * The "Iso-Roughness" stock icon.
  * <inlinegraphic fileref="gwy_iso_roughness-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -802,8 +811,8 @@ free_the_icon_factory(void)
  *
  * The "Merge" stock icon.
  * <inlinegraphic fileref="gwy_merge-24.png" format="PNG"/>
-
-* Since: 2.3
+ *
+ * Since: 2.3
  **/
 
 /**
@@ -825,8 +834,8 @@ free_the_icon_factory(void)
  *
  * The "Path-Level" stock icon.
  * <inlinegraphic fileref="gwy_path_level-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**
@@ -925,8 +934,8 @@ free_the_icon_factory(void)
  *
  * The "Spectrum" stock icon.
  * <inlinegraphic fileref="gwy_spectrum-24.png" format="PNG"/>
-
-* Since: 2.6
+ *
+ * Since: 2.6
  **/
 
 /**

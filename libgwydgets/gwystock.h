@@ -52,6 +52,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_FLIP_HORIZONTALLY     "gwy_flip_horizontally"
 #define GWY_STOCK_FLIP_VERTICALLY       "gwy_flip_vertically"
 #define GWY_STOCK_FRACTAL               "gwy_fractal"
+#define GWY_STOCK_GL_MATERIAL           "gwy_gl_material"
 #define GWY_STOCK_GRADIENT_HORIZONTAL   "gwy_gradient_horizontal"
 #define GWY_STOCK_GRADIENT_VERTICAL     "gwy_gradient_vertical"
 #define GWY_STOCK_GRAINS                "gwy_grains"
