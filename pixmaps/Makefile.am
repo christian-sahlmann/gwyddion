@@ -4,7 +4,9 @@ pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Since 2.3: arithmetic data_measure drift immerse merge
-# Since 2.6: path_level spectrum iso_roughness color_range_auto color_range_full color_range_fixed color_range_adaptive grains_measure
+# Since 2.6: path_level spectrum iso_roughness grains_measure gl_material
+# Since 2.6: color_range_auto color_range_full color_range_fixed
+# Since 2.6: color_range_adaptive
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -38,6 +40,7 @@ pixmapdata_DATA = \
 	gwy_flip_horizontally-24.png \
 	gwy_flip_vertically-24.png \
 	gwy_fractal-24.png \
+	gwy_gl_material-16.png \
 	gwy_gradient_horizontal-24.png \
 	gwy_gradient_vertical-24.png \
 	gwy_grains-24.png \
@@ -68,6 +71,7 @@ pixmapdata_DATA = \
 	gwy_line_level-24.png \
 	gwy_logscale_horizontal-24.png \
 	gwy_logscale_vertical-24.png \
+	gwy_mask-16.png \
 	gwy_mask-24.png \
 	gwy_mask_add-24.png \
 	gwy_mask_circle-24.png \
@@ -86,6 +90,7 @@ pixmapdata_DATA = \
 	gwy_mask_subtract-24.png \
 	gwy_merge-24.png \
 	gwy_more-24.png \
+	gwy_palettes-16.png \
 	gwy_palettes-24.png \
 	gwy_path_level-24.png \
 	gwy_pointer_measure-24.png \
@@ -136,6 +141,7 @@ xcf_sources = \
 	gwy_filter-24.xcf \
 	gwy_flip_horizontally-24.xcf \
 	gwy_flip_vertically-24.xcf \
+	gwy_gl_material-16.xcf \
 	gwy_gradient-24.xcf \
 	gwy_grains-24.xcf \
 	gwy_graph-24.xcf \
@@ -145,10 +151,12 @@ xcf_sources = \
 	gwy_level-24.xcf \
 	gwy_light_rotate-24.xcf \
 	gwy_markup-20.xcf \
+	gwy_mask-16.xcf \
 	gwy_mask-24.xcf \
 	gwy_measure-24.xcf \
 	gwy_more-24.xcf \
 	gwy_palette-24.xcf \
+	gwy_palettes-16.xcf \
 	gwy_polynom-24.xcf \
 	gwy_profile-24.xcf \
 	gwy_remove_under_mask-24.xcf \
