@@ -19,6 +19,7 @@
   <xi:include href="xml/gwymath.xml"/>
   <xi:include href="xml/gwynlfit.xml"/>
   <xi:include href="xml/gwynlfitpreset.xml"/>
+  <xi:include href="xml/gwyfdcurvepreset.xml"/>
   <xi:include href="xml/gwyexpr.xml"/>
   <xi:include href="xml/gwysiunit.xml"/>
   <xi:include href="xml/gwyutils.xml"/>
