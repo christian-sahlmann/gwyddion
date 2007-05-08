@@ -112,7 +112,7 @@ def update_documentation(images, sinces):
             size = max(v)
 
         if sinces.has_key(k):
-            s = '\n* Since: %s\n' % sinces[k]
+            s = ' *\n * Since: %s\n' % sinces[k]
             del sinces[k]
         else:
             s = ''
