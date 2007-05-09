@@ -134,8 +134,8 @@ static void        fit_get_full_x_range      (FitControls *controls,
                                               gdouble *xmax);
 static void        param_initial_activate    (GtkWidget *entry,
                                               gpointer user_data);
-static void        toggle_changed            (GtkToggleButton *button,
-                                              gboolean *value);
+static void        fix_changed               (GtkToggleButton *button,
+                                              FitControls *controls);
 static void        copy_param                (GObject *button,
                                               FitControls *controls);
 static void        fit_plot_curve            (FitArgs *args);
@@ -535,9 +535,9 @@ fit_param_row_create(FitControls *controls,
     /* Fix */
     cntrl->fix = gtk_check_button_new();
     gtk_table_attach(table, cntrl->fix, 0, 1, row, row+1, 0, 0, 0, 0);
+    g_object_set_data(G_OBJECT(cntrl->fix), "id", GINT_TO_POINTER(i + 1));
     gtk_widget_show(cntrl->fix);
-    g_signal_connect(cntrl->fix, "toggled",
-                     G_CALLBACK(toggle_changed), &arg->fix);
+    g_signal_connect(cntrl->fix, "toggled", G_CALLBACK(fix_changed), controls);
 
     /* Name */
     cntrl->name = gtk_label_new(NULL);
@@ -1140,9 +1140,14 @@ fit_get_full_x_range(FitControls *controls,
 }
 
 static void
-toggle_changed(GtkToggleButton *button, gboolean *value)
+fix_changed(GtkToggleButton *button, FitControls *controls)
 {
-    *value = gtk_toggle_button_get_active(button);
+    FitParamArg *arg;
+    gint i;
+
+    i = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "id")) - 1;
+    arg = &g_array_index(controls->args->param, FitParamArg, i);
+    arg->fix = gtk_toggle_button_get_active(button);
 }
 
 static void
