@@ -36,7 +36,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Level graph by line."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -77,6 +77,10 @@ level(GwyGraph *graph)
         gwy_graph_curve_model_set_data(cmodel, xdata, (gdouble*)newydata->data,
                                        ndata);
     }
+    for (i = 0; i < ncurves; i++) {
+        cmodel = gwy_graph_model_get_curve(gwy_graph_get_model(graph), i);
+        g_signal_emit_by_name(cmodel, "data-changed");
+    }
     g_array_free(newydata, TRUE);
 }
 
@@ -91,6 +95,5 @@ level_do(const gdouble *x, gdouble *y, gdouble n)
     for (i = 0; i < n; i++)
         y[i] -= result[0] + result[1]*x[i];
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
