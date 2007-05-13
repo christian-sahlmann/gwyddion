@@ -195,7 +195,7 @@ gwy_fft_window_flat_top(gint i, gint n)
     gdouble x = 2*G_PI*i/n;
 
     return (1.0 - 1.93*cos(x) + 1.29*cos(2*x)
-            - 0.388*cos(3*x) + 0.032*cos(4*x))/2;
+            - 0.388*cos(3*x) + 0.032*cos(4*x))/4;
 }
 
 static inline gdouble
