@@ -31,7 +31,7 @@ static gdouble gwy_fft_window_blackman (gint i, gint n);
 static gdouble gwy_fft_window_lanczos  (gint i, gint n);
 static gdouble gwy_fft_window_welch    (gint i, gint n);
 static gdouble gwy_fft_window_rect     (gint i, gint n);
-static gdouble gwy_fft_window_nutall   (gint i, gint n);
+static gdouble gwy_fft_window_nuttall  (gint i, gint n);
 static gdouble gwy_fft_window_flat_top (gint i, gint n);
 static gdouble gwy_fft_window_kaiser25 (gint i, gint n);
 
@@ -44,7 +44,7 @@ static const GwyFFTWindowingFunc windowings[] = {
     &gwy_fft_window_lanczos,
     &gwy_fft_window_welch,
     &gwy_fft_window_rect,
-    &gwy_fft_window_nutall,
+    &gwy_fft_window_nuttall,
     &gwy_fft_window_flat_top,
     &gwy_fft_window_kaiser25,
 };
@@ -182,7 +182,7 @@ gwy_fft_window_rect(gint i, gint n)
 }
 
 static gdouble
-gwy_fft_window_nutall(gint i, gint n)
+gwy_fft_window_nuttall(gint i, gint n)
 {
     gdouble x = 2*G_PI*i/n;
 
