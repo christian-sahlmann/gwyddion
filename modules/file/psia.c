@@ -208,8 +208,6 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     p = entry->value;
     data = (const guint16*)(tiff->data + tiff->getu32(&p));
     data_len = entry->count;
-    /* FIXME: This is always a totally bogus value, although tiffdump(1) can
-     * print the right size. Why? */
     gwy_debug("data_len: %d", data_len);
 
     /* Header */
@@ -251,6 +249,10 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
     if (err_DIMENSION(error, header.xres)
         || err_DIMENSION(error, header.yres)) {
+        psia_free_image_header(&header);
+        return NULL;
+    }
+    if (err_SIZE_MISMATCH(error, 2*header.xres*header.yres, data_len, TRUE)) {
         psia_free_image_header(&header);
         return NULL;
     }
