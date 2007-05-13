@@ -89,7 +89,7 @@ static const gchar exclude_key[]   = "/module/polynom/exclude";
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Polynomial fit tool, fits polynomials to X or Y profiles and "
+    N_("Polynomial line level tool, fits polynomials to X or Y profiles and "
        "subtracts them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "2.1",
@@ -126,7 +126,7 @@ gwy_tool_polynom_class_init(GwyToolPolynomClass *klass)
 
     tool_class->stock_id = GWY_STOCK_POLYNOM;
     tool_class->title = _("Polynomial");
-    tool_class->tooltip = _("Fit X or Y profiles with polynomials"),
+    tool_class->tooltip = _("Level X or Y lines with polynomials"),
     tool_class->prefix = "/module/polynom";
     tool_class->data_switched = gwy_tool_polynom_data_switched;
     tool_class->response = gwy_tool_polynom_response;
