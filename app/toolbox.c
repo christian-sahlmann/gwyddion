@@ -631,8 +631,8 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 
     set_sensitivity(item_factory,
                     "<file>/Save",         GWY_MENU_FLAG_FILE,
-                    "<file>/Save As",      GWY_MENU_FLAG_FILE,
-                    "<file>/Merge",        GWY_MENU_FLAG_FILE,
+                    "<file>/Save As...",   GWY_MENU_FLAG_FILE,
+                    "<file>/Merge...",     GWY_MENU_FLAG_FILE,
                     NULL);
 
     item = gtk_item_factory_get_item(item_factory, "<file>/Open Recent");
