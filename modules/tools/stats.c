@@ -149,7 +149,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -269,18 +269,18 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         gsize offset;
     }
     const values[] = {
-        { N_("Average value"),     G_STRUCT_OFFSET(GwyToolStats, avg),      },
-        { N_("Minimum"),           G_STRUCT_OFFSET(GwyToolStats, min),      },
-        { N_("Maximum"),           G_STRUCT_OFFSET(GwyToolStats, max),      },
-        { N_("Median"),            G_STRUCT_OFFSET(GwyToolStats, median),   },
-        { N_("Ra"),                G_STRUCT_OFFSET(GwyToolStats, ra),       },
-        { N_("Rms"),               G_STRUCT_OFFSET(GwyToolStats, rms),      },
-        { N_("Skew"),              G_STRUCT_OFFSET(GwyToolStats, skew),     },
-        { N_("Kurtosis"),          G_STRUCT_OFFSET(GwyToolStats, kurtosis), },
-        { N_("Surface area"),      G_STRUCT_OFFSET(GwyToolStats, area),     },
-        { N_("Projected area"),    G_STRUCT_OFFSET(GwyToolStats, projarea), },
-        { N_("Inclination θ"), G_STRUCT_OFFSET(GwyToolStats, theta),    },
-        { N_("Inclination φ"),   G_STRUCT_OFFSET(GwyToolStats, phi),      },
+        { N_("Average value:"),     G_STRUCT_OFFSET(GwyToolStats, avg),      },
+        { N_("Minimum:"),           G_STRUCT_OFFSET(GwyToolStats, min),      },
+        { N_("Maximum:"),           G_STRUCT_OFFSET(GwyToolStats, max),      },
+        { N_("Median:"),            G_STRUCT_OFFSET(GwyToolStats, median),   },
+        { N_("Ra:"),                G_STRUCT_OFFSET(GwyToolStats, ra),       },
+        { N_("Rms:"),               G_STRUCT_OFFSET(GwyToolStats, rms),      },
+        { N_("Skew:"),              G_STRUCT_OFFSET(GwyToolStats, skew),     },
+        { N_("Kurtosis:"),          G_STRUCT_OFFSET(GwyToolStats, kurtosis), },
+        { N_("Surface area:"),      G_STRUCT_OFFSET(GwyToolStats, area),     },
+        { N_("Projected area:"),    G_STRUCT_OFFSET(GwyToolStats, projarea), },
+        { N_("Inclination θ:"),     G_STRUCT_OFFSET(GwyToolStats, theta),    },
+        { N_("Inclination φ:"),     G_STRUCT_OFFSET(GwyToolStats, phi),      },
     };
     GtkDialog *dialog;
     GtkWidget *hbox, *vbox, *image, *label, **plabel;
