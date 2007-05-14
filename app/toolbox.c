@@ -561,7 +561,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             NULL
         },
         {
-            N_("/_Open"),
+            N_("/_Open..."),
             "<control>O",
             gwy_app_file_open,
             0,
@@ -569,7 +569,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_OPEN
         },
         {
-            N_("/_Merge"),
+            N_("/_Merge..."),
             "<control><shift>M",
             gwy_app_file_merge,
             0,
@@ -593,7 +593,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_SAVE
         },
         {
-            N_("/Save _As"),
+            N_("/Save _As..."),
             "<control><shift>S",
             gwy_app_file_save_as,
             0,
