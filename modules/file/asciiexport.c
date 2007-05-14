@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <stdio.h>
+#include <string.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -64,7 +65,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -184,7 +185,12 @@ static gboolean
 asciiexport_export_dialog(ASCIIExportArgs *args)
 {
     GtkWidget *dialog, *vbox, *decimal_dot, *add_comment;
+    gboolean needs_decimal_dot;
+    gchar buf[8];
     gint response;
+
+    g_snprintf(buf, sizeof(buf), "%f", G_PI);
+    needs_decimal_dot = !strchr(buf, '.');
 
     dialog = gtk_dialog_new_with_buttons(_("Export Text"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -200,10 +206,11 @@ asciiexport_export_dialog(ASCIIExportArgs *args)
     gtk_box_pack_start(GTK_BOX(vbox), gwy_label_new_header(_("Options")),
                        FALSE, FALSE, 0);
 
-    decimal_dot = gtk_check_button_new_with_mnemonic(_("Enforce _dot "
+    decimal_dot = gtk_check_button_new_with_mnemonic(_("Use _dot "
                                                        "as decimal separator"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(decimal_dot),
-                                 args->decimal_dot);
+                                 args->decimal_dot || !needs_decimal_dot);
+    gtk_widget_set_sensitive(decimal_dot, needs_decimal_dot);
     gtk_box_pack_start(GTK_BOX(vbox), decimal_dot, FALSE, FALSE, 0);
 
     add_comment = gtk_check_button_new_with_mnemonic(_("Add _informational "
@@ -215,8 +222,9 @@ asciiexport_export_dialog(ASCIIExportArgs *args)
     gtk_widget_show_all(dialog);
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     if (response != GTK_RESPONSE_NONE) {
-        args->decimal_dot
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(decimal_dot));
+        if (needs_decimal_dot)
+            args->decimal_dot
+                = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(decimal_dot));
         args->add_comment
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(add_comment));
         asciiexport_save_args(gwy_app_settings_get(), args);
