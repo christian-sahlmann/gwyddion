@@ -315,6 +315,8 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
 
     /* Data ranges */
     table = GTK_TABLE(gtk_table_new(6, 1, FALSE));
+    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
