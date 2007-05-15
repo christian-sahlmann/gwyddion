@@ -118,8 +118,9 @@ static void
 cut_dialog(CutArgs *args)
 {
     GtkWidget *label, *dialog, *hbox, *hbox2, *table;
-    GwyGraphModel *gmodel;
+    GwyGraphModel *gmodel, *ngmodel;
     GwyGraphArea *area;
+    GwyContainer *data;
     GwySelection *selection;
     GwySIUnit *siunit;
     CutControls controls;
@@ -236,6 +237,10 @@ cut_dialog(CutArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
+            ngmodel = gwy_graph_model_duplicate(gmodel);
+            gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, NULL);
+            gwy_app_data_browser_add_graph_model(ngmodel, data, TRUE);
+            g_object_unref(ngmodel);
             gtk_widget_destroy(dialog);
             break;
 
