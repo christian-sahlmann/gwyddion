@@ -427,19 +427,29 @@ gwy_tool_roughness_init_params(GwyToolRoughness *tool)
 {
     const GwyRoughnessParameterInfo *pinfo;
     GtkTreeIter siter, iter;
-    guint i;
+    guint i, j;
 
     tool->store = gtk_tree_store_new(1, G_TYPE_POINTER);
     tool->params = g_new0(gdouble, ROUGHNESS_NPARAMS);
 
-    for (i = 0; i < G_N_ELEMENTS(parameters); i++) {
+    for (i = j = 0; i < G_N_ELEMENTS(parameters); i++) {
         pinfo = parameters + i;
-        if (pinfo->param == -1)
-            gtk_tree_store_insert_with_values(tool->store, &siter, NULL,
-                                              G_MAXINT, 0, pinfo, -1);
-        else
-            gtk_tree_store_insert_with_values(tool->store, &iter, &siter,
-                                              G_MAXINT, 0, pinfo, -1);
+        if (pinfo->param == -1) {
+            if (!i)
+                gtk_tree_store_insert_after(tool->store, &siter, NULL, NULL);
+            else
+                gtk_tree_store_insert_after(tool->store, &siter, NULL, &siter);
+            gtk_tree_store_set(tool->store, &siter, 0, pinfo, -1);
+            j = 0;
+        }
+        else {
+            if (!j)
+                gtk_tree_store_insert_after(tool->store, &iter, &siter, NULL);
+            else
+                gtk_tree_store_insert_after(tool->store, &iter, &siter, &iter);
+            gtk_tree_store_set(tool->store, &iter, 0, pinfo, -1);
+            j++;
+        }
     }
 }
 
