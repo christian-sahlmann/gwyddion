@@ -300,7 +300,7 @@ gwy_fft_find_nice_size(gint size)
     /* Correct the estimated position as we often miss by a number or two */
     while (nice_fftw_num[i] < size)
         i++;
-    while (nice_fftw_num[i-1] > size)
+    while (nice_fftw_num[i-1] >= size)
         i--;
 
     return nice_fftw_num[i];
