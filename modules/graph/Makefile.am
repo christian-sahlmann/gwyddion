@@ -4,6 +4,7 @@ graphdir = $(pkglibdir)/modules/graph
 
 graph_LTLIBRARIES = \
 	graph_cd.la \
+	graph_cut.la \
 	graph_export_ascii.la \
 	graph_export_bitmap.la \
 	graph_export_vector.la \
@@ -40,6 +41,7 @@ graph_export_vector_la_SOURCES = graph_export_vector.c
 graph_fdfit_la_SOURCES = graph_fdfit.c
 graph_fit_la_SOURCES = graph_fit.c
 graph_cd_la_SOURCES = graph_cd.c
+graph_cut_la_SOURCES = graph_cut.c
 graph_level_la_SOURCES = graph_level.c
 #graph_stats_la_SOURCES = graph_stats.c
 
