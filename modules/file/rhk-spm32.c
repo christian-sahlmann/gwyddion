@@ -153,7 +153,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -500,17 +500,20 @@ rhkspm32_read_data(RHKPage *rhkpage)
     const gchar *s;
     gdouble q;
     gint power10;
-    guint i;
+    guint i, j, xres, yres;
 
     p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
-    dfield = gwy_data_field_new(rhkpage->xres, rhkpage->yres,
-                                rhkpage->xres * rhkpage->x.scale,
-                                rhkpage->yres * rhkpage->y.scale,
+    xres = rhkpage->xres;
+    yres = rhkpage->yres;
+    dfield = gwy_data_field_new(xres, yres,
+                                xres*rhkpage->x.scale, yres*rhkpage->y.scale,
                                 FALSE);
 
     data = gwy_data_field_get_data(dfield);
-    for (i = 0; i < rhkpage->xres*rhkpage->yres; i++)
-        data[i] = GINT16_FROM_LE(p[i]);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++)
+            data[i*xres + xres-1 - j] = GINT16_FROM_LE(p[i*xres + j]);
+    }
 
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_set_from_string_parse(siunit, rhkpage->x.units, &power10);

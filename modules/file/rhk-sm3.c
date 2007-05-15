@@ -216,7 +216,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -453,7 +453,7 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
     GwyDataField *dfield;
     GwySIUnit *siunit;
     const gchar *unit;
-    gint xres, yres, i;
+    gint xres, yres, i, j;
     const gint32 *pdata;
     gdouble *data;
 
@@ -465,8 +465,12 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
     pdata = (const gint32*)page->page_data;
-    for (i = 0; i < xres*yres; i++)
-        data[i] = GINT32_FROM_LE(pdata[i])*page->z_scale + page->z_offset;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            data[i*xres + xres-1 - j] = GINT32_FROM_LE(pdata[i*xres + j])
+                                        *page->z_scale + page->z_offset;
+        }
+    }
 
     if (page->strings[RHK_STRING_X_UNITS]
         && page->strings[RHK_STRING_Y_UNITS]) {
