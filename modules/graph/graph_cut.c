@@ -67,6 +67,7 @@ static void        cut_limit_selection       (CutControls *controls,
 static void        cut_get_full_x_range      (CutControls *controls,
                                               gdouble *xmin,
                                               gdouble *xmax);
+static void        do_cut                    (CutArgs *args);
 static void        graph_selected            (GwySelection* selection,
                                               gint i,
                                               CutControls *controls);
@@ -118,9 +119,8 @@ static void
 cut_dialog(CutArgs *args)
 {
     GtkWidget *label, *dialog, *hbox, *hbox2, *table;
-    GwyGraphModel *gmodel, *ngmodel;
+    GwyGraphModel *gmodel;
     GwyGraphArea *area;
-    GwyContainer *data;
     GwySelection *selection;
     GwySIUnit *siunit;
     CutControls controls;
@@ -237,10 +237,7 @@ cut_dialog(CutArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            ngmodel = gwy_graph_model_duplicate(gmodel);
-            gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, NULL);
-            gwy_app_data_browser_add_graph_model(ngmodel, data, TRUE);
-            g_object_unref(ngmodel);
+            do_cut(args);
             gtk_widget_destroy(dialog);
             break;
 
@@ -251,6 +248,51 @@ cut_dialog(CutArgs *args)
     } while (response != GTK_RESPONSE_OK);
 }
 
+static void        
+do_cut(CutArgs *args)
+{
+    gint i, j, ndata, nndata;
+    GwyContainer *data;
+    GwyGraphModel *ngmodel;
+    GwyGraphCurveModel *ngcmodel;
+    const gdouble *xdata, *ydata;
+    gdouble *nxdata, *nydata;
+
+    ngmodel = gwy_graph_model_new_alike(args->graph_model);
+ 
+    ngcmodel = gwy_graph_curve_model_duplicate(
+                    gwy_graph_model_get_curve(args->graph_model, 0));
+        
+    xdata = gwy_graph_curve_model_get_xdata(ngcmodel);
+    ydata = gwy_graph_curve_model_get_ydata(ngcmodel);
+    ndata = gwy_graph_curve_model_get_ndata(ngcmodel);
+
+    /*TODO this should really work differently*/
+    nndata = 0;
+    for (i=0; i<ndata; i++)
+        if (xdata[i]>=args->from && xdata[i]<args->to) nndata++;
+
+    nxdata = g_new(gdouble, nndata);
+    nydata = g_new(gdouble, nndata);
+
+    j=0;
+    for (i=0; i<ndata; i++) {
+        if (xdata[i]>=args->from && xdata[i]<args->to) {
+            nxdata[j] = xdata[i];
+            nydata[j] = ydata[i];
+            j++;
+        }
+    }
+    gwy_graph_curve_model_set_data(ngcmodel, nxdata, nydata, nndata);
+
+    gwy_graph_model_add_curve(ngmodel, ngcmodel);
+    g_object_unref(ngcmodel); 
+                                        
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, NULL);
+    gwy_app_data_browser_add_graph_model(ngmodel, data, TRUE);
+    
+    g_object_unref(ngmodel);
+}
 
 static void
 cut_fetch_entry(CutControls *controls)
