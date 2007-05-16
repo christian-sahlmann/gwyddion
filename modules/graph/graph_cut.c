@@ -78,11 +78,11 @@ static GtkWidget*  curve_selector_new        (GwyGraphModel *gmodel,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Cut graph with function"),
+    N_("Cut graph"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
+    "2007",
 };
 
 GWY_MODULE_QUERY(module_info)
