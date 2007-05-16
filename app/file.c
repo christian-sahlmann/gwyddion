@@ -209,13 +209,15 @@ gwy_app_file_add_loaded(GwyContainer *data,
                         const gchar *filename_utf8,
                         const gchar *filename_sys)
 {
-    gwy_container_set_string_by_name(data, "/filename",
-                                     g_strdup(filename_utf8));
+    if (filename_utf8)
+        gwy_container_set_string_by_name(data, "/filename",
+                                         g_strdup(filename_utf8));
 
     gwy_app_data_browser_add(data);
     gwy_app_data_browser_reset_visibility(data,
                                           GWY_VISIBILITY_RESET_DEFAULT);
-    gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, 0);
+    if (filename_utf8)
+        gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, 0);
     gwy_app_set_current_directory(filename_sys);
 }
 
