@@ -42,6 +42,9 @@ Recommended though optional, for `remote control':
 Optional, for SPML file support:
 - LibXML2, including development files
 
+Optional, for Python scripting interface (experimental):
+- PyGTK2, including codegen, and all its dependencies
+
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
 - Ruby-1.8 or newer
