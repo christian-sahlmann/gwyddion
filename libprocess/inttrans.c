@@ -40,6 +40,11 @@ static void  gwy_data_line_fft_do          (GwyDataLine *rsrc,
                                             GwyDataLine *rdest,
                                             GwyDataLine *idest,
                                             GwyTransformDirection direction);
+static void  gwy_data_line_fft_real_do     (GwyDataLine *rsrc,
+                                            GwyDataLine *ibuf,
+                                            GwyDataLine *rdest,
+                                            GwyDataLine *idest,
+                                            GwyTransformDirection direction);
 static void  gwy_data_field_area_2dfft_real(GwyDataField *ra,
                                             GwyDataField *rb,
                                             GwyDataField *ib,
@@ -360,7 +365,8 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 /**
  * gwy_data_line_part_fft:
  * @rsrc: Real input data line.
- * @isrc: Imaginary input data line.
+ * @isrc: Imaginary input data line. Since 2.6 it can be %NULL for
+ *        real-to-complex transforms.
  * @rdest: Real output data line, it will be resized to @len.
  * @idest: Imaginary output data line, it will be resized to @len.
  * @from: The index in input lines to start from (inclusive).
@@ -391,7 +397,7 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     GwyDataLine *rbuf, *ibuf;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
-    g_return_if_fail(GWY_IS_DATA_LINE(isrc));
+    g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
     if (isrc)
         g_return_if_fail(!gwy_data_line_check_compatibility
                                      (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
@@ -412,17 +418,27 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     gwy_fft_window(len, rbuf->data, windowing);
     gwy_data_line_resample(rbuf, newres, interpolation);
 
-    /* TODO: Support transform from real part only */
-    ibuf = gwy_data_line_part_extract(isrc, from, len);
-    gwy_level_simple(len, 1, ibuf->data, level);
-    gwy_fft_window(len, ibuf->data, windowing);
-    gwy_data_line_resample(ibuf, newres, interpolation);
-
-    gwy_data_line_fft_do(rbuf, ibuf, rdest, idest, direction);
-
-    if (preserverms)
-        gwy_preserve_rms_simple(len, 1, rsrc->data + from, isrc->data + from,
-                                newres, 1, rdest->data, idest->data);
+    if (isrc) {
+        ibuf = gwy_data_line_part_extract(isrc, from, len);
+        gwy_level_simple(len, 1, ibuf->data, level);
+        gwy_fft_window(len, ibuf->data, windowing);
+        gwy_data_line_resample(ibuf, newres, interpolation);
+        gwy_data_line_fft_do(rbuf, ibuf, rdest, idest, direction);
+        if (preserverms)
+            gwy_preserve_rms_simple(len, 1,
+                                    rsrc->data + from, isrc->data + from,
+                                    newres, 1,
+                                    rdest->data, idest->data);
+    }
+    else {
+        ibuf = gwy_data_line_new_alike(rbuf, FALSE);
+        gwy_data_line_fft_real_do(rbuf, ibuf, rdest, idest, direction);
+        if (preserverms)
+            gwy_preserve_rms_simple(len, 1,
+                                    rsrc->data + from, NULL,
+                                    newres, 1,
+                                    rdest->data, idest->data);
+    }
 
     gwy_data_line_resample(rdest, len, interpolation);
     gwy_data_line_resample(idest, len, interpolation);
@@ -434,7 +450,8 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 /**
  * gwy_data_line_fft_raw:
  * @rsrc: Real input data line.
- * @isrc: Imaginary input data line.
+ * @isrc: Imaginary input data line.  Since 2.6 it can be %NULL for
+ *        real-to-complex transform.
  * @rdest: Real output data line.  It will be resized to the size of the input
  *         data line.
  * @idest: Imaginary output data line.  It will be resized to the size of the
@@ -460,12 +477,10 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(GWY_IS_DATA_LINE(isrc));
-    /* TODO: real-to-complex does not work yet
     g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
     if (isrc)
         g_return_if_fail(!gwy_data_line_check_compatibility
                                      (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
-                                     */
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
     newres = gwy_fft_find_nice_size(rsrc->res);
@@ -474,8 +489,13 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
     gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
 
-    /* TODO: Support transform from real part only */
+    if (isrc)
+        g_object_ref(isrc);
+    else
+        isrc = gwy_data_line_new_alike(rsrc, TRUE);
+
     gwy_data_line_fft_do(rsrc, isrc, rdest, idest, direction);
+    g_object_unref(isrc);
 }
 
 static void
@@ -520,6 +540,55 @@ gwy_data_line_fft_do(GwyDataLine *rsrc,
 #else
     gwy_fft_simple(direction, rsrc->res,
                    1, rsrc->data, isrc->data,
+                   1, rdest->data, idest->data);
+#endif
+}
+
+static void
+gwy_data_line_fft_real_do(GwyDataLine *rsrc,
+                          GwyDataLine *ibuf,
+                          GwyDataLine *rdest,
+                          GwyDataLine *idest,
+                          GwyTransformDirection direction)
+{
+#ifdef HAVE_FFTW3
+    fftw_iodim dims[1], howmany_dims[1];
+    fftw_plan plan;
+    gint j;
+
+    dims[0].n = rsrc->res;
+    dims[0].is = 1;
+    dims[0].os = 1;
+    howmany_dims[0].n = 1;
+    howmany_dims[0].is = rsrc->res;
+    howmany_dims[0].os = rsrc->res;
+    /* Backward direction is equivalent to switching real and imaginary parts */
+    plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
+                                        ibuf->data,
+                                        rdest->data, idest->data,
+                                        _GWY_FFTW_PATIENCE);
+    g_return_if_fail(plan);
+    /* R2C destroys input, and especially, the planner destroys input too */
+    gwy_data_line_copy(rsrc, ibuf);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    /* Complete the missing half of transform.  */
+    for (j = rsrc->res/2 + 1; j < rsrc->res; j++) {
+        rdest->data[j] = rdest->data[rsrc->res - j];
+        idest->data[j] = -idest->data[rsrc->res - j];
+    }
+
+    gwy_data_line_multiply(rdest, 1.0/sqrt(rsrc->res));
+    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+        gwy_data_line_multiply(idest, 1.0/sqrt(rsrc->res));
+    else
+        gwy_data_line_multiply(idest, -1.0/sqrt(rsrc->res));
+#else
+    /* We cannot save anything here.  Or correct me... */
+    gwy_data_line_clear(ibuf);
+    gwy_fft_simple(direction, rsrc->res,
+                   1, rsrc->data, ibuf->data,
                    1, rdest->data, idest->data);
 #endif
 }
