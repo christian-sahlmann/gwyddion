@@ -93,8 +93,6 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     GtkWidget *table, *label, *hbox;
     gint row;
 
-    gwy_debug("");
-
     gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -192,8 +190,6 @@ gwy_graph_area_dialog_delete(GtkWidget *widget,
 {
     GwyGraphAreaDialog *dialog;
 
-    gwy_debug("");
-
     dialog = GWY_GRAPH_AREA_DIALOG(widget);
     if (dialog->color_dialog)
         gtk_widget_hide(dialog->color_dialog);
@@ -215,7 +211,6 @@ gwy_graph_area_dialog_response(GtkDialog *gtkdialog,
 GtkWidget*
 _gwy_graph_area_dialog_new()
 {
-    gwy_debug("");
     return GTK_WIDGET(g_object_new(GWY_TYPE_GRAPH_AREA_DIALOG, NULL));
 }
 
@@ -223,8 +218,6 @@ static void
 gwy_graph_area_dialog_destroy(GtkObject *object)
 {
     GwyGraphAreaDialog *dialog;
-
-    gwy_debug("");
 
     dialog = GWY_GRAPH_AREA_DIALOG(object);
     if (dialog->color_dialog) {
@@ -290,22 +283,19 @@ gwy_graph_combo_box_new(GwyGraphAreaDialog *dialog,
 }
 
 static void
-combo_realized(GtkWidget *parent,
-               GtkWidget *combo)
+combo_set_current(GtkWidget *combo,
+                  gint value)
 {
-    GtkTreeModel* (*model_creator)(GtkWidget *widget);
     GtkTreeModel *model;
     GtkTreeIter iter;
-    gint value, v;
+    gint v;
 
-    model_creator = g_object_get_data(G_OBJECT(combo), "model-creator");
-    g_return_if_fail(model_creator);
-    model = model_creator(parent);
-    g_return_if_fail(GTK_IS_TREE_MODEL(model));
-
-    gtk_combo_box_set_model(GTK_COMBO_BOX(combo), model);
-    value = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(combo),
-                                              "initial-value"));
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
+    if (!model) {
+        g_object_set_data(G_OBJECT(combo),
+                          "initial-value", GINT_TO_POINTER(value));
+        return;
+    }
 
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
@@ -319,6 +309,25 @@ combo_realized(GtkWidget *parent,
 }
 
 static void
+combo_realized(GtkWidget *parent,
+               GtkWidget *combo)
+{
+    GtkTreeModel* (*model_creator)(GtkWidget *widget);
+    GtkTreeModel *model;
+    gint value;
+
+    model_creator = g_object_get_data(G_OBJECT(combo), "model-creator");
+    g_return_if_fail(model_creator);
+    model = model_creator(parent);
+    g_return_if_fail(GTK_IS_TREE_MODEL(model));
+
+    gtk_combo_box_set_model(GTK_COMBO_BOX(combo), model);
+    value = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(combo),
+                                              "initial-value"));
+    combo_set_current(combo, value);
+}
+
+static void
 refresh(GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
@@ -326,8 +335,7 @@ refresh(GwyGraphAreaDialog *dialog)
     GwyRGBA *rgba;
 
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->color_selector));
-    gwy_null_store_set_model(GWY_NULL_STORE(model), dialog->curve_model,
-                             NULL);
+    gwy_null_store_set_model(GWY_NULL_STORE(model), dialog->curve_model, NULL);
     gwy_null_store_row_changed(GWY_NULL_STORE(model), 0);
 
     if (dialog->curve_model == NULL)
@@ -343,19 +351,8 @@ refresh(GwyGraphAreaDialog *dialog)
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(dialog->curvetype_menu),
                                   cmodel->mode);
 
-    if (gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->pointtype_menu)))
-        gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->pointtype_menu),
-                                 cmodel->point_type);
-    else
-        g_object_set_data(G_OBJECT(dialog->pointtype_menu), "initial-value",
-                          GINT_TO_POINTER(cmodel->point_type));
-
-    if (gtk_combo_box_get_model(GTK_COMBO_BOX(dialog->linestyle_menu)))
-        gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->linestyle_menu),
-                                 cmodel->line_style);
-    else
-        g_object_set_data(G_OBJECT(dialog->linestyle_menu), "initial-value",
-                          GINT_TO_POINTER(cmodel->line_style));
+    combo_set_current(dialog->pointtype_menu, cmodel->point_type);
+    combo_set_current(dialog->linestyle_menu, cmodel->line_style);
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->pointsize),
                              cmodel->point_size);
