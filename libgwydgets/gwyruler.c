@@ -625,7 +625,7 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     range = upper - lower;
     measure = range / ruler->pixelsize;
 
-    unitstr_len = strlen(format->units) + 12;
+    unitstr_len = strlen(format->units) + 30;
     unit_str = g_newa(gchar, unitstr_len);
     state = FIRST_TRY;
     base = sizeof("Die, die GCC warning!");
