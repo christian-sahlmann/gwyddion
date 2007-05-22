@@ -43,6 +43,7 @@ typedef struct {
     GwyGraphModel *graph_model;
     GwyRGBA cutcolor;
     GwySIValueFormat *abscissa_vf;
+    gboolean is_all;
 } CutArgs;
 
 typedef struct {
@@ -52,6 +53,7 @@ typedef struct {
     GtkWidget *from;
     GtkWidget *to;
     GtkWidget *curve;
+    GtkWidget *all;
 } CutControls;
 
 static gboolean    module_register           (void);
@@ -75,6 +77,9 @@ static GtkWidget*  curve_selector_new        (GwyGraphModel *gmodel,
                                               GCallback callback,
                                               CutControls *controls,
                                               gint current);
+static void        all_changed               (GtkToggleButton *check,
+                                              CutControls *controls);
+
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -172,6 +177,17 @@ cut_dialog(CutArgs *args)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    controls.all = gtk_check_button_new_with_mnemonic("Cut _all curves");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.all),
+                                                   args->is_all);
+    gtk_table_attach(GTK_TABLE(table), controls.all,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.all, "toggled",
+                           G_CALLBACK(all_changed), &controls);
+
+    row++;
+
+
     /* Cut area */
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(GTK_TABLE(table), hbox2,
@@ -251,42 +267,54 @@ cut_dialog(CutArgs *args)
 static void        
 do_cut(CutArgs *args)
 {
-    gint i, j, ndata, nndata;
+    gint i, j, k, ndata, nndata, cstart, cend;
     GwyContainer *data;
     GwyGraphModel *ngmodel;
-    GwyGraphCurveModel *ngcmodel;
+    GwyGraphCurveModel *gcmodel, *ngcmodel;
     const gdouble *xdata, *ydata;
     gdouble *nxdata, *nydata;
 
     ngmodel = gwy_graph_model_new_alike(args->graph_model);
- 
-    ngcmodel = gwy_graph_curve_model_duplicate(
-                    gwy_graph_model_get_curve(args->graph_model, 0));
-        
-    xdata = gwy_graph_curve_model_get_xdata(ngcmodel);
-    ydata = gwy_graph_curve_model_get_ydata(ngcmodel);
-    ndata = gwy_graph_curve_model_get_ndata(ngcmodel);
-
-    /*TODO this should really work differently*/
-    nndata = 0;
-    for (i=0; i<ndata; i++)
-        if (xdata[i]>=args->from && xdata[i]<args->to) nndata++;
-
-    nxdata = g_new(gdouble, nndata);
-    nydata = g_new(gdouble, nndata);
-
-    j=0;
-    for (i=0; i<ndata; i++) {
-        if (xdata[i]>=args->from && xdata[i]<args->to) {
-            nxdata[j] = xdata[i];
-            nydata[j] = ydata[i];
-            j++;
-        }
+    
+    if (args->is_all) {
+        cstart = 0;
+        cend = gwy_graph_model_get_n_curves(args->graph_model);
+    } else {
+        cstart = args->curve;
+        cend = args->curve + 1;
     }
-    gwy_graph_curve_model_set_data(ngcmodel, nxdata, nydata, nndata);
 
-    gwy_graph_model_add_curve(ngmodel, ngcmodel);
-    g_object_unref(ngcmodel); 
+    for (k=cstart; k<cend; k++) {
+
+        gcmodel = gwy_graph_model_get_curve(args->graph_model, k);
+        ngcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+        
+        xdata = gwy_graph_curve_model_get_xdata(gcmodel);
+        ydata = gwy_graph_curve_model_get_ydata(gcmodel);
+        ndata = gwy_graph_curve_model_get_ndata(gcmodel);
+
+        /*TODO this should really work differently*/
+        nndata = 0;
+        for (i=0; i<ndata; i++)
+            if (xdata[i]>=args->from && xdata[i]<args->to) nndata++;
+
+        if (nndata == 0) continue;
+        nxdata = g_new(gdouble, nndata);
+        nydata = g_new(gdouble, nndata);
+
+        j=0;
+        for (i=0; i<ndata; i++) {
+            if (xdata[i]>=args->from && xdata[i]<args->to) {
+                nxdata[j] = xdata[i];
+                nydata[j] = ydata[i];
+                j++;
+            }
+        }
+        gwy_graph_curve_model_set_data(ngcmodel, nxdata, nydata, nndata);
+
+        gwy_graph_model_add_curve(ngmodel, ngcmodel);
+        g_object_unref(ngcmodel); 
+    }
                                         
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, NULL);
     gwy_app_data_browser_add_graph_model(ngmodel, data, TRUE);
@@ -307,21 +335,36 @@ cut_fetch_entry(CutControls *controls)
 }
 
 
+static void 
+pick_curves(CutControls *controls)
+{
+    GwyGraphModel *parent_gmodel, *graph_model;
+    gint i;
+
+    graph_model = controls->args->graph_model;
+    parent_gmodel = gwy_graph_get_model(controls->args->parent_graph);
+    gwy_graph_model_remove_all_curves(graph_model);
+
+    if (!controls->args->is_all) {
+    gwy_graph_model_add_curve(graph_model,
+                              gwy_graph_model_get_curve(parent_gmodel,
+                                                        controls->args->curve));
+    } else {
+        for (i=0; i<gwy_graph_model_get_n_curves(parent_gmodel); i++)
+            gwy_graph_model_add_curve(graph_model,
+                              gwy_graph_model_get_curve(parent_gmodel,
+                                                        i));
+    }
+    cut_limit_selection(controls, TRUE);
+}
+
 static void
 curve_changed(GtkComboBox *combo,
               CutControls *controls)
 {
-    GwyGraphModel *parent_gmodel, *graph_model;
 
     controls->args->curve = gwy_enum_combo_box_get_active(combo);
-    graph_model = controls->args->graph_model;
-    parent_gmodel = gwy_graph_get_model(controls->args->parent_graph);
-
-    gwy_graph_model_remove_all_curves(graph_model);
-    gwy_graph_model_add_curve(graph_model,
-                              gwy_graph_model_get_curve(parent_gmodel,
-                                                        controls->args->curve));
-    cut_limit_selection(controls, TRUE);
+    pick_curves(controls);
 }
 
 
@@ -457,6 +500,13 @@ curve_selector_new(GwyGraphModel *gmodel,
     return combo;
 }
 
+static void
+all_changed(GtkToggleButton *check,
+            CutControls *controls)
+{
+    controls->args->is_all = gtk_toggle_button_get_active(check);
+    pick_curves(controls);
+}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
