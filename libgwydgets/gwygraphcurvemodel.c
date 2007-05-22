@@ -320,6 +320,36 @@ gwy_graph_curve_model_new(void)
     return (gcmodel);
 }
 
+/**
+ * gwy_graph_model_new_alike:
+ * @gmodel: A graph model.
+ *
+ * Creates new graph model object that has the same settings as @gmodel.
+ *
+ * This includes axis/label visibility, actual plotting range, etc.
+ * Curves are not duplicated or referenced.
+ *
+ * Returns: New graph model.
+ **/
+GwyGraphCurveModel*
+gwy_graph_curve_model_new_alike(GwyGraphCurveModel *gcmodel)
+{
+    GwyGraphCurveModel *duplicate;
+
+    gwy_debug("");
+
+    duplicate = gwy_graph_curve_model_new();
+    duplicate->description = g_string_new(gcmodel->description->str); 
+    duplicate->color = gcmodel->color;
+    duplicate->mode = gcmodel->mode;
+    duplicate->point_type = gcmodel->point_type;
+    duplicate->point_size = gcmodel->point_size;
+    duplicate->line_style = gcmodel->line_style;
+    duplicate->line_width = gcmodel->line_width;
+    
+    return duplicate;
+}
+
 static void
 gwy_graph_curve_model_finalize(GObject *object)
 {
