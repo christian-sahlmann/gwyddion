@@ -493,22 +493,12 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
     g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(object), NULL);
 
     gcmodel = GWY_GRAPH_CURVE_MODEL(object);
-    duplicate = gwy_graph_curve_model_new();
+    duplicate = gwy_graph_curve_model_new_alike(gcmodel);
 
     if ((duplicate->n = gcmodel->n)) {
         duplicate->xdata = g_memdup(gcmodel->xdata, gcmodel->n*sizeof(gdouble));
         duplicate->ydata = g_memdup(gcmodel->ydata, gcmodel->n*sizeof(gdouble));
     }
-
-    g_string_assign(duplicate->description, gcmodel->description->str);
-    duplicate->color = gcmodel->color;
-    duplicate->mode = gcmodel->mode;
-
-    duplicate->point_type = gcmodel->point_type;
-    duplicate->point_size = gcmodel->point_size;
-
-    duplicate->line_style = gcmodel->line_style;
-    duplicate->line_width = gcmodel->line_width;
 
     return (GObject*)duplicate;
 }
