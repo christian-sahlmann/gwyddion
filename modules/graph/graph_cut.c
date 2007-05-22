@@ -41,7 +41,6 @@ typedef struct {
     gdouble to;
     GwyGraph *parent_graph;
     GwyGraphModel *graph_model;
-    GwyRGBA cutcolor;
     GwySIValueFormat *abscissa_vf;
     gboolean is_all;
 } CutArgs;
@@ -483,7 +482,6 @@ curve_selector_new(GwyGraphModel *gmodel,
     gint ncurves, i;
 
     ncurves = gwy_graph_model_get_n_curves(gmodel);
-    controls->args->cutcolor = *gwy_graph_get_preset_color(ncurves);
 
     curves = g_new(GwyEnum, ncurves + 1);
     for (i = 0; i < ncurves; i++) {
